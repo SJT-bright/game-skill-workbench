@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:04:23.871Z",
-  "treeHash": "96ff3b10a9b92f7eabacc40a98a848dbcd2bdf822d18ecea08d252d4c43b13ba",
+  "createdAt": "2026-10-26T14:10:31.953Z",
+  "treeHash": "4673d80e1aafee44fc7c1070e53ebe21f6978a2571a106234f432240fd8d71b6",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -377,9 +377,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "9fc7fa15b4e85191c9a329b576102dab1fa32b96ae96ca2a6f1005cb8ce814d4",
+      "treeHash": "1e4dd79960eb78e790a2d5ccc25a279ad1018ebff1bd2c90d23afb2682217e5f",
       "fileCount": 295,
-      "bytes": 8885468,
+      "bytes": 8893388,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -467,8 +467,8 @@
         },
         {
           "path": "assets/modules/AdRewards.ts",
-          "hash": "05589181652e37e31305cd12f06a9f472fded2b2857b4ee1d17acc96aa096e35",
-          "size": 5222,
+          "hash": "f474bbf0988c460b7d2719034db824976f04189cf05dd5602a61ab0d29acd17f",
+          "size": 6341,
           "executable": false
         },
         {
@@ -725,8 +725,8 @@
         },
         {
           "path": "references/game-modules.md",
-          "hash": "6e427543282ca254f5c9e27e1c9ee2ef2bdb445d081f6f024028318c3680e978",
-          "size": 14278,
+          "hash": "fe85e34b08dcbc02d6fcbebe28db2ed075ce7d5530f28bc5957a625c6dd5bdf1",
+          "size": 15113,
           "executable": false
         },
         {
@@ -911,8 +911,8 @@
         },
         {
           "path": "references/rarity-unlock-design.md",
-          "hash": "b78b3f9cf85a3ab663a100936df082d423e43b956077d870e5e2f1d674c5a20a",
-          "size": 11618,
+          "hash": "6a2b00d3ab925064c390c7c33dc6dbeef2d77f04332efb4b890dddb68edd7083",
+          "size": 11725,
           "executable": false
         },
         {
@@ -1067,8 +1067,8 @@
         },
         {
           "path": "scripts/audit_acquisition_progression.py",
-          "hash": "1177be92426de69170e9781113a82e18d0c0dd787eaf04873417bf1727bcf9a9",
-          "size": 31330,
+          "hash": "4762f3afca8252ed7348a93815528b1441a21cbba1b73411e8ee400a3ac3def1",
+          "size": 33147,
           "executable": false
         },
         {
@@ -1157,8 +1157,8 @@
         },
         {
           "path": "scripts/audit_game_modules.py",
-          "hash": "affbe4e6584d838cfd66b7b5cd6e1b52114faf7877a27be43e338b2c54eb9d07",
-          "size": 24852,
+          "hash": "362dfb56c5ea8d7e96954013592803499372538de58d54470a0a172562a4659f",
+          "size": 25047,
           "executable": false
         },
         {
@@ -1535,8 +1535,8 @@
         },
         {
           "path": "scripts/make_skin_table.py",
-          "hash": "a1fdd9889627f9ae91a121f46ba3345a4f2c61dbe506a5ddd3be9e2aa056312a",
-          "size": 7826,
+          "hash": "2852fbe0f3279e59e41c89f313cec97fa9f5e681befed0fc8b11e96a529ed937",
+          "size": 10068,
           "executable": false
         },
         {
@@ -1547,8 +1547,8 @@
         },
         {
           "path": "scripts/modules_harness.mjs",
-          "hash": "7b0381f87252e35dd0d3ae8e4752e6f2520770a5ef7a6fa3fa3090ae0361ab34",
-          "size": 5537,
+          "hash": "f17191904cac0fccaecc94872b060b48095eff86b8c9dc5e7629be3c6e048605",
+          "size": 6230,
           "executable": false
         },
         {
@@ -1829,8 +1829,8 @@
         },
         {
           "path": "scripts/test_game_modules.py",
-          "hash": "8f5f67f0d94303b99816769deb8b31057aa4ab21ea7a569f90506a4a1ca55795",
-          "size": 17267,
+          "hash": "e3d9d6a0cd8dffabc575112798f2892f56ca45556f49a81b16e2366c1881962f",
+          "size": 18179,
           "executable": false
         },
         {

@@ -74,9 +74,11 @@ python scripts/make_skin_table.py --R <R> --endless --out assets/resources/confi
 | Legendary | 2 款，33–50% | 1 款，17–25% |
 | 限定 | 1 款，51–60% | — |
 
-- **只用货币买**。第一款付费 = 2R，后面每款比前一款贵 1R（common）/ 4R（rare）/ 10R（epic）/ 20R（legendary）——R=50 时：100、150…400，600…1600，2100、2600、3100，4100、5100，像 50/200/500/1000 这样越往后差距越大。看广告解锁皮肤取消了（贵的皮肤要远超 8 个广告）；看广告试用照旧（[rarity-unlock-design.md](rarity-unlock-design.md) 第四节）。
+- **货币定价最新优先（用户 2026-10-26）**：Common / Rare / Epic / Legendary 分别约为 **10 / 15 / 20 / 25 个普通关的基础收益**，同档默认同价，审计允许约 ±10%。基准为从零攒一件、不看广告、不买其他物品、无皮肤加成的普通关；`normal_level_coins` 与广告单位 `R` 可不同。新生成器默认 `--price-profile ordinary-levels`，用 `--normal-level-coins`、`--tier-levels 10,15,20,25` 调参并写表元数据；`AdRewards.curvePrices` 接收同一表配置。旧合同显式 `--price-profile legacy-2r`，未标 `price_profile` 的旧表按 legacy 兼容，保留首价 2R 和原台阶。
+- 这次定价规则不要求新增数量、收益加成或广告机制，维护已有游戏保留用户认可的广告解锁；上表是完整新建板块模板，不能借此扩大局部维护。模板默认货币购买，看广告试用照旧。
+- **实际进度另算**：有特殊/限定关、首通奖励、礼盒、广告翻倍或既有加成时，按真实关序、收入、购买扣款和装备状态模拟；`price / 普通关基础收益` 仅证明单件普通关基准，不能当综合通关进度证据。
 - **限定皮肤**：有关卡游戏打过限定关获得，只能在那里拿；两种格式任选（用户 2026-10-24）：`final` 只有最后一个限定关送一款（`hero_limited`），`every_10` 每个限定关各送一款（`hero_limited_10`、`hero_limited_20`…，全部排在最前面）；无尽游戏用大量货币（最贵皮肤的 1.5 倍）＋6 次广告解锁。不在试用弹窗里。
-- 只填 `name` 和 `art`，数字不改；`audit_acquisition_progression.py` 按 `module: skin.v1` 查数量、台阶、加成和限定皮肤。
+- 填 `name` 和 `art`；定价通过上述参数生成，审计读取同一 `price_profile`、普通关收益和档位目标；`module: skin.v1` 的完整模板仍查数量、加成和限定路线，局部维护按实际 catalog。
 
 ### 3. 画得越来越精致
 

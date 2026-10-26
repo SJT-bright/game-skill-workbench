@@ -89,8 +89,23 @@ export function adGateFinish(g, token, completed) {
   return true;
 }
 
-// price list of one group: first 2R, then +1R / +4R / +10R / +20R per skin by rarity (make_skin_table.py does the same)
-export function curvePrices(R, rarities) {
+// New calls default to ordinary-levels. Pass the whole table to preserve its policy;
+// an existing table without price_profile keeps legacy-2r. R remains the ad unit.
+export function curvePrices(R, rarities, pricing = 'ordinary-levels') {
+  const config = typeof pricing === 'string' ? { price_profile: pricing } : (pricing || {});
+  const profile = config.price_profile || 'legacy-2r';
+  if (profile !== 'ordinary-levels' && profile !== 'legacy-2r') throw new Error('unknown price_profile: ' + profile);
+  if (profile === 'ordinary-levels') {
+    const targets = config.price_level_targets || { common: 10, rare: 15, epic: 20, legendary: 25 };
+    const base = config.normal_level_coins === undefined ? (config.coins_per_level === undefined ? R : config.coins_per_level) : config.normal_level_coins;
+    const values = ['common', 'rare', 'epic', 'legendary'].map(r => targets[r]);
+    if (!Number.isFinite(base) || base <= 0 || values.some((n, i) => !Number.isFinite(n) || n <= 0 || (i > 0 && n <= values[i - 1])))
+      throw new Error('positive ordinary income and increasing tier targets required');
+    return rarities.map(r => {
+      if (targets[r] === undefined) throw new Error('unknown rarity: ' + r);
+      return Math.max(1, Math.round(base * targets[r]));
+    });
+  }
   const rank = { common: 0, rare: 1, epic: 2, legendary: 3 };
   const out = [];
   rarities.forEach((r, i) => {

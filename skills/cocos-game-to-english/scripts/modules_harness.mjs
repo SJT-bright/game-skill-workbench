@@ -80,7 +80,15 @@ const add = (id, passed, detail) => checks.push({ id, passed: !!passed, detail }
       'stale/cross-gate/forged callbacks ignored; only current identity pays once and releases gate');
 }
 { // the price curve the table must follow
-  const p = M.curvePrices(R, ['common', 'common', 'rare', 'rare', 'epic', 'legendary']);
+  const p = M.curvePrices(R, ['common', 'common', 'rare', 'rare', 'epic', 'legendary'], 'legacy-2r');
   add('price_curve', p.join(',') === [2, 3, 7, 11, 21, 41].map((k) => k * R).join(','), 'curve for R=' + R + ': ' + p.join(', '));
+}
+{
+  const tiers = ['common', 'rare', 'epic', 'legendary'];
+  const p = M.curvePrices(R, tiers);
+  add('ordinary_price_profile', p.join(',') === [10, 15, 20, 25].map(n => n * R).join(','), 'default ordinary-level targets');
+  const custom = M.curvePrices(R, tiers, {price_profile: 'ordinary-levels', normal_level_coins: 30, price_level_targets: {common: 8, rare: 12, epic: 16, legendary: 20}});
+  add('ordinary_price_parameters', custom.join(',') === '240,360,480,600', 'ordinary income independent of ad unit');
+  add('unmarked_price_compatibility', M.curvePrices(R, tiers, {}).join(',') === M.curvePrices(R, tiers, 'legacy-2r').join(','), 'unmarked old tables retain legacy');
 }
 console.log(JSON.stringify({ checks }));

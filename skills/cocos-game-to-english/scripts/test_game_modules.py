@@ -21,9 +21,9 @@ def py(script, *args):
     return r.returncode, r.stdout + r.stderr
 
 
-def skin_table(tmp, *args):
+def skin_table(tmp, *args, profile="legacy-2r"):
     out = Path(tmp) / 'unlock_table.json'
-    code, text = py('make_skin_table.py', '--R', 50, *(args or ('--levels',)), '--out', out)
+    code, text = py('make_skin_table.py', '--R', 50, *(args or ('--levels',)), *(['--price-profile', profile] if profile else []), '--out', out)
     assert code == 0, text
     return json.loads(out.read_text())
 
@@ -55,6 +55,20 @@ class SkinModuleTests(unittest.TestCase):
         prices = [x['coins'] for x in skins if x['unlock'] == 'coins']
         gaps = sorted({b - a for a, b in zip(prices, prices[1:])})
         self.assertEqual((prices[0], gaps), (100, [50, 200, 500, 1000]))       # user: +50, +200, +500, +1000
+
+    def test_ordinary_level_profile(self):
+        for args in (('--levels',), ('--endless',), ('--levels', '--normal-level-coins', '30', '--tier-levels', '8,12,16,20')):
+            t = skin_table(self.tmp, *args, profile=None)
+            self.assertEqual(t['price_profile'], 'ordinary-levels')
+            self.assertEqual(unlock_audit(t)[0], 0)
+            for row in t['items']:
+                if row['unlock'] == 'coins':
+                    self.assertEqual(row['coins'], t['normal_level_coins'] * t['price_level_targets'][row['rarity']])
+            next(x for x in t['items'] if x['id'] == 'hero_02')['coins'] = 100
+            self.assertIn('ordinary levels', ' '.join(unlock_audit(t)[1]['errors']))
+        legacy = skin_table(self.tmp)
+        legacy.pop('price_profile')
+        self.assertEqual(unlock_audit(legacy)[0], 0)
 
     def test_broken_skin_tables_fail(self):
         def item(t, iid):

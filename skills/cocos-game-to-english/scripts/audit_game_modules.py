@@ -278,7 +278,9 @@ def audit(proj, board, reference, maintenance=None, binding=None):
             import audit_acquisition_progression as acq
             f = {k: k for k in ('id', 'group', 'order', 'rarity', 'unlock', 'coins', 'ads')}
             res = acq.audit_rarity(items, f, ['common', 'rare', 'epic', 'legendary'], table.get('coins_per_level'),
-                                   table.get('coins_per_ad'), 8, 50, 'skin.v1', enabled(proj))
+                                   table.get('coins_per_ad'), 8, 50, 'skin.v1', enabled(proj),
+                                   table.get('price_profile'), table.get('normal_level_coins', table.get('coins_per_level')),
+                                   table.get('price_level_targets'))
             errs = list(res['errors'])
             if skins['backgrounds'] and 'background' not in by_group:
                 errs.append('skins.backgrounds true but no "background" group (10 scene backgrounds)')

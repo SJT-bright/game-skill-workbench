@@ -15,7 +15,8 @@ SKIN MODULE (user 2026-10-23, both boards, references/game-modules.md 四): a ta
     background (when the game has a scene):
     exactly 10 = the free starting one + 9 for coins (3 common, 3 rare, 2 epic, 1 legendary)
   - only coins (no ad-only / ads+coins / either-or skins): ads feed the coins (x2 at every level end, gift box, bonus levels)
-  - prices: the first for sale = 2R, every next one = the one before + 1R / 4R / 10R / 20R by its rarity (+-10%)
+  - prices: new tables ordinary-levels = 10/15/20/25 ordinary base rewards (+-10%);
+    explicit legacy-2r or unmarked old tables retain the 2R +1/4/10/20 R curve
   - every non-free item has a coin bonus that rises with rarity, bands are errors here: skin 5-10 / 11-20 / 21-32 / 33-50,
     limited 51-60 (above every legendary); background 2-5 / 6-10 / 11-16 / 17-25
   - the limited skin: unlock "level" (condition clear; audit_level_plan.py checks it is the reward of its limited level) or, for
@@ -46,6 +47,7 @@ Usage:
       [--rarity-order common,rare,epic,legendary] [--max-ads 8] [--binding review.json] --report result.json
 Exit codes: 0 pass, 2 fail or bad input. Configuration only; runtime, ads and saving are checked elsewhere.
 """
+from make_skin_table import PRICE_PROFILES, tier_levels
 import argparse
 from fractions import Fraction
 import hashlib
@@ -123,7 +125,7 @@ def audit_bonus(groups, errors, warnings):
                     warnings.append(f'Group {group}: {r["item"]} {r["rarity"]} bonus +{r["bonus"][1]}% (usual band {lo_b}-{hi_b}%)')
 
 
-def audit_module_group(group, entries, R, errors):
+def audit_module_group(group, entries, R, errors, price_profile=None, normal_level_coins=None, targets=None):
     """The skin module (references/game-modules.md 四): fixed counts, coins only, the 2R + 1/4/10/20 R price curve,
     bonus bands, the limited skin first."""
     entries = sorted(entries, key=lambda r: r['order'])
@@ -162,7 +164,20 @@ def audit_module_group(group, entries, R, errors):
         if b['rank'] < a['rank']:
             errors.append(f'Group {group}: rarity goes down from {a["item"]} ({a["rarity"]}) to {b["item"]} ({b["rarity"]})')
     prices = [r for r in buy if r['unlock'] == 'coins']
-    if R and prices:
+    profile = price_profile or 'legacy-2r'  # unmarked existing tables retain their contract
+    if profile not in PRICE_PROFILES:
+        raise ValueError('unknown price_profile: ' + str(profile))
+    if profile == 'ordinary-levels':
+        targets = tier_levels(targets)
+        base = normal_level_coins
+        if not base or not math.isfinite(base) or base <= 0:
+            errors.append('ordinary-levels requires positive normal_level_coins (ordinary level base income)')
+        else:
+            for row in prices:
+                want = base * targets[row['rarity']]
+                if abs(row['coins'] - want) > max(1, 0.1 * want):
+                    errors.append(f'Group {group}: {row["item"]} costs {row["coins"]}; {row["rarity"]} target is about {targets[row["rarity"]]:g} ordinary levels = {want:g}')
+    elif R and prices:
         if abs(prices[0]['coins'] - 2 * R) > 0.1 * 2 * R:
             errors.append(f'Group {group}: the first item for sale costs 2R = {2 * R:g}, found {prices[0]["coins"]}')
         for a, b in zip(prices, prices[1:]):
@@ -199,7 +214,7 @@ def audit_module_group(group, entries, R, errors):
             errors.append(f'Group skin: the limited skin bonus +{r["bonus"][1]}% must be above every legendary (+{max(legend)}%)')
 
 
-def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ads=8, max_bonus=50, module=None, optional=None):
+def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ads=8, max_bonus=50, module=None, optional=None, price_profile=None, normal_level_coins=None, price_level_targets=None):
     optional = optional or {}
     errors, warnings, groups, seen = [], [], {}, set()
     if not isinstance(rows, list) or not rows:
@@ -263,7 +278,8 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
     if module == 'skin.v1':
         for group in SKIN_GROUPS:
             if group in groups:
-                audit_module_group(group, groups[group], coins_per_ad, errors)
+                audit_module_group(group, groups[group], coins_per_ad, errors, price_profile,
+                                   normal_level_coins if normal_level_coins is not None else coins_per_level, price_level_targets)
                 any_buyable = True
                 entries = sorted(groups[group], key=lambda r: r['order'])
                 result.append({'group': group, 'module': 'skin.v1', 'items': [{k: v for k, v in r.items() if k != 'rank'} for r in entries]})
@@ -402,6 +418,9 @@ def main():
     p.add_argument('--rarity-order', default='common,rare,epic,legendary')
     p.add_argument('--coins-per-level', type=int)
     p.add_argument('--coins-per-ad', type=Fraction, help='R = coins from a medium-difficulty level (rarity mode); coin/ad ratio (alternative mode)')
+    p.add_argument('--price-profile', choices=PRICE_PROFILES, help='table metadata takes precedence over legacy fallback')
+    p.add_argument('--normal-level-coins', type=float)
+    p.add_argument('--tier-levels', help='ordinary-level targets: common,rare,epic,legendary')
     p.add_argument('--max-ads', type=int, default=8)
     p.add_argument('--max-bonus', type=int, default=50, help='max skin bonus percent (default 50)')
     p.add_argument('--starting-items', nargs='*', default=[], help='alternative mode only')
@@ -434,7 +453,10 @@ def main():
             if len(tiers) < 2:
                 raise ValueError('rarity-order needs at least two tiers')
             result = audit_rarity(rows, fields, tiers, coins_per_level, float(coins_per_ad) if coins_per_ad else None, a.max_ads, a.max_bonus,
-                                  meta.get('module'), enabled(next((p for p in a.table.resolve().parents if (p / 'docs').is_dir()), a.table.parent)))
+                                  meta.get('module'), enabled(next((p for p in a.table.resolve().parents if (p / 'docs').is_dir()), a.table.parent)),
+                                  a.price_profile or meta.get('price_profile'),
+                                  a.normal_level_coins if a.normal_level_coins is not None else meta.get('normal_level_coins', coins_per_level),
+                                  tier_levels(a.tier_levels) if a.tier_levels else meta.get('price_level_targets'))
         else:
             if a.coins_per_ad is not None and a.coins_per_ad <= 0:
                 raise ValueError('coins-per-ad must be positive')

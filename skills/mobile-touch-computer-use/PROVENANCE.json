@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "mobile-touch-computer-use",
-  "previous_provenance_sha256": "7801e5b3eb912bfdba6b956335fdc8db47ad97c6c4cbeae8393e5a54f4dcf634",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "79a1591e7d127c945a92f0dce293a8e4e617d33ae526ef90ee4989546188d2fb",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

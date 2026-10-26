@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "cocos-game-logic-check",
-  "previous_provenance_sha256": "46f4909fb085711d1ae65c78610f0b1406719cfd5eec594c48d0640034ae387a",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "e810b69fb2f1795b0dbe9bb445af4615e0d883824ba0d9253136d58e3c872d5b",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
@@ -22,8 +22,8 @@
     },
     {
       "path": "references/learned-regressions.md",
-      "sha256": "36031a46037e927aea437a0a86db6a253a62afab6d42c4db58b66aa807cd7738",
-      "bytes": 11736
+      "sha256": "a78359e2892b8d7cb0fab0d99fb1ae663511bbed7b2e7dce856a2ef972b2ba9b",
+      "bytes": 12476
     },
     {
       "path": "references/logic-rules.md",

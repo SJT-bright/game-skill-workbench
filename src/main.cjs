@@ -1,7 +1,7 @@
 const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nativeImage,Menu}=require('electron');
 const fs=require('node:fs/promises');const path=require('node:path');const crypto=require('node:crypto');const {pathToFileURL}=require('node:url');
 const {HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,request,addresses}=require('./core.cjs');const {zipFolder}=require('./zip.cjs');
-const {discover,queueMessage,STAGES,UUID,cancelReaders}=require('./codex.cjs');
+const {discover,queueMessage,STAGES,UUID,cancelReaders,isMaintenanceTitle}=require('./codex.cjs');
 const {scanTelemetries}=require('./telemetry.cjs');const updater=require('./updater.cjs');const github=require('./github.cjs');const {spawn}=require('node:child_process');
 const {dockBounds,EXPANDED,COLLAPSED}=require('./docking.cjs');
 const smoke=process.argv.includes('--smoke-test');
@@ -70,6 +70,7 @@ async function scanLocalSkills(){
  for(const [id,skill]of Object.entries(installed))if(skill.local&&!skill.bundled&&!present.has(id))delete installed[id];
 }
 async function syncCodex(){if(codexPromise)return codexPromise;codexPromise=(async()=>{codexBusy=true;await emit();try{
+ config.games=config.games.filter(g=>!(g.source==='codex'&&g.stageMode==='auto'&&isMaintenanceTitle(g.name)));
  const cache=Object.fromEntries(codexSnapshot.threads.map(t=>[t.threadId,t]));const roots=[...config.scanRoots,...config.games.filter(g=>g.source!=='codex').map(g=>g.path),path.join(require('node:os').homedir(),'游戏出海项目制作')];
  const snapshot=await discover({roots,cache});const knownIds=new Set(snapshot.threads.map(t=>t.threadId));const tracked=snapshot.threads.concat(config.games.filter(g=>g.telemetry?.active===true&&g.rolloutPath&&!knownIds.has(g.threadId)).map(g=>({threadId:g.threadId,rolloutPath:g.rolloutPath})));const telemetry=await scanTelemetries(tracked,{cache:telemetryCache,classifyStage:require('./codex.cjs').inferStage});telemetryCache=telemetry.cache;await atomicJSON(path.join(root,'telemetry-cache.json'),telemetryCache);codexSnapshot=snapshot;codexError='';
  for(const t of snapshot.threads){if(config.hiddenThreads.includes(t.threadId)||!t.path)continue;let g=config.games.find(g=>g.threadId===t.threadId);if(!g){g={id:'codex-'+t.threadId,name:t.title,path:t.path,threadId:t.threadId,chatUrl:'codex://threads/'+t.threadId+'?hostId=local',source:'codex',stageMode:'auto',note:''};config.games.push(g);}g.telemetry=telemetry.byThread[t.threadId]||null;g.rolloutPath=t.rolloutPath;if(g.stageMode==='auto'){g.stage=t.stageInfo.stage||(g.telemetry?.latestStageCurrent?g.telemetry.latestStage:null);g.stageEvidence=t.stageInfo.evidence||(g.telemetry?.latestStageCurrent?'Codex 本地阶段记录':'');g.contextStatus=t.contextStatus;}g.updatedAt=new Date((t.updatedAt||Date.now()/1000)*1000).toISOString();}

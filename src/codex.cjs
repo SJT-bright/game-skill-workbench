@@ -33,9 +33,19 @@ function inferStage(messages){
  }
  return {stage:null,evidence:'',certainty:'unknown'};
 }
+function isMaintenanceTitle(value){
+ const title=String(value||'').normalize('NFKC').trim().replace(/^[\s\d\p{Extended_Pictographic}\uFE0F\u20E3\u2460-\u2473\u2776-\u2793.、:：#_*+\-–—()[\]（）]+/u,'').trim();
+ if(!title)return false;
+ if(/工作台|工坊|批量|统一规则|日报|资讯|软件开发|存储清理|空间清理|股票|短剧|课件|讲稿/i.test(title))return true;
+ // A Skill/tool subject at the start is maintenance. A game identity before a
+ // Skill note is intentionally retained, even if that note says "Skill 更新".
+ const actions='(?:(?:优化|更新|维护|融合|合并|安装|导出|调整|修复|审查|整理|检测|检查|完善|同步|制作|开发|设计|重构|规范|建立|编写|改进|升级|打包|评估|比较|统一|研究|分析|本机|共享)\\s*)*';
+ const subject='(?:(?:cocos(?:[-_a-z0-9]+)?\\s+)?skills?\\b|(?:成品检测|检测成品|美工|玩法|重塑|英化|英化与重塑|重塑与英化|游戏|游戏制作|游戏检查|游戏打包|广告|逻辑检查|手机测试|多应用|通用)\\s*skills?\\b)';
+ return new RegExp('^'+actions+subject,'i').test(title)||/^cocos-game-(?:from-starter|to-english|art-redo|logic-check|ad-design|tiktok-package)(?:\s|$)/i.test(title);
+}
 function isGameThread(t,roots=[]){
  const title=String(t.name||t.title||''),cwd=String(t.cwd||'');
- if(!UUID.test(t.id)||!title||t.archived||t.ephemeral||t.parentThreadId||t.parent_thread_id||typeof t.source==='object'||['cli','exec','subagent','sub_agent'].includes(t.source)||/工作台|Skill.*(?:更新|融合|安装)|工坊|批量|统一规则|日报|资讯|软件开发|存储清理|空间清理|股票|短剧|课件|讲稿/i.test(title))return false;
+ if(!UUID.test(t.id)||!title||t.archived||t.ephemeral||t.parentThreadId||t.parent_thread_id||typeof t.source==='object'||['cli','exec','subagent','sub_agent'].includes(t.source)||isMaintenanceTitle(title))return false;
  return roots.some(r=>cwd===r||cwd.startsWith(r+path.sep))||/(?:游戏|cocos|(?:^|[\\/])games?(?:[\\/]|$))/i.test(cwd)||/游戏|关卡|重塑|英化|试玩|TikTok|Native|[A-Za-z]+[’']s\s+[A-Za-z]+/.test(title);
 }
 async function discover({roots=[],cache={},limit=40,binary}={}){
@@ -55,4 +65,4 @@ async function queueMessage(threadId,message,{binary,timeout=20000,spawnFn=spawn
  child.stdout.on('data',d=>{output=(output+d).slice(-1600);});child.stderr.on('data',d=>{output=(output+d).slice(-1600);});child.on('error',e=>{if(settled)return;settled=true;clearTimeout(timer);reject(e);});child.on('exit',code=>finish({status:code===0?'queued':'failed',detail:output.trim().slice(-800)||'Codex 未返回发送详情'}));});
 }
 const cancelReaders=()=>{for(const reader of activeReaders)reader.close().catch(()=>{});};
-module.exports={cancelReaders,Reader,discover,inferStage,isGameThread,queueMessage,executable,STAGES,UUID};
+module.exports={cancelReaders,Reader,discover,inferStage,isMaintenanceTitle,isGameThread,queueMessage,executable,STAGES,UUID};

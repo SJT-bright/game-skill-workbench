@@ -1,0 +1,97 @@
+{
+  "id": "39cfbb0f-2609-4de4-8baa-57743a4ee42f",
+  "skillId": "s-9b70fe49ec762c63822c",
+  "directory": "desktop-agent-orchestrator",
+  "name": "desktop-agent-orchestrator",
+  "version": "v2",
+  "createdAt": "2026-10-26T14:48:13.244Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "ad753de78dedeb230328bbc1267d56c9af5c6fbaaec5be7f59deccb7af9f6fb8",
+  "bytes": 94593,
+  "fileCount": 13,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "7fc277fce1ac445907932a70c544ba0f6e55772473d65fda2b9ce67340516d38",
+      "size": 2290,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "8e7e4e628b18618b9be713459990e986bf76dce74f0a4fc32ce83c7e8dce7012",
+      "size": 3725,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "16fc2d622a5ba55df2ddc9c5e2dd16be64b3e430ed36917e09135f83bcd56a8a",
+      "size": 413,
+      "executable": false
+    },
+    {
+      "path": "assets/windows-software.json",
+      "hash": "47f66cdc77ea92a4c44fd9f12c7a6a120f5e15b888994445f9d82510917ed8ba",
+      "size": 4920,
+      "executable": false
+    },
+    {
+      "path": "references/delegation-boundaries.md",
+      "hash": "a44ab252f4479927a71e4618e36c82c4e20e3f783b8a133e506aa845d1bbbdea",
+      "size": 5172,
+      "executable": false
+    },
+    {
+      "path": "references/local-app-routing.md",
+      "hash": "e945fa20d4a2847df77109234b801eec4cf8458c2cf6a64cc60146da31769dcd",
+      "size": 4753,
+      "executable": false
+    },
+    {
+      "path": "references/portability.md",
+      "hash": "3bbf405ab7d7ca9118a6eaa257fa14ac725f2cc39d9ab351f463b8ce89616a71",
+      "size": 2944,
+      "executable": false
+    },
+    {
+      "path": "references/task-brief.md",
+      "hash": "7be79f244b73f461a9c5cad1b115794cb3663986f48c55c74d1ce1766f1d2610",
+      "size": 6883,
+      "executable": false
+    },
+    {
+      "path": "references/windows-bootstrap.md",
+      "hash": "675c1061e68c2f4f19547d6ae705eab0e8cf9ae17c065240139fe7ff85a4c74d",
+      "size": 4954,
+      "executable": false
+    },
+    {
+      "path": "references/workflow-detail.md",
+      "hash": "e55a7e250543223670a1fa51b2b4449e441e8907e6499f2d257212a9e034ac56",
+      "size": 8317,
+      "executable": false
+    },
+    {
+      "path": "scripts/bootstrap_windows.py",
+      "hash": "a38bdd280b7b594e5d779d701c7b35e2add6d4a72cc4cba9db63a3e1bc739ef0",
+      "size": 18720,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_dispatch_contract.py",
+      "hash": "e3d306a8b876c51679367610df5d08abf3cff0a482a07c07ef0d131dd59d7cfd",
+      "size": 14390,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_dispatch_contract.py",
+      "hash": "10a9c4b2e523e5028fdb527d406ff8a1eb5e99b91dd3dc6c1c84df6a0e7ae882",
+      "size": 17112,
+      "executable": false
+    }
+  ]
+}

@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "39cfbb0f-2609-4de4-8baa-57743a4ee42f",
+      "skillId": "s-9b70fe49ec762c63822c",
+      "directory": "desktop-agent-orchestrator",
+      "name": "desktop-agent-orchestrator",
+      "version": "v2",
+      "createdAt": "2026-10-26T14:48:13.244Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "ad753de78dedeb230328bbc1267d56c9af5c6fbaaec5be7f59deccb7af9f6fb8",
+      "bytes": 94593,
+      "fileCount": 13
+    },
+    {
       "id": "1e1939ae-2fa5-45dd-9ac3-07c08281db71",
       "skillId": "s-8a4323773719ef381f6d",
       "directory": "grok-image-review",

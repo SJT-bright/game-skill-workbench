@@ -1,0 +1,14 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-26.contracts-v3",
+  "skill": "cocos-game-ad-design",
+  "previous_provenance_sha256": null,
+  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "dde77610fdb7cfc4f4ac497a939a89c4c9e07f4faba682de1b1d8ee59933f0e2",
+      "bytes": 7835
+    }
+  ]
+}

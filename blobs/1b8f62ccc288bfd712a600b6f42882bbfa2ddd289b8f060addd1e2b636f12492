@@ -1,0 +1,29 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-26.contracts-v3",
+  "skill": "cocos-game-tiktok-package",
+  "previous_provenance_sha256": "222178cfa4a82cf468ef566a5c15a8b2d4b7f895872145ffc7a63cbf81e93f36",
+  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "dd1ed204eb91d4a475a39939715362afd0787b73bffaa4bb0f1419e4c89e6c71",
+      "bytes": 4129
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "62a54b2424cf4757d8cc76c37dd5c8686ff8b066c0160c3a26800a81494f82ac",
+      "bytes": 750
+    },
+    {
+      "path": "references/package-forms.md",
+      "sha256": "993681e00e6636dee5606fb51f3d5e91d4a80d55843d8d154e4ba198d4df9a59",
+      "bytes": 4537
+    },
+    {
+      "path": "scripts/upload_preflight.py",
+      "sha256": "1f610e5adb9b68a8eddc49059c74309b1b976b7634aab791c9968e44aa8cf5d6",
+      "bytes": 1342
+    }
+  ]
+}

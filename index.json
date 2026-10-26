@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "dab43704-d8d0-4062-9adf-f8575b33b52b",
+      "skillId": "s-d260030552ba65620839",
+      "directory": "cocos-game-tiktok-package",
+      "name": "cocos-game-tiktok-package",
+      "version": "v3",
+      "createdAt": "2026-10-26T14:32:28.862Z",
+      "summary": "文件变更：新增 0，修改 2，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 2,
+        "deleted": 0
+      },
+      "treeHash": "d3172fe40547a45fccb47b65ed61988a74db867faf8a916e35bf574aa7687d39",
+      "bytes": 11720,
+      "fileCount": 5
+    },
+    {
       "id": "a2e63911-d245-4e9f-99ea-9ba07f002dd6",
       "skillId": "s-1bba8cd897259056ef0f",
       "directory": "cocos-game-ad-design",

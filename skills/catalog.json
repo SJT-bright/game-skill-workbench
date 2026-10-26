@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T15:57:17.668Z",
-  "treeHash": "77bc5957f83b92e53b627e7e4c493b8945e530d69d4cb0397896c0de1e384edb",
+  "createdAt": "2026-10-26T16:04:40.413Z",
+  "treeHash": "d18668c43bc89b4d607e75cb86fb66d692ae4e9f16a318f24b5c363ff7a1d471",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -881,9 +881,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "78f6e779299ae2535fd6daa333126e04c7853d0b31ac08ce906250320db53f17",
+      "treeHash": "1813873ef717ea5c088ff18cdc9a594ced66fdc7d378424177b34c43e298bfa2",
       "fileCount": 290,
-      "bytes": 8588083,
+      "bytes": 8588835,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1097,8 +1097,8 @@
         },
         {
           "path": "references/automated-ad-simulation.md",
-          "hash": "152e7f90151f9d8f685dc3eeb267bcc38cdba89405c0494e4444454b102ef34d",
-          "size": 5904,
+          "hash": "6494e88338696877ee2e0fd81d965513f74835ed72f8278f03c0ec87fc11ab53",
+          "size": 6391,
           "executable": false
         },
         {
@@ -1415,8 +1415,8 @@
         },
         {
           "path": "references/rarity-unlock-design.md",
-          "hash": "2c73f25d972237f5311f414f440801e10cac048605571dbc8ddea916eed3882f",
-          "size": 11020,
+          "hash": "f7be3cfb716c2c64bf5c4b1317bf70189daa28cf1f97c323c45575c1d9222e0b",
+          "size": 11285,
           "executable": false
         },
         {

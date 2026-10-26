@@ -286,6 +286,9 @@ def evidence_profile(location, identity):
 
 def local_contract(identity, location):
     location = Path(location).resolve()
+    for project, entry in read_store()['projects'].items():
+        if location.is_relative_to(Path(project)) and identity in entry.get('policy', {}).get('validators', {}):
+            return lookup(project, 'validators', identity)
     for policy in read_store().get('legacy_contracts', {}).values():
         if policy.get('id') == identity and location.is_relative_to(Path(policy['project'])):
             return policy

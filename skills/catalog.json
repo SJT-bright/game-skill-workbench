@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T15:39:40.092Z",
-  "treeHash": "af935a3451a34e22efb78f0f957492b3dfc5097857406b30acb831d01e1822b7",
+  "createdAt": "2026-10-26T15:46:19.168Z",
+  "treeHash": "38af94d1bbfae4d6802b25af5a735ed808f25b44eb025772681f83a8d01d4424",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -881,9 +881,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "880de252cea820d61f27b8277aa61e88c8f3140c51a3bb173a1d0269bbdb2d81",
-      "fileCount": 291,
-      "bytes": 8594440,
+      "treeHash": "78f6e779299ae2535fd6daa333126e04c7853d0b31ac08ce906250320db53f17",
+      "fileCount": 290,
+      "bytes": 8588083,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1888,12 +1888,6 @@
           "executable": false
         },
         {
-          "path": "scripts/cocos24_native_boot_retry_contract.py",
-          "hash": "f9a65c49091e23798e8e1d9d52a3c052b923f62b78f382744998f01371087ed7",
-          "size": 6589,
-          "executable": false
-        },
-        {
           "path": "scripts/cocos24_screen_input_contract.py",
           "hash": "d841568701a31bcb042c4011fb0f1ededf925f01baf28cb0576016dc398951bd",
           "size": 5533,
@@ -2129,8 +2123,8 @@
         },
         {
           "path": "scripts/project_qa.py",
-          "hash": "d92e12f1f03a3c1e9cad8e7eb1ec474b727d4fd20a5b91d2b87f5b6f0bd2f944",
-          "size": 16857,
+          "hash": "55e9e99df39b5e2efd3cdf0f76b224ed863ccba0a4e644bb522a4957ebbcdc75",
+          "size": 17089,
           "executable": false
         },
         {

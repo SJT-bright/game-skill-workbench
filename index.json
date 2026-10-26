@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "85c4633a-3b38-4e6b-b936-138f74821066",
+      "skillId": "s-ff71fb1948e2a7f0eb3b",
+      "directory": "grok-background-maker",
+      "name": "grok-background-maker",
+      "version": "v2",
+      "createdAt": "2026-10-26T14:36:48.267Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "ce6811f694c0f12ab5b71e3dbf0ac4a7123db3e4810e93fad4e8a6ea9c6d55e2",
+      "bytes": 27673,
+      "fileCount": 5
+    },
+    {
       "id": "1ef27c46-7c37-493c-908b-643a17201e32",
       "skillId": "s-bedd22bb6c578608dd49",
       "directory": "grok-delegate",

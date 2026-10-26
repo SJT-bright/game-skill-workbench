@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T13:46:12.497Z",
-  "treeHash": "a7ebffecd2efac217954ae1deaa138fdecf221ad725673d5e0e749679e2c6ade",
+  "createdAt": "2026-10-26T13:46:49.855Z",
+  "treeHash": "37190257e8cbc3a234adb1ffd38964db36099ccc0e9198e09abf745aa5653423",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2155,9 +2155,9 @@
     },
     {
       "name": "cocos-tiktok-package-check",
-      "treeHash": "6fa8211d4dfc933a43b7d30ac3a855bef6ea7f18156700199d75d1526b1b5795",
+      "treeHash": "40fcfcb7f30258e9633a1a333cfed4c52ad88728ad3a64c885f4d3e6909b80f0",
       "fileCount": 28,
-      "bytes": 189104,
+      "bytes": 189480,
       "files": [
         {
           "path": "SKILL.md",
@@ -2203,8 +2203,8 @@
         },
         {
           "path": "references/forbidden-player-windows.md",
-          "hash": "f88bb71e3cc937c09f20bba00bc8aaa817121d26daa4ab4969da9eded6a9aac1",
-          "size": 1773,
+          "hash": "f1640e9938c8253cce29a294638ac84c9a649cffd5fd946f5169d6ff60e93e88",
+          "size": 2149,
           "executable": false
         },
         {

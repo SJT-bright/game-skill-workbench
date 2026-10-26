@@ -9,3 +9,5 @@
 回归`cocos-game-to-english/scripts/test_no_ad_simulator.py`覆盖准确旧v80、模拟窗口改名/关闭、转义标签、序列化与HTML、两个writer拒绝且无输出、最终ZIP拒绝、正常广告/货币/许可证对照。最终以正式writer和prepare_delivery交包。
 
 复盘：上次门禁只识别另一套模拟器标记，漏了本作preview-ads.js；Credits仅有文字规则，未接最终字节拒包。以后以实际窗口反例校准三个出包边界，不能以“文档已有禁止”当作已执行。
+
+2026-10-26校准：Cocos 2.4独立`cc.SpriteFrame`导入元数据的`name: credits`仅为美术资源名，不能当作玩家窗口。检查器只在精确类型和结构下排除该名字字段，其他字段与模拟标记仍检查；真实Credits入口、标签和生产说明继续拒包。反例/正常对照已接`test_no_ad_simulator.py`，不改产物规避误报。

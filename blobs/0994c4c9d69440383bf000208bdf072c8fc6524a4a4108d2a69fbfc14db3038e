@@ -1,0 +1,149 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-26.contracts-v3",
+  "skill": "cocos-tiktok-package-check",
+  "previous_provenance_sha256": null,
+  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "9112e81d1987b9baddd950d446ddc746c2305696693295d35c55bd700d7b443e",
+      "bytes": 3286
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "64cf700bbdc6c7425d443f34896740e91f81dc9294aa7a71621d56ee4e2d84bc",
+      "bytes": 153
+    },
+    {
+      "path": "references/bootstrap-order-review.md",
+      "sha256": "68c7836696999ae34db03efc2f388160d5a50068e3bfbc5b3ca7a34c2af15bd2",
+      "bytes": 1381
+    },
+    {
+      "path": "references/calibration-results.json",
+      "sha256": "027701ef57cd9ad5a83d73332771109fc3025a036094ccb40c77cf6e902a6059",
+      "bytes": 10154
+    },
+    {
+      "path": "references/check-contract.md",
+      "sha256": "0c094f24a143409ca93abc59c1e97d94048368a692b8f4d29be81c8c8d49a1b6",
+      "bytes": 11095
+    },
+    {
+      "path": "references/drag-audio-postconditions.md",
+      "sha256": "9df50df6a21f853923fa20e0263daf18c83ace264c1560c0900a233e6a41b0de",
+      "bytes": 4729
+    },
+    {
+      "path": "references/failure-casebook.md",
+      "sha256": "a97ac51e9e0466e2a6c81173058b1ef9fda98ddd0adf1e3e3b67677f4d05041d",
+      "bytes": 3742
+    },
+    {
+      "path": "references/forbidden-player-windows.md",
+      "sha256": "f1640e9938c8253cce29a294638ac84c9a649cffd5fd946f5169d6ff60e93e88",
+      "bytes": 2149
+    },
+    {
+      "path": "references/gate-order-and-identity.md",
+      "sha256": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
+      "bytes": 4604
+    },
+    {
+      "path": "references/main-package-overflow.md",
+      "sha256": "49b209122928e7c1af0c1221d3c99427e6f3fb4895937852d2712bbdc135939d",
+      "bytes": 4610
+    },
+    {
+      "path": "references/resource-and-reported-issues.md",
+      "sha256": "6a9c8b8b3cc6a846b3975cbfa2c82abf58e26febc5f24f064b5c709f04962373",
+      "bytes": 9764
+    },
+    {
+      "path": "references/resource-loss-recovery.md",
+      "sha256": "f83804daeca8c39833a2d82394a9b2ad454a077aa6322f54e4c22acc05863aef",
+      "bytes": 1712
+    },
+    {
+      "path": "references/root-entry-and-delivery.md",
+      "sha256": "b381179d0c5a37a76bb8327a945336c0b95f7af24e741c73b0a918acfc36aed5",
+      "bytes": 3828
+    },
+    {
+      "path": "references/webp-decode-capability.md",
+      "sha256": "e0b55d230c3e8e368c69d8ecf4889a7004408b714eece31ac7937b80442a07d8",
+      "bytes": 3680
+    },
+    {
+      "path": "scripts/audit_interaction_audio.py",
+      "sha256": "942540bcdb8de4af9fbf266076f765d08d6d1972fffa8207903d53b3e810d351",
+      "bytes": 5603
+    },
+    {
+      "path": "scripts/audit_runtime_resources.py",
+      "sha256": "1c3e6896b2385ca9809dae6d4e1a6cbadc5726d707757afe18334b28a7e37d17",
+      "bytes": 420
+    },
+    {
+      "path": "scripts/audit_sound_settings.py",
+      "sha256": "1e50cc1c675e67d7a8a149196ef344730f69c4b760040502e6a53bc74c410fd6",
+      "bytes": 8867
+    },
+    {
+      "path": "scripts/build_checked_zip.py",
+      "sha256": "ff36bff9cf415de07d3bba2dd08ef27b9f572b2974a83b07121ec5a896520216",
+      "bytes": 6714
+    },
+    {
+      "path": "scripts/check_package.py",
+      "sha256": "42ba5d6886294321baad9ff102aabe06a4316e86fc8603f0a0c504aaab55f0b1",
+      "bytes": 5191
+    },
+    {
+      "path": "scripts/prepare_delivery.py",
+      "sha256": "e69113d5a4788db27b645db43d564d1ce238ccb8f774c58e3846878d238c4bb7",
+      "bytes": 4044
+    },
+    {
+      "path": "scripts/test_final_startup_gate.py",
+      "sha256": "bed009ad442262763b6e597c7d6b7f494f03532207bac1e865de3d8ddd53ab7d",
+      "bytes": 5078
+    },
+    {
+      "path": "scripts/test_gate_order_and_identity.py",
+      "sha256": "5bc322c7067b3eda69544b5df3d21bfdc6101334b5fa3e7ea48e523853449f69",
+      "bytes": 8317
+    },
+    {
+      "path": "scripts/test_issue_relocation.py",
+      "sha256": "39890e93c822c6c2701db1cef52faf191cd19e2eeef5b3f3e5e4bf85cceedf39",
+      "bytes": 12027
+    },
+    {
+      "path": "scripts/test_package_checks.py",
+      "sha256": "a8dd8046349e1fa0b6c42ec1457ddf99d24068e4fa79c44eb75e6735259c7d91",
+      "bytes": 12363
+    },
+    {
+      "path": "scripts/test_package_reuse.py",
+      "sha256": "4d79f88796f87bfd43b3c38492f1fe71217f290f0d54a6ab23479f64e185f73a",
+      "bytes": 4975
+    },
+    {
+      "path": "scripts/test_resource_and_issue_obligations.py",
+      "sha256": "8a13414380af2e3fef29bc55e0b51f2791a20db3db9179a79fd895ff295ae075",
+      "bytes": 15878
+    },
+    {
+      "path": "scripts/test_sound_settings_profile.py",
+      "sha256": "209df017e383579012691ae6e7ebc6815a19667274e804dc8587fc0c143ec74d",
+      "bytes": 11124
+    },
+    {
+      "path": "scripts/test_webp_decode_probe.cjs",
+      "sha256": "1180e07ee9e62603312ac53c2d8f97f424883431320a8a125bbff48b013a3df6",
+      "bytes": 1822
+    }
+  ]
+}

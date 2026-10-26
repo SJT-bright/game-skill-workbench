@@ -4373,7 +4373,7 @@
     "path": "/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v81-clean-upload-20261026/qa/renderer-runner.py",
     "sha256": "3e0144c3892e7d2832f02e1a890f8f77029cdb8b0977b69c26c36fae43c440c4",
     "dependencies": {
-      "/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v81-clean-upload-20261026/qa/native-case.mjs": "6fa1e8be978d6fab07f3103408178652b9f4d2dafa9a3b26eca59cbaa258bdbb",
+      "/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v81-clean-upload-20261026/qa/native-case.mjs": "50cd99a718e442ee9badbb55d24a3fb3f147149a10cbc6476da0712603838d3c",
       "/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v81-clean-upload-20261026/qa/run-native-case.py": "98c85a26d98a5c0663f79cb8610edc450357f5711206ac625a328c9deb626a49",
       "/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v81-clean-upload-20261026/qa/native-host/native-host.js": "99145ea6a7bfdf8ea86a7f229c9edc360742ac0541bee2eca815885c07eb82c7",
       "/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v81-clean-upload-20261026/qa/native-host/fault-server.py": "5095d2ddefdabf7b7f33dd7336d1e2de86a5996b9ac3c0680bd64443b4bdb259"

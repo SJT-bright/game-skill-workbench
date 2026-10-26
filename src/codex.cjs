@@ -1,7 +1,7 @@
 const fs=require('node:fs/promises');const path=require('node:path');const os=require('node:os');const {spawn}=require('node:child_process');const readline=require('node:readline');
 const activeReaders=new Set();
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const STAGES=['玩法制作','玩法结束','美工制作','待试玩','检查','已完成'];
+const STAGES=['玩法制作','玩法结束','美工制作','待试玩','游玩','检查','已完成'];
 const READ_METHODS=new Set(['initialize','thread/list','thread/turns/list','thread/items/list']);
 async function executable(){
  const home=os.homedir(),platform=process.platform,arch=process.arch;const triple=platform==='win32'?(arch==='arm64'?'aarch64-pc-windows-msvc':'x86_64-pc-windows-msvc'):(arch==='arm64'?'aarch64-apple-darwin':'x86_64-apple-darwin');
@@ -25,7 +25,7 @@ class Reader{
 }
 function textOf(entry){const i=entry.item||entry;if(i.type==='agentMessage')return {role:'assistant',text:String(i.text||'')};if(i.type==='userMessage')return {role:'user',text:(i.content||[]).filter(c=>c.type==='text').map(c=>c.text||'').join('\n')};return null;}
 function inferStage(messages){
- const patterns=[['已完成',/(?:游戏|项目|本游戏|制作)(?:已全部完成|已完成交付|全部完成)|正式完成|最终验收(?:已)?通过/],['待试玩',/美工(?:阶段)?(?:已)?(?:完成|结束|通过)|(?:等待|待|请你|交给你|给你)(?:进行)?(?:本地)?试玩|待试玩/],['检查',/进入(?:成品)?检查|检查阶段|开始(?:检查|验收)|正在(?:检查|验收)|检测成品|执行.*(?:检查|验收)/],['美工制作',/开始(?:做|进行)?美工|进入美工|美工(?:制作|阶段)|(?:修改|修复|调整|重做|替换).{0,12}(?:美术|界面|按钮|贴图|音效)|美术与声音|换皮/],['玩法结束',/玩法(?:制作|阶段)?(?:已)?(?:完成|结束|通过)|玩法确认(?:已)?(?:完成|通过)/],['玩法制作',/玩法制作|制作玩法|开始(?:制作|重塑)|(?:新增|修复|调整|修改|检查).{0,10}(?:玩法|关卡|机制)|玩法阶段/]];
+ const patterns=[['已完成',/(?:游戏|项目|本游戏|制作)(?:已全部完成|已完成交付|全部完成)|正式完成|最终验收(?:已)?通过/],['待试玩',/美工(?:制作|阶段)?(?:已|已经)?(?:完成|结束|通过)|(?:等待|待|请你|交给你|给你)(?:进行)?(?:本地)?试玩|待试玩/],['游玩',/正在(?:本地)?试玩|进入(?:本地)?(?:游玩|试玩)阶段|游玩阶段|开始(?:本地)?试玩/],['检查',/进入(?:成品)?检查|检查阶段|开始(?:检查|验收)|正在(?:检查|验收)|检测成品|执行.*(?:检查|验收)/],['美工制作',/开始(?:做|进行)?美工|进入美工|美工(?:制作|阶段)|(?:修改|修复|调整|重做|替换).{0,12}(?:美术|界面|按钮|贴图|音效)|美术与声音|换皮/],['玩法结束',/玩法(?:制作|阶段)?(?:已|已经)?(?:完成|结束|通过)|玩法确认(?:已)?(?:完成|通过)/],['玩法制作',/玩法制作|制作玩法|开始(?:制作|重塑)|(?:新增|修复|调整|修改|检查).{0,10}(?:玩法|关卡|机制)|玩法阶段/]];
  for(let n=messages.length-1;n>=0;n--){const message=messages[n];const text=message.text.replace(/```[\s\S]*?```/g,'').slice(-7000);const lines=text.split(/[\n。！？，,；;]/).map(s=>s.trim()).filter(Boolean);
   for(let j=lines.length-1;j>=0;j--){const line=lines[j];if(/尚未|还未|未开始|不要|暂不|没有完成|未完成|未通过|之前|此前|历史|上次|不能(?:称|视为)|不代表|之后|下一阶段|下一步|接下来|后续|计划|需要先/.test(line))continue;
    for(const [stage,re]of patterns)if(re.test(line))return {stage,evidence:line.slice(0,200),role:message.role,certainty:'explicit'};
@@ -35,7 +35,7 @@ function inferStage(messages){
 }
 function isGameThread(t,roots=[]){
  const title=String(t.name||t.title||''),cwd=String(t.cwd||'');
- if(!UUID.test(t.id)||!title||t.archived||t.source==='cli'||/工作台|Skill.*(?:更新|融合|安装)|工坊|批量|统一规则|日报|资讯|软件开发|存储清理|空间清理|股票|短剧|课件|讲稿/i.test(title))return false;
+ if(!UUID.test(t.id)||!title||t.archived||t.ephemeral||t.parentThreadId||t.parent_thread_id||typeof t.source==='object'||['cli','exec','subagent','sub_agent'].includes(t.source)||/工作台|Skill.*(?:更新|融合|安装)|工坊|批量|统一规则|日报|资讯|软件开发|存储清理|空间清理|股票|短剧|课件|讲稿/i.test(title))return false;
  return roots.some(r=>cwd===r||cwd.startsWith(r+path.sep))||/(?:游戏|cocos|(?:^|[\\/])games?(?:[\\/]|$))/i.test(cwd)||/游戏|关卡|重塑|英化|试玩|TikTok|Native|[A-Za-z]+[’']s\s+[A-Za-z]+/.test(title);
 }
 async function discover({roots=[],cache={},limit=40,binary}={}){
@@ -44,7 +44,7 @@ async function discover({roots=[],cache={},limit=40,binary}={}){
   const scoped=rows.filter(t=>isGameThread(t,roots)).slice(0,limit);incomplete=incomplete||rows.filter(t=>isGameThread(t,roots)).length>limit;
   for(const t of scoped){const old=cache[t.id],updated=Number(t.updatedAt)||0;let stageInfo=old?.stageInfo||{stage:null,certainty:'unknown'},contextStatus='cached';
    if(!old||old.updatedAt!==updated){if(Date.now()>reader.deadline-1800){incomplete=true;contextStatus='pending';}else try{const items=await reader.rpc('thread/items/list',{threadId:t.id,limit:180,sortDirection:'desc'});const messages=(items.data||[]).map(textOf).filter(Boolean).reverse();stageInfo=inferStage(messages);contextStatus='read';}catch{contextStatus='unavailable';incomplete=true;}}
-   out.push({threadId:t.id,title:t.name||t.title,path:t.cwd,updatedAt:updated,stageInfo,contextStatus});
+   out.push({threadId:t.id,title:t.name||t.title,path:t.cwd,cwd:t.cwd,rolloutPath:t.path,metadataStatus:t.status,originator:t.originator,source:t.source,forkedFromId:t.forkedFromId||null,updatedAt:updated,stageInfo,contextStatus});
   }
   return {threads:out,incomplete,checkedAt:new Date().toISOString()};
  }finally{await reader.close();}

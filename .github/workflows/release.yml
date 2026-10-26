@@ -45,15 +45,27 @@ jobs:
           $version = node -p "require('./package.json').version"
           $env:SKILL_DOCK_DATA_DIR = Join-Path $PWD '.qa/ci-native'
           $env:SKILL_DOCK_SMOKE_EMBEDDED = '1'
+          New-Item -ItemType Directory -Path '.qa/ci-native' -Force | Out-Null
           $exe = Join-Path $PWD "dist/$version/GameDesk-Skill-$version-win-x64/GameDeskSkill.exe"
-          $process = Start-Process -FilePath $exe -ArgumentList @('--smoke-test','--disable-gpu') -Wait -PassThru
-          if($process.ExitCode -ne 0){throw 'Native Windows smoke failed'}
+          $env:ELECTRON_ENABLE_LOGGING = '1'
+          $process = Start-Process -FilePath $exe -ArgumentList @('--smoke-test','--disable-gpu') -Wait -PassThru -RedirectStandardOutput '.qa/ci-out.log' -RedirectStandardError '.qa/ci-error.log'
+          if($process.ExitCode -ne 0){Get-Content '.qa/ci-error.log' -ErrorAction SilentlyContinue; Get-Content '.qa/ci-native/smoke-error.txt' -ErrorAction SilentlyContinue; throw ('Native Windows smoke failed: '+$process.ExitCode)}
           $report = Get-Content '.qa/ci-native/smoke.json' -Raw | ConvertFrom-Json
           if($report.embeddedCount -lt 15 -or -not $report.api){throw 'Embedded Skill startup verification failed'}
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: desktop-${{ matrix.kind }}
           path: release/*.zip
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.kind == 'win'
+        with:
+          name: windows-startup-proof
+          include-hidden-files: true
+          path: |
+            .qa/ci-native/smoke*.json
+            .qa/ci-native/smoke-error.txt
+            .qa/ci-error.log
   publish:
     needs: build
     runs-on: ubuntu-latest

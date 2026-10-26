@@ -1,0 +1,2 @@
+# Skill manifests bind exact bytes; do not rewrite line endings on Windows checkout.
+* -text

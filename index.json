@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "b6513a3b-a123-489f-9f11-de2ef7cf28d1",
+      "skillId": "s-4e3f250ac61da7fad00b",
+      "directory": "cocos-game-from-starter",
+      "name": "cocos-game-from-starter",
+      "version": "v5",
+      "createdAt": "2026-10-26T16:55:55.965Z",
+      "summary": "文件变更：新增 0，修改 10，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 10,
+        "deleted": 0
+      },
+      "treeHash": "70d59cacdfb0d4d15d194c813367b1c59611d9505868c075e945d64f99bda6de",
+      "bytes": 252530,
+      "fileCount": 99
+    },
+    {
       "id": "44116637-3242-467d-8daa-a9f825495b0f",
       "skillId": "s-deeeaf9abeca146bd263",
       "directory": "cocos-game-logic-check",

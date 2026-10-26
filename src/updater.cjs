@@ -8,7 +8,70 @@ async function safeLinks(root){async function walk(dir){for(const e of await fs.
 async function prepare(update,{repo,root,platform=process.platform,arch=process.arch,onProgress=()=>{},download=github.downloadAsset}={}){const m=manifest(update,repo),pkg=m.packages[platform+'-'+arch];if(!pkg)throw Error('此平台暂无更新包');const dir=path.join(root,'updates',m.version),archive=path.join(dir,'application.zip');await fs.mkdir(dir,{recursive:true});try{await download(repo,pkg.assetId,pkg.url,archive,onProgress);const data=await fs.readFile(archive);if(data.length!==pkg.bytes||crypto.createHash('sha256').update(data).digest('hex')!==pkg.sha256)throw Error('更新包哈希校验失败');zipEntries(data);const extract=path.join(dir,'extracted');await fs.rm(extract,{recursive:true,force:true});await fs.mkdir(extract);if(process.platform==='win32'){const quote=v=>"'"+v.replaceAll("'","''")+"'";await run('powershell.exe',['-NoProfile','-Command','Expand-Archive -LiteralPath '+quote(archive)+' -DestinationPath '+quote(extract)+' -Force'],{windowsHide:true});}else await run('unzip',['-q',archive,'-d',extract]);await safeLinks(extract);let entry=platform==='darwin'?path.join(extract,'游戏工作台.app'):extract;if(platform==='darwin'){const {stdout}=await run('/usr/libexec/PlistBuddy',['-c','Print :CFBundleIdentifier',path.join(entry,'Contents/Info.plist')]);if(stdout.trim()!=='studio.gamedesk.skill.personal')throw Error('更新包应用身份不匹配');await run('codesign',['--verify','--deep','--strict',entry]);}else{const p=JSON.parse(await fs.readFile(path.join(entry,'resources/app/package.json'),'utf8'));if(p.name!=='skill-game-dock'||p.version!==m.version)throw Error('Windows 更新包身份不匹配');const exe=await fs.readFile(path.join(entry,'GameDeskSkill.exe'));if(exe.subarray(0,2).toString()!=='MZ')throw Error('Windows 更新程序无效');}return {version:m.version,archive,entry};}catch(e){await fs.rm(archive,{force:true});throw e;}}
 function sh(v){return "'"+String(v).replaceAll("'","'\\''")+"'";}
 function ps(v){return "'"+String(v).replaceAll("'","''")+"'";}
-function installerScript({platform,target,candidate,pid,receipt,version:nextVersion,bootstrapPointer}){if(!Number.isSafeInteger(pid)||pid<1)throw Error('更新进程无效');const backup=target+'.previous';if(platform==='darwin')return `#!/bin/sh\nset -eu\nn=0\nwhile kill -0 ${pid} 2>/dev/null; do n=$((n+1)); [ "$n" -lt 60 ] || exit 1; sleep 1; done\nif [ -e ${sh(backup)} ]; then rm -rf ${sh(backup)}; fi\nif ! mv ${sh(target)} ${sh(backup)}; then exit 1; fi\nif mv ${sh(candidate)} ${sh(target)}; then\n printf '%s' ${sh(JSON.stringify({status:'installed',version:nextVersion,backup}))} > ${sh(receipt)}\n open ${sh(target)}\nelse\n mv ${sh(backup)} ${sh(target)}\n open ${sh(target)}\nfi\n`;
- return `$ErrorActionPreference = 'Stop'\nWait-Process -Id ${pid} -Timeout 60 -ErrorAction SilentlyContinue\nif(Get-Process -Id ${pid} -ErrorAction SilentlyContinue){exit 1}\n$target=${ps(target)}\n$backup=${ps(backup)}\n$candidate=${ps(candidate)}\ntry {\n if(Test-Path -LiteralPath $backup){Remove-Item -LiteralPath $backup -Recurse -Force}\n if(Test-Path -LiteralPath $target){Move-Item -LiteralPath $target -Destination $backup}\n Move-Item -LiteralPath $candidate -Destination $target\n ${ps(JSON.stringify({status:'installed',version:nextVersion,backup}))} | Set-Content -LiteralPath ${ps(receipt)} -Encoding UTF8\n ${bootstrapPointer?`${ps(JSON.stringify({exe:path.join(target,'GameDeskSkill.exe')}))} | Set-Content -LiteralPath ${ps(bootstrapPointer)} -Encoding UTF8`:''}\n Start-Process -FilePath (Join-Path $target 'GameDeskSkill.exe')\n} catch {\n if(Test-Path -LiteralPath $backup){if(Test-Path -LiteralPath $target){Remove-Item -LiteralPath $target -Recurse -Force};Move-Item -LiteralPath $backup -Destination $target}\n if(Test-Path -LiteralPath (Join-Path $target 'GameDeskSkill.exe')){Start-Process -FilePath (Join-Path $target 'GameDeskSkill.exe')}\n}\n`;}
+function installerScript({platform,target,candidate,pid,receipt,version:nextVersion,bootstrapPointer,fallbackExe,fallbackArgs=[]}){
+ if(!Number.isSafeInteger(pid)||pid<1)throw Error('更新进程无效');const backup=target+'.previous',failed=target+'.failed';
+ if(platform==='darwin')return `#!/bin/sh
+set -eu
+n=0
+while kill -0 ${pid} 2>/dev/null; do n=$((n+1)); [ "$n" -lt 60 ] || exit 1; sleep 1; done
+if [ -e ${sh(backup)} ]; then rm -rf ${sh(backup)}; fi
+mv ${sh(target)} ${sh(backup)} || exit 1
+if ! mv ${sh(candidate)} ${sh(target)}; then mv ${sh(backup)} ${sh(target)}; open ${sh(target)}; exit 1; fi
+printf '%s' ${sh(JSON.stringify({status:'installed',version:nextVersion,backup}))} > ${sh(receipt)}
+${sh(path.join(target,'Contents/MacOS/GameDeskSkill'))} >/dev/null 2>&1 &
+new_pid=$!
+n=0
+healthy=0
+while [ "$n" -lt 60 ]; do
+ if /usr/bin/grep -q '"status"[[:space:]]*:[[:space:]]*"confirmed"' ${sh(receipt)}; then healthy=1; break; fi
+ kill -0 "$new_pid" 2>/dev/null || break
+ n=$((n+1)); sleep 1
+done
+if [ "$healthy" = 1 ]; then rm -rf ${sh(backup)}; exit 0; fi
+kill -TERM "$new_pid" 2>/dev/null || true
+n=0
+while kill -0 "$new_pid" 2>/dev/null && [ "$n" -lt 5 ]; do n=$((n+1)); sleep 1; done
+kill -KILL "$new_pid" 2>/dev/null || true
+if [ -e ${sh(failed)} ]; then rm -rf ${sh(failed)}; fi
+mv ${sh(target)} ${sh(failed)}
+mv ${sh(backup)} ${sh(target)}
+printf '%s' ${sh(JSON.stringify({status:'rolled-back',version:nextVersion,failed,reason:'startup-not-confirmed'}))} > ${sh(receipt)}
+open ${sh(target)}
+`;
+ return `$ErrorActionPreference = 'Stop'
+Wait-Process -Id ${pid} -Timeout 60 -ErrorAction SilentlyContinue
+if(Get-Process -Id ${pid} -ErrorAction SilentlyContinue){exit 1}
+$target=${ps(target)}
+$backup=${ps(backup)}
+$candidate=${ps(candidate)}
+$failed=${ps(failed)}
+$newProcess=$null
+$hadOld=Test-Path -LiteralPath $target
+try {
+ if(Test-Path -LiteralPath $backup){Remove-Item -LiteralPath $backup -Recurse -Force}
+ if($hadOld){Move-Item -LiteralPath $target -Destination $backup}
+ Move-Item -LiteralPath $candidate -Destination $target
+ [IO.File]::WriteAllText(${ps(receipt)},${ps(JSON.stringify({status:'installed',version:nextVersion,backup}))},[Text.UTF8Encoding]::new($false))
+ $newProcess=Start-Process -FilePath (Join-Path $target 'GameDeskSkill.exe') -PassThru
+ $healthy=$false
+ for($n=0;$n -lt 60;$n++){
+  try {$current=Get-Content -LiteralPath ${ps(receipt)} -Raw | ConvertFrom-Json; if($current.status -eq 'confirmed' -and $current.version -eq ${ps(nextVersion)}){$healthy=$true;break}}catch{}
+  if($newProcess.HasExited){break}
+  Start-Sleep -Seconds 1
+ }
+ if(-not $healthy){throw 'New application startup was not confirmed'}
+ ${bootstrapPointer?`[IO.File]::WriteAllText(${ps(bootstrapPointer)},${ps(JSON.stringify({exe:path.join(target,'GameDeskSkill.exe')}))},[Text.UTF8Encoding]::new($false))`:''}
+ if(Test-Path -LiteralPath $backup){Remove-Item -LiteralPath $backup -Recurse -Force}
+} catch {
+ if($newProcess -and -not $newProcess.HasExited){Stop-Process -Id $newProcess.Id -Force -ErrorAction SilentlyContinue}
+ if(Test-Path -LiteralPath $failed){Remove-Item -LiteralPath $failed -Recurse -Force}
+ if(Test-Path -LiteralPath $target){Move-Item -LiteralPath $target -Destination $failed}
+ if(Test-Path -LiteralPath $backup){Move-Item -LiteralPath $backup -Destination $target}
+ [IO.File]::WriteAllText(${ps(receipt)},${ps(JSON.stringify({status:'rolled-back',version:nextVersion,failed,reason:'startup-not-confirmed'}))},[Text.UTF8Encoding]::new($false))
+ if($hadOld -and (Test-Path -LiteralPath (Join-Path $target 'GameDeskSkill.exe'))){Start-Process -FilePath (Join-Path $target 'GameDeskSkill.exe')}
+ ${fallbackExe?`elseif(Test-Path -LiteralPath ${ps(fallbackExe)}){Start-Process -FilePath ${ps(fallbackExe)}${fallbackArgs.length?' -ArgumentList @('+fallbackArgs.map(a=>ps('"'+a+'"')).join(',')+')':''}}`:''}
+}
+`;
+}
 function installerBytes(script,platform=process.platform){return Buffer.from((platform==='win32'?'\uFEFF':'')+script,'utf8');}
 module.exports={installerBytes,version,newer,manifest,check,zipEntries,safeLinks,prepare,installerScript};

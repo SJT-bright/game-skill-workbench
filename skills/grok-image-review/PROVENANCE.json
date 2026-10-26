@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "grok-image-review",
-  "previous_provenance_sha256": "0218603bb2559545496f3fab025561e82029fe299045d5f8d1907331c9740bd5",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "8df3703e1c93c37ba83c448b940fc814059b796e23f04004ed1ede0c64a748d4",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

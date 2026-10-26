@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "desktop-agent-orchestrator",
-  "previous_provenance_sha256": "27553569a162784a6faa33759b89436bb44a86f8a9a21106a103c56f6c87c81d",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "7fc277fce1ac445907932a70c544ba0f6e55772473d65fda2b9ce67340516d38",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

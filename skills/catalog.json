@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T16:33:22.563Z",
-  "treeHash": "ce635c3319773ae223fa0f64524aa5fbb1a2559c60805bce0f2976ae27342ad1",
+  "createdAt": "2026-10-26T16:34:07.735Z",
+  "treeHash": "dd08d452f908e36a73383ac12a7dc1b0e9a99289fa8e6d755c8877fe9423d6b3",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2811,14 +2811,14 @@
     },
     {
       "name": "desktop-agent-orchestrator",
-      "treeHash": "ad753de78dedeb230328bbc1267d56c9af5c6fbaaec5be7f59deccb7af9f6fb8",
+      "treeHash": "b487033e82c1a8412c9a533512aa1af2d0da3724957c1559768956d743f710dd",
       "fileCount": 13,
-      "bytes": 94593,
+      "bytes": 94572,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7fc277fce1ac445907932a70c544ba0f6e55772473d65fda2b9ce67340516d38",
-          "size": 2290,
+          "hash": "3d09744ed9dd537259f42625b5f766dd318553d1c1a65d8a3c3d5978a3ff798e",
+          "size": 2269,
           "executable": false
         },
         {

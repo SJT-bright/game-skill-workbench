@@ -1,0 +1,235 @@
+{
+  "id": "750b5ce6-b69d-48f2-9b27-061464c4f4b4",
+  "skillId": "s-6d7f9e585fef16dafd8d",
+  "directory": "game-audio-library",
+  "name": "game-audio-library",
+  "version": "v3",
+  "createdAt": "2026-10-26T16:47:30.683Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "6871e12a0a56861c2f04e699eb39aa194b405a06403f1fe8583c7e1ec87d9038",
+  "bytes": 546797,
+  "fileCount": 36,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "b154e845e6d77cf5174db6eed6a31e9affbc857ecdc357ecdaaaa3c86db76dad",
+      "size": 5938,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "b8b710973daa95c63e7b3cb1a9067848a92d5a9bfaf5a08db122f664bcfdfab9",
+      "size": 19463,
+      "executable": false
+    },
+    {
+      "path": "cocos24/GameAudioButton.js",
+      "hash": "bdef6cb16217224329cb7797e9985c6b7826bd222299284d3ed0dc6d870deddc",
+      "size": 1384,
+      "executable": false
+    },
+    {
+      "path": "cocos24/GameAudioManager.js",
+      "hash": "3591ebd5002ad1ebad7ea0e28504148aa964380b83f516a8ee62d321e7127c1d",
+      "size": 18890,
+      "executable": false
+    },
+    {
+      "path": "cocos3x/GameAudioButton.ts",
+      "hash": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
+      "size": 1370,
+      "executable": false
+    },
+    {
+      "path": "cocos3x/GameAudioManager.ts",
+      "hash": "eaa3f95cb0f07f79769488766014a4fa97f69de88dc8e816eb65194a061dc700",
+      "size": 20552,
+      "executable": false
+    },
+    {
+      "path": "references/keywords.md",
+      "hash": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
+      "size": 4328,
+      "executable": false
+    },
+    {
+      "path": "references/portable-library.md",
+      "hash": "b24a183a1178c45ccce2a1fad118c187f7035658f0789cbaa0d006c0b584ab4e",
+      "size": 4918,
+      "executable": false
+    },
+    {
+      "path": "references/sources.md",
+      "hash": "7631c45240cc20102859e1802cc3f57755a09a89a5ad30306a6881b9f8bed352",
+      "size": 5232,
+      "executable": false
+    },
+    {
+      "path": "references/theme-library.md",
+      "hash": "cffc8e788fe4833021fc697774c1931fb93e274d449bf1b1d3526c566a1f9301",
+      "size": 4002,
+      "executable": false
+    },
+    {
+      "path": "scripts/add_credit.py",
+      "hash": "6755d6fea34bf18d41cb4bf3692d9d9fd33df7bb3c85c3b44b57f59cb884d020",
+      "size": 1931,
+      "executable": false
+    },
+    {
+      "path": "scripts/audio_identity.py",
+      "hash": "8490e34d5188040c96ff68efe960f758e4ddf6edd6418106a661a04171d5000d",
+      "size": 3401,
+      "executable": false
+    },
+    {
+      "path": "scripts/audio_pipeline.py",
+      "hash": "1f5badca5428113c9b170e334ed0e4181caa4fdf76d55e901585bed3dd08e8c9",
+      "size": 12364,
+      "executable": false
+    },
+    {
+      "path": "scripts/audition.py",
+      "hash": "8478c3f5c88781f9e1ee375542de8b72b4aea96b933a2a16257a7822de61d16a",
+      "size": 14084,
+      "executable": false
+    },
+    {
+      "path": "scripts/browser_fetch.py",
+      "hash": "ecd938fbafe12976f0c595626ef11c161b8e63117eb93033b3560bae41055c09",
+      "size": 11377,
+      "executable": false
+    },
+    {
+      "path": "scripts/build_index.py",
+      "hash": "7f0cfe32612599b00734def0730913a25cf012aaef566b73f455b0cc4ffc869a",
+      "size": 17212,
+      "executable": false
+    },
+    {
+      "path": "scripts/common.py",
+      "hash": "d1265255136a91711a7e63426e04e69d16cf4cc8b9794a702f2fa6e695259e68",
+      "size": 9791,
+      "executable": false
+    },
+    {
+      "path": "scripts/fetch_freesound.py",
+      "hash": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
+      "size": 4439,
+      "executable": false
+    },
+    {
+      "path": "scripts/fetch_oga.py",
+      "hash": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
+      "size": 3506,
+      "executable": false
+    },
+    {
+      "path": "scripts/fetch_openverse.py",
+      "hash": "c3f849bfe6b4279b9e77b0d861a5ba01009d954fe978bbc4fa209f7d52d901fe",
+      "size": 5627,
+      "executable": false
+    },
+    {
+      "path": "scripts/fetch_page.py",
+      "hash": "bc986dd10720bfaf0490961cadaf1f490218d5f744860260504ebedb71e3400f",
+      "size": 7000,
+      "executable": false
+    },
+    {
+      "path": "scripts/install_audio_library.py",
+      "hash": "1031d1ed833ffcc969491f594e45e303d0fdfbfa9d69287bd84ab4d80ddd872e",
+      "size": 21220,
+      "executable": false
+    },
+    {
+      "path": "scripts/library_bundle.py",
+      "hash": "bbd12e32d8f3a54481c95500421e6eb5d588d0ea34550956a9223a270fe9fa83",
+      "size": 18062,
+      "executable": false
+    },
+    {
+      "path": "scripts/process_audio.py",
+      "hash": "7f0cfc8d8f0f2d9359827d2dabe096e7275fc8afa19a82d97604ae4314a91c5b",
+      "size": 17649,
+      "executable": false
+    },
+    {
+      "path": "scripts/search_index.py",
+      "hash": "33e329add52b991d6ca1aa8cc91239dbf29dd1559fb553b894c534ea1c4a0dda",
+      "size": 13724,
+      "executable": false
+    },
+    {
+      "path": "scripts/setup.py",
+      "hash": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
+      "size": 4749,
+      "executable": false
+    },
+    {
+      "path": "scripts/sync_theme_library.py",
+      "hash": "bc8592ed5555e676ab334bd7063d30b1d12b44fb51d0d3530e84c5c3b56db040",
+      "size": 6476,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_audio_diversity.py",
+      "hash": "ed2a45b984e52658e53a5b6891e4e9f205952248e1f77e96cbed2cf9757fe11e",
+      "size": 19826,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_audio_manager_contracts.cjs",
+      "hash": "5f709d01cc5046d30a72a1d988484f82effa80fd7f3708906b7082fe0219668f",
+      "size": 19542,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_index_identity.py",
+      "hash": "ec247e77ae8347631c11babb020a7eccee99724cd81ab9f43920d919b8b51953",
+      "size": 9684,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_library_bundle.py",
+      "hash": "1ba865a4d51d6115df769668c987f9f9b2870915811537b7f17c67d9989e0b3e",
+      "size": 23892,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_process_receipt.py",
+      "hash": "d26542360c6177f9b3dc16795534e61a8625d96ccbeba3ad08ac22647b51b20c",
+      "size": 13328,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_theme_sync_cache.py",
+      "hash": "4a1ffab9799f4275d9f26f7d11757d1c862fe66f321f40ecca61d3de4e80bde7",
+      "size": 8723,
+      "executable": false
+    },
+    {
+      "path": "templates/needs_casual_puzzle.csv",
+      "hash": "0538e696ef7004e0298a2321ae4e7beecea6b3d166fc7ca5d2c1cf94a0e7180a",
+      "size": 3317,
+      "executable": false
+    },
+    {
+      "path": "templates/packs.csv",
+      "hash": "5bc7d9b62d4fac0401c8dd8371a2946383e475e04d3e9bab80e76f6244e74857",
+      "size": 4430,
+      "executable": false
+    },
+    {
+      "path": "templates/theme-packs.json",
+      "hash": "8ab9937a5a8423dce2560b8ddc83149df3ee452a6368980c3ec05f4025c2bcff",
+      "size": 185366,
+      "executable": false
+    }
+  ]
+}

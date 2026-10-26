@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "750b5ce6-b69d-48f2-9b27-061464c4f4b4",
+      "skillId": "s-6d7f9e585fef16dafd8d",
+      "directory": "game-audio-library",
+      "name": "game-audio-library",
+      "version": "v3",
+      "createdAt": "2026-10-26T16:47:30.683Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "6871e12a0a56861c2f04e699eb39aa194b405a06403f1fe8583c7e1ec87d9038",
+      "bytes": 546797,
+      "fileCount": 36
+    },
+    {
       "id": "b8d4f004-8f8f-4105-a4ad-b257a1e52413",
       "skillId": "s-a5a5d4cc5c2308178580",
       "directory": "chrome-mobile-testing",

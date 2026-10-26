@@ -76,7 +76,8 @@ jobs:
           version=$(node -p "require('./package.json').version")
           gh release view "v$version" >/dev/null 2>&1 || gh release create "v$version" --draft --target "$GITHUB_SHA" --title "游戏工作台 $version" --notes-file CHANGELOG.md
           gh release upload "v$version" release/*.zip --clobber
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$version" > release-assets.json
+          release_id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq "[.[] | select(.tag_name==\"v$version\")][0].id")
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > release-assets.json
           node scripts/release-manifest.cjs release-assets.json
           gh release upload "v$version" release/gamedesk-update.json --clobber
           gh release edit "v$version" --draft=false --latest

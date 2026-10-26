@@ -130,6 +130,7 @@ async function main(){
   win.on('move',()=>{if(snapping)return;clearTimeout(snapTimer);snapTimer=setTimeout(()=>{applyDock();emit();},220);});
   await win.loadFile(path.join(__dirname,'../ui/index.html'));dockEdge=config.window?.edge||'right';applyDock(true);win.show();
   if(smoke){
+    config.feedMode='hub';config.repository='';
     await win.webContents.executeJavaScript('window.ready');await handlers.collapse();
     const integration=[];if(process.env.SKILL_DOCK_SMOKE_EMBEDDED==='1'){await seedEmbeddedSkills();await emit();}
     if(process.env.SKILL_DOCK_SMOKE_FIXTURE==='1'){

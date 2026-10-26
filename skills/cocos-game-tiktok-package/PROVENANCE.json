@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "cocos-game-tiktok-package",
-  "previous_provenance_sha256": "222178cfa4a82cf468ef566a5c15a8b2d4b7f895872145ffc7a63cbf81e93f36",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "1b8f62ccc288bfd712a600b6f42882bbfa2ddd289b8f060addd1e2b636f12492",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

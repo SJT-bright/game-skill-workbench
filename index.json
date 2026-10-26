@@ -2,6 +2,74 @@
   "schema": 1,
   "releases": [
     {
+      "id": "baa399e0-446c-4670-a790-4eaf57d2345f",
+      "skillId": "s-4e976859708a939065d7",
+      "directory": "cocos-tiktok-package-check",
+      "name": "cocos-tiktok-package-check",
+      "version": "v2",
+      "createdAt": "2026-10-26T12:08:01.006Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "28adc1bd24a2fabe1a741c818d50329bae8d9547891c25f95e94ff19a8dbdd73",
+      "bytes": 185326,
+      "fileCount": 27
+    },
+    {
+      "id": "ce48b970-f158-4736-ba1d-c7fff32e2986",
+      "skillId": "s-deeeaf9abeca146bd263",
+      "directory": "cocos-game-logic-check",
+      "name": "cocos-game-logic-check",
+      "version": "v2",
+      "createdAt": "2026-10-26T12:08:00.998Z",
+      "summary": "文件变更：新增 0，修改 4，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 4,
+        "deleted": 0
+      },
+      "treeHash": "dfa1023922100626e37f3b66f39c1e53810a8d6e6afcb51218f1c87a7cffd660",
+      "bytes": 52027,
+      "fileCount": 6
+    },
+    {
+      "id": "e88630b7-eca1-4868-8a58-7bb38642c8c1",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v2",
+      "createdAt": "2026-10-26T12:08:00.979Z",
+      "summary": "文件变更：新增 1，修改 8，移除 0。",
+      "changes": {
+        "added": 1,
+        "modified": 8,
+        "deleted": 0
+      },
+      "treeHash": "b7eaed39aa97740fc35fa86badf4ddbd28663ef83edecb5bf6b1a3d1bfa5b20b",
+      "bytes": 8655986,
+      "fileCount": 293
+    },
+    {
+      "id": "468570b7-13b8-4c76-afdc-9d828d4e98d6",
+      "skillId": "s-4e3f250ac61da7fad00b",
+      "directory": "cocos-game-from-starter",
+      "name": "cocos-game-from-starter",
+      "version": "v2",
+      "createdAt": "2026-10-26T12:08:00.920Z",
+      "summary": "文件变更：新增 0，修改 2，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 2,
+        "deleted": 0
+      },
+      "treeHash": "d4f32e6ca60c640c53fdedfac8758a0202fe53a49f32500bf58287c7156d801c",
+      "bytes": 206579,
+      "fileCount": 16
+    },
+    {
       "id": "5401a410-27fb-41f7-ac3b-19eb0d36e5c7",
       "skillId": "s-9b70fe49ec762c63822c",
       "directory": "desktop-agent-orchestrator",

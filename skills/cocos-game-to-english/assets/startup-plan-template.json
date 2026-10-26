@@ -1,0 +1,122 @@
+{
+  "declared_at": "2026-10-21T10:00:00+08:00",
+  "budget_reason": "No fixed finish times (user 2026-10-23): no product target given, so no budgets; audit_startup_loading.py judges stuck (animation, Retry, every route enters) and wasted time from what this game really loads. Add \"budgets\" to a profile only for a real product target, with the reason here.",
+  "viewports": [
+    [
+      393,
+      852
+    ],
+    [
+      412,
+      732
+    ]
+  ],
+  "profiles": {
+    "local": {
+      "network": null,
+      "cold": 3,
+      "warm": 1
+    },
+    "first_network": {
+      "network": {
+        "download_kbps": 10000,
+        "upload_kbps": 5000,
+        "latency_ms": 80
+      },
+      "cold": 3,
+      "warm": 1
+    },
+    "slow_network": {
+      "network": {
+        "download_kbps": 2000,
+        "upload_kbps": 1000,
+        "latency_ms": 150
+      },
+      "cold": 1,
+      "warm": 0
+    }
+  },
+  "animation_freeze_ms": 1000,
+  "frame_gap_ms": 250,
+  "loading_roi": {
+    "bootstrap": [
+      146,
+      380,
+      100,
+      100
+    ],
+    "enter_level": [
+      146,
+      380,
+      100,
+      100
+    ]
+  },
+  "max_home_asset_kb": 500,
+  "home_assets_allowed": [],
+  "idle_timeout_ms": 10000,
+  "old_deadline_ms": 15000,
+  "retry_grace_ms": 2000,
+  "run_plan_example": {
+    "viewport": {
+      "width": 393,
+      "height": 852
+    },
+    "dpr": 2,
+    "profile": "first_network",
+    "cache": "cold",
+    "network": {
+      "download_kbps": 10000,
+      "upload_kbps": 5000,
+      "latency_ms": 80
+    },
+    "timing": true,
+    "record": true,
+    "startup_plan_sha256": "<sha256 of this plan file>",
+    "warmup_js": "(only for cache=warm) condition that the home page is usable",
+    "actions": [
+      {
+        "type": "mark",
+        "name": "first_feedback",
+        "wait_js": "<loading screen visible || home visible>"
+      },
+      {
+        "type": "mark",
+        "name": "home_usable",
+        "wait_js": "<home page shown and PLAY active>",
+        "timeout_ms": 60000
+      },
+      {
+        "type": "tap",
+        "x": 196,
+        "y": 620
+      },
+      {
+        "type": "mark",
+        "name": "play_touch",
+        "wait_js": "<game noticed the PLAY tap>"
+      },
+      {
+        "type": "mark",
+        "name": "level_ready",
+        "wait_js": "<level 1 board ready for input>"
+      },
+      {
+        "type": "tap",
+        "x": 196,
+        "y": 500
+      },
+      {
+        "type": "mark",
+        "name": "first_effect",
+        "wait_js": "<board/score changed by that tap>"
+      }
+    ]
+  },
+  "binding": {
+    "source_sha256": "<final source SHA256 before measuring>",
+    "native_tree_sha256": "<final Native tree SHA256>",
+    "web_tree_sha256": "<final Web tree SHA256>",
+    "build_tag": "<exact final build tag>"
+  }
+}

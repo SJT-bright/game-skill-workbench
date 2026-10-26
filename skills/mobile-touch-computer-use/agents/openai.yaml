@@ -1,0 +1,4 @@
+interface:
+  display_name: "手机触控模拟验收"
+  short_description: "用 Ego Lite 自动检查手机布局、触摸按钮与手势，并保留实际结果证据"
+  default_prompt: "使用 $mobile-touch-computer-use，用 Ego Lite 自动测试当前游戏的手机触控与长屏布局，记录问题和证据。"

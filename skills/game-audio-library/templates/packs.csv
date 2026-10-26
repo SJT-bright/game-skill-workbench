@@ -1,0 +1,28 @@
+key,name,source,type,style,priority,method,page_url,license,author,notes
+kenney_interface,Interface Sounds,kenney,sfx,cute,1,page,https://kenney.nl/assets/interface-sounds,CC0,Kenney,UI 点击、弹窗、切换；小游戏首选
+kenney_ui_audio,UI Audio,kenney,sfx,cute,1,page,https://kenney.nl/assets/ui-audio,CC0,Kenney,UI 点击、开关
+kenney_digital,Digital Audio,kenney,sfx,retro,2,page,https://kenney.nl/assets/digital-audio,CC0,Kenney,电子音、提示音、升级音
+kenney_impact,Impact Sounds,kenney,sfx,cute,2,page,https://kenney.nl/assets/impact-sounds,CC0,Kenney,放置、碰撞、落地
+kenney_casino,Casino Audio,kenney,sfx,cute,1,page,https://kenney.nl/assets/casino-audio,CC0,Kenney,金币、筹码、卡牌洗牌——奖励音很好用
+kenney_jingles,Music Jingles,kenney,music,cute,1,page,https://kenney.nl/assets/music-jingles,CC0,Kenney,胜利/失败短音乐
+kenney_rpg,RPG Audio,kenney,sfx,cute,3,page,https://kenney.nl/assets/rpg-audio,CC0,Kenney,翻书、开箱、布料等
+kenney_voiceover,Voiceover Pack,kenney,sfx,cute,3,page,https://kenney.nl/assets/voiceover-pack,CC0,Kenney,"Ready / Go / You win 这类英文语音，出海英化游戏可用"
+oga_jrpg_calm,JRPG Pack 4 Calm,opengameart,music,cute,2,page,https://opengameart.org/content/jrpg-pack-4-calm,CC0,Juhani Junkala,平静温柔的循环 BGM
+oga_jrpg_explore,JRPG Pack 1 Exploration,opengameart,music,cute,2,page,https://opengameart.org/content/jrpg-pack-1-exploration,CC0,Juhani Junkala,轻快探索类 BGM
+oga_chiptune_adv,4 Chiptunes (Adventure),opengameart,music,retro,3,page,https://opengameart.org/node/74001,CC0,Juhani Junkala,像素风游戏用
+mixkit_game_sfx,Mixkit Game SFX,mixkit,sfx,cute,1,page,https://mixkit.co/free-sound-effects/game/,Mixkit Sound Effects Free License,Mixkit,游戏音效分类页
+mixkit_click_sfx,Mixkit Click SFX,mixkit,sfx,cute,1,page,https://mixkit.co/free-sound-effects/click/,Mixkit Sound Effects Free License,Mixkit,点击音
+mixkit_notification,Mixkit Notification SFX,mixkit,sfx,cute,2,page,https://mixkit.co/free-sound-effects/notification/,Mixkit Sound Effects Free License,Mixkit,提示/弹窗/奖励
+mixkit_win,Mixkit Win SFX,mixkit,sfx,cute,2,page,https://mixkit.co/free-sound-effects/win/,Mixkit Sound Effects Free License,Mixkit,胜利短音
+mixkit_music_happy,Mixkit Happy Music,mixkit,music,cute,2,page,https://mixkit.co/free-stock-music/mood/happy/,Mixkit Stock Music Free License,Mixkit,欢快音乐；首次用确认音乐授权页
+tallbeard_loops,FREE Music Loop Bundle,itch,music,any,3,browser,https://tallbeard.itch.io/music-loop-bundle,(读取页面),Abstraction / Tallbeard Studios,150+ 循环曲，风格杂，挑可爱轻快的
+itch_free_music,itch.io 免费音乐素材,itch,music,cute,2,browser,https://itch.io/game-assets/free/tag-music,(读取页面),,逐包读授权；搜 cute / casual / cozy
+itch_free_sfx,itch.io 免费音效素材,itch,sfx,cute,2,browser,https://itch.io/game-assets/free/tag-sound-effects,(读取页面),,逐包读授权
+pixabay_music,Pixabay Music,pixabay,music,cute,1,browser,https://pixabay.com/music/,Pixabay Content License,,BGM 首选来源，免署名
+pixabay_sfx,Pixabay Sound Effects,pixabay,sfx,cute,1,browser,https://pixabay.com/sound-effects/,Pixabay Content License,,音效补充，免署名
+zapsplat,ZapSplat,zapsplat,sfx,cute,3,browser,https://www.zapsplat.com/,ZapSplat Standard License (attribution),,需署名；上架前看一眼官网授权
+99sounds,99Sounds,gumroad,sfx,any,4,browser,https://99sounds.org/free-sound-effects/,Royalty-free (99Sounds),99Sounds,偏电影/写实，少量可用
+sonniss_gdc,Sonniss GameAudioGDC,sonniss,sfx,any,4,torrent,https://sonniss.com/gameaudiogdc,Sonniss GDC royalty-free,Sonniss,几 GB 一包，用 qBittorrent 只勾选 UI / Cartoon / Magic 文件夹；禁止用于 AI 训练
+bigsoundbank,BigSoundBank,bigsoundbank,sfx,any,4,page-single,https://bigsoundbank.com/,CC0,Joseph Sardin,写实录音，个别可用（按单个音效页面下载）
+incompetech,incompetech (Kevin MacLeod),incompetech,music,any,3,page-single,https://incompetech.com/music/royalty-free/music.html,CC BY 4.0,Kevin MacLeod,需署名：Music by Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0
+soundimage,soundimage.org (Eric Matyas),soundimage,both,cute,3,page-single,https://soundimage.org/,soundimage attribution license,Eric Matyas,需署名；有大量“puzzle / funny”循环曲

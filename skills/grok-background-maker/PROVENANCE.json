@@ -1,0 +1,36 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-23.fused-v7",
+  "skill": "grok-background-maker",
+  "previous_provenance_sha256": "0a72e4b0139d8dae676205d6487807d91c3f65c5931f2590902062db065bd5e9",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
+      "local_before_sha256": "02c666d001e33974cebccc22b307c3a492e812903864d1a8e232e58b350a2354",
+      "uploaded_sha256": "a93b2c58f907552da46994ba0e2c6458fb18d558dd716b38a0a821d0257bbc01",
+      "origin": "integrated-or-new"
+    },
+    {
+      "path": "references/jobs.md",
+      "sha256": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
+      "local_before_sha256": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
+      "uploaded_sha256": "60dfab528b4f31460268dc0ce5e6aa527f56aeb40eec1d25070d30fad3333314",
+      "origin": "local"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+      "local_before_sha256": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+      "uploaded_sha256": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+      "origin": "both-identical"
+    },
+    {
+      "path": "scripts/run_jobs.py",
+      "sha256": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+      "local_before_sha256": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+      "uploaded_sha256": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+      "origin": "both-identical"
+    }
+  ]
+}

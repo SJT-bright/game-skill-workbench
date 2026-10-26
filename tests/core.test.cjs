@@ -1,0 +1,44 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs/promises');const os=require('node:os');const path=require('node:path');const {execFileSync}=require('node:child_process');
+const {HubStore,ClientStore,startHub,collect,makePrompt,validateRelease,readJSON,connection,digest}=require('../src/core.cjs');const {zipFolder,crc32}=require('../src/zip.cjs');
+async function fixture(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'skill-dock-test-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const source=path.join(root,'source');await fs.mkdir(path.join(source,'references'),{recursive:true});await fs.writeFile(path.join(source,'SKILL.md'),'# Game Skill\nKeep saves.');await fs.writeFile(path.join(source,'references','mobile.md'),'Phone layout.');return {root,source,store:new HubStore(path.join(root,'hub'))};}
+test('Two independent clients receive files, publish update, restore on demand, keep one local tree',async t=>{
+ const {root,source,store}=await fixture(t);const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token};const v1=await store.publish(source,'Game Art','手机按钮标准');const a=new ClientStore(path.join(root,'mac')),b=new ClientStore(path.join(root,'windows'));
+ assert.equal((await a.sync(c)).releases.length,1);assert.equal(await fs.stat(path.join(a.root,'skills')).then(()=>true,()=>false),false,'index must not download historical files');
+ const installed=await a.install(c,v1.release.id);await b.install(c,v1.release.id);assert.equal(await fs.readFile(path.join(installed.path,'SKILL.md'),'utf8'),'# Game Skill\nKeep saves.');
+ await fs.writeFile(path.join(source,'SKILL.md'),'# Game Skill\nNew mobile standard.');const v2=await store.publish(source,'Game Art','新增重开检查');assert.equal(v2.release.version,'v2');assert.deepEqual(v2.release.changes,{added:0,modified:1,deleted:0});assert.equal((await store.publish(source,'Game Art')).changed,false);
+ assert.equal((await a.sync(c)).releases.length,2);await a.install(c,v2.release.id);await b.install(c,v2.release.id);assert.match(await fs.readFile(path.join(installed.path,'SKILL.md'),'utf8'),/New mobile/);
+ assert.equal((await fs.readdir(path.join(root,'hub','blobs'))).length,3,'unchanged reference stored once');
+ await a.install(c,v1.release.id);assert.match(await fs.readFile(path.join(installed.path,'SKILL.md'),'utf8'),/Keep saves/);assert.equal((await a.state())[v1.release.skillId].id,v1.release.id);assert.equal((await b.state())[v1.release.skillId].id,v2.release.id);
+ assert.deepEqual(await fs.readdir(path.join(a.root,'skills')),[v1.release.skillId]);assert.equal((await a.sync(c)).releases[0].id,v2.release.id);
+});
+test('SSE push is delivered; wrong credentials denied; cross-origin browser requests denied',async t=>{
+ const {store}=await fixture(t);const h=await startHub(store);t.after(()=>h.close());const base=`http://127.0.0.1:${h.port}`;assert.equal((await fetch(base+'/index.json')).status,401);assert.equal((await fetch(base+'/index.json',{headers:{Authorization:'Bearer '+h.token,Origin:'https://untrusted.example'}})).status,403);
+ const controller=new AbortController();t.after(()=>controller.abort());const response=await fetch(base+'/events',{headers:{Authorization:'Bearer '+h.token},signal:controller.signal});const reader=response.body.getReader();await reader.read();h.notify();const data=await reader.read();assert.match(Buffer.from(data.value).toString(),/data: changed/);controller.abort();
+});
+test('Corrupt downloaded blobs fail without replacing current files or ledger',async t=>{
+ const {root,source,store}=await fixture(t);const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token};const old=await store.publish(source,'Game');const client=new ClientStore(path.join(root,'client'));const installed=await client.install(c,old.release.id);
+ await fs.writeFile(path.join(source,'SKILL.md'),'corrupt candidate');const update=await store.publish(source,'Game');const release=await store.release(update.release.id);const f=release.files.find(f=>f.path==='SKILL.md');await fs.writeFile(path.join(root,'hub','blobs',f.hash),'tampered');await assert.rejects(client.install(c,release.id),/哈希/);assert.equal((await client.state())[old.release.skillId].id,old.release.id);assert.match(await fs.readFile(path.join(installed.path,'SKILL.md'),'utf8'),/Keep saves/);assert.deepEqual(await fs.readdir(path.join(client.root,'skills')),[old.release.skillId]);
+});
+test('Reject traversal, Windows special filenames, duplicate names, symlinks and local-only Skill',async t=>{
+ const {root,source,store}=await fixture(t);const pub=await store.publish(source,'Game');const r=await store.release(pub.release.id);
+ for(const name of ['../escape','/absolute','a\\b','CON.txt','dir/../bad','a:b','a.','cocos-game-finished-product-check/SKILL.md']){const bad=structuredClone(r);bad.files[0].path=name;bad.treeHash=digest(JSON.stringify(bad.files));assert.throws(()=>validateRelease(bad));}
+ const duplicate=structuredClone(r);duplicate.files.push({...duplicate.files[0],path:duplicate.files[0].path.toLowerCase()});duplicate.treeHash=digest(JSON.stringify(duplicate.files));assert.throws(()=>validateRelease(duplicate));
+ if(process.platform!=='win32'){await fs.symlink(path.join(source,'SKILL.md'),path.join(source,'link.md'));await assert.rejects(collect(source),/符号链接/);}
+ const localOnly=path.join(root,'cocos-game-finished-product-check');await fs.mkdir(localOnly);await assert.rejects(collect(localOnly),/本机专用/);
+});
+test('Source deletion is reflected in release and replacing current tree removes obsolete files',async t=>{
+ const {root,source,store}=await fixture(t);const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token};const first=await store.publish(source,'Game');const client=new ClientStore(path.join(root,'client'));await client.install(c,first.release.id);await fs.rm(path.join(source,'references','mobile.md'));const second=await store.publish(source,'Game');assert.equal(second.release.changes.deleted,1);const now=await client.install(c,second.release.id);assert.equal(await fs.stat(path.join(now.path,'references','mobile.md')).then(()=>true,()=>false),false);
+});
+test('Prompt binds exact game, local version, content hash and update summary; ZIP keeps UTF-8 files',async t=>{
+ const {root,source,store}=await fixture(t);const p=await store.publish(source,'游戏重塑','补充手机重开');const prompt=makePrompt({name:'月亮面包房',path:'C:\\Games\\Moon'}, {...p.release,path:'C:\\Skills\\Art'},'check');assert.match(prompt,/月亮面包房/);assert.match(prompt,/C:\\Games\\Moon/);assert.ok(prompt.includes(p.release.treeHash));assert.match(prompt,/补充手机重开/);assert.match(prompt,/检查当前游戏/);assert.throws(()=>makePrompt(null,null));
+ await fs.writeFile(path.join(source,'开始这里.md'),prompt);const zip=path.join(root,'交接.zip');await zipFolder(source,zip);assert.equal(crc32(Buffer.from('123456789')),0xcbf43926);if(process.platform!=='win32'){assert.match(execFileSync('unzip',['-t',zip],{encoding:'utf8'}),/No errors detected/);}
+});
+test('Public plain HTTP rejected; private LAN and HTTPS accepted; credentials in URLs rejected',()=>{
+ const token='a'.repeat(48);assert.throws(()=>connection({url:'http://example.com',token}),/HTTPS/);assert.throws(()=>connection({url:'https://user:secret@example.com',token}));assert.equal(connection({url:'http://192.168.1.10:47831',token}).url,'http://192.168.1.10:47831');assert.equal(connection({url:'https://example.com/',token}).url,'https://example.com');
+});
+test('UPDATE.md supplies file-based release notes, including automatic publication',async t=>{
+ const {source,store}=await fixture(t);await fs.writeFile(path.join(source,'UPDATE.md'),'补充手机重开与存档契约。');const p=await store.publish(source,'Game');assert.equal(p.release.summary,'补充手机重开与存档契约。');
+});
+test('Interrupted install restores the prior tree before reading current state',async t=>{
+ const {root,source,store}=await fixture(t);const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token};const p=await store.publish(source,'Game');const client=new ClientStore(path.join(root,'client'));const installed=await client.install(c,p.release.id);const stageId='interrupted-stage';const old=installed.path+'.previous';await fs.rename(installed.path,old);await fs.mkdir(installed.path);await fs.writeFile(path.join(installed.path,'SKILL.md'),'partial candidate');await fs.mkdir(installed.path+'.stage-'+stageId);await fs.writeFile(path.join(client.root,'transaction.json'),JSON.stringify({skillId:p.release.skillId,releaseId:'uncommitted',stageId,had:true}));await client.recover();assert.match(await fs.readFile(path.join(installed.path,'SKILL.md'),'utf8'),/Keep saves/);assert.deepEqual(await fs.readdir(path.join(client.root,'skills')),[p.release.skillId]);
+});

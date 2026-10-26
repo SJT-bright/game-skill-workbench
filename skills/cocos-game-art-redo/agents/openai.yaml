@@ -1,0 +1,4 @@
+interface:
+  display_name: "只改美工（重做美工/按钮/logo/图标）"
+  short_description: "按用户范围重做美术、按钮或图标；局部查受影响整页，整套重做完整验收"
+  default_prompt: "使用 $cocos-game-art-redo 按本次指定范围修改游戏美工，检查受影响整页和操作，通过后给我本地预览链接。"

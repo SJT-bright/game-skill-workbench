@@ -1,0 +1,4 @@
+interface:
+  display_name: "打包（只出可直接上传的 TikTok 平台包）"
+  short_description: "用户说打包、出包、上传测试包、检测包、压缩包、TikTok 平台包时用：只出一种包——Native 构建、根目录直接 game.js/game.json/project.config.json、resources 进普通分包、主包≤4,000,000 总包≤30,000,000；严禁外层文件夹、Web 冒充、源码、ZIP 套 ZIP；用 make_tiktok_zip.py 出包并给同版试玩链接"
+  default_prompt: "使用 $cocos-game-tiktok-package 打包：导出 Native 构建、确认 resources 是普通分包，用 make_tiktok_zip.py 出包（带门禁、超限拒绝、回读核对），回复同版试玩链接、ZIP 链接、App ID 和主包/总包体积表。"

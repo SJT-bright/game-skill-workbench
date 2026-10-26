@@ -1,0 +1,1394 @@
+{
+  "schema": 1,
+  "revision": "2026-10-24.fused-v8",
+  "purpose": "Reusable mechanism checks for Cocos/TikTok games, with advertising and rewards first. Individual designs, mechanics, concrete values and incident histories remain in each project.",
+  "items": [
+    {
+      "id": "AD-01",
+      "feature": "ads",
+      "title": "实际广告入口与整组配置",
+      "steps": "从实际界面和序列化事件双向盘点每个入口，沿按钮→业务→SDK→广告位→奖励目标追踪；核当前App、公开Key、各广告位及源码/Native/ZIP对应。",
+      "expected": "所有可达入口绑定正确用途与当前配置；备用位和未核实归属/启用单列；不使用或保存Client Secret。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "点了看广告按钮，却播了别的广告位或根本没请求；源码、Native、ZIP里的广告ID不一致。"
+    },
+    {
+      "id": "AD-02",
+      "feature": "ads",
+      "title": "严格完成与一次发奖",
+      "steps": "依据真实SDK完成契约检查show成功但未关闭、监听注册时的早close、提前关闭、未完成/缺字段/错误类型，以及完整、重复、冲突和迟到结果；在await续体执行前取消owner或换目标。",
+      "expected": "仅已实际请求展示、仍属当前有效目标的明确完成结果触发一次正确奖励；show resolve、早close、预览、取消、错误及失效旧结果均不奖；基础奖励和已存库存使用保持原规则。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "广告没看完、提前关掉或报错也照样发奖；或者看完了却没发奖、发了两次。"
+    },
+    {
+      "id": "AD-03",
+      "feature": "ads",
+      "title": "请求等待与失败恢复",
+      "steps": "逐入口检查连点、无SDK、创建/加载/show异常或拒绝、onError/无填充、不返回、播放后等待关闭、取消与退出；跨两个UI或服务实例复测，并在每种SDK终态后再次显式请求。",
+      "expected": "立即显示请求状态；同一时刻跨实例也不并发。按真实SDK契约区分业务取消/超时与会话终止：旧会话未确认结束不再show，真实终止后显式重试可用。每次玩家请求至多一次show，不自动循环重播；有界记录阶段/错误码。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "连点按钮同时弹出两个广告；没网或广告加载失败时一直转圈，退不出来、也不能再点。"
+    },
+    {
+      "id": "AD-04",
+      "feature": "ads",
+      "title": "广告往返与会话结束",
+      "steps": "核原生完成提示→关闭返回→SDK完成回调→保存→发奖→实际效果的先后；检查onHide/onShow、主动离页/换局和超时旧结果。反馈循环时记录玩家动作、请求标识、show次数及各阶段结果。",
+      "expected": "播放器完成提示、广告关闭和游戏奖励是独立阶段；正常往返不丢合法结果。旧结果不误奖新目标；恢复遵守其余暂停原因。区分同一素材继续显示、新请求和保存重试，不凭画面循环预设根因。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "看完广告切回游戏，奖励丢了；或者上一次的广告结果发到了新关卡、新目标上。"
+    },
+    {
+      "id": "AD-05",
+      "feature": "ads",
+      "title": "目标应用、广告资格与实际版本",
+      "steps": "已有App ID/公开Key/广告位时，直接核整组配置、真实入口及source/Web/Native/实际扫码版本的对应；默认不登录或打开TikTok后台，不要求账号/组织权限。归属/启用按用户提供或已有证据标明，只有用户明确要求后台操作时才现场核查。",
+      "expected": "已有ID的接入、修复、构建和本地打包不以后台访问为前提；未核实状态保留，后台无权限不推断为广告失败原因。真实IAA按Runtime请求/错误码、完整播放和奖励另验，填入ID、已登录、离线通过或其他App能播均不冒充当前真实IAA通过。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "测试包用的是旧App ID或旧广告位；把\"填了ID\"当成\"真实广告能播\"。"
+    },
+    {
+      "id": "CLAIM-01",
+      "feature": "rewards",
+      "title": "每个入口的领取结果闭环",
+      "steps": "先核原规则与用户变更，记录本次类型/数量/目标及资格；逐入口完成→保存与模型→实际反馈→关闭重开→刷新，与原入口逐项对应。",
+      "expected": "同一奖励只应用一次；本次显示与模型一致，已确认入账不继续显示未领取/失败或重看。待保存明确重试；不能只看余额或按钮禁用。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "看完广告，按钮还显示Watch / 未领取，奖励却已经到账（或反过来）。"
+    },
+    {
+      "id": "CLAIM-02",
+      "feature": "rewards",
+      "title": "成功后的重复触发",
+      "steps": "在成功同帧、展示关闭、入场动画结束、缓存再入和刷新后再次点原位置，并送重复完成结果。",
+      "expected": "一次/每日/每局奖励在当前资格内不能重领；已领外观清晰，重复触发不再请求广告；可重复入口按自身规则恢复。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "领完一次后再点原按钮，还能再领或再弹广告。"
+    },
+    {
+      "id": "CLAIM-03",
+      "feature": "rewards",
+      "title": "未完成后的资格与反馈",
+      "steps": "对各入口取消、失败或超时后核余额、次数、领取记录、等待遮罩，再次进入及退出。",
+      "expected": "不发奖、不耗领取资格，状态和反馈可理解；仍可安全重试或退出，与成功后的已领状态明确区分。 任何非成功结果都必须有玩家看得见的提示，不能静默返回。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "广告取消或失败后，按钮变灰不能再点，或者提示看不懂；失败/无资格/超时时什么提示都没有，玩家觉得按钮\"点了没反应\"。"
+    },
+    {
+      "id": "CLAIM-04",
+      "feature": "rewards",
+      "title": "领取策略与下一次资格",
+      "steps": "每个入口声明一次、每日、每局、可重复或带奖励的导航规则；检查下一周期/新局/冷却和独立资格。",
+      "expected": "成功后的显隐和恢复时机符合本入口策略；导航入口按实际需要保留，不统一隐藏或恢复全部按钮。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "每日奖励第二天不恢复；可重复领取的入口领一次就永远消失。"
+    },
+    {
+      "id": "CLAIM-05",
+      "feature": "rewards",
+      "title": "领取结果与重绘一致",
+      "steps": "完成后看原入口，再等展示/动画和缓存再入；周期奖励核本次已领与下一次预告，检查旧回调或缓存覆写；保存确认失败后穿插正常操作再打开。",
+      "expected": "保存结果、数量/名称、按钮/红点及成功/待保存/失败反馈一致；不把下次金额画成本次，不把已确认成功画成未领取，也不把未确认保存画成成功。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "领取后数字、红点、按钮状态要等切页面或重开才更新。"
+    },
+    {
+      "id": "CLAIM-06",
+      "feature": "rewards",
+      "title": "拥有、使用与相关页面一致",
+      "steps": "按已有机制区分余额/库存/拥有与选中/装备/实际生效；预先访问相关页面，领取或其他正常事务同步模型后重开缓存页，再通过原消费者使用并刷新。",
+      "expected": "目标与实际效果正确，拥有不冒充已使用；已有相关页面与同一模型同步。无装备/缓存页/持久库存时说明实际效果及界面范围，不为清单新增功能。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "道具显示已拥有，进游戏却用不了；商店、背包、局内数量对不上。"
+    },
+    {
+      "id": "CLAIM-07",
+      "feature": "rewards",
+      "title": "领取显示与点击状态一致",
+      "steps": "根据实际数据契约覆盖合法类型、旧存档表示、缺值及坏记录，分别检查显示、实际点击和保存。",
+      "expected": "显示与业务共用有效状态解释；可领状态能响应，坏记录不发假奖且有恢复反馈。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "按钮看起来能领其实点不动，或者看起来已领其实还能点。"
+    },
+    {
+      "id": "STATE-01",
+      "feature": "save",
+      "title": "存储契约与冷启动",
+      "steps": "依据实际平台适配器覆盖缺键null/undefined/空字符串、有效字符串/已解析对象、损坏和不完整记录；核有效旧余额/进度/已领状态、对象副本与语义读回。",
+      "expected": "正常初始化且有效旧数据保持；未被平台契约允许的表示可明确拒绝并保留原值。对象键顺序不误报保存失败，数组顺序仍检查；坏记录有保留和恢复路径，不清全量存档过关，不把替身值认作唯一手机根因。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "关掉游戏重开，进度、金币、道具全没了或回到旧值。"
+    },
+    {
+      "id": "STATE-02",
+      "feature": "save",
+      "title": "奖励入账、目标与保存恢复",
+      "steps": "各保存点制造写前异常/静默丢写/写成读回失败；持同一凭证重试，穿插正常设置或跨页同步模型，并测试跨周期/换局/换物品后的新凭证。",
+      "expected": "奖励与记录一致且最多入账一次；同目标保存重试不新增广告。恢复旧事务不消耗新目标完成凭证，不自动发新目标奖励。未确认不提前显示成功，确认后不继续显示失败；声明实际恢复范围。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "奖励记到了错误的道具或关卡上；保存失败后重试又多发一份。"
+    },
+    {
+      "id": "STATE-03",
+      "feature": "daily",
+      "title": "周期、当前奖励与独立状态",
+      "steps": "已有周期奖励检查相邻资格、周期边界与刷新；对照领取次数、登录日期、本次金额及下次预告，同页独立奖励分别核对；未确认旧事务在跨周期后仍需保持目标身份。",
+      "expected": "次数、金额与恢复时机符合原规则；已领显示本次，预告区分下次。旧事务恢复不冒充新周期领取，独立奖励不误用状态；旧凭证缺失不自动补奖或清日期。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "每日奖励/周期奖励换天不刷新，或者同一天能领两次。"
+    },
+    {
+      "id": "STATE-04",
+      "feature": "save",
+      "title": "数据键与第三方探针隔离",
+      "steps": "核实际存档键与引擎/第三方SDK使用的键，保存有效奖励后冷启动或刷新。",
+      "expected": "启动探针不覆盖有效数据；有冲突才按证据迁移并保留原记录，不强制所有游戏换键。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "存档键和别的游戏或测试数据串了，清掉测试数据把真实存档也清了。"
+    },
+    {
+      "id": "STATE-05",
+      "feature": "save",
+      "title": "设置值与持久范围",
+      "steps": "对实际设置覆盖缺值、坏值、NaN及边界范围，真实调整、保存并重新打开。",
+      "expected": "控件和数据范围正确，保存恢复一致，不仅默认值可用。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "音量、震动等设置重开后恢复默认，或被别的设置覆盖。"
+    },
+    {
+      "id": "STATE-06",
+      "feature": "reward_delivery",
+      "title": "消费扣减与效果交付一致",
+      "steps": "对实际奖励使用或付费开局，分别在扣减写入、读回、资源/场景加载与效果交付处制造失败、超时和重复完成；测试写成功但读回失败后的再次使用及迟到回调。",
+      "expected": "一次有效使用与一次正确效果对应；失败不无故丢库存，重试不重复扣或免费重复生效，旧交付不进入新局。采用预留、确认或恢复机制由项目决定；即时奖励不要求虚构库存。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "道具扣了但效果没发生；或效果发生了数量却没扣。"
+    },
+    {
+      "id": "GAME-AD-01",
+      "feature": "game_ad_effect",
+      "title": "广告触发的游戏状态变更",
+      "steps": "先审查是否已有正确的看广告复活，缺少则按当前玩法补齐并接用户广告位；保留独立免费TRY AGAIN。仅对实际存在的开局、继续、复活或局内广告效果，核广告前后局/分数/进度/目标对象与次数；让等待跨过旧对象原定销毁时间，覆盖取消、再触发、新局及既有保护或效果的暂停/到期。 存在安全点位移或跟随镜头时核角色即时可见与输入恢复；物理回调按实际引擎的锁定/结束阶段处理。",
+      "expected": "效果只作用预定有效目标并按真实规则一次执行；取消不改局，旧结果不作用新局。继续所需对象仍有效；对象清理及几何范围不误含装饰/技能子节点，已有正确机制不重复添加；复活次数、保护时长和技能按当前游戏，不复制其他游戏固定规则。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "看广告复活/加步数后，游戏状态没变或变错（复活后立刻又死）。"
+    },
+    {
+      "id": "GROW-01",
+      "feature": "growth",
+      "title": "平台任务资格与奖励",
+      "steps": "对实际要求的平台导航任务检查能力、真实操作、回来资格查询、领取、重载和实际消费。必测：①打开奖励弹窗发起查询A，A没结束就离开游戏（加桌面/去个人主页）再回来，新查询B必须能启动，迟到的A不改界面、不写余额、不挡B；②失败、超时、不支持、无资格、只完成未达标，每种都有看得懂的提示，能重试或关闭；③同一次查询中的连点合并，和\"外出回来要重查\"分开断言；④关闭弹窗/回首页再打开后旧查询不影响当前界面；⑤两种手机比例真实触摸点\"查看奖励/重试/关闭\"，不能用函数直调代替。 ⑥返回方式（Monkey Dash 2026-10-21）：查询结果只从 success 回调来、只从 Promise 来、两者都来、Promise 返回空/不完整、只有 complete、reject/同步抛错，每种都走同一个单次结算并有可见终态；⑦把 SDK 结果和原来的超时定时回调同时扣住，实际画面仍能结束等待、显示原因，再用真实触摸重试成功。",
+      "expected": "平台明确资格且保存成功才奖一次，奖励能在玩法里真正用上，重开后仍在；查询中有\"检查中\"状态，所有非成功结果都有可关闭的说明，任何时候按钮都不会\"点了没反应\"；导航任务不冒充视频广告，普通浏览器不伪造完成。 首页一定有这两个键（英化不问用户直接加）；没有分享任务和分享奖励（分享用不了，用户 2026-10-23）。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "平台任务（加桌面、个人主页回访等）没完成也发奖，或完成了不发奖；去加桌面/个人主页回来后点\"查看奖励\"没反应（旧查询没取消、还占着锁，新查询被挡；失败/无资格时不给任何提示）。 去加桌面/回访回来点\"查看奖励\"一直 CHECKING：SDK 用 Promise 返回资格而代码只接 success 回调；超时依赖的定时回调没执行，等待永远不结束（Monkey Dash 2026-10-21）。",
+      "requires_gui": true,
+      "required_observations": [
+        "query_pending_then_leave_and_return",
+        "each_negative_result_message",
+        "repeat_tap_vs_return_requery",
+        "late_old_result_ignored",
+        "claim_save_and_real_use"
+      ],
+      "requires_negative_control": true
+    },
+    {
+      "id": "ASYNC-01",
+      "feature": "async",
+      "title": "异步查询的返回方式与等待出口",
+      "steps": "开工用 audit_async_contracts.py 扫出代码里所有奖励查询/广告/平台导航接口，每个奖励接口都要在检查表里有入口（api 字段）。对每个入口建返回方式矩阵：只走回调、只走 Promise、两者都来、空或不完整结果、只有 complete、reject/同步抛错；生命周期另测：查询没结束就离开再回来、旧结果迟到、重复回到前台不延长等待。等待出口要实证：把 SDK 结果和原超时定时回调同时扣住，看实际画面能结束等待、提示原因、真实触摸重试成功。测试替身必须能分别用回调和 Promise 返回，不能和实现共用'只有 success'的假设。最后用故意改坏的版本（去掉 Promise 处理、去掉截止恢复、允许旧请求回写）跑同一个检查，必须变红。",
+      "expected": "每种返回方式都进入同一个单次结算：只有严格资格 true 才发奖一次，其他结果都结束等待并显示原因、能重试或关闭；扣住 SDK 和定时器后等待仍会结束；同一个检查在改坏版本上失败、在当前版本上通过、正常对照仍通过。只看'代码里有 timeout''SDK 被调用了''余额没变'不算通过。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "点了查看奖励/看广告后一直 CHECKING/Loading：SDK 用 Promise 返回结果而代码只接了 success 回调（或反过来）；超时写了，但依赖的定时回调没执行，等待永远不结束；测试替身只会用 success 返回，和代码犯同一个错，一起通过（Monkey Dash 2026-10-21）。",
+      "requires_gui": true,
+      "required_observations": [
+        "return_channel_matrix",
+        "sdk_and_timer_held_recovery",
+        "visible_end_state_each_result",
+        "known_bad_failed_current_passed"
+      ],
+      "auto_check": [
+        "audit_async_contracts"
+      ],
+      "requires_negative_control": true
+    },
+    {
+      "id": "SRC-01",
+      "feature": "archive",
+      "title": "原始工程与工作副本",
+      "steps": "核对原始压缩包或源码来源、CRC/路径/编码、引擎版本和实际启动场景；建立可运行工作副本。",
+      "expected": "保留原始资料；导入迁移与业务修改分别记录，当前工程能够启动。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "直接改了用户给的原工程，原版找不回来；改的不是当前那份工程。"
+    },
+    {
+      "id": "UI-01",
+      "feature": "ui",
+      "title": "全量中文检索与玩家界面英文覆盖",
+      "steps": "首轮及翻译/生图后扫描静态与动态文字、_string/_N$string和Unicode转义；逐候选判定绑定，复核全部图片/图集/动画帧及实际常驻/条件/等待/错误/已领页面。",
+      "expected": "当前游戏自有玩家界面无中文残留；内部键、路径、UUID和注释有不可见依据；静态零命中不代替图片与运行状态检查。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "text_scan_and_dispositions",
+        "image_and_frame_text_review",
+        "runtime_page_states"
+      ],
+      "symptom": "玩家界面还有中文字（文字、图片里的字、弹窗、提示），或英文拼写错误。"
+    },
+    {
+      "id": "COPY-01",
+      "feature": "copy",
+      "title": "英文文案质量",
+      "steps": "用 chrome_touch.py 的 dump_ui 把每个页面、弹窗和条件状态在两种比例下读一遍，再跑 audit_copy_quality.py --require-runtime --sheet；英化另有 docs/copy/copy-table.csv（zh,en）和 docs/copy/glossary.json（allow 专有词、terms 统一叫法）。阻断项全部修掉；待看项（中式英语、叫法不统一、按钮大小写、可能被截断）逐条处理或写明为什么保留；GPT 读审查单逐条判断是否自然地道、语气统一、意思准确、按钮短而清楚。",
+      "expected": "玩家看到的英文没有中文和全角标点、没有拼写错误和重复词、占位符和中文一致、同一个东西只有一个叫法、按钮大小写统一、文字都在按钮/底图里不被截断；GPT 审过全部文字并写明改了什么。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "英文像机翻：Receive/Gold coins/Click/Congratulations on passing the level；同一个东西一会儿 Coins 一会儿 Gold；PLAY 和 Play 混用；英文比中文长，挤出按钮或被截断。",
+      "required_observations": [
+        "copy_inventory_from_running_game",
+        "auto_copy_audit",
+        "native_phrasing_review",
+        "terminology_and_case",
+        "fits_in_boxes"
+      ],
+      "auto_check": [
+        "audit_copy_quality"
+      ],
+      "reviewer": "gpt"
+    },
+    {
+      "id": "UI-02",
+      "feature": "ui",
+      "title": "实际字号与对比度",
+      "steps": "在目标窄屏和长屏检查正文、数值、奖励及条件说明，并观察缩放后的真实字高。",
+      "expected": "重要信息在实际画面清晰可读，字体装饰不影响辨认。；主页标签和说明与实际背景保持清楚反差，静态标题图片与实时数值分别清晰显示。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "字太小、颜色太淡，手机上看不清。",
+      "visual_verdict": true,
+      "gate": "art"
+    },
+    {
+      "id": "UI-03",
+      "feature": "ui",
+      "title": "文字、图标、按钮、标题牌与面板边框不重叠",
+      "steps": "在不同长屏及已知窄/短屏检查常驻页与条件弹窗，覆盖最长文案、大数量、全部条件入口、等待/错误/已领状态、按下缩放、异步入口及动画稳定后的最终位置。 同时检查How to play角落入口与小型内容卡片的位置、主动作/复活/免费重开及安全区，实际开关与重看。；核胶带/折角/花边及动画峰值与标题、正文、奖励、按钮的真实可读区域，不能只看面板外框。 把标题牌、状态牌、物品展示区和面板边框/角花/缎带一起列进 docs/ui-layout.json（safe 内框、decorations、contents），跑 audit_ui_coverage.py --binding。 重塑：布局由 extract_ui_layout.py 从运行中游戏的 dump_ui 读出，不手填。",
+      "expected": "文字、图标、数量和按钮无意外重叠、越框、裁切或吞字；背景不盖字。可见区域与真实命中一致，边缘点击及底部返回可用；设计允许的装饰重叠保持，不强制统一布局。 面板上的全部内容在内框里（≥8px），不压任何边框装饰；越边的缎带标题只能是和面板同一张图。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "required_observations": [
+        "viewports",
+        "conditional_states",
+        "stable_layout",
+        "hit_results"
+      ],
+      "symptom": "文字、图标、按钮互相压住；长英文挤出框外或被裁掉；标题牌压在面板边框上、底部按钮压住角花、商品展示区太小被边框挤住（以前只查了按钮之间，漏掉了标题牌、状态牌和边框装饰）。",
+      "visual_verdict": true,
+      "auto_check": [
+        "audit_ui_coverage"
+      ],
+      "board_notes": {
+        "localize": "英化：布局同样由 dump_ui + extract_ui_layout.py 读出并检查；英文变长造成的越框、盖字由 GPT 看总览图再确认。"
+      },
+      "gate": "art"
+    },
+    {
+      "id": "UI-04",
+      "feature": "ui",
+      "title": "字体与文本资源异常",
+      "steps": "检查实际多行文本、所需字形及字体加载失败路径；从冷缓存到达使用这些资源的真实界面。",
+      "expected": "无缺字形/换行异常阻断界面；资源失败有反馈并能恢复。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "字显示成方块/乱码，字体缺字，或文字资源加载失败变空白。"
+    },
+    {
+      "id": "UI-05",
+      "feature": "ui",
+      "title": "图片透明度与图集组合",
+      "steps": "核对修改图片的原画布、UUID、透明度、裁切、图集旋转及真实背景合成。",
+      "expected": "图片与UI重构/局部维护的授权范围一致；真实组合连续，无意外接缝、底板、假透明或裁切；非UI角色/场景不因UI重构擅改。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "required_observations": [
+        "source_and_imported_images",
+        "alpha_atlas_crop",
+        "actual_background_composition"
+      ],
+      "symptom": "图片有白边/黑边、透明部分变成色块，图集里切到了旁边的图。",
+      "visual_verdict": true,
+      "gate": "art"
+    },
+    {
+      "id": "UI-06",
+      "feature": "ui",
+      "title": "绘制层级与遮罩",
+      "steps": "检查文字与背景的父子关系、前后顺序、遮罩及交互阻挡；弹窗打开关闭后重查。",
+      "expected": "背景和装饰不盖住信息；按钮可见可点；遮罩只阻挡应阻挡的对象。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "required_observations": [
+        "render_order_and_mask",
+        "text_visibility",
+        "open_close_states"
+      ],
+      "symptom": "弹窗被别的东西盖住，遮罩挡住了按钮，层级顺序错乱。",
+      "visual_verdict": true
+    },
+    {
+      "id": "UI-07",
+      "feature": "ui",
+      "title": "奖励数量与内容准确",
+      "steps": "检查实际奖励的完整数量、单位、等级或解锁目标，覆盖零值、较大数值及多种奖励。",
+      "expected": "显示与实际结算一致，重要数量独立可读且不丢失。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "界面上写\"+100金币\"，实际到账数量不一样。"
+    },
+    {
+      "id": "UI-08",
+      "feature": "ui",
+      "title": "多项奖励与界面复用",
+      "steps": "按实际数据覆盖无奖励、单项、多项、超出视区，再重开较少项目；检查滚动和底部操作。",
+      "expected": "奖励完整可达；底部操作不被覆盖；无上次内容、位置或按钮残留。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "同一个弹窗连续领多个奖励时，显示的还是上一个奖励的内容。"
+    },
+    {
+      "id": "UI-09",
+      "feature": "ui",
+      "title": "资源与能力信息一致",
+      "steps": "对实际存在的物品、角色、能力或其他资源检查图标、说明、数值、拥有/使用/锁定状态。",
+      "expected": "展示与当前配置和存档一致，玩家能区分可用、未拥有和已使用状态。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "道具说明、图标和实际效果对不上。"
+    },
+    {
+      "id": "HOME-01",
+      "feature": "home",
+      "title": "入口布局与页面往返",
+      "steps": "按本游戏实际页面链冷启动、进入主界面或玩法、返回；检查条件入口和资源加载后的布局。",
+      "expected": "沿已存在或已授权的页面链可往返；控件完整且可点，装饰不遮挡操作，不新增其他游戏的封面或菜单。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "首页按钮位置乱、点进去回不来，或返回后页面状态错。"
+    },
+    {
+      "id": "VIEW-01",
+      "feature": "touch",
+      "title": "实际画布与安全区",
+      "steps": "用两种目标屏幕比例冷启动，读回真实Canvas、viewport和DPR，检查上下安全区及条件控件。",
+      "expected": "实际画布适配目标视口；重要信息和操作不被裁切，外框变化不冒充游戏适配。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "长屏或刘海屏上内容被裁掉、露黑边，按钮跑到安全区外。",
+      "visual_verdict": true
+    },
+    {
+      "id": "VIEW-02",
+      "feature": "touch",
+      "title": "首触与显示尺寸变化",
+      "steps": "在实际支持的首次触摸、全屏/方向变化和前后台恢复后，重读尺寸并再次操作。",
+      "expected": "画布和命中位置同步更新；无旧坐标或异常边框，未支持的场景说明依据。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "第一次点击没反应，或旋转/改窗口尺寸后布局错乱。"
+    },
+    {
+      "id": "INPUT-01",
+      "feature": "touch",
+      "title": "平台输入到真实业务绑定",
+      "steps": "核平台原始坐标字段、单位、引擎转换、当前相机、实际节点和按下/松手后的业务回调。",
+      "expected": "输入有效且坐标正确；实际可见控件执行一次对应业务，不仅是同名方法可调用。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "手机上点按钮没反应（电脑鼠标正常）；按钮看起来连了其实没绑定方法。"
+    },
+    {
+      "id": "INPUT-02",
+      "feature": "touch",
+      "title": "边缘命中与遮罩阻挡",
+      "steps": "点实际图标和文字边缘，按下后拖出松开，点击空白以及被弹窗遮住的底层。",
+      "expected": "可见可点区域一致；拖出按规则取消；空白无异常；底层不意外响应。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "按钮边缘点不中，或者透明遮罩挡住了下面的按钮。"
+    },
+    {
+      "id": "INPUT-03",
+      "feature": "multitouch",
+      "title": "多指与操作归属",
+      "steps": "仅对可能收到多指输入的操作，检查UI先按→背景次指、背景先按→UI次指、不同松手顺序、快速全松，以及按钮取消/禁用/销毁后的物理松手。",
+      "expected": "触点归属保持到实际end/cancel；未初始化的玩法触点不能被次指补成有效操作。不同触点不串操作；不写NaN坐标、不使对象消失；有限制的工具如实记录，不要求游戏新增多指玩法。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "两根手指同时操作时，拖动的东西乱跳或卡住。"
+    },
+    {
+      "id": "LIFE-01",
+      "feature": "pause",
+      "title": "多层窗口与暂停原因",
+      "steps": "交叉打开实际阻塞窗口，完成/取消上层动作、只关一层、后台返回及最后一层关闭时分别观察。",
+      "expected": "时间、物理与操作遵守本游戏暂停规则；仍有阻塞原因时不提前恢复，同次返回不穿透多层。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "弹窗叠弹窗时关掉一个，游戏就提前恢复运行；暂停状态乱掉。"
+    },
+    {
+      "id": "LIFE-02",
+      "feature": "async",
+      "title": "异步结果与页面生命周期",
+      "steps": "异步资源/广告/奖励等待中关闭、禁用、销毁、切场及缓存再入；在实际引擎延迟销毁与字段清空后再送达场景加载结果，同时检查成功、失败、超时、重复和旧回调。 加载中后台/前台、后台完成、重试与新局交叉；特殊状态按真实进入、退出、中断及下一局复查。",
+      "expected": "旧组件字段被清空后不抛空引用；有效事务所需依赖按职责保存，失效UI不被重新使用。旧结果不奖励新目标、不重开旧窗口；监听和调度清理，不清掉仍需完成的独立事务。 有效加载进度/后台时间不能被错误总期限吞掉；控制与监听状态完整恢复。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "页面已经关了，异步回调回来还去改它，导致报错或界面错乱。"
+    },
+    {
+      "id": "FLOW-01",
+      "feature": "gameplay",
+      "title": "完整本局与返回",
+      "steps": "自然执行实际开始、核心操作、已有结束状态、重试或返回，再次开始；记录实际到达范围。",
+      "expected": "原流程可完成，免费流程保留；一次结束只结算一次，未自然到达的分支不冒称通过。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "一局玩完回不到首页，或回首页后再开局状态不对。"
+    },
+    {
+      "id": "FLOW-02",
+      "feature": "levels",
+      "title": "进度与解锁规则",
+      "steps": "存在关卡或进度时检查引导、切换、解锁、边界及已完成存档；没有该功能时注明不适用。",
+      "expected": "进度和门槛符合本游戏原规则或用户授权，有限覆盖不冒称全部内容通过。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "过关后下一关没解锁，或没过关就解锁了。"
+    },
+    {
+      "id": "PHYS-01",
+      "feature": "physics",
+      "title": "运动来源与状态一致",
+      "steps": "仅对存在运动或物理交互的功能，核实际输入、脚本、碰撞、惯性及约束来源，并检查暂停、恢复和结束边界。",
+      "expected": "运动遵循本游戏规则；无意外漂移或错误驱动；允许的惯性、自动运动和碰撞行为不被其他游戏的修法改写。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "物体自己乱动、穿墙、停不下来，或动画和实际位置不一致。"
+    },
+    {
+      "id": "UI-10",
+      "feature": "ui",
+      "title": "可见及条件入口的真实绑定",
+      "steps": "盘点常驻与条件按钮，核scene/prefab事件、当前运行节点及SDK/奖励消费者；从奖励方法反查触发入口。",
+      "expected": "实际点到的是已检查业务；正确方法存在不掩盖按钮仍绑旧方法；未存在的功能有不适用依据。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "能看到的按钮实际没功能，或按钮绑定到了错误的方法。"
+    },
+    {
+      "id": "TIME-01",
+      "feature": "timer",
+      "title": "计时与前后台恢复",
+      "steps": "对实际计时、冷却或需持续满足的条件检查暂停/恢复、教程或提示、前后台、异常大dt和长局；先写明本游戏使用游戏时间还是现实时间。",
+      "expected": "累计与恢复符合各自时间语义；暂停规则、稳定条件和结算不被长帧跳过，不强加某种提示暂停或固定结束规则。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "切到后台再回来，倒计时继续跑完或跳很多。"
+    },
+    {
+      "id": "ART-01",
+      "feature": "art",
+      "title": "全UI生图、全量视觉巡检与修复复查",
+      "steps": "新制作全UI内置image_gen重构后，盘点并查看全部玩家可见新旧素材/图集格/动画状态及每个实际页面显示位置；核穿插/盖字/越框/层级/裁切/清晰度/整体观感，两比例及条件状态发现问题自动优化并同状态复查。维护按当前范围。；盘点游戏名、页面/弹窗及固定分区的花体字标题图片，核image_gen来源、拼写、实际Sprite绑定与两种比例的可读区。",
+      "expected": "当前范围全部可查看图像与实际组合已审、发现问题修复并复查，原件和显示位置可追溯；未看/未到达不得填通过，生成图不代替视觉验收，动态数据/真实Button/玩法保持。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "ui_scope_and_inventory",
+        "imagegen_assets_and_bindings",
+        "dynamic_fields",
+        "rendered_states_and_hit_results",
+        "image_inventory_coverage",
+        "resource_visual_review",
+        "page_state_visual_review",
+        "defects_and_rechecks"
+      ],
+      "symptom": "有些页面或状态没换成新美术，还留着旧图；生成的图放进游戏后变糊或错位。",
+      "visual_verdict": true,
+      "board_notes": {
+        "localize": "英化：范围是全部改成英文的文字、新做的英文图、新背景和新功能的图；和 docs/baseline 原版对照截图逐页并排，除文字和优化清单里的改动外不应有变化。美术第一版不做全 UI 生图；用户说\"按重塑画风重做\"后按重塑全 UI 生图检查。"
+      },
+      "gate": "art"
+    },
+    {
+      "id": "BUILD-01",
+      "feature": "build",
+      "title": "源码、运行页与Native同版",
+      "steps": "冻结本次源码，核实际Web/Native模块、依赖、资源及服务加载的bundle；改动后重测受影响链，记录被替代候选。",
+      "expected": "运行页和实际Native来自已审查输入；旧截图、旧helper或旧报告不能放行新指纹。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "源码改了，打出来的Native包或网页还是旧版本。"
+    },
+    {
+      "id": "BUILD-02",
+      "feature": "build",
+      "title": "最终上传包结构与字节",
+      "steps": "实际独立解压到含空格目录，核CRC、安全路径、根入口、分包/体积、公开配置与全部文件SHA。",
+      "expected": "所交Native包与已验导出同字节；根入口齐全，Finder元数据及QA夹具不入包。",
+      "phase": "post_package",
+      "always_applicable": true,
+      "symptom": "上传的ZIP结构不对、缺文件或超大小。"
+    },
+    {
+      "id": "BUILD-03",
+      "feature": "build",
+      "title": "实际打包脚本拒绝缺证据的包",
+      "steps": "打包脚本在生成 ZIP 前必须自己运行 check_known_issues.py check --stage pre_scan，非零就停止、不留 ZIP。用 test_writer_refusal.py 实际跑本游戏的打包脚本五次：检查表缺失、有一项失败、版本指纹过期（三次都必须拒绝且不产生 ZIP），以及正常一次（必须产生 ZIP）。",
+      "expected": "三种缺证据情况都被实际打包脚本拒绝、没有新 ZIP；正常情况能出包；检查表原样恢复。只证明共用门禁脚本会拒绝，不等于打包脚本调用了它。",
+      "phase": "post_package",
+      "always_applicable": true,
+      "symptom": "门禁脚本单独跑会拦，但项目里的打包脚本没调用它：缺报告、报告失败、旧版本指纹都照样出包（Monkey Dash 2026-10-21）。",
+      "required_observations": [
+        "missing_review_refused",
+        "failed_check_refused",
+        "stale_binding_refused",
+        "normal_path_packaged",
+        "storage_report_refused"
+      ],
+      "auto_check": [
+        "test_writer_refusal"
+      ]
+    },
+    {
+      "id": "BUILD-04",
+      "feature": "build",
+      "title": "只有一种包：可直接上传的 TikTok 平台包（打包、上传测试包、检测包、压缩包都一样）",
+      "symptom": "SquareRush 旧包被 TikTok 拒绝：Cocos 的 assets/resources 留在主包里，未压缩主包 8,754,975 字节，超过平台主包上限 4,000,000（用户 2026-10-23 UPLOADFIX）。以前还交过：多套一层外层文件夹、Web 包改名当 Native、源码包、ZIP 里再套 ZIP、带 __MACOSX/.DS_Store 的包。",
+      "steps": "用 cocos-game-tiktok-package：从 Cocos 导出真实 Native 小游戏构建；assets/resources 等大资源配置成 Cocos 小游戏普通分包（subpackages/resources，game.json、src/settings、ccRequire 同步），启动时带可见进度加载分包、无进度超时、Retry 新请求、迟到回调隔离、后台时间不计；用 make_tiktok_zip.py --native <构建> --app-id <App ID> --out <新ZIP> --review <review.json> 出包（写 ZIP 前先跑门禁、查形式和体积，不合格不写 ZIP；写完回读核 CRC、安全路径、根入口、App ID、测试跳关、全部文件与 Native 同字节、独立解压再比一次）；报告 <ZIP>.report.json 放进本项 auto_reports。",
+      "expected": "所交 ZIP 根目录直接是 game.js、game.json、project.config.json（没有外层文件夹）；是 Native 小游戏构建（不是 Web/index.html）；未压缩主包 ≤4,000,000 字节、总包 ≤30,000,000、独立分包各 ≤4,000,000，普通分包只计入总包；没有源码（.ts/.meta/library/temp）、没有 ZIP 套 ZIP、没有 __MACOSX/.DS_Store/Thumbs.db、没有非 ASCII 路径、没有测试跳关标记；App ID 是当前目标；回复给主包/总包/分包字节数和上限，写\"直接上传，无需解压重压\"，不说平台已接受。",
+      "phase": "post_package",
+      "always_applicable": true,
+      "required_observations": [
+        "made_by_make_tiktok_zip",
+        "big_resources_in_normal_subpackage",
+        "main_total_independent_within_limits",
+        "root_entry_no_outer_folder",
+        "no_web_source_nested_zip_or_junk"
+      ],
+      "auto_check": [
+        "make_tiktok_zip"
+      ]
+    },
+    {
+      "id": "TEST-01",
+      "feature": "testing",
+      "title": "已知回归接入真实产包入口",
+      "steps": "对可自动复现的已知缺陷，用同一检查执行故障版、修复版和正常对照，并实际触发产包入口；报告绑定输入及工具SHA。",
+      "expected": "旧故障能检出；失败、缺工具或实际Native无法读取时停止新ZIP；输入保持，旧报告不能直接代替当前执行。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "以前修好的bug在新包里又出现了，回归测试没跑真实的包。"
+    },
+    {
+      "id": "TEST-02",
+      "feature": "testing",
+      "title": "测试覆盖真实后置条件",
+      "steps": "审查实际断言及夹具，回退真实状态、显隐或绑定更新检查是否失败；涉及相机枚举、包围盒、销毁或平台存储时，对照本次安装/编入引擎的真实方法与数据契约。 将“请求已发/状态清零”保留成不能放行的弱断言反例；检查真实新局、进展和操作后置条件。",
+      "expected": "不把被测业务替为空函数；不让错误枚举、包含子节点的几何假设、未清字段的销毁替身掩盖故障。最小旧失败/新通过及正常对照分别存在，断言覆盖实际后置条件。 负对照必须命中预定断言或门禁原因；缺输入、夹具异常或语法错误不能冒称原业务故障已检出。 弱断言不能放行全流程；夹具/工具超时与真实业务失败分别判定。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "测试只看\"函数被调用了\"，没检查玩家真正看到的结果。"
+    },
+    {
+      "id": "TEST-03",
+      "feature": "testing",
+      "title": "实际输入与证据层级",
+      "steps": "记录当前构建、Ego Lite TaskSpace/Page与模式、viewport/DPR/Canvas及实际可信输入；区分自己操作和外部输入/中断。",
+      "expected": "鼠标、触屏模拟、物理手机、真实广告与平台结果分层；仅改尺寸不算touch，中断不算通过，并遵守指定浏览器路线。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "直接调用代码代替真实点击，所以手机上的触屏问题没被发现。"
+    },
+    {
+      "id": "DEVICE-01",
+      "feature": "device",
+      "title": "目标真机与真实广告",
+      "steps": "按当前目标设备和平台范围，使用绑定版本的Native包逐入口检查真实视频、奖励、回访及后台恢复，记录设备与版本。 正式交付完成前使用同版Native与实际上传ZIP，在TikTok物理手机冷开、连续三次重开、实际操作和前后台恢复；有复活再验真实视频后的同局恢复、再次结束及免费重开。",
+      "expected": "真实手机/IAA结果有来源；浏览器Mock、离线检查或别的应用结果不能替代。 手机记录绑定实际Native树/上传ZIP SHA、设备、App与平台测试版本；缺真机或IAA证据保持待验并阻止正式完成，测试输入候选单列。",
+      "phase": "device",
+      "always_applicable": false,
+      "symptom": "电脑上都好，真手机TikTok里广告不出、触屏不灵或卡顿。"
+    },
+    {
+      "id": "LOAD-01",
+      "feature": "async",
+      "title": "首次资源加载与恢复",
+      "steps": "冷缓存到达实际资源/异步界面，分别模拟失败、无返回、关闭再开和迟到完成；恢复网络或资源后，从可见RETRY/BACK实际操作。 另覆盖有效进度持续且完成跨过本产品等待预算、后台等待超预算、后台完成再回前台；本地在浏览器里用同版 Web 构建执行，Native 包在阶段5真机上验证（不需要 TikTok 开发者工具）。 按 references/startup-contract.md 检查启动链写法；audit_startup_contract.py --native <构建> --startup-subpackages <启动分包> --binding 跑出当前报告；可选接口缺失、弹窗不回调、首屏图片不回调、声音失败、后续包失败的故障测试见 LOAD-03。 页面就绪按references/page-readiness-and-cancel.md执行：双向实际路由依赖清单，冷开/热开/慢加载三次取消重进/关闭后完成/失败重试/缓存断网/普通控件独立性，两比例逐路线真实触摸到页面可用。audit_page_readiness.py最终runtime报告必需，source_only不能代替。",
+      "expected": "依赖就绪才应用资源；失败或合理等待期限后有可读反馈和可用重试/返回；恢复后能到达目标界面。仅清本次占位/遮罩，旧请求不覆盖新请求，不用无限spinner掩盖错误。 不误判仍在推进的加载；真实停滞仍可退出/重试，后台与迟到结果遵守当前目标。 可选接口不挡启动；场景按代次提交；Retry 发新请求并真的能玩；首页 ready 以首屏图片加载完为准；启动下载 ≤10 MB 且不含声音。 普通本地及已就绪页面点击直达；独占后续内容不绑全部导航；取消只取消旧页面意图、保留可复用资源任务与成果，重进不重复整组下载、不抢旧导航；玩家界面不展示内部资源数量。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "首页一直转圈进不去游戏：缺 showModal 等可选接口就拒绝启动；分包后资源/场景出错只打日志没有恢复；Retry 还挂在旧请求上；旧场景迟到后仍被切进去；启动包塞了以后才用的美术和声音（如 26.7 MB）。 点击普通按钮也等所有后续美术；取消后ready被清、已下载成果丢失，再次打开又等；仅测启动resources没测后续包。",
+      "auto_check": [
+        "audit_startup_contract",
+        "audit_page_readiness"
+      ]
+    },
+    {
+      "id": "LOAD-02",
+      "feature": "loading",
+      "title": "启动及加载阻塞排查",
+      "steps": "冷启动、刷新与再次打开时记录卡住阶段、资源/分包请求和运行异常；本地Web核服务归属、目标目录与HTTP字节，再复现一次失败→恢复→实际可玩。 重开链须真实触屏连续三轮、两种视口，逐轮观察新局、实际进展及后续输入效果；不能只断言发起加载。 用户 2026-10-23：最终检查以加载为重点——在最终构建上把每一条进入游戏的路线都实际走一遍（冷启动首页 PLAY、地图点关卡、过关后 Next、失败后 Retry、复活后继续、切后台回来、重新打开游戏），每条都要真实进到可操作的关卡，不能有一条卡在加载、黑屏或点了没反应。",
+      "expected": "真实目标界面可到达；缺资源、初始化中断或服务不可达不会永远只显示Loading。失败反馈和恢复动作实际有效；HTTP200、加载图、旧健康报告或重启后截图不能单独判通过。 场景已进入不等于可玩，必须有实际计分/棋盘进展和输入响应证据。 每一条进入游戏的路线都能进去、能玩；没有一条只停在加载画面。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "loading_stage",
+        "failure_recovery",
+        "ready_target",
+        "usable_state",
+        "every_entry_route_enters"
+      ],
+      "symptom": "启动卡在Loading不动，进不了游戏。"
+    },
+    {
+      "id": "PHYS-02",
+      "feature": "physics",
+      "title": "显示轮廓与交互边界",
+      "steps": "仅对存在几何或物理边界的交互，核显示尺寸、命中/碰撞范围、裁切边界和坐标；观察生成、移动、拥挤及后期状态。",
+      "expected": "无非预期越界或显示与交互不一致；区分显示缺陷与真实碰撞缺陷，保留设计允许的重叠及穿越。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "看起来碰到了却没判定，或隔着空气就判定碰到了。"
+    },
+    {
+      "id": "FLOW-03",
+      "feature": "restart",
+      "title": "重试、再次开始与扣减一致",
+      "steps": "检查实际重试或再次开始入口，连点、资源不足、免费/限次状态、取消和返回；新局核旧操作/计时/结束状态。",
+      "expected": "一次有效操作最多扣一次并开始一次；不足或取消不误扣，按实际规则恢复，不要求新增快捷重开或体力系统。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "点重试又扣一次体力/道具，或重新开始后上局状态没清掉。"
+    },
+    {
+      "id": "LOGIC-01",
+      "feature": "gameplay",
+      "title": "逻辑检查：标准按钮功能和一局状态（玩法做完就查，不等用户验收）",
+      "symptom": "用户 2026-10-23 给的两份真实验收报告：Double Jump Duo 失败页没有 Home、暂停后物理还在跑、回首页留着上一局的角色和回调、上一局广告迟到回调落到新一局、镜头只能向右跟且左边背景是黑的、第 85 关配置空槽、存档异常没处理、主页任务绕过金币购买；Mahjong 刷新后关卡进度丢失、分包 503 卡在 Loading 没有 Retry、拖动吸附和点选两套判定、最后一秒发广告仍判失败、广告超时后奖励入口一直锁住、系统取消触摸仍提交消除、命中重叠牌不停止遍历、末关后 NEXT 重复最后一关、Daily Challenge 不是每日、声音设置不保存、平台按钮点了没反应、失败弹窗随机交换按钮位置、无上限的 while(true) 洗牌。",
+      "steps": "用 cocos-game-logic-check（build 模式）：重塑在第一轮玩法做完、发玩法确认节点 1 之前；英化在优化和广告接入做完、进美术和用户验收之前；以后大改玩法或加页面再跑。logic_check.py --project <工程> --init 生成 docs/logic/flows.json；写 docs/logic/inventory.md（按钮去向表、一局状态、异步、存档键、关卡表）；运行 logic_check.py --project <工程> --mode build --binding <review.json>，每条疑点读源码：真问题修掉，误报/有意设计写进 docs/logic/triage.json（写 why）；在 Ego 里用 chrome_touch 真实触摸、两种比例走完 F01–F20，加故障测试（分包 404/503/不回应、广告完成/取消/失败/超时/迟到/重复、最后一秒、touchcancel、刷新、切后台、坏存档），每条写 pass/fail/n/a 和证据文件；修完重跑直到通过。 每次同时执行cocos-game-logic-check/references/learned-regressions.md的R01–R08；--init保留旧流程与回归结果补齐缺项，不能自动刷新旧源码绑定；每个pass记录具体observations、证据层与哈希文件。",
+      "expected": "logic_check 报告通过（mode build、没有待处理疑点、F01–F20 全部 pass 或写明理由的 n/a、每个 pass 有证据文件）。每个页面有出路：关卡内能暂停并回首页，设置能返回，失败页有 Home 和 Retry（复活广告单独在下面），胜利页有 Home 和 Next，按钮位置固定不随机；暂停停住物理、计时和生成；离开一局清干净（节点、触摸、定时器、Tween、相机）；广告和加载回调带局次 token，迟到回调忽略，超时后安全恢复且不能连点叠奖励；加载失败有 Retry；刷新后进度和声音设置都在，坏存档不崩；触摸取消不提交；命中取最上层；同一动作一套判定；关卡配置没有空槽，末关后不重复最后一关，教程比第一关简单；Daily 真的按日期；循环有上限；奖励不绕过购买规则；平台按钮有反馈；镜头各方向都跟、背景铺满。 新版logic_check必须包含regression_version:1、R01–R08零待处理、当前源码/运行配置绑定和可复核证据；主门禁重新核证据哈希，拒绝只有旧F01–F20或review模式的报告。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "logic_check_after_gameplay_round",
+        "every_page_has_exit_and_standard_buttons",
+        "pause_stops_physics_and_leaving_cleans_up",
+        "async_round_tokens_and_ad_timeout_recovery",
+        "progress_and_sound_restored_after_refresh",
+        "flows_walked_with_real_touch"
+      ],
+      "auto_check": [
+        "logic_check"
+      ],
+      "board_notes": {
+        "remake": "重塑：第一轮玩法做完就跑，通过后才发玩法确认节点 1。",
+        "localize": "英化：优化和广告接入做完就跑（美术之前）；原游戏自带的逻辑问题也要修，按原玩法修，不改核心玩法。"
+      }
+    },
+    {
+      "id": "PHYS-03",
+      "feature": "end_conditions",
+      "title": "已有结束条件与单次结算",
+      "steps": "盘点实际存在的结束条件、前置状态及优先关系；覆盖正常达成、未满足、同帧竞争、暂停和重复回调。",
+      "expected": "结束仅在有效条件满足时触发并最多结算一次；只核本游戏原规则或明确授权的变更，不新增结束条件。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "过关或失败判定触发了两次，结算弹两遍、奖励发两次。"
+    },
+    {
+      "id": "INPUT-04",
+      "feature": "drag",
+      "title": "跨状态的旧操作失效",
+      "steps": "对实际持续操作检查start/move/end/cancel，暂停、结束、前后台或换页后的旧松手，以及随后新操作。",
+      "expected": "未完成操作按本游戏规则取消或恢复，旧输入不提交新局；归属和锁定释放，新操作可用。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "上一个状态的点击在新页面生效（比如结算后还能拖动棋子）。"
+    },
+    {
+      "id": "INPUT-05",
+      "feature": "input",
+      "title": "iPhone 模拟里每个按钮都点过、点了都有反应（按钮清单从游戏里读出）",
+      "symptom": "测试只点了主流程的几个按钮，设置里的加减号、商店里的某个皮肤、主页回访入口从来没点过；有的按钮点了什么都不发生，到用户手里才发现。按钮清单靠 AI 手写，漏了条件状态里才出现的按钮。 相机偏移：按钮看着在那儿，点上去没反应，测试照布局位置点却误报通过。",
+      "steps": "在一个浏览器里（Ego Lite 默认；Ego 和 Chrome 内核相同，不用两个都测）用 chrome_touch 的 device iphone_15 跑：每个页面和弹窗先 dump_ui（写 purpose），再把这一页上的每个按钮点一次，每次点完等约600毫秒并 snapshot 或 dump_ui；条件状态（领过奖、皮肤已拥有、没广告等）出现的新按钮同样点。iPhone SE（device iphone_se）再跑一遍主流程。运行 scripts/audit_button_coverage.py --project <工程> --binding <review.json> --out <报告> --md <按钮清单.md>，按钮清单附进测试报告。浏览器里做不到的（真的跳到 TikTok 个人主页等）写进 docs/test/button-skip.json 并写原因。",
+      "expected": "报告通过：点击按渲染相机算出的实际显示位置（玩家看到的地方）；没有 camera_offset（画面整体偏移或按钮画的位置和布局不一致）；从游戏里读出的每个按钮都点过，点完画面都有变化；必须的页面（首页、过关、失败、设置两个标签、游戏中、地图、皮肤页）都读过；跳过的都有原因；点了以后结果是否正确由 AD/CLAIM/FLOW 等条目另外检查。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "iphone_device_used",
+        "every_button_tapped",
+        "each_tap_changed_screen",
+        "conditional_state_buttons",
+        "tapped_where_drawn"
+      ],
+      "auto_check": [
+        "audit_button_coverage"
+      ]
+    },
+    {
+      "id": "LIFE-03",
+      "feature": "animation",
+      "title": "取消与动画清理职责",
+      "steps": "在实际异步动作进行中检查取消、暂停、后台、恢复及再次操作；核位置、缩放、透明度和进行中标志。",
+      "expected": "本次操作正确收尾；取消不连带停掉仍负责解锁或清理的其他动作，正常动作和新操作不被卡住。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "关掉页面后动画、计时器还在跑，导致报错或卡顿。"
+    },
+    {
+      "id": "TEST-04",
+      "feature": "test_isolation",
+      "title": "测试数据与现有环境保护",
+      "steps": "使用同字节构建的新origin或测试账户；不清用户登录/进度；QA只在独立副本添加明确观察或SDK夹具，结束仅清理本轮确认归属的临时资源。",
+      "expected": "原数据和现有服务保持；普通包不含QA夹具，用户仍有可启动试玩。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "symptom": "测试时把用户真实存档或环境改坏了。"
+    },
+    {
+      "id": "PERF-01",
+      "feature": "performance",
+      "title": "实际卡顿与动画更新频率",
+      "steps": "出现顿挫或修改动画/进度更新时，在同版真实页面记录一段帧间隔、长帧和可见属性变化频率；核调度周期、数值取整、动画与画布尺寸变化，分别比较修改前后。",
+      "expected": "用可见运动/进度的更新间隔定位并验证改善；平均FPS、服务可达或单张截图不能证明流畅。未测量的卡顿保留待定位，不擅自更改原玩法速度。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "游戏卡顿、掉帧，动画一卡一卡的。"
+    },
+    {
+      "id": "AUDIO-01",
+      "feature": "audio",
+      "title": "两类全局声音、十格音量与真实恢复",
+      "steps": "新制作每游戏提供MUSIC/SFX两类独立全局开关及0–100%十格/10%减加，玩家页无测试/试听列表；检查主题弹窗实际GUI、首手势、全档与边界、独立开关、实际事件播放、持久化/刷新、切场及暂停/广告/前后台恢复，检查加载/音频上下文并实际试听。局部维护按用户范围。；使用game-audio-library的GameAudioManager时，按其SKILL.md第10节验收清单逐项实测。",
+      "expected": "设置、百分比/十格及实际声音一致，两类互不修改且开关保留音量；恢复不错误开声、叠播或解除暂停。播放ID、非零PCM和音量保存不等于实际听见；新制作不得因原无声音跳过，既有局部维护未涉音频仅凭具体范围记不适用。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "symptom": "音乐和音效开关互相影响；看完广告或切后台回来没声音或两首叠在一起。",
+      "required_boards": [
+        "localize"
+      ]
+    },
+    {
+      "id": "ART-02",
+      "feature": "art",
+      "title": "明亮Q版画风与亮度",
+      "symptom": "页面整体发暗、大面积深色背景或深色面板，按钮是生硬的纯平面色块。",
+      "steps": "对当前版本每个页面和弹窗（首页、加载、选关、游戏内、过关/失败/结算/暂停/奖励）在两种比例下截图，运行scripts/audit_dark_area.py --binding <review.json> --out <报告>；超标页面交美术线修改后重拍重测。",
+      "expected": "全部截图深色像素≤15%、平均亮度≥50，按钮和面板为柔和Q版立体；启动包明确要求其他风格时按规格例外并写明依据。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "page_and_popup_screenshots",
+        "style_review"
+      ],
+      "auto_check": [
+        "audit_dark_area"
+      ],
+      "visual_verdict": true,
+      "boards": [
+        "remake"
+      ],
+      "localize_remake_style": true,
+      "board_notes": {
+        "localize": "英化默认不查；用户看完美术第一版说\"按重塑画风重做\"后（docs/art-style.txt 写 remake，init 加 --art-style remake），英化也按本条检查。"
+      },
+      "gate": "art"
+    },
+    {
+      "id": "ART-03",
+      "feature": "art",
+      "title": "每个页面和弹窗都有生成的背景",
+      "symptom": "过关/结算弹窗只有一张卡片，后面是纯黑或纯色；页面背景是单色或空白。",
+      "steps": "逐页核每个页面有image_gen生成的全屏背景；逐个弹窗核面板后面是半透明遮罩下的游戏场景或生成的全屏背景。截图同ART-02，由audit_dark_area.py同时测整屏纯色和边缘纯色。",
+      "expected": "没有纯黑/纯色/全不透明遮罩/空画布作为背景；两种比例不露黑边；测量报告全部通过。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "page_background_list",
+        "popup_background_list"
+      ],
+      "auto_check": [
+        "audit_dark_area"
+      ],
+      "visual_verdict": true,
+      "boards": [
+        "remake"
+      ],
+      "localize_remake_style": true,
+      "board_notes": {
+        "localize": "英化默认不查；用户看完美术第一版说\"按重塑画风重做\"后（docs/art-style.txt 写 remake，init 加 --art-style remake），英化也按本条检查。"
+      },
+      "gate": "art"
+    },
+    {
+      "id": "ART-04",
+      "feature": "art",
+      "title": "图片清晰度",
+      "symptom": "按钮、图标、背景在手机上发糊、有锯齿或像素感；图集被缩小后再放大使用。 用户 2026-10-23：RobotSpaDay 美术已经给用户确认过，最终验收才查出 22 张代码里动态设置的图（gameplay:10 等）有效像素不到节点 2 倍、背景 750×1750 只有 1.47 倍，只能回头重新生成。",
+      "steps": "和每轮美术自检是同一套步骤（用户 2026-10-23）：每轮自己的美术做完（两个板块、第一轮起）运行 scripts/art_check.py（用户 2026-10-24：最终总检测不再查美术）：它用 chrome_touch dump_ui 记录的运行时 frame_size/display_size 量每张真正画出来的图（low_res：普通图≥节点 2 倍、背景和全屏图≥1.5 倍，代码里动态设置的图集格、角色帧也算），再跑 scripts/audit_image_clarity.py 查场景/预制体里被放大使用和不到 2 倍的图；\"清晰度（ART-04…）\"一行必须通过；两种比例的高分屏截图上放大查看边缘。",
+      "expected": "art_check 的清晰度行通过：没有 low_res、没有\"放大使用\"和\"不到2倍\"的图（英化原游戏没改的原图写进 docs/art/clarity-exempt.json 并写 why，新做/重做的图不能豁免）；交用户确认美术之前就已通过（美术只在美术关查，最终总检测不查）；没有像素风、毛边或锯齿；包体超限用压缩解决，不降分辨率。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "size_ratio_table",
+        "zoomed_screenshots",
+        "runtime_frames_2x_background_1_5x",
+        "same_check_every_art_round"
+      ],
+      "visual_verdict": true,
+      "board_notes": {
+        "localize": "英化：第一轮美术起就查新做/重做的图（英文图、重做的背景、新功能图标和皮肤、两个主页入口图标），不只作提示；原游戏没改的图写进 docs/art/clarity-exempt.json（why：原游戏原图，未改）。选了\"按重塑画风重做\"后全部图都查。"
+      },
+      "auto_check": [
+        "art_check"
+      ],
+      "gate": "art"
+    },
+    {
+      "id": "ART-05",
+      "feature": "art",
+      "title": "UI不挡玩法、货币在最上方、功能按钮集中在下方图标为主、禁用深色/大白/纯色/粗黑字/单调设计、无开发用文字、首页必有桌面快捷方式和个人主页回访两个键、不要分享",
+      "symptom": "游戏中信息条、按钮、摇杆堆满四周和中间，挡住大半屏幕；暂停/商店弹窗是一整张大白板配黑色粗字和黑色单色图标；按钮和面板是藏青/黑色大色块；所有标签是同一个白色铭牌模板，放在纯黑底上。 首页把七八个功能做成大文字方块堆在中下部；试玩版显示\"PLAYABLE PROTOTYPE\"\"PLAYTEST LAB\"\"TRY THE MECHANICS\"等开发用文字；生成按钮和白色占位方块混用。 用户 2026-10-23：首页金币栏（coin 0 / 道具 1）放在屏幕正中间，地图、皮肤图标在中间两侧，帮助和视频图标挤在左下角和右下角，四散各处、中间一大片空白（Hazel's Shelf Scramble）。 用户 2026-10-23：分享用不了，英化的原游戏还留着 Share/分享按钮；英化时首页没加桌面快捷方式和个人主页回访，或者先问用户要不要。 用户 2026-10-23：原游戏的按钮不审查全部留着，更多游戏/交叉推广、排行榜、七日签到这些多做多错的按钮一直出 bug。",
+      "steps": "组装线写 docs/ui-layout.json（两种比例的游戏中常驻UI元素矩形、提示气泡、每个弹窗面板），跑 audit_ui_coverage.py --binding；每个页面和弹窗截图跑 audit_dark_area.py（含大块白色/纯色测量）；GPT 在总览图上判定文字粗细深浅、图标是否有配色、布局是否成组清楚。 首页在 ui-layout.json 写 role:home 与 buttons（primary/label），audit_ui_coverage.py 查文字方块、大小、设置在上角、货币在最上方、其他功能按钮紧凑排在下方、重叠和按钮总面积≤40%；audit_top_bar.py 的 currency_only_at_top 查每个页面货币都在最上方；audit_dev_text.py --final 查开发用文字和占位图。 布局数据由 extract_ui_layout.py 从运行中游戏的 dump_ui 自动读出（audit_ui_coverage 会重新提取比对，手填或改过的布局直接拒绝）。 audit_ui_coverage.py 同时查每个首页都有桌面快捷方式（shortcut/add_to_home）和个人主页回访（revisit/profile）两个键、任何页面/弹窗/HUD 没有分享入口（share/分享/invite/邀请/炫耀/转发）；audit_platform_markers.py <工程> 查源码里没有 shareAppMessage/onShareAppMessage/showShareMenu 等分享调用。 英化先按 references/game-modules.md 第一节审查原游戏每个按钮（docs/modules.json button_audit）；audit_ui_coverage.py 同时查没有排行榜/排名、签到、更多游戏按钮，audit_platform_markers.py 查没有 navigateToMiniProgram/showMoreGamesModal 等交叉推广调用。",
+      "expected": "游戏中常驻UI≤屏幕20%（玩法区≥80%）且互不重叠，提示气泡小、不在屏幕中间、会自动消失；游戏中弹窗面板≤屏幕60%；没有大块白色/浅灰、大块纯色或深色按钮面板；文字为中等粗细的白色/浅色或饱和主题色，没有近黑/藏青/深灰特粗字；图标和按钮都有配色并按用途区分。 首页按钮加起来≤屏幕40%（用户 2026-10-23 由30%放宽，标题、封面不算），每页最多 2 个主要文字按钮，其他为图标按钮；货币/体力/加号只在屏幕最上方，设置在左上或右上角，其他功能按钮（礼盒、地图、皮肤等）紧凑排在下方（屏幕65%以下）最多两排、按钮之间小间距，不散到四周和角落，中间不放功能按钮；不显示开发用文字，不留占位图。 首页下方那排一定有 Add to Home Screen（桌面快捷方式）和 Profile Revisit（个人主页回访）两个键，英化时原来没有就直接加、不问用户；全游戏没有分享功能，原游戏的分享按钮、弹窗、奖励和调用都已删除。 没有排行榜/排名、七日签到、更多游戏/交叉推广（用户 2026-10-23）；首页有10帧动画礼盒（点开看广告得金币；10帧图由 art_check.py 的礼盒一行查）。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "gameplay_ui_ratio_both_ratios",
+        "popup_panel_ratio",
+        "text_and_icon_colour_review",
+        "home_currency_top_buttons_bottom_compact",
+        "home_shortcut_revisit_keys_no_share",
+        "no_ranking_checkin_cross_promo_buttons"
+      ],
+      "auto_check": [
+        "audit_ui_coverage",
+        "audit_dark_area",
+        "audit_dev_text"
+      ],
+      "visual_verdict": true,
+      "board_notes": {
+        "localize": "英化：页面按本条重新排版（货币挪到最上方、设置在上角、其他功能图标紧凑排在下方、玩法区≥80%），禁止的UI（大块深色/白板/纯色、深色粗字、单色图标）必须改掉；改的部分沿用原游戏画风，不要求明亮Q版。 英化重点（用户 2026-10-23）：首页直接加桌面快捷方式和个人主页回访两个键（不问用户），原游戏的分享功能全部删掉。"
+      },
+      "gate": "art"
+    },
+    {
+      "id": "AUDIO-02",
+      "feature": "audio",
+      "title": "音效来源与授权记录",
+      "symptom": "音效听起来像程序合成的\"哔哔\"声；音频文件说不清从哪来、能不能商用。",
+      "steps": "新音频用配套Skill game-audio-library生成，来源自动写进docs/audio/credits.csv；保留的原音频在docs/audio/sources.md记一行并写\"原游戏自带\"（启动包给的写\"启动包提供\"）。运行scripts/audit_audio_sources.py --project <工程> --binding <review.json> --out <报告>；报告里attribution_required大于0时，打开游戏\"关于/制作人员\"页核对docs/audio/CREDITS.txt的内容已显示。",
+      "expected": "每个音频都有合格来源记录，无合成/AI生成、无NC/ND/SA/仅个人使用、无\"待下载\"；需署名的已在游戏内显示；报告全部通过。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "auto_check": [
+        "audit_audio_sources"
+      ],
+      "boards": [
+        "remake"
+      ]
+    },
+    {
+      "id": "ECON-01",
+      "feature": "economy",
+      "title": "皮肤板块的数值：稀有度、价格台阶、加成、限定皮肤（固定模板 skin.v1）",
+      "symptom": "皮肤价格和数量每款乱填、后面的比前面便宜、价格差距太小；加成和稀有度对不上；限定皮肤能买；还留着排名皮肤、签到皮肤（已取消）或\"完美通关送皮肤\"（用户 2026-10-22 已取消）。",
+      "steps": "皮肤板块按 references/game-modules.md 第四节：scripts/make_skin_table.py --R <中等难度一关的金币> --levels --final-level <总关数，≥70> [--limited-mode final|every_10]（无尽 --endless）生成 unlock_table.json（20款主角皮肤＋10款背景，module skin.v1），只填名字和图；设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_acquisition_progression.py --table <配置> --binding <review.json> --report <报告>。用户不要皮肤板块时填不适用并写依据。",
+      "expected": "报告通过：20款主角（限定皮肤选“每10关一款”时为 19＋限定关数；初始款免费）、10款背景（第1款免费）；只用金币买，第一款付费=2R，价格台阶按R×1/4/10/20（类似50/200/500/1000）往上；加成随稀有度上升（普通5–10%、稀有11–20%、史诗21–32%、传说33–50%、限定51–60%）；限定皮肤排最前，有关卡游戏两种格式都可以（用户 2026-10-24）：只在最后一个限定关送一款，或每个限定关各送一款，都只能在限定关拿到，无尽游戏用大量金币或5–10次广告；没有排名/签到/完美通关送皮肤；只有初始物品免费。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "auto_check": [
+        "audit_acquisition_progression"
+      ],
+      "board_notes": {
+        "localize": "英化：原游戏没有皮肤系统、用户也没取消皮肤板块时按模板新增（优化清单里先给用户勾选，默认要）；原来有皮肤的换成模板的数量和价格；新图沿用原游戏画风。"
+      },
+      "required_boards": [
+        "localize"
+      ],
+      "maintenance_scope_note": "Explicit preservation scope checks the actual existing collection and trial mechanics, original price catalog and source/Web/Native runtime plus current GUI; does not waive economy or introduce template-only map/trial popup.",
+      "gate": "design"
+    },
+    {
+      "id": "ECON-02",
+      "feature": "economy",
+      "title": "看广告试用弹窗与地图解锁的实际流程",
+      "symptom": "下一关前不弹试用或每关都弹；试用后皮肤变成永久拥有、或试用的广告算进解锁进度；通关后新地图没解锁。",
+      "steps": "有收集系统时逐项实测：①前2关不弹，之后每2–3关在点\"下一关\"后、下一关开始前弹试用；全部拥有时不弹；No Thanks立即可点；取消/失败/关闭直接进下一关。②看完广告后下一关使用试用皮肤，结束后恢复原装备、不算拥有、解锁进度不变，结算页有\"立即解锁\"入口。③章节最后一关（每10关的限定关）通关后解锁新地图，地图选择页出现（限定关本身的奖励按 LEVEL-02 测）。④重启游戏后以上状态一致。",
+      "expected": "四项全部符合references/rarity-unlock-design.md第四、五节；广告完成、取消、重复回调按AD-02/03/04处理。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "required_observations": [
+        "trial_popup_timing_and_frequency",
+        "trial_effect_and_restore",
+        "map_unlock"
+      ],
+      "required_boards": [
+        "localize"
+      ],
+      "maintenance_observations": [
+        "existing_trial_entry_and_effect",
+        "trial_only_current_round",
+        "permanent_unlock_unchanged",
+        "trial_cancel_and_reopen",
+        "existing_collection_navigation"
+      ],
+      "maintenance_scope_note": "Explicit preservation scope checks the actual existing collection and trial mechanics, original price catalog and source/Web/Native runtime plus current GUI; does not waive economy or introduce template-only map/trial popup."
+    },
+    {
+      "id": "MOD-01",
+      "feature": "modules",
+      "title": "内置板块：先删多做多错的按钮、每款游戏有货币、每次结算看广告×2、首页礼盒、皮肤板块（默认要）、关卡板块；按固定模板做，不自己发明",
+      "symptom": "用户 2026-10-23：原游戏的按钮不审查就全保留，交叉推广（更多游戏）、排名、分享、七日签到这类多做多错的功能一直出 bug；有的游戏没有货币；结算页没有看广告翻倍；皮肤数量、价格、加成每款都乱填；首页没有礼盒；AI 每款游戏自己写广告奖励逻辑，广告按钮处连点重复发奖、卡顿。",
+      "steps": "设计玩法时（英化写在优化清单里、重塑在写规格时）按 references/game-modules.md 做：①英化先把原游戏每个按钮列出来判断有没有用、能不能用，没用的删掉，写进 docs/modules.json 的 button_audit；②排名/排行榜、七日签到、更多游戏/交叉推广、分享一律不做、原有的删掉；③每款游戏有一种贴合题材的货币；④把 assets/modules/AdRewards.ts 原样复制进游戏，结算×2、奖励关×3/×6、礼盒金币、皮肤价格都从它算；⑤皮肤板块先判断适不适合并问用户（勾选框，默认要），要的话用 scripts/make_skin_table.py 生成20款主角皮肤＋10款背景；⑥首页礼盒的10帧动画图只在美术关由 art_check.py 查（用户 2026-10-24）；⑦设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_game_modules.py，最终总检测不再跑。",
+      "expected": "报告通过：板块决定已记录（问过用户、皮肤默认要）；没有排名、签到、更多游戏、分享；英化的按钮审查表完整、没用的已删；AdRewards.ts 和技能里的一模一样、模拟全部通过（结算×2、奖励关3倍→6倍、礼盒随通关数和下一款皮肤价格变大、每局只领一次、广告按钮只触发一次）；皮肤表是 skin.v1（20款主角、10款背景、价格台阶、加成随稀有度上升、限定皮肤排最前；限定皮肤只在最后一个限定关送或每个限定关各送一款）。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "auto_check": [
+        "audit_game_modules"
+      ],
+      "board_notes": {
+        "localize": "英化：按已授权优化清单审查按钮；默认删除无实际功能与排名/签到/互推/分享，明确保留的扩展按 fusion-policy.md 执行；货币、×2、礼盒及适用皮肤采用模块。"
+      },
+      "maintenance_scope_note": "Explicit preserve_existing_gameplay with current source inventory, actual two-ratio GUI and replayed production source/Web/Native evidence may map existing mechanics; see native-reward-storage-and-empty-features.md. No whole-check waiver; default template rules and all writer/reward/state gates remain.",
+      "gate": "design"
+    },
+    {
+      "id": "MOD-02",
+      "feature": "modules",
+      "title": "广告机制板块在游戏里的实际效果（结算×2、广告按钮不重复、不卡顿）",
+      "symptom": "用户 2026-10-23：bug 常常出在广告按钮那里：连点两下发两次奖、广告关掉后按钮还能点、看完广告奖励没到、广告前后画面卡一下；结算页有的关没有×2；礼盒金币一直不变、一局能领很多次。",
+      "steps": "浏览器里实测（chrome_touch，模拟广告完成/取消/失败）：①每关结束（无尽游戏每局结束）都有\"看广告×2\"，看完到账正好2倍、只发一次；②首页礼盒按奖励入口（reward_entries 的 CLAIM/AD 状态）测领取，礼盒金币随通关数变大由设计关的 AdRewards 模拟查，10帧动画由美术关查，这里不重复（用户 2026-10-24）；③每个广告按钮连点3下只播一次广告、只发一次奖；取消/失败不发奖、按钮恢复；④广告前后、发奖动画时不卡顿（录屏或 FPS 看一遍，掉帧≤1次可见卡顿）；⑤重开游戏后金币和礼盒状态一致。",
+      "expected": "五项都符合 references/game-modules.md 第二、三、六节；数值和 AdRewards.ts 算出来的一样；广告完成、取消、重复回调按 AD-02/03/04 处理。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "result_double_every_end",
+        "ad_button_single_fire",
+        "ad_cancel_no_reward",
+        "no_stutter_around_ads",
+        "same_after_reload"
+      ],
+      "maintenance_observations": [
+        "preserved_result_multiplier",
+        "original_economy_preserved",
+        "ad_button_single_fire",
+        "ad_cancel_no_reward",
+        "no_stutter_around_ads",
+        "same_after_reload"
+      ],
+      "maintenance_scope_note": "Explicit preserve_existing_gameplay with current source inventory, actual two-ratio GUI and replayed production source/Web/Native evidence may map existing mechanics; see native-reward-storage-and-empty-features.md. No whole-check waiver; default template rules and all writer/reward/state gates remain."
+    },
+    {
+      "id": "FEAT-01",
+      "feature": "economy",
+      "title": "皮肤板块在游戏里的实际效果（加成到账一次、试用也有加成、切换立刻生效、重开一致）",
+      "symptom": "皮肤卡片写着 +20% 但过关金币没变；试用的皮肤没有加成；换皮肤后要重开才生效；加成算了两次；限定皮肤能用金币买到、或排在最后；皮肤图粗糙，越贵的越简单。",
+      "steps": "用户选了皮肤板块（docs/modules.json skins.user_choice yes，默认）时浏览器里实测：①装备不同皮肤各过一关，结算金币＝基础×(1＋加成)四舍五入，单独一行\"Skin bonus +9\"；②看广告试用的皮肤这一关也有加成；③换皮肤立刻生效，背景皮肤换完游戏背景马上变；④重开游戏后装备和加成一致。皮肤页排序、卡片加成显示、越稀有越精致在设计关和美术关已查，这里不重复（用户 2026-10-24）。",
+      "expected": "四项都符合 references/game-modules.md 第四节；加成只算一次、只算当前装备的皮肤；数值与 make_skin_table.py 生成的表一致。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "required_observations": [
+        "result_coins_include_bonus_once",
+        "trial_skin_bonus",
+        "switch_takes_effect",
+        "same_after_reload"
+      ]
+    },
+    {
+      "id": "HUD-01",
+      "feature": "ui",
+      "title": "顶部资源栏数字实时变化（位置、图标、题材在美术关由 art_check.py 的顶部资源栏一行查）",
+      "symptom": "过关拿了奖励回到首页数字没变，要重开才更新；买了东西、领了奖数字不动。",
+      "steps": "测试时用 chrome_touch 依次做：首页（和地图）记下货币和关卡数 → 玩一关并过关（result_win）→ 回到首页/地图；再领一次奖、买一次东西、开一次礼盒、看一次广告奖励，每次都看顶部数字。资源栏的位置、闪电体力、贴合题材的货币图标、货币只在最上方（audit_top_bar.py）在美术关已查，这里不重复（用户 2026-10-24）。",
+      "expected": "过关后回到首页/地图时货币和关卡数马上变大；领奖、购买、开礼盒、看广告奖励后数字当场变化（滚动增加、图标飞入），不用重开游戏。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "counts_update_live"
+      ]
+    },
+    {
+      "id": "LEVEL-01",
+      "feature": "economy",
+      "title": "关卡板块：有关卡就有地图（显示总关数）、70关及以上、难度逐关递增、每10关一个限定关（华丽边框）和一个随机奖励关（3倍、看广告6倍）、限定皮肤只在最后一个限定关送或每个限定关各送一款；无尽游戏没有地图",
+      "symptom": "通关型游戏没有地图，玩家不知道一共几关、自己到哪了；只有二三十关就结束（不到70关）；难度忽高忽低，某一关突然难很多；地图上没有奖励关；每章最后一关和普通关一样的奖励；奖励关每隔固定几关出现一次，一眼看穿；奖励关不比普通关简单、金币没有3倍；限定关的节点和普通关一样；无尽游戏硬做了一张地图。",
+      "steps": "设计玩法时按 references/game-modules.md 第五节和 references/top-bar-and-level-map.md 第二到五节判断是有关卡（通关型）还是无尽；通关型至少70关（用户 2026-10-24：70关及以上都通过，多了不删）：重塑做70关或更多；英化不到70关的先按原玩法设计新关、补到至少70关（新加的关标 \"new\": true，并证明能过；原版已有70关或更多的全部保留）；用 scripts/make_level_plan.py --levels <总关数，≥70> --coins <R> --limited-skin <限定皮肤id> [--limited-skin-mode final|every_10] --seed <数字> 生成关卡表骨架（每10关一个限定关、每10关按种子随机一个奖励关；无尽：--endless），按真实关卡填难度，写到 assets/resources/config/level_plan.json，游戏运行时读它。dump_ui 读地图页（purpose map）。设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_level_plan.py；地图页的显示在美术关由 art_check.py 查。最终总检测不再跑。",
+      "expected": "报告通过：通关型70关及以上（用户 2026-10-24），每关都列在表里；难度逐关递增（奖励关除外）；限定关正好在第10、20…和最后一关，节点是华丽边框，第一次打过给大量金币；限定皮肤两种格式都通过（用户 2026-10-24）：只在最后一个限定关送一款（final），或每个限定关各送一款（every_10），限定皮肤只能在限定关拿到；每10关正好一个奖励关、位置由种子随机、不在每段前1关和最后2关，比这一段最简单的普通关还简单，给3倍货币、看广告变6倍，节点画成货币图标；没有完美通关送皮肤；地图页显示总关数；无尽游戏没有地图页。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "auto_check": [
+        "audit_level_plan"
+      ],
+      "board_notes": {
+        "localize": "英化只做补充：原来的关卡内容和顺序不改。不到70关的通关型游戏必须按原玩法设计新关、补到至少70关（已有70关或更多的不删不加）（标 \"new\": true，新关难度接着原来最后一关往上递增，每关证明能过）；没有地图的通关型游戏按原画风补一个地图页；第10、20…最后一关标成限定关（难度照常，换成华丽边框节点、补大量金币；限定皮肤只在最后一个限定关送，或每个限定关各送一款）；奖励关是新设计的很简单的短关（标 \"new\": true），插在 make_level_plan.py 按种子定的位置（每10关一个，3倍货币，看广告6倍），原关卡顺序不变。"
+      },
+      "gate": "design"
+    },
+    {
+      "id": "LEVEL-02",
+      "feature": "economy",
+      "title": "地图、奖励关和限定关在游戏里的实际效果",
+      "symptom": "地图打开在第1关而不是当前关；奖励关、限定关在地图上和普通关长得一样；限定关打完奖励没发、或者每次重玩都发；限定皮肤出现在商店价格表或看广告试用里；奖励关打完没有3倍货币、看广告没有变6倍。",
+      "steps": "浏览器里实测：①地图打开时停在当前关，顶部显示总关数（如\"Level 12 / 70\"，总关数≥70）；②奖励关的节点是货币图标，打完拿到3倍货币，结算页看广告变6倍（只能一次）；③限定关难度和前后关差不多（节点的华丽边框和奖励预览在美术关看）；④第一次打过限定关弹出大奖励（金币飞到顶部资源栏；送限定皮肤的限定关——最后一个限定关，或选了每10关一款时每个限定关——获得限定皮肤并可一键使用），重玩只给普通奖励；⑤限定皮肤在皮肤页排第一、变暗、显示\"Clear Lv.<它的限定关>\"，不能用金币或广告解锁，也不出现在试用弹窗；⑥通关章节最后一关后新地图/新章节解锁；⑦重开游戏后以上状态一致。",
+      "expected": "七项都符合 references/game-modules.md 第五节和 references/top-bar-and-level-map.md 第三到五节；奖励只发一次，按 CLAIM/STATE 规则保存。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "required_observations": [
+        "map_opens_at_current_level_with_total",
+        "bonus_level_currency_node_3x_ad_6x",
+        "limited_reward_once",
+        "limited_skin_not_for_sale",
+        "chapter_unlock",
+        "same_after_reload"
+      ]
+    },
+    {
+      "id": "PAGE-01",
+      "feature": "art",
+      "title": "不能有单调页面和纯色背景（含游戏中）：结算页只有一个按钮、纯色底、按钮只有字、系统默认字体、大块空白面板、开发用文字",
+      "symptom": "过关页是整屏纯蓝底，只有一个 NEXT LEVEL 按钮；首页的 PLAY 只是一行字没有按钮底板，两个图标下面的 Home Screen、Profile Revisit 是系统默认字体；排名/商店弹窗中间一大块空白。 第一轮美术后过关页整屏浅蓝、游戏中天空是一整块浅蓝什么都没有；主页回访弹窗显示 LOCAL PREVIEW；设置页只有声音、没有功能页。 首页按钮做得又大又多、占满屏幕，标题很小，没有封面画面。 美术只换了图，字还是系统细字体摆在图上：白字 RETRY 压米色面板、深蓝 PLAY 压深蓝按钮、细紫字压花哨背景、青字压青底。 第二批（用户 2026-10-22）：收藏页\"COINS 47 PEARLS 17\"\"Price · 250 coins\"和物品名是直接调用字体的深青色字，左右翻页是扁平青色方块里打的\"<\"\">\"，和同页金边 UNLOCK 不是一套；\"BRILLIANT!\"是深青色字体字；任务页标题是图片字，下面的任务名和数字却是很细的系统字。 第三批（用户 2026-10-23，永久禁止）：游戏中天空上的 HUD \"COINS 785\"\"LEVEL 1\"是深青/深蓝灰色粗字；奶白面板上的\"HOME SCREEN OPEN · PROFILE RETURN OPEN\"\"MISSIONS 2/3 RESOLVED\"是深青色粗字，还是把代码状态直接显示给玩家。 第四批（用户 2026-10-23）：\"Home screen reward\"弹窗是一整块浅色平板，标题和说明是字体打的青蓝色字，下面三个扁平按钮 ADD NOW / CHECK REWARD / CLOSE，没有插图和标题牌，非常单调。 第五批（用户 2026-10-23）：DETAILS 字图 570×345 被 SizeMode.CUSTOM 硬塞进 234×49 按钮，压扁 2.89 倍（SKINS、DAILY 1.80 倍，MAP 1.19 倍），RasterText.ts 用 Canvas 字体画字；Hazel's Shelf Scramble 首页标题、PLAY、数字 100/3 全是同一种青色；\"Your Progress\"弹窗所有字同一种橙黄＋棕描边、中间大白板、灰底；用户只说\"重做美工\"时 AI 只按几个字重画，没走美术规则和检查。 第六批（用户 2026-10-23）：体力胶囊里\"20\"压在闪电图标上、是原生细字体；WATCH AD 按钮左边一堆金币伸出按钮（穿模）；按钮下面用小字写\"WATCH AD · DOUBLE COINS\"，主要功能字成了小字。 第七批（用户 2026-10-23）：Daily Rewards 签到弹窗的三位数奖励 100/150/200/300 数字叠在一起（像\"10\"叠印在\"100\"上，两位数 25/50 正常）；第 7 天的车被拉长、远远伸出卡片；卡片里面是生成图自带的绿色棋盘格（假透明）。 第八批（用户 2026-10-23，Metro Switch 首页）：背景是一整张画满小细节的广场（小人、小车、招牌、地砖），深色标题和普通按钮淹没在里面，一点都不突出；标题还是深色字。",
+      "steps": "交用户看美术之前就做（不是等到打包）：在浏览器里用 chrome_touch 的 dump_ui 读每个页面和弹窗（含游戏中，两种比例），写 purpose：首页 home、过关 result_win、失败 result_fail、设置功能页 settings、设置声音页 settings_sound；每次 dump 自动存一张截图。运行 scripts/audit_page_richness.py --project <工程> --binding <review.json> --out <报告>（同时量每张截图的纯色背景）；Codex 在总览图上再看一遍。",
+      "expected": "报告通过：每个页面（含游戏中）都有背景画面、没有一种纯色占屏幕 40% 以上；没有单调页面（≥5 个元素、占屏幕≥25%）、只有字的按钮、系统默认字体、空白面板、开发用文字；结算页有至少2个按钮、奖励/分数/关卡数字、星星或金币等至少3个图；首页有大标题（宽度≥屏幕55%）、封面图（不是按钮的图≥屏幕15%）、带底板的 PLAY 和至少2个图标按钮；功能页（首页、结算、暂停、设置、复活、试用）的按钮加起来≤屏幕40%（用户 2026-10-23 由30%放宽），标题和封面不算；弹窗不单调（plain_popup：每个弹窗都有生成的插图≥面板10%、图片字标题和整套按钮）；设置有功能页（How to Play、Credits/About）和声音页（Music、Sound Effects 两类开关和十格音量）。 所有字都设计过：固定字是图片字；按钮连字一次成整张图（没有 spliced_button）、首页标题是一张生成的 logo（没有 typed_title）、数字是按画风生成的数字位图字（没有 font_number，用户 2026-10-23）；只有公告、玩法说明这类大段文字可用细一点的字体；没有对比度不够（小字4.5:1、大字3:1，描边可算）、iPhone 上小于11px、没描边阴影的按钮字和标题。 固定的字（标题、按钮、栏目名、物品名、任务名）全部是 GPT 生成的图片字（txt_<字>），没有 font_text、dark_green_text（深绿/深青色字）、text_arrow、flat_button；按钮全部在 docs/art/button-set.json 的一整套里（含左右箭头）。 没有任何深色粗字（用户 2026-10-23 永久禁止，不分颜色，游戏中 HUD 和图片字也算）：dark_bold_text（文字颜色 L*<50 且粗体/描边/阴影/≥16px）、dark_picture_text（截图像素量出字形大多是深色）都没有；没有\"SCREEN OPEN\"\"2/3 RESOLVED\"这类状态字（dev_text）。 字图都等比缩放、没有被压扁拉长（没有 squashed_text/squashed_picture，每个字单独裁边成 SpriteFrame，SizeMode TRIMMED/RAW）；没有 Canvas 画的字（canvas_text、canvas_font_code）；一页的标题、按钮字、数字、标签颜色不全一样（没有 uniform_text_colour）；docs/art/screens.json 列出所有能点开的页面和弹窗，每个都 dump 过、风格一致（art_check 行\"全部页面和弹窗\"通过）；只改美工时也走 cocos-game-art-redo 的全套规则和检查（用户 2026-10-23）。 不穿模（没有 overlap_text_picture、overlap_text、overlap_buttons、clip_out、capsule text_outside），主要功能字在生成的按钮上（没有 action_caption），道具/体力/金币/关卡的胶囊、按钮、收集键是生成的图、会变的数字单独生成位图字；art_check 行\"位置穿模\"通过，Codex 看过 overlap/ 穿模审查图（用户 2026-10-23）。 数字不叠印（用户 2026-10-23）：没有 glyph_overlap（手摆的数字图互相压）、double_number（同一个数字印两遍/再叠一个 Label）、negative_spacing（字距为负）、font_advance（.fnt 字宽大于前进宽度）；固定数字（每日奖励、价格、关卡奖励）和金币图标/底板一起生成成一张图，会变的数字用一个位图字体 Label，三位数和最大值都放大看过；卡片里的奖励图不伸出卡片（clip_out 含卡片）、不被拉长；没有 checker_fill（生成图自带的棋盘格假透明，必须是真透明 alpha）。 背景不花哨（用户 2026-10-23）：没有 busy_background（背景里细碎边缘占比≤30%），背景是大块柔和的形状、渐变、少量云朵或虚化远景，标题 logo 和按钮一眼最突出；标题是亮色或饱和色＋描边，不是深色字；首页有礼盒（gift），每个过关页（无尽游戏每个结算页）有看广告×2 按钮（result_double）；没有排名/签到页面和按钮（removed_feature）。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "visual_verdict": true,
+      "required_observations": [
+        "pages_dumped_with_purpose",
+        "no_monotonous_page",
+        "no_flat_background_including_gameplay",
+        "buttons_have_plates_and_game_font",
+        "settings_two_tabs",
+        "text_designed_and_readable",
+        "fixed_text_is_generated_picture_text",
+        "one_button_set_including_arrows",
+        "no_dark_bold_text_any_hue",
+        "popups_have_generated_illustration",
+        "buttons_and_title_one_piece_generated",
+        "no_squashed_picture_text",
+        "text_colours_varied",
+        "all_screens_restyled_together",
+        "no_overlap_clipping",
+        "action_words_on_buttons",
+        "no_glyph_overlap_fixed_numbers_one_picture",
+        "no_checkerboard_fake_transparency",
+        "no_busy_background_title_buttons_stand_out",
+        "button_groups_one_caption_style"
+      ],
+      "auto_check": [
+        "audit_page_richness"
+      ],
+      "board_notes": {
+        "localize": "英化只做补充：原来内容够的页面不改；单调的页面按原画风补上标题、奖励、星星、底板和游戏字体；原来是纯色背景的页面（含游戏中）必须重做背景，可以做得简单（渐变加云朵/花纹/远景），但必须有背景。"
+      },
+      "gate": "art"
+    },
+    {
+      "id": "ART-06",
+      "feature": "art",
+      "title": "美术自检在美术阶段做（每轮美术做完立刻跑 art_check.py，不等到测试）",
+      "symptom": "第二轮按用户意见改完美术，还是做出：选关页三张空白卡片、一个蓝色方块占位、大块灰色锁定块、一屏只有1–3关；首页 PLAY 是深色粗字、四个文字按钮、HOME SCREEN 的字超出底板、标题和按钮之间一大片空白。美术线只改了用户点到的地方，没有整页复查，检查都放在了最后。",
+      "steps": "美术线每轮做完（第一版、每次按意见修改后、按重塑画风重做后）：在浏览器里用 dump_ui 读全部页面和弹窗（含游戏中、两种比例、写 purpose，每轮用新的文件夹），运行 scripts/art_check.py --project <工程> --dumps <这一轮的文件夹>；需处理的全部改完再读再跑，直到通过；Codex 打开总览图按看图清单逐项看。交用户时附 art-check.md 的结论。最终总检测不再跑（用户 2026-10-24）；锁定后又改了美术，只对改动重跑 art_check.py。 用户 2026-10-23：美术是重中之重——先样板后整套，至少两整轮自审才交用户（第二轮零\"需处理\"），看图清单每条写\"看了哪张图、结论\"；art_check 的\"深色粗字（永久禁止）\"一行必须通过。",
+      "expected": "art_check.py 报告全部通过（页面内容与背景、画面亮度、布局、文字放得下、开发用文字和占位图；重塑和按重塑画风重做的英化还有清晰度），看图清单每项都看过；交给用户的每一轮美术都有对应的通过报告。 两整轮自审都有报告；\"深色粗字（永久禁止）\"一行通过；看图清单逐条有结论。 美术只在美术关查（用户 2026-10-24）：清晰度行（运行时的图≥节点2倍、背景≥1.5倍）和礼盒10帧一行两个板块第一轮起就必须通过；最终总检测不含美术。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "visual_verdict": true,
+      "required_observations": [
+        "art_check_after_each_art_round",
+        "whole_page_recheck_not_only_user_points",
+        "look_list_on_contact_sheet",
+        "two_full_self_review_rounds"
+      ],
+      "auto_check": [
+        "art_check"
+      ],
+      "gate": "art"
+    },
+    {
+      "id": "NOSKIP-01",
+      "feature": "ads",
+      "title": "严格没有看广告跳关",
+      "symptom": "失败/结算/暂停页有\"Skip Level\"或看广告跳过本关；按钮藏起来了但跳关方法和广告请求还在。",
+      "steps": "运行scripts/audit_no_ad_skip.py --project <工程> --native-zip <上传包> --binding <review.json> --out <报告>；报告的review列表里失败/结算弹窗的skip按钮逐个打开界面确认（跳过教程可以保留）。",
+      "expected": "报告blocking为0；没有任何跳关入口、方法、广告请求或文字；跳过教程只退出引导、广告复活只继续本关。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "auto_check": [
+        "audit_no_ad_skip"
+      ]
+    },
+    {
+      "id": "VIS-01",
+      "feature": "ui",
+      "title": "动态画面：闪黑、闪白、单帧错误、闪烁",
+      "symptom": "切场景或打开弹窗时屏幕突然黑一下/白一下；按钮或图片闪一下消失又出现；某块区域来回闪；运行中黑屏很久。截图上全都看不出来。",
+      "steps": "按references/dynamic-visual-review.md录下8类流程（chrome_touch.py --record，或真机/系统录屏），运行scripts/audit_frame_glitches.py <frames或视频> --binding <review.json> --report <报告>；每个\"必须修\"的问题看3张证据图、修好后重录同一流程；review类判断是不是设计好的效果并写明。",
+      "expected": "所有流程的报告都没有flash_dark/flash_light/one_frame_glitch/long_black/flicker；review项已逐个判断；正常淡入淡出不受影响。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "recorded_flows",
+        "glitch_events_reviewed"
+      ],
+      "auto_check": [
+        "audit_frame_glitches"
+      ],
+      "visual_verdict": true
+    },
+    {
+      "id": "LOAD-03",
+      "feature": "loading",
+      "title": "最终出包前加载必检：可选字体、真实图片重试、独立时钟、后台与迟到回调",
+      "symptom": "手机上进游戏很慢或加载到一半报错；资源还在下载却被判超时（固定15秒截止、进度76%就失败）；首页前把关卡/声音面板才用的大图都下载了；加载动画卡住不动；切到后台再回来就失败；重试后回到首页但玩不了。 用户 2026-10-23：加载动画太慢（资源早就下完了还在慢慢走进度条/固定最短加载时间）、很难进入游戏、加载出问题、进不去游戏——最终检查要以加载为重点。",
+      "steps": "按 references/startup-loading-timing.md：先写 startup-plan.json（测前写好）；在 Ego Lite 里用 chrome_touch.py 跑 local/first_network/slow_network 三种条件、两种比例（本地和首次联网各3冷1热，慢网1冷），每次量 first_feedback→home_usable 和 play_touch→level_ready→first_effect，录屏看加载动画区域；再跑 slow_progress、background_wait、stall_retry、late_callback 四种故障；用 audit_startup_loading.py --binding 判定。 另跑启动契约要求的 optional_api_missing、native_modal_no_callback、image_no_callback、audio_fail（有后续包再加 deferred_bundle_fail）。 用户 2026-10-23（加载是最终检查的重点）：不写死结束时间（大游戏做不到，凑数字反而出新问题；预算只在有真实产品目标时写），改判和游戏大小无关的三件事：不卡住（加载动画连续停住≤1秒，连续≤10秒无进展才算卡住、之后2秒内出 Retry，计划不能放宽这三个数）；不白等（每段等待的允许时间按这段时间真正下载的量算：首页3秒/进关1.5秒基础＋每MB 0.3秒＋1.5倍下载时间＋往返延迟，报告写 *_allowed_ms、*_waste_ms，超出要找原因改，不是改大数字）；下完就进（最后一个下载完成后不超过 max(2秒, 首页时间25%) 首页可点，不许假的最短加载时间、慢吞吞的进度条动画、固定计时器）。按 startup-loading-timing.md 的\"怎样让进入更快\"改（首屏只加载首页要用的、分包、压缩图片、声音单独加载、在首页时预加载第一关、并行加载、不用计时器凑时间）。除了首页 PLAY，还要量\"下一关\"\"重试\"\"地图选关\"进关（mark next_touch/next_ready、retry_touch/retry_ready、map_touch/map_ready），点了一直进不去就不合格；测试阶段第 1 段测一遍，所有修复做完后在最终构建上再完整测一遍（第 9 段），Codex 最终验收亲自在慢网冷启动走一遍\"首页→PLAY→第一关真实触摸生效\"。 必须另按 references/loading-recovery-regression.md 执行SDK回调与原超时定时器同时扣住、真实新请求与迟到结果隔离、Native捕获边界、旧失败/新通过/正常对照，附 audit_loading_recovery 当前构建报告。 另必测真实图片请求挂起时Cocos内部合并队列的释放与新底层请求（image_inflight_retry），以及守卫安装较早但新请求自身计时不包含此前启动耗时。 出任何提供给用户的测试包前，另核可选字体fail/hang/晚到不阻塞或重启页面，新请求从自身创建计时且真实进度先于帧不误超时；恢复矩阵须包含optional_font和request_local_clock，旧10项报告不能替代新增12项。",
+      "expected": "每一次运行都量到真实可操作；加载动画不连续卡住超过 1 秒；首页前没有以后才用的大文件；超时按无进展计算、后台不计时；卡住有限时间内出现 Retry 且重试后真的能玩；旧结果不影响当前局。 不写死结束时间：每次运行都不卡住（动画停住≤1秒、卡住出 Retry）、不白等（实际时间≤按这款游戏真正加载量算出的允许时间）、下完就进（不超过 max(2秒, 首页时间25%)）；下一关/重试/地图选关进关同样不白等、点了一定进得去；最终构建上重测一遍仍全部通过。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "requires_gui": true,
+      "required_observations": [
+        "slow_progress",
+        "background_wait",
+        "stall_error_retry_playable",
+        "late_callback",
+        "cold_start_seconds",
+        "no_fake_loading_wait",
+        "every_level_entry_timed",
+        "final_build_loading_retest",
+        "combined_watchdog_failure",
+        "fresh_request_after_retry",
+        "native_boundary_and_controls",
+        "image_inflight_and_request_local_clock",
+        "optional_font_nonblocking",
+        "request_local_clock_verified"
+      ],
+      "auto_check": [
+        "audit_startup_loading",
+        "audit_loading_recovery"
+      ]
+    },
+    {
+      "id": "AD-06",
+      "feature": "ads",
+      "title": "广告出错可定位、慢请求可免费退出、真机真实广告",
+      "symptom": "广告等很久后只提示\"网络错误\"，查不出原因；广告一直不出来时卡住退不出去；测试夹具都过了，真机上广告却播不了。",
+      "steps": "检查广告各阶段耗时和SDK数字错误码有记录（无则标无）；构造慢请求，确认显示等待并可返回免费流程、不发奖；每个激励广告入口在真机真实广告上走一遍看完→发奖一次→保存→实际使用，没有真机时写\"待真机验证\"。",
+      "expected": "错误可按错误码和阶段定位，不把所有错误说成玩家网络问题；慢请求可退出；真机结果有记录，或明确标为待验且不宣称完成。",
+      "phase": "device",
+      "always_applicable": false
+    },
+    {
+      "id": "STORAGE-01",
+      "feature": "save",
+      "title": "最终 Native 奖励与存档读写契约",
+      "symptom": "Tower Heroes 导出包的 Web 缺键返回 null，Native 可返回空字符串；奖励读取误判损坏，Retry 在主页和关卡详情重复遮挡。此前只测 Web 与手填存档回归，未把实际 Native 账本和适配器负例纳入出包硬门禁。",
+      "steps": "盘点全部持久化域及可达入口；用同一项目 runner 加载已知故障反例与最终 Native bundle/adapter，注入缺键 null/undefined/空字符串、字符串与对象返回、坏值、读写异常、回读歧义和 pending 重开。保存结构化原始结果与 runner、bundle、adapter SHA，执行 audit_native_storage_contract.py；同时真实触摸主页、地图、关卡详情的重开与 Retry。已知故障反例空字符串必须失败，修复版全部场景通过。",
+      "expected": "STORAGE-01 自动报告 policy_version=1、23 个当前场景及 1 个原版负例全通过，报告与最终 Native 树、当前检查表绑定；原始 runner/输入/结果文件哈希可复核。任一场景缺失、已知故障反例负例未复现、最终 Native 文件变更或报告过期，写 ZIP 前拒绝。真实 TikTok 手机和广告仍分别验。 v2 may explicitly mark only source-and-GUI-proven absent map/details routes not_applicable; negative historical_release or exact labeled controlled_legacy_fixture must reproduce the same named defect with the same runner. Final bundle and all existing routes remain required.",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "required_observations": [
+        "storage_domains_and_entrypoints",
+        "old_failure_reproduced",
+        "native_storage_matrix_passed",
+        "home_map_details_retry_touched",
+        "final_native_bytes_bound",
+        "known_runtime_reward_errors_closed"
+      ],
+      "auto_check": [
+        "audit_native_storage_contract"
+      ],
+      "maintenance_scope_note": "Explicit preserve_existing_gameplay with current source inventory, actual two-ratio GUI and replayed production source/Web/Native evidence may map existing mechanics; see native-reward-storage-and-empty-features.md. No whole-check waiver; default template rules and all writer/reward/state gates remain."
+    },
+    {
+      "id": "RANK-01",
+      "feature": "league",
+      "title": "排名扩展启用记录：默认关闭，仅明确选择后检查实际算法和参数",
+      "symptom": "不适合的游戏（关卡很少、纯休闲无输赢）硬加排名，几天就停住不动；适合的闯关/经验/战力/计分游戏没加；AI 自己写排名算法：玩家能冲到第1、一直不掉或常常掉、别人的分数不动、关掉重开名次变了；标题写 National/Worldwide、\"和真实玩家比\"；英化游戏擅自加了排名。",
+      "steps": "仅对用户明确启用或已有项目明确选择的扩展执行；默认关闭，见 fusion-policy.md。开工时按 references/ranking-league.md 第一、二节回答四个问题，写 docs/league/decision.json（重塑 add/skip；英化 none 或 keep_original）。add 时把 assets/league/LeagueSim.ts 原样复制进游戏、按模板写 league-config.json、10 款排名皮肤写进 unlock_table.json（unlock: league），规则弹窗写明对手是电脑玩家；设计关由 scripts/design_check.py 运行 scripts/audit_league.py（最终总检测不再跑）。",
+      "expected": "报告通过：判断和四个问题一致；英化没有新增排名；add 时算法文件未改、模拟检查全部通过（永远不是第1、每局5–6%概率下降、每局都上升、先快后慢、别人同比例上涨、重开一致、每周结算先发10款皮肤再只发金币、只领一次），文案不冒充真实/全国玩家。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "auto_check": [
+        "audit_league"
+      ],
+      "board_notes": {
+        "localize": "默认none；用户明确保留原系统写keep_original并附实际依据，不自动新增排名。"
+      },
+      "gate": "design"
+    },
+    {
+      "id": "RANK-02",
+      "feature": "league",
+      "title": "排名系统在游戏里的实际表现（结算页名次变化、排名页、每周结算、皮肤奖励）",
+      "symptom": "排名页是一大块空白面板加灰字；结算页看不到名次变化；新一周打开没有结算弹窗，或奖励领了两次；10款皮肤发完后还在发皮肤或什么都不发；关掉重开榜单变了。",
+      "steps": "仅对用户明确启用或已有项目明确选择的扩展执行；默认关闭，见 fusion-policy.md。在浏览器里实测（chrome_touch，init_js 可以改时间）：①打完一局，结算页显示名次变化（升了多少、超过了谁）；②排名页：段位、倒计时、前三名、自己上下几名、自己那行高亮、离上一名差多少分、下一款排名皮肤预览，dump_ui 时写 purpose league；③把时间改到下周再打开：弹出上周结算（名次、段位升降、金币＋皮肤），领一次后不再出现；④把存档改到已有10款排名皮肤：只发金币；⑤存档改到第2名附近连打多局：始终到不了第1；⑥关掉重开，榜单和名次一致；⑦规则弹窗写明对手是电脑玩家。",
+      "expected": "七项全部符合 references/ranking-league.md；排名页通过 audit_page_richness（不空白、≥10个名次/分数），画面由 Codex 最终判定。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "visual_verdict": true,
+      "required_observations": [
+        "result_rank_change",
+        "league_page_rows_and_player_row",
+        "weekly_settlement_popup_once",
+        "skins_then_coins",
+        "never_first_near_top",
+        "same_board_after_reload",
+        "rules_say_computer_rivals"
+      ],
+      "boards": [
+        "remake"
+      ]
+    },
+    {
+      "id": "FEAT-00",
+      "feature": "economy",
+      "title": "可选扩展记录：默认关闭签到；skin.v1加成按模块，明确自定义按实际选择校验",
+      "symptom": "没问用户就自己加或不加；用户要了七日签到却没做；AI 自己写签到逻辑：同一天能领两次、改时间能多领、第7天奖励很小；皮肤增益乱填、后面的皮肤比前面的加成低。",
+      "steps": "仅对用户明确启用或已有项目明确选择的扩展执行；默认关闭，见 fusion-policy.md。设计玩法时问用户两项（英化写在优化清单里，重塑在写规格时问，启动包已写就照抄核对），回答写进 docs/features.json；要了签到时把 assets/checkin/DailyCheckin.ts 原样复制进游戏、按模板写 checkin-config.json；要了皮肤增益时在 unlock_table.json 每个皮肤写 bonus；设计关由 scripts/design_check.py 运行 audit_optional_features.py 和 audit_acquisition_progression.py（最终总检测不再跑）。",
+      "expected": "两个报告都通过：回答已记录；要的都做了、不要的没加；签到模拟全部通过；皮肤增益随稀有度上升、不超过50%。",
+      "phase": "pre_scan",
+      "always_applicable": true,
+      "auto_check": [
+        "audit_optional_features"
+      ],
+      "gate": "design"
+    },
+    {
+      "id": "FEAT-02",
+      "feature": "economy",
+      "title": "七日签到在游戏里的实际表现",
+      "symptom": "签到弹窗每次打开都弹；同一天连点能领两次；把手机时间改回去又能领；第7天的卡片和其他一样小；领完按钮还亮着；已有的皮肤又发一次。",
+      "steps": "仅对用户明确启用或已有项目明确选择的扩展执行；默认关闭，见 fusion-policy.md。浏览器里实测（chrome_touch 的 init_js 改时间、改存档）：①每天第一次进入首页自动弹一次（新手前两关不弹），首页日历图标有红点；②点 Claim 发奖并有飞入动画，连点只发一次；③领完按钮变成\"Come back tomorrow\"＋倒计时；④改到第二天能领第2天，改回昨天不能领；⑤连续7天：第7天是大卡片，发大礼包；第8天从第1天重新开始；⑥签到皮肤已拥有时改发金币；⑦关掉重开状态一致；dump_ui 写 purpose checkin。",
+      "expected": "七项都符合 references/skin-bonus-and-checkin.md 第三、四节；签到弹窗通过 audit_page_richness（7张卡片、第7天大卡片、有 Claim 按钮）。",
+      "phase": "pre_scan",
+      "always_applicable": false,
+      "requires_gui": true,
+      "visual_verdict": true,
+      "required_observations": [
+        "auto_popup_once_per_day",
+        "claim_once",
+        "claimed_state_and_countdown",
+        "next_day_and_clock_back",
+        "day7_big_and_cycle_restart",
+        "owned_skin_pays_coins",
+        "same_after_reload"
+      ],
+      "maintenance_observations": [
+        "existing_checkin_entry_and_claim",
+        "claim_once",
+        "claimed_state",
+        "next_day_and_clock_back",
+        "existing_day7_reward",
+        "same_after_reload"
+      ],
+      "maintenance_scope_note": "Explicit preserve_existing_gameplay with current source inventory, actual two-ratio GUI and replayed production source/Web/Native evidence may map existing mechanics; see native-reward-storage-and-empty-features.md. No whole-check waiver; default template rules and all writer/reward/state gates remain."
+    }
+  ],
+  "reward_states": [
+    "eligible",
+    "pending",
+    "completed",
+    "cancelled",
+    "error",
+    "timeout",
+    "leave_and_return",
+    "reopen",
+    "reload",
+    "duplicate_or_late_callback",
+    "save_failure_retry",
+    "apply_or_consume",
+    "return_contracts"
+  ],
+  "reward_policy_kinds": [
+    "once",
+    "daily",
+    "per_run",
+    "repeatable",
+    "navigation_reward"
+  ],
+  "applicability": "All games review the same IDs. Always-applicable checks are mandatory; feature-specific rows apply only to existing or explicitly authorized functionality. Absence requires a concrete reason and evidence, never implementation of an unrelated feature.",
+  "boards": "Two separate work boards (references/two-boards.md, user 2026-10-21): localize = Chinese source code to English plus optimisation (user 2026-10-21): English, layout (currency at the top, feature icons compact at the bottom), banned UI removed, skin/collection system, sound settings and first-level tutorial added in the original art style; original sound files and core gameplay kept; remake = starter pack (optionally with source), gameplay first, then all new art and sound. The review records its board. Items with boards:[\"remake\"] are not checked for localize. auto_check_by_board overrides auto_check for that board; board_notes says how the check reads for that board. art_style (localize only, user 2026-10-21): original = 美术第一版 in the original style (default); remake = the user said \"按重塑画风重做\", then items marked localize_remake_style (ART-02, ART-03) apply to the localize review too.",
+  "auto_check_tools": {
+    "audit_dark_area": "scripts/audit_dark_area.py: page/popup screenshots; dark area, average lightness, single-colour and plain-backdrop measures; also large plain white/grey and single-colour blocks",
+    "audit_audio_sources": "scripts/audit_audio_sources.py: every audio file has an allowed source record",
+    "audit_ui_coverage": "scripts/audit_ui_coverage.py: docs/ui-layout.json; gameplay persistent UI <=20% of the screen, no overlaps, small off-centre tips, in-game popup panels <=60%; every popup/framed panel: all contents inside the inner frame box with padding, off ornaments, no overlaps; home page: max 2 primary text buttons, secondary are small icons; settings in a top corner, currency/energy/plus at the very top, every other feature compact at the bottom (below 65%, at most 2 rows, small gaps; user 2026-10-23), all buttons <= 40%; the layout must be extract_ui_layout.py output from chrome_touch dump_ui dumps of the running game (re-extracted and compared, hand-typed or edited layouts rejected); home must have the desktop-shortcut and profile-revisit keys, no share entry anywhere (user 2026-10-23)",
+    "audit_startup_loading": "scripts/audit_startup_loading.py: startup plan + chrome_touch timing runs (Ego Lite); no fixed finish times (user 2026-10-23): stuck (animation freeze <= 1 s, Retry after <= 10 s without progress + 2 s, every route reaches a playable level), wasted time (allowed = base home 3 s / level 1.5 s + 0.3 s per MB + 1.5 x download time + round trips of the bytes really loaded in that wait; plan budgets only as optional product targets, the stricter applies), fake wait (home later than max(2 s, 25%) after the last download), next/retry/map re-entry, first-screen big assets, coverage and the loading faults",
+    "audit_dev_text": "scripts/audit_dev_text.py --final: player-visible developer/test wording and leftover placeholder art; status readouts such as \"HOME SCREEN OPEN\", \"RETURN OPEN\", \"2/3 RESOLVED\" (user 2026-10-23)",
+    "audit_async_contracts": "scripts/audit_async_contracts.py: every reward query (getShortcutMissionReward/getEntranceMissionReward) handles both the success callback and the returned Promise; navigation calls handle a result; lists every reward API found in code so each one must have a declared entry",
+    "test_writer_refusal": "scripts/test_writer_refusal.py: runs the game's real packaging script with the review missing, a failed check and a stale fingerprint (each must refuse and make no ZIP) and once normally (must make a ZIP)",
+    "audit_copy_quality": "scripts/audit_copy_quality.py: player-visible English from UI dumps of the running game, scenes, language files and the copy table; blocks Chinese/full-width punctuation, misspellings, repeated words, placeholder mismatches, banned glossary variants and text sticking out of its button/frame; lists Chinglish, mixed names, mixed button case, possible cut-off for GPT",
+    "audit_startup_contract": "scripts/audit_startup_contract.py --native: startup-blocking code patterns (reviewed or fixed) and startup download <= 10 MB without audio",
+    "audit_league": "scripts/audit_league.py: docs/league/decision.json (重塑 add/skip from the four questions; 英化 none/keep_original and no league module); for add: LeagueSim.ts unchanged, league-config.json passes the simulation (never #1, 5-6% drops, every round up, fast then slow, rivals follow, deterministic, weekly rewards: 10 league skins then coins only), 10 league skins in unlock_table, no real/national player claims, rules say rivals are computer players",
+    "audit_page_richness": "scripts/audit_page_richness.py: chrome_touch dump_ui dumps with purpose home/result_win/result_fail; blocks monotonous pages, flat-colour backdrops, text-only buttons, system-font buttons/titles, blank panels; result pages need >= 2 buttons, a number, >= 3 pictures; home needs a logo, a plated PLAY button and >= 2 icons; home needs the gift box, level-end pages the ad x2 button; no busy background (edge share <= 30%), no ranking/check-in pages; text on every dump incl. gameplay HUD: low contrast, small, plain, font text, dark green/teal, dark bold text of any hue (label colour L* < 50 bold/outlined/shadowed/>= 16 px, user 2026-10-23 permanent ban) and dark picture text measured on the screenshot pixels",
+    "art_check": "scripts/art_check.py: the art line runs it right after every art round (first version, each revision, 按重塑画风重做) and again on the final build: page content and backgrounds (audit_page_richness incl. blank cards, placeholder/solid blocks, dark thick text, text outside plates, empty bands, buttons <= 40%, plain popups, big title and cover art, >= 6 levels per screen), screenshot colours (audit_dark_area), layout (extract_ui_layout + audit_ui_coverage), text fits (audit_copy_quality --require-runtime), developer text and placeholder art (audit_dev_text --final), clarity, plus a contact sheet and look list for Codex; its own row \"深色粗字（永久禁止）\" (dark bold / dark picture / dark green text and status text, user 2026-10-23)",
+    "audit_optional_features": "scripts/audit_optional_features.py: docs/features.json records the user's answers on skin bonus and 7-day check-in; skin_bonus true -> every non-free skin has a bonus in unlock_table.json (values checked by audit_acquisition_progression); daily_checkin true -> DailyCheckin.ts unchanged, checkin-config.json passes the simulation (once per day, 7 cards in order, big day 7, owned skin pays coins, clock back, missed days, reset hour, save/load), check-in skins are unlock \"checkin\", same R; false -> nothing added",
+    "audit_button_coverage": "scripts/audit_button_coverage.py: button list read from the chrome_touch dump_ui files of the running game (every interactable button on every page and popup, only those above an open popup mask); every button must be tapped in the simulated iPhone and a screenshot after the tap must differ from the one before; skips need a reason; writes the button list as Markdown; taps are matched at the position the render camera draws each button (ui_dump \"screen\"), and camera/viewport offsets are reported",
+    "audit_top_bar": "scripts/audit_top_bar.py: docs/top-bar.json + chrome_touch dump_ui dumps; currency (named and drawn after the game world, a plain coin needs a reason) and progress (and energy with a lightning icon) at the top of home and map, top-right corner free for the platform capsule, currency visible on shop/skins, currency and level number higher on the first home/map page after a won level ; currency_only_at_top: on every page but shop/skins/rewards/results, a number next to a currency/energy icon sits in the top band, never in the middle (user 2026-10-23)",
+    "audit_level_plan": "scripts/audit_level_plan.py: level_plan.json (mode levels/endless); levels: at least 70 levels (user 2026-10-24; originals with more kept, more is fine), every level listed, difficulty rising step by step without spikes (英化: only added levels), a limited level every 10 levels (10, 20, 30 ...; ornate frame, lots of currency; limited_skin_mode final = only the last one gives the limited skin, every_10 = each limited level gives its own; only there), one seeded-random bonus level in every 10 (easier than the block, 3x currency, ad -> 6x), no perfect-clear skins, maps unlock on limited levels; map page dumped and shows the total; endless: no map page",
+    "audit_native_storage_contract": "scripts/audit_native_storage_contract.py: same project runner executes old failing and final Native bundle/adapter; verifies null/undefined/empty-string absence, typed/string valid data, invalid values, read/write/readback failures, pending recovery, Retry, home/map/details and reward uniqueness; binds runner/raw results/final Native bytes and rejects incomplete or stale matrix before ZIP",
+    "logic_check": "scripts/logic_check.py --mode build (cocos-game-logic-check, user 2026-10-23): static suspects in assets/ scripts and level JSON (touch cancel committed like touch end, unbounded while(true)/for(;;), load error branch that only logs, buttons placed by Math.random, saved keys never read, sound setting only in memory, empty level-config slots, \"Daily\" without a date, physics not stopped on pause), each fixed or judged in docs/logic/triage.json with a why; plus docs/logic/flows.json F01-F20 walked with real touch in two ratios (exit/Home/Retry/Next on every page, pause stops physics, clean-up on leaving, round tokens for ads and loads, refresh keeps progress, touch cancel, last level, daily, platform buttons), every pass with an evidence file; untested never passes; review-mode reports never pass",
+    "make_tiktok_zip": "scripts/make_tiktok_zip.py (cocos-game-tiktok-package, user 2026-10-23 SquareRush UPLOADFIX): makes the one uploadable TikTok platform package from the Native build - refuses before writing any ZIP when the gate fails, the folder has an outer folder / is a Web build / has source files, junk, nested archives, non-ASCII paths or the QA level jump, the App ID differs, or the uncompressed main > 4,000,000, total > 30,000,000 or an independent subpackage > 4,000,000 bytes; then re-reads the written ZIP (CRC, root entry, limits, every file byte-equal to the Native tree, independent extraction) and only then moves it to --out; report <zip>.report.json bound to the review",
+    "audit_page_readiness": "scripts/audit_page_readiness.py: source-only flags broad button barriers/all-page batches/internal file counters; final runtime requires bound route inventory, two ratios, cold/warm/slow_cancel_reopen/closed_completion/failure_retry/offline_warm/core_independence, raw evidence SHA, no stale/duplicate work. Static is not acceptance.",
+    "audit_game_modules": "scripts/audit_game_modules.py: docs/modules.json (game_modules.v1, user 2026-10-23): decisions asked and recorded (gameplay, currency, skins default yes, backgrounds), no ranking/leaderboard, 7-day check-in, more games/cross-promotion or share, 英化 button audit (every original button: works/keep/why, useless ones removed), AdRewards.ts byte-equal to the skill copy and its simulation passes (result x2, bonus level 3x -> 6x, gift grows with levels cleared and the next skin price, one gift per round, ad buttons fire once), skin module skin.v1 (20 heroes + 10 backgrounds, price steps, bonus by rarity, limited skin first and its route), gift box 10 frames"
+  },
+  "visual_verdict_rule": "带 visual_verdict 的检查标\"通过\"时，review 顶层必须有 GPT 对本版截图总览图（make_contact_sheet.py）的画面结论 visual_verdict；测试执行 Agent 不能自己填。 只看最终总检测里的条目（gate design/art 的条目不算，用户 2026-10-24）。",
+  "negative_control_rule": "Items with requires_negative_control need, in their own evidence, a known-bad run of the SAME check: a JSON {schema: known_issue_negative_control.v1, mutant, status: fail, failed > 0, tool: {path, sha256}} whose tool SHA equals the tool of a current_result in the same row. A check that never failed on a known-bad version proves nothing (Monkey Dash 2026-10-21).",
+  "reviewer_rule": "Items with \"reviewer\": \"gpt\" need the row field reviewer = \"gpt\" when marked pass (judgement only a GPT/Codex session gives).",
+  "spot_check_rule": "When review.test_executor is another AI, review.gpt_spot_check is required: GPT read every code change since locked_commit, re-ran all automatic checks and redid >= 3 flows (one ad, one platform task if any) with no open disagreements.",
+  "gate_rule": "用户 2026-10-24（references/check-stages.md）：检查分阶段。gate \"design\" 的条目在设计关由 scripts/design_check.py 查（英化 1.5 优化做完后、重塑第一轮玩法节点1前）；gate \"art\" 的条目在美术关由 scripts/art_check.py 查（英化 1.8 每轮美术、重塑第二轮美术、cocos-game-art-redo）。最终总检测（check_known_issues.py）只查没有 gate 的条目：加载、广告与奖励、存储、异步、输入与按钮、逻辑、不能看广告跳关、构建与打包、英文文案、闪烁等以前出过问题的地方；gate 条目不进 review，留在 review 里的旧行忽略。锁定后又改了设计或美术，只对改动重跑 design_check.py / art_check.py，不重开最终门禁的这些行。"
+}

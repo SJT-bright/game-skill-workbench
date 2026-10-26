@@ -1,0 +1,39 @@
+name: Publish Skill files
+on:
+  push:
+    branches: [main]
+    paths: ['skills/**', 'src/core.cjs', 'scripts/export-feed.cjs']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: skill-feed
+  cancel-in-progress: false
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Update content-addressed Skill feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh auth setup-git
+          if git ls-remote --exit-code origin refs/heads/skills-feed; then
+            git clone --depth=1 --branch skills-feed "https://github.com/$GITHUB_REPOSITORY.git" .feed
+          else
+            mkdir .feed
+            git -C .feed init -b skills-feed
+            git -C .feed remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          fi
+          node scripts/export-feed.cjs .feed
+          git -C .feed config user.name github-actions
+          git -C .feed config user.email github-actions@users.noreply.github.com
+          git -C .feed add index.json releases blobs
+          if ! git -C .feed diff --cached --quiet; then
+            git -C .feed commit -m "Update Skill files from $GITHUB_SHA"
+            git -C .feed push origin HEAD:skills-feed
+          fi

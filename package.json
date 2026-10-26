@@ -1,0 +1,19 @@
+{
+  "name": "skill-game-dock",
+  "version": "0.2.0",
+  "description": "个人游戏悬浮工作台与 Skill 文件同步",
+  "main": "src/main.cjs",
+  "author": "GameDesk",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/launch.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "preview": "node src/preview.cjs",
+    "hub": "node src/hub-cli.cjs",
+    "build:mac": "node scripts/build.cjs mac",
+    "build:win": "node scripts/build.cjs win",
+    "skills:sync": "node scripts/sync-skills.cjs",
+    "skills:feed": "node scripts/export-feed.cjs"
+  }
+}

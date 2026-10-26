@@ -1,0 +1,14 @@
+{
+  "schema": "workshop-receiver-install.v1",
+  "revision": "workshop-receiver.v1",
+  "scope": "remake Skill receiving branch; preserve unrelated installed rules and shared modules",
+  "files": {
+    "SKILL.md": "92c1077916c97c2d77a31091e2c084f174127e627c9b3b352a5c6946ecac4697",
+    "references/starter-intake.md": "bbdeeca17b73bd3a89eb75935cc9eaf06eb20dd653f8cd30db41afb67ed129c7",
+    "references/starter-pack-spec.md": "b66f0caf693436d9f726e7b150cacdc6f7c6fa9a4f27d1b034a049634483cf72",
+    "references/workflow-detail.md": "45e6ebdeabd3e9b72af52e42a11f204f9e2f3b51ad559e421a17138944633ace",
+    "references/workshop-handoff.md": "175fae095f11334a56074b2eeb9f35ca57208a95efa155fa1241ffad15729353",
+    "scripts/test_workshop_intake.py": "027960a6d55d8cb87b03fcab779f680a710f2d7e10c5c7a99991463516e07967",
+    "scripts/workshop_intake.py": "261ae3112112084f97d16dae0e427db6eb542fd33f3412a8bee08451e3318cb2"
+  }
+}

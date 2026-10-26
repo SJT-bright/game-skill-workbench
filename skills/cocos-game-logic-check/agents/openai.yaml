@@ -1,0 +1,4 @@
+interface:
+  display_name: "逻辑检查（按钮功能 / 一局状态 / 存档 / 广告回调）"
+  short_description: "检查游戏逻辑、按钮与异常恢复；按改动范围回归，完整验收覆盖全部适用流程"
+  default_prompt: "使用 $cocos-game-logic-check 检查这个游戏，先确定模式和范围，局部问题走关联流程与回归，完整验收执行全部适用流程，按实际证据写结论。"

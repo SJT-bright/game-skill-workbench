@@ -1,0 +1,3 @@
+const EXPANDED={width:420,height:650},COLLAPSED={width:32,height:88};
+function dockBounds(bounds,area,{collapsed=false,edge,force=false}={}){const dims=collapsed?COLLAPSED:EXPANDED;const width=Math.min(dims.width,area.width),height=Math.min(dims.height,area.height);const left=Math.abs(bounds.x-area.x),right=Math.abs(area.x+area.width-(bounds.x+bounds.width));let side=edge|| (left<right?'left':'right');const snap=force||collapsed||Math.min(left,right)<=36;if(!edge)side=left<right?'left':'right';return {bounds:{x:snap?(side==='left'?area.x:area.x+area.width-width):Math.max(area.x,Math.min(bounds.x,area.x+area.width-width)),y:Math.max(area.y,Math.min(bounds.y,area.y+area.height-height)),width,height},edge:snap?side:null};}
+module.exports={dockBounds,EXPANDED,COLLAPSED};

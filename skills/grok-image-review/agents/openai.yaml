@@ -1,0 +1,6 @@
+interface:
+  display_name: "Grok 图片查看"
+  short_description: "自动用 Grok 读取清晰截图文字及核对封面字段，复杂视觉判断留主模型"
+  default_prompt: "使用 $grok-image-review 调用本地 Grok CLI 独立转录指定截图文字，再核对字段并保留实际读取证据。"
+policy:
+  allow_implicit_invocation: true

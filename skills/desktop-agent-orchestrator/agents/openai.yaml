@@ -1,0 +1,6 @@
+interface:
+  display_name: "桌面多 Agent 总控"
+  short_description: "主线定规则与验收，多应用按角色执行，核对送达、写入范围和原始产物"
+  default_prompt: "使用 $desktop-agent-orchestrator，先核本次模式，只向实际可用应用派发窄任务；Grok CLI可选，无Grok由主线承接，保留关键判断与独立验收。"
+policy:
+  allow_implicit_invocation: true

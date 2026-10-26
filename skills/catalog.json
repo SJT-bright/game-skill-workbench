@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "createdAt": "2026-10-26T11:50:24.282Z",
+  "treeHash": "135eb29a934e4560ae16a99b7ea9c3f033c77b67a75c72f42f8c4f65cadeb420",
+  "skills": [
+    {
+      "name": "cocos-game-from-starter",
+      "treeHash": "6652414d8f7990f6cac857b6096db792fe8bf70d7d2bb7818f7b13822300d821",
+      "fileCount": 16,
+      "bytes": 205691
+    },
+    {
+      "name": "cocos-game-to-english",
+      "treeHash": "12977b616e3d089382e55b1dc2674f0ae613105ebd8b987d54aea55971c316ae",
+      "fileCount": 292,
+      "bytes": 8601986
+    },
+    {
+      "name": "cocos-game-art-redo",
+      "treeHash": "00641a8c5dc8ac8a23129861bfbbfadad6cd3607d49a756a511d9790ef7b4a9c",
+      "fileCount": 22,
+      "bytes": 843436
+    },
+    {
+      "name": "cocos-game-logic-check",
+      "treeHash": "3fa0cf7f755322b983f90f51a772606da6367cf43e384dd8a4ca0872238f4215",
+      "fileCount": 6,
+      "bytes": 49963
+    },
+    {
+      "name": "cocos-game-ad-design",
+      "treeHash": "40edfe2e59b5307940c97bf3c762fab94a51ef1a7c0ff552c53aa6312648912b",
+      "fileCount": 1,
+      "bytes": 7835
+    },
+    {
+      "name": "cocos-game-tiktok-package",
+      "treeHash": "7b2016516d1f9a9ebb0b012ceb4f69d5e19f922b3d3cbd79b4b2a458f1a3a297",
+      "fileCount": 5,
+      "bytes": 38561
+    },
+    {
+      "name": "cocos-tiktok-package-check",
+      "treeHash": "b4dabf71cf8f3f3f960660c68e98d6af58e73724e0cb1ffc211d2a5f6766c8c8",
+      "fileCount": 27,
+      "bytes": 184943
+    },
+    {
+      "name": "mobile-touch-computer-use",
+      "treeHash": "4e576064fa06d192e8930b4caba58cb3e645e8b841ccdc916cd495297bf7c5e8",
+      "fileCount": 8,
+      "bytes": 44787
+    },
+    {
+      "name": "chrome-mobile-testing",
+      "treeHash": "993af60e199540dfcf82717a7494ef1200a7f634edb453d593fa554a0db4e125",
+      "fileCount": 4,
+      "bytes": 43826
+    },
+    {
+      "name": "game-audio-library",
+      "treeHash": "72a7068921f26ad51ddfe125edc9413ca181ee3d1525fedb1942531445c4d3d1",
+      "fileCount": 36,
+      "bytes": 547392
+    },
+    {
+      "name": "ego-browser",
+      "treeHash": "badcc008b63600d0ac23748101627f5eb5efbca994272919e0a8c71bf7ca7d52",
+      "fileCount": 8,
+      "bytes": 31806
+    },
+    {
+      "name": "grok-delegate",
+      "treeHash": "dde47dc8c1bf3b8a4f78efcbd37fcde8ded234352afb3f468aca8fc4d141cad6",
+      "fileCount": 11,
+      "bytes": 51139
+    },
+    {
+      "name": "grok-image-review",
+      "treeHash": "e2c59da8ac54f628d5f3d6631ee330f38ba6810f0cfa64928910efbdc66b45e7",
+      "fileCount": 4,
+      "bytes": 19006
+    },
+    {
+      "name": "grok-background-maker",
+      "treeHash": "ed95115dec3dbd10c4dec7d56cb7ea1dc87c0accf94241bd2ef1c2a2f19d11e7",
+      "fileCount": 5,
+      "bytes": 28380
+    },
+    {
+      "name": "desktop-agent-orchestrator",
+      "treeHash": "3de44f894f5742d70fe364ab52692f0c5993d70ec3e09c4256c9bd60e2e908d2",
+      "fileCount": 13,
+      "bytes": 96931
+    }
+  ]
+}

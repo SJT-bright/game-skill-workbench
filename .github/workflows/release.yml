@@ -1,0 +1,68 @@
+name: Release desktop
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            kind: mac
+          - os: windows-latest
+            kind: win
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm test
+      - name: Build Mac
+        if: matrix.kind == 'mac'
+        shell: bash
+        env:
+          ARCH: arm64
+        run: |
+          npm run build:mac
+          version=$(node -p "require('./package.json').version")
+          mkdir -p release
+          ditto -c -k --keepParent "dist/$version/游戏工作台.app" "release/GameDesk-$version-mac-arm64.zip"
+      - name: Build Windows
+        if: matrix.kind == 'win'
+        shell: pwsh
+        run: |
+          npm run build:win
+          $version = node -p "require('./package.json').version"
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Compress-Archive -Path "dist/$version/GameDesk-Skill-$version-win-x64/*" -DestinationPath "release/GameDesk-$version-windows-x64.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.kind }}
+          path: release/*.zip
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: release
+      - name: Publish release and verified update manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          gh release view "v$version" >/dev/null 2>&1 || gh release create "v$version" --draft --target "$GITHUB_SHA" --title "游戏工作台 $version" --notes-file CHANGELOG.md
+          gh release upload "v$version" release/*.zip --clobber
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$version" > release-assets.json
+          node scripts/release-manifest.cjs release-assets.json
+          gh release upload "v$version" release/gamedesk-update.json --clobber
+          gh release edit "v$version" --draft=false --latest

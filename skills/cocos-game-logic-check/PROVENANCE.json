@@ -1,0 +1,49 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-24.fused-v8-local-intro",
+  "skill": "cocos-game-logic-check",
+  "previous_provenance_sha256": "cdd40eeae05c655a05eb395d5846ab53224f4f24b45df8c85c5c220e23898fea",
+  "uploaded_archive_sha256": "ccd72f70454324f709a69e0d0a7bf4e8f285de5022c937ab01a136d75458c3ff",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "360dccc16dca58ab50f3c3485491fa6736343df21b95571f7d34e556f5900997",
+      "origin": "integrated-or-new",
+      "local_before_sha256": "f132c91edf6497748564d9b548a0e45f9d5990d7a211ab8fd7801bbdd3323f95",
+      "agents_before_sha256": "f132c91edf6497748564d9b548a0e45f9d5990d7a211ab8fd7801bbdd3323f95",
+      "uploaded_sha256": "acef3bfca60ebeb037f975b82faab8dc448dfb88653ef03e6535b922ae9d25b3"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "5d575afb36e50308c2aeeae917d809a3929b99f66ff64d0abec16ff5c45d819f",
+      "origin": "unchanged",
+      "local_before_sha256": "5d575afb36e50308c2aeeae917d809a3929b99f66ff64d0abec16ff5c45d819f",
+      "agents_before_sha256": "5d575afb36e50308c2aeeae917d809a3929b99f66ff64d0abec16ff5c45d819f",
+      "uploaded_sha256": "5d575afb36e50308c2aeeae917d809a3929b99f66ff64d0abec16ff5c45d819f"
+    },
+    {
+      "path": "assets/logic-report-template.md",
+      "sha256": "6089f9ff859412e0f470ed76f030c250222a7c46db8c22b2c02b3aedb97a343f",
+      "origin": "unchanged",
+      "local_before_sha256": "6089f9ff859412e0f470ed76f030c250222a7c46db8c22b2c02b3aedb97a343f",
+      "agents_before_sha256": "6089f9ff859412e0f470ed76f030c250222a7c46db8c22b2c02b3aedb97a343f",
+      "uploaded_sha256": "6089f9ff859412e0f470ed76f030c250222a7c46db8c22b2c02b3aedb97a343f"
+    },
+    {
+      "path": "references/learned-regressions.md",
+      "sha256": "f88bdf939de25033d9dfa80081a70eda4144ad7cf9a1fa7cbd38cc2a9b20d653",
+      "origin": "unchanged",
+      "local_before_sha256": "f88bdf939de25033d9dfa80081a70eda4144ad7cf9a1fa7cbd38cc2a9b20d653",
+      "agents_before_sha256": "f88bdf939de25033d9dfa80081a70eda4144ad7cf9a1fa7cbd38cc2a9b20d653",
+      "uploaded_sha256": "f88bdf939de25033d9dfa80081a70eda4144ad7cf9a1fa7cbd38cc2a9b20d653"
+    },
+    {
+      "path": "references/logic-rules.md",
+      "sha256": "ef6c0caff012ce8173025fd7d316c2ba6290115ee72de85b4e65996e46ad337b",
+      "origin": "unchanged",
+      "local_before_sha256": "ef6c0caff012ce8173025fd7d316c2ba6290115ee72de85b4e65996e46ad337b",
+      "agents_before_sha256": "ef6c0caff012ce8173025fd7d316c2ba6290115ee72de85b4e65996e46ad337b",
+      "uploaded_sha256": "ef6c0caff012ce8173025fd7d316c2ba6290115ee72de85b4e65996e46ad337b"
+    }
+  ]
+}

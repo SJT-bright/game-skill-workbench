@@ -1,0 +1,5 @@
+interface:
+  display_name: "Grok 原文搬取委派"
+  short_description: "自动委派可核验的原文搬取与清晰文字转录，保留主模型全部分析判断职责"
+policy:
+  allow_implicit_invocation: true

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:35:09.253Z",
-  "treeHash": "97ebfde6b32bd46997679a805255fe773387b534334760aba3b70c9972762a43",
+  "createdAt": "2026-10-26T14:36:03.859Z",
+  "treeHash": "8529d3c1cba4ca44725cd868ceb56fcc8ead06fe0a68226f1e7dcef112298af8",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2673,14 +2673,14 @@
     },
     {
       "name": "grok-background-maker",
-      "treeHash": "ed95115dec3dbd10c4dec7d56cb7ea1dc87c0accf94241bd2ef1c2a2f19d11e7",
+      "treeHash": "ce6811f694c0f12ab5b71e3dbf0ac4a7123db3e4810e93fad4e8a6ea9c6d55e2",
       "fileCount": 5,
-      "bytes": 28380,
+      "bytes": 27673,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "e83a5b0a734c4a93bc67a8b1356ed46b48c09705003fdc0dd0628b2be33b94a3",
-          "size": 1649,
+          "hash": "95dd4faf4a5e06de65824ae4ad42205df906424a504e3604d7195118e0e59c3b",
+          "size": 942,
           "executable": false
         },
         {

@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "chrome-mobile-testing",
-  "previous_provenance_sha256": "739836df715d730a74fb6690d5c7279347cee97fbf3a3c0621209ce8171f81f5",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "7ed150d0cc107d9b9d99f8f51b5551b07776734c0446e6cebe4e3f4c0cb235fb",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

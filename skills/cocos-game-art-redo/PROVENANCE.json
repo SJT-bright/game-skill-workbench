@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "cocos-game-art-redo",
-  "previous_provenance_sha256": "23d6bb2dcde8f3af98079fd182b0f3247e282349f1ff7c728e721a7dd06a2df4",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "e4f72b4d285b68045603133e03bf2c3323dceff11fea8f36a232c7743145633a",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T16:08:11.044Z",
-  "treeHash": "763794aae70944b39a74264a5fc9ba8bb8a5354f567c21cae12dd1cc85006d11",
+  "createdAt": "2026-10-26T16:26:30.286Z",
+  "treeHash": "cffc91bac1aeefff8622072a4fcdde65560abc0303b3bdfeb5ca35006369e361",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -57,14 +57,14 @@
     },
     {
       "name": "cocos-game-art-redo",
-      "treeHash": "071a754bfb44a58dfe9c30fc5a7cfe10ac4e7451ee373ca332be10519b5435e2",
+      "treeHash": "64dc83e155f1c37f3f21a3d52c9f1ab5f45ce8800379f8b4924943804ff67d30",
       "fileCount": 22,
-      "bytes": 805296,
+      "bytes": 805275,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "e4f72b4d285b68045603133e03bf2c3323dceff11fea8f36a232c7743145633a",
-          "size": 3891,
+          "hash": "8a5363d26404a7615d13f0f5df5e860d42f145fcb2f141fc3ac1d309957f1f1c",
+          "size": 3870,
           "executable": false
         },
         {

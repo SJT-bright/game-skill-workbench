@@ -21,3 +21,5 @@ description: "重做或局部修改Cocos游戏美术、按钮、图片字、图�
 完整首次重做覆盖实际全部页面、弹窗和条件状态、两种比例及两轮自审；局部修改查受影响整页、共享组件与真实点击，已通过且无新变化不再追加整轮。`art_check.py`按适用行运行，未测范围不写通过。用户确认画面后，最终出包只查运行故障，不重评审美。
 
 共同症状按[当前合同](../cocos-game-to-english/references/current-contracts.md)进入所属参考。交用户[同版固定手机预览](../cocos-game-to-english/references/user-phone-preview.md)，结束自建QA页与无用服务。本任务不自动生成游戏包；已报告缺图/遮挡等问题记入项目，并定点修复复验。
+
+反复出现的数字模糊、遮挡与漏检，按[成屏视觉缺陷回归](references/rendered-ui-regression-review.md)先在项目内模拟校准，再采用通用审查步骤。

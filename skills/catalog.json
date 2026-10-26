@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T16:59:04.137Z",
-  "treeHash": "e6b226cc48e4185385feeadefb04d63912443b85678495c7fb12bb82805f66aa",
+  "createdAt": "2026-10-26T17:00:46.444Z",
+  "treeHash": "5186db0fce80883b620081cf4695e15eb454a775e599c2fe9ff5724b1096bbe0",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -57,9 +57,9 @@
     },
     {
       "name": "cocos-game-art-redo",
-      "treeHash": "64dc83e155f1c37f3f21a3d52c9f1ab5f45ce8800379f8b4924943804ff67d30",
-      "fileCount": 22,
-      "bytes": 805275,
+      "treeHash": "046e4bbd73bfba4be1b5ed5509224dc3f11769cdc6c8108ddfb0290973e8d15b",
+      "fileCount": 23,
+      "bytes": 807385,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -69,8 +69,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "5d928931ff57b2d072dc510f188acfb6b2ef46d33f70ca56719c56d3e5b9bb61",
-          "size": 2627,
+          "hash": "0ab9fc19c4ca3af179bddc87c8b371fe18eb9833613b2161172a51fea80be583",
+          "size": 2811,
           "executable": false
         },
         {
@@ -131,6 +131,12 @@
           "path": "references/phone-preview-boundary.md",
           "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
           "size": 2724,
+          "executable": false
+        },
+        {
+          "path": "references/rendered-ui-regression-review.md",
+          "hash": "0640df98e4119504e4e924a8c789f85f1d89308be4c266d8c7e15e6accf755bb",
+          "size": 1926,
           "executable": false
         },
         {

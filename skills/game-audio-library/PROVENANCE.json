@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "game-audio-library",
-  "previous_provenance_sha256": "6d8427d1d3f2c80afeb05faeb62bf91820fd50be7a246b33afa7dacd7be1cf0e",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "b31e5358f85704d4b9869142e9939f6877821d069c9a20834db5a28cd6822f0a",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

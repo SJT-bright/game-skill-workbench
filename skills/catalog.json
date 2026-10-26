@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T16:46:09.225Z",
-  "treeHash": "a91699a42edc6bbbee045ce193478baa53451c5f0d1fb343298cf36c4eead34d",
+  "createdAt": "2026-10-26T16:46:47.887Z",
+  "treeHash": "943094c3743c05e1c1e8743250be460848374dc747b3c471593a02f0b66eeb25",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2953,14 +2953,14 @@
     },
     {
       "name": "game-audio-library",
-      "treeHash": "54e0577030ebf2b15a0f3e84ce0ecffbc8e2c9acd0111fd4eaa443621f64c2b0",
+      "treeHash": "6871e12a0a56861c2f04e699eb39aa194b405a06403f1fe8583c7e1ec87d9038",
       "fileCount": 36,
-      "bytes": 546818,
+      "bytes": 546797,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "b31e5358f85704d4b9869142e9939f6877821d069c9a20834db5a28cd6822f0a",
-          "size": 5959,
+          "hash": "b154e845e6d77cf5174db6eed6a31e9affbc857ecdc357ecdaaaa3c86db76dad",
+          "size": 5938,
           "executable": false
         },
         {

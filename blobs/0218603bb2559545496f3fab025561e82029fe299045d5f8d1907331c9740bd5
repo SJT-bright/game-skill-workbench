@@ -1,0 +1,29 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-23.fused-v7",
+  "skill": "grok-image-review",
+  "previous_provenance_sha256": "c964e8de3974f814858b2557d80aad88c20696a00a2a2866c50557901db5e3aa",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "cb7e36f252ef140a66c834a1e8a14d0cc1aa0e2ee5e56986060f59322825abfc",
+      "local_before_sha256": "6b958ef3146a32dedfc58bf2be10f00bd35ed7d04bf1f8735102f0d828247d1f",
+      "uploaded_sha256": "61070c0c32989ed44b0bc634f0eba004e011f7f15b3174dcce011362ed3a6c60",
+      "origin": "integrated-or-new"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
+      "local_before_sha256": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
+      "uploaded_sha256": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
+      "origin": "both-identical"
+    },
+    {
+      "path": "scripts/review.py",
+      "sha256": "d3413fb4748423fa5c7cee29e06b757983e49493132467e3c4c7f878d855e792",
+      "local_before_sha256": "d3413fb4748423fa5c7cee29e06b757983e49493132467e3c4c7f878d855e792",
+      "uploaded_sha256": "d3413fb4748423fa5c7cee29e06b757983e49493132467e3c4c7f878d855e792",
+      "origin": "both-identical"
+    }
+  ]
+}

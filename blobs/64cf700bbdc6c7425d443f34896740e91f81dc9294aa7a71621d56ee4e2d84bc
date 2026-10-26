@@ -1,0 +1,3 @@
+interface:
+  display_name: "TikTok测试包最终检测"
+  short_description: "在测试包交付前核验启动依赖、资源、配置和ZIP完整性"

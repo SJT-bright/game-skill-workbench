@@ -1,0 +1,4 @@
+interface:
+  display_name: "重塑（启动包做游戏）"
+  short_description: "有启动包就用：按启动包重新做游戏，先玩法、玩法通过后再做全部美术和声音，浏览器测试，说打包才出包"
+  default_prompt: "使用 $cocos-game-from-starter 重塑这个游戏：先读两个板块的分界，按启动包先做玩法（占位图），等我说玩法通过再做全部美术和声音。"

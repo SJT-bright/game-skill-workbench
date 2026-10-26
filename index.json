@@ -1,0 +1,260 @@
+{
+  "schema": 1,
+  "releases": [
+    {
+      "id": "5401a410-27fb-41f7-ac3b-19eb0d36e5c7",
+      "skillId": "s-9b70fe49ec762c63822c",
+      "directory": "desktop-agent-orchestrator",
+      "name": "desktop-agent-orchestrator",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.952Z",
+      "summary": "文件变更：新增 13，修改 0，移除 0。",
+      "changes": {
+        "added": 13,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "3de44f894f5742d70fe364ab52692f0c5993d70ec3e09c4256c9bd60e2e908d2",
+      "bytes": 96931,
+      "fileCount": 13
+    },
+    {
+      "id": "0b302038-04e0-414b-baea-8e8bbea6a1f4",
+      "skillId": "s-ff71fb1948e2a7f0eb3b",
+      "directory": "grok-background-maker",
+      "name": "grok-background-maker",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.944Z",
+      "summary": "文件变更：新增 5，修改 0，移除 0。",
+      "changes": {
+        "added": 5,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "ed95115dec3dbd10c4dec7d56cb7ea1dc87c0accf94241bd2ef1c2a2f19d11e7",
+      "bytes": 28380,
+      "fileCount": 5
+    },
+    {
+      "id": "0dda4f45-7738-460b-9e2f-5a4389e1ae43",
+      "skillId": "s-8a4323773719ef381f6d",
+      "directory": "grok-image-review",
+      "name": "grok-image-review",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.939Z",
+      "summary": "文件变更：新增 4，修改 0，移除 0。",
+      "changes": {
+        "added": 4,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "e2c59da8ac54f628d5f3d6631ee330f38ba6810f0cfa64928910efbdc66b45e7",
+      "bytes": 19006,
+      "fileCount": 4
+    },
+    {
+      "id": "9bcc7b6a-2f51-45bc-81ab-68e375101deb",
+      "skillId": "s-bedd22bb6c578608dd49",
+      "directory": "grok-delegate",
+      "name": "grok-delegate",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.934Z",
+      "summary": "文件变更：新增 11，修改 0，移除 0。",
+      "changes": {
+        "added": 11,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "dde47dc8c1bf3b8a4f78efcbd37fcde8ded234352afb3f468aca8fc4d141cad6",
+      "bytes": 51139,
+      "fileCount": 11
+    },
+    {
+      "id": "4505be3b-ca4f-4989-ac5c-37f8bcf100a4",
+      "skillId": "s-5a9f8b608f84c10c43c3",
+      "directory": "ego-browser",
+      "name": "ego-browser",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.927Z",
+      "summary": "文件变更：新增 8，修改 0，移除 0。",
+      "changes": {
+        "added": 8,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "badcc008b63600d0ac23748101627f5eb5efbca994272919e0a8c71bf7ca7d52",
+      "bytes": 31806,
+      "fileCount": 8
+    },
+    {
+      "id": "a3151793-40b8-40bf-8cf5-af13dca47380",
+      "skillId": "s-6d7f9e585fef16dafd8d",
+      "directory": "game-audio-library",
+      "name": "game-audio-library",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.911Z",
+      "summary": "文件变更：新增 36，修改 0，移除 0。",
+      "changes": {
+        "added": 36,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "72a7068921f26ad51ddfe125edc9413ca181ee3d1525fedb1942531445c4d3d1",
+      "bytes": 547392,
+      "fileCount": 36
+    },
+    {
+      "id": "1f756f09-6ddc-45ed-8afe-115043f10b39",
+      "skillId": "s-a5a5d4cc5c2308178580",
+      "directory": "chrome-mobile-testing",
+      "name": "chrome-mobile-testing",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.896Z",
+      "summary": "文件变更：新增 4，修改 0，移除 0。",
+      "changes": {
+        "added": 4,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "993af60e199540dfcf82717a7494ef1200a7f634edb453d593fa554a0db4e125",
+      "bytes": 43826,
+      "fileCount": 4
+    },
+    {
+      "id": "a0caedac-aeac-42c7-b911-1b00d7346dd1",
+      "skillId": "s-16601c48e7f1b99915ae",
+      "directory": "mobile-touch-computer-use",
+      "name": "mobile-touch-computer-use",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.891Z",
+      "summary": "文件变更：新增 8，修改 0，移除 0。",
+      "changes": {
+        "added": 8,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "4e576064fa06d192e8930b4caba58cb3e645e8b841ccdc916cd495297bf7c5e8",
+      "bytes": 44787,
+      "fileCount": 8
+    },
+    {
+      "id": "4053bd05-ff19-487c-b45b-eb6e5d9e1f3b",
+      "skillId": "s-4e976859708a939065d7",
+      "directory": "cocos-tiktok-package-check",
+      "name": "cocos-tiktok-package-check",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.879Z",
+      "summary": "文件变更：新增 27，修改 0，移除 0。",
+      "changes": {
+        "added": 27,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "b4dabf71cf8f3f3f960660c68e98d6af58e73724e0cb1ffc211d2a5f6766c8c8",
+      "bytes": 184943,
+      "fileCount": 27
+    },
+    {
+      "id": "a20aa51d-5101-4ec2-9d5a-f8a6eb432ae3",
+      "skillId": "s-d260030552ba65620839",
+      "directory": "cocos-game-tiktok-package",
+      "name": "cocos-game-tiktok-package",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.869Z",
+      "summary": "文件变更：新增 5，修改 0，移除 0。",
+      "changes": {
+        "added": 5,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "7b2016516d1f9a9ebb0b012ceb4f69d5e19f922b3d3cbd79b4b2a458f1a3a297",
+      "bytes": 38561,
+      "fileCount": 5
+    },
+    {
+      "id": "118247c9-b45d-45a0-a364-11cdac1b3819",
+      "skillId": "s-1bba8cd897259056ef0f",
+      "directory": "cocos-game-ad-design",
+      "name": "cocos-game-ad-design",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.865Z",
+      "summary": "文件变更：新增 1，修改 0，移除 0。",
+      "changes": {
+        "added": 1,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "40edfe2e59b5307940c97bf3c762fab94a51ef1a7c0ff552c53aa6312648912b",
+      "bytes": 7835,
+      "fileCount": 1
+    },
+    {
+      "id": "87443c35-fb37-43a2-8142-6f7374431a0a",
+      "skillId": "s-deeeaf9abeca146bd263",
+      "directory": "cocos-game-logic-check",
+      "name": "cocos-game-logic-check",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.862Z",
+      "summary": "文件变更：新增 6，修改 0，移除 0。",
+      "changes": {
+        "added": 6,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "3fa0cf7f755322b983f90f51a772606da6367cf43e384dd8a4ca0872238f4215",
+      "bytes": 49963,
+      "fileCount": 6
+    },
+    {
+      "id": "47dd2957-9bef-46bf-8317-8dceb4dbf43b",
+      "skillId": "s-8ab0e33c96543080c7af",
+      "directory": "cocos-game-art-redo",
+      "name": "cocos-game-art-redo",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.849Z",
+      "summary": "文件变更：新增 22，修改 0，移除 0。",
+      "changes": {
+        "added": 22,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "00641a8c5dc8ac8a23129861bfbbfadad6cd3607d49a756a511d9790ef7b4a9c",
+      "bytes": 843436,
+      "fileCount": 22
+    },
+    {
+      "id": "d68dd5d2-0ff9-4cc4-8e68-d5cf8815d011",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.724Z",
+      "summary": "文件变更：新增 292，修改 0，移除 0。",
+      "changes": {
+        "added": 292,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "12977b616e3d089382e55b1dc2674f0ae613105ebd8b987d54aea55971c316ae",
+      "bytes": 8601986,
+      "fileCount": 292
+    },
+    {
+      "id": "8fa21a0f-387e-49b5-9ad5-65e239d64eab",
+      "skillId": "s-4e3f250ac61da7fad00b",
+      "directory": "cocos-game-from-starter",
+      "name": "cocos-game-from-starter",
+      "version": "v1",
+      "createdAt": "2026-10-26T11:56:57.617Z",
+      "summary": "文件变更：新增 16，修改 0，移除 0。",
+      "changes": {
+        "added": 16,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "6652414d8f7990f6cac857b6096db792fe8bf70d7d2bb7818f7b13822300d821",
+      "bytes": 205691,
+      "fileCount": 16
+    }
+  ]
+}

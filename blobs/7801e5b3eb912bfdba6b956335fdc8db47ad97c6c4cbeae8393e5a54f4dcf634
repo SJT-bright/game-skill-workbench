@@ -1,0 +1,57 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-23.fused-v7",
+  "skill": "mobile-touch-computer-use",
+  "previous_provenance_sha256": "1cbfcd9a8e60fe2de5b64aa87d6cae42cfb3c9d7a437a2383349ee8700df4b36",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "d77a5f15b76e2fee9234a0744964a54bd259b01d2f8271046b8abda6f3ee3381",
+      "local_before_sha256": "338aaa96d19edb55bd93f38bd2eb65a46fa13d84794533676cea7359f09c4c6d",
+      "uploaded_sha256": "35c2735cfc0c6b8fb1db413b2b955c153cb6aab104ebdaa39fd137b1fba7f923",
+      "origin": "integrated-or-new"
+    },
+    {
+      "path": "references/cold-start-regression.md",
+      "sha256": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
+      "local_before_sha256": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
+      "uploaded_sha256": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/evidence.md",
+      "sha256": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+      "local_before_sha256": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+      "uploaded_sha256": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/computer-use.md",
+      "sha256": "f492f3e181bfe6969e2b7b34ff0e105165306a7f3966f70509313955333abcc2",
+      "local_before_sha256": "1b2136834d5cd1998e3d62ff54c3ab98ed886733f59931c705631ac67fb27c27",
+      "uploaded_sha256": "7c00caaba006b2f71874af95b67c06f4da36a12b28635a407bfd9316b687a7dd",
+      "origin": "integrated-or-new"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+      "local_before_sha256": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+      "uploaded_sha256": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+      "origin": "both-identical"
+    },
+    {
+      "path": "scripts/prepare_preview.py",
+      "sha256": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+      "local_before_sha256": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+      "uploaded_sha256": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+      "origin": "both-identical"
+    },
+    {
+      "path": "scripts/input_observer.js",
+      "sha256": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+      "local_before_sha256": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+      "uploaded_sha256": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+      "origin": "both-identical"
+    }
+  ]
+}

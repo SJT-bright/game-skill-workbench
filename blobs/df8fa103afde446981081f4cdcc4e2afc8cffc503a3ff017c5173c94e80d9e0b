@@ -1,0 +1,7 @@
+interface:
+  display_name: "Grok 全局后台执行"
+  short_description: "说用 Grok 或 Groq 即后台调用本地 Grok，处理分析、写作、制作、代码和脚本"
+  default_prompt: "用 $grok-background-maker 在后台调用本地 Grok 完成当前任务，独立部分并行，核验后交付。"
+
+policy:
+  allow_implicit_invocation: true

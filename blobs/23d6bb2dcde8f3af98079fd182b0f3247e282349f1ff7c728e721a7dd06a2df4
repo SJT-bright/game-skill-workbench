@@ -1,0 +1,33 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-24.fused-v8-local-intro",
+  "skill": "cocos-game-art-redo",
+  "previous_provenance_sha256": "688d9b50886bf825be7740c14a7d5bfb18872d64e85d2900a224ee49c4202939",
+  "uploaded_archive_sha256": "ccd72f70454324f709a69e0d0a7bf4e8f285de5022c937ab01a136d75458c3ff",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "61ecd524f7ab24b10d06f0baade1dca8b1a46c2e4be20b73646ff8f620ea50f8",
+      "origin": "preserved-local",
+      "local_before_sha256": "61ecd524f7ab24b10d06f0baade1dca8b1a46c2e4be20b73646ff8f620ea50f8",
+      "agents_before_sha256": "61ecd524f7ab24b10d06f0baade1dca8b1a46c2e4be20b73646ff8f620ea50f8",
+      "uploaded_sha256": "f9be6901a816349499223a0d048dcdf769a60ac428f1aef3e470a735e0448a78"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "3d1b186f11249220c9dcb533f733e7f95d95e4bdfc541f3c739fc826ca46a036",
+      "origin": "unchanged",
+      "local_before_sha256": "3d1b186f11249220c9dcb533f733e7f95d95e4bdfc541f3c739fc826ca46a036",
+      "agents_before_sha256": "3d1b186f11249220c9dcb533f733e7f95d95e4bdfc541f3c739fc826ca46a036",
+      "uploaded_sha256": "3d1b186f11249220c9dcb533f733e7f95d95e4bdfc541f3c739fc826ca46a036"
+    },
+    {
+      "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+      "sha256": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "origin": "preserved-local",
+      "local_before_sha256": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "agents_before_sha256": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "uploaded_sha256": null
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+id,type,required,variants,gen,tags,keywords,max_sec,volume,notes
+bgm_menu,bgm,yes,1,loop,music|cute,cute casual game music loop|happy ukulele loop|playful marimba background,90,1,主界面：轻松、欢迎感
+bgm_game,bgm,yes,1,loop,music|cute,puzzle game music loop|cozy casual game background|light hearted loop,90,0.9,游戏中：轻快不抢注意力，长时间听不烦
+bgm_game_2,bgm,no,1,loop,music|cute,whimsical game loop|bubbly background music|cheerful puzzle music,90,0.9,关卡多时轮换，减少听腻
+jingle_win,jingle,yes,1,,win|jingle,level complete jingle|victory jingle cute|success fanfare short,,1,过关：欢快上扬 2-5 秒
+jingle_lose,jingle,yes,1,,lose|jingle,game over jingle soft|fail jingle cartoon|lose sound playful,,0.9,失败：俏皮柔和，不要沮丧
+sfx_ui_click,sfx,yes,1,,click|pop,soft button click|ui tap pop|bubble click,0.4,1,所有普通按钮
+sfx_ui_back,sfx,no,1,,close|click,ui back button|soft click low|ui cancel,0.4,0.9,返回/关闭
+sfx_ui_popup_open,sfx,yes,1,,popup|whoosh|pop,popup open|ui appear whoosh|notification pop,0.8,0.8,弹窗打开
+sfx_ui_popup_close,sfx,no,1,,close|whoosh,popup close|ui disappear|soft swoosh,0.6,0.7,弹窗关闭
+sfx_ui_toggle,sfx,no,1,,click,toggle switch click|ui switch,0.3,0.8,设置开关
+sfx_ui_locked,sfx,no,1,,invalid,locked soft thud|ui denied soft|wooden knock,0.6,0.8,点未解锁内容
+sfx_select,sfx,yes,3,pitch_var,pop|click,select pop|pick up pop|bubble pop,0.5,0.9,选中/拿起
+sfx_place,sfx,yes,3,pitch_var,place|pop,place down soft|drop wood tock|plop,0.6,0.9,放下/放置成功
+sfx_swap,sfx,no,1,,swap|whoosh,swap whoosh short|slide swish,0.6,0.8,交换/移动
+sfx_match,sfx,yes,3,pitch_var,match|sparkle|pop,match clear chime|bright pop sparkle,1.0,1,消除/配对成功
+sfx_combo,sfx,yes,5,pitch_steps,match|sparkle|coin,combo chime|bright ding|xylophone note,1.0,1,连击：自动生成 5 级升调
+sfx_invalid,sfx,yes,1,,invalid,soft error|wrong cartoon boing|negative soft,0.6,0.7,无效操作：柔和不刺耳
+sfx_hint,sfx,no,1,,sparkle,hint sparkle|magic twinkle|shine,1.2,0.8,提示
+sfx_shuffle,sfx,no,1,,whoosh|swap,shuffle cards|tiles shuffle|whoosh rattle,1.2,0.8,洗牌/重排
+sfx_booster,sfx,no,1,,unlock|sparkle,power up magic|booster activate|magic spell cute,1.5,0.9,使用道具
+sfx_clear_big,sfx,no,1,,match|sparkle|win,big clear sparkle burst|bonus explosion cute,1.8,0.9,大消除/特殊效果
+sfx_coin,sfx,yes,3,pitch_var,coin,coin collect|coin ding|pickup gem,0.8,0.8,获得金币
+sfx_star,sfx,yes,3,pitch_steps,star|sparkle|coin,star twinkle|bell ding|reward star,1.0,1,结算星星：自动生成 3 级升调
+sfx_reward,sfx,yes,1,,unlock|sparkle|win,reward unlock|treasure chest open|bonus collect,1.8,1,获得奖励/激励视频到账
+sfx_timer_tick,sfx,no,1,,tick,clock tick soft|timer tick,0.3,0.6,倒计时最后 10 秒
+sfx_time_up,sfx,no,1,,tick|invalid,time up alarm soft|timer end bell,1.5,0.8,时间到
+sfx_level_start,sfx,no,1,,popup|sparkle|whoosh,level start whoosh|ready go chime,1.5,0.9,关卡开始
+sfx_heart_lose,sfx,no,1,,invalid|lose,lose life soft|heart break cartoon,1.0,0.8,扣生命
+sfx_unlock,sfx,no,1,,unlock|sparkle,unlock level|new item unlocked,1.5,0.9,解锁关卡/新皮肤
+sfx_spin,sfx,no,1,,tick|coin,wheel spin tick|lucky wheel,2.5,0.8,转盘/抽奖

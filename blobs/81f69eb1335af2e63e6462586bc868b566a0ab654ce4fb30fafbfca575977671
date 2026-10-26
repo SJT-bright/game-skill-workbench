@@ -1,0 +1,106 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-24.fused-v8-local-intro",
+  "skill": "cocos-game-from-starter",
+  "previous_provenance_sha256": "c6a4c9e9e516741bc6e32761090346c38376aaf893e163dd3df814cac97b66d7",
+  "uploaded_archive_sha256": "ccd72f70454324f709a69e0d0a7bf4e8f285de5022c937ab01a136d75458c3ff",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "7b73f8f4122f58f0f53067d469ef2153be6a707420194eb2951dd7e4422a5cbc",
+      "origin": "integrated-or-new",
+      "local_before_sha256": "03a2125d33e418b67861c404f66610ecc8058d13e787dfa645a7cb83b6c5191d",
+      "agents_before_sha256": "03a2125d33e418b67861c404f66610ecc8058d13e787dfa645a7cb83b6c5191d",
+      "uploaded_sha256": "f51f619840be991ab11e2654d0e001a3529ba8cb56369c95ced2cc029f15b9da"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "13e93c25c7218b31b3c779ce07b2e727b215e7dda6852a0b91abd94205c0e22a",
+      "origin": "unchanged",
+      "local_before_sha256": "13e93c25c7218b31b3c779ce07b2e727b215e7dda6852a0b91abd94205c0e22a",
+      "agents_before_sha256": "13e93c25c7218b31b3c779ce07b2e727b215e7dda6852a0b91abd94205c0e22a",
+      "uploaded_sha256": "13e93c25c7218b31b3c779ce07b2e727b215e7dda6852a0b91abd94205c0e22a"
+    },
+    {
+      "path": "assets/creation-spec-template.md",
+      "sha256": "538b35157a2a74ec728f8aa074af55f60ca1735e3d78542dc24039944f22a3d0",
+      "origin": "incoming",
+      "local_before_sha256": "fe7afa5a1ff0f399e6a7e6519b599582deda30f4aaa417946dcc526f695c05e6",
+      "agents_before_sha256": "fe7afa5a1ff0f399e6a7e6519b599582deda30f4aaa417946dcc526f695c05e6",
+      "uploaded_sha256": "538b35157a2a74ec728f8aa074af55f60ca1735e3d78542dc24039944f22a3d0"
+    },
+    {
+      "path": "references/base-integration.md",
+      "sha256": "88582917b40871795cc062362e6cf063cca0578f65130522d15b0fd60489621a",
+      "origin": "unchanged",
+      "local_before_sha256": "88582917b40871795cc062362e6cf063cca0578f65130522d15b0fd60489621a",
+      "agents_before_sha256": "88582917b40871795cc062362e6cf063cca0578f65130522d15b0fd60489621a",
+      "uploaded_sha256": "88582917b40871795cc062362e6cf063cca0578f65130522d15b0fd60489621a"
+    },
+    {
+      "path": "references/concept-to-spec.md",
+      "sha256": "2b436e9e1573111b60dd849ede856132ba7f7fb787d25b2d1cbf692dd1d48926",
+      "origin": "unchanged",
+      "local_before_sha256": "2b436e9e1573111b60dd849ede856132ba7f7fb787d25b2d1cbf692dd1d48926",
+      "agents_before_sha256": "2b436e9e1573111b60dd849ede856132ba7f7fb787d25b2d1cbf692dd1d48926",
+      "uploaded_sha256": "2b436e9e1573111b60dd849ede856132ba7f7fb787d25b2d1cbf692dd1d48926"
+    },
+    {
+      "path": "references/creation-gates.md",
+      "sha256": "15621a13b88f041202270415dae1338a652fc7c6dcd8d73d0f91957f4b742e5f",
+      "origin": "unchanged",
+      "local_before_sha256": "15621a13b88f041202270415dae1338a652fc7c6dcd8d73d0f91957f4b742e5f",
+      "agents_before_sha256": "15621a13b88f041202270415dae1338a652fc7c6dcd8d73d0f91957f4b742e5f",
+      "uploaded_sha256": "15621a13b88f041202270415dae1338a652fc7c6dcd8d73d0f91957f4b742e5f"
+    },
+    {
+      "path": "references/explicit-legacy-features.md",
+      "sha256": "2a4d561b633bafb5f3da674dc70c15d5da19ab2d9b0ba863d067edc48fa43f06",
+      "origin": "unchanged",
+      "local_before_sha256": "2a4d561b633bafb5f3da674dc70c15d5da19ab2d9b0ba863d067edc48fa43f06",
+      "agents_before_sha256": "2a4d561b633bafb5f3da674dc70c15d5da19ab2d9b0ba863d067edc48fa43f06",
+      "uploaded_sha256": "2a4d561b633bafb5f3da674dc70c15d5da19ab2d9b0ba863d067edc48fa43f06"
+    },
+    {
+      "path": "references/starter-intake.md",
+      "sha256": "9ce8be882a5dbffeb516103541b051ae0195586561c9a423a2e9a86e5df7efff",
+      "origin": "unchanged",
+      "local_before_sha256": "9ce8be882a5dbffeb516103541b051ae0195586561c9a423a2e9a86e5df7efff",
+      "agents_before_sha256": "9ce8be882a5dbffeb516103541b051ae0195586561c9a423a2e9a86e5df7efff",
+      "uploaded_sha256": "9ce8be882a5dbffeb516103541b051ae0195586561c9a423a2e9a86e5df7efff"
+    },
+    {
+      "path": "references/starter-pack-spec.md",
+      "sha256": "e45552ab161e0e382d8fe1bce8475e1b705e10a1fc7f8b27cc985e77f14bec53",
+      "origin": "incoming",
+      "local_before_sha256": "7ab0d9c7caf2a2db68be4c66730401316c7d92b40faef13f241175e0c3a20af4",
+      "agents_before_sha256": "7ab0d9c7caf2a2db68be4c66730401316c7d92b40faef13f241175e0c3a20af4",
+      "uploaded_sha256": "e45552ab161e0e382d8fe1bce8475e1b705e10a1fc7f8b27cc985e77f14bec53"
+    },
+    {
+      "path": "references/workflow-detail.md",
+      "sha256": "ce6e454146490ac6f84a10af5ba86f29fa0adfe5642df1fd0fc13d9a1d8e53f6",
+      "origin": "unchanged",
+      "local_before_sha256": "ce6e454146490ac6f84a10af5ba86f29fa0adfe5642df1fd0fc13d9a1d8e53f6",
+      "agents_before_sha256": "ce6e454146490ac6f84a10af5ba86f29fa0adfe5642df1fd0fc13d9a1d8e53f6",
+      "uploaded_sha256": "ce6e454146490ac6f84a10af5ba86f29fa0adfe5642df1fd0fc13d9a1d8e53f6"
+    },
+    {
+      "path": "scripts/inspect_starter.py",
+      "sha256": "828a4ac9c93051fd9bc666a43772c75e4395392908284a7f7316328d69a48b85",
+      "origin": "unchanged",
+      "local_before_sha256": "828a4ac9c93051fd9bc666a43772c75e4395392908284a7f7316328d69a48b85",
+      "agents_before_sha256": "828a4ac9c93051fd9bc666a43772c75e4395392908284a7f7316328d69a48b85",
+      "uploaded_sha256": "828a4ac9c93051fd9bc666a43772c75e4395392908284a7f7316328d69a48b85"
+    }
+  ],
+  "local_updates": [
+    {
+      "revision": "2026-10-26.manual-ad-simulation.v1",
+      "files": {
+        "SKILL.md": "000a696963c2be07c778b8d21fc168373b447bd8b1713dcaaa6faa70a4115928",
+        "references/base-integration.md": "f3c478db82acce5a38b3a36e43066bc70e27b33c3b43ff2659b38489c6fe8e52"
+      }
+    }
+  ]
+}

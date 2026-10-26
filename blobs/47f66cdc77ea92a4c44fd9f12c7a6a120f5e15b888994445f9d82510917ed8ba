@@ -1,0 +1,182 @@
+{
+  "schema": "seven-app-windows-software.v1",
+  "verified_on": "2026-10-17",
+  "apps": [
+    {
+      "id": "workbuddy",
+      "name": "WorkBuddy",
+      "registry_names": [
+        "WorkBuddy"
+      ],
+      "official_page": "https://www.workbuddy.cn/",
+      "resolver": "workbuddy_update",
+      "metadata_url": "https://www.workbuddy.cn/v2/update?platform=workbuddy-win32-x64-user",
+      "architectures": [
+        "x64"
+      ],
+      "allowed_hosts": [
+        "www.workbuddy.cn",
+        "download.codebuddy.cn"
+      ]
+    },
+    {
+      "id": "astudio",
+      "name": "AStudio",
+      "registry_names": [
+        "AStudio"
+      ],
+      "official_page": "https://agent.xfyun.cn/studio-download",
+      "resolver": "astudio_releases",
+      "metadata_url": "https://agent.xfyun.cn/xingchen-studio/client/releases/latest",
+      "architectures": [
+        "x64"
+      ],
+      "allowed_hosts": [
+        "agent.xfyun.cn",
+        "astudio-cdn.xf-yun.com"
+      ]
+    },
+    {
+      "id": "workbuddy_ai",
+      "name": "WorkBuddy International",
+      "registry_names": [
+        "WorkBuddy AI"
+      ],
+      "official_page": "https://www.workbuddy.ai/",
+      "resolver": "workbuddy_update",
+      "metadata_url": "https://www.workbuddy.ai/v2/update?platform=workbuddy-win32-x64-user",
+      "architectures": [
+        "x64"
+      ],
+      "allowed_hosts": [
+        "www.workbuddy.ai",
+        "download.codebuddy.ai"
+      ]
+    },
+    {
+      "id": "qoder_cn",
+      "name": "Qoder CN Desktop",
+      "registry_names": [
+        "Qoder CN"
+      ],
+      "official_page": "https://qoder.cn/download",
+      "resolver": "direct",
+      "urls": {
+        "x64": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe"
+      },
+      "architectures": [
+        "x64"
+      ],
+      "allowed_hosts": [
+        "qoder.cn",
+        "qoder-app.oss-cn-beijing.aliyuncs.com"
+      ]
+    },
+    {
+      "id": "qoder",
+      "name": "Qoder Desktop",
+      "registry_names": [
+        "Qoder"
+      ],
+      "official_page": "https://qoder.com/download",
+      "resolver": "page_scripts",
+      "filename_pattern": "/Qoder-win-x64-user\\.exe$",
+      "architectures": [
+        "x64"
+      ],
+      "allowed_hosts": [
+        "qoder.com",
+        "download.qoder.com"
+      ]
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode Desktop",
+      "registry_names": [
+        "OpenCode"
+      ],
+      "official_page": "https://opencode.ai/download",
+      "resolver": "direct",
+      "urls": {
+        "x64": "https://opencode.ai/download/stable/windows-x64-nsis",
+        "arm64": "https://opencode.ai/download/stable/windows-aarch64-nsis"
+      },
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "allowed_hosts": [
+        "opencode.ai",
+        "github.com",
+        "release-assets.githubusercontent.com",
+        "objects.githubusercontent.com"
+      ]
+    },
+    {
+      "id": "grok",
+      "name": "Grok Build CLI",
+      "registry_names": [
+        "Grok Build"
+      ],
+      "commands": [
+        "grok",
+        "grok.exe"
+      ],
+      "official_page": "https://x.ai/build",
+      "resolver": "direct",
+      "urls": {
+        "any": "https://x.ai/cli/install.ps1"
+      },
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "allowed_hosts": [
+        "x.ai"
+      ],
+      "installation_note": "Download only. Review official script, then run within installation authorization; user signs into own Grok account. Source: https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/01-getting-started.md"
+    }
+  ],
+  "runtimes": [
+    {
+      "id": "python",
+      "name": "Python 3.10+",
+      "registry_names": [],
+      "official_page": "https://www.python.org/downloads/windows/",
+      "resolver": "page",
+      "allowed_hosts": [
+        "www.python.org"
+      ]
+    },
+    {
+      "id": "cocos",
+      "name": "Cocos Dashboard / matching Creator",
+      "registry_names": [
+        "CocosDashboard",
+        "Cocos Dashboard",
+        "Cocos Creator"
+      ],
+      "official_page": "https://www.cocos.com/creator-download",
+      "resolver": "page",
+      "allowed_hosts": [
+        "www.cocos.com",
+        "download.cocos.com"
+      ],
+      "installation_note": "Select exact Creator version from input inventory; no automatic project upgrade."
+    },
+    {
+      "id": "chrome",
+      "name": "Google Chrome",
+      "registry_names": [
+        "Google Chrome"
+      ],
+      "official_page": "https://www.google.com/chrome/",
+      "resolver": "page",
+      "allowed_hosts": [
+        "www.google.com",
+        "dl.google.com"
+      ],
+      "installation_note": "Required Windows test browser. Use installed Google Chrome with the chrome channel. No silent substitute. Resolve current official Windows installer; Python Playwright uses a separate venv."
+    }
+  ]
+}

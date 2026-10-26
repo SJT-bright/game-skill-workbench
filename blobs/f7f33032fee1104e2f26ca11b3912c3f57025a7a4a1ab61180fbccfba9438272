@@ -1,0 +1,4 @@
+interface:
+  display_name: "英化（中文源码转英文）"
+  short_description: "只有中文源码时用：中文全改英文，带字的图做成同画风英文版，接TikTok广告，不改玩法和美术"
+  default_prompt: "使用 $cocos-game-to-english 英化这个游戏：先读两个板块的分界，把中文全部改成英文、带中文字的图做成同画风的英文版，不改玩法和美术。"

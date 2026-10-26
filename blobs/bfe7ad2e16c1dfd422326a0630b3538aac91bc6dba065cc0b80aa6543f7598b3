@@ -1,0 +1,78 @@
+{
+  "schema": "gameskills-fusion-provenance.v1",
+  "revision": "2026-10-23.fused-v7",
+  "skill": "grok-delegate",
+  "previous_provenance_sha256": "d6b0c1e38e6e5b5a625e53cea80dc72e186c8845e16c472ba0735b7373845781",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "b8e8c73d670e66b2bfd1d5fe21834c74b7979ad706a7baa448fa56e956596b46",
+      "local_before_sha256": "0433fd251af46130234c7f3898cefdd50349fac9539ff9f8d4ba032947c0a213",
+      "uploaded_sha256": "3ef3f5c2860b2e4f365669731f3c46f866329550f32b82f9a727d7016888daab",
+      "origin": "integrated-or-new"
+    },
+    {
+      "path": "references/quality-boundaries.md",
+      "sha256": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
+      "local_before_sha256": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
+      "uploaded_sha256": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/sources.md",
+      "sha256": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
+      "local_before_sha256": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
+      "uploaded_sha256": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/concepts.md",
+      "sha256": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
+      "local_before_sha256": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
+      "uploaded_sha256": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/log.md",
+      "sha256": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
+      "local_before_sha256": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
+      "uploaded_sha256": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/index.md",
+      "sha256": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
+      "local_before_sha256": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
+      "uploaded_sha256": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/literal-protocol.md",
+      "sha256": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
+      "local_before_sha256": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
+      "uploaded_sha256": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
+      "origin": "both-identical"
+    },
+    {
+      "path": "references/task-matrix.md",
+      "sha256": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
+      "local_before_sha256": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
+      "uploaded_sha256": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
+      "origin": "both-identical"
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
+      "local_before_sha256": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
+      "uploaded_sha256": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
+      "origin": "both-identical"
+    },
+    {
+      "path": "scripts/delegate.py",
+      "sha256": "485722917d67d4119f40524f3365302928690a6ff1be84a9e3329ff13009cd00",
+      "local_before_sha256": "485722917d67d4119f40524f3365302928690a6ff1be84a9e3329ff13009cd00",
+      "uploaded_sha256": "485722917d67d4119f40524f3365302928690a6ff1be84a9e3329ff13009cd00",
+      "origin": "both-identical"
+    }
+  ]
+}

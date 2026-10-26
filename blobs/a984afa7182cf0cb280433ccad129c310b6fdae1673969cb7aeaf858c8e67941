@@ -1,0 +1,41 @@
+{
+  "schema": "league_config.v1",
+  "title": "Weekly League",
+  "metric_label": "Points",
+  "pool_size": 10000,
+  "start_rank": 9200,
+  "best_rank": 2,
+  "curve": {"half_points": 165, "power": 2.0},
+  "min_step_above_rank": 30,
+  "gain": {"mode": "level", "win": 10, "stars_bonus": 2, "lose_factor": 0.3, "score_ref": 0, "score_min": 0.3, "score_max": 3},
+  "drop": {"chance": 0.055, "min_pct": 0.004, "max_pct": 0.015, "min": 1, "max": 150, "grace_rounds": 3},
+  "others": {"beta": 0.35, "jitter": 0.06},
+  "absence": {"after_hours": 6, "per_hour_pct": 0.002, "max_pct": 0.05},
+  "week": {"reset_weekday": 1, "reset_hour": 0},
+  "tiers": [
+    {"id": "bronze", "name": "Bronze", "hardness": 1.0},
+    {"id": "silver", "name": "Silver", "hardness": 1.4},
+    {"id": "gold", "name": "Gold", "hardness": 2.0},
+    {"id": "diamond", "name": "Diamond", "hardness": 2.8},
+    {"id": "champion", "name": "Champion", "hardness": 3.8}
+  ],
+  "promote_top_rank": 1000,
+  "demote_from_rank": 8000,
+  "rewards": [
+    {"max_rank": 10, "coins": 600, "skin": true},
+    {"max_rank": 100, "coins": 400, "skin": true},
+    {"max_rank": 1000, "coins": 200, "skin": true},
+    {"max_rank": 5000, "coins": 80},
+    {"max_rank": 10000, "coins": 30}
+  ],
+  "league_skins": ["league_skin_01", "league_skin_02", "league_skin_03", "league_skin_04", "league_skin_05",
+                   "league_skin_06", "league_skin_07", "league_skin_08", "league_skin_09", "league_skin_10"],
+  "skin_fallback_coins": 300,
+  "view": {"above": 6, "below": 3, "top": 3},
+  "avatars": 12,
+  "calibration": {
+    "casual":  {"rounds_per_week": 10,  "rank_at_least": 1000},
+    "regular": {"rounds_per_week": 40,  "rank_between": [100, 2000]},
+    "heavy":   {"rounds_per_week": 120, "rank_at_most": 100}
+  }
+}

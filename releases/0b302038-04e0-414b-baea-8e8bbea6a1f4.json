@@ -1,0 +1,49 @@
+{
+  "id": "0b302038-04e0-414b-baea-8e8bbea6a1f4",
+  "skillId": "s-ff71fb1948e2a7f0eb3b",
+  "directory": "grok-background-maker",
+  "name": "grok-background-maker",
+  "version": "v1",
+  "createdAt": "2026-10-26T11:56:57.944Z",
+  "summary": "文件变更：新增 5，修改 0，移除 0。",
+  "changes": {
+    "added": 5,
+    "modified": 0,
+    "deleted": 0
+  },
+  "treeHash": "ed95115dec3dbd10c4dec7d56cb7ea1dc87c0accf94241bd2ef1c2a2f19d11e7",
+  "bytes": 28380,
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "e83a5b0a734c4a93bc67a8b1356ed46b48c09705003fdc0dd0628b2be33b94a3",
+      "size": 1649,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
+      "size": 5662,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+      "size": 353,
+      "executable": false
+    },
+    {
+      "path": "references/jobs.md",
+      "hash": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
+      "size": 4450,
+      "executable": false
+    },
+    {
+      "path": "scripts/run_jobs.py",
+      "hash": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+      "size": 16266,
+      "executable": false
+    }
+  ]
+}

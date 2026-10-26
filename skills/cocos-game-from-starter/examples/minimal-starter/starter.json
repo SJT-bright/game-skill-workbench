@@ -1,0 +1,69 @@
+{
+  "schema": "design_starter.v2",
+  "language": "en",
+  "mode": "levels",
+  "plan_ownership": "import_preserve",
+  "modules": [
+    "currency",
+    "result_x2",
+    "home_gift",
+    "levels",
+    "skins"
+  ],
+  "features": {
+    "ranking": false,
+    "sharing": false,
+    "ad_skip": false,
+    "cross_promotion": false,
+    "daily_checkin": false
+  },
+  "home_layout": {
+    "middle_left_min": 1,
+    "middle_right_min": 1,
+    "below_play_max": 5,
+    "button_scale": 2
+  },
+  "energy_enabled": true,
+  "rewarded_energy_amount": 3,
+  "pages": [
+    {
+      "id": "home",
+      "buttons": [
+        {
+          "action": "play"
+        },
+        {
+          "action": "settings"
+        },
+        {
+          "action": "skins"
+        },
+        {
+          "action": "gift"
+        }
+      ]
+    },
+    {
+      "id": "play",
+      "buttons": [
+        {
+          "action": "pause"
+        }
+      ]
+    },
+    {
+      "id": "result",
+      "buttons": [
+        {
+          "action": "next"
+        },
+        {
+          "action": "reward_x2"
+        },
+        {
+          "action": "home"
+        }
+      ]
+    }
+  ]
+}

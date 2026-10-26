@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:52:13.416Z",
-  "treeHash": "a6d4c0a817656349c6bf657ff0a52f789d046c2b16bbcb090a9f368667bdcb68",
+  "createdAt": "2026-10-26T15:20:02.498Z",
+  "treeHash": "2dbc9090024a9fa944b7425bc6bbbd2bdab75cbc5e81d3240ddfe1b1d24e8191",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -197,26 +197,26 @@
     },
     {
       "name": "cocos-game-from-starter",
-      "treeHash": "aea8023ca7a2d3e3ff7698e1a7cdad5e223347e80c4ee907d3d86e1efa4c38db",
-      "fileCount": 16,
-      "bytes": 207072,
+      "treeHash": "11b8695e5f988073fcbcad2e0ad261b129e59d55cd61cf215cb4cf221642ef38",
+      "fileCount": 99,
+      "bytes": 248448,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "90ca6e557cdb03c3a523a769a696f463e0e72703a8fd4560139d1d288b715c07",
-          "size": 5898,
+          "hash": "f26424bbd6519643f65e06cd1035e41498c7dacea3736e7b8e10299a533bc588",
+          "size": 17680,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "8e817860745a3fdb8b93a3f31c3fd918e759b624df1fbf76eb4793568088b571",
-          "size": 54429,
+          "hash": "e69ac5145235e0b3fa94adf0e1bb16f1bce4f10c4c703a8865ddd7bb0198aaee",
+          "size": 3099,
           "executable": false
         },
         {
           "path": "WORKSHOP_ADAPTER.json",
-          "hash": "10ea5cc2fe5499a25a7dcd4939ba0888e982e6c72bc5f894b6608dbc300c4ad2",
-          "size": 916,
+          "hash": "c6038212c6d99f0dfa3a042ff4cb5a3515e3eacaf80c885dd57a513d1a18324b",
+          "size": 919,
           "executable": false
         },
         {
@@ -227,14 +227,500 @@
         },
         {
           "path": "assets/creation-spec-template.md",
-          "hash": "538b35157a2a74ec728f8aa074af55f60ca1735e3d78542dc24039944f22a3d0",
-          "size": 3810,
+          "hash": "1f4f3abe93e1d54d710e8fcfe0b08d3bdacf5c7baf4d170978a3670c8ca01c30",
+          "size": 3621,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/ART_DIRECTION.md",
+          "hash": "5074679b4e30b6cd606567d63fdb92db8d88da9be90ef1bf213ca7dc461233a5",
+          "size": 208,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/AUDIO.md",
+          "hash": "91eb924436376ab93aa9866b11f6b9796bac78ba6df6daae541665397086a1fa",
+          "size": 150,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/COPY_EN.md",
+          "hash": "3f787b0cde7e6934cbccae3ca960ace8af38d18eb1e87946c5c7cd43ad72c610",
+          "size": 100,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/ECONOMY.json",
+          "hash": "7f78b7019b8d5a020a8f89fd970048bf2ba1227ca06d3ee822adf780c5eac31a",
+          "size": 5746,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/GAME_DESIGN.md",
+          "hash": "46997750ea12bd7b7cd422d5371cc8612bd24d5532a1f0b1e85c61d2b161a144",
+          "size": 456,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/START_HERE.md",
+          "hash": "59b0a54dfa11c1deabd604aa686d0bae165226ecdfb572e1e65fc13f7e675007",
+          "size": 308,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/UI_PAGES.md",
+          "hash": "72f9b47887ba91a82291cbdfedcc5b943c1e3ff1dbc5c8a3e1d1bc4f1d58bed8",
+          "size": 393,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/README.md",
+          "hash": "03373598debddc1e7cf6578175b0dc3051830d18f41382db63fc083f1737dded",
+          "size": 416,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/001.json",
+          "hash": "a02cb05e49a678cab3a1dd31ddb5066d31e6a98b6409c4abce69fd3ecc7b60ea",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/002.json",
+          "hash": "e053267eddf7db3958b5d051cd82b573af555279e79a38fee2df7929f8d3a930",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/003.json",
+          "hash": "ab3ca284db3ab7fa63dbe372c4006fcbc9b28613eee7eb6ca5b11a92f48d1480",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/004.json",
+          "hash": "8bdd5dc1d7104aba0ca28fb9640113713c72e5e80f20ee8e5e029703f62f9ca5",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/005.json",
+          "hash": "67c98b8015203129a8fd22c49653f3ec987eecdbfcc003bf0f07f97c5e2a0577",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/006.json",
+          "hash": "f50852e8990d53e8d910d90a8aa1761eb87465b3d391d5fdca4d84f170158760",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/007.json",
+          "hash": "e031ed720dcdcaaf52b03c36d210bf9b20a011c6e206e5644b63dcd7143cfc36",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/008.json",
+          "hash": "a57ea498729794e59ae05a42b8e79b5a6cf3d3bb94533d271a1631e40a4f0851",
+          "size": 60,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/009.json",
+          "hash": "3db5cc2182cae21fe4257fdd31baf91636cbfb3eec608b676eede85536a4c6f9",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/010.json",
+          "hash": "d47ddb40195310b5a41493a413104470f6eb316f11232bbf7c5d377671e1a37e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/011.json",
+          "hash": "7623a5e79eb9f43fdd964e49efbd4d189a091da0ee2d6cf28854b1dec4d63205",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/012.json",
+          "hash": "a5ea0f94cc3909bb1ee6c89b7fd398a33e646d777be351d0c0db4ff41dea74df",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/013.json",
+          "hash": "483cba2cf11fc8a6a14a7229587c2434a3c0c8898e162e2179454fcd0583a165",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/014.json",
+          "hash": "171f68574472470a4be140981225f34268485bee1dda97fe213a4b3e1607554a",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/015.json",
+          "hash": "f07c773a255b25a512db3d0580c56955bb70051126740ee83fcc02f4fb895dea",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/016.json",
+          "hash": "463078260247acd02f49420fdf008c813ef2ee6c42b3c4171c7fe8cc42ce94f4",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/017.json",
+          "hash": "c91229f3676f3ea590f4c4b1832088cb9b2e90d7abb8b0c46475f3ef92e048f7",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/018.json",
+          "hash": "cc5b0fc8b47ef2f524a154981f7bbe78c72f3e72e38a19242cea842806a105b0",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/019.json",
+          "hash": "263775b22015a74bd61a5e6ea1d35607588c99ba5d7caef2ec6caec78cef84b5",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/020.json",
+          "hash": "7af6fbb9bfd11c3c57d15e11168cdf0abe32afe309cf0497a4e1ea1d1028d5ff",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/021.json",
+          "hash": "e5ec284b20f701f906b8501e4ab3210d6009c64c8f71cdfe4b2db53a1d5a2978",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/022.json",
+          "hash": "e829257637890ca477d4ed5356853d9c22c1a4c5aaec3b451aff56ea4990d45b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/023.json",
+          "hash": "31cc78fa1fb4f6b1c579de6d6ee41ece3109868525dffe5c5946098fec302d5e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/024.json",
+          "hash": "0e4ea8ea882abccc5cd0ed6b2b6ca7e70acfbf67c61028b6994cef37dd5d4b24",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/025.json",
+          "hash": "bab577c51d02e15d2699b3f79ad78d51ef40f07278d6b1b379aea1e49c34de4d",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/026.json",
+          "hash": "7521e2ee66704c32d3e5f795558cea17603c5ea08821affbe8c1decbc68a5f53",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/027.json",
+          "hash": "fb4b789afa381bbfe7e9e19ccf973b5091bca14452e08276eb5fedc7f303de69",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/028.json",
+          "hash": "2677d93e86ea40c9bc5ea3f78b5e3903ca981cca90de29eb358daed3da6e96e4",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/029.json",
+          "hash": "0872f573b2d3ad13ec776086f104806df2805701b1221b68b21cd0b6905736f2",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/030.json",
+          "hash": "ce898580916d99c506215bfea2ef43bb182ba51cc2528ad31bc912fe51162d94",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/031.json",
+          "hash": "e0cfde123714214cfecb61d5c05d1961139b2a88614676343a47d869e36aea9b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/032.json",
+          "hash": "a9daf52926ec863eac15b653b418fc110fdd28fbbe70ed51f5416c6e8b91e1b7",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/033.json",
+          "hash": "7b40461dfbababa419cb28f6af40636b7f33d400fca2e57fa5780dc5fe0ea034",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/034.json",
+          "hash": "0da13efbe0754440bb9396bd0b32647a95946f3e729d41a2b7267e9ccc37076b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/035.json",
+          "hash": "3478b689482ed55e66f689152ae73663067119b3f64ac5fe080910c1743c846e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/036.json",
+          "hash": "fa319d8f203bc1871917d8b097f9bdaace19520638ec84334acbd3c9126a3086",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/037.json",
+          "hash": "10c2c8bf6c1e056de88b122193f2c98021a0d7fddf615b81353a8590e4db8360",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/038.json",
+          "hash": "fd918c4323cc48cdfb55bf33017ce4692d95494ff8001cf4b42a49b4d40474b9",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/039.json",
+          "hash": "c03f18560b89132f5dd479b04891aefb85b9993fde56c6ccbfa7145dd1bf6297",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/040.json",
+          "hash": "1155fa6a0631d6e7f70531a74bf3f8dc7889af8c95db4d0948d8031ef0ccee14",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/041.json",
+          "hash": "cdcb21e5eb38ea5ad3b87f2b96e0866948214248868c242138d0b60189b123f0",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/042.json",
+          "hash": "938cb88480d417b1f0a6564aa4e0f07237a32189919c25886242a99e4d4b7f49",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/043.json",
+          "hash": "b98319d1701933e71fa51305eaef6c19e902cfbbe0cb10b2f1ac7060ea2a138e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/044.json",
+          "hash": "256d7777a0d5284de9d34ab76150f6e871a9145a8226fadb87ad2dd1e71eca29",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/045.json",
+          "hash": "0c4e55f66c54f20d48348e107a6b76096fac1cf6a9bd6421746dca533c5c2ce2",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/046.json",
+          "hash": "25ac42eeb8065d2ccbf9fcb1943e702803ffd3e721c834804e1f0ae7335c5f10",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/047.json",
+          "hash": "d0680dbeab1abed00a552a721154722c3c7aae6478181c39a98aad421593bfbb",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/048.json",
+          "hash": "aac39a7d0c41592af78fff43af236bc00e2f3c35df159a7135619fa8e3b2be66",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/049.json",
+          "hash": "ce2ae5bd0aa44697888c32e34bc8f3fa4b8532aa59bc532fd51962595d08d021",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/050.json",
+          "hash": "0ce81fafb28972a233871dd6d2a6338bb1598bf1a1b6078a8ac860f3e45e8419",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/051.json",
+          "hash": "6db796b9cbe70aa35c6af9c22ab8e3d0fc619be985244f5d433a2edfca7ba5ad",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/052.json",
+          "hash": "793499cd5b5eb6bd2d6bb4291501495a58929ebff9f8b04ef857e1994e12ad26",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/053.json",
+          "hash": "bc464e6bd408afd439184da518f35077f38a8387513721350b642b5f16beac2c",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/054.json",
+          "hash": "ea2fe90e82317c7d1e614fbaf38eda1bb97d5f44221a7ff4fc5b98c087d55f45",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/055.json",
+          "hash": "21ee2cb4a456dbb70ee051ce2abc88d54554a31faa3d28f69db294e2c5f01965",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/056.json",
+          "hash": "0a54de0cb57e6261f4a1dd621267e3adfd3d16397752032bd774e8ab5f87ca8c",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/057.json",
+          "hash": "38dc84a951669f50e0c65c883bf6e3ed60972fab144058ba025558835a01e69f",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/058.json",
+          "hash": "ea78e503b5badd18ce4ba2333945b465b2fa2fe19181ab46da7946e2499753bc",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/059.json",
+          "hash": "0539c6fbd5441b7498a603e7bf1c6216de25f0ca8ed3c360c244df48536c04f2",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/060.json",
+          "hash": "f399f0621dd1c60806badda9835369538e4ec1fc86d5ca78586907d9641af07b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/061.json",
+          "hash": "879455c3ad2ecd608ad316acdaead43350e8eca2ac58cd91d831e0d94c984b90",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/062.json",
+          "hash": "942d8dbb0277721523625553dbeacf5e7f8e9c3122cf4d819867e8b792d8eb26",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/063.json",
+          "hash": "992dda883c2f802fba2b1865110b5a9eebd942b79d8cac0a7598b27c0e28378f",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/064.json",
+          "hash": "eee29f8726be2c3ff7e1a6dc4d03635054b5421a85ca8839bbe66bd253d680d5",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/065.json",
+          "hash": "6283b1b03aa9457e100bff3a374bdbf38d9f9d39e8a9b5df0b19b688627e4898",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/066.json",
+          "hash": "2b4e114aff3ae1b7f8c2a5b08432fc0ea4d33f61cea2f3385f762bd4d0a99ef8",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/067.json",
+          "hash": "9607552ac19439390630ce0b18af0632c14b27560c7b8dbf3611066225d51b54",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/068.json",
+          "hash": "8e5d1914ea9bb4c218689c71b258bb046b722d1a018dd73216bb6eb870b19926",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/069.json",
+          "hash": "b6dce5a8885dfa533f09c6555f989b11862560bcc5d37115b5afe0cac8ea102c",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/070.json",
+          "hash": "e8666775a9cb1e794622a36e60ee4e553240d27ad4c037f89620e37689c0605d",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/level_plan.json",
+          "hash": "950d9153aad8f809c47f4e86f281f852a44fe37400c524bdb8bd83372ed222b8",
+          "size": 23558,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/solutions.json",
+          "hash": "59ddbd8053e6ce8886a81713712c439418554a87624a5f105ac6317d60e8fcae",
+          "size": 55557,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/starter.json",
+          "hash": "4c0785711ee3b438cc9a11b7b819c50e821de89449ab49835c339b6584e8d18c",
+          "size": 1127,
           "executable": false
         },
         {
           "path": "references/base-integration.md",
-          "hash": "f3c478db82acce5a38b3a36e43066bc70e27b33c3b43ff2659b38489c6fe8e52",
-          "size": 5834,
+          "hash": "4841a204e07f8a7470c8bed0ecf4b4d10e17d4f8e9578827b05d50b17ba4c24f",
+          "size": 5785,
           "executable": false
         },
         {
@@ -251,26 +737,26 @@
         },
         {
           "path": "references/explicit-legacy-features.md",
-          "hash": "2a4d561b633bafb5f3da674dc70c15d5da19ab2d9b0ba863d067edc48fa43f06",
-          "size": 6339,
+          "hash": "fc8d4413e9bd392a26a4001adedade02569b5134fa1ae4fe6522ba5b62330b51",
+          "size": 749,
           "executable": false
         },
         {
           "path": "references/starter-intake.md",
-          "hash": "bbdeeca17b73bd3a89eb75935cc9eaf06eb20dd653f8cd30db41afb67ed129c7",
-          "size": 7703,
+          "hash": "753dc52670b88a14f28bb4e325a2015ad1eeeac816ca8c3895b027cd8170414c",
+          "size": 8286,
           "executable": false
         },
         {
           "path": "references/starter-pack-spec.md",
-          "hash": "554909b1cb015cab9465f8a45a95224ad2aab4abab2c24ccf3e61cba98d51a36",
-          "size": 19587,
+          "hash": "26f1c0123efefe6726dc267dff62a97bd0e1bf3291b65579666e15a59742bde3",
+          "size": 8488,
           "executable": false
         },
         {
           "path": "references/workflow-detail.md",
-          "hash": "45e6ebdeabd3e9b72af52e42a11f204f9e2f3b51ad559e421a17138944633ace",
-          "size": 12992,
+          "hash": "2354c48c3382572c5f3a7374016af36fb288c3b97987138348cd58f523516c9d",
+          "size": 284,
           "executable": false
         },
         {
@@ -286,9 +772,21 @@
           "executable": false
         },
         {
+          "path": "scripts/test_validate_starter.py",
+          "hash": "a31dbad7a0bade611e93a4340813afa3d099d0622f5af11e8e8214e70a930395",
+          "size": 3868,
+          "executable": false
+        },
+        {
           "path": "scripts/test_workshop_intake.py",
           "hash": "027960a6d55d8cb87b03fcab779f680a710f2d7e10c5c7a99991463516e07967",
           "size": 26873,
+          "executable": false
+        },
+        {
+          "path": "scripts/validate_starter.py",
+          "hash": "c6f64f5dd7b9f6a79f66ddcc707919395081c2aa92ba654948527a687427028e",
+          "size": 13831,
           "executable": false
         },
         {

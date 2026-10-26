@@ -1,135 +1,51 @@
-<!-- WORKSHOP_RECEIVER:BEGIN -->
-**条件入口**：含`workshop.json`先执行[工坊接收协议](workshop-handoff.md)；接收成功的v3沿用已定数据与规格，本页重新生成关卡、价格或补产品设计的默认要求仅用于普通启动包。缺件/漂移不静默降级。
-<!-- WORKSHOP_RECEIVER:END -->
+# Design starter contract v2
 
-适用范围与冲突先按[融合政策](../../cocos-game-to-english/references/fusion-policy.md)处理；本文是默认模板，用户明确选择和项目权威规格优先。
+Send this contract together with the complete accompanying author kit (generator scripts, shared product_contract.py and the parseable 70-level example) to Grok or another author. The kit is self-contained; never tell the author to read an unprovided local script. Write all package content in English. Do not include platform IDs, credentials, implementation code, build claims or fabricated solver results. A design starter is a planning/data input; an initial download payload is an unrelated runtime size concept.
 
-# 启动包规范（发给做启动包的 AI）
+## Files and ownership
 
-> 你（Grok 或其他 AI）负责为一款 TikTok 国际版 Cocos 小游戏写**启动包**：只做**设计**，不写代码、不规定测试和打包方法。拿到启动包的制作 Skill 会按自己的固定规则完成美术、音频、广告接入、测试和打包。下面规则是默认制作模板，当前用户明确选择与项目授权优先；"由你决定"的部分写清楚、写死，不要留给后面的人猜。
+Always provide START_HERE.md, GAME_DESIGN.md, ART_DIRECTION.md, UI_PAGES.md, ECONOMY.json, COPY_EN.md, AUDIO.md and starter.json. Level games also provide levels/README.md, levels/level_plan.json, levels/solutions.json and the actual layout file referenced by each level. Endless games have no invented level map/level_plan/solutions.
 
-## 一、必须交的文件（打成一个 zip）
+START_HERE indexes every supplied file and records what to keep/change/remove if original source is attached. GAME_DESIGN defines actual input, legal actions, state changes, win/fail, pause, restart and reward consumers, and has a section named `Built-in modules`. Supplied source, original archives and saves are preserved.
 
-| 文件 | 内容 |
-|---|---|
-| `START_HERE.md` | 一页总览：游戏名、一句话玩法、做法（基于给定源码改 / 全新做——两种都属于"重塑"）、文件索引、所有"已定决策"的清单 |
-| `GAME_DESIGN.md` | 玩法设计（第二节），含内置板块的选择（第九节） |
-| `levels/` | 全部关卡数据 + 可解性验证报告（第三节） |
-| `UI_PAGES.md` | 页面与按钮清单（第五节）——美术生图需求单的来源 |
-| `ECONOMY.json` | 货币和皮肤板块的名字、造型（第六节，按指定格式；价格和加成由制作方的工具生成） |
-| `ART_DIRECTION.md` | 美术方向（第四节） |
-| `AUDIO.md` | 音乐音效方向（第七节） |
-| `COPY_EN.md` | 全部玩家可见的英文文案 |
-| `references/`（可选） | 风格参考图。只作参考，不能直接照搬别的游戏的角色、图标、标志 |
+The author owns the submitted level order, layout and seed. `plan_ownership` is `import_preserve`: the receiving production tool imports the accepted table; it does not call make_level_plan again or replace designed levels with random bonus positions. The generator is a planning aid before the author finalizes layouts. A changed seed after acceptance is a design change requiring affected layout/solution validation.
 
-## 二、GAME_DESIGN.md：玩法
+## Structured decisions: starter.json
 
-1. 一句话玩法、核心操作（点/拖/滑）、怎么算过关、怎么算失败。
-2. **关卡结构**（硬规则，所有通关型游戏都这样）：先写是**通关型**（Level-based：一关一关固定关卡）还是**无尽型**（Endless：一局玩到输，比分数/距离）。
-   - **无尽型不要地图**，首页直接开始，顶部显示最高分。
-   - **通关型一定要有地图**（Map 页），地图上写总关数（如"Level 12 / 70"）。写：
-     - 总关数：**至少 70 关**（用户 2026-10-24：少于 70 不行，原有更多关卡全部保留，多于 70 也行）；**每 10 关一章**，限定关在第 10、20、30…关；
-     - **难度逐关递增**：一关比一关难一点，没有突然变难的关（限定关也一样）；
-     - **每章最后一关是限定关**：难度照常，地图节点是华丽的大边框，打过第一次送大量金币并解锁下一章；**限定皮肤两种格式任选**（用户 2026-10-24）：`final` 只有最后一个限定关送一款（皮肤板块排第一），`every_10` 每个限定关各送一款（全部排在皮肤板块最前），只能在限定关拿到；启动包写明用哪种，没写默认 `final`；
-     - **奖励关**：每 10 关正好 1 个，位置由制作方的工具按种子随机（不用你挑）；比这一章最简单的关还简单，给 3 倍货币，结算看广告变 6 倍；地图节点画成货币图标（比如"Pearl Rush"）。
-3. 新机制在第几关第一次出现，以及第一次出现时怎么教（提示箭头/小教程）。
-4. 难度曲线：逐关递增，写清楚每章从多难到多难（奖励关是简单关）。
-5. 评价：几颗星、每颗星的条件（只用来显示和计分，**没有"完美通关送皮肤"**）。
-6. 失败后：免费重试；看广告复活（复活后继续本关，不跳关）。
-7. **基于给定源码改时**：写清楚和原源码比，保留什么、改什么、删什么（尤其是按钮和页面的增删）。
-8. **内置板块**：按第九节写（货币、结算×2、首页礼盒、皮肤板块要不要、关卡板块）；**默认不做**排名/排行榜、七日签到、更多游戏/交叉推广、分享。
+Use schema `design_starter.v2`, language `en`, mode `levels` or `endless`, plan_ownership `import_preserve`, modules including `currency`, `result_x2`, `home_gift` and, for level games, `levels`; add `skins` only when enabled. Features `ranking`, `sharing`, `ad_skip`, `cross_promotion`, `daily_checkin` are false for the ordinary starter. Explicit non-social project extensions are separate project decisions.
 
-## 三、levels/：关卡
+`home_layout` is `{"middle_left_min":1,"middle_right_min":1,"below_play_max":5,"button_scale":2}`. `energy_enabled` is a boolean; if true, `rewarded_energy_amount` is exactly 3. Supply `pages` as objects with unique `id` and `buttons` with explicit `action`. No ranking/share/invite/skip routes. No Credits or equivalent About/production-explanation pages; retain license and source records in project documentation. See the complete parseable example in ../examples/minimal-starter/.
 
-- 每关的数据（JSON），字段说明写在 `levels/README.md`。
-- **每关都要证明能过**：附求解器或验证脚本的结果（每关最少步数/最优解）。
-- 标出**限定关**（第 10、20、30…关；`final` 时最后一个送限定皮肤、其他送大量金币，`every_10` 时每个都送一款限定皮肤）；**奖励关不用你挑**，制作方的 `make_level_plan.py --seed` 每 10 关随机放一个，你给的关卡里留出简单关就行；每关写难度，逐关递增。
-- 附一张关卡表 `levels/level_plan.json`，格式见制作方的 `make_level_plan.py`：每关的 `type`（normal/bonus/milestone）、`difficulty`、`coins`，限定关的 `challenge` 和 `reward`。
+## Level and reward data
 
-## 四、ART_DIRECTION.md：美术方向
+New default level games have at least 70 total slots. The total already includes normal, bonus and milestone levels; no extra levels are silently inserted at intake. Milestones are exactly 10,20,30,… up to the largest multiple of ten within the total. An incomplete final chapter adds no milestone and no extra limited skin. Thus 75 levels have milestones 10..70, not 75.
 
-**硬规则（不能改）**：明亮Q版——浅色明亮的背景（深色区域不超过一屏的 15%）、**背景不能花哨**（用户 2026-10-23：首页背景画满小人、小车、招牌、地砖这类小细节，深色标题和按钮完全淹没；背景要大块柔和的形状、渐变、少量云朵或虚化远景，让标题 logo 和按钮最突出，标题用亮色或饱和色＋描边，不用深色字）、圆润可爱、柔和立体（有柔和高光和厚度，不是扁平哑光色块）、糖果色；每个页面和每个弹窗（包括过关/失败/结算，**也包括游戏中**）都要有背景画面，不能是纯黑或纯色（例如游戏中的天空要写渐变、云朵、远景，不能只写"浅蓝天空"）；按钮是胶囊形光泽按钮（绿=开始/下一关，黄橙=提示/首页，粉红=重试，红圆+白X=关闭，蓝=信息设置，紫=道具）。**不要**写暗色/夜景为主、扁平、哑光、写实、恐怖、像素风。**也明令禁止**：大块白色/浅灰白板、大块纯色或深色（藏青/黑/深灰）的按钮和面板、近黑/藏青/深灰的特粗文字（文字用中等粗细的白色/浅色或饱和主题色）、白底配黑色单色图标这种没有配色的设计、所有标签一个模板、UI 堆满挡住屏幕。
+Each complete ten-level chapter contains one easy bonus slot. It is chosen once from the saved integer `seed`, excluding levels 1..3, chapter starts, the milestone and its immediate predecessor. A short tail has no new bonus requirement. Keep positions and actual layouts in the submitted table. The example includes the deterministic result so an author without the production scripts can see the entire format.
 
-**文字样式（硬规则）**：所有字都要设计过——凡是事先知道写什么的字（按钮字、标题、页面名、栏目名、物品名、任务名）都用 GPT 和底图一起生成图片字（跟画风走，常用花体/装饰字或圆润粗体，有描边和立体感），**不直接调用字体打出来**；**禁止深绿、深青、深蓝灰色的字和细字**；单位（金币、珍珠）用图标不打字；**按钮连同上面的字一次生成成一整张图**（`btn_<字>`，不能空底板叠字体字或另一张字图）；**游戏大标题是一张按画风生成的风格化 logo**（不打字、不拼字母）；**会变的数字（金币、体力、关卡、价格）用按画风生成的数字图做成位图字体**（BitmapFont/LabelAtlas，不用 TTF 打数字）；只有公告、玩法说明这类大段文字可以用细一点的字体，放在底板上（用户 2026-10-23，两个板块）；**字图按原比例等比缩放、绝不压扁拉长**（每个字单独裁边做成自己的图，放不下就改按钮尺寸或重新生成；不用 Canvas 字体画字），**一页上的标题、按钮字、数字、标签颜色不能全一样**（同一风格，颜色、大小、字形有变化；用户 2026-10-23）；**道具数量、体力、金币、关卡的胶囊/边框、按钮、收集功能键都是生成的图，会变的数字单独生成位图字；不穿模**（字不压图标、图不伸出按钮/胶囊、按钮不重叠），**主要功能字（WATCH AD、PLAY）在生成的按钮上**，按钮下的小字只做解释（用户 2026-10-23）；不用系统细字体，字和背景对比明显。在 ART_DIRECTION.md 写明选的字体风格和文字配色。**按钮是一整套**：主按钮、次按钮、图标按钮、左右箭头、关闭、返回、标签页、开关都同一种材质边框，箭头和关闭是画出来的图标，不是方块里打"<"">""X"。
+Plan fields: schema `level_plan.v1`, mode `levels`, meaningful `why`, `currency`, `coins_per_level`, total_levels, milestone_every=10, seed, reward_seed, reward_policy=`seeded_band.v1`, milestone_policy=`multiples_only.v1`, limited_skin_mode=`final` or `every_10`, bonus_multiplier=3, and ordered `levels`. Each row has level, type, positive difficulty, coins, layout_file and layout_sha256. New mechanics carry tags `["intro"]`.
 
-**顶部资源栏（硬规则）**：货币、体力（有体力时）、关卡进度（无尽型是最高分）放在屏幕**最上方**的浅色胶囊里，右上角给平台菜单胶囊留空。**体力用闪电图标**；**货币按题材起名字和画图标**，例如海底→珍珠 Pearls、糖果→Candies、森林→橡果 Acorns、太空→星钻 Star Gems；只有海盗、宝藏、商店这类题材才用普通金币。在 ART_DIRECTION.md 写明货币的英文名和图标，以及限定关节点（华丽的大边框，带皇冠/宝石）、奖励关节点（画成货币图标）、首页礼盒（10 帧动画：轻摇、发光、盖子跳一下）长什么样；皮肤越稀有画得越精致，限定皮肤最精致。
+Normal and milestone rewards are generated once by reward_seed: coins=coins_base+coins_roll, coins_band=max(1,round(coins_base*0.10)), abs(coins_roll)<=coins_band. Keep at least two distinct values per complete chapter and five across 70 levels. Retry reads stored coins; it never rerolls. Bonus coins are exactly three times the ceiling of that chapter's median normal-level coins; x2 settlement yields six times that reference. A coin milestone's extra first-clear amount equals the sum of the previous five stored rewards. Skin milestones reference the matching limited skin ID. Difficulty rises across non-bonus levels; bonus is an intentional easy exception.
 
+Each actual layout has a SHA-256 and a proposed solution bound to those bytes. solutions.json contains `levels`, each with level, layout_sha256, solvable=true and a nonempty `actions` array. The receiver must independently replay solutions with the real game's rules; a supplied solvable flag or this validator cannot prove solvability.
 
-**Per-level currency reward (Saul, 2026-10-24, rule 21)**: every normal and milestone level's currency is a seeded narrow-band roll around its base, not a fixed identical amount. `coins = coins_base + coins_roll`, `abs(coins_roll) <= coins_band`, `coins_band = max(1, round(coins_base * 0.10))`. Store `coins_base`, `coins_band`, `coins_roll`, `coins` and the plan-level `reward_seed` in `levels/level_plan.json`; at least 2 distinct values per 10-level chapter and 5 across 70; retry never re-rolls; bonus levels are 3x the chapter median; limited coin rewards are the sum of the previous 5 rolled values. This is a controlled exception to the old "no random reward range" pitfall; wild ranges remain banned.
+## Economy and skins
 
-**由你决定**：主题和世界观、主角和配角、每章地图的主题场景、主色倾向（在明亮范围内）、棋子/道具/皮肤的造型、Logo 的样子、字体风格。
+ECONOMY.json has themed currency, positive integer coins_per_level, boolean skin_module and arrays skins/backgrounds. Disabled skins means both arrays empty. Names, IDs and art directions must be complete; production copies names/art by ID into the accepted table, never by unstable list position.
 
-## 五、UI_PAGES.md：页面与按钮清单
+`final`: one limited skin, awarded at the last actual milestone, then one free, seven common, six rare, three epic and two legendary = 20 hero skins. `every_10`: one distinct limited skin for each milestone, all first, followed by the same 19 nonlimited skins. Total = 19+floor(total_levels/10): 70 and 75 levels both have 26 skins/7 limited; 85 levels have 27/8. Every limited skin has its award level and matching level-plan reward ID.
 
-按页面列：加载页、首页（含顶部资源栏）、选关/地图（通关型才有：总关数、当前关、奖励关和限定关的特殊节点）、游戏中、暂停、过关、失败（含复活）、设置（两个标签：功能页 How to Play、震动、底部游戏名与版本号；声音页 Music 和 Sound Effects 各自开关和 0–100% 十格音量）、皮肤页（要皮肤板块时：主角皮肤和背景两个标签，限定皮肤排第一格并变暗）、"看广告试用"弹窗、首页礼盒弹窗（看广告领金币），以及其他弹窗。**默认不做**排名/排行榜页、签到弹窗、更多游戏/交叉推广按钮、分享按钮（用户 2026-10-23：多做多错）。每个页面写：
+Backgrounds are [] when no scene can be dressed; otherwise ten entries ordered free, three common, three rare, two epic, one legendary. Ordinary purchasable skins/backgrounds use currency only. Level-limited skins are earned at their milestone; the documented endless limited route remains its existing separate coin/ad rule. No ranking or check-in skins. Numeric prices/bonuses use the common skin generator and audit, not a second pricing model in this design package.
 
-| 元素 | 类型（按钮/图标/文字/背景/动画） | 英文文字 | 位置（上/中/下、左/右） | 大小（大/中/小） | 点了去哪 / 做什么 |
-|---|---|---|---|---|---|
+## Pages, art, audio and advertising
 
-位置和大小写大概就行，玩法确认后由制作方定最终布局。**页面不能单调**：过关页至少有标题、关卡号、星星、奖励金币、**看广告×2 按钮**、下一关按钮＋回首页/重玩图标、庆祝效果（无尽型每局结算也有×2）；失败页至少有标题、关卡号、离过关差多少、重试＋回首页；首页有**大标题**（宽度至少屏幕一半以上）和**丰富的封面设计**（主角、配角、场景、道具），带底板的 PLAY；**货币/体力在屏幕最上方的资源栏（绝不放在屏幕中间）**，设置在左上或右上角，其他功能图标（礼盒、地图、皮肤、加桌面、个人主页回访等）紧凑排在下方一两排；**每个功能页的按钮加起来最多占屏幕 40%**（标题和封面不算）；弹窗面板里不留大块空白，每个弹窗都有生成的插图和图片字标题，不是浅色平板上只有字和按钮；所有按钮都有底板图，按钮文字和标题用游戏字体。**标准按钮功能（用户 2026-10-23）**："点了去哪"一列按标准写全——游戏中有暂停/设置键，暂停页有 Continue、Restart、Home；设置的 Close 回到打开它的页面，关卡里打开的设置有 Home；失败页固定有 Home 和 Retry，复活广告单独一个放在下面；过关页有 Home 和 Next，最后一关的 Next 写清去哪（全通关页或循环）；按钮位置固定，不随机换位；叫 Daily 的模式写清按日期怎么换。制作方玩法做完会按这张表做逻辑检查（`cocos-game-logic-check`）。**布局硬规则**：每个页面最多 2 个主要文字按钮（如 PLAY、NEXT），其他功能写成"图标按钮"（类型列写"图标"，写清用什么图标）；图标按钮紧凑排在下方（不散到四周和角落），中间留给 Logo 和主角，不要把一排排文字按钮堆在一起。**硬规则**：游戏中玩法区占屏幕 80% 以上，常驻的信息条和按钮加起来不超过 20%，成组放在上边和下边，屏幕中间不放常驻 UI；只放玩这关必需的（通常是关卡/分数、暂停、1–3 个道具或操作按钮），其他收进暂停页或首页。游戏中弹出的窗口面板不超过屏幕的 60%；内容多的商店/皮肤页做成单独的整页。带边框的面板，标题牌、文字、展示区、按钮都放在边框以内，不压边框和角花；展示区（商品、皮肤）留足空间。
+UI_PAGES lists each actual page/modal and every button's English text/icon, approximate position, size and resulting action, including free Retry/Home/Next, settings return ownership, last-level destination, pause and ad cancellation. Home has a prominent title/character, functional icons in both middle side regions and at most five below PLAY. Buttons use visible dimensions twice the original reference when one exists; without an original, production records the design baseline. Do not force all icons into bottom rows. Gameplay keeps the core play area at least 80% of the screen; persistent controls stay outside its essential interaction area.
 
-## 六、ECONOMY.json：货币和皮肤板块（按这个格式）
+ART_DIRECTION describes bright cute art, calm composed backgrounds, coherent generated title/logo and button-with-text images, themed currency icons, bitmap digits, safe panel interiors and no distorted lettering/dark text backplates. Production art rules and runtime bounds are checked in the art stage. AUDIO specifies moods and required music/effects from licensed sources, never synthetic placeholder claims.
 
-```json
-{
-  "currency": "Pearls",
-  "coins_per_level": 50,
-  "skin_module": true,
-  "skins": [
-    {"slot": "limited", "name": "Coral Queen", "art": "full coral crown, shell armour, sparkle aura, own idle animation"},
-    {"slot": "free", "name": "Little Fin", "art": "the starting look"},
-    {"slot": "common", "name": "Sailor Hat", "art": "one accessory: a sailor hat"}
-  ],
-  "backgrounds": [
-    {"slot": "free", "name": "Sunny Lagoon", "art": "the starting scene"},
-    {"slot": "common", "name": "Kelp Garden", "art": "green kelp, soft light"}
-  ]
-}
-```
+Every applicable settlement offers rewarded x2; home gift is a separate currency offer; bonus settlement doubles the stored 3x amount to 6x. Revive continues the same challenge, trial skins last one level. Energy-enabled games offer +3 energy. Every offer retains a free exit; cancellation/failure grants nothing and restores play. No ad skip, ranking, sharing, cross promotion or platform secrets.
 
-（示例只写了前几款，实际要写全。）**价格、加成、稀有度数值不用你写**：制作方用 `make_skin_table.py --R <coins_per_level>` 按固定模板生成，你只写名字和造型（用户 2026-10-23：一个模板，少犯错）。
+## Intake validation and limits
 
-**硬规则**：`currency` 按题材起名字；`coins_per_level`（R）= 中等难度一关给的货币。`skin_module` 写要不要皮肤板块（默认 `true`；用户没交代就写 `true`，制作方只在缺少明确决定时问一次，已获授权不重复问）。要皮肤板块时 `skins` 正好 **20 款**、按这个顺序：1 款 `limited`（限定，排第一；通关型打过第 70 关获得，无尽型用大量货币＋几次广告获得）、1 款 `free`（初始形象）、7 款 `common`、6 款 `rare`、3 款 `epic`、2 款 `legendary`；有场景可换时 `backgrounds` 正好 **10 款**：1 款 `free`、3 款 `common`、3 款 `rare`、2 款 `epic`、1 款 `legendary`（没有可换的场景写 `[]`）。造型越稀有越精致：common 一个配饰，rare 换配色＋配饰，epic 整套服装，legendary 整套服装＋特效，limited 最精致（主题服装、配饰、光环、自己的待机动画）。只用货币买（价格台阶类似 50/200/500/1000 这样拉开），每款皮肤都有过关货币加成、越稀有越高——这些由工具生成，不要另写。**没有完美通关送皮肤、没有排名皮肤、没有签到皮肤**。
+Run scripts/validate_starter.py --input <directory-or-ZIP> --out <new-report.json> before production. It checks required files, data fields/counts/order, SHA references, seed arithmetic, structured feature/routes and obvious language/credential violations. It does not judge English quality, originality, actual gameplay, art, or execute supplied scripts/solutions. inspect_starter.py remains a safe inventory tool; exit 0 there is not acceptance.
 
-**由你决定**：货币名字和图标、每款皮肤和背景的名字和造型。
-
-## 七、AUDIO.md：音乐音效
-
-写风格关键词（如"欢快尤克里里、木琴、90–120 BPM、纯音乐"）、首页/游戏中/过关/失败各自的情绪、本游戏需要的音效清单（点击、放置、消除、连击、金币、过关、失败等）。**硬规则**：不要写"程序合成"或指定合成方法；音乐音效由制作方从正规音效库下载。
-
-## 八、广告设计（写在 GAME_DESIGN.md 或单独一节）
-
-列出每个广告入口：在哪里、什么时候出现、看完得到什么、不看会怎样。**固定有的**（用户 2026-10-23，制作方用同一个广告奖励模块做）：每关结束（无尽型每局结束）看广告×2、首页礼盒看广告领货币（每打完一关/一局可以再领一次，越往后越多）、奖励关结算看广告 3 倍变 6 倍。可以加的：失败复活、"看广告试用"弹窗（第 3 关起每 2–3 关，在点"下一关"后弹出，只试用一关）。皮肤只用货币买，不用广告解锁。**硬规则：严禁看广告跳关**，也不要任何跳关按钮。不要写任何 App ID、广告位 ID 或 Client Secret。
-
-## 九、内置板块（用户 2026-10-23，两个板块都一样）
-
-在 `GAME_DESIGN.md` 写一节"Built-in modules"，按下面写清楚；制作方的 Skill 按固定模板做，数值不用你设计：
-
-| 板块 | 写什么 |
-|---|---|
-| 货币 | 名字和图标（每款游戏都有一种货币） |
-| 结算×2 | 每关结束（无尽型每局结束）都有"看广告×2"，写在过关页的按钮清单里 |
-| 首页礼盒 | 首页下方一个 10 帧动画礼盒，点开看广告领货币，写造型 |
-| 皮肤板块 | 要不要（默认要）；要的话 20 款主角皮肤＋10 款背景，名字和造型写在 ECONOMY.json |
-| 关卡板块 | 通关型：地图、≥70 关、每 10 关一个限定关（华丽边框）、每 10 关一个随机奖励关（3 倍，看广告 6 倍）、限定皮肤 `final`（最后一个限定关送）或 `every_10`（每个限定关送）；无尽型：没有地图，限定皮肤用大量货币＋几次广告获得 |
-
-**默认不做**（当前明确选择按融合政策）：排名/排行榜/周赛、七日签到/每日登录奖励、更多游戏/交叉推广、分享。基于源码改时，先核对当前维护范围与明确保留选择，再将本轮已授权删除的按钮和页面写进"删什么"。
-
-## 十、不要写的内容
-
-代码实现、引擎设置细节、测试方法、打包步骤、账号密码和任何密钥、"由 AI 自行决定"这类留空的话。
-
-## 十一、交付前自检
-
-- [ ] 九个文件都在，START_HERE 有文件索引和已定决策清单
-- [ ] 通关型至少 70 关（原有更多关卡全部保留，多于 70 也行），每关有可解性证明，难度逐关递增；限定关（第 10、20、30…关）和限定皮肤格式（`final`/`every_10`）已标出，有 `levels/level_plan.json`
-- [ ] 写明通关型还是无尽型；通关型有地图并显示总关数，无尽型没有地图
-- [ ] 货币按题材起了名字和图标，体力用闪电，顶部资源栏写在首页和地图页
-- [ ] 美术方向是明亮Q版，背景不花哨（标题和按钮最突出），没有暗色/扁平/哑光/写实的要求，没有大白板、深色/纯色大块、深色粗字、单色图标，每个页面和弹窗都有背景描述
-- [ ] 游戏中常驻 UI 不超过屏幕 20%、弹窗面板不超过 60%
-- [ ] UI_PAGES 列全了每个页面的每个按钮
-- [ ] ECONOMY.json 符合格式：货币名、R、skin_module；要皮肤时 20 款主角（顺序：限定、初始、7/6/3/2）和 10 款背景的名字和造型，没有自己写的价格
-- [ ] GAME_DESIGN.md 有 Built-in modules 一节；默认没有排名、签到、更多游戏、分享（明确选择另记兼容模式）；过关页有看广告×2，首页有礼盒
-- [ ] 过关/失败/首页/弹窗都写了足够的内容，没有只有一个按钮或空白的页面
-- [ ] 没有"看广告跳关"，没有任何 ID 或密钥
-- [ ] 全部玩家可见文字是英文
+The checked-in minimal-starter is a deliberately simple 70-level corridor fixture illustrating all fields. It is not a polished game or a claim that 70 trivial layouts constitute production content. Real game layouts and real solution replay remain required. Workshop v3 inputs use their dedicated signed handoff contract and preserve accepted workshop data; they are not silently converted into this ordinary design template.

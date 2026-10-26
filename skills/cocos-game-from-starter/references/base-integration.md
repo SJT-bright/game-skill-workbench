@@ -1,6 +1,6 @@
 # 与共享流程衔接
 
-`cocos-game-to-english` 的 SKILL.md 只管英化；它的 references、scripts、assets 是两个板块共用的工具库。重塑从这里读取共享规则，但**顺序按本 Skill 的 SKILL.md：先玩法（占位图）→ 用户玩法通过 → 再做全部美术和声音**，不按英化的阶段表走。规则的适用范围见[两个板块](../../cocos-game-to-english/references/two-boards.md#五哪些规则共用哪些只属于一个板块)。
+`cocos-game-to-english` 的 SKILL.md 只管英化；它的 references、scripts、assets 是两个板块共用的工具库。重塑从这里读取共享规则，但**顺序按本 Skill 的 SKILL.md：先玩法（占位图）→ 用户玩法通过 → 再做全部美术和声音**，不按英化的阶段表走。规则的适用范围见[两个板块](../../cocos-game-to-english/references/two-boards.md)。
 
 按本次安装版逐步加载 `cocos-game-to-english/references/` 里的必要参考，不复制流程后假称自动继承。记录目录、入口SHA、实际使用文件SHA及`assets/known-issues.json`当前revision，以实际读取为准。
 

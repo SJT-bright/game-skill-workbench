@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:51:42.834Z",
-  "treeHash": "f5ebc4efea3bd4135a896d5379bd634a8be981260d831380d0ed76ee1e7a2e12",
+  "createdAt": "2026-10-26T14:52:13.416Z",
+  "treeHash": "a6d4c0a817656349c6bf657ff0a52f789d046c2b16bbcb090a9f368667bdcb68",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2131,14 +2131,20 @@
     },
     {
       "name": "cocos-tiktok-package-check",
-      "treeHash": "40fcfcb7f30258e9633a1a333cfed4c52ad88728ad3a64c885f4d3e6909b80f0",
-      "fileCount": 28,
-      "bytes": 189480,
+      "treeHash": "6b64d6e798ba8726b0e93796871717858839cb54808c4ffe90c7fed7cf0e6902",
+      "fileCount": 29,
+      "bytes": 172291,
       "files": [
         {
+          "path": "PROVENANCE.json",
+          "hash": "0994c4c9d69440383bf000208bdf072c8fc6524a4a4108d2a69fbfc14db3038e",
+          "size": 4981,
+          "executable": false
+        },
+        {
           "path": "SKILL.md",
-          "hash": "b733d2e60c4eada894b9840ec160c16d63000ece6494e432555e9015ece932a6",
-          "size": 25024,
+          "hash": "9112e81d1987b9baddd950d446ddc746c2305696693295d35c55bd700d7b443e",
+          "size": 3286,
           "executable": false
         },
         {
@@ -2233,8 +2239,8 @@
         },
         {
           "path": "scripts/audit_sound_settings.py",
-          "hash": "4465036b48d864e66fdfbdc8ae5f347375066b868032a11f51bbe1614f95e004",
-          "size": 9850,
+          "hash": "1e50cc1c675e67d7a8a149196ef344730f69c4b760040502e6a53bc74c410fd6",
+          "size": 8867,
           "executable": false
         },
         {
@@ -2293,8 +2299,8 @@
         },
         {
           "path": "scripts/test_sound_settings_profile.py",
-          "hash": "213d9d935cc72e5f3f0f7cbb424f8f615b897a34f31105967ef5b4eaa7f5dfbd",
-          "size": 10573,
+          "hash": "209df017e383579012691ae6e7ebc6815a19667274e804dc8587fc0c143ec74d",
+          "size": 11124,
           "executable": false
         },
         {

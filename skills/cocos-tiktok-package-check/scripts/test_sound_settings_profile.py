@@ -23,7 +23,7 @@ class SoundProfile(unittest.TestCase):
         self.native = self.project / 'native'
         self.qa = self.project / 'qa'
         self.qa.mkdir(parents=True)
-        self.profile = copy.deepcopy(sound.PROFILE)
+        self.profile = {'id': 'synthetic_sound_settings_v1', 'project': '', 'native_sha256': {'game.js': 'fixture', 'main.js': 'fixture', 'adapter.js': 'fixture', 'native-preload.js': 'fixture', 'native-load-guard.js': 'fixture', 'assets/main/index.js': 'fixture'}, 'producer_sha256': {'qa/g7-ui.mjs': 'fixture', 'qa/browser-helpers.mjs': 'fixture', 'qa/audio-settings-check.cjs': 'fixture', 'qa/capture-audio.mjs': 'fixture', 'qa/sound-issue-runner.py': 'fixture'}, 'normal': {'path': 'qa/issue-audio-delivery/all-sound-settings-normal.json', 'sha256': 'fixture'}, 'negative_source_sha256': 'fixture'}
         self.profile['project'] = str(self.project)
         for rel in self.profile['native_sha256']:
             p = self.native / rel

@@ -1,13 +1,19 @@
-"""Reviewed MergeShooter sound-settings producer adapter, never a generic schema waiver.
-Private row names/counts and PCM labels below belong only to the pinned producer.
+"""Reviewed sound-settings producer adapter, never a generic schema waiver.
+Producer profiles are project data registered through project_qa; no machine path is distributed.
 Other projects keep interaction_audio_trace.v1; this adapter does not certify drag.
 """
 import hashlib
 import json
 import math
 from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/"cocos-game-to-english/scripts"))
+import project_qa
 
-PROFILE = {'id': 'merge_shooter_v78_sound_settings_v1', 'project': '/Users/sijunting/游戏出海项目制作/工作工程/MergeShooter2048-v78-review-20261026', 'native_sha256': {'game.js': 'd94cae52074606c8add51be798a3b826a7ad9a48df22537260a35314c62de20a', 'main.js': 'cd38b8cd67111fc468bd4dc93b37f199e8d3991ad5ef66cf375504a5c42f4428', 'adapter.js': '9e5101b9f2b932b41c013238552e2d8369734b4ab9c79ad6f3b6e6ff9e2ba941', 'native-preload.js': '97ff6d1a7de1bd47904ad8d3976c871c70dc4eb4ce8d7a7e72df403f51574dd9', 'native-load-guard.js': 'fbbd565ea16fcadec42423f1bbf79e4802564660558d9fddcad9f04f7f302875', 'assets/main/index.js': '672242f95568c7968ceeb693f9ea0c67280b3d411f7fcce849cb41076c8edb2f'}, 'producer_sha256': {'qa/g7-ui.mjs': '7b58f6edf838ebfc919e8b2e5ab496c2081ea76533c51f6df38bb25a9a6621df', 'qa/browser-helpers.mjs': '3e9fe2f013280a2af8c3fc1bb07414c34c8565d78a58c157d052bdedf3677e4d', 'qa/audio-settings-check.cjs': '8b16421e29d1b6c0544752cf515080e72d6e08416173aa5b94232e55eb3ca957', 'qa/capture-audio.mjs': '8513d1df842afe0cce818ef1588f721895869f775d3debdc638ae15aa7d91c49', 'qa/sound-issue-runner.py': '01ed4947c568f752432e046d3193f0ae76df544198f76a52cd19cef9b6bafc25'}, 'normal': {'path': 'qa/issue-audio-delivery/all-sound-settings-normal.json', 'sha256': 'c5a4c138280f5d9df2157911ee677d99e922ef9f27ca13800466a4f29ae99553'}, 'negative_source_sha256': '69aa925b42ae8eededdff32838013dc595da1cf2d2fbe4ba59fcaf40a14bacb1'}
+def get_profile(trace):
+ return PROFILE or project_qa.evidence_profile(trace,"sound_settings_trace.v1")
+
+PROFILE = {}  # Only synthetic tests override this; production profiles are reviewed project data.
 UNIT_CASES = (
  'OFF display and ticks are zero, remembered level retained',
  'mute scales both buses to zero',
@@ -34,18 +40,19 @@ def number(value):
  return type(value) in (int,float) and math.isfinite(value)
 
 def profile_errors(trace,native):
- trace=Path(trace).resolve();native=Path(native).resolve();project=Path(PROFILE['project']).resolve();errors=[]
+ trace=Path(trace).resolve();native=Path(native).resolve();profile=get_profile(trace);project=Path(profile['project']).resolve();errors=[]
  if not trace.is_relative_to(project):errors.append('sound-only producer is not registered for this project')
- for rel,h in PROFILE['native_sha256'].items():
+ for rel,h in profile['native_sha256'].items():
   p=(native/rel).resolve()
   if not p.is_relative_to(native) or not p.is_file() or sha(p)!=h:errors.append('unregistered sound-only production bytes: '+rel)
- for rel,h in PROFILE['producer_sha256'].items():
+ for rel,h in profile['producer_sha256'].items():
   p=(project/rel).resolve()
   if not p.is_relative_to(project) or not p.is_file() or sha(p)!=h:errors.append('sound producer changed: '+rel)
  return errors
 
 def is_registered_profile(trace,native):
- return not profile_errors(trace,native)
+ try:return not profile_errors(trace,native)
+ except (ValueError,OSError,KeyError,TypeError):return False
 
 def audit(trace,native):
  try:return _audit(trace,native)
@@ -53,7 +60,7 @@ def audit(trace,native):
   return {'tool':'audit_interaction_audio','passed':False,'errors':['invalid sound-settings evidence: '+str(exc)]}
 
 def _audit(trace,native):
- trace=Path(trace).resolve();native=Path(native).resolve();project=Path(PROFILE['project']).resolve();d=load(trace);errors=profile_errors(trace,native)
+ trace=Path(trace).resolve();native=Path(native).resolve();profile=get_profile(trace);project=Path(profile['project']).resolve();d=load(trace);errors=profile_errors(trace,native)
  def need(ok,msg):
   if not ok:errors.append(msg)
  if errors:return {'tool':'audit_interaction_audio','passed':False,'errors':errors}
@@ -101,11 +108,11 @@ def _audit(trace,native):
   need(flag is expected_pass,label+' compiled contract result invalid')
   if expected_pass:need(all(x.get('pass') is True for x in values),label+' sound module contract failed')
   else:need(any(x.get('pass') is False and x.get('name')==UNIT_CASES[0] for x in values),'original OFF defect not reproduced')
-  expected_hash=files['assets/main/index.js'] if expected_pass else PROFILE['negative_source_sha256']
+  expected_hash=files['assets/main/index.js'] if expected_pass else profile['negative_source_sha256']
   if 'artifacts' in raw:
    artifact=raw['artifacts']['assets/main/index.js'];p=Path(artifact['path']).resolve()
    need(p.is_relative_to(project) and p.is_file() and sha(p)==artifact['sha256']==expected_hash,label+' original production artifact changed')
-   need(raw.get('runner',{}).get('sha256')==PROFILE['producer_sha256']['qa/sound-issue-runner.py'] and raw.get('case')=='all-sound-settings' and raw.get('harness_error') is False,label+' runner identity invalid')
+   need(raw.get('runner',{}).get('sha256')==profile['producer_sha256']['qa/sound-issue-runner.py'] and raw.get('case')=='all-sound-settings' and raw.get('harness_error') is False,label+' runner identity invalid')
   else:
    p=Path(raw['file']);p=p if p.is_absolute() else project/p;p=p.resolve()
    need(p.is_relative_to(project) and p.is_file() and sha(p)==expected_hash,label+' compiled source changed')
@@ -113,7 +120,7 @@ def _audit(trace,native):
  cases(read(d['negative']),'negative',False)
  # This already-recorded normal control is part of this private producer profile,
  # not a new field or extra run imposed on other projects.
- cases(read(PROFILE['normal'],project),'normal',True)
+ cases(read(profile['normal'],project),'normal',True)
  runs=read(d['pcm'])['runs'];pcm={x['label']:x for x in runs}
  need(len(pcm)==len(runs),'duplicate PCM labels')
  for label in ['music_full','music_half','music_zero','sfx_full','sfx_half','sfx_zero','sfx_off','both_zero','music_off','music_on']:
@@ -127,4 +134,4 @@ def _audit(trace,native):
   full=pcm[bus+'_full'][metric];half=pcm[bus+'_half'][metric]
   if number(full) and full>0 and number(half):need(.35<half/full<.65,'half volume PCM ratio invalid')
   else:need(False,'invalid full/half PCM data')
- return {'tool':'audit_interaction_audio','profile':PROFILE['id'],'passed':not errors,'errors':errors,'trace_sha256':sha(trace),'scope':'registered sound-settings-only raw evidence; no drag or unrelated audio-load claim'}
+ return {'tool':'audit_interaction_audio','profile':profile['id'],'passed':not errors,'errors':errors,'trace_sha256':sha(trace),'scope':'registered sound-settings-only raw evidence; no drag or unrelated audio-load claim'}

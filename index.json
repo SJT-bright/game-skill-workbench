@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "0d214627-a99d-4db4-881a-d7cd42908f14",
+      "skillId": "s-deeeaf9abeca146bd263",
+      "directory": "cocos-game-logic-check",
+      "name": "cocos-game-logic-check",
+      "version": "v6",
+      "createdAt": "2026-10-26T15:57:55.590Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "c5cbf5bc4a671a649012443f2ab41afe7575b45e787620a3d887edff4fc6ad90",
+      "bytes": 28858,
+      "fileCount": 6
+    },
+    {
       "id": "accfa765-4e0a-416a-bef6-f0d5d8e62869",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

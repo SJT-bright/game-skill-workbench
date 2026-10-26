@@ -1,0 +1,24 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-27.economy-v4",
+  "skill": "chrome-mobile-testing",
+  "previous_provenance_sha256": "7ed150d0cc107d9b9d99f8f51b5551b07776734c0446e6cebe4e3f4c0cb235fb",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "031c750d2a5ffc0c672fb1f1d17636e06a570a5f3cd8ded0c87c4cbe3e7dcf2e",
+      "bytes": 11502
+    },
+    {
+      "path": "scripts/chrome_touch.py",
+      "sha256": "9a813155a0772cc0d24399db67bdae35abba24687c22aa57a5509ec45cc184af",
+      "bytes": 29106
+    },
+    {
+      "path": "scripts/prepare_chrome.py",
+      "sha256": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+      "bytes": 1902
+    }
+  ]
+}

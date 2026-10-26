@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "1e1939ae-2fa5-45dd-9ac3-07c08281db71",
+      "skillId": "s-8a4323773719ef381f6d",
+      "directory": "grok-image-review",
+      "name": "grok-image-review",
+      "version": "v2",
+      "createdAt": "2026-10-26T14:47:49.509Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "e1067ad1f2bc6b87c734a5bc5f85d81dbab1f4049b5dd5c8cef43143462dfd49",
+      "bytes": 18493,
+      "fileCount": 4
+    },
+    {
       "id": "85c4633a-3b38-4e6b-b936-138f74821066",
       "skillId": "s-ff71fb1948e2a7f0eb3b",
       "directory": "grok-background-maker",

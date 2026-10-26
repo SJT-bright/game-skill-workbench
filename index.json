@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "d064ec38-8890-4e11-9086-280d173504f1",
+      "skillId": "s-16601c48e7f1b99915ae",
+      "directory": "mobile-touch-computer-use",
+      "name": "mobile-touch-computer-use",
+      "version": "v2",
+      "createdAt": "2026-10-26T14:50:54.543Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "50cf2f5ba5e617c2bc7567c332fc5c2a3ecbff79af15a782042a8bc45e1d6316",
+      "bytes": 43459,
+      "fileCount": 8
+    },
+    {
       "id": "39cfbb0f-2609-4de4-8baa-57743a4ee42f",
       "skillId": "s-9b70fe49ec762c63822c",
       "directory": "desktop-agent-orchestrator",

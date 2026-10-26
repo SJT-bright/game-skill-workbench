@@ -1,0 +1,49 @@
+{
+  "id": "817c4828-c631-435e-b6d5-deafb9ff0db6",
+  "skillId": "s-d260030552ba65620839",
+  "directory": "cocos-game-tiktok-package",
+  "name": "cocos-game-tiktok-package",
+  "version": "v2",
+  "createdAt": "2026-10-26T13:40:19.534Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "ef7afd017f3d39a724af0d3600769823cbb033946d1d13f384d46efd0bf09c25",
+  "bytes": 39054,
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "d210f954353c0d95dd4d4cde363d311448f13e345f3f1d36ca18ffbc52544aae",
+      "size": 1916,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "c92df62d61654d0a05f2d0dc2c407ac30420825bb6d75a67c867568a08fdd432",
+      "size": 30509,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "62a54b2424cf4757d8cc76c37dd5c8686ff8b066c0160c3a26800a81494f82ac",
+      "size": 750,
+      "executable": false
+    },
+    {
+      "path": "references/package-forms.md",
+      "hash": "993681e00e6636dee5606fb51f3d5e91d4a80d55843d8d154e4ba198d4df9a59",
+      "size": 4537,
+      "executable": false
+    },
+    {
+      "path": "scripts/upload_preflight.py",
+      "hash": "1f610e5adb9b68a8eddc49059c74309b1b976b7634aab791c9968e44aa8cf5d6",
+      "size": 1342,
+      "executable": false
+    }
+  ]
+}

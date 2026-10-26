@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "817c4828-c631-435e-b6d5-deafb9ff0db6",
+      "skillId": "s-d260030552ba65620839",
+      "directory": "cocos-game-tiktok-package",
+      "name": "cocos-game-tiktok-package",
+      "version": "v2",
+      "createdAt": "2026-10-26T13:40:19.534Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "ef7afd017f3d39a724af0d3600769823cbb033946d1d13f384d46efd0bf09c25",
+      "bytes": 39054,
+      "fileCount": 5
+    },
+    {
       "id": "7f4f0412-82f4-4e91-849c-9857eadb69b5",
       "skillId": "s-deeeaf9abeca146bd263",
       "directory": "cocos-game-logic-check",

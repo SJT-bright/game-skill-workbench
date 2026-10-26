@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "grok-background-maker",
-  "previous_provenance_sha256": "e83a5b0a734c4a93bc67a8b1356ed46b48c09705003fdc0dd0628b2be33b94a3",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "95dd4faf4a5e06de65824ae4ad42205df906424a504e3604d7195118e0e59c3b",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

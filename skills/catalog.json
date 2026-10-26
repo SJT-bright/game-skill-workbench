@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T16:52:46.175Z",
-  "treeHash": "e90061bb0badb5d1bac4360eae9d8137946174bfb5bff02664534bd89b0c5885",
+  "createdAt": "2026-10-26T16:55:11.019Z",
+  "treeHash": "4c8979558d6681ab58522897bb0724dc9f16e71904576d66a71d42f0bbd6bb15",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -197,14 +197,14 @@
     },
     {
       "name": "cocos-game-from-starter",
-      "treeHash": "11b8695e5f988073fcbcad2e0ad261b129e59d55cd61cf215cb4cf221642ef38",
+      "treeHash": "70d59cacdfb0d4d15d194c813367b1c59611d9505868c075e945d64f99bda6de",
       "fileCount": 99,
-      "bytes": 248448,
+      "bytes": 252530,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "f26424bbd6519643f65e06cd1035e41498c7dacea3736e7b8e10299a533bc588",
-          "size": 17680,
+          "hash": "4b91fe43b8b2f4b57ea0d8c7115d53e93a3c341d3bae982c0e24c6242176b3b1",
+          "size": 17659,
           "executable": false
         },
         {
@@ -215,8 +215,8 @@
         },
         {
           "path": "WORKSHOP_ADAPTER.json",
-          "hash": "c6038212c6d99f0dfa3a042ff4cb5a3515e3eacaf80c885dd57a513d1a18324b",
-          "size": 919,
+          "hash": "1610cefe5efd96bd0b5aba925f576da1e7ff5cb200ca09fc8b977a1302d7ab92",
+          "size": 917,
           "executable": false
         },
         {
@@ -227,8 +227,8 @@
         },
         {
           "path": "assets/creation-spec-template.md",
-          "hash": "1f4f3abe93e1d54d710e8fcfe0b08d3bdacf5c7baf4d170978a3670c8ca01c30",
-          "size": 3621,
+          "hash": "0cb8411c115fe2457b832f9409c3cc7efcab56d420d9da596f65dc4a27da4988",
+          "size": 3912,
           "executable": false
         },
         {
@@ -251,14 +251,14 @@
         },
         {
           "path": "examples/minimal-starter/ECONOMY.json",
-          "hash": "7f78b7019b8d5a020a8f89fd970048bf2ba1227ca06d3ee822adf780c5eac31a",
-          "size": 5746,
+          "hash": "77dbc7718965ad918f93d76f741620732a2d49e57e80a0de91e80ac2ae3ae638",
+          "size": 8226,
           "executable": false
         },
         {
           "path": "examples/minimal-starter/GAME_DESIGN.md",
-          "hash": "46997750ea12bd7b7cd422d5371cc8612bd24d5532a1f0b1e85c61d2b161a144",
-          "size": 456,
+          "hash": "94796b71d2bbf9a42af86ae6acbef017e807f14caafad85d1570123357182333",
+          "size": 615,
           "executable": false
         },
         {
@@ -269,8 +269,8 @@
         },
         {
           "path": "examples/minimal-starter/UI_PAGES.md",
-          "hash": "72f9b47887ba91a82291cbdfedcc5b943c1e3ff1dbc5c8a3e1d1bc4f1d58bed8",
-          "size": 393,
+          "hash": "4969bdd983f693afa59ec775e385cabe991e70ade9274c791b17e40773688985",
+          "size": 470,
           "executable": false
         },
         {
@@ -701,8 +701,8 @@
         },
         {
           "path": "examples/minimal-starter/levels/level_plan.json",
-          "hash": "950d9153aad8f809c47f4e86f281f852a44fe37400c524bdb8bd83372ed222b8",
-          "size": 23558,
+          "hash": "6059bde333cd316dc4c089a36832f87f0fe0dafa32ec7d76dcf3f4a01c4009c3",
+          "size": 23593,
           "executable": false
         },
         {
@@ -749,8 +749,8 @@
         },
         {
           "path": "references/starter-pack-spec.md",
-          "hash": "26f1c0123efefe6726dc267dff62a97bd0e1bf3291b65579666e15a59742bde3",
-          "size": 8488,
+          "hash": "6f9cdd79e2bf6993d3acf9d0341322429c235eaea9c3426bb4215af36f488a60",
+          "size": 8861,
           "executable": false
         },
         {
@@ -761,8 +761,8 @@
         },
         {
           "path": "references/workshop-handoff.md",
-          "hash": "175fae095f11334a56074b2eeb9f35ca57208a95efa155fa1241ffad15729353",
-          "size": 5431,
+          "hash": "6f0f0c22e3ac5f3103d7166d7ed61e8afdb8384264f28688bdcc62e261abcd9f",
+          "size": 5574,
           "executable": false
         },
         {
@@ -785,8 +785,8 @@
         },
         {
           "path": "scripts/validate_starter.py",
-          "hash": "c6f64f5dd7b9f6a79f66ddcc707919395081c2aa92ba654948527a687427028e",
-          "size": 13831,
+          "hash": "ab20212c26b608202071dabfa78296052ac4438531ac6b65dfef2f339174a35f",
+          "size": 14378,
           "executable": false
         },
         {

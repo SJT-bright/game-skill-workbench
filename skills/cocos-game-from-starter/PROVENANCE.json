@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "cocos-game-from-starter",
-  "previous_provenance_sha256": "0440e392a2da2499b8d4a12f4d0da5c877c7f852fefe7e132f314d82c4d43135",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "f26424bbd6519643f65e06cd1035e41498c7dacea3736e7b8e10299a533bc588",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
@@ -12,8 +12,8 @@
     },
     {
       "path": "WORKSHOP_ADAPTER.json",
-      "sha256": "c6038212c6d99f0dfa3a042ff4cb5a3515e3eacaf80c885dd57a513d1a18324b",
-      "bytes": 919
+      "sha256": "1610cefe5efd96bd0b5aba925f576da1e7ff5cb200ca09fc8b977a1302d7ab92",
+      "bytes": 917
     },
     {
       "path": "agents/openai.yaml",
@@ -22,8 +22,8 @@
     },
     {
       "path": "assets/creation-spec-template.md",
-      "sha256": "1f4f3abe93e1d54d710e8fcfe0b08d3bdacf5c7baf4d170978a3670c8ca01c30",
-      "bytes": 3621
+      "sha256": "0cb8411c115fe2457b832f9409c3cc7efcab56d420d9da596f65dc4a27da4988",
+      "bytes": 3912
     },
     {
       "path": "examples/minimal-starter/ART_DIRECTION.md",
@@ -42,13 +42,13 @@
     },
     {
       "path": "examples/minimal-starter/ECONOMY.json",
-      "sha256": "7f78b7019b8d5a020a8f89fd970048bf2ba1227ca06d3ee822adf780c5eac31a",
-      "bytes": 5746
+      "sha256": "77dbc7718965ad918f93d76f741620732a2d49e57e80a0de91e80ac2ae3ae638",
+      "bytes": 8226
     },
     {
       "path": "examples/minimal-starter/GAME_DESIGN.md",
-      "sha256": "46997750ea12bd7b7cd422d5371cc8612bd24d5532a1f0b1e85c61d2b161a144",
-      "bytes": 456
+      "sha256": "94796b71d2bbf9a42af86ae6acbef017e807f14caafad85d1570123357182333",
+      "bytes": 615
     },
     {
       "path": "examples/minimal-starter/START_HERE.md",
@@ -57,8 +57,8 @@
     },
     {
       "path": "examples/minimal-starter/UI_PAGES.md",
-      "sha256": "72f9b47887ba91a82291cbdfedcc5b943c1e3ff1dbc5c8a3e1d1bc4f1d58bed8",
-      "bytes": 393
+      "sha256": "4969bdd983f693afa59ec775e385cabe991e70ade9274c791b17e40773688985",
+      "bytes": 470
     },
     {
       "path": "examples/minimal-starter/levels/README.md",
@@ -417,8 +417,8 @@
     },
     {
       "path": "examples/minimal-starter/levels/level_plan.json",
-      "sha256": "950d9153aad8f809c47f4e86f281f852a44fe37400c524bdb8bd83372ed222b8",
-      "bytes": 23558
+      "sha256": "6059bde333cd316dc4c089a36832f87f0fe0dafa32ec7d76dcf3f4a01c4009c3",
+      "bytes": 23593
     },
     {
       "path": "examples/minimal-starter/levels/solutions.json",
@@ -457,8 +457,8 @@
     },
     {
       "path": "references/starter-pack-spec.md",
-      "sha256": "26f1c0123efefe6726dc267dff62a97bd0e1bf3291b65579666e15a59742bde3",
-      "bytes": 8488
+      "sha256": "6f9cdd79e2bf6993d3acf9d0341322429c235eaea9c3426bb4215af36f488a60",
+      "bytes": 8861
     },
     {
       "path": "references/workflow-detail.md",
@@ -467,8 +467,8 @@
     },
     {
       "path": "references/workshop-handoff.md",
-      "sha256": "175fae095f11334a56074b2eeb9f35ca57208a95efa155fa1241ffad15729353",
-      "bytes": 5431
+      "sha256": "6f0f0c22e3ac5f3103d7166d7ed61e8afdb8384264f28688bdcc62e261abcd9f",
+      "bytes": 5574
     },
     {
       "path": "scripts/inspect_starter.py",
@@ -487,8 +487,8 @@
     },
     {
       "path": "scripts/validate_starter.py",
-      "sha256": "c6f64f5dd7b9f6a79f66ddcc707919395081c2aa92ba654948527a687427028e",
-      "bytes": 13831
+      "sha256": "ab20212c26b608202071dabfa78296052ac4438531ac6b65dfef2f339174a35f",
+      "bytes": 14378
     },
     {
       "path": "scripts/workshop_intake.py",

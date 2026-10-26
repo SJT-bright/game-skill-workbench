@@ -8,163 +8,241 @@
       "slot": "limited",
       "name": "Hero Limited 10",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 10
+      "level": 10,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_limited_20",
       "slot": "limited",
       "name": "Hero Limited 20",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 20
+      "level": 20,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_limited_30",
       "slot": "limited",
       "name": "Hero Limited 30",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 30
+      "level": 30,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_limited_40",
       "slot": "limited",
       "name": "Hero Limited 40",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 40
+      "level": 40,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_limited_50",
       "slot": "limited",
       "name": "Hero Limited 50",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 50
+      "level": 50,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_limited_60",
       "slot": "limited",
       "name": "Hero Limited 60",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 60
+      "level": 60,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_limited_70",
       "slot": "limited",
       "name": "Hero Limited 70",
       "art": "A bright themed costume with a distinct silhouette.",
-      "level": 70
+      "level": 70,
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2500
     },
     {
       "id": "hero_01",
       "slot": "free",
       "name": "Hero 01",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "free",
+      "ads": 0,
+      "coins": 0
     },
     {
       "id": "hero_02",
       "slot": "common",
       "name": "Hero 02",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_03",
       "slot": "common",
       "name": "Hero 03",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_04",
       "slot": "common",
       "name": "Hero 04",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_05",
       "slot": "common",
       "name": "Hero 05",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_06",
       "slot": "common",
       "name": "Hero 06",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_07",
       "slot": "common",
       "name": "Hero 07",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_08",
       "slot": "common",
       "name": "Hero 08",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "hero_09",
       "slot": "rare",
       "name": "Hero 09",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "hero_10",
       "slot": "rare",
       "name": "Hero 10",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "hero_11",
       "slot": "rare",
       "name": "Hero 11",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "hero_12",
       "slot": "rare",
       "name": "Hero 12",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "hero_13",
       "slot": "rare",
       "name": "Hero 13",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "hero_14",
       "slot": "rare",
       "name": "Hero 14",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "hero_15",
       "slot": "epic",
       "name": "Hero 15",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1500
     },
     {
       "id": "hero_16",
       "slot": "epic",
       "name": "Hero 16",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1500
     },
     {
       "id": "hero_17",
       "slot": "epic",
       "name": "Hero 17",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1500
     },
     {
       "id": "hero_18",
       "slot": "legendary",
       "name": "Hero 18",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2000
     },
     {
       "id": "hero_19",
       "slot": "legendary",
       "name": "Hero 19",
-      "art": "A bright themed costume with a distinct silhouette."
+      "art": "A bright themed costume with a distinct silhouette.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2000
     }
   ],
   "backgrounds": [
@@ -172,61 +250,103 @@
       "id": "bg_01",
       "slot": "free",
       "name": "Bg 01",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "free",
+      "ads": 0,
+      "coins": 0
     },
     {
       "id": "bg_02",
       "slot": "common",
       "name": "Bg 02",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "bg_03",
       "slot": "common",
       "name": "Bg 03",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "bg_04",
       "slot": "common",
       "name": "Bg 04",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 500
     },
     {
       "id": "bg_05",
       "slot": "rare",
       "name": "Bg 05",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "bg_06",
       "slot": "rare",
       "name": "Bg 06",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "bg_07",
       "slot": "rare",
       "name": "Bg 07",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1000
     },
     {
       "id": "bg_08",
       "slot": "epic",
       "name": "Bg 08",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1500
     },
     {
       "id": "bg_09",
       "slot": "epic",
       "name": "Bg 09",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 1500
     },
     {
       "id": "bg_10",
       "slot": "legendary",
       "name": "Bg 10",
-      "art": "A calm bright scene with clear foreground space."
+      "art": "A calm bright scene with clear foreground space.",
+      "unlock": "coins",
+      "ads": 0,
+      "coins": 2000
     }
-  ]
+  ],
+  "economy_policy": "normal-10-50.v1",
+  "normal_level_coins": 50,
+  "coins_per_ad": 250,
+  "gift_multiplier": 5,
+  "gift_cooldown_ms": 1800000,
+  "price_level_targets": {
+    "common": 10,
+    "rare": 20,
+    "epic": 30,
+    "legendary": 40,
+    "limited": 50
+  }
 }

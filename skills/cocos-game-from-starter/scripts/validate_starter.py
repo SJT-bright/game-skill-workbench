@@ -100,6 +100,11 @@ def validate(files):
                 need(all(isinstance(x,str) and x for x in ids) and len(ids)==len(set(ids)),collection+' IDs required and unique')
                 for row in values:
                     need(all(isinstance(row.get(k),str) and row[k].strip() for k in ('name','art')),collection+' needs name and art direction')
+        from product_contract import budget_errors, ECONOMY_POLICY, REWARD_POLICY
+        need(economy.get('economy_policy')==ECONOMY_POLICY,'new starter economy_policy must be '+ECONOMY_POLICY)
+        budget=dict(economy,items=[dict(row,rarity=('common' if row['slot']=='free' else row['slot'])) for row in economy.get('skins',[])+economy.get('backgrounds',[])])
+        errors.extend(budget_errors(budget))
+        if spec.get('mode')=='levels':need(plan.get('reward_policy')==REWARD_POLICY,'new starter requires current normal reward budget')
         if spec.get('mode')=='endless':
             need(not plan and not proof,'endless starter must not supply a fake level plan or solutions')
             need('levels' not in module_names,'endless starter must not enable a level map')

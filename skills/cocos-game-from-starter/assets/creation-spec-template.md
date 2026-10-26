@@ -49,3 +49,5 @@
 - 本次变更、影响的需求/任务/验证与最终版本：
 
 操作细则见[主题到规格](../references/concept-to-spec.md)与[任务证据](../../cocos-game-to-english/references/production-plan.md)；本模板不替代CREATE、原catalog或实际打包检查。
+
+经济参数按[内置板块](../../cocos-game-to-english/references/game-modules.md#二货币和结算2)填写同一B及normal-10-50.v1：五档10/20/30/40/50B，独立广告/礼包5B，礼包1800000ms冷却与持久倒计时，每次成功结算可广告×2；不复制另一套公式。

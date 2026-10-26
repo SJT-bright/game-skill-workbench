@@ -35,7 +35,7 @@ python3 /absolute/path/cocos-game-from-starter/scripts/workshop_intake.py --pack
 
 每种局内道具仅真正新存档首次赠1个，锁定道具先记库存；重试、新关、重启、复活、恢复及首次解锁均不补。starter与owned分账，先用starter，成功才扣，坏存档不当新存档重送。
 
-礼盒新存档`charges:0`，不能使用共享createGift的默认1来改变合同；仅首次成功通关调用onRoundEnd，资格最多1份；成功完整激励回执后claimGift，取消/失败保留资格。结算输入为本关coins加milestone额外reward.coins，同一次resultReward加装备收益后选原额或×2；限定皮肤独立解锁，额外币不漏发也不重复发。
+新制作或本轮授权经济迁移按[经济合同](../../cocos-game-to-english/references/game-modules.md#三首页礼盒)使用5B、成功领取后30分钟冷却及持久倒计时；通关不充能。已冻结老工坊合同只在维护其原范围时保留旧资格，不能把旧charges状态直接当新版状态；迁移需migrateGift并保存。结算输入为本关coins加milestone额外reward.coins，同一次resultReward加装备收益后选原额或×2；限定皮肤独立解锁，额外币不漏发也不重复发。
 
 三个融合点在同一主输入内实现。自动互动教学按进程会话前两关；后续Fi首现用合同中的安全演练/非自动提示/手动帮助。user/background/ad暂停分别持有，恢复一个来源不清掉其他暂停。直接拖随、逻辑提交与装饰尾效分离，不能为了动画锁住后续合法输入。
 

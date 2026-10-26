@@ -1,0 +1,44 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-26.contracts-v3",
+  "skill": "ego-browser",
+  "previous_provenance_sha256": "bf381f894745a7a4198bfa3c5c1fbbb580fb4486b795f5277875546a5797b6b4",
+  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
+      "bytes": 1594
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "81a941e83feb556827d72aa98d7bc97a909294e386ff9f6a1817de92e8767b89",
+      "bytes": 271
+    },
+    {
+      "path": "assets/composer-icon.png",
+      "sha256": "2822b28752520f2a5506cb0693c8db2fd1ec0345806454b5f92d999b84b5bc1f",
+      "bytes": 3967
+    },
+    {
+      "path": "assets/logo.png",
+      "sha256": "cec732e29ea3b03d8920b28d912306f43651186dc2f4a488800da9db0a50f993",
+      "bytes": 8612
+    },
+    {
+      "path": "references/clearing-state.md",
+      "sha256": "c9a022df55f396607ec8b7dc486ab452f1a133fd04fd954a2ff3f86c4df9458c",
+      "bytes": 4140
+    },
+    {
+      "path": "references/install.md",
+      "sha256": "f5f9b1d351a84ac17737fd6aa0e88b04bf1d8b28ae14218dec37fb73a8a94e67",
+      "bytes": 4479
+    },
+    {
+      "path": "scripts/install.sh",
+      "sha256": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
+      "bytes": 6021
+    }
+  ]
+}

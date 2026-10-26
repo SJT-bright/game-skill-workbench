@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "eec90192-720d-4406-8f38-2c9e2ba24f3b",
+      "skillId": "s-5a9f8b608f84c10c43c3",
+      "directory": "ego-browser",
+      "name": "ego-browser",
+      "version": "v3",
+      "createdAt": "2026-10-26T16:59:53.058Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "718c1b23549e2ef0fe3e80aacbdbb65f9de9471c16fd71ab4ec1562ff3501135",
+      "bytes": 30468,
+      "fileCount": 8
+    },
+    {
       "id": "b6513a3b-a123-489f-9f11-de2ef7cf28d1",
       "skillId": "s-4e3f250ac61da7fad00b",
       "directory": "cocos-game-from-starter",

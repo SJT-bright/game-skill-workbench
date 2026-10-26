@@ -1,0 +1,232 @@
+{
+  "currency": "Tokens",
+  "coins_per_level": 50,
+  "skin_module": true,
+  "skins": [
+    {
+      "id": "hero_limited_10",
+      "slot": "limited",
+      "name": "Hero Limited 10",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 10
+    },
+    {
+      "id": "hero_limited_20",
+      "slot": "limited",
+      "name": "Hero Limited 20",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 20
+    },
+    {
+      "id": "hero_limited_30",
+      "slot": "limited",
+      "name": "Hero Limited 30",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 30
+    },
+    {
+      "id": "hero_limited_40",
+      "slot": "limited",
+      "name": "Hero Limited 40",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 40
+    },
+    {
+      "id": "hero_limited_50",
+      "slot": "limited",
+      "name": "Hero Limited 50",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 50
+    },
+    {
+      "id": "hero_limited_60",
+      "slot": "limited",
+      "name": "Hero Limited 60",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 60
+    },
+    {
+      "id": "hero_limited_70",
+      "slot": "limited",
+      "name": "Hero Limited 70",
+      "art": "A bright themed costume with a distinct silhouette.",
+      "level": 70
+    },
+    {
+      "id": "hero_01",
+      "slot": "free",
+      "name": "Hero 01",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_02",
+      "slot": "common",
+      "name": "Hero 02",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_03",
+      "slot": "common",
+      "name": "Hero 03",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_04",
+      "slot": "common",
+      "name": "Hero 04",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_05",
+      "slot": "common",
+      "name": "Hero 05",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_06",
+      "slot": "common",
+      "name": "Hero 06",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_07",
+      "slot": "common",
+      "name": "Hero 07",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_08",
+      "slot": "common",
+      "name": "Hero 08",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_09",
+      "slot": "rare",
+      "name": "Hero 09",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_10",
+      "slot": "rare",
+      "name": "Hero 10",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_11",
+      "slot": "rare",
+      "name": "Hero 11",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_12",
+      "slot": "rare",
+      "name": "Hero 12",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_13",
+      "slot": "rare",
+      "name": "Hero 13",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_14",
+      "slot": "rare",
+      "name": "Hero 14",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_15",
+      "slot": "epic",
+      "name": "Hero 15",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_16",
+      "slot": "epic",
+      "name": "Hero 16",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_17",
+      "slot": "epic",
+      "name": "Hero 17",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_18",
+      "slot": "legendary",
+      "name": "Hero 18",
+      "art": "A bright themed costume with a distinct silhouette."
+    },
+    {
+      "id": "hero_19",
+      "slot": "legendary",
+      "name": "Hero 19",
+      "art": "A bright themed costume with a distinct silhouette."
+    }
+  ],
+  "backgrounds": [
+    {
+      "id": "bg_01",
+      "slot": "free",
+      "name": "Bg 01",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_02",
+      "slot": "common",
+      "name": "Bg 02",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_03",
+      "slot": "common",
+      "name": "Bg 03",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_04",
+      "slot": "common",
+      "name": "Bg 04",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_05",
+      "slot": "rare",
+      "name": "Bg 05",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_06",
+      "slot": "rare",
+      "name": "Bg 06",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_07",
+      "slot": "rare",
+      "name": "Bg 07",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_08",
+      "slot": "epic",
+      "name": "Bg 08",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_09",
+      "slot": "epic",
+      "name": "Bg 09",
+      "art": "A calm bright scene with clear foreground space."
+    },
+    {
+      "id": "bg_10",
+      "slot": "legendary",
+      "name": "Bg 10",
+      "art": "A calm bright scene with clear foreground space."
+    }
+  ]
+}

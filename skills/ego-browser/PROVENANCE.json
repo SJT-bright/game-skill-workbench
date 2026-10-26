@@ -1,9 +1,9 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "ego-browser",
-  "previous_provenance_sha256": "bf381f894745a7a4198bfa3c5c1fbbb580fb4486b795f5277875546a5797b6b4",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "3926f07d985602ca15aa25e1610d940606bcfc888fe47dbc41892fa9dd675e1d",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",

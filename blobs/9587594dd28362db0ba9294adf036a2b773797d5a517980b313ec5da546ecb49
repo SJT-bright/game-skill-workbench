@@ -1,0 +1,34 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-27.economy-v4",
+  "skill": "cocos-game-logic-check",
+  "previous_provenance_sha256": "e810b69fb2f1795b0dbe9bb445af4615e0d883824ba0d9253136d58e3c872d5b",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "bded5165482dec8abf44d46e7b1f1f46c90c7d1e24d9224a4d9832c23deda1ea",
+      "bytes": 2729
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "8c04d41c9407e9bc4c7830d44b42afd00e6b30b1e19d4a26996577937b713a65",
+      "bytes": 433
+    },
+    {
+      "path": "assets/logic-report-template.md",
+      "sha256": "a4846833b55d00210c9c1c6c4311306ce7d3f043286d05126992a82b1d8eda5f",
+      "bytes": 2975
+    },
+    {
+      "path": "references/learned-regressions.md",
+      "sha256": "a78359e2892b8d7cb0fab0d99fb1ae663511bbed7b2e7dce856a2ef972b2ba9b",
+      "bytes": 12476
+    },
+    {
+      "path": "references/logic-rules.md",
+      "sha256": "9c38b4fcf58bfac297e25b5a06747f18c8b956a3e50d4c739b3d5eb782613dbb",
+      "bytes": 9115
+    }
+  ]
+}

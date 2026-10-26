@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "9e18908c-136a-4025-bea3-ad2a5123df13",
+      "skillId": "s-9b70fe49ec762c63822c",
+      "directory": "desktop-agent-orchestrator",
+      "name": "desktop-agent-orchestrator",
+      "version": "v3",
+      "createdAt": "2026-10-26T16:34:55.863Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "b487033e82c1a8412c9a533512aa1af2d0da3724957c1559768956d743f710dd",
+      "bytes": 94572,
+      "fileCount": 13
+    },
+    {
       "id": "d1c031a0-4a20-44fb-868b-4347f9d5a63f",
       "skillId": "s-ff71fb1948e2a7f0eb3b",
       "directory": "grok-background-maker",

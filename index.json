@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "169a591b-613b-4d83-9bda-dff97e4dbd38",
+      "skillId": "s-8ab0e33c96543080c7af",
+      "directory": "cocos-game-art-redo",
+      "name": "cocos-game-art-redo",
+      "version": "v4",
+      "createdAt": "2026-10-26T17:01:35.404Z",
+      "summary": "文件变更：新增 1，修改 1，移除 0。",
+      "changes": {
+        "added": 1,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "046e4bbd73bfba4be1b5ed5509224dc3f11769cdc6c8108ddfb0290973e8d15b",
+      "bytes": 807385,
+      "fileCount": 23
+    },
+    {
       "id": "eec90192-720d-4406-8f38-2c9e2ba24f3b",
       "skillId": "s-5a9f8b608f84c10c43c3",
       "directory": "ego-browser",

@@ -4,6 +4,7 @@ const {HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,r
 const {discover,queueMessage,STAGES,UUID,cancelReaders,isMaintenanceTitle}=require('./codex.cjs');
 const {scanTelemetries}=require('./telemetry.cjs');const updater=require('./updater.cjs');const github=require('./github.cjs');const {spawn}=require('node:child_process');
 const {dockBounds,EXPANDED,COLLAPSED}=require('./docking.cjs');
+const hover=require('./hover.cjs').hoverTrigger();let hoverTimer;
 const smoke=process.argv.includes('--smoke-test');
 if(process.platform==='win32')app.setAppUserModelId('studio.gamedesk.skill.personal');
 if(process.env.SKILL_DOCK_DATA_DIR)app.setPath('userData',process.env.SKILL_DOCK_DATA_DIR);
@@ -119,7 +120,8 @@ const handlers={
   taskText:async value=>(await getTask(value)).text,
   exportTask:async value=>{const {game,skill,text}=await getTask(value);const dir=path.join(root,'handoffs',game.id),archive=dir+'.zip';await fs.rm(dir,{recursive:true,force:true});await fs.mkdir(dir,{recursive:true});try{await fs.cp(skill.path,path.join(dir,'Skill'),{recursive:true});await fs.writeFile(path.join(dir,'开始这里.md'),text+'\n附件内 Skill/ 是本次完整 Skill 文件副本。若路径不可访问，以附件文件为准。\n');await zipFolder(dir,archive);}finally{await fs.rm(dir,{recursive:true,force:true});}clipboard.writeText(text+'\n完整 Skill 交接文件：'+archive);return archive;},
   reveal:async value=>{const allowed=[...config.games.map(g=>g.path),...Object.values(installed).map(s=>s.path),...config.sources.map(s=>s.path)];const target=path.resolve(value);if(!allowed.includes(target)&&!target.startsWith(path.join(root,'handoffs')+path.sep))throw Error('文件位置未授权');const err=await shell.openPath(target);if(err)throw Error(err);},
-  collapse:async()=>{if(!collapsed){const b=win.getBounds(),a=screen.getDisplayMatching(b).workArea;dockEdge=Math.abs(b.x-a.x)<Math.abs(a.x+a.width-b.x-b.width)?'left':'right';}collapsed=!collapsed;applyDock(true);await emit();},
+  expand:async()=>{if(!collapsed)return;collapsed=false;applyDock(true);await emit();},
+  collapse:async()=>{if(!collapsed){const b=win.getBounds(),a=screen.getDisplayMatching(b).workArea;dockEdge=Math.abs(b.x-a.x)<Math.abs(a.x+a.width-b.x-b.width)?'left':'right';}collapsed=!collapsed;applyDock(true);if(collapsed)hover.closed(screen.getCursorScreenPoint(),win.getBounds());await emit();},
   quit:()=>{quitting=true;app.quit();}
 };
 async function main(){
@@ -134,10 +136,12 @@ async function main(){
   win.on('close',e=>{if(!quitting&&!smoke){e.preventDefault();if(!collapsed)handlers.collapse();}});
   win.on('move',()=>{if(snapping)return;clearTimeout(snapTimer);snapTimer=setTimeout(()=>{applyDock();emit();},220);});
   await win.loadFile(path.join(__dirname,'../ui/index.html'));dockEdge=config.window?.edge||'right';applyDock(true);win.show();
+  hoverTimer=setInterval(()=>{if(collapsed&&win&&!win.isDestroyed()&&hover.sample(screen.getCursorScreenPoint(),win.getBounds()))handlers.expand().catch(console.error);},120);
   if(smoke){
+    clearInterval(hoverTimer);
     config.feedMode='hub';config.repository='';
-    await win.webContents.executeJavaScript('window.ready');await handlers.collapse();
-    const integration=[];if(process.env.SKILL_DOCK_SMOKE_EMBEDDED==='1'){await seedEmbeddedSkills();const previousHome=process.env.CODEX_HOME;process.env.CODEX_HOME=path.join(root,'empty-codex');await fs.mkdir(path.join(process.env.CODEX_HOME,'skills/.system'),{recursive:true});try{await scanLocalSkills();}finally{if(previousHome===undefined)delete process.env.CODEX_HOME;else process.env.CODEX_HOME=previousHome;}await emit();}
+    await win.webContents.executeJavaScript('window.ready');await handlers.expand();
+    const integration=[];await handlers.expand();win.emit('blur');integration.push({expandedIdempotent:!collapsed&&win.getBounds().width===EXPANDED.width,manualCloseOnly:!collapsed});if(process.env.SKILL_DOCK_SMOKE_EMBEDDED==='1'){await seedEmbeddedSkills();const previousHome=process.env.CODEX_HOME;process.env.CODEX_HOME=path.join(root,'empty-codex');await fs.mkdir(path.join(process.env.CODEX_HOME,'skills/.system'),{recursive:true});try{await scanLocalSkills();}finally{if(previousHome===undefined)delete process.env.CODEX_HOME;else process.env.CODEX_HOME=previousHome;}await emit();}
     if(process.env.SKILL_DOCK_SMOKE_FIXTURE==='1'){
       const source=path.join(root,'fixture-skill'),gamePath=path.join(root,'fixture-game');await fs.mkdir(source,{recursive:true});await fs.mkdir(gamePath,{recursive:true});await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nKeep original saves.');
       async function ipc(method,value){return win.webContents.executeJavaScript('window.dock.call('+JSON.stringify(method)+','+JSON.stringify(value ?? null)+')');}
@@ -145,7 +149,7 @@ async function main(){
       await ipc('startSharing');await ipc('subscribeSelf');integration.push({downloaded:!!Object.keys(installed).length});
       const game=await ipc('saveGame',{name:'验证游戏',path:gamePath,stage:'待检查'});const skillId=v1.release.skillId;
       const prompt=await ipc('taskText',{gameId:game.id,skillId,action:'check'});integration.push({promptBindsGame:prompt.includes(game.name),promptBindsHash:prompt.includes(v1.release.treeHash)});
-      await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nNew mobile contract.');const v2=await ipc('publish',{id:sourceRecord.id,note:'新增手机重开检查'});await ipc('sync');integration.push({updated:installed[skillId].id===v2.release.id});
+      await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nNew mobile contract.');const v2=await ipc('publish',{id:sourceRecord.id,note:'新增手机重开检查'});integration.push({backgroundAutoUpdated:installed[skillId].id===v2.release.id});
       await ipc('install',{id:v1.release.id,pin:true});await ipc('sync');integration.push({restoredAndPinned:installed[skillId].id===v1.release.id});
       await ipc('install',{id:v2.release.id,pin:false});await win.webContents.executeJavaScript(`document.querySelector('nav [data-tab="skills"]').click()`);
       await ipc('collapse');integration.push({capsule:win.getBounds().width===COLLAPSED.width&&win.getBounds().height===COLLAPSED.height});await ipc('collapse');
@@ -164,3 +168,5 @@ async function main(){
 app.whenReady().then(main).catch(e=>{console.error(e);if(smoke){try{const syncFS=require('node:fs');syncFS.mkdirSync(root,{recursive:true});syncFS.writeFileSync(path.join(root,'smoke-error.txt'),e.stack||String(e));}catch{}}app.exit(1);});
 app.on('before-quit',()=>{quitting=true;clearInterval(poll);clearInterval(updateTimer);cancelReaders();clearInterval(watchTimer);clearTimeout(snapTimer);eventAbort?.abort();hub?.close();});
 app.on('window-all-closed',()=>app.quit());
+
+app.on('will-quit',()=>clearInterval(hoverTimer));

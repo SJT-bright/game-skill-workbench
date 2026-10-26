@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:33:55.647Z",
-  "treeHash": "0fedb23ea0c86e5c5174c48946b8955a94199c4d727cc19d8503910f16ff8711",
+  "createdAt": "2026-10-26T14:34:35.216Z",
+  "treeHash": "c76751d2287d331a52abdc9416cc43f324f40b4b1fb2c3d157ba02ad179ded1b",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2393,14 +2393,14 @@
     },
     {
       "name": "ego-browser",
-      "treeHash": "badcc008b63600d0ac23748101627f5eb5efbca994272919e0a8c71bf7ca7d52",
+      "treeHash": "20f0035db3cf4d264e9add848b1c3f0e115e6e01d9fd8361166acb6b79055937",
       "fileCount": 8,
-      "bytes": 31806,
+      "bytes": 30489,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "bf381f894745a7a4198bfa3c5c1fbbb580fb4486b795f5277875546a5797b6b4",
-          "size": 2722,
+          "hash": "3926f07d985602ca15aa25e1610d940606bcfc888fe47dbc41892fa9dd675e1d",
+          "size": 1405,
           "executable": false
         },
         {

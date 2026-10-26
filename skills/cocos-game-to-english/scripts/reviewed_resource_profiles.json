@@ -39419,13 +39419,13 @@
   "scissors-v17-finite-production-domains": {
     "source_sha256": {
       "game.js": "c91f7be77374e0a44078e5d9e76234e861191d155995afff8489167fd2538d89",
-      "main.js": "05acaf1d6a0808f17aff289176e92b0c87d04e4600a48e5044dedc6b80cb3162",
+      "main.js": "d83a381ad62b93cd27ef295f548950e959a3acdf9aeb9aeb92833cc5dc098aec",
       "adapter-min.js": "0590133a7953753786ea642a5b91059a13a2bcfbdf8dcbfbdf9dd72a3af8979f",
       "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
       "touch-coordinates.js": "e934fd3ab8dbc57e88edb51612606270837a8d8eb210f4e782b9935557d0e396",
       "src/settings.js": "6b41bfce43c4dc45eda4db228ffa9ee7b113f580b369fa49dacb021139086838",
       "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
-      "assets/main/index.js": "fdc965decf5cfe7f8038f37f27f7fcc3907fba39a3a2a0b3f2dd9e2edc085057",
+      "assets/main/index.js": "1fc9f951993ca26fecce116f2bb62867e971a9dd68dc089204c936ef012ccdc8",
       "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5"
     },
@@ -39625,7 +39625,7 @@
         "not_executed": true,
         "reason": "Remote cross-promotion image utility is unreachable: GameData game-box arrays are empty and no active producer supplies icon_url; the three old item definitions remain dormant. Entire production source and semantic assets are pinned."
       },
-      "assets/main/index.js:108853": {
+      "assets/main/index.js:108854": {
         "bundles": [
           "resources"
         ],
@@ -39645,7 +39645,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:116318": {
+      "assets/main/index.js:116319": {
         "bundles": [
           "resources"
         ],
@@ -39667,7 +39667,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:117226": {
+      "assets/main/index.js:117227": {
         "bundles": [
           "resources"
         ],
@@ -39682,7 +39682,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:118999": {
+      "assets/main/index.js:119000": {
         "bundles": [
           "resources"
         ],
@@ -39709,7 +39709,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:133796": {
+      "assets/main/index.js:133797": {
         "bundles": [
           "resources"
         ],
@@ -39730,31 +39730,31 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:133978": {
+      "assets/main/index.js:133979": {
         "reason": "Known local SkinAppearance.load wrapper; every resource call in its exact body remains independently inventoried",
         "local_method": {
           "source": "assets/main/index.js",
-          "start": 133738,
-          "end": 133875,
+          "start": 133739,
+          "end": 133876,
           "sha256": "3c3ab9712c72fb739b04e16f44add57ba5a486e93f55cb6a085bec592ba85f1f",
           "delegate_sites": [
-            "assets/main/index.js:133796"
+            "assets/main/index.js:133797"
           ]
         }
       },
-      "assets/main/index.js:135175": {
+      "assets/main/index.js:135176": {
         "reason": "Known local SkinAppearance.load wrapper; every resource call in its exact body remains independently inventoried",
         "local_method": {
           "source": "assets/main/index.js",
-          "start": 133738,
-          "end": 133875,
+          "start": 133739,
+          "end": 133876,
           "sha256": "3c3ab9712c72fb739b04e16f44add57ba5a486e93f55cb6a085bec592ba85f1f",
           "delegate_sites": [
-            "assets/main/index.js:133796"
+            "assets/main/index.js:133797"
           ]
         }
       },
-      "assets/main/index.js:137029": {
+      "assets/main/index.js:137030": {
         "bundles": [
           "resources"
         ],
@@ -39780,7 +39780,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:153196": {
+      "assets/main/index.js:153197": {
         "bundles": [
           "audio"
         ],
@@ -39796,7 +39796,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:169601": {
+      "assets/main/index.js:169602": {
         "bundles": [
           "resources"
         ],
@@ -39808,7 +39808,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "assets/main/index.js:170293": {
+      "assets/main/index.js:170294": {
         "bundles": [
           "resources"
         ],
@@ -39820,7 +39820,7 @@
         "kind": "load",
         "reason": "Finite actual producer domain; derived from pinned production maps/callers, not copied from catalog"
       },
-      "main.js:5409": {
+      "main.js:5688": {
         "reason": "Actual settings.jsList local src/ script mapping, including empty list",
         "native_files": []
       }
@@ -39829,7 +39829,7 @@
       "assets/main/index.js:42342": {
         "reason": "Assignment of reviewed module-owned GamePreferences.load function, not escape of a Cocos loader; exact body and actual inner resource sites are bound by local_method resolution."
       },
-      "assets/main/index.js:133731": {
+      "assets/main/index.js:133732": {
         "reason": "Assignment of reviewed module-owned SkinAppearance.load function, not escape of a Cocos loader; exact body and actual inner resource sites are bound by local_method resolution."
       }
     },

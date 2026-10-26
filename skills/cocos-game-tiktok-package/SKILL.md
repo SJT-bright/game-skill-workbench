@@ -3,6 +3,9 @@ name: cocos-game-tiktok-package
 description: "开始前移除分享与全部排行榜（好友排行、Ranking、Leaderboard），不得保留。打包/出包：用户说打包、重新打包、出包、出个包、给我包、上传包、上传测试包、测试包、检测包、给别人检测的包、上传 TikTok 平台包、TikTok 包、平台包、压缩包、ZIP、交付包、正式包、提审包（package / build zip / upload zip / TikTok package）时使用。不管叫什么，只交一种包：可以直接上传 TikTok 后台的平台包——Cocos 真实 Native 小游戏构建，ZIP 根目录直接是 game.js、game.json、project.config.json，assets/resources 等大资源放进 Cocos 小游戏普通分包，未压缩主包≤4,000,000 字节、总包≤30,000,000、独立分包各≤4,000,000，写 ZIP 之前就拒绝超限。严禁外层文件夹、Web 包冒充 Native、主包超 4MB、源码包、ZIP 套 ZIP、__MACOSX/.DS_Store、测试跳关残留、旧 App ID。用 make_tiktok_zip.py 出包（先跑门禁、不合格不写 ZIP、写完回读核对每个字节），同时给同版本地试玩链接。 发现阻断项自动修复、补对应测试并持续到测试ZIP交付，不以拒包报告结束。"
 ---
 
+**成品测试通过后自动接续出包（用户2026-10-26）**：按[成品测试通过后自动出包](../cocos-game-to-english/references/check-fix-package-loop.md#成品测试通过后自动出包用户2026-10-26)执行。当前成品测试完成后连续封装证据、执行正式writer与交付核验，主动交同版ZIP和试玩链接；不得停在“报告未封装/未再次要求打包”等待“继续”。用户明确仅检测、评审、试玩或暂停时按其边界。
+
+
 **每次制作的时间、token与结案统计（用户2026-10-26）**：按[制作记录与完结汇总](../cocos-game-to-english/references/production-accounting.md)，确定项目后即启用本游戏追加台账；各玩法/美工/实现/实际测试/返工/交付步骤主动记录起止、工作/工具/等待、结果与证据，阶段边界增量收集绑定会话用量。用户说“项目完结了”时主动在当前聊天推送分阶段及总历时、可核实token/额度/成本、测试明细和优化分析，并本地归档；缺数据标未知，缓存/推理不重复相加，共用账户额度不冒称项目独占。记录不扩大制作/CI范围，不建常驻进程或额外定时任务。
 
 

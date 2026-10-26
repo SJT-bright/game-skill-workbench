@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:01:01.757Z",
-  "treeHash": "ff536133ea9beac2330596272c7cf8f3d940e3b9b7d9d384c00164d1faf4c0f7",
+  "createdAt": "2026-10-26T14:03:24.801Z",
+  "treeHash": "c8806edeb95e827f5f7417708acdae509fa808ef318d7667d09f615dcdf3bd32",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -295,9 +295,9 @@
     },
     {
       "name": "cocos-game-logic-check",
-      "treeHash": "1f0299dfa856ca5d1205565db68c6f93e6fb5e1cf7e70bc2ffc38a6bea34ac78",
+      "treeHash": "a66c3cb6e8aef5b7021b8ff825f43622f1266914e8b73c3c61c9258164de2966",
       "fileCount": 6,
-      "bytes": 52520,
+      "bytes": 52822,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -325,8 +325,8 @@
         },
         {
           "path": "references/learned-regressions.md",
-          "hash": "4b09a9704aa86ed9f71a029e88393ee384dfe4d177263bd65242e3f31ff8ea7d",
-          "size": 11434,
+          "hash": "36031a46037e927aea437a0a86db6a253a62afab6d42c4db58b66aa807cd7738",
+          "size": 11736,
           "executable": false
         },
         {

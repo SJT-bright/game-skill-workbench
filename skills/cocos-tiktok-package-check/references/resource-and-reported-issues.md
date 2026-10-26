@@ -95,3 +95,7 @@ python <skills>/cocos-game-to-english/scripts/package_issue_gate.py revise-scope
 回归：`scripts/test_resource_and_issue_obligations.py`，覆盖漏项、未知动态域、未复验、旧指纹、假pass、正常局部复验、无关变更复用，以及三个入口的拒绝接线。
 
 资源类型仍按实际catalog核对；已核Cocos2/3引擎中`cc.TTFFont`和`cc.BitmapFont`继承`cc.Font`，基类请求可返回这两种真实字体子类；清单记录实际具体类型，图片/JSON等不相干类型仍拒绝，不用类名通配代替类型检查。
+
+## 用户明确收窄到本地测试候选的外部验证范围（2026-10-26）
+
+仅当用户明确说明原设备/旧档不可用，并明确要求依本地实测交当前测试候选时，可用`package_issue_gate.py defer-external --project <工程> --native <当前Native> --id <设备待验问题> --authorization <用户指令记录.json>`追加设备复验待验事件。授权记录使用`external_test_scope.v1`，保留原话、问题ID、`authority: explicit_current_user_instruction`、`scope: local_test_candidate_only`、`external_requirement: original_device_save_replay`及原因。该事件不关闭问题、不改原断言，回执列`pending_external_issues`；只对绑定的同一Native字节有效，授权/Native变化拒绝。不得自动推断用户同意，不用于跳过可执行本地产品故障、资源、启动恢复和最终字节门禁；无该明确用户指令仍按未闭合拒包。原设备实测后照原case正式复验。

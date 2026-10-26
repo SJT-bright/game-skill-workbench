@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T13:39:39.229Z",
-  "treeHash": "7b739d64ecb8d180d683a428ad1e864d2ae83587484ecfdc0e44c13f049e1945",
+  "createdAt": "2026-10-26T13:40:08.420Z",
+  "treeHash": "e74de8cabf9fd2776ff3e5a8546efcd74b4121a1cad90a1a69d7cc7dcc24077a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2143,14 +2143,14 @@
     },
     {
       "name": "cocos-tiktok-package-check",
-      "treeHash": "28adc1bd24a2fabe1a741c818d50329bae8d9547891c25f95e94ff19a8dbdd73",
-      "fileCount": 27,
-      "bytes": 185326,
+      "treeHash": "6fa8211d4dfc933a43b7d30ac3a855bef6ea7f18156700199d75d1526b1b5795",
+      "fileCount": 28,
+      "bytes": 189104,
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "d363dd163dc6e29713a24c8c0b865fd823b1c188fdc771ac145c30b659abd460",
-          "size": 23985,
+          "hash": "b733d2e60c4eada894b9840ec160c16d63000ece6494e432555e9015ece932a6",
+          "size": 25024,
           "executable": false
         },
         {
@@ -2190,6 +2190,12 @@
           "executable": false
         },
         {
+          "path": "references/forbidden-player-windows.md",
+          "hash": "f88bb71e3cc937c09f20bba00bc8aaa817121d26daa4ab4969da9eded6a9aac1",
+          "size": 1773,
+          "executable": false
+        },
+        {
           "path": "references/gate-order-and-identity.md",
           "hash": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
           "size": 4604,
@@ -2203,8 +2209,8 @@
         },
         {
           "path": "references/resource-and-reported-issues.md",
-          "hash": "2a2fc6a61dd6e5c1c7c498031ad1e58e5af38db0701b4a950e7b38727f1b7121",
-          "size": 8798,
+          "hash": "6a9c8b8b3cc6a846b3975cbfa2c82abf58e26febc5f24f064b5c709f04962373",
+          "size": 9764,
           "executable": false
         },
         {

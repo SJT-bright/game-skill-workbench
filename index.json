@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "c14ddcd2-27ac-46b3-89ed-80c710c6ada3",
+      "skillId": "s-8a4323773719ef381f6d",
+      "directory": "grok-image-review",
+      "name": "grok-image-review",
+      "version": "v3",
+      "createdAt": "2026-10-26T16:48:39.093Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "8e0abf2eaead5b6da2684519e6348994e13089262c008012005a7352e6174406",
+      "bytes": 18472,
+      "fileCount": 4
+    },
+    {
       "id": "750b5ce6-b69d-48f2-9b27-061464c4f4b4",
       "skillId": "s-6d7f9e585fef16dafd8d",
       "directory": "game-audio-library",

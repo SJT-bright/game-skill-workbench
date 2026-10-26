@@ -1,0 +1,67 @@
+{
+  "id": "e469e384-04cb-42c0-bf7b-df7c0eec4070",
+  "skillId": "s-16601c48e7f1b99915ae",
+  "directory": "mobile-touch-computer-use",
+  "name": "mobile-touch-computer-use",
+  "version": "v3",
+  "createdAt": "2026-10-26T16:38:52.612Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "8b93c06982e5a3b546a82ed7cdca361dcf616e95e9d673c0899ecd5e301ef7e5",
+  "bytes": 43438,
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "9de3b7daa81818166efbd1093c83335f28f87532b64de9f58c25357ea5d86661",
+      "size": 1427,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "c9b945f471ea7c13c825230f1acff8d476bf8f9ee845b56b0e07b3a3423e74a9",
+      "size": 14248,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+      "size": 320,
+      "executable": false
+    },
+    {
+      "path": "references/cold-start-regression.md",
+      "hash": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
+      "size": 7488,
+      "executable": false
+    },
+    {
+      "path": "references/computer-use.md",
+      "hash": "f492f3e181bfe6969e2b7b34ff0e105165306a7f3966f70509313955333abcc2",
+      "size": 7586,
+      "executable": false
+    },
+    {
+      "path": "references/evidence.md",
+      "hash": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+      "size": 2916,
+      "executable": false
+    },
+    {
+      "path": "scripts/input_observer.js",
+      "hash": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+      "size": 3177,
+      "executable": false
+    },
+    {
+      "path": "scripts/prepare_preview.py",
+      "hash": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+      "size": 6276,
+      "executable": false
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-27.economy-v4",
+  "skill": "mobile-touch-computer-use",
+  "previous_provenance_sha256": "79a1591e7d127c945a92f0dce293a8e4e617d33ae526ef90ee4989546188d2fb",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "c9b945f471ea7c13c825230f1acff8d476bf8f9ee845b56b0e07b3a3423e74a9",
+      "bytes": 14248
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+      "bytes": 320
+    },
+    {
+      "path": "references/cold-start-regression.md",
+      "sha256": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
+      "bytes": 7488
+    },
+    {
+      "path": "references/computer-use.md",
+      "sha256": "f492f3e181bfe6969e2b7b34ff0e105165306a7f3966f70509313955333abcc2",
+      "bytes": 7586
+    },
+    {
+      "path": "references/evidence.md",
+      "sha256": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+      "bytes": 2916
+    },
+    {
+      "path": "scripts/input_observer.js",
+      "sha256": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+      "bytes": 3177
+    },
+    {
+      "path": "scripts/prepare_preview.py",
+      "sha256": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+      "bytes": 6276
+    }
+  ]
+}

@@ -4,7 +4,7 @@
   "description": "个人游戏悬浮工作台与 Skill 文件同步",
   "main": "src/main.cjs",
   "author": "GameDesk",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "start": "node scripts/launch.cjs",

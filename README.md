@@ -2,6 +2,8 @@
 
 Mac / Windows 玻璃质感贴边浮窗，管理本机游戏、读取 Codex 对话、推送新版 Skill，并检查工作台自身更新。
 
+[下载 Mac / Windows](https://github.com/SJT-bright/game-skill-workbench/releases/latest) · [MIT 许可证](LICENSE)
+
 ## 使用
 
 打开后以贴边小窗显示，点击展开。默认读取本机 Codex 的近期游戏对话，按“玩法制作、玩法结束、美工制作、待试玩、检查、已完成”整理。依据不明确时显示待识别，可右键修正。卡片显示对应对话的运行状态、任务时长和已记录 Token，右键“记录”查看阶段切换与统计范围。缺失记录显示未知，不将上下文窗口或账户额度当作单游戏用量、费用。没有 Codex CLI 时保留已有记录，仍可手动添加游戏和关联对话。
@@ -14,7 +16,7 @@ Mac / Windows 玻璃质感贴边浮窗，管理本机游戏、读取 Codex 对�
 
 - **工作台软件**：读取本仓库 GitHub Release 的 `gamedesk-update.json`。发现新版时通知；点击“更新并重启”下载、校验并替换应用，保留个人数据。成功启动后移除本次更新的旧应用副本与下载缓存。
 - **Skill 文件**：安装包内置 15 个允许分发的游戏 Skill，首次离线即可使用。`skills-feed` 分支提供完整文件与内容去重的版本记录，客户端按需获取变更文件，历史恢复仅下载所选版本。
-- **仓库权限**：当前为私有仓库。使用者需有仓库访问权限，并在本机 GitHub CLI 登录。凭据留在本机，安装包不包含发布者登录信息。设置中提供 GitHub 登录入口。
+- **公开更新**：源码、Release 安装包和 Skill 文件公开可读，无需申请仓库访问权限。发布变更仍需要维护者 GitHub 写入权限；凭据留在本机，安装包不包含发布者登录信息。匿名 GitHub API 访问受平台限流影响。
 - **可选独立服务**：保留局域网/HTTPS Skill Hub，发布者可选择目录自动发布；在线通过 SSE 推送，客户端每分钟补查。
 
 默认数据目录：系统 Application Support / AppData 下 `GameDesk-Skill-Personal`，与原 Mac 总管工作台隔离。个人游戏、聊天、登录与连接密钥不进入源码或安装包。
@@ -46,3 +48,7 @@ Windows 首次使用可下载完整便携包并运行 `GameDeskSkill.exe`；另�
 源码构建器使用 Node.js 标准库及系统解压、签名工具，运行时为官方 Electron 43.4.1，并核对上游 SHA-256。`ELECTRON_ARCHIVE` 可指定已下载的对应运行时 ZIP。Intel Mac 可设置 `ARCH=x64` 构建。
 
 `npm run preview` 提供标记为演示的交互预览；不会读取真实聊天或发送消息。
+
+## 开源许可
+
+项目原创代码和文档采用 [MIT](LICENSE)，允许使用、修改和再分发。第三方组件保留原许可，见 [第三方声明](THIRD_PARTY_NOTICES.md)。个人游戏、Codex 对话及本机统计不作为公开仓库内容上传。

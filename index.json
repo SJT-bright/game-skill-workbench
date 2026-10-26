@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "9e6120bb-b586-4a5a-8370-ca6f4b0681fc",
+      "skillId": "s-a5a5d4cc5c2308178580",
+      "directory": "chrome-mobile-testing",
+      "name": "chrome-mobile-testing",
+      "version": "v2",
+      "createdAt": "2026-10-26T14:33:43.968Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "59934f5d8e1a6e2a641734bf339eeaa336ca67517df37b1eb53af635f60a6236",
+      "bytes": 43312,
+      "fileCount": 4
+    },
+    {
       "id": "dab43704-d8d0-4062-9adf-f8575b33b52b",
       "skillId": "s-d260030552ba65620839",
       "directory": "cocos-game-tiktok-package",

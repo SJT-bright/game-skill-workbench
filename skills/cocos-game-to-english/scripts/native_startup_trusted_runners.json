@@ -4416,5 +4416,23 @@
       "/Users/sijunting/Downloads/！自制游戏/1喵咪小吃铺/CatSnackBar-English/source/docs/native-v7/reintroduced_defect.json": "8f583bf0b919b64b0931cc33aff93764eda57288ba1451920f0cec85d5855743",
       "/Users/sijunting/Downloads/！自制游戏/1喵咪小吃铺/CatSnackBar-English/source/docs/native-v7/parser_type_mismatch.json": "e4d5221c56801ce231cc26bf375e14b0700f8ada6b183bf131a6cc28067c3324"
     }
+  },
+  "scissors-v17-real-ego-native": {
+    "path": "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17/tools/native-startup/runner.py",
+    "sha256": "c4449a92a764f37b3e20db6e383fdaa07023cc0635e059995ed57cf9f2711faa",
+    "project": "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17",
+    "control_profile": "cocos24_sdk_screen_input_v1",
+    "timeout_seconds": 120,
+    "native_binding": {
+      "kind": "fixed_project_path",
+      "relative_path": "qa/native-v17-compact"
+    },
+    "dependencies": {
+      "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17/tools/native-startup/runtime.py": "b55cff55ea593951f696364679ab1612a51c3799272cd7f8a906daec9c0e4440",
+      "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17/tools/native-startup/freeze.py": "a4c179a8f22722c3e322374828359abbff3d1a899a0810b2b06034f92e319458",
+      "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17/tools/native-startup/probe.mjs": "f4ac2d1b96a0acee89774ff96b7cc72237492fbc88265d73677ca856c55684c8",
+      "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17/qa/native-host-final.js": "c8b6a7b07021d5b0b5b357553abcae1189e56498957ec744fa8a895de0820836",
+      "/Users/sijunting/Downloads/！自制游戏/1剪刀达人/candidates/ScissorsMaster-English-final-v17/qa/host-final.html": "1dc116f5577c93a7680744499fdcceaada67be3e4965f6c87e9f4c4c1bb3ba45"
+    }
   }
 }

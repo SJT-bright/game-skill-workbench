@@ -1,0 +1,14 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-27.economy-v4",
+  "skill": "cocos-game-ad-design",
+  "previous_provenance_sha256": "6f1f570c335944778aa33701085d8494298ce7bfdc28ab6070fedbace3ff87bd",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "d3881489d19bc455af4afbd0fdd6ab315e01cd22cb1f5323a8d22c25be1715b2",
+      "bytes": 8127
+    }
+  ]
+}

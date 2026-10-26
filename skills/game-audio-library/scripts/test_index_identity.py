@@ -21,7 +21,8 @@ HERE = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location('index_under_test', HERE / 'build_index.py')
 b = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(b)
-BASE_SCORE_AST_SHA256 = '4092a81fbcd048f1422dc2671631f8e1da3cf0b8fe6798f1600a362731a94855'
+# Verified against unchanged frozen v2 production; normalize Python-only AST metadata.
+BASE_SCORE_AST_SHA256 = 'aaa378cb6af3ce5e2bff2863e181dc9086c06a98fea4bc4601359807607bb190'
 METRICS = dict(duration=12.0, lufs=-20.0, peak_db=-3.0, lead_silence=0.0,
                clip=0, sample_rate=44100, channels=1, bitrate_kbps=705)
 
@@ -63,7 +64,7 @@ class IndexIdentityTests(unittest.TestCase):
     def test_original_score_ast_and_rejecting_controls(self):
         tree = ast.parse((HERE / 'build_index.py').read_text())
         score = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'score')
-        digest = hashlib.sha256(ast.dump(score, include_attributes=False).encode()).hexdigest()
+        digest = hashlib.sha256(ast.dump(score, include_attributes=False).replace(", type_params=[]", "").encode()).hexdigest()
         self.assertEqual(digest, BASE_SCORE_AST_SHA256)
         normal = dict(METRICS, path='x.wav', tags='', license='CC0')
         self.assertEqual(b.score(normal), (100, ''))

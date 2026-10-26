@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Offline source-cache sync contracts using an existing original CC0 audio ZIP.
+"""Offline source-cache sync contracts using a generated isolated WAV/ZIP fixture.
 
-Set AUDIO_TEST_STAGE to an expansion stage containing new-packs.json/source-cache.
+AUDIO_TEST_STAGE optionally selects an already-verified real source cache.
 Every import goes to a TemporaryDirectory; the real audio library is never written.
 """
 from __future__ import annotations
 
 import copy
+import io
+import struct
+import wave
 import csv
 import hashlib
 import importlib.util
@@ -34,11 +37,29 @@ def cache_name(entry):
 class ThemeSyncCacheTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        stage = Path(os.environ.get('AUDIO_TEST_STAGE', HERE.parents[1]))
+        if os.environ.get('AUDIO_TEST_STAGE'):
+            stage=Path(os.environ['AUDIO_TEST_STAGE'])
+        else:
+            # Test-only generated silence is never installed in the real library
+            # or described as a downloaded commercial production sound.
+            cls.stage_temp=tempfile.TemporaryDirectory(prefix='audio-cache-fixture-')
+            cls.addClassCleanup(cls.stage_temp.cleanup)
+            stage=Path(cls.stage_temp.name);(stage/'source-cache').mkdir()
+            stream=io.BytesIO()
+            with wave.open(stream,'wb') as audio:
+                audio.setparams((1,2,8000,0,'NONE','not compressed'))
+                audio.writeframes(struct.pack('<h',0)*1600)
+            packed=io.BytesIO()
+            with zipfile.ZipFile(packed,'w') as archive:
+                archive.writestr('fixture.wav',stream.getvalue())
+            entry={'url':'https://example.invalid/synthetic-test-only.zip','sha256':hashlib.sha256(packed.getvalue()).hexdigest()}
+            pack={'key':'synthetic_cache','kind':'sfx','source':'synthetic_test_only','page':'https://example.invalid/test-only','author':'Generated validator fixture','license':'CC0','license_url':'https://creativecommons.org/publicdomain/zero/1.0/','files':[entry]}
+            (stage/'source-cache'/cache_name(entry)).write_bytes(packed.getvalue())
+            (stage/'new-packs.json').write_text(json.dumps([pack]))
         manifest = stage / 'new-packs.json'
         cache = stage / 'source-cache'
         if not manifest.is_file():
-            raise unittest.SkipTest('Provide AUDIO_TEST_STAGE with already-downloaded original CC0 source-cache; tests never download it')
+            raise unittest.SkipTest('Explicit AUDIO_TEST_STAGE does not contain the requested local manifest')
         choices = []
         for pack in json.loads(manifest.read_text()):
             if pack.get('kind') != 'sfx' or not pack.get('license', '').startswith('CC0') or len(pack.get('files', [])) != 1:
@@ -84,7 +105,7 @@ class ThemeSyncCacheTests(unittest.TestCase):
     def target_files(self):
         return sorted(p for p in self.raw.rglob('*') if p.is_file()) if self.raw.exists() else []
 
-    def test_verified_actual_cc0_zip_imports_offline_and_consumes_asset_title_page(self):
+    def test_verified_zip_imports_offline_and_consumes_asset_title_page(self):
         with zipfile.ZipFile(self.source) as archive:
             first = next(n for n in archive.namelist() if Path(n).suffix.lower() in common.AUDIO_EXT and not n.endswith('/'))
         self.pack.setdefault('assets', {}).setdefault(Path(first).as_posix(), {}).update(

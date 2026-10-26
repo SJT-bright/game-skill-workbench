@@ -1,162 +1,184 @@
 {
-  "schema": "gameskills-fusion-provenance.v1",
-  "revision": "2026-10-23.fused-v7",
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-26.contracts-v3",
   "skill": "game-audio-library",
-  "previous_provenance_sha256": "e78cb0c78d1d03246b6f32503abe680c44b230c291b036a460f16f639ce79d6e",
+  "previous_provenance_sha256": "6d8427d1d3f2c80afeb05faeb62bf91820fd50be7a246b33afa7dacd7be1cf0e",
+  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "eb7473992f72f2472c471d172a934dc276f840325bb21495494425bb90c2d985",
-      "local_before_sha256": "7ad49c34f031522012968faff7fa207fcce7145b38a8fb9a54459cfcb5c9d923",
-      "uploaded_sha256": "eb7473992f72f2472c471d172a934dc276f840325bb21495494425bb90c2d985",
-      "origin": "uploaded"
-    },
-    {
-      "path": "references/sources.md",
-      "sha256": "9a634cfd11a034d8db5a863b25167e704b20e19dfc3bf557fced1725c39a20df",
-      "local_before_sha256": "9a634cfd11a034d8db5a863b25167e704b20e19dfc3bf557fced1725c39a20df",
-      "uploaded_sha256": "9a634cfd11a034d8db5a863b25167e704b20e19dfc3bf557fced1725c39a20df",
-      "origin": "both-identical"
-    },
-    {
-      "path": "references/keywords.md",
-      "sha256": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
-      "local_before_sha256": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
-      "uploaded_sha256": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
-      "origin": "both-identical"
-    },
-    {
-      "path": "cocos3x/GameAudioButton.ts",
-      "sha256": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
-      "local_before_sha256": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
-      "uploaded_sha256": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
-      "origin": "both-identical"
-    },
-    {
-      "path": "cocos3x/GameAudioManager.ts",
-      "sha256": "e454b5e3f8ec71156a0df72e7cb000ba71f036161d8b14d8c796b7b268294ac7",
-      "local_before_sha256": "e454b5e3f8ec71156a0df72e7cb000ba71f036161d8b14d8c796b7b268294ac7",
-      "uploaded_sha256": "e454b5e3f8ec71156a0df72e7cb000ba71f036161d8b14d8c796b7b268294ac7",
-      "origin": "both-identical"
-    },
-    {
-      "path": "cocos24/GameAudioManager.js",
-      "sha256": "4148ecf61d2565206c057972cfd199117fcac788e786dd80ba2be8ad44056350",
-      "local_before_sha256": "4148ecf61d2565206c057972cfd199117fcac788e786dd80ba2be8ad44056350",
-      "uploaded_sha256": "4148ecf61d2565206c057972cfd199117fcac788e786dd80ba2be8ad44056350",
-      "origin": "both-identical"
+      "sha256": "b8b710973daa95c63e7b3cb1a9067848a92d5a9bfaf5a08db122f664bcfdfab9",
+      "bytes": 19463
     },
     {
       "path": "cocos24/GameAudioButton.js",
       "sha256": "bdef6cb16217224329cb7797e9985c6b7826bd222299284d3ed0dc6d870deddc",
-      "local_before_sha256": "bdef6cb16217224329cb7797e9985c6b7826bd222299284d3ed0dc6d870deddc",
-      "uploaded_sha256": "bdef6cb16217224329cb7797e9985c6b7826bd222299284d3ed0dc6d870deddc",
-      "origin": "both-identical"
+      "bytes": 1384
     },
     {
-      "path": "scripts/build_index.py",
-      "sha256": "06eae8e98ff8017e253196b0058c480d03893e264304f9fdb441715d1279b12d",
-      "local_before_sha256": "06eae8e98ff8017e253196b0058c480d03893e264304f9fdb441715d1279b12d",
-      "uploaded_sha256": "06eae8e98ff8017e253196b0058c480d03893e264304f9fdb441715d1279b12d",
-      "origin": "both-identical"
+      "path": "cocos24/GameAudioManager.js",
+      "sha256": "3591ebd5002ad1ebad7ea0e28504148aa964380b83f516a8ee62d321e7127c1d",
+      "bytes": 18890
+    },
+    {
+      "path": "cocos3x/GameAudioButton.ts",
+      "sha256": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
+      "bytes": 1370
+    },
+    {
+      "path": "cocos3x/GameAudioManager.ts",
+      "sha256": "eaa3f95cb0f07f79769488766014a4fa97f69de88dc8e816eb65194a061dc700",
+      "bytes": 20552
+    },
+    {
+      "path": "references/keywords.md",
+      "sha256": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
+      "bytes": 4328
+    },
+    {
+      "path": "references/portable-library.md",
+      "sha256": "b24a183a1178c45ccce2a1fad118c187f7035658f0789cbaa0d006c0b584ab4e",
+      "bytes": 4918
+    },
+    {
+      "path": "references/sources.md",
+      "sha256": "7631c45240cc20102859e1802cc3f57755a09a89a5ad30306a6881b9f8bed352",
+      "bytes": 5232
+    },
+    {
+      "path": "references/theme-library.md",
+      "sha256": "cffc8e788fe4833021fc697774c1931fb93e274d449bf1b1d3526c566a1f9301",
+      "bytes": 4002
     },
     {
       "path": "scripts/add_credit.py",
       "sha256": "6755d6fea34bf18d41cb4bf3692d9d9fd33df7bb3c85c3b44b57f59cb884d020",
-      "local_before_sha256": "6755d6fea34bf18d41cb4bf3692d9d9fd33df7bb3c85c3b44b57f59cb884d020",
-      "uploaded_sha256": "6755d6fea34bf18d41cb4bf3692d9d9fd33df7bb3c85c3b44b57f59cb884d020",
-      "origin": "both-identical"
+      "bytes": 1931
     },
     {
-      "path": "scripts/search_index.py",
-      "sha256": "797bfccd3787d58772a7af220aa88efa2d0d34e2821ef4b90f0e5999b85aec18",
-      "local_before_sha256": "797bfccd3787d58772a7af220aa88efa2d0d34e2821ef4b90f0e5999b85aec18",
-      "uploaded_sha256": "797bfccd3787d58772a7af220aa88efa2d0d34e2821ef4b90f0e5999b85aec18",
-      "origin": "both-identical"
+      "path": "scripts/audio_identity.py",
+      "sha256": "8490e34d5188040c96ff68efe960f758e4ddf6edd6418106a661a04171d5000d",
+      "bytes": 3401
     },
     {
       "path": "scripts/audio_pipeline.py",
-      "sha256": "f51a410b109fdaf7c5a3ce8be7e4b3d35e9a0be9051ba773b3b415eb45ae4849",
-      "local_before_sha256": "f51a410b109fdaf7c5a3ce8be7e4b3d35e9a0be9051ba773b3b415eb45ae4849",
-      "uploaded_sha256": "f51a410b109fdaf7c5a3ce8be7e4b3d35e9a0be9051ba773b3b415eb45ae4849",
-      "origin": "both-identical"
-    },
-    {
-      "path": "scripts/fetch_oga.py",
-      "sha256": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
-      "local_before_sha256": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
-      "uploaded_sha256": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
-      "origin": "both-identical"
-    },
-    {
-      "path": "scripts/fetch_freesound.py",
-      "sha256": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
-      "local_before_sha256": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
-      "uploaded_sha256": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
-      "origin": "both-identical"
+      "sha256": "1f5badca5428113c9b170e334ed0e4181caa4fdf76d55e901585bed3dd08e8c9",
+      "bytes": 12364
     },
     {
       "path": "scripts/audition.py",
-      "sha256": "624255811f00e331316d9e93f0d9e08db2b9e81ec8d3c580155388db36a611ea",
-      "local_before_sha256": "624255811f00e331316d9e93f0d9e08db2b9e81ec8d3c580155388db36a611ea",
-      "uploaded_sha256": "624255811f00e331316d9e93f0d9e08db2b9e81ec8d3c580155388db36a611ea",
-      "origin": "both-identical"
-    },
-    {
-      "path": "scripts/setup.py",
-      "sha256": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
-      "local_before_sha256": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
-      "uploaded_sha256": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
-      "origin": "both-identical"
-    },
-    {
-      "path": "scripts/common.py",
-      "sha256": "ba97851aebe291bf8021115d0e6e1006548639b8386a1df9c32148f7334bbce5",
-      "local_before_sha256": "ba97851aebe291bf8021115d0e6e1006548639b8386a1df9c32148f7334bbce5",
-      "uploaded_sha256": "ba97851aebe291bf8021115d0e6e1006548639b8386a1df9c32148f7334bbce5",
-      "origin": "both-identical"
-    },
-    {
-      "path": "scripts/process_audio.py",
-      "sha256": "af6e22f828874c836695cda1102cc1caf7f8253112fcecc4e68f66ab49d4d873",
-      "local_before_sha256": "af6e22f828874c836695cda1102cc1caf7f8253112fcecc4e68f66ab49d4d873",
-      "uploaded_sha256": "af6e22f828874c836695cda1102cc1caf7f8253112fcecc4e68f66ab49d4d873",
-      "origin": "both-identical"
+      "sha256": "8478c3f5c88781f9e1ee375542de8b72b4aea96b933a2a16257a7822de61d16a",
+      "bytes": 14084
     },
     {
       "path": "scripts/browser_fetch.py",
       "sha256": "ecd938fbafe12976f0c595626ef11c161b8e63117eb93033b3560bae41055c09",
-      "local_before_sha256": "ecd938fbafe12976f0c595626ef11c161b8e63117eb93033b3560bae41055c09",
-      "uploaded_sha256": "ecd938fbafe12976f0c595626ef11c161b8e63117eb93033b3560bae41055c09",
-      "origin": "both-identical"
+      "bytes": 11377
+    },
+    {
+      "path": "scripts/build_index.py",
+      "sha256": "7f0cfe32612599b00734def0730913a25cf012aaef566b73f455b0cc4ffc869a",
+      "bytes": 17212
+    },
+    {
+      "path": "scripts/common.py",
+      "sha256": "d1265255136a91711a7e63426e04e69d16cf4cc8b9794a702f2fa6e695259e68",
+      "bytes": 9791
+    },
+    {
+      "path": "scripts/fetch_freesound.py",
+      "sha256": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
+      "bytes": 4439
+    },
+    {
+      "path": "scripts/fetch_oga.py",
+      "sha256": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
+      "bytes": 3506
     },
     {
       "path": "scripts/fetch_openverse.py",
       "sha256": "c3f849bfe6b4279b9e77b0d861a5ba01009d954fe978bbc4fa209f7d52d901fe",
-      "local_before_sha256": "c3f849bfe6b4279b9e77b0d861a5ba01009d954fe978bbc4fa209f7d52d901fe",
-      "uploaded_sha256": "c3f849bfe6b4279b9e77b0d861a5ba01009d954fe978bbc4fa209f7d52d901fe",
-      "origin": "both-identical"
+      "bytes": 5627
     },
     {
       "path": "scripts/fetch_page.py",
       "sha256": "bc986dd10720bfaf0490961cadaf1f490218d5f744860260504ebedb71e3400f",
-      "local_before_sha256": "bc986dd10720bfaf0490961cadaf1f490218d5f744860260504ebedb71e3400f",
-      "uploaded_sha256": "bc986dd10720bfaf0490961cadaf1f490218d5f744860260504ebedb71e3400f",
-      "origin": "both-identical"
+      "bytes": 7000
+    },
+    {
+      "path": "scripts/install_audio_library.py",
+      "sha256": "1031d1ed833ffcc969491f594e45e303d0fdfbfa9d69287bd84ab4d80ddd872e",
+      "bytes": 21220
+    },
+    {
+      "path": "scripts/library_bundle.py",
+      "sha256": "bbd12e32d8f3a54481c95500421e6eb5d588d0ea34550956a9223a270fe9fa83",
+      "bytes": 18062
+    },
+    {
+      "path": "scripts/process_audio.py",
+      "sha256": "7f0cfc8d8f0f2d9359827d2dabe096e7275fc8afa19a82d97604ae4314a91c5b",
+      "bytes": 17649
+    },
+    {
+      "path": "scripts/search_index.py",
+      "sha256": "33e329add52b991d6ca1aa8cc91239dbf29dd1559fb553b894c534ea1c4a0dda",
+      "bytes": 13724
+    },
+    {
+      "path": "scripts/setup.py",
+      "sha256": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
+      "bytes": 4749
+    },
+    {
+      "path": "scripts/sync_theme_library.py",
+      "sha256": "bc8592ed5555e676ab334bd7063d30b1d12b44fb51d0d3530e84c5c3b56db040",
+      "bytes": 6476
+    },
+    {
+      "path": "scripts/test_audio_diversity.py",
+      "sha256": "ed2a45b984e52658e53a5b6891e4e9f205952248e1f77e96cbed2cf9757fe11e",
+      "bytes": 19826
+    },
+    {
+      "path": "scripts/test_audio_manager_contracts.cjs",
+      "sha256": "5f709d01cc5046d30a72a1d988484f82effa80fd7f3708906b7082fe0219668f",
+      "bytes": 19542
+    },
+    {
+      "path": "scripts/test_index_identity.py",
+      "sha256": "ec247e77ae8347631c11babb020a7eccee99724cd81ab9f43920d919b8b51953",
+      "bytes": 9684
+    },
+    {
+      "path": "scripts/test_library_bundle.py",
+      "sha256": "1ba865a4d51d6115df769668c987f9f9b2870915811537b7f17c67d9989e0b3e",
+      "bytes": 23892
+    },
+    {
+      "path": "scripts/test_process_receipt.py",
+      "sha256": "d26542360c6177f9b3dc16795534e61a8625d96ccbeba3ad08ac22647b51b20c",
+      "bytes": 13328
+    },
+    {
+      "path": "scripts/test_theme_sync_cache.py",
+      "sha256": "4a1ffab9799f4275d9f26f7d11757d1c862fe66f321f40ecca61d3de4e80bde7",
+      "bytes": 8723
     },
     {
       "path": "templates/needs_casual_puzzle.csv",
       "sha256": "0538e696ef7004e0298a2321ae4e7beecea6b3d166fc7ca5d2c1cf94a0e7180a",
-      "local_before_sha256": "0538e696ef7004e0298a2321ae4e7beecea6b3d166fc7ca5d2c1cf94a0e7180a",
-      "uploaded_sha256": "0538e696ef7004e0298a2321ae4e7beecea6b3d166fc7ca5d2c1cf94a0e7180a",
-      "origin": "both-identical"
+      "bytes": 3317
     },
     {
       "path": "templates/packs.csv",
       "sha256": "5bc7d9b62d4fac0401c8dd8371a2946383e475e04d3e9bab80e76f6244e74857",
-      "local_before_sha256": "5bc7d9b62d4fac0401c8dd8371a2946383e475e04d3e9bab80e76f6244e74857",
-      "uploaded_sha256": "5bc7d9b62d4fac0401c8dd8371a2946383e475e04d3e9bab80e76f6244e74857",
-      "origin": "both-identical"
+      "bytes": 4430
+    },
+    {
+      "path": "templates/theme-packs.json",
+      "sha256": "8ab9937a5a8423dce2560b8ddc83149df3ee452a6368980c3ec05f4025c2bcff",
+      "bytes": 185366
     }
   ]
 }

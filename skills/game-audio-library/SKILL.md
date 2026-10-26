@@ -218,3 +218,5 @@ python scripts/build_index.py          # 补完必须重建索引
 ## 题材素材扩充与其他电脑复用（2026-10-25）
 
 新游戏选音前先读取已安装本机库；题材仍缺时读取 [题材库下载与复用](references/theme-library.md) 和 `templates/theme-packs.json`。需要新增素材时按游戏实际题材运行 `python3 scripts/sync_theme_library.py --theme <题材>`，或主动补齐时一次下载 `--theme all`；库和已审回执均无变化时不重复下载。原站音频存当前用户共用库，升级 Skill 不删除素材库；清单和校验回执控制增量下载。题材标签直接进入索引，needs.csv 同时写 music/动作标签与题材，继续执行跨项目重复降权。不要把题材配乐覆盖误称为该题材全部拟音覆盖；缺的动作声音仍需另补。不得为更新本库替换已经通过的游戏 selection。
+
+声音设置界面按[声音状态交叉检查](../cocos-game-to-english/references/common-game-components.md)读取有效音量，记忆档位不能直接作为静音时的显示值。

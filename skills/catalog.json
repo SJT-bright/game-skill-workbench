@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T14:32:58.076Z",
-  "treeHash": "5c6325f6f33b2ec94c361c0e27dbf2c5049fa273e9b4020390ea131cefece403",
+  "createdAt": "2026-10-26T14:33:55.647Z",
+  "treeHash": "0fedb23ea0c86e5c5174c48946b8955a94199c4d727cc19d8503910f16ff8711",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2449,20 +2449,20 @@
     },
     {
       "name": "game-audio-library",
-      "treeHash": "72a7068921f26ad51ddfe125edc9413ca181ee3d1525fedb1942531445c4d3d1",
+      "treeHash": "54e0577030ebf2b15a0f3e84ce0ecffbc8e2c9acd0111fd4eaa443621f64c2b0",
       "fileCount": 36,
-      "bytes": 547392,
+      "bytes": 546818,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "6d8427d1d3f2c80afeb05faeb62bf91820fd50be7a246b33afa7dacd7be1cf0e",
-          "size": 8160,
+          "hash": "b31e5358f85704d4b9869142e9939f6877821d069c9a20834db5a28cd6822f0a",
+          "size": 5959,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "adc8c65abef52d94a4984a3011da9d39e629b7597a228489963d7f88b3bc94de",
-          "size": 19276,
+          "hash": "b8b710973daa95c63e7b3cb1a9067848a92d5a9bfaf5a08db122f664bcfdfab9",
+          "size": 19463,
           "executable": false
         },
         {
@@ -2629,8 +2629,8 @@
         },
         {
           "path": "scripts/test_index_identity.py",
-          "hash": "162ae937e3740161485fbe6988cfef9717307b9e6bd878c17a29930aba48b0c8",
-          "size": 9565,
+          "hash": "ec247e77ae8347631c11babb020a7eccee99724cd81ab9f43920d919b8b51953",
+          "size": 9684,
           "executable": false
         },
         {
@@ -2647,8 +2647,8 @@
         },
         {
           "path": "scripts/test_theme_sync_cache.py",
-          "hash": "c32beb5f3bd5858cb1fe2a5671b96fe90b1972f99b7c92b88e0f475f3c35c5de",
-          "size": 7402,
+          "hash": "4a1ffab9799f4275d9f26f7d11757d1c862fe66f321f40ecca61d3de4e80bde7",
+          "size": 8723,
           "executable": false
         },
         {

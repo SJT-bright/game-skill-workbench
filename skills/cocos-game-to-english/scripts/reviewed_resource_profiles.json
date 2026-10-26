@@ -44820,5 +44820,532 @@
     },
     "data_digest_kind": "serialized-json-assets-v1",
     "data_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "ballpop-art18-native-r6": {
+    "source_sha256": {
+      "game.js": "bdd13621e779dfa1d408153102da1b0f7509ba1ce8b27d3b14bcb43d0d5ffeef",
+      "runtime-recovery.js": "edd73a93efb5e804212b6c203dab4e00023032cb905398d2d3867d8768b69db5",
+      "main.js": "f9a8d7ef1b39c90a5c99bfc59acd8267571b9a40160c768ac83f058d5195232d",
+      "adapter-min.js": "0590133a7953753786ea642a5b91059a13a2bcfbdf8dcbfbdf9dd72a3af8979f",
+      "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
+      "touch-coordinates.js": "cf66f9fdb71dd1a02ad992a8bd2e2f6ae05aaf7ff19092131350fc0089c943b9",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/game-audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "4f296080ec575e7bb7e8445fa13f576938ecc5e5d0651fc0a7f10001ad3bd3e2",
+      "src/settings.js": "5c87516d6227870a029fdcd29db177ef45cb80234140a75a5aca23abc805787b"
+    },
+    "resolutions": {
+      "assets/main/index.js:30314": {
+        "delegated_sdk": true,
+        "reason": "TDApp.changeSpritFrame downloads optional HTTP(S) player avatar URLs, not local bundle paths; native local identity supplies no remote avatar. Built-in url:N avatar fallback is separately covered by atlas/head."
+      },
+      "assets/main/index.js:42057": {
+        "not_executed": true,
+        "reason": "Production scene/prefab backgroundRes arrays are all empty with no assignment callers; getRemoteSprites helper has no call sites in the complete frozen program. No loadResArray request can be issued from these sites."
+      },
+      "assets/main/index.js:93811": {
+        "requests": [
+          {
+            "bundle": "game-audio",
+            "path": "bgm01",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "bgm02",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "bgm03",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "bgm04",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free10",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free11",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free12",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free13",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free14",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free15",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free3",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free4",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free5",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free6",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free7",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free8",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "free9",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "go",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "money",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "ready",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "select",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ],
+        "reason": "Finite loadAudio domain comes from actual localRes.json audio map; leading audio/ is removed by this production method."
+      },
+      "assets/main/index.js:94181": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "atlas/avatar",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/effect",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/effect_1",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/main",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/public",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          }
+        ],
+        "reason": "downGameLocalRes is fed only localRes.json non-audio entries; loadLocalResources explicitly skips audio. All five current entries are SpriteAtlas."
+      },
+      "assets/main/index.js:95416": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/boomAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/boomBallAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/coinAddAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/coinBallAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/freeAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/hintAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/skillBallAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/succAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/timeAddAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/ani/timeBallAni",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/control/ballControl",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/control/frameControl",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/control/hintCtrl",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/control/pageControl",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/control/playerControl",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/avatarDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/awardDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/bonusDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/buyDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/buyDiamondDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/helpDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/highScoreDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/msgDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/overDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/pauseDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/rankDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/resourceHintDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/rewardDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/signDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/skillFreeDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/startEndDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/taskDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/timeAwardDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/turnDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/dialog/unlockAvatarDialog",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/avatar",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/effect",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/effect_1",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/head",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/main",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/map",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/public",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "atlas/word",
+            "type": "cc.SpriteAtlas",
+            "kind": "load"
+          }
+        ],
+        "reason": "reuseTDResources finite paths derive from independent Acorn inventory of production prefab literals, fixed public-prefab bindings, four skill-ball variants, showMapAni timeAddAni/coinAddAni, and eight atlas names consumed by actual sprite/atlas callers. No texture/BMFont/TiledMap/loadAniClip consumer calls exist; unused colorSprite(ui_public) is not called."
+      },
+      "assets/main/index.js:97462": {
+        "not_executed": true,
+        "reason": "TDResources.getRemoteAtlass has no callers in the complete frozen program; normal atlases load through localRes and reuseTDResources, both explicitly enumerated."
+      },
+      "assets/main/index.js:97691": {
+        "not_executed": true,
+        "reason": "Production scene/prefab backgroundRes arrays are all empty with no assignment callers; getRemoteSprites helper has no call sites in the complete frozen program. No loadResArray request can be issued from these sites."
+      },
+      "assets/main/index.js:418079": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "reward-ui/panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "reward-ui/title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "reward-ui/claim",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "reward-ui/watch2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "reward-ui/close",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "rewardDialog._image/_button create exactly five _artSlots with fixed paths from onInit. slots has no other writers."
+      },
+      "assets/main/index.js:479098": {
+        "delegated_sdk": true,
+        "reason": "The receiver is created by createRewardedVideoAd inside wxSdk.initVideoGG; this is a platform advertisement preload, not Cocos asset loading. Native formal RewardedAds retains strict completion checks."
+      },
+      "main.js:2817": {
+        "native_files": [],
+        "reason": "Exact frozen src/settings.js jsList is empty; loadScript([]) requests no files. Other entry/engine modules remain checked by startup closure."
+      }
+    },
+    "escapes": {},
+    "review_notes": "Ball Pop Party art18 upload finite-domain review; logical paths derived from actual production callers and config, never copied from catalog. Full program and serialized semantic-data fingerprints enforced.",
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "585e522a848d960c943964132d4b61b4c3f2a24fe6d9a5b4cd46cacb53febe02"
   }
 }

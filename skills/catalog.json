@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-26T15:20:02.498Z",
-  "treeHash": "2dbc9090024a9fa944b7425bc6bbbd2bdab75cbc5e81d3240ddfe1b1d24e8191",
+  "createdAt": "2026-10-26T15:26:29.126Z",
+  "treeHash": "6589a21f098054c992cc91c227214de88b4099b5a200d577a575346c6775c0a9",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -881,9 +881,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "dab0068256d43b25638b7f58171cc6ea8493ad04b9b758219cb4784305677d86",
+      "treeHash": "5dd897f6797e6c1b4578e01cce25c366b2afbb7d11c8c25964f4168c41ec0980",
       "fileCount": 290,
-      "bytes": 8570939,
+      "bytes": 8587851,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2135,8 +2135,8 @@
         },
         {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "f11ab5ffdad8f08d722b1a16efc54ed4767fdf074c493bd811196adf761a1061",
-          "size": 1639186,
+          "hash": "2bfed5119a683cc45d341780485347a17d50e8a5da68996c1714e73638c2fe66",
+          "size": 1656098,
           "executable": false
         },
         {

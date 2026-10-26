@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "ffb8585f-fac0-4743-ba47-901d1d1dbbd1",
+      "skillId": "s-bedd22bb6c578608dd49",
+      "directory": "grok-delegate",
+      "name": "grok-delegate",
+      "version": "v3",
+      "createdAt": "2026-10-26T16:41:05.817Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "0c4cd347a9b6c310d4c8578c40ee6f861eac5e23682e39d5bd026184ddf05f2a",
+      "bytes": 49184,
+      "fileCount": 11
+    },
+    {
       "id": "e469e384-04cb-42c0-bf7b-df7c0eec4070",
       "skillId": "s-16601c48e7f1b99915ae",
       "directory": "mobile-touch-computer-use",

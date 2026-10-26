@@ -1,0 +1,85 @@
+{
+  "id": "ffb8585f-fac0-4743-ba47-901d1d1dbbd1",
+  "skillId": "s-bedd22bb6c578608dd49",
+  "directory": "grok-delegate",
+  "name": "grok-delegate",
+  "version": "v3",
+  "createdAt": "2026-10-26T16:41:05.817Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "0c4cd347a9b6c310d4c8578c40ee6f861eac5e23682e39d5bd026184ddf05f2a",
+  "bytes": 49184,
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "107a4af4fd7111fb9d311d35cf424ae7d257fd00148bac47b337326a1060fb44",
+      "size": 1871,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "b8e8c73d670e66b2bfd1d5fe21834c74b7979ad706a7baa448fa56e956596b46",
+      "size": 6131,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
+      "size": 218,
+      "executable": false
+    },
+    {
+      "path": "references/concepts.md",
+      "hash": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
+      "size": 1492,
+      "executable": false
+    },
+    {
+      "path": "references/index.md",
+      "hash": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
+      "size": 1085,
+      "executable": false
+    },
+    {
+      "path": "references/literal-protocol.md",
+      "hash": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
+      "size": 3184,
+      "executable": false
+    },
+    {
+      "path": "references/log.md",
+      "hash": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
+      "size": 3352,
+      "executable": false
+    },
+    {
+      "path": "references/quality-boundaries.md",
+      "hash": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
+      "size": 8392,
+      "executable": false
+    },
+    {
+      "path": "references/sources.md",
+      "hash": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
+      "size": 5946,
+      "executable": false
+    },
+    {
+      "path": "references/task-matrix.md",
+      "hash": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
+      "size": 4946,
+      "executable": false
+    },
+    {
+      "path": "scripts/delegate.py",
+      "hash": "485722917d67d4119f40524f3365302928690a6ff1be84a9e3329ff13009cd00",
+      "size": 12567,
+      "executable": false
+    }
+  ]
+}

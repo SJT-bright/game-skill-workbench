@@ -35,6 +35,12 @@ def load(path):
 
 
 def validate(data, binding, base):
+    if isinstance(data, dict) and data.get('profile') == 'runhome_native_loading_v1':
+        from runhome_native_loading_contract import validate_loading
+        return validate_loading(data, binding, base)
+    if isinstance(data, dict) and data.get('profile') == 'dessert_cocos24_facade_retry_v1':
+        from dessert_cocos24_startup_contract import validate_loading
+        return validate_loading(data,binding,base)
     if isinstance(data, dict) and data.get('profile') == 'googly_native_recovery_v1':
         from googly_native_recovery_contract import validate_loading
         return validate_loading(data, binding, base)

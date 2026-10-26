@@ -162,7 +162,21 @@ def apply_reviewed_profile(report, files):
         resolution = _resolve_reviewed_data(profile, resolution, files)
         if not resolution.get('reason'):
             raise ValueError('reviewed resource domain lacks rationale')
-        if resolution.get('not_executed') or resolution.get('delegated_sdk'):
+        if 'local_method' in resolution:
+            local=resolution['local_method']
+            if not isinstance(local,dict) or set(local)!={'source','start','end','sha256','delegate_sites'}:
+                raise ValueError('reviewed local method requires exact body identity and delegated inventory')
+            source=local['source'];start=local['start'];end=local['end']
+            if source not in files or type(start)is not int or type(end)is not int or not 0<=start<end<=len(files[source]):
+                raise ValueError('reviewed local method body range invalid')
+            body=files[source][start:end]
+            if hashlib.sha256(body).hexdigest()!=local['sha256'] or not body.startswith(b'function'):
+                raise ValueError('reviewed local method body changed')
+            delegated={r['id'] for r in report['sites'] if r.get('source')==source and start<=int(r['id'].rsplit(':',1)[1])<end}
+            if not isinstance(local['delegate_sites'],list) or delegated!=set(local['delegate_sites']):
+                raise ValueError('reviewed local method lost independent body-call inventory')
+            sites.pop(ident)
+        elif resolution.get('not_executed') or resolution.get('delegated_sdk'):
             sites.pop(ident)
         elif 'native_files' in resolution:
             sites.pop(ident)

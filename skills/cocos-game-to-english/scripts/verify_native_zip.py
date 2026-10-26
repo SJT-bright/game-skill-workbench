@@ -182,6 +182,7 @@ def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max
         'main_bytes': main, 'subpackage_roots': roots, 'appId': app_id,
         'crc_and_safe_paths': True, 'root_entries': True, 'no_test_level_jump': True,
         'no_local_ad_simulator': True,
+        'no_forbidden_player_windows': True,
         'expected_tree_exact': expected_tree is not None,
         'status': 'local_structure_checks_passed', 'file_sha256': hashes,
         'limits': {'total': max_total, 'main': max_main, 'independent_subpackage': max_independent,

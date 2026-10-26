@@ -92,7 +92,7 @@ def append(project, kind, payload, initial=False):
             current = issue_state(events)
             if kind == 'reported' and payload['id'] in current:
                 raise ValueError('issue already registered')
-            if kind in ('retested', 'scope_updated') and payload.get('id') not in current:
+            if kind in ('retested', 'scope_updated', 'external_deferred') and payload.get('id') not in current:
                 raise ValueError('cannot retest an unknown issue')
         body = {'seq': len(events), 'previous': events[-1]['hash'] if events else '0'*64,
                 'event': kind, 'payload': payload}
@@ -130,6 +130,10 @@ def issue_state(events):
             state['proof'] = None  # Revision never clears the issue; every case must execute again.
         elif event['event'] == 'retested' and data.get('id') in issues:
             issues[data['id']]['proof'] = data['proof']
+        elif event['event'] == 'external_deferred' and data.get('id') in issues:
+            if not data.get('reason') or not data.get('authorization') or not data.get('native_files'):
+                raise ValueError('external deferral requires explicit user authorization and exact Native binding')
+            issues[data['id']]['external_deferral'] = data
         elif event['event'] == 'scope_updated' and data.get('id') in issues:
             original = issues[data['id']]['contract']
             updated = data['contract']
@@ -344,11 +348,46 @@ def retest(project, native, issue_id, negative_native, normal_native, output):
         raise
 
 
+def native_files(native):
+    root = Path(native).resolve()
+    return {p.relative_to(root).as_posix(): sha(p) for p in sorted(root.rglob('*')) if p.is_file()}
+
+
+def defer_external(project, native, issue_id, authorization):
+    """Keep a device-only issue pending for one user-authorized local test candidate."""
+    events, _ = load(project)
+    if issue_id not in issue_state(events):
+        raise ValueError('unknown issue')
+    authorization = Path(authorization).resolve()
+    doc = json.loads(authorization.read_text())
+    if (doc.get('schema') != 'external_test_scope.v1' or doc.get('issue_id') != issue_id
+            or doc.get('authority') != 'explicit_current_user_instruction'
+            or doc.get('scope') != 'local_test_candidate_only'
+            or doc.get('external_requirement') != 'original_device_save_replay'
+            or not doc.get('user_quote', '').strip() or not doc.get('reason', '').strip()):
+        raise ValueError('not an explicit device-only local test scope authorization')
+    return append(project, 'external_deferred', {'id': issue_id, 'reason': doc['reason'],
+        'authorization': _ref(authorization), 'native_files': native_files(native),
+        'status': 'pending_external_verification'})
+
+
 def audit(project, native):
     events, binding = load(project)
     issues = issue_state(events)
     checked = []
+    deferred = []
     for issue_id, state in issues.items():
+        if state['proof'] is None and state.get('external_deferral'):
+            pending = state['external_deferral']
+            doc = read_ref(pending['authorization'])
+            if (doc.get('issue_id') != issue_id or doc.get('authority') != 'explicit_current_user_instruction'
+                    or doc.get('scope') != 'local_test_candidate_only'
+                    or doc.get('external_requirement') != 'original_device_save_replay'
+                    or pending['native_files'] != native_files(native)):
+                raise ValueError('external scope authorization is stale or invalid: '+issue_id)
+            deferred.append({'id': issue_id, 'status': 'pending_external_verification',
+                             'authorization': pending['authorization'], 'reason': pending['reason']})
+            continue
         if state['proof'] is None:
             raise ValueError('reported issue has no passed retest: '+issue_id)
         try:
@@ -360,12 +399,12 @@ def audit(project, native):
         checked.append({'id': issue_id, 'proof': state['proof'], 'target_sha256': proof['target_sha256'],
                         'executed_native_root': executed_root, 'current_native_root': current_root,
                         'dependency_bytes_reused': executed_root != current_root})
-    return {'passed': True, **binding, 'checked_issues': checked, 'scope': 'Registered defects only; no unrelated gameplay/level/art CI replay.'}
+    return {'passed': True, **binding, 'checked_issues': checked, 'pending_external_issues': deferred, 'scope': 'Registered defects only; no unrelated gameplay/level/art CI replay.'}
 
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('command', choices=['init', 'report', 'revise-scope', 'retest', 'check'])
+    ap.add_argument('command', choices=['init', 'report', 'revise-scope', 'retest', 'defer-external', 'check'])
     ap.add_argument('--project', type=Path, required=True)
     ap.add_argument('--native', type=Path)
     ap.add_argument('--id')
@@ -373,6 +412,7 @@ if __name__ == '__main__':
     ap.add_argument('--targets', nargs='+')
     ap.add_argument('--cases', type=Path)
     ap.add_argument('--runner', type=Path)
+    ap.add_argument('--authorization', type=Path)
     ap.add_argument('--negative-native', type=Path)
     ap.add_argument('--normal-native', type=Path)
     ap.add_argument('--out', type=Path)
@@ -384,6 +424,8 @@ if __name__ == '__main__':
             result = register(a.project, a.native, a.id, a.message, a.targets, json.loads(a.cases.read_text()), a.runner)
         elif a.command == 'revise-scope':
             result = revise_scope(a.project, a.native, a.id, a.targets, a.runner, a.message)
+        elif a.command == 'defer-external':
+            result = defer_external(a.project, a.native, a.id, a.authorization)
         elif a.command == 'retest':
             result = retest(a.project, a.native, a.id, a.negative_native, a.normal_native, a.out)
         else:

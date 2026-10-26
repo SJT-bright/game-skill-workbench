@@ -326,6 +326,9 @@ def validate(report, native, binding, project):
  elif report.get('control_profile')=='runhome_native_recovery_v1':
   from runhome_native_recovery_contract import validate as validate_runhome
   validate_runhome(report,native,binding,project,data,need,ref)
+ elif report.get('control_profile')=='dessert_cocos24_facade_retry_v1':
+  from dessert_cocos24_startup_contract import validate as validate_dessert
+  validate_dessert(report,native,binding,project,data,need,ref)
  elif report.get('control_profile')=='cocos24_adapter_coordinates_v1':
   from cocos24_adapter_coordinates_contract import validate as validate_adapter_coordinates
   validate_adapter_coordinates(report,native,binding,project,data,need,ref)

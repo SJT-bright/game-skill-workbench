@@ -67,4 +67,64 @@ class NoAdSimulator(unittest.TestCase):
                     else: self.assertTrue(verifier.verify(path)['no_local_ad_simulator'])
 
 
+class ForbiddenWindows(unittest.TestCase):
+    def test_cocos_spriteframe_art_name_is_not_a_player_label(self):
+        frame = [1, ['texture-uuid'], ['_textureSetter'], ['cc.SpriteFrame'], 0,
+                 [{'name': 'credits', 'rect': [0,0,451,261], 'offset': [0,0],
+                   'originalSize': [451,261], 'capInsets': [0,0,0,0]}], [0], 0, [0], [0], [0]]
+        guard.check_entry('assets/ui/import/art.json', json.dumps(frame).encode())
+        for field, value in [('label', 'Credits'), ('name', '__adSimulator')]:
+            dirty = json.loads(json.dumps(frame)); dirty[5][0][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                guard.check_entry('assets/ui/import/art.json', json.dumps(dirty).encode())
+        with self.assertRaises(ValueError):
+            guard.check_entry('assets/ui/import/ui.json', b'{"__type__":"cc.Label","_string":"Credits"}')
+
+    dirty = [
+        ('assets/renamed.bin', b'Local test ad'),
+        ('assets/main.js', b'if(false){show("Complete test ad")}'),
+        ('preview-ads.js', b'// disabled'),
+        ('assets/main.js', b'this.button(body, template, "Credits / About", 0, 50, 460, 110, callback)'),
+        ('assets/main.js', b'openCredits()'),
+        ('assets/main.js', b'label("Local\\u0020test ad")'),
+        ('assets/main.js', b'label("\\u0043redits")'),
+        ('assets/main.json', b'{"__type__":"cc.Label","_string":"Credits"}'),
+        ('settings.html', b'<button>Credits / About</button>'),
+    ]
+    def test_signatures_and_normal_controls(self):
+        for name,data in self.dirty:
+            with self.subTest(name=name,data=data), self.assertRaises(ValueError):
+                guard.enforce_files({name:data})
+        guard.enforce_files({'game.js':b'const credits=50; const settingsNodeName="about"; ad.onClose(r=>r.isEnded===true && award()); // "Credits" is not displayed',
+                             'LICENSE.txt':b'Credits and authors, SIL OFL',
+                             'assets/settings-credits-about.png':b'opaque unused texture'})
+    def test_native_preflight_refuses_before_startup(self):
+        for name,data in self.dirty:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as folder:
+                root=Path(folder);files=NoAdSimulator().files();files[name]=data
+                for rel,raw in files.items():
+                    p=root/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(raw)
+                with patch('audit_upload_startup.audit_files') as startup:
+                    errors,_,_=full_writer.native_problems(root)
+                    self.assertTrue(errors);startup.assert_not_called()
+    def test_both_writers_and_final_verifier_reject_each_window(self):
+        for name,data in self.dirty:
+            for writer in ('full','light','final'):
+                with self.subTest(name=name,writer=writer), tempfile.TemporaryDirectory() as folder:
+                    root=Path(folder); native=root/'native';native.mkdir();output=root/'upload.zip'
+                    files=NoAdSimulator().files();files[name]=data
+                    for rel,raw in files.items():
+                        target=native/rel;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw)
+                    if writer=='full':
+                        with self.assertRaises(ValueError):full_writer.write_zip(native,list(files),output)
+                    elif writer=='light':
+                        with self.assertRaises(ValueError):light_writer.write_archive(output,files)
+                    else:
+                        with zipfile.ZipFile(output,'w') as z:
+                            for rel,raw in files.items():z.writestr(rel,raw)
+                        with patch('audit_upload_startup.audit_files',return_value={'passed':True,'errors':[]}):
+                            with self.assertRaises(ValueError):verifier.verify(output)
+                        continue
+                    self.assertFalse(output.exists())
+
 if __name__ == '__main__': unittest.main()

@@ -91,7 +91,8 @@ def find(d, res):
     count = next((n for c in counts if c for n in nodes if ends(n['path'], c) and node_text(n)), None)
     if not count:
         return None, None, None
-    box = next((n for n in nodes if res.get('node') and ends(n['path'], res['node'])), None)
+    declared_boxes=res.get('node') if isinstance(res.get('node'),list) else [res.get('node')]
+    box = next((n for b in declared_boxes if b for n in nodes if ends(n['path'],b)),None)
     scope = box['path'] if box else count['path'].rsplit('/', 1)[0]
     word = energy_word(res) if res['kind'] == 'energy' else re.compile(re.escape(str(res.get('icon_frame') or res.get('icon') or '')), re.I)
     icon = next((n for n in nodes if (n['path'] + '/').startswith(scope + '/') and 'sprite' in n['comps'] and n is not box

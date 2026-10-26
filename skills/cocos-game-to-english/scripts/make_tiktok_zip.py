@@ -83,6 +83,11 @@ def native_problems(native):
         enforce(sizes, json.loads((native / 'game.json').read_text(encoding='utf-8-sig')))
     except (ValueError, KeyError, TypeError) as error:
         return [str(error)], sizes, {}
+    from audit_no_ad_simulator import enforce_files as enforce_player_windows
+    try:
+        enforce_player_windows({name: (native / name).read_bytes() for name in sizes})
+    except ValueError as error:
+        return [str(error)], sizes, {}
     from audit_upload_startup import audit_files
     startup = audit_files({name: (native / name).read_bytes() for name in sizes})
     if not startup['passed']:

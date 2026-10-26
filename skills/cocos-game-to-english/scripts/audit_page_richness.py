@@ -856,7 +856,7 @@ def glyph(n):
     if s and re.match(r'^(?:rail|line)[_-]',str(s.get('frame','')),re.I):return False
     if not s or text(n) or baked(n) or decor(n) or area(n['rect']) >= 0.02:
         return False
-    return bool(GLYPH.search(str(s.get('frame', ''))) or GLYPH.search(n['name']))
+    return bool(BITMAP_DIGIT_FRAME.search(str(s.get('frame',''))) or GLYPH.search(str(s.get('frame', ''))) or GLYPH.search(n['name']))
 
 
 def glyph_problems(nodes):
@@ -1874,7 +1874,8 @@ def check(d, image_module=None, project=None, binding=None):
     if purpose in ('result_win', 'result_fail'):
         decor = [n for n in pictures if not any(node_under(n, b) for b in buttons) and n not in panels]
         need = []
-        if len(buttons) < 2: need.append('>= 2 buttons (next/retry and home), found %d' % len(buttons))
+        result_controls=[n for n in content if 'button' in n['comps']]
+        if len(result_controls)<2 or not buttons:need.append('>= 2 visible result controls and an enabled exit, found %d visible / %d enabled'%(len(result_controls),len(buttons)))
         if not numbers: need.append('a number (reward coins, score or level)')
         if len(decor) < 3: need.append('>= 3 pictures besides buttons (stars, coin, ribbon, mascot), found %d' % len(decor))
         if cov < 0.25: need.append('>= 25%% of the screen used, found %.0f%%' % (cov * 100))

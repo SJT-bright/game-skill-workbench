@@ -37,6 +37,17 @@ function probe(files){
   if(!scope.tt||typeof scope.tt.onTouchStart!=='function')throw Error('Native SDK prefix did not install touch listener');
   adapterNormalize=function(event){let result=null;scope.tt.onTouchStart(function(value){result=value;});capture.Start(event);if(!result)throw Error('Native SDK touch prefix discarded valid event');return result;};
  }
+ // Some Cocos 2.4 packages normalize SDK events in an external facade before adapter registration.
+ if(entry.includes("require('./tiktok-touch-bridge')(TTMinis.game)")){
+  if(entry.indexOf("require('./tiktok-touch-bridge')")>entry.indexOf("require('adapter-min.js')"))throw Error('touch facade installed after adapter');
+  if(!/globalThis\.tt\s*=\s*engineSDK/.test(entry)||!adapter.includes('tt.onTouchStart'))throw Error('touch facade is not connected to the engine SDK namespace');
+  let listener=null,mapped=null;
+  const sdk={onTouchStart(fn){listener=fn},offTouchStart(){}};
+  const context={module:{exports:{}},Proxy,Reflect,WeakMap,Set,Array,Object,Number,isFinite};
+  vm.runInNewContext(files['tiktok-touch-bridge.js']||'',context,{timeout:1000});
+  const facade=context.module.exports(Object.freeze(sdk));facade.onTouchStart(e=>{mapped=e});
+  adapterNormalize=event=>{mapped=null;listener(event);return mapped;};
+ }
  const cases=[['sdk_screen_coordinates',{identifier:0,screenX:195,screenY:392},195,392],['client_coordinates',{identifier:0,clientX:20,clientY:30},20,30],['preserve_client_coordinates',{identifier:0,clientX:11,clientY:12,screenX:99,screenY:98},11,12],['zero_coordinates',{identifier:0,screenX:0,screenY:0},0,0]];
  const rows=cases.map(([id,t,x,y])=>{const a=manager.getTouchesByEvent(adapterNormalize?adapterNormalize({changedTouches:[t],touches:[t]},'onTouchStart'):{changedTouches:[t],touches:[t]},{});return{id,passed:a.length===1&&a[0].x===x&&a[0].y===y&&a[0].id===0,observed:a.map(t=>({x:t.x,y:t.y,id:t.id}))};});
  return{schema:'cocos2_touch_coordinates.v1',passed:rows.every(r=>r.passed),rows,boundary:'actual converter with controlled SDK payloads; not renderer/device acceptance'};

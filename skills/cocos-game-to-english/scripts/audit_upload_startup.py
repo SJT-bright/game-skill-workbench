@@ -284,7 +284,7 @@ def audit_files(files):
             node = shutil.which('node')
             if not node:
                 raise ValueError('Node.js required for Cocos touch-coordinate probe')
-            names = ('game.js', 'adapter-min.js', 'touch-coordinates.js', 'cocos/cocos2d-js-min.js')
+            names = ('game.js', 'adapter-min.js', 'touch-coordinates.js', 'tiktok-touch-bridge.js', 'cocos/cocos2d-js-min.js')
             payload = {'files': {name: files[name].decode('utf-8') for name in names if name in files}}
             run = subprocess.run([node, str(Path(__file__).with_name('probe_cocos2_touch_coordinates.cjs'))], input=json.dumps(payload), capture_output=True, text=True, timeout=20)
             touch_coordinates = json.loads(run.stdout)

@@ -17,7 +17,7 @@ export const AD_REWARDS_VERSION = 2;
 export const RESULT_AD_MULTIPLIER = 2;      // every level end / run end: watch an ad -> double
 export const BONUS_LEVEL_MULTIPLIER = 3;    // bonus level coins in level_plan.json = 3x a normal level (x2 with the ad = 6x)
 export const PRICE_STEPS = [1, 4, 10, 20];  // price gap to the previous skin, in R: common, rare, epic, legendary
-export const FIRST_PRICE_R = 2;             // the first skin for sale costs 2R
+export const FIRST_PRICE_R = 2;             // legacy-2r only: first skin for sale costs 2R
 export const GIFT_SHARE = 0.1;              // home gift box: 10% of the next skin price ...
 export const GIFT_PER_10_LEVELS = 0.5;      // ... plus 0.5R for every 10 levels cleared (endless: 10 runs)
 

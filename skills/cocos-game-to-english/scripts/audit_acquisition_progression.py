@@ -126,7 +126,7 @@ def audit_bonus(groups, errors, warnings):
 
 
 def audit_module_group(group, entries, R, errors, price_profile=None, normal_level_coins=None, targets=None):
-    """The skin module (references/game-modules.md 四): fixed counts, coins only, the 2R + 1/4/10/20 R price curve,
+    """The skin module (references/game-modules.md 四): fixed template counts, coins only, profile-selected ordinary/legacy pricing,
     bonus bands, the limited skin first."""
     entries = sorted(entries, key=lambda r: r['order'])
     if len({r['order'] for r in entries}) != len(entries):
@@ -289,7 +289,7 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
         for group in SKIN_GROUPS:
             if group in groups and not any(optional.values()):
                 errors.append(f'Group {group}: skins and backgrounds use the skin module (user 2026-10-23): write the table with '
-                              'make_skin_table.py ("module": "skin.v1": 20 skins + 10 backgrounds, the 1R/4R/10R/20R price curve)')
+                              'make_skin_table.py ("module": "skin.v1": 20 skins + 10 backgrounds, profile-selected pricing)')
     groups = {g: es for g, es in groups.items() if not (module == 'skin.v1' and g in SKIN_GROUPS)}
     audit_bonus(groups, errors, warnings)
     for group, entries in sorted(groups.items()):
@@ -461,6 +461,11 @@ def main():
             if a.coins_per_ad is not None and a.coins_per_ad <= 0:
                 raise ValueError('coins-per-ad must be positive')
             result = audit_alternative(rows, fields, set(a.starting_items), Fraction(coins_per_ad) if coins_per_ad else None)
+        if meta.get('module') == 'skin.v1':
+            result['pricing'] = {'profile': a.price_profile or meta.get('price_profile') or 'legacy-2r',
+                                 'normal_level_coins': a.normal_level_coins if a.normal_level_coins is not None else meta.get('normal_level_coins', coins_per_level),
+                                 'tier_level_targets': tier_levels(a.tier_levels) if a.tier_levels else tier_levels(meta.get('price_level_targets')),
+                                 'boundary': 'Single-item ordinary-base-income target only; actual acquisition requires level-sequence income, purchase and equipped-bonus simulation.'}
         result.update(table=str(a.table.resolve()), table_sha256=hashlib.sha256(raw).hexdigest())
         if a.binding:
             binding = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')

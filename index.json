@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "d4e604ce-8410-4812-8657-cf06abe5183a",
+      "skillId": "s-4e976859708a939065d7",
+      "directory": "cocos-tiktok-package-check",
+      "name": "cocos-tiktok-package-check",
+      "version": "v6",
+      "createdAt": "2026-10-26T16:30:18.764Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "c26ff901aec49889716c7e6e25f361be51cd6bb196c96035eda3303b8858f238",
+      "bytes": 172332,
+      "fileCount": 29
+    },
+    {
       "id": "83335c25-2424-4679-b623-dd200566a2a7",
       "skillId": "s-8ab0e33c96543080c7af",
       "directory": "cocos-game-art-redo",

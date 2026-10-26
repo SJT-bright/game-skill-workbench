@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "d1c031a0-4a20-44fb-868b-4347f9d5a63f",
+      "skillId": "s-ff71fb1948e2a7f0eb3b",
+      "directory": "grok-background-maker",
+      "name": "grok-background-maker",
+      "version": "v3",
+      "createdAt": "2026-10-26T16:34:09.365Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "070989e76b23624fd7f3f29fcf0fcc63b45e13da472a2f065161fe5827678725",
+      "bytes": 27652,
+      "fileCount": 5
+    },
+    {
       "id": "d4e604ce-8410-4812-8657-cf06abe5183a",
       "skillId": "s-4e976859708a939065d7",
       "directory": "cocos-tiktok-package-check",

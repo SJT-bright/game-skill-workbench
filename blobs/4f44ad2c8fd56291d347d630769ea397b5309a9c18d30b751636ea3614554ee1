@@ -1,0 +1,29 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-27.economy-v4",
+  "skill": "grok-background-maker",
+  "previous_provenance_sha256": "95dd4faf4a5e06de65824ae4ad42205df906424a504e3604d7195118e0e59c3b",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
+      "bytes": 5662
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+      "bytes": 353
+    },
+    {
+      "path": "references/jobs.md",
+      "sha256": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
+      "bytes": 4450
+    },
+    {
+      "path": "scripts/run_jobs.py",
+      "sha256": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+      "bytes": 16266
+    }
+  ]
+}

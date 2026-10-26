@@ -347,7 +347,7 @@ if (sceneName === 'bold_api') {
   plateBtn(panel, 'TabSound', 120, 220, 210, 70, 'Sound');
   iconBtn(panel, 'BtnClose', 210, 330, '');
   if (sceneName === 'settings') {
-    [['Vibration', 'ON'], ['How to Play', ''], ['Credits', ''], ['About', '']].forEach(([t, v], i) => {
+    [['Vibration', 'ON'], ['How to Play', ''], ['Language', 'English'], ['Notifications', 'OFF']].forEach(([t, v], i) => {
       const row = sprite(panel, 'Row' + i, 0, 120 - i * 112, 520, 95, true);
       sprite(row, 'Icon', -220, 0, 70, 70);
       label(row, 'Name', -40, 0, 260, 44, t, 30);

@@ -2,8 +2,8 @@
 """Write a level plan skeleton (references/top-bar-and-level-map.md + references/game-modules.md 五, both boards).
 
 Level games (通关型, the level module): 70 levels or more (user 2026-10-24: at least 70; more is fine), difficulty rising
-step by step (no spikes, limited levels too); every 10th level is a limited level (限定关: 10, 20 ... and the last level
-= 1/10 of the levels) whose first clear gives a big reward - a pile of the game's currency (at least the sum of the 5
+step by step (no spikes, limited levels too); every 10th level is a limited level (限定关: 10, 20 ...; an incomplete final chapter adds no milestone;
+= floor(total / 10) milestones) whose first clear gives a big reward - a pile of the game's currency (at least the sum of the 5
 levels before it). Limited skin, two formats (user 2026-10-24, both allowed): "final" (default) = only the LAST limited
 level gives the limited skin, the others coins; "every_10" = every limited level gives its own limited skin
 (make_skin_table.py --limited-mode every_10 writes the matching skins, ids <skin>_<level>). In every block of 10 levels
@@ -39,15 +39,13 @@ EVERY = 10                 # user 2026-10-23: 1/10 of the levels are limited lev
 BONUS_MULTIPLIER = 3       # bonus level = 3x a normal level (the ad doubles it again: 6x)
 
 
-def limited_levels(every, total):
-    """Every 10th level plus the last level (the finale): 10, 20 ... 70."""
-    return sorted(set(range(every, total + 1, every)) | {total})
+from product_contract import limited_levels, reward_rows, REWARD_POLICY, MILESTONE_POLICY
 
 
 def blocks(every, total):
     """(start, end) of each block: a block ends on a limited level."""
     out, start = [], 1
-    for end in limited_levels(every, total):
+    for end in sorted(set(limited_levels(every, total)) | {total}):
         out.append((start, end))
         start = end + 1
     return out
@@ -63,7 +61,7 @@ def bonus_places(seed, total, every=EVERY):
     """One bonus level in every block that has room (a short last block may have none), drawn from the seed; redrawn
     while every block uses the same place (that would look regular). audit_level_plan.py calls this too."""
     rng = random.Random(seed)
-    spans = [b for b in blocks(every, total) if b[1] - b[0] + 1 >= 6 and allowed_places(*b)]
+    spans = [b for b in blocks(every, total) if b[1] - b[0] + 1 == every and allowed_places(*b)]
     for _ in range(50):
         picks = [rng.choice(allowed_places(s, e)) for s, e in spans]
         offsets = {n - s for n, (s, e) in zip(picks, spans)}
@@ -75,7 +73,8 @@ def bonus_places(seed, total, every=EVERY):
 def make(levels, coins, limited_skin, seed, currency, every=EVERY, skin_mode='final'):
     plan = {'schema': 'level_plan.v1', 'mode': 'levels', 'why': 'TODO: why this is a level game (fixed levels to clear one by one)',
             'currency': currency, 'total_levels': levels, 'milestone_every': every, 'seed': seed,
-            'bonus_multiplier': BONUS_MULTIPLIER, 'limited_skin_mode': skin_mode, 'levels': []}
+            'bonus_multiplier': BONUS_MULTIPLIER, 'limited_skin_mode': skin_mode, 'levels': [],
+            'reward_policy': REWARD_POLICY, 'milestone_policy': MILESTONE_POLICY, 'reward_seed': seed, 'coins_per_level': coins}
     bonus = set(bonus_places(seed, levels, every))
     limited = limited_levels(every, levels)
     rows = {}
@@ -101,6 +100,12 @@ def make(levels, coins, limited_skin, seed, currency, every=EVERY, skin_mode='fi
             row = {'level': n, 'type': 'normal', 'difficulty': diff, 'coins': base}
         rows[n] = row
         plan['levels'].append(row)
+    rewards = reward_rows(levels, coins, seed, bonus, every)
+    for row in plan['levels']:
+        row.update(rewards[row['level']])
+    for row in plan['levels']:
+        if row['type'] == 'milestone' and row.get('reward', {}).get('type') == 'coins':
+            row['reward']['amount'] = sum(plan['levels'][k-1]['coins'] for k in range(max(1, row['level']-5), row['level']))
     return plan
 
 

@@ -69,7 +69,7 @@
 
 同一真实浏览器先校准：一个 Canvas 先取 2D 后取 WebGL 必须失败，另一个新 Canvas 的 WebGL 必须成功。保留真实旧包失败、修复版通过，以及把同缺陷重新注入修复版后失败的原始结果；校准或故障负例不成立就拒绝结论。记录入口→adapter→renderer→scene 的实际顺序、上下文返回、原引擎函数身份、错误堆栈、scene 与同次截图，并绑定最终 source/Native/Web 和 runner 身份。`scripts/audit_native_startup_renderer.py` 校验证据；Ember 正式维护 gate 强制接入，缺报告、缺原始证据、空 run、替换 renderer 或身份不一致均拒绝。检查工具的拒绝自测与产品运行结果分别报告，不把宿主/真实浏览器模拟升级为物理设备或平台通过。
 
-正式 gate 还须自行执行已审核 runner，再校验本次输出；静态 JSON 不代替执行。受信注册保存在 Skill 的 `scripts/native_startup_trusted_runners.json`，限定项目绝对路径、runner SHA 和固定参数，无 shell；报告里的任意 command 不执行。runner 或依赖变更须重新审查登记，未登记、超时、没有本次输出、Native 在执行期间改变均拒绝。
+正式 gate 还须自行执行已审核 runner，再校验本次输出；静态 JSON 不代替执行。受信注册按[项目QA注册](project-qa-registration.md)：项目提供相对路径清单，执行机保存已审阅代码SHA与固定参数，不修改共享Skill；无shell，报告任意command不执行。runner 或依赖变更须重新审查登记，未登记、超时、没有本次输出、Native 在执行期间改变均拒绝。
 
 真实 adapter 的 downloader→parser 数据类型也是启动契约：下载阶段返回的 path／ArrayBuffer／Image 须符合该 Native parser 的实际输入，不能拿 Web parser 或万能替身覆盖。对已发现的类型协议缺陷，须独立重注入该缺陷，在 renderer 正常建立的前提下复现实际解析错误，并保留修复后 active scene；Canvas 反例不能代替这项。受信 runner 的宿主与所有执行依赖同样登记 SHA，正式 gate 执行前逐项核验。
 

@@ -5,7 +5,7 @@
 - 从真实引擎渲染后读取每个 Sprite、Label 的世界框及有效可见性，统一转为屏幕 CSS top-down 坐标。按钮 root 缩小而子图未缩小必须失败。实际图框、字框分别检查 viewport、父框、声明槽位及跨槽重叠；默认容差1 CSS px，契约最多允许2 px，不能用百分比放宽。
 - 用稳定语义 `slot` 收集正常、已领、写失败 Retry 等受影响状态。按钮换成独立 Label 后仍属于原槽位。缺状态、空采集、隐藏/透明内容或缺真实图框不能通过。`kind:status`可无按钮Sprite，仍必须采集并检查真实字框。
 - 对本次受影响的语义工具声明允许的实际SpriteFrame；真实Sprite、texture均须加载且可见，并实际点击验证返回页面。默认 Graphics 方块、只剩Label或空资源不能代替图标。
-- `audit_ui_contract.py`自行调用已审阅并锁定SHA的固定Python runner，不能接受外部JSON的`passed`或执行`report.command`。Skill内`ui_contract_trusted_runners.json`登记project、runner/dependencies及contract精确SHA、非空依赖清单、允许变体、1..600秒超时。新runner需先审阅再登记；不提供命令行自注册绕过。
+- `audit_ui_contract.py`自行调用已审阅并锁定SHA的固定Python runner，不能接受外部JSON的`passed`或执行`report.command`。按[项目QA注册](project-qa-registration.md)登记工程内相对runner/dependencies及contract精确SHA、非空依赖清单与允许变体，超时1..120秒。新runner先审阅实际代码再登记；登记不等于证据通过，不执行报告command。
 - 同一checker实际运行故障旧UI、修复、单缺陷回注。原故障的启动错误已修复时只保留旧UI，以免启动失败冒充UI缺陷被识别；回注只改独立副本，不改交付候选或ZIP。反例必须命中声明UI错误，缺截图/启动失败/空采集不能当校准成功。
 
 局部入口（只执行此契约，不进入完整美术脚本或CI）：

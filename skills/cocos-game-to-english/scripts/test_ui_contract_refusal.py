@@ -66,27 +66,33 @@ class Refusal(unittest.TestCase):
     def test_unknown_registry_never_executes_report_command(self):
         native=self.project/'native';native.mkdir();contract=self.project/'contract.json';contract.write_text(json.dumps(self.contract))
         self.raw['command']=['touch',str(self.project/'should-not-exist')]
-        with self.assertRaises(KeyError):audit.execute(self.project,native,contract,'unregistered-not-command',self.project/'out',['final'])
+        with self.assertRaisesRegex(ValueError,'no reviewed'):audit.execute(self.project,native,contract,'unregistered-not-command',self.project/'out',['final'])
         self.assertFalse((self.project/'should-not-exist').exists())
     def test_calibration_cannot_mask_hidden_or_incomplete_capture(self):
         self.assertTrue(audit.detected_expected([{'code':'cross_slot_overlap'}],['cross_slot_overlap']))
         for code in ['hidden','missing_state','empty_capture','rect','missing_slot','missing_sprite','missing_caption','events','kind','font_size']:
             self.assertFalse(audit.detected_expected([{'code':'cross_slot_overlap'},{'code':code}],['cross_slot_overlap']),code)
     def test_empty_dependency_registry_refused(self):
-        native=self.project/'native';native.mkdir();contract=self.project/'contract.json';contract.write_text(json.dumps(self.contract))
+        from unittest.mock import patch
+        import os
+        import project_qa
         runner=self.project/'runner.py';runner.write_text("raise RuntimeError('must never execute')")
-        registry=self.project/'registry.json';registry.write_text(json.dumps({'test':{'project':str(self.project),'path':str(runner),'sha256':audit.sha(runner),'dependencies':{}}}))
-        old=audit.REGISTRY;audit.REGISTRY=registry
-        try:
-            with self.assertRaisesRegex(ValueError,'nonempty'):audit.execute(self.project,native,contract,'test',self.project/'out',['final'])
-        finally:audit.REGISTRY=old
+        contract=self.project/'contract.json';contract.write_text(json.dumps(self.contract))
+        manifest=self.project/'qa.json';manifest.write_text(json.dumps({'schema':'cocos_project_qa.v1','ui_runners':{'test':{'path':'runner.py','dependencies':[],'contract':'contract.json','variants':['final'],'timeout_seconds':120}}}))
+        with patch.dict(os.environ,{'COCOS_QA_TRUST_FILE':str(self.project/'trust.json')}):
+            with self.assertRaisesRegex(ValueError,'nonempty'):
+                project_qa.register(self.project,manifest,reviewed=True)
     def test_changed_registered_runner_refused_before_execution(self):
+        from unittest.mock import patch
+        import os
+        import project_qa
         native=self.project/'native';native.mkdir();contract=self.project/'contract.json';contract.write_text(json.dumps(self.contract))
         runner=self.project/'runner.py';runner.write_text("raise RuntimeError('must never execute')")
-        registry=self.project/'registry.json';registry.write_text(json.dumps({'test':{'project':str(self.project),'path':str(runner),'sha256':'0'*64,'dependencies':{str(contract):audit.sha(contract)}}}))
-        old=audit.REGISTRY;audit.REGISTRY=registry
-        try:
-            with self.assertRaises(ValueError):audit.execute(self.project,native,contract,'test',self.project/'out',['final'])
-        finally:audit.REGISTRY=old
+        manifest=self.project/'qa.json';manifest.write_text(json.dumps({'schema':'cocos_project_qa.v1','ui_runners':{'test':{'path':'runner.py','dependencies':['contract.json'],'contract':'contract.json','variants':['final'],'timeout_seconds':120}}}))
+        with patch.dict(os.environ,{'COCOS_QA_TRUST_FILE':str(self.project/'trust.json')}):
+            project_qa.register(self.project,manifest,reviewed=True);runner.write_text('changed')
+            with patch.object(audit.subprocess,'run') as run:
+                with self.assertRaisesRegex(ValueError,'changed'):audit.execute(self.project,native,contract,'test',self.project/'out',['final'])
+                run.assert_not_called()
 
 if __name__=='__main__':unittest.main()

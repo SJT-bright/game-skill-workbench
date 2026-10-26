@@ -102,7 +102,7 @@ class SkinModuleTests(unittest.TestCase):
 
     def test_every_10_limited_skins(self):
         """User 2026-10-24: one limited skin per limited level is allowed too (19 + N skins, all limited ones first)."""
-        for final, n in ((70, 7), (85, 9)):
+        for final, n in ((70, 7), (75, 7), (85, 8)):
             t = skin_table(self.tmp, '--levels', '--final-level', final, '--limited-mode', 'every_10')
             code, r = unlock_audit(t)
             self.assertEqual(code, 0, r['errors'])
@@ -263,7 +263,7 @@ class GameModulesAuditTests(unittest.TestCase):
         code, r, bad = self.audit(self.project('remake', lambda root, dec: dec.pop('button_audit')))
         self.assertEqual(code, 0, bad)
 
-    def test_explicit_extensions_are_not_reported_as_removed(self):
+    def test_legacy_league_decision_cannot_reenable_removed_ranking(self):
         def extensions(root, dec):
             (root / 'docs/league').mkdir()
             (root / 'docs/league/decision.json').write_text(json.dumps({'decision': 'keep_original'}))
@@ -273,7 +273,8 @@ class GameModulesAuditTests(unittest.TestCase):
             dec['button_audit'].extend([{'page': 'home', 'button': name, 'works': True, 'keep': True,
                                         'why': 'user requested extension'} for name in ('League', 'Check-in')])
         code, report, bad = self.audit(self.project(change=extensions))
-        self.assertEqual(code, 0, bad)
+        self.assertEqual(code, 1, bad)
+        self.assertIn('no ranking', bad)
 
     def test_core_record_produces_default_disabled_extension_reports(self):
         root = self.project()

@@ -2,7 +2,7 @@ Grok按[可选CLI](optional-grok.md)独立开关；完全单应用不派外部�
 
 # Cocos制作的本地多应用执行
 
-新任务先询问主Agent+可选Grok、桌面多Agent+可选Grok或完全单应用；本轮人类明确要求调动时视为已选择，未答复不派发、旧轮选择不沿用。只有选择启用后，加载已安装[桌面总控Skill](../../desktop-agent-orchestrator/SKILL.md)，按其[委派边界](../../desktop-agent-orchestrator/references/delegation-boundaries.md)及[实时应用路由](../../desktop-agent-orchestrator/references/local-app-routing.md)实际派发。不复制聊天到每个应用，不把阶段整体外包；每个阶段都拆主线决定、执行文件权和原始证据。只讨论/改Skill时不启动别的游戏。
+默认当前应用执行，不为每个任务询问协作。只有本轮人类明确授权调动外部应用时才启用，原有持续授权按其范围有效。只有选择启用后，加载已安装[桌面总控Skill](../../desktop-agent-orchestrator/SKILL.md)，按其[委派边界](../../desktop-agent-orchestrator/references/delegation-boundaries.md)及[实时应用路由](../../desktop-agent-orchestrator/references/local-app-routing.md)实际派发。不复制聊天到每个应用，不把阶段整体外包；每个阶段都拆主线决定、执行文件权和原始证据。只讨论/改Skill时不启动别的游戏。
 
 ## 谁做什么
 

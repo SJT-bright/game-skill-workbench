@@ -44,7 +44,7 @@ class CriteriaDerivationTests(unittest.TestCase):
         self.assertIn('UI-01.player_visible_english_and_no_share', req)
         self.assertIn('STORAGE-01.current_native_storage_contract', req)
         self.assertIn('LOAD-01.current_loading_and_recovery', req)
-        self.assertIn('RANK-02.original_in_match_rank_behavior', req)
+        self.assertIn('RANK-01.no_ranking_or_share', req)
         self.assertIn('MOD-01.add_skin_v1_module', out)
         self.assertIn('MOD-01.add_fixed_70_level_map', out)
         self.assertIn('MOD-01.add_home_gift_box_module', out)
@@ -56,20 +56,20 @@ class CriteriaDerivationTests(unittest.TestCase):
         features = {'daily_checkin': True, 'skin_bonus': True}
         scope = {'new_modules_requested': True, 'existing_features': ['daily_checkin', 'skin_bonus', 'collection']}
         level = {'mode': 'levels'}
-        league = {'decision': 'add'}
+        league = {'decision': 'none'}
         report = self.derive(features=features, scope=scope, level=level, league=league)
         req, out = set(report['required_criteria']), set(report['scoped_out_criteria'])
         self.assertIn('ECON-01.authorized_skin_bonus_progression', req)
         self.assertIn('LEVEL-01.authorized_fixed_level_plan', req)
-        self.assertIn('RANK-02.authorized_weekly_league_behavior', req)
+        self.assertIn('RANK-01.no_ranking_or_share', req)
         self.assertIn('MOD-01.authorized_new_reward_modules', req)
         self.assertNotIn('MOD-01.add_skin_v1_module', out)
         self.assertNotIn('MOD-01.add_fixed_70_level_map', out)
-        self.assertNotIn('RANK-02.add_weekly_league_behavior', out)
+        self.assertIn('RANK-02.add_weekly_league_behavior', out)
         self.assertNotIn('MOD-01.add_home_gift_box_module', out)
 
     def test_existing_map_or_league_contradiction_blocks_exclusion(self):
-        with self.assertRaisesRegex(ValueError, 'league decision none conflicts'):
+        with self.assertRaisesRegex(ValueError, 'all ranking/league is forbidden'):
             self.derive(scope={'new_modules_requested': False, 'existing_features': ['daily_checkin', 'weekly_league']})
 
     def test_applicable_template_feature_without_real_gate_domain_blocks(self):
@@ -111,10 +111,11 @@ class EvidenceGateTests(unittest.TestCase):
                 m.evaluate(record, root, BINDING, root)
 
     def test_criteria_matrix_cannot_hide_required_failure(self):
-        # Required check domain contract is separately immutable in the caller.
-        from pathlib import Path as P
-        source = (P(__file__).parent/'audit_source_maintenance.py').read_text()
-        self.assertIn("required = {'LOAD-01','LOAD-03','STORAGE-01','BUSINESS','PAGES','NORMAL','AUDIO','VISUAL','COVERAGE','SCOPE','ENGLISH'}", source)
+        required=set(m.ALWAYS_REQUIRED)
+        self.assertTrue({'STORAGE-01.current_native_storage_contract','LOAD-01.current_loading_and_recovery','CORE-01.original_match_and_round_flow'}<=required)
+        for row in m.ALWAYS_REQUIRED.values():
+            self.assertTrue(set(row)<=m.AVAILABLE_CHECK_DOMAINS)
+
 
 
 if __name__ == '__main__':

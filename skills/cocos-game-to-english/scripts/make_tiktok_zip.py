@@ -139,77 +139,6 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def ant_storage_coverage(reviewed, project, native, web, build_tag):
-    """Bind Ant writer coverage to the same validated Native storage contract used by pre_scan."""
-    project, native, web = Path(project).resolve(), Path(native).resolve(), Path(web).resolve()
-    if reviewed.get('schema') != 'ant_export_maintenance_review.v1' or reviewed.get('game_id') != 'ant-tunnel':
-        raise ValueError('Ant storage coverage requires the exact Ant export maintenance review')
-    if reviewed.get('source_project_root') != 'ant' or (project / 'ant').resolve() != web:
-        raise ValueError('Ant writer requires workspace root plus source_project_root=ant and matching Web/source root')
-    from types import SimpleNamespace
-    from check_known_issues import binding as check_binding
-    expected_binding = check_binding(SimpleNamespace(project=web, native=native, web=web, build_tag=build_tag))
-    if reviewed.get('binding') != expected_binding:
-        raise ValueError('Ant storage review binding differs from current source/Native/Web inputs')
-
-    def project_file(value, label):
-        if not isinstance(value, str) or not value:
-            raise ValueError(label + ' path missing')
-        path = Path(value)
-        if not path.is_absolute():
-            path = project / path
-        path = path.resolve()
-        if not path.is_relative_to(project):
-            raise ValueError(label + ' path escapes the Ant workspace')
-        return path
-
-    trace_path = project_file(reviewed.get('storage_trace'), 'Ant storage trace')
-    if not trace_path.is_file():
-        raise ValueError('Ant storage trace missing')
-    trace_sha = sha(trace_path)
-    try:
-        trace = json.loads(trace_path.read_text(encoding='utf-8'))
-        from audit_native_storage_contract import CASES, validate as validate_storage
-    except (OSError, ValueError, ImportError) as error:
-        raise ValueError('Ant storage trace or validator invalid: ' + str(error))
-    if validate_storage(trace, native, expected_binding):
-        raise ValueError('Ant storage trace does not validate against the current Native binding')
-
-    storage_row = reviewed.get('checks', {}).get('STORAGE-01', {})
-    if not isinstance(storage_row, dict) or storage_row.get('status') != 'pass':
-        raise ValueError('Ant STORAGE-01 review row is not pass after official pre_scan')
-    refs = storage_row.get('auto_reports', []) if isinstance(storage_row, dict) else []
-    if not isinstance(refs, list) or not refs:
-        raise ValueError('Ant STORAGE-01 automatic report reference missing')
-    report_refs = []
-    for ref in refs:
-        if not isinstance(ref, dict) or not isinstance(ref.get('sha256'), str):
-            raise ValueError('Ant STORAGE-01 automatic report reference malformed')
-        report_path = project_file(ref.get('path'), 'Ant storage report')
-        if not report_path.is_file() or sha(report_path) != ref['sha256']:
-            raise ValueError('Ant STORAGE-01 report hash mismatch')
-        try:
-            report = json.loads(report_path.read_text(encoding='utf-8'))
-        except (OSError, ValueError) as error:
-            raise ValueError('Ant STORAGE-01 report invalid: ' + str(error))
-        policy = 2 if trace.get('schema') == 'native_storage_trace.v2' else 1
-        report_trace = Path(report.get('trace', ''))
-        if not report_trace.is_absolute():
-            report_trace = report_path.parent / report_trace
-        report_native = Path(report.get('native', ''))
-        if not report_native.is_absolute():
-            report_native = report_path.parent / report_native
-        if (report.get('tool') != 'audit_native_storage_contract' or report.get('passed') is not True or
-                type(report.get('failed')) is not int or report.get('failed') != 0 or report.get('errors') != [] or
-                report.get('binding') != expected_binding or report.get('trace_sha256') != trace_sha or
-                report_trace.resolve() != trace_path or report_native.resolve() != native or
-                report.get('policy_version') != policy or report.get('required_cases') != list(CASES) or
-                report.get('checked') != len(CASES) + 1):
-            raise ValueError('Ant STORAGE-01 report does not match the exact current trace contract')
-        report_refs.append({'path': str(report_path), 'sha256': ref['sha256'], 'tool': report['tool']})
-    return {'path': str(trace_path), 'sha256': trace_sha,
-            'tool': 'audit_native_storage_contract', 'reports': report_refs,
-            'coverage_contract': 'official Ant pre_scan storage.validate + current STORAGE-01 report hash/binding/trace_sha/cases'}
 
 
 def write_zip(native, files, target):
@@ -266,6 +195,20 @@ def main():
     if report_path.exists():
         print('make_tiktok_zip: report %s already exists' % report_path, file=sys.stderr)
         return 2
+    # Cocos bundle URLs can contain ../ even when every ZIP entry is safe.
+    try:
+        from audit_native_resource_paths import audit as audit_resource_paths
+        path_review=json.loads(a.review.read_text(encoding='utf-8'))
+        proof=path_review.get('native_resource_paths_runtime')
+        if proof:
+            proof=Path(proof)
+            if not proof.is_absolute(): proof=a.review.parent/proof
+        resource_result=audit_resource_paths(native,proof)
+        if resource_result['status']!='pass':
+            raise ValueError('; '.join(resource_result['errors']))
+    except (OSError,ValueError,TypeError) as error:
+        print('REFUSED, no ZIP written: native resource path check: '+str(error),file=sys.stderr)
+        return 1
     # Reject size and missing/moved local art BEFORE replaying the expensive review.
     # This never substitutes for the full review gate below.
     early_problems, early_sizes, _ = native_problems(native)
@@ -311,20 +254,6 @@ def main():
         except (KeyError, TypeError, ValueError, OSError) as error:
             print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
             return 1
-    # Cocos bundle URLs can contain ../ even when every ZIP entry is safe.
-    try:
-        from audit_native_resource_paths import audit as audit_resource_paths
-        path_review=json.loads(a.review.read_text(encoding='utf-8'))
-        proof=path_review.get('native_resource_paths_runtime')
-        if proof:
-            proof=Path(proof)
-            if not proof.is_absolute(): proof=a.review.parent/proof
-        resource_result=audit_resource_paths(native,proof)
-        if resource_result['status']!='pass':
-            raise ValueError('; '.join(resource_result['errors']))
-    except (OSError,ValueError,TypeError) as error:
-        print('REFUSED, no ZIP written: native resource path check: '+str(error),file=sys.stderr)
-        return 1
     # Execute known production-runtime regressions before accepting any attested
     # coverage table. This is not satisfied by a handwritten pass row.
     probe_cmd = [sys.executable, str(HERE / 'run_reward_storage_probe.py'), '--native', str(native), '--web', str(a.web)]
@@ -356,84 +285,22 @@ def main():
             print('REFUSED, no ZIP written: the known-issue gate failed (exit %d):\n%s' % (p.returncode, gate['tail']), file=sys.stderr)
             return 1
     reviewed = json.loads(a.review.read_text(encoding='utf-8')) if a.review else {}
-    if reviewed.get('schema') == 'export_maintenance_review.v1' and reviewed.get('game_id') == 'tower-heroes':
-        # This existing export has compiled modules instead of an editable assets/
-        # source tree. Its pre-scan branch already inventories every storage owner
-        # in the actual Native bytes and replays the 23-case old/current contract.
-        coverage = a.project / reviewed['storage_trace']
-        if not coverage.is_file():
-            print('REFUSED, no ZIP written: Tower Native storage trace missing', file=sys.stderr)
+    import project_qa
+    profile = project_qa.review_policy(a, reviewed)
+    if profile and profile.get('writer_path'):
+        addition = project_qa.invoke(profile, 'legacy_coverage', a, native, reviewed, HERE, field='writer_path')
+        if not isinstance(addition, dict):
+            print('REFUSED, no ZIP written: project coverage gate failed', file=sys.stderr)
             return 1
-        gate['runtime_coverage_sha256'] = sha(coverage)
-        gate['runtime_coverage_tool'] = 'audit_tower_export_maintenance + audit_native_storage_contract'
-    elif reviewed.get('schema') == 'ant_export_maintenance_review.v1' and reviewed.get('game_id') == 'ant-tunnel':
-        try:
-            ant_coverage = ant_storage_coverage(reviewed, a.project, native, a.web, a.build_tag)
-            if a.coverage is not None and a.coverage.resolve() != Path(ant_coverage['path']).resolve():
-                raise ValueError('--coverage cannot replace the current Ant maintenance storage trace')
-        except (KeyError, TypeError, ValueError, OSError) as error:
-            print('REFUSED, no ZIP written: Ant current storage coverage: ' + str(error), file=sys.stderr)
-            return 1
-        gate['runtime_coverage_sha256'] = ant_coverage['sha256']
-        gate['runtime_coverage_tool'] = 'audit_native_storage_contract (official Ant maintenance trace/report contract)'
-        gate['runtime_coverage_reports'] = ant_coverage['reports']
-    elif reviewed.get('schema') == 'metro_r8_scope_review.v1':
-        expected_root = Path('/Users/sijunting/Downloads/！自制游戏/地铁换乘/redesign/candidates/metro-60-20261024-r8')
-        if (a.project.resolve() != expected_root / 'game' or native != expected_root / 'native' or
-                a.web.resolve() != expected_root / 'preview' or
-                a.review.resolve() != expected_root / 'qa/r8-known-issue-review.json' or
-                reviewed.get('app_id') != '7683427172773644296'):
-            print('REFUSED, no ZIP written: Metro R8 scope profile is restricted to its exact candidate and App ID', file=sys.stderr)
-            return 1
-        # This target is a Cocos built package, so storage discovery must start
-        # at the full exported source tree (adapter/platform/bootstrap included),
-        # not only game/assets. All other project types retain their old roots.
-        source_root = a.project
-        coverage = a.coverage or a.review.parent / 'r8-runtime-coverage.json'
-        coverage_cmd = [sys.executable, str(HERE / 'audit_runtime_coverage.py'), '--source', str(source_root),
-                        '--native', str(native), '--web', str(a.web), '--coverage', str(coverage)]
-        coverage_result = subprocess.run(coverage_cmd, capture_output=True, text=True)
-        if coverage_result.returncode:
-            print('REFUSED, no ZIP written: actual Metro R8 runtime persistence coverage failed:\n' +
-                  (coverage_result.stdout + coverage_result.stderr)[-2000:], file=sys.stderr)
-            return 1
-        gate['runtime_coverage_sha256'] = sha(coverage)
-        gate['runtime_coverage_tool'] = 'audit_runtime_coverage (Metro R8 full exported source root)'
-    elif reviewed.get('schema') == 'metro_r9_scope_review.v1':
-        expected_root = Path('/Users/sijunting/Downloads/！自制游戏/地铁换乘/redesign/candidates/metro-60-20261024-r9')
-        if (a.project.resolve() != expected_root / 'game' or native != expected_root / 'native' or
-                a.web.resolve() != expected_root / 'preview' or
-                a.review.resolve() != expected_root / 'qa/r9-known-issue-review.json' or
-                reviewed.get('app_id') != '7683427172773644296'):
-            print('REFUSED, no ZIP written: Metro R9 scope profile is restricted to its exact candidate and App ID', file=sys.stderr)
-            return 1
-        source_root = a.project
-        coverage = a.coverage or a.review.parent / 'r9-runtime-coverage.json'
-        coverage_cmd = [sys.executable, str(HERE / 'audit_runtime_coverage.py'), '--source', str(source_root),
-                        '--native', str(native), '--web', str(a.web), '--coverage', str(coverage)]
-        coverage_result = subprocess.run(coverage_cmd, capture_output=True, text=True)
-        if coverage_result.returncode:
-            print('REFUSED, no ZIP written: actual Metro R9 runtime persistence coverage failed:\n' +
-                  (coverage_result.stdout + coverage_result.stderr)[-2000:], file=sys.stderr)
-            return 1
-        gate['runtime_coverage_sha256'] = sha(coverage)
-        gate['runtime_coverage_tool'] = 'audit_runtime_coverage (Metro R9 full exported source root)'
-    else:
+        gate.update(addition)
+    if not (profile and profile.get('legacy_coverage_override')):
         source_root = a.project / 'assets'
-        if not source_root.is_dir():
-            source_root = a.project / 'src'
-        if reviewed.get('schema') == 'export_maintenance_review.v1' and reviewed.get('game_id') == 'ember-circuit':
-            # This authorized existing-export recipe lives in tools/, not an
-            # invented Cocos editor source tree. Inventory all actual recipe,
-            # Web and Native storage calls with the same strict coverage audit.
-            source_root = a.project / 'tools'
+        if not source_root.is_dir():source_root = a.project / 'src'
         coverage = a.coverage or a.project / 'docs/test/runtime-coverage.json'
-        coverage_cmd = [sys.executable, str(HERE / 'audit_runtime_coverage.py'), '--source', str(source_root),
-                        '--native', str(native), '--web', str(a.web), '--coverage', str(coverage)]
+        coverage_cmd = [sys.executable, str(HERE / 'audit_runtime_coverage.py'), '--source', str(source_root), '--native', str(native), '--web', str(a.web), '--coverage', str(coverage)]
         coverage_result = subprocess.run(coverage_cmd, capture_output=True, text=True)
         if coverage_result.returncode:
-            print('REFUSED, no ZIP written: actual runtime persistence coverage failed:\n' +
-                  (coverage_result.stdout + coverage_result.stderr)[-2000:], file=sys.stderr)
+            print('REFUSED, no ZIP written: actual runtime persistence coverage failed:\n'+(coverage_result.stdout+coverage_result.stderr)[-2000:], file=sys.stderr)
             return 1
         gate['runtime_coverage_sha256'] = sha(coverage)
     problems, sizes, info = native_problems(native)

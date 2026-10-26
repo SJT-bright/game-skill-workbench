@@ -73,9 +73,7 @@ def curve(R, tiers, price_profile='ordinary-levels', normal_level_coins=None, ta
     return rows
 
 
-def limited_levels(every, total):
-    """Every 10th level plus the last level: 10, 20 ... total (same as audit_level_plan.py)."""
-    return sorted(set(range(every, total + 1, every)) | {total})
+from product_contract import limited_levels
 
 
 def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_profile='ordinary-levels', normal_level_coins=None, targets=None):
@@ -96,7 +94,7 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
     else:
         row = limited_skin(hero + '_limited', 1)
         if mode == 'levels':
-            row.update(unlock='level', level=final_level, condition='clear', ads=0, coins=0)
+            row.update(unlock='level', level=limited_levels(10, final_level)[-1], condition='clear', ads=0, coins=0)
         else:
             row.update(unlock='ads_coins', ads=LIMITED_ADS, coins=int(math.ceil(1.5 * top / 100.0) * 100))
         items.append(row)
@@ -133,9 +131,9 @@ def main():
     ap.add_argument('--normal-level-coins', type=int, help='ordinary level base income, excluding ads/bonuses (default R)')
     ap.add_argument('--tier-levels', default='10,15,20,25', help='ordinary-level targets: common,rare,epic,legendary')
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument('--levels', action='store_true', help='level game: the limited skin is won on the last level')
+    g.add_argument('--levels', action='store_true', help='level game: the limited skin is won on the last multiple-of-ten milestone')
     g.add_argument('--endless', action='store_true', help='endless game: the limited skin costs a lot of coins + 6 ads')
-    ap.add_argument('--final-level', type=int, default=70, help='the last level (70 or more, user 2026-10-24)')
+    ap.add_argument('--final-level', type=int, default=70, help='total levels, including any incomplete tail (70 or more)')
     ap.add_argument('--limited-mode', choices=['final', 'every_10'], default='final',
                     help='final: one limited skin on the last limited level; every_10: one per limited level (user 2026-10-24)')
     ap.add_argument('--no-backgrounds', action='store_true', help='the game has no scene to dress (no background skins)')

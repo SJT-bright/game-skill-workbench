@@ -108,7 +108,7 @@ By purpose (dump_ui "purpose"):
                             >= 10% of the panel (user 2026-10-23 negative example: a flat pale "Home screen reward" panel
                             with font text and three flat buttons ADD NOW / CHECK REWARD / CLOSE)
   league                    >= 10 numbers (ranks and points), >= 35% of the screen used
-  settings (General tab)    >= 3 rows/buttons, "How to Play" and "Credits"/"About" (references/common-game-components.md)
+  settings (General tab)    >= 3 rows/buttons, "How to Play", with no Credits/About entry (references/common-game-components.md)
   settings_sound (Sound tab) "Music" and "Sound"/"SFX" sections, >= 6 buttons (two switches, minus/plus), percentages
 Required pages: home, result_win, result_fail, settings, settings_sound; league as well when
 docs/league/decision.json says "add"; checkin when docs/features.json has the 7-day check-in; map when the level plan

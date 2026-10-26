@@ -351,7 +351,7 @@ class PreflightTests(unittest.TestCase):
         r = self.run_tool("preflight.py", "--project", self.project, "--levels", "20", "--recheck-earlier", "--out", out2)
         rows = {x["check"]: x["status"] for x in json.loads((out2 / "preflight.json").read_text(encoding="utf-8"))["results"]}
         self.assertEqual(rows["清晰度"], "需处理")
-        self.assertEqual(rows["排名扩展"], "需处理")          # no docs/league/decision.json yet
+        self.assertEqual(rows["排名扩展"], "不适用")          # no ranking feature; missing old opt-in record must not demand one
         self.assertEqual(rows["单调页面"], "需处理")          # no page dumps yet
         self.assertEqual(rows["内置板块"], "需处理")          # nobody asked the user yet (docs/features.json)
         self.assertEqual(rows["顶部资源栏"], "需处理")        # no docs/top-bar.json yet
@@ -521,11 +521,11 @@ class NoShareTests(unittest.TestCase):
 
 class BannedUiTests(unittest.TestCase):
     """User rule 2026-10-20: play area >= 80%, no big white sheets or big solid blocks."""
-    # user 2026-10-23: settings in a top corner, currency at the top, all other features compact at the bottom
+    # Current home contract: currency top, side features above PLAY, at most five below PLAY
     HOME = {"name": "home", "kind": "page", "role": "home", "size": [390, 844], "buttons": [
         {"name": "settings", "rect": [14, 14, 48, 48]}, {"name": "TopBar/CoinsPlus", "rect": [150, 18, 40, 40]},
         {"name": "play", "rect": [85, 640, 220, 64], "primary": True, "label": "text"},
-        {"name": "shop", "rect": [20, 760, 50, 50], "label": "small"}, {"name": "wardrobe", "rect": [82, 760, 50, 50], "label": "small"},
+        {"name": "shop", "rect": [20, 430, 50, 50], "label": "small"}, {"name": "wardrobe", "rect": [320, 430, 50, 50], "label": "small"},
         {"name": "map", "rect": [144, 760, 50, 50], "label": "small"}, {"name": "help", "rect": [206, 760, 50, 50]},
         {"name": "BtnShortcut", "rect": [268, 760, 50, 50]}, {"name": "BtnRevisit", "rect": [330, 760, 50, 50]}]}
 
@@ -616,7 +616,7 @@ class BannedUiTests(unittest.TestCase):
              "buttons": tiles + [{"name": "play", "rect": [41, 419, 307, 54], "primary": True, "label": "text"}]}]})
         self.assertEqual(code, 1)
         text = json.dumps(out)
-        for needle in ("is a text tile", "not at the bottom", "wider than 70%"):
+        for needle in ("is a text tile", "at most 5", "wider than 70%"):
             self.assertIn(needle, text)
 
     def test_currency_in_the_middle_and_scattered_icons_fail(self):
@@ -631,8 +631,7 @@ class BannedUiTests(unittest.TestCase):
                 {"name": "BtnHelp", "rect": [10, 770, 48, 48]}, {"name": "BtnVideo", "rect": [332, 770, 48, 48]}]}]}, add_home=False)
         self.assertEqual(code, 1)
         text = json.dumps(out)
-        for needle in ("BtnSettings goes in the top-left or top-right corner", "belongs to the resource bar at the very top",
-                       "BtnMap, BtnSkins not at the bottom", "BtnHelp and BtnVideo are 274 px apart"):
+        for needle in ("belongs to the resource bar at the very top", "no desktop-shortcut button", "no profile-revisit button"):
             self.assertIn(needle, text)
 
     def test_buttons_up_to_40_percent(self):
@@ -909,7 +908,7 @@ class StartupContractTests(unittest.TestCase):
                            "startup download", "audio"):
                 self.assertIn(needle, text)
 
-    def test_clean_or_reviewed_passes(self):
+    def test_clean_source_passes_but_native_requires_real_renderer(self):
         with tempfile.TemporaryDirectory() as t:
             proj = Path(t) / "proj"; (proj / "assets").mkdir(parents=True); (proj / "docs").mkdir()
             (proj / "assets" / "Boot.ts").write_text("bundle.loadScene('Home', (e, s) => { if (gen === cur) director.runSceneImmediate(s); });\n"
@@ -918,8 +917,11 @@ class StartupContractTests(unittest.TestCase):
                 {"assets/Boot.ts:2": "credits page after home; not part of startup, old callback harmless"}))
             native = Path(t) / "native"; native.mkdir()
             (native / "game.json").write_text("{}"); (native / "game.js").write_text("x")
-            code, out = self.run_tool(proj, native)
+            code, out = self.run_tool(proj, extra=["--source-only"])
             self.assertEqual(code, 0, out)
+            code, out = self.run_tool(proj, native)
+            self.assertEqual(code, 1, out)
+            self.assertIn("requires --renderer-report", json.dumps(out))
 
 
 class MachineLoadTests(unittest.TestCase):
@@ -1204,6 +1206,21 @@ export class Game {
                        observations={key: "Synthetic validator fixture observation for " + key for key in spec[4]},
                        evidence=[{"path": "docs/logic/shots/f.png", "sha256": hashlib.sha256(b"x").hexdigest()}])
 
+        for row in flows['regressions']:
+            if row['id'] == 'R07':
+                row.update(drag_applicable=False, drag_absence_reason='Synthetic constant-only fixture has no drag mechanism')
+            if row['id'] == 'R09':
+                row['audio_channels'] = ['music', 'sfx']
+                row['audio_samples'] = [dict(viewport=view, channel=channel, mode=mode,
+                    signal_id='synthetic fixed segment ' + channel, trusted_touch=True,
+                    rms_samples=[{'zero':0., 'mid':.05, 'full':.1, 'off':0., 'on':.1}[mode]] * 3)
+                    for view in ([390,844], [375,667]) for channel in ('music','sfx')
+                    for mode in ('zero','mid','full','off','on')]
+
+        from test_button_state_check import save_fixture_report
+        button_dir=self.proj
+        button_ref=save_fixture_report(button_dir)
+        flows['regressions'][5]['button_check']={'path':str((button_dir/button_ref['path']).resolve()),'sha256':button_ref['sha256']}
         (self.proj / "docs" / "logic" / "flows.json").write_text(json.dumps(flows), encoding="utf-8")
 
     def test_report_problems_are_found(self):
@@ -1320,7 +1337,7 @@ class TikTokZipTests(unittest.TestCase):
         from make_tiktok_zip import native_problems
         t, n = self.native()
         def rejected(path, expected):
-            self.assertIn(expected, ' '.join(native_problems(path)[0]))
+            self.assertIn(expected.lower(), ' '.join(native_problems(path)[0]).lower())
         rejected(n.parent, 'outer folder')
         web = n.parent / 'web'; web.mkdir(); (web / 'index.html').write_text('<html>')
         rejected(web, 'web build')

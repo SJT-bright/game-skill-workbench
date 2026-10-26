@@ -16,7 +16,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--report', type=Path, required=True)
     args = parser.parse_args()
-    results = []
+    from unittest.mock import patch
+    import audit_startup_contract
+    results = [{'name':'production startup contract refuses a source-only stamped pass',
+                'passed':bool(audit_startup_contract.validate_runtime_report({'passed':True},{}))}]
+    # Explicit unit boundary: this matrix has no real Cocos/browser renderer.
+    renderer_boundary=patch.object(audit_startup_contract,'validate_runtime_report',
+        side_effect=lambda report,binding: [] if report.get('policy_version')==2 and report.get('runtime_required') is True and report.get('binding')==binding else ['synthetic runtime boundary metadata invalid'])
+    renderer_boundary.start()
+    import atexit
+    atexit.register(renderer_boundary.stop)
     with tempfile.TemporaryDirectory(prefix='known-issue-gate-selftest-') as temp:
         root = Path(temp)
         project, native, web = [root / name for name in ('Source', 'Native', 'Web')]
@@ -27,7 +36,7 @@ def main():
         (web / 'index.html').write_text('<p>Synthetic, not UI evidence</p>')
         # User 2026-10-24: the final audit reads the design decisions from the project records (docs/ is not part of the
         # source binding), because MOD-01 / RANK-01 / FEAT-00 / LEVEL-01 are design-stage rows now.
-        def records(league='add', skin_bonus=True, daily_checkin=True, skins=True, mode='levels'):
+        def records(league='none', skin_bonus=True, daily_checkin=True, skins=True, mode='levels'):
             for rel, data in (('docs/league/decision.json', {'schema': 'league_decision.v1', 'decision': league}),
                               ('docs/features.json', {'schema': 'optional_features.v1', 'skin_bonus': skin_bonus,
                                                       'daily_checkin': daily_checkin}),
@@ -70,7 +79,7 @@ def main():
         for tool in sorted({x for item in catalog['items'] for x in item.get('auto_check', [])}):
             report = root / (tool + '-report.json')
             extra = ({'reward_apis': ['createRewardedVideoAd', 'getShortcutMissionReward']} if tool == 'audit_async_contracts' else
-                     {'decision': 'add'} if tool == 'audit_league' else
+                     {'decision': 'none'} if tool == 'audit_league' else
                      {'decision': {'skin_bonus': True, 'daily_checkin': True}} if tool == 'audit_optional_features' else
                      {'mode': 'levels'} if tool == 'audit_level_plan' else
                      {'stage': 'runtime'} if tool in {'audit_page_readiness', 'audit_loading_recovery'} else {})
@@ -105,6 +114,18 @@ def main():
                          'current_source_sha256': digest, 'regression_binding': {'source_sha256': digest},
                          'regressions': [{'id': spec[0], 'status': 'n/a',
                                           'note': 'Synthetic gate fixture only; no actual game tested'} for spec in logic_reg.CASES]}
+            if tool == 'audit_startup_contract':
+                extra={'policy_version':2,'runtime_required':True,'unit_boundary':'Renderer runtime is separately calibrated; this fixture only exercises catalog orchestration.'}
+            if tool == 'logic_check':
+                from test_button_state_check import save_fixture_report
+                button_dir=root
+                button_ref=save_fixture_report(button_dir)
+                spec=next(spec for spec in logic_reg.CASES if spec[0]=='R06')
+                extra['regressions'][5]={'id':'R06','status':'pass','layer':spec[3][0],
+                    'observations':{k:'Synthetic orchestration observation: '+k for k in spec[4]},
+                    'evidence':[{'path':str(artifact),'sha256':gate.sha(artifact.read_bytes())}],
+                    'button_check_root':str(root),
+                    'button_check':{'path':str((button_dir/button_ref['path']).resolve()),'sha256':button_ref['sha256']}}
             if tool == 'audit_loading_recovery':
                 from audit_loading_recovery import SCENARIOS, POLICY_VERSION
                 from test_loading_recovery_gate import RecoveryGateTests
@@ -400,9 +421,9 @@ def main():
         probe('COPY-01 without the GPT phrasing review', lambda d: d['checks']['COPY-01']['observations'].pop('native_phrasing_review'))
         probe('COPY-01 cannot be waived', lambda d: d['checks']['COPY-01'].update(status='not_applicable', reason='Synthetic skip'))
         # User 2026-10-21: Weekly League (重塑) and monotonous pages.
-        probe('RANK-02 waived although the game has a league', lambda d: d['checks']['RANK-02'].update(
-            status='not_applicable', reason='Synthetic skip', layer='source'))
-        probe('RANK-02 without the never-first observation', lambda d: d['checks']['RANK-02']['observations'].pop('never_first_near_top'))
+        probe('RANK-02 may be scoped out when ranking is absent', lambda d: d['checks']['RANK-02'].update(
+            status='not_applicable', reason='Synthetic fixture has no ranking module', layer='source'), 'passed')
+        probe('RANK-02 without the no-ranking observation', lambda d: d['checks']['RANK-02']['observations'].pop('no_ranking_routes'))
         for cid in ('FEAT-01', 'FEAT-02'):
             probe(cid + ' waived although the user chose it', lambda d, cid=cid: d['checks'][cid].update(
                 status='not_applicable', reason='Synthetic skip', layer='source'))
@@ -493,7 +514,7 @@ def main():
         raw.write_text(json.dumps({**payload, 'checks': [{'id': 'a', 'passed': True}, {'id': 'a', 'passed': True}]}))
         probe('duplicate raw case IDs rejected', lambda d: wrapped(d, 'valid'))
     report = {'passed': all(x['passed'] for x in results), 'count': len(results), 'cases': results,
-              'limits': 'Synthetic gate acceptance/rejection only. Does not validate any game, actual GUI, mobile touch, real IAA or platform result.'}
+              'limits': 'Synthetic gate orchestration; renderer execution boundary stubbed and separately refusal-tested. Synthetic gate acceptance/rejection only. Does not validate any game, actual GUI, mobile touch, real IAA or platform result.'}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps({'passed': report['passed'], 'count': report['count'], 'report': str(args.report.resolve())}))

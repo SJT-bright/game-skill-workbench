@@ -10,9 +10,25 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import subprocess
+from contextvars import ContextVar
+from functools import wraps
 
 HERE = Path(__file__).resolve().parent
 _CACHE = {}
+_RESOURCE_PROJECT = ContextVar('resource_project', default=None)
+
+def resource_profile_file(name):
+    import project_qa
+    return project_qa.resource_profile_path(_RESOURCE_PROJECT.get(), name)
+
+def project_context(function):
+    @wraps(function)
+    def wrapped(*args, project=None, **kwargs):
+        token = _RESOURCE_PROJECT.set(project)
+        try:return function(*args, **kwargs)
+        finally:_RESOURCE_PROJECT.reset(token)
+    return wrapped
+
 
 
 def _catalogs(files):
@@ -55,7 +71,7 @@ def _domain(value):
 
 
 def _reviewed_profiles():
-    path = HERE / 'reviewed_resource_profiles.json'
+    path = resource_profile_file('reviewed_resource_profiles.json')
     return json.loads(path.read_text()) if path.is_file() else {}
 
 
@@ -83,7 +99,7 @@ def _matching_reviewed_profiles(files, source_hashes):
             if not local.is_absolute():
                 if '..' in local.parts:
                     raise ValueError('unsafe reviewed resource profile reference')
-                local = HERE / local
+                local = resource_profile_file('reviewed_resource_profiles.json').parent / local
             if not local.is_file() or hashlib.sha256(local.read_bytes()).hexdigest() != ref.get('sha256'):
                 raise ValueError('reviewed project resource profile changed or missing')
             reviewed = json.loads(local.read_text())
@@ -252,7 +268,7 @@ def discover(files):
     source_hashes = {n: hashlib.sha256(b).hexdigest() for n, b in sources.items()}
     payload = {'files': {n: b.decode('utf-8-sig') for n, b in sources.items()}, 'json_domains': {},
                'reviewed_data_sha256': _profile_data_hashes(files, source_hashes)}
-    system_profile_path = HERE / 'systemjs_finite_profiles.json'
+    system_profile_path = resource_profile_file('systemjs_finite_profiles.json')
     system_profile_bytes = system_profile_path.read_bytes() if system_profile_path.is_file() else b''
     if systemjs and system_profile_bytes:
         source_digest = hashlib.sha256(json.dumps(source_hashes, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
@@ -281,7 +297,7 @@ def discover(files):
         payload['json_domains'][name] = domains
     # Exact-program finite adapters cannot be enabled by an upload manifest.
     # Keep the independent generic inventory, then resolve only reviewed sites.
-    profile_path = HERE/'cocos2_finite_profiles.json'
+    profile_path = resource_profile_file('cocos2_finite_profiles.json')
     profile = None
     if not systemjs and profile_path.is_file():
         source_digest = hashlib.sha256(json.dumps({n: hashlib.sha256(b).hexdigest() for n, b in sources.items()}, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
@@ -297,8 +313,8 @@ def discover(files):
         payload['asset_jsons'] = {n: b.decode('utf-8-sig') for n, b in files.items() if '/import/' in n and n.endswith('.json')}
         payload['catalogs'] = {k: sorted(v) for k, v in _catalogs(files).items()}
         raw = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode()
-        tool_sha = hashlib.sha256((tool_sha+hashlib.sha256(finite_adapter.read_bytes()+profile_path.read_bytes()).hexdigest()).encode()).hexdigest()
-    profile_path = HERE / 'reviewed_resource_profiles.json'
+        tool_sha = hashlib.sha256((tool_sha+hashlib.sha256(finite_adapter.read_bytes()+json.dumps(profile,sort_keys=True,separators=(',', ':')).encode()).hexdigest()).encode()).hexdigest()
+    profile_path = resource_profile_file('reviewed_resource_profiles.json')
     profile_bytes = profile_path.read_bytes() if profile_path.is_file() else b''
     special = HERE / 'scan_systemjs_finite_art.cjs'
     special_bytes = special.read_bytes() if systemjs and payload.get('systemjs_profile') else b''
@@ -316,7 +332,11 @@ def discover(files):
         system_profile_bytes = b''
         reviewed_digest = hashlib.sha256(profile_bytes).hexdigest()
     else:
-        reviewed_digest = hashlib.sha256(json.dumps(_reviewed_profiles(), sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        relevant_profiles = _matching_reviewed_profiles(files, source_hashes)
+        relevant_profiles += [p for p in _reviewed_profiles().values() if p.get('native_manifest_kind') == 'native-files-v3' and p.get('anchor_source') in sources and p not in relevant_profiles]
+        profile_bytes = json.dumps(relevant_profiles,sort_keys=True,separators=(',', ':')).encode()
+        reviewed_digest = hashlib.sha256(profile_bytes).hexdigest()
+        system_profile_bytes = json.dumps([payload['systemjs_profile']] if payload.get('systemjs_profile') else [],sort_keys=True,separators=(',', ':')).encode()
     tool_sha = hashlib.sha256(tool_sha.encode() + profile_bytes + system_profile_bytes + special_bytes + Path(__file__).read_bytes() + (HERE/'scan_native_file_requests.cjs').read_bytes()).hexdigest()
     key = (node, tool_sha, hashlib.sha256(raw).hexdigest(), reviewed_digest)
     if key in _CACHE:
@@ -460,6 +480,7 @@ def required_native_files(inventory):
     return required
 
 
+@project_context
 def audit(files, manifest):
     if not isinstance(manifest, dict):
         raise ValueError('runtime resource manifest must be an object')
@@ -501,6 +522,7 @@ def audit(files, manifest):
             'scanner_sha256': inventory['scanner_sha256'], 'bundles': sorted(catalogs)}
 
 
+@project_context
 def generate(files):
     required, inventory, _ = required_requests(files)
     native_required=required_native_files(inventory)
@@ -514,6 +536,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--native', type=Path, required=True)
     ap.add_argument('--out', type=Path, required=True)
+    ap.add_argument('--project',type=Path,help='project-local reviewed finite data domain context')
     a = ap.parse_args()
     try:
         if a.out.exists():
@@ -521,7 +544,7 @@ if __name__ == '__main__':
         files = {p.relative_to(a.native).as_posix(): p.read_bytes() for p in a.native.rglob('*') if p.is_file()}
         if a.out.resolve().is_relative_to(a.native.resolve()):
             raise ValueError('resource manifest must stay outside the upload tree')
-        result = generate(files)
+        result = generate(files,project=a.project)
         a.out.parent.mkdir(parents=True, exist_ok=True)
         with a.out.open('x') as stream:
             json.dump(result, stream, ensure_ascii=False, indent=2)

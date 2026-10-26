@@ -153,10 +153,10 @@ class RegisteredNativeBinding(unittest.TestCase):
         self.key = 'fixture-fixed-native'
         self.policy = {'project':str(self.project),'path':str(self.runner),
                        'sha256':renderer.sha(self.runner),'dependencies':{},'timeout_seconds':10,
-                       'native_binding':{'kind':'fixed_project_path','relative_path':'native'}}
+                       'control_profile':'native_startup_controls.v1','native_binding':{'kind':'fixed_project_path','relative_path':'native'}}
         self.registry = self.root / 'native_startup_trusted_runners.json'
         self.save()
-        self.report = {'execution':{'registered_runner':self.key},
+        self.report = {'control_profile':'native_startup_controls.v1','execution':{'registered_runner':self.key},
                        'runner':{'path':str(self.runner),'sha256':self.policy['sha256']}}
 
     def tearDown(self):
@@ -166,7 +166,8 @@ class RegisteredNativeBinding(unittest.TestCase):
         self.registry.write_text(json.dumps({self.key:self.policy}))
 
     def call(self, native=None):
-        with patch.object(renderer,'__file__',str(self.root/'audit_native_startup_renderer.py')):
+        import project_qa
+        with patch.object(project_qa,'lookup',return_value=self.policy):
             return renderer.execute_registered(self.report,native or self.native,{},self.project)
 
     def mock_execute(self, command, **kwargs):

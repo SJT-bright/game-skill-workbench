@@ -86,7 +86,9 @@ def prepare(profile, files, entries, name, registry):
 
 
 def publish(profile_path, native, name, registry=None):
-    registry = Path(registry or HERE / 'reviewed_resource_profiles.json').absolute()
+    from project_qa import resource_profile_path
+    registry = Path(registry or resource_profile_path(None,'reviewed_resource_profiles.json')).absolute()
+    registry.parent.mkdir(parents=True,exist_ok=True)
     if not name or registry.is_symlink():
         raise ValueError('profile name required; registry must be a regular file')
     profile_path = Path(profile_path).resolve()

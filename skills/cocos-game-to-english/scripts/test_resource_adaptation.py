@@ -226,7 +226,7 @@ class ResourceAdaptation(unittest.TestCase):
                 path.write_bytes(raw);resources.generate(data);path.unlink()
                 with self.assertRaisesRegex(ValueError,'profile changed or missing'):resources.generate(data)
             path.write_bytes(raw)
-            with patch.object(resources,'HERE',Path(temp)),patch.object(resources,'_reviewed_profiles',return_value={'synthetic':{'source_sha256':profile['source_sha256'],'profile_ref':{'path':'profile.json','sha256':hashlib.sha256(raw).hexdigest()}}}):
+            with patch.object(resources,'resource_profile_file',return_value=Path(temp)/'reviewed_resource_profiles.json'),patch.object(resources,'_reviewed_profiles',return_value={'synthetic':{'source_sha256':profile['source_sha256'],'profile_ref':{'path':'profile.json','sha256':hashlib.sha256(raw).hexdigest()}}}):
                 self.assertEqual(len(resources._matching_reviewed_profiles(data,profile['source_sha256'])),1)
             changed=dict(profile,source_sha256={});path.write_text(json.dumps(changed));stub['synthetic']['profile_ref']['sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
             with patch.object(resources,'_reviewed_profiles',return_value=stub):

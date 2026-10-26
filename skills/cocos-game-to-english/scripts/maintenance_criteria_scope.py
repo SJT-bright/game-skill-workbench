@@ -80,16 +80,11 @@ def derive_criteria(features, level, league, scope, refs, route_labels, binding)
     else:
         required('LEVEL-01.authorized_fixed_level_plan', ('LEVEL-01',), 'Current level plan declares fixed levels.')
         required('LEVEL-02.authorized_level_map_behavior', ('LEVEL-02', 'PAGES'), 'Current level plan declares fixed levels.')
-    if league['decision'] == 'none':
-        if 'weekly_league' in existing or 'weekly league' in route_labels or 'leaderboard' in route_labels:
-            raise ValueError('league decision none conflicts with current feature or UI-route inventory')
-        required('RANK-01.explicit_no_weekly_league_decision', ('SCOPE',), 'No-weekly-league decision remains reviewable.')
-        required('RANK-02.original_in_match_rank_behavior', ('BUSINESS', 'NORMAL'), 'Original in-match/result rank remains core behavior.')
-        excluded('RANK-01.add_weekly_league_system', 'Current league decision is none.', [refs['league_decision'], refs['maintenance_scope']])
-        excluded('RANK-02.add_weekly_league_behavior', 'Only weekly league is excluded; original in-match rank remains required.', [refs['league_decision'], refs['maintenance_scope']])
-    else:
-        required('RANK-01.authorized_weekly_league_decision', ('RANK-01',), 'Weekly league is explicitly selected or retained.')
-        required('RANK-02.authorized_weekly_league_behavior', ('RANK-02',), 'Weekly league is explicitly selected or retained.')
+    if league.get('decision') not in ('none','skip') or 'weekly_league' in existing or any(x in route_labels.lower() for x in ('weekly league','leaderboard')):
+        raise ValueError('all ranking/league is forbidden; legacy enabling decisions cannot override it')
+    required('RANK-01.no_ranking_or_share', ('SCOPE','PAGES'), 'All ranking/share routes and business calls are forbidden.')
+    excluded('RANK-01.add_weekly_league_system', 'Ranking is prohibited.', [refs['league_decision'], refs['maintenance_scope']])
+    excluded('RANK-02.add_weekly_league_behavior', 'Ranking is prohibited.', [refs['league_decision'], refs['maintenance_scope']])
     if features['daily_checkin'] and 'daily_checkin' in existing:
         excluded('FEAT-00.replace_original_signin_with_DailyCheckin_ts', 'Preserve the existing check-in; do not replace it with a template module.', [refs['features'], refs['maintenance_scope']])
     if scope.get('new_modules_requested') is False:
@@ -141,8 +136,8 @@ def evaluate(record, project, binding, base):
         raise ValueError('features decision must bind skin_bonus and daily_checkin booleans and explicit user decision')
     if level.get('schema') != 'level_plan.v1' or level.get('mode') not in ('endless', 'levels'):
         raise ValueError('level plan must declare endless or levels mode')
-    if league.get('schema') != 'league_decision.v1' or league.get('decision') not in ('none', 'add', 'keep_original'):
-        raise ValueError('league decision must declare none/add/keep_original')
+    if league.get('schema') != 'league_decision.v1' or league.get('decision') not in ('none', 'skip'):
+        raise ValueError('league decision must declare none/skip; ranking remains forbidden')
     scope_ref = inputs.get('maintenance_scope')
     scope_file = checked_ref(scope_ref, base)
     if not scope_file.resolve().is_relative_to(project):

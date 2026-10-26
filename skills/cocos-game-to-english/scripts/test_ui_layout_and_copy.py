@@ -332,21 +332,31 @@ class PageRichnessTests(unittest.TestCase):
         self.assertIn('bare_button', home)
         self.assertIn('system_font', home)
         win = self.problems(r, 'result_win')
-        for kind in ('monotonous', 'plain_backdrop', 'result_page'):
+        for kind in ('monotonous', 'result_page', 'result_double'):
             self.assertIn(kind, win)
         self.assertIn('empty_panel', self.problems(r, 'league'))
 
-    FULL = [('good_home', 'home'), ('good_result', 'result_win'), ('good_result', 'result_fail'), ('league', 'league'),
+    FULL = [('good_home', 'home'), ('good_result', 'result_win'), ('good_result', 'result_fail'),
             ('settings', 'settings'), ('settings_sound', 'settings_sound'), ('play', 'other')]
 
+    def test_missing_backdrop_is_rejected(self):
+        root = self.project(self.FULL)
+        for file in (root/'docs/test').glob('*-ui-dump-*.json'):
+            dump=json.loads(file.read_text())
+            dump['nodes']=[n for n in dump['nodes'] if not any(w in (n.get('name','')+' '+str(n.get('comps',{}).get('sprite',{}).get('frame',''))).lower() for w in ('background','backdrop'))]
+            file.write_text(json.dumps(dump))
+        code, report = self.run_audit(root)
+        self.assertEqual(code,1)
+        self.assertIn('plain_backdrop',self.problems(report,'home'))
+
     def test_full_pages_pass(self):
-        code, r = self.run_audit(self.project(self.FULL, league_add=True))
+        code, r = self.run_audit(self.project(self.FULL, league_add=False))
         self.assertEqual(code, 0, json.dumps([p for p in r['pages'] if p['problems']], indent=1))
-        self.assertEqual(r['checked'], 7)                       # gameplay is measured too (background only)
+        self.assertEqual(r['checked'], 6)                       # gameplay is measured too (background only)
 
     def test_flat_background_fails_even_when_the_scene_looks_full(self):
         # user 2026-10-21: light-blue result page and light-blue gameplay sky with nothing on them
-        code, r = self.run_audit(self.project(self.FULL, league_add=True, flat=('good_result', 'play')))
+        code, r = self.run_audit(self.project(self.FULL, league_add=False, flat=('good_result', 'play')))
         self.assertEqual(code, 1)
         flat = [p['purpose'] for p in r['pages'] if any(x.startswith('flat_background') for x in p['problems'])]
         self.assertEqual(sorted(flat), ['other', 'result_fail', 'result_win'])
@@ -360,7 +370,7 @@ class PageRichnessTests(unittest.TestCase):
         self.assertIn('buttons_too_big', home)
         self.assertIn('big title', home)
         self.assertIn('cover art', home)
-        good = next(p for p in self.run_audit(self.project(self.FULL, league_add=True))[1]['pages'] if p['purpose'] == 'home')
+        good = next(p for p in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] if p['purpose'] == 'home')
         self.assertLess(good['stats']['button_share'], 0.40)
 
     def test_round_two_mistakes_fail(self):
@@ -397,9 +407,9 @@ class PageRichnessTests(unittest.TestCase):
         self.assertNotIn('plain_popup', self.problems(r, 'result_win'))
 
     def test_checkin_popup_needs_seven_cards_and_a_big_day7(self):
-        code, r = self.run_audit(self.project(self.FULL + [('checkin', 'checkin')], league_add=True))
+        code, r = self.run_audit(self.project(self.FULL + [('checkin', 'checkin')], league_add=False))
         self.assertEqual(code, 0, json.dumps([p for p in r['pages'] if p['problems']], indent=1))
-        code, r = self.run_audit(self.project(self.FULL + [('checkin_small7', 'checkin')], league_add=True))
+        code, r = self.run_audit(self.project(self.FULL + [('checkin_small7', 'checkin')], league_add=False))
         self.assertIn('day-7 card must be the big one', self.problems(r, 'checkin'))
 
     def test_calm_and_busy_backgrounds_are_measured_without_numpy(self):
@@ -638,7 +648,9 @@ class PageRichnessTests(unittest.TestCase):
         self.assertEqual(masks, [blocker])
         self.assertTrue(fully_occluded(underlay, masks))
         partly_visible = dict(underlay, rect=[-0.2, 0.4, 0.3, 0.2])
-        self.assertFalse(fully_occluded(partly_visible, masks))
+        self.assertTrue(fully_occluded(partly_visible, masks))  # every actually visible pixel is covered
+        partial_mask = dict(blocker, rect=[0.5,0,0.5,1])
+        self.assertFalse(fully_occluded(underlay, [partial_mask]))
 
     def test_font_text_dark_teal_and_typed_arrows_fail(self):
         # user 2026-10-22: Collection page with "COINS 47 PEARLS 17" / "Price · 250 coins" in a dark-teal font and
@@ -673,7 +685,7 @@ class PageRichnessTests(unittest.TestCase):
                      'spliced_button: Canvas/BtnLevels', 'spliced_button: Canvas/BtnShortcut', 'font_number: "0"', 'font_number: "0/9"'):
             self.assertIn(kind, home)
         # the good pages: buttons are btn_<words> pictures, numbers use generated bitmap digits, the title is a logo picture
-        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=True))[1]['pages'] for p in row['problems'])
+        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] for p in row['problems'])
         for kind in ('spliced_button', 'font_number', 'typed_title'):
             self.assertNotIn(kind, good)
 
@@ -697,7 +709,7 @@ class PageRichnessTests(unittest.TestCase):
         (root / 'docs/text/runtime-text.json').write_text(json.dumps({'labels': [], 'canvas_text_files': [
             {'file': 'assets/scripts/RasterText.ts', 'why': 'player nickname typed at run time'}]}))
         self.assertNotIn('canvas_font_code', ' '.join(self.run_audit(root)[1]['setup']))
-        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=True))[1]['pages'] for p in row['problems'])
+        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] for p in row['problems'])
         for kind in ('squashed_', 'canvas_text', 'uniform_text_colour'):
             self.assertNotIn(kind, good)
 
@@ -719,7 +731,7 @@ class PageRichnessTests(unittest.TestCase):
         bad = self.problems(self.run_audit(root)[1], 'gameplay')
         self.assertNotIn('Canvas/OldShelf', bad)
         self.assertIn('Canvas/Robot', bad, 'an exemption needs a why')
-        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=True))[1]['pages'] for p in row['problems'])
+        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] for p in row['problems'])
         self.assertNotIn('low_res', good)
 
     def test_clipping_is_caught(self):
@@ -732,7 +744,7 @@ class PageRichnessTests(unittest.TestCase):
                      'clip_out: Canvas/BtnWatchAd/CoinPile sticks out of Canvas/BtnWatchAd', 'action_caption: "WATCH AD DOUBLE COINS"',
                      'overlap_buttons: Canvas/BtnHome and Canvas/BtnShop'):
             self.assertIn(kind, bad)
-        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=True))[1]['pages'] for p in row['problems'])
+        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] for p in row['problems'])
         for kind in ('overlap_', 'clip_out', 'action_caption'):
             self.assertNotIn(kind, good)
 
@@ -776,7 +788,7 @@ class PageRichnessTests(unittest.TestCase):
         setup = ' '.join(r['setup'])
         self.assertIn('font_advance: assets/fonts/num_gold.fnt - glyph 0 (width 44, xadvance 26, gap -18; need >= 7)', setup)
         self.assertNotIn('glyph 1', setup)
-        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=True))[1]['pages'] for p in row['problems'])
+        good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] for p in row['problems'])
         for kind in ('glyph_overlap', 'double_number', 'negative_spacing', 'checker_fill', 'clip_out'):
             self.assertNotIn(kind, good)
 
@@ -899,7 +911,7 @@ class PageRichnessTests(unittest.TestCase):
         self.assertIn('different colours', self.problems(self.run_audit(root)[1], 'skins'))
 
     def test_developer_wording_on_screen_fails(self):
-        root = self.project(self.FULL, league_add=True)
+        root = self.project(self.FULL, league_add=False)
         f = next((root / 'docs/test').glob('*-ui-dump-settings-*.json'))
         f.write_text(f.read_text().replace('"txt_How_to_Play"', '"txt_LOCAL_PREVIEW"'))
         code, r = self.run_audit(root)
@@ -907,7 +919,7 @@ class PageRichnessTests(unittest.TestCase):
         self.assertIn('dev_text', self.problems(r, 'settings'))
 
     def test_missing_screenshot_fails(self):
-        root = self.project(self.FULL, league_add=True)
+        root = self.project(self.FULL, league_add=False)
         next((root / 'docs/test').glob('*-ui-play-*.png')).unlink()
         code, r = self.run_audit(root)
         self.assertEqual(code, 1)
@@ -973,6 +985,25 @@ class ArtCheckTests(unittest.TestCase):
                 {'kind': 'progress', 'name': 'Best', 'icon': 'flag', 'node': 'TopBar/Level', 'count': 'TopBar/Level/Count'}]}))
             (root / 'docs/levels').mkdir(parents=True)
             (root / 'docs/levels/level_plan.json').write_text(json.dumps({'schema': 'level_plan.v1', 'mode': 'endless', 'why': 'one run'}))
+        # Build genuine synthetic PNG + Cocos source metadata for every captured
+        # frame; these validate source coverage, not a real game's artwork.
+        import hashlib
+        from PIL import ImageDraw
+        (root / 'project.json').write_text('{}')
+        texture_root = root / 'assets' / 'fixture-textures'
+        texture_root.mkdir(parents=True, exist_ok=True)
+        frames = set()
+        for captured in (root / 'docs/test').glob('*-ui-dump-*.json'):
+            for node in json.loads(captured.read_text()).get('nodes', []):
+                frame = node.get('comps', {}).get('sprite', {}).get('frame')
+                if isinstance(frame, str) and frame and not frame.startswith('background_'):
+                    frames.add(frame)
+        for frame in frames:
+            name = hashlib.sha256(frame.encode()).hexdigest() + '.png'
+            image = Image.new('RGBA', (64,64), (0,0,0,0))
+            ImageDraw.Draw(image).rounded_rectangle((8,8,55,55), radius=12, fill=(80,150,220,255))
+            image.save(texture_root / name)
+            (texture_root / (name + '.meta')).write_text(json.dumps({'subMetas': {frame: {}}}))
         out = Path(tempfile.mkdtemp(prefix='artcheck-out-')) / 'r'
         self.addCleanup(shutil.rmtree, out.parent, True)
         code, text = py('art_check.py', '--project', root, '--out', out, *(['--board', board] if board else []))
@@ -1024,23 +1055,25 @@ class ArtCheckTests(unittest.TestCase):
     def test_squashed_words_and_unlisted_screens_block(self):
         # user 2026-10-23: squashed DETAILS words, Canvas-drawn text; every clickable page/popup restyled and dumped together
         scenes = [('squashed', 'skins'), ('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
-        code, r, text = self.run_check(scenes, bar=True, extra_screens=('progress_popup',))
+        code, r, text = self.run_check(scenes, bar=True)
         self.assertEqual(code, 1)
         rows = {x['check']: x for x in r['rows']}
         self.assertEqual(rows['字不压扁拉伸、字色有变化']['status'], '需处理')
         self.assertIn('squashed_text', rows['字不压扁拉伸、字色有变化']['detail'])
         self.assertIn('canvas_text', rows['文字一次成图（标题logo、整张按钮、图片数字）']['detail'])
-        self.assertEqual(rows['实际页面状态与截图（docs/art/screens.json）']['status'], '需处理')
-        self.assertIn('progress_popup', rows['实际页面状态与截图（docs/art/screens.json）']['detail'])
+        missing_code, missing_report, _ = self.run_check(scenes,bar=True,extra_screens=('progress_popup',))
+        self.assertEqual(missing_code,1)
+        self.assertEqual(missing_report['rows'][0]['status'],'缺采集')
+        self.assertIn('progress_popup',json.dumps(missing_report,ensure_ascii=False))
         self.assertIn('压扁', text)
 
     def test_screen_inventory_must_be_runtime_verified_and_exactly_named(self):
         scenes = [('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
-        for kwargs, expected in (({'runtime_verified': False}, '源码盘点'), ({'screen_alias': True}, '精确页面ID')):
+        for kwargs, expected in (({'runtime_verified': False}, '运行核对'), ({'screen_alias': True}, '缺采集')):
             code, report, _ = self.run_check(scenes, bar=True, **kwargs)
             self.assertEqual(code, 1)
-            row = next(x for x in report['rows'] if x['check'] == '实际页面状态与截图（docs/art/screens.json）')
-            self.assertEqual(row['status'], '需处理')
+            row = report['rows'][0]
+            self.assertEqual(row['status'], '缺采集')
             self.assertIn(expected, row['detail'])
 
     def test_clipping_blocks_the_art_round(self):
@@ -1114,7 +1147,7 @@ class ArtCheckTests(unittest.TestCase):
     def test_nothing_dumped_is_not_skipped(self):
         code, r, text = self.run_check([])
         self.assertEqual(code, 1)
-        self.assertEqual(r['rows'][0]['status'], '需处理')
+        self.assertEqual(r['rows'][0]['status'], '缺采集')
 
 
 class AssetSheetTests(unittest.TestCase):

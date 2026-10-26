@@ -40,6 +40,13 @@ def audit(project,web=None,native=None,dumps=None):
       for v in x:walk(v)
     walk(data)
    if MODULE.search(p.stem):add(p,'feature_file',p.name)
+ decision=project/'docs/league/decision.json'
+ if decision.is_file():
+  try:
+   record=json.loads(decision.read_text())
+   if not isinstance(record,dict) or record.get('decision') not in ('none','skip'):add(decision,'obsolete_enabling_decision',record)
+   files['decision/league']=hashlib.sha256(decision.read_bytes()).hexdigest()
+  except (ValueError,OSError):add(decision,'invalid_decision','unreadable ranking decision')
  return{'tool':'audit_no_social_features','policy':'no_social_features.2026-10-24','passed':not hits,'findings':hits,'artifacts':files,'excluded_third_party':excluded,'scope':'Static source/export/UI evidence; actual mobile navigation and platform-menu checks remain required'}
 def main():
  a=argparse.ArgumentParser(description=__doc__);a.add_argument('--project',type=Path,required=True)

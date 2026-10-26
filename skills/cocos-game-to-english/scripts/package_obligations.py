@@ -19,7 +19,7 @@ def verify(files, native, project, resource_manifest):
         raise ValueError('malformed reported-issue evidence: '+str(error)) from error
     path = Path(resource_manifest).resolve()
     raw = path.read_bytes()
-    resource_result = resources.audit(files, json.loads(raw))
+    resource_result = resources.audit(files, json.loads(raw), project=project)
     return {'passed': True, 'resource_manifest': str(path),
             'resource_manifest_sha256': hashlib.sha256(raw).hexdigest(),
             'reported_issues': issue_result, 'resources': resource_result}

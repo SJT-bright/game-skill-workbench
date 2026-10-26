@@ -319,11 +319,14 @@ def audit(proj, board, reference, maintenance=None, binding=None):
                 'format every_10: one limited skin (unlock "level") on each limited level %s, found levels %s '
                 '(or use format final: one limited skin on the last level)' % (want, got))
         elif mode == 'levels':
-            ok = lim[0].get('unlock') == 'level' and lim[0].get('level') == plan.get('total_levels')
-            add('limited_skin_route', ok, 'format final: won on the last limited level %s' % plan.get('total_levels') if ok else
+            from product_contract import limited_levels
+            total = plan.get('total_levels') or 0
+            final_limited = limited_levels(10, total)[-1] if total >= 10 else None
+            ok = lim[0].get('unlock') == 'level' and lim[0].get('level') == final_limited
+            add('limited_skin_route', ok, 'format final: won on the last limited level %s' % final_limited if ok else
                 'level game: the limited skin is won on the last limited level %s (unlock "level", level %s), found %s %s '
                 '(or format every_10: one limited skin per limited level)'
-                % (plan.get('total_levels'), plan.get('total_levels'), lim[0].get('unlock'), lim[0].get('level')))
+                % (final_limited, final_limited, lim[0].get('unlock'), lim[0].get('level')))
         else:
             ok = lim[0].get('unlock') == 'ads_coins' and (lim[0].get('ads') or 0) >= 5
             add('limited_skin_route', ok, 'endless: coins + %s ads' % lim[0].get('ads') if ok else

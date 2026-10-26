@@ -113,20 +113,6 @@ def binding(args):
             'web_tree_sha256': tree_sha(args.web), 'build_tag': args.build_tag}
 
 
-def ant_workspace(project):
-    """Resolve only the exact Ant workspace root or its direct ant/ source."""
-    supplied = Path(project).resolve()
-    if supplied.name == 'ant' and supplied.is_dir():
-        workspace, source = supplied.parent, supplied
-    elif (supplied / 'ant').is_dir():
-        workspace, source = supplied, supplied / 'ant'
-    else:
-        return None
-    if (not (source / 'assets/main/index.js').is_file() or
-            not (workspace / 'reports/original-sha256.json').is_file() or
-            not (workspace / '原版源码_LineReconnect').is_dir()):
-        return None
-    return workspace
 
 
 def inventory_signature(entries):
@@ -535,104 +521,25 @@ def check_row(row, base, errors, label, expected_binding):
 def audit(args):
     from audit_no_social_features import audit as audit_no_social
     review = load(args.review)
-    audit_args = args
+    import project_qa
+    policy = project_qa.review_policy(args, review)
+    audit_args = project_qa.adjusted_args(args, policy) if policy else args
     social_project = args.project.resolve()
-    ant_review = isinstance(review, dict) and review.get('schema') == 'ant_export_maintenance_review.v1' and review.get('game_id') == 'ant-tunnel'
-    if ant_review:
-        workspace = ant_workspace(args.project)
-        if workspace is None:
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Ant export review requires the workspace root or its exact ant/ source directory.']}
-        social_project = workspace / 'ant'
-        audit_args = copy.copy(args)
-        audit_args.project = workspace
+    if policy and policy.get('legacy_context'):
+        audit_args, social_project = project_qa.invoke(policy, 'prepare_context', args)
     social = audit_no_social(social_project, native=args.native, web=args.web)
     if not social['passed']:
         return {'status': 'blocked', 'stage': args.stage, 'binding': binding(audit_args), 'errors': ['Forbidden sharing/ranking feature present'], 'no_social_features': social}
     catalog = load(CATALOG); errors = []
     if not isinstance(review, dict):
         raise ValueError('Review must be an object')
-    if review.get('schema') == 'metro_r8_scope_review.v1':
-        # One exact, project-owned scope profile for Metro Switch R8. The branch
-        # is restricted to this immutable candidate/app/build path; all other
-        # projects continue through the unchanged generic catalog auditor.
-        expected_root = Path('/Users/sijunting/Downloads/！自制游戏/地铁换乘/redesign/candidates/metro-60-20261024-r8')
-        expected_helper = expected_root / 'qa/r8-project-scope-audit.py'
-        if (args.project.resolve() != expected_root / 'game' or
-                args.native.resolve() != expected_root / 'native' or
-                args.web.resolve() != expected_root / 'preview' or
-                args.review.resolve() != expected_root / 'qa/r8-known-issue-review.json'):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 profile is restricted to its exact project, Native, preview and review paths.']}
-        if review.get('catalog_sha256') != sha(CATALOG.read_bytes()):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 scope review is pinned to a different known-issue catalog revision.']}
-        if not expected_helper.is_file() or sha(expected_helper.read_bytes()) != review.get('scope_auditor_sha256'):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 scope auditor is missing or changed.']}
-        try:
-            import importlib.util
-            spec = importlib.util.spec_from_file_location('metro_r8_scope_audit', expected_helper)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module.audit(args, review, binding(args), catalog)
-        except (ImportError, OSError, ValueError, TypeError, AttributeError) as error:
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 scope audit failed: ' + str(error)]}
-    if review.get('schema') == 'metro_r9_scope_review.v1':
-        # R9 is an exact, project-owned 60-level/no-gift scope profile.
-        expected_root = Path('/Users/sijunting/Downloads/！自制游戏/地铁换乘/redesign/candidates/metro-60-20261024-r9')
-        expected_helper = expected_root / 'qa/r9-project-scope-audit.py'
-        if (args.project.resolve() != expected_root / 'game' or
-                args.native.resolve() != expected_root / 'native' or
-                args.web.resolve() != expected_root / 'preview' or
-                args.review.resolve() != expected_root / 'qa/r9-known-issue-review.json'):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R9 profile is restricted to its exact project, Native, preview and review paths.']}
-        if review.get('catalog_sha256') != sha(CATALOG.read_bytes()):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R9 scope review is pinned to a different known-issue catalog revision.']}
-        if not expected_helper.is_file() or sha(expected_helper.read_bytes()) != review.get('scope_auditor_sha256'):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R9 scope auditor is missing or changed.']}
-        try:
-            import importlib.util
-            spec = importlib.util.spec_from_file_location('metro_r9_scope_audit', expected_helper)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module.audit(args, review, binding(args), catalog)
-        except (ImportError, OSError, ValueError, TypeError, AttributeError) as error:
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R9 scope audit failed: ' + str(error)]}
-        # One exact, project-owned scope profile for Metro Switch R8. The branch
-        # is restricted to this immutable candidate/app/build path; all other
-        # projects continue through the unchanged generic catalog auditor.
-        expected_root = Path('/Users/sijunting/Downloads/！自制游戏/地铁换乘/redesign/candidates/metro-60-20261024-r8')
-        expected_helper = expected_root / 'qa/r8-project-scope-audit.py'
-        if (args.project.resolve() != expected_root / 'game' or
-                args.native.resolve() != expected_root / 'native' or
-                args.web.resolve() != expected_root / 'preview' or
-                args.review.resolve() != expected_root / 'qa/r8-known-issue-review.json'):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 profile is restricted to its exact project, Native, preview and review paths.']}
-        if review.get('catalog_sha256') != sha(CATALOG.read_bytes()):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 scope review is pinned to a different known-issue catalog revision.']}
-        if not expected_helper.is_file() or sha(expected_helper.read_bytes()) != review.get('scope_auditor_sha256'):
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 scope auditor is missing or changed.']}
-        try:
-            import importlib.util
-            spec = importlib.util.spec_from_file_location('metro_r8_scope_audit', expected_helper)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module.audit(args, review, binding(args), catalog)
-        except (ImportError, OSError, ValueError, TypeError, AttributeError) as error:
-            return {'status': 'blocked', 'stage': args.stage, 'errors': ['Metro R8 scope audit failed: ' + str(error)]}
-    if review.get('schema') == 'ant_export_maintenance_review.v1' and review.get('game_id') == 'ant-tunnel':
-        import audit_ant_export_maintenance
-        return audit_ant_export_maintenance.audit(audit_args)
-    if review.get('schema') == 'source_maintenance_review.v1':
-        import audit_source_maintenance
-        return audit_source_maintenance.audit(args)
+    if policy:
+        extension = project_qa.invoke(policy, 'audit', audit_args, review, binding, catalog)
+        if policy.get('legacy_coverage_override'):
+            return extension
+        if not isinstance(extension, dict) or extension.get('status') not in ('pass','passed','ready'):
+            return {'status':'blocked','stage':args.stage,'errors':['Project review supplement failed'],'extension':extension}
     if review.get('schema') == 'export_maintenance_review.v1':
-        if review.get('game_id') == 'paper-cut-kid':
-            import audit_papercut_export_maintenance
-            return audit_papercut_export_maintenance.audit(args)
-        if review.get('game_id') == 'ember-circuit':
-            import audit_ember_export_maintenance
-            return audit_ember_export_maintenance.audit(args)
-        if review.get('game_id') == 'tower-heroes':
-            import audit_tower_export_maintenance
-            return audit_tower_export_maintenance.audit(args)
         import audit_export_maintenance
         return audit_export_maintenance.audit(args)
     if review.get('schema') != 3:

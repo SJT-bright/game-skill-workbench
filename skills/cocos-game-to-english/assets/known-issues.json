@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": "2026-10-24.fused-v8",
+  "revision": "2026-10-26.contracts-v3",
   "purpose": "Reusable mechanism checks for Cocos/TikTok games, with advertising and rewards first. Individual designs, mechanics, concrete values and incident histories remain in each project.",
   "items": [
     {
@@ -941,7 +941,7 @@
       "title": "皮肤板块的数值：稀有度、价格台阶、加成、限定皮肤（固定模板 skin.v1）",
       "symptom": "皮肤价格和数量每款乱填、后面的比前面便宜、价格差距太小；加成和稀有度对不上；限定皮肤能买；还留着排名皮肤、签到皮肤（已取消）或\"完美通关送皮肤\"（用户 2026-10-22 已取消）。",
       "steps": "皮肤板块按 references/game-modules.md 第四节：scripts/make_skin_table.py --R <中等难度一关的金币> --levels --final-level <总关数，≥70> [--limited-mode final|every_10]（无尽 --endless）生成 unlock_table.json（20款主角皮肤＋10款背景，module skin.v1），只填名字和图；设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_acquisition_progression.py --table <配置> --binding <review.json> --report <报告>。用户不要皮肤板块时填不适用并写依据。",
-      "expected": "报告通过：20款主角（限定皮肤选“每10关一款”时为 19＋限定关数；初始款免费）、10款背景（第1款免费）；只用金币买，第一款付费=2R，价格台阶按R×1/4/10/20（类似50/200/500/1000）往上；加成随稀有度上升（普通5–10%、稀有11–20%、史诗21–32%、传说33–50%、限定51–60%）；限定皮肤排最前，有关卡游戏两种格式都可以（用户 2026-10-24）：只在最后一个限定关送一款，或每个限定关各送一款，都只能在限定关拿到，无尽游戏用大量金币或5–10次广告；没有排名/签到/完美通关送皮肤；只有初始物品免费。",
+      "expected": "报告通过：20款主角（限定皮肤选“每10关一款”时为 19＋限定关数；初始款免费）、10款背景（第1款免费）；新建表默认ordinary-levels，普通/稀有/史诗/传说约10/15/20/25个无加成普通关收益、同档默认同价，审计容许±10%；未标profile或legacy-2r的旧合同保留2R与原台阶；维护既有广告解锁按授权保留；加成随稀有度上升（普通5–10%、稀有11–20%、史诗21–32%、传说33–50%、限定51–60%）；限定皮肤排最前，有关卡游戏两种格式都可以（用户 2026-10-24）：只在最后一个限定关送一款，或每个限定关各送一款，都只能在限定关拿到，无尽游戏用大量金币或5–10次广告；没有排名/签到/完美通关送皮肤；只有初始物品免费。",
       "phase": "pre_scan",
       "always_applicable": false,
       "auto_check": [
@@ -989,7 +989,7 @@
       "title": "内置板块：先删多做多错的按钮、每款游戏有货币、每次结算看广告×2、首页礼盒、皮肤板块（默认要）、关卡板块；按固定模板做，不自己发明",
       "symptom": "用户 2026-10-23：原游戏的按钮不审查就全保留，交叉推广（更多游戏）、排名、分享、七日签到这类多做多错的功能一直出 bug；有的游戏没有货币；结算页没有看广告翻倍；皮肤数量、价格、加成每款都乱填；首页没有礼盒；AI 每款游戏自己写广告奖励逻辑，广告按钮处连点重复发奖、卡顿。",
       "steps": "设计玩法时（英化写在优化清单里、重塑在写规格时）按 references/game-modules.md 做：①英化先把原游戏每个按钮列出来判断有没有用、能不能用，没用的删掉，写进 docs/modules.json 的 button_audit；②排名/排行榜、七日签到、更多游戏/交叉推广、分享一律不做、原有的删掉；③每款游戏有一种贴合题材的货币；④把 assets/modules/AdRewards.ts 原样复制进游戏，结算×2、奖励关×3/×6、礼盒金币、皮肤价格都从它算；⑤皮肤板块先判断适不适合并问用户（勾选框，默认要），要的话用 scripts/make_skin_table.py 生成20款主角皮肤＋10款背景；⑥首页礼盒的10帧动画图只在美术关由 art_check.py 查（用户 2026-10-24）；⑦设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_game_modules.py，最终总检测不再跑。",
-      "expected": "报告通过：板块决定已记录（问过用户、皮肤默认要）；没有排名、签到、更多游戏、分享；英化的按钮审查表完整、没用的已删；AdRewards.ts 和技能里的一模一样、模拟全部通过（结算×2、奖励关3倍→6倍、礼盒随通关数和下一款皮肤价格变大、每局只领一次、广告按钮只触发一次）；皮肤表是 skin.v1（20款主角、10款背景、价格台阶、加成随稀有度上升、限定皮肤排最前；限定皮肤只在最后一个限定关送或每个限定关各送一款）。",
+      "expected": "报告通过：板块决定已记录（问过用户、皮肤默认要）；没有排名、签到、更多游戏、分享；英化的按钮审查表完整、没用的已删；AdRewards.ts 和技能里的一模一样、模拟全部通过（结算×2、奖励关3倍→6倍、礼盒随通关数和下一款皮肤价格变大、每局只领一次、广告按钮只触发一次）；皮肤表是 skin.v1（final20款主角/every_10为19+整十限定关数款主角、10款背景、按price_profile定价、加成随稀有度上升、限定皮肤排最前；限定皮肤只在最后一个限定关送或每个限定关各送一款）。",
       "phase": "pre_scan",
       "always_applicable": true,
       "auto_check": [
@@ -1195,7 +1195,7 @@
       "feature": "loading",
       "title": "最终出包前加载必检：可选字体、真实图片重试、独立时钟、后台与迟到回调",
       "symptom": "手机上进游戏很慢或加载到一半报错；资源还在下载却被判超时（固定15秒截止、进度76%就失败）；首页前把关卡/声音面板才用的大图都下载了；加载动画卡住不动；切到后台再回来就失败；重试后回到首页但玩不了。 用户 2026-10-23：加载动画太慢（资源早就下完了还在慢慢走进度条/固定最短加载时间）、很难进入游戏、加载出问题、进不去游戏——最终检查要以加载为重点。",
-      "steps": "按 references/startup-loading-timing.md：先写 startup-plan.json（测前写好）；在 Ego Lite 里用 chrome_touch.py 跑 local/first_network/slow_network 三种条件、两种比例（本地和首次联网各3冷1热，慢网1冷），每次量 first_feedback→home_usable 和 play_touch→level_ready→first_effect，录屏看加载动画区域；再跑 slow_progress、background_wait、stall_retry、late_callback 四种故障；用 audit_startup_loading.py --binding 判定。 另跑启动契约要求的 optional_api_missing、native_modal_no_callback、image_no_callback、audio_fail（有后续包再加 deferred_bundle_fail）。 用户 2026-10-23（加载是最终检查的重点）：不写死结束时间（大游戏做不到，凑数字反而出新问题；预算只在有真实产品目标时写），改判和游戏大小无关的三件事：不卡住（加载动画连续停住≤1秒，连续≤10秒无进展才算卡住、之后2秒内出 Retry，计划不能放宽这三个数）；不白等（每段等待的允许时间按这段时间真正下载的量算：首页3秒/进关1.5秒基础＋每MB 0.3秒＋1.5倍下载时间＋往返延迟，报告写 *_allowed_ms、*_waste_ms，超出要找原因改，不是改大数字）；下完就进（最后一个下载完成后不超过 max(2秒, 首页时间25%) 首页可点，不许假的最短加载时间、慢吞吞的进度条动画、固定计时器）。按 startup-loading-timing.md 的\"怎样让进入更快\"改（首屏只加载首页要用的、分包、压缩图片、声音单独加载、在首页时预加载第一关、并行加载、不用计时器凑时间）。除了首页 PLAY，还要量\"下一关\"\"重试\"\"地图选关\"进关（mark next_touch/next_ready、retry_touch/retry_ready、map_touch/map_ready），点了一直进不去就不合格；测试阶段第 1 段测一遍，所有修复做完后在最终构建上再完整测一遍（第 9 段），Codex 最终验收亲自在慢网冷启动走一遍\"首页→PLAY→第一关真实触摸生效\"。 必须另按 references/loading-recovery-regression.md 执行SDK回调与原超时定时器同时扣住、真实新请求与迟到结果隔离、Native捕获边界、旧失败/新通过/正常对照，附 audit_loading_recovery 当前构建报告。 另必测真实图片请求挂起时Cocos内部合并队列的释放与新底层请求（image_inflight_retry），以及守卫安装较早但新请求自身计时不包含此前启动耗时。 出任何提供给用户的测试包前，另核可选字体fail/hang/晚到不阻塞或重启页面，新请求从自身创建计时且真实进度先于帧不误超时；恢复矩阵须包含optional_font和request_local_clock，旧10项报告不能替代新增12项。",
+      "steps": "按 references/startup-loading-timing.md：先写 startup-plan.json（测前写好）；在 Ego Lite 里用 chrome_touch.py 跑 local/first_network/slow_network 三种条件、两种比例（本地和首次联网各3冷1热，慢网1冷），每次量 first_feedback→home_usable 和 play_touch→level_ready→first_effect，录屏看加载动画区域；再跑 slow_progress、background_wait、stall_retry、late_callback 四种故障；用 audit_startup_loading.py --binding 判定。 另跑启动契约要求的 optional_api_missing、native_modal_no_callback、image_no_callback、audio_fail（有后续包再加 deferred_bundle_fail）。 用户 2026-10-23（加载是最终检查的重点）：不写死结束时间（大游戏做不到，凑数字反而出新问题；预算只在有真实产品目标时写），改判和游戏大小无关的三件事：不卡住（加载动画连续停住≤1秒，连续≤10秒无进展才算卡住、之后2秒内出 Retry，计划不能放宽这三个数）；不白等（每段等待的允许时间按这段时间真正下载的量算：首页3秒/进关1.5秒基础＋每MB 0.3秒＋1.5倍下载时间＋往返延迟，报告写 *_allowed_ms、*_waste_ms，超出要找原因改，不是改大数字）；下完就进（最后一个下载完成后不超过 max(2秒, 首页时间25%) 首页可点，不许假的最短加载时间、慢吞吞的进度条动画、固定计时器）。按 startup-loading-timing.md 的\"怎样让进入更快\"改（首屏只加载首页要用的、分包、压缩图片、声音单独加载、在首页时预加载第一关、并行加载、不用计时器凑时间）。除了首页 PLAY，还要量\"下一关\"\"重试\"\"地图选关\"进关（mark next_touch/next_ready、retry_touch/retry_ready、map_touch/map_ready），点了一直进不去就不合格；稳定候选建立一次完整适用加载基线；最终构建核当前候选与证据绑定，加载/资源/引擎/适配器变化时只重测失效范围，不因进入第9段重跑有效整套；最终必要的短链由Codex亲自在慢网冷启动走一遍\"首页→PLAY→第一关真实触摸生效\"。 必须另按 references/loading-recovery-regression.md 执行SDK回调与原超时定时器同时扣住、真实新请求与迟到结果隔离、Native捕获边界、旧失败/新通过/正常对照，附 audit_loading_recovery 当前构建报告。 另必测真实图片请求挂起时Cocos内部合并队列的释放与新底层请求（image_inflight_retry），以及守卫安装较早但新请求自身计时不包含此前启动耗时。 出任何提供给用户的测试包前，另核可选字体fail/hang/晚到不阻塞或重启页面，新请求从自身创建计时且真实进度先于帧不误超时；恢复矩阵须包含optional_font和request_local_clock，旧10项报告不能替代新增12项。",
       "expected": "每一次运行都量到真实可操作；加载动画不连续卡住超过 1 秒；首页前没有以后才用的大文件；超时按无进展计算、后台不计时；卡住有限时间内出现 Retry 且重试后真的能玩；旧结果不影响当前局。 不写死结束时间：每次运行都不卡住（动画停住≤1秒、卡住出 Retry）、不白等（实际时间≤按这款游戏真正加载量算出的允许时间）、下完就进（不超过 max(2秒, 首页时间25%)）；下一关/重试/地图选关进关同样不白等、点了一定进得去；最终构建上重测一遍仍全部通过。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -1256,39 +1256,34 @@
     {
       "id": "RANK-01",
       "feature": "league",
-      "title": "排名扩展启用记录：默认关闭，仅明确选择后检查实际算法和参数",
-      "symptom": "不适合的游戏（关卡很少、纯休闲无输赢）硬加排名，几天就停住不动；适合的闯关/经验/战力/计分游戏没加；AI 自己写排名算法：玩家能冲到第1、一直不掉或常常掉、别人的分数不动、关掉重开名次变了；标题写 National/Worldwide、\"和真实玩家比\"；英化游戏擅自加了排名。",
-      "steps": "仅对用户明确启用或已有项目明确选择的扩展执行；默认关闭，见 fusion-policy.md。开工时按 references/ranking-league.md 第一、二节回答四个问题，写 docs/league/decision.json（重塑 add/skip；英化 none 或 keep_original）。add 时把 assets/league/LeagueSim.ts 原样复制进游戏、按模板写 league-config.json、10 款排名皮肤写进 unlock_table.json（unlock: league），规则弹窗写明对手是电脑玩家；设计关由 scripts/design_check.py 运行 scripts/audit_league.py（最终总检测不再跑）。",
-      "expected": "报告通过：判断和四个问题一致；英化没有新增排名；add 时算法文件未改、模拟检查全部通过（永远不是第1、每局5–6%概率下降、每局都上升、先快后慢、别人同比例上涨、重开一致、每周结算先发10款皮肤再只发金币、只领一次），文案不冒充真实/全国玩家。",
+      "title": "禁止排行榜与分享：代码、路由与配置一致关闭",
+      "symptom": "首页或结算仍有排行榜/分享入口，旧 League 决策重新启用已禁用功能。",
+      "steps": "设计关执行 audit_league 兼容命令及 no_social 检查。已有 decision.json 只允许 none/skip；移除入口、路由、模块和奖励，不安装 LeagueSim。源文件未变化时复用绑定证据。",
+      "expected": "不存在排行榜、社交分享入口或启用决策；新增 add/keep_original 决策必须拒绝。",
       "phase": "pre_scan",
       "always_applicable": true,
       "auto_check": [
         "audit_league"
       ],
       "board_notes": {
-        "localize": "默认none；用户明确保留原系统写keep_original并附实际依据，不自动新增排名。"
+        "localize": "英化与重塑一致禁止排行榜与分享。"
       },
       "gate": "design"
     },
     {
       "id": "RANK-02",
       "feature": "league",
-      "title": "排名系统在游戏里的实际表现（结算页名次变化、排名页、每周结算、皮肤奖励）",
-      "symptom": "排名页是一大块空白面板加灰字；结算页看不到名次变化；新一周打开没有结算弹窗，或奖励领了两次；10款皮肤发完后还在发皮肤或什么都不发；关掉重开榜单变了。",
-      "steps": "仅对用户明确启用或已有项目明确选择的扩展执行；默认关闭，见 fusion-policy.md。在浏览器里实测（chrome_touch，init_js 可以改时间）：①打完一局，结算页显示名次变化（升了多少、超过了谁）；②排名页：段位、倒计时、前三名、自己上下几名、自己那行高亮、离上一名差多少分、下一款排名皮肤预览，dump_ui 时写 purpose league；③把时间改到下周再打开：弹出上周结算（名次、段位升降、金币＋皮肤），领一次后不再出现；④把存档改到已有10款排名皮肤：只发金币；⑤存档改到第2名附近连打多局：始终到不了第1；⑥关掉重开，榜单和名次一致；⑦规则弹窗写明对手是电脑玩家。",
-      "expected": "七项全部符合 references/ranking-league.md；排名页通过 audit_page_richness（不空白、≥10个名次/分数），画面由 Codex 最终判定。",
+      "title": "历史排名入口的定向复验",
+      "symptom": "源码已移除排行榜，但运行时仍有旧入口或结算奖励。",
+      "steps": "只在旧入口存在或其删除范围发生变更时，打开受影响首页/结算页面，确认旧路由与奖励不可达。已绑定的无排名范围可标记不适用并注明依据，不跑排名算法、周结算或多局升降模拟。",
+      "expected": "受影响页面不存在排行榜/分享入口与旧奖励；无相关功能时保留范围依据。",
       "phase": "pre_scan",
       "always_applicable": false,
       "requires_gui": true,
       "visual_verdict": true,
       "required_observations": [
-        "result_rank_change",
-        "league_page_rows_and_player_row",
-        "weekly_settlement_popup_once",
-        "skins_then_coins",
-        "never_first_near_top",
-        "same_board_after_reload",
-        "rules_say_computer_rivals"
+        "no_ranking_routes",
+        "no_share_routes"
       ],
       "boards": [
         "remake"

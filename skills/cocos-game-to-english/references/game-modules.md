@@ -29,7 +29,7 @@
 没有真实功能的、点了没反应的、上表里的，一律 `keep: false` 并在代码和场景里删掉（不是隐藏）。重塑只审查启动包源码里带来的按钮。
 
 ## 二、货币和结算×2
-- **Per-level currency (rule 21)**: read the rolled `coins` stored in `level_plan.json`; do not recompute a fixed amount. The plan stores `coins_base` / `coins_band` / `coins_roll` / `coins` and `reward_seed`; retry never re-rolls; the x2 ad uses the rolled value; bonus = 3x the chapter median; limited coin reward = the sum of the previous 5 rolled values.
+- **Per-level currency**: read the rolled `coins` stored in `level_plan.json`; do not recompute a fixed amount. The plan stores `coins_base` / `coins_band` / `coins_roll` / `coins` and `reward_seed`; retry never re-rolls; the x2 ad uses the rolled value; bonus = 3x the ceiling of the chapter median of normal levels; limited coin reward = the sum of the previous 5 rolled values.
 （每款游戏都有）
 
 - **每款游戏都有一种货币**，按题材起名字和画图标（海底 Pearls、糖果 Candies、森林 Acorns；只有宝藏/商店题材用普通金币），写进 `docs/modules.json` 的 `currency`，放在顶部资源栏（[top-bar-and-level-map.md](top-bar-and-level-map.md) 第一节）。英化原来有货币就沿用。
@@ -52,7 +52,7 @@
 - 适合时**默认要**。英化写在优化清单（[模板8](../assets/session-relay-templates.md) 第九节）、重塑在写规格时，用勾选框问：
 
 > **内置板块**（默认都要，不要的把 ☑ 改成 ☐）
-> ☑ 皮肤板块：20 款主角皮肤＋10 款背景，价格、加成按固定模板，限定皮肤排第一（我的判断：适合，因为……）
+> ☑ 皮肤板块：final为20款主角；every_10为19+floor(总关数/10)款主角，适用时10款背景，价格、加成按固定模板，限定皮肤排第一（我的判断：适合，因为……）
 > ☑ 背景皮肤（游戏有能换的场景时）
 
 - 回答写进 `docs/modules.json` 的 `skins.user_choice`（和 `backgrounds`）、`asked` 写怎么问的。未回复时只可按默认拟定方案；尚未获批的英化优化清单不得提前实施。不适合时（没有能换外观的主角）写 `suitable: false` 和原因，不做。
@@ -60,7 +60,7 @@
 ### 2. 数量、稀有度、价格、加成（工具生成，不手填）
 
 ```
-python scripts/make_skin_table.py --R <中等难度一关的货币> --levels [--final-level <最后一个限定关，≥70>] [--limited-mode final|every_10] [--no-backgrounds] --out assets/resources/config/unlock_table.json
+python scripts/make_skin_table.py --R <中等难度一关的货币> --levels [--final-level <总关数，≥70>] [--limited-mode final|every_10] [--no-backgrounds] --out assets/resources/config/unlock_table.json
 python scripts/make_skin_table.py --R <R> --endless --out assets/resources/config/unlock_table.json
 ```
 
@@ -74,7 +74,7 @@ python scripts/make_skin_table.py --R <R> --endless --out assets/resources/confi
 | Legendary | 2 款，33–50% | 1 款，17–25% |
 | 限定 | 1 款，51–60% | — |
 
-- **货币定价最新优先（用户 2026-10-26）**：Common / Rare / Epic / Legendary 分别约为 **10 / 15 / 20 / 25 个普通关的基础收益**，同档默认同价，审计允许约 ±10%。基准为从零攒一件、不看广告、不买其他物品、无皮肤加成的普通关；`normal_level_coins` 与广告单位 `R` 可不同。新生成器默认 `--price-profile ordinary-levels`，用 `--normal-level-coins`、`--tier-levels 10,15,20,25` 调参并写表元数据；`AdRewards.curvePrices` 接收同一表配置。旧合同显式 `--price-profile legacy-2r`，未标 `price_profile` 的旧表按 legacy 兼容，保留首价 2R 和原台阶。
+- **货币定价**：Common / Rare / Epic / Legendary 分别约为 **10 / 15 / 20 / 25 个普通关的基础收益**，同档默认同价，审计允许约 ±10%。基准为从零攒一件、不看广告、不买其他物品、无皮肤加成的普通关；`normal_level_coins` 与广告单位 `R` 可不同。新生成器默认 `--price-profile ordinary-levels`，用 `--normal-level-coins`、`--tier-levels 10,15,20,25` 调参并写表元数据；`AdRewards.curvePrices` 接收同一表配置。旧合同显式 `--price-profile legacy-2r`，未标 `price_profile` 的旧表按 legacy 兼容，保留首价 2R 和原台阶。
 - 这次定价规则不要求新增数量、收益加成或广告机制，维护已有游戏保留用户认可的广告解锁；上表是完整新建板块模板，不能借此扩大局部维护。模板默认货币购买，看广告试用照旧。
 - **实际进度另算**：有特殊/限定关、首通奖励、礼盒、广告翻倍或既有加成时，按真实关序、收入、购买扣款和装备状态模拟；`price / 普通关基础收益` 仅证明单件普通关基准，不能当综合通关进度证据。
 - **限定皮肤**：有关卡游戏打过限定关获得，只能在那里拿；两种格式任选（用户 2026-10-24）：`final` 只有最后一个限定关送一款（`hero_limited`），`every_10` 每个限定关各送一款（`hero_limited_10`、`hero_limited_20`…，全部排在最前面）；无尽游戏用大量货币（最贵皮肤的 1.5 倍）＋6 次广告解锁。不在试用弹窗里。

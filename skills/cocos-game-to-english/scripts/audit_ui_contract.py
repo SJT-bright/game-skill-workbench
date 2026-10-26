@@ -4,7 +4,7 @@ from pathlib import Path
 import argparse, hashlib, itertools, json, math, subprocess, sys
 
 HERE = Path(__file__).resolve().parent
-REGISTRY = HERE / 'ui_contract_trusted_runners.json'
+import project_qa
 IDENTITY = ('game_run_original', 'renderer_original', 'canvas_get_context_original', 'webgl_context', 'scene_active')
 
 def sha(path):
@@ -154,7 +154,7 @@ def detected_expected(errors, required):
 
 def execute(project, native, contract_path, runner_key, out, variants, calibrate=False):
     project, native, contract_path, out = map(lambda p: Path(p).resolve(), (project, native, contract_path, out))
-    registry = json.loads(REGISTRY.read_text()); policy = registry[runner_key]
+    policy = project_qa.lookup(project, 'ui_runners', runner_key)
     if policy['project'] != str(project): raise ValueError('registered project mismatch')
     runner = Path(policy['path']).resolve()
     if not runner.is_file(): raise ValueError('registered runner file missing')

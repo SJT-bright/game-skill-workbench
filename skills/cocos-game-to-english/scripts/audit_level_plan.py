@@ -41,6 +41,7 @@ import json
 from pathlib import Path
 import re
 import statistics
+import math
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -57,9 +58,7 @@ BUYABLE = ('ads', 'coins', 'ads_coins', 'ads_or_coins')
 MAP_GROUPS = ('map', 'maps', 'world', 'worlds', 'chapter', 'chapters')
 
 
-def limited_levels(every, total):
-    """Limited levels: every 10th level plus the last level (the finale): 10, 20 ... 70."""
-    return sorted(set(range(every, total + 1, every)) | {total})
+from product_contract import limited_levels, reward_errors, REWARD_POLICY
 
 
 def _every_milestone(plan):
@@ -73,7 +72,7 @@ def _every_milestone(plan):
 def chapters(every, total):
     """(start, end) of each block of 10: a block ends on a limited level (the last one may be short)."""
     out, start = [], 1
-    for end in limited_levels(every, total):
+    for end in sorted(set(limited_levels(every, total)) | {total}):
         out.append((start, end))
         start = end + 1
     return out
@@ -173,6 +172,8 @@ def audit_plan(plan, items, add, board=None):
         'fix level rows: bad %s, missing %s' % (bad[:8], missing[:8]))
     if bad or missing:
         return mode
+    reward_failures = reward_errors(plan)
+    add('seeded_currency_rewards', not reward_failures, '; '.join(reward_failures[:8]) if reward_failures else 'seeded reward policy, bounds and stored values verified')
     climb = [by[n] for n in sorted(by) if by[n]['type'] != 'bonus']
     note = ''
     if board == 'localize':
@@ -183,7 +184,7 @@ def audit_plan(plan, items, add, board=None):
     limited = limited_levels(every, total)
     wrong = [n for n in by if (by[n]['type'] == 'milestone') != (n in limited)]
     add('limited_every_%d' % every, not wrong, 'limited levels at %s' % limited if not wrong else
-        'type "milestone" must be exactly levels %s (every %d and the last level %d); wrong: %s'
+        'type "milestone" must be exactly levels %s (every %d; incomplete tail ends at %d without extra milestone); wrong: %s'
         % (limited, every, total, sorted(wrong)[:8]))
     item_by_id = {str(r.get('id')): r for r in items or []}
     limited_skins = [r for r in items or [] if r.get('limited') is True and str(r.get('group', '')).lower() == 'skin']
@@ -266,7 +267,7 @@ def audit_plan(plan, items, add, board=None):
                 if by[n]['difficulty'] > easiest:
                     problems.append('bonus level %d is not very easy (%s; the easiest normal level of its block is %s): make it easy'
                                     % (n, by[n]['difficulty'], easiest))
-                if not 2.9 * mid_c <= by[n]['coins'] <= 3.5 * mid_c:
+                if (plan.get('reward_policy') == REWARD_POLICY and by[n]['coins'] != 3 * math.ceil(mid_c)) or (plan.get('reward_policy') != REWARD_POLICY and not 2.9 * mid_c <= by[n]['coins'] <= 3.5 * mid_c):
                     problems.append('bonus level %d gives %d, needs 3x the block median (%d; the x2 ad then makes it 6x)'
                                     % (n, by[n]['coins'], 3 * mid_c))
     bp = plan.get('bonus_levels_policy') if isinstance(plan.get('bonus_levels_policy'), dict) else None

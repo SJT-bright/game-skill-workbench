@@ -1468,6 +1468,16 @@
         "scripts/make_tiktok_zip.py": "c231edc061192754b8241c6f61a75b3e418387b434fee1525e217b6302f3ca6b",
         "references/manual-ad-simulation.md": "9a39ad4b80bfa11f7ff98bf453e5ff0a5e1f7c7ba08b6c23226664a8f3299ed0"
       }
+    },
+    {
+      "revision": "2026-10-26.ai-ad-simulation-per-entry.v1",
+      "files": {
+        "SKILL.md": "7f58154b2062907c674dac4eb476bae65d5c4b60856f338ed326b6dd2722b615",
+        "references/automated-ad-simulation.md": "152e7f90151f9d8f685dc3eeb267bcc38cdba89405c0494e4444454b102ef34d",
+        "references/manual-ad-simulation.md": "f681671f334c4f73346c7f5b191da0143b2fa367f63acce9a43d65b65d0dac85",
+        "references/check-stages.md": "72fbd1addb3c775cdff073b3abf77977959eb09ed881d7483db00707b99744c4",
+        "references/session-relay.md": "5c7f4e44876ebbf584184ed2dd259a884977e039fa603dc597a70a705e3cfa00"
+      }
     }
   ]
 }

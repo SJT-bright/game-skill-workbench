@@ -48,7 +48,7 @@ async function getTask(payload){const game=config.games.find(g=>g.id===payload.g
 
 async function seedEmbeddedSkills(){
  const bundled=path.join(__dirname,'../bundled-skills');const source=await fs.access(bundled).then(()=>bundled,()=>path.join(__dirname,'../skills'));const catalog=await readJSON(path.join(source,'catalog.json'),null);if(!catalog)return;
- const ledger=await client.state();for(const item of catalog.skills){const skillId='s-'+require('./core.cjs').digest(item.name).slice(0,20);if(ledger[skillId])continue;const snapshot=await require('./core.cjs').collect(path.join(source,item.name));if(snapshot.treeHash!==item.treeHash)throw Error('内置 Skill 文件校验失败');const dest=path.join(root,'subscriber/skills',item.name);await fs.cp(path.join(source,item.name),dest,{recursive:true});ledger[skillId]={id:'built-'+snapshot.treeHash.slice(0,24),skillId,name:item.name,version:'内置',bundled:true,local:true,path:dest,treeHash:snapshot.treeHash,files:snapshot.files,bytes:snapshot.bytes,fileCount:snapshot.files.length,createdAt:catalog.createdAt,summary:''};}
+ const ledger=await client.state();for(const item of catalog.skills){const skillId='s-'+require('./core.cjs').digest(item.name).slice(0,20);if(ledger[skillId])continue;const snapshot=await require('./core.cjs').collect(path.join(source,item.name));const actualFiles=new Map(snapshot.files.map(f=>[f.path,f]));if(item.files?(item.files.length!==snapshot.files.length||item.files.some(f=>actualFiles.get(f.path)?.hash!==f.hash||actualFiles.get(f.path)?.size!==f.size)):snapshot.treeHash!==item.treeHash)throw Error('内置 Skill 文件校验失败');const dest=path.join(root,'subscriber/skills',item.name);await fs.cp(path.join(source,item.name),dest,{recursive:true});ledger[skillId]={id:'built-'+item.treeHash.slice(0,24),skillId,name:item.name,version:'内置',bundled:true,local:true,path:dest,treeHash:item.treeHash,files:item.files||snapshot.files,bytes:snapshot.bytes,fileCount:snapshot.files.length,createdAt:catalog.createdAt,summary:''};}
  await atomicJSON(path.join(root,'subscriber/installed.json'),ledger);Object.assign(installed,ledger);client.seeds=installed;
 }
 async function checkApplication(){if(appUpdate.busy||!config.repository)return state();appUpdate={...appUpdate,busy:true,error:''};await emit();try{const result=await updater.check(config.repository,app.getVersion());const changed=result.available&&appUpdate.manifest?.version!==result.manifest?.version;appUpdate={...result,busy:false,error:''};if(changed)notify('工作台有更新','打开设置更新工作台');}catch(e){appUpdate={...appUpdate,busy:false,error:e.message};}await emit();return state();}
@@ -131,7 +131,7 @@ async function main(){
   await win.loadFile(path.join(__dirname,'../ui/index.html'));dockEdge=config.window?.edge||'right';applyDock(true);win.show();
   if(smoke){
     await win.webContents.executeJavaScript('window.ready');await handlers.collapse();
-    const integration=[];
+    const integration=[];if(process.env.SKILL_DOCK_SMOKE_EMBEDDED==='1'){await seedEmbeddedSkills();await emit();}
     if(process.env.SKILL_DOCK_SMOKE_FIXTURE==='1'){
       const source=path.join(root,'fixture-skill'),gamePath=path.join(root,'fixture-game');await fs.mkdir(source,{recursive:true});await fs.mkdir(gamePath,{recursive:true});await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nKeep original saves.');
       async function ipc(method,value){return win.webContents.executeJavaScript('window.dock.call('+JSON.stringify(method)+','+JSON.stringify(value ?? null)+')');}
@@ -148,7 +148,7 @@ async function main(){
     }
     await new Promise(r=>setTimeout(r,300));
     const result=await win.webContents.executeJavaScript(`({title:document.title,body:document.body.innerText,scroll:document.documentElement.scrollWidth,viewport:innerWidth,api:!!window.dock,nodes:document.querySelectorAll('button').length})`);
-    await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'smoke.json'),JSON.stringify({...result,integration,runtime:process.versions.electron,alwaysOnTop:win.isAlwaysOnTop(),bounds:win.getBounds()},null,2));await fs.writeFile(path.join(root,'smoke.png'),(await win.webContents.capturePage()).toPNG());quitting=true;app.quit();return;
+    await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'smoke.json'),JSON.stringify({...result,integration,embeddedCount:Object.values(installed).filter(s=>s.bundled).length,runtime:process.versions.electron,alwaysOnTop:win.isAlwaysOnTop(),bounds:win.getBounds()},null,2));await fs.writeFile(path.join(root,'smoke.png'),(await win.webContents.capturePage()).toPNG());quitting=true;app.quit();return;
   }
   const receipt=await readJSON(path.join(root,'updates/receipt.json'),null).catch(()=>null);if(receipt?.status==='installed'&&receipt.version===app.getVersion()){const target=process.platform==='darwin'?process.execPath.split('/Contents/MacOS/')[0]:path.dirname(process.execPath);if(receipt.backup===target+'.previous'){await fs.rm(receipt.backup,{recursive:true,force:true});await fs.rm(path.join(root,'updates',receipt.version),{recursive:true,force:true});await atomicJSON(path.join(root,'updates/receipt.json'),{status:'confirmed',version:receipt.version});}}
   if(config.hostEnabled)await startSharing().catch(e=>{lastError=e.message;});

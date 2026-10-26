@@ -4285,5 +4285,18 @@
       "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/1\u6c14\u7403\u5feb\u8dd1/BalloonRun-English/game/tools/native-qa/retry_visibility.py": "451a9c336130deda4c17c73a43f9dd6f7690d99fa997264212c9eeace9d804a9",
       "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/1\u6c14\u7403\u5feb\u8dd1/BalloonRun-English/game/docs/test/native-controls/preserved-v32.zip": "6af1dd306d34eeaf26ff1fac84258ca85a2a7c5cdbbdb010a5db331b932eed0a"
     }
+  },
+  "metro-art-r12-20261026-native-input-v1": {
+    "project": "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/\u5730\u94c1\u6362\u4e58/redesign/candidates/metro-art-20261026-r12",
+    "path": "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/\u5730\u94c1\u6362\u4e58/redesign/candidates/metro-art-20261026-r12/qa/native-runner/native_probe.py",
+    "sha256": "872603936ef109d35f54b516df26b556b416a38d4666e78fe7ea744e3deb909b",
+    "timeout_seconds": 120,
+    "control_profile": "cocos24_adapter_coordinates_v1",
+    "dependencies": {
+      "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/\u5730\u94c1\u6362\u4e58/redesign/candidates/metro-art-20261026-r12/qa/native-runner/native-host.js": "08ae865b3a8316867fac253bc44287d41e06cf46051bc003ff3ee76730953be1",
+      "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/\u5730\u94c1\u6362\u4e58/redesign/candidates/metro-art-20261026-r12/qa/native-runner/startup-browser.mjs": "aefe23ddb2936cf1334db21b090e41c6db65ba4eecb6dceb0628f7fffeea3869",
+      "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/\u5730\u94c1\u6362\u4e58/redesign/candidates/metro-art-20261026-r12/qa/native-runner/host.html": "f6ac20382f58f0b7862d67405a82ea48e90981ea349c65dc32d84cca7f6ad39e",
+      "/Users/sijunting/Downloads/\uff01\u81ea\u5236\u6e38\u620f/\u5730\u94c1\u6362\u4e58/redesign/candidates/metro-art-20261026-r12/qa/known-bad.zip": "7175fe1fab1147588ead0cfbbbc5099c47538cc53552a93f84be8dbe3a9b40ce"
+    }
   }
 }

@@ -34556,5 +34556,1262 @@
       }
     },
     "escapes": {}
+  },
+  "fruit-scrape-20261026-r2-reviewed": {
+    "source_sha256": {
+      "game.js": "ec6163b3faccae567e552492ff631521ea9b48139916441a719d13cbb360003c",
+      "main.js": "61a951c1a81bbb40f95b5dce2a3b83f29bba90465cf072addc77d207deff8bd7",
+      "subpackage-boundary.js": "122d34f75ae8200c11c22e84205ae7dc2d5c5febf6218e941f16396a363ccf4f",
+      "adapter-min.js": "0590133a7953753786ea642a5b91059a13a2bcfbdf8dcbfbdf9dd72a3af8979f",
+      "startup-recovery.js": "bd18c1bf5784858a31bc00636cb146129efb35c3a0f2822db0ed818736d72094",
+      "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
+      "src/settings.js": "254928b59c91a2eb57951951fce6043677976efa601d6484fdccb1a39a9ac66e",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "307b617dd2a9ef67c60fca56991d2dd654e6e9778215ed60b5a84b2cb9289df3",
+      "subpackages/home/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/game/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/art-06/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/art-01/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/art-04/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/art-03/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/art-02/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/art-05/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5"
+    },
+    "resolutions": {
+      "assets/main/index.js:14948": {
+        "requests": [
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/double-coins-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/trial-watch-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/trial-title-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/trial-explanation-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/controls/actions-a",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/controls/buy",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/controls/close",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/coin-ad",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/coin-hud",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/equip",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/controls/home",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/level-map",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/map-platform",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/controls/map-states",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/nav-actions",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/controls/next-level",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/controls/replay",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/settings",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/controls/skin-card",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/skins",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/sound-parts",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-01",
+            "path": "art-strict/controls/watch-ad",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/scenes/foreground-layer",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/home-screen-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/map-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/scenes/orchard-layer",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/profile-revisit-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/scenes/result-panel-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/settings-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-01",
+            "path": "art-strict/scenes/shop-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-01",
+            "path": "art-strict/scenes/sky-layer",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/aqua",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/skins/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/citrus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/coral",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/crown",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/frost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/nebula",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/phoenix",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "fonts/FredokaOne-Regular",
+            "type": "cc.Font",
+            "kind": "load"
+          }
+        ],
+        "reason": "ArtLoader.loadAny follows actual ART_BUNDLE_BY_PATH registry; no caller-controlled arbitrary files. Every region sheet is separately verified to be registered."
+      },
+      "assets/main/index.js:59842": {
+        "requests": [
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/aqua",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/skins/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/citrus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/coral",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/crown",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/frost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/nebula",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/phoenix",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "Only catalog skin IDs reach equipped/trial loads: catalog buy/equip validation and TrialSession epic/legendary choice. Expanded from production SkinCatalog, all ten skins."
+      },
+      "assets/main/index.js:65336": {
+        "requests": [
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/aqua",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/skins/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/citrus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/coral",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/crown",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/frost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/nebula",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/phoenix",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "Only catalog skin IDs reach equipped/trial loads: catalog buy/equip validation and TrialSession epic/legendary choice. Expanded from production SkinCatalog, all ten skins."
+      },
+      "assets/main/index.js:96662": {
+        "requests": [
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/aqua",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/skins/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/citrus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/coral",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/crown",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/frost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/nebula",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/phoenix",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "Only catalog skin IDs reach equipped/trial loads: catalog buy/equip validation and TrialSession epic/legendary choice. Expanded from production SkinCatalog, all ten skins."
+      },
+      "assets/main/index.js:792658": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/coin-hud",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/map-platform",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/settings",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/skins",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "Loading.ts six first-screen paths expanded through actual ArtRegions and routing table."
+      },
+      "assets/main/index.js:809501": {
+        "requests": [
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/double-coins-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/trial-watch-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/trial-title-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/trial-explanation-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/controls/actions-a",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/controls/buy",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/controls/close",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/coin-ad",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/coin-hud",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/equip",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/controls/home",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/level-map",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/map-platform",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/controls/map-states",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/nav-actions",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/controls/next-level",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/controls/replay",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/settings",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/controls/skin-card",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art-strict/controls/skins",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/controls/sound-parts",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-01",
+            "path": "art-strict/controls/watch-ad",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/scenes/foreground-layer",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/home-screen-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/map-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/scenes/orchard-layer",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/profile-revisit-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-03",
+            "path": "art-strict/scenes/result-panel-v2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/scenes/settings-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-01",
+            "path": "art-strict/scenes/shop-panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-01",
+            "path": "art-strict/scenes/sky-layer",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/aqua",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-02",
+            "path": "art-strict/skins/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/citrus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-06",
+            "path": "art-strict/skins/coral",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/crown",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/frost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-05",
+            "path": "art-strict/skins/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/nebula",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "art-04",
+            "path": "art-strict/skins/phoenix",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "PineappleUI.setImage delegates finite production art keys through ArtRegions sheets and ArtBundleManifest; all registered sprite paths conservatively included."
+      },
+      "assets/main/index.js:817020": {
+        "requests": [
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/1",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/2",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/3",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/4",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/5",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/6",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/7",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/8",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/9",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/10",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ],
+        "reason": "Level definitions templateId is finite1..10; all 100 definitions use these ten actual icon prefabs."
+      },
+      "assets/main/index.js:817707": {
+        "requests": [
+          {
+            "bundle": "game",
+            "path": "game/prefab/endDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/gameDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/homeDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/popBoxDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/menuDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/fullDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/bannerDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/treaBoxDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/toastDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "home",
+            "path": "home/prefab/display/modalDisplay",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ],
+        "reason": "PoolMgr URL domain from actual display getUrl implementations; exactly gameDisplay/endDisplay use game; all others home/display."
+      },
+      "assets/main/index.js:822252": {
+        "requests": [
+          {
+            "bundle": "home",
+            "path": "home/image/hand",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "Active ResMgr.setSpriteHome domain is Tools finger hand. WechatGameBox export backgrounds belong to disabled original promotion path (all adv config off, startup source contains no registration); absent old promotion artwork is not an active request."
+      },
+      "assets/main/index.js:822728": {
+        "not_executed": true,
+        "reason": "ResMgr.setSpriteGame has no invocation in complete current business AST/source or serialized event handlers; retained unused helper only, no catalog superset invented."
+      },
+      "assets/main/index.js:823094": {
+        "not_executed": true,
+        "reason": "ResMgr.setPrefabHome has no live invocation; only a commented legacy WechatGameBox example, excluded by AST. PoolMgr active prefab loading is separately inventoried."
+      },
+      "assets/main/index.js:823386": {
+        "requests": [
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/1",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/2",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/3",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/4",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/5",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/6",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/7",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/8",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/9",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "game",
+            "path": "game/prefab/icon/10",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ],
+        "reason": "Level definitions templateId is finite1..10; all 100 definitions use these ten actual icon prefabs."
+      },
+      "assets/main/index.js:841072": {
+        "requests": [
+          {
+            "bundle": "audio",
+            "path": "home/bg",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "home/check",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "game/1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "game/star",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "game/happy",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ],
+        "reason": "SoundMgr.loadAudio callers: music home/bg; literal current effect call sites home/check, game/1,star,happy; ViewUI defaults check."
+      },
+      "assets/main/index.js:875187": {
+        "not_executed": true,
+        "reason": "Tools.loadSubPackage retained definition has zero call sites in current compiled business program; Loading/PoolMgr own active subpackage chains are separately checked."
+      },
+      "assets/main/index.js:906546": {
+        "delegated_sdk": true,
+        "reason": "WechatGameBox external promotional image URLs from SDK/config, not local Native resource files; actual TikTok runtime disables original WeChat cross-promotion. No local resource request is waived."
+      },
+      "assets/main/index.js:906722": {
+        "delegated_sdk": true,
+        "reason": "WechatGameBox external promotional image URLs from SDK/config, not local Native resource files; actual TikTok runtime disables original WeChat cross-promotion. No local resource request is waived."
+      },
+      "assets/main/index.js:913557": {
+        "delegated_sdk": true,
+        "reason": "_gamePortal is created by platform SDK (WechatScreen), load() is external ad object loading, not Cocos resource; its constructor and callbacks reviewed separately."
+      },
+      "main.js:2286": {
+        "native_files": [],
+        "reason": "Exact src/settings.js jsList is empty. Main boot has no plugin files; launchScene data covered by native scene/runtime gate."
+      }
+    },
+    "escapes": {
+      "assets/main/index.js:14280": "ArtLoader static load method definition assigned to class; its body loadAny is independently inventoried; exact source fingerprint guards additional calls."
+    },
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "metro-art-r12-20261026": {
+    "source_sha256": {
+      "platform-audio.js": "e2a3cad29320bcc1a2fcaff45d0e1212e677d3c788f471f7eb8a960231b5c161",
+      "game.js": "88e930e841f10a651ae6e52d5707b14f6ad73c1636dfb190f51d27f631a44585",
+      "cocos-loading.js": "971cead11d303f603c7a05a7e608f5472669d46112ec2f0a0bdcd2f35efa5f83",
+      "main.js": "002922927e6e222df719513e9d17bca5ccaabcb5a999e18ffa30e15063f02664",
+      "adapter-min.js": "85e9c4976d870a25e6fd79a56192fc8f999470e9e0c42505c352ad6b9cd6aeb0",
+      "restore-boot.js": "c9c26eafc5958c329edc8fe1c84d62976ab7c562c762e2925a0dff61f229aea5",
+      "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
+      "platform/public-config.js": "70f15549035829238615cc722ec79ba61e7846c072770f79268566fdaf88ff84",
+      "platform/metro-platform.js": "7af63e05ef89359c052a0a8acfac0a7300b88174f7cb9344219cff5749353aa3",
+      "src/settings.js": "af4fe08ccfd5c53ea925cb295d100ed988331d4e543fa9cb462929a1fd2413f1",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "85238cbf5ef9a6666933e16d580951e0e0c6c8e272fa87c41f7a57711c1a556e",
+      "subpackages/resources/game.js": "5f0a8fcc6eaecb5d84915f6608db93c753674836cccb968db5e686b93f6930be"
+    },
+    "resolutions": {
+      "assets/main/index.js:96598": {
+        "native_files": [
+          "subpackages/resources/audio/sfx_click.wav"
+        ],
+        "reason": "AudioMgr.onLoad directly requests click clip."
+      },
+      "assets/main/index.js:117871": {
+        "not_executed": true,
+        "reason": "Common.loadAvatar has no callers in the complete business script inventory. No rank/profile entry remains."
+      },
+      "assets/main/index.js:118088": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "textures/audio1",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "textures/audio2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "Only Common.setSpriteFrame caller ItemAudio._updateBtnAudio assigns one of two literal paths."
+      },
+      "assets/main/index.js:122024": {
+        "native_files": [
+          "subpackages/resources/audio/sfx_swap.wav",
+          "subpackages/resources/audio/sfx_connect.wav",
+          "subpackages/resources/audio/sfx_trap.wav",
+          "subpackages/resources/audio/sfx_win.wav"
+        ],
+        "reason": "Complete G.__sfx call inventory contains these four literals; loader installed by GameAudioMgr.playBgm."
+      },
+      "assets/main/index.js:122181": {
+        "native_files": [
+          "subpackages/resources/audio/bgm_metro.mp3"
+        ],
+        "reason": "Direct gameplay/home music request; optional failure does not gate HOME."
+      },
+      "assets/main/index.js:133046": {
+        "not_executed": true,
+        "reason": "JsonMgr.loadJson only reached through startLoad; startLoad/addItem have no production callers. MainCtrl uses loadAllJsons, separately discovered."
+      },
+      "assets/main/index.js:136893": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "scenes/SceneBoot",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "scenes/SceneHome",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "scenes/SceneGame",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ],
+        "reason": "All MainCtrl.loadScene call sites are these three literal scenes; retry preserves the requested scene."
+      },
+      "assets/main/index.js:137374": {
+        "not_executed": true,
+        "reason": "MainCtrl.preloadScene has no callers; actual loadScene is independently covered."
+      },
+      "assets/main/index.js:168916": {
+        "native_files": [
+          "subpackages/resources/audio/bgm_metro.mp3"
+        ],
+        "reason": "Direct gameplay/home music request; optional failure does not gate HOME."
+      },
+      "assets/main/index.js:171252": {
+        "native_files": [
+          "subpackages/resources/art-r12/background-bottom.webp",
+          "subpackages/resources/art-r12/background-top.webp",
+          "subpackages/resources/art-r12/controls.webp",
+          "subpackages/resources/art-r12/digits-v3.webp",
+          "subpackages/resources/art-r12/game-pieces.webp",
+          "subpackages/resources/art-r12/hud-parts.webp",
+          "subpackages/resources/art-r12/hud-progress.webp",
+          "subpackages/resources/art-r12/icon-buttons.webp",
+          "subpackages/resources/art-r12/line-acute.webp",
+          "subpackages/resources/art-r12/line-gentle.webp",
+          "subpackages/resources/art-r12/line-straight.webp",
+          "subpackages/resources/art-r12/logo-metro-switch.webp",
+          "subpackages/resources/art-r12/panel-frame.webp",
+          "subpackages/resources/art-r12/platform-buttons.webp",
+          "subpackages/resources/art-r12/primary-buttons.webp",
+          "subpackages/resources/art-r12/reward-buttons.webp",
+          "subpackages/resources/art-r12/text-headings.webp",
+          "subpackages/resources/art-r12/text-status.webp",
+          "subpackages/resources/art-r12/train-mascot.webp"
+        ],
+        "reason": "Exact METRO_ASSETS finite table. frame(key) resolves table path; preload iterates all distinct table values."
+      },
+      "assets/main/index.js:172740": {
+        "native_files": [
+          "subpackages/resources/fonts/MetroBody.ttf"
+        ],
+        "reason": "MetroUI.preload directly loads the required font."
+      },
+      "assets/main/index.js:173056": {
+        "native_files": [
+          "subpackages/resources/art-r12/background-bottom.webp",
+          "subpackages/resources/art-r12/background-top.webp",
+          "subpackages/resources/art-r12/controls.webp",
+          "subpackages/resources/art-r12/digits-v3.webp",
+          "subpackages/resources/art-r12/game-pieces.webp",
+          "subpackages/resources/art-r12/hud-parts.webp",
+          "subpackages/resources/art-r12/hud-progress.webp",
+          "subpackages/resources/art-r12/icon-buttons.webp",
+          "subpackages/resources/art-r12/line-acute.webp",
+          "subpackages/resources/art-r12/line-gentle.webp",
+          "subpackages/resources/art-r12/line-straight.webp",
+          "subpackages/resources/art-r12/logo-metro-switch.webp",
+          "subpackages/resources/art-r12/panel-frame.webp",
+          "subpackages/resources/art-r12/platform-buttons.webp",
+          "subpackages/resources/art-r12/primary-buttons.webp",
+          "subpackages/resources/art-r12/reward-buttons.webp",
+          "subpackages/resources/art-r12/text-headings.webp",
+          "subpackages/resources/art-r12/text-status.webp",
+          "subpackages/resources/art-r12/train-mascot.webp"
+        ],
+        "reason": "Exact METRO_ASSETS finite table. frame(key) resolves table path; preload iterates all distinct table values."
+      },
+      "assets/main/index.js:230456": {
+        "native_files": [
+          "subpackages/resources/art-r12/background-bottom.webp",
+          "subpackages/resources/art-r12/background-top.webp",
+          "subpackages/resources/art-r12/controls.webp",
+          "subpackages/resources/art-r12/digits-v3.webp",
+          "subpackages/resources/art-r12/game-pieces.webp",
+          "subpackages/resources/art-r12/hud-parts.webp",
+          "subpackages/resources/art-r12/hud-progress.webp",
+          "subpackages/resources/art-r12/icon-buttons.webp",
+          "subpackages/resources/art-r12/line-acute.webp",
+          "subpackages/resources/art-r12/line-gentle.webp",
+          "subpackages/resources/art-r12/line-straight.webp",
+          "subpackages/resources/art-r12/logo-metro-switch.webp",
+          "subpackages/resources/art-r12/panel-frame.webp",
+          "subpackages/resources/art-r12/platform-buttons.webp",
+          "subpackages/resources/art-r12/primary-buttons.webp",
+          "subpackages/resources/art-r12/reward-buttons.webp",
+          "subpackages/resources/art-r12/text-headings.webp",
+          "subpackages/resources/art-r12/text-status.webp",
+          "subpackages/resources/art-r12/train-mascot.webp",
+          "subpackages/resources/fonts/MetroBody.ttf"
+        ],
+        "reason": "Local RestoreSkin/MetroUI.preload delegation, not a bundle loader. True art-v2 loadResDir and inner loadRemote sites independently covered."
+      },
+      "assets/main/index.js:239243": {
+        "native_files": [
+          "subpackages/resources/art-r12/background-bottom.webp",
+          "subpackages/resources/art-r12/background-top.webp",
+          "subpackages/resources/art-r12/controls.webp",
+          "subpackages/resources/art-r12/digits-v3.webp",
+          "subpackages/resources/art-r12/game-pieces.webp",
+          "subpackages/resources/art-r12/hud-parts.webp",
+          "subpackages/resources/art-r12/hud-progress.webp",
+          "subpackages/resources/art-r12/icon-buttons.webp",
+          "subpackages/resources/art-r12/line-acute.webp",
+          "subpackages/resources/art-r12/line-gentle.webp",
+          "subpackages/resources/art-r12/line-straight.webp",
+          "subpackages/resources/art-r12/logo-metro-switch.webp",
+          "subpackages/resources/art-r12/panel-frame.webp",
+          "subpackages/resources/art-r12/platform-buttons.webp",
+          "subpackages/resources/art-r12/primary-buttons.webp",
+          "subpackages/resources/art-r12/reward-buttons.webp",
+          "subpackages/resources/art-r12/text-headings.webp",
+          "subpackages/resources/art-r12/text-status.webp",
+          "subpackages/resources/art-r12/train-mascot.webp",
+          "subpackages/resources/fonts/MetroBody.ttf"
+        ],
+        "reason": "Local RestoreSkin/MetroUI.preload delegation, not a bundle loader. True art-v2 loadResDir and inner loadRemote sites independently covered."
+      },
+      "assets/main/index.js:248180": {
+        "not_executed": true,
+        "reason": "SceneGame validates level 0..59; compiled R2_LEVELS contains every key 0..59, so __L branch is always taken. Legacy catalog fallback is unreachable under this source-bound table."
+      },
+      "assets/main/index.js:255401": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "prefabs/panels/PanelAddEnergy",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ],
+        "reason": "Only openUI production caller is EnergyUI -> PanelAddEnergy."
+      },
+      "cocos-loading.js:764": {
+        "native_files": [
+          "subpackages/resources/cocos-loading.png"
+        ],
+        "reason": "CocosLoading.decorate loads only constant LOGO, unchanged stock Creator 2.4.15 splash."
+      }
+    },
+    "escapes": {},
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "a3e1348cfbd1626138da7f0466c76ca63d9178e771c38385f94d8d68befb6937"
   }
 }

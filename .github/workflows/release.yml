@@ -38,6 +38,18 @@ jobs:
           $version = node -p "require('./package.json').version"
           New-Item -ItemType Directory -Path release -Force | Out-Null
           Compress-Archive -Path "dist/$version/GameDesk-Skill-$version-win-x64/*" -DestinationPath "release/GameDesk-$version-windows-x64.zip"
+      - name: Verify Windows startup with embedded Skill files
+        if: matrix.kind == 'win'
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $env:SKILL_DOCK_DATA_DIR = Join-Path $PWD '.qa/ci-native'
+          $env:SKILL_DOCK_SMOKE_EMBEDDED = '1'
+          $exe = Join-Path $PWD "dist/$version/GameDesk-Skill-$version-win-x64/GameDeskSkill.exe"
+          $process = Start-Process -FilePath $exe -ArgumentList @('--smoke-test','--disable-gpu') -Wait -PassThru
+          if($process.ExitCode -ne 0){throw 'Native Windows smoke failed'}
+          $report = Get-Content '.qa/ci-native/smoke.json' -Raw | ConvertFrom-Json
+          if($report.embeddedCount -lt 15 -or -not $report.api){throw 'Embedded Skill startup verification failed'}
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.kind }}
@@ -59,6 +71,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          current=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          [ "$current" = "$GITHUB_SHA" ] || { echo "Superseded source revision"; exit 1; }
           version=$(node -p "require('./package.json').version")
           gh release view "v$version" >/dev/null 2>&1 || gh release create "v$version" --draft --target "$GITHUB_SHA" --title "游戏工作台 $version" --notes-file CHANGELOG.md
           gh release upload "v$version" release/*.zip --clobber

@@ -231,14 +231,16 @@ def contrast(a, b):
 
 def generated_text_contrast(img, group, nodes, need, image_module):
     """Use the actual source alpha/fill masks, so the blue gaps between glyphs are not classified as text ink."""
-    if not group.get('comps',{}).get('image_text',{}).get('complete'):return None
-    pieces=[n for n in nodes if node_under(n,group) and n is not group and 'sprite' in n['comps']]
+    if group.get('comps',{}).get('image_text',{}).get('complete'):
+        pieces=[n for n in nodes if node_under(n,group) and n is not group and 'sprite' in n['comps']]
+    elif group.get('comps',{}).get('sprite',{}).get('frame') in GENERATED_TEXT_SOURCES:pieces=[group]
+    else:return None
     if not pieces:return None
     ratios=[]
     for n in pieces:
         source=GENERATED_TEXT_SOURCES.get(n['comps']['sprite'].get('frame'))
         if not source or abs(n.get('angle',0))>1:return None
-        r=n.get('screen') or n['rect'];W,H=img.size
+        r=n.get('unclipped_screen') or n.get('screen') or n['rect'];W,H=img.size
         box=(round(r[0]*W),round(r[1]*H),round((r[0]+r[2])*W),round((r[1]+r[3])*H))
         width,height=box[2]-box[0],box[3]-box[1]
         if width<2 or height<2:return None
@@ -246,7 +248,10 @@ def generated_text_contrast(img, group, nodes, need, image_module):
         if isinstance(source,dict) and source.get('rect'):
             sx,sy,sw,sh=source['rect'];raw=raw.crop((sx,sy,sx+sw,sy+sh))
         raw=raw.resize((width,height))
-        shown=img.crop(box).convert('RGB');light=[];dark=[]
+        shown=img.crop(box).convert('RGB')
+        if n.get('unclipped_screen') and n.get('screen'):
+            clip=n['screen'];cb=(max(0,round(clip[0]*W)-box[0]),max(0,round(clip[1]*H)-box[1]),min(width,round((clip[0]+clip[2])*W)-box[0]),min(height,round((clip[1]+clip[3])*H)-box[1]));raw=raw.crop(cb);shown=shown.crop(cb)
+        light=[];dark=[]
         for rgba,rgb in zip(raw.getdata(),shown.getdata()):
             if rgba[3]<200:continue
             ink=lstar(rgba[:3])

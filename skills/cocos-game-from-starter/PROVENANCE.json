@@ -101,6 +101,12 @@
         "SKILL.md": "000a696963c2be07c778b8d21fc168373b447bd8b1713dcaaa6faa70a4115928",
         "references/base-integration.md": "f3c478db82acce5a38b3a36e43066bc70e27b33c3b43ff2659b38489c6fe8e52"
       }
+    },
+    {
+      "revision": "2026-10-26.ai-ad-simulation-per-entry.v1",
+      "files": {
+        "SKILL.md": "bdd7cf7ce9913ec5d1d5c07b4e89f50f08b0e63c6cc556911a7187138597414e"
+      }
     }
   ]
 }

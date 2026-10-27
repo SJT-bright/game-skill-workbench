@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T07:24:21.875Z",
-  "treeHash": "f33994074ae1109d240e71400d9fcbb78c4d6e2ac5cd95273eb6baf284f883d2",
+  "createdAt": "2026-10-27T07:32:04.516Z",
+  "treeHash": "508422231e11061982029ab447a7a558c7bb0ee5e14f0e29e687c516ab149f2d",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -805,9 +805,9 @@
     },
     {
       "name": "cocos-game-logic-check",
-      "treeHash": "4326b59bb922c72cc1a2d16ece1fd0164ce15ff2851da8e2ef6c0808287ad0bb",
+      "treeHash": "1bf09d3c42d44bf81b94ecc04afb1339a054d8eacc04176d9687f311cc97ef2c",
       "fileCount": 6,
-      "bytes": 34074,
+      "bytes": 32684,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -817,8 +817,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "5e460d67d1040bb09822664938d91594c87faab4cf638ac7bf16de5f986ffedf",
-          "size": 6933,
+          "hash": "f84020b6ba352d0f8df085c4674dee0471d73c37ea266495c63fde9a5a213b53",
+          "size": 5543,
           "executable": false
         },
         {

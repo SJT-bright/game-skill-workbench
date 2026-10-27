@@ -205,9 +205,11 @@ def main():
             except (OSError, ValueError):
                 pass
     try:
-        launch = browser_request(url, keep=args.keep, explicit_open=args.open,
-                                 no_browser=args.no_browser, phone_size=phone_size)
-        print('PREVIEW_BROWSER ' + json.dumps(launch, ensure_ascii=False), flush=True)
+        def launch_touch_window():
+            launch = browser_request(url, keep=args.keep, explicit_open=args.open,
+                                     no_browser=args.no_browser, phone_size=phone_size)
+            print('PREVIEW_BROWSER ' + json.dumps(launch, ensure_ascii=False), flush=True)
+        threading.Thread(target=launch_touch_window, daemon=True).start()
         server.serve_forever()
     except KeyboardInterrupt:
         pass

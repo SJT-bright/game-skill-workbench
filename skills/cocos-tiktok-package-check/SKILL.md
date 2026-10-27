@@ -3,6 +3,9 @@ name: cocos-tiktok-package-check
 description: "已有Cocos Native或ZIP的最终文件检查、启动故障诊断及成品增量出包；新制作完整验收由打包主入口分流。"
 ---
 
+**浏览器用途规则（用户 2026-10-27 最新更正）**：Agent 代测使用 Ego 浏览器的 **Google Chrome iPhone touch** 模式，先按 `ego-browser` 绑定自有测试空间并取得当前 CDP 端点，再用 `chrome_touch.py --cdp-url <当前Ego-CDP端点>` 执行；固定 viewport/DPR/UA/has_touch，`input_transport=playwright_cdp_touch`。代测不启动本机独立 Google Chrome，不使用 `--user-approved-chrome --channel chrome`，也不因 Ego 不可用自动切换本机 Chrome。仅在完全交给用户亲自试玩时，使用本地固定手机尺寸预览并打开本机 Google Chrome。代测服务使用 `--no-browser`，不通过 `--keep` 提前触发本机浏览器；交接用户时再按试玩流程打开。Ego 测试结束由 Agent 关闭自有空间并核实；不接管其他会话。此规则替代此前“代测默认独立 Chrome”的规定，Codex 内置浏览器仍不作触摸通过证据。
+
+
 # 最终Native/ZIP检查与成品增量出包
 
 接在用户已授权的出包或具体启动故障维护之后。新制作完整验收由[打包主入口](../cocos-game-tiktok-package/SKILL.md)选择范围；本入口不重做全游戏玩法、美术或所有历史事故。只读检查已有ZIP仍可单独执行。
@@ -36,7 +39,7 @@ python scripts/prepare_delivery.py --zip <上述同一ZIP> --native <同一Nativ
 
 **广告入口的 Native 存储前置门禁（用户2026-10-27）**：写测试包时，广告检查必须覆盖“按钮→Native存储读取→SDK create/show→回调→奖励保存→原消费者”全链。浏览器/本地广告模拟只能证明模拟业务回调，不替代 Native 存储桥和真实 SDK 边界。应按平台契约与键语义验证缺省、Boolean、字符串/数字、损坏对象和坏字符串等适用形态；坏值不得静默发奖。缺少逐项证据时不能标全链通过。当前 writer 对合同的自动核验能力有限，见下方审查纠偏；不能把它当作完整拒包保障。
 
-**最终包先做 Chrome 触摸短检（用户 2026-10-27）**：回解最终 ZIP 的本地预览使用独立 Google Chrome iPhone CDP 触摸；Codex 内置浏览器只能查看，不得作为手机点击通过依据。广告入口、取消、超时、重复回调和按钮结果按[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。
+**最终包先做 Chrome 触摸短检（用户 2026-10-27）**：回解最终 ZIP 的本地预览使用Ego 浏览器的 Google Chrome iPhone CDP 触摸；Codex 内置浏览器只能查看，不得作为手机点击通过依据。广告入口、取消、超时、重复回调和按钮结果按[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。
 
 **广告存储合同必须接入 writer（2026-10-27 复审修订）**：已识别激励广告或已有存储合同的项目，按 [adapter 存储证据 v2](../cocos-game-to-english/references/ad-storage-evidence-contract.md)核验逐形态原始 JSON、Native/runner/宿主身份及业务断言。v1 拒绝沿用；共享 `package_obligations.verify` 已调用此检查。合同同时强制本地玩家链与旧故障对照；入口清单及运行器语义仍须审阅，本地验证不产生真实平台结论。
 

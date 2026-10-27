@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T12:12:01.275Z",
-  "treeHash": "172b41ed1eea007a4219cc62d1a15385973e9723a07659ea6073296959cf7468",
+  "createdAt": "2026-10-27T12:13:42.135Z",
+  "treeHash": "6ff2079bfb30d625cc3edcf5cb3127a67fcb579c0628ce0fb3b491fd28d3c19a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2713,9 +2713,9 @@
     },
     {
       "name": "cocos-tiktok-package-check",
-      "treeHash": "b456d355ed142714d1d51ae9ab0aebbb3741ebb5b823360319645688bdd1fa4c",
+      "treeHash": "aeaa2aebf521f0d03bfe2a4906a5da05aed541f453e2e1c833d88437faa41c68",
       "fileCount": 29,
-      "bytes": 180789,
+      "bytes": 181739,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2725,8 +2725,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "12e12b97a5acad429167b2baf6716fd6ead7055ee316a6db92b350180e283d2b",
-          "size": 7744,
+          "hash": "ffb9933edbdc4be76806b2c0c79ce396c34c6ce96974d2388b27d2f36bc12bbf",
+          "size": 8694,
           "executable": false
         },
         {

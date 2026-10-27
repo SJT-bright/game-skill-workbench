@@ -153,10 +153,12 @@ def _cocos24_texture_pack_refs(root, errors, resolved=None):
    versions=c.get('versions',{}).get('native',[]) if isinstance(c.get('versions',{}),dict) else []
    native_versions={versions[i]:versions[i+1]for i in range(0,len(versions)-1,2)}
    for index,entry in zip(indices,entries):
-    if not isinstance(index,int) or not 0<=index<len(c['uuids']):errors.append('Cocos Texture2D pack UUID index invalid: '+str(p.relative_to(root)));continue
+    if type(index) is int and 0<=index<len(c['uuids']):encoded_uuid=c['uuids'][index]
+    elif isinstance(index,str) and index in c['uuids']:encoded_uuid=index
+    else:errors.append('Cocos Texture2D pack UUID index invalid: '+str(p.relative_to(root)));continue
     ext_field=entry.split(',',1)[0]
     if not ext_field:continue  # Render textures do not have a native file.
-    try:identifier=uuid(c['uuids'][index])
+    try:identifier=uuid(encoded_uuid)
     except (ValueError,TypeError,AttributeError):errors.append('Cocos texture UUID invalid: '+str(p.relative_to(root)));continue
     for token in ext_field.split('_'):
      ext=token.split('@',1)[0];formats=['.png','.jpg','.jpeg','.bmp','.webp','.pvr','.pkm','.astc']

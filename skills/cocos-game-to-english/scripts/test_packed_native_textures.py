@@ -19,4 +19,11 @@ class PackedNativeTextureTests(unittest.TestCase):
  def test_external_native_base_rejected(self):
   with tempfile.TemporaryDirectory()as d:
    p=Path(d);self.fixture(p,native_base='../../../../outside');r=audit(p);self.assertFalse(r['passed']);self.assertTrue(any('escapes package' in x for x in r['errors']))
+ def test_debug_string_uuid_and_missing_texture(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);target=self.fixture(p);target.write_bytes(b'fixture');config=p/'subpackages/art/config.json';c=json.loads(config.read_text());c['packs']['ab123']=[c['uuids'][0]];config.write_text(json.dumps(c))
+   self.assertTrue(audit(p)['passed']);target.unlink();self.assertTrue(any('missing Cocos packed native texture' in x for x in audit(p)['errors']))
+ def test_unknown_debug_uuid_rejected(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);self.fixture(p).write_bytes(b'fixture');config=p/'subpackages/art/config.json';c=json.loads(config.read_text());c['packs']['ab123']=['11AAAAAAAAAAAAAAAAAAAA'];config.write_text(json.dumps(c));self.assertFalse(audit(p)['passed'])
 if __name__=='__main__':unittest.main()

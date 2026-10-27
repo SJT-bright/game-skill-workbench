@@ -7,6 +7,8 @@ class ContractTests(unittest.TestCase):
  def test_normal(self):self.assertEqual(validate_business(self.good),[])
  def test_chrome_cdp(self):
   self.good['business']['play']['touch']['transport']='playwright_cdp_touch';self.assertEqual(validate_business(self.good),[])
+ def test_chrome_touch(self):
+  self.good['business']['play']['touch']['transport']='playwright_cdp_touch';self.assertEqual(validate_business(self.good),[])
  def test_loading_only(self):self.assertTrue(validate_business({'passed':True,'scene':{'active':True,'name':'Loading'},'errors':[]}))
  def test_mutations(self):
   cases=[lambda d:d['business']['home'].pop('lifecycle_complete'),lambda d:d['business']['home'].update(after_draw_observed=False),lambda d:d['business']['home'].update(loading_overlay_gone=False),lambda d:d['business']['home'].update(required_assets_ready=False),lambda d:d['business']['home'].update(play_interactable=False),lambda d:d['business']['play'].update(after={'x':0}),lambda d:d['business']['play']['touch'].update(transport='controller_call'),lambda d:d['business']['play'].update(effect_at_ms=19),lambda d:d.update(first_exception={'message':'hidden'}),lambda d:d['business']['home'].update(at_ms=float('nan')),lambda d:d.update(business=None)]

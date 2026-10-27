@@ -1,8 +1,206 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T04:15:01.672Z",
-  "treeHash": "6b26446ec1a9c05ff49bb8bde7e8f68da54676a7d471078f46cf24ca4686ecda",
+  "createdAt": "2026-10-27T04:22:04.069Z",
+  "treeHash": "079643d395d22ffa6c0ff35b8df63755dbbcc50ae7c9a8abc2156be99f587b08",
   "skills": [
+    {
+      "name": "chrome-mobile-testing",
+      "treeHash": "47445d22389a70ac3a9484acab1c6c20b599466bb6783da201294f1c035f0d7d",
+      "fileCount": 4,
+      "bytes": 43391,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "ad448907fd92783e23865e2bbd37b1ce550c52ecc436aebd16ad3b10607100d9",
+          "size": 781,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "0e68f89e7fbccc7d12d9663c17b0eea6711b355175771906299c5f829ef669ed",
+          "size": 11431,
+          "executable": false
+        },
+        {
+          "path": "scripts/chrome_touch.py",
+          "hash": "e9d9973661e5a63cecff3ab2e3cf71bc12205e16e548615c67284989d22913c9",
+          "size": 29277,
+          "executable": false
+        },
+        {
+          "path": "scripts/prepare_chrome.py",
+          "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+          "size": 1902,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-ad-design",
+      "treeHash": "87c3d3d297be78d4978099302868dfb8035f3ca38dd038cd005f34ba8f5cfc31",
+      "fileCount": 2,
+      "bytes": 10896,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "f3dd3d774f952d68f7d5c5f1b5108f750896b823c72646b2af403e87ccb89fcb",
+          "size": 460,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "93c41a7ab5809816fbe9d9599069d894c888abbc6f36bc49f291af0ae2af09ea",
+          "size": 10436,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-art-redo",
+      "treeHash": "aeec8d1d91422ad9cd5dec2eaf9e0ede02defd08d51a094075e1bf7aea148ec8",
+      "fileCount": 23,
+      "bytes": 808685,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "8a5363d26404a7615d13f0f5df5e860d42f145fcb2f141fc3ac1d309957f1f1c",
+          "size": 3870,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "3bdb88339877e40ad60b08c435004b610615e720f440d13eaa06630069d72ffa",
+          "size": 3531,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "559d7df9b2ab6e3195aac662d7e4b59beca6c2848c6bba2a4f18f74ad1c66f18",
+          "size": 362,
+          "executable": false
+        },
+        {
+          "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+          "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+          "size": 744350,
+          "executable": false
+        },
+        {
+          "path": "references/button-group-review.md",
+          "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+          "size": 2705,
+          "executable": false
+        },
+        {
+          "path": "references/capsule-content-fit.md",
+          "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+          "size": 1278,
+          "executable": false
+        },
+        {
+          "path": "references/card-ornament-layout-review.md",
+          "hash": "b493141dfa3cc817fd9b186ee60db19891722592e87f9410e355d210c1a5c873",
+          "size": 3693,
+          "executable": false
+        },
+        {
+          "path": "references/card-text-fit-review.md",
+          "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+          "size": 1734,
+          "executable": false
+        },
+        {
+          "path": "references/collection-preview-review.md",
+          "hash": "0e1f19121a5a2b086dbe77c98d776c35cea5f9ec6482055aebfd1e2543e98254",
+          "size": 2629,
+          "executable": false
+        },
+        {
+          "path": "references/large-background-static-review.md",
+          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+          "size": 2140,
+          "executable": false
+        },
+        {
+          "path": "references/panel-composite-review.md",
+          "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+          "size": 1843,
+          "executable": false
+        },
+        {
+          "path": "references/phone-preview-boundary.md",
+          "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+          "size": 2724,
+          "executable": false
+        },
+        {
+          "path": "references/rendered-ui-regression-review.md",
+          "hash": "0640df98e4119504e4e924a8c789f85f1d89308be4c266d8c7e15e6accf755bb",
+          "size": 1926,
+          "executable": false
+        },
+        {
+          "path": "references/standalone-alpha-review.md",
+          "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+          "size": 2237,
+          "executable": false
+        },
+        {
+          "path": "references/stat-digit-runtime-review.md",
+          "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
+          "size": 1699,
+          "executable": false
+        },
+        {
+          "path": "references/text-backplate-review.md",
+          "hash": "cbab9cfa3956f0050891288d0defeb5550ac3bc32be4dec2c38e5588d1e3405f",
+          "size": 2839,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_button_group.py",
+          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
+          "size": 2024,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_card_layout.py",
+          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
+          "size": 4910,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_collection_preview.py",
+          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
+          "size": 2573,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_native_sprite_sources.py",
+          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
+          "size": 9544,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_phone_boundary.py",
+          "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+          "size": 3800,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_native_sprite_sources.py",
+          "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
+          "size": 3130,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_source_residue.py",
+          "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+          "size": 3144,
+          "executable": false
+        }
+      ]
+    },
     {
       "name": "cocos-game-from-starter",
       "treeHash": "b715944757df959738c3586e9c71617c06323608e34453fc353b6e0a31406b12",
@@ -606,10 +804,92 @@
       ]
     },
     {
+      "name": "cocos-game-logic-check",
+      "treeHash": "a6ea76cb7af5c51fe7ad8d574ef4aacf82c97ff9cad467ddc3c4083c2a0a0df4",
+      "fileCount": 6,
+      "bytes": 33270,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "9587594dd28362db0ba9294adf036a2b773797d5a517980b313ec5da546ecb49",
+          "size": 1109,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "bf4cdc2ab960537abc00c295ba956020b06d59d08c8a9b941d3b90160db09575",
+          "size": 6129,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "8c04d41c9407e9bc4c7830d44b42afd00e6b30b1e19d4a26996577937b713a65",
+          "size": 433,
+          "executable": false
+        },
+        {
+          "path": "assets/logic-report-template.md",
+          "hash": "bc756a37b35951eca0712f0161997560f0e2979399bff96353b06b71d72888db",
+          "size": 2927,
+          "executable": false
+        },
+        {
+          "path": "references/learned-regressions.md",
+          "hash": "d819ab57a3fb85e2bd6f1bcdd4e4e652ae935093244a1cad729ed127e3862307",
+          "size": 13554,
+          "executable": false
+        },
+        {
+          "path": "references/logic-rules.md",
+          "hash": "d381683e730543f2872a71262c8c50efb875d390df2e62125baf028af4717b13",
+          "size": 9118,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-tiktok-package",
+      "treeHash": "0244e97dcbadb539a002b10e7a36712c62ffa658cae5fd753cf6df8a6fdcdc07",
+      "fileCount": 5,
+      "bytes": 14265,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "0ff921610e58c8e5bddfadc17cee4ca7571503fe7a16a2caedecd51746bf643e",
+          "size": 941,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "50078bc86e0d6691e0bc603e57a7c89538175e45bb39f07fcf6f55f4ccbf54c0",
+          "size": 6695,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "62a54b2424cf4757d8cc76c37dd5c8686ff8b066c0160c3a26800a81494f82ac",
+          "size": 750,
+          "executable": false
+        },
+        {
+          "path": "references/package-forms.md",
+          "hash": "993681e00e6636dee5606fb51f3d5e91d4a80d55843d8d154e4ba198d4df9a59",
+          "size": 4537,
+          "executable": false
+        },
+        {
+          "path": "scripts/upload_preflight.py",
+          "hash": "1f610e5adb9b68a8eddc49059c74309b1b976b7634aab791c9968e44aa8cf5d6",
+          "size": 1342,
+          "executable": false
+        }
+      ]
+    },
+    {
       "name": "cocos-game-to-english",
-      "treeHash": "4bd78a47ed05f3748792ab1672287bdabca35bd66dd7014a36b0107b869fe3b6",
+      "treeHash": "9cbc256b14cad2abbcbfd402afc759a770175a5943743e45ee190b2cad3ba570",
       "fileCount": 296,
-      "bytes": 8663599,
+      "bytes": 8666024,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1249,8 +1529,8 @@
         },
         {
           "path": "references/tiktok-device-stage.md",
-          "hash": "c3953b91b877c885eb671013f06593989fc2977ccc1cfb5e271ce234fbb1b6a4",
-          "size": 1365,
+          "hash": "dfb2d2e755a5f48cf1416d7528b786590dd0b965da5d1e00da02b2f89b78ac1d",
+          "size": 2752,
           "executable": false
         },
         {
@@ -1495,8 +1775,8 @@
         },
         {
           "path": "scripts/audit_packed_assets.py",
-          "hash": "e60c44357b703c82715804fc0d595952202bd76b5a9e7b411b13c6238b47dfbb",
-          "size": 17605,
+          "hash": "3329d81dcaf8592b2397a8e69b299e7e2f309aff2e279eb892dd61a421c9d481",
+          "size": 17704,
           "executable": false
         },
         {
@@ -2191,8 +2471,8 @@
         },
         {
           "path": "scripts/test_packed_native_textures.py",
-          "hash": "7ea9fa0be076c069a94c76fb0aebbff2620d51635abd065b2bc6c4ab3ce68274",
-          "size": 1705,
+          "hash": "7635a74c29ef5589f50120aea7ddcedbecede3f322834d246721989502bd4022",
+          "size": 2487,
           "executable": false
         },
         {
@@ -2263,8 +2543,8 @@
         },
         {
           "path": "scripts/test_startup_business_contract.py",
-          "hash": "f334155ae2a20a9c934bb14479e2e40e4399158fa8c03840050fcc66c11289e6",
-          "size": 1959,
+          "hash": "685fd400c6ff307c8069bb178c0e5c4bd2313eab1b04b423750c52c4a58703fe",
+          "size": 2116,
           "executable": false
         },
         {
@@ -2385,254 +2665,6 @@
           "path": "scripts/visual_maintenance_scope.py",
           "hash": "69edd92f241f86c86c876f6bb8d58d34f096007b4c53f4eb56ef27f7c1181de1",
           "size": 10298,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-art-redo",
-      "treeHash": "aeec8d1d91422ad9cd5dec2eaf9e0ede02defd08d51a094075e1bf7aea148ec8",
-      "fileCount": 23,
-      "bytes": 808685,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "8a5363d26404a7615d13f0f5df5e860d42f145fcb2f141fc3ac1d309957f1f1c",
-          "size": 3870,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "3bdb88339877e40ad60b08c435004b610615e720f440d13eaa06630069d72ffa",
-          "size": 3531,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "559d7df9b2ab6e3195aac662d7e4b59beca6c2848c6bba2a4f18f74ad1c66f18",
-          "size": 362,
-          "executable": false
-        },
-        {
-          "path": "examples/weekly-league-typed-text-counterexample-v042.png",
-          "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
-          "size": 744350,
-          "executable": false
-        },
-        {
-          "path": "references/button-group-review.md",
-          "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
-          "size": 2705,
-          "executable": false
-        },
-        {
-          "path": "references/capsule-content-fit.md",
-          "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
-          "size": 1278,
-          "executable": false
-        },
-        {
-          "path": "references/card-ornament-layout-review.md",
-          "hash": "b493141dfa3cc817fd9b186ee60db19891722592e87f9410e355d210c1a5c873",
-          "size": 3693,
-          "executable": false
-        },
-        {
-          "path": "references/card-text-fit-review.md",
-          "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
-          "size": 1734,
-          "executable": false
-        },
-        {
-          "path": "references/collection-preview-review.md",
-          "hash": "0e1f19121a5a2b086dbe77c98d776c35cea5f9ec6482055aebfd1e2543e98254",
-          "size": 2629,
-          "executable": false
-        },
-        {
-          "path": "references/large-background-static-review.md",
-          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
-          "size": 2140,
-          "executable": false
-        },
-        {
-          "path": "references/panel-composite-review.md",
-          "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
-          "size": 1843,
-          "executable": false
-        },
-        {
-          "path": "references/phone-preview-boundary.md",
-          "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
-          "size": 2724,
-          "executable": false
-        },
-        {
-          "path": "references/rendered-ui-regression-review.md",
-          "hash": "0640df98e4119504e4e924a8c789f85f1d89308be4c266d8c7e15e6accf755bb",
-          "size": 1926,
-          "executable": false
-        },
-        {
-          "path": "references/standalone-alpha-review.md",
-          "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
-          "size": 2237,
-          "executable": false
-        },
-        {
-          "path": "references/stat-digit-runtime-review.md",
-          "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
-          "size": 1699,
-          "executable": false
-        },
-        {
-          "path": "references/text-backplate-review.md",
-          "hash": "cbab9cfa3956f0050891288d0defeb5550ac3bc32be4dec2c38e5588d1e3405f",
-          "size": 2839,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_button_group.py",
-          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
-          "size": 2024,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_card_layout.py",
-          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
-          "size": 4910,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_collection_preview.py",
-          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
-          "size": 2573,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_native_sprite_sources.py",
-          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
-          "size": 9544,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_phone_boundary.py",
-          "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
-          "size": 3800,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_native_sprite_sources.py",
-          "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
-          "size": 3130,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_source_residue.py",
-          "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
-          "size": 3144,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-logic-check",
-      "treeHash": "a6ea76cb7af5c51fe7ad8d574ef4aacf82c97ff9cad467ddc3c4083c2a0a0df4",
-      "fileCount": 6,
-      "bytes": 33270,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "9587594dd28362db0ba9294adf036a2b773797d5a517980b313ec5da546ecb49",
-          "size": 1109,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "bf4cdc2ab960537abc00c295ba956020b06d59d08c8a9b941d3b90160db09575",
-          "size": 6129,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "8c04d41c9407e9bc4c7830d44b42afd00e6b30b1e19d4a26996577937b713a65",
-          "size": 433,
-          "executable": false
-        },
-        {
-          "path": "assets/logic-report-template.md",
-          "hash": "bc756a37b35951eca0712f0161997560f0e2979399bff96353b06b71d72888db",
-          "size": 2927,
-          "executable": false
-        },
-        {
-          "path": "references/learned-regressions.md",
-          "hash": "d819ab57a3fb85e2bd6f1bcdd4e4e652ae935093244a1cad729ed127e3862307",
-          "size": 13554,
-          "executable": false
-        },
-        {
-          "path": "references/logic-rules.md",
-          "hash": "d381683e730543f2872a71262c8c50efb875d390df2e62125baf028af4717b13",
-          "size": 9118,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-ad-design",
-      "treeHash": "87c3d3d297be78d4978099302868dfb8035f3ca38dd038cd005f34ba8f5cfc31",
-      "fileCount": 2,
-      "bytes": 10896,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "f3dd3d774f952d68f7d5c5f1b5108f750896b823c72646b2af403e87ccb89fcb",
-          "size": 460,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "93c41a7ab5809816fbe9d9599069d894c888abbc6f36bc49f291af0ae2af09ea",
-          "size": 10436,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-tiktok-package",
-      "treeHash": "0244e97dcbadb539a002b10e7a36712c62ffa658cae5fd753cf6df8a6fdcdc07",
-      "fileCount": 5,
-      "bytes": 14265,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "0ff921610e58c8e5bddfadc17cee4ca7571503fe7a16a2caedecd51746bf643e",
-          "size": 941,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "50078bc86e0d6691e0bc603e57a7c89538175e45bb39f07fcf6f55f4ccbf54c0",
-          "size": 6695,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "62a54b2424cf4757d8cc76c37dd5c8686ff8b066c0160c3a26800a81494f82ac",
-          "size": 750,
-          "executable": false
-        },
-        {
-          "path": "references/package-forms.md",
-          "hash": "993681e00e6636dee5606fb51f3d5e91d4a80d55843d8d154e4ba198d4df9a59",
-          "size": 4537,
-          "executable": false
-        },
-        {
-          "path": "scripts/upload_preflight.py",
-          "hash": "1f610e5adb9b68a8eddc49059c74309b1b976b7634aab791c9968e44aa8cf5d6",
-          "size": 1342,
           "executable": false
         }
       ]
@@ -2820,89 +2852,143 @@
       ]
     },
     {
-      "name": "mobile-touch-computer-use",
-      "treeHash": "a9a2ed326e9d5dfcfdfd29febb485c5acacb91d65512f1a822e166bcbd093920",
-      "fileCount": 8,
-      "bytes": 44204,
+      "name": "desktop-agent-orchestrator",
+      "treeHash": "b487033e82c1a8412c9a533512aa1af2d0da3724957c1559768956d743f710dd",
+      "fileCount": 13,
+      "bytes": 94572,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "9de3b7daa81818166efbd1093c83335f28f87532b64de9f58c25357ea5d86661",
-          "size": 1427,
+          "hash": "3d09744ed9dd537259f42625b5f766dd318553d1c1a65d8a3c3d5978a3ff798e",
+          "size": 2269,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "174364caac70c789fee0cc7d5f01aa99169f2373ca3474058f5610f46b6bd7c1",
-          "size": 14928,
+          "hash": "8e7e4e628b18618b9be713459990e986bf76dce74f0a4fc32ce83c7e8dce7012",
+          "size": 3725,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
-          "hash": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
-          "size": 320,
+          "hash": "16fc2d622a5ba55df2ddc9c5e2dd16be64b3e430ed36917e09135f83bcd56a8a",
+          "size": 413,
           "executable": false
         },
         {
-          "path": "references/cold-start-regression.md",
-          "hash": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
-          "size": 7488,
+          "path": "assets/windows-software.json",
+          "hash": "47f66cdc77ea92a4c44fd9f12c7a6a120f5e15b888994445f9d82510917ed8ba",
+          "size": 4920,
           "executable": false
         },
         {
-          "path": "references/computer-use.md",
-          "hash": "cd5215cafc8faf8b8a0ab156d950481de5317f8d683783a446be44cafee91df6",
-          "size": 7672,
+          "path": "references/delegation-boundaries.md",
+          "hash": "a44ab252f4479927a71e4618e36c82c4e20e3f783b8a133e506aa845d1bbbdea",
+          "size": 5172,
           "executable": false
         },
         {
-          "path": "references/evidence.md",
-          "hash": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
-          "size": 2916,
+          "path": "references/local-app-routing.md",
+          "hash": "e945fa20d4a2847df77109234b801eec4cf8458c2cf6a64cc60146da31769dcd",
+          "size": 4753,
           "executable": false
         },
         {
-          "path": "scripts/input_observer.js",
-          "hash": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
-          "size": 3177,
+          "path": "references/portability.md",
+          "hash": "3bbf405ab7d7ca9118a6eaa257fa14ac725f2cc39d9ab351f463b8ce89616a71",
+          "size": 2944,
           "executable": false
         },
         {
-          "path": "scripts/prepare_preview.py",
-          "hash": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
-          "size": 6276,
+          "path": "references/task-brief.md",
+          "hash": "7be79f244b73f461a9c5cad1b115794cb3663986f48c55c74d1ce1766f1d2610",
+          "size": 6883,
+          "executable": false
+        },
+        {
+          "path": "references/windows-bootstrap.md",
+          "hash": "675c1061e68c2f4f19547d6ae705eab0e8cf9ae17c065240139fe7ff85a4c74d",
+          "size": 4954,
+          "executable": false
+        },
+        {
+          "path": "references/workflow-detail.md",
+          "hash": "e55a7e250543223670a1fa51b2b4449e441e8907e6499f2d257212a9e034ac56",
+          "size": 8317,
+          "executable": false
+        },
+        {
+          "path": "scripts/bootstrap_windows.py",
+          "hash": "a38bdd280b7b594e5d779d701c7b35e2add6d4a72cc4cba9db63a3e1bc739ef0",
+          "size": 18720,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_dispatch_contract.py",
+          "hash": "e3d306a8b876c51679367610df5d08abf3cff0a482a07c07ef0d131dd59d7cfd",
+          "size": 14390,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_dispatch_contract.py",
+          "hash": "10a9c4b2e523e5028fdb527d406ff8a1eb5e99b91dd3dc6c1c84df6a0e7ae882",
+          "size": 17112,
           "executable": false
         }
       ]
     },
     {
-      "name": "chrome-mobile-testing",
-      "treeHash": "47445d22389a70ac3a9484acab1c6c20b599466bb6783da201294f1c035f0d7d",
-      "fileCount": 4,
-      "bytes": 43391,
+      "name": "ego-browser",
+      "treeHash": "718c1b23549e2ef0fe3e80aacbdbb65f9de9471c16fd71ab4ec1562ff3501135",
+      "fileCount": 8,
+      "bytes": 30468,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "ad448907fd92783e23865e2bbd37b1ce550c52ecc436aebd16ad3b10607100d9",
-          "size": 781,
+          "hash": "6b9f4366d5d7c9a5e33be8d74a3f010a3449caacf4fe3aaa3e601b00c180980f",
+          "size": 1384,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "0e68f89e7fbccc7d12d9663c17b0eea6711b355175771906299c5f829ef669ed",
-          "size": 11431,
+          "hash": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
+          "size": 1594,
           "executable": false
         },
         {
-          "path": "scripts/chrome_touch.py",
-          "hash": "e9d9973661e5a63cecff3ab2e3cf71bc12205e16e548615c67284989d22913c9",
-          "size": 29277,
+          "path": "agents/openai.yaml",
+          "hash": "81a941e83feb556827d72aa98d7bc97a909294e386ff9f6a1817de92e8767b89",
+          "size": 271,
           "executable": false
         },
         {
-          "path": "scripts/prepare_chrome.py",
-          "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
-          "size": 1902,
+          "path": "assets/composer-icon.png",
+          "hash": "2822b28752520f2a5506cb0693c8db2fd1ec0345806454b5f92d999b84b5bc1f",
+          "size": 3967,
+          "executable": false
+        },
+        {
+          "path": "assets/logo.png",
+          "hash": "cec732e29ea3b03d8920b28d912306f43651186dc2f4a488800da9db0a50f993",
+          "size": 8612,
+          "executable": false
+        },
+        {
+          "path": "references/clearing-state.md",
+          "hash": "c9a022df55f396607ec8b7dc486ab452f1a133fd04fd954a2ff3f86c4df9458c",
+          "size": 4140,
+          "executable": false
+        },
+        {
+          "path": "references/install.md",
+          "hash": "f5f9b1d351a84ac17737fd6aa0e88b04bf1d8b28ae14218dec37fb73a8a94e67",
+          "size": 4479,
+          "executable": false
+        },
+        {
+          "path": "scripts/install.sh",
+          "hash": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
+          "size": 6021,
           "executable": false
         }
       ]
@@ -3132,57 +3218,39 @@
       ]
     },
     {
-      "name": "ego-browser",
-      "treeHash": "718c1b23549e2ef0fe3e80aacbdbb65f9de9471c16fd71ab4ec1562ff3501135",
-      "fileCount": 8,
-      "bytes": 30468,
+      "name": "grok-background-maker",
+      "treeHash": "070989e76b23624fd7f3f29fcf0fcc63b45e13da472a2f065161fe5827678725",
+      "fileCount": 5,
+      "bytes": 27652,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "6b9f4366d5d7c9a5e33be8d74a3f010a3449caacf4fe3aaa3e601b00c180980f",
-          "size": 1384,
+          "hash": "4f44ad2c8fd56291d347d630769ea397b5309a9c18d30b751636ea3614554ee1",
+          "size": 921,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
-          "size": 1594,
+          "hash": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
+          "size": 5662,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
-          "hash": "81a941e83feb556827d72aa98d7bc97a909294e386ff9f6a1817de92e8767b89",
-          "size": 271,
+          "hash": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+          "size": 353,
           "executable": false
         },
         {
-          "path": "assets/composer-icon.png",
-          "hash": "2822b28752520f2a5506cb0693c8db2fd1ec0345806454b5f92d999b84b5bc1f",
-          "size": 3967,
+          "path": "references/jobs.md",
+          "hash": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
+          "size": 4450,
           "executable": false
         },
         {
-          "path": "assets/logo.png",
-          "hash": "cec732e29ea3b03d8920b28d912306f43651186dc2f4a488800da9db0a50f993",
-          "size": 8612,
-          "executable": false
-        },
-        {
-          "path": "references/clearing-state.md",
-          "hash": "c9a022df55f396607ec8b7dc486ab452f1a133fd04fd954a2ff3f86c4df9458c",
-          "size": 4140,
-          "executable": false
-        },
-        {
-          "path": "references/install.md",
-          "hash": "f5f9b1d351a84ac17737fd6aa0e88b04bf1d8b28ae14218dec37fb73a8a94e67",
-          "size": 4479,
-          "executable": false
-        },
-        {
-          "path": "scripts/install.sh",
-          "hash": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
-          "size": 6021,
+          "path": "scripts/run_jobs.py",
+          "hash": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+          "size": 16266,
           "executable": false
         }
       ]
@@ -3294,125 +3362,57 @@
       ]
     },
     {
-      "name": "grok-background-maker",
-      "treeHash": "070989e76b23624fd7f3f29fcf0fcc63b45e13da472a2f065161fe5827678725",
-      "fileCount": 5,
-      "bytes": 27652,
+      "name": "mobile-touch-computer-use",
+      "treeHash": "a9a2ed326e9d5dfcfdfd29febb485c5acacb91d65512f1a822e166bcbd093920",
+      "fileCount": 8,
+      "bytes": 44204,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "4f44ad2c8fd56291d347d630769ea397b5309a9c18d30b751636ea3614554ee1",
-          "size": 921,
+          "hash": "9de3b7daa81818166efbd1093c83335f28f87532b64de9f58c25357ea5d86661",
+          "size": 1427,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
-          "size": 5662,
+          "hash": "174364caac70c789fee0cc7d5f01aa99169f2373ca3474058f5610f46b6bd7c1",
+          "size": 14928,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
-          "hash": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
-          "size": 353,
+          "hash": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+          "size": 320,
           "executable": false
         },
         {
-          "path": "references/jobs.md",
-          "hash": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
-          "size": 4450,
+          "path": "references/cold-start-regression.md",
+          "hash": "7a47078d74cba7121560dfec6a4f67c1dadb0cd50c6435df46eb5ca7cbadf2a2",
+          "size": 7488,
           "executable": false
         },
         {
-          "path": "scripts/run_jobs.py",
-          "hash": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
-          "size": 16266,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "desktop-agent-orchestrator",
-      "treeHash": "b487033e82c1a8412c9a533512aa1af2d0da3724957c1559768956d743f710dd",
-      "fileCount": 13,
-      "bytes": 94572,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "3d09744ed9dd537259f42625b5f766dd318553d1c1a65d8a3c3d5978a3ff798e",
-          "size": 2269,
+          "path": "references/computer-use.md",
+          "hash": "cd5215cafc8faf8b8a0ab156d950481de5317f8d683783a446be44cafee91df6",
+          "size": 7672,
           "executable": false
         },
         {
-          "path": "SKILL.md",
-          "hash": "8e7e4e628b18618b9be713459990e986bf76dce74f0a4fc32ce83c7e8dce7012",
-          "size": 3725,
+          "path": "references/evidence.md",
+          "hash": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+          "size": 2916,
           "executable": false
         },
         {
-          "path": "agents/openai.yaml",
-          "hash": "16fc2d622a5ba55df2ddc9c5e2dd16be64b3e430ed36917e09135f83bcd56a8a",
-          "size": 413,
+          "path": "scripts/input_observer.js",
+          "hash": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+          "size": 3177,
           "executable": false
         },
         {
-          "path": "assets/windows-software.json",
-          "hash": "47f66cdc77ea92a4c44fd9f12c7a6a120f5e15b888994445f9d82510917ed8ba",
-          "size": 4920,
-          "executable": false
-        },
-        {
-          "path": "references/delegation-boundaries.md",
-          "hash": "a44ab252f4479927a71e4618e36c82c4e20e3f783b8a133e506aa845d1bbbdea",
-          "size": 5172,
-          "executable": false
-        },
-        {
-          "path": "references/local-app-routing.md",
-          "hash": "e945fa20d4a2847df77109234b801eec4cf8458c2cf6a64cc60146da31769dcd",
-          "size": 4753,
-          "executable": false
-        },
-        {
-          "path": "references/portability.md",
-          "hash": "3bbf405ab7d7ca9118a6eaa257fa14ac725f2cc39d9ab351f463b8ce89616a71",
-          "size": 2944,
-          "executable": false
-        },
-        {
-          "path": "references/task-brief.md",
-          "hash": "7be79f244b73f461a9c5cad1b115794cb3663986f48c55c74d1ce1766f1d2610",
-          "size": 6883,
-          "executable": false
-        },
-        {
-          "path": "references/windows-bootstrap.md",
-          "hash": "675c1061e68c2f4f19547d6ae705eab0e8cf9ae17c065240139fe7ff85a4c74d",
-          "size": 4954,
-          "executable": false
-        },
-        {
-          "path": "references/workflow-detail.md",
-          "hash": "e55a7e250543223670a1fa51b2b4449e441e8907e6499f2d257212a9e034ac56",
-          "size": 8317,
-          "executable": false
-        },
-        {
-          "path": "scripts/bootstrap_windows.py",
-          "hash": "a38bdd280b7b594e5d779d701c7b35e2add6d4a72cc4cba9db63a3e1bc739ef0",
-          "size": 18720,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_dispatch_contract.py",
-          "hash": "e3d306a8b876c51679367610df5d08abf3cff0a482a07c07ef0d131dd59d7cfd",
-          "size": 14390,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_dispatch_contract.py",
-          "hash": "10a9c4b2e523e5028fdb527d406ff8a1eb5e99b91dd3dc6c1c84df6a0e7ae882",
-          "size": 17112,
+          "path": "scripts/prepare_preview.py",
+          "hash": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+          "size": 6276,
           "executable": false
         }
       ]

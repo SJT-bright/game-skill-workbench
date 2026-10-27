@@ -1,0 +1,43 @@
+{
+  "id": "b16dcbcb-619f-42a4-977c-5b7ebe1ff565",
+  "skillId": "s-a5a5d4cc5c2308178580",
+  "directory": "chrome-mobile-testing",
+  "name": "chrome-mobile-testing",
+  "version": "v4",
+  "createdAt": "2026-10-27T04:16:00.055Z",
+  "summary": "文件变更：新增 0，修改 2，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 2,
+    "deleted": 0
+  },
+  "treeHash": "47445d22389a70ac3a9484acab1c6c20b599466bb6783da201294f1c035f0d7d",
+  "bytes": 43391,
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "ad448907fd92783e23865e2bbd37b1ce550c52ecc436aebd16ad3b10607100d9",
+      "size": 781,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "0e68f89e7fbccc7d12d9663c17b0eea6711b355175771906299c5f829ef669ed",
+      "size": 11431,
+      "executable": false
+    },
+    {
+      "path": "scripts/chrome_touch.py",
+      "hash": "e9d9973661e5a63cecff3ab2e3cf71bc12205e16e548615c67284989d22913c9",
+      "size": 29277,
+      "executable": false
+    },
+    {
+      "path": "scripts/prepare_chrome.py",
+      "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+      "size": 1902,
+      "executable": false
+    }
+  ]
+}

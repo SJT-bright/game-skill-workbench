@@ -41,6 +41,44 @@ class WriterOrder(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def add_string_texture_pack(self):
+        base=self.native/'subpackages/resources'
+        (base/'import/ab').mkdir(parents=True,exist_ok=True)
+        (base/'config.json').write_text(json.dumps({'name':'resources','uuids':['00AAAAAAAAAAAAAAAAAAAA'],'packs':{'ab123':['00AAAAAAAAAAAAAAAAAAAA']},'nativeBase':'native','importBase':'import'}))
+        (base/'import/ab/ab123.json').write_text(json.dumps({'type':'cc.Texture2D','data':'0,9729,9729,33071,33071,0,0,1'}))
+        target=base/'native/00/00000000-0000-0000-0000-000000000000.png'
+        target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(b'fixture')
+        return target
+
+    def test_string_uuid_real_writer_and_missing_texture_no_output(self):
+        target=self.add_string_texture_pack()
+        with patch('build_checked_zip.audit_final_startup',return_value={'passed':True}) as run:
+            result=build(self.native,'test-target',self.out,resource_manifest=self.manifest,project=self.project)
+        run.assert_called_once()
+        self.assertTrue(result['expected_tree_exact'])
+        self.assertTrue(any(row['uuid_index']=='00AAAAAAAAAAAAAAAAAAAA' for row in result['packed_resource_check']['native_texture_references']))
+        target.unlink();broken=self.root/'broken.zip'
+        with patch('build_checked_zip.audit_final_startup') as run:
+            with self.assertRaisesRegex(ValueError,'missing Cocos packed native texture'):
+                build(self.native,'test-target',broken,resource_manifest=self.manifest,project=self.project)
+            run.assert_not_called()
+        self.assertFalse(broken.exists())
+
+    def test_string_uuid_missing_texture_zip_readback_refused(self):
+        from check_package import native_files,check
+        target=self.add_string_texture_pack();target.unlink()
+        archive=self.root/'external-broken.zip';write_archive(archive,native_files(self.native))
+        with self.assertRaisesRegex(ValueError,'missing Cocos packed native texture'):
+            check(archive,'test-target')
+
+    def test_unknown_string_uuid_writer_refused_before_runtime(self):
+        self.add_string_texture_pack();p=self.native/'subpackages/resources/config.json';c=json.loads(p.read_text());c['packs']['ab123']=['11AAAAAAAAAAAAAAAAAAAA'];p.write_text(json.dumps(c))
+        with patch('build_checked_zip.audit_final_startup') as run:
+            with self.assertRaisesRegex(ValueError,'Texture2D pack UUID index invalid'):
+                build(self.native,'test-target',self.out,resource_manifest=self.manifest,project=self.project)
+            run.assert_not_called()
+        self.assertFalse(self.out.exists())
+
     def test_wrong_app_id_never_starts_runtime(self):
         with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
             with self.assertRaisesRegex(ValueError, 'App ID'):

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T04:39:44.263Z",
-  "treeHash": "676fb9a483bca094c78a26ab5b33ef3e5780fc4c923148da2993a4bb1ca8d86f",
+  "createdAt": "2026-10-27T04:50:51.816Z",
+  "treeHash": "07ef74f4c44ea82d5950cd5dfd1285e1a06e5e19cd08d856fcfb81c88502dd4a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2677,9 +2677,9 @@
     },
     {
       "name": "cocos-tiktok-package-check",
-      "treeHash": "d7fe639e7ab8d91bb784c2434b1b782ec81dc31484aa3e4cd9e764abd45dbd7d",
+      "treeHash": "c78eafd27e37616cbe77d1842bbc4564f240f1d2e73fb8f72dd48d92dae77a81",
       "fileCount": 29,
-      "bytes": 175566,
+      "bytes": 180199,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2689,8 +2689,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "d46731958729471310e7d090e984821bb46c084758e7b08492d2c8e8069976a6",
-          "size": 6520,
+          "hash": "67f44b2adbbf3185215958339c9a77b534ce8a7a13abc5aef6620c6023bd9f30",
+          "size": 7154,
           "executable": false
         },
         {
@@ -2713,8 +2713,8 @@
         },
         {
           "path": "references/check-contract.md",
-          "hash": "0c094f24a143409ca93abc59c1e97d94048368a692b8f4d29be81c8c8d49a1b6",
-          "size": 11095,
+          "hash": "0146248d4ee31037240f8cfed69bb5fb5de72d185b40680ff37f750554215813",
+          "size": 12452,
           "executable": false
         },
         {
@@ -2815,8 +2815,8 @@
         },
         {
           "path": "scripts/test_gate_order_and_identity.py",
-          "hash": "5bc322c7067b3eda69544b5df3d21bfdc6101334b5fa3e7ea48e523853449f69",
-          "size": 8317,
+          "hash": "b1dd8552dc8392427b58de7cce7b137dc20e87012d6840f4f478826a3a710a84",
+          "size": 10959,
           "executable": false
         },
         {

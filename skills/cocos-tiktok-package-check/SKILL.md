@@ -7,6 +7,8 @@ description: "已有Cocos Native或ZIP的最终文件检查、启动故障诊断
 
 接在用户已授权的出包或具体启动故障维护之后。新制作完整验收由[打包主入口](../cocos-game-tiktok-package/SKILL.md)选择范围；本入口不重做全游戏玩法、美术或所有历史事故。只读检查已有ZIP仍可单独执行。
 
+遇到 Cocos debug/release 资源格式差异或触摸执行器迁移时，按[格式与执行器兼容](references/check-contract.md#构建格式与触摸执行器兼容2026-10-27)处理；保留真实缺图/假触摸拒绝断言，并验证实际 writer 接线。
+
 1. 锁当前Native、目标App ID、稳定新ZIP路径、项目与证据。按[检查合同](references/check-contract.md)先核根入口、原生坐标、引擎/adapter、分包/场景、资源、未压缩体积；[检查顺序](references/gate-order-and-identity.md)先拒绝确定错误。
 2. 按[资源与历史问题门禁](references/resource-and-reported-issues.md)，运行当前生产调用清单反查。清单漏项、未知动态域、固定问题历史缺失、未复验/失败/失效拒包。相关问题有效时仅核证据与依赖，不重新跑该运行器。
 3. 验[同版Native启动恢复](../cocos-game-to-english/references/final-package-startup-gate.md)，保留HOME→真实触摸→玩法变化及失败→Retry新请求→恢复。现有可信runner走[项目QA注册](../cocos-game-to-english/references/project-qa-registration.md)。
@@ -36,10 +38,12 @@ python scripts/prepare_delivery.py --zip <上述同一ZIP> --native <同一Nativ
 
 **最终包先做 Chrome 触摸短检（用户 2026-10-27）**：回解最终 ZIP 的本地预览使用独立 Google Chrome iPhone CDP 触摸；Codex 内置浏览器只能查看，不得作为手机点击通过依据。广告入口、取消、超时、重复回调和按钮结果按[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。
 
-**广告存储合同必须接入 writer（2026-10-27 复审修订）**：已识别激励广告或已有存储合同的项目，按 [adapter 存储证据 v2](../cocos-game-to-english/references/ad-storage-evidence-contract.md)核验逐形态原始 JSON、Native/runner/宿主身份及业务断言。v1 拒绝沿用；共享 `package_obligations.verify` 已调用此检查。结果仅覆盖 adapter 存储；入口清单、玩家广告全链、旧故障对照及真实平台分别核验。
+**广告存储合同必须接入 writer（2026-10-27 复审修订）**：已识别激励广告或已有存储合同的项目，按 [adapter 存储证据 v2](../cocos-game-to-english/references/ad-storage-evidence-contract.md)核验逐形态原始 JSON、Native/runner/宿主身份及业务断言。v1 拒绝沿用；共享 `package_obligations.verify` 已调用此检查。合同同时强制本地玩家链与旧故障对照；入口清单及运行器语义仍须审阅，本地验证不产生真实平台结论。
 
 **输出必须标明 Chrome 测试层（用户 2026-10-27）**：凡输出“测试通过”“手机触摸通过”“按钮已验证”或交付预览，必须注明 `Google Chrome iPhone touch`、设备尺寸/DPR、`input_transport=playwright_cdp_touch` 和业务结果。只在 Codex 内置浏览器查看或点击，必须写“仅查看，未作为手机触摸测试”，不得写成测试通过。
 
-**2026-10-27 审查纠偏**：合同列出形状不等于执行；每一形状需独立原始证据与业务断言。当前脚本只核 adapter 证据身份和逐项断言，关键字扫描仍可能漏广告，不能代替运行器和入口清单审阅；须人工核对所有真实广告入口、旧故障复现、测试 runner 实际注入位置及最终 Native 同版，并保留完整回调与奖励读回证据。模拟注入、哈希或设备尺寸均不证明真实 TikTok SDK/物理设备通过；缺证据标未验证。
+**2026-10-27 审查纠偏**：合同列出形状不等于执行；每一形状需独立原始证据与业务断言。当前脚本核 adapter 形态及本地玩家链的身份/断言/失败对照，关键字扫描仍可能漏广告，不能代替运行器和入口清单审阅；须人工核对所有真实广告入口、旧故障复现、测试 runner 实际注入位置及最终 Native 同版，并保留完整回调与奖励读回证据。模拟注入、哈希或设备尺寸均不证明真实 TikTok SDK/物理设备通过；缺证据标未验证。
 
 **真实广告不是本地交付门槛（用户2026-10-27）**：电脑本地不要求真实 TikTok 广告填充或播放；用独立SDK边界模拟验证实际触摸、奖励与恢复，不得因缺少真实广告而停工、拒包或等待用户。适用检查通过即完成授权交付，日常不重复免责声明。统一规则见[电脑本地广告验收边界](../cocos-game-to-english/references/tiktok-device-stage.md#电脑本地广告验收边界用户2026-10-27明确)。
+
+广告前置读取或 Native adapter 故障修复时，执行[本地广告修复闭环](../cocos-game-to-english/references/native-ad-local-repair.md)：忠实存储/能力替身、真实按钮到 SDK 与到账、超时重试、迟到回调、保存重试及原消费者；以业务结果和旧故障对照收口。

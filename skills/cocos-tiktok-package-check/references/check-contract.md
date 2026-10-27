@@ -78,3 +78,12 @@ JS依赖检查使用随工具固定的Acorn 8.15.0（MIT，scripts/vendor/ACORN-
 ## 编译包中的资源封装（2026-10-26）
 
 同名 `this.load()` 先确认实际所属组件与方法体，不能直接当引擎资源调用，也不能只按名称豁免；原方法体仍须被独立清点。动态图片域从生产登记表、配置ID和关卡数据展开，只有源码明确的存在性判断才允许裁掉可选分支，不抄整个catalog作需求。版本相关适配绑定完整JS源集合；未知代码变更恢复拒绝。正式采用前用删首页必需资源、删数据推导的末项资源及新增未知动态调用校准，再验当前产物。
+
+
+## 构建格式与触摸执行器兼容（2026-10-27）
+
+- **纹理误拒原因**：Cocos 2.4 `packs` 可用数字索引，也可直接存 `uuids` 清单内的 UUID 字符串。`audit_packed_assets.py` 两种均解析，继续核实际 native 文件、多编码扩展名及安全路径；未知 UUID、坏索引和缺图仍拒绝。不得为适配 debug/release 格式删资源断言或混借其他构建的纹理。
+- **触摸误拒原因**：旧证据合同只识别 Ego 名称。`startup_business_contract.py` 接受实际 `playwright_cdp_touch`；Chrome 证据须有原始可信 touchstart/touchend、HOME→PLAY→玩法变化及当前 Native 绑定，不能改标签冒充触摸。电脑鼠标、模块四态回归不能充作全按钮/全状态手机触摸通过。
+- **实际接线**：正式 writer 的 Native 前检、轻量 writer 的写包前检、ZIP 回读/交付检查继续调用原共享资源和启动门禁。更新解析器时保留正常/旧格式对照与“缺图拒绝、无最终ZIP、启动器未运行”回归；只改文案不算接入。
+
+工具回归：`test_packed_native_textures.py`、`test_startup_business_contract.py`；轻量 writer/ZIP 接线回归：`cocos-tiktok-package-check/scripts/test_gate_order_and_identity.py`。这些是检查器校准，游戏与账号的原始材料留项目，不打进通用 Skill。

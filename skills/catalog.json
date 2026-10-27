@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T05:16:32.364Z",
-  "treeHash": "91ebe0669aa7a3d824672d42390377a38b163b9a5419ab32f373ec70887056e8",
+  "createdAt": "2026-10-27T05:44:57.687Z",
+  "treeHash": "14004b499c85adf9f3312b1ae3c1f1f2f7df4a98f1361d371d1f14fdcf42e78f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "4b3c38c27580214c46e896a9e85fac20cceb73b47fdc3e8fa897ad63559c0e14",
+      "treeHash": "f78ed10cce9b1cf180a35faaf07e9653a99f5a180cdb68e7de29b6f54a488804",
       "fileCount": 300,
-      "bytes": 8714214,
+      "bytes": 8714531,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1367,8 +1367,8 @@
         },
         {
           "path": "references/native-ad-local-repair.md",
-          "hash": "0bee1aa13455c2ba25cf0fc4722a703e6f39ba9fd69f68f29251f2aa4dc4e87c",
-          "size": 3376,
+          "hash": "a67a8e82e028f7333742fb1047ac8a333f77a7d920fa87976884c1faef2b3e75",
+          "size": 3693,
           "executable": false
         },
         {

@@ -31,6 +31,11 @@ class ObligationTests(unittest.TestCase):
  def test_native_rank_json_refused(self):
   self.source();(self.native/'ui.json').write_text('[{"_name":"btn_rank","_active":false}]')
   with self.assertRaises(ValueError):verify(self.root,self.native)
+ def test_package_verify_mandatory_gate_runs_before_other_evidence(self):
+  from package_obligations import verify as package_verify
+  p=self.source();(p/'assets/main.ts').write_text('sdk.getRank()')
+  with self.assertRaisesRegex(ValueError,'forbidden social package features'):
+   package_verify({},self.native,self.root,'unused-resource-manifest.json')
  def test_source_symlink_refused(self):
   p=self.root/'external';p.mkdir();(self.root/'source').symlink_to(p,target_is_directory=True)
   with self.assertRaises(ValueError):verify(self.root,self.native)

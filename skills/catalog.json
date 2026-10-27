@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T06:38:21.129Z",
-  "treeHash": "686b340a81fb1ec8099119ed64f46d929b69104d434e2e60742f63c54eb97c6c",
+  "createdAt": "2026-10-27T06:39:55.673Z",
+  "treeHash": "5f271ae1bf32cde5833e498556165eb1628dc6e86bf7e3d098e64da031215796",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "75cee0da24ee8535f6ffc0c2f4f28083b24eb5a3a577882d53e2122831af91e2",
+      "treeHash": "42bf9e218f531912d9f07cae3985dc3443166896245b9cdd31faa610fa7ef1f4",
       "fileCount": 302,
-      "bytes": 8720446,
+      "bytes": 8720801,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2471,8 +2471,8 @@
         },
         {
           "path": "scripts/test_no_social_package_obligation.py",
-          "hash": "38aef29be94d613a90a254b80f7e88a7408ea185b56620513654898ea95a5266",
-          "size": 2545,
+          "hash": "e738cd7ae086fbad9316033bfddd9543b612f39edf26c7bcdfc706b6da3da748",
+          "size": 2900,
           "executable": false
         },
         {

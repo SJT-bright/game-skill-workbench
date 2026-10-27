@@ -11,12 +11,14 @@ description: "重做或局部修改Cocos游戏美术、按钮、图片字、图�
 |---|---|
 | 主题、样板与同套资产 | [UI规范与样板](../cocos-game-to-english/references/ui-style-and-samples.md)、[明亮Q版](../cocos-game-to-english/references/cute-casual-style.md) |
 | Logo、图片字、按钮连字、位图数字 | [页面丰富度与文字](../cocos-game-to-english/references/page-richness.md)、[字底与字形](references/text-backplate-review.md) |
-| 双倍按钮、首页分区和动态标题/主角 | [按钮与首页](../cocos-game-to-english/references/mobile-button-size-and-home-layout.md) |
+| 双倍奖励主按钮、普通领取次按钮、首页分区和动态标题/主角 | [结算按钮层级](../cocos-game-to-english/references/mobile-button-size-and-home-layout.md#结算双倍主按钮层级用户-2026-10-27)、[按钮与首页](../cocos-game-to-english/references/mobile-button-size-and-home-layout.md) |
 | 集合预览、首尾压框、装备对应 | [集合预览](references/collection-preview-review.md) |
 | 拼装后的实际画面和输入 | [美术自审](../cocos-game-to-english/references/artwork-and-feedback.md)、[局部UI契约](../cocos-game-to-english/references/local-ui-contract.md) |
 | 用户确认后的检查范围 | [美术前移与锁定](../cocos-game-to-english/references/art-before-trial.md)、[执行去重](../cocos-game-to-english/references/review-execution-plan.md) |
 
 已知文字/按钮与其底图由内置image_gen整体生成，标题使用风格化logo，动态数字使用生成的位图字；不以程序字或空底叠字冒充。字图等比缩放，实际组合图核字芯/描边、装饰压字、关闭与父面板、最长数字串和字距；普通矩形边界通过不能代替实际画面。
+
+**结算页主次（用户 2026-10-27）**：可领取广告双倍奖励时，“看广告 ×2”必须是最大、最醒目的收益操作主按钮，普通领取／免费继续做成较小的次按钮，降低视觉权重但保持清楚可读、容易触摸。美术样板、生图提示词、实际组装及手机画面验收均按上表的结算按钮层级执行；不能让 HOME/NEXT 抢走广告奖励入口的视觉主位。
 
 完整首次重做覆盖实际全部页面、弹窗和条件状态、两种比例及两轮自审；局部修改查受影响整页、共享组件与真实点击，已通过且无新变化不再追加整轮。`art_check.py`按适用行运行，未测范围不写通过。用户确认画面后，最终出包只查运行故障，不重评审美。
 

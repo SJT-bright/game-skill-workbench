@@ -48,7 +48,7 @@ function isGameThread(t,roots=[]){
  if(!UUID.test(t.id)||!title||t.archived||t.ephemeral||t.parentThreadId||t.parent_thread_id||typeof t.source==='object'||['cli','exec','subagent','sub_agent'].includes(t.source)||isMaintenanceTitle(title))return false;
  return roots.some(r=>cwd===r||cwd.startsWith(r+path.sep))||/(?:游戏|cocos|(?:^|[\\/])games?(?:[\\/]|$))/i.test(cwd)||/游戏|关卡|重塑|英化|试玩|TikTok|Native|[A-Za-z]+[’']s\s+[A-Za-z]+/.test(title);
 }
-async function discover({roots=[],cache={},limit=40,binary}={}){
+async function discover({roots=[],cache={},limit=300,binary}={}){
  const reader=new Reader(binary||await executable());const out=[];let incomplete=false;
  try{await reader.init();let cursor=null;const rows=[];for(let page=0;page<3;page++){const r=await reader.rpc('thread/list',{limit:100,sortKey:'updated_at',sortDirection:'desc',archived:false,useStateDbOnly:true,...(cursor?{cursor}:{})});rows.push(...r.data||[]);cursor=r.nextCursor;if(!cursor)break;}incomplete=!!cursor;
   const scoped=rows.filter(t=>isGameThread(t,roots)).slice(0,limit);incomplete=incomplete||rows.filter(t=>isGameThread(t,roots)).length>limit;

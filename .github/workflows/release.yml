@@ -45,6 +45,7 @@ jobs:
           $version = node -p "require('./package.json').version"
           $env:SKILL_DOCK_DATA_DIR = Join-Path $PWD '.qa/ci-native'
           $env:SKILL_DOCK_SMOKE_EMBEDDED = '1'
+          $env:SKILL_DOCK_SMOKE_SELECTION = '1'
           New-Item -ItemType Directory -Path '.qa/ci-native' -Force | Out-Null
           $exe = Join-Path $PWD "dist/$version/GameDesk-Skill-$version-win-x64/GameDeskSkill.exe"
           $env:ELECTRON_ENABLE_LOGGING = '1'

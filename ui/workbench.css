@@ -10,3 +10,15 @@
 
 /* Persistent update inbox stays visible until explicitly acknowledged. */
 .update-inbox{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#90b8ff09;color:#c5d6ef;font-size:11px}.update-inbox .text-button{font-size:10px;white-space:nowrap}.edge-handle button{position:relative}.edge-update-dot{position:absolute;top:4px;right:3px;width:6px;height:6px;border-radius:50%;background:#86b6ff;box-shadow:0 0 0 2px #1c2639}.update-metadata{display:grid;gap:6px;margin:0 0 12px;font-size:11px;font-variant-numeric:tabular-nums}.update-metadata>div{display:flex;justify-content:space-between;gap:12px}.update-metadata dt{color:var(--muted)}.update-metadata dd{margin:0;color:#d1dceb;text-align:right}
+
+.activity-filters{display:flex;gap:4px;padding:6px 0 2px;flex-shrink:0}
+.activity-filters .filter{flex:1;white-space:nowrap;padding:7px 5px;font-size:12px}
+.activity-filters .filter span{opacity:.65;font-variant-numeric:tabular-nums}
+.thread-count{padding:2px 2px 8px;color:var(--muted,#929ba9);font-size:11px;flex-shrink:0}
+.thread-group{margin:0 0 12px}
+.thread-group-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:3px 3px 7px;color:var(--muted,#929ba9);font-size:12px}
+.thread-group-heading>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread-group-heading small{white-space:nowrap;font-size:10px;opacity:.75}
+.thread-group .game{margin-bottom:7px}
+.games-page .filters{grid-template-columns:repeat(5,minmax(0,1fr))}
+.games-page .filters .filter{padding-left:3px;padding-right:3px;font-size:11px}

@@ -56,3 +56,7 @@ Windows 首次使用可下载完整便携包并运行 `GameDeskSkill.exe`；另�
 ## 维护者无窗口发布
 
 `npm run skills:publish` 只同步 allowlist 中的本地 Skill 源目录到发布仓库，不读取游戏或对话。可由系统后台任务每分钟执行；无变更时只检查本地哈希，失败在下轮重试。状态保存在维护者电脑的 `GameDesk-Publisher` 目录，与使用者工作台独立；GitHub 发布仍需要维护者自己的写权限。macOS 后台任务无需打开悬浮窗口。
+
+## Windows 旧版内置更新失败
+
+已安装用户可下载 Release 中的 `GameDesk-0.2.5-Windows-Repair.zip`。先在旧工作台设置中点击“退出”，完整解压修复包到独立目录，双击 `Update.cmd` 并选择原来包含 `GameDeskSkill.exe` 的安装目录。修复包只替换程序文件，不重复下载 Electron 运行时，个人游戏、Codex对话及设置保持原样。原程序文件保留备份，位置记录在 `repair-receipt.json`。未安装用户仍使用完整 Windows ZIP。

@@ -1,0 +1,64 @@
+name: Verify Windows repair package
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/build.cjs win
+      - run: node scripts/build-repair.cjs
+      - name: Verify repair, backup and native startup
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $install = Join-Path $PWD "dist/$version/GameDesk-Skill-$version-win-x64"
+          $repair = Join-Path $PWD "release/GameDesk-$version-Windows-Repair"
+          $old = Join-Path $install 'resources/app/package.json'
+          $package = Get-Content $old -Raw | ConvertFrom-Json
+          $package.version = '0.2.4'
+          $package | ConvertTo-Json | Set-Content -LiteralPath $old -Encoding utf8
+          $before = (Get-FileHash -LiteralPath $old).Hash
+          $probe = Join-Path $repair 'payload/ui/app.js'
+          $good = [IO.File]::ReadAllBytes($probe)
+          [IO.File]::AppendAllText($probe,'tampered')
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repair 'Repair.ps1') -InstallDirectory $install -NoLaunch
+          if($LASTEXITCODE -eq 0 -or (Get-FileHash -LiteralPath $old).Hash -ne $before){throw 'Corrupt repair must fail without changing old installation'}
+          [IO.File]::WriteAllBytes($probe,$good)
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repair 'Repair.ps1') -InstallDirectory $install -NoLaunch
+          if($LASTEXITCODE -ne 0){throw 'Repair script failed'}
+          $receipt = Get-Content (Join-Path $install 'repair-receipt.json') -Raw | ConvertFrom-Json
+          if($receipt.version -ne $version -or $receipt.previousVersion -ne '0.2.4'){throw 'Repair receipt mismatch'}
+          if((Get-FileHash (Join-Path $receipt.backup 'package.json')).Hash -ne $before){throw 'Old application backup differs'}
+          $env:SKILL_DOCK_DATA_DIR = Join-Path $PWD '.qa/repair-native'
+          $env:SKILL_DOCK_SMOKE_EMBEDDED = '1'
+          New-Item -ItemType Directory -Path $env:SKILL_DOCK_DATA_DIR -Force | Out-Null
+          $process = Start-Process -FilePath (Join-Path $install 'GameDeskSkill.exe') -ArgumentList @('--smoke-test','--disable-gpu') -Wait -PassThru -RedirectStandardError '.qa/repair-error.log'
+          if($process.ExitCode -ne 0){Get-Content '.qa/repair-error.log';throw 'Repaired application did not start'}
+          $smoke = Get-Content '.qa/repair-native/smoke.json' -Raw | ConvertFrom-Json
+          if(-not $smoke.api -or $smoke.embeddedCount -lt 15){throw 'Repaired application failed embedded Skill checks'}
+          Compress-Archive -Path "$repair/*" -DestinationPath "release/GameDesk-$version-Windows-Repair.zip"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-repair-proof
+          include-hidden-files: true
+          path: |
+            release/*-Repair.zip
+            .qa/repair-native/smoke.json
+            .qa/repair-error.log
+      - name: Publish verified recovery package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = node -p "require('./package.json').version"
+          gh release upload "v$version" "release/GameDesk-$version-Windows-Repair.zip" --clobber
+          if($LASTEXITCODE -ne 0){throw 'Repair package publication failed'}

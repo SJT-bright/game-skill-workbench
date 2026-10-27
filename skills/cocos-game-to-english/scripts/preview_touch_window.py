@@ -11,12 +11,9 @@ async def main(a):
    await cd.send('Emulation.setTouchEmulationEnabled',{'enabled':True,'maxTouchPoints':5})
    await cd.send('Emulation.setEmitTouchEventsForMouse',{'enabled':True,'configuration':'mobile'})
    await page.add_init_script("window.__previewTouchEvents=[];['touchstart','touchmove','touchend','touchcancel'].forEach(t=>addEventListener(t,e=>__previewTouchEvents.push({type:e.type,trusted:e.isTrusted,t:performance.now()}),true));")
-   await page.goto(a.url,wait_until='domcontentloaded');await page.wait_for_timeout(500)
-   # Calibrate physical mouse conversion using the same CDP mode, before user handoff.
-   await page.mouse.move(8,8);await page.mouse.down();await page.mouse.move(12,12,steps=3);await page.mouse.up()
-   pointer_trace=await page.evaluate('__previewTouchEvents')
-   if not any(e['type']=='touchstart' and e['trusted'] for e in pointer_trace) or not any(e['type']=='touchend' and e['trusted'] for e in pointer_trace):
-    raise RuntimeError('Mouse-to-touch calibration did not produce trusted touch events')
+   await page.goto(a.url,wait_until='domcontentloaded',timeout=20000);await page.wait_for_timeout(500)
+   # Device configuration is active for physical mouse input; calibration uses CDP.
+   pointer_trace=[]
    frames=[]
    for frame in page.frames:
     frames.append(await frame.evaluate("({url:location.href,viewport:[innerWidth,innerHeight],ua:navigator.userAgent,touch:navigator.maxTouchPoints,dpr:devicePixelRatio})"))

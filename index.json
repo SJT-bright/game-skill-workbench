@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "87d9ebef-4af0-4805-9823-8e7e8117627e",
+      "skillId": "s-8ab0e33c96543080c7af",
+      "directory": "cocos-game-art-redo",
+      "name": "cocos-game-art-redo",
+      "version": "v6",
+      "createdAt": "2026-10-27T04:26:54.000Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "9e192b3b0b5c25cfed82675e615ec64864f7ceecbc6df665ee950ef9d3e00982",
+      "bytes": 809328,
+      "fileCount": 23
+    },
+    {
       "id": "c55df8eb-553d-4329-80e4-ce3f612ad670",
       "skillId": "s-4e976859708a939065d7",
       "directory": "cocos-tiktok-package-check",

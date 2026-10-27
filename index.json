@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "5388f364-dac0-419c-9ba5-4b5f6c4a0742",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v17",
+      "createdAt": "2026-10-27T04:22:55.781Z",
+      "summary": "文件变更：新增 0，修改 4，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 4,
+        "deleted": 0
+      },
+      "treeHash": "9cbc256b14cad2abbcbfd402afc759a770175a5943743e45ee190b2cad3ba570",
+      "bytes": 8666024,
+      "fileCount": 296
+    },
+    {
       "id": "b16dcbcb-619f-42a4-977c-5b7ebe1ff565",
       "skillId": "s-a5a5d4cc5c2308178580",
       "directory": "chrome-mobile-testing",

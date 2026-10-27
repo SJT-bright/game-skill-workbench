@@ -5,11 +5,11 @@ description: 用户要求游戏本地预览、试玩、游玩或打开游戏时�
 
 # 手机触控模拟验收
 
-**用户亲自试玩先走轻量入口**：预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读[固定手机尺寸试玩](../cocos-game-to-english/references/user-phone-preview.md)。共享预览脚本默认390×844同源手机框、只缩小不放大，真实确认首页/开始后才发链接；仅试玩不执行下面的完整代测流程。
+**用户亲自试玩先走轻量入口**：预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读[固定手机尺寸试玩](../cocos-game-to-english/references/user-phone-preview.md)。共享预览脚本 `--keep` 默认自动请求独立 Google Chrome 窗口，保留390×844同源手机框；读回实际窗口并确认首页/开始后交接；仅试玩不执行下面的完整代测流程。
 
-让 Agent 直接操作界面完成测试。**Google Chrome DevTools/CDP 触摸默认（用户 2026-10-27）**：自动测试在独立 Google Chrome 触摸模式里做，使用 `chrome_touch.py --user-approved-chrome --channel chrome`；固定移动 viewport、DPR、UA、`has_touch`，通过 `Input.dispatchTouchEvent` 或 `page.touchscreen` 发送触摸。`input_transport` 必须是 `playwright_cdp_touch`，普通鼠标不计作手机通过。用户试玩仍使用 Codex 本地预览链接，手机框只负责展示。Ego Lite 只有用户明确指定时才启用。完整合同见[Google Chrome 移动触摸运行模式](../cocos-game-to-english/references/google-touch-runtime.md)。
+让 Agent 直接操作界面完成测试。**Google Chrome DevTools/CDP 触摸默认（用户 2026-10-27）**：自动测试在独立 Google Chrome 触摸模式里做，使用 `chrome_touch.py --user-approved-chrome --channel chrome`；固定移动 viewport、DPR、UA、`has_touch`，通过 `Input.dispatchTouchEvent` 或 `page.touchscreen` 发送触摸。`input_transport` 必须是 `playwright_cdp_touch`，普通鼠标不计作手机通过。用户试玩按上述固定手机入口自动打开独立 Chrome，并保留本地链接。Ego Lite 只有用户明确指定时才启用。完整合同见[Google Chrome 移动触摸运行模式](../cocos-game-to-english/references/google-touch-runtime.md)。
 
-**禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用主 Skill 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，用户在 Codex 里打开，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
+**禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用主 Skill 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，共享脚本自动请求独立 Chrome 窗口并核实可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
 
 文档命令中的 `<SKILLS_DIR>` 取本次实际加载的 skills 目录，先解析再执行，不沿用其他电脑的用户名或盘符。Windows使用已安装的 `py -3 -X utf8 -B`，macOS使用实际 `python3 -B`；不为示例路径重新安装解释器。
 
@@ -72,7 +72,7 @@ Cocos/TikTok任务同时读取 [通用问题适用范围与重点](../cocos-game
 
 清楚报告通过、失败、受限、未测范围。修复在授权范围内时另建候选、重建并用 Google Chrome CDP 触摸复测，不只改报告。现有 Cocos 手机门禁仍按它自己的绑定和真机要求，本 Skill 不自动放行。
 
-结束只清理本轮 QA 服务；按 `ego-browser` 规则调用一次 `task.finish({keep:[]})`（不为用户保留页面：用户试玩在 Codex 本地预览），用 `browser_slots.py close --name "<线名>"` 一并结束并注销本次空间。保护原标签页和服务。给用户结论、证据和可打开的报告，不要求重做已完成的操作。
+结束只清理本轮 QA 服务；按 `ego-browser` 规则调用一次 `task.finish({keep:[]})`（不为用户保留页面：用户试玩自动打开独立 Chrome 手机框），用 `browser_slots.py close --name "<线名>"` 一并结束并注销本次空间。保护原标签页和服务。给用户结论、证据和可打开的报告，不要求重做已完成的操作。
 
 ## 资源争用与关闭回执
 

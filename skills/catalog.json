@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T07:14:22.496Z",
-  "treeHash": "fc3d4d8b60cd729910e9f091d8d0836fa1e4cadbc45a578d37a272e48be6bb80",
+  "createdAt": "2026-10-27T07:16:17.830Z",
+  "treeHash": "00ecac1a15705fea507f081664eddd9835985da461804ae856217a7042675e25",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "42bf9e218f531912d9f07cae3985dc3443166896245b9cdd31faa610fa7ef1f4",
-      "fileCount": 302,
-      "bytes": 8720801,
+      "treeHash": "1940ad72d42126da3868ea37a2cb8c5b24b3e286809adde388d633a3ff7f12e9",
+      "fileCount": 303,
+      "bytes": 8725416,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1583,8 +1583,8 @@
         },
         {
           "path": "references/user-phone-preview.md",
-          "hash": "91051f445ef2ddc8b60c4771adb7d36928592e94e15ba3e49563f207f4b2ec7a",
-          "size": 4214,
+          "hash": "13a2865502cbf620610a8b66b78c18418a6ecf90ca09f40f0ec47ade54d808c8",
+          "size": 5018,
           "executable": false
         },
         {
@@ -2129,8 +2129,14 @@
         },
         {
           "path": "scripts/preview_chrome.py",
-          "hash": "0189976d1c43d7b6c56080ec18fa734a0927fd6d2161b494c64ff1e6e1c09879",
-          "size": 2618,
+          "hash": "60f6838a7e50efd7663a8a430ce944e6e199c43e1991d0f864e38ba2e9ac7bf0",
+          "size": 3359,
+          "executable": false
+        },
+        {
+          "path": "scripts/preview_touch_window.py",
+          "hash": "ed74a09f3302164a29e88ea0098241fac5766b19ff89818319750b7d9925cbde",
+          "size": 3070,
           "executable": false
         },
         {

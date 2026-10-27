@@ -1,4 +1,4 @@
-"""Open a loopback user preview in a separate, ordinary Google Chrome window.
+"""Open a loopback user preview in a separate, Google Chrome mobile touch window.
 
 This submits an OS launch request; it does not certify that a window was shown
 or that the game works. It never changes profiles, cookies or browser settings.
@@ -31,16 +31,30 @@ def open_chrome_window(url, phone_size=(390, 844)):
     parsed = urlsplit(url)
     if parsed.scheme != 'http' or parsed.hostname not in ('127.0.0.1', 'localhost', '::1') or parsed.username or parsed.password:
         raise ValueError('用户试玩启动器只接受本机 HTTP 预览地址')
-    executable = find_chrome()
-    width, height = phone_size
-    window_size = (max(480, width + 80), max(560, height + 116))
-    command = [str(executable), '--new-window',
-               '--window-size=' + ','.join(map(str, window_size)), url]
+    find_chrome()
+    import json, time, hashlib
+    runtime = Path.home() / 'GameSkillMigration/chrome-runtime/bin/python'
+    if not runtime.is_file():
+        runtime = Path(sys.executable)
+    state = Path.home() / '.game-skill-locks/touch-previews'
+    state.mkdir(parents=True,exist_ok=True)
+    ident = hashlib.sha256(url.encode()).hexdigest()[:16]
+    result = state / (ident + '-' + str(os.getpid()) + '.json')
+    command = [str(runtime), str(Path(__file__).with_name('preview_touch_window.py')),
+               '--url',url,'--width',str(phone_size[0]),'--height',str(phone_size[1]),
+               '--profile',str(state / (ident+'-profile')), '--result',str(result),'--parent',str(os.getpid())]
     child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL, close_fds=True)
-    return {'browser': 'google_chrome', 'status': 'launch_requested', 'url': url,
-            'new_window': True, 'requested_window_size': list(window_size),
-            'launcher_pid': child.pid, 'visible_window_verified': False}
+    for _ in range(300):
+        if result.is_file():
+            observed=json.loads(result.read_text())
+            if observed.get('status') != 'touch_window_ready':raise OSError(observed.get('error','Touch window failed'))
+            observed['receipt']=str(result)
+            return observed
+        if child.poll() is not None:raise OSError('Chrome touch preview exited before verification')
+        time.sleep(.1)
+    raise OSError('Chrome touch preview did not return its device readback in time')
+
 
 
 def browser_request(url, *, keep=False, explicit_open=False, no_browser=False, phone_size=(390, 844)):

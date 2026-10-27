@@ -35,7 +35,16 @@ def image_recovery_errors(raw, binding, runner_sha=None):
     before, after = raw.get('request_count_before'), raw.get('request_count_after')
     need(type(before) is int and before >= 1 and type(after) is int and after > before, 'Retry must issue fresh underlying image requests')
     touch = raw.get('retry_touch', {})
-    need(isinstance(touch, dict) and touch.get('transport') == 'ego_page_cdp' and touch.get('trusted_touch') is True and type(touch.get('at_ms')) in (int, float) and math.isfinite(touch['at_ms']) and touch['at_ms'] >= 0, 'actual Retry touch required')
+    need(isinstance(touch, dict) and touch.get('transport') in ('ego_page_cdp', 'playwright_cdp_touch') and touch.get('trusted_touch') is True and type(touch.get('at_ms')) in (int, float) and math.isfinite(touch['at_ms']) and touch['at_ms'] >= 0, 'actual Retry touch required')
+    if isinstance(touch, dict) and touch.get('transport') == 'playwright_cdp_touch':
+        trace = raw.get('observed', {}).get('touches', []) if isinstance(raw.get('observed'), dict) else []
+        trace = trace if isinstance(trace, list) else []
+        at = touch.get('at_ms')
+        valid_time = lambda value: type(value) in (int, float) and math.isfinite(value) and value >= 0
+        starts = [row.get('t') for row in trace if isinstance(row, dict) and row.get('type') == 'touchstart' and row.get('trusted') is True and valid_time(row.get('t'))]
+        ends = [row.get('t') for row in trace if isinstance(row, dict) and row.get('type') == 'touchend' and row.get('trusted') is True and valid_time(row.get('t'))]
+        home = raw.get('business', {}).get('home', {}).get('at_ms')
+        need(valid_time(at) and valid_time(home) and any(at <= start <= end <= home for start in starts for end in ends), 'Chrome Retry requires original trusted touchstart/touchend between Retry and HOME')
     if isinstance(touch, dict) and type(touch.get('at_ms')) in (int, float):
         home_time = raw.get('business', {}).get('home', {}).get('at_ms')
         need(type(home_time) in (int, float) and touch['at_ms'] <= home_time, 'Retry must precede the recovered HOME')

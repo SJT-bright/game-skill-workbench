@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T05:00:38.948Z",
-  "treeHash": "eaccdd7687e78221bf134d7a34a72334b14050cf27f0a2e7063c96a6cd9ffe0d",
+  "createdAt": "2026-10-27T05:04:33.403Z",
+  "treeHash": "18c437f3ce66d528a7fb1c0552419466ee112b99493076fa82e97fd59595ab2b",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "502353b65d61201aab45bd95baf06808431d9b8d5364f8d6ab66b41d7de7f2c7",
-      "fileCount": 298,
-      "bytes": 8679998,
+      "treeHash": "1a2b4578b1559fc83802686bdc0de2b2f23f1540cb7a9dedbaa081f4eb2ae27c",
+      "fileCount": 299,
+      "bytes": 8708458,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1307,8 +1307,8 @@
         },
         {
           "path": "references/loading-scene-false-positive.md",
-          "hash": "94094881defa4df97d8031404a82c97fc1b7953704fadb6ba4c8a298faaff22a",
-          "size": 12917,
+          "hash": "a5aae102d89f014219826bf4989836610d3b9d2b1ca9d82c650057ccfed3eba3",
+          "size": 13019,
           "executable": false
         },
         {
@@ -1745,8 +1745,8 @@
         },
         {
           "path": "scripts/audit_native_startup_renderer.py",
-          "hash": "ea7b9317f898fa6112cda47b8e0ab2ba3b696b7dc622dc89ae793c96c6af5387",
-          "size": 13266,
+          "hash": "eb7d746b397535cb9ba58b377bd06a0644ae19fab45a823b02f56476262b639f",
+          "size": 13433,
           "executable": false
         },
         {
@@ -1973,8 +1973,8 @@
         },
         {
           "path": "scripts/duo_sdk_ui_retry_contract.py",
-          "hash": "aecf5df8303b4c1c532a79157fbb77e7f7728b06b212fea4928903171f5eea71",
-          "size": 12119,
+          "hash": "2a17f60aa091bdfa36e805a6c06dd28e2930560d9effbbafb80b8ff3f2284d69",
+          "size": 13141,
           "executable": false
         },
         {
@@ -2183,8 +2183,8 @@
         },
         {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "4939518fc33e168815b78210d1f41e7bdd9e461e24aad9848972e90004948e88",
-          "size": 1677277,
+          "hash": "9f0e61accef2e40f3172754792d06c33301caa09da30b2ebae8e7e9d931ffd33",
+          "size": 1702139,
           "executable": false
         },
         {
@@ -2323,6 +2323,12 @@
           "path": "scripts/test_check_runner.py",
           "hash": "3ffee7199152c5f6018028321c22344abf44dd335060c63d932261bc2bed0a69",
           "size": 1035,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_duo_chrome_retry.py",
+          "hash": "f752e8431cc475652ee59e5f08288034385b59be7713715df8109b83813053ad",
+          "size": 2307,
           "executable": false
         },
         {

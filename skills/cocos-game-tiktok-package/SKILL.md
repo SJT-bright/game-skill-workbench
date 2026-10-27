@@ -29,6 +29,8 @@ description: "用户提到测试包、上传包、平台包、TikTok ZIP或重�
 
 先拒绝便宜、确定失败项，再运行必要启动/功能门禁。失败继续修复→重建→定点复验，不以中途报告等待下一句“继续”，也不为了变绿而删断言或改限额。项目专用运行器按[项目QA注册](../cocos-game-to-english/references/project-qa-registration.md)，路径、App ID与故障原件留项目。
 
+- Cocos debug/release 资源与 Chrome CDP 证据兼容按[格式与执行器检查](../cocos-tiktok-package-check/references/check-contract.md#构建格式与触摸执行器兼容2026-10-27)，同一共享门禁必须继续拦截缺图、未知 UUID 和无原始触摸的证据。
+
 ## 正式writer命令
 
 ```sh

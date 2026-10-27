@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T06:39:55.673Z",
-  "treeHash": "5f271ae1bf32cde5833e498556165eb1628dc6e86bf7e3d098e64da031215796",
+  "createdAt": "2026-10-27T06:58:52.557Z",
+  "treeHash": "92c390d8702bfcd3a410962eacfee958503f1114ac9a43144c916f3e1c621315",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -57,9 +57,9 @@
     },
     {
       "name": "cocos-game-art-redo",
-      "treeHash": "9e192b3b0b5c25cfed82675e615ec64864f7ceecbc6df665ee950ef9d3e00982",
+      "treeHash": "5fec21cc4b6749492a6da9f6b40e76e74b4f65454f9d28eb17201a01869cbaad",
       "fileCount": 23,
-      "bytes": 809328,
+      "bytes": 811293,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -69,8 +69,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "3bdb88339877e40ad60b08c435004b610615e720f440d13eaa06630069d72ffa",
-          "size": 3531,
+          "hash": "a13f244b3cddf7299ab869748dcd42ed79051218306c55ec73e819f225930ac9",
+          "size": 3657,
           "executable": false
         },
         {
@@ -135,8 +135,8 @@
         },
         {
           "path": "references/rendered-ui-regression-review.md",
-          "hash": "f61775e3b380d665eb5d290da2569964efd4991537295a19bf4afa56718097b2",
-          "size": 2569,
+          "hash": "e50d0bf4796a3290bb0378b6b012f3135a97e2e06020fd99da6fbc9a054d7229",
+          "size": 4408,
           "executable": false
         },
         {

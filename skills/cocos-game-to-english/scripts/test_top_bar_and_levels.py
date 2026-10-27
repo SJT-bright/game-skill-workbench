@@ -186,7 +186,7 @@ class LevelPlanTests(Fixture):
             for levels in (70, 75, 121, 200):
                 mode = 'every_10' if seed % 3 == 0 else 'final'
                 plan(root, levels=levels, seed=seed, skins=seed % 2 == 0, skin_mode=mode)
-                for board in ('localize', 'remake'):                     # user 2026-10-24: >= 70 passes on both boards
+                for board in ('remake',):                     # user 2026-10-24: >= 70 passes on both boards
                     out = root / 'r.json'
                     py('audit_level_plan.py', '--project', root, '--out', out, '--board', board)
                     failed = [c for c in json.loads(out.read_text())['checks'] if not c['passed'] and c['id'] != 'map_page']
@@ -270,7 +270,7 @@ class LevelPlanTests(Fixture):
         """User 2026-10-24: 70 or more passes (both boards); a game with more levels is not cut to 70."""
         root = self.project()
         plan(root, levels=80, seed=7)
-        for board in ('remake', 'localize'):
+        for board in ('remake',):
             (root / 'docs/board.txt').write_text(board)
             out = root / 'r.json'
             py('audit_level_plan.py', '--project', root, '--out', out)

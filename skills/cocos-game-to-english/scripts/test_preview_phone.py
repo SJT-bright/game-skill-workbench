@@ -7,6 +7,15 @@ from urllib.request import urlopen
 HERE=Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location('preview',HERE/'serve_preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 class PhonePreview(unittest.TestCase):
+ def test_raw_root_ad_simulation_matches_explicit_index(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);original=b'<html><head></head><body>game</body></html>';(root/'index.html').write_bytes(original)
+   for enabled in (False,True):
+    server=ThreadingHTTPServer(('127.0.0.1',0),partial(preview.Handler,directory=folder,phone_size=None,ad_simulator=enabled));thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start();base=f'http://127.0.0.1:{server.server_port}'
+    try:
+     body=urlopen(base+'/').read();explicit=urlopen(base+'/index.html').read();self.assertEqual(body,explicit)
+     self.assertEqual(b'/__local_ad_simulator.js' in body,enabled);self.assertEqual((root/'index.html').read_bytes(),original)
+    finally:server.shutdown();thread.join();server.server_close()
  def test_ad_simulation_is_response_only_and_disabled_by_default(self):
   from urllib.error import HTTPError
   with tempfile.TemporaryDirectory() as folder:

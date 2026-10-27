@@ -52,3 +52,7 @@ Windows 首次使用可下载完整便携包并运行 `GameDeskSkill.exe`；另�
 ## 开源许可
 
 项目原创代码和文档采用 [MIT](LICENSE)，允许使用、修改和再分发。第三方组件保留原许可，见 [第三方声明](THIRD_PARTY_NOTICES.md)。个人游戏、Codex 对话及本机统计不作为公开仓库内容上传。
+
+## 维护者无窗口发布
+
+`npm run skills:publish` 只同步 allowlist 中的本地 Skill 源目录到发布仓库，不读取游戏或对话。可由系统后台任务每分钟执行；无变更时只检查本地哈希，失败在下轮重试。状态保存在维护者电脑的 `GameDesk-Publisher` 目录，与使用者工作台独立；GitHub 发布仍需要维护者自己的写权限。macOS 后台任务无需打开悬浮窗口。

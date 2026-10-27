@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Run an Agent-reviewed local touch plan in a Chromium browser and retain evidence.
 
-Default browser is Ego Lite (user rule 2026-10-21): pass --cdp-url with Ego's DevTools endpoint
-(see `ego-browser skill` for how to get it) and the plan runs in a fresh isolated context inside Ego;
-Ego itself is never closed. Launching Google Chrome (no --cdp-url) is only allowed after the user agreed.
-Ego is ONLY for the agent's own tests (user 2026-10-23): a run never hands its window to the user. --handoff is
+Default browser is Google Chrome (user rule 2026-10-27): use --user-approved-chrome --channel chrome and run the plan in a fresh isolated context.
+--cdp-url is reserved for an explicitly selected existing Chromium instance.
+Browser test windows are ONLY for the agent's own tests (user 2026-10-23): a run never hands its window to the user. --handoff is
 refused; the user plays the local preview link the agent gives in Codex (serve_preview.py --keep).
 
 Never waits (user 2026-10-22/23): every run opens its OWN new isolated window, so several runs (other games, other
@@ -36,7 +35,7 @@ All network requests (url, status, encoded bytes, finish time) are recorded for 
 
 Phone (user 2026-10-22): plan "device": "iphone_15" (default: 393x852, DPR 3, iPhone user agent, touch) |
   "iphone_se" (375x667, the short 9:16 ratio) | "iphone_15_pro_max"; or give viewport/dpr/user_agent yourself.
-  Ego Lite and Chrome are the same Chromium engine: run the phone simulation once, in one browser (Ego Lite by default).
+  Google Chrome is the default Chromium execution engine for the phone simulation; run one controlled simulation per browser version.
   This is Chromium with iPhone screen, touch and user agent, not Apple's WebKit.
 
 UI layout and copy are read from the running game, never typed in (user rule 2026-10-21):
@@ -93,11 +92,16 @@ SHOW_JS = """() => {
  window.dispatchEvent(new Event('pageshow'));window.dispatchEvent(new Event('focus'));
 }"""
 MAX_FRAMES=20000   # about 5.5 minutes at 60 fps
-READ = """() => ({url:location.href,ua:navigator.userAgent,width:innerWidth,height:innerHeight,
- dpr:devicePixelRatio,maxTouchPoints:navigator.maxTouchPoints,ontouchstart:'ontouchstart' in window,
- canvas:Array.from(document.querySelectorAll('canvas'),c=>{let r=c.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}),
- cocos:window.cc&&cc.sys?{isMobile:cc.sys.isMobile,capabilities:cc.sys.capabilities}:null,
- bodyText:document.body.innerText.slice(0,12000),events:window.__chromeTouchEvidence||[]})"""
+READ = """() => {
+ const one = (w) => ({url:w.location.href,ua:w.navigator.userAgent,width:w.innerWidth,height:w.innerHeight,
+  dpr:w.devicePixelRatio,maxTouchPoints:w.navigator.maxTouchPoints,ontouchstart:'ontouchstart' in w,
+  canvas:Array.from(w.document.querySelectorAll('canvas'),c=>{let r=c.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}),
+  cocos:w.cc&&w.cc.sys?{isMobile:w.cc.sys.isMobile,capabilities:w.cc.sys.capabilities}:null,
+  bodyText:w.document.body.innerText.slice(0,12000),events:w.__chromeTouchEvidence||[]});
+ const frames=[one(window)];
+ for(const iframe of document.querySelectorAll('iframe')) { try { frames.push(one(iframe.contentWindow)); } catch (_) {} }
+ return {top:frames[0],frames};
+}"""
 
 
 ON_TERM=[lambda:None]

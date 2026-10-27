@@ -1,6 +1,6 @@
 # 重开与触摸输入：最容易漏的几类检查
 
-来源：用户本地版 Skill 2026-10-19/20 的复盘（"下一局其实不能玩""拖动难拿起/拿错""弹窗关了还挡触摸"），合并时去掉了重型记录格式，保留要测的情况。锁定后的**测试执行**按本页做（任何能运行命令的 Agent 都可以），用 `chrome_touch.py --cdp-url` 在 Ego Lite 里发真实触摸事件，结果写进对应门禁行，每条写自己的观察。只测本游戏实际有的机制，不为通过清单新增功能。
+来源：用户本地版 Skill 复盘。锁定后的**测试执行**统一用独立 Google Chrome iPhone CDP 触摸，使用 `chrome_touch.py --user-approved-chrome --channel chrome` 发真实触摸事件，结果写进对应门禁行，每条写自己的观察。只测本游戏实际有的机制，不为通过清单新增功能。
 
 ## 一、开工就列出本游戏的风险链
 
@@ -46,7 +46,7 @@
 
 ## 七、每个按钮都点一遍（iPhone 模拟，INPUT-05，用户 2026-10-22）
 
-**在一个浏览器里测一次就够**：Ego Lite 和 Chrome 是同一个内核（Chromium），结果一样，不用两个都测；默认 Ego Lite，改用 Chrome 仍要先问用户。手机用 `chrome_touch.py` 的 iPhone 预设：
+**在一个浏览器里测一次就够**：统一使用独立 Google Chrome iPhone CDP 触摸；Codex 内置浏览器和 Ego 不作为默认测试器。手机用 `chrome_touch.py --user-approved-chrome --channel chrome` 的 iPhone 预设：
 
 - `"device": "iphone_15"`（默认，393×852、3 倍像素、iPhone 浏览器标识、触摸）：**每个按钮都点一遍**。
 - `"device": "iphone_se"`（375×667，短屏）：再跑一遍主流程。
@@ -71,3 +71,12 @@
 ## 页面就绪与后续资源取消重进（2026-10-23）
 
 导航/分包/加载维护及最终出包前，按[页面就绪与取消重进](page-readiness-and-cancel.md)执行。首页resources故障不能覆盖后续包；取消旧导航同时保留资源成果，热缓存页面点击直达；LOAD-01新增audit_page_readiness的最终runtime报告，source_only静态报告不合格。实际输入改变后复验受影响业务链；不要用断言数或ZIP完整性替代漏测路线。
+
+## 结算出路与测试坐标稳定
+
+结算出路及清理的业务要求见[逻辑规则](../../cocos-game-logic-check/references/logic-rules.md#一出路和标准按钮功能)；本页负责真实操作与坐标稳定检查。
+
+自动化点击 Canvas 时，在设备配置、视口或页面切换、Retry 和面板动画后，先等待布局和真实绘制稳定，再用同一帧的实际渲染相机、视口和节点坐标定位；点击后验证对应业务状态。若未命中，先核当前画面、相机变换、布局更新及事件是否到达，区分测试坐标错误和产品故障，不盲目重复点击或修改游戏。
+
+适用范围与修复闭环见[通用问题规范](feedback-regressions.md#通用化判据)。
+

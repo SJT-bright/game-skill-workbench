@@ -2,7 +2,7 @@
 """LOAD-03: startup / enter-level timing, loading-animation freezes and first-screen size (user rules 2026-10-20/21/23).
 
 Reads the startup plan (written BEFORE measuring) and the report folders written by
-chrome_touch.py (run in Ego Lite with --cdp-url, plan "timing": true, --record). Every single run
+chrome_touch.py (run in Google Chrome with --user-approved-chrome --channel chrome, plan "timing": true, --record). Every single run
 must pass; averages never hide a failure.
 
   python audit_startup_loading.py --plan startup-plan.json --runs RUN_DIR [RUN_DIR ...]

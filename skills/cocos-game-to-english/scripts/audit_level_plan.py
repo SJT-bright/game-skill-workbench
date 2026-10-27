@@ -1,40 +1,8 @@
 #!/usr/bin/env python3
-"""Level map, bonus levels and limited levels (LEVEL-01, both boards; user 2026-10-22, the level module 2026-10-23,
-70-or-more and the two limited-skin formats 2026-10-24). A design-stage check (references/check-stages.md): run it with
-design_check.py at 英化 1.5 / 重塑 round 1, not in the final audit.
-references/top-bar-and-level-map.md, references/game-modules.md 五
-
-The plan: assets/resources/config/level_plan.json (the game reads it), or docs/levels/level_plan.json with a note
-where the original keeps its levels. make_level_plan.py writes a skeleton.
-  {"schema": "level_plan.v1", "mode": "levels"|"endless", "why": "...", "currency": "Pearls",
-   "total_levels": 70, "milestone_every": 10, "seed": N (the bonus places are drawn from it),
-   "limited_skin_mode": "final"|"every_10" (optional; read from the rewards when missing),
-   "levels": [{"level": 1, "type": "normal"|"bonus"|"milestone", "difficulty": 1.0, "coins": 40, "new": true (英化: added level),
-               "reward": {"type": "coins", "amount": N} | {"type": "skin", "id": "..."} (milestone)}]}
-endless: no levels, no map page (purpose "map" must not appear in the test dumps).
-levels:
-  - 70 levels or more (user 2026-10-24, both boards: at least 70 passes, more is fine, nothing is cut): 英化 with fewer
-    than 70 adds new levels in the original gameplay up to at least 70 (marked "new": true); an original with 70 or
-    more keeps all its levels; 重塑 makes 70 or more
-  - every level 1..total_levels listed once, difficulty > 0, coins >= 0
-  - difficulty rises step by step (bonus levels left out): never goes down, no jump bigger than 3x the usual step
-    (limited levels included: no spike). 英化: only the added levels are checked (the original order is kept)
-  - a limited level (type milestone) exactly at every 10th level and on the last level (user 2026-10-23: 1/10 of the
-    levels; 10, 20 ... last), nowhere else; coin rewards >= the sum of the 5 levels before it. Limited skin, two formats
-    (user 2026-10-24, both pass): "final" = only the LAST limited level gives the limited skin of the skin module (when
-    the game has skins), the other limited levels give coins; "every_10" = every limited level gives its own limited
-    skin. A limited skin is unlock "level", condition "clear", that level, no ads, no coins (cannot be bought)
-  - bonus levels: exactly one in every block of 10 (0-1 in a short last block) at the places make_level_plan.py draws
-    from the plan's "seed" (every game differs; never levels 1-3, never on or next to a limited level); very easy
-    (not harder than the easiest normal level of its block) and 3x the block's median normal coins (2.9-3.5x; the x2
-    ad makes it 6x). 英化: bonus levels are new easy levels ("new": true) put in at those places
-  - unlock_table: no "perfect clear gives a skin" items (user 2026-10-22); every level skin is the reward of its
-    limited level; a map item (group map, condition clear) unlocks on a limited level (the chapter end)
-  - dumps (docs/test, chrome_touch dump_ui): at least one map page, and a map page shows the total number of levels
-Usage:
-  python audit_level_plan.py --project <game> [--plan level_plan.json] [--dumps <folder> ...] [--board localize|remake]
-      [--binding review.json] --out report.json
-Exit codes: 0 pass, 1 fail, 2 bad input. Markers and the reward popup are checked in the browser (LEVEL-02).
+"""Design-stage level checks. Localization compares real original/current data: N>=70 unchanged,
+N<70 append actual maps to exactly70. New designs use the documented milestone/bonus template.
+Original JSON preservation/count checks do not prove puzzle solvability or real input; use the
+project's existing solver and affected runtime samples. No automatic full-game replay.
 """
 import argparse
 import json
@@ -228,8 +196,8 @@ def audit_plan(plan, items, add, board=None):
                 if not item.get('limited'):
                     problems.append('every-milestone skin %s must be marked limited in unlock_table.json' % reward.get('id'))
             else:
-                if str(item.get('unlock', '')).lower() != 'level' or str(item.get('condition', '')).lower() != 'clear' \
-                        or item.get('level') != n or item.get('ads') or item.get('coins'):
+                if not (plan.get('reward_policy')==REWARD_POLICY and item.get('unlock')=='coins' and item.get('coins')==50*plan.get('coins_per_level',0) and item.get('ads')==0) and (str(item.get('unlock', '')).lower() != 'level' or str(item.get('condition', '')).lower() != 'clear' \
+                        or item.get('level') != n or item.get('ads') or item.get('coins')):
                     problems.append('limited skin %s must be unlock "level", condition "clear", level %d, ads 0, coins 0 '
                                     '(only won here, cannot be bought)' % (reward.get('id'), n))
                 if str(item.get('rarity', '')).lower() not in ('limited', 'rare', 'epic', 'legendary'):
@@ -267,7 +235,7 @@ def audit_plan(plan, items, add, board=None):
                 if by[n]['difficulty'] > easiest:
                     problems.append('bonus level %d is not very easy (%s; the easiest normal level of its block is %s): make it easy'
                                     % (n, by[n]['difficulty'], easiest))
-                if (plan.get('reward_policy') == REWARD_POLICY and by[n]['coins'] != 3 * math.ceil(mid_c)) or (plan.get('reward_policy') != REWARD_POLICY and not 2.9 * mid_c <= by[n]['coins'] <= 3.5 * mid_c):
+                if (plan.get('reward_policy') == REWARD_POLICY and by[n]['coins'] != 3 * plan.get('coins_per_level',0)) or (plan.get('reward_policy') not in (REWARD_POLICY,'seeded_band.v1') and not 2.9 * mid_c <= by[n]['coins'] <= 3.5 * mid_c):
                     problems.append('bonus level %d gives %d, needs 3x the block median (%d; the x2 ad then makes it 6x)'
                                     % (n, by[n]['coins'], 3 * mid_c))
     bp = plan.get('bonus_levels_policy') if isinstance(plan.get('bonus_levels_policy'), dict) else None
@@ -339,10 +307,37 @@ def preserved_levels(proj, plan, binding, add):
         add('preserved_level_data',False,str(exc));return False
 
 
+def original_level_rows(data):
+    if isinstance(data,dict) and 'levels'in data:data=data['levels']
+    if isinstance(data,dict):
+        if set(data)!={str(n)for n in range(1,len(data)+1)}:raise ValueError('original/production dictionary requires contiguous numeric level keys')
+        data=[data[str(n)]for n in range(1,len(data)+1)]
+    if not isinstance(data,list)or not data or any(not isinstance(r,(dict,list))or not r for r in data):raise ValueError('real nonempty level records required, not only a level count')
+    return data
+
+def audit_original_levels(original,current,add):
+    original=original_level_rows(original);current=original_level_rows(current);count=len(original);target=max(70,count)
+    add('levels_at_least_70',len(current)==target,'original %d -> production %d; required %d'%(count,len(current),target))
+    add('original_level_data_preserved',current[:count]==original,'original gameplay records and order must remain unchanged; currency uses a separate economic layer')
+    if count>=70:return
+    def layout(row):
+        if isinstance(row,dict):
+            row={k:v for k,v in row.items()if k not in ('id','level','index','new','difficulty','coins','name','title','label','description')}
+        return json.dumps(row,sort_keys=True)
+    seen={layout(r)for r in original};unique=True
+    for row in current[count:]:
+        value=layout(row)
+        if value in seen or value in ('{}','[]'):unique=False
+        seen.add(value)
+    add('new_actual_maps',len(current)==70 and unique,'append exactly %d distinct actual maps; changing only IDs/count or repeating old maps cannot fill the gap. Project rules must independently replay all new solutions.'%(70-count))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--project', type=Path, required=True)
     ap.add_argument('--plan', type=Path)
+    ap.add_argument('--original-levels',type=Path,help='read-only original gameplay JSON, from intake authority')
+    ap.add_argument('--current-levels',type=Path,help='actual production gameplay JSON inside project')
     ap.add_argument('--dumps', type=Path, nargs='*', help='folders with chrome_touch dump_ui files (default <project>/docs/test)')
     ap.add_argument('--board', choices=['localize', 'remake'], help='default: docs/board.txt')
     ap.add_argument('--binding', type=Path)
@@ -373,8 +368,20 @@ def main():
         if maintenance:
             binding=json.loads(a.binding.read_text()).get('binding') if a.binding else None
             preserved_levels(proj,plan,binding,add);mode='levels'
+        elif board=='localize':
+            mode='levels'
+            try:
+                if plan.get('mode')=='endless':mode=audit_plan(plan,items,add,board)
+                else:
+                    if not a.original_levels or not a.current_levels:raise ValueError('localize requires --original-levels and --current-levels; do not regenerate original maps with make_level_plan.py')
+                    original=a.original_levels.resolve();current=a.current_levels.resolve()
+                    if not current.is_relative_to(proj):raise ValueError('current levels must be actual production data inside project')
+                    audit_original_levels(json.loads(original.read_text()),json.loads(current.read_text()),add)
+                    import hashlib
+                    checks.append({'id':'original_level_inputs','passed':True,'detail':'structural preservation/count only; new maps still require project-rule solution replay and affected samples','original_sha256':hashlib.sha256(original.read_bytes()).hexdigest(),'current_sha256':hashlib.sha256(current.read_bytes()).hexdigest()})
+            except (OSError,ValueError,TypeError)as exc:add('original_level_data_preserved',False,str(exc))
         else:mode = audit_plan(plan if isinstance(plan, dict) else {}, items, add, board)
-        if not maintenance and mode in ('levels', 'endless') and all(c['passed'] for c in checks if c['id'] in ('mode_recorded', 'structure')):
+        if not maintenance and board!='localize' and mode in ('levels', 'endless') and all(c['passed'] for c in checks if c['id'] in ('mode_recorded', 'structure')):
             folders = [f for f in (a.dumps or [proj / 'docs/test']) if Path(f).is_dir()]
             audit_dumps(load_dumps(folders), mode, plan.get('total_levels'), add)
     failed = [c for c in checks if not c['passed']]

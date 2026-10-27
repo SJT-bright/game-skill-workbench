@@ -7,7 +7,7 @@
 ## 怎么做
 
 1. **盘点**（一页）：游戏类型和玩法、页面、所有按钮、广告入口、收集系统、关卡数，写进 `docs/review/概况.md`。**先定按哪个板块的标准评**：这个游戏是从中文游戏英化来的，就按英化＋优化标准（整体画风不按明亮Q版评，只在"可以更好"里提建议；排版、禁止的UI、皮肤收集、声音设置、首关教程照查）；是新做或重塑的，按重塑标准；分不清时问用户一句，用户不在就按重塑（最严），并在报告开头写明。只有上传包没有源码时，做得到的照做，做不到的列出来并说明原因。
-2. **整游戏验收按本 Skill 的完整适用标准检查；局部审查只执行相关项**，用和自制游戏一样的工具，在 Ego Lite 里做：
+2. **整游戏验收按本 Skill 的完整适用标准检查；局部审查只执行相关项**，用和自制游戏一样的工具，在独立 Google Chrome iPhone touch 模式里做：
    - 一键预检（`--board` 按上面定的板块）和当前范围适用的"自动检查"脚本（明亮Q版与亮度、每页背景、清晰度、明令禁止的UI与页面布局、开发用文字、中文残留、英文文案质量、异步返回方式、看广告跳关、音频来源、收集系统梯度）；页面布局和英文都用 chrome_touch 的 dump_ui 从运行中的游戏读出（`extract_ui_layout.py`、`audit_copy_quality.py --sheet`），不手填；
    - [启动契约](startup-contract.md)（`audit_startup_contract.py` 和故障测试）、[启动加载计时](startup-loading-timing.md)、[重开与触摸输入](replay-and-input-checks.md)、[动态画面](dynamic-visual-review.md)、每个广告入口的每种模拟结果（[广告要做到](loading-and-ad-prevention.md#三广告要做到)）、关卡抽测；
    - 每个页面和弹窗两种比例截图，`make_contact_sheet.py` 拼总览图，GPT 看图判定，并读文案审查单审英文语感；
@@ -15,7 +15,7 @@
    - **逻辑检查**（用户 2026-10-23）：用 [`cocos-game-logic-check`](../../cocos-game-logic-check/SKILL.md) 的 **review 模式**：原件记 sha256、在副本上测、自己的端口和 Ego 窗口（不碰用户的预览和存档）；`logic_check.py --init`、盘点按钮去向表、`logic_check.py --mode review` 静态扫描＋逐条读源码、真实触摸走 F01–F20、故障测试（分包 404/503/不回应、广告 6 种结果、最后一秒、touchcancel、刷新、切后台、坏存档）、必要时隔离复现。标准按钮功能和一局状态按[逻辑规则](../../cocos-game-logic-check/references/logic-rules.md)评。
    可以按[测试分工](session-relay.md#锁定后的测试分工)交给其他 AI 执行，GPT 只看总览图。
 3. **给用户一份试玩清单**（[试玩清单模板](../assets/user-playtest-checklist-template.md)，大白话），用户照着玩，把感受和问题统一发回。
-4. **合成《优化建议报告》**（`docs/review/优化建议报告.md`），写给做游戏的人，按[报告模板](../../cocos-game-logic-check/assets/logic-report-template.md)（用户 2026-10-23 给的 Mahjong 报告格式）：
+4. **合成《优化建议报告》**（`docs/review/优化建议报告.md`），写给做游戏的人，按[报告模板](../../cocos-game-logic-check/assets/logic-report-template.md)（统一报告格式）：
    - 开头概况和一页"**上传前必须解决的问题**"（A 档）；
    - 其余按三档：**A 必须修 / B 建议改 / C 可以更好**，编号 A01、B01…；
    - 每条写：证据类型（**浏览器实际复现 / 故障测试 / 隔离复现 / 静态确认 / 待验证**；待验证不计入必须修）、位置（`文件:行`）、复现步骤（截图或录屏编号）、影响、修复建议（对应本 Skill 的哪条规则或检查编号）、验收标准；

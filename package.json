@@ -14,6 +14,7 @@
     "build:mac": "node scripts/build.cjs mac",
     "build:win": "node scripts/build.cjs win",
     "skills:sync": "node scripts/sync-skills.cjs",
-    "skills:feed": "node scripts/export-feed.cjs"
+    "skills:feed": "node scripts/export-feed.cjs",
+    "skills:publish": "node scripts/publish-background.cjs"
   }
 }

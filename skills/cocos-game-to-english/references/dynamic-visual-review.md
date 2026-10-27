@@ -4,7 +4,7 @@
 
 ## 一、怎么录
 
-- **浏览器手机模拟（默认）**：`chrome_touch.py --cdp-url <Ego 地址>` 加 `--record`（跑在 Ego Lite 里），会把每一帧（约每秒 60 帧）存到 `<输出>/frames/`。一个流程一次录制，每段不超过 60 秒。
+- **浏览器手机模拟（默认）**：`chrome_touch.py --user-approved-chrome --channel chrome --record`（跑在独立 Google Chrome iPhone 触摸模式），会把每一帧（约每秒 60 帧）存到 `<输出>/frames/`。一个流程一次录制，每段不超过 60 秒。
 - **其他录屏也可以**：Ego Lite、系统录屏、真手机录屏得到的视频文件（mp4/mov/webm）直接交给分析脚本。真机录屏能查到浏览器里看不到的问题，有就一起分析。
 - 不用改游戏代码，不用开调试工具。
 
@@ -25,7 +25,7 @@
 python scripts/audit_frame_glitches.py <frames文件夹或视频> --report <报告.json> --delete-frames [--binding <review.json>]
 ```
 
-录屏本身（`chrome_touch.py --cdp-url <Ego 地址> --record`）和录屏分析都不排队：录屏在自己新开的独立测试窗口里跑，被占就再新开（用户 2026-10-22/23）；`--delete-frames` 在存好证据图后删掉帧文件夹，省硬盘。
+录屏本身（`chrome_touch.py --user-approved-chrome --channel chrome --record`）和录屏分析都不排队：录屏在自己新开的独立测试窗口里跑，被占就再新开（用户 2026-10-22/23）；`--delete-frames` 在存好证据图后删掉帧文件夹，省硬盘。
 
 | 结果 | 含义 | 处理 |
 |---|---|---|

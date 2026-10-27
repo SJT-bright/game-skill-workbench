@@ -106,7 +106,7 @@ def scan(proj):
             set_keys.setdefault(m.group(2), (rel, line_of(code, m.start())))
         for m in re.finditer(r'getItem\s*\(\s*([\'"`])([^\'"`]+)\1', code):
             get_keys.add(m.group(2))
-        # touch cancel committed like a normal release (Mahjong 2026-10-23: 16 -> 14 tiles after touchcancel)
+        # touch cancel committed like a normal release
         ends = {m.group(2) for m in re.finditer(r'(TOUCH_END|[\'"]touchend[\'"])\s*,\s*(?:this\.)?(\w+)', code)}
         for m in re.finditer(r'(TOUCH_CANCEL|[\'"]touchcancel[\'"])\s*,\s*(?:this\.)?(\w+)', code):
             if m.group(2) in ends:
@@ -117,7 +117,7 @@ def scan(proj):
             add('L-INPUT-CANCEL', 'hint', rel, 1, 'drag (touch move) without any touch-cancel handling: check F13')
         for m in re.finditer(r'while\s*\(\s*(true|1|!0)\s*\)|for\s*\(\s*;\s*;\s*\)', code):
             add('L-LOOP', 'fail', rel, line_of(code, m.start()),
-                'unbounded synchronous loop: give it a try limit, yield, and a guaranteed fallback (Mahjong auto-shuffle while(true))')
+                'unbounded synchronous loop: give it a try limit, yield, and a guaranteed fallback')
         for m in re.finditer(r'(loadBundle|loadRes|loadDir|load|preload|loadScene|preloadScene)\s*\(', code):
             seg = code[m.end():m.end() + 900]
             e = re.search(r'if\s*\(\s*(err|error|e)\s*\)\s*\{([^{}]*)\}', seg)
@@ -129,7 +129,7 @@ def scan(proj):
             around = code[max(0, m.start() - 250):m.end() + 250]
             if re.search(r'(btn|button|Btn|Button)\w*', around) and re.search(r'setPosition|\.position\s*=|\.x\s*=|swap', around):
                 add('L-BUTTON-FIXED', 'fail', rel, line_of(code, m.start()),
-                    'buttons placed by Math.random (Mahjong: retry/continue/close swap places 12-15%%): fixed positions, same meaning '
+                    'buttons placed by Math.random: fixed positions, same meaning '
                     'every time')
         for m in re.finditer(r'Math\.min\s*\([^;]{0,120}(level|Level|lv|stage|Stage)[^;]{0,80}length\s*-\s*1', code):
             add('L-LEVELS', 'hint', rel, line_of(code, m.start()),
@@ -142,7 +142,7 @@ def scan(proj):
     for key, (rel, line) in set_keys.items():
         if key not in get_keys:
             add('L-SAVE', 'fail', rel, line, 'saved key "%s" is never read back: progress/settings written but not restored after a '
-                'refresh (Mahjong: highest level saved, game restarts at level 1)' % key)
+                'refresh' % key)
     flags = [(rel, line_of(code, m.start()), m.group(1)) for rel, code in files for m in re.finditer(SOUND_FLAG, code)]
     saved_sound = any(re.search(r'setItem\s*\([^)]*(sound|music|mute|sfx|bgm|audio|volume)', c, re.I) for _, c in files) or \
         re.search(r'(sound|music|mute|sfx|bgm|audio|volume)\w*\s*:', ' '.join(k for k in set_keys), re.I)
@@ -158,11 +158,11 @@ def scan(proj):
     if re.search(r'daily', allcode + ' ' + names, re.I) and not DATE_API.search(allcode):
         rel = next((r for r, c in files if re.search(r'daily', c, re.I)), 'assets')
         add('L-MODE', 'fail', rel, 1, '"Daily" appears but no script reads the date: a daily mode needs a date seed, a per-day save and '
-            'a day reset, otherwise rename it (Mahjong "Daily Challenge" was a normal level)')
+            'a day reset, otherwise rename it')
     if PHYSICS.search(allcode) and re.search(r'\bpause', allcode, re.I) and not PHYSICS_OFF.search(allcode):
         rel = next((r for r, c in files if PHYSICS.search(c)), 'assets')
         add('L-PAUSE', 'fail', rel, 1, 'physics is used and the game pauses, but nothing stops the physics step: pause must stop physics, '
-            'timers and spawning and resume them on continue/restart (Double Jump: pause only changed a flag)')
+            'timers and spawning and resume them on continue/restart')
     if (re.search(r'setTimeout\s*\(|scheduleOnce\s*\(', allcode) and
             not re.search(r'clearTimeout|unscheduleAllCallbacks|unschedule\s*\(|Tween\.stopAll|stopAllByTarget', allcode)):
         add('L-ASYNC', 'hint', 'assets', 1, 'delayed callbacks are never cleared: leaving a round must cancel them or check a round token')
@@ -190,7 +190,7 @@ def scan(proj):
                     walk(v, path + '.' + str(k))
         walk(data, '$')
         if holes:
-            add('L-CONFIG', 'fail', rel, 1, 'level config has empty entries %s: remove the holes (Double Jump level 85 had an empty slot) '
+            add('L-CONFIG', 'fail', rel, 1, 'level config has empty entries %s: remove the holes '
                 'and check every level loads' % ', '.join(holes[:4]))
     found.extend(regressions.static_suspects(files))
     return found, len(files)

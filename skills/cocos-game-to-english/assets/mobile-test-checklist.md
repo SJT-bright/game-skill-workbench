@@ -2,7 +2,7 @@
 
 日期：{{日期}}。当前版本：{{build_tag}}。测试 App：{{app_id}}。平台测试版本：{{platform_code_version}}。上传 ZIP SHA256：{{native_sha256}}。设备 / 系统 / TikTok 版本：{{实际设备信息}}。
 
-本清单是 Agent 内部的技术检查表。给用户看的是两份大白话清单：阶段 2 的[试玩清单](user-playtest-checklist-template.md)（本 Skill 不做真机测试，没有真机清单）。本清单由 Agent 按当前游戏实际源码和界面填充；删除无依据的示例行，列全真实入口。结果默认待测，不以模板代替操作。Ego Lite 模拟、真实手机和平台结果分别记录。
+本清单是 Agent 内部的技术检查表。给用户看的是两份大白话清单：阶段 2 的[试玩清单](user-playtest-checklist-template.md)（本 Skill 不做真机测试，没有真机清单）。本清单由 Agent 按当前游戏实际源码和界面填充；删除无依据的示例行，列全真实入口。结果默认待测，不以模板代替操作。Google Chrome iPhone touch 模拟、真实手机和平台结果分别记录。
 
 ## 开始之前
 

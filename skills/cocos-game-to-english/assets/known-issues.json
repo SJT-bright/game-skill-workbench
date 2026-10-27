@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "purpose": "Reusable mechanism checks for Cocos/TikTok games, with advertising and rewards first. Individual designs, mechanics, concrete values and incident histories remain in each project.",
   "items": [
     {
@@ -705,7 +705,7 @@
       "id": "LOGIC-01",
       "feature": "gameplay",
       "title": "逻辑检查：标准按钮功能和一局状态（玩法做完就查，不等用户验收）",
-      "symptom": "用户 2026-10-23 给的两份真实验收报告：Double Jump Duo 失败页没有 Home、暂停后物理还在跑、回首页留着上一局的角色和回调、上一局广告迟到回调落到新一局、镜头只能向右跟且左边背景是黑的、第 85 关配置空槽、存档异常没处理、主页任务绕过金币购买；Mahjong 刷新后关卡进度丢失、分包 503 卡在 Loading 没有 Retry、拖动吸附和点选两套判定、最后一秒发广告仍判失败、广告超时后奖励入口一直锁住、系统取消触摸仍提交消除、命中重叠牌不停止遍历、末关后 NEXT 重复最后一关、Daily Challenge 不是每日、声音设置不保存、平台按钮点了没反应、失败弹窗随机交换按钮位置、无上限的 while(true) 洗牌。",
+      "symptom": "多款游戏验收中出现的通用问题集合：失败页缺少标准退出路径、暂停后运动仍在变化、离开后残留上一局对象或回调、旧局异步结果影响新局、镜头只覆盖单一方向、关卡配置存在空槽、异常存档未处理、外部奖励绕过购买规则、刷新后进度丢失、资源失败卡在 Loading 无 Retry、同一动作存在多套判定、最后一秒广告结果与失败判定竞争、广告超时后入口锁死、系统取消触摸仍提交、重叠对象命中遍历不停止、末关 Next 重复开局、日期模式未按日期、声音设置不保存、平台按钮无反馈、按钮随机换位和无上限同步循环。",
       "steps": "用 cocos-game-logic-check（build 模式）：重塑在第一轮玩法做完、发玩法确认节点 1 之前；英化在优化和广告接入做完、进美术和用户验收之前；以后大改玩法或加页面再跑。logic_check.py --project <工程> --init 生成 docs/logic/flows.json；写 docs/logic/inventory.md（按钮去向表、一局状态、异步、存档键、关卡表）；运行 logic_check.py --project <工程> --mode build --binding <review.json>，每条疑点读源码：真问题修掉，误报/有意设计写进 docs/logic/triage.json（写 why）；在 Ego 里用 chrome_touch 真实触摸、两种比例走完 F01–F20，加故障测试（分包 404/503/不回应、广告完成/取消/失败/超时/迟到/重复、最后一秒、touchcancel、刷新、切后台、坏存档），每条写 pass/fail/n/a 和证据文件；修完重跑直到通过。 每次同时执行cocos-game-logic-check/references/learned-regressions.md的R01–R08；--init保留旧流程与回归结果补齐缺项，不能自动刷新旧源码绑定；每个pass记录具体observations、证据层与哈希文件。",
       "expected": "logic_check 报告通过（mode build、没有待处理疑点、F01–F20 全部 pass 或写明理由的 n/a、每个 pass 有证据文件）。每个页面有出路：关卡内能暂停并回首页，设置能返回，失败页有 Home 和 Retry（复活广告单独在下面），胜利页有 Home 和 Next，按钮位置固定不随机；暂停停住物理、计时和生成；离开一局清干净（节点、触摸、定时器、Tween、相机）；广告和加载回调带局次 token，迟到回调忽略，超时后安全恢复且不能连点叠奖励；加载失败有 Retry；刷新后进度和声音设置都在，坏存档不崩；触摸取消不提交；命中取最上层；同一动作一套判定；关卡配置没有空槽，末关后不重复最后一关，教程比第一关简单；Daily 真的按日期；循环有上限；奖励不绕过购买规则；平台按钮有反馈；镜头各方向都跟、背景铺满。 新版logic_check必须包含regression_version:1、R01–R08零待处理、当前源码/运行配置绑定和可复核证据；主门禁重新核证据哈希，拒绝只有旧F01–F20或review模式的报告。",
       "phase": "pre_scan",
@@ -938,10 +938,10 @@
     {
       "id": "ECON-01",
       "feature": "economy",
-      "title": "皮肤板块的数值：稀有度、价格台阶、加成、限定皮肤（固定模板 skin.v1）",
+      "title": "购买经济：五档普通收入预算、广告与礼包基准",
       "symptom": "皮肤价格和数量每款乱填、后面的比前面便宜、价格差距太小；加成和稀有度对不上；限定皮肤能买；还留着排名皮肤、签到皮肤（已取消）或\"完美通关送皮肤\"（用户 2026-10-22 已取消）。",
-      "steps": "皮肤板块按 references/game-modules.md 第四节：scripts/make_skin_table.py --R <中等难度一关的金币> --levels --final-level <总关数，≥70> [--limited-mode final|every_10]（无尽 --endless）生成 unlock_table.json（20款主角皮肤＋10款背景，module skin.v1），只填名字和图；设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_acquisition_progression.py --table <配置> --binding <review.json> --report <报告>。用户不要皮肤板块时填不适用并写依据。",
-      "expected": "报告通过：20款主角（限定皮肤选“每10关一款”时为 19＋限定关数；初始款免费）、10款背景（第1款免费）；新建表默认ordinary-levels，普通/稀有/史诗/传说约10/15/20/25个无加成普通关收益、同档默认同价，审计容许±10%；未标profile或legacy-2r的旧合同保留2R与原台阶；维护既有广告解锁按授权保留；加成随稀有度上升（普通5–10%、稀有11–20%、史诗21–32%、传说33–50%、限定51–60%）；限定皮肤排最前，有关卡游戏两种格式都可以（用户 2026-10-24）：只在最后一个限定关送一款，或每个限定关各送一款，都只能在限定关拿到，无尽游戏用大量金币或5–10次广告；没有排名/签到/完美通关送皮肤；只有初始物品免费。",
+      "steps": "按references/game-modules.md第二至四节及现有audit_acquisition_progression/audit_game_modules检查；新normal-10-50.v1使用同一B。旧冻结表只在授权迁移范围内改动，不另建价格表。",
+      "expected": "普通/稀有/史诗/传说/限定每件分别10/20/30/40/50B；普通收入无章节膨胀，每10个普通关合计10B；独立广告和礼包5B，礼包成功领取后30分钟；免费基础结算与广告×2一致。现有数量、造型和加成按授权，不为模板增加机制。",
       "phase": "pre_scan",
       "always_applicable": false,
       "auto_check": [
@@ -989,7 +989,7 @@
       "title": "内置板块：先删多做多错的按钮、每款游戏有货币、每次结算看广告×2、首页礼盒、皮肤板块（默认要）、关卡板块；按固定模板做，不自己发明",
       "symptom": "用户 2026-10-23：原游戏的按钮不审查就全保留，交叉推广（更多游戏）、排名、分享、七日签到这类多做多错的功能一直出 bug；有的游戏没有货币；结算页没有看广告翻倍；皮肤数量、价格、加成每款都乱填；首页没有礼盒；AI 每款游戏自己写广告奖励逻辑，广告按钮处连点重复发奖、卡顿。",
       "steps": "设计玩法时（英化写在优化清单里、重塑在写规格时）按 references/game-modules.md 做：①英化先把原游戏每个按钮列出来判断有没有用、能不能用，没用的删掉，写进 docs/modules.json 的 button_audit；②排名/排行榜、七日签到、更多游戏/交叉推广、分享一律不做、原有的删掉；③每款游戏有一种贴合题材的货币；④把 assets/modules/AdRewards.ts 原样复制进游戏，结算×2、奖励关×3/×6、礼盒金币、皮肤价格都从它算；⑤皮肤板块先判断适不适合并问用户（勾选框，默认要），要的话用 scripts/make_skin_table.py 生成20款主角皮肤＋10款背景；⑥首页礼盒的10帧动画图只在美术关由 art_check.py 查（用户 2026-10-24）；⑦设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_game_modules.py，最终总检测不再跑。",
-      "expected": "报告通过：板块决定已记录（问过用户、皮肤默认要）；没有排名、签到、更多游戏、分享；英化的按钮审查表完整、没用的已删；AdRewards.ts 和技能里的一模一样、模拟全部通过（结算×2、奖励关3倍→6倍、礼盒随通关数和下一款皮肤价格变大、每局只领一次、广告按钮只触发一次）；皮肤表是 skin.v1（final20款主角/every_10为19+整十限定关数款主角、10款背景、按price_profile定价、加成随稀有度上升、限定皮肤排最前；限定皮肤只在最后一个限定关送或每个限定关各送一款）。",
+      "expected": "按当前内置板块合同：适合时有皮肤或可购买物品，五档价格10/20/30/40/50B、独立广告/礼包5B、礼包30分钟，结算×2；共用模块身份与模拟通过。英化原关>=70完整保留，不足只追加实际地图到70；不套新设计重排原关。",
       "phase": "pre_scan",
       "always_applicable": true,
       "auto_check": [
@@ -1006,7 +1006,7 @@
       "feature": "modules",
       "title": "广告机制板块在游戏里的实际效果（结算×2、广告按钮不重复、不卡顿）",
       "symptom": "用户 2026-10-23：bug 常常出在广告按钮那里：连点两下发两次奖、广告关掉后按钮还能点、看完广告奖励没到、广告前后画面卡一下；结算页有的关没有×2；礼盒金币一直不变、一局能领很多次。",
-      "steps": "浏览器里实测（chrome_touch，模拟广告完成/取消/失败）：①每关结束（无尽游戏每局结束）都有\"看广告×2\"，看完到账正好2倍、只发一次；②首页礼盒按奖励入口（reward_entries 的 CLAIM/AD 状态）测领取，礼盒金币随通关数变大由设计关的 AdRewards 模拟查，10帧动画由美术关查，这里不重复（用户 2026-10-24）；③每个广告按钮连点3下只播一次广告、只发一次奖；取消/失败不发奖、按钮恢复；④广告前后、发奖动画时不卡顿（录屏或 FPS 看一遍，掉帧≤1次可见卡顿）；⑤重开游戏后金币和礼盒状态一致。",
+      "steps": "只对本次影响的经济入口实测：胜利结算免费原额/完整观看2倍（基础已发只补差）；独立广告5B；礼包完整观看且入账5B后持久化30分钟倒计时。通关、重开、重启不能重置，边界前不可领、到期可领，长离线不积多份；取消/失败/保存失败不误耗资格。重复/迟到回调只发一次，钱包、回执和冷却同步。沿用原reward_entries/F11/R04，不新增全关检查。",
       "expected": "五项都符合 references/game-modules.md 第二、三、六节；数值和 AdRewards.ts 算出来的一样；广告完成、取消、重复回调按 AD-02/03/04 处理。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -1016,7 +1016,9 @@
         "ad_button_single_fire",
         "ad_cancel_no_reward",
         "no_stutter_around_ads",
-        "same_after_reload"
+        "same_after_reload",
+        "gift_5x_and_persisted_30min",
+        "independent_currency_ad_5x"
       ],
       "maintenance_observations": [
         "preserved_result_multiplier",
@@ -1062,10 +1064,10 @@
     {
       "id": "LEVEL-01",
       "feature": "economy",
-      "title": "关卡板块：有关卡就有地图（显示总关数）、70关及以上、难度逐关递增、每10关一个限定关（华丽边框）和一个随机奖励关（3倍、看广告6倍）、限定皮肤只在最后一个限定关送或每个限定关各送一款；无尽游戏没有地图",
+      "title": "英化原关保留/不足补70；新设计按已接受关序",
       "symptom": "通关型游戏没有地图，玩家不知道一共几关、自己到哪了；只有二三十关就结束（不到70关）；难度忽高忽低，某一关突然难很多；地图上没有奖励关；每章最后一关和普通关一样的奖励；奖励关每隔固定几关出现一次，一眼看穿；奖励关不比普通关简单、金币没有3倍；限定关的节点和普通关一样；无尽游戏硬做了一张地图。",
-      "steps": "设计玩法时按 references/game-modules.md 第五节和 references/top-bar-and-level-map.md 第二到五节判断是有关卡（通关型）还是无尽；通关型至少70关（用户 2026-10-24：70关及以上都通过，多了不删）：重塑做70关或更多；英化不到70关的先按原玩法设计新关、补到至少70关（新加的关标 \"new\": true，并证明能过；原版已有70关或更多的全部保留）；用 scripts/make_level_plan.py --levels <总关数，≥70> --coins <R> --limited-skin <限定皮肤id> [--limited-skin-mode final|every_10] --seed <数字> 生成关卡表骨架（每10关一个限定关、每10关按种子随机一个奖励关；无尽：--endless），按真实关卡填难度，写到 assets/resources/config/level_plan.json，游戏运行时读它。dump_ui 读地图页（purpose map）。设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_level_plan.py；地图页的显示在美术关由 art_check.py 查。最终总检测不再跑。",
-      "expected": "报告通过：通关型70关及以上（用户 2026-10-24），每关都列在表里；难度逐关递增（奖励关除外）；限定关正好在第10、20…和最后一关，节点是华丽边框，第一次打过给大量金币；限定皮肤两种格式都通过（用户 2026-10-24）：只在最后一个限定关送一款（final），或每个限定关各送一款（every_10），限定皮肤只能在限定关拿到；每10关正好一个奖励关、位置由种子随机、不在每段前1关和最后2关，比这一段最简单的普通关还简单，给3倍货币、看广告变6倍，节点画成货币图标；没有完美通关送皮肤；地图页显示总关数；无尽游戏没有地图页。",
+      "steps": "先核真实原始关卡数据。英化N>=70保留全部布局/关序/机制/难度；N<70追加70-N张真实新图到恰好70，不仅改总数或循环旧图。使用audit_level_plan的original/current数据比较；新增图按本作规则独立复放解法，代表边界触摸。重塑新设计才查限定/奖励关模板，接受后不重新随机。",
+      "expected": "原关保留、真实新增图数量与生产路由对应，旧关不重复跑全量；结构审计与解法/实际输入证据分别准确。经济配置不重写原玩法地图。",
       "phase": "pre_scan",
       "always_applicable": true,
       "auto_check": [
@@ -1079,9 +1081,9 @@
     {
       "id": "LEVEL-02",
       "feature": "economy",
-      "title": "地图、奖励关和限定关在游戏里的实际效果",
+      "title": "本作实际关卡路由、已设计奖励与新增图的定向运行验证",
       "symptom": "地图打开在第1关而不是当前关；奖励关、限定关在地图上和普通关长得一样；限定关打完奖励没发、或者每次重玩都发；限定皮肤出现在商店价格表或看广告试用里；奖励关打完没有3倍货币、看广告没有变6倍。",
-      "steps": "浏览器里实测：①地图打开时停在当前关，顶部显示总关数（如\"Level 12 / 70\"，总关数≥70）；②奖励关的节点是货币图标，打完拿到3倍货币，结算页看广告变6倍（只能一次）；③限定关难度和前后关差不多（节点的华丽边框和奖励预览在美术关看）；④第一次打过限定关弹出大奖励（金币飞到顶部资源栏；送限定皮肤的限定关——最后一个限定关，或选了每10关一款时每个限定关——获得限定皮肤并可一键使用），重玩只给普通奖励；⑤限定皮肤在皮肤页排第一、变暗、显示\"Clear Lv.<它的限定关>\"，不能用金币或广告解锁，也不出现在试用弹窗；⑥通关章节最后一关后新地图/新章节解锁；⑦重开游戏后以上状态一致。",
+      "steps": "英化原关>=70只核当前版本沿用的进度/选关入口与代表边界，不硬插奖励/限定关；不足70核实际新增图可加载、按规则解法通过、末关/解锁边界真实输入。新设计有奖励关才查3B/广告6B，有首通限定赠送才查一次领取；限定购买为50B，已有时不重复补币。范围以真实机制为准，n/a附依据，沿用现有样本清单。",
       "expected": "七项都符合 references/game-modules.md 第五节和 references/top-bar-and-level-map.md 第三到五节；奖励只发一次，按 CLAIM/STATE 规则保存。",
       "phase": "pre_scan",
       "always_applicable": false,
@@ -1090,7 +1092,7 @@
         "map_opens_at_current_level_with_total",
         "bonus_level_currency_node_3x_ad_6x",
         "limited_reward_once",
-        "limited_skin_not_for_sale",
+        "limited_purchase_50x_and_award_once",
         "chapter_unlock",
         "same_after_reload"
       ]
@@ -1379,7 +1381,7 @@
     "logic_check": "scripts/logic_check.py --mode build (cocos-game-logic-check, user 2026-10-23): static suspects in assets/ scripts and level JSON (touch cancel committed like touch end, unbounded while(true)/for(;;), load error branch that only logs, buttons placed by Math.random, saved keys never read, sound setting only in memory, empty level-config slots, \"Daily\" without a date, physics not stopped on pause), each fixed or judged in docs/logic/triage.json with a why; plus docs/logic/flows.json F01-F20 walked with real touch in two ratios (exit/Home/Retry/Next on every page, pause stops physics, clean-up on leaving, round tokens for ads and loads, refresh keeps progress, touch cancel, last level, daily, platform buttons), every pass with an evidence file; untested never passes; review-mode reports never pass",
     "make_tiktok_zip": "scripts/make_tiktok_zip.py (cocos-game-tiktok-package, user 2026-10-23 SquareRush UPLOADFIX): makes the one uploadable TikTok platform package from the Native build - refuses before writing any ZIP when the gate fails, the folder has an outer folder / is a Web build / has source files, junk, nested archives, non-ASCII paths or the QA level jump, the App ID differs, or the uncompressed main > 4,000,000, total > 30,000,000 or an independent subpackage > 4,000,000 bytes; then re-reads the written ZIP (CRC, root entry, limits, every file byte-equal to the Native tree, independent extraction) and only then moves it to --out; report <zip>.report.json bound to the review",
     "audit_page_readiness": "scripts/audit_page_readiness.py: source-only flags broad button barriers/all-page batches/internal file counters; final runtime requires bound route inventory, two ratios, cold/warm/slow_cancel_reopen/closed_completion/failure_retry/offline_warm/core_independence, raw evidence SHA, no stale/duplicate work. Static is not acceptance.",
-    "audit_game_modules": "scripts/audit_game_modules.py: docs/modules.json (game_modules.v1, user 2026-10-23): decisions asked and recorded (gameplay, currency, skins default yes, backgrounds), no ranking/leaderboard, 7-day check-in, more games/cross-promotion or share, 英化 button audit (every original button: works/keep/why, useless ones removed), AdRewards.ts byte-equal to the skill copy and its simulation passes (result x2, bonus level 3x -> 6x, gift grows with levels cleared and the next skin price, one gift per round, ad buttons fire once), skin module skin.v1 (20 heroes + 10 backgrounds, price steps, bonus by rarity, limited skin first and its route), gift box 10 frames"
+    "audit_game_modules": "scripts/audit_game_modules.py: docs/modules.json (game_modules.v1, user 2026-10-23): decisions asked and recorded (gameplay, currency, skins default yes, backgrounds), no ranking/leaderboard, 7-day check-in, more games/cross-promotion or share, 英化 button audit (every original button: works/keep/why, useless ones removed), AdRewards.ts byte-equal to the skill copy and its simulation passes (result x2, bonus level 3x -> 6x, gift and currency ad 5B, gift 30-minute persisted cooldown, ad buttons fire once), skin module skin.v1 (20 heroes + 10 backgrounds, price steps, bonus by rarity, limited skin first and its route), gift box 10 frames"
   },
   "visual_verdict_rule": "带 visual_verdict 的检查标\"通过\"时，review 顶层必须有 GPT 对本版截图总览图（make_contact_sheet.py）的画面结论 visual_verdict；测试执行 Agent 不能自己填。 只看最终总检测里的条目（gate design/art 的条目不算，用户 2026-10-24）。",
   "negative_control_rule": "Items with requires_negative_control need, in their own evidence, a known-bad run of the SAME check: a JSON {schema: known_issue_negative_control.v1, mutant, status: fail, failed > 0, tool: {path, sha256}} whose tool SHA equals the tool of a current_result in the same row. A check that never failed on a known-bad version proves nothing (Monkey Dash 2026-10-21).",

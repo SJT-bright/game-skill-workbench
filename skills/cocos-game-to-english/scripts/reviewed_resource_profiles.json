@@ -42019,7 +42019,7 @@
       "src/settings.js": "8944df28590eea3945fa2afe97617ab8bfccafc6385a2063f71684f010b2c7ab",
       "assets/resources/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
-      "assets/main/index.js": "f7d70ff661f00dffb170cfb99707c475ccf59b8671813930690f4913d73b9954",
+      "assets/main/index.js": "872511df94ea42a3c80d4efe5915990c36dc0e9fd4b2b21e41360a72415fdea9",
       "subpackages/sub/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "subpackages/ui_late/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5"
@@ -43490,7 +43490,7 @@
           ]
         }
       },
-      "assets/main/index.js:296080": {
+      "assets/main/index.js:296049": {
         "reason": "Platform interstitial ad instance load, not a Cocos resource loader",
         "delegated_sdk": true
       },
@@ -43970,7 +43970,7 @@
       "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
-      "assets/main/index.js": "795020523980212e0323275de37d24daf52a00081a8a7ce60c4328b357e378a2",
+      "assets/main/index.js": "70e6bac6732093b03dc5e08902f746a9714ea3df359c798e71ad6f4c813e5f7b",
       "src/settings.js": "5b408dbb309967f6e30697199738fddf083472373e09c4a6fcb264c9222d9c92"
     },
     "resolutions": {
@@ -44117,6 +44117,14 @@
           "texture/polish/shortcut_title",
           "texture/polish/sky",
           "texture/polish/skyfont",
+          "texture/polish/txt_level",
+          "texture/polish/txt_level_complete",
+          "texture/polish/txt_music",
+          "texture/polish/txt_paused",
+          "texture/polish/txt_ready",
+          "texture/polish/txt_sound_effects",
+          "texture/polish/txt_try_again",
+          "texture/polish/txt_x",
           "texture/polish/vibration_off",
           "texture/polish/vibration_on"
         ],
@@ -44124,7 +44132,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:67091": {
+      "assets/main/index.js:67016": {
         "kind": "loadDir",
         "bundles": [
           "resources"
@@ -44136,7 +44144,7 @@
         "unknown_receiver": false,
         "reason": "Exact GameView ResourceRecovery.load directory=true tile-domain request."
       },
-      "assets/main/index.js:139388": {
+      "assets/main/index.js:139313": {
         "kind": "loadDir",
         "bundles": [
           "resources"
@@ -44176,11 +44184,11 @@
         "unknown_receiver": false,
         "reason": "HeroItem loads the finite Global.SKIN_COUNT hero directories; each directory keeps its complete required pieces."
       },
-      "assets/main/index.js:179048": {
+      "assets/main/index.js:178973": {
         "not_executed": true,
         "reason": "LoadUtil.loadAudio has no production caller; verified across current complete program."
       },
-      "assets/main/index.js:179653": {
+      "assets/main/index.js:179578": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44311,6 +44319,14 @@
           "texture/polish/shortcut_title",
           "texture/polish/sky",
           "texture/polish/skyfont",
+          "texture/polish/txt_level",
+          "texture/polish/txt_level_complete",
+          "texture/polish/txt_music",
+          "texture/polish/txt_paused",
+          "texture/polish/txt_ready",
+          "texture/polish/txt_sound_effects",
+          "texture/polish/txt_try_again",
+          "texture/polish/txt_x",
           "texture/polish/vibration_off",
           "texture/polish/vibration_on"
         ],
@@ -44318,7 +44334,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:199919": {
+      "assets/main/index.js:199844": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44449,6 +44465,14 @@
           "texture/polish/shortcut_title",
           "texture/polish/sky",
           "texture/polish/skyfont",
+          "texture/polish/txt_level",
+          "texture/polish/txt_level_complete",
+          "texture/polish/txt_music",
+          "texture/polish/txt_paused",
+          "texture/polish/txt_ready",
+          "texture/polish/txt_sound_effects",
+          "texture/polish/txt_try_again",
+          "texture/polish/txt_x",
           "texture/polish/vibration_off",
           "texture/polish/vibration_on"
         ],
@@ -44456,7 +44480,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:200240": {
+      "assets/main/index.js:200474": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44468,7 +44492,7 @@
         "unknown_receiver": false,
         "reason": "The only generated bitmap font request is the explicit skyfont resource in PolishedUI.font."
       },
-      "assets/main/index.js:201577": {
+      "assets/main/index.js:201828": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44599,6 +44623,14 @@
           "texture/polish/shortcut_title",
           "texture/polish/sky",
           "texture/polish/skyfont",
+          "texture/polish/txt_level",
+          "texture/polish/txt_level_complete",
+          "texture/polish/txt_music",
+          "texture/polish/txt_paused",
+          "texture/polish/txt_ready",
+          "texture/polish/txt_sound_effects",
+          "texture/polish/txt_try_again",
+          "texture/polish/txt_x",
           "texture/polish/vibration_off",
           "texture/polish/vibration_on"
         ],
@@ -44606,7 +44638,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:204411": {
+      "assets/main/index.js:204832": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44640,7 +44672,7 @@
         "unknown_receiver": false,
         "reason": "PoolMgr receives exact getUrl return literals from current production view classes; no external prefab input."
       },
-      "assets/main/index.js:242133": {
+      "assets/main/index.js:242624": {
         "kind": "load",
         "bundles": [
           "audio"
@@ -44661,7 +44693,7 @@
         "unknown_receiver": false,
         "reason": "SoundMgr calls bg and effect-name literals from all playEffect callers; finite exact source paths, separately verified against actual source below."
       },
-      "assets/main/index.js:296105": {
+      "assets/main/index.js:296521": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44792,6 +44824,14 @@
           "texture/polish/shortcut_title",
           "texture/polish/sky",
           "texture/polish/skyfont",
+          "texture/polish/txt_level",
+          "texture/polish/txt_level_complete",
+          "texture/polish/txt_music",
+          "texture/polish/txt_paused",
+          "texture/polish/txt_ready",
+          "texture/polish/txt_sound_effects",
+          "texture/polish/txt_try_again",
+          "texture/polish/txt_x",
           "texture/polish/vibration_off",
           "texture/polish/vibration_on"
         ],
@@ -44799,22 +44839,22 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:306673": {
+      "assets/main/index.js:307089": {
         "delegated_sdk": true,
         "reason": "WxGameBox calls the platform SDK game portal load method, not cc.AssetManager; legacy cross-promotion disabled in HomeView."
       }
     },
     "escapes": {
-      "assets/main/index.js:180233": {
+      "assets/main/index.js:180158": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:209722": {
+      "assets/main/index.js:210143": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:210291": {
+      "assets/main/index.js:210712": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:210312": {
+      "assets/main/index.js:210733": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       }
     },
@@ -45347,5 +45387,625 @@
     "review_notes": "Ball Pop Party art18 upload finite-domain review; logical paths derived from actual production callers and config, never copied from catalog. Full program and serialized semantic-data fingerprints enforced.",
     "data_digest_kind": "serialized-json-assets-v1",
     "data_digest": "585e522a848d960c943964132d4b61b4c3f2a24fe6d9a5b4cd46cacb53febe02"
+  },
+  "merge-shooter-v82": {
+    "source_sha256": {
+      "adapter.js": "9e5101b9f2b932b41c013238552e2d8369734b4ab9c79ad6f3b6e6ff9e2ba941",
+      "game.js": "d94cae52074606c8add51be798a3b826a7ad9a48df22537260a35314c62de20a",
+      "native-preload.js": "97ff6d1a7de1bd47904ad8d3976c871c70dc4eb4ce8d7a7e72df403f51574dd9",
+      "native-load-guard.js": "fbbd565ea16fcadec42423f1bbf79e4802564660558d9fddcad9f04f7f302875",
+      "main.js": "cd38b8cd67111fc468bd4dc93b37f199e8d3991ad5ef66cf375504a5c42f4428",
+      "ccRequire.js": "ece6cafa033a58e58bc01a4acef461ea76d60fac9066c417e684f0261cfb6044",
+      "src/settings.js": "9acc72db24f038f59d9de8433057f2706e09a7ec9a2be8752d1ebe690b764b0d",
+      "assets/internal/index.js": "d8e86668a8db80c1ea94594f7fa4ad8184ddbc42af7203eb0781e773518c36a1",
+      "assets/main/index.js": "c341c0b9ff7e89ab0d7c699001bb8558555469b67aac32b8a74156ca0cd77f5f",
+      "subpackages/resources/game.js": "fa29070a398ea0372fc0c16c5a4119188b9d89679321f6afeba884e610faa513",
+      "subpackages/resources/index.js": "20e80afd32773cb3dc5e5795ced9f54d29ae0d6d4f09b8e86ca05fd76dac7085",
+      "subpackages/audio/game.js": "37354872aaaa4da2ba8dd1e370205ae8f6bf7a74b6f1d156317ac31e5d7ea094"
+    },
+    "resolutions": {
+      "assets/main/index.js:38752": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/settings/action-best",
+          "pic/settings/action-claim",
+          "pic/settings/action-claimed",
+          "pic/settings/action-continue",
+          "pic/settings/action-daily-rewards",
+          "pic/settings/action-equip",
+          "pic/settings/action-equipped",
+          "pic/settings/action-free",
+          "pic/settings/action-goal",
+          "pic/settings/action-home",
+          "pic/settings/action-music",
+          "pic/settings/action-owned",
+          "pic/settings/action-play",
+          "pic/settings/action-retry",
+          "pic/settings/action-sound-effects",
+          "pic/settings/claim-ad-button",
+          "pic/settings/claim-x2-ad-button",
+          "pic/settings/confirm-button",
+          "pic/settings/no-thanks",
+          "pic/settings/title-goal-cleared",
+          "pic/settings/title-highest-tile",
+          "pic/settings/title-run-over",
+          "pic/settings/title-you-got",
+          "pic/settings/txt_clear",
+          "pic/settings/txt_pause",
+          "pic/settings/txt_reroll",
+          "pic/settings/txt_swap",
+          "pic/settings/txt_wildcard",
+          "pic/settings/watch-ad"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "EnglishFont exact actionPictures map, excluding Shop/Go atlas branch."
+      },
+      "assets/main/index.js:48945": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "music/butcall",
+          "music/guoguan",
+          "music/merge",
+          "music/pp",
+          "music/push",
+          "music/pz",
+          "music/zs"
+        ],
+        "kind": "load",
+        "type": "cc.AudioClip",
+        "unknown_receiver": false,
+        "reason": "GameAudioConfig BGM/SFX IDs, all entries have one path and no variants."
+      },
+      "assets/main/index.js:49425": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "music/butcall",
+          "music/guoguan",
+          "music/merge",
+          "music/pp",
+          "music/push",
+          "music/pz",
+          "music/zs"
+        ],
+        "kind": "load",
+        "type": "cc.AudioClip",
+        "unknown_receiver": false,
+        "reason": "GameAudioConfig BGM/SFX IDs, all entries have one path and no variants."
+      },
+      "assets/main/index.js:100893": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "config/unlock_table"
+        ],
+        "kind": "load",
+        "type": "cc.JsonAsset",
+        "unknown_receiver": false,
+        "reason": "Actual SkinEffects.load delegates to its one config load, separately inventoried."
+      },
+      "assets/main/index.js:145245": {
+        "delegated_sdk": true,
+        "reason": "Legacy SDK ad transport, not a packaged Cocos asset. Actual SDK adapter tested separately."
+      },
+      "assets/main/index.js:146210": {
+        "delegated_sdk": true,
+        "reason": "Legacy SDK ad transport, not a packaged Cocos asset. Actual SDK adapter tested separately."
+      },
+      "assets/main/index.js:155850": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/checkin-mystery-chest",
+          "pic/dj1",
+          "pic/dj2",
+          "pic/dj3",
+          "pic/dj4",
+          "pic/dj5",
+          "pic/logo",
+          "pic/musicoff",
+          "pic/musicon",
+          "pic/pf1",
+          "pic/pf2",
+          "pic/pf3",
+          "pic/pf4",
+          "pic/pf5",
+          "pic/pf6",
+          "pic/pf7",
+          "pic/pf8",
+          "pic/pifu/q1",
+          "pic/pifu/q2",
+          "pic/pifu/q3",
+          "pic/pifu/q4",
+          "pic/pifu/q5",
+          "pic/pifu/q6",
+          "pic/pifu/q7",
+          "pic/pifu/q8",
+          "pic/pifu/ys1/1024",
+          "pic/pifu/ys1/128",
+          "pic/pifu/ys1/16",
+          "pic/pifu/ys1/16384",
+          "pic/pifu/ys1/2",
+          "pic/pifu/ys1/2048",
+          "pic/pifu/ys1/256",
+          "pic/pifu/ys1/32",
+          "pic/pifu/ys1/32768",
+          "pic/pifu/ys1/4",
+          "pic/pifu/ys1/4096",
+          "pic/pifu/ys1/512",
+          "pic/pifu/ys1/64",
+          "pic/pifu/ys1/65536",
+          "pic/pifu/ys1/8",
+          "pic/pifu/ys1/8192",
+          "pic/pifu/ys1/99",
+          "pic/pifu/ys2/1024",
+          "pic/pifu/ys2/128",
+          "pic/pifu/ys2/16",
+          "pic/pifu/ys2/16384",
+          "pic/pifu/ys2/2",
+          "pic/pifu/ys2/2048",
+          "pic/pifu/ys2/256",
+          "pic/pifu/ys2/32",
+          "pic/pifu/ys2/32768",
+          "pic/pifu/ys2/4",
+          "pic/pifu/ys2/4096",
+          "pic/pifu/ys2/512",
+          "pic/pifu/ys2/64",
+          "pic/pifu/ys2/65536",
+          "pic/pifu/ys2/8",
+          "pic/pifu/ys2/8192",
+          "pic/pifu/ys2/99",
+          "pic/pifu/ys3/1024",
+          "pic/pifu/ys3/128",
+          "pic/pifu/ys3/16",
+          "pic/pifu/ys3/16384",
+          "pic/pifu/ys3/2",
+          "pic/pifu/ys3/2048",
+          "pic/pifu/ys3/256",
+          "pic/pifu/ys3/32",
+          "pic/pifu/ys3/32768",
+          "pic/pifu/ys3/4",
+          "pic/pifu/ys3/4096",
+          "pic/pifu/ys3/512",
+          "pic/pifu/ys3/64",
+          "pic/pifu/ys3/65536",
+          "pic/pifu/ys3/8",
+          "pic/pifu/ys3/8192",
+          "pic/pifu/ys3/99",
+          "pic/pifu/ys4/1024",
+          "pic/pifu/ys4/128",
+          "pic/pifu/ys4/16",
+          "pic/pifu/ys4/16384",
+          "pic/pifu/ys4/2",
+          "pic/pifu/ys4/2048",
+          "pic/pifu/ys4/256",
+          "pic/pifu/ys4/32",
+          "pic/pifu/ys4/32768",
+          "pic/pifu/ys4/4",
+          "pic/pifu/ys4/4096",
+          "pic/pifu/ys4/512",
+          "pic/pifu/ys4/64",
+          "pic/pifu/ys4/65536",
+          "pic/pifu/ys4/8",
+          "pic/pifu/ys4/8192",
+          "pic/pifu/ys4/99",
+          "pic/pifu/ys5/1024",
+          "pic/pifu/ys5/128",
+          "pic/pifu/ys5/16",
+          "pic/pifu/ys5/16384",
+          "pic/pifu/ys5/2",
+          "pic/pifu/ys5/2048",
+          "pic/pifu/ys5/256",
+          "pic/pifu/ys5/32",
+          "pic/pifu/ys5/32768",
+          "pic/pifu/ys5/4",
+          "pic/pifu/ys5/4096",
+          "pic/pifu/ys5/512",
+          "pic/pifu/ys5/64",
+          "pic/pifu/ys5/65536",
+          "pic/pifu/ys5/8",
+          "pic/pifu/ys5/8192",
+          "pic/pifu/ys5/99",
+          "pic/pifu/ys6/1024",
+          "pic/pifu/ys6/128",
+          "pic/pifu/ys6/16",
+          "pic/pifu/ys6/16384",
+          "pic/pifu/ys6/2",
+          "pic/pifu/ys6/2048",
+          "pic/pifu/ys6/256",
+          "pic/pifu/ys6/32",
+          "pic/pifu/ys6/32768",
+          "pic/pifu/ys6/4",
+          "pic/pifu/ys6/4096",
+          "pic/pifu/ys6/512",
+          "pic/pifu/ys6/64",
+          "pic/pifu/ys6/65536",
+          "pic/pifu/ys6/8",
+          "pic/pifu/ys6/8192",
+          "pic/pifu/ys6/99",
+          "pic/pifu/ys7/1024",
+          "pic/pifu/ys7/128",
+          "pic/pifu/ys7/16",
+          "pic/pifu/ys7/16384",
+          "pic/pifu/ys7/2",
+          "pic/pifu/ys7/2048",
+          "pic/pifu/ys7/256",
+          "pic/pifu/ys7/32",
+          "pic/pifu/ys7/32768",
+          "pic/pifu/ys7/4",
+          "pic/pifu/ys7/4096",
+          "pic/pifu/ys7/512",
+          "pic/pifu/ys7/64",
+          "pic/pifu/ys7/65536",
+          "pic/pifu/ys7/8",
+          "pic/pifu/ys7/8192",
+          "pic/pifu/ys7/99",
+          "pic/pifu/ys8/1024",
+          "pic/pifu/ys8/128",
+          "pic/pifu/ys8/16",
+          "pic/pifu/ys8/16384",
+          "pic/pifu/ys8/2",
+          "pic/pifu/ys8/2048",
+          "pic/pifu/ys8/256",
+          "pic/pifu/ys8/32",
+          "pic/pifu/ys8/32768",
+          "pic/pifu/ys8/4",
+          "pic/pifu/ys8/4096",
+          "pic/pifu/ys8/512",
+          "pic/pifu/ys8/64",
+          "pic/pifu/ys8/65536",
+          "pic/pifu/ys8/8",
+          "pic/pifu/ys8/8192",
+          "pic/pifu/ys8/99",
+          "pic/pifu/yz1",
+          "pic/pifu/yz2",
+          "pic/pifu/yz3",
+          "pic/pifu/yz4",
+          "pic/pifu/yz5",
+          "pic/pifu/yz6",
+          "pic/pifu/yz7",
+          "pic/pifu/yz8",
+          "pic/pzoff",
+          "pic/pzon",
+          "pic/settings/txt_percent",
+          "pic/shakeoff",
+          "pic/shakeon",
+          "pic/sp",
+          "pic/ttxcxm",
+          "pic/wxxcxm",
+          "pic/zs"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "Globle.loadsp actual literal callers, skin IDs1–8, source tile powers2–65536/99; larger values use actual procedural tile digits/generic skin portrait."
+      },
+      "assets/main/index.js:161083": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "view/fuhuo",
+          "view/game",
+          "view/gameend",
+          "view/gamepasd",
+          "view/gamepasdlv",
+          "view/getaward",
+          "view/gift",
+          "view/help",
+          "view/jiangli",
+          "view/main",
+          "view/pause",
+          "view/qiandao",
+          "view/shop",
+          "view/task"
+        ],
+        "kind": "load",
+        "type": "cc.Prefab",
+        "unknown_receiver": false,
+        "reason": "Finite literals from all actual Globle.openview callers in compiled business."
+      },
+      "assets/main/index.js:188984": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "config/unlock_table"
+        ],
+        "kind": "load",
+        "type": "cc.JsonAsset",
+        "unknown_receiver": false,
+        "reason": "Actual SkinEffects.load delegates to its one config load, separately inventoried."
+      },
+      "assets/main/index.js:189551": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/icon-add-to-home",
+          "pic/icon-profile-revisit"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "HomeScene two platform mission entries."
+      },
+      "assets/main/index.js:190244": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "config/checkin-config"
+        ],
+        "kind": "load",
+        "type": "cc.JsonAsset",
+        "unknown_receiver": false,
+        "reason": "Actual CheckinService.load delegates to checkin-config."
+      },
+      "assets/main/index.js:210688": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/settings/action-best",
+          "pic/settings/action-music",
+          "pic/settings/action-sound-effects",
+          "pic/settings/cta-off",
+          "pic/settings/cta-on",
+          "pic/settings/got-it",
+          "pic/settings/no-thanks",
+          "pic/settings/settings-back",
+          "pic/settings/settings-close",
+          "pic/settings/settings-how-to-play",
+          "pic/settings/settings-screen-shake-off",
+          "pic/settings/settings-screen-shake-on",
+          "pic/settings/settings-tab-general",
+          "pic/settings/settings-tab-sound",
+          "pic/settings/settings-title",
+          "pic/settings/settings-version-v1.0",
+          "pic/settings/settings-vibration-off",
+          "pic/settings/settings-vibration-on",
+          "pic/settings/skip-tutorial",
+          "pic/settings/title-goal-cleared",
+          "pic/settings/title-highest-tile",
+          "pic/settings/title-run-over",
+          "pic/settings/try-it-free",
+          "pic/settings/txt_pause",
+          "pic/settings/volume-minus",
+          "pic/settings/volume-plus",
+          "pic/settings/watch-ad",
+          "pic/settings/watch-ad-to-try"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "SettingsPanel exact pictures map plus literal per-label and version assignments."
+      },
+      "assets/main/index.js:236026": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "config/unlock_table"
+        ],
+        "kind": "load",
+        "type": "cc.JsonAsset",
+        "unknown_receiver": false,
+        "reason": "Actual SkinEffects.load delegates to its one config load, separately inventoried."
+      },
+      "assets/main/index.js:251368": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "config/unlock_table"
+        ],
+        "kind": "load",
+        "type": "cc.JsonAsset",
+        "unknown_receiver": false,
+        "reason": "Actual SkinEffects.load delegates to its one config load, separately inventoried."
+      },
+      "assets/main/index.js:254648": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/pf1",
+          "pic/pf2",
+          "pic/pf3",
+          "pic/pf4",
+          "pic/pf5",
+          "pic/pf6",
+          "pic/pf7",
+          "pic/pf8"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "SkinCollection/unlock table IDs pf1 through pf8."
+      },
+      "assets/main/index.js:352747": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/dj1",
+          "pic/dj2",
+          "pic/dj3",
+          "pic/dj4",
+          "pic/dj5"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "Actual inventory IDs dj1 through dj5."
+      },
+      "assets/main/index.js:363377": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/tutorial-how-to-play",
+          "pic/tutorial-power-up-guide"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "help.loadGuide has exactly two literal callers."
+      },
+      "assets/main/index.js:386123": {
+        "native_files": [
+          "cocos-splash.png"
+        ],
+        "reason": "Literal official splash copied into Native root and decoded as image."
+      },
+      "assets/main/index.js:392818": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "view/main"
+        ],
+        "kind": "load",
+        "type": "cc.Prefab",
+        "unknown_receiver": false,
+        "reason": "loadview STARTUP_PREFABS contains only view/main."
+      },
+      "assets/main/index.js:416731": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "config/checkin-config"
+        ],
+        "kind": "load",
+        "type": "cc.JsonAsset",
+        "unknown_receiver": false,
+        "reason": "Actual CheckinService.load delegates to checkin-config."
+      },
+      "assets/main/index.js:424098": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/settings/daily-reward-day1",
+          "pic/settings/daily-reward-day2",
+          "pic/settings/daily-reward-day3",
+          "pic/settings/daily-reward-day4",
+          "pic/settings/daily-reward-day5",
+          "pic/settings/daily-reward-day6",
+          "pic/settings/daily-reward-day7"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "DailyCheckin actual seven-day config."
+      },
+      "assets/main/index.js:437773": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/settings/txt_clear",
+          "pic/settings/txt_pause",
+          "pic/settings/txt_reroll",
+          "pic/settings/txt_swap",
+          "pic/settings/txt_wildcard"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "Shopitem actual inventory item names."
+      },
+      "assets/main/index.js:439923": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/pf1",
+          "pic/pf2",
+          "pic/pf3",
+          "pic/pf4",
+          "pic/pf5",
+          "pic/pf6",
+          "pic/pf7",
+          "pic/pf8"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "SkinCollection/unlock table IDs pf1 through pf8."
+      },
+      "assets/main/index.js:442371": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/settings/txt_rarity_common",
+          "pic/settings/txt_rarity_epic",
+          "pic/settings/txt_rarity_legendary",
+          "pic/settings/txt_rarity_rare"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "unlock_table actual finite rarity enum."
+      },
+      "assets/main/index.js:450753": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "pic/dj1",
+          "pic/dj2",
+          "pic/dj3",
+          "pic/dj4",
+          "pic/dj5"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "Actual inventory IDs dj1 through dj5."
+      },
+      "main.js:1779": {
+        "native_files": [
+          "cocos-splash.png"
+        ],
+        "reason": "Literal official splash copied into Native root and decoded as image."
+      },
+      "main.js:3798": {
+        "native_files": [],
+        "reason": "Exact settings.js jsList is empty; Native scripts are already in CommonJS closure."
+      },
+      "subpackages/resources/index.js:1452": {
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "ht/2048jl",
+          "ht/tqq"
+        ],
+        "kind": "load",
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "ht.getInfo is fixed two-entry icon table."
+      }
+    },
+    "escapes": {
+      "adapter.js:221120": "ByteDance fsUtils object-method forwarding constructs native SDK shims only; real adapter executed by Native runner.",
+      "assets/main/index.js:17817": "Reference to project helper load function; concrete helper leaf resource calls are separately inventoried and resolved.",
+      "assets/main/index.js:246028": "Reference to project helper load function; concrete helper leaf resource calls are separately inventoried and resolved."
+    },
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "7572fa94d21ff9b68fc2dc63b64e0ed4b2f52bea338f987d568c40fa58bf8e83"
   }
 }

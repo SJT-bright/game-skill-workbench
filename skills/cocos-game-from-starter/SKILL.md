@@ -21,4 +21,9 @@ description: "接收游戏设计启动包、主题或策划，制作真实Cocos�
 
 普通包数量和奖励的单一合同由 `product_contract.py`、两份生成器和 `validate_starter.py`共同使用。限定关仅10的倍数；尾章不加限定。每关货币按已存reward_seed生成、重试不重抽；规则说明及字段完整见规范。求解器结果须在真实规则独立重放，校验器不替代玩法验收。
 
-反馈写项目固定问题历史；未复验不出包，仅复测相关依赖。运行器、专款适配与账号配置留项目，按[项目QA登记](../cocos-game-to-english/references/project-qa-registration.md)，不改共享Skill。
+反馈写项目固定问题历史；未复验不出包，仅复测相关依赖。运行器、专款适配与账号配置留项目，按[项目QA登记](../cocos-game-to-english/references/project-qa-registration.md)，不改共享Skill。\n\n完工复盘需要更新共享规范时，按[完工知识整理、去重与通用化](../cocos-game-to-english/references/knowledge-consolidation.md)执行，先去重、替换和删除过时规则。\n
+**统一手机触摸测试（用户 2026-10-27）**：玩法设计后的首个可玩确认及后续输入验收统一使用 Google Chrome DevTools/CDP 触摸模式：`chrome_touch.py --user-approved-chrome --channel chrome`，固定移动 viewport/DPR/UA/has_touch，记录 `playwright_cdp_touch` 和真实业务结果；鼠标只作辅助排错。见[Google Chrome 移动触摸运行模式](../cocos-game-to-english/references/google-touch-runtime.md)。
+
+**玩法确认前的 Chrome 触摸预检（用户 2026-10-27）**：首个可玩候选交用户前，先用独立 Google Chrome iPhone CDP 触摸完成矩阵；Codex 内置浏览器只用于查看，不作为测试器。
+
+**输出必须标明 Chrome 测试层（用户 2026-10-27）**：凡输出“测试通过”“手机触摸通过”“按钮已验证”或交付预览，必须注明 `Google Chrome iPhone touch`、设备尺寸/DPR、`input_transport=playwright_cdp_touch` 和业务结果。只在 Codex 内置浏览器查看或点击，必须写“仅查看，未作为手机触摸测试”，不得写成测试通过。

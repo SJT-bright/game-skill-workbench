@@ -19,7 +19,7 @@ def validate_business(data):
     need(home.get('lifecycle_complete') is True and home.get('after_draw_observed') is True,'HOME lifecycle and actual post-draw observation required')
     touch=play.get('touch',{})
     if not isinstance(touch,dict):touch={}
-    need(touch.get('transport')=='ego_page_cdp' and moment(touch.get('at_ms')),'actual touch identity required')
+    need(touch.get('transport') in ('ego_page_cdp','playwright_cdp_touch') and moment(touch.get('at_ms')),'actual touch identity required')
     need(play.get('level_ready') is True and bool(play.get('level_identity')),'actual playable level identity required')
     need(isinstance(play.get('before'),dict) and bool(play.get('before')) and isinstance(play.get('after'),dict) and bool(play.get('after')) and play.get('before')!=play.get('after'),'observable gameplay change after touch required')
     need(moment(home.get('at_ms')) and moment(play.get('effect_at_ms')) and moment(touch.get('at_ms')) and home['at_ms']<=touch['at_ms']<play['effect_at_ms'],'HOME → touch → gameplay effect order required')

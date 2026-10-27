@@ -1,9 +1,11 @@
 ---
 name: cocos-game-tiktok-package
-description: "用户授权生成TikTok小游戏测试包或上传ZIP时，选择完整制作或成品增量路线，并完成同版文件核验和交付。"
+description: "用户提到测试包、上传包、平台包、TikTok ZIP或重新出包时，调用本技能生成同版Native测试包，并同步交付同版本固定手机本地预览。"
 ---
 
 # TikTok小游戏出包与交付
+
+用户2026-10-27明确：writer拒包是当前任务的修复输入，不是对话终点。自动处理具体缺口、重建并复验，直到writer及交付核验真实通过并给出ZIP；不能用“尚未放行”的总结结束或等待用户再次说继续。只在确需用户提供、且本机无法取得的外部信息或用户明确暂停时停下；不得降低门禁或伪造证据。
 
 本入口负责用户授权的测试包、上传ZIP与重新出包。只有真实Cocos Native构建可以生成平台ZIP；根目录直接包含game.js、game.json、project.config.json，不带外层文件夹、源码、Web套壳、套娃ZIP和QA跳关标记。成品制作流程通过后按当前合同连续出包；仅检测/评审/试玩遵守用户边界；本入口不授权平台上传或发布。
 
@@ -43,4 +45,14 @@ python <skills>/cocos-game-to-english/scripts/make_tiktok_zip.py \
 
 writer成功后按[最终交付核对](../cocos-tiktok-package-check/SKILL.md)对实际ZIP生成新回执，不重新手跑相同文件检查。最终回复主动给当前稳定ZIP可点击链接和同版本已启动的可点击试玩入口，默认不堆报告。原始材料、旧包、用户存档保持；本地结果不冒称设备/真实广告/平台通过。
 
+**测试包必同步本地预览（用户 2026-10-27）**：用户只要提到“测试包、上传包、平台包、TikTok ZIP、出包、重新打包”或同义出包意图，必须调用本技能；交付物必须同时包含当前同版 Native 测试包和固定手机尺寸的 Codex 本地预览链接。预览必须从本轮最终 Web 导出启动，使用固定手机外壳（通常390×844），并通过文件树/构建绑定确认预览版本与 ZIP 对应同一源码、同一版本标识和同一候选。只交 ZIP、只给旧预览、用旧版本试玩页或把 Ego/Chrome QA 页面当用户预览都不算完成。
+
+出包前先启动并验证本地预览的 HOME→PLAY→玩法变化；writer 生成后再次核对预览服务仍指向同版导出。最终回复必须同时给 ZIP 链接和本地预览链接，并明确预览为本地 Web 手机试玩层，和 Native、物理手机、真实广告、平台接受分开记录。用户试玩预览在用户结束试玩或被新版替代后由 Agent 按现有收尾规则关闭；若本轮仍需用户试玩则保留并标记交付。
+
 同期广告模拟、制作统计、Credits和评价等规则按[当前合同](../cocos-game-to-english/references/current-contracts.md)选择相关正文，不复制事故全文。
+
+**出包前触摸输入（用户 2026-10-27）**：涉及首页、PLAY、按钮、拖动或启动恢复的本地回归，按最终检查入口的[最终包触摸证据](../cocos-tiktok-package-check/SKILL.md#最终包触摸证据用户-2026-10-27)执行；不把电脑鼠标通过写成手机触摸通过。
+
+**出包前触摸预检（用户 2026-10-27）**：在交当前 Native 测试包前，先使用独立 Google Chrome iPhone CDP 触摸完成受影响入口矩阵；Codex 内置浏览器不能替代。读取[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)。
+
+**输出必须标明 Chrome 测试层（用户 2026-10-27）**：凡输出“测试通过”“手机触摸通过”“按钮已验证”或交付预览，必须注明 `Google Chrome iPhone touch`、设备尺寸/DPR、`input_transport=playwright_cdp_touch` 和业务结果。只在 Codex 内置浏览器查看或点击，必须写“仅查看，未作为手机触摸测试”，不得写成测试通过。

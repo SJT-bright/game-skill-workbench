@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import audit_runtime_resources as resources
+import audit_ad_storage_contract as ad_storage
 import package_issue_gate as issues
 
 
@@ -20,9 +21,10 @@ def verify(files, native, project, resource_manifest):
     path = Path(resource_manifest).resolve()
     raw = path.read_bytes()
     resource_result = resources.audit(files, json.loads(raw), project=project)
+    ad_storage_result = ad_storage.verify(files, native, project)
     return {'passed': True, 'resource_manifest': str(path),
             'resource_manifest_sha256': hashlib.sha256(raw).hexdigest(),
-            'reported_issues': issue_result, 'resources': resource_result}
+            'reported_issues': issue_result, 'resources': resource_result, 'ad_storage': ad_storage_result}
 
 
 def signature(result):

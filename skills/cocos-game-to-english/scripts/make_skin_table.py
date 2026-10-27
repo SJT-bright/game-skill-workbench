@@ -5,7 +5,7 @@
 the starting skin (free), then 18 skins for coins: 7 common, 6 rare, 3 epic, 2 legendary.
 10 scene backgrounds (group "background", only when the game has a scene to dress): the starting one (free), then
 9 for coins: 3 common, 3 rare, 2 epic, 1 legendary.
-Default prices: ordinary-levels = 10/15/20/25 ordinary-level base rewards by rarity.
+Default prices: ordinary-levels = 10/20/30/40/50 ordinary base rewards, including purchasable limited.
 Use --normal-level-coins when ordinary base income differs from R (ad reward unit).
 Explicit legacy-2r preserves the old 2R first price and +1/4/10/20 R curve.
 Every skin has a coin bonus that rises with rarity (skins 5-10 / 11-20 / 21-32 / 33-50 %, limited 51-60 %;
@@ -13,7 +13,7 @@ backgrounds about half). The limited skin, two formats (user 2026-10-24, both al
   --limited-mode final (default): ONE limited skin, won on the last limited level (--final-level, 70 or more);
   --limited-mode every_10: one limited skin per limited level (10, 20 ... --final-level), all first in the list
     (then 19 + N skins: N limited + the free one + 18 for coins).
-Endless games buy the one limited skin with a lot of coins (1.5x the dearest skin) plus 6 ads.
+Current economy: limited skins cost 50B in levels and endless games; optional milestone awards grant the same item once. Legacy-2r retains its former limited routes.
 
 Fill in "name" and "art" (what the skin changes: common = one accessory, rare = colours + accessory, epic = full outfit,
 legendary = full costume + effect, limited = the most detailed: themed costume, accessories, aura, own idle animation),
@@ -32,19 +32,19 @@ from pathlib import Path
 STEPS = {'common': 1, 'rare': 4, 'epic': 10, 'legendary': 20}
 FIRST = 2  # legacy-2r only
 PRICE_PROFILES = ('ordinary-levels', 'legacy-2r')
-DEFAULT_TIER_LEVELS = dict(zip(STEPS, (10, 15, 20, 25)))
+from product_contract import PRICE_LEVEL_TARGETS
+DEFAULT_TIER_LEVELS = dict(PRICE_LEVEL_TARGETS)
 
 def tier_levels(value=None):
-    if value is None:
-        return dict(DEFAULT_TIER_LEVELS)
-    if isinstance(value, str):
-        value = dict(zip(STEPS, [float(x) for x in value.split(',')])) if len(value.split(',')) == 4 else {}
-    if not isinstance(value, dict) or set(value) != set(STEPS):
-        raise ValueError('tier-levels needs common,rare,epic,legendary (four positive increasing values)')
-    result = {k: float(value[k]) for k in STEPS}
-    levels = list(result.values())
-    if any(not math.isfinite(x) or x <= 0 for x in levels) or any(a >= b for a,b in zip(levels, levels[1:])):
-        raise ValueError('tier-levels must be positive and strictly increasing')
+    if value is None:return dict(DEFAULT_TIER_LEVELS)
+    if isinstance(value,str):
+        parts=value.split(',');value=dict(zip(('common','rare','epic','legendary','limited'),map(float,parts))) if len(parts) in (4,5) else {}
+    if not isinstance(value,dict) or set(value) not in (set(STEPS),set(DEFAULT_TIER_LEVELS)):
+        raise ValueError('tier-levels needs common,rare,epic,legendary[,limited]')
+    result={k:float(v) for k,v in value.items()}
+    if 'limited' not in result:result['limited']=max(50.,result['legendary']+10.)
+    values=[result[k] for k in DEFAULT_TIER_LEVELS]
+    if any(not math.isfinite(v) or v<=0 for v in values) or any(a>=b for a,b in zip(values,values[1:])):raise ValueError('tier-levels must be positive and strictly increasing')
     return result
 SKIN_TIERS = [('common', 7), ('rare', 6), ('epic', 3), ('legendary', 2)]
 BG_TIERS = [('common', 3), ('rare', 3), ('epic', 2), ('legendary', 1)]
@@ -73,12 +73,13 @@ def curve(R, tiers, price_profile='ordinary-levels', normal_level_coins=None, ta
     return rows
 
 
-from product_contract import limited_levels
+from product_contract import limited_levels, ECONOMY_POLICY, PRICE_LEVEL_TARGETS, GIFT_COOLDOWN_MS
 
 
 def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_profile='ordinary-levels', normal_level_coins=None, targets=None):
     items = []
     targets = tier_levels(targets)
+    if price_profile=='ordinary-levels' and targets!=PRICE_LEVEL_TARGETS:raise ValueError('new economy requires 10,20,30,40,50 ordinary levels; existing custom tables retain their saved contract')
     normal_level_coins = R if normal_level_coins is None else normal_level_coins
     skins = curve(R, SKIN_TIERS, price_profile, normal_level_coins, targets)
     top = max(p for _, p in skins)
@@ -98,6 +99,11 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
         else:
             row.update(unlock='ads_coins', ads=LIMITED_ADS, coins=int(math.ceil(1.5 * top / 100.0) * 100))
         items.append(row)
+    if price_profile=='ordinary-levels':
+        for row in items:
+            if 'level' in row:row['award_level']=row['level']
+            row.pop('level',None);row.pop('condition',None)
+            row.update(unlock='coins',coins=int(normal_level_coins*targets['limited']),ads=0)
     first = len(items)
     items.append({'id': hero + '_01', 'group': 'skin', 'order': first + 1, 'rarity': 'common', 'unlock': 'free', 'ads': 0, 'coins': 0,
                   'name': 'TODO (the starting look)', 'art': 'the original protagonist'})
@@ -117,22 +123,23 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
             items.append({'id': 'bg_%02d' % (i + 2), 'group': 'background', 'order': i + 2, 'rarity': rarity, 'unlock': 'coins',
                           'ads': 0, 'coins': price, 'bonus': {'type': 'coins', 'pct': BG_BONUS[rarity][k]}, 'name': 'TODO',
                           'art': 'TODO: the scene in a new theme (calm, few details: references/page-richness.md)'})
-    t = {'module': 'skin.v1', 'coins_per_ad': R, 'coins_per_level': normal_level_coins, 'normal_level_coins': normal_level_coins,
+    t = {'module': 'skin.v1', 'coins_per_ad': (5*normal_level_coins if price_profile=='ordinary-levels' else R), 'coins_per_level': normal_level_coins, 'normal_level_coins': normal_level_coins,
          'price_profile': price_profile, 'price_level_targets': targets, 'price_steps': [1, 4, 10, 20], 'mode': mode, 'items': items}
     if mode == 'levels':
         t['limited_mode'] = limited_mode
+    if price_profile=='ordinary-levels':t.update(economy_policy=ECONOMY_POLICY,gift_multiplier=5,gift_cooldown_ms=GIFT_COOLDOWN_MS)
     return t
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--R', type=int, required=True, help='coins of a medium level (= coins_per_ad)')
+    ap.add_argument('--R', type=int, required=True, help='ordinary base B for new pricing; legacy-2r ad unit for old contracts')
     ap.add_argument('--price-profile', choices=PRICE_PROFILES, default='ordinary-levels')
     ap.add_argument('--normal-level-coins', type=int, help='ordinary level base income, excluding ads/bonuses (default R)')
-    ap.add_argument('--tier-levels', default='10,15,20,25', help='ordinary-level targets: common,rare,epic,legendary')
+    ap.add_argument('--tier-levels', default='10,20,30,40,50', help='ordinary-level targets: common,rare,epic,legendary,limited')
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument('--levels', action='store_true', help='level game: the limited skin is won on the last multiple-of-ten milestone')
-    g.add_argument('--endless', action='store_true', help='endless game: the limited skin costs a lot of coins + 6 ads')
+    g.add_argument('--levels', action='store_true', help='level game: 50B limited purchase, optional last-milestone award')
+    g.add_argument('--endless', action='store_true', help='endless game: limited purchase is 50B; legacy-2r retains the old route')
     ap.add_argument('--final-level', type=int, default=70, help='total levels, including any incomplete tail (70 or more)')
     ap.add_argument('--limited-mode', choices=['final', 'every_10'], default='final',
                     help='final: one limited skin on the last limited level; every_10: one per limited level (user 2026-10-24)')

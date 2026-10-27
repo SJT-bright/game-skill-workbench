@@ -21,3 +21,32 @@ description: "检查和修复Cocos游戏玩法、按钮、异步广告、奖励�
 测试执行者可以在授权范围修代码bug并自己定点重测；设计变化依当前合同处理，需要新图交有权生图的执行者。相同一轮截图/dump/操作可支持多个实际断言，保留原始证据和准确执行身份，不能靠手填pass或旧报告哈希续用。
 
 收到反馈立即登记固定问题历史与实际生产依赖。按[可执行问题门禁](../cocos-tiktok-package-check/references/resource-and-reported-issues.md)保存故障、修复与正常对照；缺复验或失效不得出包，相关文件未变只核证据不重跑运行器。结束无用QA页面/服务，给用户准确结果；未授权不打包。
+
+已有游戏适配后若反馈跳跃、移动或落地手感改变，按[帧率与原版运动对照](../cocos-game-to-english/references/mobile-motion-state-review.md)先核实际时间步与轨迹，再决定修复；不要直接改原版物理数值。试玩点不动时同时按[电脑试玩输入](../cocos-game-to-english/references/user-phone-preview.md)区分鼠标桥接、真实触摸和业务按钮故障。
+
+## 激励广告入口与点击失效
+
+广告必须由玩家主动点击触发、且失败页仍可免费退出的完整规则只维护在 [Cocos 游戏广告设计](../cocos-game-ad-design/SKILL.md#激励广告必须由玩家主动点击触发2026-10-27)。本 Skill 只负责按本轮实际入口路由到该规范和问题账本，不复制广告触发与回调正文。
+
+## 通用规范与完工整理
+
+适用性与故障修复按[通用问题规范](../cocos-game-to-english/references/feedback-regressions.md)；完工沉淀按[去重维护](../cocos-game-to-english/references/knowledge-consolidation.md)，入口只引用主规范。
+
+## 点击闪烁的跨游戏回归
+
+点击过渡中的空帧、旧图叠加、字体回退和尺寸跳变统一按 [按钮状态轻量核对](../cocos-game-to-english/references/button-state-check.md#click-transition-flash-regression-cross-game-rule-2026-10-27) 执行；这里不复制第二套帧证据协议。
+
+
+## Native 广告前置存储合同（2026-10-27）
+
+任何新增、修改或排查激励广告时，必须把“点击广告前的 Native 存储读取”作为广告链的一部分。浏览器模拟广告通过不代表 Native 通过；测试执行者必须在实际 Native 宿主或同等可信 adapter 边界注入存储返回形状：缺省 `null`、空字符串、字符串/数字 `0/1`、桥接 `false/true`、损坏对象/数组、坏字符串、负数和越界值。依据实际平台契约及键语义处理 Boolean 和缺省值；无法区分读取失败与缺键时不得假定成功。损坏值继续拒绝并可重试，不能静默发奖。
+
+每个广告入口按同一合同验证：真实按钮触摸→库存/奖励读取→pending 恢复→SDK create/show→close/error/timeout→奖励写入→读回→原消费者可使用。必须保留旧故障、修复版和正常对照，并记录广告是否实际进入 SDK；若在 SDK 前失败，不能把它写成“广告无填充”。没有 `storage_boolean` Native 原始证据时，广告测试不完整。
+
+实现者负责接入公共存储归一化入口；测试者负责执行 `storage_boolean` 及损坏值矩阵；出包者负责检查合同回执和当前 Native 字节。三者任何一个缺失都不能把广告入口标为通过。
+
+
+
+**2026-10-27 审查纠偏**：先依据目标平台存储 API 的实际契约和键的业务语义区分缺失、合法 Boolean、读取失败与损坏值；不能跨游戏一律把 `false` 当缺失、`true` 当 1。测试注入须说明替身位置并通过真实用户入口验证业务结果；本地替身和日志不证明平台真机行为。逐形状留可复核断言，缺失旧版反例、完整广告链或平台证据时分别标未验证。
+
+受影响输入的执行器、预检和结果字段统一按[Chrome 触摸运行合同](../cocos-game-to-english/references/google-touch-runtime.md)与[触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。

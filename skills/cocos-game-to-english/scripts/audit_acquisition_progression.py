@@ -133,7 +133,7 @@ def audit_module_group(group, entries, R, errors, price_profile=None, normal_lev
         errors.append(f'Group {group}: duplicate display order')
     limited = [r for r in entries if r.get('limited')]
     total = MODULE_TOTAL[group]
-    every_10 = group == 'skin' and len(limited) > 1 and all(r['unlock'] == 'level' for r in limited)
+    every_10 = group == 'skin' and len(limited) > 1 and all(r['unlock'] in ('level','coins') for r in limited)
     if every_10:
         total = MODULE_TOTAL[group] - 1 + len(limited)   # user 2026-10-24: one limited skin per limited level
     if len(entries) != total:
@@ -199,7 +199,10 @@ def audit_module_group(group, entries, R, errors, price_profile=None, normal_lev
             errors.append(f'Group {group}: bonus goes down from {a["item"]} (+{a["bonus"][1]}) to {b["item"]} (+{b["bonus"][1]})')
     for r in limited:
         top = max([x['coins'] for x in prices] or [0])
-        if r['unlock'] == 'level':
+        if r['unlock'] == 'coins' and profile == 'ordinary-levels':
+            want=(normal_level_coins or 0)*targets['limited']
+            if r['ads'] or r['coins']!=want:errors.append(f'Group skin: limited purchase costs {want} coins, no ads')
+        elif r['unlock'] == 'level':
             if r.get('condition') != 'clear':
                 errors.append(f'Group skin: limited skin {r["item"]} is won by clearing its limited level (condition clear)')
         elif r['unlock'] == 'ads_coins':
@@ -214,13 +217,13 @@ def audit_module_group(group, entries, R, errors, price_profile=None, normal_lev
             errors.append(f'Group skin: the limited skin bonus +{r["bonus"][1]}% must be above every legendary (+{max(legend)}%)')
 
 
-def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ads=8, max_bonus=50, module=None, optional=None, price_profile=None, normal_level_coins=None, price_level_targets=None):
+def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ads=8, max_bonus=50, module=None, optional=None, price_profile=None, normal_level_coins=None, price_level_targets=None, economy_policy=None):
     optional = optional or {}
     errors, warnings, groups, seen = [], [], {}, set()
     if not isinstance(rows, list) or not rows:
         return {'status': 'fail', 'errors': ['Table must be a nonempty array of items'], 'warnings': [], 'groups': []}
     rank = {name.lower(): i for i, name in enumerate(tiers)}
-    if module == 'skin.v1':
+    if module == 'skin.v1' or economy_policy=='normal-10-50.v1':
         rank['limited'] = len(tiers)
     elif module is not None:
         errors.append(f'unknown module {module!r} (the skin module is "skin.v1", make_skin_table.py)')
@@ -240,7 +243,7 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
                 raise ValueError(f'unknown rarity {rarity!r} (expected one of {", ".join(tiers)})')
             if unlock in REMOVED and not optional.get(unlock):
                 raise ValueError(f'{item}: unlock {unlock!r} is gone ({REMOVED[unlock]}, user 2026-10-23, both boards)')
-            if rarity == 'limited' and not (module == 'skin.v1' and group == 'skin' and row.get('limited') is True):
+            if rarity == 'limited' and not ((module == 'skin.v1' and group == 'skin' or economy_policy=='normal-10-50.v1') and row.get('limited') is True):
                 raise ValueError(f'{item}: rarity "limited" only for the limited protagonist skin(s) of the skin module ("limited": true)')
             in_module = module == 'skin.v1' and group in SKIN_GROUPS
             if unlock not in UNLOCKS and not (unlock in REMOVED and optional.get(unlock)):
@@ -296,6 +299,14 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
         entries.sort(key=lambda r: r['order'])
         if len({r['order'] for r in entries}) != len(entries):
             errors.append(f'Group {group}: duplicate display order')
+        if economy_policy=='normal-10-50.v1':
+            from product_contract import PRICE_LEVEL_TARGETS
+            base=normal_level_coins or coins_per_level
+            for row in entries:
+                if row['unlock']=='free':continue
+                if not base or row['unlock']!='coins' or row['ads'] or row['coins']!=base*PRICE_LEVEL_TARGETS[row['rarity']]:errors.append('Group '+group+': exact ordinary reward budget required')
+            result.append({'group':group,'items':entries});any_buyable=True
+            continue
         buy = [r for r in entries if r['unlock'] in BUYABLE]
         levels = [r for r in entries if r['unlock'] == 'level']
         first_paid = min((r['order'] for r in buy + levels), default=None)
@@ -456,11 +467,14 @@ def main():
                                   meta.get('module'), enabled(next((p for p in a.table.resolve().parents if (p / 'docs').is_dir()), a.table.parent)),
                                   a.price_profile or meta.get('price_profile'),
                                   a.normal_level_coins if a.normal_level_coins is not None else meta.get('normal_level_coins', coins_per_level),
-                                  tier_levels(a.tier_levels) if a.tier_levels else meta.get('price_level_targets'))
+                                  tier_levels(a.tier_levels) if a.tier_levels else meta.get('price_level_targets'), meta.get('economy_policy'))
         else:
             if a.coins_per_ad is not None and a.coins_per_ad <= 0:
                 raise ValueError('coins-per-ad must be positive')
             result = audit_alternative(rows, fields, set(a.starting_items), Fraction(coins_per_ad) if coins_per_ad else None)
+        from product_contract import budget_errors
+        result['errors'].extend(budget_errors(meta))
+        if result['errors']:result['status']='fail'
         if meta.get('module') == 'skin.v1':
             result['pricing'] = {'profile': a.price_profile or meta.get('price_profile') or 'legacy-2r',
                                  'normal_level_coins': a.normal_level_coins if a.normal_level_coins is not None else meta.get('normal_level_coins', coins_per_level),

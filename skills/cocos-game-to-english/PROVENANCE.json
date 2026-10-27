@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-26.contracts-v3",
+  "revision": "2026-10-27.economy-v4",
   "skill": "cocos-game-to-english",
-  "previous_provenance_sha256": "c4330bd9afdea9a295ab14549c101be8f0173ecaaa9538646f868ce951cf3a05",
-  "scope": "Portable Skill source. Machine QA registrations and game evidence are excluded.",
+  "previous_provenance_sha256": "e69253685a3614d82ad8f964130f08173cfea1a89ac4856c1e273a4a16c41cd7",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "f8cbd5a77169463618ba075c5896421ec21dea854af10a1a910f75e3bdfc114a",
-      "bytes": 2578
+      "sha256": "973faabf647287dc26eb32419548a39f34b0b6bc56522025c5eb9e93c9b05ead",
+      "bytes": 2641
     },
     {
       "path": "agents/openai.yaml",
@@ -42,8 +42,8 @@
     },
     {
       "path": "assets/known-issues.json",
-      "sha256": "3367b9bf862442a77841dc3cd1417e8af7ed3257846f98bcd99002ad8bcadf71",
-      "bytes": 130358
+      "sha256": "8a878db38b98dfb907dca494befcac8ee42cdbc10d123db6c15e6e1381c03508",
+      "bytes": 127120
     },
     {
       "path": "assets/loading-recovery-examples/asset-load-guard.js",
@@ -62,8 +62,8 @@
     },
     {
       "path": "assets/modules/AdRewards.ts",
-      "sha256": "b68851372d10535e83add52a7790d310e56d742437a333aed643850c7c1e0d28",
-      "bytes": 6353
+      "sha256": "cd88b1c2b1a88139757662042ac675c3423d650a28d71ac0ea2abe3ef13f7efe",
+      "bytes": 8049
     },
     {
       "path": "assets/production-task-template.md",
@@ -87,8 +87,8 @@
     },
     {
       "path": "assets/user-playtest-checklist-template.md",
-      "sha256": "763b08d19922b3f416b5cdc6b4bf36ccb38c7db3366d93bf771cc81a85a74a90",
-      "bytes": 5883
+      "sha256": "e298ec9b2bbab9f593c566fcad3de2f4837903b4c25d7b72782b80c4955563ff",
+      "bytes": 5915
     },
     {
       "path": "examples/flat-atlas/buttons.png",
@@ -177,8 +177,8 @@
     },
     {
       "path": "references/automated-ad-simulation.md",
-      "sha256": "152e7f90151f9d8f685dc3eeb267bcc38cdba89405c0494e4444454b102ef34d",
-      "bytes": 5904
+      "sha256": "6494e88338696877ee2e0fd81d965513f74835ed72f8278f03c0ec87fc11ab53",
+      "bytes": 6391
     },
     {
       "path": "references/button-state-check.md",
@@ -212,8 +212,8 @@
     },
     {
       "path": "references/current-contracts.md",
-      "sha256": "a10f4713ea12fdcf307c3340cbbdf45066064bd9795faced3438896202525ac8",
-      "bytes": 6052
+      "sha256": "30352ed7a1018a3e232e379fdbb283da182b252e2375b72fe5c6b510ed3cd144",
+      "bytes": 6050
     },
     {
       "path": "references/cute-casual-style.md",
@@ -282,8 +282,8 @@
     },
     {
       "path": "references/game-modules.md",
-      "sha256": "2941e4b739f1aac322d977aef966ab71e89bbde6a78f19ebe2b3ee02ec98d38e",
-      "bytes": 15142
+      "sha256": "bfae4b12a9b331e3c2a78b9ea82fc3ac0e8b013101035c495acba52a878cb635",
+      "bytes": 13945
     },
     {
       "path": "references/host-adaptation.md",
@@ -442,8 +442,8 @@
     },
     {
       "path": "references/rarity-unlock-design.md",
-      "sha256": "2c73f25d972237f5311f414f440801e10cac048605571dbc8ddea916eed3882f",
-      "bytes": 11020
+      "sha256": "9ef85a63ef31dffbc35090feaa3e930c5e2f6d6fe2ea50f0f2c9bbfbb87f31f9",
+      "bytes": 11169
     },
     {
       "path": "references/replay-and-input-checks.md",
@@ -482,8 +482,8 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "26d4f8647d3e5029d828aa1d620d06fa832805b04818f84ccfd29b49fbfbcc08",
-      "bytes": 35282
+      "sha256": "ba0d1bd77f8a76cc63116ff9df8b13bf6ae8f7f78775ff2e9b58a69d83c3fb66",
+      "bytes": 35288
     },
     {
       "path": "references/startup-contract.md",
@@ -532,8 +532,8 @@
     },
     {
       "path": "references/top-bar-and-level-map.md",
-      "sha256": "2c571bbe83c60693d23fbdf531bc7d0fc32df962fa1d268ab41f7c2abeb64e84",
-      "bytes": 23781
+      "sha256": "111325629e81546446791e2a252b7abfae670e1c870c04dd691e32e641b294c6",
+      "bytes": 23280
     },
     {
       "path": "references/tutorial-input-and-pause-recovery.md",
@@ -572,8 +572,8 @@
     },
     {
       "path": "scripts/audit_acquisition_progression.py",
-      "sha256": "de280482ecc4d20e6a20ef7d0fa5cd331463cf968c72d20156e30519c90aa0e8",
-      "bytes": 33809
+      "sha256": "7dafc5da2a9b3d06f69ab05282033f1bae2ebd69839b9a3f2a89a4a890bdf249",
+      "bytes": 34888
     },
     {
       "path": "scripts/audit_ad_binding.py",
@@ -637,8 +637,8 @@
     },
     {
       "path": "scripts/audit_game_modules.py",
-      "sha256": "95ff87a32635a757396b94c1c0e0f16374364bdead7ed780704ea32d029b2abc",
-      "bytes": 25192
+      "sha256": "b380e56960cb1f84ac480d0d0d34116012d4d57ba3ecb57b52c0885ba96c1926",
+      "bytes": 25908
     },
     {
       "path": "scripts/audit_image_clarity.py",
@@ -652,8 +652,8 @@
     },
     {
       "path": "scripts/audit_level_plan.py",
-      "sha256": "0d95673db9e77a1c8f1ccf5ff95c1667bd0ce977864799e33e6699efe3eff8a4",
-      "bytes": 26208
+      "sha256": "e9353f4c919b881335d47c6b99097c4f4f649b09e2deb2870c61b15d06d5f8a7",
+      "bytes": 26509
     },
     {
       "path": "scripts/audit_loading_recovery.py",
@@ -922,13 +922,13 @@
     },
     {
       "path": "scripts/make_level_plan.py",
-      "sha256": "e38eaddbbe7eb5af3560e7a63c08c571a6c2da34ca042af6c2595f76b94976d6",
-      "bytes": 9329
+      "sha256": "e68ac1b3d7bdbb221b14fc93acfd781f8b599177bd6958a1c962570dfc4a0346",
+      "bytes": 9080
     },
     {
       "path": "scripts/make_skin_table.py",
-      "sha256": "84e3e7d059faffb11dd3b14b108375fed2b42dd60dc1a21402a2b904c1337926",
-      "bytes": 9973
+      "sha256": "663be5f063be748badc0fd989c422f821e03b6fb856dd3636256245c3c744826",
+      "bytes": 10988
     },
     {
       "path": "scripts/make_tiktok_zip.py",
@@ -937,8 +937,8 @@
     },
     {
       "path": "scripts/modules_harness.mjs",
-      "sha256": "f17191904cac0fccaecc94872b060b48095eff86b8c9dc5e7629be3c6e048605",
-      "bytes": 6230
+      "sha256": "66780b793e5a36187f94f91773d2eb0713151b00ccaf8f8ac8e210eb9faf5b70",
+      "bytes": 6960
     },
     {
       "path": "scripts/official_loading.py",
@@ -1012,8 +1012,8 @@
     },
     {
       "path": "scripts/product_contract.py",
-      "sha256": "8cc105ba70680bf89cc125f905fa108709a54165a5b8aff2aee53f6cd0b81acd",
-      "bytes": 4143
+      "sha256": "963e0505614ad2835180628c3091d79e6cccb7cecbc60f74cf391e5393cd3f2b",
+      "bytes": 6628
     },
     {
       "path": "scripts/production_accounting.py",
@@ -1022,8 +1022,8 @@
     },
     {
       "path": "scripts/project_qa.py",
-      "sha256": "d92e12f1f03a3c1e9cad8e7eb1ec474b727d4fd20a5b91d2b87f5b6f0bd2f944",
-      "bytes": 16857
+      "sha256": "55e9e99df39b5e2efd3cdf0f76b224ed863ccba0a4e644bb522a4957ebbcdc75",
+      "bytes": 17089
     },
     {
       "path": "scripts/publish_resource_profile.py",
@@ -1157,8 +1157,8 @@
     },
     {
       "path": "scripts/test_game_modules.py",
-      "sha256": "faf3fb1e50babeccfed4c2501a90b8d8d4591df2a23cb1cf0705e1f39134c498",
-      "bytes": 18236
+      "sha256": "82cc741fa7029c8a4a3ee429f4962b490c84b7d071f821d66849529f28c1842b",
+      "bytes": 18099
     },
     {
       "path": "scripts/test_home_linked_pages.py",
@@ -1287,8 +1287,8 @@
     },
     {
       "path": "scripts/test_product_contract.py",
-      "sha256": "25e5df9d72e60f2552dc8f1ef6f108e5256e145fb9ef5e32edb0f78c0086b4be",
-      "bytes": 2410
+      "sha256": "e107b6e746cd66419ccee5f175f565858421175398dfdc88b962ac6b68522445",
+      "bytes": 7696
     },
     {
       "path": "scripts/test_production_accounting.py",
@@ -1357,8 +1357,8 @@
     },
     {
       "path": "scripts/test_top_bar_and_levels.py",
-      "sha256": "b5534ec2d9cd6353ff3d3c83d51a2f72e10dbeb7eedd15a57d845fb0214bf63a",
-      "bytes": 18854
+      "sha256": "0c7fdadf12ef9ec7e148aa43a9ae0963a59d642f6b8bf5da8e6026f6f84b8762",
+      "bytes": 18832
     },
     {
       "path": "scripts/test_ui_contract_refusal.py",

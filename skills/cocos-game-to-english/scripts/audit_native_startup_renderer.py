@@ -43,7 +43,7 @@ def validate(report, native, binding, project):
  inputs={r.get('relative_path') for r in report.get('inputs',[])}
  if report.get('control_profile')!='cocos3_systemjs_native_v1':need({'game.js','main.js','adapter-min.js'}<=inputs,'entry and real adapter identities required')
  need(any('cocos' in str(x).lower() for x in inputs),'real engine identity required')
- need(any(str(x).startswith('assets/') for x in inputs),'actual scene bundle identity required')
+ need(any(str(x).startswith('assets/') or (report.get('control_profile')=='cocos3_systemjs_native_v1' and str(x).startswith('subpackages/')) for x in inputs),'actual scene bundle identity required')
  need(ref(report.get('runner',{}),'browser runner') is not None,'runner required')
  raw=ref(report.get('raw',{}),'raw browser result');data={}
  if raw:

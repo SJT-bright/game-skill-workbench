@@ -7,7 +7,9 @@ import { pathToFileURL } from 'url';
 const [modPath, tablePath, rArg] = process.argv.slice(2);
 const M = await import(pathToFileURL(modPath).href);
 const table = tablePath && tablePath !== '-' ? JSON.parse(fs.readFileSync(tablePath, 'utf8')) : { items: [] };
-const R = Number(rArg) || 50;
+const INPUT_R = Number(rArg) || 50;
+const B = table.normal_level_coins || table.coins_per_level || INPUT_R;
+const R = B;
 const checks = [];
 const add = (id, passed, detail) => checks.push({ id, passed: !!passed, detail });
 
@@ -33,29 +35,28 @@ const add = (id, passed, detail) => checks.push({ id, passed: !!passed, detail }
   }
   add('bonus_once_per_group', ok, detail);
 }
-{ // home gift box grows with levels cleared and with skins bought, never below R
-  const priced = (table.items || []).filter((it) => it.unlock === 'coins' && it.coins > 0).sort((a, b) => a.coins - b.coins);
-  const byLevel = [0, 9, 10, 20, 35, 70].map((n) => M.giftReward(R, table, [], n));
-  const lvOk = byLevel.every((v, i) => i === 0 || v >= byLevel[i - 1]) && byLevel[5] > byLevel[0] && byLevel[0] >= R;
-  add('gift_grows_with_levels', lvOk, 'gift at 0/9/10/20/35/70 levels: ' + byLevel.join('/'));
-  if (priced.length) {
-    const owned = [], seq = [M.giftReward(R, table, owned, 0)];
-    priced.forEach((it) => { owned.push(it.id); seq.push(M.giftReward(R, table, owned, 0)); });
-    const ok = seq.every((v, i) => i === 0 || v >= seq[i - 1]) && seq[seq.length - 1] > seq[0];
-    add('gift_grows_with_skins', ok, 'gift after buying 0..' + priced.length + ' skins: ' + seq.filter((v, i) => i % 4 === 0 || i === seq.length - 1).join('/'));
-    const top = M.nextPrice(table, priced.map((it) => it.id));
-    add('next_price_all_owned', top === priced[priced.length - 1].coins, 'everything owned -> next price ' + top);
-  }
-}
-{ // one charge, used by a claim, refilled after a level end, never stacked
-  let g = M.createGift();
-  const a = M.claimGift(g, R, table, [], 0); g = a.state;
-  const b = M.claimGift(g, R, table, [], 0);
-  g = M.onRoundEnd(M.onRoundEnd(g));
-  const c = M.claimGift(g, R, table, [], 1); g = c.state;
-  const d = M.claimGift(g, R, table, [], 1);
-  const ok = a.coins >= R && b.coins === 0 && c.coins > 0 && d.coins === 0;
-  add('gift_once_per_round', ok, 'claim ' + a.coins + ', again ' + b.coins + ', after two level ends ' + c.coins + ' then ' + d.coins);
+{ // Gifts and separate currency ads each grant 5B; no progress/price inflation.
+  const values = [0,10,70,1000].map(n=>M.giftReward(B,table,[],n));
+  add('gift_fixed_5x',values.every(v=>v===5*B) && M.giftReward(B,{items:[]},[],0)===5*B,'fixed 5 ordinary rewards regardless of price/progress');
+  add('currency_ad_5x',M.currencyAdReward(B)===5*B,'independent coin ad is not the result multiplier');
+  const now=1_000_000, cooldown=1_800_000;
+  const a=M.claimGift(M.createGift(now),B,table,[],0,now), state=a.state;
+  const repeat=M.claimGift(state,B,table,[],0,now);
+  const before=M.claimGift(state,B,table,[],70,now+cooldown-1);
+  const next=M.claimGift(state,B,table,[],70,now+cooldown);
+  add('gift_cooldown_boundary',M.GIFT_COOLDOWN_MS===cooldown && a.coins===5*B && repeat.coins===0 && before.coins===0 && next.coins===5*B,'ready at exactly 30 minutes after successful claim');
+  add('gift_round_cannot_reset',JSON.stringify(M.onRoundEnd(M.onRoundEnd(state)))===JSON.stringify(state),'winning does not refill gift');
+  add('gift_corrupt_deadline_refused',!M.giftAvailable({...state,nextClaimAt:0},now) && !M.giftAvailable({...state,nextClaimAt:state.nextClaimAt-1},now),'bad persisted deadlines cannot grant a fresh gift');
+  const loaded=JSON.parse(JSON.stringify(state));
+  add('gift_reload_countdown',M.giftRemainingMs(loaded,now+600_000)===1_200_000 && !M.giftAvailable(loaded,now-60_000),'persisted deadline survives reload/clock rollback');
+  const late=M.claimGift(loaded,B,table,[],100,now+10*cooldown);
+  add('gift_no_accumulation',late.coins===5*B && !M.giftAvailable(late.state,now+10*cooldown),'long absence grants one gift, no stack');
+  add('gift_legacy_migration',!M.giftAvailable(M.migrateGift({charges:0},now),now) && M.giftAvailable(M.migrateGift({charges:1},now),now),'spent old state cannot become a free claim');
+  const cancelled=M.createAdGate(), token=M.adGateStart(cancelled);
+  const allowed=M.adGateFinish(cancelled,token,false);
+  add('gift_cancel_keeps_eligibility',!allowed && M.giftAvailable(M.createGift(now),now),'cancel/failure must not call claimGift or start its clock');
+  const top=M.nextPrice(table, (table.items||[]).map(x=>x.id));
+  add('next_price_all_owned',top>=0,'price helper remains usable independently of fixed gifts');
 }
 { // ad buttons: a double tap plays one ad, repeated callbacks pay once, cancel pays nothing
   const g = M.createAdGate();
@@ -84,11 +85,11 @@ const add = (id, passed, detail) => checks.push({ id, passed: !!passed, detail }
   add('price_curve', p.join(',') === [2, 3, 7, 11, 21, 41].map((k) => k * R).join(','), 'curve for R=' + R + ': ' + p.join(', '));
 }
 {
-  const tiers = ['common', 'rare', 'epic', 'legendary'];
+  const tiers = ['common', 'rare', 'epic', 'legendary','limited'];
   const p = M.curvePrices(R, tiers);
-  add('ordinary_price_profile', p.join(',') === [10, 15, 20, 25].map(n => n * R).join(','), 'default ordinary-level targets');
-  const custom = M.curvePrices(R, tiers, {price_profile: 'ordinary-levels', normal_level_coins: 30, price_level_targets: {common: 8, rare: 12, epic: 16, legendary: 20}});
-  add('ordinary_price_parameters', custom.join(',') === '240,360,480,600', 'ordinary income independent of ad unit');
-  add('unmarked_price_compatibility', M.curvePrices(R, tiers, {}).join(',') === M.curvePrices(R, tiers, 'legacy-2r').join(','), 'unmarked old tables retain legacy');
+  add('ordinary_price_profile', p.join(',') === [10,20,30,40,50].map(n => n * R).join(','), 'default ordinary-level targets');
+  const custom = M.curvePrices(R, tiers, {price_profile: 'ordinary-levels', normal_level_coins: 30, price_level_targets: {common: 10, rare: 20, epic: 30, legendary: 40,limited:50}});
+  add('ordinary_price_parameters', custom.join(',') === '300,600,900,1200,1500', 'ordinary income independent of ad unit');
+  add('unmarked_price_compatibility', M.curvePrices(R, tiers.slice(0,4), {}).join(',') === M.curvePrices(R, tiers.slice(0,4), 'legacy-2r').join(','), 'unmarked old tables retain legacy');
 }
 console.log(JSON.stringify({ checks }));

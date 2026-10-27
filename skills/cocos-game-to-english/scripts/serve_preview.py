@@ -7,8 +7,7 @@ private folder, so a build of the same game running at the same time cannot chan
 The server registers itself in browser_slots.py (old free ones are closed first) and frees its slot on exit.
 Default URL is a centered fixed-size phone iframe (390x844); larger desktop windows never enlarge it.
 --raw is internal automated QA only; it cannot be combined with --keep. Source/export bytes are never rewritten.
-User trial (user 2026-10-23): the user plays in Codex's local preview. Start with --keep, put the printed link in the
-Codex reply; never open the game in Ego for the user. No browser is opened by default (--open opens the system one).
+User trial (user 2026-10-27): the user opens the printed local URL in Google Chrome. Start with --keep; do not use Codex's embedded browser as the phone-touch test surface. No browser is opened by default (--open opens the system one).
 """
 import argparse
 import os
@@ -86,6 +85,8 @@ class Handler(SimpleHTTPRequestHandler):
         if 'If-None-Match' in self.headers: del self.headers['If-None-Match']
         if self.ad_simulator:
             path = Path(self.translate_path(self.path))
+            if path.is_dir():
+                path = path / 'index.html'
             # Apply to nested HTML exports as well. Only HTTP response bytes change.
             if path.suffix.lower() in ('.html', '.htm') and path.is_file():
                 content = path.read_bytes()
@@ -125,7 +126,7 @@ def main():
     parser.add_argument('--snapshot', action='store_true', help='serve a private copy of the export (a running build cannot change it)')
     parser.add_argument('--name', default='', help='label shown in browser_slots.py list, e.g. "测试线 音量复核"')
     parser.add_argument('--project', help='game folder (label only)')
-    parser.add_argument('--keep', action='store_true', help='user trial link the agent gives in Codex (local preview): never closed as idle by a sweep')
+    parser.add_argument('--keep', action='store_true', help='user trial link the agent gives for Google Chrome (local preview): never closed as idle by a sweep')
     parser.add_argument('--orientation', choices=['portrait', 'landscape'], default='portrait', help='user preview phone orientation (default portrait 390x844)')
     parser.add_argument('--phone-width', type=int, help='fixed inner CSS viewport width; use with --phone-height')
     parser.add_argument('--phone-height', type=int, help='fixed inner CSS viewport height; use with --phone-width')
@@ -170,7 +171,7 @@ def main():
             slot = None
     lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
     entry_kind = '内部QA入口（禁止交给用户试玩）' if args.raw else f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
-    print(f'{entry_kind}：{url}\n（给用户试玩：把这个链接写在 Codex 回复里，用户在 Codex 里打开本地预览；不要在 Ego 里打开交给用户。）\n保持窗口打开；按 Control+C 结束。{lifetime}'
+    print(f'{entry_kind}：{url}\n（给用户试玩：请在独立 Google Chrome 中打开此本地链接；Codex 内置浏览器只可查看，不能作为手机触摸测试。）\n（测试结论必须来自 Google Chrome iPhone touch；Codex 内置浏览器不算真正测试。）\n保持窗口打开；按 Control+C 结束。{lifetime}'
           + (f'\n（独立副本：{directory}）' if args.snapshot else ''), flush=True)
     if slot:
         def beat():

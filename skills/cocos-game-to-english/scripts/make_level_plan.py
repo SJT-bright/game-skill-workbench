@@ -11,13 +11,10 @@ exactly one bonus level (奖励关) at a place
 drawn from the game's own random seed (so games differ): very easy, 3x the currency of a normal level (the x2 ad then
 makes it 6x). Endless games: no levels, no map.
 
-The skeleton is a starting point: replace difficulty/coins with the real numbers of your levels (英化: the original
-levels' numbers; levels you add to reach 70 get "new": true; the bonus levels are new very easy levels put in at the
-seeded places, the original levels keep their order; an original with 70 or more keeps all its levels: --levels
-<its count>; 重塑 may make more than 70 too); keep the bonus places and the seed (audit_level_plan.py redraws them from
-the seed), then run
-audit_level_plan.py. Mark each new mechanic first appearance with tags: ["intro"] and stable mechanics IDs;
---intro LEVEL:MECHANIC can record known introductions while generating the skeleton.
+This generator is for NEW designs. Localization preserves the original actual maps when N>=70, or appends exactly
+70-N new actual maps when N<70; do not use this skeleton to relabel/reorder original stages. Check original/current
+production JSON with audit_level_plan.py --board localize --original-levels ... --current-levels ... instead.
+Mark new mechanic introductions with tags ["intro"] and stable IDs; --intro LEVEL:MECHANIC records them.
 
 Usage:
   python make_level_plan.py --levels 70 --coins 40 [--limited-skin hero_limited] [--limited-skin-mode final|every_10] [--seed N]
@@ -80,7 +77,7 @@ def make(levels, coins, limited_skin, seed, currency, every=EVERY, skin_mode='fi
     rows = {}
     for n in range(1, levels + 1):
         block = sum(1 for m in limited if m < n)
-        base = coins + 5 * block
+        base = coins
         diff = round(1 + (n - 1) * 0.1, 2)                     # rises a little every level, no spikes
         if n in limited:
             need = int(math.ceil(sum(rows[k]['coins'] for k in range(max(1, n - 5), n)) / 10.0) * 10)

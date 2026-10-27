@@ -89,3 +89,10 @@ The criteria matrix is derived from current, hash-checked project documents: `do
 Only criteria representing new template additions can be `scoped_out`, with a criterion-specific reason and references to the governing current documents. Existing daily check-in, ad entry/completion, reward claim and persistence, original match/result behavior, original collection/trial, English/UI/no-share, Native storage, loading/recovery, and current route inventory remain required. `skin_bonus=true`, fixed-level mode, or an affirmative weekly-league decision restores the corresponding requirement. If the current maintenance profile has no enforced check domain for that applicable criterion, the audit blocks until the profile gains a real executor; a matrix-only pass is insufficient. Absence cannot be inferred from an incomplete inventory. User intent to preserve the game alone cannot satisfy implementation checks.
 
 No blanket scope can authorize the template's 70-level map, skin bonuses, gift-box module, settlement ad multiplier x2, or weekly league. These stay out unless current bound decisions explicitly request them and the appropriate real implementation checks exist. This filter does not create missing project decision records or change product/review state.
+
+
+### TikTok Native 存储桥 Boolean 归一化（2026-10-27）
+
+疑似存储桥返回 Boolean 时，先依据目标平台 API 契约、原始返回和每个键的业务语义确认缺失、合法值及读取失败；`false`、`true` 不能跨游戏统一改写。若不能区分缺失和失败，不得假定空档并覆盖存档。异常输入按该字段合同处理，损坏数据不得静默覆盖或发奖。
+
+在实际目标 adapter 边界注入适用返回形态，通过玩家真实入口和原业务消费者检查；替身测试与真实 Native 平台设备分开记录。保留旧故障、修复版、正常及损坏值对照，按各游戏实际模块检查写入、读回和重试。

@@ -57,7 +57,7 @@ class SkinModuleTests(unittest.TestCase):
         self.assertEqual((prices[0], gaps), (100, [50, 200, 500, 1000]))       # user: +50, +200, +500, +1000
 
     def test_ordinary_level_profile(self):
-        for args in (('--levels',), ('--endless',), ('--levels', '--normal-level-coins', '30', '--tier-levels', '8,12,16,20')):
+        for args in (('--levels',), ('--endless',), ('--levels', '--normal-level-coins', '30')):
             t = skin_table(self.tmp, *args, profile=None)
             self.assertEqual(t['price_profile'], 'ordinary-levels')
             self.assertEqual(unlock_audit(t)[0], 0)
@@ -133,6 +133,9 @@ def frames(folder, n=10, same=False, size=256):
 
 @unittest.skipUnless(NODE, 'Node.js is needed for the ad module simulation')
 class GameModulesAuditTests(unittest.TestCase):
+    def edit_table(self,root,change):
+        p=root/'assets/resources/config/unlock_table.json';t=json.loads(p.read_text());change(t);p.write_text(json.dumps(t))
+
     def project(self, board='localize', change=None, mode='levels'):
         root = Path(tempfile.mkdtemp(prefix='modules-'))
         self.addCleanup(shutil.rmtree, root, True)
@@ -171,7 +174,7 @@ class GameModulesAuditTests(unittest.TestCase):
             code, r, bad = self.audit(self.project(board, mode=mode))
             self.assertEqual(code, 0, (board, mode, bad))
             self.assertTrue(r['decision']['skins'])
-            self.assertTrue(any(c['id'] == 'sim_gift_grows_with_skins' and c['passed'] for c in r['checks']))
+            self.assertTrue(any(c['id'] == 'sim_gift_fixed_5x' and c['passed'] for c in r['checks']))
 
         def no_skins(root, dec):
             dec['skins'] = {'suitable': False, 'why': 'a puzzle without a hero', 'user_choice': False, 'backgrounds': False}
@@ -218,7 +221,7 @@ class GameModulesAuditTests(unittest.TestCase):
     def test_every_10_limited_route(self):
         def every_10(root, dec):
             cfg = root / 'assets/resources/config'
-            code, text = py('make_skin_table.py', '--R', 50, '--levels', '--limited-mode', 'every_10', '--out', cfg / 'unlock_table.json')
+            code, text = py('make_skin_table.py', '--R', 50, '--levels', '--price-profile', 'legacy-2r', '--limited-mode', 'every_10', '--out', cfg / 'unlock_table.json')
             assert code == 0, text
         code, r, bad = self.audit(self.project(change=every_10))
         self.assertEqual(code, 0, bad)
@@ -251,9 +254,7 @@ class GameModulesAuditTests(unittest.TestCase):
                 json.dumps({'coins_per_ad': 50, 'items': []})), 'make_skin_table.py'),
             'suitable but dropped by the AI': (lambda root, dec: dec.update(asked='AI decided') or dec['skins'].update(user_choice=False),
                                                'default is yes'),
-            'limited skin on the wrong level': (lambda root, dec: (root / 'assets/resources/config/level_plan.json').write_text(json.dumps(
-                {'schema': 'level_plan.v1', 'mode': 'levels', 'why': 't', 'total_levels': 80, 'milestone_every': 10, 'levels': []})),
-                'last limited level 80'),
+            'limited skin wrong price': (lambda root, dec: self.edit_table(root, lambda t: t['items'][0].update(coins=49*t['normal_level_coins'])), 'limited'),
         }
         for name, (change, words) in cases.items():
             code, r, bad = self.audit(self.project('localize', change))
@@ -291,13 +292,12 @@ class GameModulesAuditTests(unittest.TestCase):
     def test_simulation_catches_a_broken_module(self):
         root = self.project()
         broken = root / 'broken.ts'
-        broken.write_text(MODULE.read_text().replace('return round5(Math.max(R, GIFT_SHARE * p) + GIFT_PER_10_LEVELS',
-                                                     'return round5(Math.max(R, 0 * p) + 0').replace('if (g.busy) return false;', ''))
+        broken.write_text(MODULE.read_text().replace('GIFT_MULTIPLIER * baseCurrency(B)','2 * baseCurrency(B)').replace('if (g.busy) return false;', ''))
         shutil.copy(broken, root / 'assets/AdRewards.ts')
         code, r, bad = self.audit(root, '--reference', broken)
         failed = {c['id'] for c in r['checks'] if not c['passed']}
         self.assertEqual(code, 1)
-        self.assertTrue({'sim_gift_grows_with_levels', 'sim_gift_grows_with_skins', 'sim_ad_gate_single_fire'} <= failed, failed)
+        self.assertTrue({'sim_gift_fixed_5x', 'sim_ad_gate_single_fire'} <= failed, failed)
 
 
 if __name__ == '__main__':

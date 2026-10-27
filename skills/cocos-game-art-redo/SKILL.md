@@ -23,3 +23,11 @@ description: "重做或局部修改Cocos游戏美术、按钮、图片字、图�
 共同症状按[当前合同](../cocos-game-to-english/references/current-contracts.md)进入所属参考。交用户[同版固定手机预览](../cocos-game-to-english/references/user-phone-preview.md)，结束自建QA页与无用服务。本任务不自动生成游戏包；已报告缺图/遮挡等问题记入项目，并定点修复复验。
 
 反复出现的数字模糊、遮挡与漏检，按[成屏视觉缺陷回归](references/rendered-ui-regression-review.md)先在项目内模拟校准，再采用通用审查步骤。
+
+删除界面代码时按[相邻功能回归](../cocos-game-to-english/references/button-state-check.md#删除界面代码时保护相邻方法2026-10-27)检查完整方法边界及受影响入口。
+
+## 通用规范与完工整理
+
+适用性与故障修复按[通用问题规范](../cocos-game-to-english/references/feedback-regressions.md)；完工沉淀按[去重维护](../cocos-game-to-english/references/knowledge-consolidation.md)，入口只引用主规范。
+
+受影响输入的执行器、预检和结果字段统一按[Chrome 触摸运行合同](../cocos-game-to-english/references/google-touch-runtime.md)与[触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。

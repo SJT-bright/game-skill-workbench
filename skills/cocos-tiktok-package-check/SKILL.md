@@ -29,3 +29,15 @@ python scripts/prepare_delivery.py --zip <上述同一ZIP> --native <同一Nativ
 交稳定ZIP链接和必要说明，并给同版已启动的[固定手机预览](../cocos-game-to-english/references/user-phone-preview.md)。报告与故障原件留项目，不混进游戏包；不改变已批准美术，不自动上传平台。
 
 同期广告模拟、制作统计、Credits和评价等规则按[当前合同](../cocos-game-to-english/references/current-contracts.md)选择相关正文，不复制事故全文。
+
+**最终包触摸证据（用户 2026-10-27）**：本地启动或回解验证使用 Google Chrome DevTools/CDP 触摸模式，固定移动设备参数并记录 `playwright_cdp_touch`；鼠标仅作辅助排错，Chrome 模拟仍与物理手机、TikTok Native 和真实广告分开记录。
+
+**广告入口的 Native 存储前置门禁（用户2026-10-27）**：写测试包时，广告检查必须覆盖“按钮→Native存储读取→SDK create/show→回调→奖励保存→原消费者”全链。浏览器/本地广告模拟只能证明模拟业务回调，不替代 Native 存储桥和真实 SDK 边界。应按平台契约与键语义验证缺省、Boolean、字符串/数字、损坏对象和坏字符串等适用形态；坏值不得静默发奖。缺少逐项证据时不能标全链通过。当前 writer 对合同的自动核验能力有限，见下方审查纠偏；不能把它当作完整拒包保障。
+
+**最终包先做 Chrome 触摸短检（用户 2026-10-27）**：回解最终 ZIP 的本地预览使用独立 Google Chrome iPhone CDP 触摸；Codex 内置浏览器只能查看，不得作为手机点击通过依据。广告入口、取消、超时、重复回调和按钮结果按[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。
+
+**广告存储合同必须接入 writer（2026-10-27 复审修订）**：已识别激励广告或已有存储合同的项目，按 [adapter 存储证据 v2](../cocos-game-to-english/references/ad-storage-evidence-contract.md)核验逐形态原始 JSON、Native/runner/宿主身份及业务断言。v1 拒绝沿用；共享 `package_obligations.verify` 已调用此检查。结果仅覆盖 adapter 存储；入口清单、玩家广告全链、旧故障对照及真实平台分别核验。
+
+**输出必须标明 Chrome 测试层（用户 2026-10-27）**：凡输出“测试通过”“手机触摸通过”“按钮已验证”或交付预览，必须注明 `Google Chrome iPhone touch`、设备尺寸/DPR、`input_transport=playwright_cdp_touch` 和业务结果。只在 Codex 内置浏览器查看或点击，必须写“仅查看，未作为手机触摸测试”，不得写成测试通过。
+
+**2026-10-27 审查纠偏**：合同列出形状不等于执行；每一形状需独立原始证据与业务断言。当前脚本只核 adapter 证据身份和逐项断言，关键字扫描仍可能漏广告，不能代替运行器和入口清单审阅；须人工核对所有真实广告入口、旧故障复现、测试 runner 实际注入位置及最终 Native 同版，并保留完整回调与奖励读回证据。模拟注入、哈希或设备尺寸均不证明真实 TikTok SDK/物理设备通过；缺证据标未验证。

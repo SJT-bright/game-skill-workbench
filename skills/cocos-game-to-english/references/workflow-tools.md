@@ -96,7 +96,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 动态画面录屏分析
 
-`chrome_touch.py --cdp-url <Ego 地址> --record`（配套 chrome-mobile-testing，跑在 Ego Lite 里）把每一帧存到 `<输出>/frames/`；然后 `python scripts/audit_frame_glitches.py <frames文件夹或视频> --report <报告.json>`。视频（手机录屏、系统录屏）需要 ffmpeg，帧文件夹需要 Pillow。每个问题自动存 之前/当时/之后 三张图，只看这些图即可。详见 `references/dynamic-visual-review.md`。
+`chrome_touch.py --user-approved-chrome --channel chrome --record`（配套 chrome-mobile-testing，跑在独立 Google Chrome iPhone 触摸模式）把每一帧存到 `<输出>/frames/`；然后 `python scripts/audit_frame_glitches.py <frames文件夹或视频> --report <报告.json>`。视频（手机录屏、系统录屏）需要 ffmpeg，帧文件夹需要 Pillow。每个问题自动存 之前/当时/之后 三张图，只看这些图即可。详见 `references/dynamic-visual-review.md`。
 
 ## UI 不挡玩法
 
@@ -112,11 +112,11 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 重活排队与清理（不压垮电脑）
 
-- **被占就开新的，绝不等待**（用户 2026-10-23）：浏览器测试（`chrome_touch.py`）、录屏、批量跑关、预览服务都不排队；每次在 Ego 里新开独立测试窗口，后台运行，可以多开；包在锁里也会直接放行。
+- **被占就开新的，绝不等待**（用户 2026-10-23）：浏览器测试（`chrome_touch.py`）、录屏、批量跑关、预览服务都不排队；每次在 Google Chrome 里新开独立测试窗口，后台运行，可以多开；包在锁里也会直接放行。
 - `python scripts/browser_slots.py sweep [--close]`：新开窗口前查以前开的测试窗口、Ego 空间、预览服务，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；旧空间与心跳超时先核用途，别人还在用的不动（`chrome_touch.py`、`serve_preview.py` 启动时自动跑）；`register --kind ego_space --space-id <ID> --name ...` 登记手动新建的 TaskSpace，测试用完马上 `close --name "<线名>"`（或 `--id <slot>`；`release` 同义）：核进程退出；Ego 由拥有者先结束已绑定任务，脚本读回空间消失后才注销，退出码 2 时由拥有者核当前控制权并结束已绑定的自有空间，读回消失后重跑 close；不盲用历史 ID；`check --name "<线名>"` 退出码 1 表示这条线还有没关的，汇报"测试完成"前必须是 0（用户 2026-10-23，所有环节）；`ego-list` 列出 Ego 全部空间、`ego-finish --space-id <ID> ...` 只核对已由当前拥有者结束的空间消失，不凭"需要你处理"标签关闭空间（Ego 只给 AI 测试；`--keep` 只允许给用户的本地预览，Ego 空间登记 `--keep` 会被拒绝）；`snapshot --from <Web 导出>` 复制一份私有构建副本。
 - `python scripts/heavy_lock.py run --project <工程> --name "<线名+做什么>" -- <命令>`：只给同一个游戏写文件的活（构建、音频流水线），放后台跑；`--no-wait` 被占就立刻返回 75；`status --project <工程>` 看谁在占用。不写 `--project` 不排队。
 - `python scripts/cleanup_machine.py [--close]`：先跑一次 sweep；登记已完成且当前进程身份匹配的自有资源自动清理，未登记的历史/孤儿进程只列待核候选；父进程已不在不是独立关闭依据，别的会话还在跑的不关；不碰用户自己的 Chrome、Cocos 编辑器、Codex 和正在锁里运行的任务。
-- `serve_preview.py` 默认 20 分钟没人访问自动关闭（`--idle-minutes`）；每条测试线自己开（默认新端口），`--snapshot` 用私有副本，构建同时进行也不影响测试；给用户的试玩链接加 `--keep`，链接写在 Codex 回复里，不在 Ego 里打开交给用户。详见 `references/machine-load.md`。
+- `serve_preview.py` 默认 20 分钟没人访问自动关闭（`--idle-minutes`）；每条测试线自己开（默认新端口），`--snapshot` 用私有副本，构建同时进行也不影响测试；给用户的试玩链接加 `--keep`，链接要求用户在独立 Google Chrome 中打开；Codex 内置浏览器只可查看，不能作为手机测试。详见 `references/machine-load.md`。
 
 
 融合后的清理边界：独立窗口/端口和私有快照继续使用；完成的自有QA正常退出并注销，核实空间/页面/端口已消失。`--keep`保留的用户试玩不因固定小时数到期关闭；用户玩完或新版替代后 Agent 关闭并核实。自动清理只处理登记中已完成且进程启动身份匹配的资源，或退役已不存在的拥有者记录；仅心跳超时仍在运行、旧版未登记PID、未知所有权只列待核候选，经支持的界面确认确实无用后再处理。自己绑定的 Ego 测试空间失活/未分配，核实旧 ID 已消失后自动新建登记独立空间继续，不问用户、不接管旧 ID；用户明确接管、要求停止或工具安全 hard stop 立即停止，不换空间、接口或系统信号绕过。

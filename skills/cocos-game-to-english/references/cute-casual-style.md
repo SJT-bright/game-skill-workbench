@@ -119,7 +119,7 @@
 
 **怎么检查**：
 
-- 布局数据**从运行中的游戏自动读出，不手填**（用户 2026-10-21）：在 Ego Lite 里用 `chrome_touch.py` 的 `{"type":"dump_ui","screen":"play_9x19","kind":"gameplay"}` 把首页（kind home）、游戏中、每个弹窗（kind popup）在两种比例下各读一次，再运行 `extract_ui_layout.py <这些 dump> --out docs/ui-layout.json` 生成；`audit_ui_coverage.py` 会按 dump 重新提取比对，手填或改过的布局直接拒绝。自动判断错了（比如把棋盘当成 HUD、主按钮没认出来）只能在 `docs/ui-layout-overrides.json` 里标注 exclude/include/primary/label/role，不能写位置。 若HOME入口需经过关联页，可在同文件用 `home_entry_pages: ["实际screen ID"]` 显式声明；先实际导航确认可达。关联页须有实际按钮dump，并与HOME的CSS宽高和DPR完全一致，不能拿别的比例或任意页面代替。生成的 `home_entry_sources` 列出来源及哈希供复核；配置声明不证明路由可达。`scripts/audit_ui_coverage.py` 量面积、重叠和压边框（门禁 ART-05、UI-03，见[防穿模](ui-style-and-samples.md#边框标题牌角花内容只放在内框里防穿模)）。
+- 布局数据**从运行中的游戏自动读出，不手填**（用户 2026-10-21）：在独立 Google Chrome iPhone touch 模式里用 `chrome_touch.py` 的 `{"type":"dump_ui","screen":"play_9x19","kind":"gameplay"}` 把首页（kind home）、游戏中、每个弹窗（kind popup）在两种比例下各读一次，再运行 `extract_ui_layout.py <这些 dump> --out docs/ui-layout.json` 生成；`audit_ui_coverage.py` 会按 dump 重新提取比对，手填或改过的布局直接拒绝。自动判断错了（比如把棋盘当成 HUD、主按钮没认出来）只能在 `docs/ui-layout-overrides.json` 里标注 exclude/include/primary/label/role，不能写位置。 若HOME入口需经过关联页，可在同文件用 `home_entry_pages: ["实际screen ID"]` 显式声明；先实际导航确认可达。关联页须有实际按钮dump，并与HOME的CSS宽高和DPR完全一致，不能拿别的比例或任意页面代替。生成的 `home_entry_sources` 列出来源及哈希供复核；配置声明不证明路由可达。`scripts/audit_ui_coverage.py` 量面积、重叠和压边框（门禁 ART-05、UI-03，见[防穿模](ui-style-and-samples.md#边框标题牌角花内容只放在内框里防穿模)）。
 - 每个页面和弹窗的截图跑 `scripts/audit_dark_area.py`：除了深色，还会量**大块白色/浅灰**（white_gray_ratio、white_block_ratio）和**大块单一纯色**（plain_block_ratio），超标就不合格。
 - 文字粗细/深浅、图标是否单调、是否条理清楚，脚本量不准，由 GPT 在截图总览图上判定（画面结论 `visual_verdict`）。
 

@@ -10,7 +10,7 @@
 
 直接拖动物件、邻接误选、透明弹窗挡触摸、"下一局其实不能玩"，按[重开与触摸输入](replay-and-input-checks.md)检查（锁定后由测试执行完成，画面结论由 GPT 看总览图下）。
 
-2026-10-15 用户指定以后默认使用 Ego Lite 测试；2026-10-21 用户再次明确：自动测试**严格用 Ego Lite**（脚本用 `chrome_touch.py --cdp-url` 连进 Ego），改用 Chrome 前必须先问用户。**2026-10-23 用户定：Ego 只给 AI 自己测试，用户试玩一律在 Codex 本地预览**，禁止在 Ego 里开窗口让用户试玩，Ego 里等用户的空间由 AI 关掉（见[Ego 只给 AI 测试](machine-load.md#ego-只给-ai-自己测试用户试玩一律在-codex-本地预览用户-2026-10-23)）。2026-10-16 用户明确取消在 Ego 中让用户审查 UI 并等待确认的环节：Agent 默认自主检查和优化每个按钮，再继续完整功能检查。真实 TikTok 手机与 IAA 验收仍分别记录。本页接入 `mobile-touch-computer-use` Skill，补全制作到交付之间的检查顺序；不要求已被用户确认结项的游戏重新测试。
+2026-10-27 用户明确统一使用 Google Chrome iPhone DevTools/CDP 触摸测试（脚本用 `chrome_touch.py --user-approved-chrome --channel chrome`）；Codex 内置浏览器只可查看，不算手机测试。用户不需要在浏览器里代做 AI 预检；AI 先完成 Chrome 触摸矩阵，再交用户补充真实 TikTok 手机、平台和广告范围。
 
 本页承接 [全量中文检索/英化与全 UI 生图重构](english-ui-rebuild.md)、检测前独立的 [共通首页与声音设计](common-game-components.md) 及 [全量视觉巡检/优化/复查](full-visual-review.md)，随后执行功能、手机及打包检查。新制作先完成全部页面/控件的生图设计与实际接入，查看全部可见图像原件及实际显示位置/条件状态，修复穿插/盖字/越框/层级/裁切与观感问题并复查；局部维护按用户范围。视觉完成不代表按钮输入、广告、性能、手机或真实 IAA 通过；阶段定义见 [全流程覆盖](process-gates.md#默认由-agent-自主完成两阶段检查)。
 
@@ -19,7 +19,7 @@
 Ego Lite **只是** Agent 自己的检查工具，**从不是**用户的试玩入口（用户 2026-10-23）。用户要求可玩结果时，用 `serve_preview.py --keep` 起本地服务，在 Codex 回复里给本地预览链接（真实 Cocos 页面），并说明方向、已核验比例和最少操作；不要求用户进入受限 Ego 窗口操作或回复画风认可才能继续制作。
 
 1. 复用本游戏健康服务，核对准确 Web 目录、版本与 HTTP 字节，从无关 cwd 实际验证启动器。普通试玩不含 QA 或模拟 SDK；不清存档，也不覆盖用户正在进行的游戏。
-2. Agent 在**本会话自己新开的** Ego TaskSpace（或 `chrome_touch.py` 新开的独立窗口）中单独完成手机模拟检查（被占就再新开一个，不等，见[被占就开新的](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）：在引擎启动前配置视口、DPR、方向、移动端 UA、触摸和鼠标转触摸，再读回 DOM/Canvas、maxTouchPoints、引擎能力及实际输入链。具体方法沿用手机触屏 Skill 的 [启动与触控核验](../../mobile-touch-computer-use/references/computer-use.md#启动与触控核验)。
+2. Agent 在**本会话自己新开的** Google Chrome 独立窗口中单独完成手机模拟检查（被占就再新开一个，不等，见[被占就开新的](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）：在引擎启动前配置视口、DPR、方向、移动端 UA、触摸和鼠标转触摸，再读回 DOM/Canvas、maxTouchPoints、引擎能力及实际输入链。具体方法沿用手机触屏 Skill 的 [启动与触控核验](../../mobile-touch-computer-use/references/computer-use.md#启动与触控核验)。
 3. Agent 实际点按必要入口，有拖动玩法时验证拖动，记录触摸与可见结果。单纯窗口缩放、手机外框、固定比例 iframe 或 HTTP 200 不算触屏通过；已有同版有效交互可作基线，不重复跑无关检查。
 4. 在 Codex 回复里给本地预览链接，说明横屏或竖屏、尺寸及操作方法；不要把 Agent 的 Ego 设备配置说成用户的预览已开启手机模拟。**不在 Ego 里打开、置前或 handOff 试玩页给用户**；Agent 的检查空间测完马上 `browser_slots.py close --name <线名>`。
 
@@ -94,7 +94,7 @@ python scripts/plan_level_tests.py --level-plan <实际关卡表level_plan.json>
 
 在可用技能目录中查找并读取 `$mobile-touch-computer-use` 的 `SKILL.md`；同根安装入口为 [mobile-touch-computer-use](../../mobile-touch-computer-use/SKILL.md)，实际路径从当前Skill目录解析。沿用其 Ego Lite、隔离预览、被动输入证据和清理方法。先读取 `ego-browser` Skill，通过官方 `ego-browser nodejs` 在本会话自己新开的 TaskSpace 执行（被占就再新开一个、不等待，新开前 `browser_slots.py sweep --close`；审查做完马上自己关掉这个 TaskSpace：`browser_slots.py close --name <线名>`）；不引入外部 Playwright 或独立 CDP 连接。官方 `page.cdp()` 可按文档用于手机视口和触摸输入，报告实际 transport。
 
-该 Skill 默认由 Agent 操作 Ego Lite 模拟触摸，用户不代做浏览器 UI 审查；需要用户协助的真实 TikTok 手机检查另列。Ego Lite 模拟结果不标成 iPhone/Android 真机、原生输入转换、真实 IAA 或平台接受通过。
+该 Skill 默认由 Agent 操作 Google Chrome iPhone CDP 触摸模式，用户不代做浏览器 UI 审查；需要用户协助的真实 TikTok 手机检查另列。Chrome 模拟结果不标成 iPhone/Android 真机、原生输入转换、真实 IAA 或平台接受通过。
 
 Ego 测试空间不存在/失活/被占时直接新建自己的空间接着测，不问用户（用户 2026-10-23 已长期授权，见[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）；只有 Ego 卡到没法准确测试才问是否改用 Chrome。Ego Lite 不可用时记录具体阻挡，继续离线检查；用户明确指定备用浏览器时再沿对应工具文档执行，不静默切回 Chrome。缺少触摸能力或原始证据标受限，不伪造事件，不调用游戏控制器替代操作。仅改窗口尺寸、手机外框或固定比例 iframe 不能算触摸通过。
 

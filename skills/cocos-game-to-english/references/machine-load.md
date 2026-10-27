@@ -10,7 +10,7 @@
 
 1. **不等待、不轮询、不跟用户说"在等"**：不写"等轮到再做""等那一步跑完"，不 sleep 后再查、不反复看 `status`。
 2. **立刻在 Ego 里新开一个独立窗口**：被占的是谁都一样——别的游戏的测试、同一个游戏另一条线的测试、别的会话的 TaskSpace、别人的预览服务、"手机模拟页"——都不去抢、不去等，自己**新开**一个：
-   - 自动测试：直接跑 `chrome_touch.py --cdp-url <Ego 地址> --name "<线名+做什么>"`，每次运行本来就是 Ego 里一个新的隔离窗口，多个同时跑互不影响；
+   - 自动测试：直接跑 `chrome_touch.py --user-approved-chrome --channel chrome --name "<线名+做什么>"`，每次运行在 Google Chrome 里建立新的隔离窗口；多个同时跑互不影响；
    - 需要手动操作 Page 时：用 `ego-browser nodejs` **新建一个只属于本会话、本次测试的 TaskSpace**（不复用别的会话的空间，不 `claimTaskSpace` / `takeOverTaskSpace` 别人的空间），打印 spaceId 后登记：`python scripts/browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>" --project <工程>`；
    - 预览服务被别人占着或正在被构建改写：自己开一个新的，`python scripts/serve_preview.py --directory <最新一次完成的 Web 导出> --snapshot --no-browser --name "<线名>"`（自动选新端口；`--snapshot` 先复制一份私有副本，正在跑的构建改不到它）。
 3. **每次新开之前先查旧的、空了就关**：`python scripts/browser_slots.py sweep --close`（`chrome_touch.py` 和 `serve_preview.py` 启动时会自动先做这一步）。它逐个检查以前开过的测试窗口、Ego 空间和预览服务：
@@ -42,7 +42,7 @@
 反例（用户截图）：Ego 的空间列表里堆着"需要你处理 · HSS-v2-user-preview""需要你处理 · Battle Cars v7 local preview"这种等用户去试玩的空间；AI 汇报"试玩页已在 Ego Lite 中打开并交给你操作，看到 Swipe to Play 后滑动即可开始"。**这两种都禁止。**
 
 1. **禁止一切在 Ego 里让用户试玩的行为**：不开"给用户试玩"的 Ego 窗口或空间；不把页面置前、不 `handOff()` 给用户；`chrome_touch.py --handoff` 已停用（直接报错）；`browser_slots.py register --kind ego_space --keep` 会被拒绝；不在回复里写"已在 Ego 里打开，交给你"。
-2. **用户试玩怎么给**：`python scripts/serve_preview.py --directory <最新一次完成的 Web 导出> --keep --name "<线名> 用户试玩"`（默认不自动打开任何浏览器），把打印出的 `http://127.0.0.1:端口/` **写在 Codex 回复里**，用户在 Codex 里打开本地预览试玩；同时写清"这是竖屏/横屏游戏"、建议的窗口尺寸和怎么操作。这个预览服务用户玩完就关（`browser_slots.py close --id <slot>`）。
+2. **用户试玩怎么给**：`python scripts/serve_preview.py --directory <最新一次完成的 Web 导出> --keep --name "<线名> 用户试玩"`（默认不自动打开任何浏览器），把打印出的 `http://127.0.0.1:端口/` 交给用户在独立 Google Chrome 中打开；Codex 内置浏览器只可查看，不能作为手机触摸测试；同时写清"这是竖屏/横屏游戏"、建议的窗口尺寸和怎么操作。这个预览服务用户玩完就关（`browser_slots.py close --id <slot>`）。
 3. **历史 Ego 空间先核用途再处理**：用 `python scripts/browser_slots.py ego-list` 只读取得列表。名称含试玩或显示“需要你处理”只作为候选；核实已完成、取消或被新版替代且不再使用后，通过受支持的当前拥有者接口结束，再 `ego-finish --space-id <ID>` 读取列表核对原空间消失。用户当前在用、明确要求保留或未知归属不动；遇到工具 hard stop 立即停止。新任务不再为用户创建 Ego 试玩空间。集中移出按现有十小时自动化，不在本次 Skill 更新里运行真实清理或新增循环。
 4. **AI 自己测试照常用 Ego**：触摸计划、截图、录屏、批量跑关、加载测试、手机模拟都还在 Ego 里，后台跑，测完马上关（上一节）。
 

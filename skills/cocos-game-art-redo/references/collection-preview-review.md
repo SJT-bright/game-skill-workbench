@@ -8,3 +8,10 @@
 4. 两种手机比例检查全部受影响选项；装备已拥有项，核游戏同一资源及选择标记，关页重开状态正确。只测本组选项，不扩大全游戏CI。
 
 辅助命令：`python3 scripts/check_collection_preview.py CAPTURE.json`（需 Pillow）。输入必须含 `producer: real_cocos_collection_geometry`、当前 `bundle_file/bundle_sha256`、同帧截图路径/哈希、真实 viewport、panel、按源图实绘标定的 sourceSafe、非空 rows（preview/action/loaded）。源图内区比例映射只支持未旋转的矩形面板；旋转/九宫格须另作真实映射，不套本采集协议。截图内预览左半区域 >90% 低饱和像素仅报占位疑点，必须结合原图与画面人工判读，不能据此自动把所有灰色美术重画。按钮非交互状态也采实际可见 Sprite。保留正常彩色选项与空输入对照；项目截图、标定坐标和用户批准留项目，不写入共享规则。
+
+## 皮肤风格与实际应用
+
+用户要求沿用原作风格时，先以实际角色的轮廓、线条、配色和材质为依据制作小样并核对，再扩展皮肤；不要用简单换色、程序形状或未经确认的新风格替代图片设计。按实际需求核商店预览、角色双侧或动作资源、装备后游戏画面及刷新恢复，资源ID对应；不因本规则增加未授权的皮肤、经济或广告机制。
+
+适用范围与修复闭环见[通用问题规范](../../cocos-game-to-english/references/feedback-regressions.md#通用化判据)。
+

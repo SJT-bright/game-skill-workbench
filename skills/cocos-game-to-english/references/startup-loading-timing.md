@@ -2,7 +2,7 @@
 
 来源：《恢复线场》2026-10-20 复盘。那次给了测试包才发现：首页前把关卡里才用的提示按钮图、声音面板图（合计 3.76 MB）都下载了；加载用"从开始算 15 秒"的固定截止，慢网下资源还在下载、进度到 76% 就被判失败。734 项逻辑测试都过了，因为**从来没在没缓存、限速的情况下量过加载时间**，也没量加载动画显示多久、有没有卡住。
 
-全部在浏览器（Ego Lite）里做，用 `chrome_touch.py`（`--cdp-url` 连 Ego）跑，`scripts/audit_startup_loading.py` 计算和判定，结果进门禁 LOAD-03。
+全部在独立 Google Chrome iPhone 触摸模式里做，用 `chrome_touch.py --user-approved-chrome --channel chrome` 跑，`scripts/audit_startup_loading.py` 计算和判定，结果进门禁 LOAD-03。
 
 ## 一、什么时候测
 

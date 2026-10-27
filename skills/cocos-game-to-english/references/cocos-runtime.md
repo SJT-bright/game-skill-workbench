@@ -8,7 +8,7 @@
 
 （本地版 2026-10-19 复盘合入；2026-10-21 用户确认：不用 TikTok 开发者工具，测试在浏览器里做）接入已有源码、迁移引擎，或改平台桥接/入口/加载链时，**在批量生图和铺关之前**由组装线做这组最小检查。这是阶段 1 的"少量技术检查"，不等锁定后的测试，也不提前出交付 ZIP。新建游戏在第一个可玩骨架出来时做。只改图片等不影响启动的修改，沿用上次结果。
 
-0. **两种导出都要成功**：同一份源码分别导出 Web（web-mobile）和 TikTok 小游戏（Native）两份，构建无报错；Native 导出跑一次 `verify_native_zip.py` 查结构（根目录 game.js/game.json/project.config.json、App ID、包大小）。下面两条在**浏览器**里用 Web 导出跑（Ego Lite 里用 `chrome_touch.py --cdp-url` 手机模拟），**不找、不问 TikTok 开发者工具**；电脑上已经装好能直接打开时才顺手用。Native 包在真实 TikTok 里能不能跑不在本 Skill 范围（不做真机测试），这不算"受阻"。
+0. **两种导出都要成功**：同一份源码分别导出 Web（web-mobile）和 TikTok 小游戏（Native）两份，构建无报错；Native 导出跑一次 `verify_native_zip.py` 查结构（根目录 game.js/game.json/project.config.json、App ID、包大小）。下面两条在**浏览器**里用 Web 导出跑（独立 Google Chrome iPhone 触摸模式用 `chrome_touch.py --user-approved-chrome --channel chrome`），**不找、不问 TikTok 开发者工具**；电脑上已经装好能直接打开时才顺手用。Native 包在真实 TikTok 里能不能跑不在本 Skill 范围（不做真机测试），这不算"受阻"。
 1. **正常链**：用独立测试存档冷启动，到首页能点，再实际点进去玩完第一关，确认完成状态和存档读回。不能用内部"直接通关"函数代替操作。
 2. **失败链**：让一个首页必需的资源失败或不返回，确认不会误报"启动成功"、能看到提示和 Retry；恢复资源后点 Retry 真的回到可操作的首页。不自动无限重试，不清用户存档。
 

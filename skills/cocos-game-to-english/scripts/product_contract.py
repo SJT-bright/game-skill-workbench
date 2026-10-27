@@ -3,8 +3,12 @@ import random
 import statistics
 import math
 
-REVISION = '2026-10-26.contracts-v3'
-REWARD_POLICY = 'seeded_band.v1'
+REVISION = '2026-10-27.economy-v4'
+REWARD_POLICY = 'normal_budget.v2'
+ECONOMY_POLICY = 'normal-10-50.v1'
+PRICE_LEVEL_TARGETS = dict(zip(('common','rare','epic','legendary','limited'), (10,20,30,40,50)))
+GIFT_COOLDOWN_MS = 30 * 60 * 1000
+GIFT_MULTIPLIER = AD_CURRENCY_MULTIPLIER = 5
 MILESTONE_POLICY = 'multiples_only.v1'
 
 
@@ -26,7 +30,7 @@ def skin_counts(total=70, mode='final'):
             'epic': 3, 'legendary': 2, 'total': 19 + limited}
 
 
-def reward_rows(total, base_coins, seed, bonus_levels, every=10):
+def legacy_reward_rows(total, base_coins, seed, bonus_levels, every=10):
     """Seeded normal/milestone rolls, then bonus median; no retry-time RNG."""
     if type(total) is not int or total < 1 or type(base_coins) is not int or base_coins < 1 or type(seed) is not int:
         raise ValueError('positive total/base_coins and integer reward_seed required')
@@ -64,14 +68,35 @@ def reward_rows(total, base_coins, seed, bonus_levels, every=10):
     return rows
 
 
+def reward_rows(total, base_coins, seed, bonus_levels, every=10):
+    """Stored bounded rolls; each ten ordinary wins sum exactly 10B, without chapter inflation."""
+    if type(total) is not int or total < 1 or type(base_coins) is not int or base_coins < 1 or type(seed) is not int:
+        raise ValueError('positive total/base_coins and integer reward_seed required')
+    bonus=set(bonus_levels);rng=random.Random('normal-budget-v2:'+str(seed));band=base_coins//10
+    normal=[n for n in range(1,total+1) if n not in bonus];rows={}
+    for start in range(0,len(normal),10):
+        group=normal[start:start+10];rolls=[]
+        for _ in range(len(group)//2):
+            value=rng.randint(1,band) if band else 0
+            rolls.extend((value,-value))
+        if len(group)%2:rolls.append(0)
+        rng.shuffle(rolls)
+        for n,roll in zip(group,rolls):
+            rows[n]={'coins_base':base_coins,'coins_band':band,'coins_roll':roll,'coins':base_coins+roll}
+    for n in bonus:
+        rows[n]={'coins':3*base_coins,'normal_level_coins':base_coins}
+    return rows
+
+
 def reward_errors(plan):
     """Validate deterministic policy, arithmetic, bounds, and immutable seed."""
     errors = []
-    if plan.get('reward_policy') != REWARD_POLICY:
+    if plan.get('reward_policy') not in (REWARD_POLICY,'seeded_band.v1'):
         return ['reward_policy must be '+REWARD_POLICY+' for a newly generated plan']
     try:
         rows = plan['levels'];total = plan['total_levels'];seed = plan['reward_seed'];base = plan['coins_per_level']
-        expected = reward_rows(total, base, seed, [r['level'] for r in rows if r['type']=='bonus'])
+        factory = legacy_reward_rows if plan['reward_policy']=='seeded_band.v1' else reward_rows
+        expected = factory(total, base, seed, [r['level'] for r in rows if r['type']=='bonus'])
         if plan.get('milestone_policy') != MILESTONE_POLICY:
             errors.append('milestone_policy must be '+MILESTONE_POLICY)
         for row in rows:
@@ -83,4 +108,19 @@ def reward_errors(plan):
             errors.append('reward_seed must be an integer')
     except (KeyError, TypeError, ValueError) as exc:
         errors.append('incomplete reward contract: '+str(exc))
+    return errors
+
+
+def budget_errors(table):
+    """Current economic contract only; saved pre-policy tables retain their explicit legacy scope."""
+    if table.get('economy_policy')!=ECONOMY_POLICY:return []
+    base=table.get('normal_level_coins');errors=[]
+    if type(base)is not int or base<=0:return ['normal_level_coins must be a positive integer']
+    for key,want in [('price_level_targets',PRICE_LEVEL_TARGETS),('coins_per_level',base),('coins_per_ad',5*base),('gift_multiplier',5),('gift_cooldown_ms',GIFT_COOLDOWN_MS)]:
+        if table.get(key)!=want:errors.append(key+' differs from normal-10-50.v1')
+    for row in table.get('items',[]):
+        if row.get('group') in ('map','maps','world','worlds','chapter','chapters') or row.get('unlock')=='free':continue
+        rarity=row.get('rarity')
+        if rarity not in PRICE_LEVEL_TARGETS or row.get('unlock')!='coins' or row.get('ads')!=0 or row.get('coins')!=base*PRICE_LEVEL_TARGETS[rarity]:
+            errors.append(str(row.get('id'))+': coin purchase must cost exactly 10/20/30/40/50 ordinary rewards')
     return errors

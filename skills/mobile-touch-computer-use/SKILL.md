@@ -81,3 +81,8 @@ Cocos/TikTok任务同时读取 [通用问题适用范围与重点](../cocos-game
 **禁止把 Codex 内置浏览器当作测试器（用户 2026-10-27）**：Codex 内置页面只能用于用户查看/试玩，不能用于 Agent 的手机触摸测试、按钮通过结论或触摸证据。Agent 必须在交链接前使用独立 Google Chrome iPhone CDP 触摸模式，并读取[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)。
 
 **输出必须标明 Chrome 测试层（用户 2026-10-27）**：凡输出“测试通过”“手机触摸通过”“按钮已验证”或交付预览，必须注明 `Google Chrome iPhone touch`、设备尺寸/DPR、`input_transport=playwright_cdp_touch` 和业务结果。只在 Codex 内置浏览器查看或点击，必须写“仅查看，未作为手机触摸测试”，不得写成测试通过。
+
+
+## 用户试玩必须真实启用触摸模拟（用户2026-10-27）
+
+固定手机 iframe 只证明显示比例。默认用户试玩必须由 `serve_preview.py --snapshot --keep` 调用 `preview_touch_window.py`，在首次导航前设置移动 UA、is_mobile、has_touch、viewport/DPR、CDP TouchEmulation 与 `setEmitTouchEventsForMouse(configuration=mobile)`。普通鼠标按下/拖动/松开须产生可信 touchstart/move/end；读回游戏所在 frame 的 maxTouchPoints、Cocos touches 能力和一次实际操作结果后交接。禁止普通 Chrome new-window 代替触控试玩；失败不可静默回退。每个URL使用独立持久目录保留该试玩存档，不接管用户Chrome配置。服务退出后关闭它自己持有的窗口；用户关闭窗口同样结束对应上下文。

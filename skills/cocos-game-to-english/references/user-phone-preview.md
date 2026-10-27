@@ -4,7 +4,7 @@
 
 - 交链接之前，默认将真实游戏放在同源固定手机尺寸 iframe 中。竖屏内部视口默认390×844 CSS px；项目明确其他机型则用该机型，横屏默认844×390。
 - 桌面宽窗口周围保留留白，尺寸不超过一部手机；窗口变大不把游戏放大全屏。小窗口只整体等比缩小，iframe 内部尺寸不变，不裁掉游戏/控件、不要求用户手动缩浏览器或切开发者工具。
-- 使用当前共享 `scripts/serve_preview.py`，默认已经实施手机外壳。用户试玩用 `--snapshot --keep`，本地链接交给用户在独立 Google Chrome 中打开；Codex 内置浏览器只可查看，不能作为手机触摸测试器。不能直接把 `python -m http.server`、裸导出 `/index.html`、Vite 全窗口地址或旧版预览脚本的链接交给用户。
+- 使用当前共享 `scripts/serve_preview.py`，用户试玩用 `--snapshot --keep` 默认自动请求独立 Google Chrome 手机框窗口，回复同时保留本地链接，无需用户先点链接。已有同版窗口核对后复用；启动回执不等于窗口已可见，须通过可用接口读回准确 URL/窗口并核首页和开始。Chrome 缺失或启动失败如实报告；浏览器工具被设置禁止时停止对应操作，继续可做的离线工作。
 - 恢复旧链接也先检查外壳；可在原端口重启当前服务以保留 origin/存档。外壳在服务层生成，不改已验证的 Web/Native 导出或 ZIP，不清存档，不凭此重新打包。
 - 手机外壳必须以 `Permissions-Policy: fullscreen=()` 和 iframe `allow="fullscreen 'none'"` 禁止游戏自动全屏；真实触摸 PLAY 后再次核 iframe 内部尺寸及外框，防止首页合格、开局却铺满窗口。外壳策略不改 Web/Native 产物。
 - 发链接前只做相称检查：桌面宽窗口下读回 iframe 内390×844（或明确尺寸）、外框未放大且留白；小窗口整体缩放不溢出；确认真实游戏首页与 PLAY/开始可用。HTTP200、标题正确或设置手机 UA 单独都不够。
@@ -26,3 +26,5 @@ python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep
 
 适用范围与修复闭环见[通用问题规范](feedback-regressions.md#通用化判据)。
 
+
+用户试玩窗口自动打开已获持续授权。内部准备可用 `--no-browser`，内部 QA 不自动弹窗；不把此参数用于默认用户交接。用户玩完或被新版替代后，Agent 用受支持接口只关闭自有准确 URL 对应页面，再关闭服务并核实；保留其他 Chrome 页面、登录与存档。

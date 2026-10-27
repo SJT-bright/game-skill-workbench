@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T05:04:33.403Z",
-  "treeHash": "18c437f3ce66d528a7fb1c0552419466ee112b99493076fa82e97fd59595ab2b",
+  "createdAt": "2026-10-27T05:15:54.527Z",
+  "treeHash": "0e7761e70b5ee72cb8512380d974151277b0a569df94d4e61d5f7139ce5cd56f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "1a2b4578b1559fc83802686bdc0de2b2f23f1540cb7a9dedbaa081f4eb2ae27c",
-      "fileCount": 299,
-      "bytes": 8708458,
+      "treeHash": "4b3c38c27580214c46e896a9e85fac20cceb73b47fdc3e8fa897ad63559c0e14",
+      "fileCount": 300,
+      "bytes": 8714214,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1247,8 +1247,8 @@
         },
         {
           "path": "references/google-touch-runtime.md",
-          "hash": "2c85740d850571da656a00ca0f6acd78d77a11eb2eab6cc3eed6462fc7e2ae71",
-          "size": 4868,
+          "hash": "884fea6bee3c19b6a99c3289adc581f50cc6348a8aaa7147dacaa96f19b5dcae",
+          "size": 5164,
           "executable": false
         },
         {
@@ -1307,8 +1307,8 @@
         },
         {
           "path": "references/loading-scene-false-positive.md",
-          "hash": "a5aae102d89f014219826bf4989836610d3b9d2b1ca9d82c650057ccfed3eba3",
-          "size": 13019,
+          "hash": "ce34fdc29b765a85726730c925cdecfb532a32cefdd2117d2e62c13779a91480",
+          "size": 13514,
           "executable": false
         },
         {
@@ -1583,8 +1583,8 @@
         },
         {
           "path": "references/user-phone-preview.md",
-          "hash": "667f5b79d507280d43cc60f9562114b3a5fe208de44b25492316b4fb4d9d41d5",
-          "size": 3793,
+          "hash": "91051f445ef2ddc8b60c4771adb7d36928592e94e15ba3e49563f207f4b2ec7a",
+          "size": 4214,
           "executable": false
         },
         {
@@ -2122,6 +2122,12 @@
           "executable": false
         },
         {
+          "path": "scripts/preview_chrome.py",
+          "hash": "0189976d1c43d7b6c56080ec18fa734a0927fd6d2161b494c64ff1e6e1c09879",
+          "size": 2618,
+          "executable": false
+        },
+        {
           "path": "scripts/probe_cocos2_papercut_storage.cjs",
           "hash": "3343c430dce215941d0fed5e5e315859b12c3fc5b3095fe09b40650ae821930f",
           "size": 3185,
@@ -2153,8 +2159,8 @@
         },
         {
           "path": "scripts/probe_native_host_boundary.cjs",
-          "hash": "ebaeadefc8ea1fcbf73a0524753032f1319e57ad0cfa3acaf3273f42ee697c18",
-          "size": 5434,
+          "hash": "b9caff39193983833e116515a89ae029e180b44f13a6f47cee293bf583cd7470",
+          "size": 7048,
           "executable": false
         },
         {
@@ -2249,8 +2255,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "f70411a676cce17f5147f0d222deb395b7ded05e5252ff2a19dca4fd3592a1da",
-          "size": 13484,
+          "hash": "6f89e68e3e60639601122f0cce4005357782e20793006ece88c44105c7b1f4bc",
+          "size": 13796,
           "executable": false
         },
         {

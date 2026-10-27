@@ -70,3 +70,5 @@ python3 <skills>/chrome-mobile-testing/scripts/chrome_touch.py \
 如果只在 Codex 内置浏览器打开或点击过，输出必须写：`Codex 内置浏览器仅查看，未作为手机触摸测试`；不能写“手机测试通过”“触摸通过”“按钮已验证”，也不能把 Codex 页面截图当作 Chrome 触摸证据。
 
 用户预览链接的说明必须提醒独立 Google Chrome。即使 Codex 自动把本地链接显示在内置页面里，Agent 仍需在独立 Chrome 完成预检后才能交付测试结论。
+
+截图与 Retry 前后必须读回实际 viewport：Playwright context 的 viewport 应与 CDP DeviceMetricsOverride 一致，避免截图把短屏恢复成默认尺寸。若发生重置，原短屏证据无效；修工具后只补跑受影响比例，不把工具错误记成游戏已复现。

@@ -7,7 +7,7 @@ private folder, so a build of the same game running at the same time cannot chan
 The server registers itself in browser_slots.py (old free ones are closed first) and frees its slot on exit.
 Default URL is a centered fixed-size phone iframe (390x844); larger desktop windows never enlarge it.
 --raw is internal automated QA only; it cannot be combined with --keep. Source/export bytes are never rewritten.
-User trial (user 2026-10-27): the user opens the printed local URL in Google Chrome. Start with --keep; do not use Codex's embedded browser as the phone-touch test surface. No browser is opened by default (--open opens the system one).
+User trial (user 2026-10-27): the user opens the printed local URL in Google Chrome. Start with --keep; do not use Codex's embedded browser as the phone-touch test surface. User --keep requests a separate Google Chrome window; --no-browser suppresses it. A launch request is not visible-window verification.
 """
 import argparse
 import os
@@ -19,7 +19,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import threading
 import time
-import webbrowser
+import json
+from preview_chrome import browser_request
 from urllib.parse import parse_qs, urlsplit
 
 LAST = [time.time()]
@@ -120,8 +121,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', required=True, type=Path)
     parser.add_argument('--port', type=int, default=0)
-    parser.add_argument('--no-browser', action='store_true', help='default now (kept for old commands)')
-    parser.add_argument('--open', action='store_true', help='also open the system browser (never Ego for the user; see --keep)')
+    parser.add_argument('--no-browser', action='store_true', help='do not open a browser, including user-trial --keep')
+    parser.add_argument('--open', action='store_true', help='request a separate Google Chrome window, including without --keep')
     parser.add_argument('--idle-minutes', type=float, default=20, help='stop after this many minutes without requests (0 = never)')
     parser.add_argument('--snapshot', action='store_true', help='serve a private copy of the export (a running build cannot change it)')
     parser.add_argument('--name', default='', help='label shown in browser_slots.py list, e.g. "测试线 音量复核"')
@@ -171,7 +172,7 @@ def main():
             slot = None
     lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
     entry_kind = '内部QA入口（禁止交给用户试玩）' if args.raw else f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
-    print(f'{entry_kind}：{url}\n（给用户试玩：请在独立 Google Chrome 中打开此本地链接；Codex 内置浏览器只可查看，不能作为手机触摸测试。）\n（测试结论必须来自 Google Chrome iPhone touch；Codex 内置浏览器不算真正测试。）\n保持窗口打开；按 Control+C 结束。{lifetime}'
+    print(f'{entry_kind}：{url}\n（给用户试玩：预览启动器自动请求打开独立 Google Chrome 窗口；Codex 内置浏览器只可查看，不能作为手机触摸测试。）\n（测试结论必须来自 Google Chrome iPhone touch；Codex 内置浏览器不算真正测试。）\n保持窗口打开；按 Control+C 结束。{lifetime}'
           + (f'\n（独立副本：{directory}）' if args.snapshot else ''), flush=True)
     if slot:
         def beat():
@@ -203,9 +204,10 @@ def main():
                 signal.signal(sig, stop)
             except (OSError, ValueError):
                 pass
-    if args.open and not args.no_browser:
-        webbrowser.open(url)
     try:
+        launch = browser_request(url, keep=args.keep, explicit_open=args.open,
+                                 no_browser=args.no_browser, phone_size=phone_size)
+        print('PREVIEW_BROWSER ' + json.dumps(launch, ensure_ascii=False), flush=True)
         server.serve_forever()
     except KeyboardInterrupt:
         pass

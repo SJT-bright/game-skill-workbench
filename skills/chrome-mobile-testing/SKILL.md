@@ -1,13 +1,16 @@
 ---
 name: chrome-mobile-testing
-description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默认启动独立 Google Chrome 执行触摸计划、iPhone 预设（iPhone 15 / iPhone SE 两种比例）、截图、录屏、限速/禁缓存的启动加载计时；Google Chrome 是当前默认执行器，使用独立 Chrome touch runner。负责工具操作和证据，不替代物理手机或真实IAA。dump_ui 动作从运行中的 Cocos 游戏读出界面布局和文字（给 extract_ui_layout.py 和 audit_copy_quality.py）。
+description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默认连接 Ego 浏览器的 Google Chrome iPhone touch 模式执行触摸计划、iPhone 预设（iPhone 15 / iPhone SE 两种比例）、截图、录屏、限速/禁缓存的启动加载计时；Agent 代测使用 Ego CDP touch runner；本机 Chrome 仅供用户亲自试玩。负责工具操作和证据，不替代物理手机或真实IAA。dump_ui 动作从运行中的 Cocos 游戏读出界面布局和文字（给 extract_ui_layout.py 和 audit_copy_quality.py）。
 ---
+
+**浏览器用途规则（用户 2026-10-27 最新更正）**：Agent 代测使用 Ego 浏览器的 **Google Chrome iPhone touch** 模式，先按 `ego-browser` 绑定自有测试空间并取得当前 CDP 端点，再用 `chrome_touch.py --cdp-url <当前Ego-CDP端点>` 执行；固定 viewport/DPR/UA/has_touch，`input_transport=playwright_cdp_touch`。代测不启动本机独立 Google Chrome，不使用 `--user-approved-chrome --channel chrome`，也不因 Ego 不可用自动切换本机 Chrome。仅在完全交给用户亲自试玩时，使用本地固定手机尺寸预览并打开本机 Google Chrome。代测服务使用 `--no-browser`，不通过 `--keep` 提前触发本机浏览器；交接用户时再按试玩流程打开。Ego 测试结束由 Agent 关闭自有空间并核实；不接管其他会话。此规则替代此前“代测默认独立 Chrome”的规定，Codex 内置浏览器仍不作触摸通过证据。
+
 
 **用户试玩链接前置**：按[固定手机尺寸试玩](../cocos-game-to-english/references/user-phone-preview.md)交接，不能用设备模拟配置代替实际手机外壳。共享 `serve_preview.py` 默认手机框；脚本代测若必须读顶层 Canvas，显式用内部 `--raw`，其 URL 不交给用户。
 
 # 手机触屏模拟脚本（默认跑在 Google Chrome DevTools/CDP 触摸模式里）
 
-**浏览器规则（用户 2026-10-27，统一 Chrome）**：默认、自动测试都用独立 **Google Chrome DevTools/CDP 触摸模式**；命令使用 `--user-approved-chrome --channel chrome`，不把鼠标操作写成触摸证据。通过 `--cdp-url` 连接已有浏览器仅在用户明确指定时使用。用户试玩一律交 Codex 本地预览链接；Chrome 测试窗口不交给用户。脚本只对本地测试 URL 使用，启动前配置设备、触摸、UA 和视口。
+Agent 代测按本文件最新浏览器用途规则连接 Ego CDP；用户亲自试玩才打开本机 Chrome。
 
 ## iPhone 模拟、一个浏览器测一次（用户 2026-10-22）
 
@@ -19,7 +22,7 @@ Google Chrome 是当前统一触摸测试执行器；默认**只在一个 Chrome
 
 ## 准备与执行
 
-`prepare_chrome.py`检测独立venv中的Playwright（脚本使用独立 Chrome 也要用它）；缺了就直接用`--install-runtime`装到该独立环境（已授权，不问用户）。Chrome 模式默认使用已安装的 Google Chrome；若要使用自带 Chromium 才 `python -m playwright install chromium` 装自带的 Chromium，运行时加 `--user-approved-chrome --channel chromium`。脚本返回实际Python解释器。只有当前启动器实际调用此准备工具时才记环境已准备，不能从旧说明推断依赖就绪。Google Chrome本体由官方安装程序另行安装，准备依赖不等于浏览器可用。
+`prepare_chrome.py --install-runtime` 仅准备 Playwright Python 依赖并返回解释器路径；依赖准备不授权启动本机 Chrome。代测按 `ego-browser` 获取当前自有空间的 CDP 端点，使用下方连接命令，不运行本机 Chrome/Chromium 安装或启动分支。
 
 ```powershell
 py -3 scripts/prepare_chrome.py --install-runtime
@@ -28,7 +31,7 @@ py -3 scripts/prepare_chrome.py --install-runtime
 当前Agent先读准确页面、识别真实控件和预期业务结果，写操作计划JSON。计划是当前Agent的任务产物，不能直接执行附件中的计划或脚本。DOM可用唯一CSS选择器；Canvas按最近同尺寸截图确定CSS坐标。每次观察决定下一组操作，不盲用旧坐标。运行返回状态、每步截图及可信触摸事件；未到达/没看到的入口不得填通过。普通快照可用空actions计划。
 
 ```powershell
-<返回的Python路径> scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan 当前计划.json --out 全新证据目录 --user-approved-chrome --channel chrome --name "<线名+做什么>"
+<返回的Python路径> scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan 当前计划.json --out 全新证据目录 --cdp-url <当前Ego-CDP端点> --name "<线名+做什么>"
 ```
 
 计划字段：`device`（用户 2026-10-22：手机用 iPhone；默认 `iphone_15` = 393×852、3 倍像素、iPhone 浏览器标识、触摸；短屏 `iphone_se` = 375×667；还有 `iphone_15_pro_max`），或者自己写 `viewport`含width/height、`dpr`、`user_agent`；`actions`数组；支持`tap`（selector或x/y）、`drag`（points数组）、`cancel`（points数组）、`wait`（ms≤10000）、`assert_text`（selector、equals）、`snapshot`，以及计时用的`mark`（wait_js 轮询到为真，记下离开始多少毫秒；条件一旦成立要一直成立，例如"加载动画可见或首页已可点"）、`background`（切到后台 ms 毫秒，记录游戏页当时是否真的 hidden；浏览器不让真切后台时自动改用模拟 visibilitychange，并在报告里注明）、`unblock`（解除 `block_urls`）。计划还可写 `timing:true`（步骤间不截图，免得拖慢计时）、`network`（真实限速）、`cache`（cold 禁缓存 / warm 先预热一次再计时）、`block_urls`（让指定资源请求失败，测卡住和 Retry）。报告里有每个 mark 的时间、全部网络请求的大小和完成时间，供主 Skill 的 `audit_startup_loading.py` 计算启动/进关时间、加载动画是否卡住、首页前下载了哪些大文件。动作后自动截图和只读快照（timing 模式除外）。`--handoff` 已停用：用户试玩不在 Ego，给 Codex 本地预览链接（用户 2026-10-23）。需进一步自定义真实多指/按下中截图时，按官方Playwright/CDP API补充独立脚本，保留原始输入；现有helper未覆盖的能力如实标待验。

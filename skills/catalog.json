@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T05:44:57.687Z",
-  "treeHash": "14004b499c85adf9f3312b1ae3c1f1f2f7df4a98f1361d371d1f14fdcf42e78f",
+  "createdAt": "2026-10-27T06:38:21.129Z",
+  "treeHash": "686b340a81fb1ec8099119ed64f46d929b69104d434e2e60742f63c54eb97c6c",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "f78ed10cce9b1cf180a35faaf07e9653a99f5a180cdb68e7de29b6f54a488804",
-      "fileCount": 300,
-      "bytes": 8714531,
+      "treeHash": "75cee0da24ee8535f6ffc0c2f4f28083b24eb5a3a577882d53e2122831af91e2",
+      "fileCount": 302,
+      "bytes": 8720446,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2074,6 +2074,12 @@
           "executable": false
         },
         {
+          "path": "scripts/no_social_package_obligation.py",
+          "hash": "d5c2359357b15803cb162f794ac4ad15e707669adac9458fd225355e96e8d1df",
+          "size": 3233,
+          "executable": false
+        },
+        {
           "path": "scripts/official_loading.py",
           "hash": "01bde2215da47a7cabf9f73540c12969ef674249623d36e7defecea4177de2ef",
           "size": 22061,
@@ -2093,8 +2099,8 @@
         },
         {
           "path": "scripts/package_obligations.py",
-          "hash": "43fa65e447fd2e2f5bb9a2e5287a1350a36634a3a708a7c2b56f2da42293d359",
-          "size": 2597,
+          "hash": "4fb727d7193e0723863ce51419711da8c01df5e9b92f47c18cf3e4b2bef67451",
+          "size": 2734,
           "executable": false
         },
         {
@@ -2461,6 +2467,12 @@
           "path": "scripts/test_no_social_features.py",
           "hash": "5c2a9092aa05fd2886850441543ec56266f8af07d56f283f13888c7c79c1d5e7",
           "size": 2245,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_no_social_package_obligation.py",
+          "hash": "38aef29be94d613a90a254b80f7e88a7408ea185b56620513654898ea95a5266",
+          "size": 2545,
           "executable": false
         },
         {

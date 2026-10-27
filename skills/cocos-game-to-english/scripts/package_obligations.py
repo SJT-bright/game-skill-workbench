@@ -6,6 +6,7 @@ from pathlib import Path
 import audit_runtime_resources as resources
 import audit_ad_storage_contract as ad_storage
 import package_issue_gate as issues
+import no_social_package_obligation as no_social
 
 
 def verify(files, native, project, resource_manifest):
@@ -13,6 +14,7 @@ def verify(files, native, project, resource_manifest):
         raise ValueError('package obligations require --project and its fixed issue history')
     if not resource_manifest:
         raise ValueError('runtime resource manifest required for both writers and final delivery')
+    no_social_result = no_social.verify(project, native)
     # Missing/open issues are a cheap refusal, before JS discovery or browser runs.
     try:
         issue_result = issues.audit(project, native)
@@ -24,7 +26,7 @@ def verify(files, native, project, resource_manifest):
     ad_storage_result = ad_storage.verify(files, native, project)
     return {'passed': True, 'resource_manifest': str(path),
             'resource_manifest_sha256': hashlib.sha256(raw).hexdigest(),
-            'reported_issues': issue_result, 'resources': resource_result, 'ad_storage': ad_storage_result}
+            'no_social': no_social_result, 'reported_issues': issue_result, 'resources': resource_result, 'ad_storage': ad_storage_result}
 
 
 def signature(result):

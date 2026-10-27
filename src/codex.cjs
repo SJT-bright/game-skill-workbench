@@ -34,7 +34,7 @@ function inferStage(messages){
  return {stage:null,evidence:'',certainty:'unknown'};
 }
 function isMaintenanceTitle(value){
- const title=String(value||'').normalize('NFKC').trim().replace(/^[\s\d\p{Extended_Pictographic}\uFE0F\u20E3\u2460-\u2473\u2776-\u2793.、:：#_*+\-–—()[\]（）]+/u,'').trim();
+ const title=String(value||'').normalize('NFKC').trim().replace(/^[\s\d\p{Extended_Pictographic}\uFE0F\u20E3\u2460-\u2473\u2776-\u2793.、:：#_*+\-–—()[\]（）]+/u,'').trim().replace(/^(?:(?:每(?:天|日|周|星期|月|小时|分钟|\d+\s*(?:小时|分钟|天))|定时|定期|每日|每周)\s*[:：、-]?\s*)+/u,'');
  if(!title)return false;
  if(/工作台|工坊|批量|统一规则|日报|资讯|软件开发|存储清理|空间清理|股票|短剧|课件|讲稿/i.test(title))return true;
  // A Skill/tool subject at the start is maintenance. A game identity before a
@@ -52,9 +52,9 @@ async function discover({roots=[],cache={},limit=40,binary}={}){
  const reader=new Reader(binary||await executable());const out=[];let incomplete=false;
  try{await reader.init();let cursor=null;const rows=[];for(let page=0;page<3;page++){const r=await reader.rpc('thread/list',{limit:100,sortKey:'updated_at',sortDirection:'desc',archived:false,useStateDbOnly:true,...(cursor?{cursor}:{})});rows.push(...r.data||[]);cursor=r.nextCursor;if(!cursor)break;}incomplete=!!cursor;
   const scoped=rows.filter(t=>isGameThread(t,roots)).slice(0,limit);incomplete=incomplete||rows.filter(t=>isGameThread(t,roots)).length>limit;
-  for(const t of scoped){const old=cache[t.id],updated=Number(t.updatedAt)||0;let stageInfo=old?.stageInfo||{stage:null,certainty:'unknown'},contextStatus='cached';
-   if(!old||old.updatedAt!==updated){if(Date.now()>reader.deadline-1800){incomplete=true;contextStatus='pending';}else try{const items=await reader.rpc('thread/items/list',{threadId:t.id,limit:180,sortDirection:'desc'});const messages=(items.data||[]).map(textOf).filter(Boolean).reverse();stageInfo=inferStage(messages);contextStatus='read';}catch{contextStatus='unavailable';incomplete=true;}}
-   out.push({threadId:t.id,title:t.name||t.title,path:t.cwd,cwd:t.cwd,rolloutPath:t.path,metadataStatus:t.status,originator:t.originator,source:t.source,forkedFromId:t.forkedFromId||null,updatedAt:updated,stageInfo,contextStatus});
+  for(const t of scoped){const old=cache[t.id],updated=Number(t.updatedAt)||0;let stageInfo=old?.stageInfo||{stage:null,certainty:'unknown'},contextStatus='cached',contextRead=old?.contextRead===true&&old.updatedAt===updated;
+   if(!contextRead){if(Date.now()>reader.deadline-1800){incomplete=true;contextStatus='pending';}else try{const items=await reader.rpc('thread/items/list',{threadId:t.id,limit:180,sortDirection:'desc'});const messages=(items.data||[]).map(textOf).filter(Boolean).reverse();stageInfo=inferStage(messages);contextStatus='read';contextRead=true;}catch{contextStatus='unavailable';incomplete=true;}}
+   out.push({threadId:t.id,title:t.name||t.title,path:t.cwd,cwd:t.cwd,rolloutPath:t.path,metadataStatus:t.status,originator:t.originator,source:t.source,forkedFromId:t.forkedFromId||null,updatedAt:updated,stageInfo,contextStatus,contextRead});
   }
   return {threads:out,incomplete,checkedAt:new Date().toISOString()};
  }finally{await reader.close();}

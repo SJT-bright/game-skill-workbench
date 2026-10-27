@@ -1,6 +1,6 @@
 {
   "name": "skill-game-dock",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "个人游戏悬浮工作台与 Skill 文件同步",
   "main": "src/main.cjs",
   "author": "GameDesk",

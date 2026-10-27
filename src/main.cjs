@@ -1,4 +1,4 @@
-const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nativeImage,Menu}=require('electron');
+const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nativeImage,Menu,nativeTheme}=require('electron');
 const fs=require('node:fs/promises');const path=require('node:path');const crypto=require('node:crypto');const {pathToFileURL}=require('node:url');
 const {HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,request,addresses}=require('./core.cjs');const {zipFolder}=require('./zip.cjs');
 const {discover,queueMessage,STAGES,UUID,cancelReaders,isMaintenanceTitle}=require('./codex.cjs');
@@ -81,12 +81,13 @@ async function syncCodex(){if(codexPromise)return codexPromise;codexPromise=(asy
 function applyDock(force=false){if(!win||snapping)return;snapping=true;try{const bounds=win.getBounds(),area=screen.getDisplayMatching(bounds).workArea;const next=dockBounds(bounds,area,{collapsed,edge:force?dockEdge:undefined,force});dockEdge=next.edge||dockEdge;if(bounds.width!==next.bounds.width||bounds.height!==next.bounds.height)win.setMinimumSize(next.bounds.width,next.bounds.height);if(['x','y','width','height'].some(k=>bounds[k]!==next.bounds[k]))win.setBounds(next.bounds);config.window={...next.bounds,edge:dockEdge};persist().catch(console.error);}finally{snapping=false;}}
 async function sendGame(value){
  const game=config.games.find(g=>g.id===value.gameId);if(!game||!UUID.test(game.threadId||''))throw Error('请先关联 Codex 对话');if(busy)throw Error('Skill 正在同步，请稍后推送');if(sending.has(game.threadId))throw Error('正在发送');
+ sending.add(game.threadId);try{
  let message,skill;
  if(value.action==='preview')message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请按当前项目适用的 Skill，启动最新版本的本地试玩，使用固定手机尺寸外壳给出可点击的预览链接。先检查能否进入游戏，保留原文件与存档，并收尾已被替代的旧预览。';
  else if(value.action==='check')message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请读取本对话最新要求、项目规则和适用 Skill，检查并定点修复当前游戏，完成相称验证，保留原件与存档。不要自动上传或发布。';
  else {skill=installed[value.skillId];if(!skill)throw Error('请选择 Skill');if(!skill.local){const latest=index.releases.find(r=>r.skillId===value.skillId);if(latest&&latest.id!==skill.id){skill=installed[value.skillId]=await client.install(config,latest.id);const pins=await readJSON(path.join(root,'pins.json'),{});pins[value.skillId]=false;await atomicJSON(path.join(root,'pins.json'),pins);}}const task=await getTask(value);skill=task.skill;message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请重新读取这个新版 Skill：'+skill.path+'\n先读取 SKILL.md，再按需读取配套文件。\nSkill：'+skill.name+' '+skill.version+'\n文件树 SHA-256：'+skill.treeHash+'\n请使用这个新版 Skill 继续完成后面的制作，沿用本对话的当前进度，保留原件、存档和已确认的玩法。';}
  const key=game.threadId+':'+(skill?.treeHash||value.action),logPath=path.join(root,'send-receipts.json'),receipts=await readJSON(logPath,{});if(receipts[key]?.status==='uncertain')throw Error('上次发送待确认，请先查看目标对话，勿重复发送');
- sending.add(game.threadId);try{const result=await queueMessage(game.threadId,message);receipts[key]={...result,threadId:game.threadId,skillId:value.skillId||null,createdAt:new Date().toISOString()};await atomicJSON(logPath,receipts);if(result.status==='failed')throw Error(result.detail);return result;}finally{sending.delete(game.threadId);await emit();}
+ const result=await queueMessage(game.threadId,message);receipts[key]={...result,threadId:game.threadId,skillId:value.skillId||null,createdAt:new Date().toISOString()};await atomicJSON(logPath,receipts);if(result.status==='failed')throw Error(result.detail);return result;}finally{sending.delete(game.threadId);await emit();}
 }
 
 const handlers={
@@ -125,6 +126,7 @@ const handlers={
   quit:()=>{quitting=true;app.quit();}
 };
 async function main(){
+  nativeTheme.themeSource='dark';
   const distribution=await readJSON(path.join(__dirname,'../distribution.json'),{});config={...defaults(),repository:distribution.repository||'',...await readJSON(configPath,{})};config.hiddenThreads ||= [];config.scanRoots ||= [];for(const g of config.games){if(g.stage==='制作中')g.stage='玩法制作';if(g.stage==='待检查')g.stage='检查';g.threadId ||=g.chatUrl?.match(/threads\/([0-9a-f-]{36})/i)?.[1]||'';g.stageMode ||= 'manual';}codexSnapshot=await readJSON(path.join(root,'codex-index.json'),codexSnapshot);telemetryCache=await readJSON(path.join(root,'telemetry-cache.json'),{});store=new HubStore(path.join(root,'publisher'));client=new ClientStore(path.join(root,'subscriber'));await client.recover();installed=await client.state();index=await readJSON(path.join(root,'subscriber','index.json'),{releases:[]});
   const area=screen.getPrimaryDisplay().workArea;const b=config.window||{};
   win=new BrowserWindow({width:COLLAPSED.width,height:COLLAPSED.height,minWidth:COLLAPSED.width,minHeight:COLLAPSED.height,x:Math.max(area.x,Math.min(b.x??area.x+area.width-490,area.x+area.width-460)),y:Math.max(area.y,Math.min(b.y??area.y+48,area.y+area.height-740)),icon:path.join(__dirname,'../ui/window-icon.png'),frame:false,transparent:true,backgroundColor:'#00000000',...(process.platform==='darwin'?{vibrancy:'under-window',visualEffectState:'active'}:process.platform==='win32'?{backgroundMaterial:'acrylic'}:{}),resizable:false,alwaysOnTop:true,hasShadow:true,show:false,webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
@@ -135,7 +137,7 @@ async function main(){
   ipcMain.on('dock:drag',(e,archive)=>{if(e.sender!==win.webContents||typeof archive!=='string'||!archive.startsWith(path.join(root,'handoffs')+path.sep)||!archive.endsWith('.zip'))return;const pixels=Buffer.alloc(32*32*4);for(let n=0;n<pixels.length;n+=4){pixels[n]=77;pixels[n+1]=121;pixels[n+2]=92;pixels[n+3]=255;}const icon=nativeImage.createFromBitmap(pixels,{width:32,height:32});e.sender.startDrag({file:archive,icon});});
   win.on('close',e=>{if(!quitting&&!smoke){e.preventDefault();if(!collapsed)handlers.collapse();}});
   win.on('move',()=>{if(snapping)return;clearTimeout(snapTimer);snapTimer=setTimeout(()=>{applyDock();emit();},220);});
-  await win.loadFile(path.join(__dirname,'../ui/index.html'));dockEdge=config.window?.edge||'right';applyDock(true);win.show();
+  await win.loadFile(path.join(__dirname,'../ui/index.html'));dockEdge=config.window?.edge||'right';applyDock(true);if(!smoke)win.show();
   hoverTimer=setInterval(()=>{if(collapsed&&win&&!win.isDestroyed()&&hover.sample(screen.getCursorScreenPoint(),win.getBounds()))handlers.expand().catch(console.error);},120);
   if(smoke){
     clearInterval(hoverTimer);
@@ -155,6 +157,13 @@ async function main(){
       await ipc('collapse');integration.push({capsule:win.getBounds().width===COLLAPSED.width&&win.getBounds().height===COLLAPSED.height});await ipc('collapse');
       await hub.close();hub=null;
       if(integration.some(row=>Object.values(row).some(v=>v!==true)))throw Error('Native integration checks failed');
+    }
+    if(process.env.SKILL_DOCK_SMOKE_FIXTURE==='1'){
+      await fs.mkdir(root,{recursive:true});
+      for(const page of ['games','settings','skills']){
+        await win.webContents.executeJavaScript(`document.querySelector('nav [data-tab="${page}"]').click()`);
+        await fs.writeFile(path.join(root,'view-'+page+'.png'),(await win.webContents.capturePage()).toPNG());
+      }
     }
     await new Promise(r=>setTimeout(r,300));
     const result=await win.webContents.executeJavaScript(`({title:document.title,body:document.body.innerText,scroll:document.documentElement.scrollWidth,viewport:innerWidth,api:!!window.dock,nodes:document.querySelectorAll('button').length})`);

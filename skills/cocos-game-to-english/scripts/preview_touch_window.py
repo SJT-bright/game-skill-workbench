@@ -23,7 +23,8 @@ async def main(a):
    release=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mouseReleased','x':12,'y':12,'button':'left','buttons':0,'clickCount':1}))
    try:await asyncio.wait_for(asyncio.gather(press,move,release),5)
    except asyncio.TimeoutError:pass
-   pointer_trace=await page.evaluate('__previewTouchEvents')
+   pointer_trace=[]
+   for frame in page.frames:pointer_trace.extend(await frame.evaluate('window.__previewTouchEvents||[]'))
    if not any(e['type']=='touchstart' and e['trusted'] for e in pointer_trace) or not any(e['type']=='touchend' and e['trusted'] for e in pointer_trace):raise RuntimeError('Mouse-to-touch calibration failed')
    frames=[]
    for frame in page.frames:

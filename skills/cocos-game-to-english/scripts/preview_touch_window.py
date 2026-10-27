@@ -13,7 +13,18 @@ async def main(a):
    await page.add_init_script("window.__previewTouchEvents=[];['touchstart','touchmove','touchend','touchcancel'].forEach(t=>addEventListener(t,e=>__previewTouchEvents.push({type:e.type,trusted:e.isTrusted,t:performance.now()}),true));")
    await page.goto(a.url,wait_until='domcontentloaded',timeout=20000);await page.wait_for_timeout(500)
    # Device configuration is active for physical mouse input; calibration uses CDP.
-   pointer_trace=[]
+   # Chrome mouse-to-touch may defer the down acknowledgement until release.
+   # Dispatch the bounded gesture concurrently so down cannot block its own up.
+   await cd.send('Input.dispatchMouseEvent',{'type':'mouseMoved','x':8,'y':8})
+   press=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mousePressed','x':8,'y':8,'button':'left','buttons':1,'clickCount':1}))
+   await asyncio.sleep(.1)
+   move=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mouseMoved','x':12,'y':12,'buttons':1}))
+   await asyncio.sleep(.1)
+   release=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mouseReleased','x':12,'y':12,'button':'left','buttons':0,'clickCount':1}))
+   try:await asyncio.wait_for(asyncio.gather(press,move,release),5)
+   except asyncio.TimeoutError:pass
+   pointer_trace=await page.evaluate('__previewTouchEvents')
+   if not any(e['type']=='touchstart' and e['trusted'] for e in pointer_trace) or not any(e['type']=='touchend' and e['trusted'] for e in pointer_trace):raise RuntimeError('Mouse-to-touch calibration failed')
    frames=[]
    for frame in page.frames:
     frames.append(await frame.evaluate("({url:location.href,viewport:[innerWidth,innerHeight],ua:navigator.userAgent,touch:navigator.maxTouchPoints,dpr:devicePixelRatio})"))

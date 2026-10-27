@@ -34,7 +34,7 @@ python3 <skills>/chrome-mobile-testing/scripts/chrome_touch.py \
 1. 运行记录的 `device`、viewport、DPR 和 UA 与本次计划一致。
 2. 事件证据包含可信的触摸输入；至少有 `touchstart/touchend` 或由 Cocos 接收的 `TOUCH_START/TOUCH_END`。只有 `mousedown/mouseup/click` 不能通过。
 3. 触摸坐标在当前 Canvas CSS 坐标和按钮命中区域内，没有依赖旧视口坐标。
-4. 业务结果真实发生，例如页面打开、设置值变化、签到状态改变、关卡进入、汉堡移动或弹窗关闭；`clicked` 回执、颜色变化、SDK 被调用或无异常都不能单独通过。
+4. 业务结果真实发生，例如页面打开、设置值变化、签到状态改变、关卡进入、玩法对象移动或弹窗关闭；`clicked` 回执、颜色变化、SDK 被调用或无异常都不能单独通过。
 5. 触摸取消、滑出按钮、重复触摸、弹窗关闭后重新点击等适用状态也能收口。
 
 页面中的 `pointerType="mouse"` 记录只能标记为鼠标辅助结果。电脑物理触摸屏可作为额外人工对照，但必须读取实际 `pointerType`；若驱动把它转换成 mouse，不计作手机触摸。
@@ -72,3 +72,9 @@ python3 <skills>/chrome-mobile-testing/scripts/chrome_touch.py \
 用户预览链接的说明必须提醒独立 Google Chrome。即使 Codex 自动把本地链接显示在内置页面里，Agent 仍需在独立 Chrome 完成预检后才能交付测试结论。
 
 截图与 Retry 前后必须读回实际 viewport：Playwright context 的 viewport 应与 CDP DeviceMetricsOverride 一致，避免截图把短屏恢复成默认尺寸。若发生重置，原短屏证据无效；修工具后只补跑受影响比例，不把工具错误记成游戏已复现。
+
+## 输入桥接去重
+
+仅适用于同时接收触摸和鼠标、或把鼠标转成 SDK 触摸的预览宿主。一次触摸后开关恢复原值、弹窗重复打开或奖励请求翻倍时，沿原始输入→桥接→业务提交计数定位；浏览器 touch 后派生兼容 mouse 与重复监听都可能造成双派发。优先依据 `sourceCapabilities.firesTouchEvents` 识别派生输入，必要时采用受限去重窗口；不能吞掉独立真实鼠标、合法下一次触摸或 end/cancel，也不改游戏奖励来掩盖工具故障。
+
+用同一可逆业务动作核旧宿主失败、修复宿主和正常输入对照：一次可信触摸只提交一次且状态改变；下一次新触摸有效；独立鼠标仍有效。记录原始事件、桥接次数和业务前后值，不能仅断言最终余额或无异常。无双输入通道时标不适用。将这些观察绑定宿主和生产字节，纳入项目既有定点 runner；`button_state_check.py` 的业务表达式可断言提交次数和状态，当前 writer 不会自动识别所有自定义桥接，未登记接线不得声称通用自动拦截。

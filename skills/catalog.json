@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T07:32:04.516Z",
-  "treeHash": "508422231e11061982029ab447a7a558c7bb0ee5e14f0e29e687c516ab149f2d",
+  "createdAt": "2026-10-27T07:34:14.356Z",
+  "treeHash": "5bc8b7193b163ffd2e317cb4d980fec8967259f2870b2542a110d865c0053f1e",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "07585ad716d595318095786c6e5ea373cdb6b386ddbc3ef5c836239596129728",
+      "treeHash": "b64588897f9e2fb764790fc453140a078a39cbc366ef07dac0f62b59211bdce8",
       "fileCount": 303,
-      "bytes": 8726267,
+      "bytes": 8756989,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1115,8 +1115,8 @@
         },
         {
           "path": "references/button-state-check.md",
-          "hash": "64454b436ca22d086262d4adec88efb6b7fc3bba94a95b8f7c6349eb04fddd67",
-          "size": 20468,
+          "hash": "5675c6e6eaf547f75094394e8b967135fb18149452bafbafea0b115dcda0ca92",
+          "size": 17374,
           "executable": false
         },
         {
@@ -1211,8 +1211,8 @@
         },
         {
           "path": "references/feedback-regressions.md",
-          "hash": "2c29460a894810d5e7a8c49b4ed1a593bb929e9717e9584183fa4605e086e6e0",
-          "size": 9011,
+          "hash": "5ea737f173dd375cf54f017f079f08b5d1368ffe94ea0334c65ab30d4c1255c9",
+          "size": 8181,
           "executable": false
         },
         {
@@ -1247,8 +1247,8 @@
         },
         {
           "path": "references/google-touch-runtime.md",
-          "hash": "884fea6bee3c19b6a99c3289adc581f50cc6348a8aaa7147dacaa96f19b5dcae",
-          "size": 5164,
+          "hash": "ebf236ef5a92662c2f025a611311f9fa610453e5da7e6f864e61c5df3db283f6",
+          "size": 6301,
           "executable": false
         },
         {
@@ -1271,8 +1271,8 @@
         },
         {
           "path": "references/known-issue-checklist.md",
-          "hash": "316b3442b76cd45b82dc068d904c23147efba80929bfcb1043ae0bc8c7abd79d",
-          "size": 45393,
+          "hash": "10485d651c7b3c7c7cf446599b773441ae24363d62fdcae2b14c0f82c5f62912",
+          "size": 46136,
           "executable": false
         },
         {
@@ -1583,8 +1583,8 @@
         },
         {
           "path": "references/user-phone-preview.md",
-          "hash": "13a2865502cbf620610a8b66b78c18418a6ecf90ca09f40f0ec47ade54d808c8",
-          "size": 5018,
+          "hash": "0f660bba9d47cbbe2d9e99578f1df1ef0427c53aba8939047a18fa0470bd74be",
+          "size": 4579,
           "executable": false
         },
         {
@@ -2201,8 +2201,8 @@
         },
         {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "9f0e61accef2e40f3172754792d06c33301caa09da30b2ebae8e7e9d931ffd33",
-          "size": 1702139,
+          "hash": "4645edfb9df1b664280d0de34cf804967ecd6069a737caea66fa6cd2a85c1b46",
+          "size": 1735344,
           "executable": false
         },
         {

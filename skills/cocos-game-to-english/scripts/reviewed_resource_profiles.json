@@ -46731,5 +46731,1159 @@
     },
     "data_digest_kind": "serialized-json-assets-v1",
     "data_digest": "8d502df5f26c33cbe90085a7c02b959006438d5e6272f91493d1836c5974b4aa"
+  },
+  "cutmaster-levels500-v16-20261027": {
+    "source_sha256": {
+      "adapter-min.js": "d8e3986ae2cd827b20fb443c070f2642ce8172c86c8ea19f6c3dfecfef489365",
+      "asset-load-guard.js": "8bf09944dddf13f9488568a9138536596087a90bf8ee5a155a03e7c84e198feb",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "0b6da55930961de73443b7de06bb57d2981062fe3b8e509befaa54668c29f8e4",
+      "ccRequire.js": "8e2b311b45ae65541bde44e3d80c383a27ac98995ca3a2662a96191033c78a59",
+      "game.js": "17c379f972c5858a3db54c801d31bbf1cad08134a61ca7650abd56777a87dda5",
+      "main.js": "76c27540c790032d9d24657734a7cd087129f197c2314a1f66f7ebc1ef16ab6f",
+      "runtime-load-guard.js": "75ae88035b411a88c5496990e17ffbafab7db6fb698ee2db692a819dfe31cf08",
+      "src/assets/Scripts/Enhancements/platform-bridge.js": "f6bbe8aadb58c13bda29bff09f90c01ded7fc295b5f84a64d01eee467a449257",
+      "src/settings.js": "6cdddb330e292f9293a841b1c491a64afa8e23eed00a3412bc24d869b93c01a8",
+      "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/fingerSkins/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/levels/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/pauseUI/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/sub/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "touch-coordinates.js": "376c2fa5da0a155ac18eff4570db39bab9a0253f6db59478c795dafd6dc85e7a"
+    },
+    "resolutions": {
+      "assets/main/index.js:16006": {
+        "delegated_sdk": true,
+        "reason": "Imported GameArt.load is a local SpriteFrame provider. Its actual resource/pauseUI loader branches are independently inventoried below; digits, result art, panel prefetch and pause callers are included in the finite domain."
+      },
+      "assets/main/index.js:26500": {
+        "delegated_sdk": true,
+        "reason": "Imported GameArt.load is a local SpriteFrame provider. Its actual resource/pauseUI loader branches are independently inventoried below; digits, result art, panel prefetch and pause callers are included in the finite domain."
+      },
+      "assets/main/index.js:41600": {
+        "delegated_sdk": true,
+        "reason": "Imported GameArt.load is a local SpriteFrame provider. Its actual resource/pauseUI loader branches are independently inventoried below; digits, result art, panel prefetch and pause callers are included in the finite domain."
+      },
+      "assets/main/index.js:43819": {
+        "delegated_sdk": true,
+        "reason": "Imported GameArt.load is a local SpriteFrame provider. Its actual resource/pauseUI loader branches are independently inventoried below; digits, result art, panel prefetch and pause callers are included in the finite domain."
+      },
+      "assets/main/index.js:125620": {
+        "delegated_sdk": true,
+        "reason": "Imported GameArt.load is a local SpriteFrame provider. Its actual resource/pauseUI loader branches are independently inventoried below; digits, result art, panel prefetch and pause callers are included in the finite domain."
+      },
+      "assets/main/index.js:128097": {
+        "delegated_sdk": true,
+        "reason": "Imported GameArt.load is a local SpriteFrame provider. Its actual resource/pauseUI loader branches are independently inventoried below; digits, result art, panel prefetch and pause callers are included in the finite domain."
+      },
+      "assets/main/index.js:135345": {
+        "kind": "load",
+        "bundles": [
+          "levels"
+        ],
+        "paths": [
+          "1_001",
+          "1_002",
+          "1_003",
+          "1_004",
+          "1_005",
+          "1_006",
+          "1_007",
+          "1_008",
+          "1_009",
+          "1_010",
+          "1_011",
+          "1_012",
+          "1_013",
+          "1_014",
+          "1_015",
+          "1_016",
+          "1_017",
+          "1_018",
+          "1_019",
+          "1_020",
+          "1_021",
+          "1_022",
+          "1_023",
+          "1_024",
+          "1_025",
+          "1_026",
+          "1_027",
+          "1_028",
+          "1_029",
+          "1_030",
+          "1_031",
+          "1_032",
+          "1_033",
+          "1_034",
+          "1_035",
+          "1_036",
+          "1_037",
+          "1_038",
+          "1_039",
+          "1_040",
+          "1_041",
+          "1_042",
+          "1_043",
+          "1_044",
+          "1_045",
+          "1_046",
+          "1_047",
+          "1_048",
+          "1_049",
+          "1_050",
+          "1_051",
+          "1_052",
+          "1_053",
+          "1_054",
+          "1_055",
+          "1_056",
+          "1_057",
+          "1_058",
+          "1_059",
+          "1_060",
+          "1_061",
+          "1_062",
+          "1_063",
+          "1_064",
+          "1_065",
+          "1_066",
+          "1_067",
+          "1_068",
+          "1_069",
+          "1_070",
+          "1_071",
+          "1_072",
+          "1_073",
+          "1_074",
+          "1_075",
+          "1_076",
+          "1_077",
+          "1_078",
+          "1_079",
+          "1_080",
+          "1_081",
+          "1_082",
+          "1_083",
+          "1_084",
+          "1_085",
+          "1_086",
+          "1_087",
+          "1_088",
+          "1_089",
+          "1_090",
+          "1_091",
+          "1_092",
+          "1_093",
+          "1_094",
+          "1_095",
+          "1_096",
+          "1_097",
+          "1_098",
+          "1_099",
+          "1_100",
+          "1_101",
+          "1_102",
+          "1_103",
+          "1_104",
+          "1_105",
+          "1_106",
+          "1_107",
+          "1_108",
+          "1_109",
+          "1_110",
+          "1_111",
+          "1_112",
+          "1_113",
+          "1_114",
+          "1_115",
+          "1_116",
+          "1_117",
+          "1_118",
+          "1_119",
+          "1_120",
+          "1_121",
+          "1_122",
+          "1_123",
+          "1_124",
+          "1_125",
+          "1_126",
+          "1_127",
+          "1_128",
+          "1_129",
+          "1_130",
+          "1_131",
+          "1_132",
+          "1_133",
+          "1_134",
+          "1_135",
+          "1_136",
+          "1_137",
+          "1_138",
+          "1_139",
+          "1_140",
+          "1_141",
+          "1_142",
+          "1_143",
+          "1_144",
+          "1_145",
+          "1_146",
+          "1_147",
+          "1_148",
+          "1_149",
+          "1_150",
+          "1_151",
+          "1_152",
+          "1_153",
+          "1_154",
+          "1_155",
+          "1_156",
+          "1_157",
+          "1_158",
+          "1_159",
+          "1_160",
+          "1_161",
+          "1_162",
+          "1_163",
+          "1_164",
+          "1_165",
+          "1_166",
+          "1_167",
+          "1_168",
+          "1_169",
+          "1_170",
+          "1_171",
+          "1_172",
+          "1_173",
+          "1_174",
+          "1_175",
+          "1_176",
+          "1_177",
+          "1_178",
+          "1_179",
+          "1_180",
+          "1_181",
+          "1_182",
+          "1_183",
+          "1_184",
+          "1_185",
+          "1_186",
+          "1_187",
+          "1_188",
+          "1_189",
+          "1_190",
+          "1_191",
+          "1_192",
+          "1_193",
+          "1_194",
+          "1_195",
+          "1_196",
+          "1_197",
+          "1_198",
+          "1_199",
+          "1_200",
+          "1_201",
+          "1_202",
+          "1_203",
+          "1_204",
+          "1_205",
+          "1_206",
+          "1_207",
+          "1_208",
+          "1_209",
+          "1_210",
+          "1_211",
+          "1_212",
+          "1_213",
+          "1_214",
+          "1_215",
+          "1_216",
+          "1_217",
+          "1_218",
+          "1_219",
+          "1_220",
+          "1_221",
+          "1_222",
+          "1_223",
+          "1_224",
+          "1_225",
+          "1_226",
+          "1_227",
+          "1_228",
+          "1_229",
+          "1_230",
+          "1_231",
+          "1_232",
+          "1_233",
+          "1_234",
+          "1_235",
+          "1_236",
+          "1_237",
+          "1_238",
+          "1_239",
+          "1_240",
+          "1_241",
+          "1_242",
+          "1_243",
+          "1_244",
+          "1_245",
+          "1_246",
+          "1_247",
+          "1_248",
+          "1_249",
+          "1_250",
+          "1_251",
+          "1_252",
+          "1_253",
+          "1_254",
+          "1_255",
+          "1_256",
+          "1_257",
+          "1_258",
+          "1_259",
+          "1_260",
+          "1_261",
+          "1_262",
+          "1_263",
+          "1_264",
+          "1_265",
+          "1_266",
+          "1_267",
+          "1_268",
+          "1_269",
+          "1_270",
+          "1_271",
+          "1_272",
+          "1_273",
+          "1_274",
+          "1_275",
+          "1_276",
+          "1_277",
+          "1_278",
+          "1_279",
+          "1_280",
+          "1_281",
+          "1_282",
+          "1_283",
+          "1_284",
+          "1_285",
+          "1_286",
+          "1_287",
+          "1_288",
+          "1_289",
+          "1_290",
+          "1_291",
+          "1_292",
+          "1_293",
+          "1_294",
+          "1_295",
+          "1_296",
+          "1_297",
+          "1_298",
+          "1_299",
+          "1_300",
+          "1_301",
+          "1_302",
+          "1_303",
+          "1_304",
+          "1_305",
+          "1_306",
+          "1_307",
+          "1_308",
+          "1_309",
+          "1_310",
+          "1_311",
+          "1_312",
+          "1_313",
+          "1_314",
+          "1_315",
+          "1_316",
+          "1_317",
+          "1_318",
+          "1_319",
+          "1_320",
+          "1_321",
+          "1_322",
+          "1_323",
+          "1_324",
+          "1_325",
+          "1_326",
+          "1_327",
+          "1_328",
+          "1_329",
+          "1_330",
+          "1_331",
+          "1_332",
+          "1_333",
+          "1_334",
+          "1_335",
+          "1_336",
+          "1_337",
+          "1_338",
+          "1_339",
+          "1_340",
+          "1_341",
+          "1_342",
+          "1_343",
+          "1_344",
+          "1_345",
+          "1_346",
+          "1_347",
+          "1_348",
+          "1_349",
+          "1_350",
+          "1_351",
+          "1_352",
+          "1_353",
+          "1_354",
+          "1_355",
+          "1_356",
+          "1_357",
+          "1_358",
+          "1_359",
+          "1_360",
+          "1_361",
+          "1_362",
+          "1_363",
+          "1_364",
+          "1_365",
+          "1_366",
+          "1_367",
+          "1_368",
+          "1_369",
+          "1_370",
+          "1_371",
+          "1_372",
+          "1_373",
+          "1_374",
+          "1_375",
+          "1_376",
+          "1_377",
+          "1_378",
+          "1_379",
+          "1_380",
+          "1_381",
+          "1_382",
+          "1_383",
+          "1_384",
+          "1_385",
+          "1_386",
+          "1_387",
+          "1_388",
+          "1_389",
+          "1_390",
+          "1_391",
+          "1_392",
+          "1_393",
+          "1_394",
+          "1_395",
+          "1_396",
+          "1_397",
+          "1_398",
+          "1_399",
+          "1_400",
+          "1_401",
+          "1_402",
+          "1_403",
+          "1_404",
+          "1_405",
+          "1_406",
+          "1_407",
+          "1_408",
+          "1_409",
+          "1_410",
+          "1_411",
+          "1_412",
+          "1_413",
+          "1_414",
+          "1_415",
+          "1_416",
+          "1_417",
+          "1_418",
+          "1_419",
+          "1_420",
+          "1_421",
+          "1_422",
+          "1_423",
+          "1_424",
+          "1_425",
+          "1_426",
+          "1_427",
+          "1_428",
+          "1_429",
+          "1_430",
+          "1_431",
+          "1_432",
+          "1_433",
+          "1_434",
+          "1_435",
+          "1_436",
+          "1_437",
+          "1_438",
+          "1_439",
+          "1_440",
+          "1_441",
+          "1_442",
+          "1_443",
+          "1_444",
+          "1_445",
+          "1_446",
+          "1_447",
+          "1_448",
+          "1_449",
+          "1_450",
+          "1_451",
+          "1_452",
+          "1_453",
+          "1_454",
+          "1_455",
+          "1_456",
+          "1_457",
+          "1_458",
+          "1_459",
+          "1_460",
+          "1_461",
+          "1_462",
+          "1_463",
+          "1_464",
+          "1_465",
+          "1_466",
+          "1_467",
+          "1_468",
+          "1_469",
+          "1_470",
+          "1_471",
+          "1_472",
+          "1_473",
+          "1_474",
+          "1_475",
+          "1_476",
+          "1_477",
+          "1_478",
+          "1_479",
+          "1_480",
+          "1_481",
+          "1_482",
+          "1_483",
+          "1_484",
+          "1_485",
+          "1_486",
+          "1_487",
+          "1_488",
+          "1_489",
+          "1_490",
+          "1_491",
+          "1_492",
+          "1_493",
+          "1_494",
+          "1_495",
+          "1_496",
+          "1_497",
+          "1_498",
+          "1_499",
+          "1_500"
+        ],
+        "type": "cc.Prefab",
+        "unknown_receiver": false,
+        "reason": "Compiled LevelLimits.TOTAL_LEVELS literal 500; MyGameView clamps the requested level to this shared bound and formats 1_ + padded three digits; exact source prefab set and current Native levels catalog independently agree with every path. Original pooling load call independently inventoried."
+      },
+      "assets/main/index.js:135432": {
+        "kind": "load",
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "display/adv/bannerDisplay",
+          "display/adv/leftBoxDisplay",
+          "display/adv/modalDisplay",
+          "display/adv/popBoxDisplay",
+          "display/adv/screenBoxDisplay",
+          "display/adv/toastDisplay",
+          "display/adv/treaBoxDisplay",
+          "display/view/MyGameView",
+          "display/view/endDisplay",
+          "display/view/homeDisplay",
+          "display/view/myGame/pMask",
+          "display/view/myGame/pMask2",
+          "display/view/myGame/score"
+        ],
+        "type": "cc.Prefab",
+        "unknown_receiver": false,
+        "reason": "All ViewPanel.getUrl methods reachable by DisplayMgr plus the three explicit pooled gameplay helpers; level paths use the separate levels branch. MenuBoxDisplay is a class with no DisplayMgr.openUI caller and is excluded."
+      },
+      "assets/main/index.js:140186": {
+        "not_executed": true,
+        "reason": "ResMgr.playDragon has no production caller in the complete compiled program; declarations are retained legacy helpers."
+      },
+      "assets/main/index.js:140933": {
+        "not_executed": true,
+        "reason": "ResMgr.setSpriteByFrameName has no production caller in the complete compiled program; declarations are retained legacy helpers."
+      },
+      "assets/main/index.js:141396": {
+        "kind": "load",
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "image/fengxiang",
+          "image/hand",
+          "image/shiping"
+        ],
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "Only Tools.setUnlockBtnSprite(two literal variants) and initFingerNode(hand) call ResMgr.setSprite; LanguageMgr.setSprite has no caller."
+      },
+      "assets/main/index.js:141722": {
+        "not_executed": true,
+        "reason": "ResMgr.setPrefab has no production caller in the complete compiled program; declarations are retained legacy helpers."
+      },
+      "assets/main/index.js:146190": {
+        "kind": "load",
+        "bundles": [
+          "audio"
+        ],
+        "paths": [
+          "bg",
+          "check",
+          "cut",
+          "defeat",
+          "victory"
+        ],
+        "type": "cc.AudioClip",
+        "unknown_receiver": false,
+        "reason": "SoundMgr.music uses bg; ViewUI default click is check; MyGameView uses cut; EndDisplay uses victory/defeat. No other caller of playAudio exists."
+      },
+      "assets/main/index.js:200384": {
+        "not_executed": true,
+        "reason": "Global.config.game_box is an empty production array; retired cross-promotion data and the remote configuration boot path are not called by the current Main entry."
+      },
+      "assets/main/index.js:207291": {
+        "delegated_sdk": true,
+        "reason": "this._gamePortal is a platform game-portal object, not a Cocos resource bundle. Its SDK load does not resolve to a local game resource."
+      },
+      "main.js:5089": {
+        "kind": "load",
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "enhancements/badge_stars_en",
+          "enhancements/badge_level_en",
+          "enhancements/nav_map_en",
+          "enhancements/nav_skins_en",
+          "enhancements/nav_settings_en",
+          "enhancements/nav_add_home_en",
+          "enhancements/nav_profile_en",
+          "enhancements/pause_icon_en",
+          "enhancements/instruction_split_two_en",
+          "enhancements/digits/digit_0",
+          "enhancements/digits/digit_1",
+          "enhancements/digits/digit_2",
+          "enhancements/digits/digit_3",
+          "enhancements/digits/digit_4",
+          "enhancements/digits/digit_5",
+          "enhancements/digits/digit_6",
+          "enhancements/digits/digit_7",
+          "enhancements/digits/digit_8",
+          "enhancements/digits/digit_9",
+          "enhancements/digits/digit_plus",
+          "enhancements/digits/digit_slash"
+        ],
+        "type": "cc.SpriteFrame",
+        "reason": "Bootstrap explicit HOME/first-action list plus finite 0..9 digit loop."
+      },
+      "main.js:6158": {
+        "native_files": [
+          "src/assets/Scripts/Enhancements/platform-bridge.js"
+        ],
+        "reason": "Exact settings.jsList contains this one bundled platform plugin; native file is verified."
+      },
+      "assets/main/index.js:62721": {
+        "delegated_sdk": true,
+        "reason": "Reviewed local GameArt.load delegation: card assets derive from the 14 EnhancementState entries; crop assets derive from four FingerSkinArt pointer atlases plus ui_kit. Every actual Cocos load in GameArt is independently inventoried below."
+      },
+      "assets/main/index.js:63521": {
+        "delegated_sdk": true,
+        "reason": "Reviewed local GameArt.load delegation: card assets derive from the 14 EnhancementState entries; crop assets derive from four FingerSkinArt pointer atlases plus ui_kit. Every actual Cocos load in GameArt is independently inventoried below."
+      },
+      "assets/main/index.js:67291": {
+        "requests": [
+          {
+            "bundle": "pauseUI",
+            "path": "button_continue_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "pauseUI",
+            "path": "button_home_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "pauseUI",
+            "path": "button_restart_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "pauseUI",
+            "path": "menu_panel_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "pauseUI",
+            "path": "title_paused_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "comet",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "coral",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "frost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "home_star",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "neon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "pointer_atlas_a",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "pointer_atlas_b",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "pointer_atlas_c",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "pointer_atlas_d",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "profile_glow",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "royal",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "starter",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "sunny",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "trail15",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "trail45",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "trail70",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "ui_kit",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "fingerSkins",
+            "path": "violet",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "GameArt source routes ordinary names to resources, exact pauseNames to pauseUI, and prefix finger_skins/ to deferred fingerSkins with prefix removed. Current finite caller domains reviewed against actual source and independently inventoried load sites; caching/get adds no I/O."
+      },
+      "assets/main/index.js:67320": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "enhancements/badge_level_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/badge_stars_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_close_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_equip_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_next_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_ok_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_prev_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_unlock_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/button_watch_ad_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/card_common_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/card_epic_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/card_legendary_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/card_rare_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/close_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_0",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_1",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_3",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_4",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_5",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_6",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_7",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_8",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_9",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_plus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/digits/digit_slash",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/instruction_split_two_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/level_tile_bonus_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/level_tile_limited_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/level_tile_locked_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/level_tile_open_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/nav_add_home_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/nav_map_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/nav_profile_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/nav_settings_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/nav_skins_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/pause_icon_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/scissors_blue_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/scissors_gold_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/scissors_pink_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/settings_toggle_off_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/settings_toggle_on_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/skin_card_button_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/star_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_general_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_map_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_notice_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_reward_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_settings_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_skins_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/title_sound_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/volume_tick_off_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "enhancements/volume_tick_on_en",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ],
+        "reason": "GameArt source routes ordinary names to resources, exact pauseNames to pauseUI, and prefix finger_skins/ to deferred fingerSkins with prefix removed. Current finite caller domains reviewed against actual source and independently inventoried load sites; caching/get adds no I/O."
+      }
+    },
+    "escapes": {
+      "assets/main/index.js:66730": "GameArt local static load method definition; independently inventoried downstream Cocos calls and complete finite caller domains remain explicit."
+    },
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "8d502df5f26c33cbe90085a7c02b959006438d5e6272f91493d1836c5974b4aa"
   }
 }

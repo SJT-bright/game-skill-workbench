@@ -1,0 +1,193 @@
+{
+  "id": "0078537c-216d-4d76-a9c1-2c24012c91a6",
+  "skillId": "s-4e976859708a939065d7",
+  "directory": "cocos-tiktok-package-check",
+  "name": "cocos-tiktok-package-check",
+  "version": "v10",
+  "createdAt": "2026-10-27T07:00:19.193Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "b456d355ed142714d1d51ae9ab0aebbb3741ebb5b823360319645688bdd1fa4c",
+  "bytes": 180789,
+  "fileCount": 29,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "5dd6125bf9115884419cc21e3e0338d186331d59a717b8f6c96ecbe22b2a7e79",
+      "size": 5022,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "12e12b97a5acad429167b2baf6716fd6ead7055ee316a6db92b350180e283d2b",
+      "size": 7744,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "64cf700bbdc6c7425d443f34896740e91f81dc9294aa7a71621d56ee4e2d84bc",
+      "size": 153,
+      "executable": false
+    },
+    {
+      "path": "references/bootstrap-order-review.md",
+      "hash": "68c7836696999ae34db03efc2f388160d5a50068e3bfbc5b3ca7a34c2af15bd2",
+      "size": 1381,
+      "executable": false
+    },
+    {
+      "path": "references/calibration-results.json",
+      "hash": "027701ef57cd9ad5a83d73332771109fc3025a036094ccb40c77cf6e902a6059",
+      "size": 10154,
+      "executable": false
+    },
+    {
+      "path": "references/check-contract.md",
+      "hash": "0146248d4ee31037240f8cfed69bb5fb5de72d185b40680ff37f750554215813",
+      "size": 12452,
+      "executable": false
+    },
+    {
+      "path": "references/drag-audio-postconditions.md",
+      "hash": "9df50df6a21f853923fa20e0263daf18c83ace264c1560c0900a233e6a41b0de",
+      "size": 4729,
+      "executable": false
+    },
+    {
+      "path": "references/failure-casebook.md",
+      "hash": "a97ac51e9e0466e2a6c81173058b1ef9fda98ddd0adf1e3e3b67677f4d05041d",
+      "size": 3742,
+      "executable": false
+    },
+    {
+      "path": "references/forbidden-player-windows.md",
+      "hash": "f1640e9938c8253cce29a294638ac84c9a649cffd5fd946f5169d6ff60e93e88",
+      "size": 2149,
+      "executable": false
+    },
+    {
+      "path": "references/gate-order-and-identity.md",
+      "hash": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
+      "size": 4604,
+      "executable": false
+    },
+    {
+      "path": "references/main-package-overflow.md",
+      "hash": "49b209122928e7c1af0c1221d3c99427e6f3fb4895937852d2712bbdc135939d",
+      "size": 4610,
+      "executable": false
+    },
+    {
+      "path": "references/resource-and-reported-issues.md",
+      "hash": "6a9c8b8b3cc6a846b3975cbfa2c82abf58e26febc5f24f064b5c709f04962373",
+      "size": 9764,
+      "executable": false
+    },
+    {
+      "path": "references/resource-loss-recovery.md",
+      "hash": "f83804daeca8c39833a2d82394a9b2ad454a077aa6322f54e4c22acc05863aef",
+      "size": 1712,
+      "executable": false
+    },
+    {
+      "path": "references/root-entry-and-delivery.md",
+      "hash": "b381179d0c5a37a76bb8327a945336c0b95f7af24e741c73b0a918acfc36aed5",
+      "size": 3828,
+      "executable": false
+    },
+    {
+      "path": "references/webp-decode-capability.md",
+      "hash": "e0b55d230c3e8e368c69d8ecf4889a7004408b714eece31ac7937b80442a07d8",
+      "size": 3680,
+      "executable": false
+    },
+    {
+      "path": "scripts/audit_interaction_audio.py",
+      "hash": "942540bcdb8de4af9fbf266076f765d08d6d1972fffa8207903d53b3e810d351",
+      "size": 5603,
+      "executable": false
+    },
+    {
+      "path": "scripts/audit_runtime_resources.py",
+      "hash": "1c3e6896b2385ca9809dae6d4e1a6cbadc5726d707757afe18334b28a7e37d17",
+      "size": 420,
+      "executable": false
+    },
+    {
+      "path": "scripts/audit_sound_settings.py",
+      "hash": "1e50cc1c675e67d7a8a149196ef344730f69c4b760040502e6a53bc74c410fd6",
+      "size": 8867,
+      "executable": false
+    },
+    {
+      "path": "scripts/build_checked_zip.py",
+      "hash": "ff36bff9cf415de07d3bba2dd08ef27b9f572b2974a83b07121ec5a896520216",
+      "size": 6714,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_package.py",
+      "hash": "42ba5d6886294321baad9ff102aabe06a4316e86fc8603f0a0c504aaab55f0b1",
+      "size": 5191,
+      "executable": false
+    },
+    {
+      "path": "scripts/prepare_delivery.py",
+      "hash": "e69113d5a4788db27b645db43d564d1ce238ccb8f774c58e3846878d238c4bb7",
+      "size": 4044,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_final_startup_gate.py",
+      "hash": "bed009ad442262763b6e597c7d6b7f494f03532207bac1e865de3d8ddd53ab7d",
+      "size": 5078,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_gate_order_and_identity.py",
+      "hash": "b1dd8552dc8392427b58de7cce7b137dc20e87012d6840f4f478826a3a710a84",
+      "size": 10959,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_issue_relocation.py",
+      "hash": "39890e93c822c6c2701db1cef52faf191cd19e2eeef5b3f3e5e4bf85cceedf39",
+      "size": 12027,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_package_checks.py",
+      "hash": "a8dd8046349e1fa0b6c42ec1457ddf99d24068e4fa79c44eb75e6735259c7d91",
+      "size": 12363,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_package_reuse.py",
+      "hash": "4d79f88796f87bfd43b3c38492f1fe71217f290f0d54a6ab23479f64e185f73a",
+      "size": 4975,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_resource_and_issue_obligations.py",
+      "hash": "8a13414380af2e3fef29bc55e0b51f2791a20db3db9179a79fd895ff295ae075",
+      "size": 15878,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_sound_settings_profile.py",
+      "hash": "209df017e383579012691ae6e7ebc6815a19667274e804dc8587fc0c143ec74d",
+      "size": 11124,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_webp_decode_probe.cjs",
+      "hash": "1180e07ee9e62603312ac53c2d8f97f424883431320a8a125bbff48b013a3df6",
+      "size": 1822,
+      "executable": false
+    }
+  ]
+}

@@ -47,3 +47,5 @@ python scripts/prepare_delivery.py --zip <上述同一ZIP> --native <同一Nativ
 **真实广告不是本地交付门槛（用户2026-10-27）**：电脑本地不要求真实 TikTok 广告填充或播放；用独立SDK边界模拟验证实际触摸、奖励与恢复，不得因缺少真实广告而停工、拒包或等待用户。适用检查通过即完成授权交付，日常不重复免责声明。统一规则见[电脑本地广告验收边界](../cocos-game-to-english/references/tiktok-device-stage.md#电脑本地广告验收边界用户2026-10-27明确)。
 
 广告前置读取或 Native adapter 故障修复时，执行[本地广告修复闭环](../cocos-game-to-english/references/native-ad-local-repair.md)：忠实存储/能力替身、真实按钮到 SDK 与到账、超时重试、迟到回调、保存重试及原消费者；以业务结果和旧故障对照收口。
+
+**条件画面与禁用入口的出包检查（2026-10-27）**：受影响的倒计时、价格、广告结果及教程状态，按[成屏回归](../cocos-game-art-redo/references/rendered-ui-regression-review.md#条件状态与检查器自校准2026-10-27)留实际运行证据，已反馈缺陷通过当前 Native 的可执行问题复验接入 writer；不是每次重新审全部美术。`package_obligations.verify` 强制执行源码/Native 的分享与排行榜残留检查，发布前复查同一结果；图片字与动态入口仍须实际页面检查，扫描不替代触摸。

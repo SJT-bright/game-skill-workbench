@@ -128,6 +128,19 @@ async function request(c, route, binary=false) {
   for await(const chunk of res.body){total+=chunk.length;if(total>MAX_BYTES)throw Error('响应体过大');chunks.push(chunk);}
   const data=Buffer.concat(chunks);return binary?data:JSON.parse(data.toString('utf8'));
 }
+// Stage with hard links: unchanged files retain inode, timestamps and contents.
+// Detach changed files before writing, so failures cannot mutate the live tree.
+async function linkTree(source,target){
+ const stat=await fs.lstat(source);if(stat.isSymbolicLink())throw Error('本机 Skill 包含符号链接');
+ if(!stat.isDirectory())throw Error('Skill 目录无效');
+ for(const entry of await fs.readdir(source,{withFileTypes:true})){
+  const from=path.join(source,entry.name),to=path.join(target,entry.name);
+  if(entry.isSymbolicLink())throw Error('本机 Skill 包含符号链接：'+entry.name);
+  if(entry.isDirectory()){await fs.mkdir(to);await linkTree(from,to);}
+  else if(entry.isFile()){try{await fs.link(from,to);}catch(e){if(!['ENOTSUP','EPERM','EXDEV'].includes(e.code))throw e;await fs.copyFile(from,to);const st=await fs.stat(from);await fs.utimes(to,st.atime,st.mtime);}}
+  else throw Error('Skill 含不支持的本机文件');
+ }
+}
 class ClientStore {
   constructor(root){this.root=root;}
   async recover(){
@@ -151,25 +164,38 @@ class ClientStore {
     for(const r of index.releases)if(!ID.test(r.id)||!ID.test(r.skillId)||typeof r.name!=='string'||typeof r.version!=='string'||typeof r.summary!=='string'||!HASH.test(r.treeHash))throw Error('订阅索引条目无效');
     await atomicJSON(path.join(this.root,'index.json'),index); return index;
   }
-  async install(c,id) {
+  async install(c,id,{replace=false}={}) {
     const release=validateRelease(await request(c,'/releases/'+id));
     await this.recover();
     const directory=release.directory||release.skillId;const existing=await this.state();if(Object.entries(existing).some(([id,s])=>id!==release.skillId&&path.basename(s.path)===directory))throw Error('Skill 目录冲突');
     const stageId=crypto.randomUUID(),dest=path.join(this.root,'skills',directory), stage=dest+'.stage-'+stageId, backup=dest+'.previous';
     await fs.mkdir(stage,{recursive:true});
     try {
-      for(const f of release.files){let data;const current=existing[release.skillId]||this.seeds?.[release.skillId];if(current?.path){try{const candidate=await fs.readFile(path.join(current.path,...f.path.split('/')));if(candidate.length===f.size&&digest(candidate)===f.hash)data=candidate;}catch{}}if(!data)data=await request(c,'/blobs/'+f.hash,true);if(data.length!==f.size||digest(data)!==f.hash)throw Error('文件哈希校验失败：'+f.path);const p=path.join(stage,...f.path.split('/'));await fs.mkdir(path.dirname(p),{recursive:true});await fs.writeFile(p,data,{mode:f.executable?0o755:0o644});}
+      const current=existing[release.skillId]||this.seeds?.[release.skillId];
+      if(!replace&&await exists(dest))await linkTree(dest,stage);
+      const stats={unchanged:0,added:0,updated:0};
+      for(const f of release.files){
+        const p=path.join(stage,...f.path.split('/'));let data,match=false;
+        if(current?.path){try{const candidate=await fs.readFile(path.join(current.path,...f.path.split('/')));if(candidate.length===f.size&&digest(candidate)===f.hash){data=candidate;match=true;}}catch{}}
+        if(match&&await exists(p)){const st=await fs.stat(p);if(!!(st.mode&0o111)===!!f.executable||process.platform==='win32'){stats.unchanged++;continue;}}
+        if(!data)data=await request(c,'/blobs/'+f.hash,true);
+        if(data.length!==f.size||digest(data)!==f.hash)throw Error('文件哈希校验失败：'+f.path);
+        const present=await exists(p);if(present){const st=await fs.lstat(p);if(!st.isFile())throw Error('Skill 文件与本机目录冲突：'+f.path);await fs.unlink(p);}
+        await fs.mkdir(path.dirname(p),{recursive:true});await fs.writeFile(p,data,{mode:f.executable?0o755:0o644});stats[present?'updated':'added']++;
+      }
+      await collect(stage,{localUse:true});
+      const installation={...light(release),files:release.files,path:dest,installMode:replace?'replace':'merge',installStats:stats};
       // Crash recovery: retain the previous tree until both replacement and ledger commit succeed.
       if(await exists(backup)&&!await exists(dest))await fs.rename(backup,dest);
       await fs.rm(backup,{recursive:true,force:true});
       const had=await exists(dest);
       await atomicJSON(path.join(this.root,'transaction.json'),{skillId:release.skillId,releaseId:release.id,stageId,had,directory:release.directory});
       if(had)await fs.rename(dest,backup);
-      try {await fs.rename(stage,dest);const state=await this.state();state[release.skillId]={...light(release),files:release.files,path:dest};await atomicJSON(path.join(this.root,'installed.json'),state);}
+      try {await fs.rename(stage,dest);const state=await this.state();state[release.skillId]=installation;await atomicJSON(path.join(this.root,'installed.json'),state);}
       catch(e){await fs.rm(dest,{recursive:true,force:true});if(had)await fs.rename(backup,dest);await fs.rm(path.join(this.root,'transaction.json'),{force:true});throw e;}
       await fs.rm(backup,{recursive:true,force:true});
       await fs.rm(path.join(this.root,'transaction.json'),{force:true});
-      return {...light(release),files:release.files,path:dest};
+      return installation;
     } finally {await fs.rm(stage,{recursive:true,force:true});}
   }
 }

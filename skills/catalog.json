@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T04:22:04.069Z",
-  "treeHash": "079643d395d22ffa6c0ff35b8df63755dbbcc50ae7c9a8abc2156be99f587b08",
+  "createdAt": "2026-10-27T04:23:07.614Z",
+  "treeHash": "a723f5a3a604b6ce098daee50d8296dbf4f5282f2637fc70e2235b11a869d7f4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -37,9 +37,9 @@
     },
     {
       "name": "cocos-game-ad-design",
-      "treeHash": "87c3d3d297be78d4978099302868dfb8035f3ca38dd038cd005f34ba8f5cfc31",
+      "treeHash": "2999362bd980875b48316047fd9d86c92cb51df1168866c0d08faff81f88da75",
       "fileCount": 2,
-      "bytes": 10896,
+      "bytes": 11383,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -49,8 +49,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "93c41a7ab5809816fbe9d9599069d894c888abbc6f36bc49f291af0ae2af09ea",
-          "size": 10436,
+          "hash": "a98bc8e4b813423210771c25eac38bcff907165d549ffac0a78970c05e8d5ea0",
+          "size": 10923,
           "executable": false
         }
       ]

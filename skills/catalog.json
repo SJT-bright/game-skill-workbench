@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T12:20:39.764Z",
-  "treeHash": "7b7cbff8ec087c2b50cf9102a3960f6fb8ba4b75d99bdf1de2c45f62bee402f5",
+  "createdAt": "2026-10-27T15:22:43.033Z",
+  "treeHash": "bf059bdd23d45f0c6090cbda116fda1e5a0ac83223eea5195eac3b35665beedd",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "d635ecb45b4ae08d806328d1ee9a247293b18b7cde256ed95c2dd427b3efce4e",
+      "treeHash": "56a309212a18b8402193e4e1202f94576f5118dc6637e8fdfae52b913b99d2b7",
       "fileCount": 303,
-      "bytes": 8790194,
+      "bytes": 8843498,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1133,8 +1133,8 @@
         },
         {
           "path": "references/chrome-touch-preflight-matrix.md",
-          "hash": "5a4a6e6a71b9eb66deaa024d9cbcab51a06e0c294c4d77ff73e769276bbaddf8",
-          "size": 3639,
+          "hash": "aa22d26627e0d8b638801683828f0e3e3edf8b6075eb944772dd5c388b970a76",
+          "size": 4593,
           "executable": false
         },
         {
@@ -1247,8 +1247,8 @@
         },
         {
           "path": "references/google-touch-runtime.md",
-          "hash": "ebf236ef5a92662c2f025a611311f9fa610453e5da7e6f864e61c5df3db283f6",
-          "size": 6301,
+          "hash": "147f720c15019f8ac78da5a292b010118f5777761c48ea88159c10c4420ef70e",
+          "size": 7109,
           "executable": false
         },
         {
@@ -1307,8 +1307,8 @@
         },
         {
           "path": "references/loading-scene-false-positive.md",
-          "hash": "ce34fdc29b765a85726730c925cdecfb532a32cefdd2117d2e62c13779a91480",
-          "size": 13514,
+          "hash": "ae4ca4a5524ed801beac2282cca88d402c83d60cbc9bbb8d1f8fed8a193b1986",
+          "size": 13904,
           "executable": false
         },
         {
@@ -1349,8 +1349,8 @@
         },
         {
           "path": "references/mobile-button-size-and-home-layout.md",
-          "hash": "0400d05ccf6d967c5a9102c8e96526ef734420fa876670d754b451e2941bbacf",
-          "size": 7141,
+          "hash": "6e3a4247b4b432fe6d3ce7603324b1d57f4d95764eb9d895e27c603d9fbca5f1",
+          "size": 9873,
           "executable": false
         },
         {
@@ -1619,8 +1619,8 @@
         },
         {
           "path": "scripts/audit_ad_local_retest.py",
-          "hash": "aafa6e79f4ad424d4766f9b5bf446bf012d96be344c31091578d001df7a5b996",
-          "size": 4693,
+          "hash": "2b0d562ecfefe9c550aa2fc325f48cc871583060e463afc90fd581c350cebe58",
+          "size": 4721,
           "executable": false
         },
         {
@@ -2069,14 +2069,14 @@
         },
         {
           "path": "scripts/native_startup_trusted_runners.json",
-          "hash": "820e30604ac835ef74eceb2c714ac3bd9f36c4976634fdb4e0b8658a6801f377",
-          "size": 1061146,
+          "hash": "a39c8cfb25ed4dc471bc716b064e6686eead3e52f3db253ae9bdfe48a439eeb1",
+          "size": 1062429,
           "executable": false
         },
         {
           "path": "scripts/no_social_package_obligation.py",
-          "hash": "d5c2359357b15803cb162f794ac4ad15e707669adac9458fd225355e96e8d1df",
-          "size": 3233,
+          "hash": "4b9fd82e9cd759073ada97c50d4abe2a69df0faa47f7e0c8ab09b4f6d67b5f50",
+          "size": 4101,
           "executable": false
         },
         {
@@ -2201,8 +2201,8 @@
         },
         {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "5c44de6bf40f8a4656795ae49d3af8abded1891e779deeb44ddf4e9c29391a67",
-          "size": 1768549,
+          "hash": "19cce49a2508a81b07c567825e4cee03e999b3c57695b48d17dca6a0576f98ef",
+          "size": 1814063,
           "executable": false
         },
         {
@@ -2285,8 +2285,8 @@
         },
         {
           "path": "scripts/test_ad_storage_contract.py",
-          "hash": "fb45d24768a7474f9806292e4a00951c35fb872d6efd229f1f54eafd629db318",
-          "size": 10436,
+          "hash": "8784ada08628cbc8b0984e509e97394762727c00b59001d7a38d5e0f4d1fa0ad",
+          "size": 11163,
           "executable": false
         },
         {

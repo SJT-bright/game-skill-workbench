@@ -49039,5 +49039,1504 @@
     },
     "data_digest_kind": "serialized-json-assets-v1",
     "data_digest": "8d502df5f26c33cbe90085a7c02b959006438d5e6272f91493d1836c5974b4aa"
+  },
+  "dessert-match-r47-diagnostic": {
+    "source_sha256": {
+      "device-diagnostics.js": "32e84a47267a1662c8074476249bdefd017a23b75045c65a2b5cf7eb3508e536",
+      "game.js": "6b83eaea9e2d07ad7c28daf5908e634aed7abd8b8fd7470a2b10f42f22f29f50",
+      "tiktok-touch-bridge.js": "c9bd4e07a3182282f633e0953e60c65eda535796e1e2ebcc76c312b8f898945d",
+      "diagnostic-build.js": "bafc8ca557884301ec166ca5ed20431bc617dc9fee57057409e269debf93780e",
+      "main.js": "865b01bbfe487c3be52676f3f14074db18696dfead5159f4897501da4f0afd53",
+      "adapter-min.js": "0590133a7953753786ea642a5b91059a13a2bcfbdf8dcbfbdf9dd72a3af8979f",
+      "ccRequire.js": "9481be47c208057152c9063f24ba011035a5a38766effcda58ab863c99438bc1",
+      "src/settings.js": "8944df28590eea3945fa2afe97617ab8bfccafc6385a2063f71684f010b2c7ab",
+      "assets/resources/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "27ac49eded95e98ac61bd99cf3fa3addff4b6b3fe544993333251e79fb8c5790",
+      "subpackages/sub/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/ui_late/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5"
+    },
+    "resolutions": {
+      "assets/main/index.js:44784": {
+        "reason": "Call delegates to exact NumberFont.load; its concrete numbers BitmapFont request stays inventoried",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 205718,
+          "end": 206178,
+          "sha256": "18c3b8128180ad9a41520f76677f4cd64abbde5e8f9be1031a3644553b397cce",
+          "delegate_sites": [
+            "assets/main/index.js:205942"
+          ]
+        }
+      },
+      "assets/main/index.js:59647": {
+        "reason": "Call delegates to exact NumberFont.load; its concrete numbers BitmapFont request stays inventoried",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 205718,
+          "end": 206178,
+          "sha256": "18c3b8128180ad9a41520f76677f4cd64abbde5e8f9be1031a3644553b397cce",
+          "delegate_sites": [
+            "assets/main/index.js:205942"
+          ]
+        }
+      },
+      "assets/main/index.js:85242": {
+        "reason": "Global.sub is the sub bundle installed by Loading.begin before Game starts",
+        "bundles": [
+          "sub"
+        ],
+        "unknown_receiver": false
+      },
+      "assets/main/index.js:124881": {
+        "reason": "Call delegates to exact NumberFont.load; its concrete numbers BitmapFont request stays inventoried",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 205718,
+          "end": 206178,
+          "sha256": "18c3b8128180ad9a41520f76677f4cd64abbde5e8f9be1031a3644553b397cce",
+          "delegate_sites": [
+            "assets/main/index.js:205942"
+          ]
+        }
+      },
+      "assets/main/index.js:147209": {
+        "reason": "Global.sub is the sub bundle installed by Loading.begin before Game starts",
+        "bundles": [
+          "sub"
+        ],
+        "unknown_receiver": false
+      },
+      "assets/main/index.js:148054": {
+        "reason": "Global.sub is the sub bundle installed by Loading.begin before Game starts",
+        "bundles": [
+          "sub"
+        ],
+        "unknown_receiver": false
+      },
+      "assets/main/index.js:148805": {
+        "reason": "Global.sub is the sub bundle installed by Loading.begin before Game starts",
+        "bundles": [
+          "sub"
+        ],
+        "unknown_receiver": false
+      },
+      "assets/main/index.js:179855": {
+        "reason": "LoadMgr.asset private dispatcher; conservative finite domain from authored latePaths, literal sprite/prefab/audio callers and static UI getUrl; identical retry request uses loadAny",
+        "requests": [
+          {
+            "bundle": "audio",
+            "path": "bg",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "getCoin",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "hint",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "lose",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "remove",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "replay",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "undo",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "win",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/skill/ui/claimed",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/btn_coin_video_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/btn_cxks",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/btn_time_video_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/title_shengli",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/title_shibai",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/common/hand",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/game/coin",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/game/hand",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/endView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/gameInfoView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/gameView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/homeView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/toastView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/hb",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/hb2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/new",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/new2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/rm",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/rm2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/tj",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/tj2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/hand",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/common/showStart",
+            "type": "cc.ParticleAsset",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter20",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter40",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter60",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter70",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/clear-level",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/common",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/epic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/equip",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/equipped",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/lavender",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/legendary",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/no-thanks",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/rare",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/royal",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/try-title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/unlock",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/watch-ad",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/add-button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/check-button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/profile-art",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/profile-title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/shortcut-art",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/shortcut-title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/credits",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/help",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-credits",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-help",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-music",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-sfx",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-vibration",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-help",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-music",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-sfx",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-vibration",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/minus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/plus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/row",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/tab-general",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/tab-sound",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/toggle-off",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/toggle-on",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/volume-empty",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/volume-full",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/day",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-1-hint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-1-undo",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-11-hints",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-11-undos",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/bonus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/close",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/coin",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_node_clear",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_node_current",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_node_locked",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/next",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/play",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/previous",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/tray-classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/video",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/gold/button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/gold/image",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/stamina/button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/stamina/image",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/stamina/skip",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/bannerBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/oneBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/settingBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/threeBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/twoBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/game/shop",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/game/signIn",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/view/mapView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/view/shortageView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/view/treaView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:179931": {
+        "reason": "LoadMgr.asset private dispatcher; conservative finite domain from authored latePaths, literal sprite/prefab/audio callers and static UI getUrl; identical retry request uses loadAny",
+        "requests": [
+          {
+            "bundle": "audio",
+            "path": "bg",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "getCoin",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "hint",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "lose",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "remove",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "replay",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "undo",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "audio",
+            "path": "win",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/skill/ui/claimed",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/btn_coin_video_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/btn_cxks",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/btn_time_video_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/title_shengli",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "image/view/endView/title_shibai",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/common/hand",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/game/coin",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/game/hand",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/endView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/gameInfoView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/gameView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/homeView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "sub",
+            "path": "prefab/view/toastView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/hb",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/hb2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/new",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/new2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/rm",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/rm2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/tj",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/gameBox/tj2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/box/hand",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/common/showStart",
+            "type": "cc.ParticleAsset",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/berry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter20",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter40",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter60",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/chapter70",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/clear-level",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/common",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/epic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/equip",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/equipped",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/lavender",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/legendary",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/mint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/no-thanks",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/rare",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/royal",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/try-title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/unlock",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/collection/watch-ad",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/add-button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/check-button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/profile-art",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/profile-title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/shortcut-art",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/platform/shortcut-title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/credits",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/help",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-credits",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-help",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-music",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-sfx",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/icon-vibration",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-help",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-music",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-sfx",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/label-vibration",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/minus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/plus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/row",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/tab-general",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/tab-sound",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/toggle-off",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/toggle-on",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/volume-empty",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/settings/volume-full",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/day",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-1-hint",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-1-undo",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-11-hints",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/shop/shop-11-undos",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/bonus",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/close",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/coin",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_node_clear",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_node_current",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_node_locked",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/map_title",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/next",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/play",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/previous",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/tray-classic",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/skill/ui/video",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/gold/button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/gold/image",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/stamina/button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/stamina/image",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "image/view/shortage/stamina/skip",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/bannerBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/oneBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/settingBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/threeBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/box/twoBox",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/game/shop",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/game/signIn",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/view/mapView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/view/shortageView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "ui_late",
+            "path": "prefab/view/treaView",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:181297": {
+        "reason": "Legacy cross-promotion path unreachable: Global.exportInfo remains empty; Game.onLoad does not invoke legacy JiuWuSDK login/getGameBox; no active caller supplies remote avatars",
+        "not_executed": true
+      },
+      "assets/main/index.js:181412": {
+        "reason": "Legacy cross-promotion path unreachable: Global.exportInfo remains empty; Game.onLoad does not invoke legacy JiuWuSDK login/getGameBox; no active caller supplies remote avatars",
+        "not_executed": true
+      },
+      "assets/main/index.js:182092": {
+        "reason": "Legacy cross-promotion path unreachable: Global.exportInfo remains empty; Game.onLoad does not invoke legacy JiuWuSDK login/getGameBox; no active caller supplies remote avatars",
+        "not_executed": true
+      },
+      "assets/main/index.js:182208": {
+        "reason": "Legacy cross-promotion path unreachable: Global.exportInfo remains empty; Game.onLoad does not invoke legacy JiuWuSDK login/getGameBox; no active caller supplies remote avatars",
+        "not_executed": true
+      },
+      "assets/main/index.js:198565": {
+        "reason": "Call delegates to exact NumberFont.load; its concrete numbers BitmapFont request stays inventoried",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 205718,
+          "end": 206178,
+          "sha256": "18c3b8128180ad9a41520f76677f4cd64abbde5e8f9be1031a3644553b397cce",
+          "delegate_sites": [
+            "assets/main/index.js:205942"
+          ]
+        }
+      },
+      "assets/main/index.js:205942": {
+        "reason": "Global.sub is the sub bundle installed by Loading.begin before Game starts",
+        "bundles": [
+          "sub"
+        ],
+        "unknown_receiver": false
+      },
+      "assets/main/index.js:206294": {
+        "reason": "Call delegates to exact NumberFont.load; its concrete numbers BitmapFont request stays inventoried",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 205718,
+          "end": 206178,
+          "sha256": "18c3b8128180ad9a41520f76677f4cd64abbde5e8f9be1031a3644553b397cce",
+          "delegate_sites": [
+            "assets/main/index.js:205942"
+          ]
+        }
+      },
+      "assets/main/index.js:301802": {
+        "reason": "Platform interstitial ad instance load, not a Cocos resource loader",
+        "delegated_sdk": true
+      },
+      "main.js:1846": {
+        "reason": "Exact settings.jsList is empty; no script path requested",
+        "native_files": []
+      }
+    },
+    "escapes": {
+      "assets/main/index.js:179684": "Exact private loader type-check / static NumberFont.load assignment; actual calls inventoried and resolved separately",
+      "assets/main/index.js:205711": "Exact private loader type-check / static NumberFont.load assignment; actual calls inventoried and resolved separately"
+    },
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "97fa9fd6d1ff4617cb1433219da7b35739192dadb69031a63ea1d624dbe3ce2d"
   }
 }

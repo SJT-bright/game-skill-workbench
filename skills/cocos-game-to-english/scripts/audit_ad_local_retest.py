@@ -28,7 +28,7 @@ def verify(project, native_hash, report_ref):
 
     def read_raw(ref, expected):
         raw = storage._object(storage._ref(project, ref, 'local ad raw'), 'local ad raw')
-        if raw.get('native_tree_sha256') != expected or raw.get('input_transport') != 'playwright_cdp_touch':
+        if raw.get('native_tree_sha256') != expected or raw.get('input_transport') not in ('playwright_cdp_touch', 'ego_page_cdp_touch'):
             raise ValueError('local ad raw Native/input identity mismatch')
         storage._ref(project, raw.get('runner'), 'local ad runner')
         deps = raw.get('harness_dependencies')

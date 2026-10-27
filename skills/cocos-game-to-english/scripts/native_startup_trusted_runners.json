@@ -4483,5 +4483,21 @@
       "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game/docs/test/native-startup-r46/native-host.js": "c82e54d5c91c21fa8652779681eff1dea243775402ced4c4ee56287db9a02ede",
       "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game/docs/test/native-startup-r46/browser.mjs": "b6ae12cde5fd47f5de4fa9e79354d2d82dcd3c6c880d793a7b6a092125f4d792"
     }
+  },
+  "dessert-r47-native-startup": {
+    "project": "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game",
+    "path": "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game/docs/test/native-startup-r47/runner.py",
+    "sha256": "d8db7503d2d5234aa5a1f816b31a1abdd73583ce0796cc08eedd98907160abc7",
+    "timeout_seconds": 120,
+    "control_profile": "dessert_cocos24_facade_retry_v1",
+    "native_binding": {
+      "kind": "fixed_project_path",
+      "relative_path": "build-r47-native-v2/bytedance"
+    },
+    "dependencies": {
+      "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game/docs/test/native-startup-r47/host.html": "6d8eb264fbf7e5d683b74091ff6ebc5c822273ce552d0ace4a83a1c3e16e5db8",
+      "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game/docs/test/native-startup-r47/native-host.js": "c82e54d5c91c21fa8652779681eff1dea243775402ced4c4ee56287db9a02ede",
+      "/Users/sijunting/游戏出海项目制作/工作区/DessertMatch-R39-props-fix-20261025/source/game/docs/test/native-startup-r47/browser.mjs": "b6ae12cde5fd47f5de4fa9e79354d2d82dcd3c6c880d793a7b6a092125f4d792"
+    }
   }
 }

@@ -1,6 +1,8 @@
 # Chrome iPhone 触摸预检矩阵
 
-适用：把本地预览交给用户前、玩法设计首次可玩确认、按钮/美术/逻辑修改后、Native ZIP 回解本地启动后。执行器固定为独立 Google Chrome + `chrome_touch.py --user-approved-chrome --channel chrome`；Codex 内置浏览器禁止作为 Agent 触摸测试器或通过证据来源。
+**浏览器用途规则（用户 2026-10-27 最新更正）**：Agent 代测使用 Ego 浏览器的 **Google Chrome iPhone touch** 模式，先按 `ego-browser` 绑定自有测试空间并取得当前 CDP 端点，再用 `chrome_touch.py --cdp-url <当前Ego-CDP端点>` 执行；固定 viewport/DPR/UA/has_touch，`input_transport=playwright_cdp_touch`。代测不启动本机独立 Google Chrome，不使用 `--user-approved-chrome --channel chrome`，也不因 Ego 不可用自动切换本机 Chrome。仅在完全交给用户亲自试玩时，使用本地固定手机尺寸预览并打开本机 Google Chrome。代测服务使用 `--no-browser`，不通过 `--keep` 提前触发本机浏览器；交接用户时再按试玩流程打开。Ego 测试结束由 Agent 关闭自有空间并核实；不接管其他会话。此规则替代此前“代测默认独立 Chrome”的规定，Codex 内置浏览器仍不作触摸通过证据。
+
+适用：把本地预览交给用户前、玩法设计首次可玩确认、按钮/美术/逻辑修改后、Native ZIP 回解本地启动后。执行器固定为Ego 浏览器的 Google Chrome iPhone touch + `chrome_touch.py --cdp-url <当前Ego-CDP端点>`；Codex 内置浏览器禁止作为 Agent 触摸测试器或通过证据来源。
 
 ## 预检原则
 

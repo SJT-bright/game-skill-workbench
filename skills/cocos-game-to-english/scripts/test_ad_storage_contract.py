@@ -167,6 +167,15 @@ class StorageEvidenceGate(unittest.TestCase):
         self.chain['controls'][0]['raw']=self.ref('qa/negative.json');self.save_chain();self.save()
         with self.assertRaisesRegex(ValueError,'did not reproduce'):self.verify()
 
+    def test_ego_page_cdp_retains_trusted_touch_requirements(self):
+        p=self.project/'qa/chain.json';raw=json.loads(p.read_text());raw['input_transport']='ego_page_cdp_touch';p.write_text(json.dumps(raw))
+        for case in self.chain['cases'].values():case['raw']=self.ref('qa/chain.json')
+        self.save_chain();self.save();self.assertTrue(self.verify()['passed'])
+        raw['observed']['trusted_touch_count']=0;p.write_text(json.dumps(raw))
+        for case in self.chain['cases'].values():case['raw']=self.ref('qa/chain.json')
+        self.save_chain();self.save()
+        with self.assertRaisesRegex(ValueError,'no trusted input'):self.verify()
+
     def test_mouse_player_material_blocks(self):
         p=self.project/'qa/chain.json';raw=json.loads(p.read_text());raw['input_transport']='mouse';p.write_text(json.dumps(raw))
         for case in self.chain['cases'].values():case['raw']=self.ref('qa/chain.json')
@@ -182,7 +191,7 @@ class StorageEvidenceGate(unittest.TestCase):
         import package_obligations as obligations
         manifest = self.project/'resources.json'; manifest.write_text('{}')
         self.data['cases']['false'] = []; self.save()
-        with patch.object(obligations.issues, 'audit', return_value={}), patch.object(obligations.resources, 'audit', return_value={}):
+        with patch.object(obligations.no_social, 'verify', return_value={}), patch.object(obligations.issues, 'audit', return_value={}), patch.object(obligations.resources, 'audit', return_value={}):
             with self.assertRaisesRegex(ValueError, 'business assertions'):
                 obligations.verify(self.files, self.native, self.project, manifest)
 

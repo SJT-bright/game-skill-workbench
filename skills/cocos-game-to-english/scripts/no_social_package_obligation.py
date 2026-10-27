@@ -21,6 +21,16 @@ def resolve_source(project):
             if child.is_dir() and (child/'assets').is_dir() and (child/'project.json').is_file():candidates.append(child.resolve())
     if len(candidates)>1:raise ValueError('ambiguous Cocos sources: '+', '.join(map(str,candidates)))
     if not candidates:
+        # Some maintenance inputs preserve the supplied Creator 3 Native
+        # export under source/. It is not an editable assets/project.json
+        # source project. Recognize only the complete exported entry/engine
+        # form; the final Native scripts/JSON are still fully scanned below.
+        export_files=('game.js','game.json','src/settings.json','cocos-js/cc.js','engine-adapter.js','web-adapter.js')
+        if source.is_dir() and all((source/name).is_file() and not (source/name).is_symlink() for name in export_files):
+            settings=json.loads((source/'src/settings.json').read_text())
+            config=json.loads((source/'game.json').read_text())
+            if str(settings.get('CocosEngine','')).startswith('3.') and isinstance(config,dict) and b'System.register' in (source/'cocos-js/cc.js').read_bytes():
+                return None
         if source.exists():raise ValueError('source directory exists but no Cocos assets/project.json root found')
         return None
     candidate=candidates[0];assets=candidate/'assets'

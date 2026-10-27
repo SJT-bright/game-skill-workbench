@@ -1,5 +1,7 @@
 # Google Chrome 移动触摸运行模式
 
+**浏览器用途规则（用户 2026-10-27 最新更正）**：Agent 代测使用 Ego 浏览器的 **Google Chrome iPhone touch** 模式，先按 `ego-browser` 绑定自有测试空间并取得当前 CDP 端点，再用 `chrome_touch.py --cdp-url <当前Ego-CDP端点>` 执行；固定 viewport/DPR/UA/has_touch，`input_transport=playwright_cdp_touch`。代测不启动本机独立 Google Chrome，不使用 `--user-approved-chrome --channel chrome`，也不因 Ego 不可用自动切换本机 Chrome。仅在完全交给用户亲自试玩时，使用本地固定手机尺寸预览并打开本机 Google Chrome。代测服务使用 `--no-browser`，不通过 `--keep` 提前触发本机浏览器；交接用户时再按试玩流程打开。Ego 测试结束由 Agent 关闭自有空间并核实；不接管其他会话。此规则替代此前“代测默认独立 Chrome”的规定，Codex 内置浏览器仍不作触摸通过证据。
+
 适用范围：所有本地游戏预览、试玩代测、玩法设计后的首个可玩确认、按钮/拖动/弹窗回归，以及美术或逻辑修改后的受影响输入验证。用户明确指定其他执行器时再切换；普通鼠标点击只作辅助排错。
 
 ## 运行合同
@@ -13,19 +15,18 @@ Chrome DevTools 的 Device Mode 只负责显示尺寸和设备参数；真正的
 - 拖动使用 `touchStart → touchMove* → touchEnd`；取消使用 `touchCancel`。
 - 记录 `touchstart/touchmove/touchend/touchcancel`、`pointerdown/up`、`pointerType`、`isTrusted`、坐标、Canvas CSS 范围和最终业务结果。
 
-默认启动命令（当前用户已授权本机 Chrome 模式）：
+默认代测命令（连接当前自有 Ego 空间）：
 
 ```sh
 python3 <skills>/chrome-mobile-testing/scripts/chrome_touch.py \
   --url http://127.0.0.1:<PORT>/ \
   --plan <project>/docs/qa/touch-plan.json \
   --out <project>/docs/qa/touch-run-<version> \
-  --user-approved-chrome \
-  --channel chrome \
+  --cdp-url <当前Ego-CDP端点> \
   --name "<game> Chrome touch"
 ```
 
-`--cdp-url` 只用于用户明确要求连接已有 Chromium/Ego 实例的情况；当前统一测试默认启动独立 Google Chrome 隔离上下文。脚本的 `input_transport` 必须是 `playwright_cdp_touch`，不能用 `page.mouse` 结果替代。
+`--cdp-url` 是 Agent 代测的默认路线，必须使用当前自有 Ego 空间的实际 CDP 端点；不复用历史端点或接管其他会话。
 
 ## 通过条件
 
@@ -69,7 +70,7 @@ python3 <skills>/chrome-mobile-testing/scripts/chrome_touch.py \
 
 如果只在 Codex 内置浏览器打开或点击过，输出必须写：`Codex 内置浏览器仅查看，未作为手机触摸测试`；不能写“手机测试通过”“触摸通过”“按钮已验证”，也不能把 Codex 页面截图当作 Chrome 触摸证据。
 
-用户预览链接的说明必须提醒独立 Google Chrome。即使 Codex 自动把本地链接显示在内置页面里，Agent 仍需在独立 Chrome 完成预检后才能交付测试结论。
+用户预览链接的说明必须提醒独立 Google Chrome。即使 Codex 自动把本地链接显示在内置页面里，Agent 仍需在 Ego 完成触摸预检后才能交付测试结论。
 
 截图与 Retry 前后必须读回实际 viewport：Playwright context 的 viewport 应与 CDP DeviceMetricsOverride 一致，避免截图把短屏恢复成默认尺寸。若发生重置，原短屏证据无效；修工具后只补跑受影响比例，不把工具错误记成游戏已复现。
 

@@ -22,6 +22,7 @@ description: "用户提到测试包、上传包、平台包、TikTok ZIP或重�
 ## 两条writer共用的必要门禁
 
 - 当前目标App ID、真实Native根入口/引擎/adapter/分包、静态资源完整性和场景组件绑定。
+- 按[皮肤试用频率的项目验收](../cocos-game-ad-design/SKILL.md#皮肤试用频率的项目验收2026-10-27)盘点适用性并核对与最终候选绑定的实际运行证据；适用但未验证或失败不得当作通过，修复复验后继续出包。
 - 固定未压缩限额：总包≤30,000,000、主包≤4,000,000、每个独立分包≤4,000,000字节，普通分包计总包。按 `upload_size_gate.py`执行；压缩后大小不能替代。
 - [生产资源清单与已报告问题](../cocos-tiktok-package-check/references/resource-and-reported-issues.md)：动态请求反查漏项，未知有限域明确拒绝；固定项目问题历史缺失/未复验/失败/相关证据失效拒绝。有效问题证据只读回相关文件，不重放无关矩阵。
 - [当前Native启动与恢复](../cocos-game-to-english/references/final-package-startup-gate.md)：HOME可操作→可信输入→玩法变化，故障后Retry产生新请求并恢复；同一次可信启动不在交付阶段再跑一遍。

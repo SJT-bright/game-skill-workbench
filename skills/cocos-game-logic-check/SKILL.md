@@ -50,3 +50,5 @@ description: "检查和修复Cocos游戏玩法、按钮、异步广告、奖励�
 **2026-10-27 审查纠偏**：先依据目标平台存储 API 的实际契约和键的业务语义区分缺失、合法 Boolean、读取失败与损坏值；不能跨游戏一律把 `false` 当缺失、`true` 当 1。测试注入须说明替身位置并通过真实用户入口验证业务结果；本地替身和日志不证明平台真机行为。逐形状留可复核断言，缺失旧版反例、完整广告链或平台证据时分别标未验证。
 
 受影响输入的执行器、预检和结果字段统一按[Chrome 触摸运行合同](../cocos-game-to-english/references/google-touch-runtime.md)与[触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。
+
+**真实广告不是本地交付门槛（用户2026-10-27）**：电脑本地不要求真实 TikTok 广告填充或播放；用独立SDK边界模拟验证实际触摸、奖励与恢复，不得因缺少真实广告而停工、拒包或等待用户。适用检查通过即完成授权交付，日常不重复免责声明。统一规则见[电脑本地广告验收边界](../cocos-game-to-english/references/tiktok-device-stage.md#电脑本地广告验收边界用户2026-10-27明确)。

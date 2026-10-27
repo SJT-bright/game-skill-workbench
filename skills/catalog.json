@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T04:50:51.816Z",
-  "treeHash": "07ef74f4c44ea82d5950cd5dfd1285e1a06e5e19cd08d856fcfb81c88502dd4a",
+  "createdAt": "2026-10-27T04:53:51.704Z",
+  "treeHash": "888de81706a5fa6321ece330e658dcdf10a79f43829218cb4008fe4b2d9fe2c2",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "6a1c41c17a4b847bcd12c3822bad4354ac96632bdc7b62500194700590eae797",
-      "fileCount": 297,
-      "bytes": 8669400,
+      "treeHash": "502353b65d61201aab45bd95baf06808431d9b8d5364f8d6ab66b41d7de7f2c7",
+      "fileCount": 298,
+      "bytes": 8679998,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1073,8 +1073,8 @@
         },
         {
           "path": "references/ad-storage-evidence-contract.md",
-          "hash": "f343b46b22029b5c7d2bd03106223f9e9a07696b397044b72a22f924dc5b08ae",
-          "size": 3476,
+          "hash": "cd50c13890f97d6b5b1be0c64782e5b0a5efd65c40cad2a3df7b850bf8486b07",
+          "size": 5134,
           "executable": false
         },
         {
@@ -1307,8 +1307,8 @@
         },
         {
           "path": "references/loading-scene-false-positive.md",
-          "hash": "b1080b7f3c62019111dc458c5d4e55a9b7468c1b3dcb761493649310aae29081",
-          "size": 12810,
+          "hash": "94094881defa4df97d8031404a82c97fc1b7953704fadb6ba4c8a298faaff22a",
+          "size": 12917,
           "executable": false
         },
         {
@@ -1618,9 +1618,15 @@
           "executable": false
         },
         {
+          "path": "scripts/audit_ad_local_retest.py",
+          "hash": "aafa6e79f4ad424d4766f9b5bf446bf012d96be344c31091578d001df7a5b996",
+          "size": 4693,
+          "executable": false
+        },
+        {
           "path": "scripts/audit_ad_storage_contract.py",
-          "hash": "1085daf9c47b638f6e350c2b631608943c75619d6c31f393e18f0450d2dcef76",
-          "size": 7329,
+          "hash": "abe0526d3a73fe1020c2be969c16674c8bc405eb4b1ebca9665d3f715dc5a52a",
+          "size": 7517,
           "executable": false
         },
         {
@@ -2249,8 +2255,8 @@
         },
         {
           "path": "scripts/startup_business_contract.py",
-          "hash": "ec3297fb8dacb73d9f5ca6bc0ea72fd71f020bb4cae7d3301cbbc702ca60ecfc",
-          "size": 2120,
+          "hash": "87e9b888377b59222217f79dd8ce7f8b93cd85fff050486d321d2819cc6e298c",
+          "size": 2788,
           "executable": false
         },
         {
@@ -2261,8 +2267,8 @@
         },
         {
           "path": "scripts/test_ad_storage_contract.py",
-          "hash": "2d0e58df033a8e6f040e4e901d9c3c1f0ec1cb927188841f2b0b27c6c8ae53f3",
-          "size": 7548,
+          "hash": "fb45d24768a7474f9806292e4a00951c35fb872d6efd229f1f54eafd629db318",
+          "size": 10436,
           "executable": false
         },
         {
@@ -2549,8 +2555,8 @@
         },
         {
           "path": "scripts/test_startup_business_contract.py",
-          "hash": "685fd400c6ff307c8069bb178c0e5c4bd2313eab1b04b423750c52c4a58703fe",
-          "size": 2116,
+          "hash": "1c7c7479615d76aa742e8d7bd4267d8d7f00bf524578cfec2e55ae588fd43f1c",
+          "size": 2512,
           "executable": false
         },
         {

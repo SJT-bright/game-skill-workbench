@@ -20,6 +20,13 @@ def validate_business(data):
     touch=play.get('touch',{})
     if not isinstance(touch,dict):touch={}
     need(touch.get('transport') in ('ego_page_cdp','playwright_cdp_touch') and moment(touch.get('at_ms')),'actual touch identity required')
+    if touch.get('transport') == 'playwright_cdp_touch':
+        observed=data.get('observed',{})
+        trace=observed.get('touches',[]) if isinstance(observed,dict) else []
+        if not isinstance(trace,list):trace=[]
+        starts=[row.get('t') for row in trace if isinstance(row,dict) and row.get('type')=='touchstart' and row.get('trusted') is True and moment(row.get('t'))]
+        ends=[row.get('t') for row in trace if isinstance(row,dict) and row.get('type')=='touchend' and row.get('trusted') is True and moment(row.get('t'))]
+        need(any(start<=end for start in starts for end in ends),'Chrome touch requires recorded trusted touchstart/touchend')
     need(play.get('level_ready') is True and bool(play.get('level_identity')),'actual playable level identity required')
     need(isinstance(play.get('before'),dict) and bool(play.get('before')) and isinstance(play.get('after'),dict) and bool(play.get('after')) and play.get('before')!=play.get('after'),'observable gameplay change after touch required')
     need(moment(home.get('at_ms')) and moment(play.get('effect_at_ms')) and moment(touch.get('at_ms')) and home['at_ms']<=touch['at_ms']<play['effect_at_ms'],'HOME → touch → gameplay effect order required')

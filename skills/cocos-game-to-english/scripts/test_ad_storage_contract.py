@@ -34,7 +34,23 @@ class StorageEvidenceGate(unittest.TestCase):
                    'injection': {'api': 'tt.getStorageSync', 'shape': shape, 'read_count': 1},
                    'errors': [], 'observed': {'balance_delta': 0}}
             self.write_case(shape, raw)
+        # Synthetic player-chain material exercises the validator only.
+        raw.update(shape='false', observed={'balance_delta':0}, input_transport='playwright_cdp_touch')
+        raw['observed']['trusted_touch_count']=2
+        (self.project/'qa/chain.json').write_text(json.dumps(raw))
+        self.negative=self.project/'negative';self.negative.mkdir();(self.negative/'game.js').write_text('known bad fixture')
+        negative=copy.deepcopy(raw);negative['native_tree_sha256']=gate.tree_sha(self.negative);negative['observed']['balance_delta']=1
+        (self.project/'qa/negative.json').write_text(json.dumps(negative))
+        import audit_ad_local_retest
+        self.chain={'schema':'native_ad_local_retest.v1','native_tree_sha256':self.data['native_tree_sha256'],
+          'cases':{name:{'raw':self.ref('qa/chain.json'),'assertions':[{'path':['observed','balance_delta'],'op':'eq','value':0}]} for name in audit_ad_local_retest.REQUIRED_CASES},
+          'controls':[{'case':'completed','native_root':str(self.negative),'raw':self.ref('qa/negative.json')}]}
+        self.save_chain()
         self.save()
+
+    def save_chain(self):
+        (self.project/'qa/player-chain.json').write_text(json.dumps(self.chain))
+        self.data['local_player_retest']=self.ref('qa/player-chain.json')
 
     def ref(self, rel):
         return {'path': rel, 'sha256': hashlib.sha256((self.project/rel).read_bytes()).hexdigest()}
@@ -58,7 +74,7 @@ class StorageEvidenceGate(unittest.TestCase):
     def test_complete_material_is_limited_to_adapter_storage(self):
         result = self.verify()
         self.assertTrue(result['passed'])
-        self.assertEqual(result['coverage'], 'adapter_storage_only')
+        self.assertEqual(result['coverage'], 'adapter_storage_and_local_player_chain')
 
     def test_old_v1_declarations_refused(self):
         self.data['schema'] = 'native_ad_storage_contract.v1'; self.save()
@@ -131,6 +147,31 @@ class StorageEvidenceGate(unittest.TestCase):
     def test_device_claim_refused(self):
         self.data['evidence_layer'] = 'real_tiktok_iaa'; self.save()
         with self.assertRaisesRegex(ValueError, 'adapter simulation'): self.verify()
+
+    def test_missing_player_chain_blocks(self):
+        del self.data['local_player_retest'];self.save()
+        with self.assertRaisesRegex(ValueError,'invalid storage evidence reference'):self.verify()
+
+    def test_missing_consumer_blocks(self):
+        del self.chain['cases']['consumer'];self.save_chain();self.save()
+        with self.assertRaisesRegex(ValueError,'required player-chain'):self.verify()
+
+    def test_wrong_player_result_blocks_even_with_refreshed_hash(self):
+        p=self.project/'qa/chain.json';raw=json.loads(p.read_text());raw['observed']['balance_delta']=7;p.write_text(json.dumps(raw))
+        for case in self.chain['cases'].values():case['raw']=self.ref('qa/chain.json')
+        self.save_chain();self.save()
+        with self.assertRaisesRegex(ValueError,'local ad postconditions'):self.verify()
+
+    def test_nonreproducing_player_negative_blocks(self):
+        p=self.project/'qa/negative.json';raw=json.loads(p.read_text());raw['observed']['balance_delta']=0;p.write_text(json.dumps(raw))
+        self.chain['controls'][0]['raw']=self.ref('qa/negative.json');self.save_chain();self.save()
+        with self.assertRaisesRegex(ValueError,'did not reproduce'):self.verify()
+
+    def test_mouse_player_material_blocks(self):
+        p=self.project/'qa/chain.json';raw=json.loads(p.read_text());raw['input_transport']='mouse';p.write_text(json.dumps(raw))
+        for case in self.chain['cases'].values():case['raw']=self.ref('qa/chain.json')
+        self.save_chain();self.save()
+        with self.assertRaisesRegex(ValueError,'Native/input'):self.verify()
 
     def test_existing_narrow_source_bypass_guard_preserved(self):
         path = self.project/'EnglishProject/assets/script/RewardFlow.ts'

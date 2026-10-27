@@ -117,8 +117,10 @@ def verify(files, native, project):
                   and 'cc.sys.localStorage.getItem' in p.read_text(errors='replace')]
         if direct:
             raise ValueError('reward/ad source bypasses shared storage reader: '+', '.join(direct))
+    import audit_ad_local_retest
+    local_retest = audit_ad_local_retest.verify(project, expected, data.get('local_player_retest'))
     return {'passed': True, 'required': True, 'contract': str(contract_path),
             'contract_sha256': hashlib.sha256(contract_path.read_bytes()).hexdigest(),
             'native_tree_sha256': expected, 'shapes': sorted(REQUIRED_SHAPES),
             'runner': runner, 'harness_dependencies': dependencies, 'evidence_refs': refs,
-            'evidence_layer': 'native_adapter_simulation', 'coverage': 'adapter_storage_only'}
+            'evidence_layer': 'native_adapter_simulation', 'coverage': 'adapter_storage_and_local_player_chain', 'local_player_retest': local_retest}

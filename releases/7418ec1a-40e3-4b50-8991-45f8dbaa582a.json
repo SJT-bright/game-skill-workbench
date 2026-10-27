@@ -1,0 +1,55 @@
+{
+  "id": "7418ec1a-40e3-4b50-8991-45f8dbaa582a",
+  "skillId": "s-deeeaf9abeca146bd263",
+  "directory": "cocos-game-logic-check",
+  "name": "cocos-game-logic-check",
+  "version": "v11",
+  "createdAt": "2026-10-27T07:32:53.597Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "1bf09d3c42d44bf81b94ecc04afb1339a054d8eacc04176d9687f311cc97ef2c",
+  "bytes": 32684,
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "9587594dd28362db0ba9294adf036a2b773797d5a517980b313ec5da546ecb49",
+      "size": 1109,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "f84020b6ba352d0f8df085c4674dee0471d73c37ea266495c63fde9a5a213b53",
+      "size": 5543,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "8c04d41c9407e9bc4c7830d44b42afd00e6b30b1e19d4a26996577937b713a65",
+      "size": 433,
+      "executable": false
+    },
+    {
+      "path": "assets/logic-report-template.md",
+      "hash": "bc756a37b35951eca0712f0161997560f0e2979399bff96353b06b71d72888db",
+      "size": 2927,
+      "executable": false
+    },
+    {
+      "path": "references/learned-regressions.md",
+      "hash": "d819ab57a3fb85e2bd6f1bcdd4e4e652ae935093244a1cad729ed127e3862307",
+      "size": 13554,
+      "executable": false
+    },
+    {
+      "path": "references/logic-rules.md",
+      "hash": "d381683e730543f2872a71262c8c50efb875d390df2e62125baf028af4717b13",
+      "size": 9118,
+      "executable": false
+    }
+  ]
+}

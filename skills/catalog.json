@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-27T04:26:45.633Z",
-  "treeHash": "3cd7162c33371eaaba618c1db5f1c73abeebcfe9f6b62acbab52e951e5073878",
+  "createdAt": "2026-10-27T04:35:32.985Z",
+  "treeHash": "a5c421b18c2420a6550caac64c839e137594612dd65f2942af9621df72494b17",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "9cbc256b14cad2abbcbfd402afc759a770175a5943743e45ee190b2cad3ba570",
-      "fileCount": 296,
-      "bytes": 8666024,
+      "treeHash": "6a1c41c17a4b847bcd12c3822bad4354ac96632bdc7b62500194700590eae797",
+      "fileCount": 297,
+      "bytes": 8669400,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1363,6 +1363,12 @@
           "path": "references/mobile-motion-state-review.md",
           "hash": "6ec48af349e2d1c6509591d466c8170e9508d2534c556d81d1e0724076b5b95a",
           "size": 5388,
+          "executable": false
+        },
+        {
+          "path": "references/native-ad-local-repair.md",
+          "hash": "0bee1aa13455c2ba25cf0fc4722a703e6f39ba9fd69f68f29251f2aa4dc4e87c",
+          "size": 3376,
           "executable": false
         },
         {

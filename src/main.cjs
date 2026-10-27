@@ -1,10 +1,11 @@
-const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nativeImage,Menu,nativeTheme}=require('electron');
+const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nativeImage,Menu,nativeTheme,powerMonitor}=require('electron');
 const fs=require('node:fs/promises');const path=require('node:path');const crypto=require('node:crypto');const {pathToFileURL}=require('node:url');
 const {HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,request,addresses}=require('./core.cjs');const {zipFolder}=require('./zip.cjs');
 const {discover,queueMessage,STAGES,UUID,cancelReaders,isMaintenanceTitle}=require('./codex.cjs');
 const {scanTelemetries}=require('./telemetry.cjs');const updater=require('./updater.cjs');const github=require('./github.cjs');const {spawn}=require('node:child_process');
 const {dockBounds,EXPANDED,COLLAPSED}=require('./docking.cjs');
 const hover=require('./hover.cjs').hoverTrigger();let hoverTimer;
+const {SKILL_POLL_MS,APPLICATION_POLL_MS,mergeNotices,notificationBody}=require('./update-notices.cjs');let updateNotices=[];
 const smoke=process.argv.includes('--smoke-test');
 if(process.platform==='win32')app.setAppUserModelId('studio.gamedesk.skill.personal');
 if(process.env.SKILL_DOCK_DATA_DIR)app.setPath('userData',process.env.SKILL_DOCK_DATA_DIR);
@@ -16,18 +17,18 @@ let codexSnapshot={threads:[],checkedAt:null,incomplete:false},codexError='',cod
 const configPath=path.join(root,'settings.json');
 const defaults=()=>({games:[],sources:[],url:'',token:'',autoDownload:true,port:47831,hostEnabled:false,hostToken:crypto.randomBytes(24).toString('hex'),window:null,autoCodex:true,repository:'',feedMode:'github',hiddenThreads:[],scanRoots:[]});
 async function persist(){await atomicJSON(configPath,config);}
-function notify(title,body){if(!smoke&&Notification.isSupported())new Notification({title,body}).show();}
-async function state(){return {games:config.games,sources:config.sources,settings:{url:config.url,autoDownload:config.autoDownload,port:config.port,connected:!!config.url},index,installed,lastCheck,status,lastError,busy,hosting:!!hub,hostUrls:hub?addresses().map(a=>`http://${a}:${hub.port}`):[],localUrl:hub?`http://127.0.0.1:${hub.port}`:'',platform:process.platform,version:app.getVersion(),collapsed,dockEdge,codex:{busy:codexBusy,error:codexError,checkedAt:codexSnapshot.checkedAt,incomplete:codexSnapshot.incomplete},localSkillErrors,appUpdate,repository:config.repository,feedMode:config.feedMode};}
+function notify(title,body){try{if(!smoke&&Notification.isSupported())new Notification({title,body}).show();}catch{console.warn('System notification unavailable; updates remain visible in the workbench');}}
+async function state(){return {updateNotices,games:config.games,sources:config.sources,settings:{url:config.url,autoDownload:config.autoDownload,port:config.port,connected:!!config.url},index,installed,lastCheck,status,lastError,busy,hosting:!!hub,hostUrls:hub?addresses().map(a=>`http://${a}:${hub.port}`):[],localUrl:hub?`http://127.0.0.1:${hub.port}`:'',platform:process.platform,version:app.getVersion(),collapsed,dockEdge,codex:{busy:codexBusy,error:codexError,checkedAt:codexSnapshot.checkedAt,incomplete:codexSnapshot.incomplete},localSkillErrors,appUpdate,repository:config.repository,feedMode:config.feedMode};}
 async function emit(){if(win&&!win.isDestroyed())win.webContents.send('dock:state',await state());}
 async function sync(){
   if(syncPromise)return syncPromise;
   syncPromise=(async()=>{
     if(!config.url&&!(config.feedMode==='github'&&config.repository))return state();busy=true;lastError='';await emit();
     try{const known=new Set(index.releases.map(r=>r.id));index=await client.sync(config);lastCheck=new Date().toISOString();const latest=new Map();for(const r of index.releases)if(!latest.has(r.skillId))latest.set(r.skillId,r);
-      const pins=await readJSON(path.join(root,'pins.json'),{});let changed=[];
-      for(const r of latest.values())if(config.autoDownload&&!pins[r.skillId]&&installed[r.skillId]?.id!==r.id){installed[r.skillId]=await client.install(config,r.id);changed.push(r);}
-      const updates=[...new Map([...latest.values()].filter(r=>!known.has(r.id)).concat(changed).map(r=>[r.id,r])).values()];if(updates.length)notify(config.autoDownload?'Skill 文件已更新':'有新的 Skill 更新',updates.map(r=>`${r.name} ${r.version}：${r.summary}`).join('\n').slice(0,800));
-      status='已同步 · '+latest.size+' 个 Skill';
+      const pins=await readJSON(path.join(root,'pins.json'),{});let changed=[],failed=[];
+      for(const r of latest.values())if(config.autoDownload&&!pins[r.skillId]&&installed[r.skillId]?.id!==r.id){try{installed[r.skillId]=await client.install(config,r.id);changed.push(r);}catch{failed.push(r.name);}}
+      const updates=[...new Map([...latest.values()].filter(r=>!known.has(r.id)).concat(changed).map(r=>[r.id,r])).values()];if(updates.length){updateNotices=mergeNotices(updateNotices,updates,{installed,pins});await atomicJSON(path.join(root,'update-notices.json'),updateNotices);notify('Skill 更新',notificationBody(updateNotices.filter(n=>updates.some(r=>r.id===n.id))));}
+      lastError=failed.length?'部分 Skill 待重试：'+failed.join('、'):'';status=failed.length?'部分文件待重试':'已同步 · '+latest.size+' 个 Skill';
     }catch(e){lastError=e.message;status='连接待恢复';}finally{busy=false;await emit();}return state();
   })();try{return await syncPromise;}finally{syncPromise=null;}
 }
@@ -91,6 +92,7 @@ async function sendGame(value){
 }
 
 const handlers={
+  ackUpdates:async()=>{updateNotices=[];await atomicJSON(path.join(root,'update-notices.json'),updateNotices);await emit();},
   githubLogin:async()=>{const binary=await github.ghBinary();if(!binary){await shell.openExternal('https://cli.github.com/');return {status:'install-required'};}if(process.platform==='darwin'){const file=path.join(root,'github-login.command');const quote=v=>"'"+v.replaceAll("'","'\\''")+"'";await fs.writeFile(file,'#!/bin/sh\nexec '+quote(binary)+' auth login --web --git-protocol https\n',{mode:0o700});await shell.openPath(file);}else{const quote=v=>"'"+v.replaceAll("'","''")+"'";spawn('powershell.exe',['-NoProfile','-Command','Start-Process -FilePath '+quote(binary)+" -ArgumentList @('auth','login','--web','--git-protocol','https')"],{windowsHide:false});}return {status:'login-opened'};},
   checkApplication:()=>checkApplication(),
   applyApplication:()=>applyApplication(),
@@ -127,7 +129,7 @@ const handlers={
 };
 async function main(){
   nativeTheme.themeSource='dark';
-  const distribution=await readJSON(path.join(__dirname,'../distribution.json'),{});config={...defaults(),repository:distribution.repository||'',...await readJSON(configPath,{})};config.hiddenThreads ||= [];config.scanRoots ||= [];for(const g of config.games){if(g.stage==='制作中')g.stage='玩法制作';if(g.stage==='待检查')g.stage='检查';g.threadId ||=g.chatUrl?.match(/threads\/([0-9a-f-]{36})/i)?.[1]||'';g.stageMode ||= 'manual';}codexSnapshot=await readJSON(path.join(root,'codex-index.json'),codexSnapshot);telemetryCache=await readJSON(path.join(root,'telemetry-cache.json'),{});store=new HubStore(path.join(root,'publisher'));client=new ClientStore(path.join(root,'subscriber'));await client.recover();installed=await client.state();index=await readJSON(path.join(root,'subscriber','index.json'),{releases:[]});
+  const distribution=await readJSON(path.join(__dirname,'../distribution.json'),{});config={...defaults(),repository:distribution.repository||'',...await readJSON(configPath,{})};config.hiddenThreads ||= [];config.scanRoots ||= [];for(const g of config.games){if(g.stage==='制作中')g.stage='玩法制作';if(g.stage==='待检查')g.stage='检查';g.threadId ||=g.chatUrl?.match(/threads\/([0-9a-f-]{36})/i)?.[1]||'';g.stageMode ||= 'manual';}codexSnapshot=await readJSON(path.join(root,'codex-index.json'),codexSnapshot);telemetryCache=await readJSON(path.join(root,'telemetry-cache.json'),{});updateNotices=await readJSON(path.join(root,'update-notices.json'),[]);store=new HubStore(path.join(root,'publisher'));client=new ClientStore(path.join(root,'subscriber'));await client.recover();installed=await client.state();index=await readJSON(path.join(root,'subscriber','index.json'),{releases:[]});
   const area=screen.getPrimaryDisplay().workArea;const b=config.window||{};
   win=new BrowserWindow({width:COLLAPSED.width,height:COLLAPSED.height,minWidth:COLLAPSED.width,minHeight:COLLAPSED.height,x:Math.max(area.x,Math.min(b.x??area.x+area.width-490,area.x+area.width-460)),y:Math.max(area.y,Math.min(b.y??area.y+48,area.y+area.height-740)),icon:path.join(__dirname,'../ui/window-icon.png'),frame:false,transparent:true,backgroundColor:'#00000000',...(process.platform==='darwin'?{vibrancy:'under-window',visualEffectState:'active'}:process.platform==='win32'?{backgroundMaterial:'acrylic'}:{}),resizable:false,alwaysOnTop:true,hasShadow:true,show:false,webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
   if(process.platform==='darwin')win.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});Menu.setApplicationMenu(null);
@@ -151,7 +153,7 @@ async function main(){
       await ipc('startSharing');await ipc('subscribeSelf');integration.push({downloaded:!!Object.keys(installed).length});
       const game=await ipc('saveGame',{name:'验证游戏',path:gamePath,stage:'待检查'});const skillId=v1.release.skillId;
       const prompt=await ipc('taskText',{gameId:game.id,skillId,action:'check'});integration.push({promptBindsGame:prompt.includes(game.name),promptBindsHash:prompt.includes(v1.release.treeHash)});
-      await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nNew mobile contract.');const v2=await ipc('publish',{id:sourceRecord.id,note:'新增手机重开检查'});integration.push({backgroundAutoUpdated:installed[skillId].id===v2.release.id});
+      await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nNew mobile contract.');const v2=await ipc('publish',{id:sourceRecord.id,note:'新增手机重开检查'});integration.push({backgroundAutoUpdated:installed[skillId].id===v2.release.id});integration.push({persistentSkillNotice:updateNotices.some(n=>n.id===v2.release.id&&n.status==='updated')&&(await readJSON(path.join(root,'update-notices.json'),[])).some(n=>n.id===v2.release.id)});await ipc('ackUpdates');integration.push({acknowledgedNotices:updateNotices.length===0&&(await readJSON(path.join(root,'update-notices.json'),[])).length===0});
       await ipc('install',{id:v1.release.id,pin:true});await ipc('sync');integration.push({restoredAndPinned:installed[skillId].id===v1.release.id});
       await ipc('install',{id:v2.release.id,pin:false});await win.webContents.executeJavaScript(`document.querySelector('nav [data-tab="skills"]').click()`);
       await ipc('collapse');integration.push({capsule:win.getBounds().width===COLLAPSED.width&&win.getBounds().height===COLLAPSED.height});await ipc('collapse');
@@ -170,8 +172,9 @@ async function main(){
     await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'smoke.json'),JSON.stringify({...result,integration,embeddedCount:Object.values(installed).filter(s=>s.bundled).length,runtime:process.versions.electron,alwaysOnTop:win.isAlwaysOnTop(),bounds:win.getBounds()},null,2));await fs.writeFile(path.join(root,'smoke.png'),(await win.webContents.capturePage()).toPNG());quitting=true;app.quit();return;
   }
   if(config.hostEnabled)await startSharing().catch(e=>{lastError=e.message;});
-  await seedEmbeddedSkills();await scanLocalSkills();await emit();await confirmHealthyUpdate();syncCodex();checkApplication();updateTimer=setInterval(checkApplication,6*60*60*1000);await sync();listenEvents();
-  poll=setInterval(()=>{if(!codexBusy)syncCodex();scanLocalSkills().then(emit).catch(console.error);sync();if(!eventAbort||eventAbort.signal.aborted)listenEvents();},60000);
+  await seedEmbeddedSkills();await scanLocalSkills();await emit();await confirmHealthyUpdate();syncCodex();checkApplication();updateTimer=setInterval(checkApplication,APPLICATION_POLL_MS);await sync();listenEvents();
+  poll=setInterval(()=>{if(!codexBusy)syncCodex();scanLocalSkills().then(emit).catch(console.error);sync();if(!eventAbort||eventAbort.signal.aborted)listenEvents();},SKILL_POLL_MS);
+  powerMonitor.on('resume',()=>{sync();checkApplication();});
   watchTimer=setInterval(async()=>{if(watchBusy||publishPromise)return;watchBusy=true;try{for(const s of config.sources.filter(s=>s.auto))try{await publish(s.id);}catch(e){s.error=e.message;await emit();}}finally{watchBusy=false;}},20000);
 }
 app.whenReady().then(main).catch(e=>{console.error(e);if(smoke){try{const syncFS=require('node:fs');syncFS.mkdirSync(root,{recursive:true});syncFS.writeFileSync(path.join(root,'smoke-error.txt'),e.stack||String(e));}catch{}}app.exit(1);});

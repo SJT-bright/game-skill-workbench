@@ -3,11 +3,14 @@ name: mobile-touch-computer-use
 description: 用户要求游戏本地预览、试玩、游玩或打开游戏时，先用固定手机尺寸外壳轻量交接，不启动全量验收；需要代测时默认用 Google Chrome DevTools/CDP 触摸模式自动验收游戏或网页的手机触控模拟、长屏布局、按钮和手势；Ego Lite 仅在用户明确指定时使用。适用于“替我测试手机端”“电脑模拟手机点击”“按钮手机点不动”等请求；通过 Ego Lite 官方 CLI 操作页面、手机视口和触摸输入，必要时操作已安装的系统模拟器，记录实际输入与界面变化，区分模拟结果与平台真机结果。
 ---
 
+**浏览器用途规则（用户 2026-10-27 最新更正）**：Agent 代测使用 Ego 浏览器的 **Google Chrome iPhone touch** 模式，先按 `ego-browser` 绑定自有测试空间并取得当前 CDP 端点，再用 `chrome_touch.py --cdp-url <当前Ego-CDP端点>` 执行；固定 viewport/DPR/UA/has_touch，`input_transport=playwright_cdp_touch`。代测不启动本机独立 Google Chrome，不使用 `--user-approved-chrome --channel chrome`，也不因 Ego 不可用自动切换本机 Chrome。仅在完全交给用户亲自试玩时，使用本地固定手机尺寸预览并打开本机 Google Chrome。代测服务使用 `--no-browser`，不通过 `--keep` 提前触发本机浏览器；交接用户时再按试玩流程打开。Ego 测试结束由 Agent 关闭自有空间并核实；不接管其他会话。此规则替代此前“代测默认独立 Chrome”的规定，Codex 内置浏览器仍不作触摸通过证据。
+
+
 # 手机触控模拟验收
 
 **用户亲自试玩先走轻量入口**：预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读[固定手机尺寸试玩](../cocos-game-to-english/references/user-phone-preview.md)。共享预览脚本 `--keep` 默认自动请求独立 Google Chrome 窗口，保留390×844同源手机框；读回实际窗口并确认首页/开始后交接；仅试玩不执行下面的完整代测流程。
 
-让 Agent 直接操作界面完成测试。**Google Chrome DevTools/CDP 触摸默认（用户 2026-10-27）**：自动测试在独立 Google Chrome 触摸模式里做，使用 `chrome_touch.py --user-approved-chrome --channel chrome`；固定移动 viewport、DPR、UA、`has_touch`，通过 `Input.dispatchTouchEvent` 或 `page.touchscreen` 发送触摸。`input_transport` 必须是 `playwright_cdp_touch`，普通鼠标不计作手机通过。用户试玩按上述固定手机入口自动打开独立 Chrome，并保留本地链接。Ego Lite 只有用户明确指定时才启用。完整合同见[Google Chrome 移动触摸运行模式](../cocos-game-to-english/references/google-touch-runtime.md)。
+Agent 代测按本文件最新浏览器用途规则连接 Ego CDP；用户亲自试玩才打开本机 Chrome。
 
 **禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用主 Skill 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，共享脚本自动请求独立 Chrome 窗口并核实可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
 
@@ -78,7 +81,7 @@ Cocos/TikTok任务同时读取 [通用问题适用范围与重点](../cocos-game
 
 普通并发占用时新建独立空间，不抢其他会话资源。自己绑定的测试空间失活或未分配时，先停止旧 ID 的操作并读列表核实原 ID 消失，再自动新建、登记独立空间继续；无法核实消失时先排查，不能盲接管。用户明确接管、要求停止或浏览器安全 hard stop 时立即停止对应操作，不换空间、接口或系统信号绕过。测试结束后由当前拥有者用已绑定的官方 API `finish({keep:[]})`，`close` / `ego-finish` 读列表确认消失；预览服务核对原进程及端口退出，不能要求用户手动关闭。无法确认时退出码 2，记录保留，`check` 不放行。历史空间的名称或“需要你处理”标签不能单独证明可以关闭；先核当前归属与用途。详见主 Skill 的 `references/machine-load.md`。
 
-**禁止把 Codex 内置浏览器当作测试器（用户 2026-10-27）**：Codex 内置页面只能用于用户查看/试玩，不能用于 Agent 的手机触摸测试、按钮通过结论或触摸证据。Agent 必须在交链接前使用独立 Google Chrome iPhone CDP 触摸模式，并读取[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)。
+**禁止把 Codex 内置浏览器当作测试器（用户 2026-10-27）**：Codex 内置页面只能用于用户查看/试玩，不能用于 Agent 的手机触摸测试、按钮通过结论或触摸证据。Agent 必须在交链接前使用Ego 浏览器的 Google Chrome iPhone CDP 触摸模式，并读取[Chrome iPhone 触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)。
 
 **输出必须标明 Chrome 测试层（用户 2026-10-27）**：凡输出“测试通过”“手机触摸通过”“按钮已验证”或交付预览，必须注明 `Google Chrome iPhone touch`、设备尺寸/DPR、`input_transport=playwright_cdp_touch` 和业务结果。只在 Codex 内置浏览器查看或点击，必须写“仅查看，未作为手机触摸测试”，不得写成测试通过。
 

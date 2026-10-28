@@ -1,0 +1,157 @@
+{
+  "id": "7aef8dab-c639-4523-83a6-bd70ccc45dce",
+  "skillId": "s-8ab0e33c96543080c7af",
+  "directory": "cocos-game-art-redo",
+  "name": "cocos-game-art-redo",
+  "version": "v9",
+  "createdAt": "2026-10-28T08:23:09.200Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "d3dbbdbc8b23d028852c5463b11f3bbe836ea751fa77c96c4b14aae69f96edad",
+  "bytes": 812301,
+  "fileCount": 23,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "8a5363d26404a7615d13f0f5df5e860d42f145fcb2f141fc3ac1d309957f1f1c",
+      "size": 3870,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "8b540a9c1d66db4c239de2ea0bc7ed53b57f7c5ed9a7623833b09a53a0134f3b",
+      "size": 4665,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "559d7df9b2ab6e3195aac662d7e4b59beca6c2848c6bba2a4f18f74ad1c66f18",
+      "size": 362,
+      "executable": false
+    },
+    {
+      "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+      "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "size": 744350,
+      "executable": false
+    },
+    {
+      "path": "references/button-group-review.md",
+      "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+      "size": 2705,
+      "executable": false
+    },
+    {
+      "path": "references/capsule-content-fit.md",
+      "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+      "size": 1278,
+      "executable": false
+    },
+    {
+      "path": "references/card-ornament-layout-review.md",
+      "hash": "b493141dfa3cc817fd9b186ee60db19891722592e87f9410e355d210c1a5c873",
+      "size": 3693,
+      "executable": false
+    },
+    {
+      "path": "references/card-text-fit-review.md",
+      "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+      "size": 1734,
+      "executable": false
+    },
+    {
+      "path": "references/collection-preview-review.md",
+      "hash": "0e1f19121a5a2b086dbe77c98d776c35cea5f9ec6482055aebfd1e2543e98254",
+      "size": 2629,
+      "executable": false
+    },
+    {
+      "path": "references/large-background-static-review.md",
+      "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+      "size": 2140,
+      "executable": false
+    },
+    {
+      "path": "references/panel-composite-review.md",
+      "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+      "size": 1843,
+      "executable": false
+    },
+    {
+      "path": "references/phone-preview-boundary.md",
+      "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+      "size": 2724,
+      "executable": false
+    },
+    {
+      "path": "references/rendered-ui-regression-review.md",
+      "hash": "e50d0bf4796a3290bb0378b6b012f3135a97e2e06020fd99da6fbc9a054d7229",
+      "size": 4408,
+      "executable": false
+    },
+    {
+      "path": "references/standalone-alpha-review.md",
+      "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+      "size": 2237,
+      "executable": false
+    },
+    {
+      "path": "references/stat-digit-runtime-review.md",
+      "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
+      "size": 1699,
+      "executable": false
+    },
+    {
+      "path": "references/text-backplate-review.md",
+      "hash": "cbab9cfa3956f0050891288d0defeb5550ac3bc32be4dec2c38e5588d1e3405f",
+      "size": 2839,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_button_group.py",
+      "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
+      "size": 2024,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_card_layout.py",
+      "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
+      "size": 4910,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_collection_preview.py",
+      "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
+      "size": 2573,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_native_sprite_sources.py",
+      "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
+      "size": 9544,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_phone_boundary.py",
+      "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+      "size": 3800,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_native_sprite_sources.py",
+      "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
+      "size": 3130,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_source_residue.py",
+      "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+      "size": 3144,
+      "executable": false
+    }
+  ]
+}

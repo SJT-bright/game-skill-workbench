@@ -1,0 +1,31 @@
+{
+  "id": "f2e1f7fc-f77c-4d93-a7dc-1ff19828ff08",
+  "skillId": "s-1bba8cd897259056ef0f",
+  "directory": "cocos-game-ad-design",
+  "name": "cocos-game-ad-design",
+  "version": "v11",
+  "createdAt": "2026-10-28T08:23:53.971Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "615d6be79d411fce8c42396c29da8079061a323dc47991cd0e4d034a33cc2ff0",
+  "bytes": 14805,
+  "fileCount": 2,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "f3dd3d774f952d68f7d5c5f1b5108f750896b823c72646b2af403e87ccb89fcb",
+      "size": 460,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "10da65cd3803dd2087f249c8407761ec0cb3aa11a89bc59a8a2229cbcf9b4753",
+      "size": 14345,
+      "executable": false
+    }
+  ]
+}

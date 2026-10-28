@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "f2e1f7fc-f77c-4d93-a7dc-1ff19828ff08",
+      "skillId": "s-1bba8cd897259056ef0f",
+      "directory": "cocos-game-ad-design",
+      "name": "cocos-game-ad-design",
+      "version": "v11",
+      "createdAt": "2026-10-28T08:23:53.971Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "615d6be79d411fce8c42396c29da8079061a323dc47991cd0e4d034a33cc2ff0",
+      "bytes": 14805,
+      "fileCount": 2
+    },
+    {
       "id": "34f4d9f2-610b-47bc-ac48-6a3f414d75f0",
       "skillId": "s-deeeaf9abeca146bd263",
       "directory": "cocos-game-logic-check",

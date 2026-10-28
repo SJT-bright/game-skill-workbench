@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "31c96f31-8b7b-4912-aa16-32bb767deda1",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v33",
+      "createdAt": "2026-10-28T06:39:47.165Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "84da805973accd20252cf8cb8ad8c88fc7e442a7c9ebad6e4cbe4289a61ee106",
+      "bytes": 8979471,
+      "fileCount": 303
+    },
+    {
       "id": "b2cbb06e-aab8-4a7f-9e98-eb8c0b412d56",
       "skillId": "s-d260030552ba65620839",
       "directory": "cocos-game-tiktok-package",

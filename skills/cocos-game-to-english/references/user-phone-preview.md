@@ -33,3 +33,7 @@ python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep
 ## 用户试玩必须真实启用触摸模拟（用户2026-10-27）
 
 固定手机 iframe 只证明显示比例。默认用户试玩必须由 `serve_preview.py --snapshot --keep` 调用 `preview_touch_window.py`，在首次导航前设置移动 UA、is_mobile、has_touch、viewport/DPR、CDP TouchEmulation 与 `setEmitTouchEventsForMouse(configuration=mobile)`。普通鼠标按下/拖动/松开须产生可信 touchstart/move/end；读回游戏所在 frame 的 maxTouchPoints、Cocos touches 能力和一次实际操作结果后交接。禁止普通 Chrome new-window 代替触控试玩；失败不可静默回退。每个URL使用独立持久目录保留该试玩存档，不接管用户Chrome配置。服务退出后关闭它自己持有的窗口；用户关闭窗口同样结束对应上下文。
+
+## 每轮修改后的交接（用户2026-10-28）
+
+每轮游戏修改完成并做完相称验证后，在最终回复主动给出同版本可点击预览链接，并说明本轮改动。可以复用已核实指向当前构建的链接；不能沿用指向旧构建或已经退出的服务。需要重建时先完成构建，再启动隔离预览。给测试包时同时给ZIP和同版本预览。用户仍在玩的旧预览保持原构建，新版另开候选；交接新版后按既有收尾规则处理旧服务。仅修改Skill或文档时，提供当前游戏预览并说明游戏本身未改变；没有可运行游戏或预览启动失败时明确说明具体阻断，不把失效链接冒充交付。

@@ -18,10 +18,8 @@ async def main(a):
    await cd.send('Input.dispatchMouseEvent',{'type':'mouseMoved','x':8,'y':8})
    press=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mousePressed','x':8,'y':8,'button':'left','buttons':1,'clickCount':1}))
    await asyncio.sleep(.1)
-   move=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mouseMoved','x':12,'y':12,'buttons':1}))
-   await asyncio.sleep(.1)
-   release=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mouseReleased','x':12,'y':12,'button':'left','buttons':0,'clickCount':1}))
-   try:await asyncio.wait_for(asyncio.gather(press,move,release),5)
+   release=asyncio.create_task(cd.send('Input.dispatchMouseEvent',{'type':'mouseReleased','x':8,'y':8,'button':'left','buttons':0,'clickCount':1}))
+   try:await asyncio.wait_for(asyncio.gather(press,release),5)
    except asyncio.TimeoutError:pass
    pointer_trace=[]
    for frame in page.frames:pointer_trace.extend(await frame.evaluate('window.__previewTouchEvents||[]'))

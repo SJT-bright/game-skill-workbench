@@ -190,6 +190,9 @@ _AUDIO_RESOLVERS = {
  },
 }
 
+# Reviewed v84 storage-only adapter edit: audio resolver and entry unchanged.
+_AUDIO_RESOLVERS['a4c1740ee7354d13963bcf1ad67a2ff563dc4256f95cbdaa5aa063dd18fe19da'] = {'source_path': 'adapter.js', 'entry_sha256': 'd94cae52074606c8add51be798a3b826a7ad9a48df22537260a35314c62de20a', 'bundle': 'audio', 'bundle_root': 'subpackages/audio'}
+
 def _reviewed_audio_aliases(root, path, source_bytes, errors):
  profile=_AUDIO_RESOLVERS.get(hashlib.sha256(source_bytes).hexdigest())
  if profile is None or path.relative_to(root).as_posix()!=profile['source_path']:return {}

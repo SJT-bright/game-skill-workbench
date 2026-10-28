@@ -43967,11 +43967,11 @@
       "adapter-min.js": "44c0e1c1311cb51262a8e3d714b3ab5b6c901cad7461ebcff69ce3bc91ccf5bc",
       "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
       "touch-coordinates.js": "3a829933141b8e2a3d2c3a403929335b71b2f7a268b57882f476d44ebe8674eb",
-      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
-      "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "src/settings.js": "5b408dbb309967f6e30697199738fddf083472373e09c4a6fcb264c9222d9c92",
       "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
-      "assets/main/index.js": "70e6bac6732093b03dc5e08902f746a9714ea3df359c798e71ad6f4c813e5f7b",
-      "src/settings.js": "5b408dbb309967f6e30697199738fddf083472373e09c4a6fcb264c9222d9c92"
+      "assets/main/index.js": "8d53424f26c391a1a9fa7088c426657007778e7a004a0d6c7a7e17604d0d6e14",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5"
     },
     "resolutions": {
       "main.js:29726": {
@@ -44132,7 +44132,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:67016": {
+      "assets/main/index.js:67714": {
         "kind": "loadDir",
         "bundles": [
           "resources"
@@ -44144,7 +44144,7 @@
         "unknown_receiver": false,
         "reason": "Exact GameView ResourceRecovery.load directory=true tile-domain request."
       },
-      "assets/main/index.js:139313": {
+      "assets/main/index.js:139706": {
         "kind": "loadDir",
         "bundles": [
           "resources"
@@ -44184,11 +44184,157 @@
         "unknown_receiver": false,
         "reason": "HeroItem loads the finite Global.SKIN_COUNT hero directories; each directory keeps its complete required pieces."
       },
-      "assets/main/index.js:178973": {
+      "assets/main/index.js:144663": {
+        "kind": "load",
+        "bundles": [
+          "resources"
+        ],
+        "paths": [
+          "texture/main/game/hero/2001/hero",
+          "texture/main/game/hero/2001/piece",
+          "texture/main/game/hero/2002/hero",
+          "texture/main/game/hero/2002/piece",
+          "texture/main/game/hero/2003/hero",
+          "texture/main/game/hero/2003/piece",
+          "texture/main/game/hero/2004/hero",
+          "texture/main/game/hero/2004/piece",
+          "texture/main/game/hero/2005/hero",
+          "texture/main/game/hero/2005/piece",
+          "texture/main/game/hero/2006/hero",
+          "texture/main/game/hero/2006/piece",
+          "texture/main/game/hero/2007/hero",
+          "texture/main/game/hero/2007/piece",
+          "texture/main/game/hero/2008/hero",
+          "texture/main/game/hero/2008/piece",
+          "texture/main/game/hero/2009/hero",
+          "texture/main/game/hero/2009/piece",
+          "texture/main/game/hero/2010/hero",
+          "texture/main/game/hero/2010/piece",
+          "texture/main/game/hero/2011/hero",
+          "texture/main/game/hero/2011/piece",
+          "texture/main/game/hero/2012/hero",
+          "texture/main/game/hero/2012/piece",
+          "texture/main/game/hero/2013/hero",
+          "texture/main/game/hero/2013/piece",
+          "texture/main/game/hero/2014/hero",
+          "texture/main/game/hero/2014/piece",
+          "texture/main/game/hero/2015/hero",
+          "texture/main/game/hero/2015/piece",
+          "texture/main/game/hero/2016/hero",
+          "texture/main/game/hero/2016/piece",
+          "texture/main/game/hero/2017/hero",
+          "texture/main/game/hero/2017/piece",
+          "texture/main/game/hero/2018/hero",
+          "texture/main/game/hero/2018/piece",
+          "texture/main/game/hero/2019/hero",
+          "texture/main/game/hero/2019/piece",
+          "texture/main/game/hero/2020/hero",
+          "texture/main/game/hero/2020/piece",
+          "texture/main/game/hero/2021/hero",
+          "texture/main/game/hero/2021/piece",
+          "texture/main/game/hero/2022/hero",
+          "texture/main/game/hero/2022/piece",
+          "texture/main/game/hero/2023/hero",
+          "texture/main/game/hero/2023/piece",
+          "texture/main/game/hero/2024/hero",
+          "texture/main/game/hero/2024/piece",
+          "texture/main/game/hero/2025/hero",
+          "texture/main/game/hero/2025/piece",
+          "texture/main/game/hero/2026/hero",
+          "texture/main/game/hero/2026/piece",
+          "texture/main/game/hero/2027/hero",
+          "texture/main/game/hero/2027/piece",
+          "texture/main/game/hero/2028/hero",
+          "texture/main/game/hero/2028/piece",
+          "texture/main/game/hero/2029/hero",
+          "texture/main/game/hero/2029/piece",
+          "texture/main/game/tiled/theme_1/type_1",
+          "texture/main/game/tiled/theme_1/type_2",
+          "texture/main/game/tiled/theme_1/type_3",
+          "texture/main/game/tiled/theme_10/type_1",
+          "texture/main/game/tiled/theme_10/type_2",
+          "texture/main/game/tiled/theme_10/type_3",
+          "texture/main/game/tiled/theme_2/type_1",
+          "texture/main/game/tiled/theme_2/type_2",
+          "texture/main/game/tiled/theme_2/type_3",
+          "texture/main/game/tiled/theme_3/type_1",
+          "texture/main/game/tiled/theme_3/type_2",
+          "texture/main/game/tiled/theme_3/type_3",
+          "texture/main/game/tiled/theme_4/type_1",
+          "texture/main/game/tiled/theme_4/type_2",
+          "texture/main/game/tiled/theme_4/type_3",
+          "texture/main/game/tiled/theme_5/type_1",
+          "texture/main/game/tiled/theme_5/type_2",
+          "texture/main/game/tiled/theme_5/type_3",
+          "texture/main/game/tiled/theme_6/5",
+          "texture/main/game/tiled/theme_6/type_1",
+          "texture/main/game/tiled/theme_6/type_2",
+          "texture/main/game/tiled/theme_6/type_3",
+          "texture/main/game/tiled/theme_7/type_1",
+          "texture/main/game/tiled/theme_7/type_2",
+          "texture/main/game/tiled/theme_7/type_3",
+          "texture/main/game/tiled/theme_8/type_1",
+          "texture/main/game/tiled/theme_8/type_2",
+          "texture/main/game/tiled/theme_8/type_3",
+          "texture/main/game/tiled/theme_9/type_1",
+          "texture/main/game/tiled/theme_9/type_2",
+          "texture/main/game/tiled/theme_9/type_3",
+          "texture/main/home/sz",
+          "texture/main/shou",
+          "texture/main/signView/1",
+          "texture/main/signView/2",
+          "texture/main/signView/3",
+          "texture/main/signView/4",
+          "texture/main/signView/5",
+          "texture/main/signView/6",
+          "texture/main/signView/7",
+          "texture/main/signView/jb2",
+          "texture/main/signView/tl",
+          "texture/main/successGold/gold",
+          "texture/main/successStrength/sign",
+          "texture/main/video",
+          "texture/platform/profile",
+          "texture/platform/shortcut",
+          "texture/polish/add_shortcut",
+          "texture/polish/audio",
+          "texture/polish/audio_title",
+          "texture/polish/back",
+          "texture/polish/check_reward",
+          "texture/polish/claimed",
+          "texture/polish/close",
+          "texture/polish/continue",
+          "texture/polish/fail_art",
+          "texture/polish/home",
+          "texture/polish/open_profile",
+          "texture/polish/panel",
+          "texture/polish/profile_art",
+          "texture/polish/profile_title",
+          "texture/polish/retry",
+          "texture/polish/settings_title",
+          "texture/polish/shortcut_art",
+          "texture/polish/shortcut_title",
+          "texture/polish/sky",
+          "texture/polish/skyfont",
+          "texture/polish/txt_level",
+          "texture/polish/txt_level_complete",
+          "texture/polish/txt_music",
+          "texture/polish/txt_paused",
+          "texture/polish/txt_ready",
+          "texture/polish/txt_sound_effects",
+          "texture/polish/txt_try_again",
+          "texture/polish/txt_x",
+          "texture/polish/vibration_off",
+          "texture/polish/vibration_on"
+        ],
+        "type": "cc.SpriteFrame",
+        "unknown_receiver": false,
+        "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
+      },
+      "assets/main/index.js:183144": {
         "not_executed": true,
         "reason": "LoadUtil.loadAudio has no production caller; verified across current complete program."
       },
-      "assets/main/index.js:179578": {
+      "assets/main/index.js:183749": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44334,7 +44480,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:199844": {
+      "assets/main/index.js:204709": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44480,7 +44626,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:200474": {
+      "assets/main/index.js:205339": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44492,7 +44638,7 @@
         "unknown_receiver": false,
         "reason": "The only generated bitmap font request is the explicit skyfont resource in PolishedUI.font."
       },
-      "assets/main/index.js:201828": {
+      "assets/main/index.js:207013": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44638,7 +44784,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:204832": {
+      "assets/main/index.js:210017": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44672,7 +44818,7 @@
         "unknown_receiver": false,
         "reason": "PoolMgr receives exact getUrl return literals from current production view classes; no external prefab input."
       },
-      "assets/main/index.js:242624": {
+      "assets/main/index.js:247809": {
         "kind": "load",
         "bundles": [
           "audio"
@@ -44693,7 +44839,7 @@
         "unknown_receiver": false,
         "reason": "SoundMgr calls bg and effect-name literals from all playEffect callers; finite exact source paths, separately verified against actual source below."
       },
-      "assets/main/index.js:296521": {
+      "assets/main/index.js:302137": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44839,22 +44985,22 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:307089": {
+      "assets/main/index.js:312705": {
         "delegated_sdk": true,
         "reason": "WxGameBox calls the platform SDK game portal load method, not cc.AssetManager; legacy cross-promotion disabled in HomeView."
       }
     },
     "escapes": {
-      "assets/main/index.js:180158": {
+      "assets/main/index.js:184329": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:210143": {
+      "assets/main/index.js:215328": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:210712": {
+      "assets/main/index.js:215897": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:210733": {
+      "assets/main/index.js:215918": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       }
     },
@@ -53277,5 +53423,192 @@
     },
     "data_digest_kind": "serialized-json-assets-v1",
     "data_digest": "5883bf8246b1ea5bacec56f50066bae4f269b0b44e5b5ccc6bfb9629a90c11a0"
+  },
+  "parking_rush_r39_reviewed": {
+    "schema": "reviewed_finite_resource_profile.v1",
+    "review": "Parking Rush R39 actual compiled call inventory, actual ArtTheme serialized catalog, ENUM_RESOURCE_TYPE, and guarded SkinVisuals names; strict source and semantic data fingerprints. Static finite-domain evidence only.",
+    "source_sha256": {
+      "game.js": "c91f7be77374e0a44078e5d9e76234e861191d155995afff8489167fd2538d89",
+      "main.js": "51c3439c5bd6a27a77bd4dd376708528902baaaaf03e3a37a41cef470457cbf1",
+      "adapter-min.js": "4a4d34c9a0dee8dba7924d260efb03b5c14dccb2fb0e787e649347ab04587067",
+      "ccRequire.js": "c6676df7e137c9b62edc66b72c7e4e8b0b4053be5d0f0ec408293967b6536a05",
+      "touch-coordinates.js": "94217956428a044743f46657fe12f27384e3f9e217249961e643a535aa414cb1",
+      "subpackages/skin_visuals/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/ui_redo/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/main/game.js": "0e02cc9fa38bea4a4b7c90e94beed5c5c18deffe9b09a68c198b4a0746f5cafe",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "src/settings.js": "07c0b3883e91412a0c5cdb4776167ff7e6b3de286ca88462badbed60b46f2d8e"
+    },
+    "resolutions": {
+      "main.js:4505": {
+        "not_executed": true,
+        "reason": "The exact current src/settings.js declares jsList:[]; map produces an empty script list, no plugin script requests."
+      },
+      "subpackages/main/game.js:2552": {
+        "bundles": [
+          "ui_redo"
+        ],
+        "unknown_receiver": false,
+        "reason": "ArtTheme.prepare assigns this static bundle only from loadBundle(\"ui_redo\"); all setters in exact program reviewed."
+      },
+      "subpackages/main/game.js:2824": {
+        "bundles": [
+          "ui_redo"
+        ],
+        "unknown_receiver": false,
+        "reason": "The ArtTheme bundle field is ui_redo; fixed paragraph_regular font request."
+      },
+      "subpackages/main/game.js:3054": {
+        "bundles": [
+          "ui_redo"
+        ],
+        "paths": [
+          "generated_digits"
+        ],
+        "unknown_receiver": false,
+        "reason": "ArtTheme loads digitFont from the exact serialized catalog JsonAsset subpackages/ui_redo/import/97/9764288f-2a32-4d24-b0d5-5037519455a1.json. Semantic JSON fingerprint pins the field."
+      },
+      "subpackages/main/game.js:3538": {
+        "bundles": [
+          "ui_redo"
+        ],
+        "paths": [
+          "actions",
+          "capsule",
+          "card",
+          "collection-tabs",
+          "concrete_texture",
+          "controls",
+          "copy_a",
+          "copy_b",
+          "digits",
+          "gameplay_portrait",
+          "garage_map_portrait",
+          "gift/gift_01",
+          "gift/gift_02",
+          "gift/gift_03",
+          "gift/gift_04",
+          "gift/gift_05",
+          "gift/gift_06",
+          "gift/gift_07",
+          "gift/gift_08",
+          "gift/gift_09",
+          "gift/gift_10",
+          "grass_texture",
+          "home_hero",
+          "home_portrait",
+          "icons",
+          "labels-a",
+          "labels-b",
+          "labels-c",
+          "labels-d",
+          "labels-e",
+          "labels-f",
+          "level_capsule",
+          "level_cards",
+          "logo",
+          "mission_illustration_clean",
+          "popup_illustrations_atlas",
+          "popup_panel",
+          "popup_panel_clear",
+          "resource_capsules",
+          "settings-actions",
+          "skill_buttons",
+          "skin_names_atlas_01",
+          "skin_names_atlas_02",
+          "state-buttons-wide",
+          "titles",
+          "tutorial-caption"
+        ],
+        "unknown_receiver": false,
+        "reason": "ArtTheme.frame accepts only keys present in catalog.frames, then loads that entry.path. Enumerated all distinct paths from the exact serialized production catalog; no wildcard."
+      },
+      "subpackages/main/game.js:110317": {
+        "local_method": {
+          "source": "subpackages/main/game.js",
+          "start": 157072,
+          "end": 159407,
+          "sha256": "f967206d6fef633bae79c79f560f64100cddc991d1459fb5273e15706bb33d93",
+          "delegate_sites": [
+            "subpackages/main/game.js:159299",
+            "subpackages/main/game.js:159337"
+          ]
+        },
+        "reason": "ResourceManager.loadRes is an authored local method, not Cocos.loadRes; exact body owns and independently inventories its two real loadDir calls. Only caller iterates ENUM_RESOURCE_TYPE."
+      },
+      "subpackages/main/game.js:159299": {
+        "bundles": [
+          "audio"
+        ],
+        "paths": [
+          ""
+        ],
+        "unknown_receiver": false,
+        "reason": "Only ENUM_RESOURCE_TYPE audio row enters audio && resource.bundle branch; bundle=audio, path empty, cc.AudioClip. loadDir enumerates actual catalog clips."
+      },
+      "subpackages/main/game.js:159337": {
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "prefab",
+            "type": "cc.Prefab",
+            "kind": "loadDir"
+          },
+          {
+            "bundle": "resources",
+            "path": "sprite",
+            "type": "cc.SpriteFrame",
+            "kind": "loadDir"
+          }
+        ],
+        "reason": "All calls of ResourceManager.loadRes originate in Index.loadStartup iterating the three production ENUM_RESOURCE_TYPE rows; non-audio rows are prefab/cc.Prefab and sprite/cc.SpriteFrame. No JSON row is enabled."
+      },
+      "subpackages/main/game.js:175962": {
+        "bundles": [
+          "skin_visuals"
+        ],
+        "paths": [
+          "skin_ambulance_top",
+          "skin_blue_breeze_top",
+          "skin_chapter_20_top",
+          "skin_chapter_60_top",
+          "skin_checkin_6_top",
+          "skin_checkin_7_top",
+          "skin_city_taxi_top",
+          "skin_dragon_dash_top",
+          "skin_fire_rescue_top",
+          "skin_gold_rally_top",
+          "skin_green_glide_top",
+          "skin_icecream_van_top",
+          "skin_neon_grid_top",
+          "skin_night_cruise_top",
+          "skin_pirate_ship_top",
+          "skin_police_patrol_top",
+          "skin_royal_road_top",
+          "skin_sakura_bloom_top",
+          "skin_silver_shift_top",
+          "skin_space_rider_top",
+          "skin_track_racer_top",
+          "skin_trail_rover_top",
+          "skin_vintage_cruise_top"
+        ],
+        "unknown_receiver": false,
+        "reason": "SkinVisuals.getFrame exits unless names.has(id); exact production Set contains 23 IDs. getBundle resolves only loadBundle(\"skin_visuals\"). Enumerate each allowed id+\"_top\"."
+      }
+    },
+    "escapes": {
+      "subpackages/main/game.js:157052": {
+        "reason": "This is the authored ResourceManager.prototype.loadRes definition, not an escaped Cocos method. Its one actual call site is resolved to the exact local-method function and its delegate sites.",
+        "local_method_sha256": "f967206d6fef633bae79c79f560f64100cddc991d1459fb5273e15706bb33d93",
+        "delegate_sites": [
+          "subpackages/main/game.js:159299",
+          "subpackages/main/game.js:159337"
+        ]
+      }
+    },
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "68a61e116de19bb76b95d34201d532efd3c8f2cd57cc70b4a6202cc93a8e85a1"
   }
 }

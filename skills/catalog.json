@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-28T14:25:07.482Z",
-  "treeHash": "b6cc7106aac061d45a79c343a972fc9029f10bc492d2f7bd07f1d88e594cf607",
+  "createdAt": "2026-10-28T17:26:02.748Z",
+  "treeHash": "27f970d9f291db28b27a669a61dfa15e9e6769c8bed424cd5d408ea82e9d4c7d",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -887,9 +887,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "e8b6543280577a5f1116a8afddaf19b35a190d88434cda434eb8965c4e77175c",
+      "treeHash": "8b095c3c2f6dc49b6f16b158b06751d68487435c015bde95409a300018c15e84",
       "fileCount": 303,
-      "bytes": 8980553,
+      "bytes": 9005969,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1115,8 +1115,8 @@
         },
         {
           "path": "references/button-state-check.md",
-          "hash": "5675c6e6eaf547f75094394e8b967135fb18149452bafbafea0b115dcda0ca92",
-          "size": 17374,
+          "hash": "a7e5221d330581ba984dacdc061a1893fa6bd3d5b4f09b187d1c1534245aaf7f",
+          "size": 18344,
           "executable": false
         },
         {
@@ -1169,8 +1169,8 @@
         },
         {
           "path": "references/delivery-and-handoff.md",
-          "hash": "dd890cd0024557ba3bf9f4d05a74fcb2ce0b9b5552b5c4652d190d1ce85d4718",
-          "size": 10064,
+          "hash": "28cfac66d338b8a230e4c10e9e6b2e9258acc6f64fa34d6660c5e2d7773bb153",
+          "size": 11416,
           "executable": false
         },
         {
@@ -1187,8 +1187,8 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "a52b5a7fc68d906f408a8e3cec31fa79ff8161cb8cb87d384cc7a36c91683fa6",
-          "size": 21239,
+          "hash": "7d107d2579f6095403e5c7ae9ef5f7dee7b20fdf8c96ff6f15cf75ad52c94f45",
+          "size": 21499,
           "executable": false
         },
         {
@@ -1259,14 +1259,14 @@
         },
         {
           "path": "references/item-acquisition.md",
-          "hash": "bab0cf9771ed1d10e878d4f79bd0f3884ec1a6844fb4ba40d6519d2b195ad22c",
-          "size": 3519,
+          "hash": "74445f05ee444d946b45da57262bf93309f5bffc44a8512ce134cc13090bcaaa",
+          "size": 3844,
           "executable": false
         },
         {
           "path": "references/knowledge-consolidation.md",
-          "hash": "d5bec4269437a888d28e4fd7c7db6ed9470a829b236a1cf8d6de1dfe7b8d11cc",
-          "size": 3440,
+          "hash": "1c91123a6c5a61dc2650ea2a2a3510f6187dbb44255fbb926ea8b318d5b7c50e",
+          "size": 5662,
           "executable": false
         },
         {
@@ -1361,14 +1361,14 @@
         },
         {
           "path": "references/mobile-motion-state-review.md",
-          "hash": "6ec48af349e2d1c6509591d466c8170e9508d2534c556d81d1e0724076b5b95a",
-          "size": 5388,
+          "hash": "e85f484247c9933920123d9095e97e032944f77f6405127761e27a388a5d58dd",
+          "size": 6328,
           "executable": false
         },
         {
           "path": "references/native-ad-local-repair.md",
-          "hash": "a67a8e82e028f7333742fb1047ac8a333f77a7d920fa87976884c1faef2b3e75",
-          "size": 3693,
+          "hash": "6dc30fc5392feaaa53c4376563d77c52bb2dac470689e19836db417801d7aa91",
+          "size": 5426,
           "executable": false
         },
         {
@@ -1505,14 +1505,14 @@
         },
         {
           "path": "references/startup-contract.md",
-          "hash": "aaa19c26e3b65bc554841a578dcdea56f7652012ffd12521030acc5d7b9539df",
-          "size": 10125,
+          "hash": "1ece207e520639c4d9b8fdaf7f31fc1f2a618d4e7a59336c2aa722f9df181f79",
+          "size": 10723,
           "executable": false
         },
         {
           "path": "references/startup-loading-timing.md",
-          "hash": "5cd6563b9ca3ffd46e08b2159b6c6b379e49d005066b1c60b8c23442bcba27bc",
-          "size": 14034,
+          "hash": "dce1375e38b6f2125ce055fd7c03e843f0bdb7a77796b2042425352e45a75f99",
+          "size": 14959,
           "executable": false
         },
         {
@@ -1769,8 +1769,8 @@
         },
         {
           "path": "scripts/audit_no_social_features.py",
-          "hash": "b88a6520541bd2756a2900cefa39c3741f547fdd723c46fcfab13aa78c637e63",
-          "size": 4347,
+          "hash": "1e160173170b583cab1f89f2c70c06fe05f6c1093f2c4c841d0dbe74a4c27596",
+          "size": 5114,
           "executable": false
         },
         {
@@ -1787,8 +1787,8 @@
         },
         {
           "path": "scripts/audit_packed_assets.py",
-          "hash": "3329d81dcaf8592b2397a8e69b299e7e2f309aff2e279eb892dd61a421c9d481",
-          "size": 17704,
+          "hash": "27a0f4ca5706aaaf34b2596ce9c75a4cb0330d06daec708982427c29be51d84e",
+          "size": 18039,
           "executable": false
         },
         {
@@ -2135,8 +2135,8 @@
         },
         {
           "path": "scripts/preview_touch_window.py",
-          "hash": "d45deb63508ee716bd399775c47f9b7bfd6a12721acfee06d4fda8871ba86dfd",
-          "size": 3800,
+          "hash": "a0c22a0be8ffcdfee32d1bc1893e4f94929a95f98861d9c819f7d3111503db60",
+          "size": 3653,
           "executable": false
         },
         {
@@ -2201,8 +2201,8 @@
         },
         {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "7cd48a90dc2c2c676cfd0e789926d2acc1c5725aea6d15028057a292039d40f8",
-          "size": 1950036,
+          "hash": "091cbe520351aa6950a40f7a9a96d12437b5ad07fb3c319bde8d40a32f37f073",
+          "size": 1964145,
           "executable": false
         },
         {
@@ -2471,8 +2471,8 @@
         },
         {
           "path": "scripts/test_no_social_features.py",
-          "hash": "5c2a9092aa05fd2886850441543ec56266f8af07d56f283f13888c7c79c1d5e7",
-          "size": 2245,
+          "hash": "fe86e461992bef31ac2f881d2c4f45a212485c7feb37ef18d0da872fb213df4b",
+          "size": 3272,
           "executable": false
         },
         {

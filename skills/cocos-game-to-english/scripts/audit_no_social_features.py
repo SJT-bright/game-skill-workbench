@@ -31,10 +31,19 @@ def audit(project,web=None,native=None,dumps=None):
    if p.suffix in{'.prefab','.fire','.scene','.json'}:
     try:data=json.loads(text)
     except ValueError:continue
+    # Cocos 2.4 compiled SpriteFrames carry a resource name, not a UI route.
+    # Exclude only the descriptor's name field; still inspect every other field,
+    # and never exempt cc.Node/scene/prefab records or runtime API calls.
+    sprite_descriptors=set()
+    if isinstance(data,list) and len(data)==11 and data[0]==1 and data[3]==['cc.SpriteFrame'] and isinstance(data[5],list):
+     for descriptor in data[5]:
+      if isinstance(descriptor,dict) and all(key in descriptor for key in ('rect','offset','originalSize','capInsets')) and all(isinstance(descriptor[key],list) for key in ('rect','offset','originalSize','capInsets')):
+       sprite_descriptors.add(id(descriptor))
     def walk(x):
      if isinstance(x,dict):
       for k,v in x.items():
-       if k in{'_name','name','text','string','_string','path','open','button','screen','purpose'}and isinstance(v,str)and ENTITY.search(v):add(p,'ui_or_route',v)
+       resource_name=k=='name' and id(x) in sprite_descriptors
+       if not resource_name and k in{'_name','name','text','string','_string','path','open','button','screen','purpose'}and isinstance(v,str)and ENTITY.search(v):add(p,'ui_or_route',v)
        walk(v)
      elif isinstance(x,list):
       for v in x:walk(v)

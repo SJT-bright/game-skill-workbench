@@ -10,3 +10,12 @@
 6. **绑定证据。** adapter 形态矩阵按 ad-storage-evidence-contract.md v2；玩家链结果另保留逐入口的实际变更、SDK 次数与当前 Native/runner/宿主身份，并登记现有问题账本的可执行 retest。只有材料检查通过不能标玩家链通过；只列测试数量不能替代业务结果。
 
 官方接口参考（2026-10-27核验）：[Storage](https://developers.tiktok.com/docs/en/mini-games-sdk-storage) 返回任意存储内容并提供 keys；文档未保证缺键返回 false，不能把注入假设当平台事实。[IAA](https://developers.tiktok.com/docs/en/mini-games-sdk-iaa) 的 show Promise 表示展示结果，观看完成以 onClose.isEnded 为准。平台接口变化时复核文档与实际 adapter，保留本地假设和原机观察的区别。
+
+
+## read/undefined 与桥接存储域（2026-10-28）
+
+- 先追踪赋值与异常：`raw = storageGet()` 抛错后局部 raw 仍为 undefined；报错中的 undefined 不证明平台返回了 undefined，也不证明存档是 Boolean。保留实际 exception name/message 和阶段，未知原因不写成已确认。
+- TikTok Native 的正式存储以当前官方 SDK 合同为准；若启动/广告已使用 `TTMinis.game`，检查 Cocos adapter 是否仍硬编码旧 `tt`。必须构造两者返回不同的宿主：旧桥返回Boolean，官方桥保留数字关卡/库存；同一玩家链核原进度、广告到账、重开、消费和原异常值保护。不能让两个命名空间始终共享同一组函数，使旧桥缺陷在模拟中消失。
+- 读值、键存在性、写入与读回必须属于同一个 adapter/存储域。不得用 TTMinis 的 keys 证明 tt 的键不存在；优先复用 adapter 的 length/key，不能仅因另一个命名空间函数存在就切换。
+- 涉及此类修复，除正常/坏档外增加同宿主旧失败→新通过：缺键读取抛异常但同域索引确认不存在；另一个 SDK 命名空间索引失效或不同域。已存在键读失败、索引不可用/不合法时保留原档，不写默认值；已存 Boolean 不凭猜测迁移成 0/1。原机原因未取得时将这些写成本地可复现机制，不冒称已复现原手机根因。
+- 修改前冻结已交付 Native 与原始证据，在新版本目录写代码及回执；复制宿主时先核实际 symlink/执行字节指向新候选。独立重跑用新测试存档 ID；验证重开时才复用同一 ID。不能覆盖旧日志后继续沿用原回执，也不能给旧报告刷新哈希替代运行。

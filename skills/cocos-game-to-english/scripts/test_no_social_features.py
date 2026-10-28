@@ -15,6 +15,15 @@ class NoSocialTests(unittest.TestCase):
   for name in ['rank','Rankings','好友排行','share','Invite','分享给好友']:
    with self.subTest(name=name):
     (self.root/'assets/home.prefab').write_text(json.dumps([{'_name':name,'_active':False}]));self.assertFalse(audit(self.root)['passed'])
+ def test_compiled_sprite_frame_name_is_not_a_ui_route(self):
+  frame=[1,['texture'],['_textureSetter'],['cc.SpriteFrame'],0,[{'name':'share1','rect':[0,0,80,80],'offset':[0,0],'originalSize':[80,80],'capInsets':[0,0,0,0]}],[0],0,[0],[0],[0]]
+  (self.root/'assets/sprite.json').write_text(json.dumps(frame));self.assertTrue(audit(self.root)['passed'])
+  frame[5][0]['button']='Share';(self.root/'assets/sprite.json').write_text(json.dumps(frame));self.assertFalse(audit(self.root)['passed'])
+ def test_node_record_inside_compiled_container_still_rejected(self):
+  frame=[1,[],[],['cc.Node'],0,[{'name':'share','rect':[],'offset':[],'originalSize':[],'capInsets':[]}],[],0,[],[],[]]
+  (self.root/'assets/node.json').write_text(json.dumps(frame));self.assertFalse(audit(self.root)['passed'])
+ def test_sprite_shape_without_exact_type_is_not_exempt(self):
+  (self.root/'assets/node.json').write_text(json.dumps({'name':'share','rect':[],'offset':[],'originalSize':[],'capInsets':[]}));self.assertFalse(audit(self.root)['passed'])
  def test_removed_sharing_texture(self):
   (self.root/'assets/share.png.meta').write_text('{}');self.assertFalse(audit(self.root)['passed'])
  def test_normal_score_progress_profile_and_shared_config(self):

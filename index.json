@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "527e15b0-edf9-4bac-bc7e-3c46e46948b3",
+      "skillId": "s-4e976859708a939065d7",
+      "directory": "cocos-tiktok-package-check",
+      "name": "cocos-tiktok-package-check",
+      "version": "v12",
+      "createdAt": "2026-10-28T14:25:43.859Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "80eb9f131de4864e15ae0e3392ad8c3c73b6f58f664ddf8afbed6864a1aba171",
+      "bytes": 182028,
+      "fileCount": 29
+    },
+    {
       "id": "d54175f5-bf5a-4f49-8b25-da6e55328a3b",
       "skillId": "s-16601c48e7f1b99915ae",
       "directory": "mobile-touch-computer-use",

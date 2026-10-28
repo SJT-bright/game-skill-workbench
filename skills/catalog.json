@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-28T06:39:10.156Z",
-  "treeHash": "cc2a785d1971d56090c2927d52a5479cb9083753b101a04f2c3ab5d4cc03a8c2",
+  "createdAt": "2026-10-28T08:21:45.281Z",
+  "treeHash": "6ff4668c2725ea381604540f5d2cfc835c61ff34674effa8dbe66cf425b02eb7",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -203,9 +203,9 @@
     },
     {
       "name": "cocos-game-from-starter",
-      "treeHash": "b715944757df959738c3586e9c71617c06323608e34453fc353b6e0a31406b12",
+      "treeHash": "5a2d0f1e6aba06c8b8c782dea369db5218d4730d19a3b003dbd9b9af2c69f097",
       "fileCount": 99,
-      "bytes": 253822,
+      "bytes": 254220,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -215,8 +215,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "304a753002a6c88e39e7c33f239e764383d47d069250dcc8af69e86599af3d32",
-          "size": 4391,
+          "hash": "2e16e74e61b728255c0e09b13d050588efad9711b80854cdb261a19ace8344af",
+          "size": 4789,
           "executable": false
         },
         {

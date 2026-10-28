@@ -89,3 +89,5 @@ Cocos/TikTok任务同时读取 [通用问题适用范围与重点](../cocos-game
 ## 用户试玩必须真实启用触摸模拟（用户2026-10-27）
 
 固定手机 iframe 只证明显示比例。默认用户试玩必须由 `serve_preview.py --snapshot --keep` 调用 `preview_touch_window.py`，在首次导航前设置移动 UA、is_mobile、has_touch、viewport/DPR、CDP TouchEmulation 与 `setEmitTouchEventsForMouse(configuration=mobile)`。普通鼠标按下/拖动/松开须产生可信 touchstart/move/end；读回游戏所在 frame 的 maxTouchPoints、Cocos touches 能力和一次实际操作结果后交接。禁止普通 Chrome new-window 代替触控试玩；失败不可静默回退。每个URL使用独立持久目录保留该试玩存档，不接管用户Chrome配置。服务退出后关闭它自己持有的窗口；用户关闭窗口同样结束对应上下文。
+
+**每轮修改主动交预览（用户2026-10-28）**：每轮游戏代码、美术、玩法、广告或打包相关修改完成后，主动在回复中给出当前同版本可点击的固定手机预览链接，无需等用户再次索取。按[用户本地试玩](../cocos-game-to-english/references/user-phone-preview.md)执行；交接前确认服务可访问且指向本轮完成的构建。

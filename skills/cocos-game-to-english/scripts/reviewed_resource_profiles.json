@@ -43969,7 +43969,7 @@
       "touch-coordinates.js": "3a829933141b8e2a3d2c3a403929335b71b2f7a268b57882f476d44ebe8674eb",
       "src/settings.js": "5b408dbb309967f6e30697199738fddf083472373e09c4a6fcb264c9222d9c92",
       "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
-      "assets/main/index.js": "8d53424f26c391a1a9fa7088c426657007778e7a004a0d6c7a7e17604d0d6e14",
+      "assets/main/index.js": "30a78aabd6740e34bb0c91b57e4a382783f1cd575f4d1903d579243ed1a996a9",
       "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
       "subpackages/audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5"
     },
@@ -44132,7 +44132,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:67714": {
+      "assets/main/index.js:68086": {
         "kind": "loadDir",
         "bundles": [
           "resources"
@@ -44144,7 +44144,7 @@
         "unknown_receiver": false,
         "reason": "Exact GameView ResourceRecovery.load directory=true tile-domain request."
       },
-      "assets/main/index.js:139706": {
+      "assets/main/index.js:140078": {
         "kind": "loadDir",
         "bundles": [
           "resources"
@@ -44184,7 +44184,7 @@
         "unknown_receiver": false,
         "reason": "HeroItem loads the finite Global.SKIN_COUNT hero directories; each directory keeps its complete required pieces."
       },
-      "assets/main/index.js:144663": {
+      "assets/main/index.js:145035": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44330,11 +44330,11 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:183144": {
+      "assets/main/index.js:183516": {
         "not_executed": true,
         "reason": "LoadUtil.loadAudio has no production caller; verified across current complete program."
       },
-      "assets/main/index.js:183749": {
+      "assets/main/index.js:184121": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44480,7 +44480,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:204709": {
+      "assets/main/index.js:205081": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44626,7 +44626,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:205339": {
+      "assets/main/index.js:205711": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44638,7 +44638,7 @@
         "unknown_receiver": false,
         "reason": "The only generated bitmap font request is the explicit skyfont resource in PolishedUI.font."
       },
-      "assets/main/index.js:207013": {
+      "assets/main/index.js:207385": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44784,7 +44784,7 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:210017": {
+      "assets/main/index.js:210389": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44818,7 +44818,7 @@
         "unknown_receiver": false,
         "reason": "PoolMgr receives exact getUrl return literals from current production view classes; no external prefab input."
       },
-      "assets/main/index.js:247809": {
+      "assets/main/index.js:248181": {
         "kind": "load",
         "bundles": [
           "audio"
@@ -44839,7 +44839,7 @@
         "unknown_receiver": false,
         "reason": "SoundMgr calls bg and effect-name literals from all playEffect callers; finite exact source paths, separately verified against actual source below."
       },
-      "assets/main/index.js:302137": {
+      "assets/main/index.js:302509": {
         "kind": "load",
         "bundles": [
           "resources"
@@ -44985,22 +44985,22 @@
         "unknown_receiver": false,
         "reason": "AtlasMgr.setSprite domain from actual AST literal paths, Global skin/theme bounds, SignView seven slots and MissionPanel shortcut/profile; exact catalog checks all expanded requests."
       },
-      "assets/main/index.js:312705": {
+      "assets/main/index.js:313077": {
         "delegated_sdk": true,
         "reason": "WxGameBox calls the platform SDK game portal load method, not cc.AssetManager; legacy cross-promotion disabled in HomeView."
       }
     },
     "escapes": {
-      "assets/main/index.js:184329": {
+      "assets/main/index.js:184701": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:215328": {
+      "assets/main/index.js:215700": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:215897": {
+      "assets/main/index.js:216269": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       },
-      "assets/main/index.js:215918": {
+      "assets/main/index.js:216290": {
         "reason": "ResourceRecovery selects loadResDir/loadRes by its directory boolean, then calls selected function once; reviewed below. LoadUtil method reference has no caller."
       }
     },

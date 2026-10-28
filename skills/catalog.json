@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-28T08:23:56.874Z",
-  "treeHash": "d1dba4deb6b76cfc6cae566e6656d68223cf95ca7ee7cb1e4df162eca4fcbe4c",
+  "createdAt": "2026-10-28T14:25:07.482Z",
+  "treeHash": "b6cc7106aac061d45a79c343a972fc9029f10bc492d2f7bd07f1d88e594cf607",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2713,9 +2713,9 @@
     },
     {
       "name": "cocos-tiktok-package-check",
-      "treeHash": "aeaa2aebf521f0d03bfe2a4906a5da05aed541f453e2e1c833d88437faa41c68",
+      "treeHash": "80eb9f131de4864e15ae0e3392ad8c3c73b6f58f664ddf8afbed6864a1aba171",
       "fileCount": 29,
-      "bytes": 181739,
+      "bytes": 182028,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2749,8 +2749,8 @@
         },
         {
           "path": "references/check-contract.md",
-          "hash": "0146248d4ee31037240f8cfed69bb5fb5de72d185b40680ff37f750554215813",
-          "size": 12452,
+          "hash": "58fd91c9781ad3c7e8686fc4ce77b609dd543ae97bbd03858482152b78d124c9",
+          "size": 12741,
           "executable": false
         },
         {

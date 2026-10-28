@@ -87,3 +87,5 @@ JS依赖检查使用随工具固定的Acorn 8.15.0（MIT，scripts/vendor/ACORN-
 - **实际接线**：正式 writer 的 Native 前检、轻量 writer 的写包前检、ZIP 回读/交付检查继续调用原共享资源和启动门禁。更新解析器时保留正常/旧格式对照与“缺图拒绝、无最终ZIP、启动器未运行”回归；只改文案不算接入。
 
 工具回归：`test_packed_native_textures.py`、`test_startup_business_contract.py`；轻量 writer/ZIP 接线回归：`cocos-tiktok-package-check/scripts/test_gate_order_and_identity.py`。这些是检查器校准，游戏与账号的原始材料留项目，不打进通用 Skill。
+
+- Cocos 2.4 压缩序列化中的 `cc.SpriteFrame` 描述符 `name` 是资源名，不当作 UI/路由；检查器只豁免精确类型与结构的该字段，仍拦截节点、按钮、隐藏路由、描述符其他功能字段及分享API。对应回归 `test_no_social_features.py`。

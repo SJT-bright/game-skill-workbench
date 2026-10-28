@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "98f7a95d-163d-4a6e-9fd3-c2e5cda3e402",
+      "skillId": "s-4e3f250ac61da7fad00b",
+      "directory": "cocos-game-from-starter",
+      "name": "cocos-game-from-starter",
+      "version": "v7",
+      "createdAt": "2026-10-28T08:22:20.706Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "5a2d0f1e6aba06c8b8c782dea369db5218d4730d19a3b003dbd9b9af2c69f097",
+      "bytes": 254220,
+      "fileCount": 99
+    },
+    {
       "id": "31c96f31-8b7b-4912-aa16-32bb767deda1",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

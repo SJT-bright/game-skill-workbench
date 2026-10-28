@@ -33,3 +33,5 @@ description: "重做或局部修改Cocos游戏美术、按钮、图片字、图�
 适用性与故障修复按[通用问题规范](../cocos-game-to-english/references/feedback-regressions.md)；完工沉淀按[去重维护](../cocos-game-to-english/references/knowledge-consolidation.md)，入口只引用主规范。
 
 受影响输入的执行器、预检和结果字段统一按[Chrome 触摸运行合同](../cocos-game-to-english/references/google-touch-runtime.md)与[触摸预检矩阵](../cocos-game-to-english/references/chrome-touch-preflight-matrix.md)执行。
+
+**每轮修改主动交预览（用户2026-10-28）**：每轮游戏代码、美术、玩法、广告或打包相关修改完成后，主动在回复中给出当前同版本可点击的固定手机预览链接，无需等用户再次索取。按[用户本地试玩](../cocos-game-to-english/references/user-phone-preview.md)执行；交接前确认服务可访问且指向本轮完成的构建。

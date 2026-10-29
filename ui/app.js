@@ -75,6 +75,7 @@ window.dock.onState(s=>{const stableTab=state?.collapsed&&s.collapsed&&state.doc
 // Only the clock span changes between samples; forms, selection, and menus stay intact.
 setInterval(()=>{if(document.hidden||state?.collapsed)return;for(const node of document.querySelectorAll('[data-run-ms][data-sampled-at]')){const base=Number(node.dataset.runMs),sample=Number(node.dataset.sampledAt);if(Number.isFinite(base)&&Number.isFinite(sample))node.textContent='本轮 '+duration(base+Math.max(0,Date.now()-sample));}},1000);
 
-document.addEventListener('dragover',e=>{if([...e.dataTransfer?.types||[]].includes('Files')){e.preventDefault();document.body.classList.add('project-drag-over');}});
+const acceptProjectDrag=e=>{if([...e.dataTransfer?.types||[]].includes('Files')){e.preventDefault();e.dataTransfer.dropEffect='copy';document.body.classList.add('project-drag-over');}};
+document.addEventListener('dragenter',acceptProjectDrag);document.addEventListener('dragover',acceptProjectDrag);
 document.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('project-drag-over');});
 document.addEventListener('drop',async e=>{e.preventDefault();document.body.classList.remove('project-drag-over');try{const files=[...e.dataTransfer.files];if(files.length!==1)return toast('每次拖入一个游戏文件夹');if(!window.dock.filePath)return toast('浏览器预览不复制本机文件，请在桌面客户端导入');const source=window.dock.filePath(files[0]);if(state.collapsed)await call('expand');importDialog(source);}catch(err){toast(err.message);}});

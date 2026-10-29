@@ -27,6 +27,7 @@ jobs:
           ARCH: arm64
         run: |
           npm run build:mac
+          node scripts/build-skill-bundles.cjs
           version=$(node -p "require('./package.json').version")
           mkdir -p release
           ditto -c -k --keepParent "dist/$version/游戏工作台.app" "release/GameDesk-$version-mac-arm64.zip"

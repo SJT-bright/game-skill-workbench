@@ -1,0 +1,19 @@
+{
+  "schema": "checkin_config.v1",
+  "title": "Daily Reward",
+  "mode": "cumulative",
+  "reset_hour": 0,
+  "R": 50,
+  "note": "Remake (user 2026-10-27): R = B = normal_level_coins of unlock_table.json (this example: B = 50). Coins: day 1 = 1B, day 3 = 2B, day 5 = 3B, day 7 = 6B. Skins are existing common/rare skins of the 20; owned -> fallback coins. Use energy only in games with an energy system.",
+  "days": [
+    {"day": 1, "rewards": [{"type": "coins", "amount": 50}]},
+    {"day": 2, "rewards": [{"type": "item", "id": "hint", "amount": 2}]},
+    {"day": 3, "rewards": [{"type": "coins", "amount": 100}]},
+    {"day": 4, "rewards": [{"type": "item", "id": "hint", "amount": 3}]},
+    {"day": 5, "rewards": [{"type": "coins", "amount": 150}]},
+    {"day": 6, "rewards": [{"type": "skin", "id": "checkin_skin_01", "fallback_coins": 150}]},
+    {"day": 7, "big": true, "title": "Mystery Gift",
+     "rewards": [{"type": "coins", "amount": 300}, {"type": "skin", "id": "checkin_skin_02", "fallback_coins": 250},
+                 {"type": "item", "id": "hint", "amount": 3}]}
+  ]
+}

@@ -7,3 +7,5 @@
 历史内容在发布端按内容哈希去重；订阅端只保留当前版本与轻量索引，恢复历史需主动下载。下载校验失败不替换当前版本。提示词/附件生成与真实发送、AI 执行完成分开显示。
 
 必要验证：`npm test`，原生 smoke test 与 Mac 构建。Windows 产物结构检查不能代替 Windows 实机运行。测试使用临时数据目录，退出测试实例，用户交付预览另有明确用途。
+
+用户于2026-10-29要求完整英化/重塑ZIP并正式发布；为补齐当前英化入口的实际依赖，allowlist增补cocos-game-check、remake-core、remake-art，共18项。仍排除本机专用cocos-game-finished-product-check。界面仅显示两个包，内部组件按需组合。

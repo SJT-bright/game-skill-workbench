@@ -1,0 +1,179 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-28.english-simple.5",
+  "skill": "remake-art",
+  "previous_provenance_sha256": "f426146b9f849647cbe2275b7db8b91f95daf1306393c6d6e214b88f05001c8c",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "439592d2e80b780799587c5693fa0e5c2111cec3a88280b75d3e4ffaa7887eb0",
+      "bytes": 5780
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
+      "bytes": 353
+    },
+    {
+      "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+      "sha256": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "bytes": 744350
+    },
+    {
+      "path": "references/actor-pose-handoffs.md",
+      "sha256": "3ebfe8a468ed53bfa4793b12665d334cbf76216550421d0e22be7bdfdad45343",
+      "bytes": 5476
+    },
+    {
+      "path": "references/art-before-trial.md",
+      "sha256": "c05650a7a6a0a92ef686063acf86defe21ecbe4781b3d233980e1967cf5a2dbd",
+      "bytes": 5289
+    },
+    {
+      "path": "references/artwork-and-feedback.md",
+      "sha256": "5743e90346e6b64f316f31fb99eeb17eb0f39750e731e8dcdfdd71c3ed0f74e3",
+      "bytes": 23060
+    },
+    {
+      "path": "references/atlas-slice-integrity.md",
+      "sha256": "0121dd76de6a8437d244b377d4dd043708f578cabc7deb4d5fcba8093a34fef3",
+      "bytes": 5298
+    },
+    {
+      "path": "references/button-group-review.md",
+      "sha256": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+      "bytes": 2705
+    },
+    {
+      "path": "references/capsule-content-fit.md",
+      "sha256": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+      "bytes": 1278
+    },
+    {
+      "path": "references/card-ornament-layout-review.md",
+      "sha256": "eee10888defc6ed5f687e0f2e319b52747780ac7486d1f8407dbf53c66b8e1ee",
+      "bytes": 3654
+    },
+    {
+      "path": "references/card-text-fit-review.md",
+      "sha256": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+      "bytes": 1734
+    },
+    {
+      "path": "references/collection-preview-review.md",
+      "sha256": "c227e3a52691dbfee0ef1790faea76c3800d240f6112280ceda3dfa65cea5413",
+      "bytes": 2049
+    },
+    {
+      "path": "references/common-game-components.md",
+      "sha256": "3d79a10b9296d332d87753d5bbb180d000ac0bb2a42c0978e507aca69ad38737",
+      "bytes": 14217
+    },
+    {
+      "path": "references/dynamic-visual-review.md",
+      "sha256": "4e06f44dd40c69ea00b45861e086efd4b6d7f0ea7cc54d09be0ad20b2bcd8c6a",
+      "bytes": 4333
+    },
+    {
+      "path": "references/full-visual-review.md",
+      "sha256": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
+      "bytes": 11847
+    },
+    {
+      "path": "references/large-background-static-review.md",
+      "sha256": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+      "bytes": 2140
+    },
+    {
+      "path": "references/local-ui-contract.md",
+      "sha256": "14e2349cd29d9c2a08c32355986b858f3c6a057a1f69669054aa5a2f71a504d3",
+      "bytes": 3999
+    },
+    {
+      "path": "references/mobile-button-size-and-home-layout.md",
+      "sha256": "0400d05ccf6d967c5a9102c8e96526ef734420fa876670d754b451e2941bbacf",
+      "bytes": 7141
+    },
+    {
+      "path": "references/page-richness.md",
+      "sha256": "e67e745f15177b59dbdd2636ec70f4cac14f8c5714c45c1041b6e2ca17b997b6",
+      "bytes": 79394
+    },
+    {
+      "path": "references/panel-composite-review.md",
+      "sha256": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+      "bytes": 1843
+    },
+    {
+      "path": "references/phone-preview-boundary.md",
+      "sha256": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+      "bytes": 2724
+    },
+    {
+      "path": "references/standalone-alpha-review.md",
+      "sha256": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+      "bytes": 2237
+    },
+    {
+      "path": "references/stat-digit-runtime-review.md",
+      "sha256": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
+      "bytes": 1699
+    },
+    {
+      "path": "references/style-limits.md",
+      "sha256": "1fb83f9ec0ade9be7cde6e3956530fb84731c0dcafe0c96e3e6d225555f4103e",
+      "bytes": 21628
+    },
+    {
+      "path": "references/text-backplate-review.md",
+      "sha256": "0558302863e92c9b2c75e4acaf3bc5219e4b4da81066d9a7930a3e2175bf2084",
+      "bytes": 2959
+    },
+    {
+      "path": "references/theme-readability.md",
+      "sha256": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
+      "bytes": 2118
+    },
+    {
+      "path": "references/ui-style-and-samples.md",
+      "sha256": "a5a1b1ec4c6f8f92a6e579cce5455d42c74eee96754400de2e77e400bb652389",
+      "bytes": 15021
+    },
+    {
+      "path": "scripts/check_button_group.py",
+      "sha256": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
+      "bytes": 2024
+    },
+    {
+      "path": "scripts/check_card_layout.py",
+      "sha256": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
+      "bytes": 4910
+    },
+    {
+      "path": "scripts/check_collection_preview.py",
+      "sha256": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
+      "bytes": 2573
+    },
+    {
+      "path": "scripts/check_native_sprite_sources.py",
+      "sha256": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
+      "bytes": 9544
+    },
+    {
+      "path": "scripts/check_phone_boundary.py",
+      "sha256": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+      "bytes": 3800
+    },
+    {
+      "path": "scripts/test_native_sprite_sources.py",
+      "sha256": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
+      "bytes": 3130
+    },
+    {
+      "path": "scripts/test_source_residue.py",
+      "sha256": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+      "bytes": 3144
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "游戏Skill总合同与工具库"
+  short_description: "共用规则、症状→板块路由、共享脚本；不确定用哪个板块时先看这里"
+  default_prompt: "使用 $remake-core 告诉我这个问题该用哪个板块 Skill 处理，以及改了以后要回查哪些板块。"

@@ -73,7 +73,7 @@ IPHONE_UA='Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/60
 DEVICES={'iphone_15':{'viewport':{'width':393,'height':852},'dpr':3,'user_agent':IPHONE_UA},          # tall ratio (default)
          'iphone_se':{'viewport':{'width':375,'height':667},'dpr':2,'user_agent':IPHONE_UA},          # short 9:16 ratio
          'iphone_15_pro_max':{'viewport':{'width':430,'height':932},'dpr':3,'user_agent':IPHONE_UA}}
-PURPOSES={'home','result_win','result_fail','league','shop','skins','settings','settings_sound','map','checkin','pause','revive','trial','tutorial','gift','reward','other'}
+PURPOSES={'home','result_win','result_fail','result_win_repeat','result_fail_repeat','league','shop','skins','settings','settings_sound','map','checkin','pause','revive','trial','tutorial','gift','reward','other'}
 from urllib.parse import urlsplit
 
 OBSERVER = """() => {

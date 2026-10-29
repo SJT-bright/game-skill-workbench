@@ -6,17 +6,16 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../ui/app.js')
 function harness(patch={}){
  const app={innerHTML:'',addEventListener(){}},modal={addEventListener(){}},listeners={},calls=[];
  let onState;const initial={games:[],installed:{},index:{releases:[]},settings:{},sources:[],collapsed:true,updateNotices:[],...patch};
- const context=vm.createContext({document:{querySelector:q=>q==='#app'?app:q==='#modal'?modal:null,querySelectorAll:()=>[],addEventListener:(event,fn)=>listeners[event]=fn,body:{classList:{toggle(){}},dataset:{}}},window:{dock:{call:async(method,value)=>{calls.push([method,value]);return initial;},onState:fn=>onState=fn}},setInterval(){},setTimeout(){},clearTimeout(){},console});
+ const context=vm.createContext({SkillCategories:require('../ui/skill-categories.js'),ThreadSelection:require('../ui/thread-selection.js'),document:{querySelector:q=>q==='#app'?app:q==='#modal'?modal:null,querySelectorAll:()=>[],addEventListener:(event,fn)=>listeners[event]=fn,body:{classList:{toggle(){}},dataset:{}}},window:{dock:{call:async(method,value)=>{calls.push([method,value]);return initial;},onState:fn=>onState=fn}},setInterval(){},setTimeout(){},clearTimeout(){},console});
  vm.runInContext(source,context);vm.runInContext('state='+JSON.stringify(initial),context);
  return {app,calls,run:code=>vm.runInContext(code,context),emit:s=>onState(s),click:async dataset=>listeners.click({target:{closest:selector=>selector==='button,[data-game]'?{dataset,hasAttribute:()=>false}:null}}),initial};
 }
-test('Remote installed Skill and release win over same-name local copies in either order',()=>{
- for(const entries of [[{skillId:'local',name:'shared',local:true},{skillId:'remote',name:'shared',id:'v2'}],[{skillId:'remote',name:'shared',id:'v2'},{skillId:'local',name:'shared',local:true}]]){
-  const ui=harness({installed:Object.fromEntries(entries.map(x=>[x.skillId,x]).concat([['private',{skillId:'private',name:'private',local:true}]])),index:{releases:[{skillId:'remote',name:'shared',id:'v3'}]}});
-  assert.equal(ui.run('latest().find(x=>x.name==="shared").id'),'v3');
-  assert.equal(ui.run('usableSkills().find(x=>x.name==="shared").skillId'),'remote');
-  assert.equal(ui.run('usableSkills().some(x=>x.name==="private")'),true);
- }
+test('Only English and remake bundles appear even with many private and supporting Skills installed',()=>{
+ const entries=['cocos-game-to-english','cocos-game-from-starter','game-audio-library','cocos-game-finished-product-check'].map(name=>({skillId:name,name,local:true}));
+ const ui=harness({installed:Object.fromEntries(entries.map(x=>[x.skillId,x]))});
+ assert.equal(ui.run('usableSkills().length'),2);
+ assert.equal(ui.run('latest().map(x=>x.skillId).join(",")'),'bundle-english,bundle-remake');
+ assert.equal(ui.run('usableSkills().some(x=>x.name.includes("finished"))'),false);
 });
 test('Installed updates remain unread and pinned notices do not claim installation',async()=>{
  const ui=harness({updateNotices:[{id:'v2',kind:'skill',status:'updated'},{id:'v3',kind:'skill',status:'pinned'}]});

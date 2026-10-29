@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-27.economy-v4",
+  "revision": "2026-10-27.remake-v7",
   "skill": "grok-delegate",
-  "previous_provenance_sha256": "ca361b839e0bc4994ca4635c4fb0d44432d36dafba1734e6c39184606480eeed",
+  "previous_provenance_sha256": "e913f0b78997ac824056407a59a40532e42df662703e0bd156c678166ae95664",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {

@@ -36,3 +36,7 @@ test('Settings show real versions, checked times, and escaped sync errors',()=>{
  const ui=harness({version:'0.2.3',lastCheck:'2026-10-27T02:00:00Z',lastError:'<sync failed>',appUpdate:{available:true,manifest:{version:'0.2.4'},checkedAt:'2026-10-27T03:00:00Z'}});
  const html=ui.run('settings()');assert.match(html,/0\.2\.3/);assert.match(html,/0\.2\.4/);assert.match(html,/最近同步/);assert.match(html,/&lt;sync failed&gt;/);assert.match(html,/检查/);
 });
+test('Two-package view preserves opt-in component version history and restore actions',()=>{
+ const ui=harness({installed:{english:{skillId:'english',name:'cocos-game-to-english',id:'v2',local:false}},index:{releases:[{skillId:'english',name:'cocos-game-to-english',id:'v2',version:'v2',summary:'latest'},{skillId:'english',name:'cocos-game-to-english',id:'v1',version:'v1',summary:'older'}]}});
+ ui.run('histories.add("bundle-english")');const html=ui.run('skills()');assert.match(html,/data-history="bundle-english"/);assert.match(html,/data-restore="v1"/);assert.match(html,/当前使用/);assert.match(html,/cocos-game-to-english · v1/);
+});

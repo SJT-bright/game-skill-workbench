@@ -1,0 +1,67 @@
+{
+  "id": "8bb7232c-cfa6-4eed-bc79-1c43c8f382c3",
+  "skillId": "s-5a9f8b608f84c10c43c3",
+  "directory": "ego-browser",
+  "name": "ego-browser",
+  "version": "v4",
+  "createdAt": "2026-10-29T02:32:01.033Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "aa4323f0468028c59aa75d15a00fac27f587e277fbd4908d60ef31c05fe1a5dc",
+  "bytes": 30466,
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "dc80661576f097b566fe4768ab98df55850f0719aad8d84e9e66b6f7881b9254",
+      "size": 1382,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
+      "size": 1594,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "81a941e83feb556827d72aa98d7bc97a909294e386ff9f6a1817de92e8767b89",
+      "size": 271,
+      "executable": false
+    },
+    {
+      "path": "assets/composer-icon.png",
+      "hash": "2822b28752520f2a5506cb0693c8db2fd1ec0345806454b5f92d999b84b5bc1f",
+      "size": 3967,
+      "executable": false
+    },
+    {
+      "path": "assets/logo.png",
+      "hash": "cec732e29ea3b03d8920b28d912306f43651186dc2f4a488800da9db0a50f993",
+      "size": 8612,
+      "executable": false
+    },
+    {
+      "path": "references/clearing-state.md",
+      "hash": "c9a022df55f396607ec8b7dc486ab452f1a133fd04fd954a2ff3f86c4df9458c",
+      "size": 4140,
+      "executable": false
+    },
+    {
+      "path": "references/install.md",
+      "hash": "f5f9b1d351a84ac17737fd6aa0e88b04bf1d8b28ae14218dec37fb73a8a94e67",
+      "size": 4479,
+      "executable": false
+    },
+    {
+      "path": "scripts/install.sh",
+      "hash": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
+      "size": 6021,
+      "executable": false
+    }
+  ]
+}

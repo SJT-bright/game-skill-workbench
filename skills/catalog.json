@@ -1,36 +1,78 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-29T02:30:08.481Z",
-  "treeHash": "3c346a8ecdbf7984a0ad5fef24350c37be31bffa6bb85042a119dbf38c7f8dde",
+  "createdAt": "2026-10-29T02:30:59.532Z",
+  "treeHash": "d7f6fde08b0ef9761021582bff198fec8c4c9221e57a948357d0adf65c72b180",
   "skills": [
     {
       "name": "chrome-mobile-testing",
-      "treeHash": "85757390b4c270f54fc95d46b4a3f83bff62c1b9553992d1bdb3147e91fe36f3",
-      "fileCount": 4,
-      "bytes": 43634,
+      "treeHash": "5e1a4fcbec01ae8d4bbe7d2b9ef6a12db85d73e43b594cb2faa4f115bd55d0b4",
+      "fileCount": 11,
+      "bytes": 79082,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "ad448907fd92783e23865e2bbd37b1ce550c52ecc436aebd16ad3b10607100d9",
-          "size": 781,
+          "hash": "aa76434efa9939054b2b4a22fdcf24fd664e09aeef45d3ed11be707e84e15893",
+          "size": 2009,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "f5f467b19c7aabc149e1b21ea748a4ea90f80da25479524420d2408aa8e8b037",
-          "size": 11674,
+          "hash": "01a7f5f84ecda77fb21570bcec9dc26419a4a11bd951518c0388e209d46c95b1",
+          "size": 15278,
           "executable": false
         },
         {
           "path": "scripts/chrome_touch.py",
-          "hash": "e9d9973661e5a63cecff3ab2e3cf71bc12205e16e548615c67284989d22913c9",
-          "size": 29277,
+          "hash": "1f3daae36aca0dca7efd59cad5843521b053062d395479e4a94b6d26dd325805",
+          "size": 35857,
+          "executable": false
+        },
+        {
+          "path": "scripts/ego_touch_runner.js",
+          "hash": "15f562ba045a54b6ef1c4e4c89d2246dc8a604cdec97112b1467dc6399a0dc25",
+          "size": 13600,
           "executable": false
         },
         {
           "path": "scripts/prepare_chrome.py",
           "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
           "size": 1902,
+          "executable": false
+        },
+        {
+          "path": "tests/bin/ego-browser",
+          "hash": "c393f9ebed922816ccefced55c17009ce004b420e16b5e953b3508350d59c97d",
+          "size": 2920,
+          "executable": false
+        },
+        {
+          "path": "tests/calibration-plan.json",
+          "hash": "a2e8e5e5fb915222386195cb8b5fcbc74c46bccda09447cab095259097bf05c6",
+          "size": 333,
+          "executable": false
+        },
+        {
+          "path": "tests/site/big.png",
+          "hash": "82c88be7500e579e4219db87afa35bf36c0602915c298f9bd769c01dcb1e311b",
+          "size": 1390,
+          "executable": false
+        },
+        {
+          "path": "tests/site/index.html",
+          "hash": "10964c5f7910c168d2223b1e40bb4ed8215b3865f3af0810567f7091dacdf053",
+          "size": 578,
+          "executable": false
+        },
+        {
+          "path": "tests/test_ego_route.py",
+          "hash": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
+          "size": 4925,
+          "executable": false
+        },
+        {
+          "path": "tests/timing-plan.json",
+          "hash": "7eece6a52f0ea6a0f2413020932648dd279c6806874bb1a12442171df1b3b309",
+          "size": 290,
           "executable": false
         }
       ]

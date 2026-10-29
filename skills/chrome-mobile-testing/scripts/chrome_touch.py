@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 """Run an Agent-reviewed local touch plan in a Chromium browser and retain evidence.
 
-Default browser is Google Chrome (user rule 2026-10-27): use --user-approved-chrome --channel chrome and run the plan in a fresh isolated context.
---cdp-url is reserved for an explicitly selected existing Chromium instance.
-Browser test windows are ONLY for the agent's own tests (user 2026-10-23): a run never hands its window to the user. --handoff is
+Default browser is Ego Lite (user rules 2026-10-21 / 2026-10-27). Since 2026-10-27 the plan runs through Ego's
+OFFICIAL API: the script ego_touch_runner.js is piped to `ego-browser nodejs`, creates its own uniquely named
+TaskSpace, uses page.cdp() for the iPhone emulation, touch and network, and finishes only that space. There is no
+--cdp-url any more: Ego exposes no DevTools endpoint and its guide forbids attaching Playwright. Two runs with the
+same space name used to share one space (taskSpace(name) resumes it), and one run's finish() killed the other:
+every run now gets a unique name. Launching Google Chrome is only allowed after the user agreed
+(--user-approved-chrome, Playwright route below); the user's own trial uses serve_preview.py --keep, not this tool.
+Ego is ONLY for the agent's own tests (user 2026-10-23): a run never hands its window to the user. --handoff is
 refused; the user plays the local preview link the agent gives in Codex (serve_preview.py --keep).
 
 Never waits (user 2026-10-22/23): every run opens its OWN new isolated window, so several runs (other games, other
 sessions, the same game) work at the same time and nothing is ever "occupied". Before opening, it sweeps old test
-windows (cocos-game-to-english/scripts/browser_slots.py): gone-owner records retire; completed helpers close only
+windows (cocos-game-core/scripts/browser_slots.py): gone-owner records retire; completed helpers close only
 with matching current identity. Idle/live or unknown Ego ownership stays for current review. It then registers its
 own window, heartbeats on every step and closes its own context on exit, also on SIGTERM.
-If connecting to Ego fails it immediately retries once on a fresh connection; it never queues behind anything.
+It never queues behind anything. Report ids (same names as mobile-touch-computer-use): browser_route=ego_taskspace,
+input_transport=ego_page_cdp, session_id = the numeric Ego spaceId, space_name = the unique name.
 
---record (or "record": true in the plan) also saves every rendered frame (about 60 per second) to
-<out>/frames/NNNNN_TTTTTTTms.jpg for scripts/audit_frame_glitches.py (black flashes, flicker, one-frame pops),
-which static screenshots cannot see. Record short flows (one flow per run) to keep the folder small.
+--record (or "record": true in the plan) saves frames to <out>/frames/NNNNN_TTTTTTTms.jpg for
+scripts/audit_frame_glitches.py. In Ego the frames are sequential screenshots (a few per second, fps in the report):
+enough for black screens, frozen screens and wrong pages, NOT for one-frame flicker. The Chrome route (user consent
+only) records every rendered frame (about 60 per second). Record short flows (one flow per run).
 
-Startup/loading timing (scripts/audit_startup_loading.py of cocos-game-to-english reads these reports):
+Startup/loading timing (scripts/audit_startup_loading.py of cocos-game-core reads these reports):
   plan "timing": true      no screenshots between steps (they would distort timing); navigation does not wait for 'load'
   plan "network": {"download_kbps": 10000, "upload_kbps": 5000, "latency_ms": 80}   real throttling via CDP
   plan "cache": "cold"|"warm"   cold = cache disabled; warm = one untimed visit first, then the timed visit
@@ -27,7 +34,7 @@ Startup/loading timing (scripts/audit_startup_loading.py of cocos-game-to-englis
          polls until true and records t_ms since navigation start (entry); timeout = failed run
   plan "init_js": "<js>"         runs before the game's own scripts: stub or break the platform SDK
                                  (e.g. a tt object without showModal, or a showModal that never calls back)
-  plan "hang_urls": ["*logo*"]   those requests never answer (no callback); action {"type":"unhang"} lets
+  plan "hang_urls": ["*logo*"]   (Chrome route only; Ego refuses it) those requests never answer (no callback); action {"type":"unhang"} lets
                                  later requests through (the held ones stay pending, like a lost callback)
   action {"type":"background","ms":12000}  switches to another tab for ms and records the game page's
          document.visibilityState while away (must read "hidden" for the background test to count)
@@ -35,12 +42,12 @@ All network requests (url, status, encoded bytes, finish time) are recorded for 
 
 Phone (user 2026-10-22): plan "device": "iphone_15" (default: 393x852, DPR 3, iPhone user agent, touch) |
   "iphone_se" (375x667, the short 9:16 ratio) | "iphone_15_pro_max"; or give viewport/dpr/user_agent yourself.
-  Google Chrome is the default Chromium execution engine for the phone simulation; run one controlled simulation per browser version.
+  Ego Lite and Chrome are the same Chromium engine: run the phone simulation once, in one browser (Ego Lite by default).
   This is Chromium with iPhone screen, touch and user agent, not Apple's WebKit.
 
 UI layout and copy are read from the running game, never typed in (user rule 2026-10-21):
   action {"type":"dump_ui","screen":"play_9x19","kind":"gameplay"}   kind: home | page | gameplay | popup
-         runs cocos-game-to-english/scripts/ui_dump.js in the page (Cocos 2.4 / 3.x), saves
+         runs cocos-game-core/scripts/ui_dump.js in the page (Cocos 2.4 / 3.x), saves
          <out>/NNN-ui-dump-<screen>.json next to the screenshot NNN-ui-<screen>.png. Feed the dumps to
          extract_ui_layout.py (docs/ui-layout.json) and audit_copy_quality.py. A dump error stops the run.
          optional "purpose": home | result_win | result_fail | shop | skins | settings (General tab) |
@@ -92,16 +99,11 @@ SHOW_JS = """() => {
  window.dispatchEvent(new Event('pageshow'));window.dispatchEvent(new Event('focus'));
 }"""
 MAX_FRAMES=20000   # about 5.5 minutes at 60 fps
-READ = """() => {
- const one = (w) => ({url:w.location.href,ua:w.navigator.userAgent,width:w.innerWidth,height:w.innerHeight,
-  dpr:w.devicePixelRatio,maxTouchPoints:w.navigator.maxTouchPoints,ontouchstart:'ontouchstart' in w,
-  canvas:Array.from(w.document.querySelectorAll('canvas'),c=>{let r=c.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}),
-  cocos:w.cc&&w.cc.sys?{isMobile:w.cc.sys.isMobile,capabilities:w.cc.sys.capabilities}:null,
-  bodyText:w.document.body.innerText.slice(0,12000),events:w.__chromeTouchEvidence||[]});
- const frames=[one(window)];
- for(const iframe of document.querySelectorAll('iframe')) { try { frames.push(one(iframe.contentWindow)); } catch (_) {} }
- return {top:frames[0],frames};
-}"""
+READ = """() => ({url:location.href,ua:navigator.userAgent,width:innerWidth,height:innerHeight,
+ dpr:devicePixelRatio,maxTouchPoints:navigator.maxTouchPoints,ontouchstart:'ontouchstart' in window,
+ canvas:Array.from(document.querySelectorAll('canvas'),c=>{let r=c.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}),
+ cocos:window.cc&&cc.sys?{isMobile:cc.sys.isMobile,capabilities:cc.sys.capabilities}:null,
+ bodyText:document.body.innerText.slice(0,12000),events:window.__chromeTouchEvidence||[]})"""
 
 
 ON_TERM=[lambda:None]
@@ -109,8 +111,9 @@ ON_TERM=[lambda:None]
 
 def skill_script_dirs():
     here = Path(__file__).resolve()
-    return [here.parents[2] / 'cocos-game-to-english' / 'scripts',             # installed skills folder
-            here.parents[3] / 'skills' / 'cocos-game-to-english' / 'scripts']  # unpacked package
+    return [here.parents[2] / 'remake-core' / 'scripts',                 # remake package (2026-10-27 split)
+            here.parents[2] / 'cocos-game-core' / 'scripts',             # installed skills folder
+            here.parents[3] / 'skills' / 'cocos-game-core' / 'scripts']  # unpacked package
 
 
 def load_slots():
@@ -129,12 +132,13 @@ def load_slots():
 def ui_dump_js(action):
     here = Path(__file__).resolve()
     candidates = [Path(action['js_file'])] if action.get('js_file') else []
-    candidates += [here.parents[2] / 'cocos-game-to-english' / 'scripts' / 'ui_dump.js',            # installed skills folder
-                   here.parents[3] / 'skills' / 'cocos-game-to-english' / 'scripts' / 'ui_dump.js']  # unpacked package
+    candidates += [here.parents[2] / 'remake-core' / 'scripts' / 'ui_dump.js',              # remake package (2026-10-27 split)
+                   here.parents[2] / 'cocos-game-core' / 'scripts' / 'ui_dump.js',            # installed skills folder
+                   here.parents[3] / 'skills' / 'cocos-game-core' / 'scripts' / 'ui_dump.js']  # unpacked package
     for c in candidates:
         if c.is_file():
             return c.read_text(encoding='utf-8')
-    raise ValueError('ui_dump.js not found next to cocos-game-to-english; install the full skill package')
+    raise ValueError('ui_dump.js not found in cocos-game-core; install the full skill package')
 
 
 def validate(plan):
@@ -370,7 +374,7 @@ def run(args):
             if recording['on']:
                 page.wait_for_timeout(300);cdp.send('Page.stopScreencast')
                 report['recording']={'frames':recording['count'],'first_frame_epoch':recording['t0'],'dropped_after_limit':recording['dropped'],'dir':str(args.out/'frames'),
-                                     'next':'python <cocos-game-to-english>/scripts/audit_frame_glitches.py <frames dir> --report <report.json>'}
+                                     'next':'python <cocos-game-core>/scripts/audit_frame_glitches.py <frames dir> --report <report.json>'}
             report['status']='completed_pending_business_and_visual_review';save()
         except Exception as error:
             report['status']='failed';report['error']=str(error);save();raise
@@ -394,12 +398,92 @@ def run(args):
     return report_path
 
 
+def run_ego(args):
+    """Default route: run the plan in Ego Lite through its official API (ego-browser nodejs)."""
+    import secrets, shutil, subprocess
+    parsed=urlsplit(args.url)
+    if parsed.scheme not in {'http','https'} or parsed.hostname not in {'127.0.0.1','localhost','::1'}:
+        raise ValueError('This helper only accepts an authorized local test origin')
+    if parsed.username or parsed.password:raise ValueError('Credentials in URL are not accepted')
+    plan=json.loads(args.plan.read_text(encoding='utf-8-sig'))
+    viewport,dpr,actions=validate(plan)
+    if plan.get('hang_urls') or any(a.get('type')=='unhang' for a in actions):
+        raise ValueError('hang_urls/unhang need live request interception, which the Ego API does not offer: use init_js to '
+                         'stub a callback that never fires, or block_urls for a failing request')
+    exe=shutil.which('ego-browser')
+    if not exe:
+        raise ValueError('ego-browser not found: install/upgrade Ego Lite per the ego-browser Skill (references/install.md), '
+                         'then run `ego-browser skill`. Do not switch to Chrome without the user\'s consent.')
+    args.out.mkdir(parents=True,exist_ok=False)
+    out=args.out.resolve()
+    label=(args.name or args.out.name).strip()[:40] or 'touch'
+    space_name='touch %s %s %s'%(label,datetime.now().strftime('%Y%m%d-%H%M%S'),secrets.token_hex(3))
+    report={'platform':platform.platform(),'started_at':datetime.now(timezone.utc).isoformat(),
+            'browser_channel':'ego (official API)','browser_route':'ego_taskspace','input_transport':'ego_page_cdp',
+            'headless':False,'viewport_requested':viewport,'dpr_requested':dpr,'device':plan.get('device'),
+            'space_name':space_name,'steps':[],'status':'running',
+            'boundary':'Browser simulation in Ego Lite; no physical phone, Native or live IAA acceptance.'}
+    report_path=out/'report.json'
+    def save():report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    slots=load_slots();slot_id=None
+    if slots is not None:
+        try:
+            swept=slots.sweep(close=True)
+            report['sweep_before_open']={'freed':len(swept.get('freed',[])),'active_windows':swept.get('active_windows')}
+            slot_id=slots.register('touch_run',name=args.name or args.out.name,pid=os.getpid(),project=args.project,url=args.url)
+            report['browser_slot']=slot_id
+        except Exception as error:
+            report['browser_slot_error']=str(error)
+    save()
+    needs_dump=any(a['type']=='dump_ui' for a in actions)
+    config={'plan':dict(plan,actions=actions),'out':str(out),'url':args.url,'viewport':viewport,'dpr':dpr,
+            'userAgent':plan.get('user_agent',IPHONE_UA),'timing':bool(plan.get('timing')),
+            'record':bool(args.record or plan.get('record')),'spaceName':space_name,'readJs':READ,'observerJs':OBSERVER,
+            'hideJs':HIDE_JS,'showJs':SHOW_JS,'uiDumpJs':ui_dump_js(next(a for a in actions if a['type']=='dump_ui')) if needs_dump else None}
+    runner=(Path(__file__).resolve().parent/'ego_touch_runner.js').read_text(encoding='utf-8')
+    script='const CONFIG = %s;\n%s'%(json.dumps(config,ensure_ascii=False),runner)
+    budget=60+sum(a.get('ms',0)/1000+a.get('timeout_ms',0)/1000+15 for a in actions)+(150 if plan.get('cache')=='warm' else 0)
+    try:
+        r=subprocess.run([exe,'nodejs'],input=script,capture_output=True,text=True,encoding='utf-8',timeout=budget)
+        report['ego_output']=(r.stdout[-3000:]+'\n'+r.stderr[-3000:]).strip()
+        report['ego_exit_code']=r.returncode
+    except subprocess.TimeoutExpired:
+        report['ego_output']='ego-browser nodejs did not finish within %d s'%budget
+    result_path=out/'ego-result.json'
+    result=json.loads(result_path.read_text(encoding='utf-8')) if result_path.is_file() else {'status':'failed','error':'no ego-result.json'}
+    for key in ('space_id','space_ownership','steps','marks','requests','background','page_errors','ui_dumps','entry_epoch',
+                'cache_disabled','network_applied','warmup_done','recording','status','error','space_finished','cleanup_error','api',
+                'emulation_observed','emulation_reapplied','emulation_restored'):
+        if key in result:report[key]=result[key]
+    report['session_id']=result.get('space_id')
+    report['timing']=bool(plan.get('timing'));report['cache_mode']=plan.get('cache','cold')
+    report['init_js_sha256']=hashlib.sha256(str(plan['init_js']).encode()).hexdigest() if plan.get('init_js') else None
+    for step in report.get('steps',[]):
+        if step.get('screenshot'):step['screenshot']=Path(step['screenshot']).name
+    for dump in report.get('ui_dumps',[]):
+        f=out/dump['path']
+        if f.is_file():dump['sha256']=hashlib.sha256(f.read_bytes()).hexdigest()
+    finished=result.get('space_finished') is True
+    report['cleanup_pending']=not finished and result.get('space_id') is not None
+    if report.get('status')=='running':report['status']='failed'
+    save()
+    if slot_id:
+        try:
+            if report['cleanup_pending']:
+                slots.register('ego_space',name=args.name or args.out.name,space_id=result.get('space_id'),project=args.project)
+            slots.release(slot_id)
+        except Exception:pass
+    if report['status']=='failed':
+        raise RuntimeError('Ego run failed: %s (report %s)'%(str(report.get('error') or report.get('ego_output',''))[:600],report_path))
+    return report_path
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--url',required=True);p.add_argument('--plan',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True);p.add_argument('--headless',action='store_true');p.add_argument('--handoff',action='store_true',help='refused: Ego windows are never handed to the user')
     p.add_argument('--record',action='store_true',help='save every rendered frame for dynamic glitch analysis')
-    p.add_argument('--cdp-url',help="Ego Lite DevTools endpoint, e.g. http://127.0.0.1:9222 (default route)")
+    p.add_argument('--cdp-url',help='removed 2026-10-27: Ego has no DevTools endpoint; runs go through ego-browser nodejs')
     p.add_argument('--channel',default='chrome',help='only with --user-approved-chrome: chrome, or chromium = bundled Playwright browser')
     p.add_argument('--user-approved-chrome',action='store_true',help='the user explicitly agreed to use Chrome instead of Ego this time')
     p.add_argument('--name',help='short label shown to other sessions in browser_slots.py list, e.g. "测试线 音量复核"')
@@ -408,7 +492,7 @@ if __name__=='__main__':
     if args.handoff:
         raise SystemExit('Not allowed (user 2026-10-23): Ego / test windows are only for the agent\'s own tests and are '
                          'never handed to the user. Give the user the local preview link in Codex instead: '
-                         'python <cocos-game-to-english>/scripts/serve_preview.py --directory <web export> --keep --name "<line> user trial"')
+                         'python <cocos-game-core>/scripts/serve_preview.py --directory <web export> --keep --name "<line> user trial"')
     def _stop(signum,frame):
         # Do not equate a dropped CDP connection with context closure. Preserve a pending record for owner review.
         try:ON_TERM[0]()
@@ -418,6 +502,9 @@ if __name__=='__main__':
         if _sig is not None:
             try:signal.signal(_sig,_stop)
             except (OSError,ValueError):pass
-    try:print(json.dumps({'report':str(run(args))},ensure_ascii=False))
+    if args.cdp_url:
+        raise SystemExit('--cdp-url was removed (2026-10-27): Ego Lite exposes no DevTools endpoint and its guide forbids '
+                         'attaching Playwright. Drop --cdp-url: the plan runs through `ego-browser nodejs` automatically.')
+    try:print(json.dumps({'report':str(run(args) if args.user_approved_chrome else run_ego(args))},ensure_ascii=False))
     except Exception as error:
         print(json.dumps({'status':'failed','error':str(error)},ensure_ascii=False),file=sys.stderr);raise SystemExit(2)

@@ -1,0 +1,2 @@
+{"device":"iphone_se","timing":true,"cache":"cold","network":{"download_kbps":2000,"upload_kbps":1000,"latency_ms":150},
+ "actions":[{"type":"mark","name":"home_usable","wait_js":"window.homeReady===true && document.getElementById('big').complete","timeout_ms":20000},{"type":"snapshot"}]}

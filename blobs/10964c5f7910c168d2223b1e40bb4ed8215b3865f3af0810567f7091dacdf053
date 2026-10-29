@@ -1,0 +1,9 @@
+<!doctype html><meta name=viewport content="width=device-width"><body style="margin:0">
+<div id=count>0</div><div id=drags>0</div><canvas id=c width=300 height=300 style="width:300px;height:300px;background:#7bd"></canvas>
+<img src="/big.png" id=big>
+<script>
+const c=document.getElementById('c');let d=0;
+c.addEventListener('touchstart',()=>{document.getElementById('count').textContent=String(+document.getElementById('count').textContent+1)});
+c.addEventListener('touchmove',()=>{d++;document.getElementById('drags').textContent=String(d)});
+window.homeReady=true;
+</script>

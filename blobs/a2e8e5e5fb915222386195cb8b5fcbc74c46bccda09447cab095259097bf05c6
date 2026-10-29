@@ -1,0 +1,7 @@
+{"device":"iphone_15","actions":[
+ {"type":"tap","selector":"#c"},
+ {"type":"assert_text","selector":"#count","equals":"1"},
+ {"type":"drag","points":[[100,100],[150,150],[200,200]]},
+ {"type":"mark","name":"home_usable","wait_js":"window.homeReady===true","timeout_ms":5000},
+ {"type":"background","ms":800},
+ {"type":"snapshot"}]}

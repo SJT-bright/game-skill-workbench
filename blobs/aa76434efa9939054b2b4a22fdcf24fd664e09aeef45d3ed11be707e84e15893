@@ -1,0 +1,60 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-10-28.remake-v7.3.2",
+  "skill": "chrome-mobile-testing",
+  "previous_provenance_sha256": "0add424b1207c7a682a14c81a7a27d7cd27a42251464b50ed2c56dbd5ffb9d2f",
+  "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "01a7f5f84ecda77fb21570bcec9dc26419a4a11bd951518c0388e209d46c95b1",
+      "bytes": 15278
+    },
+    {
+      "path": "scripts/chrome_touch.py",
+      "sha256": "1f3daae36aca0dca7efd59cad5843521b053062d395479e4a94b6d26dd325805",
+      "bytes": 35857
+    },
+    {
+      "path": "scripts/ego_touch_runner.js",
+      "sha256": "15f562ba045a54b6ef1c4e4c89d2246dc8a604cdec97112b1467dc6399a0dc25",
+      "bytes": 13600
+    },
+    {
+      "path": "scripts/prepare_chrome.py",
+      "sha256": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+      "bytes": 1902
+    },
+    {
+      "path": "tests/bin/ego-browser",
+      "sha256": "c393f9ebed922816ccefced55c17009ce004b420e16b5e953b3508350d59c97d",
+      "bytes": 2920
+    },
+    {
+      "path": "tests/calibration-plan.json",
+      "sha256": "a2e8e5e5fb915222386195cb8b5fcbc74c46bccda09447cab095259097bf05c6",
+      "bytes": 333
+    },
+    {
+      "path": "tests/site/big.png",
+      "sha256": "82c88be7500e579e4219db87afa35bf36c0602915c298f9bd769c01dcb1e311b",
+      "bytes": 1390
+    },
+    {
+      "path": "tests/site/index.html",
+      "sha256": "10964c5f7910c168d2223b1e40bb4ed8215b3865f3af0810567f7091dacdf053",
+      "bytes": 578
+    },
+    {
+      "path": "tests/test_ego_route.py",
+      "sha256": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
+      "bytes": 4925
+    },
+    {
+      "path": "tests/timing-plan.json",
+      "sha256": "7eece6a52f0ea6a0f2413020932648dd279c6806874bb1a12442171df1b3b309",
+      "bytes": 290
+    }
+  ],
+  "parent_release_sha256": "0dffc1f86bc770211d9d39cc379e958eadafda1f62e3839bd8443262a42a4b32"
+}

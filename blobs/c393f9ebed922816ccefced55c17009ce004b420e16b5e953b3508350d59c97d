@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+// Fake ego-browser for offline tests: implements only the API surface documented in `ego-browser skill` v2.1.0
+// (taskSpace, page.cdp/evaluate/screenshot/goto/waitFor*, events, newPage, finish) on top of real Chromium.
+const { chromium } = require('playwright');
+const fs = require('fs');
+const LOG = process.env.FAKE_EGO_LOG || '/tmp/fake-ego-log.json';
+if (process.argv[2] === '--version') { console.log('ego-browser fake 0.0'); process.exit(0); }
+if (process.argv[2] !== 'nodejs') { console.error('unknown command'); process.exit(2); }
+let src = fs.readFileSync(0, 'utf8');
+(async () => {
+  const browser = await chromium.launch();
+  const log = { spaces: [], finished: [] };
+  const spaces = new Map(); let nextId = 41;
+  const EVENTS = ['Network.requestWillBeSent', 'Network.responseReceived', 'Network.loadingFinished', 'Network.loadingFailed', 'Runtime.exceptionThrown'];
+  async function wrap(ctx, label) {
+    const pg = await ctx.newPage(); const s = await ctx.newCDPSession(pg); const buf = [];
+    for (const n of EVENTS) s.on(n, (p) => buf.push({ method: n, params: p }));
+    return { label, spaceId: 0, _pg: pg,
+      goto: (u) => pg.goto(u, { waitUntil: 'load' }), reload: () => pg.reload({ waitUntil: 'load' }), url: async () => pg.url(), close: () => pg.close(),
+      cdp: (m, p) => s.send(m, p || {}), events: async () => buf.splice(0),
+      evaluate: (f, a) => typeof f === 'string' ? pg.evaluate(f) : pg.evaluate(f, a),
+      screenshot: async (o) => { const r = await s.send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(o.path, Buffer.from(r.data, 'base64')); return o.path; },
+      waitForTimeout: (ms) => pg.waitForTimeout(ms),
+      waitForFunction: (f, a, o) => pg.waitForFunction(f, a, o) };
+  }
+  globalThis.taskSpace = async (name) => {
+    if (spaces.has(name)) return spaces.get(name);       // real Ego: same name resumes the same space
+    const ctx = await browser.newContext({ viewport: null }); const id = nextId++;
+    const p1 = await wrap(ctx, 'p1'); const pages = { p1 }; let n = 1;
+    const task = { spaceId: id, name, ownership: 'agent', page: (l) => pages[l],
+      newPage: async () => { const pg = await wrap(ctx, 'p' + (++n)); pages[pg.label] = pg; return pg; },
+      finish: async (o) => { log.finished.push({ id, keep: o && o.keep }); await ctx.close(); spaces.delete(name); } };
+    spaces.set(name, task); log.spaces.push({ id, name }); return task;
+  };
+  globalThis.listTaskSpaces = async () => [...spaces.values()].map((t) => ({ id: t.spaceId, name: t.name, ownership: 'agent' }));
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+  let code = 0;
+  try { await new AsyncFunction(src.replace(/await import\(/g, 'await import('))(); }
+  catch (e) { console.error(e && e.stack || e); code = 1; }
+  fs.writeFileSync(LOG, JSON.stringify(log));
+  await browser.close(); process.exit(code);
+})();

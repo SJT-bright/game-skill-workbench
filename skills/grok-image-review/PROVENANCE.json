@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-27.economy-v4",
+  "revision": "2026-10-27.remake-v7",
   "skill": "grok-image-review",
-  "previous_provenance_sha256": "8df3703e1c93c37ba83c448b940fc814059b796e23f04004ed1ede0c64a748d4",
+  "previous_provenance_sha256": "c474239533a1269ba25a5305ff8d137e888a46b256752bd35df0d857905c2bf6",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {

@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-27.economy-v4",
+  "revision": "2026-10-27.remake-v7",
   "skill": "ego-browser",
-  "previous_provenance_sha256": "3926f07d985602ca15aa25e1610d940606bcfc888fe47dbc41892fa9dd675e1d",
+  "previous_provenance_sha256": "8ed7c3f25fc652b1095eb7a849680f294428758a694346c0580dd73c3f55ff8a",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {

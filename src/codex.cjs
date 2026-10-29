@@ -60,9 +60,9 @@ async function discover({roots=[],cache={},limit=300,binary}={}){
  }finally{await reader.close();}
 }
 async function queueMessage(threadId,message,{binary,timeout=20000,spawnFn=spawn}={}){
- if(!UUID.test(threadId)||typeof message!=='string'||!message.trim()||message.length>50000)throw Error('对话或指令无效');
- const exe=binary||await executable();return new Promise((resolve,reject)=>{let settled=false,output='';const child=spawnFn(exe,['queue','--thread',threadId,'--message',message],{stdio:['ignore','pipe','pipe'],windowsHide:true});const finish=result=>{if(settled)return;settled=true;clearTimeout(timer);resolve(result);};const timer=setTimeout(()=>{child.kill('SIGTERM');finish({status:'uncertain',detail:'发送回执超时，请查看目标对话，勿重复发送'});const cleanup=setTimeout(()=>{if(child.exitCode===null)child.kill('SIGKILL');},1000);cleanup.unref();},timeout);
- child.stdout.on('data',d=>{output=(output+d).slice(-1600);});child.stderr.on('data',d=>{output=(output+d).slice(-1600);});child.on('error',e=>{if(settled)return;settled=true;clearTimeout(timer);reject(e);});child.on('exit',code=>finish({status:code===0?'queued':'failed',detail:output.trim().slice(-800)||'Codex 未返回发送详情'}));});
+ if(!UUID.test(threadId)||typeof message!=='string'||!message.trim()||message.length>50000){const e=Error('对话或指令无效');e.deliveryStarted=false;throw e;}
+ let exe;try{exe=binary||await executable();}catch(e){e.deliveryStarted=false;throw e;}return new Promise((resolve,reject)=>{let settled=false,output='';const child=spawnFn(exe,['queue','--thread',threadId,'--message',message],{stdio:['ignore','pipe','pipe'],windowsHide:true});const finish=result=>{if(settled)return;settled=true;clearTimeout(timer);resolve(result);};const timer=setTimeout(()=>{child.kill('SIGTERM');finish({status:'uncertain',detail:'发送回执超时，请查看目标对话，勿重复发送'});const cleanup=setTimeout(()=>{if(child.exitCode===null)child.kill('SIGKILL');},1000);cleanup.unref();},timeout);
+ child.stdout.on('data',d=>{output=(output+d).slice(-1600);});child.stderr.on('data',d=>{output=(output+d).slice(-1600);});child.on('error',e=>{if(settled)return;settled=true;clearTimeout(timer);if(!child.pid)e.deliveryStarted=false;reject(e);});child.on('exit',code=>finish({status:code===0?'queued':'failed',detail:output.trim().slice(-800)||'Codex 未返回发送详情'}));});
 }
 const cancelReaders=()=>{for(const reader of activeReaders)reader.close().catch(()=>{});};
 module.exports={cancelReaders,Reader,discover,inferStage,isMaintenanceTitle,isGameThread,queueMessage,executable,STAGES,UUID};

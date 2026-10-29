@@ -20,6 +20,10 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm test
+      - name: Verify real Codex queue in isolated profile
+        run: |
+          npm install --prefix .qa/codex --no-audit --no-fund @openai/codex@0.158.0
+          node scripts/verify-codex-queue.cjs
       - name: Build Mac
         if: matrix.kind == 'mac'
         shell: bash

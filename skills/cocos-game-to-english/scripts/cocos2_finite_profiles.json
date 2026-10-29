@@ -1,9 +1,0 @@
-[
-  {
-    "name": "mlf-cocos2-immutable-art-tables-v1",
-    "source_digest": "ff044fe7e87314a199c8ec3297b270a97020bad0404b296ef3fecb1957b96fca",
-    "business_file": "assets/main/index.js",
-    "entry_file": "main.js",
-    "review": "Pinned exact compiled program; domain comes from authored registration table, config item IDs, all 70 level face counts, fixed backgrounds/stalls, and actual getInfoWithPath-guarded optional words. No source edits are silently accepted."
-  }
-]

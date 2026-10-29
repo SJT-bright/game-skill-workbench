@@ -1,7 +1,0 @@
-'use strict';
-// Independently enumerate ORIGINAL native-image/audio URL writes and image pipeline calls.
-// Dynamic domains always remain unresolved until exact-program reviewed finite resolution.
-const fs=require('fs'),acorn=require('./vendor/acorn.cjs'),input=JSON.parse(fs.readFileSync(0,'utf8')),sites=[];
-function walk(n,fn){if(!n?.type)return;fn(n);for(const[k,v]of Object.entries(n)){if(k==='loc')continue;if(Array.isArray(v))v.forEach(c=>walk(c,fn));else if(v?.type)walk(v,fn)}}
-for(const[source,text]of Object.entries(input.files)){let ast;try{ast=acorn.parse(text,{ecmaVersion:'latest',sourceType:'script',locations:true,allowReturnOutsideFunction:true})}catch(_){ast=acorn.parse(text,{ecmaVersion:'latest',sourceType:'module',locations:true})}walk(ast,n=>{let kind;if(n.type==='AssignmentExpression'&&n.left.type==='MemberExpression'&&(n.left.property.name??n.left.property.value)==='src')kind='native-src';if(n.type==='CallExpression'&&n.callee.type==='MemberExpression'){const m=n.callee.property.name??n.callee.property.value;const obj=text.slice(n.callee.object.start,n.callee.object.end);if((m==='download'&&/\.assetManager\.downloader$/.test(obj))||(m==='parse'&&/\.assetManager\.parser$/.test(obj)))kind='native-image-pipeline';}if(kind)sites.push({id:source+':'+n.start,source,line:n.loc.start.line,kind,expression:text.slice(n.start,n.end),literal_path:kind==='native-src'&&n.right.type==='Literal'&&typeof n.right.value==='string'?n.right.value:null})})}
-console.log(JSON.stringify({schema:'cocos_native_file_sites.v1',sites}));

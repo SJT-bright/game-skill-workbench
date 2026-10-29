@@ -1,4 +1,4 @@
 interface:
-  display_name: "英化（中文源码转英文）"
-  short_description: "只有中文源码时用：按授权范围英化和优化中文Cocos游戏，核对真实界面、玩法及同版运行证据"
-  default_prompt: "使用 $cocos-game-to-english 英化这个游戏：先确认当前授权和项目合同，再完成英文界面、适用优化及受影响运行验证。"
+  display_name: "英化"
+  short_description: "中文完整游戏只改英文美工和文字，补固定入口"
+  default_prompt: "用英化skill英化这个游戏"

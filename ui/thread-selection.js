@@ -1,6 +1,8 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.ThreadSelection=factory();})(globalThis,()=>{
  'use strict';
  const LABELS={all:'全部',ongoing:'进行中',ended:'本轮结束',unknown:'待确认'};
+ const PHASES={'玩法阶段':['玩法制作','玩法结束'],'美工阶段':['美工制作'],'测试阶段':['待试玩','游玩','检查']};
+ function phase(stage){return Object.keys(PHASES).find(key=>PHASES[key].includes(stage))||(stage==='已完成'?'已完成':'待识别');}
  function activity(game,{stale=false}={}){
   if(stale)return 'unknown';
   const raw=game.metadataStatus,kind=typeof raw==='object'?raw?.type:raw;
@@ -26,7 +28,7 @@
   const text=query.trim().toLowerCase(),groups=new Map(),counts={all:0,ongoing:0,ended:0,unknown:0};
   for(const game of games){
    const item=identity(game,roots);
-   if(stage!=='全部'&&(game.stage||'待识别')!==stage)continue;
+   if(stage!=='全部'&&(PHASES[stage]?!PHASES[stage].includes(game.stage):(game.stage||'待识别')!==stage))continue;
    if(text&&![game.name,game.note,game.path,item.name].join(' ').toLowerCase().includes(text))continue;
    const status=activity(game,{stale:stale&&game.source==='codex'});counts.all++;counts[status]++;
    if(activityFilter!=='all'&&status!==activityFilter)continue;
@@ -35,5 +37,5 @@
   }
   return {groups:[...groups.values()],counts,threadCount:[...groups.values()].reduce((n,g)=>n+g.threads.length,0)};
  }
- return {LABELS,activity,identity,select};
+ return {LABELS,PHASES,phase,activity,identity,select};
 });

@@ -1,0 +1,13 @@
+const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
+const {collect,atomicJSON,readJSON,digest}=require('./core.cjs'),{zipFolder}=require('./zip.cjs');
+const {definitions}=require('../ui/skill-categories.js');
+const pending=new Map();
+async function prepareBundle(root,installed,id){const key=root+':'+id;if(pending.has(key))return pending.get(key);const promise=build(root,installed,id);pending.set(key,promise);try{return await promise;}finally{pending.delete(key);}}
+async function build(root,installed,id){const spec=definitions.find(d=>d.skillId===id);if(!spec)throw Error('Skill 包不存在');const byName=new Map();for(const s of Object.values(installed)){const old=byName.get(s.name);if(!old||(!s.local&&old.local))byName.set(s.name,s);}if(!byName.has(spec.entry))throw Error('缺少入口 Skill，请先同步文件');const parts=[];
+ for(const name of spec.members){const skill=byName.get(name);if(skill)parts.push({name,tree:await collect(skill.path,{localUse:true})});}
+ const signature=digest(JSON.stringify(parts.map(p=>[p.name,p.tree.treeHash]))),base=path.join(root,'bundles'),dest=path.join(base,id),archive=dest+'.zip',ledger=await readJSON(dest+'.json',{});
+ if(ledger.signature===signature&&await fs.access(archive).then(()=>true,()=>false)&&await fs.access(path.join(dest,'SKILL.md')).then(()=>true,()=>false)){const actual=await collect(dest,{localUse:true});if(actual.treeHash===ledger.treeHash)return {...ledger,path:dest,archive};}
+ await fs.mkdir(base,{recursive:true});const stage=dest+'.stage-'+crypto.randomUUID();await fs.mkdir(stage);try{for(const p of parts)for(const f of p.tree.files){const to=path.join(stage,p.name,...f.path.split('/'));await fs.mkdir(path.dirname(to),{recursive:true});await fs.writeFile(to,p.tree.blobs.get(f.hash),{mode:f.executable?0o755:0o644});}
+ await fs.writeFile(path.join(stage,'SKILL.md'),`# ${spec.name}\n\n先读取 ./`+spec.entry+`/SKILL.md，然后按需读取本包配套目录。\n沿用当前游戏对话进度，保留原文件与存档，不自动发布游戏。\n\n完整组件：\n`+parts.map(p=>'- '+p.name+'/').join('\n')+'\n');
+ const tree=await collect(stage,{localUse:true});const zipStage=stage+'.zip';await zipFolder(stage,zipStage);await fs.rm(dest,{recursive:true,force:true});await fs.rename(stage,dest);await fs.rm(archive,{force:true});await fs.rename(zipStage,archive);const value={...spec,id:spec.skillId,version:signature.slice(0,12),signature,treeHash:tree.treeHash,files:tree.files,bytes:tree.bytes,summary:'完整 Skill 与配套工具',memberCount:parts.length,local:true,bundle:true};await atomicJSON(dest+'.json',value);return {...value,path:dest,archive};}finally{await fs.rm(stage,{recursive:true,force:true});await fs.rm(stage+'.zip',{force:true});}}
+module.exports={prepareBundle};

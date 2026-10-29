@@ -3,6 +3,7 @@ if(!window.dock){
   window.isDemo=true;document.body.classList.add('preview');
   const s1={id:'release-3',skillId:'demo-art',name:'游戏重塑',version:'v3',createdAt:'2026-10-26T01:20:00Z',summary:'调整手机首页按钮尺寸与布局。\n补充重开、异步恢复和存档检查，制作前先确认当前输入。',bytes:284900,fileCount:24,treeHash:'a'.repeat(64)},s2={...s1,id:'release-2',version:'v2',createdAt:'2026-10-25T01:20:00Z',summary:'补充首关交互与手机适配检查。'},s3={...s1,id:'release-1',version:'v1',createdAt:'2026-10-24T01:20:00Z',summary:'建立制作流程与原创美术检查规范。'};
   let demo={games:[{id:'g1',name:'松果邮局',path:'/示例项目/PineconePost',stage:'玩法制作',note:'首页已完成，接下来检查手机按钮和重开流程。',updatedAt:'2026-10-26T02:00:00Z'},{id:'g2',name:'月亮面包房',path:'/示例项目/MoonBakery',stage:'检查',note:'新版本已整理，等待按新版 Skill 检查。',updatedAt:'2026-10-25T02:00:00Z'},{id:'g3',name:'小岛收纳日记',path:'/示例项目/IslandTidy',stage:'待试玩',note:'本地预览已准备，继续核对本轮反馈。',updatedAt:'2026-10-25T02:00:00Z'}],repository:'SJT-bright/game-skill-workbench',appUpdate:{available:false,busy:false,error:''},sources:[],settings:{url:'https://skills.example.com',autoDownload:true,connected:true,port:47831},index:{releases:[s1,s2,s3]},installed:{'demo-art':{...s1,path:'/示例 Skill/游戏重塑'}},lastCheck:new Date().toISOString(),status:'演示：Skill 已同步',lastError:'',busy:false,hosting:false,hostUrls:[],codex:{busy:false,error:'',incomplete:false},dockEdge:'right',platform:'darwin',version:'0.2.0',collapsed:false};
+  const english={...s1,id:'release-en-1',skillId:'demo-en',name:'游戏英化',version:'v1',summary:'中文游戏英化与界面检查。'};demo.index.releases.push(english);demo.installed['demo-en']={...english,path:'/示例 Skill/游戏英化'};
   for(const g of demo.games){g.threadId='11111111-1111-4111-8111-111111111111';g.stageMode='auto';}
   const checkedAt=new Date().toISOString();
   Object.assign(demo.games[0],{telemetry:{active:true,status:'active',elapsedMs:4780000,currentElapsedMs:742000,totalTokens:183400,inputTokens:162100,outputTokens:21300,cachedInputTokens:118000,stageHistory:[{stage:'玩法制作',at:'2026-10-26T01:00:00Z',elapsedMs:4780000,tokens:183400}],source:'演示数据',complete:true,checkedAt,cost:null}});
@@ -15,6 +16,8 @@ if(!window.dock){
     if(['syncCodex','refreshSkills'].includes(method)){emit();return structuredClone(demo);}
     if(method==='openChat')throw Error('演示不打开真实对话');
     if(method==='state')return structuredClone(demo);
+    if(method==='setProjectRoot'){demo.settings.projectRoot='/示例项目/我的游戏';emit();return demo.settings.projectRoot;}
+    if(method==='importProject'){if(!demo.settings.projectRoot)throw Error('请先选择项目保存位置');const name=v.name||'收到的游戏',g={id:crypto.randomUUID(),name,path:demo.settings.projectRoot+'/'+name,stage:null,stageMode:'auto',source:'manual',note:'浏览器示例，未复制本机文件'};demo.games.unshift(g);emit();return g;}
     if(method==='chooseFolder')return demo.platform==='win32'?'C:\\Games\\MyGame':'/示例项目/MyGame';
     if(method==='taskText')return prompt(v);
     if(method==='copyTask'){await navigator.clipboard.writeText(prompt(v));return prompt(v);}

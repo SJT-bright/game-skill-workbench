@@ -23,3 +23,11 @@ test('Activity filters intersect stage and search; counts are scoped before acti
  assert.deepEqual(result.counts,{all:2,ongoing:1,ended:1,unknown:0});assert.equal(result.threadCount,1);assert.equal(result.groups[0].threads[0].threadId,'a');assert.equal(rows[1].stage,'玩法制作');
  const stale=select(rows,{stale:true});assert.equal(stale.counts.ongoing,0);assert.equal(stale.counts.unknown,3);assert.equal(stale.threadCount,3);
 });
+test('Three production phases map explicit substages without confusing completed or unknown games',()=>{
+ const {phase,PHASES}=require('../ui/thread-selection.js');
+ for(const [label,stages]of Object.entries(PHASES))for(const stage of stages){assert.equal(phase(stage),label);assert.equal(select([make(stage,{stage})],{stage:label}).threadCount,1);}
+ assert.equal(phase('已完成'),'已完成');assert.equal(phase(null),'待识别');
+ assert.equal(select([make('done',{stage:'已完成'}),make('unknown',{stage:null})],{stage:'测试阶段'}).threadCount,0);
+ const rows=[make('a',{stage:'待试玩',metadataStatus:'active'}),make('b',{stage:'检查',metadataStatus:'idle'}),make('c',{stage:'玩法制作',metadataStatus:'active'})];
+ assert.deepEqual(select(rows,{stage:'测试阶段',activityFilter:'ongoing'}).groups[0].threads.map(t=>t.id),['a']);
+});

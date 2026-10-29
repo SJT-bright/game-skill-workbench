@@ -2,6 +2,7 @@ const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nati
 const fs=require('node:fs/promises');const path=require('node:path');const crypto=require('node:crypto');const {pathToFileURL}=require('node:url');
 const {HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,request,addresses}=require('./core.cjs');const {zipFolder}=require('./zip.cjs');
 const {discover,queueMessage:codexQueueMessage,STAGES,UUID,cancelReaders,isMaintenanceTitle}=require('./codex.cjs');
+const {sendWithReceipt}=require('./send-receipts.cjs');
 const {scanTelemetries}=require('./telemetry.cjs');const updater=require('./updater.cjs');const github=require('./github.cjs');const {spawn}=require('node:child_process');
 const {dockBounds,EXPANDED,COLLAPSED}=require('./docking.cjs');
 const hover=require('./hover.cjs').hoverTrigger();let hoverTimer;
@@ -20,11 +21,13 @@ function queueMessage(threadId,message){
 }
 const configPath=path.join(root,'settings.json');
 const defaults=()=>({games:[],sources:[],url:'',token:'',autoDownload:true,port:47831,hostEnabled:false,hostToken:crypto.randomBytes(24).toString('hex'),window:null,autoCodex:true,repository:'',feedMode:'github',hiddenThreads:[],scanRoots:[],projectRoot:''});
-async function persist(){await atomicJSON(configPath,config);}
+let persistQueue=Promise.resolve();
+async function persist(){persistQueue=persistQueue.catch(()=>{}).then(()=>atomicJSON(configPath,config));return persistQueue;}
 function notify(title,body){try{if(!smoke&&Notification.isSupported())new Notification({title,body}).show();}catch{console.warn('System notification unavailable; updates remain visible in the workbench');}}
 async function state(){return {updateNotices,games:config.games,sources:config.sources,settings:{projectRoot:config.projectRoot||'',scanRoots:config.scanRoots,url:config.url,autoDownload:config.autoDownload,port:config.port,connected:!!config.url},index,installed,lastCheck,status,lastError,busy,hosting:!!hub,hostUrls:hub?addresses().map(a=>`http://${a}:${hub.port}`):[],localUrl:hub?`http://127.0.0.1:${hub.port}`:'',platform:process.platform,version:app.getVersion(),collapsed,dockEdge,codex:{busy:codexBusy,error:codexError,checkedAt:codexSnapshot.checkedAt,incomplete:codexSnapshot.incomplete},localSkillErrors,appUpdate,repository:config.repository,feedMode:config.feedMode};}
 async function emit(){if(win&&!win.isDestroyed())win.webContents.send('dock:state',await state());}
 async function sync(){
+  if(sending.size)return state();
   if(syncPromise)return syncPromise;
   syncPromise=(async()=>{
     if(!config.url&&!(config.feedMode==='github'&&config.repository))return state();busy=true;lastError='';await emit();
@@ -90,10 +93,10 @@ async function sendGame(value){
  let message,skill;
  if(value.action==='preview')message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请按当前项目适用的 Skill，启动最新版本的本地试玩，使用固定手机尺寸外壳给出可点击的预览链接。先检查能否进入游戏，保留原文件与存档，并收尾已被替代的旧预览。';
  else if(value.action==='check')message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请读取本对话最新要求、项目规则和适用 Skill，检查并定点修复当前游戏，完成相称验证，保留原件与存档。不要自动上传或发布。';
- else {skill=value.skillId?.startsWith('bundle-')?await require('./skill-bundles.cjs').prepareBundle(root,installed,value.skillId):installed[value.skillId];if(!skill)throw Error('请选择 Skill');if(!skill.local){const latest=index.releases.find(r=>r.skillId===value.skillId);if(latest&&latest.id!==skill.id){skill=installed[value.skillId]=await client.install(config,latest.id);const pins=await readJSON(path.join(root,'pins.json'),{});pins[value.skillId]=false;await atomicJSON(path.join(root,'pins.json'),pins);}}const task=await getTask(value);skill=task.skill;message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请重新读取这个新版 Skill：'+skill.path+'\n先读取 SKILL.md，再按需读取配套文件。\nSkill：'+skill.name+' '+skill.version+'\n文件树 SHA-256：'+skill.treeHash+'\n请使用这个新版 Skill 继续完成后面的制作，沿用本对话的当前进度，保留原件、存档和已确认的玩法。';}
+ else {if(!value.skillId?.startsWith('bundle-')){skill=installed[value.skillId];if(!skill)throw Error('请选择 Skill');if(!skill.local){const latest=index.releases.find(r=>r.skillId===value.skillId);if(latest&&latest.id!==skill.id){skill=installed[value.skillId]=await client.install(config,latest.id);const pins=await readJSON(path.join(root,'pins.json'),{});pins[value.skillId]=false;await atomicJSON(path.join(root,'pins.json'),pins);}}}const task=await getTask(value);skill=task.skill;message='当前游戏：'+game.name+'\n项目目录：'+game.path+'\n请重新读取这个新版 Skill：'+skill.path+'\n先读取 SKILL.md，再按需读取配套文件。\nSkill：'+skill.name+' '+skill.version+'\n文件树 SHA-256：'+skill.treeHash+'\n请使用这个新版 Skill 继续完成后面的制作，沿用本对话的当前进度，保留原件、存档和已确认的玩法。';}
  if(skill?.archive)message+='\n完整压缩包：'+skill.archive;
- const key=game.threadId+':'+(skill?.treeHash||value.action),logPath=path.join(root,'send-receipts.json'),receipts=await readJSON(logPath,{});if(receipts[key]?.status==='uncertain')throw Error('上次发送待确认，请先查看目标对话，勿重复发送');
- const result=await queueMessage(game.threadId,message);receipts[key]={...result,threadId:game.threadId,skillId:value.skillId||null,createdAt:new Date().toISOString()};await atomicJSON(logPath,receipts);if(result.status==='failed')throw Error(result.detail);return result;}finally{sending.delete(game.threadId);await emit();}
+ const key=game.threadId+':'+(skill?.treeHash||value.action),logPath=path.join(root,'send-receipts.json');
+ const result=await sendWithReceipt({file:logPath,key,threadId:game.threadId,skillId:value.skillId,send:()=>queueMessage(game.threadId,message)});if(result.status==='failed')throw Error(result.detail);return {...result,target:game.name,skill:skill?.name};}finally{sending.delete(game.threadId);await emit();}
 }
 
 const handlers={
@@ -116,7 +119,7 @@ const handlers={
   settings:async value=>{if(syncPromise)await syncPromise;const c=connection({url:value.url,token:value.token||config.token});const changed=config.url!==c.url||config.token!==c.token;config.url=c.url;config.token=c.token;config.feedMode='hub';config.autoDownload=!!value.autoDownload;if(changed){await atomicJSON(path.join(root,'pins.json'),{});index={releases:[]};}await persist();await sync();listenEvents();return state();},
   disconnect:async()=>{eventAbort?.abort();if(syncPromise)await syncPromise;config.url='';config.token='';config.feedMode='none';index={releases:[]};status='未连接同步源';await persist();await emit();},
   sync:()=>sync(),
-  install:async value=>{if(busy)throw Error('正在同步，请稍候');busy=true;await emit();try{const r=index.releases.find(r=>r.id===value.id);if(!r)throw Error('版本不存在');const out=await client.install(config,r.id,{replace:!!value.pin});installed[r.skillId]=out;const pins=await readJSON(path.join(root,'pins.json'),{});pins[r.skillId]=!!value.pin;await atomicJSON(path.join(root,'pins.json'),pins);await emit();return out;}finally{busy=false;await emit();}},
+  install:async value=>{if(sending.size)throw Error('Skill 正在推送，请稍后恢复版本');if(busy)throw Error('正在同步，请稍候');busy=true;await emit();try{const r=index.releases.find(r=>r.id===value.id);if(!r)throw Error('版本不存在');const out=await client.install(config,r.id,{replace:!!value.pin});installed[r.skillId]=out;const pins=await readJSON(path.join(root,'pins.json'),{});pins[r.skillId]=!!value.pin;await atomicJSON(path.join(root,'pins.json'),pins);await emit();return out;}finally{busy=false;await emit();}},
   addSource:async value=>{if(config.sources.some(s=>s.name===value.name||s.path===value.path))throw Error('此名称或目录已添加');const {collect}=require('./core.cjs');await collect(value.path);const s={id:crypto.randomUUID(),name:String(value.name).trim(),path:value.path,auto:false};if(!s.name)throw Error('请输入 Skill 名称');config.sources.push(s);await persist();await emit();return s;},
   sourceAuto:async value=>{const s=config.sources.find(s=>s.id===value.id);if(s)s.auto=!!value.auto;await persist();await emit();},
   removeSource:async id=>{config.sources=config.sources.filter(s=>s.id!==id);await persist();await emit();},

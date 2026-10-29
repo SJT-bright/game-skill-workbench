@@ -3,10 +3,10 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../ui/app.js'),'utf8');
-function harness(patch={}){
+function harness(patch={},preferences={}){
  const app={innerHTML:'',addEventListener(){}},modal={addEventListener(){}},listeners={},calls=[];
  let onState;const initial={games:[],installed:{},index:{releases:[]},settings:{},sources:[],collapsed:true,updateNotices:[],...patch};
- const context=vm.createContext({SkillCategories:require('../ui/skill-categories.js'),ThreadSelection:require('../ui/thread-selection.js'),document:{querySelector:q=>q==='#app'?app:q==='#modal'?modal:null,querySelectorAll:()=>[],addEventListener:(event,fn)=>listeners[event]=fn,body:{classList:{toggle(){}},dataset:{}}},window:{dock:{call:async(method,value)=>{calls.push([method,value]);return initial;},onState:fn=>onState=fn}},setInterval(){},setTimeout(){},clearTimeout(){},console});
+ const context=vm.createContext({localStorage:{getItem:()=>JSON.stringify(preferences),setItem:(_,v)=>Object.assign(preferences,JSON.parse(v))},SkillCategories:require('../ui/skill-categories.js'),ThreadSelection:require('../ui/thread-selection.js'),document:{querySelector:q=>q==='#app'?app:q==='#modal'?modal:null,querySelectorAll:()=>[],addEventListener:(event,fn)=>listeners[event]=fn,body:{classList:{toggle(){}},dataset:{}}},window:{dock:{call:async(method,value)=>{calls.push([method,value]);return initial;},onState:fn=>onState=fn}},setInterval(){},setTimeout(){},clearTimeout(){},console});
  vm.runInContext(source,context);vm.runInContext('state='+JSON.stringify(initial),context);
  return {app,calls,run:code=>vm.runInContext(code,context),emit:s=>onState(s),click:async dataset=>listeners.click({target:{closest:selector=>selector==='button,[data-game]'?{dataset,hasAttribute:()=>false}:null}}),initial};
 }
@@ -40,3 +40,5 @@ test('Two-package view preserves opt-in component version history and restore ac
  const ui=harness({installed:{english:{skillId:'english',name:'cocos-game-to-english',id:'v2',local:false}},index:{releases:[{skillId:'english',name:'cocos-game-to-english',id:'v2',version:'v2',summary:'latest'},{skillId:'english',name:'cocos-game-to-english',id:'v1',version:'v1',summary:'older'}]}});
  ui.run('histories.add("bundle-english")');const html=ui.run('skills()');assert.match(html,/data-history="bundle-english"/);assert.match(html,/data-restore="v1"/);assert.match(html,/当前使用/);assert.match(html,/cocos-game-to-english · v1/);
 });
+
+test('Selection and category survive restart and background refresh without changing the chosen target',()=>{const preferences={selectedGame:'b',skillCategory:'重塑',filter:'测试阶段',activityFilter:'ongoing'},ui=harness({games:[{id:'a'},{id:'b'}]},preferences);ui.run('render()');assert.equal(ui.run('selectedGame'),'b');assert.equal(ui.run('skillCategory'),'重塑');ui.emit({...ui.initial,games:[{id:'a',name:'changed'},{id:'b'}]});assert.equal(ui.run('selectedGame'),'b');assert.equal(preferences.selectedGame,'b');ui.run('filter="全部";render()');assert.equal(preferences.selectedGame,'b');});

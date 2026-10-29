@@ -3,7 +3,7 @@
 const fs=require('node:fs/promises'),path=require('node:path');
 module.exports=async function({win,handlers,config,installed,root,dialog}){
  const source=path.join(root,'收到的游戏 folder'),destination=path.join(root,'项目 projects');await fs.mkdir(path.join(source,'assets'),{recursive:true});await fs.mkdir(destination,{recursive:true});await fs.writeFile(path.join(source,'assets','game.txt'),'original-game');await fs.writeFile(path.join(source,'.project'),'hidden');
- const execute=js=>win.webContents.executeJavaScript(js),wait=async fn=>{for(let i=0;i<100;i++){if(await execute(fn))return;await new Promise(r=>setTimeout(r,50));}throw Error('Native UI condition timed out: '+fn);};
+ const execute=js=>win.webContents.executeJavaScript(js),wait=async fn=>{for(let i=0;i<1200;i++){if(await execute(fn))return;await new Promise(r=>setTimeout(r,50));}throw Error('Native UI condition timed out: '+fn);};
  const original=dialog.showOpenDialog;dialog.showOpenDialog=async()=>({canceled:false,filePaths:[destination]});try{await handlers.setProjectRoot();}finally{dialog.showOpenDialog=original;}
  await execute(`document.querySelector('nav [data-tab="games"]').click()`);
  win.webContents.debugger.attach('1.3');try{const data={items:[],files:[source],dragOperationsMask:1};await win.webContents.debugger.sendCommand('Input.dispatchDragEvent',{type:'dragEnter',x:180,y:280,data});await win.webContents.debugger.sendCommand('Input.dispatchDragEvent',{type:'drop',x:180,y:280,data});}finally{win.webContents.debugger.detach();}

@@ -35,7 +35,7 @@ Ego Lite 先设定目标长屏视口，再加载/刷新游戏；引擎可能缓�
 
 ## 从项目故障提炼通用机制
 
-Cocos/TikTok任务按 [通用问题适用范围](../../cocos-game-to-english/references/feedback-regressions.md) 使用统一编号，原故障和个性化改动保留项目。重点把广告完成、一次发奖、保存恢复、成功/失败后的可见状态和旧结果隔离接入当前源码/Native回归；其他状态故障仅在实际存在对应功能时检查。不得把某款游戏的运动、结束或动画规则复制为通用要求。旧失败/新通过及正常对照进入实际产包入口，界面与手机待验单列。
+Cocos/TikTok任务按 通用问题适用范围（英化包 `remake-core/references/feedback-regressions.md`；重塑包 `remake-core/references/feedback-regressions.md`） 使用统一编号，原故障和个性化改动保留项目。重点把广告完成、一次发奖、保存恢复、成功/失败后的可见状态和旧结果隔离接入当前源码/Native回归；其他状态故障仅在实际存在对应功能时检查。不得把某款游戏的运动、结束或动画规则复制为通用要求。旧失败/新通过及正常对照进入实际产包入口，界面与手机待验单列。
 
 ## Native 首页完全无响应时
 

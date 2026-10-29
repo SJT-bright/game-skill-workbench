@@ -1,0 +1,39 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "skill": "cocos-game-to-english",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "revision": "2026-10-28.english-simple.5",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "34e50b6475600f30e68c431ab21ea027f0ea39d034aadeb5f8951f7f72fea107",
+      "bytes": 3527
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "bytes": 176
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "sha256": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+      "bytes": 1434
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "sha256": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
+      "bytes": 21567
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "sha256": "621d0e75d15095e50776fc12c70ca9d75634f3a0ab90c61eb478088c96c724e5",
+      "bytes": 2039
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "sha256": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
+      "bytes": 460
+    }
+  ],
+  "previous_provenance_sha256": "f5278d1f1209645be17a75137c9445cf88d452db74e2942dad90008f76d96783"
+}

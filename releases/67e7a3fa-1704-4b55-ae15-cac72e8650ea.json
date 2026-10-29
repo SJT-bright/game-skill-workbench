@@ -1,0 +1,61 @@
+{
+  "id": "67e7a3fa-1704-4b55-ae15-cac72e8650ea",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v37",
+  "createdAt": "2026-10-29T02:30:13.412Z",
+  "summary": "文件变更：新增 1，修改 5，移除 297。",
+  "changes": {
+    "added": 1,
+    "modified": 5,
+    "deleted": 297
+  },
+  "treeHash": "33d7bf73272aa09b2970b9389a35df09feb0aaf0b8060f47d646b2c21377e152",
+  "bytes": 30484,
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "a1de4f4255f2c73e68ea84f3a6a006a28c7fa9ad81edd8ee6ad974cb471696e8",
+      "size": 1281,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "34e50b6475600f30e68c431ab21ea027f0ea39d034aadeb5f8951f7f72fea107",
+      "size": 3527,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "hash": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+      "size": 1434,
+      "executable": false
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "hash": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
+      "size": 21567,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "hash": "621d0e75d15095e50776fc12c70ca9d75634f3a0ab90c61eb478088c96c724e5",
+      "size": 2039,
+      "executable": false
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
+      "size": 460,
+      "executable": false
+    }
+  ]
+}

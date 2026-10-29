@@ -1,0 +1,4 @@
+interface:
+  display_name: "英化"
+  short_description: "中文完整游戏只改英文美工和文字，补固定入口"
+  default_prompt: "用英化skill英化这个游戏"

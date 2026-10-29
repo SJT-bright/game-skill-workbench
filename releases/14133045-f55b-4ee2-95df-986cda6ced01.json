@@ -1,0 +1,85 @@
+{
+  "id": "14133045-f55b-4ee2-95df-986cda6ced01",
+  "skillId": "s-a5a5d4cc5c2308178580",
+  "directory": "chrome-mobile-testing",
+  "name": "chrome-mobile-testing",
+  "version": "v7",
+  "createdAt": "2026-10-29T17:35:02.248Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "27837c0f827a81401fe11fdda94d7e3d8a6ca7fd53a0110e8504a1d239373d0d",
+  "bytes": 79123,
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "aa76434efa9939054b2b4a22fdcf24fd664e09aeef45d3ed11be707e84e15893",
+      "size": 2009,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "01a7f5f84ecda77fb21570bcec9dc26419a4a11bd951518c0388e209d46c95b1",
+      "size": 15278,
+      "executable": false
+    },
+    {
+      "path": "scripts/chrome_touch.py",
+      "hash": "e6adeb7cdc7d58bde659e98fa9b69ce8756b25c7c6b93d7f5ef6803ce56c841d",
+      "size": 35898,
+      "executable": false
+    },
+    {
+      "path": "scripts/ego_touch_runner.js",
+      "hash": "15f562ba045a54b6ef1c4e4c89d2246dc8a604cdec97112b1467dc6399a0dc25",
+      "size": 13600,
+      "executable": false
+    },
+    {
+      "path": "scripts/prepare_chrome.py",
+      "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+      "size": 1902,
+      "executable": false
+    },
+    {
+      "path": "tests/bin/ego-browser",
+      "hash": "c393f9ebed922816ccefced55c17009ce004b420e16b5e953b3508350d59c97d",
+      "size": 2920,
+      "executable": false
+    },
+    {
+      "path": "tests/calibration-plan.json",
+      "hash": "a2e8e5e5fb915222386195cb8b5fcbc74c46bccda09447cab095259097bf05c6",
+      "size": 333,
+      "executable": false
+    },
+    {
+      "path": "tests/site/big.png",
+      "hash": "82c88be7500e579e4219db87afa35bf36c0602915c298f9bd769c01dcb1e311b",
+      "size": 1390,
+      "executable": false
+    },
+    {
+      "path": "tests/site/index.html",
+      "hash": "10964c5f7910c168d2223b1e40bb4ed8215b3865f3af0810567f7091dacdf053",
+      "size": 578,
+      "executable": false
+    },
+    {
+      "path": "tests/test_ego_route.py",
+      "hash": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
+      "size": 4925,
+      "executable": false
+    },
+    {
+      "path": "tests/timing-plan.json",
+      "hash": "7eece6a52f0ea6a0f2413020932648dd279c6806874bb1a12442171df1b3b309",
+      "size": 290,
+      "executable": false
+    }
+  ]
+}

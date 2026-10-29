@@ -2,6 +2,72 @@
   "schema": 1,
   "releases": [
     {
+      "id": "14133045-f55b-4ee2-95df-986cda6ced01",
+      "skillId": "s-a5a5d4cc5c2308178580",
+      "directory": "chrome-mobile-testing",
+      "name": "chrome-mobile-testing",
+      "version": "v7",
+      "createdAt": "2026-10-29T17:35:02.248Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "27837c0f827a81401fe11fdda94d7e3d8a6ca7fd53a0110e8504a1d239373d0d",
+      "bytes": 79123,
+      "fileCount": 11
+    },
+    {
+      "id": "971c643d-7be6-4ec4-a397-83a4273c7594",
+      "skillId": "s-c80e30dda4e7623bf0ac",
+      "name": "remake-art",
+      "version": "v1",
+      "createdAt": "2026-10-29T17:35:02.193Z",
+      "summary": "文件变更：新增 35，修改 0，移除 0。",
+      "changes": {
+        "added": 35,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "2c14e3d5d9d20933ef357537e2b22e5ea7aa932e5ca5cadb4ce69edc3d110c38",
+      "bytes": 1009511,
+      "fileCount": 35
+    },
+    {
+      "id": "5d92bd70-dbf0-4166-97b8-7a46541bdbeb",
+      "skillId": "s-c527d5389d209a5759a9",
+      "name": "remake-core",
+      "version": "v1",
+      "createdAt": "2026-10-29T17:35:02.153Z",
+      "summary": "文件变更：新增 262，修改 0，移除 0。",
+      "changes": {
+        "added": 262,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "5a7980e3cf62e6cafd4412fc79772f978c73f7600b5bee5eaab926c0682b4da3",
+      "bytes": 5480047,
+      "fileCount": 262
+    },
+    {
+      "id": "fe92c2d1-0208-4147-bd5a-1412c177e937",
+      "skillId": "s-21e83a6b3e72cb97b66b",
+      "directory": "cocos-game-check",
+      "name": "cocos-game-check",
+      "version": "v1",
+      "createdAt": "2026-10-29T17:35:02.068Z",
+      "summary": "文件变更：新增 62，修改 0，移除 0。",
+      "changes": {
+        "added": 62,
+        "modified": 0,
+        "deleted": 0
+      },
+      "treeHash": "64b4105f1ddb998d0a270bb8bec5ae8b9b9e004957eee2e80598e131be8ca8d6",
+      "bytes": 477324,
+      "fileCount": 62
+    },
+    {
       "id": "be4179fb-4256-4dae-a0ec-9d5590d62134",
       "skillId": "s-8a4323773719ef381f6d",
       "directory": "grok-image-review",

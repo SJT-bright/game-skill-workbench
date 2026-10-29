@@ -1,0 +1,4 @@
+interface:
+  display_name: "统一检查"
+  short_description: "英化与重塑共用：启动、测试、出包、包检查、评审"
+  default_prompt: "用检查skill检查这个游戏"

@@ -1,0 +1,182 @@
+'use strict';
+// TikTok Platform Kit v1 - logic of the two home entries (Add to Home Screen, Profile Revisit). Copy unchanged.
+// It draws nothing. The game owns the art and calls render(view) output into its own panel.
+//
+//   var flow = new MissionFlow({
+//     store: save,                                   // SaveStore of this game (coins live in the same save)
+//     reward: function (kind, draft) { draft.coins += 25; },   // edit the draft only
+//     rewardText: {shortcut: '+25 Coins', profile: '+25 Coins'},
+//     render: function (view) { ...update the panel from view... },
+//     onGranted: function (kind, data) { ...refresh the top bar from data... }
+//   });
+//   home icon tap        -> flow.open('shortcut' | 'profile')
+//   panel main button    -> view.action === 'start' ? flow.start() : flow.check()
+//   panel close (X)      -> flow.close()
+//   cc.game.EVENT_SHOW   -> flow.onShow()
+//   every frame          -> flow.tick()
+//   home scene destroyed -> flow.dispose()
+//
+// Guarantees (each one is a real bug from an earlier game):
+//  - Leaving TikTok and coming back cancels the old check and starts a new one; a late old answer is dropped.
+//  - Taps during one check are merged; a check always ends (10 s at most) with a visible message.
+//  - Every result that is not a reward shows a message. No silent return.
+//  - A navigation answer never overwrites a newer check result.
+//  - Reward + "claimed" flag are saved in ONE write; a failed save pays nothing and can be retried.
+//  - Only canReceiveReward === true pays, once per entry per save.
+var TikTokMissionService = require('./TikTokMissionService');
+
+var TEXT = {
+  intro_shortcut: 'Add this game to your home screen, open it from the new icon, then come back for your reward.',
+  intro_profile: 'Open your TikTok Profile, open this game from the sidebar, then come back for your reward.',
+  opening: 'Opening TikTok...',
+  navigated: 'Now open the game from that entry, then tap CHECK REWARD.',
+  checking: 'Checking your reward...',
+  wait: 'Please wait for the current request.',
+  granted: 'Reward received: ',
+  claimed: 'Reward already collected.',
+  saveFailed: 'Could not save your reward. Please try again.',
+  preview: 'LOCAL PREVIEW: open the game inside TikTok to use this.'
+};
+var KINDS = {shortcut: true, profile: true};
+
+function hasNativeSDK() {
+  return typeof TTMinis !== 'undefined' && !!TTMinis && !!TTMinis.game;
+}
+
+function MissionFlow(options) {
+  options = options || {};
+  if (!options.store || typeof options.reward !== 'function' || typeof options.render !== 'function') {
+    throw new Error('MissionFlow needs store, reward(kind, draft) and render(view)');
+  }
+  this.store = options.store;
+  this.reward = options.reward;
+  this.renderView = options.render;
+  this.onGranted = options.onGranted || null;
+  this.rewardText = options.rewardText || {shortcut: '', profile: ''};
+  this.ownsMissions = !options.missions;
+  // Own timer on by default, so a check still ends if the game forgets to call tick().
+  this.missions = options.missions ||
+    new TikTokMissionService(options.missionTimeoutMs ? {timeoutMs: options.missionTimeoutMs} : undefined);
+  this.native = options.native !== undefined ? !!options.native : hasNativeSDK();
+  this.kind = null;
+  this.phase = 'closed';      // closed | idle | opening | checking | done
+  this.message = '';
+  this.version = 0;           // changes on open / close / return from background
+  this.op = 0;                // changes on every new request; only the newest may update the panel
+}
+
+MissionFlow.prototype.isClaimed = function (kind) { return this.store.isClaimed(kind); };
+
+MissionFlow.prototype.view = function () {
+  var claimed = this.kind ? this.isClaimed(this.kind) : false;
+  var busy = this.phase === 'opening' || this.phase === 'checking';
+  return {
+    open: this.kind !== null, kind: this.kind, phase: this.phase, busy: busy, claimed: claimed,
+    message: this.message, native: this.native,
+    rewardText: this.kind ? (this.rewardText[this.kind] || '') : '',
+    // The single main button: go to TikTok first, check after coming back. Disabled while busy or claimed.
+    action: claimed ? 'none' : (this.phase === 'idle' && this.navigatedOnce ? 'check' : 'start'),
+    canStart: !busy && !claimed, canCheck: !busy && !claimed
+  };
+};
+
+MissionFlow.prototype._render = function () { try { this.renderView(this.view()); } catch (_) {} };
+
+MissionFlow.prototype._guard = function () {
+  var self = this, version = this.version, kind = this.kind;
+  return function () { return self.version === version && self.kind === kind; };
+};
+
+MissionFlow.prototype.open = function (kind) {
+  if (!KINDS[kind]) return;
+  this.missions.cancel();
+  this.kind = kind;
+  this.version++; this.op++;
+  this.navigatedOnce = false;
+  this.phase = 'idle';
+  this.message = this.isClaimed(kind) ? TEXT.claimed : (this.native ? TEXT['intro_' + kind] : TEXT.preview);
+  this._render();
+  if (!this.isClaimed(kind) && this.native) this.check();
+};
+
+MissionFlow.prototype.start = function () {
+  if (!this.kind) return;
+  if (this.isClaimed(this.kind)) { this.message = TEXT.claimed; this._render(); return; }
+  if (this.phase === 'opening' || this.phase === 'checking') { this.message = TEXT.wait; this._render(); return; }
+  var self = this, op = ++this.op, isCurrent = this._guard();
+  this.phase = 'opening'; this.message = TEXT.opening; this._render();
+  return this.missions.navigate(this.kind, {isCurrent: isCurrent}).then(function (r) {
+    if (!isCurrent() || op !== self.op) return;
+    self.phase = 'idle';
+    if (r.status === 'success') { self.navigatedOnce = true; self.message = TEXT.navigated; }
+    else self.message = r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;
+    self._render();
+  });
+};
+
+MissionFlow.prototype.check = function () {
+  if (!this.kind) return;
+  if (this.isClaimed(this.kind)) { this.message = TEXT.claimed; this._render(); return; }
+  if (this.phase === 'checking') return this.pendingCheck;   // merge taps during one check
+  if (this.phase === 'opening') { this.message = TEXT.wait; this._render(); return; }
+  var self = this, op = ++this.op, isCurrent = this._guard(), kind = this.kind;
+  this.phase = 'checking'; this.message = TEXT.checking; this._render();
+  this.pendingCheck = this.missions.query(kind, {isCurrent: isCurrent}).then(function (r) {
+    if (!isCurrent() || op !== self.op) return;
+    self.pendingCheck = null;
+    if (r.eligible) { self._grant(kind); return; }
+    self.phase = 'idle';
+    self.message = r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;
+    self._render();
+  });
+  return this.pendingCheck;
+};
+
+MissionFlow.prototype._grant = function (kind) {
+  var self = this;
+  var result = this.store.update(function (draft) {
+    if (draft.platformClaims[kind] === true) return false;
+    draft.platformClaims[kind] = true;
+    return self.reward(kind, draft);
+  });
+  if (result.ok) {
+    this.phase = 'done';
+    this.message = TEXT.granted + (this.rewardText[kind] || '');
+    this._render();
+    if (this.onGranted) { try { this.onGranted(kind, result.data); } catch (_) {} }
+    return;
+  }
+  this.phase = 'idle';
+  this.message = this.isClaimed(kind) ? TEXT.claimed : TEXT.saveFailed;
+  this._render();
+};
+
+MissionFlow.prototype.close = function () {
+  this.missions.cancel();
+  this.kind = null;
+  this.version++; this.op++;
+  this.phase = 'closed'; this.message = ''; this.pendingCheck = null;
+  this._render();
+};
+
+// Call on cc.game.EVENT_SHOW: the player came back from TikTok (shortcut / profile).
+MissionFlow.prototype.onShow = function () {
+  this.missions.onResume();          // old query is cancelled and its lock released
+  this.version++; this.op++;
+  this.pendingCheck = null;
+  if (!this.kind) return;
+  this.phase = 'idle';
+  if (this.isClaimed(this.kind)) { this.message = TEXT.claimed; this._render(); return; }
+  this.navigatedOnce = true;
+  this.check();                      // always a NEW request after coming back
+};
+
+MissionFlow.prototype.tick = function () { this.missions.tick(); };
+
+MissionFlow.prototype.dispose = function () {
+  this.close();
+  if (this.ownsMissions) this.missions.dispose();
+};
+
+MissionFlow.TEXT = TEXT;
+module.exports = MissionFlow;

@@ -1,0 +1,237 @@
+{
+  "schema": "tiktok_package_check.calibration.v1",
+  "date": "2026-10-24",
+  "synthetic_cases": [
+    {
+      "name": "test_case_mismatch",
+      "status": "ok"
+    },
+    {
+      "name": "test_comment_not_dependency",
+      "status": "ok"
+    },
+    {
+      "name": "test_custom_extra_subpackage",
+      "status": "ok"
+    },
+    {
+      "name": "test_division_does_not_hide_require",
+      "status": "ok"
+    },
+    {
+      "name": "test_duplicate_subpackage",
+      "status": "ok"
+    },
+    {
+      "name": "test_dynamic_not_claimed_verified",
+      "status": "ok"
+    },
+    {
+      "name": "test_empty_engine",
+      "status": "ok"
+    },
+    {
+      "name": "test_forwarded_require_iife",
+      "status": "ok"
+    },
+    {
+      "name": "test_internal_bundle_require",
+      "status": "ok"
+    },
+    {
+      "name": "test_js_syntax_failure",
+      "status": "ok"
+    },
+    {
+      "name": "test_jslist_missing",
+      "status": "ok"
+    },
+    {
+      "name": "test_json_parse_failure",
+      "status": "ok"
+    },
+    {
+      "name": "test_launch_registration",
+      "status": "ok"
+    },
+    {
+      "name": "test_main_limit",
+      "status": "ok"
+    },
+    {
+      "name": "test_missing_engine",
+      "status": "ok"
+    },
+    {
+      "name": "test_module_cycle",
+      "status": "ok"
+    },
+    {
+      "name": "test_native_byte_mismatch",
+      "status": "ok"
+    },
+    {
+      "name": "test_normal",
+      "status": "ok"
+    },
+    {
+      "name": "test_pack_missing",
+      "status": "ok"
+    },
+    {
+      "name": "test_parent_relative",
+      "status": "ok"
+    },
+    {
+      "name": "test_path_traversal",
+      "status": "ok"
+    },
+    {
+      "name": "test_regex_not_require",
+      "status": "ok"
+    },
+    {
+      "name": "test_report_failure_no_final_zip",
+      "status": "ok"
+    },
+    {
+      "name": "test_report_success_bound_to_output",
+      "status": "ok"
+    },
+    {
+      "name": "test_source_file_refused",
+      "status": "ok"
+    },
+    {
+      "name": "test_subpackage_missing",
+      "status": "ok"
+    },
+    {
+      "name": "test_subpackage_undeclared",
+      "status": "ok"
+    },
+    {
+      "name": "test_template_expression_require",
+      "status": "ok"
+    },
+    {
+      "name": "test_transitive",
+      "status": "ok"
+    },
+    {
+      "name": "test_unknown_local_require_is_explicit",
+      "status": "ok"
+    },
+    {
+      "name": "test_writer_publishes_and_preserves_existing",
+      "status": "ok"
+    },
+    {
+      "name": "test_writer_refuses_missing_engine_without_output",
+      "status": "ok"
+    },
+    {
+      "name": "test_writer_refuses_wrong_id_without_output",
+      "status": "ok"
+    },
+    {
+      "name": "test_wrong_app_id",
+      "status": "ok"
+    }
+  ],
+  "raw_synthetic_test_log": "test_case_mismatch (__main__.PackageChecks.test_case_mismatch) ... ok\ntest_comment_not_dependency (__main__.PackageChecks.test_comment_not_dependency) ... ok\ntest_custom_extra_subpackage (__main__.PackageChecks.test_custom_extra_subpackage) ... ok\ntest_division_does_not_hide_require (__main__.PackageChecks.test_division_does_not_hide_require) ... ok\ntest_duplicate_subpackage (__main__.PackageChecks.test_duplicate_subpackage) ... ok\ntest_dynamic_not_claimed_verified (__main__.PackageChecks.test_dynamic_not_claimed_verified) ... ok\ntest_empty_engine (__main__.PackageChecks.test_empty_engine) ... ok\ntest_forwarded_require_iife (__main__.PackageChecks.test_forwarded_require_iife) ... ok\ntest_internal_bundle_require (__main__.PackageChecks.test_internal_bundle_require) ... ok\ntest_js_syntax_failure (__main__.PackageChecks.test_js_syntax_failure) ... ok\ntest_jslist_missing (__main__.PackageChecks.test_jslist_missing) ... ok\ntest_json_parse_failure (__main__.PackageChecks.test_json_parse_failure) ... ok\ntest_launch_registration (__main__.PackageChecks.test_launch_registration) ... ok\ntest_main_limit (__main__.PackageChecks.test_main_limit) ... ok\ntest_missing_engine (__main__.PackageChecks.test_missing_engine) ... ok\ntest_module_cycle (__main__.PackageChecks.test_module_cycle) ... ok\ntest_native_byte_mismatch (__main__.PackageChecks.test_native_byte_mismatch) ... ok\ntest_normal (__main__.PackageChecks.test_normal) ... ok\ntest_pack_missing (__main__.PackageChecks.test_pack_missing) ... ok\ntest_parent_relative (__main__.PackageChecks.test_parent_relative) ... ok\ntest_path_traversal (__main__.PackageChecks.test_path_traversal) ... ok\ntest_regex_not_require (__main__.PackageChecks.test_regex_not_require) ... ok\ntest_report_failure_no_final_zip (__main__.PackageChecks.test_report_failure_no_final_zip) ... ok\ntest_report_success_bound_to_output (__main__.PackageChecks.test_report_success_bound_to_output) ... ok\ntest_source_file_refused (__main__.PackageChecks.test_source_file_refused) ... ok\ntest_subpackage_missing (__main__.PackageChecks.test_subpackage_missing) ... ok\ntest_subpackage_undeclared (__main__.PackageChecks.test_subpackage_undeclared) ... ok\ntest_template_expression_require (__main__.PackageChecks.test_template_expression_require) ... ok\ntest_transitive (__main__.PackageChecks.test_transitive) ... ok\ntest_unknown_local_require_is_explicit (__main__.PackageChecks.test_unknown_local_require_is_explicit) ... ok\ntest_writer_publishes_and_preserves_existing (__main__.PackageChecks.test_writer_publishes_and_preserves_existing) ... ok\ntest_writer_refuses_missing_engine_without_output (__main__.PackageChecks.test_writer_refuses_missing_engine_without_output) ... ok\ntest_writer_refuses_wrong_id_without_output (__main__.PackageChecks.test_writer_refuses_wrong_id_without_output) ... ok\ntest_wrong_app_id (__main__.PackageChecks.test_wrong_app_id) ... ok\n\n----------------------------------------------------------------------\nRan 34 tests in 6.353s\n\nOK\n",
+  "real_artifact_controls": [
+    {
+      "artifact_name": "像素矿工.zip",
+      "input_sha256": "2e7d1d7016ffb655a0f1ee702b9f0d14b523c80d3d0143c6e0bbdf1b6625ff5f",
+      "expected_static_pass": false,
+      "actual_static_pass": false,
+      "expectation_met": true,
+      "error": "Startup dependency check failed: missing startup dependency: cocos/cocos2d-js-min.js from game.js"
+    },
+    {
+      "artifact_name": "像素矿工_修复引擎缺失_v13.zip",
+      "input_sha256": "e9bef92350f9c800170a041a4bfca2acacf35cd6f8200cec2b9ac37903580547",
+      "expected_static_pass": true,
+      "actual_static_pass": true,
+      "expectation_met": true,
+      "error": null
+    },
+    {
+      "artifact_name": "BadHairDay_TikTok_Unified_v9_20261024.zip",
+      "input_sha256": "5096b2b8d708ade2fa12ceb71fab56057d3189ed6b0642019e7d0e627825544a",
+      "expected_static_pass": true,
+      "actual_static_pass": true,
+      "expectation_met": true,
+      "error": null
+    },
+    {
+      "artifact_name": "EmberCircuit_TikTok（自制）.zip",
+      "input_sha256": "f9c3b1782ba7c919c3b4d39db998b826319e6af20e724ce01b11be17af7d973a",
+      "expected_static_pass": true,
+      "actual_static_pass": true,
+      "expectation_met": true,
+      "error": null
+    },
+    {
+      "artifact_name": "JunipersGreenhouse（自制）.zip",
+      "input_sha256": "665cbb42ab37025efae891620ffb21c3c3284e9cfc4a1c1d8418fc36b7f0d080",
+      "expected_static_pass": true,
+      "actual_static_pass": true,
+      "expectation_met": true,
+      "error": null
+    },
+    {
+      "artifact_name": "双人行双人跳.zip",
+      "input_sha256": "eed891f83ef6410561ab558dba65793a1809a83597c63267a0dab9653dcd5e2b",
+      "expected_static_pass": true,
+      "actual_static_pass": true,
+      "expectation_met": true,
+      "error": null
+    }
+  ],
+  "all_expectations_met": true,
+  "independent_review": {
+    "method": "separate Codex agent; read-only shared scripts, isolated temporary fixtures",
+    "initial_findings": [
+      "forwarded require IIFE skipped",
+      "regex literal misread as require",
+      "required JSON not parsed",
+      "report failure after ZIP publication"
+    ],
+    "retested_all_closed": true
+  },
+  "code_sha256": {
+    "remake-core/scripts/audit_upload_startup.py": "43ca68b32fd746c88fcda03f7d545be2aa27f425cba14ff94fc901959b5b6201",
+    "remake-core/scripts/parse_package_requires.cjs": "a876d4686b3574e3e86614e0c7dc5ef5db612d3329819caec684eba72640fc79",
+    "remake-core/scripts/vendor/acorn.cjs": "fdb08546776ec6228b03e8d02b40d4ab3255bae5f401adba7ff5dad927ac5c9c",
+    "remake-core/scripts/vendor/ACORN-LICENSE": "76a876cf886ff9be2a8b5e2e86514fed06223c8c9f0c1e9ee9606e93841e00b7",
+    "remake-core/scripts/verify_native_zip.py": "1743a54c6b3dc9cf2a9f4ec031f2d31817abb2d89038a4ba650d1fae6988b0cc",
+    "remake-core/scripts/make_tiktok_zip.py": "56fc9fb00bed4bfc40fa4f543901adb33e9c8e838fd59078d485e3ace777c410",
+    "cocos-game-check/package-check/scripts/test_package_checks.py": "b6374c5f9fcad6e25b5a4198bd0bf6ac5e342619d6cd07a74cce3fafbb4180c3",
+    "cocos-game-check/package-check/scripts/build_checked_zip.py": "96722710feb03a7de5d1730d5762fe34defab9e67c2c5cfee0ff5e6259e77101",
+    "cocos-game-check/package-check/scripts/check_package.py": "f93bccc1236bce24373c049403fd69f38e4501e088b6d250d791dd2223fec435"
+  },
+  "parser_dependency": {
+    "name": "acorn",
+    "version": "8.15.0",
+    "license": "MIT",
+    "tar_sha256": "e46eae89bd9761f16d1d25563b837b55b4b78f3ece06ee0b9789cb2644f523b3"
+  },
+  "boundary": "Static package-file calibration only; no physical TikTok/IAA/portal acceptance claimed.",
+  "main_package_overflow_20261024": {
+    "suite": "scripts/test_package_checks.py",
+    "tests_run": 38,
+    "failed": 0,
+    "before_archive_size_refusal": true,
+    "cases": [
+      "compressible_main_over_limit_refused_without_archive_write",
+      "total_over_limit_refused_without_archive_write",
+      "large_normal_subpackage_allowed",
+      "large_independent_subpackage_refused",
+      "empty_code_subpackage_entry_allowed"
+    ],
+    "real_package_regression": "Stored in project docs/qa/skill-overflow-regression-20261024.json; old refused main 26326649; fixed passed main 2613842 total 28862371",
+    "boundary": "No new platform upload or physical device claim"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "TikTokPlatformKit-Cocos2415",
+  "version": "1.1",
+  "engine": "2.4.15",
+  "date": "2026-10-27",
+  "files": {
+    "assets/tiktok-platform/PlatformConfig.js": {
+      "sha256": "4824b7b8340854f4bf2b6ecf185041b98f948fb9b74eeff0343885f73fe72fd4",
+      "origin": "editable: only gameId / placementMap per game",
+      "editable": true
+    },
+    "assets/tiktok-platform/RewardedService.js": {
+      "sha256": "04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd",
+      "origin": "SnakeVSBlock v32 assets/src, byte-identical (passed on device)"
+    },
+    "assets/tiktok-platform/TikTokMissionService.js": {
+      "sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
+      "origin": "SnakeVSBlock v32 assets/src, byte-identical (passed on device)"
+    },
+    "assets/tiktok-platform/SaveStore.js": {
+      "sha256": "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406",
+      "origin": "new in kit v1, Node-tested; first device use pending"
+    },
+    "assets/tiktok-platform/MissionFlow.js": {
+      "sha256": "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a",
+      "origin": "new in kit v1, Node-tested; first device use pending"
+    },
+    "build-templates/bytedance/main.js": {
+      "sha256": "75d635818778ff9b6e0dc66b6ee32c35b7c5ab9e18685d7fa42f84e73fb70dff",
+      "origin": "MetalMaster r5 build-templates (passed on device) + 1 touch-fix line; v1.1 stall limit 10 s"
+    },
+    "build-templates/bytedance/touch-coordinates.js": {
+      "sha256": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520",
+      "origin": "StarPop v50 build-templates, byte-identical (passed on device)"
+    }
+  }
+}

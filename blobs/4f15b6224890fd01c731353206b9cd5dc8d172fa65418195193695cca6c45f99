@@ -1,0 +1,44 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "skill": "cocos-game-to-english",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "revision": "2026-10-29.english-simple.9",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "aa7d5d44f9f35f7b15ae2010aa37198af034fe7ddd1af7e3514c927757a18867",
+      "bytes": 9748
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "bytes": 176
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "sha256": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "bytes": 1380
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "sha256": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+      "bytes": 1434
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "sha256": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
+      "bytes": 21567
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "sha256": "35825f8ab50a25d2a3c84560d47ff73ef8cabdda9ea6b66f761b26386baf2d51",
+      "bytes": 5758
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "sha256": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
+      "bytes": 460
+    }
+  ],
+  "previous_provenance_sha256": "97f07aa3d38975fbccea503c74349bcb06001a7b28e414827de9e5efc31c0aff"
+}

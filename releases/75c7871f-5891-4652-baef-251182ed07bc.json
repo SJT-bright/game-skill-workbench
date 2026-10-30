@@ -1,0 +1,67 @@
+{
+  "id": "75c7871f-5891-4652-baef-251182ed07bc",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v38",
+  "createdAt": "2026-10-30T08:51:57.097Z",
+  "summary": "文件变更：新增 1，修改 3，移除 0。",
+  "changes": {
+    "added": 1,
+    "modified": 3,
+    "deleted": 0
+  },
+  "treeHash": "a579917b76b66ea4749a2e26c6b6d134d316610c930ad39f0ad8f139ac37cdad",
+  "bytes": 41977,
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "4f15b6224890fd01c731353206b9cd5dc8d172fa65418195193695cca6c45f99",
+      "size": 1454,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "aa7d5d44f9f35f7b15ae2010aa37198af034fe7ddd1af7e3514c927757a18867",
+      "size": 9748,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "hash": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "size": 1380,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "hash": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+      "size": 1434,
+      "executable": false
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "hash": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
+      "size": 21567,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "hash": "35825f8ab50a25d2a3c84560d47ff73ef8cabdda9ea6b66f761b26386baf2d51",
+      "size": 5758,
+      "executable": false
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
+      "size": 460,
+      "executable": false
+    }
+  ]
+}

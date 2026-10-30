@@ -15,20 +15,7 @@ function epoch(value){if(typeof value==='number'&&Number.isFinite(value))return 
 function finite(value){return Number.isSafeInteger(value)&&value>=0?value:null;}
 function fresh(threadId,rolloutPath){return {schema:1,threadId,rolloutPath,offset:0,inode:null,identityConfirmed:false,identityMismatch:false,intervals:[],openTasks:{},lastTaskId:null,lastStart:null,lastActivity:null,lastOutcome:null,phaseHistory:[],tokens:null,lastReportedTotal:null,usageDiscontinuity:false,invalidRecords:0,invalidTime:false,historyTruncated:false,draining:false};}
 function merged(intervals){const out=[];for(const [start,end] of intervals.filter(i=>Number.isFinite(i[0])&&Number.isFinite(i[1])&&i[1]>=i[0]).sort((a,b)=>a[0]-b[0])){const last=out[out.length-1];if(last&&start<=last[1])last[1]=Math.max(last[1],end);else out.push([start,end]);}return out;}
-function messageOf(record){
- const p=record.payload||{};let item=p.type==='item_completed'?p.item:p;
- if(record.type==='response_item')item=p;
- const type=String(item?.type||'').toLowerCase();let role;
- if(type==='usermessage'||type==='user_message'||item?.role==='user')role='user';
- else if(type==='agentmessage'||type==='agent_message'||item?.role==='assistant')role='assistant';
- else return null;
- const content=item.content;
- const text=typeof item.text==='string'?item.text:typeof content==='string'?content:Array.isArray(content)?content.filter(x=>['text','input_text','output_text'].includes(String(x.type).toLowerCase())).map(x=>x.text||'').join('\n'):'';
- if(!text||/^\s*#\s*AGENTS\.md\b/.test(text)||/<(?:environment_context|permissions instructions|collaboration_mode)>/.test(text))return null;
- return {role,text,id:item.id||null};
-}
-function defaultStage(messages){const text=messages[messages.length-1]?.text||'';const clean=text.replace(/```[\s\S]*?```/g,'');const lines=clean.split(/[\n。！？，,；;]/).map(x=>x.trim()).filter(Boolean);const rules=[['已完成',/(?:本游戏|游戏|项目)(?:已全部完成|已完成交付|全部完成)|最终验收(?:已)?通过/],['待试玩',/待试玩|美工(?:制作|阶段)?(?:已|已经)?(?:完成|结束|通过)/],['游玩',/正在(?:本地)?试玩|进入(?:本地)?(?:游玩|试玩)阶段|游玩阶段|开始(?:本地)?试玩/],['检查',/检查阶段|进入(?:成品)?检查|开始(?:检查|验收)|正在(?:检查|验收)|检测成品/],['美工制作',/开始(?:做|进行)?美工|进入美工|美工(?:制作|阶段)/],['玩法结束',/玩法(?:制作|阶段)?(?:已|已经)?(?:完成|结束|通过)/],['玩法制作',/玩法制作|制作玩法|玩法阶段|开始(?:制作|重塑)/]];
- for(let n=lines.length-1;n>=0;n--){const line=lines[n];if(/尚未|还未|未开始|不要|暂不|未完成|未通过|之前|此前|历史|上次|不代表|之后|下一阶段|下一步|接下来|后续|计划/.test(line))continue;for(const [stage,re]of rules)if(re.test(line))return {stage};}return {stage:null};}
+const {messageOf,inferStage:defaultStage,VERSION:STAGE_VERSION}=require('./stage-detection.cjs');
 function applyRecord(state,record,{now=Date.now(),classifyStage=defaultStage}={}){
  const p=record.payload;if(!p||typeof p!=='object')return;
  if(record.type==='session_meta'){
@@ -60,7 +47,7 @@ function applyRecord(state,record,{now=Date.now(),classifyStage=defaultStage}={}
   }
   if(!turn||state.openTasks[turn]!==undefined||START.has(kind)||END.has(kind))state.lastActivity=Math.max(state.lastActivity??0,stamp);
  }
- const message=messageOf(record);if(message){const classified=classifyStage([message]);const stage=classified?.stage;if(stage&&state.phaseHistory[state.phaseHistory.length-1]?.stage!==stage){state.phaseHistory.push({stage,at:new Date(stamp).toISOString(),turnId:turn||null,itemId:message.id,role:message.role,source:'explicit-message',tokens:0});if(state.phaseHistory.length>512){state.phaseHistory=state.phaseHistory.slice(-512);state.historyTruncated=true;}}}
+ const message=messageOf(record);if(message){const classified=classifyStage([message]);const stage=classified?.stage;if(stage&&(state.phaseHistory[state.phaseHistory.length-1]?.stage!==stage||state.phaseHistory[state.phaseHistory.length-1]?.algorithmVersion!==STAGE_VERSION)){state.phaseHistory.push({stage,at:new Date(stamp).toISOString(),turnId:turn||null,itemId:message.id,role:message.role,source:'explicit-message',algorithmVersion:STAGE_VERSION,tokens:0});if(state.phaseHistory.length>512){state.phaseHistory=state.phaseHistory.slice(-512);state.historyTruncated=true;}}}
 }
 function currentState(thread,state,desktop,complete,now){
  const raw=thread.metadataStatus||thread.status;const kind=typeof raw==='object'?raw?.type:raw;const flags=typeof raw==='object'?raw?.activeFlags||[]:[];
@@ -83,7 +70,7 @@ function project(thread,state,{now=Date.now(),complete=false,desktop}={}){
  const history=state.phaseHistory.map((h,i)=>{const begin=epoch(h.at),end=epoch(state.phaseHistory[i+1]?.at)??now;const duration=intervals.reduce((n,[a,b])=>n+Math.max(0,Math.min(b,end)-Math.max(a,begin)),0);return {...h,elapsedMs:duration,totalTokens:h.tokens||0};});
  const totals={};for(const h of history){const t=totals[h.stage]||(totals[h.stage]={elapsedMs:0,totalTokens:0});t.elapsedMs+=h.elapsedMs;t.totalTokens+=h.totalTokens;}
  const latest=history[history.length-1]||null;const stageCurrent=!!latest&&epoch(latest.at)>=(state.lastStart||0);
- const value={active:activity.active,status:activity.status,elapsedMs:known?elapsed:null,currentElapsedMs:known?current:null,recordedElapsedMs:known&&closed.length?closed.reduce((n,[a,b])=>n+b-a,0):null,totalTokens:null,inputTokens:null,outputTokens:null,cachedInputTokens:null,reasoningOutputTokens:null,stageHistory:known?history:[],stageTotals:known?totals:{},latestStage:known?latest?.stage||null:null,latestStageAt:known?latest?.at||null:null,latestStageCurrent:known&&stageCurrent,source:'codex-rollout-events',complete:!!(known&&complete&&!state.invalidRecords&&!state.invalidTime&&!state.historyTruncated),timeComplete:!!(known&&complete&&(state.lastStart!==null||state.lastEnd!==undefined)&&!state.missingDuration&&!state.historyTruncated&&(!open.length||activity.active===true)),tokenComplete:!!(known&&complete&&state.tokens&&!state.usageDiscontinuity&&!state.inherited&&!thread.forkedFromId),usageBasis:state.usageDiscontinuity?'observed-cumulative-maximum':'thread-cumulative-counter',cost:null,checkedAt:new Date(now).toISOString()};
+ const value={active:activity.active,status:activity.status,elapsedMs:known?elapsed:null,currentElapsedMs:known?current:null,recordedElapsedMs:known&&closed.length?closed.reduce((n,[a,b])=>n+b-a,0):null,totalTokens:null,inputTokens:null,outputTokens:null,cachedInputTokens:null,reasoningOutputTokens:null,stageHistory:known?history:[],stageTotals:known?totals:{},latestStage:known?latest?.stage||null:null,latestStageAt:known?latest?.at||null:null,latestStageVersion:known?latest?.algorithmVersion||null:null,latestStageCurrent:known&&stageCurrent,source:'codex-rollout-events',complete:!!(known&&complete&&!state.invalidRecords&&!state.invalidTime&&!state.historyTruncated),timeComplete:!!(known&&complete&&(state.lastStart!==null||state.lastEnd!==undefined)&&!state.missingDuration&&!state.historyTruncated&&(!open.length||activity.active===true)),tokenComplete:!!(known&&complete&&state.tokens&&!state.usageDiscontinuity&&!state.inherited&&!thread.forkedFromId),usageBasis:state.usageDiscontinuity?'observed-cumulative-maximum':'thread-cumulative-counter',cost:null,checkedAt:new Date(now).toISOString()};
  if(known&&state.tokens)for(const key of COUNTERS)value[key]=state.tokens[key];
  if(known&&state.accountUsage)value.accountUsage=state.accountUsage;
  if(state.identityMismatch)value.reason='thread-identity-mismatch';else if(!known)value.reason='identity-unavailable';else if(!complete)value.reason='index-incomplete';else if(state.usageDiscontinuity)value.reason='usage-counter-reset';

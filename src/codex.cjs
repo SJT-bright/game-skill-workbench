@@ -6,7 +6,7 @@ const READ_METHODS=new Set(['initialize','thread/list','thread/turns/list','thre
 async function executable(){
  const home=os.homedir(),platform=process.platform,arch=process.arch;const triple=platform==='win32'?(arch==='arm64'?'aarch64-pc-windows-msvc':'x86_64-pc-windows-msvc'):(arch==='arm64'?'aarch64-apple-darwin':'x86_64-apple-darwin');
  const bases=[path.join(home,'.local/lib/node_modules'),path.join(process.env.APPDATA||path.join(home,'AppData/Roaming'),'npm/node_modules'),'/opt/homebrew/lib/node_modules','/usr/local/lib/node_modules'];
- const choices=bases.map(b=>path.join(b,'@openai/codex/node_modules/@openai',`codex-${platform}-${arch}`,'vendor',triple,'bin',platform==='win32'?'codex.exe':'codex'));
+ const choices=bases.flatMap(b=>['@openai/codex/node_modules/@openai','@openai'].map(prefix=>path.join(b,prefix,`codex-${platform}-${arch}`,'vendor',triple,'bin',platform==='win32'?'codex.exe':'codex')));if(platform==='darwin')choices.push('/Applications/Codex.app/Contents/Resources/codex');
  for(const dir of (process.env.PATH||'').split(path.delimiter))choices.push(path.join(dir,platform==='win32'?'codex.exe':'codex'));
  for(const p of choices)if(await fs.stat(p).then(s=>s.isFile(),()=>false))return p;
  throw Error('未找到 Codex CLI');
@@ -24,15 +24,8 @@ class Reader{
  async close(){if(this.closed)return;activeReaders.delete(this);this.closed=true;this.fail(Error('读取已结束'));this.lines.close();this.child.stdin.end();if(this.child.exitCode!==null)return;await new Promise(resolve=>{const done=()=>{clearTimeout(timer);resolve();};const timer=setTimeout(()=>{this.child.kill('SIGTERM');resolve();},700);this.child.once('exit',done);});if(this.child.exitCode===null){this.child.kill('SIGTERM');await new Promise(resolve=>{const timer=setTimeout(()=>{if(this.child.exitCode===null)this.child.kill('SIGKILL');resolve();},700);this.child.once('exit',()=>{clearTimeout(timer);resolve();});});}}
 }
 function textOf(entry){const i=entry.item||entry;if(i.type==='agentMessage')return {role:'assistant',text:String(i.text||'')};if(i.type==='userMessage')return {role:'user',text:(i.content||[]).filter(c=>c.type==='text').map(c=>c.text||'').join('\n')};return null;}
-function inferStage(messages){
- const patterns=[['已完成',/(?:游戏|项目|本游戏|制作)(?:已全部完成|已完成交付|全部完成)|正式完成|最终验收(?:已)?通过/],['待试玩',/美工(?:制作|阶段)?(?:已|已经)?(?:完成|结束|通过)|(?:等待|待|请你|交给你|给你)(?:进行)?(?:本地)?试玩|待试玩/],['游玩',/正在(?:本地)?试玩|进入(?:本地)?(?:游玩|试玩)阶段|游玩阶段|开始(?:本地)?试玩/],['检查',/进入(?:成品)?检查|检查阶段|开始(?:检查|验收)|正在(?:检查|验收)|检测成品|执行.*(?:检查|验收)/],['美工制作',/开始(?:做|进行)?美工|进入美工|美工(?:制作|阶段)|(?:修改|修复|调整|重做|替换).{0,12}(?:美术|界面|按钮|贴图|音效)|美术与声音|换皮/],['玩法结束',/玩法(?:制作|阶段)?(?:已|已经)?(?:完成|结束|通过)|玩法确认(?:已)?(?:完成|通过)/],['玩法制作',/玩法制作|制作玩法|开始(?:制作|重塑)|(?:新增|修复|调整|修改|检查).{0,10}(?:玩法|关卡|机制)|玩法阶段/]];
- for(let n=messages.length-1;n>=0;n--){const message=messages[n];const text=message.text.replace(/```[\s\S]*?```/g,'').slice(-7000);const lines=text.split(/[\n。！？，,；;]/).map(s=>s.trim()).filter(Boolean);
-  for(let j=lines.length-1;j>=0;j--){const line=lines[j];if(/尚未|还未|未开始|不要|暂不|没有完成|未完成|未通过|之前|此前|历史|上次|不能(?:称|视为)|不代表|之后|下一阶段|下一步|接下来|后续|计划|需要先/.test(line))continue;
-   for(const [stage,re]of patterns)if(re.test(line))return {stage,evidence:line.slice(0,200),role:message.role,certainty:'explicit'};
-  }
- }
- return {stage:null,evidence:'',certainty:'unknown'};
-}
+const {inferStage,VERSION:STAGE_VERSION}=require('./stage-detection.cjs');
+const {readLatestStage}=require('./stage-reader.cjs');
 function isMaintenanceTitle(value){
  const title=String(value||'').normalize('NFKC').trim().replace(/^[\s\d\p{Extended_Pictographic}\uFE0F\u20E3\u2460-\u2473\u2776-\u2793.、:：#_*+\-–—()[\]（）]+/u,'').trim().replace(/^(?:(?:每(?:天|日|周|星期|月|小时|分钟|\d+\s*(?:小时|分钟|天))|定时|定期|每日|每周)\s*[:：、-]?\s*)+/u,'');
  if(!title)return false;
@@ -48,15 +41,22 @@ function isGameThread(t,roots=[]){
  if(!UUID.test(t.id)||!title||t.archived||t.ephemeral||t.parentThreadId||t.parent_thread_id||typeof t.source==='object'||['cli','exec','subagent','sub_agent'].includes(t.source)||isMaintenanceTitle(title))return false;
  return roots.some(r=>cwd===r||cwd.startsWith(r+path.sep))||/(?:游戏|cocos|(?:^|[\\/])games?(?:[\\/]|$))/i.test(cwd)||/游戏|关卡|重塑|英化|试玩|TikTok|Native|[A-Za-z]+[’']s\s+[A-Za-z]+/.test(title);
 }
-async function discover({roots=[],cache={},limit=300,binary}={}){
- const reader=new Reader(binary||await executable());const out=[];let incomplete=false;
- try{await reader.init();let cursor=null;const rows=[];for(let page=0;page<3;page++){const r=await reader.rpc('thread/list',{limit:100,sortKey:'updated_at',sortDirection:'desc',archived:false,useStateDbOnly:true,...(cursor?{cursor}:{})});rows.push(...r.data||[]);cursor=r.nextCursor;if(!cursor)break;}incomplete=!!cursor;
-  const scoped=rows.filter(t=>isGameThread(t,roots)).slice(0,limit);incomplete=incomplete||rows.filter(t=>isGameThread(t,roots)).length>limit;
-  for(const t of scoped){const old=cache[t.id],updated=Number(t.updatedAt)||0;let stageInfo=old?.stageInfo||{stage:null,certainty:'unknown'},contextStatus='cached',contextRead=old?.contextRead===true&&old.updatedAt===updated;
-   if(!contextRead){if(Date.now()>reader.deadline-1800){incomplete=true;contextStatus='pending';}else try{const items=await reader.rpc('thread/items/list',{threadId:t.id,limit:180,sortDirection:'desc'});const messages=(items.data||[]).map(textOf).filter(Boolean).reverse();stageInfo=inferStage(messages);contextStatus='read';contextRead=true;}catch{contextStatus='unavailable';incomplete=true;}}
-   out.push({threadId:t.id,title:t.name||t.title,path:t.cwd,cwd:t.cwd,rolloutPath:t.path,metadataStatus:t.status,originator:t.originator,source:t.source,forkedFromId:t.forkedFromId||null,updatedAt:updated,stageInfo,contextStatus,contextRead});
+async function discover({roots=[],cache={},limit=600,binary,readerFactory}={}){
+ const reader=readerFactory?readerFactory():new Reader(binary||await executable());let incomplete=false;
+ try{await reader.init();let cursor=null;const rows=[];for(let page=0;page<Math.max(6,Math.ceil(limit/100)*2);page++){const r=await reader.rpc('thread/list',{limit:100,sortKey:'updated_at',sortDirection:'desc',archived:false,useStateDbOnly:true,...(cursor?{cursor}:{})});rows.push(...r.data||[]);cursor=r.nextCursor;if(!cursor||rows.filter(t=>isGameThread(t,roots)).length>=limit)break;}incomplete=!!cursor;
+ const all=rows.filter(t=>isGameThread(t,roots)),scoped=all.slice(0,limit);incomplete ||= all.length>limit;const out=new Array(scoped.length),order=scoped.map((_,i)=>i).sort((a,b)=>Number(cache[scoped[a].id]?.contextRead===true)-Number(cache[scoped[b].id]?.contextRead===true));let next=0;
+ async function worker(){while(next<scoped.length){const i=order[next++],t=scoped[i],old=cache[t.id],numeric=Number(t.updatedAt),updated=Number.isFinite(numeric)&&numeric>0?(numeric>1e12?numeric/1000:numeric):(Date.parse(t.updatedAt)||0)/1000;
+  let stageInfo={stage:null,evidence:'',certainty:'unknown',algorithmVersion:STAGE_VERSION},contextStatus='pending',contextRead=false,rolloutStamp,contextCheckedAt;
+  const local=await readLatestStage({threadId:t.id,rolloutPath:t.path},{previous:old});
+  if(local.available){stageInfo=local.stageInfo;rolloutStamp=local.rolloutStamp;contextStatus=local.contextStatus;contextRead=!!stageInfo.stage;contextCheckedAt=new Date().toISOString();}
+  if(!contextRead){const fresh=old?.contextRead===true&&old.updatedAt===updated&&old.stageInfo?.algorithmVersion===STAGE_VERSION&&Date.now()-Date.parse(old.contextCheckedAt||0)<60000;
+   if(!local.available&&fresh){stageInfo=old.stageInfo;contextStatus='cached';contextRead=true;contextCheckedAt=old.contextCheckedAt;}
+   else if(Date.now()>reader.deadline-1800){incomplete=true;contextStatus='pending';}
+   else try{const items=await reader.rpc('thread/items/list',{threadId:t.id,limit:180,sortDirection:'desc'});const messages=(items.data||[]).map(textOf).filter(Boolean).reverse();stageInfo=inferStage(messages);contextStatus='read';contextRead=true;contextCheckedAt=new Date().toISOString();}catch{contextStatus='unavailable';incomplete=true;}
   }
-  return {threads:out,incomplete,checkedAt:new Date().toISOString()};
+  out[i]={threadId:t.id,title:t.name||t.title,path:t.cwd,cwd:t.cwd,rolloutPath:t.path,metadataStatus:t.status,originator:t.originator,source:t.source,forkedFromId:t.forkedFromId||null,updatedAt:updated,stageInfo,rolloutStamp,contextStatus,contextRead,contextCheckedAt};
+ }}
+ await Promise.all(Array.from({length:Math.min(4,scoped.length)},()=>worker()));return {threads:out,incomplete,checkedAt:new Date().toISOString()};
  }finally{await reader.close();}
 }
 async function queueMessage(threadId,message,{binary,timeout=20000,spawnFn=spawn}={}){

@@ -35,7 +35,11 @@
    if(!groups.has(item.key))groups.set(item.key,{...item,threads:[]});
    groups.get(item.key).threads.push(game);
   }
-  return {groups:[...groups.values()],counts,threadCount:[...groups.values()].reduce((n,g)=>n+g.threads.length,0)};
+  const recent=g=>Number.isFinite(Date.parse(g.updatedAt))?Date.parse(g.updatedAt):0;
+  const score=group=>[group.threads.some(g=>g.pinned)?1:0,group.threads.some(g=>activity(g,{stale:stale&&g.source==='codex'})==='ongoing')?1:0,Math.max(...group.threads.map(recent))];
+  const ordered=[...groups.values()];for(const group of ordered)group.threads.sort((a,b)=>(activity(b,{stale:stale&&b.source==='codex'})==='ongoing')-(activity(a,{stale:stale&&a.source==='codex'})==='ongoing')||recent(b)-recent(a));
+  ordered.sort((a,b)=>{const x=score(a),y=score(b);return y[0]-x[0]||y[1]-x[1]||y[2]-x[2];});
+  return {groups:ordered,counts,threadCount:[...groups.values()].reduce((n,g)=>n+g.threads.length,0)};
  }
  return {LABELS,PHASES,phase,activity,identity,select};
 });

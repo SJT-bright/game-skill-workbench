@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-30T18:03:04.667Z",
-  "treeHash": "284e1d4e53e46c98ef040688777fd706ece9f46d5d6c64d260a297f650189556",
+  "createdAt": "2026-10-30T18:03:45.489Z",
+  "treeHash": "9e835245a116cb9e9ee4511c9e6254ed09bdda1fa64323cba48031bd72dd2e01",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2269,14 +2269,14 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "6e511fd0a2d67c7cbdf0c3a298cdb35e13b18b44cd3b83581fb66db9bcfd01e9",
+      "treeHash": "f17f040dc7768dcc4f567a8ddb3aa9b8c0b438840de35de668d3374c7b2e0cc4",
       "fileCount": 36,
-      "bytes": 1023642,
+      "bytes": 1024040,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7714f22fb6ebb8c098f4dc7109f1e6800a53b4091375b23dc867d2cacf4163be",
-          "size": 6225,
+          "hash": "8933f3c8c195055ec24965ed7895c1dc335e8f2b313d2b56ff6dd0ef85b10c87",
+          "size": 6227,
           "executable": false
         },
         {
@@ -2395,8 +2395,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "1d630c96f63a1860a5fcf6467eaa6d583e3be3f04da23c7cad51b6aa99d56817",
-          "size": 79736,
+          "hash": "bda480bb55dec5c90dfe2b01e4b69543e99b2304b7015ee1f9211c7a801fb6d1",
+          "size": 80132,
           "executable": false
         },
         {

@@ -110,7 +110,7 @@
 | 没有皮肤/收集、设置页（两个标签）、首关教程、两个主页能力 | 加上（已在[英化＋优化](../../remake-core/references/two-boards.md)里规定） |
 | 原来有看广告复活 | 保留，改接 TikTok |
 | **排名、更多游戏、分享** | **不做**，原游戏自带的也删掉（七日签到 2026-10-27 改为重塑必做）（用户 2026-10-23，多做多错，见[内置板块](../../remake-core/references/game-modules.md#一先删多做多错)） |
-| 看广告复活（原来没有） | 不加 |
+| 看广告复活（原来没有） | **加上**（Saul 2026-10-29：英化游戏一律加看广告复活，没有失败环节的也加；先出复活页、放弃后再进结算 x2 页，每屏只放一个看广告按钮，见 `cocos-game-check/references/tiktok-fixed-adaptation.md` 已定口径第 2 条。v7.7.5 起改，以前写的“不加”作废） |
 | 看广告跳关 | 删掉，永远不加 |
 
 补充的内容写进优化清单（[模板8](../../remake-core/assets/session-relay-templates.md)）的"七、纯色背景重做"和"八、单调页面补充"，用户说"优化方案通过"才动手。补奖励显示时，奖励的金币数用已有的数值；原来没有金币时，按收集与皮肤系统设计（重塑包 remake-skins 板块，英化包不含）加最简单的每关金币。
@@ -163,7 +163,7 @@
 **完整美术线的"做完"＝下面适用项全部通过**。下列全页面步骤用于首次整套制作或整套重做；局部意见修改按共享范围规则完成受影响整页复查，不能宣称全游戏美术关通过。
 
 1. 浏览器里用 `chrome_touch.py` 的 `dump_ui` 读**全部页面和弹窗，包括游戏中**，两种手机比例，写上 `purpose`：首页 `home`、过关页 `result_win`、失败页 `result_fail`、设置功能页 `settings`、设置声音页 `settings_sound`、选关 `map`；其他页面写 `shop`/`skins`/`gift`/`pause`/`revive`/`trial` 等（没有排名、签到页）。**每一轮用一个新的输出文件夹**（如 `docs/test/art-round-2/`），每次 dump 会自动存一张截图。**只改一页就复查受影响整页**；共用字体/图集/组件变化再覆盖其调用方，不默认重读全游戏。
-2. 运行一条命令：`python scripts/art_check.py --project <工程> --dumps docs/test/art-round-2`。它依次跑：
+2. 运行一条命令：`python3 <skills>/remake-core/scripts/art_check.py --project <工程> --dumps docs/test/art-round-2`（脚本在 remake-core，不在本 Skill 的 scripts 下）。它依次跑：
    - 页面内容与背景（`audit_page_richness.py`），会拦住：
      - 纯色背景（游戏中也量）、缺截图；
      - 单调页面（少于 5 个东西或占屏幕不到 25%）；

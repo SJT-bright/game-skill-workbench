@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-29.english-simple.9",
+  "revision": "2026-10-30.english-simple.9.5",
   "skill": "remake-art",
-  "previous_provenance_sha256": "745bdce22fb129e7d998eeb4f85c9be8c53ecd672c9da5a18090ac44ce3b0ed7",
+  "previous_provenance_sha256": "7714f22fb6ebb8c098f4dc7109f1e6800a53b4091375b23dc867d2cacf4163be",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
@@ -102,8 +102,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "1d630c96f63a1860a5fcf6467eaa6d583e3be3f04da23c7cad51b6aa99d56817",
-      "bytes": 79736
+      "sha256": "bda480bb55dec5c90dfe2b01e4b69543e99b2304b7015ee1f9211c7a801fb6d1",
+      "bytes": 80132
     },
     {
       "path": "references/panel-composite-review.md",

@@ -82,6 +82,26 @@ class Rules(unittest.TestCase):
                               files={'assets/main/config.json': json.dumps({'scenes': {'db://x.fire': U1}}).encode()})
         self.assertEqual(out['policy'], 'new')
 
+    def test_recorded_last_source_folder_is_legacy_exactly_there(self):
+        """v7.7.5 (总表 B27): no uuid matches, but the project IS the folder the list recorded as the entry's last
+        source package -> legacy. A child or parent folder, a native last package, or a new-game marker -> new."""
+        root = H.tmpdir(self)
+        other = '2b2c3d4e-0000-4000-8000-00000000abcd'           # a scene uuid the list does not hold
+        game = project(root / 'game', scene=other)
+        entry = {'name': 'g', 'folder': 'J/g', 'scene_uuids': [], 'asset_uuids': [],
+                 'last_package': {'kind': 'source', 'path': str(game)}}
+        legacy = {'games': [entry]}
+        out = P.decide(project=game, legacy=legacy)
+        self.assertEqual(out['policy'], 'legacy', out['reason'])
+        self.assertIn('same folder', out['reason'])
+        self.assertEqual(P.decide(project=project(game / 'v2', scene=other), legacy=legacy)['policy'], 'new')
+        self.assertEqual(P.decide(project=project(root / 'outer', scene=other).parent, legacy=legacy)['policy'], 'new')
+        native = {'games': [dict(entry, last_package={'kind': 'native', 'path': str(game)})]}
+        self.assertEqual(P.decide(project=game, legacy=native)['policy'], 'new')
+        self.assertEqual(P.decide(uuids=[], legacy=legacy)['policy'], 'new')       # no project given: no path rule
+        P.write_marker(game, 'localize', '2.0')
+        self.assertEqual(P.decide(project=game, legacy=legacy)['policy'], 'new')   # a marker still wins
+
 
 @unittest.skipUnless(J.is_dir(), 'real packages not on this machine')
 class RealIdentity(unittest.TestCase):
@@ -115,6 +135,25 @@ class RealIdentity(unittest.TestCase):
             self.assertEqual(out['policy'], 'legacy', (z.name, out['reason']))
         out = P.decide(native=J / '1香吉士-射击高手2048/检测修复_20261029/pkg85', legacy=legacy)
         self.assertEqual(out['policy'], 'legacy', out['reason'])
+
+    def test_recorded_folders_of_scissors_and_scraping_fruit_are_legacy(self):
+        """v7.7.5 (总表 B27, 剪刀达人 skill-feedback 10-30): under v7.7.4 both recorded projects were judged new."""
+        legacy = P.load_legacy()
+        if legacy.get('missing'):
+            self.skipTest('KIT/LEGACY_GAMES.json not generated')
+        seen = 0
+        for game in legacy['games']:
+            if game.get('name') not in ('剪刀达人', '欢乐刮水果'):
+                continue
+            path = Path((game.get('last_package') or {}).get('path') or '/nonexistent')
+            if not path.is_dir() or P.read_marker(path):
+                continue
+            seen += 1
+            out = P.decide(project=path, legacy=legacy)
+            self.assertEqual(out['policy'], 'legacy', (game['name'], out['reason']))
+            self.assertEqual([h['name'] for h in out['legacy_match']], [game['name']])
+        if not seen:
+            self.skipTest('neither recorded project is on this machine')
 
     def test_shared_template_is_new(self):
         legacy = P.load_legacy()

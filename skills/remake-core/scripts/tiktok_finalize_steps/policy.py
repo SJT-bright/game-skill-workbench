@@ -7,6 +7,9 @@ scene. Copying a project into a new version folder keeps the uuids, so a new ver
 decide():
     marker <project>/.tiktok-kit/policy.json says new          -> new   (a marker can only make things stricter)
     scene uuids overlap an entry of the frozen LEGACY_GAMES.json -> legacy
+    the project folder is exactly an entry's recorded last source -> legacy (v7.7.5, 总表 B27)
+      (sub-asset uuids are deliberately NOT read from projects: 51 workshop starter packs are copies of listed games
+       and would then match; a new game started from one without init would be judged legacy. Moved to v7.8.)
     anything else (not listed, no uuid readable)                -> new (Saul Q1, 2026-10-29: every game not on the
                                                                    frozen list is new, including games in progress)
 """
@@ -322,6 +325,34 @@ def match_legacy(scenes, legacy, assets=()):
     return hits
 
 
+def match_legacy_path(project, legacy):
+    """v7.7.5 (总表 B27): the project folder IS the one the list recorded as an entry's last source package. Only the
+    exact folder counts, never a parent or a child, so a new game started inside an old game's folder stays new.
+    The list was read from packages (their config.json also lists sub-assets), a project only shows top-level .meta
+    uuids: 剪刀达人's recorded project shows 63 of the 400 stored ones (80 needed), 欢乐刮水果's recorded Chinese
+    original none (its stored uuids came from the English package). Both were judged new and could not ship."""
+    try:
+        here = Path(project).resolve()
+    except (OSError, TypeError):
+        return []
+    if not here.is_dir():
+        return []
+    hits = []
+    for game in legacy.get('games') or []:
+        last = game.get('last_package')
+        path = last.get('path') if isinstance(last, dict) else None
+        if not path or last.get('kind') != 'source':
+            continue
+        try:
+            same = Path(path).resolve() == here
+        except OSError:
+            same = False
+        if same:
+            hits.append({'name': game.get('name'), 'folder': game.get('folder'), 'scenes': [], 'assets_matched': 0,
+                         'assets_stored': len(game.get('asset_uuids') or []), 'by': 'last_package path'})
+    return hits
+
+
 def identity(project=None, files=None, native=None):
     scenes, assets = set(), set()
     if project and Path(project, 'assets').is_dir():
@@ -354,9 +385,14 @@ def decide(project=None, files=None, native=None, legacy=None, uuids=None, asset
     if mark and mark.get('policy') == 'new':
         return dict(out, policy='new', reason='project marker .tiktok-kit/policy.json says new (%s)' % mark.get('by'))
     hits = match_legacy(uuids, legacy, assets)
+    by_path = False
+    if not hits and project is not None:
+        hits = match_legacy_path(project, legacy)
+        by_path = bool(hits)
     if hits:
         return dict(out, policy='legacy', legacy_match=hits,
-                    reason='on the legacy list: %s' % ', '.join(str(h['folder']) for h in hits))
+                    reason='on the legacy list: %s%s' % (', '.join(str(h['folder']) for h in hits),
+                                                          ' (same folder as its recorded last package)' if by_path else ''))
     why = 'no scene uuid readable' if not uuids else 'not on the legacy list'
     if legacy.get('missing'):
         why += ' (LEGACY_GAMES.json missing)'

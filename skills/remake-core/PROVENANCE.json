@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-30.english-simple.9.4",
+  "revision": "2026-10-30.english-simple.9.5",
   "skill": "remake-core",
-  "previous_provenance_sha256": "969ed385dd723fe34ffbcb494185bdeeaa425f13b5297594b8d6583e755162fa",
+  "previous_provenance_sha256": "b98eb5ae9518d3b923162a65ae0519e871978bca4a8a9c25d9ba9b68048a7aba",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -1273,8 +1273,8 @@
     },
     {
       "path": "scripts/test_finalize_policy.py",
-      "sha256": "cac5b1f4e1dd80913aca13a9409435e92fcf176334ea057b081e654da47d3a46",
-      "bytes": 7037
+      "sha256": "b79677a497a34364d2f76ea4af1ff3070094ee6c14a3b00ec3eb53da8558fdbd",
+      "bytes": 9566
     },
     {
       "path": "scripts/test_finalize_source_fixes.py",
@@ -1603,8 +1603,8 @@
     },
     {
       "path": "scripts/test_unofficial_entry_cli.py",
-      "sha256": "144f896156a7c7b63c7bbb444751d2e7b65b2b32b7e030b11c80c576fcb1a4a9",
-      "bytes": 3310
+      "sha256": "6bce643bfa842d0fa426d40e3f34e1320e4f48f1259e37a27f0b84a6479a33a0",
+      "bytes": 5941
     },
     {
       "path": "scripts/test_visual_maintenance_scope.py",
@@ -1613,8 +1613,8 @@
     },
     {
       "path": "scripts/test_workflow_tools.py",
-      "sha256": "a947c15a340bd0099968ec1094fbbae7439767dd082c8b5c5c09ddba44139217",
-      "bytes": 87867
+      "sha256": "1d1a7a2d0eef6cc8a4e5f1702d13c8357ef93e273a5b7240c440df78c59c606a",
+      "bytes": 88200
     },
     {
       "path": "scripts/test_writer_finalize.py",
@@ -1673,8 +1673,8 @@
     },
     {
       "path": "scripts/tiktok_finalize_steps/policy.py",
-      "sha256": "6104fff3e03ba9101d5a3f01a193971d6954e2d29a744f5541fe1e6fd630181f",
-      "bytes": 14715
+      "sha256": "cebb396ae3517d236607d52f60392d767641ba8daf813e7dcd0ba8f4e8708ed6",
+      "bytes": 16680
     },
     {
       "path": "scripts/tiktok_finalize_steps/settings.py",
@@ -1723,8 +1723,8 @@
     },
     {
       "path": "scripts/verify_native_zip.py",
-      "sha256": "e2727080f3d6a003f801af72519f1115fb9ed6e3bf85e17940edf80768ed6f0e",
-      "bytes": 22629
+      "sha256": "1840141073fba39f15a377c403a40cc10e1c364d7772f68cdd367337b3ee2390",
+      "bytes": 24074
     },
     {
       "path": "scripts/visual_maintenance_scope.py",

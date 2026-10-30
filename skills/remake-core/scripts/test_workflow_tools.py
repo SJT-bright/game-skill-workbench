@@ -1386,7 +1386,10 @@ class TikTokZipTests(unittest.TestCase):
     def test_valid_native_structure_still_requires_the_known_issue_gate(self):
         from make_tiktok_zip import native_problems
         t, n = self.native()
-        problems, sizes, info = native_problems(n)
+        # This fake package has no engine file. Since v7.7.4 (总表 B18) that is K_engine_unknown, a block for a new
+        # game (test_gate_fail_closed.py covers it), so the structure check here runs as legacy: this test is about
+        # the structure and the --review requirement, not the platform-kit parts.
+        problems, sizes, info = native_problems(n, policy='legacy')
         self.assertFalse(problems, problems)
         self.assertLessEqual(info['main'], 4_000_000)
         out = t / 'out.zip'

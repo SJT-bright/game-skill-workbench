@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-30T18:01:04.958Z",
-  "treeHash": "9491c2d3056ebdc2cd9cc55aacebc38aacd070203077d35c4a789949c8a7798a",
+  "createdAt": "2026-10-30T18:03:04.667Z",
+  "treeHash": "284e1d4e53e46c98ef040688777fd706ece9f46d5d6c64d260a297f650189556",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2493,13 +2493,13 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "8918ae9bcd9bd97bca50f5ef357776c922f591a080698950f7304465cd1ebf56",
+      "treeHash": "1d9e5fe3b58e577ad7a6d816d149ad975ff9530c520ae1c2a749fc4739346a34",
       "fileCount": 346,
-      "bytes": 7877387,
+      "bytes": 7886673,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "b98eb5ae9518d3b923162a65ae0519e871978bca4a8a9c25d9ba9b68048a7aba",
+          "hash": "43ef1352debcdfe72cb9f47ead3c239f5105dc407213574485790438422454dd",
           "size": 59512,
           "executable": false
         },
@@ -3291,8 +3291,8 @@
         },
         {
           "path": "scripts/audit_native_startup_renderer.py",
-          "hash": "beddf4c01a00b0d8e20c46ba500fb54242b327cd1264ac19755b8c92583c3cba",
-          "size": 13164,
+          "hash": "66444264a305d2d233d8edd5b02d86ae78f551f2f9974ff2a6b310e49de611c1",
+          "size": 13547,
           "executable": false
         },
         {
@@ -4023,8 +4023,8 @@
         },
         {
           "path": "scripts/test_finalize_policy.py",
-          "hash": "cac5b1f4e1dd80913aca13a9409435e92fcf176334ea057b081e654da47d3a46",
-          "size": 7037,
+          "hash": "b79677a497a34364d2f76ea4af1ff3070094ee6c14a3b00ec3eb53da8558fdbd",
+          "size": 9566,
           "executable": false
         },
         {
@@ -4419,8 +4419,8 @@
         },
         {
           "path": "scripts/test_unofficial_entry_cli.py",
-          "hash": "144f896156a7c7b63c7bbb444751d2e7b65b2b32b7e030b11c80c576fcb1a4a9",
-          "size": 3310,
+          "hash": "6bce643bfa842d0fa426d40e3f34e1320e4f48f1259e37a27f0b84a6479a33a0",
+          "size": 5941,
           "executable": false
         },
         {
@@ -4431,8 +4431,8 @@
         },
         {
           "path": "scripts/test_workflow_tools.py",
-          "hash": "a947c15a340bd0099968ec1094fbbae7439767dd082c8b5c5c09ddba44139217",
-          "size": 87867,
+          "hash": "1d1a7a2d0eef6cc8a4e5f1702d13c8357ef93e273a5b7240c440df78c59c606a",
+          "size": 88200,
           "executable": false
         },
         {
@@ -4503,8 +4503,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/policy.py",
-          "hash": "6104fff3e03ba9101d5a3f01a193971d6954e2d29a744f5541fe1e6fd630181f",
-          "size": 14715,
+          "hash": "cebb396ae3517d236607d52f60392d767641ba8daf813e7dcd0ba8f4e8708ed6",
+          "size": 16680,
           "executable": false
         },
         {
@@ -4563,8 +4563,8 @@
         },
         {
           "path": "scripts/verify_native_zip.py",
-          "hash": "e2727080f3d6a003f801af72519f1115fb9ed6e3bf85e17940edf80768ed6f0e",
-          "size": 22629,
+          "hash": "1840141073fba39f15a377c403a40cc10e1c364d7772f68cdd367337b3ee2390",
+          "size": 24074,
           "executable": false
         },
         {

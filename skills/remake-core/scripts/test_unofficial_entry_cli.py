@@ -53,6 +53,56 @@ class VerifyCommand(unittest.TestCase):
         self.assertEqual(self.run_main('official')[0], 0)
 
 
+class RenamedZip(unittest.TestCase):
+    """v7.7.5 (五款返工 #8): a ZIP renamed after writing (Saul renames before uploading) still finds its receipt,
+    by the ZIP's sha256 in the same folder. Any other bytes still have no receipt."""
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.dir = Path(tmp.name)
+
+    def write(self, name, data):
+        (self.dir / name).write_bytes(data)
+        return self.dir / name
+
+    def receipt(self, name, digest, tool='build_checked_zip'):
+        import json
+        (self.dir / name).write_text(json.dumps({'tool': tool, 'zip_sha256': digest}), encoding='utf-8')
+        return self.dir / name
+
+    def test_same_name_receipt_first_then_by_bytes(self):
+        import hashlib
+        z = self.write('上传TikTok用这个.zip', b'zip bytes')
+        digest = hashlib.sha256(b'zip bytes').hexdigest()
+        self.assertFalse(V.find_receipt(z, digest)[1])                          # nothing there yet
+        r = self.receipt('Game_v3.zip.receipt.json', digest)
+        self.assertEqual(V.find_receipt(z, digest), (r, True))
+        own = self.receipt('上传TikTok用这个.zip.receipt.json', 'other')
+        self.assertEqual(V.find_receipt(z, digest), (own, False))               # the same-name receipt wins
+
+    def test_other_bytes_or_unofficial_tool_find_nothing(self):
+        import hashlib
+        z = self.write('changed.zip', b'changed bytes')
+        self.receipt('Game_v3.zip.receipt.json', hashlib.sha256(b'zip bytes').hexdigest())
+        self.receipt('Hand.zip.receipt.json', hashlib.sha256(b'changed bytes').hexdigest(), tool='zip -r')
+        path, by_bytes = V.find_receipt(z, hashlib.sha256(b'changed bytes').hexdigest())
+        self.assertFalse(by_bytes)
+        self.assertEqual(path.name, 'changed.zip.receipt.json')
+        self.assertEqual(V.receipt_status(z, 'x', {})['entry'], 'unofficial')
+
+    def test_real_renamed_copy_of_driftracer_v31_is_official(self):
+        import shutil
+        src = Path('/Users/sijunting/Downloads/！自制游戏/1全民飞车漂移/交付/DriftRacer3D_TikTok_Test_v3.1_20261030.zip')
+        if not (src.is_file() and V.receipt_path(src).is_file()):
+            self.skipTest('DriftRacer v3.1 not on this machine')
+        copy = self.dir / '上传TikTok用这个_飞车v3.1.zip'
+        shutil.copyfile(src, copy)
+        shutil.copyfile(V.receipt_path(src), self.dir / V.receipt_path(src).name)
+        out = V.verify(copy)
+        self.assertEqual(out['entry'], 'official', out.get('entry_reason'))
+        self.assertIn('renamed', out['entry_reason'])
+
+
 class UploadPreflight(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()

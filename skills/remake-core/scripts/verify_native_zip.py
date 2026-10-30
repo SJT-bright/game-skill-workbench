@@ -150,14 +150,40 @@ def make_receipt(tool, zip_path, zip_sha256, file_sha256, gate_result, board, ex
     return receipt
 
 
-def receipt_status(archive, zip_sha256, file_sha256):
-    """'official' only when <zip>.receipt.json was written by an official writer for exactly these bytes."""
+def find_receipt(archive, zip_sha256, limit=500):
+    """<zip>.receipt.json; when it is absent, a receipt in the same folder written for exactly these ZIP bytes.
+    v7.7.5 (五款返工 #8): Saul renames a ZIP before uploading it, and the renamed copy lost its receipt and was called
+    unofficial (全民飞车漂移, 剪刀达人). A receipt still has to match the ZIP's sha256 and pass every check below.
+    -> (path, found_by_bytes)"""
     path = receipt_path(archive)
+    if path.is_file() and not path.is_symlink():
+        return path, False
+    try:
+        candidates = sorted(Path(archive).parent.glob('*' + RECEIPT_SUFFIX))[:limit]
+    except OSError:
+        return path, False
+    for cand in candidates:
+        try:
+            if cand.is_symlink() or not cand.is_file() or cand.stat().st_size > 2_000_000:
+                continue
+            data = json.loads(cand.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get('tool') in RECEIPT_TOOLS and data.get('zip_sha256') == zip_sha256:
+            return cand, True
+    return path, False
+
+
+def receipt_status(archive, zip_sha256, file_sha256):
+    """'official' only when an official writer's receipt exists for exactly these bytes (find_receipt)."""
+    path, by_bytes = find_receipt(archive, zip_sha256)
     out = {'entry': 'unofficial', 'entry_label': ENTRY_LABEL['unofficial'], 'receipt': str(path)}
     if not path.is_file() or path.is_symlink():
-        out['entry_reason'] = ('no writer receipt %s: this ZIP was not written by make_tiktok_zip.py / build_checked_zip.py '
-                               '(hand-zipped or renamed)' % path.name)
+        out['entry_reason'] = ('no writer receipt %s, and no receipt in that folder for these ZIP bytes: this ZIP was not '
+                               'written by make_tiktok_zip.py / build_checked_zip.py (hand-zipped or changed)' % path.name)
         return out
+    if by_bytes:
+        out['receipt_found_by'] = 'zip_sha256 (the ZIP was renamed after writing)'
     try:
         receipt = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError) as error:
@@ -175,7 +201,9 @@ def receipt_status(archive, zip_sha256, file_sha256):
     elif finalize_problem(receipt.get('finalize'), file_sha256):
         out['entry_reason'] = finalize_problem(receipt.get('finalize'), file_sha256)
     else:
-        out.update(entry='official', entry_label=ENTRY_LABEL['official'], entry_reason='matching receipt from ' + receipt['tool'],
+        out.update(entry='official', entry_label=ENTRY_LABEL['official'],
+                   entry_reason='matching receipt from ' + receipt['tool'] + (
+                       ' (found by the ZIP bytes: %s; the ZIP was renamed)' % path.name if by_bytes else ''),
                    receipt_tool=receipt['tool'], receipt_board=receipt.get('board'),
                    receipt_policy=receipt['finalize'].get('policy'), receipt_kit_version=receipt['finalize'].get('kit_version'))
     return out

@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-28.english-simple.5",
+  "revision": "2026-10-29.english-simple.9",
   "skill": "remake-art",
-  "previous_provenance_sha256": "f426146b9f849647cbe2275b7db8b91f95daf1306393c6d6e214b88f05001c8c",
+  "previous_provenance_sha256": "745bdce22fb129e7d998eeb4f85c9be8c53ecd672c9da5a18090ac44ce3b0ed7",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "439592d2e80b780799587c5693fa0e5c2111cec3a88280b75d3e4ffaa7887eb0",
-      "bytes": 5780
+      "sha256": "6bbdf830fb76f5223a36fe699ed6f5f0b92d919a2883ad65c68eddb94142df67",
+      "bytes": 8828
     },
     {
       "path": "agents/openai.yaml",
@@ -32,8 +32,8 @@
     },
     {
       "path": "references/artwork-and-feedback.md",
-      "sha256": "5743e90346e6b64f316f31fb99eeb17eb0f39750e731e8dcdfdd71c3ed0f74e3",
-      "bytes": 23060
+      "sha256": "92b864efb4480f04789e2f13bc9dc71c609f0643aaa4de52d64883d781c9bfd2",
+      "bytes": 23464
     },
     {
       "path": "references/atlas-slice-integrity.md",
@@ -81,6 +81,11 @@
       "bytes": 11847
     },
     {
+      "path": "references/home-by-gameplay.md",
+      "sha256": "b91f6eb1ffd5c26a3edf97272ea34c032e2e0ae446b82f83e00eede328860d62",
+      "bytes": 5652
+    },
+    {
       "path": "references/large-background-static-review.md",
       "sha256": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
       "bytes": 2140
@@ -92,13 +97,13 @@
     },
     {
       "path": "references/mobile-button-size-and-home-layout.md",
-      "sha256": "0400d05ccf6d967c5a9102c8e96526ef734420fa876670d754b451e2941bbacf",
-      "bytes": 7141
+      "sha256": "3204347e7d5d19589c31b19e111defc11b999d800e2242e6cab04bead540863a",
+      "bytes": 7670
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "e67e745f15177b59dbdd2636ec70f4cac14f8c5714c45c1041b6e2ca17b997b6",
-      "bytes": 79394
+      "sha256": "1d630c96f63a1860a5fcf6467eaa6d583e3be3f04da23c7cad51b6aa99d56817",
+      "bytes": 79736
     },
     {
       "path": "references/panel-composite-review.md",
@@ -122,8 +127,8 @@
     },
     {
       "path": "references/style-limits.md",
-      "sha256": "1fb83f9ec0ade9be7cde6e3956530fb84731c0dcafe0c96e3e6d225555f4103e",
-      "bytes": 21628
+      "sha256": "6c9a98498ab2d64dc578f3509393fee9a93c8251ee3888b6c6f0888466bc09ec",
+      "bytes": 24561
     },
     {
       "path": "references/text-backplate-review.md",
@@ -137,8 +142,8 @@
     },
     {
       "path": "references/ui-style-and-samples.md",
-      "sha256": "a5a1b1ec4c6f8f92a6e579cce5455d42c74eee96754400de2e77e400bb652389",
-      "bytes": 15021
+      "sha256": "93e657886351827e9b2d0fb8907535907f2912945c51c13eecb0177d2e65c44e",
+      "bytes": 16079
     },
     {
       "path": "scripts/check_button_group.py",

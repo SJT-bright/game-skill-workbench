@@ -1,0 +1,10 @@
+{
+  "note": "MusicSlice (莫慌-音乐消消乐). Request = the daily-reward Watch Ad path (config.videoType=0 -> AdsManager.ShowVideo -> TikTokPlatformBridge.showRewardedAd). config.getReward is the game's single reward entry for every video type; the adapter counts it instead of paying daily coins so repeated cases do not depend on the daily reward still being claimable.",
+  "ready": "return typeof config !== 'undefined' && !!config.homeController && !!config.homeController.node && !!config.AdsManager && cc.director.getScene() && cc.director.getScene().name === 'HomeScene';",
+  "home": "return typeof config !== 'undefined' && !!config.homeController && !!config.homeController.node && cc.director.getScene() && cc.director.getScene().name === 'HomeScene';",
+  "request": "if (!window.__qaWrapped) { window.__qaWrapped = true; config.getReward = function () { if (window.__qaGrant) window.__qaGrant(); }; } window.__qaGrant = grant; config.videoType = 0; config.AdsManager.ShowVideo();",
+  "state": "var h = config.homeController, p = h && h.messagePop, msg = null; try { if (p && p.active) msg = p.getChildByName('pop').getComponentInChildren(cc.Label).string; } catch (e) {} return { pending: !!config.isWatchingVideo, locked: false, message: msg };",
+  "boot_timeout_s": 90,
+  "enter_level": "config.homeController.playGame(); return true;",
+  "level_timeout_s": 20
+}

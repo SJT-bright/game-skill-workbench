@@ -1,8 +1,254 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-29T17:33:35.829Z",
-  "treeHash": "7a84645c8e3cb77c084e2b0bc1d9471e83b0e035eeab4394981b7427ae78b1cd",
+  "createdAt": "2026-10-30T08:51:47.355Z",
+  "treeHash": "94714a29034ec480ebf9b7256b61a638009ec86375ff680ec506d1036a9f5c47",
   "skills": [
+    {
+      "name": "chrome-mobile-testing",
+      "treeHash": "9425025ccd9b4ca41191c42c02e41f9c1b67e7c253d5c6300ca89b58c18fe57b",
+      "fileCount": 12,
+      "bytes": 87979,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "a89ee70efeb63e96479b9f6e8515ed25a0bcd67f05b21bc354065b4bd8e3ea3a",
+          "size": 2168,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "01a7f5f84ecda77fb21570bcec9dc26419a4a11bd951518c0388e209d46c95b1",
+          "size": 15278,
+          "executable": false
+        },
+        {
+          "path": "scripts/chrome_touch.py",
+          "hash": "d458cdbb6fd40a11e6b7ebff5a36062e1d79c06db015346a95663f28512d2992",
+          "size": 42774,
+          "executable": false
+        },
+        {
+          "path": "scripts/ego_touch_runner.js",
+          "hash": "15f562ba045a54b6ef1c4e4c89d2246dc8a604cdec97112b1467dc6399a0dc25",
+          "size": 13600,
+          "executable": false
+        },
+        {
+          "path": "scripts/prepare_chrome.py",
+          "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+          "size": 1902,
+          "executable": false
+        },
+        {
+          "path": "tests/bin/ego-browser",
+          "hash": "c393f9ebed922816ccefced55c17009ce004b420e16b5e953b3508350d59c97d",
+          "size": 2920,
+          "executable": false
+        },
+        {
+          "path": "tests/calibration-plan.json",
+          "hash": "a2e8e5e5fb915222386195cb8b5fcbc74c46bccda09447cab095259097bf05c6",
+          "size": 333,
+          "executable": false
+        },
+        {
+          "path": "tests/site/big.png",
+          "hash": "82c88be7500e579e4219db87afa35bf36c0602915c298f9bd769c01dcb1e311b",
+          "size": 1390,
+          "executable": false
+        },
+        {
+          "path": "tests/site/index.html",
+          "hash": "10964c5f7910c168d2223b1e40bb4ed8215b3865f3af0810567f7091dacdf053",
+          "size": 578,
+          "executable": false
+        },
+        {
+          "path": "tests/test_ego_route.py",
+          "hash": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
+          "size": 4925,
+          "executable": false
+        },
+        {
+          "path": "tests/test_timing_fps.py",
+          "hash": "84f46b5a5aa62bcc65694e8a84081fa94d0e4e04e45ed1558270a5b67154b58b",
+          "size": 1821,
+          "executable": false
+        },
+        {
+          "path": "tests/timing-plan.json",
+          "hash": "7eece6a52f0ea6a0f2413020932648dd279c6806874bb1a12442171df1b3b309",
+          "size": 290,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-ad-design",
+      "treeHash": "615d6be79d411fce8c42396c29da8079061a323dc47991cd0e4d034a33cc2ff0",
+      "fileCount": 2,
+      "bytes": 14805,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "f3dd3d774f952d68f7d5c5f1b5108f750896b823c72646b2af403e87ccb89fcb",
+          "size": 460,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "10da65cd3803dd2087f249c8407761ec0cb3aa11a89bc59a8a2229cbcf9b4753",
+          "size": 14345,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-art-redo",
+      "treeHash": "d3dbbdbc8b23d028852c5463b11f3bbe836ea751fa77c96c4b14aae69f96edad",
+      "fileCount": 23,
+      "bytes": 812301,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "8a5363d26404a7615d13f0f5df5e860d42f145fcb2f141fc3ac1d309957f1f1c",
+          "size": 3870,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "8b540a9c1d66db4c239de2ea0bc7ed53b57f7c5ed9a7623833b09a53a0134f3b",
+          "size": 4665,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "559d7df9b2ab6e3195aac662d7e4b59beca6c2848c6bba2a4f18f74ad1c66f18",
+          "size": 362,
+          "executable": false
+        },
+        {
+          "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+          "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+          "size": 744350,
+          "executable": false
+        },
+        {
+          "path": "references/button-group-review.md",
+          "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+          "size": 2705,
+          "executable": false
+        },
+        {
+          "path": "references/capsule-content-fit.md",
+          "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+          "size": 1278,
+          "executable": false
+        },
+        {
+          "path": "references/card-ornament-layout-review.md",
+          "hash": "b493141dfa3cc817fd9b186ee60db19891722592e87f9410e355d210c1a5c873",
+          "size": 3693,
+          "executable": false
+        },
+        {
+          "path": "references/card-text-fit-review.md",
+          "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+          "size": 1734,
+          "executable": false
+        },
+        {
+          "path": "references/collection-preview-review.md",
+          "hash": "0e1f19121a5a2b086dbe77c98d776c35cea5f9ec6482055aebfd1e2543e98254",
+          "size": 2629,
+          "executable": false
+        },
+        {
+          "path": "references/large-background-static-review.md",
+          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+          "size": 2140,
+          "executable": false
+        },
+        {
+          "path": "references/panel-composite-review.md",
+          "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+          "size": 1843,
+          "executable": false
+        },
+        {
+          "path": "references/phone-preview-boundary.md",
+          "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+          "size": 2724,
+          "executable": false
+        },
+        {
+          "path": "references/rendered-ui-regression-review.md",
+          "hash": "e50d0bf4796a3290bb0378b6b012f3135a97e2e06020fd99da6fbc9a054d7229",
+          "size": 4408,
+          "executable": false
+        },
+        {
+          "path": "references/standalone-alpha-review.md",
+          "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+          "size": 2237,
+          "executable": false
+        },
+        {
+          "path": "references/stat-digit-runtime-review.md",
+          "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
+          "size": 1699,
+          "executable": false
+        },
+        {
+          "path": "references/text-backplate-review.md",
+          "hash": "cbab9cfa3956f0050891288d0defeb5550ac3bc32be4dec2c38e5588d1e3405f",
+          "size": 2839,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_button_group.py",
+          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
+          "size": 2024,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_card_layout.py",
+          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
+          "size": 4910,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_collection_preview.py",
+          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
+          "size": 2573,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_native_sprite_sources.py",
+          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
+          "size": 9544,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_phone_boundary.py",
+          "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+          "size": 3800,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_native_sprite_sources.py",
+          "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
+          "size": 3130,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_source_residue.py",
+          "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+          "size": 3144,
+          "executable": false
+        }
+      ]
+    },
     {
       "name": "cocos-game-check",
       "treeHash": "64b4105f1ddb998d0a270bb8bec5ae8b9b9e004957eee2e80598e131be8ca8d6",
@@ -379,6 +625,1718 @@
           "path": "test/references/testing-scope-and-stop.md",
           "hash": "e9d30d038c1c7e52632d4501d46c945527a33f46d07d8c7b55689d4a249b1209",
           "size": 13894,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-from-starter",
+      "treeHash": "5a2d0f1e6aba06c8b8c782dea369db5218d4730d19a3b003dbd9b9af2c69f097",
+      "fileCount": 99,
+      "bytes": 254220,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "4b91fe43b8b2f4b57ea0d8c7115d53e93a3c341d3bae982c0e24c6242176b3b1",
+          "size": 17659,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "2e16e74e61b728255c0e09b13d050588efad9711b80854cdb261a19ace8344af",
+          "size": 4789,
+          "executable": false
+        },
+        {
+          "path": "WORKSHOP_ADAPTER.json",
+          "hash": "1610cefe5efd96bd0b5aba925f576da1e7ff5cb200ca09fc8b977a1302d7ab92",
+          "size": 917,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "13e93c25c7218b31b3c779ce07b2e727b215e7dda6852a0b91abd94205c0e22a",
+          "size": 425,
+          "executable": false
+        },
+        {
+          "path": "assets/creation-spec-template.md",
+          "hash": "0cb8411c115fe2457b832f9409c3cc7efcab56d420d9da596f65dc4a27da4988",
+          "size": 3912,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/ART_DIRECTION.md",
+          "hash": "5074679b4e30b6cd606567d63fdb92db8d88da9be90ef1bf213ca7dc461233a5",
+          "size": 208,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/AUDIO.md",
+          "hash": "91eb924436376ab93aa9866b11f6b9796bac78ba6df6daae541665397086a1fa",
+          "size": 150,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/COPY_EN.md",
+          "hash": "3f787b0cde7e6934cbccae3ca960ace8af38d18eb1e87946c5c7cd43ad72c610",
+          "size": 100,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/ECONOMY.json",
+          "hash": "77dbc7718965ad918f93d76f741620732a2d49e57e80a0de91e80ac2ae3ae638",
+          "size": 8226,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/GAME_DESIGN.md",
+          "hash": "94796b71d2bbf9a42af86ae6acbef017e807f14caafad85d1570123357182333",
+          "size": 615,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/START_HERE.md",
+          "hash": "59b0a54dfa11c1deabd604aa686d0bae165226ecdfb572e1e65fc13f7e675007",
+          "size": 308,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/UI_PAGES.md",
+          "hash": "4969bdd983f693afa59ec775e385cabe991e70ade9274c791b17e40773688985",
+          "size": 470,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/README.md",
+          "hash": "03373598debddc1e7cf6578175b0dc3051830d18f41382db63fc083f1737dded",
+          "size": 416,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/001.json",
+          "hash": "a02cb05e49a678cab3a1dd31ddb5066d31e6a98b6409c4abce69fd3ecc7b60ea",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/002.json",
+          "hash": "e053267eddf7db3958b5d051cd82b573af555279e79a38fee2df7929f8d3a930",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/003.json",
+          "hash": "ab3ca284db3ab7fa63dbe372c4006fcbc9b28613eee7eb6ca5b11a92f48d1480",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/004.json",
+          "hash": "8bdd5dc1d7104aba0ca28fb9640113713c72e5e80f20ee8e5e029703f62f9ca5",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/005.json",
+          "hash": "67c98b8015203129a8fd22c49653f3ec987eecdbfcc003bf0f07f97c5e2a0577",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/006.json",
+          "hash": "f50852e8990d53e8d910d90a8aa1761eb87465b3d391d5fdca4d84f170158760",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/007.json",
+          "hash": "e031ed720dcdcaaf52b03c36d210bf9b20a011c6e206e5644b63dcd7143cfc36",
+          "size": 59,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/008.json",
+          "hash": "a57ea498729794e59ae05a42b8e79b5a6cf3d3bb94533d271a1631e40a4f0851",
+          "size": 60,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/009.json",
+          "hash": "3db5cc2182cae21fe4257fdd31baf91636cbfb3eec608b676eede85536a4c6f9",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/010.json",
+          "hash": "d47ddb40195310b5a41493a413104470f6eb316f11232bbf7c5d377671e1a37e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/011.json",
+          "hash": "7623a5e79eb9f43fdd964e49efbd4d189a091da0ee2d6cf28854b1dec4d63205",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/012.json",
+          "hash": "a5ea0f94cc3909bb1ee6c89b7fd398a33e646d777be351d0c0db4ff41dea74df",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/013.json",
+          "hash": "483cba2cf11fc8a6a14a7229587c2434a3c0c8898e162e2179454fcd0583a165",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/014.json",
+          "hash": "171f68574472470a4be140981225f34268485bee1dda97fe213a4b3e1607554a",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/015.json",
+          "hash": "f07c773a255b25a512db3d0580c56955bb70051126740ee83fcc02f4fb895dea",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/016.json",
+          "hash": "463078260247acd02f49420fdf008c813ef2ee6c42b3c4171c7fe8cc42ce94f4",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/017.json",
+          "hash": "c91229f3676f3ea590f4c4b1832088cb9b2e90d7abb8b0c46475f3ef92e048f7",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/018.json",
+          "hash": "cc5b0fc8b47ef2f524a154981f7bbe78c72f3e72e38a19242cea842806a105b0",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/019.json",
+          "hash": "263775b22015a74bd61a5e6ea1d35607588c99ba5d7caef2ec6caec78cef84b5",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/020.json",
+          "hash": "7af6fbb9bfd11c3c57d15e11168cdf0abe32afe309cf0497a4e1ea1d1028d5ff",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/021.json",
+          "hash": "e5ec284b20f701f906b8501e4ab3210d6009c64c8f71cdfe4b2db53a1d5a2978",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/022.json",
+          "hash": "e829257637890ca477d4ed5356853d9c22c1a4c5aaec3b451aff56ea4990d45b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/023.json",
+          "hash": "31cc78fa1fb4f6b1c579de6d6ee41ece3109868525dffe5c5946098fec302d5e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/024.json",
+          "hash": "0e4ea8ea882abccc5cd0ed6b2b6ca7e70acfbf67c61028b6994cef37dd5d4b24",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/025.json",
+          "hash": "bab577c51d02e15d2699b3f79ad78d51ef40f07278d6b1b379aea1e49c34de4d",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/026.json",
+          "hash": "7521e2ee66704c32d3e5f795558cea17603c5ea08821affbe8c1decbc68a5f53",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/027.json",
+          "hash": "fb4b789afa381bbfe7e9e19ccf973b5091bca14452e08276eb5fedc7f303de69",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/028.json",
+          "hash": "2677d93e86ea40c9bc5ea3f78b5e3903ca981cca90de29eb358daed3da6e96e4",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/029.json",
+          "hash": "0872f573b2d3ad13ec776086f104806df2805701b1221b68b21cd0b6905736f2",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/030.json",
+          "hash": "ce898580916d99c506215bfea2ef43bb182ba51cc2528ad31bc912fe51162d94",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/031.json",
+          "hash": "e0cfde123714214cfecb61d5c05d1961139b2a88614676343a47d869e36aea9b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/032.json",
+          "hash": "a9daf52926ec863eac15b653b418fc110fdd28fbbe70ed51f5416c6e8b91e1b7",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/033.json",
+          "hash": "7b40461dfbababa419cb28f6af40636b7f33d400fca2e57fa5780dc5fe0ea034",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/034.json",
+          "hash": "0da13efbe0754440bb9396bd0b32647a95946f3e729d41a2b7267e9ccc37076b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/035.json",
+          "hash": "3478b689482ed55e66f689152ae73663067119b3f64ac5fe080910c1743c846e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/036.json",
+          "hash": "fa319d8f203bc1871917d8b097f9bdaace19520638ec84334acbd3c9126a3086",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/037.json",
+          "hash": "10c2c8bf6c1e056de88b122193f2c98021a0d7fddf615b81353a8590e4db8360",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/038.json",
+          "hash": "fd918c4323cc48cdfb55bf33017ce4692d95494ff8001cf4b42a49b4d40474b9",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/039.json",
+          "hash": "c03f18560b89132f5dd479b04891aefb85b9993fde56c6ccbfa7145dd1bf6297",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/040.json",
+          "hash": "1155fa6a0631d6e7f70531a74bf3f8dc7889af8c95db4d0948d8031ef0ccee14",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/041.json",
+          "hash": "cdcb21e5eb38ea5ad3b87f2b96e0866948214248868c242138d0b60189b123f0",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/042.json",
+          "hash": "938cb88480d417b1f0a6564aa4e0f07237a32189919c25886242a99e4d4b7f49",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/043.json",
+          "hash": "b98319d1701933e71fa51305eaef6c19e902cfbbe0cb10b2f1ac7060ea2a138e",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/044.json",
+          "hash": "256d7777a0d5284de9d34ab76150f6e871a9145a8226fadb87ad2dd1e71eca29",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/045.json",
+          "hash": "0c4e55f66c54f20d48348e107a6b76096fac1cf6a9bd6421746dca533c5c2ce2",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/046.json",
+          "hash": "25ac42eeb8065d2ccbf9fcb1943e702803ffd3e721c834804e1f0ae7335c5f10",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/047.json",
+          "hash": "d0680dbeab1abed00a552a721154722c3c7aae6478181c39a98aad421593bfbb",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/048.json",
+          "hash": "aac39a7d0c41592af78fff43af236bc00e2f3c35df159a7135619fa8e3b2be66",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/049.json",
+          "hash": "ce2ae5bd0aa44697888c32e34bc8f3fa4b8532aa59bc532fd51962595d08d021",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/050.json",
+          "hash": "0ce81fafb28972a233871dd6d2a6338bb1598bf1a1b6078a8ac860f3e45e8419",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/051.json",
+          "hash": "6db796b9cbe70aa35c6af9c22ab8e3d0fc619be985244f5d433a2edfca7ba5ad",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/052.json",
+          "hash": "793499cd5b5eb6bd2d6bb4291501495a58929ebff9f8b04ef857e1994e12ad26",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/053.json",
+          "hash": "bc464e6bd408afd439184da518f35077f38a8387513721350b642b5f16beac2c",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/054.json",
+          "hash": "ea2fe90e82317c7d1e614fbaf38eda1bb97d5f44221a7ff4fc5b98c087d55f45",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/055.json",
+          "hash": "21ee2cb4a456dbb70ee051ce2abc88d54554a31faa3d28f69db294e2c5f01965",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/056.json",
+          "hash": "0a54de0cb57e6261f4a1dd621267e3adfd3d16397752032bd774e8ab5f87ca8c",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/057.json",
+          "hash": "38dc84a951669f50e0c65c883bf6e3ed60972fab144058ba025558835a01e69f",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/058.json",
+          "hash": "ea78e503b5badd18ce4ba2333945b465b2fa2fe19181ab46da7946e2499753bc",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/059.json",
+          "hash": "0539c6fbd5441b7498a603e7bf1c6216de25f0ca8ed3c360c244df48536c04f2",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/060.json",
+          "hash": "f399f0621dd1c60806badda9835369538e4ec1fc86d5ca78586907d9641af07b",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/061.json",
+          "hash": "879455c3ad2ecd608ad316acdaead43350e8eca2ac58cd91d831e0d94c984b90",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/062.json",
+          "hash": "942d8dbb0277721523625553dbeacf5e7f8e9c3122cf4d819867e8b792d8eb26",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/063.json",
+          "hash": "992dda883c2f802fba2b1865110b5a9eebd942b79d8cac0a7598b27c0e28378f",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/064.json",
+          "hash": "eee29f8726be2c3ff7e1a6dc4d03635054b5421a85ca8839bbe66bd253d680d5",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/065.json",
+          "hash": "6283b1b03aa9457e100bff3a374bdbf38d9f9d39e8a9b5df0b19b688627e4898",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/066.json",
+          "hash": "2b4e114aff3ae1b7f8c2a5b08432fc0ea4d33f61cea2f3385f762bd4d0a99ef8",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/067.json",
+          "hash": "9607552ac19439390630ce0b18af0632c14b27560c7b8dbf3611066225d51b54",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/068.json",
+          "hash": "8e5d1914ea9bb4c218689c71b258bb046b722d1a018dd73216bb6eb870b19926",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/069.json",
+          "hash": "b6dce5a8885dfa533f09c6555f989b11862560bcc5d37115b5afe0cac8ea102c",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/layouts/070.json",
+          "hash": "e8666775a9cb1e794622a36e60ee4e553240d27ad4c037f89620e37689c0605d",
+          "size": 61,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/level_plan.json",
+          "hash": "6059bde333cd316dc4c089a36832f87f0fe0dafa32ec7d76dcf3f4a01c4009c3",
+          "size": 23593,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/levels/solutions.json",
+          "hash": "59ddbd8053e6ce8886a81713712c439418554a87624a5f105ac6317d60e8fcae",
+          "size": 55557,
+          "executable": false
+        },
+        {
+          "path": "examples/minimal-starter/starter.json",
+          "hash": "4c0785711ee3b438cc9a11b7b819c50e821de89449ab49835c339b6584e8d18c",
+          "size": 1127,
+          "executable": false
+        },
+        {
+          "path": "references/base-integration.md",
+          "hash": "4841a204e07f8a7470c8bed0ecf4b4d10e17d4f8e9578827b05d50b17ba4c24f",
+          "size": 5785,
+          "executable": false
+        },
+        {
+          "path": "references/concept-to-spec.md",
+          "hash": "2b436e9e1573111b60dd849ede856132ba7f7fb787d25b2d1cbf692dd1d48926",
+          "size": 4197,
+          "executable": false
+        },
+        {
+          "path": "references/creation-gates.md",
+          "hash": "15621a13b88f041202270415dae1338a652fc7c6dcd8d73d0f91957f4b742e5f",
+          "size": 4644,
+          "executable": false
+        },
+        {
+          "path": "references/explicit-legacy-features.md",
+          "hash": "fc8d4413e9bd392a26a4001adedade02569b5134fa1ae4fe6522ba5b62330b51",
+          "size": 749,
+          "executable": false
+        },
+        {
+          "path": "references/starter-intake.md",
+          "hash": "753dc52670b88a14f28bb4e325a2015ad1eeeac816ca8c3895b027cd8170414c",
+          "size": 8286,
+          "executable": false
+        },
+        {
+          "path": "references/starter-pack-spec.md",
+          "hash": "6f9cdd79e2bf6993d3acf9d0341322429c235eaea9c3426bb4215af36f488a60",
+          "size": 8861,
+          "executable": false
+        },
+        {
+          "path": "references/workflow-detail.md",
+          "hash": "2354c48c3382572c5f3a7374016af36fb288c3b97987138348cd58f523516c9d",
+          "size": 284,
+          "executable": false
+        },
+        {
+          "path": "references/workshop-handoff.md",
+          "hash": "6f0f0c22e3ac5f3103d7166d7ed61e8afdb8384264f28688bdcc62e261abcd9f",
+          "size": 5574,
+          "executable": false
+        },
+        {
+          "path": "scripts/inspect_starter.py",
+          "hash": "828a4ac9c93051fd9bc666a43772c75e4395392908284a7f7316328d69a48b85",
+          "size": 10134,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_validate_starter.py",
+          "hash": "a31dbad7a0bade611e93a4340813afa3d099d0622f5af11e8e8214e70a930395",
+          "size": 3868,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_workshop_intake.py",
+          "hash": "027960a6d55d8cb87b03fcab779f680a710f2d7e10c5c7a99991463516e07967",
+          "size": 26873,
+          "executable": false
+        },
+        {
+          "path": "scripts/validate_starter.py",
+          "hash": "ab20212c26b608202071dabfa78296052ac4438531ac6b65dfef2f339174a35f",
+          "size": 14378,
+          "executable": false
+        },
+        {
+          "path": "scripts/workshop_intake.py",
+          "hash": "261ae3112112084f97d16dae0e427db6eb542fd33f3412a8bee08451e3318cb2",
+          "size": 37860,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-logic-check",
+      "treeHash": "304d121afec0eafbe8fffeeb87168705ae45112718ff7817a44ed443dbc9d7f3",
+      "fileCount": 6,
+      "bytes": 33338,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "9587594dd28362db0ba9294adf036a2b773797d5a517980b313ec5da546ecb49",
+          "size": 1109,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "03ac28a7194e510e31f3cfd845e2ad0bd8c7824eb6932aaf86217b3df2b78df1",
+          "size": 6197,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "8c04d41c9407e9bc4c7830d44b42afd00e6b30b1e19d4a26996577937b713a65",
+          "size": 433,
+          "executable": false
+        },
+        {
+          "path": "assets/logic-report-template.md",
+          "hash": "bc756a37b35951eca0712f0161997560f0e2979399bff96353b06b71d72888db",
+          "size": 2927,
+          "executable": false
+        },
+        {
+          "path": "references/learned-regressions.md",
+          "hash": "d819ab57a3fb85e2bd6f1bcdd4e4e652ae935093244a1cad729ed127e3862307",
+          "size": 13554,
+          "executable": false
+        },
+        {
+          "path": "references/logic-rules.md",
+          "hash": "d381683e730543f2872a71262c8c50efb875d390df2e62125baf028af4717b13",
+          "size": 9118,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-tiktok-package",
+      "treeHash": "ff642a0feba63b9d749cd735dac78cc2a3bfbfe136513da1f93b0b7120d51c16",
+      "fileCount": 5,
+      "bytes": 15699,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "0ff921610e58c8e5bddfadc17cee4ca7571503fe7a16a2caedecd51746bf643e",
+          "size": 941,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "b5953bc41c1d2e96283a351a1aa143b2733e2b40f00dc3313c19509d83ea949e",
+          "size": 8129,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "62a54b2424cf4757d8cc76c37dd5c8686ff8b066c0160c3a26800a81494f82ac",
+          "size": 750,
+          "executable": false
+        },
+        {
+          "path": "references/package-forms.md",
+          "hash": "993681e00e6636dee5606fb51f3d5e91d4a80d55843d8d154e4ba198d4df9a59",
+          "size": 4537,
+          "executable": false
+        },
+        {
+          "path": "scripts/upload_preflight.py",
+          "hash": "1f610e5adb9b68a8eddc49059c74309b1b976b7634aab791c9968e44aa8cf5d6",
+          "size": 1342,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-game-to-english",
+      "treeHash": "a579917b76b66ea4749a2e26c6b6d134d316610c930ad39f0ad8f139ac37cdad",
+      "fileCount": 8,
+      "bytes": 41977,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "4f15b6224890fd01c731353206b9cd5dc8d172fa65418195193695cca6c45f99",
+          "size": 1454,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "aa7d5d44f9f35f7b15ae2010aa37198af034fe7ddd1af7e3514c927757a18867",
+          "size": 9748,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+          "size": 176,
+          "executable": false
+        },
+        {
+          "path": "examples/MusicSlice_ad-regression.json",
+          "hash": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+          "size": 1380,
+          "executable": false
+        },
+        {
+          "path": "references/dynamic-text-glyph-review.md",
+          "hash": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+          "size": 1434,
+          "executable": false
+        },
+        {
+          "path": "references/english-ui-rebuild.md",
+          "hash": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
+          "size": 21567,
+          "executable": false
+        },
+        {
+          "path": "references/fixed-entries.md",
+          "hash": "35825f8ab50a25d2a3c84560d47ff73ef8cabdda9ea6b66f761b26386baf2d51",
+          "size": 5758,
+          "executable": false
+        },
+        {
+          "path": "scripts/serve_preview.py",
+          "hash": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
+          "size": 460,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "cocos-tiktok-package-check",
+      "treeHash": "80eb9f131de4864e15ae0e3392ad8c3c73b6f58f664ddf8afbed6864a1aba171",
+      "fileCount": 29,
+      "bytes": 182028,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "5dd6125bf9115884419cc21e3e0338d186331d59a717b8f6c96ecbe22b2a7e79",
+          "size": 5022,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "ffb9933edbdc4be76806b2c0c79ce396c34c6ce96974d2388b27d2f36bc12bbf",
+          "size": 8694,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "64cf700bbdc6c7425d443f34896740e91f81dc9294aa7a71621d56ee4e2d84bc",
+          "size": 153,
+          "executable": false
+        },
+        {
+          "path": "references/bootstrap-order-review.md",
+          "hash": "68c7836696999ae34db03efc2f388160d5a50068e3bfbc5b3ca7a34c2af15bd2",
+          "size": 1381,
+          "executable": false
+        },
+        {
+          "path": "references/calibration-results.json",
+          "hash": "027701ef57cd9ad5a83d73332771109fc3025a036094ccb40c77cf6e902a6059",
+          "size": 10154,
+          "executable": false
+        },
+        {
+          "path": "references/check-contract.md",
+          "hash": "58fd91c9781ad3c7e8686fc4ce77b609dd543ae97bbd03858482152b78d124c9",
+          "size": 12741,
+          "executable": false
+        },
+        {
+          "path": "references/drag-audio-postconditions.md",
+          "hash": "9df50df6a21f853923fa20e0263daf18c83ace264c1560c0900a233e6a41b0de",
+          "size": 4729,
+          "executable": false
+        },
+        {
+          "path": "references/failure-casebook.md",
+          "hash": "a97ac51e9e0466e2a6c81173058b1ef9fda98ddd0adf1e3e3b67677f4d05041d",
+          "size": 3742,
+          "executable": false
+        },
+        {
+          "path": "references/forbidden-player-windows.md",
+          "hash": "f1640e9938c8253cce29a294638ac84c9a649cffd5fd946f5169d6ff60e93e88",
+          "size": 2149,
+          "executable": false
+        },
+        {
+          "path": "references/gate-order-and-identity.md",
+          "hash": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
+          "size": 4604,
+          "executable": false
+        },
+        {
+          "path": "references/main-package-overflow.md",
+          "hash": "49b209122928e7c1af0c1221d3c99427e6f3fb4895937852d2712bbdc135939d",
+          "size": 4610,
+          "executable": false
+        },
+        {
+          "path": "references/resource-and-reported-issues.md",
+          "hash": "6a9c8b8b3cc6a846b3975cbfa2c82abf58e26febc5f24f064b5c709f04962373",
+          "size": 9764,
+          "executable": false
+        },
+        {
+          "path": "references/resource-loss-recovery.md",
+          "hash": "f83804daeca8c39833a2d82394a9b2ad454a077aa6322f54e4c22acc05863aef",
+          "size": 1712,
+          "executable": false
+        },
+        {
+          "path": "references/root-entry-and-delivery.md",
+          "hash": "b381179d0c5a37a76bb8327a945336c0b95f7af24e741c73b0a918acfc36aed5",
+          "size": 3828,
+          "executable": false
+        },
+        {
+          "path": "references/webp-decode-capability.md",
+          "hash": "e0b55d230c3e8e368c69d8ecf4889a7004408b714eece31ac7937b80442a07d8",
+          "size": 3680,
+          "executable": false
+        },
+        {
+          "path": "scripts/audit_interaction_audio.py",
+          "hash": "942540bcdb8de4af9fbf266076f765d08d6d1972fffa8207903d53b3e810d351",
+          "size": 5603,
+          "executable": false
+        },
+        {
+          "path": "scripts/audit_runtime_resources.py",
+          "hash": "1c3e6896b2385ca9809dae6d4e1a6cbadc5726d707757afe18334b28a7e37d17",
+          "size": 420,
+          "executable": false
+        },
+        {
+          "path": "scripts/audit_sound_settings.py",
+          "hash": "1e50cc1c675e67d7a8a149196ef344730f69c4b760040502e6a53bc74c410fd6",
+          "size": 8867,
+          "executable": false
+        },
+        {
+          "path": "scripts/build_checked_zip.py",
+          "hash": "ff36bff9cf415de07d3bba2dd08ef27b9f572b2974a83b07121ec5a896520216",
+          "size": 6714,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_package.py",
+          "hash": "42ba5d6886294321baad9ff102aabe06a4316e86fc8603f0a0c504aaab55f0b1",
+          "size": 5191,
+          "executable": false
+        },
+        {
+          "path": "scripts/prepare_delivery.py",
+          "hash": "e69113d5a4788db27b645db43d564d1ce238ccb8f774c58e3846878d238c4bb7",
+          "size": 4044,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_final_startup_gate.py",
+          "hash": "bed009ad442262763b6e597c7d6b7f494f03532207bac1e865de3d8ddd53ab7d",
+          "size": 5078,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_gate_order_and_identity.py",
+          "hash": "b1dd8552dc8392427b58de7cce7b137dc20e87012d6840f4f478826a3a710a84",
+          "size": 10959,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_issue_relocation.py",
+          "hash": "39890e93c822c6c2701db1cef52faf191cd19e2eeef5b3f3e5e4bf85cceedf39",
+          "size": 12027,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_package_checks.py",
+          "hash": "a8dd8046349e1fa0b6c42ec1457ddf99d24068e4fa79c44eb75e6735259c7d91",
+          "size": 12363,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_package_reuse.py",
+          "hash": "4d79f88796f87bfd43b3c38492f1fe71217f290f0d54a6ab23479f64e185f73a",
+          "size": 4975,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_resource_and_issue_obligations.py",
+          "hash": "8a13414380af2e3fef29bc55e0b51f2791a20db3db9179a79fd895ff295ae075",
+          "size": 15878,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_sound_settings_profile.py",
+          "hash": "209df017e383579012691ae6e7ebc6815a19667274e804dc8587fc0c143ec74d",
+          "size": 11124,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_webp_decode_probe.cjs",
+          "hash": "1180e07ee9e62603312ac53c2d8f97f424883431320a8a125bbff48b013a3df6",
+          "size": 1822,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "desktop-agent-orchestrator",
+      "treeHash": "b487033e82c1a8412c9a533512aa1af2d0da3724957c1559768956d743f710dd",
+      "fileCount": 13,
+      "bytes": 94572,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "3d09744ed9dd537259f42625b5f766dd318553d1c1a65d8a3c3d5978a3ff798e",
+          "size": 2269,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "8e7e4e628b18618b9be713459990e986bf76dce74f0a4fc32ce83c7e8dce7012",
+          "size": 3725,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "16fc2d622a5ba55df2ddc9c5e2dd16be64b3e430ed36917e09135f83bcd56a8a",
+          "size": 413,
+          "executable": false
+        },
+        {
+          "path": "assets/windows-software.json",
+          "hash": "47f66cdc77ea92a4c44fd9f12c7a6a120f5e15b888994445f9d82510917ed8ba",
+          "size": 4920,
+          "executable": false
+        },
+        {
+          "path": "references/delegation-boundaries.md",
+          "hash": "a44ab252f4479927a71e4618e36c82c4e20e3f783b8a133e506aa845d1bbbdea",
+          "size": 5172,
+          "executable": false
+        },
+        {
+          "path": "references/local-app-routing.md",
+          "hash": "e945fa20d4a2847df77109234b801eec4cf8458c2cf6a64cc60146da31769dcd",
+          "size": 4753,
+          "executable": false
+        },
+        {
+          "path": "references/portability.md",
+          "hash": "3bbf405ab7d7ca9118a6eaa257fa14ac725f2cc39d9ab351f463b8ce89616a71",
+          "size": 2944,
+          "executable": false
+        },
+        {
+          "path": "references/task-brief.md",
+          "hash": "7be79f244b73f461a9c5cad1b115794cb3663986f48c55c74d1ce1766f1d2610",
+          "size": 6883,
+          "executable": false
+        },
+        {
+          "path": "references/windows-bootstrap.md",
+          "hash": "675c1061e68c2f4f19547d6ae705eab0e8cf9ae17c065240139fe7ff85a4c74d",
+          "size": 4954,
+          "executable": false
+        },
+        {
+          "path": "references/workflow-detail.md",
+          "hash": "e55a7e250543223670a1fa51b2b4449e441e8907e6499f2d257212a9e034ac56",
+          "size": 8317,
+          "executable": false
+        },
+        {
+          "path": "scripts/bootstrap_windows.py",
+          "hash": "a38bdd280b7b594e5d779d701c7b35e2add6d4a72cc4cba9db63a3e1bc739ef0",
+          "size": 18720,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_dispatch_contract.py",
+          "hash": "e3d306a8b876c51679367610df5d08abf3cff0a482a07c07ef0d131dd59d7cfd",
+          "size": 14390,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_dispatch_contract.py",
+          "hash": "10a9c4b2e523e5028fdb527d406ff8a1eb5e99b91dd3dc6c1c84df6a0e7ae882",
+          "size": 17112,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "ego-browser",
+      "treeHash": "aa4323f0468028c59aa75d15a00fac27f587e277fbd4908d60ef31c05fe1a5dc",
+      "fileCount": 8,
+      "bytes": 30466,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "dc80661576f097b566fe4768ab98df55850f0719aad8d84e9e66b6f7881b9254",
+          "size": 1382,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
+          "size": 1594,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "81a941e83feb556827d72aa98d7bc97a909294e386ff9f6a1817de92e8767b89",
+          "size": 271,
+          "executable": false
+        },
+        {
+          "path": "assets/composer-icon.png",
+          "hash": "2822b28752520f2a5506cb0693c8db2fd1ec0345806454b5f92d999b84b5bc1f",
+          "size": 3967,
+          "executable": false
+        },
+        {
+          "path": "assets/logo.png",
+          "hash": "cec732e29ea3b03d8920b28d912306f43651186dc2f4a488800da9db0a50f993",
+          "size": 8612,
+          "executable": false
+        },
+        {
+          "path": "references/clearing-state.md",
+          "hash": "c9a022df55f396607ec8b7dc486ab452f1a133fd04fd954a2ff3f86c4df9458c",
+          "size": 4140,
+          "executable": false
+        },
+        {
+          "path": "references/install.md",
+          "hash": "f5f9b1d351a84ac17737fd6aa0e88b04bf1d8b28ae14218dec37fb73a8a94e67",
+          "size": 4479,
+          "executable": false
+        },
+        {
+          "path": "scripts/install.sh",
+          "hash": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
+          "size": 6021,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "game-audio-library",
+      "treeHash": "6871e12a0a56861c2f04e699eb39aa194b405a06403f1fe8583c7e1ec87d9038",
+      "fileCount": 36,
+      "bytes": 546797,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "b154e845e6d77cf5174db6eed6a31e9affbc857ecdc357ecdaaaa3c86db76dad",
+          "size": 5938,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "b8b710973daa95c63e7b3cb1a9067848a92d5a9bfaf5a08db122f664bcfdfab9",
+          "size": 19463,
+          "executable": false
+        },
+        {
+          "path": "cocos24/GameAudioButton.js",
+          "hash": "bdef6cb16217224329cb7797e9985c6b7826bd222299284d3ed0dc6d870deddc",
+          "size": 1384,
+          "executable": false
+        },
+        {
+          "path": "cocos24/GameAudioManager.js",
+          "hash": "3591ebd5002ad1ebad7ea0e28504148aa964380b83f516a8ee62d321e7127c1d",
+          "size": 18890,
+          "executable": false
+        },
+        {
+          "path": "cocos3x/GameAudioButton.ts",
+          "hash": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
+          "size": 1370,
+          "executable": false
+        },
+        {
+          "path": "cocos3x/GameAudioManager.ts",
+          "hash": "eaa3f95cb0f07f79769488766014a4fa97f69de88dc8e816eb65194a061dc700",
+          "size": 20552,
+          "executable": false
+        },
+        {
+          "path": "references/keywords.md",
+          "hash": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
+          "size": 4328,
+          "executable": false
+        },
+        {
+          "path": "references/portable-library.md",
+          "hash": "b24a183a1178c45ccce2a1fad118c187f7035658f0789cbaa0d006c0b584ab4e",
+          "size": 4918,
+          "executable": false
+        },
+        {
+          "path": "references/sources.md",
+          "hash": "7631c45240cc20102859e1802cc3f57755a09a89a5ad30306a6881b9f8bed352",
+          "size": 5232,
+          "executable": false
+        },
+        {
+          "path": "references/theme-library.md",
+          "hash": "cffc8e788fe4833021fc697774c1931fb93e274d449bf1b1d3526c566a1f9301",
+          "size": 4002,
+          "executable": false
+        },
+        {
+          "path": "scripts/add_credit.py",
+          "hash": "6755d6fea34bf18d41cb4bf3692d9d9fd33df7bb3c85c3b44b57f59cb884d020",
+          "size": 1931,
+          "executable": false
+        },
+        {
+          "path": "scripts/audio_identity.py",
+          "hash": "8490e34d5188040c96ff68efe960f758e4ddf6edd6418106a661a04171d5000d",
+          "size": 3401,
+          "executable": false
+        },
+        {
+          "path": "scripts/audio_pipeline.py",
+          "hash": "1f5badca5428113c9b170e334ed0e4181caa4fdf76d55e901585bed3dd08e8c9",
+          "size": 12364,
+          "executable": false
+        },
+        {
+          "path": "scripts/audition.py",
+          "hash": "8478c3f5c88781f9e1ee375542de8b72b4aea96b933a2a16257a7822de61d16a",
+          "size": 14084,
+          "executable": false
+        },
+        {
+          "path": "scripts/browser_fetch.py",
+          "hash": "ecd938fbafe12976f0c595626ef11c161b8e63117eb93033b3560bae41055c09",
+          "size": 11377,
+          "executable": false
+        },
+        {
+          "path": "scripts/build_index.py",
+          "hash": "7f0cfe32612599b00734def0730913a25cf012aaef566b73f455b0cc4ffc869a",
+          "size": 17212,
+          "executable": false
+        },
+        {
+          "path": "scripts/common.py",
+          "hash": "d1265255136a91711a7e63426e04e69d16cf4cc8b9794a702f2fa6e695259e68",
+          "size": 9791,
+          "executable": false
+        },
+        {
+          "path": "scripts/fetch_freesound.py",
+          "hash": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
+          "size": 4439,
+          "executable": false
+        },
+        {
+          "path": "scripts/fetch_oga.py",
+          "hash": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
+          "size": 3506,
+          "executable": false
+        },
+        {
+          "path": "scripts/fetch_openverse.py",
+          "hash": "c3f849bfe6b4279b9e77b0d861a5ba01009d954fe978bbc4fa209f7d52d901fe",
+          "size": 5627,
+          "executable": false
+        },
+        {
+          "path": "scripts/fetch_page.py",
+          "hash": "bc986dd10720bfaf0490961cadaf1f490218d5f744860260504ebedb71e3400f",
+          "size": 7000,
+          "executable": false
+        },
+        {
+          "path": "scripts/install_audio_library.py",
+          "hash": "1031d1ed833ffcc969491f594e45e303d0fdfbfa9d69287bd84ab4d80ddd872e",
+          "size": 21220,
+          "executable": false
+        },
+        {
+          "path": "scripts/library_bundle.py",
+          "hash": "bbd12e32d8f3a54481c95500421e6eb5d588d0ea34550956a9223a270fe9fa83",
+          "size": 18062,
+          "executable": false
+        },
+        {
+          "path": "scripts/process_audio.py",
+          "hash": "7f0cfc8d8f0f2d9359827d2dabe096e7275fc8afa19a82d97604ae4314a91c5b",
+          "size": 17649,
+          "executable": false
+        },
+        {
+          "path": "scripts/search_index.py",
+          "hash": "33e329add52b991d6ca1aa8cc91239dbf29dd1559fb553b894c534ea1c4a0dda",
+          "size": 13724,
+          "executable": false
+        },
+        {
+          "path": "scripts/setup.py",
+          "hash": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
+          "size": 4749,
+          "executable": false
+        },
+        {
+          "path": "scripts/sync_theme_library.py",
+          "hash": "bc8592ed5555e676ab334bd7063d30b1d12b44fb51d0d3530e84c5c3b56db040",
+          "size": 6476,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_audio_diversity.py",
+          "hash": "ed2a45b984e52658e53a5b6891e4e9f205952248e1f77e96cbed2cf9757fe11e",
+          "size": 19826,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_audio_manager_contracts.cjs",
+          "hash": "5f709d01cc5046d30a72a1d988484f82effa80fd7f3708906b7082fe0219668f",
+          "size": 19542,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_index_identity.py",
+          "hash": "ec247e77ae8347631c11babb020a7eccee99724cd81ab9f43920d919b8b51953",
+          "size": 9684,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_library_bundle.py",
+          "hash": "1ba865a4d51d6115df769668c987f9f9b2870915811537b7f17c67d9989e0b3e",
+          "size": 23892,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_process_receipt.py",
+          "hash": "d26542360c6177f9b3dc16795534e61a8625d96ccbeba3ad08ac22647b51b20c",
+          "size": 13328,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_theme_sync_cache.py",
+          "hash": "4a1ffab9799f4275d9f26f7d11757d1c862fe66f321f40ecca61d3de4e80bde7",
+          "size": 8723,
+          "executable": false
+        },
+        {
+          "path": "templates/needs_casual_puzzle.csv",
+          "hash": "0538e696ef7004e0298a2321ae4e7beecea6b3d166fc7ca5d2c1cf94a0e7180a",
+          "size": 3317,
+          "executable": false
+        },
+        {
+          "path": "templates/packs.csv",
+          "hash": "5bc7d9b62d4fac0401c8dd8371a2946383e475e04d3e9bab80e76f6244e74857",
+          "size": 4430,
+          "executable": false
+        },
+        {
+          "path": "templates/theme-packs.json",
+          "hash": "8ab9937a5a8423dce2560b8ddc83149df3ee452a6368980c3ec05f4025c2bcff",
+          "size": 185366,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "grok-background-maker",
+      "treeHash": "070989e76b23624fd7f3f29fcf0fcc63b45e13da472a2f065161fe5827678725",
+      "fileCount": 5,
+      "bytes": 27652,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "4f44ad2c8fd56291d347d630769ea397b5309a9c18d30b751636ea3614554ee1",
+          "size": 921,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
+          "size": 5662,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
+          "size": 353,
+          "executable": false
+        },
+        {
+          "path": "references/jobs.md",
+          "hash": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
+          "size": 4450,
+          "executable": false
+        },
+        {
+          "path": "scripts/run_jobs.py",
+          "hash": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
+          "size": 16266,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "grok-delegate",
+      "treeHash": "f4b4f18ebc6fb8846f46f70063c50ac8115870f0b15003c722f0fe67a98f74b0",
+      "fileCount": 11,
+      "bytes": 49182,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "4f72a3ca650bdf9c19903e4d042b81ba8d89d802813c23481a3a5f01ffaed0c7",
+          "size": 1869,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "b8e8c73d670e66b2bfd1d5fe21834c74b7979ad706a7baa448fa56e956596b46",
+          "size": 6131,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
+          "size": 218,
+          "executable": false
+        },
+        {
+          "path": "references/concepts.md",
+          "hash": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
+          "size": 1492,
+          "executable": false
+        },
+        {
+          "path": "references/index.md",
+          "hash": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
+          "size": 1085,
+          "executable": false
+        },
+        {
+          "path": "references/literal-protocol.md",
+          "hash": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
+          "size": 3184,
+          "executable": false
+        },
+        {
+          "path": "references/log.md",
+          "hash": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
+          "size": 3352,
+          "executable": false
+        },
+        {
+          "path": "references/quality-boundaries.md",
+          "hash": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
+          "size": 8392,
+          "executable": false
+        },
+        {
+          "path": "references/sources.md",
+          "hash": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
+          "size": 5946,
+          "executable": false
+        },
+        {
+          "path": "references/task-matrix.md",
+          "hash": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
+          "size": 4946,
+          "executable": false
+        },
+        {
+          "path": "scripts/delegate.py",
+          "hash": "485722917d67d4119f40524f3365302928690a6ff1be84a9e3329ff13009cd00",
+          "size": 12567,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "grok-image-review",
+      "treeHash": "26a3b1a92b4ffd3ab796e72a2ce2564610653bf0a22d546a0df1dcb49ca55c98",
+      "fileCount": 4,
+      "bytes": 18470,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "56e5aaa56a7d417839a5ced251edfc087f2613649aedd343a1819e3819d7d393",
+          "size": 760,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "cb7e36f252ef140a66c834a1e8a14d0cc1aa0e2ee5e56986060f59322825abfc",
+          "size": 6853,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
+          "size": 353,
+          "executable": false
+        },
+        {
+          "path": "scripts/review.py",
+          "hash": "d3413fb4748423fa5c7cee29e06b757983e49493132467e3c4c7f878d855e792",
+          "size": 10504,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "mobile-touch-computer-use",
+      "treeHash": "44290c0cdf090238e87cb61e7235c8e7a6cd81c6e778276d10d3fd2e739f27f2",
+      "fileCount": 8,
+      "bytes": 45276,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "36ed3a57c09e6e8617d04ad343e5db850ce4f613fe9a814dd0f9a38e40d6fc3c",
+          "size": 1553,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "07ea0bc6312018d58e51ccaaa47bf046926675b27720ff3cee95fe5725d6bcbd",
+          "size": 15375,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
+          "size": 320,
+          "executable": false
+        },
+        {
+          "path": "references/cold-start-regression.md",
+          "hash": "7130d2f683847d8636d4f04e0f059b91e1e4016ef674c37cefea3fb493cdbf0e",
+          "size": 7547,
+          "executable": false
+        },
+        {
+          "path": "references/computer-use.md",
+          "hash": "143756dfe3af833fd91b1e6371c4ac9d644e18e2053f1571808c17af755dc25d",
+          "size": 8112,
+          "executable": false
+        },
+        {
+          "path": "references/evidence.md",
+          "hash": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
+          "size": 2916,
+          "executable": false
+        },
+        {
+          "path": "scripts/input_observer.js",
+          "hash": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
+          "size": 3177,
+          "executable": false
+        },
+        {
+          "path": "scripts/prepare_preview.py",
+          "hash": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
+          "size": 6276,
+          "executable": false
+        }
+      ]
+    },
+    {
+      "name": "remake-art",
+      "treeHash": "6e511fd0a2d67c7cbdf0c3a298cdb35e13b18b44cd3b83581fb66db9bcfd01e9",
+      "fileCount": 36,
+      "bytes": 1023642,
+      "files": [
+        {
+          "path": "PROVENANCE.json",
+          "hash": "7714f22fb6ebb8c098f4dc7109f1e6800a53b4091375b23dc867d2cacf4163be",
+          "size": 6225,
+          "executable": false
+        },
+        {
+          "path": "SKILL.md",
+          "hash": "6bbdf830fb76f5223a36fe699ed6f5f0b92d919a2883ad65c68eddb94142df67",
+          "size": 8828,
+          "executable": false
+        },
+        {
+          "path": "agents/openai.yaml",
+          "hash": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
+          "size": 353,
+          "executable": false
+        },
+        {
+          "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+          "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+          "size": 744350,
+          "executable": false
+        },
+        {
+          "path": "references/actor-pose-handoffs.md",
+          "hash": "3ebfe8a468ed53bfa4793b12665d334cbf76216550421d0e22be7bdfdad45343",
+          "size": 5476,
+          "executable": false
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "hash": "c05650a7a6a0a92ef686063acf86defe21ecbe4781b3d233980e1967cf5a2dbd",
+          "size": 5289,
+          "executable": false
+        },
+        {
+          "path": "references/artwork-and-feedback.md",
+          "hash": "92b864efb4480f04789e2f13bc9dc71c609f0643aaa4de52d64883d781c9bfd2",
+          "size": 23464,
+          "executable": false
+        },
+        {
+          "path": "references/atlas-slice-integrity.md",
+          "hash": "0121dd76de6a8437d244b377d4dd043708f578cabc7deb4d5fcba8093a34fef3",
+          "size": 5298,
+          "executable": false
+        },
+        {
+          "path": "references/button-group-review.md",
+          "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+          "size": 2705,
+          "executable": false
+        },
+        {
+          "path": "references/capsule-content-fit.md",
+          "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+          "size": 1278,
+          "executable": false
+        },
+        {
+          "path": "references/card-ornament-layout-review.md",
+          "hash": "eee10888defc6ed5f687e0f2e319b52747780ac7486d1f8407dbf53c66b8e1ee",
+          "size": 3654,
+          "executable": false
+        },
+        {
+          "path": "references/card-text-fit-review.md",
+          "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+          "size": 1734,
+          "executable": false
+        },
+        {
+          "path": "references/collection-preview-review.md",
+          "hash": "c227e3a52691dbfee0ef1790faea76c3800d240f6112280ceda3dfa65cea5413",
+          "size": 2049,
+          "executable": false
+        },
+        {
+          "path": "references/common-game-components.md",
+          "hash": "3d79a10b9296d332d87753d5bbb180d000ac0bb2a42c0978e507aca69ad38737",
+          "size": 14217,
+          "executable": false
+        },
+        {
+          "path": "references/dynamic-visual-review.md",
+          "hash": "4e06f44dd40c69ea00b45861e086efd4b6d7f0ea7cc54d09be0ad20b2bcd8c6a",
+          "size": 4333,
+          "executable": false
+        },
+        {
+          "path": "references/full-visual-review.md",
+          "hash": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
+          "size": 11847,
+          "executable": false
+        },
+        {
+          "path": "references/home-by-gameplay.md",
+          "hash": "b91f6eb1ffd5c26a3edf97272ea34c032e2e0ae446b82f83e00eede328860d62",
+          "size": 5652,
+          "executable": false
+        },
+        {
+          "path": "references/large-background-static-review.md",
+          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+          "size": 2140,
+          "executable": false
+        },
+        {
+          "path": "references/local-ui-contract.md",
+          "hash": "14e2349cd29d9c2a08c32355986b858f3c6a057a1f69669054aa5a2f71a504d3",
+          "size": 3999,
+          "executable": false
+        },
+        {
+          "path": "references/mobile-button-size-and-home-layout.md",
+          "hash": "3204347e7d5d19589c31b19e111defc11b999d800e2242e6cab04bead540863a",
+          "size": 7670,
+          "executable": false
+        },
+        {
+          "path": "references/page-richness.md",
+          "hash": "1d630c96f63a1860a5fcf6467eaa6d583e3be3f04da23c7cad51b6aa99d56817",
+          "size": 79736,
+          "executable": false
+        },
+        {
+          "path": "references/panel-composite-review.md",
+          "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+          "size": 1843,
+          "executable": false
+        },
+        {
+          "path": "references/phone-preview-boundary.md",
+          "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+          "size": 2724,
+          "executable": false
+        },
+        {
+          "path": "references/standalone-alpha-review.md",
+          "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+          "size": 2237,
+          "executable": false
+        },
+        {
+          "path": "references/stat-digit-runtime-review.md",
+          "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
+          "size": 1699,
+          "executable": false
+        },
+        {
+          "path": "references/style-limits.md",
+          "hash": "6c9a98498ab2d64dc578f3509393fee9a93c8251ee3888b6c6f0888466bc09ec",
+          "size": 24561,
+          "executable": false
+        },
+        {
+          "path": "references/text-backplate-review.md",
+          "hash": "0558302863e92c9b2c75e4acaf3bc5219e4b4da81066d9a7930a3e2175bf2084",
+          "size": 2959,
+          "executable": false
+        },
+        {
+          "path": "references/theme-readability.md",
+          "hash": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
+          "size": 2118,
+          "executable": false
+        },
+        {
+          "path": "references/ui-style-and-samples.md",
+          "hash": "93e657886351827e9b2d0fb8907535907f2912945c51c13eecb0177d2e65c44e",
+          "size": 16079,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_button_group.py",
+          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
+          "size": 2024,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_card_layout.py",
+          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
+          "size": 4910,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_collection_preview.py",
+          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
+          "size": 2573,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_native_sprite_sources.py",
+          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
+          "size": 9544,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_phone_boundary.py",
+          "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+          "size": 3800,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_native_sprite_sources.py",
+          "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
+          "size": 3130,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_source_residue.py",
+          "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+          "size": 3144,
           "executable": false
         }
       ]
@@ -1959,1946 +3917,6 @@
           "path": "scripts/visual_maintenance_scope.py",
           "hash": "69edd92f241f86c86c876f6bb8d58d34f096007b4c53f4eb56ef27f7c1181de1",
           "size": 10298,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "remake-art",
-      "treeHash": "2c14e3d5d9d20933ef357537e2b22e5ea7aa932e5ca5cadb4ce69edc3d110c38",
-      "fileCount": 35,
-      "bytes": 1009511,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "0df5c7d644a071a3f41ad8fe6cc03704e835d13216fe18f86dbb42bc326f738d",
-          "size": 6060,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "439592d2e80b780799587c5693fa0e5c2111cec3a88280b75d3e4ffaa7887eb0",
-          "size": 5780,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
-          "size": 353,
-          "executable": false
-        },
-        {
-          "path": "examples/weekly-league-typed-text-counterexample-v042.png",
-          "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
-          "size": 744350,
-          "executable": false
-        },
-        {
-          "path": "references/actor-pose-handoffs.md",
-          "hash": "3ebfe8a468ed53bfa4793b12665d334cbf76216550421d0e22be7bdfdad45343",
-          "size": 5476,
-          "executable": false
-        },
-        {
-          "path": "references/art-before-trial.md",
-          "hash": "c05650a7a6a0a92ef686063acf86defe21ecbe4781b3d233980e1967cf5a2dbd",
-          "size": 5289,
-          "executable": false
-        },
-        {
-          "path": "references/artwork-and-feedback.md",
-          "hash": "5743e90346e6b64f316f31fb99eeb17eb0f39750e731e8dcdfdd71c3ed0f74e3",
-          "size": 23060,
-          "executable": false
-        },
-        {
-          "path": "references/atlas-slice-integrity.md",
-          "hash": "0121dd76de6a8437d244b377d4dd043708f578cabc7deb4d5fcba8093a34fef3",
-          "size": 5298,
-          "executable": false
-        },
-        {
-          "path": "references/button-group-review.md",
-          "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
-          "size": 2705,
-          "executable": false
-        },
-        {
-          "path": "references/capsule-content-fit.md",
-          "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
-          "size": 1278,
-          "executable": false
-        },
-        {
-          "path": "references/card-ornament-layout-review.md",
-          "hash": "eee10888defc6ed5f687e0f2e319b52747780ac7486d1f8407dbf53c66b8e1ee",
-          "size": 3654,
-          "executable": false
-        },
-        {
-          "path": "references/card-text-fit-review.md",
-          "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
-          "size": 1734,
-          "executable": false
-        },
-        {
-          "path": "references/collection-preview-review.md",
-          "hash": "c227e3a52691dbfee0ef1790faea76c3800d240f6112280ceda3dfa65cea5413",
-          "size": 2049,
-          "executable": false
-        },
-        {
-          "path": "references/common-game-components.md",
-          "hash": "3d79a10b9296d332d87753d5bbb180d000ac0bb2a42c0978e507aca69ad38737",
-          "size": 14217,
-          "executable": false
-        },
-        {
-          "path": "references/dynamic-visual-review.md",
-          "hash": "4e06f44dd40c69ea00b45861e086efd4b6d7f0ea7cc54d09be0ad20b2bcd8c6a",
-          "size": 4333,
-          "executable": false
-        },
-        {
-          "path": "references/full-visual-review.md",
-          "hash": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
-          "size": 11847,
-          "executable": false
-        },
-        {
-          "path": "references/large-background-static-review.md",
-          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
-          "size": 2140,
-          "executable": false
-        },
-        {
-          "path": "references/local-ui-contract.md",
-          "hash": "14e2349cd29d9c2a08c32355986b858f3c6a057a1f69669054aa5a2f71a504d3",
-          "size": 3999,
-          "executable": false
-        },
-        {
-          "path": "references/mobile-button-size-and-home-layout.md",
-          "hash": "0400d05ccf6d967c5a9102c8e96526ef734420fa876670d754b451e2941bbacf",
-          "size": 7141,
-          "executable": false
-        },
-        {
-          "path": "references/page-richness.md",
-          "hash": "e67e745f15177b59dbdd2636ec70f4cac14f8c5714c45c1041b6e2ca17b997b6",
-          "size": 79394,
-          "executable": false
-        },
-        {
-          "path": "references/panel-composite-review.md",
-          "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
-          "size": 1843,
-          "executable": false
-        },
-        {
-          "path": "references/phone-preview-boundary.md",
-          "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
-          "size": 2724,
-          "executable": false
-        },
-        {
-          "path": "references/standalone-alpha-review.md",
-          "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
-          "size": 2237,
-          "executable": false
-        },
-        {
-          "path": "references/stat-digit-runtime-review.md",
-          "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
-          "size": 1699,
-          "executable": false
-        },
-        {
-          "path": "references/style-limits.md",
-          "hash": "1fb83f9ec0ade9be7cde6e3956530fb84731c0dcafe0c96e3e6d225555f4103e",
-          "size": 21628,
-          "executable": false
-        },
-        {
-          "path": "references/text-backplate-review.md",
-          "hash": "0558302863e92c9b2c75e4acaf3bc5219e4b4da81066d9a7930a3e2175bf2084",
-          "size": 2959,
-          "executable": false
-        },
-        {
-          "path": "references/theme-readability.md",
-          "hash": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
-          "size": 2118,
-          "executable": false
-        },
-        {
-          "path": "references/ui-style-and-samples.md",
-          "hash": "a5a1b1ec4c6f8f92a6e579cce5455d42c74eee96754400de2e77e400bb652389",
-          "size": 15021,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_button_group.py",
-          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
-          "size": 2024,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_card_layout.py",
-          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
-          "size": 4910,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_collection_preview.py",
-          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
-          "size": 2573,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_native_sprite_sources.py",
-          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
-          "size": 9544,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_phone_boundary.py",
-          "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
-          "size": 3800,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_native_sprite_sources.py",
-          "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
-          "size": 3130,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_source_residue.py",
-          "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
-          "size": 3144,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-from-starter",
-      "treeHash": "5a2d0f1e6aba06c8b8c782dea369db5218d4730d19a3b003dbd9b9af2c69f097",
-      "fileCount": 99,
-      "bytes": 254220,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "4b91fe43b8b2f4b57ea0d8c7115d53e93a3c341d3bae982c0e24c6242176b3b1",
-          "size": 17659,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "2e16e74e61b728255c0e09b13d050588efad9711b80854cdb261a19ace8344af",
-          "size": 4789,
-          "executable": false
-        },
-        {
-          "path": "WORKSHOP_ADAPTER.json",
-          "hash": "1610cefe5efd96bd0b5aba925f576da1e7ff5cb200ca09fc8b977a1302d7ab92",
-          "size": 917,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "13e93c25c7218b31b3c779ce07b2e727b215e7dda6852a0b91abd94205c0e22a",
-          "size": 425,
-          "executable": false
-        },
-        {
-          "path": "assets/creation-spec-template.md",
-          "hash": "0cb8411c115fe2457b832f9409c3cc7efcab56d420d9da596f65dc4a27da4988",
-          "size": 3912,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/ART_DIRECTION.md",
-          "hash": "5074679b4e30b6cd606567d63fdb92db8d88da9be90ef1bf213ca7dc461233a5",
-          "size": 208,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/AUDIO.md",
-          "hash": "91eb924436376ab93aa9866b11f6b9796bac78ba6df6daae541665397086a1fa",
-          "size": 150,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/COPY_EN.md",
-          "hash": "3f787b0cde7e6934cbccae3ca960ace8af38d18eb1e87946c5c7cd43ad72c610",
-          "size": 100,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/ECONOMY.json",
-          "hash": "77dbc7718965ad918f93d76f741620732a2d49e57e80a0de91e80ac2ae3ae638",
-          "size": 8226,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/GAME_DESIGN.md",
-          "hash": "94796b71d2bbf9a42af86ae6acbef017e807f14caafad85d1570123357182333",
-          "size": 615,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/START_HERE.md",
-          "hash": "59b0a54dfa11c1deabd604aa686d0bae165226ecdfb572e1e65fc13f7e675007",
-          "size": 308,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/UI_PAGES.md",
-          "hash": "4969bdd983f693afa59ec775e385cabe991e70ade9274c791b17e40773688985",
-          "size": 470,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/README.md",
-          "hash": "03373598debddc1e7cf6578175b0dc3051830d18f41382db63fc083f1737dded",
-          "size": 416,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/001.json",
-          "hash": "a02cb05e49a678cab3a1dd31ddb5066d31e6a98b6409c4abce69fd3ecc7b60ea",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/002.json",
-          "hash": "e053267eddf7db3958b5d051cd82b573af555279e79a38fee2df7929f8d3a930",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/003.json",
-          "hash": "ab3ca284db3ab7fa63dbe372c4006fcbc9b28613eee7eb6ca5b11a92f48d1480",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/004.json",
-          "hash": "8bdd5dc1d7104aba0ca28fb9640113713c72e5e80f20ee8e5e029703f62f9ca5",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/005.json",
-          "hash": "67c98b8015203129a8fd22c49653f3ec987eecdbfcc003bf0f07f97c5e2a0577",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/006.json",
-          "hash": "f50852e8990d53e8d910d90a8aa1761eb87465b3d391d5fdca4d84f170158760",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/007.json",
-          "hash": "e031ed720dcdcaaf52b03c36d210bf9b20a011c6e206e5644b63dcd7143cfc36",
-          "size": 59,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/008.json",
-          "hash": "a57ea498729794e59ae05a42b8e79b5a6cf3d3bb94533d271a1631e40a4f0851",
-          "size": 60,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/009.json",
-          "hash": "3db5cc2182cae21fe4257fdd31baf91636cbfb3eec608b676eede85536a4c6f9",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/010.json",
-          "hash": "d47ddb40195310b5a41493a413104470f6eb316f11232bbf7c5d377671e1a37e",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/011.json",
-          "hash": "7623a5e79eb9f43fdd964e49efbd4d189a091da0ee2d6cf28854b1dec4d63205",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/012.json",
-          "hash": "a5ea0f94cc3909bb1ee6c89b7fd398a33e646d777be351d0c0db4ff41dea74df",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/013.json",
-          "hash": "483cba2cf11fc8a6a14a7229587c2434a3c0c8898e162e2179454fcd0583a165",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/014.json",
-          "hash": "171f68574472470a4be140981225f34268485bee1dda97fe213a4b3e1607554a",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/015.json",
-          "hash": "f07c773a255b25a512db3d0580c56955bb70051126740ee83fcc02f4fb895dea",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/016.json",
-          "hash": "463078260247acd02f49420fdf008c813ef2ee6c42b3c4171c7fe8cc42ce94f4",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/017.json",
-          "hash": "c91229f3676f3ea590f4c4b1832088cb9b2e90d7abb8b0c46475f3ef92e048f7",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/018.json",
-          "hash": "cc5b0fc8b47ef2f524a154981f7bbe78c72f3e72e38a19242cea842806a105b0",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/019.json",
-          "hash": "263775b22015a74bd61a5e6ea1d35607588c99ba5d7caef2ec6caec78cef84b5",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/020.json",
-          "hash": "7af6fbb9bfd11c3c57d15e11168cdf0abe32afe309cf0497a4e1ea1d1028d5ff",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/021.json",
-          "hash": "e5ec284b20f701f906b8501e4ab3210d6009c64c8f71cdfe4b2db53a1d5a2978",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/022.json",
-          "hash": "e829257637890ca477d4ed5356853d9c22c1a4c5aaec3b451aff56ea4990d45b",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/023.json",
-          "hash": "31cc78fa1fb4f6b1c579de6d6ee41ece3109868525dffe5c5946098fec302d5e",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/024.json",
-          "hash": "0e4ea8ea882abccc5cd0ed6b2b6ca7e70acfbf67c61028b6994cef37dd5d4b24",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/025.json",
-          "hash": "bab577c51d02e15d2699b3f79ad78d51ef40f07278d6b1b379aea1e49c34de4d",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/026.json",
-          "hash": "7521e2ee66704c32d3e5f795558cea17603c5ea08821affbe8c1decbc68a5f53",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/027.json",
-          "hash": "fb4b789afa381bbfe7e9e19ccf973b5091bca14452e08276eb5fedc7f303de69",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/028.json",
-          "hash": "2677d93e86ea40c9bc5ea3f78b5e3903ca981cca90de29eb358daed3da6e96e4",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/029.json",
-          "hash": "0872f573b2d3ad13ec776086f104806df2805701b1221b68b21cd0b6905736f2",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/030.json",
-          "hash": "ce898580916d99c506215bfea2ef43bb182ba51cc2528ad31bc912fe51162d94",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/031.json",
-          "hash": "e0cfde123714214cfecb61d5c05d1961139b2a88614676343a47d869e36aea9b",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/032.json",
-          "hash": "a9daf52926ec863eac15b653b418fc110fdd28fbbe70ed51f5416c6e8b91e1b7",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/033.json",
-          "hash": "7b40461dfbababa419cb28f6af40636b7f33d400fca2e57fa5780dc5fe0ea034",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/034.json",
-          "hash": "0da13efbe0754440bb9396bd0b32647a95946f3e729d41a2b7267e9ccc37076b",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/035.json",
-          "hash": "3478b689482ed55e66f689152ae73663067119b3f64ac5fe080910c1743c846e",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/036.json",
-          "hash": "fa319d8f203bc1871917d8b097f9bdaace19520638ec84334acbd3c9126a3086",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/037.json",
-          "hash": "10c2c8bf6c1e056de88b122193f2c98021a0d7fddf615b81353a8590e4db8360",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/038.json",
-          "hash": "fd918c4323cc48cdfb55bf33017ce4692d95494ff8001cf4b42a49b4d40474b9",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/039.json",
-          "hash": "c03f18560b89132f5dd479b04891aefb85b9993fde56c6ccbfa7145dd1bf6297",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/040.json",
-          "hash": "1155fa6a0631d6e7f70531a74bf3f8dc7889af8c95db4d0948d8031ef0ccee14",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/041.json",
-          "hash": "cdcb21e5eb38ea5ad3b87f2b96e0866948214248868c242138d0b60189b123f0",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/042.json",
-          "hash": "938cb88480d417b1f0a6564aa4e0f07237a32189919c25886242a99e4d4b7f49",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/043.json",
-          "hash": "b98319d1701933e71fa51305eaef6c19e902cfbbe0cb10b2f1ac7060ea2a138e",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/044.json",
-          "hash": "256d7777a0d5284de9d34ab76150f6e871a9145a8226fadb87ad2dd1e71eca29",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/045.json",
-          "hash": "0c4e55f66c54f20d48348e107a6b76096fac1cf6a9bd6421746dca533c5c2ce2",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/046.json",
-          "hash": "25ac42eeb8065d2ccbf9fcb1943e702803ffd3e721c834804e1f0ae7335c5f10",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/047.json",
-          "hash": "d0680dbeab1abed00a552a721154722c3c7aae6478181c39a98aad421593bfbb",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/048.json",
-          "hash": "aac39a7d0c41592af78fff43af236bc00e2f3c35df159a7135619fa8e3b2be66",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/049.json",
-          "hash": "ce2ae5bd0aa44697888c32e34bc8f3fa4b8532aa59bc532fd51962595d08d021",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/050.json",
-          "hash": "0ce81fafb28972a233871dd6d2a6338bb1598bf1a1b6078a8ac860f3e45e8419",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/051.json",
-          "hash": "6db796b9cbe70aa35c6af9c22ab8e3d0fc619be985244f5d433a2edfca7ba5ad",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/052.json",
-          "hash": "793499cd5b5eb6bd2d6bb4291501495a58929ebff9f8b04ef857e1994e12ad26",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/053.json",
-          "hash": "bc464e6bd408afd439184da518f35077f38a8387513721350b642b5f16beac2c",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/054.json",
-          "hash": "ea2fe90e82317c7d1e614fbaf38eda1bb97d5f44221a7ff4fc5b98c087d55f45",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/055.json",
-          "hash": "21ee2cb4a456dbb70ee051ce2abc88d54554a31faa3d28f69db294e2c5f01965",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/056.json",
-          "hash": "0a54de0cb57e6261f4a1dd621267e3adfd3d16397752032bd774e8ab5f87ca8c",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/057.json",
-          "hash": "38dc84a951669f50e0c65c883bf6e3ed60972fab144058ba025558835a01e69f",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/058.json",
-          "hash": "ea78e503b5badd18ce4ba2333945b465b2fa2fe19181ab46da7946e2499753bc",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/059.json",
-          "hash": "0539c6fbd5441b7498a603e7bf1c6216de25f0ca8ed3c360c244df48536c04f2",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/060.json",
-          "hash": "f399f0621dd1c60806badda9835369538e4ec1fc86d5ca78586907d9641af07b",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/061.json",
-          "hash": "879455c3ad2ecd608ad316acdaead43350e8eca2ac58cd91d831e0d94c984b90",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/062.json",
-          "hash": "942d8dbb0277721523625553dbeacf5e7f8e9c3122cf4d819867e8b792d8eb26",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/063.json",
-          "hash": "992dda883c2f802fba2b1865110b5a9eebd942b79d8cac0a7598b27c0e28378f",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/064.json",
-          "hash": "eee29f8726be2c3ff7e1a6dc4d03635054b5421a85ca8839bbe66bd253d680d5",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/065.json",
-          "hash": "6283b1b03aa9457e100bff3a374bdbf38d9f9d39e8a9b5df0b19b688627e4898",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/066.json",
-          "hash": "2b4e114aff3ae1b7f8c2a5b08432fc0ea4d33f61cea2f3385f762bd4d0a99ef8",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/067.json",
-          "hash": "9607552ac19439390630ce0b18af0632c14b27560c7b8dbf3611066225d51b54",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/068.json",
-          "hash": "8e5d1914ea9bb4c218689c71b258bb046b722d1a018dd73216bb6eb870b19926",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/069.json",
-          "hash": "b6dce5a8885dfa533f09c6555f989b11862560bcc5d37115b5afe0cac8ea102c",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/layouts/070.json",
-          "hash": "e8666775a9cb1e794622a36e60ee4e553240d27ad4c037f89620e37689c0605d",
-          "size": 61,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/level_plan.json",
-          "hash": "6059bde333cd316dc4c089a36832f87f0fe0dafa32ec7d76dcf3f4a01c4009c3",
-          "size": 23593,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/levels/solutions.json",
-          "hash": "59ddbd8053e6ce8886a81713712c439418554a87624a5f105ac6317d60e8fcae",
-          "size": 55557,
-          "executable": false
-        },
-        {
-          "path": "examples/minimal-starter/starter.json",
-          "hash": "4c0785711ee3b438cc9a11b7b819c50e821de89449ab49835c339b6584e8d18c",
-          "size": 1127,
-          "executable": false
-        },
-        {
-          "path": "references/base-integration.md",
-          "hash": "4841a204e07f8a7470c8bed0ecf4b4d10e17d4f8e9578827b05d50b17ba4c24f",
-          "size": 5785,
-          "executable": false
-        },
-        {
-          "path": "references/concept-to-spec.md",
-          "hash": "2b436e9e1573111b60dd849ede856132ba7f7fb787d25b2d1cbf692dd1d48926",
-          "size": 4197,
-          "executable": false
-        },
-        {
-          "path": "references/creation-gates.md",
-          "hash": "15621a13b88f041202270415dae1338a652fc7c6dcd8d73d0f91957f4b742e5f",
-          "size": 4644,
-          "executable": false
-        },
-        {
-          "path": "references/explicit-legacy-features.md",
-          "hash": "fc8d4413e9bd392a26a4001adedade02569b5134fa1ae4fe6522ba5b62330b51",
-          "size": 749,
-          "executable": false
-        },
-        {
-          "path": "references/starter-intake.md",
-          "hash": "753dc52670b88a14f28bb4e325a2015ad1eeeac816ca8c3895b027cd8170414c",
-          "size": 8286,
-          "executable": false
-        },
-        {
-          "path": "references/starter-pack-spec.md",
-          "hash": "6f9cdd79e2bf6993d3acf9d0341322429c235eaea9c3426bb4215af36f488a60",
-          "size": 8861,
-          "executable": false
-        },
-        {
-          "path": "references/workflow-detail.md",
-          "hash": "2354c48c3382572c5f3a7374016af36fb288c3b97987138348cd58f523516c9d",
-          "size": 284,
-          "executable": false
-        },
-        {
-          "path": "references/workshop-handoff.md",
-          "hash": "6f0f0c22e3ac5f3103d7166d7ed61e8afdb8384264f28688bdcc62e261abcd9f",
-          "size": 5574,
-          "executable": false
-        },
-        {
-          "path": "scripts/inspect_starter.py",
-          "hash": "828a4ac9c93051fd9bc666a43772c75e4395392908284a7f7316328d69a48b85",
-          "size": 10134,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_validate_starter.py",
-          "hash": "a31dbad7a0bade611e93a4340813afa3d099d0622f5af11e8e8214e70a930395",
-          "size": 3868,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_workshop_intake.py",
-          "hash": "027960a6d55d8cb87b03fcab779f680a710f2d7e10c5c7a99991463516e07967",
-          "size": 26873,
-          "executable": false
-        },
-        {
-          "path": "scripts/validate_starter.py",
-          "hash": "ab20212c26b608202071dabfa78296052ac4438531ac6b65dfef2f339174a35f",
-          "size": 14378,
-          "executable": false
-        },
-        {
-          "path": "scripts/workshop_intake.py",
-          "hash": "261ae3112112084f97d16dae0e427db6eb542fd33f3412a8bee08451e3318cb2",
-          "size": 37860,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-to-english",
-      "treeHash": "33d7bf73272aa09b2970b9389a35df09feb0aaf0b8060f47d646b2c21377e152",
-      "fileCount": 7,
-      "bytes": 30484,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "a1de4f4255f2c73e68ea84f3a6a006a28c7fa9ad81edd8ee6ad974cb471696e8",
-          "size": 1281,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "34e50b6475600f30e68c431ab21ea027f0ea39d034aadeb5f8951f7f72fea107",
-          "size": 3527,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
-          "size": 176,
-          "executable": false
-        },
-        {
-          "path": "references/dynamic-text-glyph-review.md",
-          "hash": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
-          "size": 1434,
-          "executable": false
-        },
-        {
-          "path": "references/english-ui-rebuild.md",
-          "hash": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
-          "size": 21567,
-          "executable": false
-        },
-        {
-          "path": "references/fixed-entries.md",
-          "hash": "621d0e75d15095e50776fc12c70ca9d75634f3a0ab90c61eb478088c96c724e5",
-          "size": 2039,
-          "executable": false
-        },
-        {
-          "path": "scripts/serve_preview.py",
-          "hash": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
-          "size": 460,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-art-redo",
-      "treeHash": "d3dbbdbc8b23d028852c5463b11f3bbe836ea751fa77c96c4b14aae69f96edad",
-      "fileCount": 23,
-      "bytes": 812301,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "8a5363d26404a7615d13f0f5df5e860d42f145fcb2f141fc3ac1d309957f1f1c",
-          "size": 3870,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "8b540a9c1d66db4c239de2ea0bc7ed53b57f7c5ed9a7623833b09a53a0134f3b",
-          "size": 4665,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "559d7df9b2ab6e3195aac662d7e4b59beca6c2848c6bba2a4f18f74ad1c66f18",
-          "size": 362,
-          "executable": false
-        },
-        {
-          "path": "examples/weekly-league-typed-text-counterexample-v042.png",
-          "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
-          "size": 744350,
-          "executable": false
-        },
-        {
-          "path": "references/button-group-review.md",
-          "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
-          "size": 2705,
-          "executable": false
-        },
-        {
-          "path": "references/capsule-content-fit.md",
-          "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
-          "size": 1278,
-          "executable": false
-        },
-        {
-          "path": "references/card-ornament-layout-review.md",
-          "hash": "b493141dfa3cc817fd9b186ee60db19891722592e87f9410e355d210c1a5c873",
-          "size": 3693,
-          "executable": false
-        },
-        {
-          "path": "references/card-text-fit-review.md",
-          "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
-          "size": 1734,
-          "executable": false
-        },
-        {
-          "path": "references/collection-preview-review.md",
-          "hash": "0e1f19121a5a2b086dbe77c98d776c35cea5f9ec6482055aebfd1e2543e98254",
-          "size": 2629,
-          "executable": false
-        },
-        {
-          "path": "references/large-background-static-review.md",
-          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
-          "size": 2140,
-          "executable": false
-        },
-        {
-          "path": "references/panel-composite-review.md",
-          "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
-          "size": 1843,
-          "executable": false
-        },
-        {
-          "path": "references/phone-preview-boundary.md",
-          "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
-          "size": 2724,
-          "executable": false
-        },
-        {
-          "path": "references/rendered-ui-regression-review.md",
-          "hash": "e50d0bf4796a3290bb0378b6b012f3135a97e2e06020fd99da6fbc9a054d7229",
-          "size": 4408,
-          "executable": false
-        },
-        {
-          "path": "references/standalone-alpha-review.md",
-          "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
-          "size": 2237,
-          "executable": false
-        },
-        {
-          "path": "references/stat-digit-runtime-review.md",
-          "hash": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
-          "size": 1699,
-          "executable": false
-        },
-        {
-          "path": "references/text-backplate-review.md",
-          "hash": "cbab9cfa3956f0050891288d0defeb5550ac3bc32be4dec2c38e5588d1e3405f",
-          "size": 2839,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_button_group.py",
-          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
-          "size": 2024,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_card_layout.py",
-          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
-          "size": 4910,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_collection_preview.py",
-          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
-          "size": 2573,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_native_sprite_sources.py",
-          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
-          "size": 9544,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_phone_boundary.py",
-          "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
-          "size": 3800,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_native_sprite_sources.py",
-          "hash": "efec1c13602a884576c01fe27abc9b3e66f49dbe80cef5e756394a19a7729224",
-          "size": 3130,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_source_residue.py",
-          "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
-          "size": 3144,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-logic-check",
-      "treeHash": "304d121afec0eafbe8fffeeb87168705ae45112718ff7817a44ed443dbc9d7f3",
-      "fileCount": 6,
-      "bytes": 33338,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "9587594dd28362db0ba9294adf036a2b773797d5a517980b313ec5da546ecb49",
-          "size": 1109,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "03ac28a7194e510e31f3cfd845e2ad0bd8c7824eb6932aaf86217b3df2b78df1",
-          "size": 6197,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "8c04d41c9407e9bc4c7830d44b42afd00e6b30b1e19d4a26996577937b713a65",
-          "size": 433,
-          "executable": false
-        },
-        {
-          "path": "assets/logic-report-template.md",
-          "hash": "bc756a37b35951eca0712f0161997560f0e2979399bff96353b06b71d72888db",
-          "size": 2927,
-          "executable": false
-        },
-        {
-          "path": "references/learned-regressions.md",
-          "hash": "d819ab57a3fb85e2bd6f1bcdd4e4e652ae935093244a1cad729ed127e3862307",
-          "size": 13554,
-          "executable": false
-        },
-        {
-          "path": "references/logic-rules.md",
-          "hash": "d381683e730543f2872a71262c8c50efb875d390df2e62125baf028af4717b13",
-          "size": 9118,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-ad-design",
-      "treeHash": "615d6be79d411fce8c42396c29da8079061a323dc47991cd0e4d034a33cc2ff0",
-      "fileCount": 2,
-      "bytes": 14805,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "f3dd3d774f952d68f7d5c5f1b5108f750896b823c72646b2af403e87ccb89fcb",
-          "size": 460,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "10da65cd3803dd2087f249c8407761ec0cb3aa11a89bc59a8a2229cbcf9b4753",
-          "size": 14345,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-game-tiktok-package",
-      "treeHash": "ff642a0feba63b9d749cd735dac78cc2a3bfbfe136513da1f93b0b7120d51c16",
-      "fileCount": 5,
-      "bytes": 15699,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "0ff921610e58c8e5bddfadc17cee4ca7571503fe7a16a2caedecd51746bf643e",
-          "size": 941,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "b5953bc41c1d2e96283a351a1aa143b2733e2b40f00dc3313c19509d83ea949e",
-          "size": 8129,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "62a54b2424cf4757d8cc76c37dd5c8686ff8b066c0160c3a26800a81494f82ac",
-          "size": 750,
-          "executable": false
-        },
-        {
-          "path": "references/package-forms.md",
-          "hash": "993681e00e6636dee5606fb51f3d5e91d4a80d55843d8d154e4ba198d4df9a59",
-          "size": 4537,
-          "executable": false
-        },
-        {
-          "path": "scripts/upload_preflight.py",
-          "hash": "1f610e5adb9b68a8eddc49059c74309b1b976b7634aab791c9968e44aa8cf5d6",
-          "size": 1342,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "cocos-tiktok-package-check",
-      "treeHash": "80eb9f131de4864e15ae0e3392ad8c3c73b6f58f664ddf8afbed6864a1aba171",
-      "fileCount": 29,
-      "bytes": 182028,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "5dd6125bf9115884419cc21e3e0338d186331d59a717b8f6c96ecbe22b2a7e79",
-          "size": 5022,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "ffb9933edbdc4be76806b2c0c79ce396c34c6ce96974d2388b27d2f36bc12bbf",
-          "size": 8694,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "64cf700bbdc6c7425d443f34896740e91f81dc9294aa7a71621d56ee4e2d84bc",
-          "size": 153,
-          "executable": false
-        },
-        {
-          "path": "references/bootstrap-order-review.md",
-          "hash": "68c7836696999ae34db03efc2f388160d5a50068e3bfbc5b3ca7a34c2af15bd2",
-          "size": 1381,
-          "executable": false
-        },
-        {
-          "path": "references/calibration-results.json",
-          "hash": "027701ef57cd9ad5a83d73332771109fc3025a036094ccb40c77cf6e902a6059",
-          "size": 10154,
-          "executable": false
-        },
-        {
-          "path": "references/check-contract.md",
-          "hash": "58fd91c9781ad3c7e8686fc4ce77b609dd543ae97bbd03858482152b78d124c9",
-          "size": 12741,
-          "executable": false
-        },
-        {
-          "path": "references/drag-audio-postconditions.md",
-          "hash": "9df50df6a21f853923fa20e0263daf18c83ace264c1560c0900a233e6a41b0de",
-          "size": 4729,
-          "executable": false
-        },
-        {
-          "path": "references/failure-casebook.md",
-          "hash": "a97ac51e9e0466e2a6c81173058b1ef9fda98ddd0adf1e3e3b67677f4d05041d",
-          "size": 3742,
-          "executable": false
-        },
-        {
-          "path": "references/forbidden-player-windows.md",
-          "hash": "f1640e9938c8253cce29a294638ac84c9a649cffd5fd946f5169d6ff60e93e88",
-          "size": 2149,
-          "executable": false
-        },
-        {
-          "path": "references/gate-order-and-identity.md",
-          "hash": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
-          "size": 4604,
-          "executable": false
-        },
-        {
-          "path": "references/main-package-overflow.md",
-          "hash": "49b209122928e7c1af0c1221d3c99427e6f3fb4895937852d2712bbdc135939d",
-          "size": 4610,
-          "executable": false
-        },
-        {
-          "path": "references/resource-and-reported-issues.md",
-          "hash": "6a9c8b8b3cc6a846b3975cbfa2c82abf58e26febc5f24f064b5c709f04962373",
-          "size": 9764,
-          "executable": false
-        },
-        {
-          "path": "references/resource-loss-recovery.md",
-          "hash": "f83804daeca8c39833a2d82394a9b2ad454a077aa6322f54e4c22acc05863aef",
-          "size": 1712,
-          "executable": false
-        },
-        {
-          "path": "references/root-entry-and-delivery.md",
-          "hash": "b381179d0c5a37a76bb8327a945336c0b95f7af24e741c73b0a918acfc36aed5",
-          "size": 3828,
-          "executable": false
-        },
-        {
-          "path": "references/webp-decode-capability.md",
-          "hash": "e0b55d230c3e8e368c69d8ecf4889a7004408b714eece31ac7937b80442a07d8",
-          "size": 3680,
-          "executable": false
-        },
-        {
-          "path": "scripts/audit_interaction_audio.py",
-          "hash": "942540bcdb8de4af9fbf266076f765d08d6d1972fffa8207903d53b3e810d351",
-          "size": 5603,
-          "executable": false
-        },
-        {
-          "path": "scripts/audit_runtime_resources.py",
-          "hash": "1c3e6896b2385ca9809dae6d4e1a6cbadc5726d707757afe18334b28a7e37d17",
-          "size": 420,
-          "executable": false
-        },
-        {
-          "path": "scripts/audit_sound_settings.py",
-          "hash": "1e50cc1c675e67d7a8a149196ef344730f69c4b760040502e6a53bc74c410fd6",
-          "size": 8867,
-          "executable": false
-        },
-        {
-          "path": "scripts/build_checked_zip.py",
-          "hash": "ff36bff9cf415de07d3bba2dd08ef27b9f572b2974a83b07121ec5a896520216",
-          "size": 6714,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_package.py",
-          "hash": "42ba5d6886294321baad9ff102aabe06a4316e86fc8603f0a0c504aaab55f0b1",
-          "size": 5191,
-          "executable": false
-        },
-        {
-          "path": "scripts/prepare_delivery.py",
-          "hash": "e69113d5a4788db27b645db43d564d1ce238ccb8f774c58e3846878d238c4bb7",
-          "size": 4044,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_final_startup_gate.py",
-          "hash": "bed009ad442262763b6e597c7d6b7f494f03532207bac1e865de3d8ddd53ab7d",
-          "size": 5078,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_gate_order_and_identity.py",
-          "hash": "b1dd8552dc8392427b58de7cce7b137dc20e87012d6840f4f478826a3a710a84",
-          "size": 10959,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_issue_relocation.py",
-          "hash": "39890e93c822c6c2701db1cef52faf191cd19e2eeef5b3f3e5e4bf85cceedf39",
-          "size": 12027,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_package_checks.py",
-          "hash": "a8dd8046349e1fa0b6c42ec1457ddf99d24068e4fa79c44eb75e6735259c7d91",
-          "size": 12363,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_package_reuse.py",
-          "hash": "4d79f88796f87bfd43b3c38492f1fe71217f290f0d54a6ab23479f64e185f73a",
-          "size": 4975,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_resource_and_issue_obligations.py",
-          "hash": "8a13414380af2e3fef29bc55e0b51f2791a20db3db9179a79fd895ff295ae075",
-          "size": 15878,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_sound_settings_profile.py",
-          "hash": "209df017e383579012691ae6e7ebc6815a19667274e804dc8587fc0c143ec74d",
-          "size": 11124,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_webp_decode_probe.cjs",
-          "hash": "1180e07ee9e62603312ac53c2d8f97f424883431320a8a125bbff48b013a3df6",
-          "size": 1822,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "mobile-touch-computer-use",
-      "treeHash": "44290c0cdf090238e87cb61e7235c8e7a6cd81c6e778276d10d3fd2e739f27f2",
-      "fileCount": 8,
-      "bytes": 45276,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "36ed3a57c09e6e8617d04ad343e5db850ce4f613fe9a814dd0f9a38e40d6fc3c",
-          "size": 1553,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "07ea0bc6312018d58e51ccaaa47bf046926675b27720ff3cee95fe5725d6bcbd",
-          "size": 15375,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "fb7a6b393af799874599c7aa4963307d26d675a96b7f8d6fed83ce4f54ab90fa",
-          "size": 320,
-          "executable": false
-        },
-        {
-          "path": "references/cold-start-regression.md",
-          "hash": "7130d2f683847d8636d4f04e0f059b91e1e4016ef674c37cefea3fb493cdbf0e",
-          "size": 7547,
-          "executable": false
-        },
-        {
-          "path": "references/computer-use.md",
-          "hash": "143756dfe3af833fd91b1e6371c4ac9d644e18e2053f1571808c17af755dc25d",
-          "size": 8112,
-          "executable": false
-        },
-        {
-          "path": "references/evidence.md",
-          "hash": "867c6fe2626e82554d488bc6f18faec93bd499366af90aaa32901487bc0d0889",
-          "size": 2916,
-          "executable": false
-        },
-        {
-          "path": "scripts/input_observer.js",
-          "hash": "37b0d399f55ee585a2d483d873b4ac2d338b2525ca8642ab9bf6c8bbbaa507d0",
-          "size": 3177,
-          "executable": false
-        },
-        {
-          "path": "scripts/prepare_preview.py",
-          "hash": "949ef438b3e23434765c563a502dbe68b5df5e683c8d35c88db4f690372924e6",
-          "size": 6276,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "chrome-mobile-testing",
-      "treeHash": "27837c0f827a81401fe11fdda94d7e3d8a6ca7fd53a0110e8504a1d239373d0d",
-      "fileCount": 11,
-      "bytes": 79123,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "aa76434efa9939054b2b4a22fdcf24fd664e09aeef45d3ed11be707e84e15893",
-          "size": 2009,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "01a7f5f84ecda77fb21570bcec9dc26419a4a11bd951518c0388e209d46c95b1",
-          "size": 15278,
-          "executable": false
-        },
-        {
-          "path": "scripts/chrome_touch.py",
-          "hash": "e6adeb7cdc7d58bde659e98fa9b69ce8756b25c7c6b93d7f5ef6803ce56c841d",
-          "size": 35898,
-          "executable": false
-        },
-        {
-          "path": "scripts/ego_touch_runner.js",
-          "hash": "15f562ba045a54b6ef1c4e4c89d2246dc8a604cdec97112b1467dc6399a0dc25",
-          "size": 13600,
-          "executable": false
-        },
-        {
-          "path": "scripts/prepare_chrome.py",
-          "hash": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
-          "size": 1902,
-          "executable": false
-        },
-        {
-          "path": "tests/bin/ego-browser",
-          "hash": "c393f9ebed922816ccefced55c17009ce004b420e16b5e953b3508350d59c97d",
-          "size": 2920,
-          "executable": false
-        },
-        {
-          "path": "tests/calibration-plan.json",
-          "hash": "a2e8e5e5fb915222386195cb8b5fcbc74c46bccda09447cab095259097bf05c6",
-          "size": 333,
-          "executable": false
-        },
-        {
-          "path": "tests/site/big.png",
-          "hash": "82c88be7500e579e4219db87afa35bf36c0602915c298f9bd769c01dcb1e311b",
-          "size": 1390,
-          "executable": false
-        },
-        {
-          "path": "tests/site/index.html",
-          "hash": "10964c5f7910c168d2223b1e40bb4ed8215b3865f3af0810567f7091dacdf053",
-          "size": 578,
-          "executable": false
-        },
-        {
-          "path": "tests/test_ego_route.py",
-          "hash": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
-          "size": 4925,
-          "executable": false
-        },
-        {
-          "path": "tests/timing-plan.json",
-          "hash": "7eece6a52f0ea6a0f2413020932648dd279c6806874bb1a12442171df1b3b309",
-          "size": 290,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "game-audio-library",
-      "treeHash": "6871e12a0a56861c2f04e699eb39aa194b405a06403f1fe8583c7e1ec87d9038",
-      "fileCount": 36,
-      "bytes": 546797,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "b154e845e6d77cf5174db6eed6a31e9affbc857ecdc357ecdaaaa3c86db76dad",
-          "size": 5938,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "b8b710973daa95c63e7b3cb1a9067848a92d5a9bfaf5a08db122f664bcfdfab9",
-          "size": 19463,
-          "executable": false
-        },
-        {
-          "path": "cocos24/GameAudioButton.js",
-          "hash": "bdef6cb16217224329cb7797e9985c6b7826bd222299284d3ed0dc6d870deddc",
-          "size": 1384,
-          "executable": false
-        },
-        {
-          "path": "cocos24/GameAudioManager.js",
-          "hash": "3591ebd5002ad1ebad7ea0e28504148aa964380b83f516a8ee62d321e7127c1d",
-          "size": 18890,
-          "executable": false
-        },
-        {
-          "path": "cocos3x/GameAudioButton.ts",
-          "hash": "0a64d784be6188d98282b23503f775555dd4840a52b56b5414bb4680cc0c2dbc",
-          "size": 1370,
-          "executable": false
-        },
-        {
-          "path": "cocos3x/GameAudioManager.ts",
-          "hash": "eaa3f95cb0f07f79769488766014a4fa97f69de88dc8e816eb65194a061dc700",
-          "size": 20552,
-          "executable": false
-        },
-        {
-          "path": "references/keywords.md",
-          "hash": "b52c2920e354b80ec856c9936ce572f913d0857878b7601bcdb9e29ee8cdf044",
-          "size": 4328,
-          "executable": false
-        },
-        {
-          "path": "references/portable-library.md",
-          "hash": "b24a183a1178c45ccce2a1fad118c187f7035658f0789cbaa0d006c0b584ab4e",
-          "size": 4918,
-          "executable": false
-        },
-        {
-          "path": "references/sources.md",
-          "hash": "7631c45240cc20102859e1802cc3f57755a09a89a5ad30306a6881b9f8bed352",
-          "size": 5232,
-          "executable": false
-        },
-        {
-          "path": "references/theme-library.md",
-          "hash": "cffc8e788fe4833021fc697774c1931fb93e274d449bf1b1d3526c566a1f9301",
-          "size": 4002,
-          "executable": false
-        },
-        {
-          "path": "scripts/add_credit.py",
-          "hash": "6755d6fea34bf18d41cb4bf3692d9d9fd33df7bb3c85c3b44b57f59cb884d020",
-          "size": 1931,
-          "executable": false
-        },
-        {
-          "path": "scripts/audio_identity.py",
-          "hash": "8490e34d5188040c96ff68efe960f758e4ddf6edd6418106a661a04171d5000d",
-          "size": 3401,
-          "executable": false
-        },
-        {
-          "path": "scripts/audio_pipeline.py",
-          "hash": "1f5badca5428113c9b170e334ed0e4181caa4fdf76d55e901585bed3dd08e8c9",
-          "size": 12364,
-          "executable": false
-        },
-        {
-          "path": "scripts/audition.py",
-          "hash": "8478c3f5c88781f9e1ee375542de8b72b4aea96b933a2a16257a7822de61d16a",
-          "size": 14084,
-          "executable": false
-        },
-        {
-          "path": "scripts/browser_fetch.py",
-          "hash": "ecd938fbafe12976f0c595626ef11c161b8e63117eb93033b3560bae41055c09",
-          "size": 11377,
-          "executable": false
-        },
-        {
-          "path": "scripts/build_index.py",
-          "hash": "7f0cfe32612599b00734def0730913a25cf012aaef566b73f455b0cc4ffc869a",
-          "size": 17212,
-          "executable": false
-        },
-        {
-          "path": "scripts/common.py",
-          "hash": "d1265255136a91711a7e63426e04e69d16cf4cc8b9794a702f2fa6e695259e68",
-          "size": 9791,
-          "executable": false
-        },
-        {
-          "path": "scripts/fetch_freesound.py",
-          "hash": "6fb67a6268c9881e08a4f1635d5ff2331da22fcf96cbe9e6dbae2ea8b3195c06",
-          "size": 4439,
-          "executable": false
-        },
-        {
-          "path": "scripts/fetch_oga.py",
-          "hash": "25c05ebe1316c412da8b62b1eab83f32f3b8bd168f4b5bb5789cd1b58934566b",
-          "size": 3506,
-          "executable": false
-        },
-        {
-          "path": "scripts/fetch_openverse.py",
-          "hash": "c3f849bfe6b4279b9e77b0d861a5ba01009d954fe978bbc4fa209f7d52d901fe",
-          "size": 5627,
-          "executable": false
-        },
-        {
-          "path": "scripts/fetch_page.py",
-          "hash": "bc986dd10720bfaf0490961cadaf1f490218d5f744860260504ebedb71e3400f",
-          "size": 7000,
-          "executable": false
-        },
-        {
-          "path": "scripts/install_audio_library.py",
-          "hash": "1031d1ed833ffcc969491f594e45e303d0fdfbfa9d69287bd84ab4d80ddd872e",
-          "size": 21220,
-          "executable": false
-        },
-        {
-          "path": "scripts/library_bundle.py",
-          "hash": "bbd12e32d8f3a54481c95500421e6eb5d588d0ea34550956a9223a270fe9fa83",
-          "size": 18062,
-          "executable": false
-        },
-        {
-          "path": "scripts/process_audio.py",
-          "hash": "7f0cfc8d8f0f2d9359827d2dabe096e7275fc8afa19a82d97604ae4314a91c5b",
-          "size": 17649,
-          "executable": false
-        },
-        {
-          "path": "scripts/search_index.py",
-          "hash": "33e329add52b991d6ca1aa8cc91239dbf29dd1559fb553b894c534ea1c4a0dda",
-          "size": 13724,
-          "executable": false
-        },
-        {
-          "path": "scripts/setup.py",
-          "hash": "2505b9abaa3669b37d210f326d512fc634e4f1be08b35512b1326b6bf96883e5",
-          "size": 4749,
-          "executable": false
-        },
-        {
-          "path": "scripts/sync_theme_library.py",
-          "hash": "bc8592ed5555e676ab334bd7063d30b1d12b44fb51d0d3530e84c5c3b56db040",
-          "size": 6476,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_audio_diversity.py",
-          "hash": "ed2a45b984e52658e53a5b6891e4e9f205952248e1f77e96cbed2cf9757fe11e",
-          "size": 19826,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_audio_manager_contracts.cjs",
-          "hash": "5f709d01cc5046d30a72a1d988484f82effa80fd7f3708906b7082fe0219668f",
-          "size": 19542,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_index_identity.py",
-          "hash": "ec247e77ae8347631c11babb020a7eccee99724cd81ab9f43920d919b8b51953",
-          "size": 9684,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_library_bundle.py",
-          "hash": "1ba865a4d51d6115df769668c987f9f9b2870915811537b7f17c67d9989e0b3e",
-          "size": 23892,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_process_receipt.py",
-          "hash": "d26542360c6177f9b3dc16795534e61a8625d96ccbeba3ad08ac22647b51b20c",
-          "size": 13328,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_theme_sync_cache.py",
-          "hash": "4a1ffab9799f4275d9f26f7d11757d1c862fe66f321f40ecca61d3de4e80bde7",
-          "size": 8723,
-          "executable": false
-        },
-        {
-          "path": "templates/needs_casual_puzzle.csv",
-          "hash": "0538e696ef7004e0298a2321ae4e7beecea6b3d166fc7ca5d2c1cf94a0e7180a",
-          "size": 3317,
-          "executable": false
-        },
-        {
-          "path": "templates/packs.csv",
-          "hash": "5bc7d9b62d4fac0401c8dd8371a2946383e475e04d3e9bab80e76f6244e74857",
-          "size": 4430,
-          "executable": false
-        },
-        {
-          "path": "templates/theme-packs.json",
-          "hash": "8ab9937a5a8423dce2560b8ddc83149df3ee452a6368980c3ec05f4025c2bcff",
-          "size": 185366,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "ego-browser",
-      "treeHash": "aa4323f0468028c59aa75d15a00fac27f587e277fbd4908d60ef31c05fe1a5dc",
-      "fileCount": 8,
-      "bytes": 30466,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "dc80661576f097b566fe4768ab98df55850f0719aad8d84e9e66b6f7881b9254",
-          "size": 1382,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
-          "size": 1594,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "81a941e83feb556827d72aa98d7bc97a909294e386ff9f6a1817de92e8767b89",
-          "size": 271,
-          "executable": false
-        },
-        {
-          "path": "assets/composer-icon.png",
-          "hash": "2822b28752520f2a5506cb0693c8db2fd1ec0345806454b5f92d999b84b5bc1f",
-          "size": 3967,
-          "executable": false
-        },
-        {
-          "path": "assets/logo.png",
-          "hash": "cec732e29ea3b03d8920b28d912306f43651186dc2f4a488800da9db0a50f993",
-          "size": 8612,
-          "executable": false
-        },
-        {
-          "path": "references/clearing-state.md",
-          "hash": "c9a022df55f396607ec8b7dc486ab452f1a133fd04fd954a2ff3f86c4df9458c",
-          "size": 4140,
-          "executable": false
-        },
-        {
-          "path": "references/install.md",
-          "hash": "f5f9b1d351a84ac17737fd6aa0e88b04bf1d8b28ae14218dec37fb73a8a94e67",
-          "size": 4479,
-          "executable": false
-        },
-        {
-          "path": "scripts/install.sh",
-          "hash": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
-          "size": 6021,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "grok-delegate",
-      "treeHash": "f4b4f18ebc6fb8846f46f70063c50ac8115870f0b15003c722f0fe67a98f74b0",
-      "fileCount": 11,
-      "bytes": 49182,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "4f72a3ca650bdf9c19903e4d042b81ba8d89d802813c23481a3a5f01ffaed0c7",
-          "size": 1869,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "b8e8c73d670e66b2bfd1d5fe21834c74b7979ad706a7baa448fa56e956596b46",
-          "size": 6131,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
-          "size": 218,
-          "executable": false
-        },
-        {
-          "path": "references/concepts.md",
-          "hash": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
-          "size": 1492,
-          "executable": false
-        },
-        {
-          "path": "references/index.md",
-          "hash": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
-          "size": 1085,
-          "executable": false
-        },
-        {
-          "path": "references/literal-protocol.md",
-          "hash": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
-          "size": 3184,
-          "executable": false
-        },
-        {
-          "path": "references/log.md",
-          "hash": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
-          "size": 3352,
-          "executable": false
-        },
-        {
-          "path": "references/quality-boundaries.md",
-          "hash": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
-          "size": 8392,
-          "executable": false
-        },
-        {
-          "path": "references/sources.md",
-          "hash": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
-          "size": 5946,
-          "executable": false
-        },
-        {
-          "path": "references/task-matrix.md",
-          "hash": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
-          "size": 4946,
-          "executable": false
-        },
-        {
-          "path": "scripts/delegate.py",
-          "hash": "485722917d67d4119f40524f3365302928690a6ff1be84a9e3329ff13009cd00",
-          "size": 12567,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "grok-image-review",
-      "treeHash": "26a3b1a92b4ffd3ab796e72a2ce2564610653bf0a22d546a0df1dcb49ca55c98",
-      "fileCount": 4,
-      "bytes": 18470,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "56e5aaa56a7d417839a5ced251edfc087f2613649aedd343a1819e3819d7d393",
-          "size": 760,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "cb7e36f252ef140a66c834a1e8a14d0cc1aa0e2ee5e56986060f59322825abfc",
-          "size": 6853,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
-          "size": 353,
-          "executable": false
-        },
-        {
-          "path": "scripts/review.py",
-          "hash": "d3413fb4748423fa5c7cee29e06b757983e49493132467e3c4c7f878d855e792",
-          "size": 10504,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "grok-background-maker",
-      "treeHash": "070989e76b23624fd7f3f29fcf0fcc63b45e13da472a2f065161fe5827678725",
-      "fileCount": 5,
-      "bytes": 27652,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "4f44ad2c8fd56291d347d630769ea397b5309a9c18d30b751636ea3614554ee1",
-          "size": 921,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "0f705522b1994d70c987f671d5609ca376017193d469bca2ebf5b708fea5d2af",
-          "size": 5662,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "df8fa103afde446981081f4cdcc4e2afc8cffc503a3ff017c5173c94e80d9e0b",
-          "size": 353,
-          "executable": false
-        },
-        {
-          "path": "references/jobs.md",
-          "hash": "134ef412f403652e6f907113ac11acd8a619e37b4f468c8d36994e270ecaf7b6",
-          "size": 4450,
-          "executable": false
-        },
-        {
-          "path": "scripts/run_jobs.py",
-          "hash": "fc0ce3dbb5395aaab791d75b54d8b8feb2314f5e80e323be68452ce6946f8ed4",
-          "size": 16266,
-          "executable": false
-        }
-      ]
-    },
-    {
-      "name": "desktop-agent-orchestrator",
-      "treeHash": "b487033e82c1a8412c9a533512aa1af2d0da3724957c1559768956d743f710dd",
-      "fileCount": 13,
-      "bytes": 94572,
-      "files": [
-        {
-          "path": "PROVENANCE.json",
-          "hash": "3d09744ed9dd537259f42625b5f766dd318553d1c1a65d8a3c3d5978a3ff798e",
-          "size": 2269,
-          "executable": false
-        },
-        {
-          "path": "SKILL.md",
-          "hash": "8e7e4e628b18618b9be713459990e986bf76dce74f0a4fc32ce83c7e8dce7012",
-          "size": 3725,
-          "executable": false
-        },
-        {
-          "path": "agents/openai.yaml",
-          "hash": "16fc2d622a5ba55df2ddc9c5e2dd16be64b3e430ed36917e09135f83bcd56a8a",
-          "size": 413,
-          "executable": false
-        },
-        {
-          "path": "assets/windows-software.json",
-          "hash": "47f66cdc77ea92a4c44fd9f12c7a6a120f5e15b888994445f9d82510917ed8ba",
-          "size": 4920,
-          "executable": false
-        },
-        {
-          "path": "references/delegation-boundaries.md",
-          "hash": "a44ab252f4479927a71e4618e36c82c4e20e3f783b8a133e506aa845d1bbbdea",
-          "size": 5172,
-          "executable": false
-        },
-        {
-          "path": "references/local-app-routing.md",
-          "hash": "e945fa20d4a2847df77109234b801eec4cf8458c2cf6a64cc60146da31769dcd",
-          "size": 4753,
-          "executable": false
-        },
-        {
-          "path": "references/portability.md",
-          "hash": "3bbf405ab7d7ca9118a6eaa257fa14ac725f2cc39d9ab351f463b8ce89616a71",
-          "size": 2944,
-          "executable": false
-        },
-        {
-          "path": "references/task-brief.md",
-          "hash": "7be79f244b73f461a9c5cad1b115794cb3663986f48c55c74d1ce1766f1d2610",
-          "size": 6883,
-          "executable": false
-        },
-        {
-          "path": "references/windows-bootstrap.md",
-          "hash": "675c1061e68c2f4f19547d6ae705eab0e8cf9ae17c065240139fe7ff85a4c74d",
-          "size": 4954,
-          "executable": false
-        },
-        {
-          "path": "references/workflow-detail.md",
-          "hash": "e55a7e250543223670a1fa51b2b4449e441e8907e6499f2d257212a9e034ac56",
-          "size": 8317,
-          "executable": false
-        },
-        {
-          "path": "scripts/bootstrap_windows.py",
-          "hash": "a38bdd280b7b594e5d779d701c7b35e2add6d4a72cc4cba9db63a3e1bc739ef0",
-          "size": 18720,
-          "executable": false
-        },
-        {
-          "path": "scripts/check_dispatch_contract.py",
-          "hash": "e3d306a8b876c51679367610df5d08abf3cff0a482a07c07ef0d131dd59d7cfd",
-          "size": 14390,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_dispatch_contract.py",
-          "hash": "10a9c4b2e523e5028fdb527d406ff8a1eb5e99b91dd3dc6c1c84df6a0e7ae882",
-          "size": 17112,
           "executable": false
         }
       ]

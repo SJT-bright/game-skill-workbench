@@ -4,6 +4,10 @@
 
 新游戏和新制作的全 UI 重构，在批量生成玩家 UI 图片前执行：**按启动包 `ART_DIRECTION` 定规范 → 内置 image_gen 做代表样板 → 主 Agent 自审并修好 → 以选定样板为参考生成整套 → 实际 Cocos 全量复查**。**本页只属于重塑**（见[两个板块](../../remake-core/references/two-boards.md)）；英化不改原美术，只把带中文字的图做成同画风的英文版，见英化换图（重塑包 remake-copy 板块，英化包不含）。局部维护沿用本游戏已确认的规范，只处理当前范围；不追溯重做其他已交付游戏。用户当前明确的视觉方向优先。
 
+## 精简启动包的详细画风
+
+Saul 2026-10-28（"美术复杂一点写，Skill 按照你给的风格去做美工"）：`starter.json` 写 `"supply": "light"` 的包，`ART_DIRECTION.md` 是写得很细的本作画风，有 Style summary、Palette（5–8 个带 HEX 和用途的颜色）、Characters、Environment / backgrounds（逐页）、UI kit、Typography、Effects and motion、Image prompts、Forbidden list 九节。美术阶段**照它执行，不另起画风**：下表的方向、色板与用途、背景体系、按钮体系、图形与文字直接抄它的对应节；Typography 指定的正规授权 TTF 用于句子文字，图片字只用于固定短词，数字用生成的位图字；生图以它的 Image prompts 为基础，只为满足禁止项或补它没写到的页面做最小改动，并记进项目记录。本 Skill 通用规则仍然只有[禁止项](style-limits.md#〇画风禁止项清单只查负向用户-2026-10-28)，不额外加正向审美要求；它和禁止项冲突时按禁止项调整并写明哪一条。
+
 ## 先把主题变成可执行的规范
 
 在本游戏现有规格中建立 UI 美术小节，或保存一份项目级 `ui-style.md`，后续任务引用同一份。主 Agent 依据启动包 `ART_DIRECTION`（以及 UI_PAGES、EXPERIENCE 的页面与素材需求）把设计落成具体条目，启动包没写到的部分按同一风格结合题材补齐；不以“高级、好看、不土”几个形容词代替具体要求，也不要求用户先提供色板才能推进。

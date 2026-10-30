@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-28.remake-v7.3.2",
+  "revision": "2026-10-29.remake-v7.7.2",
   "skill": "chrome-mobile-testing",
-  "previous_provenance_sha256": "0add424b1207c7a682a14c81a7a27d7cd27a42251464b50ed2c56dbd5ffb9d2f",
+  "previous_provenance_sha256": "901cbde963f27720c7cff449cbb604ddcc17e4dd5905d0d2f2290ee2e4783f85",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
@@ -12,8 +12,8 @@
     },
     {
       "path": "scripts/chrome_touch.py",
-      "sha256": "1f3daae36aca0dca7efd59cad5843521b053062d395479e4a94b6d26dd325805",
-      "bytes": 35857
+      "sha256": "d458cdbb6fd40a11e6b7ebff5a36062e1d79c06db015346a95663f28512d2992",
+      "bytes": 42774
     },
     {
       "path": "scripts/ego_touch_runner.js",
@@ -49,6 +49,11 @@
       "path": "tests/test_ego_route.py",
       "sha256": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
       "bytes": 4925
+    },
+    {
+      "path": "tests/test_timing_fps.py",
+      "sha256": "84f46b5a5aa62bcc65694e8a84081fa94d0e4e04e45ed1558270a5b67154b58b",
+      "bytes": 1821
     },
     {
       "path": "tests/timing-plan.json",

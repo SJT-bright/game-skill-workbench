@@ -48,7 +48,7 @@ async function discover({roots=[],cache={},limit=600,binary,readerFactory}={}){
  async function worker(){while(next<scoped.length){const i=order[next++],t=scoped[i],old=cache[t.id],numeric=Number(t.updatedAt),updated=Number.isFinite(numeric)&&numeric>0?(numeric>1e12?numeric/1000:numeric):(Date.parse(t.updatedAt)||0)/1000;
   let stageInfo={stage:null,evidence:'',certainty:'unknown',algorithmVersion:STAGE_VERSION},contextStatus='pending',contextRead=false,rolloutStamp,contextCheckedAt;
   const local=await readLatestStage({threadId:t.id,rolloutPath:t.path},{previous:old});
-  if(local.available){stageInfo=local.stageInfo;rolloutStamp=local.rolloutStamp;contextStatus=local.contextStatus;contextRead=!!stageInfo.stage;contextCheckedAt=new Date().toISOString();}
+  if(local.available){stageInfo=local.stageInfo;rolloutStamp=local.rolloutStamp;contextStatus=local.contextStatus;contextRead=local.contextRead===true;contextCheckedAt=new Date().toISOString();}
   if(!contextRead){const fresh=old?.contextRead===true&&old.updatedAt===updated&&old.stageInfo?.algorithmVersion===STAGE_VERSION&&Date.now()-Date.parse(old.contextCheckedAt||0)<60000;
    if(!local.available&&fresh){stageInfo=old.stageInfo;contextStatus='cached';contextRead=true;contextCheckedAt=old.contextCheckedAt;}
    else if(Date.now()>reader.deadline-1800){incomplete=true;contextStatus='pending';}

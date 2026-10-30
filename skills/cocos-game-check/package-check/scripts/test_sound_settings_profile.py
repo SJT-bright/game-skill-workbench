@@ -10,6 +10,7 @@ from unittest.mock import patch
 import audit_sound_settings as sound
 import audit_interaction_audio as interaction
 import test_resource_and_issue_obligations as package_fixtures
+from test_package_checks import APP
 
 
 def sha(path):
@@ -217,7 +218,7 @@ class WriterScope(unittest.TestCase):
         out = self.root / 'no-output.zip'
         with patch('build_checked_zip.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError, 'unregistered sound-only evidence scope'):
-                package_fixtures.build(self.native, 'test-target', out,
+                package_fixtures.build(self.native, APP, out,
                     resource_manifest=manifest, project=self.project, interaction_audio_trace=trace)
             runtime.assert_not_called()
         self.assertFalse(out.exists())

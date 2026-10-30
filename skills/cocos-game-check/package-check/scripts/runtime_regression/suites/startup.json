@@ -1,0 +1,23 @@
+{
+  "name": "startup",
+  "about": "cold start + subpackage slow/stall/fail, config fail/hang, SDKVersion missing, getOpenDataContext missing (separate cases), missing save key -> home with <=1 Retry, Retry within 20 s; lifecycle (Finger Mahjong v57): cold / 12 s clock jump without onHide / onHide+60 s+onShow while loading -> no Retry; first image never answers -> at most 1 Retry; then a REAL tap on adapter.play must leave home; DOM Retry does not count",
+  "applies": [
+    "tiktok"
+  ],
+  "needs": [
+    "home",
+    "play"
+  ],
+  "fields": [
+    "retry",
+    "retry_label",
+    "startup_cases",
+    "in_level"
+  ],
+  "engines": [
+    "2.x"
+  ],
+  "timeout_s": 1500,
+  "owner": "W3a",
+  "proof": "evidence/W3a/item2-startup-*.json"
+}

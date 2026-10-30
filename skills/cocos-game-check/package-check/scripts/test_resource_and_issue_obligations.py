@@ -9,7 +9,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from check_package import native_files, write_archive
-from test_package_checks import fixture
+from test_package_checks import fixture, runtime_patch, APP, finalize_project
+_RUNTIME = runtime_patch()
+setUpModule, tearDownModule = _RUNTIME.start, _RUNTIME.stop
 import audit_runtime_resources as resources
 import package_issue_gate as issues
 import package_obligations as obligations
@@ -205,7 +207,9 @@ class ReportedIssues(unittest.TestCase):
 
 # Separate setup reuse without inherited test execution.
 class EntryPoints(unittest.TestCase):
-    setUp=ReportedIssues.setUp
+    def setUp(self):
+        ReportedIssues.setUp(self)
+        finalize_project(self.project)      # v7.7: the writers need a current source record (K5)
     tearDown=ReportedIssues.tearDown
     report=ReportedIssues.report
 
@@ -219,7 +223,7 @@ class EntryPoints(unittest.TestCase):
     def test_light_writer_open_issue_blocks_before_runtime_and_no_output(self):
         manifest=self.setup_package();self.report();out=self.root/'game.zip'
         with patch('build_checked_zip.audit_final_startup') as runtime:
-            with self.assertRaisesRegex(ValueError,'no passed retest'):build(self.native,'test-target',out,resource_manifest=manifest,project=self.project)
+            with self.assertRaisesRegex(ValueError,'no passed retest'):build(self.native,APP,out,resource_manifest=manifest,project=self.project)
             runtime.assert_not_called()
         self.assertFalse(out.exists())
 
@@ -227,13 +231,13 @@ class EntryPoints(unittest.TestCase):
         manifest=self.setup_package();out=self.root/'game.zip'
         def runtime(*args,**kwargs):self.report();return {'passed':True}
         with patch('build_checked_zip.audit_final_startup',side_effect=runtime):
-            with self.assertRaisesRegex(ValueError,'no passed retest'):build(self.native,'test-target',out,resource_manifest=manifest,project=self.project)
+            with self.assertRaisesRegex(ValueError,'no passed retest'):build(self.native,APP,out,resource_manifest=manifest,project=self.project)
         self.assertFalse(out.exists())
 
     def test_delivery_cannot_skip_open_issue_or_manifest(self):
         manifest=self.setup_package();self.report();archive=self.root/'game.zip';write_archive(archive,native_files(self.native));record=self.root/'delivery.json';other=self.root/'other';other.mkdir()
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)),patch('prepare_delivery.audit_final_startup') as runtime:
-            with self.assertRaisesRegex(ValueError,'no passed retest'):prepare(archive,self.native,'test-target',record,project=self.project,resource_manifest=manifest)
+            with self.assertRaisesRegex(ValueError,'no passed retest'):prepare(archive,self.native,APP,record,project=self.project,resource_manifest=manifest)
             runtime.assert_not_called()
         self.assertFalse(record.exists())
 
@@ -246,10 +250,61 @@ class EntryPoints(unittest.TestCase):
     def test_formal_writer_also_refuses_open_issue_before_full_ci(self):
         import make_tiktok_zip
         manifest=self.setup_package();self.report();out=self.root/'formal.zip'
-        argv=['make_tiktok_zip.py','--native',str(self.native),'--app-id','test-target','--out',str(out),'--project',str(self.project),'--web',str(self.root/'web'),'--build-tag','fixture','--review',str(self.root/'review.json'),'--resource-manifest',str(manifest)]
+        argv=['make_tiktok_zip.py','--native',str(self.native),'--app-id',APP,'--out',str(out),'--project',str(self.project),'--web',str(self.root/'web'),'--build-tag','fixture','--review',str(self.root/'review.json'),'--resource-manifest',str(manifest)]
         with patch.object(sys,'argv',argv),patch('audit_final_package_startup.audit_final_startup') as runtime:
             self.assertEqual(make_tiktok_zip.main(),1);runtime.assert_not_called()
         self.assertFalse(out.exists())
+
+
+class KitMainStaticManifest(unittest.TestCase):
+    """v7.7 W-G2: a finalized 2.4.15 new game (kit main.js) gets a static manifest. Its jsList scripts and the
+    webp-decode-probe.js the kit main.js requires are listed and must exist; the writer's resource step accepts it."""
+    setUp=EntryPoints.setUp
+    tearDown=ReportedIssues.tearDown
+
+    def setup_package(self, plugin=True):
+        from test_package_checks import ENGINE_KIT_MAIN
+        files=fixture(ENGINE_KIT_MAIN);config=json.loads(files['assets/main/config.json']);config.update(name='main',paths={'0':['fixture',0]},types=['cc.JsonAsset']);files['assets/main/config.json']=json.dumps(config).encode()
+        if plugin:  # a jsList plugin script, as Creator writes one for a plugin-marked script
+            files['src/settings.js']=files['src/settings.js'].replace(b'jsList:[]',b'jsList:["assets/plugins/fixture-plugin.js"]')
+            files['src/assets/plugins/fixture-plugin.js']=b'window.fixturePlugin=1;\n'
+        for name,data in files.items():
+            p=self.native/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+        manifest=self.root/'resources.json'
+        manifest.write_text(json.dumps(resources.generate(native_files(self.native))))
+        return manifest
+
+    def test_static_manifest_lists_kit_scripts_and_writer_resource_step_accepts_it(self):
+        manifest=self.setup_package()
+        rows=json.loads(manifest.read_text())['script_files']
+        self.assertEqual(sorted(r['path'] for r in rows),['src/assets/plugins/fixture-plugin.js','webp-decode-probe.js'])
+        self.assertTrue(obligations.verify(native_files(self.native),self.native,self.project,manifest)['passed'])
+
+    def test_light_writer_writes_zip_with_the_static_manifest(self):
+        # only the browser parts are patched (startup runtime, Ego ad regression), as in the other writer tests
+        import check_package
+        manifest=self.setup_package();out=self.root/'game.zip'
+        with patch('build_checked_zip.audit_final_startup',return_value={'passed':True,'patched':True}),\
+             patch.object(check_package,'rewarded_ad_gate',return_value={'status':'patched_in_unit_test'}):
+            result=build(self.native,APP,out,self.root/'report.json',resource_manifest=manifest,project=self.project)
+        self.assertTrue(out.exists())
+        listed=result['package_obligations']['resources']['kit_script_files']
+        self.assertEqual(sorted(r['path'] for r in listed),['src/assets/plugins/fixture-plugin.js','webp-decode-probe.js'])
+
+    def test_writer_refuses_package_missing_a_jslist_script(self):
+        manifest=self.setup_package();(self.native/'src/assets/plugins/fixture-plugin.js').unlink();out=self.root/'game.zip'
+        with self.assertRaisesRegex(ValueError,'kit main.js script file missing or empty: src/assets/plugins/fixture-plugin.js'):
+            obligations.verify(native_files(self.native),self.native,self.project,manifest)
+        # the writer's startup dependency check meets the missing jsList file first; either way no ZIP
+        with patch('build_checked_zip.audit_final_startup') as runtime:
+            with self.assertRaisesRegex(ValueError,'(missing startup dependency|kit main.js script file missing).*fixture-plugin.js'):build(self.native,APP,out,resource_manifest=manifest,project=self.project)
+            runtime.assert_not_called()
+        self.assertFalse(out.exists())
+
+    def test_writer_refuses_package_missing_the_probe(self):
+        manifest=self.setup_package(plugin=False);(self.native/'webp-decode-probe.js').unlink()
+        with self.assertRaisesRegex(ValueError,'kit main.js script file missing or empty: webp-decode-probe.js'):
+            obligations.verify(native_files(self.native),self.native,self.project,manifest)
 
 
 if __name__=='__main__':unittest.main()

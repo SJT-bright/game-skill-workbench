@@ -34,7 +34,7 @@
 
 Native分包守卫必须在适配器捕获函数前安装。图片守卫包裹适配器实际注册的downloader/parser，保留原生文件、缓存和解码处理器。不要把Web Image/XHR替换成Native实际实现。callback-only、Promise-only、二者同时、无可选progress API、throw/reject/error、重复与迟到结果均覆盖。
 
-参考实现位于 `../assets/loading-recovery-examples/runtime-load-guard.js` 和 `asset-load-guard.js`，来自本次Creator2.4.15候选。它们是**版本相关示例**，保留原游戏命名空间以便溯源；移植前核实际引擎/适配器接口和注册顺序，不能把示例原样复制就判通过。由当前游戏每帧驱动update、生命周期驱动setBackground并接入实际加载链。下载与解码可有不同阶段，按真实可观测进度判断，不凭假百分比刷新计时。
+参考实现位于 `../assets/loading-recovery-examples/runtime-load-guard.js` 和 `asset-load-guard.js`，来自本次Creator2.4.15候选。它们是**版本相关示例**，保留原游戏命名空间以便溯源；移植前核实际引擎/适配器接口和注册顺序，不能把示例原样复制就判通过。由当前游戏每帧驱动update、生命周期驱动setBackground并接入实际加载链。下载与解码可有不同阶段，按真实可观测进度判断，不凭假百分比刷新计时。`asset-load-guard.js` 自 v7.5 起按射击高手2048 v82 的做法（待真机复测）：一张图前台 10 秒没有回应就再请求一次、先到先用，报错重试一次，前台 30 秒仍无回应才判失败，后台时间不算，一次 update 最多计 1 秒。旧示例"10 秒无进度即判失败、不再请求"在 iPhone 上丢掉了迟到的首页图（v81），出包门禁 `package_gates.startup` G7 会拒绝这种写法；单测 `remake-core/scripts/test_asset_load_guard.cjs`。
 
 ## 4. 真实HTTP复现方法
 

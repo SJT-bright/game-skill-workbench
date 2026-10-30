@@ -10,7 +10,9 @@ import unittest
 from unittest.mock import patch
 
 from check_package import native_files, write_archive
-from test_package_checks import fixture
+from test_package_checks import fixture, runtime_patch, APP, fixture_project
+_RUNTIME = runtime_patch()
+setUpModule, tearDownModule = _RUNTIME.start, _RUNTIME.stop
 from build_checked_zip import build
 from prepare_delivery import prepare
 import package_issue_gate as issues
@@ -20,8 +22,7 @@ class IssueRelocation(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='issue relocation ')
         self.root = Path(self.temp.name)
-        self.project = self.root/'project'; self.project.mkdir()
-        issues.initialize(self.project)
+        self.project = fixture_project(self.root/'project')   # v7.7: issue log + current source record (K5)
         self.native = self.root/'original Native'; self.native.mkdir()
         self.negative = self.root/'fault Native'; self.negative.mkdir()
         self.normal = self.root/'normal Native'; self.normal.mkdir()
@@ -189,11 +190,11 @@ class RelocatedWriterDelivery(unittest.TestCase):
     def test_writer_and_delivery_accept_same_dependency_bytes(self):
         moved,manifest = self.package(); archive=self.root/'game.zip'
         with patch('build_checked_zip.audit_final_startup', return_value={'passed':True}):
-            result=build(moved,'test-target',archive,project=self.project,resource_manifest=manifest)
+            result=build(moved,APP,archive,project=self.project,resource_manifest=manifest)
         self.assertTrue(result['package_obligations']['reported_issues']['checked_issues'][0]['dependency_bytes_reused'])
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
                 patch('prepare_delivery.audit_final_startup',return_value={'passed':True}):
-            receipt=prepare(archive,moved,'test-target',self.root/'delivery.json',
+            receipt=prepare(archive,moved,APP,self.root/'delivery.json',
                             project=self.project,resource_manifest=manifest)
         self.assertTrue(receipt['expected_tree_exact'])
 
@@ -201,7 +202,7 @@ class RelocatedWriterDelivery(unittest.TestCase):
         moved,manifest=self.package(); (self.native/'state.json').unlink(); out=self.root/'game.zip'
         with patch('build_checked_zip.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError,'production artifact missing/changed'):
-                build(moved,'test-target',out,project=self.project,resource_manifest=manifest)
+                build(moved,APP,out,project=self.project,resource_manifest=manifest)
             runtime.assert_not_called()
         self.assertFalse(out.exists())
 
@@ -211,7 +212,7 @@ class RelocatedWriterDelivery(unittest.TestCase):
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
                 patch('prepare_delivery.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError,'production artifact missing/changed'):
-                prepare(archive,moved,'test-target',record,project=self.project,resource_manifest=manifest)
+                prepare(archive,moved,APP,record,project=self.project,resource_manifest=manifest)
             runtime.assert_not_called()
         self.assertFalse(record.exists())
 

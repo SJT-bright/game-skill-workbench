@@ -86,7 +86,14 @@ export const findLabels = (page, pattern) => ev(page, (pattern) => {
   if (!(window.cc && cc.director && cc.director.getScene())) return [];
   const rx = new RegExp(pattern, 'i');
   const canvas = cc.game.canvas, rect = canvas.getBoundingClientRect();
-  const v2 = !!(cc.Camera && cc.Camera.findCamera);
+  const v2api = !!(cc.Camera && cc.Camera.findCamera);
+  const toCss = (p) => {
+    // css-point:begin (v7.7.5, 总表 A13) the same conversion as ad_regression/cases.mjs (A5): Cocos 2.x
+    // getWorldToScreenPoint works in cc.visibleRect units, 3.x worldToScreen in canvas pixels.
+    const vis = (v2api && cc.visibleRect) ? { w: cc.visibleRect.width, h: cc.visibleRect.height } : { w: canvas.width, h: canvas.height };
+    return { x: rect.left + p.x * rect.width / vis.w, y: rect.top + rect.height - p.y * rect.height / vis.h };
+    // css-point:end
+  };
   const hits = [];
   const walk = (n) => {
     if (!n || n.activeInHierarchy === false) return;
@@ -94,9 +101,9 @@ export const findLabels = (page, pattern) => ev(page, (pattern) => {
     if (l && typeof l.string === 'string' && rx.test(l.string)) {
       try {
         let p;
-        if (v2) { const w = n.convertToWorldSpaceAR(cc.v2(0, 0)); p = cc.Camera.findCamera(n).getWorldToScreenPoint(w); }
+        if (v2api) { const w = n.convertToWorldSpaceAR(cc.v2(0, 0)); p = cc.Camera.findCamera(n).getWorldToScreenPoint(w); }
         else { const ui = n.getComponent(cc.UITransform); const w = ui.convertToWorldSpaceAR(new cc.Vec3(0, 0, 0)); const cams = cc.director.getScene().getComponentsInChildren(cc.Camera); p = new cc.Vec3(); cams[0].worldToScreen(w, p); }
-        hits.push({ text: l.string, x: rect.left + p.x * rect.width / canvas.width, y: rect.top + rect.height - p.y * rect.height / canvas.height });
+        hits.push(Object.assign({ text: l.string }, toCss(p)));
       } catch (e) { hits.push({ text: l.string, error: String(e.message || e) }); }
     }
     (n.children || []).forEach(walk);
@@ -127,13 +134,24 @@ export async function locate(page, code, labelPattern) {
     const p = await ev(page, (code) => {
       let r; try { r = new Function(code)(); } catch (e) { return { error: String(e.message || e) }; }
       if (!r) return null;
-      if (typeof r.x === 'number' && typeof r.y === 'number' && !r.getComponent) return { x: r.x, y: r.y };
       const n = r.node || r, canvas = cc.game.canvas, rect = canvas.getBoundingClientRect();
+      // the TikTok host's canvas rect has left/top/width/height only (no right/bottom)
+      const onCanvas = (q) => Object.assign(q, { onCanvas: q.x >= rect.left - 1 && q.x <= rect.left + rect.width + 1
+                                                  && q.y >= rect.top - 1 && q.y <= rect.top + rect.height + 1 });
+      if (typeof r.x === 'number' && typeof r.y === 'number' && !r.getComponent) return onCanvas({ x: r.x, y: r.y });
+      const v2api = !!(cc.Camera && cc.Camera.findCamera);
+      const toCss = (p) => {
+        // css-point:begin (v7.7.5, 总表 A13) the same conversion as ad_regression/cases.mjs (A5): Cocos 2.x
+        // getWorldToScreenPoint works in cc.visibleRect units, 3.x worldToScreen in canvas pixels.
+        const vis = (v2api && cc.visibleRect) ? { w: cc.visibleRect.width, h: cc.visibleRect.height } : { w: canvas.width, h: canvas.height };
+        return { x: rect.left + p.x * rect.width / vis.w, y: rect.top + rect.height - p.y * rect.height / vis.h };
+        // css-point:end
+      };
       try {
         let p;
-        if (cc.Camera && cc.Camera.findCamera) p = cc.Camera.findCamera(n).getWorldToScreenPoint(n.convertToWorldSpaceAR(cc.v2(0, 0)));
+        if (v2api) p = cc.Camera.findCamera(n).getWorldToScreenPoint(n.convertToWorldSpaceAR(cc.v2(0, 0)));
         else { const w = n.getComponent(cc.UITransform).convertToWorldSpaceAR(new cc.Vec3(0, 0, 0)); const cams = cc.director.getScene().getComponentsInChildren(cc.Camera); p = new cc.Vec3(); cams[0].worldToScreen(w, p); }
-        return { x: rect.left + p.x * rect.width / canvas.width, y: rect.top + rect.height - p.y * rect.height / canvas.height };
+        return onCanvas(toCss(p));
       } catch (e) { return { error: String(e.message || e) }; }
     }, code);
     return p && typeof p.x === 'number' ? p : null;

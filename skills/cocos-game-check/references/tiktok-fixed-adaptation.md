@@ -88,7 +88,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 ## 新游戏和旧游戏
 
 - **规则（Saul Q1，2026-10-29）**：平台包里有一份冻结的遗留名单 `remake-core/assets/platform-kit/LEGACY_GAMES.json`，只有 Skill 发版才能改。**不在名单上的游戏都是新游戏**，包括正在做、还没交付过的游戏。
-- **怎么认**：按场景 uuid 认，工程里读 `*.fire.meta` / `*.scene.meta`，只有构建产物时读各 bundle 的 `config.json`。名单只存本游戏独有的 uuid：在两个以上启动包里出现的、两款以上游戏共有的都去掉；只在一个启动包里出现的保留（启动包工坊里放着英化游戏的原版源码，全去掉这些游戏就认不出了），所以用这类启动包起的新项目也带着名单游戏的 uuid。独有场景 uuid 重合 1 个，或独有资源 uuid 重合至少 5 个且占所存的 20% 以上，就是名单上的那款游戏。复制工程出新版本不改 uuid，同一款游戏的新版本还在名单上。读不出 uuid 的按新游戏。
+- **怎么认**：按场景 uuid 认，工程里读 `*.fire.meta` / `*.scene.meta`，只有构建产物时读各 bundle 的 `config.json`。名单只存本游戏独有的 uuid：在两个以上启动包里出现的、两款以上游戏共有的都去掉；只在一个启动包里出现的保留（启动包工坊里放着英化游戏的原版源码，全去掉这些游戏就认不出了），所以用这类启动包起的新项目也带着名单游戏的 uuid。独有场景 uuid 重合 1 个，或独有资源 uuid 重合至少 5 个且占所存的 20% 以上，就是名单上的那款游戏。复制工程出新版本不改 uuid，同一款游戏的新版本还在名单上。读不出 uuid 的按新游戏。v7.7.5 起（总表 B27）：工程文件夹正好是名单记下的那款游戏最后一版源码文件夹（`last_package.path`）时也判旧游戏，只认这个文件夹本身，不认上级、下级或别处的副本（剪刀达人、欢乐刮水果靠这条认出来：名单的 uuid 是从包里读的，包里有图片帧这类子资源，工程顶层 .meta 读不到）。
 - **标记只能往严里改**：`<工程>/.tiktok-kit/policy.json` 有新游戏标记，就按新游戏，名单也盖不住；没有“标记成旧游戏”的写法。用名单上的游戏（例如英化原版、完结游戏）做底子的新游戏会带着底子的 uuid，所以起项目时必须跑 `init`。现在没有门禁检查起项目时跑没跑 `init`：漏跑时不在名单上的游戏照样按新游戏处理，用名单游戏做底子的会被当成旧游戏。
 - **已经开工、用名单游戏做底子的工程**：名单第二版生成时查到 `！自制游戏` 下 12 个正在做、还没交付的工程会被名单认成旧游戏（`LEGACY_GAMES.json` 的 `stats.in_progress_matching_legacy`），另有 21 个启动包和名单游戏同源（`stats.template_packs_matching_legacy`），用它们起的新项目同样全靠 `init`。按 Q1 这些工程是新游戏：下一次出包之前先跑一次 `tiktok_finalize.py init --project <工程> --board remake`（英化用 `localize`），再跑 `source`、构建、写包；不跑就按旧游戏处理。音乐消消乐的工作副本本来就是名单上的那款，不用跑。
 - **出过测试包、还在做的新游戏也要跑 `init`**：名单把出过 TikTok 包的文件夹都算了进去，所以已经出过测试包、还没完结的新游戏也会被认成旧游戏。2026-10-29 用 `decide` 查到 4 个：丛林荡藤 VineSwing（认成我是蜘蛛人）、海底泡泡合成 OceanBubbleMerge（认成细菌2048）、HollysHayHop（认成方块冲冲）、MeteorBlaster（名单上它自己那条）。拿不准时先跑 `tiktok_finalize.py decide --project <工程>`（只读，不改文件）：结果是 `legacy`、游戏又还没通过官方测试，就跑 `init`。不在名单上的游戏多跑一次 `init` 也没有坏处。
@@ -187,7 +187,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 4. 源码和上传包对不上（21 款）
 - **规则**：上传包只能从源码经官方写包入口（`make_tiktok_zip.py` / `build_checked_zip.py`）出；直接改包必须带补丁脚本，对源码和包打同一组改动、每处正好命中一次，并写进源码说明。
-- **现在怎么拦**：两个写包入口都写 `<zip>.receipt.json`，没有回执的 ZIP 标“非官方入口”，`prepare_delivery.py` 拒收；`prepare_delivery.py` 比对 `logic_check` 报告里的源码哈希和交付源码。v7.7 起写包入口还查 `K5_source_finalized`（源码段之后工程没改过）和 `K4_finalize_ran`（产物段写的文件和包里一致），收据升到 schema 2、带 `finalize` 记录；v7.6 写的收据不再是官方入口，要用 v7.7 写包入口重新出包。v7.7.4 起 `verify_native_zip.py` 和 `upload_preflight.py` 单独运行时也拒收没有匹配回执的 ZIP（退出码 3 / refuse；DriftRacer v2 就是只跑了这两个、带着旧版广告服务交的包），只看结构加 `--structure-only`。build-templates 和包根文件逐字节比对、补丁脚本要求：仍是文档规则，计划做成出包硬拦截。
+- **现在怎么拦**：两个写包入口都写 `<zip>.receipt.json`，没有回执的 ZIP 标“非官方入口”，`prepare_delivery.py` 拒收；`prepare_delivery.py` 比对 `logic_check` 报告里的源码哈希和交付源码。v7.7 起写包入口还查 `K5_source_finalized`（源码段之后工程没改过）和 `K4_finalize_ran`（产物段写的文件和包里一致），收据升到 schema 2、带 `finalize` 记录；v7.6 写的收据不再是官方入口，要用 v7.7 写包入口重新出包。v7.7.4 起 `verify_native_zip.py` 和 `upload_preflight.py` 单独运行时也拒收没有匹配回执的 ZIP（退出码 3 / refuse；DriftRacer v2 就是只跑了这两个、带着旧版广告服务交的包），只看结构加 `--structure-only`。v7.7.5 起 ZIP 改了名也认：同名回执不在时，在同一文件夹里找为这份 ZIP 字节写的回执（官方写包入口写的、`zip_sha256` 相同），内容改过一个字节就找不到。build-templates 和包根文件逐字节比对、补丁脚本要求：仍是文档规则，计划做成出包硬拦截。
 - **验收包**：Basil fix1、fix2 配 0.4.0 源码被拦；Marlows R6 配 R6 源码通过；方块冲冲原包配现在的源码被拒、`方块冲冲tk.zip` 通过。
 
 ### 5. 英化固定清理：分享、更多游戏、排行、跳转、国内统计（10 款 + 统计 2 款）

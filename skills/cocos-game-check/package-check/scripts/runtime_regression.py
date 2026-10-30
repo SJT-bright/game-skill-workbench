@@ -271,8 +271,10 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
             json.dumps(cfg, ensure_ascii=False), json.dumps(meta['script'].as_uri())), encoding='utf-8')
         limit = timeout or meta['timeout_s']
         try:
+            # stdin closed (v7.7.5, Holly v3): with the caller's stdin left open as a pipe, ego-browser nodejs -e
+            # waited on it, the probe never wrote a line and the run timed out twice.
             proc = subprocess.run([browser, 'nodejs', '-e', 'await import(%s)' % json.dumps(entry.as_uri())],
-                                  capture_output=True, text=True, timeout=limit)
+                                  capture_output=True, text=True, timeout=limit, stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired:
             raise RuntimeRefused('runtime suite %s timed out after %d s' % (name, limit))
         try:

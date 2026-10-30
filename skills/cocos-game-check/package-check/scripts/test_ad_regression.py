@@ -219,6 +219,21 @@ class ExitTapPoint(unittest.TestCase):
                 self.assertAlmostEqual(got['x'], s['want'][0], places=3)
                 self.assertAlmostEqual(got['y'], s['want'][1], places=3)
 
+    def test_adapter_that_converts_coordinates_itself_gets_a_hint(self):
+        """v7.7.5 (总表 A14): the 全民飞车漂移 / 回家快跑 / 狐狸回窝 exit compensated the pre-v7.7.4 formula and now
+        moves the tap off the X. Such an adapter gets a warning (never a refusal); one returning the node does not."""
+        compensating = ("var c=cc.find('Canvas/x');var cam=cc.Camera.findCamera(c),p=cam.getWorldToScreenPoint("
+                        "c.convertToWorldSpaceAR(cc.v2(0,0))),vs=cc.view.getVisibleSize(),cv=cc.game.canvas;"
+                        "var w2=cam.getScreenToWorldPoint(cc.v2(p.x*cv.width/vs.width,p.y*cv.height/vs.height));"
+                        "var l=c.convertToNodeSpaceAR(w2);return {node:c,x:l.x,y:l.y};")
+        hint = ad_regression.adapter_warnings({'request': 'x', 'exit': compensating})
+        self.assertEqual(len(hint), 1)
+        self.assertIn('getScreenToWorldPoint', hint[0])
+        self.assertIn('Return the X node', hint[0])
+        for good in ("var b=cc.find('Canvas/adExitLayer/adExitButton');return b&&b.activeInHierarchy?{node:b,x:0,y:0}:null;",
+                     "var x=cc.find('Canvas/__adExit');return x&&x.activeInHierarchy?x:null;", None):
+            self.assertEqual(ad_regression.adapter_warnings({'request': 'x', 'exit': good}), [], good)
+
     def test_negative_control_v773_formula_misses_at_dpr_2(self):
         old = self.block().replace('vis.w', 'canvas.width').replace('vis.h', 'canvas.height')
         got = self.points(old)

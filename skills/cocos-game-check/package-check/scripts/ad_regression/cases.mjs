@@ -91,7 +91,15 @@ const findExit = () => ev((A) => {
   const toCss = (n, w) => {
     let p;
     if (v2api) p = cc.Camera.findCamera(n).getWorldToScreenPoint(w);
-    else { const cams = cc.director.getScene().getComponentsInChildren(cc.Camera); p = new cc.Vec3(); cams[0].worldToScreen(w, p); }
+    else {
+      let cam = null;
+      for (let parent = n; parent && !cam; parent = parent.parent) {
+        const cv = parent.getComponent && parent.getComponent(cc.Canvas);
+        if (cv && cv.cameraComponent) cam = cv.cameraComponent;
+      }
+      if (!cam) throw new Error('Exit control has no owning Canvas camera');
+      p = new cc.Vec3(); cam.worldToScreen(w, p);
+    }
     // css-point:begin (v7.7.4, 总表 A5) Cocos 2.x getWorldToScreenPoint works in cc.visibleRect units, not canvas
     // pixels: dividing by canvas.width put the X off screen at DPR 2 (MusicSlice v31, 回家快跑, Meteor Blaster r3).
     const vis = (v2api && cc.visibleRect) ? { w: cc.visibleRect.width, h: cc.visibleRect.height } : { w: canvas.width, h: canvas.height };

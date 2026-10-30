@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import shutil
 import socket
@@ -34,6 +35,12 @@ ENV_ADAPTER = 'TIKTOK_AD_REGRESSION_ADAPTER'
 ENV_BROWSER = 'EGO_BROWSER'
 _which = shutil.which  # patch point for tests; shutil.which itself is shared
 ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note'}
+# v7.7.5 (总表 A14): adapter.exit returns the X node (or {node, x, y} in its anchor space) and the tool finds where it
+# is on screen. Before v7.7.4 the tool's formula was wrong, so adapters converted the position themselves to
+# compensate (全民飞车漂移, 回家快跑, 狐狸回窝, 珊瑚守卫). With the corrected formula that compensation moves the tap
+# off the X and nocallback / cancel look like ad bugs in the game.
+SELF_CONVERT = re.compile(r'getScreenToWorldPoint|convertToNodeSpace(?:AR)?|devicePixelRatio|canvas\.(?:width|height)'
+                          r'|getBoundingClientRect')
 
 
 class RegressionRefused(ValueError):
@@ -80,6 +87,17 @@ def load_adapter(path):
         if key in adapter and not isinstance(adapter[key], str):
             raise RegressionRefused('ad regression adapter "%s" must be a string' % key)
     return adapter
+
+
+def adapter_warnings(adapter):
+    """Hints about the adapter itself (they never refuse): adapter.exit doing its own screen-coordinate math."""
+    code = adapter.get('exit') if isinstance(adapter, dict) else None
+    hits = sorted(set(SELF_CONVERT.findall(code))) if isinstance(code, str) else []
+    if not hits:
+        return []
+    return ['adapter.exit converts screen coordinates itself (%s): since v7.7.4 the tool converts the node correctly, '
+            'so this compensation can move the tap off the X and make nocallback / cancel fail although the game is '
+            'fine. Return the X node itself (or {node, x: 0, y: 0}).' % ', '.join(hits)]
 
 
 def find_browser():
@@ -168,8 +186,9 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         # Real need: boot + ~12 s per case on a loaded machine.
         limit = timeout or (boot_ms / 1000 + 60 + 25 * len(cases))
         try:
+            # stdin closed (v7.7.5, Holly v3): an inherited open stdin pipe made ego-browser nodejs -e wait forever.
             proc = subprocess.run([browser, 'nodejs', '-e', 'await import(%s)' % json.dumps(entry.as_uri())],
-                                  capture_output=True, text=True, timeout=limit)
+                                  capture_output=True, text=True, timeout=limit, stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired:
             raise RegressionRefused('ad regression timed out after %d s' % limit)
         try:
@@ -187,9 +206,12 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         if owned:
             shutil.rmtree(work, ignore_errors=True)
     passed, problems = judge(result, cases)
+    hints = adapter_warnings(adapter)
+    if not passed:
+        problems = problems + hints          # shown next to the failure, where a session reads it
     summary = {'id': 'rewarded_ad_regression', 'passed': passed, 'cases': [
         {k: row.get(k) for k in ('case', 'ok', 'want', 'granted', 'problems')} for row in result.get('cases', [])],
-        'boot': result.get('boot'), 'warnings': result.get('warnings') or [], 'tool_sha256': tool_digest(),
+        'boot': result.get('boot'), 'warnings': (result.get('warnings') or []) + hints, 'tool_sha256': tool_digest(),
         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
         'seconds': round(time.monotonic() - started, 1)}
     if not passed:

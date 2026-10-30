@@ -41,10 +41,10 @@ python3 -B runtime_regression.py run --package <解压包或.zip> --adapter <ada
 
 | 字段 | 谁用 | 含义 |
 |---|---|---|
-| `request` `state` `ready` `exit` `exit_label` `no_music` `boot_timeout_s` `note` | 广告回归（v7.4） | 见 ad-timeout-and-regression.md；`boot_timeout_s` 也是运行时套件的启动上限（默认 60） |
+| `request` `state` `ready` `exit` `exit_label` `no_music` `boot_timeout_s` `note` | 广告回归（v7.4） | 见 ad-timeout-and-regression.md；`boot_timeout_s` 也是运行时套件的启动上限（默认 60）。`exit` 直接返回 X 节点（或 `{node, x: 0, y: 0}`），不要自己换算屏幕坐标：v7.7.4 起工具对 2.x 换算正确，以前为绕开旧公式写的 getScreenToWorldPoint / convertToNodeSpaceAR / canvas.width 补偿会把 X 点偏，nocallback、cancel 看起来像游戏广告坏了；v7.7.5 起这样写会出警告（总表 A14） |
 | `home` | 所有运行时套件（必填） | 首页可用时返回 `true` |
 | `retry` | startup | 返回 Retry 控件（cc.Node 或 `{x,y}` CSS 坐标）；不填就按文字找 |
-| `play` | startup（必填） | 首页 PLAY 按钮（cc.Node 或 `{x,y}` CSS 坐标；Cocos 2.4 建议直接返回坐标）。生命周期用例真点它，点后 `home` 变 false（或 `in_level` 为 true）才算按钮有效。`home` 写成“首页画出来了”，不要用游戏自己的加载完成标记 |
+| `play` | startup（必填） | 首页 PLAY 按钮：直接返回 cc.Node（v7.7.5 起工具对 2.x 按 cc.visibleRect 换算，以前除以 canvas.width 会点偏，总表 A13），也可以返回 `{x,y}` CSS 坐标；算出来的点在画布外时报“定位错误”，不算首页锁死。生命周期用例真点它，点后 `home` 变 false（或 `in_level` 为 true）才算按钮有效。`home` 写成“首页画出来了”，不要用游戏自己的加载完成标记 |
 | `in_level` | startup（可选） | 进了关卡返回 `true`；点 PLAY 后先弹窗、首页仍算可用的游戏要填 |
 | `retry_label` | startup | Retry 文字的正则（默认 RETRY/Try again/Reload/重试/重新加载） |
 | `startup_cases` | startup | 只跑这些 case（逗号分隔），调试用；出包时不要填 |

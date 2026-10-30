@@ -128,13 +128,14 @@ async function runLife(page, out, [id, fault, query, maxRetries]) {
     await sleep(1500);
     const p = await L.locate(page, A.play);
     if (!p) problems.push('adapter.play found no PLAY button on the home page');
+    else if (p.onCanvas === false) problems.push(`adapter.play points outside the game canvas (${Math.round(p.x)}, ${Math.round(p.y)}): a locate error in the adapter or the tool, not a home lock`);
     else {
       await L.touchTap(page, p.x, p.y);
       for (let i = 0; i < 20 && !left; i++) {
         await sleep(500);
         left = !(await isHome(page).catch(() => true)) || (A.in_level ? (await L.adapterCall(page, A.in_level).catch(() => false)) === true : false);
       }
-      if (!left) problems.push('the home page is shown but PLAY did not answer a real tap (home locked)');
+      if (!left) problems.push(`the home page is shown but PLAY did not answer a real tap at (${Math.round(p.x)}, ${Math.round(p.y)}) (home locked; check the screenshot that the tap hit PLAY)`);
     }
   }
   let shot = null;

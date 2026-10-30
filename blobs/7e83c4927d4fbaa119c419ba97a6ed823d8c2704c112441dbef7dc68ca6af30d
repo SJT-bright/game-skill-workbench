@@ -1,0 +1,197 @@
+{
+  "name": "TikTokPlatformKit-Cocos2415",
+  "version": "2.0",
+  "engine": "2.4.15",
+  "date": "2026-10-29",
+  "includes": ["parts-3x/KIT_PARTS_3X.json"],
+  "note": "kit 2.0 (remake Skill v7.7). `files` = what a 2.4 kit project holds (check_kit_project.py); `parts` = the standard parts tiktok_finalize installs and package_gates/kit_parts.py proves, read only from here. 3.x parts live in parts-3x/KIT_PARTS_3X.json (W-A2), merged through `includes`. Every part is Node-tested only: 待真机复测 until the first v7.7 game passes a phone scan (design R9).",
+  "files": {
+    "assets/tiktok-platform/PlatformConfig.js": {
+      "sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+      "previous_sha256": ["b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46"],
+      "origin": "editable: only gameId / placementMap / normalLevelCoins per game; growthReward() = 5B (Saul 2026-10-29) is not edited",
+      "editable": true
+    },
+    "assets/tiktok-platform/RewardedService.js": {
+      "sha256": "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1",
+      "previous_sha256": ["04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd"],
+      "origin": "SnakeVSBlock v32 assets/src (passed on device), changed in v7.4 2026-10-28 to the Basil ad-timeout rule: 15 s request timeout not counting background time, no playback timeout, exit X 30 s after playback starts without a callback, immediate release after timeout or X; verified by tests/snake-regression and package-check ad_regression (Marlows r5 10/10); the v7.4 version itself 待真机复测"
+    },
+    "assets/tiktok-platform/TikTokMissionService.js": {
+      "sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
+      "origin": "SnakeVSBlock v32 assets/src, byte-identical (passed on device)"
+    },
+    "assets/tiktok-platform/SaveStore.js": {
+      "sha256": "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf",
+      "previous_sha256": ["954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406"],
+      "origin": "new in kit v1, Node-tested; v7.5: unreadable read decided by getStorageInfoSync().keys (missing key = new save), one fire-and-forget login after load; v7.7 unchanged, runs the same with storage-guard.js (kit.test.js savestore_with_storage_guard_behaves_the_same); 待真机复测"
+    },
+    "assets/tiktok-platform/MissionFlow.js": {
+      "sha256": "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f",
+      "previous_sha256": ["306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee", "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348", "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a"],
+      "origin": "new in kit v1, Node-tested; v7.5: hasNativeSDK uses TTMinis.game / tt / wx like TikTokMissionService.js; v7.7: without a reward option it pays PlatformConfig.growthReward() (5B) to draft.coins; v7.7.4: preview text is 'Available in TikTok.' (the v7.7.3 'LOCAL PREVIEW: ...' failed audit_dev_text); 待真机复测"
+    },
+    "assets/tiktok-platform/HomeGrowthEntries.js": {
+      "sha256": "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474",
+      "origin": "new in kit 2.0 (v7.7): fixed home bottom-row entries Add to Home + Profile Revisit, reward always growthReward(), \"Available in TikTok\" without the runtime, text when the icon fails; Node-tested (tests/home-entries.test.js); 待真机复测"
+    },
+    "build-templates/bytedance/main.js": {
+      "sha256": "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42",
+      "previous_sha256": ["2de75ea00f79d8889172d54e053160650161c6cc4b107dd51eb38f2b39a965d9", "0b662250961f3fb24cb75a27140db5fa8166cd69da58029eea49f12ee9d07d45", "6d06d8fb53038f1a4d26595001257f9d1b269fbb6b4f8f9b334d5943163f3f89", "442c328ffb1f7fa4b20ab201849ea25f1782010269a2c4f7d627aa5ff318e5d1", "75d635818778ff9b6e0dc66b6ee32c35b7c5ab9e18685d7fa42f84e73fb70dff"],
+      "origin": "MetalMaster r5 build-templates (passed on device) + 1 touch-fix line; v1.1 stall limit 10 s; v7.5 per-file load guard (re-request 10 s, fail 30 s, foreground only), visible Retry within 20 s for every startup step, startup exceptions shown; v1.3 (v7.7): storage-guard.js before game scripts, one silent login never awaited, standard WebP probe only when __TIKTOK_KIT_WEBP_PROBE__ = true; v1.4 (v7.7 W-D3): image-decode guard registered on the real 2.4 image parser (downloader.downloadDomImage; v1.2-v1.3 looked for parser._parsers, absent in every 2.4 engine); a Retry tapped after the scene came up no longer leaves a masked loading over the game; v1.5 (v7.7 W-F1a): same numbers (10 s re-request, 30 s file fail, background not counted), a per-file re-request counts as progress and the 10 s no-progress watchdog waits while a guarded file is inside its 30 s budget, so one stuck file shows Retry only when it fails and no Load failed dialog is left over a home page loaded after a re-request; the kit main.js always ships with webp-decode-probe.js (startup24.extra_files); v1.6 (v7.7 W-G1): the first Retry after a failed launch scene works (the failed scene's JSON, already deserialized in place, is dropped from cc.assetManager._files before the reload; before, the first Retry always failed at once with 'Can not deserialize the same JSON data again'), timer numbers unchanged; Node-tested + host-tested on 2.4.4/2.4.6/2.4.13/2.4.15 packages (v1.5 and v1.6 on 2.4.13 pkg81), 待真机复测"
+    },
+    "build-templates/bytedance/touch-coordinates.js": {
+      "sha256": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520",
+      "origin": "StarPop v50 build-templates, byte-identical (delivery ZIP 星星点点消.zip sha cf82092e: package root and source build-templates/bytedance both 1aeb690c, 852 B); no user phone-scan confirmation found for StarPop v50: 待真机复测. Not the same file as 0369875d (RainyDuck v20 / MergeShot2048 pkg85, 1566 B, other code)"
+    },
+    "parts/storage-guard.js": {
+      "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "project_path": "build-templates/bytedance/storage-guard.js",
+      "origin": "new in kit 2.0 (v7.7): MergeShot2048 v85 storage-guard.js (40aee1a4, real-iPhone vConsole 10-28/10-29) + TobinsGem / Tansys key-list rule; SaveStore keys read raw; Node-tested (tests/storage-guard.test.js + negative controls); 待真机复测"
+    },
+    "webp-probe/cocos2.4/webp-decode-probe.js": {
+      "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+      "origin": "Mabel's Meadow r8 package, byte-identical (decodes main-package loading/webp-probe.webp, 5 s no answer = WebP off, Retry re-checks); old WebP games and the --keep-webp-exception case only, new games use PNG/JPG; main.js v1.3 loads it only when __TIKTOK_KIT_WEBP_PROBE__ = true; 待真机复测",
+      "reference": true
+    },
+    "webp-probe/cocos2.4/loading/webp-probe.webp": {
+      "sha256": "f96d0f0f515e9d0e13233e3af41bf6e7a200062e0ada4c0dee596873d2142811",
+      "origin": "Mabel's Meadow r8 package, byte-identical 16x16 WebP with alpha; must sit in the MAIN package at loading/webp-probe.webp",
+      "reference": true
+    },
+    "webp-probe/cocos3.x-reference/webp-probe.js": {
+      "sha256": "2b5c06d66c9b93fa8c8271961b3666267777450b6cf43bf7fba0407ac278ef8a",
+      "origin": "LunasJade v0.10.1 build-templates/bytedance-mini-game, data: URI fallback removed in v7.5 (decodes webp-check.webp only); reference for existing 3.x games; 待真机复测",
+      "reference": true
+    },
+    "webp-probe/cocos3.x-reference/webp-check.webp": {
+      "sha256": "5ba936792ba4b75bd12db7c27d9b6644063fb54ec751470d743bdbd5beba0c1d",
+      "origin": "LunasJade v0.10.1, byte-identical 2x2 lossless (VP8L) WebP with alpha; main package root",
+      "reference": true
+    },
+    "webp-probe/cocos3.x-reference/boot-loading.js": {
+      "sha256": "1f8d6f6fb8971a5df49538f733ec81825c99a92a04c41bc52e5a862503ff8a38",
+      "origin": "LunasJade v0.10.1, byte-identical (loading page, subpackage download, WebP check via webp-probe.js, Retry); reference only; 待真机复测",
+      "reference": true
+    }
+  },
+  "parts": {
+    "touch24": {
+      "engine": 2, "phase": "native",
+      "file": {"src": "build-templates/bytedance/touch-coordinates.js", "template": "build-templates/bytedance/touch-coordinates.js",
+               "dest": "touch-coordinates.js",
+               "sha256": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520", "previous_sha256": []},
+      "wiring": [
+        {"in": "main.js", "when": "kit_main", "kit_line": "require('./touch-coordinates').install(cc)"},
+        {"in": "game.js", "when": "not_kit_main", "insert_after": "__globalAdapter\\.adaptEngine\\(\\s*\\)\\s*;?",
+         "line": "try { require('./touch-coordinates').install(cc); } catch (e) { console.error('touch fix', e); } // tiktok-kit:touch24:2.0"}
+      ],
+      "own_markers": ["getTouchesByEvent\\s*=", "__starPopTouchCoordinates", "_rainyCoordinates", "tiktok-touch-adapter:"],
+      "own_files": ["(^|/)touch-coordinates\\.js$", "(^|/)tiktok-input\\.js$", "(^|/)[\\w-]*touch[\\w-]*\\.js$"],
+      "own_skip": ["^adapter(-min)?\\.js$", "^cocos/", "^src/", "^assets/", "^subpackages/"],
+      "known_own_sha256": {"0369875d16cbbb223a14d3d529ba3996ffbbef5fa45734a045c05210bc21f451": "RainyDuck v20 / MergeShot2048 pkg85 touch-coordinates.js (not the kit file; no scan confirmation)"},
+      "policy": {"new": "replace", "legacy": "add_if_absent"}
+    },
+    "startup24": {
+      "engine": 2, "phase": "native",
+      "file": {"src": "build-templates/bytedance/main.js", "template": "build-templates/bytedance/main.js", "dest": "main.js",
+               "sha256": "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42",
+               "previous_sha256": ["2de75ea00f79d8889172d54e053160650161c6cc4b107dd51eb38f2b39a965d9", "0b662250961f3fb24cb75a27140db5fa8166cd69da58029eea49f12ee9d07d45", "6d06d8fb53038f1a4d26595001257f9d1b269fbb6b4f8f9b334d5943163f3f89", "442c328ffb1f7fa4b20ab201849ea25f1782010269a2c4f7d627aa5ff318e5d1", "75d635818778ff9b6e0dc66b6ee32c35b7c5ab9e18685d7fa42f84e73fb70dff"]},
+      "extra_files": [{"src": "webp-probe/cocos2.4/webp-decode-probe.js", "dest": "webp-decode-probe.js",
+                       "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+                       "what": "required by main.js v1.3+ inside if (__TIKTOK_KIT_WEBP_PROBE__ === true); a static dependency check does not read the if, so the script always ships next to the kit main.js (W-D1 request 1). Script only: no probe image, no switch line (those are part webp_probe24, --keep-webp-exception), so it never runs"}],
+      "wiring": [
+        {"in": "game.js", "requires": "require\\(\\s*['\"]\\./main(\\.js)?['\"]\\s*\\)", "count": 1,
+         "what": "game.js must load main.js exactly once (Nanas: kit template present but never loaded)"}
+      ],
+      "checks": [{"id": "login", "in": "main.js", "kit_line": "window.__tiktokKitLoginSent = true",
+                  "what": "login step (design 1.3 login.py): one silent login at startup, never awaited; proven by the kit main.js bytes"}],
+      "needs": {"engine_versions": ["2.4.4", "2.4.6", "2.4.13", "2.4.15"], "globals": ["window._CCSettings", "window.boot"],
+                "note": "design R4: kit main.js v1.4 host-tested after finalize on 2.4.4 (DotsDelivery v40), 2.4.6 (BobbysBeat v22), 2.4.13 (MergeShot2048 pkg81): first screen and level 1 load (v7.7 W-D3); 2.4.15 is the editor base. Other 2.4.x builds keep their own main.js; finalize wires touch24 + storage24 into game.js and warns"},
+      "own_markers": ["require\\(\\s*['\"]\\./(native-load-guard|runtime-load-guard|asset-load-guard|subpackage-guard|tiktok_bootstrap|boot-loading|StartupIO|native-boot-guard|native-startup-guard|SkiBoot|hotpot-loader|srr-native-boot|native-preload)['\"]",
+                      "cc\\.assetManager\\.loadBundle\\s*=[^=]", "cc\\.assetManager\\.downloader\\.(download|register)\\w*\\s*=[^=]"],
+      "own_files": ["(^|/)(native-load-guard|runtime-load-guard|asset-load-guard|subpackage-guard|tiktok_bootstrap|boot-loading|StartupIO|native-boot-guard|native-startup-guard|SkiBoot|hotpot-loader|srr-native-boot|native-preload)\\.js$"],
+      "policy": {"new": "replace", "legacy": "warn"}
+    },
+    "storage24": {
+      "engine": 2, "phase": "native",
+      "file": {"src": "parts/storage-guard.js", "template": "build-templates/bytedance/storage-guard.js", "dest": "storage-guard.js",
+               "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+               "previous_sha256": ["40aee1a437d1be48aca797ce099f87f3a7dad28dadc8029baf66bf6b7cf31190", "0e090a0fc1b1b2408e28515ac3d8655b341928646f3959d8c7f64798047f8f9a"],
+               "previous_note": "40aee1a4 = MergeShot2048 pkg85 (base of the kit file), 0e090a0f = pkg83/pkg84 (old): both count as old versions of this part"},
+      "wiring": [
+        {"in": "main.js", "when": "kit_main", "kit_line": "require('./storage-guard')(cc, platform)"},
+        {"in": "game.js", "when": "not_kit_main", "insert_after": "__globalAdapter\\.adaptEngine\\(\\s*\\)\\s*;?",
+         "line": "try { require('./storage-guard')(cc, typeof TTMinis !== 'undefined' && TTMinis.game ? TTMinis.game : (typeof tt !== 'undefined' ? tt : null)); } catch (e) { console.error('storage guard', e); } // tiktok-kit:storage24:2.0"}
+      ],
+      "own_markers": ["(?:storage|localStorage)\\.(?:getItem|setItem)\\s*=[^=]", "(?:getStorageSync|setStorageSync)\\s*=[^=]", "__mergeAbsentKey"],
+      "own_files": ["(^|/)storage-guard\\.js$"],
+      "own_skip": ["^adapter(-min)?\\.js$", "^cocos/"],
+      "policy": {"new": "install", "legacy": "none"}
+    },
+    "webp_probe24": {
+      "engine": 2, "phase": "native",
+      "only_with": "--keep-webp-exception",
+      "file": {"src": "webp-probe/cocos2.4/webp-decode-probe.js", "template": null, "dest": "webp-decode-probe.js",
+               "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56", "previous_sha256": []},
+      "extra_files": [{"src": "webp-probe/cocos2.4/loading/webp-probe.webp", "dest": "loading/webp-probe.webp",
+                       "sha256": "f96d0f0f515e9d0e13233e3af41bf6e7a200062e0ada4c0dee596873d2142811"}],
+      "wiring": [
+        {"in": "game.js", "insert_before": "require\\(\\s*['\"]\\./main(\\.js)?['\"]\\s*\\)",
+         "line": "window.__TIKTOK_KIT_WEBP_PROBE__ = true; // tiktok-kit:webp_probe24:2.0",
+         "what": "switch read by main.js v1.3; only with the kit main.js"}
+      ],
+      "own_markers": ["toDataURL\\(\\s*['\"]image/webp", "captureParser", "data:image/webp"],
+      "policy": {"new": "install_only_with_exception", "legacy": "none"}
+    },
+    "rewarded": {
+      "engine": 2, "phase": "source",
+      "file": {"src": "assets/tiktok-platform/RewardedService.js", "dest": "assets/tiktok-platform/RewardedService.js",
+               "sha256": "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1",
+               "previous_sha256": ["04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd"]},
+      "module": "RewardedService",
+      "fingerprint": "getSDK\\(\\s*[\"']createRewardedVideoAd[\"']\\s*\\)",
+      "outside_kit_gate": "A1_rewarded_outside_kit",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "missions": {
+      "engine": 2, "phase": "source",
+      "file": {"src": "assets/tiktok-platform/MissionFlow.js", "dest": "assets/tiktok-platform/MissionFlow.js",
+               "sha256": "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f",
+               "previous_sha256": ["306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee", "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348", "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a"]},
+      "extra_files": [{"src": "assets/tiktok-platform/TikTokMissionService.js", "dest": "assets/tiktok-platform/TikTokMissionService.js",
+                       "sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4"}],
+      "modules": {"MissionFlow": "Add this game to your home screen, open it from the new icon, then come back for your reward\\.",
+                  "TikTokMissionService": "Return through this TikTok entry, then check your reward\\."},
+      "sdk_calls": ["addShortcut", "checkShortcut", "startEntranceMission", "getShortcutMissionReward", "getEntranceMissionReward"],
+      "outside_kit_gate": "G1k_growth_outside_kit",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "home_entries": {
+      "engine": 2, "phase": "source",
+      "file": {"src": "assets/tiktok-platform/HomeGrowthEntries.js", "dest": "assets/tiktok-platform/HomeGrowthEntries.js",
+               "sha256": "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474", "previous_sha256": []},
+      "module": "HomeGrowthEntries",
+      "fingerprint": "Available in TikTok",
+      "reward": "PlatformConfig.growthReward() = 5 * normalLevelCoins (5B); no per-game amount",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "savestore": {
+      "engine": 2, "phase": "source",
+      "file": {"src": "assets/tiktok-platform/SaveStore.js", "dest": "assets/tiktok-platform/SaveStore.js",
+               "sha256": "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf",
+               "previous_sha256": ["954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406"]},
+      "module": "SaveStore",
+      "fingerprint": ":corrupt-backup",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "platform_config": {
+      "engine": 2, "phase": "source", "editable": true,
+      "file": {"src": "assets/tiktok-platform/PlatformConfig.js", "dest": "assets/tiktok-platform/PlatformConfig.js",
+               "sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+               "previous_sha256": ["b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46"]},
+      "required_text": ["config.growthReward = function"],
+      "policy": {"new": "add_if_absent", "legacy": "report"}
+    }
+  }
+}

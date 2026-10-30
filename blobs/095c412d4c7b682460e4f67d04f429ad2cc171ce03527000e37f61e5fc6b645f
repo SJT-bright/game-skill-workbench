@@ -1,0 +1,170 @@
+{
+  "name": "TikTokPlatformKit-Cocos3x-parts",
+  "version": "2.0",
+  "engine": 3,
+  "generated_by": "tools/make_plugin_scripts.py (do not edit; run it again)",
+  "startup": "none: v7.7 installs no Cocos 3.x startup part (DECISIONS Q5, design R3)",
+  "parts": {
+    "platformconfig3x": {
+      "engine": 3,
+      "phase": "source",
+      "plugin": true,
+      "editable": true,
+      "file": {
+        "src": "plugins-3x/PlatformConfig.plugin.js",
+        "dest": "assets/tiktok-platform/PlatformConfig.plugin.js",
+        "sha256": "db307a9d05d55548dcb875d3a4b031d9eac9ad16115f5df9b6e6b80681224840",
+        "previous_sha256": [],
+        "from": "assets/tiktok-platform/PlatformConfig.js",
+        "from_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a"
+      },
+      "global": "globalThis.TikTokKit.PlatformConfig",
+      "policy": {
+        "new": "replace",
+        "legacy": "report"
+      },
+      "note": "per-game values (gameId / appId / placementMap / normalLevelCoins; growthReward() = 5B is fixed) are edited inside BEGIN..END; K1 checks presence only. Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
+    },
+    "missions3x": {
+      "engine": 3,
+      "phase": "source",
+      "plugin": true,
+      "editable": false,
+      "file": {
+        "src": "plugins-3x/TikTokMissionService.plugin.js",
+        "dest": "assets/tiktok-platform/TikTokMissionService.plugin.js",
+        "sha256": "87459c5d43580e94de6531f24e59c5cc75ba8072f0ab013b5badb8c162c41df8",
+        "previous_sha256": [],
+        "from": "assets/tiktok-platform/TikTokMissionService.js",
+        "from_sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4"
+      },
+      "global": "globalThis.TikTokKit.TikTokMissionService",
+      "policy": {
+        "new": "replace",
+        "legacy": "report"
+      },
+      "note": "byte-identical to the kit; the 2.4 module between BEGIN..END (tools/make_plugin_scripts.py --check). Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
+    },
+    "rewarded3x": {
+      "engine": 3,
+      "phase": "source",
+      "plugin": true,
+      "editable": false,
+      "file": {
+        "src": "plugins-3x/RewardedService.plugin.js",
+        "dest": "assets/tiktok-platform/RewardedService.plugin.js",
+        "sha256": "f269a19b7a87cdf71396410b7f7e073d18ef0902ef320b449f135a1a46159c5a",
+        "previous_sha256": [],
+        "from": "assets/tiktok-platform/RewardedService.js",
+        "from_sha256": "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1"
+      },
+      "global": "globalThis.TikTokKit.RewardedService",
+      "policy": {
+        "new": "replace",
+        "legacy": "report"
+      },
+      "note": "byte-identical to the kit; the 2.4 module between BEGIN..END (tools/make_plugin_scripts.py --check). Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
+    },
+    "savestore3x": {
+      "engine": 3,
+      "phase": "source",
+      "plugin": true,
+      "editable": false,
+      "file": {
+        "src": "plugins-3x/SaveStore.plugin.js",
+        "dest": "assets/tiktok-platform/SaveStore.plugin.js",
+        "sha256": "c6d7b35f87ec51d5c768a33636354506c238bd86f92ab5c5847687499cd31eb1",
+        "previous_sha256": [],
+        "from": "assets/tiktok-platform/SaveStore.js",
+        "from_sha256": "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf"
+      },
+      "global": "globalThis.TikTokKit.SaveStore",
+      "policy": {
+        "new": "replace",
+        "legacy": "report"
+      },
+      "note": "byte-identical to the kit; the 2.4 module between BEGIN..END (tools/make_plugin_scripts.py --check). Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
+    },
+    "missionflow3x": {
+      "engine": 3,
+      "phase": "source",
+      "plugin": true,
+      "editable": false,
+      "file": {
+        "src": "plugins-3x/MissionFlow.plugin.js",
+        "dest": "assets/tiktok-platform/MissionFlow.plugin.js",
+        "sha256": "962b9ce639885d9db9e3e7eb1c99153ec5604731ada16d8bdbeca608afe87d8f",
+        "previous_sha256": [
+          "9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2"
+        ],
+        "from": "assets/tiktok-platform/MissionFlow.js",
+        "from_sha256": "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f"
+      },
+      "global": "globalThis.TikTokKit.MissionFlow",
+      "policy": {
+        "new": "replace",
+        "legacy": "report"
+      },
+      "note": "byte-identical to the kit; the 2.4 module between BEGIN..END (tools/make_plugin_scripts.py --check). Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
+    },
+    "touch3x": {
+      "engine": 3,
+      "phase": "native",
+      "file": {
+        "src": "build-templates/bytedance-mini-game/tiktok-touch-3x.js",
+        "dest": "tiktok-touch-3x.js",
+        "template": "build-templates/bytedance-mini-game/tiktok-touch-3x.js",
+        "sha256": "7027f5388161bffe7dcf52231b5b8de27cbfc62e1fb8e519b3b8027788478b86",
+        "previous_sha256": []
+      },
+      "wiring": [
+        {
+          "in": "game.js",
+          "insert_before": "require\\(\\s*['\"]\\./web-adapter(?:\\.js)?['\"]\\s*\\)\\s*;?",
+          "line": "require('./tiktok-touch-3x.js').install(globalThis.TTMinis&&TTMinis.game||globalThis.tt); // tiktok-kit:touch3x:2.0"
+        }
+      ],
+      "own_markers": [
+        "marlow-touch",
+        "grotto-touch",
+        "tiktok-touch-adapter:",
+        "__starPopTouchCoordinates",
+        "['\"]onTouch['\"]\\s*\\+\\s*[A-Za-z_$]",
+        "\\b(?:tt|TTMinis\\s*\\.\\s*game)\\s*\\.\\s*onTouch(?:Start|Move|End|Cancel)\\s*=(?!=)",
+        "\\[\\s*['\"]onTouch(?:Start|Move|End|Cancel)['\"]\\s*\\]\\s*=(?!=)"
+      ],
+      "policy": {
+        "new": "replace",
+        "legacy": "add_if_absent"
+      },
+      "note": "before web-adapter.js: the engine clones tt when cc is evaluated. Proof: Marlows R4 probe_cocos3_touch_coordinates.cjs 1/8 -> 8/8 with this line, back to 1/8 without it."
+    },
+    "storage3x": {
+      "engine": 3,
+      "phase": "native",
+      "file": {
+        "src": "parts/storage-guard.js",
+        "dest": "storage-guard.js",
+        "template": "build-templates/bytedance-mini-game/storage-guard.js",
+        "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+        "previous_sha256": []
+      },
+      "wiring": [
+        {
+          "in": "game.js",
+          "insert_after": "require\\(\\s*['\"]\\./web-adapter(?:\\.js)?['\"]\\s*\\)\\s*;?",
+          "line": "require('./storage-guard.js')(null, globalThis.TTMinis&&TTMinis.game||globalThis.tt); // tiktok-kit:storage3x:2.0"
+        }
+      ],
+      "own_markers": [
+        "\\blocalStorage\\s*\\.\\s*(?:getItem|setItem)\\s*=(?!=)",
+        "\\b(?:tt|TTMinis\\s*\\.\\s*game)\\s*\\.\\s*(?:getStorageSync|setStorageSync)\\s*=(?!=)"
+      ],
+      "policy": {
+        "new": "replace",
+        "legacy": "none"
+      },
+      "note": "AFTER web-adapter.js: window.localStorage only exists once web-adapter ran, and the 3.x engine reads sys.localStorage = window.localStorage later, so guarding that object covers the engine. File owned by W-A1 (parts/storage-guard.js, same file as the 2.4 part)."
+    }
+  }
+}

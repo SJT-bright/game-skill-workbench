@@ -1362,7 +1362,13 @@ class TikTokZipTests(unittest.TestCase):
         (n / "big-main.bin").write_bytes(os.urandom(64) * (main_extra // 64)) if main_extra else None
         res = (n / "subpackages/resources") if sub else (n / "assets/resources")
         res.mkdir(parents=True)
-        (res / "game.js").write_text("// resources entry", encoding="utf-8")
+        (res / "game.js").write_text("// resources entry\n", encoding="utf-8")
+        # v7.5 G1_growth_apis: the five TikTok growth calls must be in game JS; v7.7 G1k: a new game makes them only
+        # through the kit TikTokMissionService / MissionFlow modules (2.4 bundle form, as Creator writes index.js)
+        kit = self.HERE.parent / "assets/platform-kit/assets/tiktok-platform"
+        (res / "index.js").write_text("".join(
+            "cc._RF.push(module, 'u%d', '%s');\n%s\ncc._RF.pop();\n" % (i, m, (kit / (m + ".js")).read_text(encoding="utf-8"))
+            for i, m in enumerate(("TikTokMissionService", "MissionFlow"))), encoding="utf-8")
         (res / "config.json").write_text("{}", encoding="utf-8")
         (res / "art.bin").write_bytes(b"a" * 5_000_000)            # big art: fine in a normal subpackage, never in main
         game = {"deviceOrientation": "portrait"}

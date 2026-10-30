@@ -25,7 +25,7 @@ function ads(mode) {
     assert(config.rewardedPlacements.some(function(p){return p.id===opts.adUnitId;}));
     var ad=fakeAd(mode);list.push(ad);return ad;
   }};
-  var options={getSDK:function(){return sdk;},now:function(){return time;},autoPoll:false,requestTimeoutMs:10,playbackTimeoutMs:20};
+  var options={getSDK:function(){return sdk;},now:function(){return time;},autoPoll:false,requestTimeoutMs:10,exitAfterMs:20};
   return {service:new RewardedService(options),second:function(){return new RewardedService(options);},list:list,advance:function(n){time+=n;}};
 }
 function mission(method) {
@@ -77,22 +77,38 @@ function mission(method) {
     f.list[0].close({isEnded:true});f.list[0].close({isEnded:true});f.list[0].error({});await p;
     assert.equal(count,1);
   });
-  await test('request_timeout_independent_tick_and_native_quarantine_until_terminal',async function(){
+  await test('request_timeout_releases_at_once_unbinds_and_late_close_cannot_reward',async function(){
     var f=ads('pending'),p=f.service.request({placementKey:'revive'});f.advance(11);f.service.tick();
-    assert.equal((await p).status,'timeout');assert(f.service.isNativeBusy());
-    assert.equal((await f.second().request({placementKey:'revive'})).status,'busy');
-    f.list[0].close({isEnded:true});assert(!f.service.isNativeBusy());
-    var retry=f.service.request({placementKey:'revive'});f.list[1].close({isEnded:true});assert((await retry).rewarded);
+    var r=await p;assert.equal(r.status,'timeout');assert.equal(r.rewarded,false);assert(!f.service.isNativeBusy());
+    var retry=f.second().request({placementKey:'revive'});assert.equal(f.list.length,2);
+    f.list[0].close({isEnded:true});
+    f.list[1].close({isEnded:true});assert((await retry).rewarded);
   });
-  await test('playback_timeout_does_not_reward_late_ended',async function(){
-    var f=ads(),p=f.service.request({placementKey:'revive'});await Promise.resolve();f.advance(21);f.service.tick();
-    assert.equal((await p).status,'timeout');f.list[0].close({isEnded:true});assert(!f.service.isNativeBusy());
+  await test('request_timeout_ignores_time_in_background',async function(){
+    var f=ads('pending'),p=f.service.request({placementKey:'revive'}),settled=false;p.then(function(){settled=true;});
+    f.advance(5);f.service.onHide();f.advance(200000);f.service.tick();await Promise.resolve();assert(!settled);
+    f.service.onShow();f.advance(4);f.service.tick();await Promise.resolve();assert(!settled);
+    f.advance(2);f.service.tick();assert.equal((await p).status,'timeout');
   });
-  await test('cancel_and_dispose_leave_native_lock_then_late_close_cannot_reward',async function(){
+  await test('no_playback_timeout_200s_video_rewards_on_close',async function(){
+    var f=ads(),p=f.service.request({placementKey:'revive'}),settled=false;p.then(function(){settled=true;});
+    await Promise.resolve();await Promise.resolve();f.advance(200000);f.service.tick();await Promise.resolve();
+    assert(!settled);assert(f.service.isNativeBusy());
+    f.list[0].close({isEnded:true});assert.equal((await p).rewarded,true);assert(!f.service.isNativeBusy());
+  });
+  await test('no_callback_exit_after_30s_releases_and_next_request_starts',async function(){
+    var f=ads(),shownExit=0,p=f.service.request({placementKey:'revive',onExitAvailable:function(){shownExit++;}});
+    await Promise.resolve();await Promise.resolve();f.advance(19);f.service.tick();assert(!f.service.exitAvailable());
+    f.advance(2);f.service.tick();f.service.tick();assert(f.service.exitAvailable());assert.equal(shownExit,1);
+    f.service.exit();var r=await p;assert.equal(r.status,'cancelled');assert.equal(r.reason,'exit');assert(!f.service.isNativeBusy());
+    var next=f.service.request({placementKey:'revive'});assert.equal(f.list.length,2);
+    f.list[0].close({isEnded:true});f.list[1].close({isEnded:true});assert((await next).rewarded);
+  });
+  await test('cancel_and_dispose_release_lock_and_late_close_cannot_reward',async function(){
     for(var dispose of [false,true]){
       var f=ads(),p=f.service.request({placementKey:'revive',ownerId:'old'});
       if(dispose)f.service.dispose();else f.service.cancelOwner('old');
-      assert.equal((await p).rewarded,false);assert(f.service.isNativeBusy());
+      assert.equal((await p).rewarded,false);assert(!f.service.isNativeBusy());
       f.list[0].close({isEnded:true});assert(!f.service.isNativeBusy());
     }
   });

@@ -47,6 +47,13 @@ Home layout (user rules 2026-10-21, changed 2026-10-23: no more "spread to the f
   other menu pages: secondary buttons not in the middle.
   all buttons together <= --max-menu of the screen (default 0.40, user 2026-10-23: up to 40%, not more).
   At least one page must have role "home". Gameplay HUD elements stay in the edge zones.
+  Remake home zoning (user 2026-10-28, --board remake; default docs/board.txt, a project without it counts as remake;
+  English keeps the rules above):
+    home_zone_settings_row   settings/sound on the top row: inside the row of the resource-bar buttons (or, with none,
+                             centre in the top 10% beside the capsule), on the left half
+    home_zone_below_play     below PLAY only Profile Revisit and Add to Home Screen
+    home_zone_checkin_bottom check-in never in the bottom row (it goes beside the hero)
+    at least one entrance on each side of the middle stays required.
 
 Home entries and no sharing (user 2026-10-23, above all for 英化; both boards):
   every role-home page has BOTH the desktop-shortcut button (Add to Home Screen: name like shortcut / add_to_home /
@@ -223,6 +230,55 @@ def home_places(name, sec, size, problems):
         problems.append('%s: put at least one real feature entrance on each side of the hero above PLAY' % name)
 
 
+# Remake home zoning (user 2026-10-28, remake-art/references/home-by-gameplay.md). English keeps the rules above.
+CHECKIN_NAMES = re.compile(r'check[-_ ]?in|sign[-_ ]?in|签到|daily[-_ ]?(reward|bonus|login)|calendar', re.I)
+TOP_ROW = 0.10      # no resource-bar button found: the settings centre stays in the capsule row (audit_top_bar CAPSULE y)
+ROW_SLACK = 0.25    # share of the settings height it may stick out of the resource-bar row
+
+
+def home_zones_remake(name, sec, size, problems, primary_y):
+    """Settings on the top row (same row as the currency bar, left side); below PLAY only Profile Revisit and Add to Home
+    Screen; check-in never in the bottom row. Each problem starts with its check id."""
+    w, h = size
+    rows = []
+    for b in sec:
+        r = clip(b['rect'], size)
+        n = re.sub(r'[\s\-]+', '_', leaf(b['name']))     # "Action-ADD TO HOME SCREEN" -> Action_ADD_TO_HOME_SCREEN
+        if not CORNER_NAMES.search(n) and (TOP_NAMES.search(n) or TOP_PATHS.search(str(b['name']))):
+            rows.append(r)
+    for b in sec:
+        r = clip(b['rect'], size)
+        n = re.sub(r'[\s\-]+', '_', leaf(b['name']))
+        cx, cy = (r[0] + r[2] / 2) / w, (r[1] + r[3] / 2) / h
+        if CORNER_NAMES.search(n):
+            if rows:
+                top = min(x[1] for x in rows)
+                bottom = max(x[1] + x[3] for x in rows)
+                slack = ROW_SLACK * r[3]
+                same_row = r[1] >= top - slack and r[1] + r[3] <= bottom + slack
+                where = 'the resource-bar row (y %.0f-%.0f px)' % (top, bottom)
+            else:
+                same_row = cy < TOP_ROW
+                where = 'the top row (centre above %.0f%% of the height, beside the platform capsule)' % (TOP_ROW * 100)
+            if not same_row:
+                problems.append('home_zone_settings_row: %s: %s must sit on %s, not a row below it (centre at y %.0f%%; '
+                                'user 2026-10-28)' % (name, b['name'], where, cy * 100))
+            elif cx >= 0.5:
+                problems.append('home_zone_settings_row: %s: %s goes at the top-left; the top-right is the platform '
+                                'capsule (centre at x %.0f%%)' % (name, b['name'], cx * 100))
+            continue
+        if rows and r in rows:
+            continue
+        if cy <= primary_y:
+            continue
+        if CHECKIN_NAMES.search(n):
+            problems.append('home_zone_checkin_bottom: %s: check-in %s is in the bottom row; put it beside the hero '
+                            '(middle left or right, user 2026-10-28)' % (name, b['name']))
+        elif not (SHORTCUT_NAMES.search(n) or REVISIT_NAMES.search(n)):
+            problems.append('home_zone_below_play: %s: %s is below PLAY; only Profile Revisit and Add to Home Screen '
+                            'go there, move it beside the hero (user 2026-10-28)' % (name, b['name']))
+
+
 def check_buttons(s, size, problems, a):
     buttons = s.get('buttons')
     if not isinstance(buttons, list) or not buttons:
@@ -258,7 +314,9 @@ def check_buttons(s, size, problems, a):
     if s.get('role') == 'home':
         home_places._primary_y = min(((b['rect'][1]+b['rect'][3]/2)/size[1] for b in prim),default=0.7)
         home_places(name, sec, size, problems)
-        leaves = [leaf(b['name']) for b in buttons] + [leaf(n) for n in s.get('entry_names',[])]
+        if getattr(a, 'board', None) == 'remake':
+            home_zones_remake(name, sec, size, problems, home_places._primary_y)
+        leaves = [re.sub(r'[\s\-]+', '_', leaf(n)) for n in [b['name'] for b in buttons] + list(s.get('entry_names') or [])]
         if not any(SHORTCUT_NAMES.search(n) for n in leaves):
             problems.append('%s: no desktop-shortcut button (Add to Home Screen, house icon) on the home page; add it '
                             '(英化 too, without asking the user)' % name)
@@ -371,6 +429,36 @@ def check(layout, a):
     return results
 
 
+def find_project(a):
+    """The Cocos project (folder with assets/): --project, else a parent of the layout, else a parent of a recorded dump
+    (art_check writes the layout outside the project)."""
+    if a.project:
+        return a.project.resolve()
+    cands = [a.layout.resolve()]
+    try:
+        cands += [Path(str(d.get('path', ''))).resolve() for d in json.loads(a.layout.read_text(encoding='utf-8')).get('dumps') or []
+                  if isinstance(d, dict) and d.get('path')]
+    except (OSError, ValueError, AttributeError):
+        pass
+    for c in cands:
+        p = next((p for p in c.parents if (p / 'assets').is_dir()), None)
+        if p:
+            return p
+    return None
+
+
+def resolve_board(board, proj):
+    if board:
+        return board, 'argument'
+    if proj:
+        f = proj / 'docs' / 'board.txt'
+        rec = f.read_text(encoding='utf-8').strip().lower() if f.is_file() else ''
+        if rec in ('localize', 'remake'):
+            return rec, 'docs/board.txt'
+        return 'remake', 'no docs/board.txt: checked as remake (strictest)'
+    return None, 'no project found: remake home zoning not applied'
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('layout', type=Path)
@@ -384,10 +472,16 @@ def main():
     ap.add_argument('--binding', type=Path, help='known-issue review JSON whose "binding" is copied into the report')
     ap.add_argument('--out', type=Path)
     ap.add_argument('--rules-selftest', action='store_true', help=argparse.SUPPRESS)  # Skill self-tests of the geometry rules only
+    ap.add_argument('--board', choices=['localize', 'remake'],
+                    help='default: <project>/docs/board.txt; a project without it is checked as remake (strictest). '
+                         'remake adds the 2026-10-28 home zoning')
+    ap.add_argument('--project', type=Path, help='Cocos project (default: found from the layout path or its dumps)')
     a = ap.parse_args()
     global OPTIONAL
     from feature_policy import enabled
-    OPTIONAL = enabled(next((p for p in a.layout.resolve().parents if (p / 'assets').is_dir()), a.layout.parent))
+    proj = find_project(a)
+    OPTIONAL = enabled(proj or a.layout.parent)
+    a.board, a.board_source = resolve_board(a.board, proj)
     try:
         if a.rules_selftest and (a.out or a.binding):
             raise ValueError('--rules-selftest only checks the geometry rules and never writes a gate report')
@@ -412,7 +506,7 @@ def main():
     failed = sum(1 for r in results if not r['passed'])
     report = {'tool': 'audit_ui_coverage', 'provenance': 'rules_selftest' if a.rules_selftest else 'runtime_dump',
               'auto_notes': notes, 'max_ui': a.max_ui, 'max_popup': a.max_popup, 'max_tip': a.max_tip,
-              'min_pad': a.min_pad,
+              'min_pad': a.min_pad, 'board': a.board, 'board_source': a.board_source,
               'checked': len(results), 'failed': failed, 'passed': failed == 0,
               'checks': [{'name': r['name'], 'passed': r['passed']} for r in results], 'results': results,
               'note': 'Measures the layout read from the running game; GPT still compares auto_notes and safe_estimated '

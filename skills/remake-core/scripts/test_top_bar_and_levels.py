@@ -187,10 +187,10 @@ class LevelPlanTests(Fixture):
         self.addCleanup(shutil.rmtree, root, True)
         (root / 'assets').mkdir()
         for seed in range(1, 40):
-            for levels in (100, 107, 121, 200):
+            for levels in (60, 67, 100, 121, 200):
                 mode = 'every_10' if seed % 3 == 0 else 'final'
                 plan(root, levels=levels, seed=seed, skins=seed % 2 == 0, skin_mode=mode)
-                for board in ('remake',):                     # user 2026-10-27: 重塑 >= 100
+                for board in ('remake',):                     # Saul 2026-10-29: 重塑 >= 60
                     out = root / 'r.json'
                     py('audit_level_plan.py', '--project', root, '--out', out, '--board', board)
                     failed = [c for c in json.loads(out.read_text())['checks'] if not c['passed'] and c['id'] != 'map_page']
@@ -310,7 +310,7 @@ class LevelPlanTests(Fixture):
         self.assertNotIn(4, bonus)                                                # level 4 is the first spike
 
     def test_more_than_70_passes_on_both_boards(self):
-        """重塑 100 or more passes (user 2026-10-27); a game with more levels is not cut."""
+        """重塑 60 or more passes (Saul 2026-10-29); a game with more levels is not cut."""
         root = self.project()
         plan(root, levels=110, seed=7)
         for board in ('remake',):
@@ -362,15 +362,15 @@ class LevelPlanTests(Fixture):
         self.rewrite(root, cut)
         code, r, bad = self.level_audit(root)
         self.assertEqual(code, 1)
-        self.assertIn('this board needs 100 levels or more', bad)
-        self.assertIn('add at least 60', bad)
-        self.assertNotEqual(py('make_level_plan.py', '--levels', 99, '--out', root / 'x.json')[0], 0)
-        # 英化 keeps its own minimum of 70 (user 2026-10-27: only 重塑 moves to 100)
+        self.assertIn('this board needs 60 levels or more', bad)
+        self.assertIn('add at least 20', bad)
+        self.assertNotEqual(py('make_level_plan.py', '--levels', 59, '--out', root / 'x.json')[0], 0)
+        # 英化 keeps its own minimum of 70; 重塑 is 60 (Saul 2026-10-29), so 65 levels fail 英化 and pass 重塑
         from make_level_plan import make
         from audit_level_plan import audit_plan
-        data = make(80, 50, None, 19, 'Coins')
-        data['why'] = 'Localized game keeps its original eighty levels.'
-        for board, expected in (('localize', True), ('remake', False)):
+        data = make(65, 50, None, 19, 'Coins')
+        data['why'] = 'Game with sixty-five fixed levels cleared one by one.'
+        for board, expected in (('localize', False), ('remake', True)):
             checks = {}
             audit_plan(data, None, lambda name, passed, detail: checks.update({name: passed}), board)
             self.assertEqual(checks['levels_at_least_70'], expected, board)

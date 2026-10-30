@@ -5,7 +5,21 @@ User 2026-10-23 (SquareRush UPLOADFIX): every package is the one uploadable TikT
 built in (not optional): uncompressed main package <= 4,000,000 bytes, total <= 30,000,000 bytes, each independent
 subpackage <= 4,000,000 bytes; normal subpackages count only toward the total. --max-*-bytes can only make a limit
 stricter. Also refused: an outer folder, a Web build (index.html), Finder/Windows junk, a ZIP inside the ZIP, source-project
-files (.ts, .meta, library/, temp/ ...), non-ASCII paths and the test-only level jump marker."""
+files (.ts, .meta, library/, temp/ ...), non-ASCII paths and the test-only level jump marker.
+
+v7.5 (D7 items 1/14): the result carries entry = official | unofficial (官方入口 / 非官方入口). Only a ZIP with a
+matching <zip>.receipt.json written by make_tiktok_zip.py or build_checked_zip.py is official; this read-only check
+never writes a receipt, so "verify + ordinary zip" stays unofficial and prepare_delivery.py refuses it.
+
+v7.7 (design D77 1.6): receipt schema 2 carries `finalize`, the writer's tiktok_finalize native record in short
+(kit version, policy and why, each step's state and changed files, the Chinese parts table, the source record's
+digest). A receipt without it, with a refused or --policy (test-only) finalize, or whose finalized files differ from
+the ZIP is not official, so a ZIP that never went through finalize cannot be delivered.
+
+v7.7.4 (总表 B17): run as a command, an unofficial ZIP is refused (status unofficial_not_deliverable, exit 3), so
+"verify + ordinary zip" can no longer look like a pass (DriftRacer v2 shipped an outdated ad service that way).
+--structure-only keeps the read-only structure answer for diagnosis. Writers and checks that import verify() are
+unchanged."""
 import argparse
 import hashlib
 import json
@@ -46,6 +60,125 @@ def forbidden(name):
     if any(ord(ch) > 126 or ord(ch) < 32 for ch in name):
         return 'a non-ASCII path (rename it with ASCII letters, digits, _ - .)'
     return None
+
+
+RECEIPT_TOOLS = ('make_tiktok_zip', 'build_checked_zip')
+RECEIPT_SUFFIX = '.receipt.json'
+ENTRY_LABEL = {'official': '官方入口', 'unofficial': '非官方入口'}
+# v7.7.4 (总表 B17): the standalone verify_native_zip / upload_preflight refusal for an unofficial ZIP.
+UNOFFICIAL_REFUSAL = ('not deliverable: unofficial entry (非官方入口) - %s. Only a ZIP written by build_checked_zip.py '
+                      'or make_tiktok_zip.py (with <zip>.receipt.json beside it) may be uploaded or delivered; '
+                      'add --structure-only for a read-only structure check')
+
+
+def receipt_path(archive):
+    """<Game>.zip -> <Game>.zip.receipt.json next to it (written only by the two official writers)."""
+    return Path(str(Path(archive)) + RECEIPT_SUFFIX)
+
+
+def tree_digest(file_sha256):
+    """One digest for a {path: sha256} map (the Native tree that went into the ZIP)."""
+    h = hashlib.sha256()
+    for name in sorted(file_sha256):
+        h.update(name.encode('utf-8') + b'\0' + file_sha256[name].encode('ascii') + b'\n')
+    return h.hexdigest()
+
+
+RECEIPT_SCHEMA = 2
+
+
+def finalize_summary(record):
+    """Short form of a tiktok_finalize.finalize_native record for receipts and reports (no file bytes)."""
+    if not isinstance(record, dict):
+        return None
+    decision = record.get('decision') or {}
+    steps = []
+    for step in record.get('steps') or []:
+        steps.append({'step': step.get('step'), 'state': step.get('state'),
+                      'changed': [{'file': c.get('file'), 'after_sha256': c.get('after_sha256'), 'what': c.get('what')}
+                                  for c in step.get('changed') or []],
+                      'blocks': [b.get('id') for b in step.get('blocks') or []],
+                      'warnings': [w.get('id') for w in step.get('warnings') or []]})
+    return {'kind': record.get('kind'), 'kit_version': record.get('kit_version'), 'policy': record.get('policy'),
+            'policy_reason': decision.get('reason'), 'legacy_match': [m.get('folder') for m in
+                                                                      decision.get('legacy_match') or []],
+            'policy_override': bool(record.get('policy_override')), 'board': record.get('board'),
+            'engine': record.get('engine'), 'blocks': [b.get('id') for b in record.get('blocks') or []],
+            'warnings': ['%s: %s' % (w.get('id'), w.get('message')) for w in record.get('warnings') or []],
+            'files_after': dict(record.get('files_after') or {}), 'table': record.get('table') or [],
+            'steps': steps, 'source_record': record.get('source_record')}
+
+
+def finalize_problem(summary, file_sha256):
+    """Why a receipt's finalize summary does not prove THIS package went through finalize, or None."""
+    if not isinstance(summary, dict) or summary.get('kind') != 'finalize-native':
+        return 'writer receipt has no finalize record (written before v7.7 or by hand): rewrite the ZIP with the v7.7 writer'
+    if summary.get('blocks'):
+        return 'writer receipt records a refused finalize: %s' % ', '.join(map(str, summary['blocks'][:3]))
+    if summary.get('policy_override'):
+        return 'writer receipt records finalize with --policy (tests and calibration only)'
+    if summary.get('policy') not in ('new', 'legacy'):
+        return 'writer receipt finalize record has no policy'
+    for rel, digest in sorted((summary.get('files_after') or {}).items()):
+        if digest is None and rel in file_sha256:
+            return 'finalize moved %s away but it is in the ZIP' % rel
+        if digest is not None and file_sha256.get(rel) != digest:
+            return 'finalize wrote %s but the ZIP holds other bytes' % rel
+    return None
+
+
+def make_receipt(tool, zip_path, zip_sha256, file_sha256, gate_result, board, extra=None, finalize=None):
+    """finalize: the writer's finalize_native record (or its finalize_summary); required since v7.7."""
+    if tool not in RECEIPT_TOOLS:
+        raise ValueError('receipt tool must be one of the official writers')
+    import datetime
+    if isinstance(finalize, dict) and 'decision' in finalize:      # a full record, not yet summarised
+        finalize = finalize_summary(finalize)
+    receipt = {'schema': RECEIPT_SCHEMA, 'tool': tool, 'zip': Path(zip_path).name, 'zip_sha256': zip_sha256,
+               'zip_bytes': Path(zip_path).stat().st_size, 'native_tree_sha256': tree_digest(file_sha256),
+               'files': len(file_sha256), 'board': board,
+               'gate_result': {'passed': not gate_result.get('blocks'), 'blocks': gate_result.get('blocks', []),
+                               'warnings': [w.get('id') for w in gate_result.get('warnings', [])],
+                               'gates': gate_result.get('gates', []), 'missing': gate_result.get('missing', []),
+                               'policy': gate_result.get('policy'), 'policy_reason': gate_result.get('policy_reason')},
+               'finalize': finalize,
+               'created': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+               'boundary': 'Written by the official writer after every package gate passed; local structure only, '
+                           'not platform or device acceptance.'}
+    if extra:
+        receipt.update(extra)
+    return receipt
+
+
+def receipt_status(archive, zip_sha256, file_sha256):
+    """'official' only when <zip>.receipt.json was written by an official writer for exactly these bytes."""
+    path = receipt_path(archive)
+    out = {'entry': 'unofficial', 'entry_label': ENTRY_LABEL['unofficial'], 'receipt': str(path)}
+    if not path.is_file() or path.is_symlink():
+        out['entry_reason'] = ('no writer receipt %s: this ZIP was not written by make_tiktok_zip.py / build_checked_zip.py '
+                               '(hand-zipped or renamed)' % path.name)
+        return out
+    try:
+        receipt = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError) as error:
+        out['entry_reason'] = 'writer receipt unreadable: %s' % error
+        return out
+    if not isinstance(receipt, dict) or receipt.get('tool') not in RECEIPT_TOOLS:
+        out['entry_reason'] = 'writer receipt is not from an official writer'
+    elif receipt.get('zip_sha256') != zip_sha256:
+        out['entry_reason'] = 'writer receipt is for other ZIP bytes (zip_sha256 differs): the ZIP was changed or re-zipped'
+    elif receipt.get('native_tree_sha256') != tree_digest(file_sha256):
+        out['entry_reason'] = 'writer receipt is for another Native tree (native_tree_sha256 differs)'
+    elif not isinstance(receipt.get('gate_result'), dict) or receipt['gate_result'].get('passed') is not True \
+            or receipt['gate_result'].get('blocks'):
+        out['entry_reason'] = 'writer receipt does not record a passed package gate'
+    elif finalize_problem(receipt.get('finalize'), file_sha256):
+        out['entry_reason'] = finalize_problem(receipt.get('finalize'), file_sha256)
+    else:
+        out.update(entry='official', entry_label=ENTRY_LABEL['official'], entry_reason='matching receipt from ' + receipt['tool'],
+                   receipt_tool=receipt['tool'], receipt_board=receipt.get('board'),
+                   receipt_policy=receipt['finalize'].get('policy'), receipt_kit_version=receipt['finalize'].get('kit_version'))
+    return out
 
 
 def safe_name(name):
@@ -174,6 +307,7 @@ def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max
         raise ValueError('ZIP changed during verification')
     if _verified_files is not None:
         _verified_files.update(contents)
+    entry = receipt_status(archive, archive_after, hashes)
     return {
         'archive': str(Path(archive).resolve()),
         'sha256': archive_after,
@@ -190,6 +324,7 @@ def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max
         'tiktok_upload_form': bool(tiktok),
         'startup_dependency_check': startup,
         'not_verified': ['Client Key/ad ownership or enablement', 'SDK behavior', 'DevTool', 'real phone/IAA', 'platform upload/release'],
+        **entry,
     }
 
 
@@ -202,7 +337,10 @@ def main():
     p.add_argument('--max-total-bytes', type=int)
     p.add_argument('--max-independent-bytes', type=int, help='only stricter than the built-in TikTok limits')
     p.add_argument('--report', type=Path, help='New report file; existing reports are preserved')
+    p.add_argument('--structure-only', action='store_true',
+                   help='read-only structure diagnosis: do not refuse a ZIP without a matching writer receipt')
     args = p.parse_args()
+    refused = None
     try:
         if args.report and args.report.exists():
             raise ValueError('Report already exists; choose a new path')
@@ -211,13 +349,20 @@ def main():
                 raise ValueError('Package limits must be positive')
         result = verify(args.archive, args.expected_app_id, args.expected_tree, args.max_main_bytes, args.max_total_bytes,
                         args.max_independent_bytes)
+        if result['entry'] != 'official' and not args.structure_only:
+            refused = UNOFFICIAL_REFUSAL % result['entry_reason']
+            result.update(status='unofficial_not_deliverable', refused=refused)
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         print(json.dumps({k: v for k, v in result.items() if k != 'file_sha256'}, ensure_ascii=False, indent=2))
+        print('entry: %s (%s) - %s' % (result['entry'], result['entry_label'], result['entry_reason']))
     except (ValueError, OSError, zipfile.BadZipFile, RuntimeError) as error:
         print('Native ZIP check failed: ' + str(error), file=sys.stderr)
         return 2
+    if refused:
+        print('REFUSED: ' + refused, file=sys.stderr)
+        return 3
     return 0
 
 

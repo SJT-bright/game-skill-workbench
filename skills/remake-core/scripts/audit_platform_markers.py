@@ -78,7 +78,13 @@ def share_hits(entries, extra=()):
     return hits
 
 
+REQUIRED_FEATURES = ('iaa', 'growth')
+
+
 def audit(project, native_zip=None, features=('iaa', 'growth')):
+    # v7.5 (Mabel 1.2 / Fangkuai 2): every TikTok game needs add-to-desktop and profile revisit, so the growth
+    # markers are always checked; a run with only "iaa" no longer exists.
+    features = tuple(dict.fromkeys(REQUIRED_FEATURES + tuple(features)))
     markers = list(dict.fromkeys(marker for feature in features for marker in GROUPS[feature]))
     result = {'source_project': str(project.resolve()), 'features': list(features),
               'source': scan(source_entries(project), markers), 'native_zip': None,
@@ -114,7 +120,8 @@ def main():
     parser.add_argument('project', type=Path)
     parser.add_argument('--native-zip', type=Path)
     parser.add_argument('--features', nargs='+', choices=tuple(GROUPS),
-                        default=['iaa', 'growth'])
+                        default=['iaa', 'growth'],
+                        help='kept for old command lines; iaa and growth are always both checked (v7.5)')
     parser.add_argument('--report', type=Path, help='New report; existing files are preserved')
     args = parser.parse_args()
     try:

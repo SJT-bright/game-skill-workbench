@@ -117,7 +117,7 @@ class SkinModuleTests(unittest.TestCase):
         t = skin_table(self.tmp, '--levels', '--limited-mode', 'every_10')
         next(x for x in t['items'] if x['id'] == 'hero_limited_30').update(unlock='coins', coins=5000, level=None)
         self.assertNotEqual(unlock_audit(t)[0], 0)
-        self.assertNotEqual(py('make_skin_table.py', '--R', 50, '--levels', '--final-level', 60, '--out', Path(self.tmp) / 'x.json')[0], 0)
+        self.assertNotEqual(py('make_skin_table.py', '--R', 50, '--levels', '--final-level', 59, '--out', Path(self.tmp) / 'x.json')[0], 0)
 
 
 def frames(folder, n=10, same=False, size=256):

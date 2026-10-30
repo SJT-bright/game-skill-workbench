@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write a level plan skeleton (remake-levels/references/top-bar-and-level-map.md + remake-levels/references/level-rules.md, both boards).
 
-Level games (通关型, the level module): new designs have 100 levels or more (user 2026-10-27; 英化 keeps the 70 rule);
+Level games (通关型, the level module): new designs have 60 levels or more (Saul 2026-10-29, was 100; 英化 keeps the 70 rule);
 difficulty follows wave-tiers.v1 (difficulty_wave.py: tutorial 1-3, spike 4, recovery 5-9, exam 10, then an irregular
 low/medium/high/extreme wave 25/45/15/15; remake-levels/references/difficulty-curve.md); every 10th level is a limited level (限定关: 10, 20 ...; an incomplete final chapter adds no milestone;
 = floor(total / 10) milestones) whose first clear gives a big reward - a pile of the game's currency (at least the sum of the 5
@@ -18,7 +18,7 @@ production JSON with audit_level_plan.py --board localize --original-levels ... 
 Mark new mechanic introductions with tags ["intro"] and stable IDs; --intro LEVEL:MECHANIC records them.
 
 Usage:
-  python make_level_plan.py --levels 100 --coins 40 [--intro 23:wind] [--limited-skin hero_limited] [--limited-skin-mode final|every_10] [--seed N]
+  python make_level_plan.py --levels 60 --coins 40 [--intro 23:wind] [--limited-skin hero_limited] [--limited-skin-mode final|every_10] [--seed N]
       [--currency Pearls] --out assets/resources/config/level_plan.json
   python make_level_plan.py --endless --why "one run, score keeps growing" --out assets/resources/config/level_plan.json
 """
@@ -36,7 +36,7 @@ def ceil10(x):
 EVERY = 10                 # user 2026-10-23: 1/10 of the levels are limited levels
 BONUS_MULTIPLIER = 3       # bonus level = 3x a normal level (the ad doubles it again: 6x)
 MILD_POLICY = 'rising-mild-wave.v1'   # earlier 2026-10-27 option, still accepted with --policy mild
-MIN_LEVELS = 100   # user 2026-10-27: new designs (重塑) have 100 levels or more; 英化 keeps its own 70 rule
+MIN_LEVELS = 60    # Saul 2026-10-29: new designs (重塑) have 60 levels or more (was 100); 英化 keeps its own 70 rule
 
 
 from product_contract import limited_levels, reward_rows, REWARD_POLICY, MILESTONE_POLICY
@@ -186,7 +186,7 @@ def make(levels, coins, limited_skin, seed, currency, every=EVERY, skin_mode='fi
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--levels', type=int, default=MIN_LEVELS, help='100 or more for new designs (user 2026-10-27)')
+    ap.add_argument('--levels', type=int, default=MIN_LEVELS, help='60 or more for new designs (Saul 2026-10-29)')
     ap.add_argument('--policy', choices=['wave', 'mild'], default='wave', help='wave = wave-tiers.v1 (default, user 2026-10-27); mild = rising-mild-wave.v1')
     ap.add_argument('--coins', type=int, default=50, help='currency of a normal early level')
     ap.add_argument('--limited-skin', help='id of the limited skin (skin module, unlock "level"): final = the reward of the last '
@@ -199,15 +199,26 @@ def main():
     ap.add_argument('--seed', type=int, help='random seed of the bonus places (default: a new random one, so every game differs)')
     ap.add_argument('--endless', action='store_true')
     ap.add_argument('--why', default='')
+    ap.add_argument('--base-game', help='original game this remake follows (Saul 2026-10-29: its mode decides levels/endless)')
+    ap.add_argument('--base-mode', choices=['levels', 'endless'], help='mode of the original game, read from its source')
+    ap.add_argument('--base-evidence', default='', help='what in the original source shows the mode (>=10 chars)')
     ap.add_argument('--out', type=Path, required=True)
     a = ap.parse_args()
+    if bool(a.base_game) != bool(a.base_mode):
+        ap.error('--base-game and --base-mode go together')
+    if a.base_mode and len(a.base_evidence.strip()) < 10:
+        ap.error('--base-evidence: say what in the original source shows it is %s (>=10 chars)' % a.base_mode)
+    if a.base_mode and a.base_mode != ('endless' if a.endless else 'levels'):
+        ap.error('the original game %s is %s (Saul 2026-10-29: the remake keeps its mode); use %s, or write '
+                 'mode_override by hand only with Saul\'s authorization' % (a.base_game, a.base_mode,
+                                                                            '--endless' if a.base_mode == 'endless' else '--levels 60'))
     if a.endless and a.intro:
         ap.error('--intro requires a level game')
     if a.endless:
         plan = {'schema': 'level_plan.v1', 'mode': 'endless', 'why': a.why or 'TODO: why this is an endless game (no levels to clear)'}
     else:
         if a.levels < MIN_LEVELS:
-            ap.error('--levels %d: a new level game has %d levels or more (user 2026-10-27); add %d levels first'
+            ap.error('--levels %d: a new level game has %d levels or more (Saul 2026-10-29); add %d levels first'
                      % (a.levels, MIN_LEVELS, MIN_LEVELS - a.levels))
         seed = a.seed if a.seed is not None else random.SystemRandom().randrange(1, 10 ** 6)
         intros = {}
@@ -242,6 +253,8 @@ def main():
             row['mechanics'].append(mechanic)
     if plan['mode'] == 'levels' and plan.get('difficulty_policy') == MILD_POLICY:
         soften_intros(plan)
+    if a.base_game:
+        plan['base_game'] = {'name': a.base_game, 'mode': a.base_mode, 'evidence': a.base_evidence.strip()}
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(plan, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     if plan['mode'] == 'levels':

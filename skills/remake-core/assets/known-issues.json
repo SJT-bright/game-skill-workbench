@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": "2026-10-27.economy-v4",
+  "revision": "2026-10-28.ad-timeout-v1",
   "purpose": "Reusable mechanism checks for Cocos/TikTok games, with advertising and rewards first. Individual designs, mechanics, concrete values and incident histories remain in each project.",
   "items": [
     {
@@ -27,11 +27,11 @@
       "id": "AD-03",
       "feature": "ads",
       "title": "请求等待与失败恢复",
-      "steps": "逐入口检查连点、无SDK、创建/加载/show异常或拒绝、onError/无填充、不返回、播放后等待关闭、取消与退出；跨两个UI或服务实例复测，并在每种SDK终态后再次显式请求。",
-      "expected": "立即显示请求状态；同一时刻跨实例也不并发。按真实SDK契约区分业务取消/超时与会话终止：旧会话未确认结束不再show，真实终止后显式重试可用。每次玩家请求至多一次show，不自动循环重播；有界记录阶段/错误码。",
+      "steps": "逐入口检查连点、无SDK、创建/加载/show异常或拒绝、onError/无填充、不返回、播放后等待关闭、取消与退出；跨两个UI或服务实例复测，并在每种结果后马上再次显式请求。出包前跑 cocos-game-check/package-check/scripts/check_package.py --ad-regression <适配文件>：10个广告用例（视频200秒、16秒后才开播、播放中/加载中切后台200秒、中途关闭、报错、show失败、一直不开播、开播后不回调再按X、普通看完），每个用例后核奖励数、无挂起广告、无锁、音乐恢复、马上再发一次能拿到奖励；不通过不出包（remake-ads/references/ad-timeout-and-regression.md）。",
+      "expected": "立即显示请求状态；同一时刻跨实例也不并发。只有请求阶段（show成功前）超时，15秒，后台时间不算；show成功后不判超时，奖励只看onClose(isEnded)/onError；开播30秒无回调时广告遮罩上有X。超时或按X后解绑旧回调、恢复音乐，下一次请求立即可发，没有等SDK终态才释放的锁。每次玩家请求至多一次show，不自动循环重播；有界记录阶段/错误码。",
       "phase": "pre_scan",
       "always_applicable": false,
-      "symptom": "连点按钮同时弹出两个广告；没网或广告加载失败时一直转圈，退不出来、也不能再点。"
+      "symptom": "连点按钮同时弹出两个广告；没网或广告加载失败时一直转圈，退不出来、也不能再点。Marlows r4（用户 2026-10-28）：开播后SDK不回调，30秒后广告被放进retiredAd，之后每次点广告都提示\"The previous video is still closing\"直到重启，音乐一直停；30秒从点击算起，看完35秒的视频奖励被吞。"
     },
     {
       "id": "AD-04",
@@ -896,7 +896,7 @@
       "title": "UI不挡玩法、货币在最上方、功能按钮集中在下方图标为主、禁用深色/大白/纯色/粗黑字/单调设计、无开发用文字、首页必有桌面快捷方式和个人主页回访两个键、不要分享",
       "symptom": "游戏中信息条、按钮、摇杆堆满四周和中间，挡住大半屏幕；暂停/商店弹窗是一整张大白板配黑色粗字和黑色单色图标；按钮和面板是藏青/黑色大色块；所有标签是同一个白色铭牌模板，放在纯黑底上。 首页把七八个功能做成大文字方块堆在中下部；试玩版显示\"PLAYABLE PROTOTYPE\"\"PLAYTEST LAB\"\"TRY THE MECHANICS\"等开发用文字；生成按钮和白色占位方块混用。 用户 2026-10-23：首页金币栏（coin 0 / 道具 1）放在屏幕正中间，地图、皮肤图标在中间两侧，帮助和视频图标挤在左下角和右下角，四散各处、中间一大片空白（Hazel's Shelf Scramble）。 用户 2026-10-23：分享用不了，英化的原游戏还留着 Share/分享按钮；英化时首页没加桌面快捷方式和个人主页回访，或者先问用户要不要。 用户 2026-10-23：原游戏的按钮不审查全部留着，更多游戏/交叉推广、排行榜、七日签到这些多做多错的按钮一直出 bug。",
       "steps": "组装线写 docs/ui-layout.json（两种比例的游戏中常驻UI元素矩形、提示气泡、每个弹窗面板），跑 audit_ui_coverage.py --binding；每个页面和弹窗截图跑 audit_dark_area.py（含大块白色/纯色测量）；GPT 在总览图上判定文字是否太深/太密/太细、图标是否单色、布局是否成组清楚。 首页在 ui-layout.json 写 role:home 与 buttons（primary/label），audit_ui_coverage.py 查文字方块、大小、设置在上角、货币在最上方、其他功能按钮紧凑排在下方、重叠和按钮总面积≤40%；audit_top_bar.py 的 currency_only_at_top 查每个页面货币都在最上方；audit_dev_text.py --final 查开发用文字和占位图。 布局数据由 extract_ui_layout.py 从运行中游戏的 dump_ui 自动读出（audit_ui_coverage 会重新提取比对，手填或改过的布局直接拒绝）。 audit_ui_coverage.py 同时查每个首页都有桌面快捷方式（shortcut/add_to_home）和个人主页回访（revisit/profile）两个键、任何页面/弹窗/HUD 没有分享入口（share/分享/invite/邀请/炫耀/转发）；audit_platform_markers.py <工程> 查源码里没有 shareAppMessage/onShareAppMessage/showShareMenu 等分享调用。 英化先按 remake-core/references/game-modules.md 第一节审查原游戏每个按钮（docs/modules.json button_audit）；audit_ui_coverage.py 同时查没有排行榜/排名、签到、更多游戏按钮，audit_platform_markers.py 查没有 navigateToMiniProgram/showMoreGamesModal 等交叉推广调用。",
-      "expected": "游戏中常驻UI≤屏幕20%（玩法区≥80%）且互不重叠，提示气泡小、不在屏幕中间、会自动消失；游戏中弹窗面板≤屏幕60%；没有大块白色/浅灰、大块纯色或深色按钮面板；文字不是深色/近黑填充，没有近黑/藏青/深灰特粗字，也不过密、不细到看不清；没有单色图标；颜色照启动包，不规定颜色固定含义。 首页按钮加起来≤屏幕40%（用户 2026-10-23 由30%放宽，标题、封面不算），每页最多 2 个主要文字按钮，其他为图标按钮；货币/体力/加号只在屏幕最上方，设置在左上或右上角，其他功能按钮（礼盒、地图、皮肤等）紧凑排在下方（屏幕65%以下）最多两排、按钮之间小间距，不散到四周和角落，中间不放功能按钮；不显示开发用文字，不留占位图。 首页下方那排一定有 Add to Home Screen（桌面快捷方式）和 Profile Revisit（个人主页回访）两个键，英化时原来没有就直接加、不问用户；全游戏没有分享功能，原游戏的分享按钮、弹窗、奖励和调用都已删除。 没有排行榜/排名、七日签到、更多游戏/交叉推广（用户 2026-10-23）；首页有10帧动画礼盒（点开看广告得金币；10帧图由 art_check.py 的礼盒一行查）。",
+      "expected": "游戏中常驻UI≤屏幕20%（玩法区≥80%）且互不重叠，提示气泡小、不在屏幕中间、会自动消失；游戏中弹窗面板≤屏幕60%；没有大块白色/浅灰、大块纯色或深色按钮面板；文字不是深色/近黑填充，没有近黑/藏青/深灰特粗字，也不过密、不细到看不清；没有单色图标；颜色照启动包，不规定颜色固定含义。 首页按钮加起来≤屏幕40%（用户 2026-10-23 由30%放宽，标题、封面不算），每页最多 2 个主要文字按钮，其他为图标按钮；货币/体力/加号只在屏幕最上方；重塑首页按 v7.5 分区：设置在左上、和货币栏同一行，签到、礼盒、地图、皮肤放在主视觉左右两侧，PLAY 下面只放主页回访和加桌面（audit_ui_coverage.py home_zones_remake）；英化保持原规则：设置在左上或右上角，其他功能按钮（礼盒、地图、皮肤等）紧凑排在下方（屏幕65%以下）最多两排、按钮之间小间距，不散到四周和角落，中间不放功能按钮；不显示开发用文字，不留占位图。 首页下方那排一定有 Add to Home Screen（桌面快捷方式）和 Profile Revisit（个人主页回访）两个键，英化时原来没有就直接加、不问用户；全游戏没有分享功能，原游戏的分享按钮、弹窗、奖励和调用都已删除。 没有排行榜/排名、七日签到、更多游戏/交叉推广（用户 2026-10-23）；首页有10帧动画礼盒（点开看广告得金币；10帧图由 art_check.py 的礼盒一行查）。",
       "phase": "pre_scan",
       "always_applicable": true,
       "requires_gui": true,
@@ -1196,9 +1196,9 @@
       "id": "LOAD-03",
       "feature": "loading",
       "title": "最终出包前加载必检：进得去、不白等（重塑：Retry 由平台包覆盖，用户 2026-10-27）",
-      "symptom": "手机上进游戏很慢或加载到一半报错；资源还在下载却被判超时（固定15秒截止、进度76%就失败）；首页前把关卡/声音面板才用的大图都下载了；加载动画卡住不动；切到后台再回来就失败；重试后回到首页但玩不了。 用户 2026-10-23：加载动画太慢（资源早就下完了还在慢慢走进度条/固定最短加载时间）、很难进入游戏、加载出问题、进不去游戏——最终检查要以加载为重点。",
-      "steps": "重塑（用户 2026-10-27）：先用固定做法防卡住：Cocos 2.4.15＋原样的 TikTok 平台包（remake-core/assets/platform-kit），platform-kit/tools/check_kit_project.py 必须通过；Retry 只是平台包自带兜底，平台包测试已覆盖，不再逐个游戏做 Retry 故障矩阵。仍要做：按 cocos-game-check/startup/references/startup-loading-timing.md 量冷启动、各进关路线、不白等、下完就进，audit_startup_loading.py --binding 判定，最终构建复测，Codex 慢网冷启动亲自走一遍\"首页→PLAY→第一关触摸生效\"。没有原样用平台包时回到旧做法：按 loading-recovery-regression.md 做完整 Retry 矩阵并附 audit_loading_recovery 报告。\n旧步骤：重塑（用户 2026-10-27）：卡住的根本原因是包本身做错（漏引擎、主包超 4MB、WebP 误判、分包没回调、外网下载），所以先用固定做法防住：Cocos 2.4.15＋原样的 TikTok 平台包（remake-core/assets/platform-kit），跑 platform-kit/tools/check_kit_project.py 必须通过；Retry 只是平台包自带的兜底（10 秒无进展→Retry→新请求），平台包自己的测试已覆盖，不再逐个游戏做 Retry 故障矩阵。仍要做：按 cocos-game-check/startup/references/startup-loading-timing.md 写 startup-plan.json，在 Ego Lite 里用 chrome_touch.py 跑 local/first_network/slow_network、两种比例，量 first_feedback→home_usable、PLAY/下一关/重试/地图选关进关；用 audit_startup_loading.py --binding 判定不卡住、不白等、下完就进；最终构建复测；Codex 亲自在慢网冷启动走一遍\"首页→PLAY→第一关真实触摸生效\"。工程没有原样用平台包时（改过或没用），回到旧做法：按 loading-recovery-regression.md 做完整 Retry 故障矩阵并附 audit_loading_recovery 报告。",
-      "expected": "每一次运行都量到真实可操作；加载动画不连续卡住超过 1 秒；首页前没有以后才用的大文件；超时按无进展计算、后台不计时；卡住有限时间内出现 Retry 且重试后真的能玩；旧结果不影响当前局。 不写死结束时间：每次运行都不卡住（动画停住≤1秒、卡住出 Retry）、不白等（实际时间≤按这款游戏真正加载量算出的允许时间）、下完就进（不超过 max(2秒, 首页时间25%)）；下一关/重试/地图选关进关同样不白等、点了一定进得去；最终构建上重测一遍仍全部通过。",
+      "symptom": "手机上进游戏很慢或加载到一半报错；资源还在下载却被判超时（固定15秒截止、进度76%就失败）；首页前把关卡/声音面板才用的大图都下载了；加载动画卡住不动；切到后台再回来就失败；重试后回到首页但玩不了。 用户 2026-10-23：加载动画太慢（资源早就下完了还在慢慢走进度条/固定最短加载时间）、很难进入游戏、加载出问题、进不去游戏——最终检查要以加载为重点。 指尖麻将 v57（10-30 真机）：游戏自写的加载看门狗用 document.hidden 判前台（TikTok 里永远是 false），锁屏、拉控制中心的时间被算成卡住；报错框是网页 div，TikTok 画不出来；首页按钮一直等它，全部点不动。",
+      "steps": "重塑（用户 2026-10-27）：先用固定做法防卡住：Cocos 2.4.15＋原样的 TikTok 平台包（remake-core/assets/platform-kit），platform-kit/tools/check_kit_project.py 必须通过；Retry 只是平台包自带兜底，平台包测试已覆盖，不再逐个游戏做 Retry 故障矩阵。仍要做：按 cocos-game-check/startup/references/startup-loading-timing.md 量冷启动、各进关路线、不白等、下完就进，audit_startup_loading.py --binding 判定，最终构建复测，Codex 慢网冷启动亲自走一遍\"首页→PLAY→第一关触摸生效\"。没有原样用平台包时回到旧做法：按 loading-recovery-regression.md 做完整 Retry 矩阵并附 audit_loading_recovery 报告。\n旧步骤：重塑（用户 2026-10-27）：卡住的根本原因是包本身做错（漏引擎、主包超 4MB、WebP 误判、分包没回调、外网下载），所以先用固定做法防住：Cocos 2.4.15＋原样的 TikTok 平台包（remake-core/assets/platform-kit），跑 platform-kit/tools/check_kit_project.py 必须通过；Retry 只是平台包自带的兜底（10 秒无进展→Retry→新请求），平台包自己的测试已覆盖，不再逐个游戏做 Retry 故障矩阵。仍要做：按 cocos-game-check/startup/references/startup-loading-timing.md 写 startup-plan.json，在 Ego Lite 里用 chrome_touch.py 跑 local/first_network/slow_network、两种比例，量 first_feedback→home_usable、PLAY/下一关/重试/地图选关进关；用 audit_startup_loading.py --binding 判定不卡住、不白等、下完就进；最终构建复测；Codex 亲自在慢网冷启动走一遍\"首页→PLAY→第一关真实触摸生效\"。工程没有原样用平台包时（改过或没用），回到旧做法：按 loading-recovery-regression.md 做完整 Retry 故障矩阵并附 audit_loading_recovery 报告。 生命周期必跑（启动套件 LIFE，adapter.play 必填）：加载中时钟跳 12 秒且不发 onHide、onHide+60 秒+onShow、第一张图不回应，之后真点首页 PLAY 必须进关；网页元素做的 Retry 不算；包里用 document.hidden 计时或画 DOM Retry 由门禁 G9 拦。",
+      "expected": "每一次运行都量到真实可操作；加载动画不连续卡住超过 1 秒；首页前没有以后才用的大文件；超时按无进展计算、后台不计时；卡住有限时间内出现 Retry 且重试后真的能玩；旧结果不影响当前局。 不写死结束时间：每次运行都不卡住（动画停住≤1秒、卡住出 Retry）、不白等（实际时间≤按这款游戏真正加载量算出的允许时间）、下完就进（不超过 max(2秒, 首页时间25%)）；下一关/重试/地图选关进关同样不白等、点了一定进得去；最终构建上重测一遍仍全部通过。 锁屏、切后台、单张图迟到都不能锁住首页按钮；看门狗只算前台时间，每次最多计 1 秒。",
       "phase": "pre_scan",
       "always_applicable": true,
       "requires_gui": true,
@@ -1212,7 +1212,8 @@
         "final_build_loading_retest"
       ],
       "auto_check": [
-        "audit_startup_loading"
+        "audit_startup_loading",
+        "make_tiktok_zip"
       ]
     },
     {
@@ -1368,7 +1369,7 @@
     "audit_optional_features": "scripts/audit_optional_features.py: docs/features.json records the user's answers on skin bonus and 7-day check-in; skin_bonus true -> every non-free skin has a bonus in unlock_table.json (values checked by audit_acquisition_progression); daily_checkin true -> DailyCheckin.ts unchanged, checkin-config.json passes the simulation (once per day, 7 cards in order, big day 7, owned skin pays coins, clock back, missed days, reset hour, save/load), check-in skins are unlock \"checkin\", same R; false -> nothing added",
     "audit_button_coverage": "scripts/audit_button_coverage.py: button list read from the chrome_touch dump_ui files of the running game (every interactable button on every page and popup, only those above an open popup mask); every button must be tapped in the simulated iPhone and a screenshot after the tap must differ from the one before; skips need a reason; writes the button list as Markdown; taps are matched at the position the render camera draws each button (ui_dump \"screen\"), and camera/viewport offsets are reported",
     "audit_top_bar": "scripts/audit_top_bar.py: docs/top-bar.json + chrome_touch dump_ui dumps; currency (named and drawn after the game world, a plain coin needs a reason) and progress (and energy with a lightning icon) at the top of home and map, top-right corner free for the platform capsule, currency visible on shop/skins, currency and level number higher on the first home/map page after a won level ; currency_only_at_top: on every page but shop/skins/rewards/results, a number next to a currency/energy icon sits in the top band, never in the middle (user 2026-10-23)",
-    "audit_level_plan": "scripts/audit_level_plan.py: level_plan.json (mode levels/endless); levels: at least 100 levels for remake/new designs (user 2026-10-27) and at least 70 for 英化 (user 2026-10-24; originals with more kept, more is fine), every level listed, difficulty per difficulty_policy (wave-tiers.v1: tutorial 1-3, spike 4, recovery 5-9, exam 10, tiered 25/45/15/15 irregular wave, no two hard levels in a row; older plans strictly rising) (英化: only added levels), a limited level every 10 levels (10, 20, 30 ...; ornate frame, lots of currency; limited_skin_mode final = only the last one gives the limited skin, every_10 = each limited level gives its own; only there), one seeded-random bonus level in every 10 (easier than the block, 3x currency, ad -> 6x), no perfect-clear skins, maps unlock on limited levels; map page dumped and shows the total; endless: no map page",
+    "audit_level_plan": "scripts/audit_level_plan.py: level_plan.json (mode levels/endless); levels: at least 60 levels for remake/new designs (Saul 2026-10-29) and at least 70 for 英化 (user 2026-10-24; originals with more kept, more is fine), every level listed, difficulty per difficulty_policy (wave-tiers.v1: tutorial 1-3, spike 4, recovery 5-9, exam 10, tiered 25/45/15/15 irregular wave, no two hard levels in a row; older plans strictly rising) (英化: only added levels), a limited level every 10 levels (10, 20, 30 ...; ornate frame, lots of currency; limited_skin_mode final = only the last one gives the limited skin, every_10 = each limited level gives its own; only there), one seeded-random bonus level in every 10 (easier than the block, 3x currency, ad -> 6x), no perfect-clear skins, maps unlock on limited levels; map page dumped and shows the total; endless: no map page",
     "audit_native_storage_contract": "scripts/audit_native_storage_contract.py: same project runner executes old failing and final Native bundle/adapter; verifies null/undefined/empty-string absence, typed/string valid data, invalid values, read/write/readback failures, pending recovery, Retry, home/map/details and reward uniqueness; binds runner/raw results/final Native bytes and rejects incomplete or stale matrix before ZIP",
     "logic_check": "scripts/logic_check.py --mode build (cocos-game-check/test, user 2026-10-23): static suspects in assets/ scripts and level JSON (touch cancel committed like touch end, unbounded while(true)/for(;;), load error branch that only logs, buttons placed by Math.random, saved keys never read, sound setting only in memory, empty level-config slots, \"Daily\" without a date, physics not stopped on pause), each fixed or judged in docs/logic/triage.json with a why; plus docs/logic/flows.json F01-F20 walked with real touch in two ratios (exit/Home/Retry/Next on every page, pause stops physics, clean-up on leaving, round tokens for ads and loads, refresh keeps progress, touch cancel, last level, daily, platform buttons), every pass with an evidence file; untested never passes; review-mode reports never pass",
     "make_tiktok_zip": "scripts/make_tiktok_zip.py (cocos-game-check/package, user 2026-10-23 SquareRush UPLOADFIX): makes the one uploadable TikTok platform package from the Native build - refuses before writing any ZIP when the gate fails, the folder has an outer folder / is a Web build / has source files, junk, nested archives, non-ASCII paths or the QA level jump, the App ID differs, or the uncompressed main > 4,000,000, total > 30,000,000 or an independent subpackage > 4,000,000 bytes; then re-reads the written ZIP (CRC, root entry, limits, every file byte-equal to the Native tree, independent extraction) and only then moves it to --out; report <zip>.report.json bound to the review",
@@ -1379,5 +1380,288 @@
   "negative_control_rule": "Items with requires_negative_control need, in their own evidence, a known-bad run of the SAME check: a JSON {schema: known_issue_negative_control.v1, mutant, status: fail, failed > 0, tool: {path, sha256}} whose tool SHA equals the tool of a current_result in the same row. A check that never failed on a known-bad version proves nothing (Monkey Dash 2026-10-21).",
   "reviewer_rule": "Items with \"reviewer\": \"gpt\" need the row field reviewer = \"gpt\" when marked pass (judgement only a GPT/Codex session gives).",
   "spot_check_rule": "When review.test_executor is another AI, review.gpt_spot_check is required: GPT read every code change since locked_commit, re-ran all automatic checks and redid >= 3 flows (one ad, one platform task if any) with no open disagreements.",
-  "gate_rule": "用户 2026-10-24（remake-core/references/check-stages.md）：检查分阶段。gate \"design\" 的条目在设计关由 scripts/design_check.py 查（英化 1.5 优化做完后、重塑第一轮玩法节点1前）；gate \"art\" 的条目在美术关由 scripts/art_check.py 查（英化 1.8 每轮美术、重塑第二轮美术、remake-art）。最终总检测（check_known_issues.py）只查没有 gate 的条目：加载、广告与奖励、存储、异步、输入与按钮、逻辑、不能看广告跳关、构建与打包、英文文案、闪烁等以前出过问题的地方；gate 条目不进 review，留在 review 里的旧行忽略。锁定后又改了设计或美术，只对改动重跑 design_check.py / art_check.py，不重开最终门禁的这些行。"
+  "gate_rule": "用户 2026-10-24（remake-core/references/check-stages.md）：检查分阶段。gate \"design\" 的条目在设计关由 scripts/design_check.py 查（英化 1.5 优化做完后、重塑第一轮玩法节点1前）；gate \"art\" 的条目在美术关由 scripts/art_check.py 查（英化 1.8 每轮美术、重塑第二轮美术、remake-art）。最终总检测（check_known_issues.py）只查没有 gate 的条目：加载、广告与奖励、存储、异步、输入与按钮、逻辑、不能看广告跳关、构建与打包、英文文案、闪烁等以前出过问题的地方；gate 条目不进 review，留在 review 里的旧行忽略。锁定后又改了设计或美术，只对改动重跑 design_check.py / art_check.py，不重开最终门禁的这些行。",
+  "package_gate_intercepts_rule": "v7.5: symptom -> the script/gate that stops it at packaging (or source stage). Lookup only: these are not review rows; the review items above stay the checklist. level warn = reported, never refuses.",
+  "package_gate_intercepts": [
+    {
+      "id": "NET-H12",
+      "symptom": "扫码后卡加载/进不去：代码加载包里没有的 bundle 或分包（MusicSlice v29b loadSubpackage(\"general\")）",
+      "intercept": "remake-core/scripts/package_gates/network.py H12_bundle_name",
+      "level": "block",
+      "source": "D5 3,4.1/W1a"
+    },
+    {
+      "id": "NET-H13",
+      "symptom": "国内统计 SDK 域名（pas.qq.com、mta.qq.com、友盟、CNZZ）在 TikTok 上请求不到",
+      "intercept": "remake-core/scripts/package_gates/network.py H13_analytics_domain",
+      "level": "block",
+      "source": "D5 4.2/W1a"
+    },
+    {
+      "id": "NET-H14",
+      "symptom": "包里留着跳转其他小游戏/更多游戏的调用或别的 App ID（射击高手2048 v81）",
+      "intercept": "remake-core/scripts/package_gates/network.py H14_cross_promo",
+      "level": "block",
+      "source": "D6 7/W1a"
+    },
+    {
+      "id": "ADAPTER-OLD-FORMS",
+      "symptom": "旧适配器的 SDKVersion、isSubContext、包内 fs.access 写法导致启动或加载异常",
+      "intercept": "remake-core/scripts/package_gates/adapter_fix.py（写包入口自动改写，认不出就拒；check_package 只警告）",
+      "level": "block",
+      "source": "D5 5/D6 2,8/W1a"
+    },
+    {
+      "id": "ENTRY-UNOFFICIAL",
+      "symptom": "绕过官方入口手工压缩的 ZIP，入口里的门禁一次都没跑（细菌2048 v1-v3）",
+      "intercept": "remake-core/scripts/verify_native_zip.py entry=unofficial；cocos-game-check/package-check/scripts/prepare_delivery.py 拒收",
+      "level": "block",
+      "source": "D7 1,15/W1a"
+    },
+    {
+      "id": "GROWTH-MISSING",
+      "symptom": "首页没有加桌面/回访，或只有跳转没有领奖查询",
+      "intercept": "remake-core/scripts/package_gates/mission.py G1_growth_apis",
+      "level": "block",
+      "source": "D4 1.1/W1b"
+    },
+    {
+      "id": "NO-LOGIN",
+      "symptom": "没调 TikTok 登录",
+      "intercept": "remake-core/scripts/package_gates/mission.py W2_login",
+      "level": "warn",
+      "source": "D4 6/D5 9/W1b"
+    },
+    {
+      "id": "BIG-SUBPACKAGE-NO-PROGRESS",
+      "symptom": "大分包下载无进度，被看门狗判失败要点多次 RETRY",
+      "intercept": "remake-core/scripts/package_gates/startup.py G3_progress",
+      "level": "block",
+      "source": "D4 2.1/W1b"
+    },
+    {
+      "id": "COCOS3-FIRST-FRAME-WAITS-SUBPACKAGE",
+      "symptom": "3.x 扫码后第一帧要等整个分包下载",
+      "intercept": "remake-core/scripts/package_gates/startup.py G5_3x_presubpackage（preloadBundles >2 MB：remake 拦，其他板块警告）",
+      "level": "block",
+      "source": "D3 1.1/W1b"
+    },
+    {
+      "id": "COCOS3-SPLASH-ONLOAD",
+      "symptom": "3.x 开场 Logo 依赖 img.onload，可能永远不出第一帧",
+      "intercept": "remake-core/scripts/package_gates/startup.py G6_3x_splash",
+      "level": "block(remake)/warn",
+      "source": "D3 3/W1b"
+    },
+    {
+      "id": "SHORT-FATAL-FILE-GUARD",
+      "symptom": "包内文件 8-10 秒无回应就永久失败、迟到结果被丢，首页图/按钮不显示",
+      "intercept": "remake-core/scripts/package_gates/startup.py G7_file_load_guard",
+      "level": "block",
+      "source": "D6 1/W1b"
+    },
+    {
+      "id": "PREHOME-DOWNLOAD-BIG",
+      "symptom": "首页前要下载超过 15 MB，扫码后一直转圈",
+      "intercept": "remake-core/scripts/package_gates/startup.py W8_prehome_bytes（每次报告打印 pre_home_bytes）",
+      "level": "warn",
+      "source": "D5 6.3/W1b"
+    },
+    {
+      "id": "WEBP-PROBE",
+      "symptom": "全 WebP 美术被误判不支持，卡 Could not load resources / 首页空白；探针用 data: URI、探针图不在主包、3.x 样图有损配无损美术",
+      "intercept": "remake-core/scripts/package_gates/webp.py G4_webp_probe；cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs（data: 判失败）",
+      "level": "block",
+      "source": "D2 2/D3 2/D4 3/W1b/W2"
+    },
+    {
+      "id": "REWARDED-OUTSIDE-KIT",
+      "symptom": "游戏自写激励广告（超时写死、看完不发奖）",
+      "intercept": "remake-core/scripts/package_gates/ads_static.py A1_rewarded_outside_kit",
+      "level": "warn",
+      "source": "D2 1.3/W1b（v7.5 父级定为警告）"
+    },
+    {
+      "id": "HIDE-CANCELS-AD",
+      "symptom": "切后台就取消/销毁正在播的广告，看完不发奖",
+      "intercept": "remake-core/scripts/package_gates/ads_static.py A2_hide_kills_ad",
+      "level": "block(remake)/warn",
+      "source": "D2 1.3/W1b"
+    },
+    {
+      "id": "KIT-TOUCH-LAYOUT",
+      "symptom": "平台包工程只在 main.js 装触摸修正、Basil 的 tiktok-input.js、调试版引擎 cocos2d-js.js 被误判触摸不合格",
+      "intercept": "remake-core/scripts/audit_upload_startup.py + probe_cocos2_touch_coordinates.cjs",
+      "level": "block",
+      "source": "D2 3/D6 5/D7 5/W2"
+    },
+    {
+      "id": "KIT-APPID",
+      "symptom": "settings/bytedance.json 缺失或 appid 为空/testappId，命令行出包变 testappId",
+      "intercept": "remake-core/assets/platform-kit/tools/check_kit_project.py",
+      "level": "block",
+      "source": "D7 6/W2"
+    },
+    {
+      "id": "KIT-AD-TIMING",
+      "symptom": "平台包激励广告文件按播放时长超时 / 后台时间计入 / 超时后锁不放（v7.3）",
+      "intercept": "remake-core/assets/platform-kit/tests/rewarded-timing.test.js",
+      "level": "kit test",
+      "source": "D8 1/D9/W2"
+    },
+    {
+      "id": "RT-STARTUP-STUCK",
+      "symptom": "分包卡在 40% 或 config 读取不回应 → 黑屏无 Retry（MusicSlice v29b/v30、射击高手2048 v81）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py startup: pkg_stall_40pct, config_hang_once",
+      "level": "block",
+      "source": "D4 2.2/D6 3,4,8/W3a"
+    },
+    {
+      "id": "RT-SDK-MISSING",
+      "symptom": "没有 SDKVersion 或 getOpenDataContext → 启动抛错/卡在首页前（射击高手2048 v83/v84、MusicSlice v29b）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py startup: sdk_missing, opendata_missing",
+      "level": "block",
+      "source": "D5 5.3/W3a"
+    },
+    {
+      "id": "RT-SAVE-MISSING",
+      "symptom": "读不存在的存档键显示 \"Saved value is unavailable\"",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py startup: storage_missing_true",
+      "level": "block",
+      "source": "D6 4/W3a"
+    },
+    {
+      "id": "RT-NET-UNLISTED",
+      "symptom": "包请求未登记的域名（MusicSlice v29b pas.qq.com）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py network",
+      "level": "warn",
+      "source": "D5 4.2/W3a"
+    },
+    {
+      "id": "RT-3X-FIRSTFRAME",
+      "symptom": "3.x game.js 在引擎启动前下载 21.5 MB 分包：1.5 MB/s 下约 15-18 秒没有画面",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py startup3x: cold_1500kbps_first_frame",
+      "level": "block",
+      "source": "D3/W3a"
+    },
+    {
+      "id": "RT-3X-WEBP",
+      "symptom": "3.x WebP 检测（500 ms、VP8 样图）误判 → 首页空白",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py startup3x: webp_slow",
+      "level": "block",
+      "source": "D3/W3a"
+    },
+    {
+      "id": "RT-3X-SPLASH-ONLOAD",
+      "symptom": "3.x 开场等 img.onload 属性 → 永远不画",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py startup3x: img_events_only",
+      "level": "block",
+      "source": "D3/W3a"
+    },
+    {
+      "id": "RT-TIMING-THROTTLED",
+      "symptom": "Ego 标签页被挡住约 1 帧/秒，加载计时被拉长",
+      "intercept": "chrome-mobile-testing/scripts/chrome_touch.py timing_valid（退出码 2）；remake-core/scripts/audit_startup_loading.py 拒收 LOAD-03",
+      "level": "block",
+      "source": "D3 4/W3a"
+    },
+    {
+      "id": "RT-RESOURCE-MISSING",
+      "symptom": "运行时请求的资源不在包里（运行时拼路径的游戏静态清单写不出来）",
+      "intercept": "cocos-game-check/package-check/scripts/make_runtime_resource_manifest.py；remake-core/scripts/audit_runtime_resources.py 认 observed 清单",
+      "level": "block",
+      "source": "D7 14/D3 5/W3a"
+    },
+    {
+      "id": "AD-AUDIO-DURING-AD",
+      "symptom": "看激励视频时 BGM/音效还在响，或看完没恢复",
+      "intercept": "cocos-game-check/package-check/scripts/ad_regression/cases.mjs 声音检查（摘要 warnings）",
+      "level": "warn",
+      "source": "D7 9/W3a"
+    },
+    {
+      "id": "EGO-SHARED-SPACE",
+      "symptom": "两次运行用同名 Ego 空间，驱动同一个页面，结果作废",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression.py、ad_regression.py 每次唯一空间名",
+      "level": "tool",
+      "source": "W3a"
+    },
+    {
+      "id": "SRC-APPID",
+      "symptom": "settings/bytedance.json 缺失/testappId，出包变 testappId（源码阶段）",
+      "intercept": "remake-core/scripts/audit_source_appid.py（preflight「App ID」）",
+      "level": "preflight",
+      "source": "D7 6/W4"
+    },
+    {
+      "id": "SRC-SIZE",
+      "symptom": "出包时才发现 42 MB；源码阶段估算 > 30 MB 或主包 > 4 MB 却没有 resources 分包",
+      "intercept": "remake-core/scripts/audit_package_estimate.py（preflight「包体估算」）",
+      "level": "preflight",
+      "source": "D7 3/W4"
+    },
+    {
+      "id": "KIT-2415",
+      "symptom": "用本机 2.4.15 出包却没带平台包（触摸失灵、自写广告封装）",
+      "intercept": "remake-core/scripts/audit_platform_kit_required.py（preflight「平台包」）",
+      "level": "preflight",
+      "source": "D7 4/W4"
+    },
+    {
+      "id": "SHARE-DEAD",
+      "symptom": "分享入口显示 \"unavailable on this platform\"，奖励永远领不到；分享调用没有 docs 记录",
+      "intercept": "remake-core/scripts/audit_share_entries.py（preflight「分享换奖励」）",
+      "level": "preflight",
+      "source": "D7 7/W4"
+    },
+    {
+      "id": "AD-ENTRY-HIDDEN",
+      "symptom": "唯一的激励广告入口在预制体里是关着的，又没有代码打开",
+      "intercept": "remake-core/scripts/audit_ad_entry_reachability.py（preflight「广告入口」）",
+      "level": "preflight",
+      "source": "D7 8.1/W4"
+    },
+    {
+      "id": "SOUND-ONE-SWITCH",
+      "symptom": "只有一个 Sound 开关，没有 BGM，没有分开的音量",
+      "intercept": "remake-core/scripts/audit_sound_settings_static.py（preflight「声音设置」）",
+      "level": "preflight",
+      "source": "D7/W4"
+    },
+    {
+      "id": "L-DAILY-DATE",
+      "symptom": "签到/每日奖励只比较 getDate()，跨月同日领不到或重复领",
+      "intercept": "remake-core/scripts/logic_check.py L-DAILY-DATE",
+      "level": "preflight",
+      "source": "D7 10/11/W4"
+    },
+    {
+      "id": "EN-IMG-REVIEW",
+      "symptom": "英化包里图集还画着中文（MusicSlice HomeSprites \"已拥有\"）",
+      "intercept": "remake-core/scripts/audit_image_review_record.py（英化板块写包入口）",
+      "level": "block(localize)",
+      "source": "D5 7/W4"
+    },
+    {
+      "id": "EN-IMG-SIZE",
+      "symptom": "新做的英文图每张 1.5-2.2 MB，首页前要下载 25 MB",
+      "intercept": "remake-core/scripts/audit_new_english_images.py（英化板块写包入口：> 800 KB 拒；2.5 倍只列出）",
+      "level": "block(localize)",
+      "source": "D5 6/W4"
+    },
+    {
+      "id": "END-ONE-VIDEO",
+      "symptom": "一局结束的弹窗里同时放复活视频和结算 x2 视频（方块迷阵 v6）",
+      "intercept": "remake-core/scripts/audit_page_richness.py two_video_buttons",
+      "level": "block（只有合成样例证明，见 INT RESULT）",
+      "source": "D8 4/W5"
+    },
+    {
+      "id": "HOME-ZONES",
+      "symptom": "首页设置不在顶行、签到在最下排、PLAY 下面放了主页回访和加桌面以外的入口",
+      "intercept": "remake-core/scripts/audit_ui_coverage.py home_zones_remake",
+      "level": "block(remake)",
+      "source": "D1/W5"
+    }
+  ]
 }

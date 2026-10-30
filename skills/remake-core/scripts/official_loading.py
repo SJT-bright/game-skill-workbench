@@ -140,6 +140,7 @@ def audit(d, project, image_module, binding=None, manifest=None):
         has_wait = False
         has_failure_text = False
         logo_box = None
+        text_boxes = []
         retry = [n for n in active if 'button' in n.get('comps', {})]
         for n in active:
             comps = n.get('comps') or {}
@@ -154,6 +155,7 @@ def audit(d, project, image_module, binding=None, manifest=None):
             label = comps.get('label') or comps.get('richtext') or comps.get('image_text')
             text = str((label or {}).get('string', '')).strip()
             if text:
+                text_boxes.append((rect, text))
                 if not STANDARD.fullmatch(text):
                     raise ValueError('game/story/nonstandard content on loading page: ' + text[:50])
                 is_wait = bool(re.fullmatch(r'(?:Loading(?! failed).*|Please wait.*|Retrying.*|[0-9.]+%)', text, re.I))
@@ -162,6 +164,7 @@ def audit(d, project, image_module, binding=None, manifest=None):
                 if text.endswith('%') and not 0 <= float(text[:-1]) <= 100:
                     raise ValueError('invalid displayed loading percentage')
             if 'button' in comps:
+                text_boxes.append((rect, 'Retry button'))
                 below = [str(((m.get('comps') or {}).get('label') or {}).get('string', '')).strip() for m in active if m.get('path', '').startswith(n['path'] + '/')]
                 if text.casefold() not in {'retry', 'tap to retry'} and not any(t.casefold() in {'retry', 'tap to retry'} for t in below):
                     raise ValueError('only the standard Retry action belongs to this loading surface')
@@ -205,6 +208,16 @@ def audit(d, project, image_module, binding=None, manifest=None):
             raise ValueError('failed frame requires exactly one visible, operable Retry')
         if row['phase'] != 'retry' and (retry or has_failure_text or not has_wait):
             raise ValueError('normal loading frame requires a standard wait/progress, not a failure state')
+        if logo_box is not None:
+            # Marlows r4 (user 2026-10-28): the enlarged logo's visible body covered "Unable to load. Please retry.".
+            # Compare the logo's opaque pixels, scaled into its rendered box, with every text and the Retry button.
+            ox0, oy0, ox1, oy1 = original.getbbox()
+            width, height = logo_box[2] - logo_box[0], logo_box[3] - logo_box[1]
+            body = [logo_box[0] + width * ox0 / original.width, logo_box[1] + height * oy0 / original.height,
+                    logo_box[0] + width * ox1 / original.width, logo_box[1] + height * oy1 / original.height]
+            for box, label_text in text_boxes:
+                if min(body[2], box[2]) - max(body[0], box[0]) > 1 and min(body[3], box[3]) - max(body[1], box[1]) > 1:
+                    raise ValueError('official logo overlaps loading text or Retry: ' + label_text[:40])
         for box, node in surfaces:
             comps = node.get('comps', {})
             label = comps.get('label') or comps.get('richtext') or comps.get('image_text')

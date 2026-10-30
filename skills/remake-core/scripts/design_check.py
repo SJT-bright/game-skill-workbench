@@ -6,7 +6,7 @@
 不再重复这些检查（MOD-01、ECON-01、LEVEL-01、FEAT-00、RANK-01 标 gate "design"）。
 
 依次运行（缺输入就是"需处理"，不跳过）：
-  关卡板块    audit_level_plan.py              重塑 100 关及以上、英化 70 关及以上（用户 2026-10-27/10-24）、难度按 difficulty_policy（wave-tiers.v1 波浪分档）、
+  关卡板块    audit_level_plan.py              重塑 60 关及以上、英化 70 关及以上（Saul 2026-10-29/用户 2026-10-24）、难度按 difficulty_policy（wave-tiers.v1 波浪分档）、
                                                每 10 关一个限定关、每 10 关一个按种子随机的奖励关；限定皮肤两种格式都行：
                                                只在最后一个限定关送（final），或每个限定关各送一款（every_10）
                                                （地图页要 dump，没有 dump 时这里只提示，美术关 art_check.py 再查）

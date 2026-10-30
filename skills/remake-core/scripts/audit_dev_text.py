@@ -31,6 +31,10 @@ PAT = re.compile('|'.join(PHRASES), re.I)
 STR = re.compile(r'''(["'`])((?:\\.|(?!\1).){2,200})\1''')
 LABEL_KEYS = ('_string', '_N$string', 'string', 'text', '_text')
 SKIP_DIRS = {'node_modules', 'library', 'temp', 'local', 'build', 'profiles', '.git', 'settings'}
+# v7.7.4: platform-kit 2.0 in v7.7.3 shipped MissionFlow with 'LOCAL PREVIEW: open the game inside TikTok to use this.'
+KIT_FILES = {'MissionFlow.js', 'MissionFlow.plugin.js'}
+KIT_HINT = ('old platform-kit file (v7.7.3 text): run `tiktok_finalize.py source --project <project> --board <board>` '
+            'to restore the current kit file ("Available in TikTok."); do not edit kit files by hand')
 
 
 def strip_comments(code):
@@ -60,7 +64,10 @@ def scan(project, final):
                     s = m.group(2)
                     if ' ' in s or s.isupper():    # looks like display text, not an identifier/key
                         if PAT.search(s):
-                            hits.append({'file': rel, 'line': line_no, 'text': s[:120]})
+                            hit = {'file': rel, 'line': line_no, 'text': s[:120]}
+                            if f.name in KIT_FILES:    # v7.7.4: the v7.7.3 platform-kit text itself
+                                hit['hint'] = KIT_HINT
+                            hits.append(hit)
         elif suf in {'.fire', '.scene', '.prefab', '.json'}:
             try:
                 data = json.loads(text)

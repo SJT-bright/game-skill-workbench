@@ -19,6 +19,16 @@ For every package the mandatory --review known-issue gate (check_known_issues.py
 (BUILD-03; use this script as the game's writer for test_writer_refusal.py). Exit codes: 0 ZIP written and verified,
 1 refused (no ZIP written), 2 bad input. A passing ZIP is a local structure check only - not platform acceptance.
 The report (<out>.report.json; tool make_tiktok_zip, bound to the review's binding) goes into BUILD-04 auto_reports.
+v7.5: before any check the stock Cocos 2.4 ByteDance adapter forms are rewritten in the Native folder
+(package_gates/adapter_fix.py, listed in the report; an unrecognised adapter is refused). native_problems() lists
+EVERY reason at once and runs the shared package gates (package_gates.run: bundle names, analytics domains,
+cross-promotion, growth APIs, startup, WebP, static ad code). A written ZIP gets <out>.receipt.json; without it
+verify_native_zip.py calls a ZIP unofficial and prepare_delivery.py refuses it.
+v7.7 (design D77 1.1, 1.5): the source record <project>/.tiktok-kit/finalize-source.json must match the project and
+the kit version (K5; `tiktok_finalize.py source` before the Cocos build), then tiktok_finalize.finalize_native installs
+the platform-kit standard parts in the Native folder in place of the v7.5 adapter_fix call (adapter_fix is its first
+step) and the package gates run with the finalize record (K4) and its policy (new | legacy). Report and receipt carry
+`finalize` (receipt schema 2). --keep-webp-exception REASON is the design 3.6 WebP exception (kit probe installed).
 For test_writer_refusal.py give this script a separate --out (its normal case makes one ZIP; existing ZIPs are never
 overwritten) and delete that check ZIP afterwards.
 """
@@ -41,11 +51,19 @@ FIXED_TIME = (2020, 1, 1, 0, 0, 0)
 SKIPPED = []
 
 
-def native_problems(native):
-    """Refuse before writing anything: what is wrong with the folder that would go into the ZIP."""
+def native_problems(native, board=None, policy=None, context=None):
+    """Refuse before writing anything: EVERY reason the folder that would go into the ZIP is not uploadable.
+
+    Both writers (make_tiktok_zip.py and build_checked_zip.py) call this one function. Sub-checks never stop at
+    the first failure: all reasons are returned together (MusicSlice 0f). The shared package gates
+    (package_gates.run, board 'remake' | 'localize' | None) run on exactly the files that go into the ZIP; their
+    blocks join the problem list and their warnings go to info['package_gates'] for the reports.
+    policy / context (v7.7): the writer's finalize policy and record for package_gates.run (kit_parts K4/K5)."""
     out = []
+    native = Path(native)
     root = {p.name for p in native.iterdir()}
-    if not all(n in root for n in ('game.js', 'game.json', 'project.config.json')):
+    rootless = not all(n in root for n in ('game.js', 'game.json', 'project.config.json'))
+    if rootless:
         inner = [p for p in native.iterdir() if p.is_dir() and (p / 'game.json').is_file() and (p / 'game.js').is_file()]
         if inner:
             out.append('outer folder: the Native files are inside "%s/" - point --native at that folder so game.js, game.json '
@@ -67,40 +85,55 @@ def native_problems(native):
             continue
         why = vnz.forbidden(rel)
         if why == 'Finder/Windows junk file':          # .DS_Store / Thumbs.db / ._x: left out of the ZIP, listed in the report
-            SKIPPED.append(rel)
+            if rel not in SKIPPED:
+                SKIPPED.append(rel)
             continue
         if why:
             out.append('not allowed: %s - %s' % (rel, why))
             continue
         sizes[rel] = f.stat().st_size
+    if rootless:
+        return out, sizes, {}   # nothing below can read a package without its root files
     for name in ('game.js', 'game.json', 'project.config.json'):
-        if name in root and not sizes.get(name):
+        if not sizes.get(name):
             out.append('empty root file: %s' % name)
-    if out:
-        return out, sizes, {}
-    from upload_size_gate import enforce
+    files = {name: (native / name).read_bytes() for name in sizes}
+    info = {'independent': {}, 'normal': {}}
     try:
-        enforce(sizes, json.loads((native / 'game.json').read_text(encoding='utf-8-sig')))
-    except (ValueError, KeyError, TypeError) as error:
-        return [str(error)], sizes, {}
-    from audit_no_ad_simulator import enforce_files as enforce_player_windows
-    try:
-        enforce_player_windows({name: (native / name).read_bytes() for name in sizes})
-    except ValueError as error:
-        return [str(error)], sizes, {}
-    from audit_upload_startup import audit_files
-    startup = audit_files({name: (native / name).read_bytes() for name in sizes})
-    if not startup['passed']:
-        return startup['errors'], sizes, {}
-    try:
-        game = json.loads((native / 'game.json').read_text(encoding='utf-8-sig'))
-        subs = game.get('subpackages', []) if isinstance(game, dict) else None
-    except ValueError as e:
-        return ['game.json is not valid JSON: %s' % e], sizes, {}
-    if not isinstance(subs, list):
-        return ['game.json "subpackages" must be an array'], sizes, {}
-    roots, info = [], {'independent': {}, 'normal': {}}
-    for sub in subs:
+        game = json.loads(files.get('game.json', b'{}').decode('utf-8-sig'))
+    except (ValueError, UnicodeDecodeError) as e:
+        out.append('game.json is not valid JSON: %s' % e)
+        game = None
+    size_error = None
+    if game is not None:
+        from upload_size_gate import enforce
+        try:
+            enforce(sizes, game)
+        except (ValueError, KeyError, TypeError) as error:
+            size_error = str(error)
+    from audit_no_ad_simulator import check_entry as player_window
+    windows = len(out)
+    for name in sorted(files):                     # every Credits/About/simulator hit, not only the first file
+        try:
+            player_window(name, files[name])
+        except ValueError as error:
+            out.append(str(error))
+    if len(out) > windows:
+        # The startup audit runs Node probes on the package JS; never execute a package that still carries an ad
+        # simulator / player window (v7.4 boundary). The static package gates below still run and list their reasons.
+        out.append('startup audit not run: remove the player window(s) listed above first (the audit executes package JS)')
+    else:
+        from audit_upload_startup import audit_files
+        startup = audit_files(files)
+        if not startup['passed']:
+            out.extend(startup['errors'])
+    subs = game.get('subpackages', []) if isinstance(game, dict) else None
+    if game is not None and not isinstance(subs, list):
+        out.append('game.json "subpackages" must be an array')
+        subs = []
+    roots = []
+    own_size = []
+    for sub in subs or []:
         if not isinstance(sub, dict) or not isinstance(sub.get('root'), str):
             out.append('game.json: each subpackage needs "root"')
             continue
@@ -115,28 +148,126 @@ def native_problems(native):
     info.update(total=total, main=sum(main.values()))
     if info['main'] > vnz.TIKTOK_MAIN:
         big = sorted(main.items(), key=lambda kv: -kv[1])[:5]
-        out.append('main package %d bytes > %d (biggest: %s): %s' % (info['main'], vnz.TIKTOK_MAIN,
-                                                                    ', '.join('%s %d' % kv for kv in big), vnz.FIX_SIZE))
+        own_size.append('main package %d bytes > %d (biggest: %s): %s' % (info['main'], vnz.TIKTOK_MAIN,
+                                                                         ', '.join('%s %d' % kv for kv in big), vnz.FIX_SIZE))
     if total > vnz.TIKTOK_TOTAL:
-        out.append('total %d bytes > %d: shrink the art/audio (compress, smaller atlases) - the total limit counts every '
-                   'subpackage' % (total, vnz.TIKTOK_TOTAL))
+        own_size.append('total %d bytes > %d: shrink the art/audio (compress, smaller atlases) - the total limit counts '
+                        'every subpackage' % (total, vnz.TIKTOK_TOTAL))
     for r, b in info['independent'].items():
         if b > vnz.TIKTOK_INDEPENDENT:
-            out.append('independent subpackage %s %d bytes > %d: make it a normal subpackage or split it' % (r, b, vnz.TIKTOK_INDEPENDENT))
+            own_size.append('independent subpackage %s %d bytes > %d: make it a normal subpackage or split it'
+                            % (r, b, vnz.TIKTOK_INDEPENDENT))
+    out.extend(own_size)
+    if size_error and not own_size:                # same limits; keep the shared gate's reason when ours found nothing
+        out.append(size_error)
     try:
-        app = json.loads((native / 'project.config.json').read_text(encoding='utf-8-sig')).get('appid')
-    except (ValueError, AttributeError):
+        app = json.loads(files.get('project.config.json', b'{}').decode('utf-8-sig')).get('appid')
+    except (ValueError, AttributeError, UnicodeDecodeError):
         app = None
     info['appId'] = app
     for rel in sizes:
-        p = native / rel
-        if p.suffix in ('.js', '.json') and vnz.QA_MARKER in p.read_bytes():
+        if rel.endswith(('.js', '.json')) and vnz.QA_MARKER in files[rel]:
             out.append('test-only level jump %s is still in %s: build the upload package without it' % (vnz.QA_MARKER.decode(), rel))
+    import package_gates
+    gates = package_gates.run(files, native, board, policy=policy, context=context)
+    info['package_gates'] = package_gates.summary(gates)
+    info['pre_home_bytes'] = pre_home(files, native, board)
+    out.extend(package_gates.messages(gates['blocks']))
     return out, sizes, info
+
+
+def pre_home(files, root=None, board=None):
+    """Bytes downloaded before the home page (main + subpackages the startup loads), printed in every report
+    (MusicSlice 6.3; > 15 MB is the W8_prehome_bytes warning, no hard limit yet)."""
+    import package_gates
+    from package_gates import startup
+    try:
+        return startup.pre_home_bytes(package_gates.PackageView(files, root, board))
+    except Exception as error:  # noqa: BLE001 - reporting only; the gates themselves already ran
+        return {'error': repr(error)}
+
+
+def english_image_problems(files, project, board):
+    """Board localize only (v7.5, MusicSlice items 6-7): the upload images need the main agent's review record
+    <project>/docs/english/image-review.json (audit_image_review_record.py) and every NEW English image (SHA not in
+    <project>/docs/english/pre-english-images.json) must be <= 800 KB (audit_new_english_images.py). A missing record or
+    list refuses. The 2.5x-display rule needs prefab sizes and is not run here (warning until Saul decides)."""
+    if board != 'localize':
+        return []
+    if project is None:
+        return ['English image checks need --project (docs/english/image-review.json and pre-english-images.json)']
+    import audit_image_review_record
+    import audit_new_english_images
+    docs = Path(project) / 'docs' / 'english'
+    problems = ['image review: ' + p for p in audit_image_review_record.check(files, docs / 'image-review.json')['problems']]
+    pre = docs / 'pre-english-images.json'
+    if not pre.is_file():
+        problems.append('pre-English image list missing: %s (audit_new_english_images.py --make-list <Chinese original '
+                        'project> --out it, before the first English image is made)' % pre)
+    else:
+        try:
+            problems.extend(audit_new_english_images.check(files, pre)['problems'])
+        except (OSError, ValueError, TypeError) as error:
+            problems.append('pre-English image list unreadable: %s (%s)' % (pre, error))
+    return problems
 
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def source_record_ref(project):
+    """Which source record the writer accepted (path, file sha256, recorded source digest), for report/receipt."""
+    import tiktok_finalize as F
+    if not project:
+        return None
+    path = Path(project) / F.SOURCE_RECORD
+    if not path.is_file():
+        return {'path': str(path), 'present': False}
+    record = F.read_source_record(project) or {}
+    return {'path': str(path), 'present': True, 'sha256': sha(path), 'source_sha256': record.get('source_sha256'),
+            'kit_version': record.get('kit_version'), 'policy': record.get('policy'), 'created': record.get('created')}
+
+
+def finalize_for_writer(native, project, board, app_id, options=None):
+    """v7.7, both writers (make_tiktok_zip.main and build_checked_zip.build), BEFORE any other package check.
+
+    1. K5: the source record must exist, have no block, match the current project (assets/, build-templates/,
+       settings/) and the kit version - checked before the build folder is touched, so a refusal changes nothing.
+    2. tiktok_finalize.finalize_native(native, project, board, app_id): installs the standard parts in place (the
+       v7.5 adapter_fix rewrite is its first step). The writers never pass --policy: the policy comes from the
+       project marker / the frozen legacy list (design section 2).
+    -> (record, gate_context, problems). problems non-empty = refuse; record is None when step 1 refused."""
+    import tiktok_finalize as F
+    options = dict(options or {})
+    try:
+        kit = F.T.load_manifest()
+    except F.T.KitError as error:
+        return None, None, ['K_kit_unusable: %s' % error]
+    problems = ['%s: %s' % (f['id'], f['message']) for f in F.check_source_record(project, kit, options=options)]
+    if problems:
+        return None, None, problems
+    record = F.finalize_native(native, project, board, app_id, manifest=kit, options=options)
+    record['source_record'] = source_record_ref(project)
+    problems = ['%s: %s' % (b['id'], b['message']) for b in record['blocks']]
+    context = {'writer': True, 'finalize_record': record, 'project': project, 'finalize_options': options}
+    return record, context, problems
+
+
+def finalize_report(record):
+    """Report form: the receipt summary plus the Chinese parts table for the delivery reply."""
+    import tiktok_finalize as F
+    out = vnz.finalize_summary(record)
+    out['table_markdown'] = F.table_markdown(record)
+    return out
+
+
+def adapter_step(record):
+    """The adapter step of a finalize record (v7.5 report key adapter_fix kept for readers of old reports)."""
+    for step in (record or {}).get('steps') or []:
+        if step.get('step') == 'adapter':
+            return step
+    return None
 
 
 
@@ -166,13 +297,15 @@ def main():
     ap.add_argument('--build-tag')
     ap.add_argument('--review', type=Path, help='known-issue review JSON: runs the pre_scan gate first (BUILD-03)')
     ap.add_argument('--coverage', type=Path, help='final source/Web/Native storage ownership evidence; default project/docs/test/runtime-coverage.json')
-    ap.add_argument('--board', choices=['localize', 'remake'])
+    ap.add_argument('--board', choices=['localize', 'remake'], help='remake | localize; package gates use it only to choose block vs warning')
     ap.add_argument('--startup-contract', type=Path)
     ap.add_argument('--loading-recovery-runtime', type=Path)
     ap.add_argument('--resource-manifest', type=Path, help='complete current production resource requests; shared mandatory gate')
+    ap.add_argument('--keep-webp-exception', metavar='REASON', help='design D77 3.6: keep WebP (still over 30 MB after '
+                    'shrinking); finalize installs the kit WebP probe. Same reason as `tiktok_finalize.py source`')
     a = ap.parse_args()
     if not (a.review and a.project and a.web and a.build_tag):
-        print('REFUSED, no ZIP written: all upload/test/detection packages require --review, --project, --web and --build-tag; use verify_native_zip.py for read-only structure diagnosis', file=sys.stderr)
+        print('REFUSED, no ZIP written: all upload/test/detection packages require --review, --project, --web and --build-tag; use verify_native_zip.py --structure-only for read-only structure diagnosis', file=sys.stderr)
         return 2
     native = a.native.resolve()
     if not native.is_dir():
@@ -195,6 +328,18 @@ def main():
     if report_path.exists():
         print('make_tiktok_zip: report %s already exists' % report_path, file=sys.stderr)
         return 2
+    receipt_file = vnz.receipt_path(out)
+    if receipt_file.exists() or receipt_file.is_symlink():
+        print('make_tiktok_zip: receipt %s already exists' % receipt_file, file=sys.stderr)
+        return 2
+    # v7.7: the source record must be current (K5), then finalize installs the platform-kit standard parts in the
+    # Native folder BEFORE any check (its first step is the v7.5 adapter_fix rewrite; unknown adapter = refused).
+    options = {'keep_webp_exception': a.keep_webp_exception} if a.keep_webp_exception else {}
+    finalized, gate_context, finalize_problems = finalize_for_writer(native, a.project, a.board, a.app_id, options)
+    if finalize_problems:
+        print('REFUSED, no ZIP written (tiktok_finalize):\n- ' + '\n- '.join(finalize_problems), file=sys.stderr)
+        return 1
+    gate_policy = finalized['policy']
     # Cocos bundle URLs can contain ../ even when every ZIP entry is safe.
     try:
         from audit_native_resource_paths import audit as audit_resource_paths
@@ -211,7 +356,7 @@ def main():
         return 1
     # Reject size and missing/moved local art BEFORE replaying the expensive review.
     # This never substitutes for the full review gate below.
-    early_problems, early_sizes, _ = native_problems(native)
+    early_problems, early_sizes, _ = native_problems(native, a.board, gate_policy, gate_context)
     from audit_packed_assets import audit as audit_packed_assets
     asset_result = audit_packed_assets(native)
     if early_problems or not asset_result['passed']:
@@ -223,6 +368,10 @@ def main():
         obligations = package_obligations.verify(obligation_files, native, a.project, a.resource_manifest)
     except (ValueError, OSError, TypeError, KeyError, subprocess.TimeoutExpired) as error:
         print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
+        return 1
+    english_problems = english_image_problems(obligation_files, a.project, a.board)
+    if english_problems:
+        print('REFUSED, no ZIP written: ' + '\n'.join(english_problems), file=sys.stderr)
         return 1
     from audit_final_package_startup import audit_final_startup
     try:
@@ -303,8 +452,8 @@ def main():
             print('REFUSED, no ZIP written: actual runtime persistence coverage failed:\n'+(coverage_result.stdout+coverage_result.stderr)[-2000:], file=sys.stderr)
             return 1
         gate['runtime_coverage_sha256'] = sha(coverage)
-    problems, sizes, info = native_problems(native)
-    if not problems and info.get('appId') != a.app_id:
+    problems, sizes, info = native_problems(native, a.board, gate_policy, gate_context)
+    if 'appId' in info and info['appId'] != a.app_id:
         problems.append('App ID: project.config.json appid is %r, the target is %r - rebuild with the right App ID'
                         % (info.get('appId'), a.app_id))
     if problems:
@@ -325,14 +474,25 @@ def main():
         again = {f.relative_to(check).as_posix(): sha(f) for f in check.rglob('*') if f.is_file()}
         if again != result['file_sha256']:
             raise ValueError('independent extraction differs from the ZIP listing')
+        receipt = vnz.make_receipt('make_tiktok_zip', tmp, result['sha256'], result['file_sha256'],
+                                   info['package_gates'], a.board,
+                                   {'tool_sha256': sha(Path(__file__))}, finalize=finalized)
+        receipt_tmp = tmpdir / receipt_file.name
+        receipt_tmp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         with package_obligations.publication_guard(obligation_files, native, a.project, a.resource_manifest, obligations):
-            os.replace(tmp, out)
+            os.link(receipt_tmp, receipt_file)          # never overwrites; published together with the ZIP
+            try:
+                os.replace(tmp, out)
+            except OSError:
+                receipt_file.unlink()
+                raise
     except (ValueError, OSError, zipfile.BadZipFile, RuntimeError) as e:
         print('REFUSED, no ZIP written: the written ZIP failed its own check: %s' % e, file=sys.stderr)
         return 1
     finally:
         shutil.rmtree(tmpdir, True)
     result['archive'] = str(out)
+    result.update(vnz.receipt_status(out, sha(out), result['file_sha256']))
     report = {'tool': 'make_tiktok_zip', 'status': 'tiktok_upload_zip_ready', 'passed': True, 'failed': 0,
               'package_obligations': obligations,
               'checked': result['files'], 'zip': str(out), 'zip_sha256': sha(out),
@@ -347,7 +507,10 @@ def main():
                                                    'independent extraction (folder with a space) equal'],
               'warnings': result.get('warnings', []), 'left_out_junk': SKIPPED, 'limits_source': vnz.LIMITS_SOURCE,
               'upload': 'upload this ZIP directly - do not unzip, re-zip or wrap it',
-              'not_verified': result['not_verified']}
+              'not_verified': result['not_verified'],
+              'board': a.board, 'package_gates': info['package_gates'], 'pre_home_bytes': info['pre_home_bytes'],
+              'finalize': finalize_report(finalized), 'adapter_fix': adapter_step(finalized),
+              'entry': result['entry'], 'receipt': str(receipt_file)}
     if a.review is not None:            # BUILD-04 auto report: bound to this build like every other automatic check
         try:
             report['binding'] = json.loads(a.review.read_text(encoding='utf-8')).get('binding')
@@ -355,8 +518,11 @@ def main():
             pass
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(json.dumps({k: report[k] for k in ('status', 'zip', 'zip_sha256', 'zip_bytes', 'appId', 'sizes', 'warnings')},
+    print(json.dumps({k: report[k] for k in ('status', 'zip', 'zip_sha256', 'zip_bytes', 'appId', 'sizes', 'warnings',
+                                             'pre_home_bytes', 'entry')},
                      ensure_ascii=False, indent=2))
+    print('finalize (policy %s, kit %s):\n%s' % (finalized['policy'], finalized['kit_version'],
+                                                 report['finalize']['table_markdown']))
     print('report: %s' % report_path)
     return 0
 

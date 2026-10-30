@@ -278,27 +278,78 @@ def audit_files(files):
             errors.append('Native bootstrap probe unavailable/invalid: '+str(exc))
     touch_coordinates = None
     adapter = files.get('adapter-min.js', b'').decode('utf-8', errors='replace')
-    engine = files.get('cocos/cocos2d-js-min.js', b'').decode('utf-8', errors='replace')
+    # Release builds ship cocos/cocos2d-js-min.js; debug builds (MergeShot2048 v82) ship cocos/cocos2d-js.js.
+    engine_name = next((n for n in ('cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js') if n in files
+                        and re.search(rb'getTouchesByEvent\s*:\s*function\b', files[n])), 'cocos/cocos2d-js-min.js')
+    engine = files.get(engine_name, b'').decode('utf-8', errors='replace')
+    touch_converter = re.search(r'getTouchesByEvent\s*:\s*function\b', engine) is not None
     # TikTok gives touches only screenX/screenY; Cocos 2.4 reads clientX/clientY, so every legacy-converter build
     # is probed, whatever its adapter looks like. Browser emulation supplies clientX and cannot reveal the defect.
-    if 'getTouchesByEvent:function(' in engine:
+    if touch_converter:
         try:
             node = shutil.which('node')
             if not node:
                 raise ValueError('Node.js required for Cocos touch-coordinate probe')
-            names = ('game.js', 'main.js', 'adapter-min.js', 'touch-coordinates.js', 'tiktok-touch-bridge.js', 'cocos/cocos2d-js-min.js')
+            # Root scripts carry the install line, the adapter and any SDK touch wrapper (tiktok-input.js or a
+            # module game.js declares with '// tiktok-touch-adapter: ./name.js').
+            names = sorted({n for n in files if '/' not in n and n.endswith('.js')} | {engine_name})
             payload = {'files': {name: files[name].decode('utf-8') for name in names if name in files}}
             run = subprocess.run([node, str(Path(__file__).with_name('probe_cocos2_touch_coordinates.cjs'))], input=json.dumps(payload), capture_output=True, text=True, timeout=20)
             touch_coordinates = json.loads(run.stdout)
             if run.returncode or touch_coordinates.get('schema') != 'cocos2_touch_coordinates.v1' or touch_coordinates.get('passed') is not True:
-                errors.append('Cocos2 native touch coordinates rejected: SDK screenX/screenY must reach finite engine coordinates')
+                errors.append('Cocos2 native touch coordinates rejected: SDK screenX/screenY must reach finite engine coordinates'
+                              + (' (' + str(touch_coordinates.get('error')) + ')' if touch_coordinates.get('error') else ''))
         except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
             errors.append('Cocos2 native touch-coordinate probe unavailable: ' + str(exc))
+    # Cocos 3.x reads clientX/clientY in its minigame TouchInputSource through its own copy of `tt`. Run the
+    # package's real game.js -> web-adapter.js prefix with SDK touches that carry only the documented
+    # identifier/screenX/screenY/force fields, then the engine's own callbacks (probe_cocos3_touch_coordinates.cjs).
+    # Its Vec2 turns NaN into 0, so the probe requires the tapped point, not just a finite on-screen value.
+    touch_probed = touch_converter
+    root_scripts = [n for n in files if '/' not in n and n.endswith('.js')]
+    tiktok = any(re.search(rb'\btt\s*\.\s*[A-Za-z_$]|\bTTMinis\b', files[n]) for n in root_scripts)
+    cocos3_engine = next((n for n in sorted(files) if n.startswith('cocos-js/') and n.endswith('.js')
+                          and re.search(rb'\.onTouchStart\(this\.(?:_ccprivate\$)?_createCallback\(', files[n])), None)
+    # Creator 3.8.8 command-line builds mangle engine private names to _ccprivate$_createCallback (ccbuild
+    # mangleProperties); delivered R4/R6 packages keep _createCallback. Both are the same engine touch source.
+    if touch_coordinates is None and cocos3_engine and (tiktok or 'web-adapter.js' in files):
+        touch_probed = True
+        try:
+            node = shutil.which('node')
+            if not node:
+                raise ValueError('Node.js required for Cocos 3 touch-coordinate probe')
+            prefix_files = {n: files[n].decode('utf-8', errors='replace') for n in files
+                            if n.endswith(('.js', '.json')) and not n.startswith(('assets/', 'subpackages/', 'cocos-js/', 'src/'))}
+            payload = {'files': prefix_files, 'engine': files[cocos3_engine].decode('utf-8', errors='replace')}
+            run = subprocess.run([node, str(Path(__file__).with_name('probe_cocos3_touch_coordinates.cjs'))],
+                                 input=json.dumps(payload), capture_output=True, text=True, timeout=60)
+            touch_coordinates = json.loads(run.stdout)
+            if not isinstance(touch_coordinates, dict):
+                raise ValueError('unexpected Cocos 3 touch probe report')
+            if run.returncode or touch_coordinates.get('schema') != 'cocos3_touch_coordinates.v1' or touch_coordinates.get('passed') is not True:
+                rows = touch_coordinates.get('rows') if isinstance(touch_coordinates.get('rows'), list) else []
+                failed = ['%s expected (%s, %s), engine received %s (raw location %s)' % (
+                              r.get('id'), (r.get('expected') or {}).get('x'), (r.get('expected') or {}).get('y'),
+                              [(t.get('x'), t.get('y')) for t in r.get('observed', [])],
+                              [(t.get('x'), t.get('y')) for t in r.get('raw_location', [])])
+                          for r in rows if isinstance(r, dict) and r.get('passed') is not True]
+                reason = touch_coordinates.get('error') or '; '.join(failed) or 'probe did not pass'
+                errors.append('Cocos3 native touch coordinates rejected: SDK identifier/screenX/screenY/force touches must reach '
+                              'finite in-screen engine coordinates at the tapped point through game.js -> web-adapter.js (' + str(reason) + ')')
+        except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
+            errors.append('Cocos3 native touch-coordinate probe unavailable: ' + str(exc))
+    # A TikTok Cocos package must prove its touch coordinates; a missing probe result is never a pass.
+    cocos_package = any(n.startswith(('cocos/', 'cocos-js/')) or n in ('adapter-min.js', 'web-adapter.js', 'engine-adapter.js',
+                                                                     'src/settings.js', 'src/settings.json') for n in files)
+    if not touch_probed and touch_coordinates is None and tiktok and cocos_package:
+        errors.append('TikTok Cocos package touch coordinates unverified: engine touch converter not recognised (neither the '
+                      'Cocos 2.x getTouchesByEvent in cocos/cocos2d-js-min.js nor the Cocos 3.x minigame TouchInputSource in '
+                      'cocos-js/*.js was found), so SDK screenX/screenY cannot be proven to reach the engine')
     if dynamic:
         warnings.append('dynamic require sites are not proven by static closure; execute actual Native startup')
     return {'tool': 'audit_upload_startup', 'policy_version': 1, 'passed': not errors,
             'errors': sorted(set(errors)), 'warnings': sorted(set(warnings)),
             'reachable_files': sorted(visited), 'require_edges': edges, 'dynamic_requires': dynamic,
             'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
-            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch registration, declared subpackage entries; registered entry host-boundary fixtures',
+            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch registration, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes',
             'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'account/region/network', 'platform acceptance']}

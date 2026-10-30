@@ -43,6 +43,13 @@ def main():
         test('changed_frame_hash',lambda d:d.update(raw_frames={}),False)
         test('missing_normal_runs',lambda d:d.update(run_directories=d['run_directories'][-8:],checked=8),False)
         test('duplicate_run_directory',lambda d:d.update(run_directories=d['run_directories']+[d['run_directories'][0]],checked=27),False)
+        # W3a R5 / D3 problem 4: a v7.5 timing report (has frame_rate) without timing_valid true is not LOAD-03 evidence.
+        first=Path(report['run_directories'][0])/'report.json';original=first.read_text()
+        for tag,valid,expected in (('invalid_timing_run_rejected',False,False),('valid_timing_run_accepted',True,True)):
+            r=json.loads(original);r.update(timing=True,timing_valid=valid,frame_rate={'lowest_fps_in_window':60 if valid else 2,'min_fps':30});first.write_text(json.dumps(r))
+            d=deepcopy(report);d['raw_reports'],d['raw_frames']=gate.raw_manifest(d['run_directories'])
+            rows.append(dict(id=tag,passed=(not gate.validate_report(d,binding))==expected))
+        first.write_text(original)
         binding_file=root/'binding.json';binding_file.write_text(json.dumps({'binding':binding}))
         cli=[sys.executable,str(Path(gate.__file__)), '--plan',report['plan_file'],'--runs',*report['run_directories'],'--binding',str(binding_file)]
         run=subprocess.run(cli+['--out',str(root/'positive-cli.json')],capture_output=True,text=True)

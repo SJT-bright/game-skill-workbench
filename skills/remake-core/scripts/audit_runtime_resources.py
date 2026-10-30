@@ -1,5 +1,7 @@
 """Derive finite Cocos requests from production JS, then refuse incomplete manifests.
 Unknown dynamic domains/method escapes fail closed; this never plays levels.
+v7.7 W-G2: the platform-kit main.js (bytes listed in KIT_MANIFEST.json) loads settings.jsList with
+cc.assetManager.loadScript; that one call becomes required script files (script_files), never a waived request.
 """
 import argparse
 import copy
@@ -16,6 +18,12 @@ from functools import wraps
 HERE = Path(__file__).resolve().parent
 _CACHE = {}
 _RESOURCE_PROJECT = ContextVar('resource_project', default=None)
+# v7.7 W-G2: the platform-kit main.js is recognised by the hashes KIT_MANIFEST.json lists at run time (current and
+# previous_sha256); tests point this at a copy.
+KIT_MANIFEST = HERE.parent / 'assets' / 'platform-kit' / 'KIT_MANIFEST.json'
+# The one loader call of the kit main.js that is script loading: every settings.jsList entry, as 'src/' + entry.
+KIT_JSLIST_CALL = re.compile(r"cc\.assetManager\.loadScript\(\(settings\.jsList \|\| \[\]\)\.map\(function \(x\) \{\s*"
+                             r"return 'src/' \+ x;\s*\}\)")
 
 def resource_profile_file(name):
     import project_qa
@@ -218,8 +226,94 @@ def apply_reviewed_profile(report, files):
     return report
 
 
+def kit_main_identity():
+    """The kit main.js as KIT_MANIFEST.json describes it, read on every call (W-G1 may change main.js): its sha256
+    values (files["build-templates/bytedance/main.js"] and every 2.4 part whose file lands at main.js, each with its
+    previous_sha256) and the files that part always ships next to it (extra_files, e.g. webp-decode-probe.js).
+    An unreadable manifest recognises nothing, so the jsList call stays an unsupported loader call."""
+    try:
+        manifest = json.loads(Path(KIT_MANIFEST).read_bytes())
+    except (OSError, ValueError, UnicodeError):
+        return {'hashes': [], 'extra_files': []}
+    hashes, extras = set(), set()
+
+    def add(spec):
+        if not isinstance(spec, dict):
+            return
+        for digest in [spec.get('sha256')] + list(spec.get('previous_sha256') or []):
+            if isinstance(digest, str) and re.fullmatch(r'[0-9a-f]{64}', digest):
+                hashes.add(digest)
+    files = manifest.get('files') if isinstance(manifest.get('files'), dict) else {}
+    add(files.get('build-templates/bytedance/main.js'))
+    parts = manifest.get('parts') if isinstance(manifest.get('parts'), dict) else {}
+    for part in parts.values():
+        if not isinstance(part, dict) or part.get('engine') != 2 or not isinstance(part.get('file'), dict) \
+                or part['file'].get('dest') != 'main.js':
+            continue
+        add(part['file'])
+        for extra in part.get('extra_files') or []:
+            if isinstance(extra, dict) and isinstance(extra.get('dest'), str) and extra['dest']:
+                extras.add(extra['dest'])
+    return {'hashes': sorted(hashes), 'extra_files': sorted(extras)}
+
+
+def _expand_kit_main_scripts(report, files, kit):
+    """v7.7 W-G2: in the kit main.js (bytes equal to a KIT_MANIFEST hash) and nowhere else, the call
+    cc.assetManager.loadScript((settings.jsList || []).map(x => 'src/' + x)) is script loading, not a resource
+    request: each jsList entry becomes a required package file, and so does every kit extra file the kit main.js
+    requires (webp-decode-probe.js). Any other main.js, any other loader call, a non-literal jsList, a second settings
+    script, or a write to jsList / _CCSettings outside the kit main.js leaves the call unsupported, as before."""
+    settings = report.pop('settings_js', None) or {}
+    writes = [w for w in report.pop('settings_writes', None) or [] if w.get('source') != 'main.js']
+    main = files.get('main.js')
+    if main is None or hashlib.sha256(main).hexdigest() not in kit['hashes']:
+        return report
+    calls = [s for s in report['sites'] if s.get('source') == 'main.js' and s.get('kind') == 'unsupported'
+             and KIT_JSLIST_CALL.match(s.get('expression') or '')]
+    if len(calls) != 1:
+        return report
+    site, problem, paths = calls[0], None, []
+    if len(settings) != 1:
+        problem = 'expected one src/settings.js, found %s' % (sorted(settings) or 'none')
+    else:
+        (settings_name, row), = settings.items()
+        if not isinstance(row.get('jsList'), list):
+            problem = '%s: %s' % (settings_name, row.get('why') or 'jsList unreadable')
+        elif writes:
+            problem = 'settings jsList/_CCSettings written outside the kit main.js: ' + \
+                '; '.join('%s:%s %s' % (w['source'], w['line'], w['expression'][:80]) for w in writes)
+        else:
+            for entry in row['jsList']:
+                path = posixpath.normpath('src/' + entry)
+                if not entry or entry.startswith('/') or '\\' in entry or not path.startswith('src/') or '..' in PurePosixPath(path).parts:
+                    problem = 'unsafe settings.jsList entry: %r' % entry
+                    break
+                if path not in paths:
+                    paths.append(path)
+    if problem:
+        site['kit_main_js'] = 'kit main.js jsList not expanded: ' + problem
+        return report
+    text = main.decode('utf-8-sig', errors='replace')
+    rows = [{'id': site['id'], 'path': p, 'required_by': 'kit main.js cc.assetManager.loadScript(settings.jsList)'}
+            for p in paths]
+    for dest in kit['extra_files']:
+        stem = re.escape(PurePosixPath(dest).with_suffix('').as_posix())
+        if re.search(r"\brequire\(\s*(['\"])\./%s(?:\.js)?\1\s*\)" % stem, text) and dest not in paths:
+            rows.append({'id': 'main.js:require:' + dest, 'path': dest, 'required_by': 'kit main.js require (KIT_MANIFEST extra_files)'})
+    report['sites'] = [s for s in report['sites'] if s is not site]
+    report['kit_main_js'] = {'sha256': hashlib.sha256(main).hexdigest(), 'settings': settings_name,
+                             'jsList': row['jsList'], 'expanded_site': dict(site)}
+    report['kit_script_files'] = rows
+    return report
+
+
 def _validate_current_files(report, files, *, systemjs):
     """Validate per-call Native data; only the parsed call inventory is cached."""
+    for row in report.get('kit_script_files', []):
+        path = row['path']
+        if PurePosixPath(path).is_absolute() or '..' in PurePosixPath(path).parts or not files.get(path):
+            raise ValueError('kit main.js script file missing or empty: %s (%s)' % (path, row['required_by']))
+        row['sha256'] = hashlib.sha256(files[path]).hexdigest()
     for row in report.get('finite_adapter', {}).get('native_file_sites', []):
         path = row['path']
         if path not in files or not files[path] or PurePosixPath(path).is_absolute() or '..' in PurePosixPath(path).parts:
@@ -337,7 +431,10 @@ def discover(files):
         profile_bytes = json.dumps(relevant_profiles,sort_keys=True,separators=(',', ':')).encode()
         reviewed_digest = hashlib.sha256(profile_bytes).hexdigest()
         system_profile_bytes = json.dumps([payload['systemjs_profile']] if payload.get('systemjs_profile') else [],sort_keys=True,separators=(',', ':')).encode()
+    kit = {'hashes': [], 'extra_files': []} if systemjs else kit_main_identity()
     tool_sha = hashlib.sha256(tool_sha.encode() + profile_bytes + system_profile_bytes + special_bytes + Path(__file__).read_bytes() + (HERE/'scan_native_file_requests.cjs').read_bytes()).hexdigest()
+    if kit['hashes']:  # the kit main.js identity decides the jsList expansion, so it is part of the cache key
+        tool_sha = hashlib.sha256((tool_sha + json.dumps(kit, sort_keys=True)).encode()).hexdigest()
     key = (node, tool_sha, hashlib.sha256(raw).hexdigest(), reviewed_digest)
     if key in _CACHE:
         return _validate_current_files(copy.deepcopy(_CACHE[key]), files, systemjs=systemjs)
@@ -430,6 +527,8 @@ def discover(files):
     report['source_sha256'] = current_source_hashes
     report['scanner_sha256'] = tool_sha
     report = apply_reviewed_profile(report, files)
+    # After the reviewed profile: a profile that already resolved the jsList call keeps its own resolution.
+    report = _expand_kit_main_scripts(report, files, kit)
     checked = _validate_current_files(copy.deepcopy(report), files, systemjs=systemjs)
     _CACHE[key] = copy.deepcopy(report)
     return checked
@@ -480,8 +579,32 @@ def required_native_files(inventory):
     return required
 
 
+def _audit_observed(files, manifest):
+    """Observed runtime manifest (cocos-game-check/package-check/scripts/make_runtime_resource_manifest.py, D7 14 /
+    D3 5): only for packages the static expansion cannot read (runtime-built load paths, 3.x SystemJS). A package
+    whose requests expand statically keeps the static manifest, so the observed one never replaces a working check."""
+    try:
+        required_requests(files)
+    except ValueError:
+        pass
+    else:
+        raise ValueError('observed runtime manifest refused: this package expands statically; '
+                         'use the generated manifest (audit_runtime_resources.py --native)')
+    import importlib.util
+    path = Path(__file__).resolve().parents[2] / 'cocos-game-check/package-check/scripts/make_runtime_resource_manifest.py'
+    spec = importlib.util.spec_from_file_location('_cocos_runtime_resource_manifest', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    try:
+        return dict(module.verify(files, manifest), source='observed')
+    except module.ManifestRefused as error:
+        raise ValueError('observed runtime manifest refused: ' + str(error))
+
+
 @project_context
 def audit(files, manifest):
+    if isinstance(manifest, dict) and manifest.get('schema') == 'runtime_resource_manifest.observed.v1':
+        return _audit_observed(files, manifest)
     if not isinstance(manifest, dict):
         raise ValueError('runtime resource manifest must be an object')
     rows = manifest.get('resources', [])
@@ -517,7 +640,22 @@ def audit(files, manifest):
     missing = required - declared
     if missing:
         raise ValueError('runtime resource manifest omitted production requests: ' + repr(sorted(missing)))
-    return {'passed': True, 'checked_requests': len(declared), 'production_required_requests': len(required),
+    script_required = {r['path']: r['sha256'] for r in inventory.get('kit_script_files', [])}
+    script_rows = manifest.get('script_files', [])
+    if not isinstance(script_rows, list):
+        raise ValueError('script_files must be an array')
+    script_declared = {}
+    for row in script_rows:
+        if not isinstance(row, dict) or not {'path', 'sha256'} <= set(row) <= {'path', 'sha256', 'required_by'}:
+            raise ValueError('invalid kit main.js script file row')
+        if row['path'] in script_declared or row['path'] not in script_required:
+            raise ValueError('unknown or duplicate kit main.js script file: ' + str(row['path']))
+        if row['sha256'] != script_required[row['path']]:
+            raise ValueError('kit main.js script file bytes changed: ' + row['path'])
+        script_declared[row['path']] = row['sha256']
+    if script_declared != script_required:
+        raise ValueError('runtime manifest omitted kit main.js script files: ' + repr(sorted(set(script_required) - set(script_declared))))
+    return {'passed': True, 'kit_script_files': inventory.get('kit_script_files', []), 'checked_requests': len(declared), 'production_required_requests': len(required),
             'native_file_required_requests':len(native_required), 'native_file_call_inventory':inventory.get('native_file_inventory',[]), 'reviewed_resolutions':inventory.get('reviewed_resolutions',[]), 'resource_call_sites': inventory['sites'], 'source_sha256': inventory['source_sha256'],
             'scanner_sha256': inventory['scanner_sha256'], 'bundles': sorted(catalogs)}
 
@@ -529,6 +667,8 @@ def generate(files):
     return {'schema': 'runtime_resource_manifest.v3' if native_required else 'runtime_resource_manifest.v2',
             'native_files':[{'path':p,'type':t,'sha256':hashlib.sha256(files[p]).hexdigest()} for p,t in sorted(native_required.items())],
             'resources': [{'bundle': b, 'path': p, 'type': t} for b, p, t in sorted(required)],
+            **({'script_files': [{'path': r['path'], 'sha256': r['sha256'], 'required_by': r['required_by']}
+                                 for r in inventory['kit_script_files']]} if inventory.get('kit_script_files') else {}),
             'source_sha256': inventory['source_sha256'], 'scanner_sha256': inventory['scanner_sha256']}
 
 
@@ -548,7 +688,7 @@ if __name__ == '__main__':
         a.out.parent.mkdir(parents=True, exist_ok=True)
         with a.out.open('x') as stream:
             json.dump(result, stream, ensure_ascii=False, indent=2)
-        print(json.dumps({'status': 'resource_manifest_generated', 'requests': len(result['resources']), 'native_file_requests':len(result.get('native_files',[])), 'out': str(a.out)}))
+        print(json.dumps({'status': 'resource_manifest_generated', 'requests': len(result['resources']), 'native_file_requests':len(result.get('native_files',[])), 'kit_script_files':len(result.get('script_files',[])), 'out': str(a.out)}))
     except (ValueError, OSError, UnicodeError, subprocess.TimeoutExpired) as error:
         print(json.dumps({'status': 'refuse', 'error': str(error)}, ensure_ascii=False))
         raise SystemExit(1)

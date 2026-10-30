@@ -140,7 +140,7 @@ def main():
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument('--levels', action='store_true', help='level game: 50B limited purchase, optional last-milestone award')
     g.add_argument('--endless', action='store_true', help='endless game: limited purchase is 50B; legacy-2r retains the old route')
-    ap.add_argument('--final-level', type=int, default=100, help='total levels, including any incomplete tail (重塑 100 or more, 英化 70 or more)')
+    ap.add_argument('--final-level', type=int, default=60, help='total levels, including any incomplete tail (重塑 60 or more, 英化 70 or more)')
     ap.add_argument('--limited-mode', choices=['final', 'every_10'], default='final',
                     help='final: one limited skin on the last limited level; every_10: one per limited level (user 2026-10-24)')
     ap.add_argument('--no-backgrounds', action='store_true', help='the game has no scene to dress (no background skins)')
@@ -149,8 +149,8 @@ def main():
     a = ap.parse_args()
     if a.R <= 0:
         ap.error('--R must be > 0')
-    if a.levels and a.final_level < 70:
-        ap.error('--final-level %d: a level game has 70 levels or more (英化 70, 重塑 100; user 2026-10-27)' % a.final_level)
+    if a.levels and a.final_level < 60:
+        ap.error('--final-level %d: a level game has 60 levels or more (英化 70, 重塑 60; Saul 2026-10-29)' % a.final_level)
     try:
         t = make(a.R, 'levels' if a.levels else 'endless', a.final_level, not a.no_backgrounds, a.hero, a.limited_mode,
                  a.price_profile, a.normal_level_coins, tier_levels(a.tier_levels))

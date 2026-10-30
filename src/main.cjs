@@ -161,7 +161,7 @@ async function main(){
     clearInterval(hoverTimer);
     config.feedMode='hub';config.repository='';
     await win.webContents.executeJavaScript('window.ready');await handlers.expand();
-    const integration=[];await handlers.expand();win.emit('blur');integration.push({expandedIdempotent:!collapsed&&win.getBounds().width===EXPANDED.width,manualCloseOnly:!collapsed});if(process.env.SKILL_DOCK_SMOKE_EMBEDDED==='1'){await seedEmbeddedSkills();const previousHome=process.env.CODEX_HOME;process.env.CODEX_HOME=path.join(root,'empty-codex');await fs.mkdir(path.join(process.env.CODEX_HOME,'skills/.system'),{recursive:true});try{await scanLocalSkills();}finally{if(previousHome===undefined)delete process.env.CODEX_HOME;else process.env.CODEX_HOME=previousHome;}await emit();}
+    const integration=[];let embeddedCountAtStartup=0;await handlers.expand();win.emit('blur');integration.push({expandedIdempotent:!collapsed&&win.getBounds().width===EXPANDED.width,manualCloseOnly:!collapsed});if(process.env.SKILL_DOCK_SMOKE_EMBEDDED==='1'){await seedEmbeddedSkills();embeddedCountAtStartup=Object.values(installed).filter(s=>s.bundled).length;const previousHome=process.env.CODEX_HOME;process.env.CODEX_HOME=path.join(root,'empty-codex');await fs.mkdir(path.join(process.env.CODEX_HOME,'skills/.system'),{recursive:true});try{await scanLocalSkills();}finally{if(previousHome===undefined)delete process.env.CODEX_HOME;else process.env.CODEX_HOME=previousHome;}await emit();}
     if(process.env.SKILL_DOCK_SMOKE_FIXTURE==='1'){
       const source=path.join(root,'fixture-skill'),gamePath=path.join(root,'fixture-game');await fs.mkdir(source,{recursive:true});await fs.mkdir(gamePath,{recursive:true});await fs.writeFile(path.join(source,'SKILL.md'),'# Smoke Skill\nKeep original saves.');
       async function ipc(method,value){return win.webContents.executeJavaScript('window.dock.call('+JSON.stringify(method)+','+JSON.stringify(value ?? null)+')');}
@@ -197,7 +197,7 @@ async function main(){
     }
     await new Promise(r=>setTimeout(r,300));
     const result=await win.webContents.executeJavaScript(`({title:document.title,body:document.body.innerText,scroll:document.documentElement.scrollWidth,viewport:innerWidth,api:!!window.dock,nodes:document.querySelectorAll('button').length})`);
-    await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'smoke.json'),JSON.stringify({...result,integration,embeddedCount:Object.values(installed).filter(s=>s.bundled).length,runtime:process.versions.electron,alwaysOnTop:win.isAlwaysOnTop(),bounds:win.getBounds()},null,2));await fs.writeFile(path.join(root,'smoke.png'),(await win.webContents.capturePage()).toPNG());quitting=true;app.quit();return;
+    await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'smoke.json'),JSON.stringify({...result,integration,embeddedCount:embeddedCountAtStartup,remainingEmbeddedCount:Object.values(installed).filter(s=>s.bundled).length,runtime:process.versions.electron,alwaysOnTop:win.isAlwaysOnTop(),bounds:win.getBounds()},null,2));await fs.writeFile(path.join(root,'smoke.png'),(await win.webContents.capturePage()).toPNG());quitting=true;app.quit();return;
   }
   if(config.hostEnabled)await startSharing().catch(e=>{lastError=e.message;});
   await seedEmbeddedSkills();await scanLocalSkills();await emit();await confirmHealthyUpdate();syncCodex();checkApplication();updateTimer=setInterval(checkApplication,APPLICATION_POLL_MS);await sync();listenEvents();

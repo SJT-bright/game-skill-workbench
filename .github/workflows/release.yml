@@ -69,6 +69,18 @@ jobs:
           if($report.embeddedCount -lt 15 -or -not $report.api){throw 'Embedded Skill startup verification failed'}
           $e2e = Get-Content '.qa/ci-native/native-e2e.json' -Raw | ConvertFrom-Json
           if(-not $e2e.nativeDrop -or $e2e.bundleQueue.Count -ne 2){throw 'Native import/bundle queue verification failed'}
+      - name: Verify Windows published old version to public latest native upgrade
+        if: matrix.kind == 'win'
+        timeout-minutes: 15
+        shell: pwsh
+        run: node scripts/verify-windows-upgrade.cjs --published
+      - name: Verify Windows native upgrade from published 0.2.14
+        if: matrix.kind == 'win'
+        timeout-minutes: 15
+        shell: pwsh
+        env:
+          WINDOWS_UPGRADE_BASELINE: 0.2.14
+        run: node scripts/verify-windows-upgrade.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -84,6 +96,11 @@ jobs:
             .qa/ci-native/view-*.png
             .qa/ci-native/smoke-error.txt
             .qa/ci-error.log
+            .qa/windows-upgrade-*/upgrade-proof.json
+            .qa/windows-upgrade-*/*.log
+            .qa/windows-upgrade-*/用户数据/updates/receipt.json
+            .qa/windows-upgrade-*/upgraded-native-stages/*.json
+            .qa/windows-upgrade-*/upgraded-native-stages/smoke-error.txt
   publish:
     needs: build
     runs-on: ubuntu-latest

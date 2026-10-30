@@ -42,11 +42,31 @@ async function readFeed(repo,route){
  // Private feeds and transient raw failures can still use the user's existing gh authentication.
  return api(`repos/${repo}/contents/${file}?ref=skills-feed`,{binary:true});
 }
-function downloadWithGh(gh,repo,assetId,dest,onProgress){return (async()=>{const handle=await fs.open(dest,'w',0o600);try{await new Promise((resolve,reject)=>{let settled=false;const child=spawn(gh,['api',`repos/${repo}/releases/assets/${assetId}`,'--hostname','github.com','--header','Accept: application/octet-stream'],{stdio:['ignore',handle.fd,'pipe'],windowsHide:true,env:{...process.env,GODEBUG:'http2client=0'}});const done=error=>{if(settled)return;settled=true;clearTimeout(timer);clearInterval(progress);error?reject(error):resolve();};const timer=setTimeout(()=>{child.kill('SIGTERM');done(Error('更新下载超时'));},10*60*1000);const progress=setInterval(async()=>{try{const stat=await fs.stat(dest);onProgress(stat.size);if(stat.size>DOWNLOAD_LIMIT){child.kill('SIGTERM');done(Error('更新文件过大'));}}catch{}},600);child.stderr.on('data',()=>{});child.on('error',()=>done(Error('GitHub 下载进程无法启动')));child.on('close',code=>done(code===0?null:Error('GitHub 认证下载失败')));});const stat=await fs.stat(dest);if(stat.size>DOWNLOAD_LIMIT)throw Error('更新文件过大');}finally{await handle.close();}})();}
-async function anonymousDownload(url,dest,onProgress){const response=await requestFetch(url,{credentials:'omit',signal:AbortSignal.timeout(10*60*1000)});if(!response.ok)throw httpError(response.status);const handle=await fs.open(dest,'w',0o600);let total=0;try{for await(const chunk of response.body){const data=Buffer.from(chunk);total+=data.length;if(total>DOWNLOAD_LIMIT)throw Error('更新文件过大');await handle.write(data);onProgress(total);}}finally{await handle.close();}}
+function downloadWithGh(gh,repo,assetId,dest,onProgress){return (async()=>{
+ const handle=await fs.open(dest,'w',0o600);try{
+  await new Promise((resolve,reject)=>{
+   let settled=false,lastSize=0,lastProgress=Date.now(),checking=false,killTimer;
+   const child=spawn(gh,['api',`repos/${repo}/releases/assets/${assetId}`,'--hostname','github.com','--header','Accept: application/octet-stream'],{stdio:['ignore',handle.fd,'pipe'],windowsHide:true,env:{...process.env,GODEBUG:'http2client=0'}});
+   const done=error=>{if(settled)return;settled=true;clearTimeout(timer);clearInterval(progress);if(error&&child.exitCode===null){child.kill('SIGTERM');killTimer=setTimeout(()=>{if(child.exitCode===null)child.kill('SIGKILL');},1000);killTimer.unref();}error?reject(error):resolve();};
+   const timer=setTimeout(()=>done(Error('更新认证下载超时')),3*60*1000);
+   const progress=setInterval(async()=>{if(checking||settled)return;checking=true;try{const stat=await fs.stat(dest);if(settled)return;if(stat.size>lastSize){lastSize=stat.size;lastProgress=Date.now();onProgress(stat.size);}if(stat.size>DOWNLOAD_LIMIT)done(Error('更新文件过大'));else if(Date.now()-lastProgress>30000)done(Error('更新认证下载长时间无进度'));}catch(e){done(e);}finally{checking=false;}},600);
+   child.stderr.on('data',()=>{});child.on('error',()=>done(Error('GitHub 下载进程无法启动')));child.on('close',code=>{clearTimeout(killTimer);done(code===0?null:Error('GitHub 认证下载失败'));});
+  });
+  const stat=await fs.stat(dest);if(stat.size>DOWNLOAD_LIMIT)throw Error('更新文件过大');onProgress(stat.size);
+ }finally{await handle.close();}
+})();}
+function validateDownloadUrl(url){const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||!['github.com','objects.githubusercontent.com','release-assets.githubusercontent.com'].includes(u.hostname))throw Error('更新下载地址无效');}
 async function downloadAsset(repo,assetId,url,dest,onProgress=()=>{}){
- repo=repository(repo);const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||!['github.com','objects.githubusercontent.com','release-assets.githubusercontent.com'].includes(u.hostname))throw Error('更新下载地址无效');const gh=await ghBinary();await fs.mkdir(path.dirname(dest),{recursive:true});
- if(gh&&Number.isSafeInteger(assetId)&&assetId>0)try{await downloadWithGh(gh,repo,assetId,dest,onProgress);return;}catch{await fs.rm(dest,{force:true});}
- try{await anonymousDownload(url,dest,onProgress);}catch(e){await fs.rm(dest,{force:true});throw e;}
+ repo=repository(repo);validateDownloadUrl(url);await fs.mkdir(path.dirname(dest),{recursive:true});
+ // Public release assets do not need gh login or an authenticated API round trip.
+ try{return await require('./download-retry.cjs').downloadWithRetry(url,dest,{fetchFn:requestFetch,onProgress,validateUrl:validateDownloadUrl,limit:DOWNLOAD_LIMIT});}
+ catch(error){
+  // Private releases retain the existing authenticated transport. Do not turn
+  // disk/protocol failures into another long download with a different client.
+  if(![401,403,404].includes(error.status))throw error;
+  const gh=await ghBinary();if(!gh||!Number.isSafeInteger(assetId)||assetId<1)throw error;
+  try{await downloadWithGh(gh,repo,assetId,dest,onProgress);}catch(e){await fs.rm(dest,{force:true});e.status ||= error.status;throw e;}
+ }
 }
-module.exports={repository,ghBinary,api,apiWrite,readFeed,downloadAsset};
+async function readPublicUpdateManifest(repo){repo=repository(repo);const response=await requestFetch(`https://github.com/${repo}/releases/latest/download/gamedesk-update.json?t=${Math.floor(Date.now()/60000)}`,{credentials:'omit',headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(20000)});if(!response.ok)throw httpError(response.status);const data=await responseBytes(response,128*1024);try{return JSON.parse(data.toString('utf8'));}catch{throw Error('工作台更新清单无法解析');}}
+module.exports={readPublicUpdateManifest,repository,ghBinary,api,apiWrite,readFeed,downloadAsset};

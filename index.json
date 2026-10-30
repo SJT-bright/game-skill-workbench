@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "6b77eab7-cc81-4dfb-b673-f7b80eeba51f",
+      "skillId": "s-c80e30dda4e7623bf0ac",
+      "name": "remake-art",
+      "version": "v2",
+      "createdAt": "2026-10-30T08:51:11.617Z",
+      "summary": "文件变更：新增 1，修改 7，移除 0。",
+      "changes": {
+        "added": 1,
+        "modified": 7,
+        "deleted": 0
+      },
+      "treeHash": "6e511fd0a2d67c7cbdf0c3a298cdb35e13b18b44cd3b83581fb66db9bcfd01e9",
+      "bytes": 1023642,
+      "fileCount": 36
+    },
+    {
       "id": "14133045-f55b-4ee2-95df-986cda6ced01",
       "skillId": "s-a5a5d4cc5c2308178580",
       "directory": "chrome-mobile-testing",

@@ -1,0 +1,30 @@
+name: Windows published upgrade diagnostics
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  upgrade:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run unchanged published client update path
+        shell: pwsh
+        run: node scripts/verify-windows-upgrade.cjs --published
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-published-upgrade-diagnostics
+          include-hidden-files: true
+          path: |
+            .qa/windows-upgrade-published/upgrade-proof.json
+            .qa/windows-upgrade-published/installer-*.json
+            .qa/windows-upgrade-published/*.log
+            .qa/windows-upgrade-published/用户数据/updates/*.ps1
+            .qa/windows-upgrade-published/用户数据/updates/*.json
+            .qa/windows-upgrade-published/upgraded-native-stages/*.json
+            .qa/windows-upgrade-published/upgraded-native-stages/smoke-error.txt

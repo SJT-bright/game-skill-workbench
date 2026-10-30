@@ -98,6 +98,8 @@ jobs:
             .qa/ci-native/smoke-error.txt
             .qa/ci-error.log
             .qa/windows-upgrade-*/upgrade-proof.json
+            .qa/windows-upgrade-*/installer-*.json
+            .qa/windows-upgrade-*/用户数据/updates/apply.ps1
             .qa/windows-upgrade-*/*.log
             .qa/windows-upgrade-*/用户数据/updates/receipt.json
             .qa/windows-upgrade-*/upgraded-native-stages/*.json

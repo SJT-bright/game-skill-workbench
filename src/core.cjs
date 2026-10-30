@@ -177,7 +177,7 @@ class ClientStore {
       for(const f of release.files){
         const p=path.join(stage,...f.path.split('/'));let data,match=false;
         if(current?.path){try{const candidate=await fs.readFile(path.join(current.path,...f.path.split('/')));if(candidate.length===f.size&&digest(candidate)===f.hash){data=candidate;match=true;}}catch{}}
-        if(match&&await exists(p)){const st=await fs.stat(p);if(!!(st.mode&0o111)===!!f.executable||process.platform==='win32'){stats.unchanged++;continue;}}
+        if(match&&await exists(p)){const st=await fs.stat(p),staged=await fs.readFile(p);if(staged.length===f.size&&digest(staged)===f.hash&&(!!(st.mode&0o111)===!!f.executable||process.platform==='win32')){stats.unchanged++;continue;}}
         if(!data)data=await request(c,'/blobs/'+f.hash,true);
         if(data.length!==f.size||digest(data)!==f.hash)throw Error('文件哈希校验失败：'+f.path);
         const present=await exists(p);if(present){const st=await fs.lstat(p);if(!st.isFile())throw Error('Skill 文件与本机目录冲突：'+f.path);await fs.unlink(p);}

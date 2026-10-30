@@ -26,6 +26,9 @@ only) records every rendered frame (about 60 per second). Record short flows (on
 
 Startup/loading timing (scripts/audit_startup_loading.py of cocos-game-core reads these reports):
   plan "timing": true      no screenshots between steps (they would distort timing); navigation does not wait for 'load'
+                           v7.5 (Ego route): a low-quality CDP screencast keeps the tab drawing (plan "screencast": false
+                           turns it off), the page rAF rate is recorded per second (report frame_rate), and a run with any
+                           whole second below 30 fps before the last mark is INVALID (timing_valid false, exit 2)
   plan "network": {"download_kbps": 10000, "upload_kbps": 5000, "latency_ms": 80}   real throttling via CDP
   plan "cache": "cold"|"warm"   cold = cache disabled; warm = one untimed visit first, then the timed visit
   plan "warmup_js": "<js>"      warm only: condition that ends the untimed visit (e.g. home is usable)
@@ -99,6 +102,86 @@ SHOW_JS = """() => {
  window.dispatchEvent(new Event('pageshow'));window.dispatchEvent(new Event('focus'));
 }"""
 MAX_FRAMES=20000   # about 5.5 minutes at 60 fps
+# Timing validity (LunasJade D3 problem 4, v7.5): a covered Ego window is throttled to ~1 fps while
+# visibilityState stays 'visible', which stretches every frame-driven loading step. Timing runs therefore
+# (1) keep a tiny CDP screencast running from the timed navigation on (plan "screencast": false turns it
+# off) and (2) record the page's requestAnimationFrame rate; a timed run whose median is below MIN_TIMING_FPS
+# is INVALID (status failed, timing_valid false) and cannot be LOAD-03 evidence.
+MIN_TIMING_FPS=30
+RAF_JS = """(()=>{if(window.__ctRaf)return;const R=window.__ctRaf={frames:0,t0:performance.now(),perSec:[]};let sec=0,cnt=0;
+ const f=()=>{const s=Math.floor((performance.now()-R.t0)/1000);while(s>sec){if(R.perSec.length<900)R.perSec.push(cnt);cnt=0;sec++;}R.frames++;cnt++;requestAnimationFrame(f);};
+ requestAnimationFrame(f);})();"""
+# Prepended to ego_touch_runner.js (after CONFIG) for timing runs: wraps the official taskSpace() so the
+# page starts a low-quality screencast right after the timed Page.navigate, and writes fps.json just
+# before the runner finishes its own space. Uses only the documented TaskSpace/Page API + page.cdp().
+TIMING_PRELUDE = r"""
+if (CONFIG.timing) {
+  const __ctFs = await import("node:fs/promises");
+  const __ctTs = globalThis.taskSpace;
+  const __ctNote = { screencast: false, screencast_error: null, warmup: null };
+  globalThis.taskSpace = async (...a) => {
+    const t = await __ctTs(...a);
+    const page0 = t.page.bind(t);
+    t.page = (...b) => {
+      const p = page0(...b);
+      if (p.__ctWrapped) return p;
+      p.__ctWrapped = true;
+      const cdp = p.cdp.bind(p);
+      p.cdp = async (m, params) => {
+        const r = await cdp(m, params);
+        // Start at the runner's first Page.enable (before about:blank emulation and the timed navigation) and
+        // re-assert right after the timed Page.navigate: the throttle bites in the first seconds otherwise.
+        if ((m === "Page.enable" || m === "Page.navigate") && CONFIG.screencast) {
+          if (m === "Page.navigate") __ctNote.screencast = false;
+          for (let i = 0; i < 3 && !__ctNote.screencast; i++) {
+            try { await cdp("Page.startScreencast", { format: "jpeg", quality: 5, maxWidth: 120, maxHeight: 240, everyNthFrame: 1 }); __ctNote.screencast = true; __ctNote.screencast_error = null; }
+            catch (e) { if (/already active/i.test(String(e))) { __ctNote.screencast = true; break; } __ctNote.screencast_error = String(e).slice(0, 300); await new Promise(r => setTimeout(r, 250)); }
+          }
+        }
+        // Warm-up before the clock starts (the runner sets entry_epoch after its cache setting): a fresh Ego
+        // window draws ~1 fps for its first seconds. Wait (max 10 s) until about:blank runs >= 30 fps.
+        if (m === "Network.setCacheDisabled" && !__ctNote.warmup) {
+          __ctNote.warmup = [];
+          for (let i = 0; i < 10; i++) {
+            let f = null;
+            try { f = (await cdp("Runtime.evaluate", { expression: "new Promise(d=>{let n=0;const t0=performance.now();const f=()=>{n++;if(performance.now()-t0<1000)requestAnimationFrame(f);else d(Math.round(n*1000/(performance.now()-t0)));};requestAnimationFrame(f);})", awaitPromise: true, returnByValue: true })).result.value; } catch (_) {}
+            __ctNote.warmup.push(f);
+            if (typeof f === "number" && f >= 30) break;
+          }
+        }
+        return r;
+      };
+      return p;
+    };
+    const fin = t.finish.bind(t);
+    t.finish = async (...f) => {
+      let raf = null, error = null;
+      try { raf = await t.page("p1").evaluate(() => window.__ctRaf ? { frames: window.__ctRaf.frames, perSec: window.__ctRaf.perSec, ms: Math.round(performance.now() - window.__ctRaf.t0) } : null); }
+      catch (e) { error = String(e).slice(0, 300); }
+      try { await __ctFs.writeFile(CONFIG.out + "/fps.json", JSON.stringify(Object.assign({ raf, error }, __ctNote))); } catch (_) {}
+      return fin(...f);
+    };
+    return t;
+  };
+}
+"""
+
+
+def frame_rate(fps_doc, window_ms=None):
+    """rAF rate of a timing run. Every whole second from navigation up to window_ms (the last mark; the whole
+    run when None) must reach MIN_TIMING_FPS: a covered Ego tab runs ~1 fps exactly during loading and 60 fps
+    afterwards, so a run-wide median would hide it (seen 2026-10-29 with the screencast off: 1, 1, 60, 60...).
+    Returns (fps used for the verdict, median of whole seconds); (None, None) when unmeasured."""
+    raf=(fps_doc or {}).get('raf') or {}
+    per=[n for n in (raf.get('perSec') or []) if isinstance(n,int)]
+    median=sorted(per)[len(per)//2] if per else None
+    if window_ms is not None:per=per[:max(1,-(-int(window_ms)//1000))]
+    if per:return min(per),median
+    # Shorter than one whole second: average over the page life, if it lived at least 0.2 s.
+    frames,ms=raf.get('frames'),raf.get('ms')
+    if isinstance(frames,int) and isinstance(ms,(int,float)) and ms>=200:
+        avg=round(frames*1000/ms);return avg,avg
+    return None,None
 READ = """() => ({url:location.href,ua:navigator.userAgent,width:innerWidth,height:innerHeight,
  dpr:devicePixelRatio,maxTouchPoints:navigator.maxTouchPoints,ontouchstart:'ontouchstart' in window,
  canvas:Array.from(document.querySelectorAll('canvas'),c=>{let r=c.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}),
@@ -436,12 +519,15 @@ def run_ego(args):
             report['browser_slot_error']=str(error)
     save()
     needs_dump=any(a['type']=='dump_ui' for a in actions)
-    config={'plan':dict(plan,actions=actions),'out':str(out),'url':args.url,'viewport':viewport,'dpr':dpr,
-            'userAgent':plan.get('user_agent',IPHONE_UA),'timing':bool(plan.get('timing')),
+    timing=bool(plan.get('timing'))
+    run_plan=dict(plan,actions=actions)
+    if timing:run_plan['init_js']=RAF_JS+('\n'+str(plan['init_js']) if plan.get('init_js') else '')
+    config={'plan':run_plan,'out':str(out),'url':args.url,'viewport':viewport,'dpr':dpr,
+            'userAgent':plan.get('user_agent',IPHONE_UA),'timing':timing,'screencast':timing and plan.get('screencast',True) is not False,
             'record':bool(args.record or plan.get('record')),'spaceName':space_name,'readJs':READ,'observerJs':OBSERVER,
             'hideJs':HIDE_JS,'showJs':SHOW_JS,'uiDumpJs':ui_dump_js(next(a for a in actions if a['type']=='dump_ui')) if needs_dump else None}
     runner=(Path(__file__).resolve().parent/'ego_touch_runner.js').read_text(encoding='utf-8')
-    script='const CONFIG = %s;\n%s'%(json.dumps(config,ensure_ascii=False),runner)
+    script='const CONFIG = %s;\n%s%s'%(json.dumps(config,ensure_ascii=False),TIMING_PRELUDE if timing else '',runner)
     budget=60+sum(a.get('ms',0)/1000+a.get('timeout_ms',0)/1000+15 for a in actions)+(150 if plan.get('cache')=='warm' else 0)
     try:
         r=subprocess.run([exe,'nodejs'],input=script,capture_output=True,text=True,encoding='utf-8',timeout=budget)
@@ -464,6 +550,22 @@ def run_ego(args):
         f=out/dump['path']
         if f.is_file():dump['sha256']=hashlib.sha256(f.read_bytes()).hexdigest()
     finished=result.get('space_finished') is True
+    if timing:
+        fps_path=out/'fps.json'
+        fps_doc=json.loads(fps_path.read_text(encoding='utf-8')) if fps_path.is_file() else None
+        marks=[v for v in (report.get('marks') or {}).values() if isinstance(v,(int,float))]
+        window=max(marks) if marks else None
+        low,median=frame_rate(fps_doc,window)
+        report['frame_rate']={'lowest_fps_in_window':low,'median_fps':median,'min_fps':MIN_TIMING_FPS,'window_ms':window,
+                              'screencast':bool(fps_doc and fps_doc.get('screencast')),
+                              'screencast_error':fps_doc and fps_doc.get('screencast_error'),
+                              'warmup_fps':fps_doc and fps_doc.get('warmup'),
+                              'per_second':((fps_doc or {}).get('raf') or {}).get('perSec',[])[:300]}
+        report['timing_valid']=low is not None and low>=MIN_TIMING_FPS
+        if not report['timing_valid'] and report.get('status')!='failed':
+            report['status']='failed'
+            report['error']=('timing run invalid: page ran at %s fps (< %d) before the last mark; it cannot be LOAD-03 '
+                             'evidence. Keep the Ego window uncovered / leave the screencast on and re-run.'%(low,MIN_TIMING_FPS))
     report['cleanup_pending']=not finished and result.get('space_id') is not None
     if report.get('status')=='running':report['status']='failed'
     save()

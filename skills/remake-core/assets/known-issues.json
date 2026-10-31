@@ -924,7 +924,7 @@
       "feature": "audio",
       "title": "音效来源与授权记录",
       "symptom": "音效听起来像程序合成的\"哔哔\"声；音频文件说不清从哪来、能不能商用。",
-      "steps": "新音频用配套Skill game-audio-library生成，来源自动写进docs/audio/credits.csv；保留的原音频在docs/audio/sources.md记一行并写\"原游戏自带\"（启动包给的写\"启动包提供\"）。运行scripts/audit_audio_sources.py --project <工程> --binding <review.json> --out <报告>；报告里attribution_required大于0时，打开游戏\"关于/制作人员\"页核对docs/audio/CREDITS.txt的内容已显示。",
+      "steps": "新音频用配套Skill game-audio-library生成，来源自动写进docs/audio/credits.csv；启动包自带的声音原字节复制进工程后运行remake-game/scripts/starter_audio_credits.py --starter <启动包> --project <工程>，把它在音效库里的原文件写进docs/audio/credits.csv（v7.8，Saul 10-30）；底子原游戏自带的声音重塑不许用，docs/audio/sources.md只写\"原游戏自带\"\"启动包提供\"的不算来源，要从音效库换掉。运行scripts/audit_audio_sources.py --project <工程> --binding <review.json> --out <报告>；报告里attribution_required大于0时，打开游戏\"关于/制作人员\"页核对docs/audio/CREDITS.txt的内容已显示。",
       "expected": "每个音频都有合格来源记录，无合成/AI生成、无NC/ND/SA/仅个人使用、无\"待下载\"；需署名的已在游戏内显示；报告全部通过。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -948,11 +948,8 @@
         "audit_acquisition_progression"
       ],
       "board_notes": {
-        "localize": "英化：原游戏没有皮肤系统、用户也没取消皮肤板块时按模板新增（优化清单里先给用户勾选，默认要）；原来有皮肤的换成模板的数量和价格；新图沿用原游戏画风。"
+        "localize": "英化默认不加皮肤和经济（Saul 2026-10-28，取代 10-21“英化＋优化”的按模板新增）：原游戏自带的皮肤/商店只英化，数量和价格不改，看广告的入口改接平台包激励广告；原版没有就写不适用并附依据。Saul 要求创新玩法、新加皮肤或商店时，新加的部分按本条和经济板块测。"
       },
-      "required_boards": [
-        "localize"
-      ],
       "maintenance_scope_note": "Explicit preservation scope checks the actual existing collection and trial mechanics, original price catalog and source/Web/Native runtime plus current GUI; does not waive economy or introduce template-only map/trial popup.",
       "gate": "design"
     },
@@ -971,9 +968,9 @@
         "trial_effect_and_restore",
         "map_unlock"
       ],
-      "required_boards": [
-        "localize"
-      ],
+      "board_notes": {
+        "localize": "英化：原游戏有试用弹窗或地图解锁，按原机制测；创新玩法新加的，按本条测；都没有就写不适用并附依据（英化默认不加，Saul 2026-10-28）。"
+      },
       "maintenance_observations": [
         "existing_trial_entry_and_effect",
         "trial_only_current_round",
@@ -988,8 +985,8 @@
       "feature": "modules",
       "title": "内置板块：先删多做多错的按钮、每款游戏有货币、每次结算看广告×2、首页礼盒、皮肤板块（默认要）、关卡板块；按固定模板做，不自己发明",
       "symptom": "用户 2026-10-23：原游戏的按钮不审查就全保留，交叉推广（更多游戏）、排名、分享、七日签到这类多做多错的功能一直出 bug；有的游戏没有货币；结算页没有看广告翻倍；皮肤数量、价格、加成每款都乱填；首页没有礼盒；AI 每款游戏自己写广告奖励逻辑，广告按钮处连点重复发奖、卡顿。",
-      "steps": "设计玩法时（英化写在优化清单里、重塑在写规格时）按 remake-core/references/game-modules.md 做：①英化先把原游戏每个按钮列出来判断有没有用、能不能用，没用的删掉，写进 docs/modules.json 的 button_audit；②排名/排行榜、七日签到、更多游戏/交叉推广、分享一律不做、原有的删掉；③每款游戏有一种贴合题材的货币；④把 assets/modules/AdRewards.ts 原样复制进游戏，结算×2、奖励关×3/×6、礼盒金币、皮肤价格都从它算；⑤皮肤板块先判断适不适合并问用户（勾选框，默认要），要的话用 scripts/make_skin_table.py 生成20款主角皮肤＋10款背景；⑥首页礼盒的10帧动画图只在美术关由 art_check.py 查（用户 2026-10-24）；⑦设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_game_modules.py，最终总检测不再跑。",
-      "expected": "按当前内置板块合同：适合时有皮肤或可购买物品，五档价格10/20/30/40/50B、独立广告/礼包5B、礼包30分钟，结算×2；共用模块身份与模拟通过。英化原关>=70完整保留，不足只追加实际地图到70；不套新设计重排原关。",
+      "steps": "设计玩法时（英化写在优化清单里、重塑在写规格时）按 remake-core/references/game-modules.md 做：①英化先把原游戏每个按钮列出来判断有没有用、能不能用，没用的删掉，写进 docs/modules.json 的 button_audit；②联网/全服排行榜（局内对本地机器人的名次可以做，Saul 2026-10-31）、七日签到、更多游戏/交叉推广、分享一律不做、原有的删掉；③每款游戏有一种贴合题材的货币；④把 assets/modules/AdRewards.ts 原样复制进游戏，结算×2、奖励关×3/×6、礼盒金币、皮肤价格都从它算；⑤皮肤板块先判断适不适合并问用户（勾选框，默认要），要的话用 scripts/make_skin_table.py 生成20款主角皮肤＋10款背景；⑥首页礼盒的10帧动画图只在美术关由 art_check.py 查（用户 2026-10-24）；⑦设计关（英化 1.5 / 重塑第一轮玩法）由 scripts/design_check.py 运行 scripts/audit_game_modules.py，最终总检测不再跑。",
+      "expected": "按当前内置板块合同：适合时有皮肤或可购买物品，五档价格10/20/30/40/50B、独立广告/礼包5B、礼包30分钟，结算×2；共用模块身份与模拟通过。英化原关完整保留、不补关（Saul 2026-10-28）；不套新设计重排原关。",
       "phase": "pre_scan",
       "always_applicable": true,
       "auto_check": [
@@ -1064,9 +1061,9 @@
     {
       "id": "LEVEL-01",
       "feature": "economy",
-      "title": "英化原关保留/不足补70；新设计按已接受关序",
-      "symptom": "通关型游戏没有地图，玩家不知道一共几关、自己到哪了；只有二三十关就结束（不到70关）；难度忽高忽低，某一关突然难很多；地图上没有奖励关；每章最后一关和普通关一样的奖励；奖励关每隔固定几关出现一次，一眼看穿；奖励关不比普通关简单、金币没有3倍；限定关的节点和普通关一样；无尽游戏硬做了一张地图。",
-      "steps": "先核真实原始关卡数据。英化N>=70保留全部布局/关序/机制/难度；N<70追加70-N张真实新图到恰好70，不仅改总数或循环旧图。使用audit_level_plan的original/current数据比较；新增图按本作规则独立复放解法，代表边界触摸。重塑新设计才查限定/奖励关模板，接受后不重新随机。",
+      "title": "英化原关保留（不补关）；新设计按已接受关序",
+      "symptom": "通关型游戏没有地图，玩家不知道一共几关、自己到哪了；重塑只有二三十关就结束（不到60关）；难度忽高忽低，某一关突然难很多；地图上没有奖励关；每章最后一关和普通关一样的奖励；奖励关每隔固定几关出现一次，一眼看穿；奖励关不比普通关简单、金币没有3倍；限定关的节点和普通关一样；无尽游戏硬做了一张地图。",
+      "steps": "先核真实原始关卡数据。英化默认不补关（Saul 2026-10-28，取代10-24的补到70）：保留全部原关的布局/关序/机制/难度和关数；用户另外要求加关时算单独任务，level_plan.json写explicit_total，追加的必须是真实新图，不仅改总数或循环旧图。使用audit_level_plan的original/current数据比较；新增图按本作规则独立复放解法，代表边界触摸。重塑新设计才查限定/奖励关模板，接受后不重新随机。",
       "expected": "原关保留、真实新增图数量与生产路由对应，旧关不重复跑全量；结构审计与解法/实际输入证据分别准确。经济配置不重写原玩法地图。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -1074,7 +1071,7 @@
         "audit_level_plan"
       ],
       "board_notes": {
-        "localize": "英化只做补充：原来的关卡内容和顺序不改。不到70关的通关型游戏必须按原玩法设计新关、补到至少70关（已有70关或更多的不删不加）（标 \"new\": true，新关难度接着原来最后一关往上递增，每关证明能过）；没有地图的通关型游戏按原画风补一个地图页；第10、20…最后一关标成限定关（难度照常，换成华丽边框节点、补大量金币；限定皮肤只在最后一个限定关送，或每个限定关各送一款）；奖励关是新设计的很简单的短关（标 \"new\": true），插在 make_level_plan.py 按种子定的位置（每10关一个，3倍货币，看广告6倍），原关卡顺序不变。"
+        "localize": "英化默认不补关（Saul 2026-10-28，取代 10-24 的“不到 70 关补到 70”）：原来的关卡内容、顺序和数量都不改，默认不加地图页、限定关、奖励关，也没有设计关。Saul 要求加关（创新玩法）时算单独任务，新关按关卡板块做，在 level_plan.json 写 explicit_total（count、authorized_by、reason），新关标 \"new\": true、每关证明能过。"
       },
       "gate": "design"
     },
@@ -1083,7 +1080,7 @@
       "feature": "economy",
       "title": "本作实际关卡路由、已设计奖励与新增图的定向运行验证",
       "symptom": "地图打开在第1关而不是当前关；奖励关、限定关在地图上和普通关长得一样；限定关打完奖励没发、或者每次重玩都发；限定皮肤出现在商店价格表或看广告试用里；奖励关打完没有3倍货币、看广告没有变6倍。",
-      "steps": "英化原关>=70只核当前版本沿用的进度/选关入口与代表边界，不硬插奖励/限定关；不足70核实际新增图可加载、按规则解法通过、末关/解锁边界真实输入。新设计有奖励关才查3B/广告6B，有首通限定赠送才查一次领取；限定购买为50B，已有时不重复补币。范围以真实机制为准，n/a附依据，沿用现有样本清单。",
+      "steps": "英化不补关：只核当前版本沿用的进度/选关入口与代表边界，不硬插奖励/限定关；用户另行要求加关（explicit_total）时才核实际新增图可加载、按规则解法通过、末关/解锁边界真实输入。新设计有奖励关才查3B/广告6B，有首通限定赠送才查一次领取；限定购买为50B，已有时不重复补币。范围以真实机制为准，n/a附依据，沿用现有样本清单。",
       "expected": "七项都符合 remake-core/references/game-modules.md 第五节和 remake-levels/references/top-bar-and-level-map.md 第三到五节；奖励只发一次，按 CLAIM/STATE 规则保存。",
       "phase": "pre_scan",
       "always_applicable": false,
@@ -1251,17 +1248,17 @@
     {
       "id": "RANK-01",
       "feature": "league",
-      "title": "禁止排行榜与分享：代码、路由与配置一致关闭",
-      "symptom": "首页或结算仍有排行榜/分享入口，旧 League 决策重新启用已禁用功能。",
-      "steps": "设计关执行 audit_league 兼容命令及 no_social 检查。已有 decision.json 只允许 none/skip；移除入口、路由、模块和奖励，不安装 LeagueSim。源文件未变化时复用绑定证据。",
-      "expected": "不存在排行榜、社交分享入口或启用决策；新增 add/keep_original 决策必须拒绝。",
+      "title": "禁止联网/全服排行榜与分享：代码、路由与配置一致关闭（局内本地名次可用）",
+      "symptom": "首页或结算仍有好友/世界/地区/周榜、本地编的全服名次（You are #3,512）、假联赛或分享入口，旧 League 决策重新启用已禁用功能。",
+      "steps": "设计关执行 audit_league 兼容命令及 no_social 检查。已有 decision.json 只允许 none/skip；移除入口、路由、模块和奖励，不安装 LeagueSim。Saul 2026-10-31：一局里对本地机器人的名次、结算名次、按名次加本地奖杯、奖杯换段位、个人星级和最高分可以做（数据只在本机、不联网、匹配页写 Finding opponents），扫描器不按 rank/setRank/RANKED 名字拦，只拦平台排行与开放数据 API、带全服/世界/好友/地区/周榜范围词的榜单名和文字、编出来的大名次和假联赛。源文件未变化时复用绑定证据。",
+      "expected": "不存在联网/全服排行榜、假联赛、社交分享入口或启用决策；新增 add/keep_original 决策必须拒绝；局内本地名次不被误拦。",
       "phase": "pre_scan",
       "always_applicable": true,
       "auto_check": [
         "audit_league"
       ],
       "board_notes": {
-        "localize": "英化与重塑一致禁止排行榜与分享。"
+        "localize": "英化与重塑一致禁止联网/全服排行榜与分享（原游戏的好友榜、开放数据域照删）；局内对本地机器人的名次可以保留。"
       },
       "gate": "design"
     },
@@ -1352,7 +1349,7 @@
     "navigation_reward"
   ],
   "applicability": "All games review the same IDs. Always-applicable checks are mandatory; feature-specific rows apply only to existing or explicitly authorized functionality. Absence requires a concrete reason and evidence, never implementation of an unrelated feature.",
-  "boards": "Two separate work boards (remake-core/references/two-boards.md, user 2026-10-21): localize = Chinese source code to English plus optimisation (user 2026-10-21): English, layout (currency at the top, feature icons compact at the bottom), banned UI removed, skin/collection system, sound settings and first-level tutorial added in the original art style; original sound files and core gameplay kept; remake = starter pack (optionally with source), gameplay first, then all new art and sound. The review records its board. Items with boards:[\"remake\"] are not checked for localize. auto_check_by_board overrides auto_check for that board; board_notes says how the check reads for that board. art_style (localize only, user 2026-10-21): original = 美术第一版 in the original style (default); remake = the user said \"按重塑画风重做\", then items marked localize_remake_style (ART-02, ART-03) apply to the localize review too.",
+  "boards": "Two separate work boards (remake-core/references/two-boards.md, user 2026-10-21): localize = Chinese source code to English (cocos-game-to-english, Saul 2026-10-28): only the fixed items of the English entry (English text and image text, profile revisit and add-to-desktop, SFX/BGM volumes, share/more-games/leaderboard removed, broken input fixed, Watch Ad x2 and Retry on the result page, watch-ad revive); original gameplay, levels, home buttons, art style and sound files kept; by default no new levels, economy, skins, check-in or tutorial (the 2026-10-21 'English plus optimisation' list is void); when the user asks for new gameplay, the added parts use the ads/economy/levels/skins boards and are checked by their items; remake = starter pack (optionally with source), gameplay first, then all new art and sound. The review records its board. Items with boards:[\"remake\"] are not checked for localize. auto_check_by_board overrides auto_check for that board; board_notes says how the check reads for that board. art_style (localize only, user 2026-10-21): original = 美术第一版 in the original style (default); remake = the user said \"按重塑画风重做\", then items marked localize_remake_style (ART-02, ART-03) apply to the localize review too.",
   "auto_check_tools": {
     "audit_dark_area": "scripts/audit_dark_area.py: page/popup screenshots; negative rules only (user 2026-10-28): large dark area, single-colour and plain-backdrop measures, large plain white/grey and single-colour blocks; average lightness is reported for information only, no brightness floor",
     "audit_audio_sources": "scripts/audit_audio_sources.py: every audio file has an allowed source record",
@@ -1369,7 +1366,7 @@
     "audit_optional_features": "scripts/audit_optional_features.py: docs/features.json records the user's answers on skin bonus and 7-day check-in; skin_bonus true -> every non-free skin has a bonus in unlock_table.json (values checked by audit_acquisition_progression); daily_checkin true -> DailyCheckin.ts unchanged, checkin-config.json passes the simulation (once per day, 7 cards in order, big day 7, owned skin pays coins, clock back, missed days, reset hour, save/load), check-in skins are unlock \"checkin\", same R; false -> nothing added",
     "audit_button_coverage": "scripts/audit_button_coverage.py: button list read from the chrome_touch dump_ui files of the running game (every interactable button on every page and popup, only those above an open popup mask); every button must be tapped in the simulated iPhone and a screenshot after the tap must differ from the one before; skips need a reason; writes the button list as Markdown; taps are matched at the position the render camera draws each button (ui_dump \"screen\"), and camera/viewport offsets are reported",
     "audit_top_bar": "scripts/audit_top_bar.py: docs/top-bar.json + chrome_touch dump_ui dumps; currency (named and drawn after the game world, a plain coin needs a reason) and progress (and energy with a lightning icon) at the top of home and map, top-right corner free for the platform capsule, currency visible on shop/skins, currency and level number higher on the first home/map page after a won level ; currency_only_at_top: on every page but shop/skins/rewards/results, a number next to a currency/energy icon sits in the top band, never in the middle (user 2026-10-23)",
-    "audit_level_plan": "scripts/audit_level_plan.py: level_plan.json (mode levels/endless); levels: at least 60 levels for remake/new designs (Saul 2026-10-29) and at least 70 for 英化 (user 2026-10-24; originals with more kept, more is fine), every level listed, difficulty per difficulty_policy (wave-tiers.v1: tutorial 1-3, spike 4, recovery 5-9, exam 10, tiered 25/45/15/15 irregular wave, no two hard levels in a row; older plans strictly rising) (英化: only added levels), a limited level every 10 levels (10, 20, 30 ...; ornate frame, lots of currency; limited_skin_mode final = only the last one gives the limited skin, every_10 = each limited level gives its own; only there), one seeded-random bonus level in every 10 (easier than the block, 3x currency, ad -> 6x), no perfect-clear skins, maps unlock on limited levels; map page dumped and shows the total; endless: no map page",
+    "audit_level_plan": "scripts/audit_level_plan.py: level_plan.json (mode levels/endless); levels: at least 60 levels for remake/new designs (Saul 2026-10-29) and at least 70 for 英化 (user 2026-10-24; originals with more kept, more is fine), every level listed, difficulty per difficulty_policy (wave-tiers.v2: tutorial 1-2, level 3 already hard, every limited level a hard exam, tiered 25/45/15/15 irregular wave, no two hard levels in a row; wave-tiers.v1 plans (tutorial 1-3, spike 4, recovery 5-9) keep the v1 rules; older plans strictly rising) (英化: only added levels), a limited level every 10 levels (10, 20, 30 ...; ornate frame, lots of currency; limited_skin_mode final = only the last one gives the limited skin, every_10 = each limited level gives its own; only there), one seeded-random bonus level in every 10 (easier than the block, 3x currency, ad -> 6x), no perfect-clear skins, maps unlock on limited levels; map page dumped and shows the total; endless: no map page",
     "audit_native_storage_contract": "scripts/audit_native_storage_contract.py: same project runner executes old failing and final Native bundle/adapter; verifies null/undefined/empty-string absence, typed/string valid data, invalid values, read/write/readback failures, pending recovery, Retry, home/map/details and reward uniqueness; binds runner/raw results/final Native bytes and rejects incomplete or stale matrix before ZIP",
     "logic_check": "scripts/logic_check.py --mode build (cocos-game-check/test, user 2026-10-23): static suspects in assets/ scripts and level JSON (touch cancel committed like touch end, unbounded while(true)/for(;;), load error branch that only logs, buttons placed by Math.random, saved keys never read, sound setting only in memory, empty level-config slots, \"Daily\" without a date, physics not stopped on pause), each fixed or judged in docs/logic/triage.json with a why; plus docs/logic/flows.json F01-F20 walked with real touch in two ratios (exit/Home/Retry/Next on every page, pause stops physics, clean-up on leaving, round tokens for ads and loads, refresh keeps progress, touch cancel, last level, daily, platform buttons), every pass with an evidence file; untested never passes; review-mode reports never pass",
     "make_tiktok_zip": "scripts/make_tiktok_zip.py (cocos-game-check/package, user 2026-10-23 SquareRush UPLOADFIX): makes the one uploadable TikTok platform package from the Native build - refuses before writing any ZIP when the gate fails, the folder has an outer folder / is a Web build / has source files, junk, nested archives, non-ASCII paths or the QA level jump, the App ID differs, or the uncompressed main > 4,000,000, total > 30,000,000 or an independent subpackage > 4,000,000 bytes; then re-reads the written ZIP (CRC, root entry, limits, every file byte-equal to the Native tree, independent extraction) and only then moves it to --out; report <zip>.report.json bound to the review",
@@ -1380,7 +1377,7 @@
   "negative_control_rule": "Items with requires_negative_control need, in their own evidence, a known-bad run of the SAME check: a JSON {schema: known_issue_negative_control.v1, mutant, status: fail, failed > 0, tool: {path, sha256}} whose tool SHA equals the tool of a current_result in the same row. A check that never failed on a known-bad version proves nothing (Monkey Dash 2026-10-21).",
   "reviewer_rule": "Items with \"reviewer\": \"gpt\" need the row field reviewer = \"gpt\" when marked pass (judgement only a GPT/Codex session gives).",
   "spot_check_rule": "When review.test_executor is another AI, review.gpt_spot_check is required: GPT read every code change since locked_commit, re-ran all automatic checks and redid >= 3 flows (one ad, one platform task if any) with no open disagreements.",
-  "gate_rule": "用户 2026-10-24（remake-core/references/check-stages.md）：检查分阶段。gate \"design\" 的条目在设计关由 scripts/design_check.py 查（英化 1.5 优化做完后、重塑第一轮玩法节点1前）；gate \"art\" 的条目在美术关由 scripts/art_check.py 查（英化 1.8 每轮美术、重塑第二轮美术、remake-art）。最终总检测（check_known_issues.py）只查没有 gate 的条目：加载、广告与奖励、存储、异步、输入与按钮、逻辑、不能看广告跳关、构建与打包、英文文案、闪烁等以前出过问题的地方；gate 条目不进 review，留在 review 里的旧行忽略。锁定后又改了设计或美术，只对改动重跑 design_check.py / art_check.py，不重开最终门禁的这些行。",
+  "gate_rule": "用户 2026-10-24（remake-core/references/check-stages.md）：检查分阶段。gate \"design\" 的条目在设计关由 scripts/design_check.py 查（重塑：第一轮玩法节点1前；英化默认没有设计关，创新玩法新加的部分也在这里查）；gate \"art\" 的条目在美术关由 scripts/art_check.py 查（英化只查改过的页面、重塑第二轮美术、remake-art）。最终总检测（check_known_issues.py）只查没有 gate 的条目：加载、广告与奖励、存储、异步、输入与按钮、逻辑、不能看广告跳关、构建与打包、英文文案、闪烁等以前出过问题的地方；gate 条目不进 review，留在 review 里的旧行忽略。锁定后又改了设计或美术，只对改动重跑 design_check.py / art_check.py，不重开最终门禁的这些行。",
   "package_gate_intercepts_rule": "v7.5: symptom -> the script/gate that stops it at packaging (or source stage). Lookup only: these are not review rows; the review items above stay the checklist. level warn = reported, never refuses.",
   "package_gate_intercepts": [
     {
@@ -1636,6 +1633,13 @@
       "source": "D7 10/11/W4"
     },
     {
+      "id": "L-FPS",
+      "symptom": "120 帧的屏幕上物理和推力跑成两倍速，电脑上测的手感不代表手机（全民飞车漂移 schedule(run_time, 0.01) 每次推固定的力、物理没开 enabledAccumulator；Pizza Drift 第 1 到 5 关第一个弯就掉下去）",
+      "intercept": "remake-core/scripts/logic_check.py L-FPS-ACCUM（开了 2.4 物理却没开 enabledAccumulator）、L-FPS-SCHEDULE（schedule 间隔小于 1/60 秒且回调不用 dt）、L-FPS-DT（update / 每帧 schedule 里施力、冲量、改速度或位置却不乘 dt）",
+      "level": "preflight（新游戏需处理；LEGACY_GAMES 名单上的老游戏只提示）；只静态，60/120 帧手感对比（FRAME-RATE-FEEL，runtime_regression frame_rate）是最终裁判",
+      "source": "总表 22 P16 / FW 2.3"
+    },
+    {
       "id": "EN-IMG-REVIEW",
       "symptom": "英化包里图集还画着中文（MusicSlice HomeSprites \"已拥有\"）",
       "intercept": "remake-core/scripts/audit_image_review_record.py（英化板块写包入口）",
@@ -1662,6 +1666,104 @@
       "intercept": "remake-core/scripts/audit_ui_coverage.py home_zones_remake",
       "level": "block(remake)",
       "source": "D1/W5"
+    },
+    {
+      "id": "CAPSULE-PX-SHIFT",
+      "symptom": "胶囊位置按像素返回时，顶栏整体往下挪，钱、设置被挤开或被 3D 盖住（全民飞车漂移 v1 顶栏 10 个节点下移 166 点；SpiderSwing、Holly、FoxDenDash 同类）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/layout_state.mjs unit_shift（写包入口必跑；修法：remake-core/assets/platform-kit/parts/CapsuleLayout.js）",
+      "level": "block（新游戏；名单上的老游戏警告；3.x 只警告）",
+      "source": "总表 22 B30 / U1 / W87"
+    },
+    {
+      "id": "TRIAL-AD-WINDOW-HIDDEN",
+      "symptom": "试玩链接里点看广告像卡死：模拟广告窗挂在被游戏适配器换掉的 body 上，页面上看不到（全民飞车漂移 v1-v3 的旧试玩宿主）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/trial_link.mjs ad_window_hidden（remake-core/scripts/serve_preview.py --keep 给链接前自动跑；runtime_regression.py trial --url 手动跑）",
+      "level": "block（不给试玩链接）",
+      "source": "总表 22 B21 / B30 F / W87"
+    },
+    {
+      "id": "ART-OVERLAP-V78",
+      "symptom": "按钮压着图框、字身后背景太花、换字后两层字叠在一起（Holly v1 局内 Settings、Holly v2 PROFILE 压栅栏、剪刀达人 v26）",
+      "intercept": "remake-core/scripts/art_check.py「位置穿模」（remake-core/scripts/audit_page_richness.py overlap_button_picture / busy_text_background / stacked_text_layers）",
+      "level": "art（美术关；art_check 回执进写包入口）",
+      "source": "总表 22 U11 / U7 补 / W88（遮罩透明度那部分 Saul 10-31 撤掉，W98）"
+    },
+    {
+      "id": "ART-HERO-HUD-EDGE",
+      "symptom": "首页主角只露半个身子、HUD 分数和货币太小看不清、复活或结算页上下有黑边（企鹅雪道美术 v3 / v4）",
+      "intercept": "remake-core/scripts/art_check.py（remake-core/scripts/audit_page_richness.py home_hero_* / hud_digit_* / black_edge_band）",
+      "level": "art（美术关；art_check 回执进写包入口）",
+      "source": "总表 22 H11 / H6 / W88"
+    },
+    {
+      "id": "ART-HIDDEN-BODY",
+      "symptom": "关卡里看不见板子却能剪、能撞（带碰撞体的节点 Sprite 被关或没图：剪刀达人 v17 / v18）",
+      "intercept": "remake-core/scripts/tiktok_finalize_steps/art_static.py K_art_hidden_body（tiktok_finalize source 源码段）",
+      "level": "block（新的重塑游戏；老游戏和英化警告）",
+      "source": "总表 22 H6 / W88"
+    },
+    {
+      "id": "ATLAS-EDGE-FRAGMENT",
+      "symptom": "图片字、棋子或投射物边上有一条残边（图集切片切到了旁边的图：Ingrid's Snowball Stack 10-26 连续三轮）",
+      "intercept": "remake-core/scripts/audit_atlas_slices.py edge_fragment",
+      "level": "art（美术关）",
+      "source": "总表 22 H9 补 / W88"
+    },
+    {
+      "id": "POPIN",
+      "symptom": "宽屏下障碍在屏幕中间凭空出现、右半边一直空着，复活时看得见的障碍一帧挪走（BreezyBalloon v2.1 按设计宽度 750 回收柱子）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/popin.mjs appeared_on_screen / vanished_on_screen / jumped_on_screen（写包入口必跑，四种屏幕；修法：remake-core/assets/platform-kit/parts/CourseLane.js）",
+      "level": "block（新游戏；名单上的老游戏警告；3.x 未覆盖只警告；没有滚动障碍写 n/a）",
+      "source": "总表 22 P2 补 / W89"
+    },
+    {
+      "id": "ART-BASE-LEFT",
+      "symptom": "重塑游戏里还留着底子原图、原声，或模型里内嵌的原贴图（企鹅雪道美术 v2 39 张和懒猫原版相同、丛林荡藤 v6 33 张、Pinecone fix1 沿用旧音效）",
+      "intercept": "remake-core/scripts/art_check.py「底子原图原声不留」、remake-core/scripts/art_records.py check（修法：换掉，或写进 docs/art/base-keep.json 并写原因）",
+      "level": "art（新的重塑游戏拒；老游戏警告；英化不查）",
+      "source": "总表 22 H8 / W90"
+    },
+    {
+      "id": "ART-NOT-GENERATED",
+      "symptom": "按钮和数字是代码画的，或新做的图没有生成记录（企鹅雪道美术 v3 用 PIL 加 Fredoka 字体画按钮和数字）",
+      "intercept": "remake-core/scripts/art_check.py「新做的图都有生成记录」（remake-core/scripts/art_records.py generated 登记；不在记录里的报 not_generated）",
+      "level": "art（新的重塑游戏拒；老游戏警告）",
+      "source": "总表 22 H10 / W90"
+    },
+    {
+      "id": "FRAME-RATE-FEEL",
+      "symptom": "同一段操作在 120 帧的屏幕上跑得更快、更远，电脑上调的手感到手机上不一样（全民飞车漂移 v3.1：起步 1 秒时 120 帧多跑 19.9%；Pizza Drift 第 1 到 5 关第一个弯就掉下去）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/frame_rate.mjs same_motion（60 帧和 120 帧按真实时间比位置，差超过 5% 不通过；用了 2.4 物理的新游戏由 remake-core/scripts/tiktok_finalize_steps/physics_clock.py 自动装 remake-core/assets/platform-kit/parts/PhysicsClock.js 打开 enabledAccumulator，推力仍要乘 dt）",
+      "level": "block（新游戏；名单上的老游戏警告；3.x 未覆盖只警告；没有物理、没有自己会动的东西写 n/a）",
+      "source": "总表 22 P16 / W92"
+    },
+    {
+      "id": "ISSUE-SUPERSEDE",
+      "symptom": "设计改了，旧问题登记的用例永远过不了，只能删问题历史或手写 pass 绕过（剪刀达人、企鹅雪道）",
+      "intercept": "remake-core/scripts/package_issue_gate.py supersede（要 Saul 原话、日期和已登记的新问题编号，缺一个就拒；旧问题不再拦，新问题复验通过前照样拦）",
+      "level": "block（没写原话、日期或新编号的作废不认）",
+      "source": "总表 22 B32 a / W92"
+    },
+    {
+      "id": "DELIVERY-MANY-ZIPS",
+      "symptom": "交付文件夹里堆着几十个版本的包，上传时分不清该用哪个（剪刀达人）",
+      "intercept": "remake-core/scripts/delivery_folder.py（两个写包入口出包后自动把同款旧包连同回执挪进 旧包/，写 最新.txt：上传用哪个包、sha256、时间；--keep-old-packages 不挪）",
+      "level": "tool",
+      "source": "总表 22 B32 b / W92"
+    },
+    {
+      "id": "MODIFIED-CHECK-TOOLS",
+      "symptom": "游戏会话用自己改过的检查工具判包，结论不是 Skill 的工具给的，改动也没回到 Skill（企鹅雪道 qa/ad_regression_tool_fix）",
+      "intercept": "cocos-game-check/package-check/scripts/tool_identity.py（check_package、build_checked_zip、runtime_regression 报「改过的工具」，并写反馈草稿到 ！Skill更新/）",
+      "level": "warn",
+      "source": "总表 22 B32 d / W92"
+    },
+    {
+      "id": "OLD-SCRIPT-PATH",
+      "symptom": "照旧笔记运行 ~/.kiro/crew/skills/cocos-game-check/core/scripts/<脚本>.py，提示文件不存在（10-28 拆包后搬到 remake-core/scripts/）",
+      "intercept": "cocos-game-check/core/scripts/（转发桩，转到 remake-core/scripts/ 的同名脚本并提示新路径）",
+      "level": "tool",
+      "source": "总表 22 B32 c / W92"
     }
   ]
 }

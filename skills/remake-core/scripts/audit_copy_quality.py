@@ -10,7 +10,10 @@ and checks:
   blocking  Chinese characters or full-width punctuation in English text; misspelled words (offline dictionary
             assets/english-words.txt.gz + game words + docs/copy/glossary.json "allow"); repeated words ("the the");
             placeholders ({0} %d ${x}) that differ between zh and en; text sticking out of its button/frame
-            (measured from the dump); a variant the project glossary bans ("terms": {"Coins": ["Gold"]})
+            (measured from the dump); a variant the project glossary bans ("terms": {"Coins": ["Gold"]});
+            v7.8 E8: a car / character trademark from assets/trademark-words.json ("Ferrari 458" -> "Supercar";
+            licensed names go to glossary "trademark_ok": [{term, why}]). Words that are also plain English
+            (Mustang, Bumblebee, Golf) and names in code / data string literals are review only.
   review    Chinglish phrases with a suggestion ("Receive" -> "Claim", "Gold coins" -> "Coins", "Click" -> "Tap" ...);
             mixed names for one thing (Coins/Gold, Energy/Stamina, Back/Return ...); mixed button case
             (PLAY / Play); one Chinese source translated two ways; text that may be cut (CLAMP) or shrunk
@@ -32,6 +35,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WORDS = HERE.parent / 'assets' / 'english-words.txt.gz'
+TRADEMARKS = HERE.parent / 'assets' / 'trademark-words.json'   # v7.8 E8: car and character names (Ferrari 458 ...)
 SKIP_DIRS = {'library', 'temp', 'local', 'build', 'node_modules', '.git', 'profiles'}
 HAN = re.compile('[㐀-䶿一-鿿豈-﫿]')
 FULLWIDTH = re.compile('[，。！？：；“”‘’（）【】、…—《》]')
@@ -99,6 +103,59 @@ def load_words(extra):
         for t in TOKEN.findall(w):
             words.add(t.lower())
     return words
+
+
+def load_trademarks(path=TRADEMARKS, allowed=()):
+    """总表 E8 -> [(term, kind, level, compiled pattern, instead)]. Terms the game's glossary lists under
+    trademark_ok (licensed, with a why) are left out."""
+    try:
+        data = json.loads(Path(path).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return []
+    ok = {str(a.get('term', '')).strip().lower() for a in allowed
+          if isinstance(a, dict) and len(str(a.get('why', '')).strip()) >= 10}
+    out = []
+    for t in data.get('terms') or []:
+        if not isinstance(t, dict) or str(t.get('term', '')).lower() in ok:
+            continue
+        try:
+            rx = re.compile(t['pattern'], re.I if 'i' in str(t.get('flags', '')) else 0)
+        except (KeyError, re.error):
+            continue
+        out.append((t['term'], t.get('kind', ''), t.get('level', 'block'), rx, t.get('instead', '')))
+    return out
+
+
+def trademark_hits(text, terms):
+    """-> [(term, kind, level, matched words, instead)] for one string."""
+    hits = []
+    for term, kind, level, rx, instead in terms:
+        m = rx.search(text)
+        if m:
+            hits.append((term, kind, level, m.group(0), instead))
+    return hits
+
+
+STRING_LITERAL = re.compile(r'([\'"`])((?:(?!\1)[^\\\r\n]|\\.){2,120})\1')
+
+
+def literal_strings(project):
+    """Every short string literal in game scripts and JSON data under assets/ (car-name tables live there, not in a
+    Label). Only the trademark check reads these, and only as review: a literal is not always shown to players."""
+    out = []
+    for p in sorted((Path(project) / 'assets').rglob('*')):
+        if p.suffix not in {'.ts', '.js', '.json'} or not p.is_file() or p.name.endswith('.meta') \
+                or SKIP_DIRS & {x.lower() for x in p.relative_to(project).parts} or p.stat().st_size > 3_000_000:
+            continue
+        rel = p.relative_to(project).as_posix()
+        if 'tiktok-platform' in rel:
+            continue
+        text = p.read_text(encoding='utf-8', errors='replace')
+        for m in STRING_LITERAL.finditer(text):
+            s = m.group(2)
+            if LATIN.search(s) and not re.fullmatch(r'[\w./-]*(_|/|\.png|\.json)[\w./-]*', s):
+                out.append({'text': s, 'source': 'literal', 'where': rel})
+    return out
 
 
 def misspelled(body, words):
@@ -232,6 +289,7 @@ def px(rect, canvas, dpr):
 def audit(project, dumps, table_path, glossary_path):
     glossary = json.loads(Path(glossary_path).read_text(encoding='utf-8')) if glossary_path and Path(glossary_path).is_file() else {}
     words = load_words(glossary.get('allow', []))
+    trademarks = load_trademarks(allowed=glossary.get('trademark_ok') or [])
     try:
         runtime_manifest = json.loads((Path(project) / 'docs' / 'text' / 'runtime-text.json').read_text(encoding='utf-8-sig'))
         runtime_patterns = [str(x['path']) for x in runtime_manifest.get('labels', [])
@@ -282,6 +340,20 @@ def audit(project, dumps, table_path, glossary_path):
             add(review, s, 'long_button', '按钮文字太长（%d 个字符），手机上不好读' % len(text))
         if len(text.split()) > 6 and text.isupper():
             add(review, s, 'all_caps_sentence', '整句全大写不好读，长句用正常大小写')
+        for term, kind, level, word, instead in trademark_hits(text, trademarks):
+            add(blocking if level == 'block' else review, s, 'trademark',
+                '%s商标词「%s」（%s，词表 %s）：换成通用叫法%s；真有授权写进 glossary.json 的 trademark_ok' % (
+                    '' if level == 'block' else '可能是', word, kind, term, '，如 "%s"' % instead if instead else ''))
+    # v7.8 E8: car / character names in data tables (string literals) are only a hint, a literal is not always shown
+    shown = set(seen)
+    hinted = set()
+    for s in literal_strings(project):
+        if s['text'] in shown or s['text'] in hinted:
+            continue
+        for term, kind, level, word, instead in trademark_hits(s['text'], trademarks):
+            hinted.add(s['text'])
+            add(review, s, 'trademark_literal', '代码或数据里的字符串有商标词「%s」（%s）：如果会显示给玩家，换成通用叫法%s'
+                % (word, kind, '，如 "%s"' % instead if instead else ''))
     # text must fit: measured from the running game
     for s in runtime:
         if not s.get('rect') or not s.get('canvas'):

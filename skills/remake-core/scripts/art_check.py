@@ -24,6 +24,7 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
 依次运行（缺输入就是"需处理"，不跳过）：
   页面内容    audit_page_richness.py   纯色背景、单调页面、只有字的按钮、系统字体、空白面板/卡片、占位图、纯色方块、
                                        深色粗字、字超出按钮、大片空白、按钮超过40%、单调弹窗（只有字和按钮）、首页大标题和封面、选关≥6关、设置两个标签
+  领奖窗      audit_claim_double.py    签到/转盘结果/礼包领奖窗：一个广告入口、「看广告双倍」默认勾上、有免费 CLAIM（Saul 2026-10-31）
   大块深色    audit_dark_area.py       每张截图：大块深色、纯黑/纯色底、大白板、大块纯色（只查负向，不设亮度下限，用户 2026-10-28）
   布局        extract_ui_layout.py + audit_ui_coverage.py   玩法区≥80%、弹窗≤60%、内容不压边框、首页设置在上角/功能按钮紧凑放在下方
   文字放得下  audit_copy_quality.py --require-runtime        字超出按钮/底图、被截断、中文残留、拼写
@@ -41,6 +42,15 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
 最后生成总览图（make_contact_sheet.py）和一页 art-check.md：Codex 打开总览图，按里面的"看图清单"逐项看。
 
 结果：<输出>/art-check.md、art-check.json（tool art_check，供门禁 ART-06）、logs/。退出码 0 全部通过，1 有需处理，2 参数错误。
+v7.8（U7 补，Saul 10-30）：分析跑完还写 <工程>/.tiktok-kit/art-receipt.json（art_receipt.py：通过 pass / 失败 fail，
+工程里全部图片的指纹）；缺采集时 2.4 不动旧回执，3.x 写 not_covered_3x（3.x 未覆盖，不是通过）。两个写包入口和
+serve_preview.py --keep 只核对这份回执、不重跑本脚本：重塑新游戏没有回执、不是通过或图对不上就不出包、不起试玩。
+v7.8（H8、H10，art_records.py）：两行不用采集就能查——和底子逐字节相同的图、模型内嵌贴图、声音（docs/art/base-assets.json，
+留下的写 docs/art/base-keep.json）；新做的图要在 docs/art/generated.json（代码画的写 docs/art/script-drawn-allow.json）。
+缺采集时这两行也写进报告；3.x 工程这两行没通过时回执写 fail（不是 not_covered_3x）。本机 python3 没有 numpy 时，
+命令行自动改用带 numpy 的 /usr/bin/python3 重跑。
+W90b：这两行只算会进包的文件（在 resources 或资源包里、被场景/预制体等按 uuid 引用、代码写了路径、认不出的；给 --build
+时出现在构建里的也算）；工程里没用到的只列成「建议删掉」，不拦。
 """
 from __future__ import annotations
 
@@ -58,14 +68,21 @@ HERE = Path(__file__).resolve().parent
 TIMEOUT = 600
 DARK_TEXT_KINDS = {'dark_bold_text', 'dark_picture_text', 'dark_green_text', 'dark_text', 'dev_text'}
 # user 2026-10-23 (both boards): every word, number and button is generated picture text in one piece with the art
-ONE_PIECE_KINDS = {'spliced_button', 'typed_title', 'font_number', 'font_text', 'canvas_text', 'canvas_font_code'}
+ONE_PIECE_KINDS = {'spliced_button', 'typed_title', 'font_number', 'font_value_label', 'font_text', 'canvas_text',
+                   'canvas_font_code'}
 # user 2026-10-23: DETAILS squashed 2.89x into a button; all text on a page one colour (Hazel's teal home, orange Progress popup)
 SHAPE_COLOUR_KINDS = {'squashed_text', 'squashed_picture', 'uniform_text_colour'}
 # user 2026-10-23: energy "20" over the lightning icon, coin pile hanging off WATCH AD, "WATCH AD" as a caption: 穿模
+# v7.8 H11 (企鹅雪道美术 v3 half a penguin, v4 tiny score) + H6 black bands on revive / result pages
+HERO_HUD_KINDS = {'home_hero_unknown', 'home_hero_hidden', 'home_hero_small', 'hud_digit_small', 'hud_digit_contrast',
+                  'black_edge_band'}
 STYLE_KINDS = {'mixed_caption_style', 'off_style_button', 'flat_button', 'text_arrow'}   # user 2026-10-23: one style per group
 OVERLAP_KINDS = {'overlap_text_picture', 'overlap_text', 'overlap_buttons', 'clip_out', 'text_outside', 'action_caption',
                  # user 2026-10-23 Daily Rewards: "100" printed as "10" over "100", day-7 car out of its card, checkerboard
-                 'glyph_overlap', 'double_number', 'negative_spacing', 'font_advance', 'font_advance_rendered', 'checker_fill', 'checker_unavailable'}
+                 'glyph_overlap', 'double_number', 'negative_spacing', 'font_advance', 'font_advance_rendered', 'checker_fill', 'checker_unavailable',
+                 # v7.8 U11: a button over another frame (Holly v1), plain text on a busy background (Holly v2), one
+                 # text drawn in two layers (剪刀达人 v26). No popup-dim opacity limit (Saul 10-31: judged by eye).
+                 'overlap_button_picture', 'busy_text_background', 'stacked_text_layers'}
 LOOK = [
     '【用户 2026-10-24，动态时钟字距】同帧 runtime dump 与截图齐全；逐个检查动态时钟在 Canvas/节点/Label 缩放后的相邻字形间隙，至少 2.5 CSS px；不足由位置穿模项拦截，缺视口/字体/字形证据不能跳过',
     '【永久禁止，用户 2026-10-23/28，只查负向】放大看每一段字（含游戏中 HUD 的金币/关卡数字、面板里的说明和状态字、图片字）：没有深色/近黑填充的字，尤其深色粗字——不管什么颜色（深青、深绿、藏青、深蓝灰、深棕、深灰、黑），深色只能出现在描边/阴影里；没有特别密集的字（字距/行距过小、一块区域塞满字）；没有特别细的字（细线字、发丝描边，手机上看不清）；字没有压在复杂底图上看不清；没有"HOME SCREEN OPEN""MISSIONS 2/3 RESOLVED"这类状态字',
@@ -96,6 +113,11 @@ LOOK = [
 def run(name, args, logs):
     from check_runner import run_tool
     return run_tool(name, args, logs, HERE, TIMEOUT)
+
+
+def recorded_frame_dirs(dumps):
+    """Frame folders saved by chrome_touch.py --record (<out>/frames/NNNNN_TTTTTTTms.jpg) under the dump folder."""
+    return sorted({p.parent for p in Path(dumps).rglob('*.jpg') if p.parent.name == 'frames'})
 
 
 def first_json(text):
@@ -190,7 +212,7 @@ def fixed_text_inventory_findings(page_report):
         screen = page.get('screen') or page.get('file') or 'unknown screen'
         for problem in page.get('problems', []):
             kind = str(problem).split(':', 1)[0]
-            if kind in {'font_text', 'font_number'}:
+            if kind in {'font_text', 'font_number', 'font_value_label'}:
                 findings.append('%s: %s' % (screen, str(problem)[:180]))
     return findings
 
@@ -325,6 +347,46 @@ def gift_box_row(proj):
     return title, ok, detail
 
 
+H8_TITLE = '底子原图原声不留（H8：和底子逐字节相同的图、模型内嵌贴图、声音）'
+H10_TITLE = '新做的图都有生成记录（H10：代码画的按钮和数字不算图片字）'
+
+
+def base_generated_rows(proj, board, build=None):
+    """v7.8 H8 + H10 (art_records.py): static, needs no page capture. -> ([(title, ok, detail, log)], summary)."""
+    try:
+        import art_records
+        result = art_records.check(proj, board, build=build)
+    except Exception as exc:  # noqa: BLE001 - a broken check never passes
+        return [(H8_TITLE, False, '查不了：%r' % exc, ''), (H10_TITLE, False, '查不了：%r' % exc, '')], {'error': repr(exc)}
+    b, g = result['base'], result['generated']
+    return [(H8_TITLE, b['ok'], b['message'], art_records.BASE_FILE.as_posix()),
+            (H10_TITLE, g['ok'], g['message'], art_records.GENERATED_FILE.as_posix())], art_records.summary(result)
+
+
+def numpy_python():
+    """v7.8: art_check's checkers need numpy + Pillow (checkerboard, busy background). Homebrew's python3 has no numpy
+    (rows then said checker_unavailable), so the command line re-runs itself with a Python that has both (macOS
+    /usr/bin/python3). None when this Python has them, or when no other Python does (the old message stays)."""
+    import importlib.util
+    import os
+    import shutil
+    if importlib.util.find_spec('numpy') and importlib.util.find_spec('PIL'):
+        return None
+    if os.environ.get('ART_CHECK_REEXEC'):
+        return None
+    here = os.path.realpath(sys.executable)
+    for cand in ('/usr/bin/python3', shutil.which('python3'), '/usr/local/bin/python3', '/opt/homebrew/bin/python3'):
+        if not cand or not os.path.exists(cand) or os.path.realpath(cand) == here:
+            continue
+        try:
+            ok = subprocess.run([cand, '-c', 'import numpy, PIL'], capture_output=True, timeout=60).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            ok = False
+        if ok:
+            return cand
+    return None
+
+
 def main():
     started = time.monotonic()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -338,6 +400,7 @@ def main():
     ap.add_argument('--loading-only', action='store_true', help='affected official loading presentation; never a full ART-06 pass')
     ap.add_argument('--board', choices=['localize', 'remake'])
     ap.add_argument('--binding', type=Path, help='known-issue review JSON whose "binding" is copied into the report (ART-06)')
+    ap.add_argument('--build', type=Path, help='v7.8 H8/H10: build folder or package ZIP; files found in it count as shipped')
     ap.add_argument('--out', type=Path)
     a = ap.parse_args()
     if a.loading_only:
@@ -382,13 +445,30 @@ def main():
 
     inventory = capture_inventory(proj, dumps)
     (out/'input-inventory.json').write_text(json.dumps({k:v for k,v in inventory.items() if k not in ('records','dump_files','shots')},ensure_ascii=False,indent=2)+'\n')
+    # v7.8 H8 / H10: static rows, also when the page capture is missing
+    static_rows, static_summary = base_generated_rows(proj, board, a.build)
+    static_failed = [r for r in static_rows if r[1] is False]
     if not inventory['ready']:
-        report={'tool':'art_check','schema':1,'passed':False,'status':'blocked_inputs','checked':0,
-                'failed':len(inventory['errors']),'input_errors':inventory['errors'],'total_elapsed_seconds':round(time.monotonic()-started,6),
-                'rows':[{'check':'采集材料','status':'缺采集','detail':e} for e in inventory['errors']],
-                'time':dt.datetime.now().isoformat(timespec='seconds')}
+        report={'tool':'art_check','schema':1,'passed':False,'status':'blocked_inputs','checked':0,'static_checked':len(static_rows),
+                'failed':len(inventory['errors'])+len(static_failed),'input_errors':inventory['errors'],'total_elapsed_seconds':round(time.monotonic()-started,6),
+                'rows':[{'check':'采集材料','status':'缺采集','detail':e} for e in inventory['errors']]+
+                       [{'check':t,'status':'通过' if ok is True else ('提示' if ok is None else '需处理'),'detail':d,'log':lg} for t,ok,d,lg in static_rows],
+                'base_generated':static_summary,'time':dt.datetime.now().isoformat(timespec='seconds')}
         (out/'art-check.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
         md='# 美术检查：先补采集\n\n本轮尚未运行美术分析，不能判定美术通过或失败。补齐以下具体材料后再运行：\n\n'+'\n'.join('- '+e for e in inventory['errors'])+'\n'
+        md+='\n不用采集就能查的两行（v7.8 H8、H10）：\n\n'+'\n'.join('- %s：%s　%s'%(t,'通过' if ok is True else ('提示' if ok is None else '需处理'),d) for t,ok,d,_ in static_rows)+'\n'
+        # v7.8 U7（补）: Cocos 2.4 keeps its earlier receipt (missing inputs are no verdict); a 3.x project cannot be
+        # captured by ui_dump yet, so its receipt records the images as "3.x 未覆盖" (never a pass) -- unless H8 / H10
+        # already failed: then the receipt is a fail (3.x remakes such as 企鹅雪道 would otherwise pass the writers).
+        import art_receipt
+        if art_receipt.engine(proj) == 3:
+            if static_failed:
+                art_receipt.write(proj,'fail',report,out/'art-check.json',
+                                  note='3.x 未覆盖页面检查；不用采集的 H8/H10 没通过：'+'；'.join(r[0] for r in static_failed))
+                md+='\n美术回执：%s（fail：H8/H10 没通过；重塑新游戏不出包）\n'%art_receipt.receipt_path(proj)
+            else:
+                receipt=art_receipt.not_covered_3x(proj,report,out/'art-check.json')
+                md+='\n美术回执：%s（3.x 未覆盖，不是通过；写包入口照样放行但会标出）\n'%art_receipt.receipt_path(proj)
         (out/'art-check.md').write_text(md,encoding='utf-8');print(md);return 1
     from audit_no_social_features import audit as audit_no_social
     social=audit_no_social(proj,dumps=a.dumps)
@@ -426,6 +506,12 @@ def main():
     j = first_json(text)
     found = '；'.join('%s：%s' % (x.get('screen') or '缺页面', p[:90]) for x in j.get('found', []) for p in x.get('problems', [])[:2])[:900]
     add('页面内容与背景', code == 0, found or '通过（%s 个页面）' % j.get('checked', 0), 'page_richness.json')
+    # v7.8 (Saul 10-31, W100): check-in / wheel result / gift-pack claim windows: one ad entry, a 「看广告双倍」 box
+    # that starts ticked, a free CLAIM
+    code, text = run('audit_claim_double.py', ['--project', proj, '--dumps', dumps, '--out', out / 'claim_double.json'], logs)
+    j = first_json(text)
+    add('领奖窗看广告双倍（签到/转盘结果/礼包：一个默认勾上的勾选框、有免费 CLAIM）', code == 0,
+        '；'.join(p[:120] for p in j.get('problems', []))[:700] or '通过（%s 个领奖窗）' % j.get('screens', 0), 'claim_double.json')
     # user 2026-10-23: dark bold text is permanently banned (any hue, HUD and picture text too): its own row, never waived
     dark = []
     try:
@@ -451,6 +537,17 @@ def main():
     add('文字与数字后深色实心底块（禁止）', dark_ok and not solid_text and not solid_unavailable,
         '；'.join((solid_text + solid_unavailable)[:8])[:900] if solid_text or solid_unavailable else
         ('通过：实际文字周围未检出深色实心 UI 填充；仍须检查生成贴图 Alpha 与合成图' if dark_ok else '缺实际页面截图与文字采集'), 'page_richness.json')
+    # user 2026-10-29 (冲鸭小巴 "数据后面有纯色背景的在skill也要限制住", 坦克 blue box behind coins, 人鱼逃脱 blue strip behind
+    # "LEVEL 1 • +10 PEARLS"): no flat colour box of ANY colour behind level/score/currency values
+    flat_plate = []
+    if dark_ok:
+        for pg in rep.get('pages', []):
+            for prob in pg.get('problems', []):
+                if prob.startswith('flat_value_plate:'):
+                    flat_plate.append('%s: %s' % (pg.get('screen') or '?', prob[:120]))
+    add('数据后面的纯色底板（任何颜色都禁止）', dark_ok and not flat_plate, '；'.join(flat_plate[:6])[:700] if flat_plate else
+        ('通过：等级、分数、货币数字后面没有纯色方块；底板都是生成的图' if dark_ok else '缺实际页面截图与文字采集'),
+        'page_richness.json')
     one = []
     try:
         for pg in rep.get('pages', []):
@@ -466,6 +563,21 @@ def main():
     add('文字一次成图（标题logo、整张按钮、图片数字）', dark_ok and not one, '；'.join(one[:6])[:700] if one else
         ('通过：标题是 logo 图、按钮字和按钮一张图、数字是生成的位图字、没有用 Canvas 字体画字' if dark_ok else '没有页面报告：先 dump 全部页面'),
         'page_richness.json')
+    # user (Codex 美工调查 2026-10-30, A02/A11): flashes when tapping, paging, changing the volume or clearing tiles
+    # ("这个问题必须沉淀进检查的skill，出现很多次了很多游戏都有") are invisible on still screenshots. Every art round
+    # records those actions with chrome_touch.py --record (frames/ next to the dumps) and runs audit_frame_glitches.py.
+    frame_dirs = recorded_frame_dirs(dumps)
+    glitches = []
+    for index, frame_dir in enumerate(frame_dirs[:12]):
+        g_out = out / 'frame_glitches' / ('%02d' % index)
+        code_g, _ = run('audit_frame_glitches.py', [frame_dir, '--out-dir', g_out, '--report', g_out / 'report.json'], logs)
+        if code_g != 0:
+            glitches.append('%s：%s' % (frame_dir.parent.name, '有闪屏/空帧，证据见 %s' % g_out if code_g == 1 else '工具出错 %d' % code_g))
+    add('动态闪屏（录屏：点按钮、开关弹窗、调音量、局内消除）', bool(frame_dirs) and not glitches,
+        '；'.join(glitches[:6]) if glitches else (
+            '检查 %d 段录屏，没有闪黑、闪白、空帧或闪烁' % len(frame_dirs) if frame_dirs else
+            '没有录屏帧：用 chrome_touch.py --record 录首页点按钮、弹窗开关、调音量、局内消除各一段，帧放在 dump 目录下的 frames/'),
+        'frame_glitches')
     text_findings = fixed_text_inventory_findings(rep if dark_ok else {})
     label_total, dynamic_total, long_copy_total = visible_label_counts(dump_files, proj)
     text_detail = ('可见运行时文字 %d 项：动态白名单 %d 项、40 字以上说明 %d 项、固定短文字/数字违规 %d 项' %
@@ -509,6 +621,17 @@ def main():
     add('同组按钮同一种风格（按钮和下面的字做法、底板、颜色一致）', dark_ok and not same, '；'.join(same[:6])[:700] if same else
         ('通过：每组按钮的字都是同一种做法、同一种底板和颜色，按钮全部来自同一套' if dark_ok else '没有页面报告：先 dump 全部页面'),
         'page_richness.json')
+    hero = []
+    try:
+        for pg in rep.get('pages', []):
+            for prob in pg.get('problems', []):
+                if prob.split(':', 1)[0] in HERO_HUD_KINDS:
+                    hero.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', prob[:110]))
+    except (NameError, AttributeError):
+        pass
+    add('首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边（H11、H6）', dark_ok and not hero, '；'.join(hero[:6])[:700] if hero else
+        ('通过：首页主角至少 90%% 在屏内、占屏 8%% 以上；HUD 数字字高至少屏高 3%%、对比度至少 3:1；复活和结算页上下没有黑边' if dark_ok
+         else '没有页面报告：先 dump 首页、游戏中、复活和结算页'), 'page_richness.json')
     sheets_ = overlap_sheets(dump_files, out)
     add('穿模审查图（给 Codex 看）', None if sheets_ else False, ('%d 张：%s（放大看每个按钮、胶囊、数字有没有穿模）' % (len(sheets_), out / 'overlap'))
         if sheets_ else '没有可裁的按钮/胶囊（缺 dump 或截图）', 'overlap')
@@ -612,6 +735,8 @@ def main():
 
     # 用户 2026-10-24：礼盒 10 帧只在美术阶段查（原来在 audit_game_modules.py / 最终门禁里）
     add(*gift_box_row(proj))
+    for title, ok, detail, log in static_rows:     # v7.8 H8 / H10 (computed before the capture check)
+        add(title, ok, detail, log)
 
     if shots:
         code, text = run('make_contact_sheet.py', [*shots, '--out', out / 'sheets', *binding], logs)
@@ -620,7 +745,7 @@ def main():
     report = {'tool': 'art_check', 'schema': 1, 'board': board, 'art_style': 'remake' if remake_art else 'original',
               'assets_fingerprint': tree_fingerprint(proj), 'checked': len(rows), 'failed': len(blocking),
               'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows, 'look_list': LOOK,
-              'time': dt.datetime.now().isoformat(timespec='seconds')}
+              'base_generated': static_summary, 'time': dt.datetime.now().isoformat(timespec='seconds')}
     if a.binding:
         try:
             b = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')
@@ -633,8 +758,13 @@ def main():
     report['check_timings'] = read_timings(logs)
     report['total_elapsed_seconds'] = round(time.monotonic()-started,6)
     (out / 'art-check.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    # v7.8 U7（补）: the package writers and serve_preview --keep only check this receipt (never re-run the art check)
+    import art_receipt
+    receipt = art_receipt.after_art_check(proj, report, out / 'art-check.json')
     md = ['# 美术自检', '', '工程：%s　板块：%s　美术：%s　时间：%s' % (proj, '英化' if board == 'localize' else '重塑',
                                                              '按重塑画风' if remake_art else '沿用原画风', report['time']), '',
+          '美术回执：%s（%s，%d 张图的指纹；出包和用户试玩只核对它，图再改就要重跑本脚本）' % (
+              art_receipt.receipt_path(proj), receipt['status'], receipt['images_count']), '',
           ('**需处理 %d 项：改完重新读页面、重新跑本脚本，全部通过才交用户。**' % len(blocking)) if blocking else '**脚本检查全部通过。**接着 Codex 看总览图：',
           '', '| 检查 | 结果 | 说明 |', '| --- | --- | --- |']
     md += ['| %s | %s | %s |' % (r['check'], r['status'], r['detail'].replace('|', '/')) for r in rows]
@@ -646,4 +776,10 @@ def main():
 
 
 if __name__ == '__main__':
+    _python = numpy_python()
+    if _python:      # v7.8: no numpy here -> re-run with one that has it (the checker tools inherit sys.executable)
+        import os
+        print('art_check: %s 没有 numpy，改用 %s 运行' % (sys.executable, _python), file=sys.stderr)
+        raise SystemExit(subprocess.call([_python, '-B', str(Path(__file__).resolve()), *sys.argv[1:]],
+                                         env=dict(os.environ, ART_CHECK_REEXEC='1', PYTHONDONTWRITEBYTECODE='1')))
     raise SystemExit(main())

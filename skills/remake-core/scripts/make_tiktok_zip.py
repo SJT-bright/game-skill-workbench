@@ -13,7 +13,7 @@ Native tree), extracts it again into a folder with spaces and compares, and only
          --project <game> --web <web build> --build-tag v3 --review docs/test/known-issue-review.json [--board localize|remake]
          --resource-manifest <current resource manifest.json>
          --startup-contract <current startup contract.json> --loading-recovery-runtime <current recovery runtime.json>
-         [--report <new report.json>]
+         --ad-regression <project>/qa/ad-regression.json [--report <new report.json>]
 
 For every package the mandatory --review known-issue gate (check_known_issues.py check --stage pre_scan) runs first and a failure stops it
 (BUILD-03; use this script as the game's writer for test_writer_refusal.py). Exit codes: 0 ZIP written and verified,
@@ -31,6 +31,18 @@ step) and the package gates run with the finalize record (K4) and its policy (ne
 `finalize` (receipt schema 2). --keep-webp-exception REASON is the design 3.6 WebP exception (kit probe installed).
 For test_writer_refusal.py give this script a separate --out (its normal case makes one ZIP; existing ZIPs are never
 overwritten) and delete that check ZIP afterwards.
+v7.8 (总表 B32 b): after the ZIP is written, older packages of the same game in the --out folder (same App ID and the
+same game's own files, delivery_folder.py) move into 旧包/ with their receipts, and 最新.txt says which file to upload,
+its sha256 and time; the moved files are listed in the output and in the report (delivery_folder). Source ZIPs and
+everything else stay. --keep-old-packages (or TIKTOK_KEEP_OLD_PACKAGES=1) leaves the folder as it is: use it, or an
+own folder, for the test_writer_refusal check ZIP.
+v7.8 (W97, 总表 22.6 D/E): after the written ZIP is re-read and extracted, the rewarded-ad regression and the runtime
+regression suites (startup, network, dead_shell, layout_state, button_sweep, ad_entries, popin, frame_rate, ...) run on
+that extraction through check_package.writer_regressions - the same gates build_checked_zip runs in check_package.check()
+- with --ad-regression <adapter JSON> (or $TIKTOK_AD_REGRESSION_ADAPTER), the finalize policy and --board. A new game
+is refused (no adapter, no Ego browser, an incomplete environment and a failed case all refuse); a game on the frozen
+legacy list gets warnings and its ZIP. Results go into the report (rewarded_ad_regression, runtime_regression). The
+suites take minutes; for test_writer_refusal give the same --ad-regression in the writer command (its normal case).
 """
 import argparse
 import hashlib
@@ -237,6 +249,10 @@ def finalize_for_writer(native, project, board, app_id, options=None):
     2. tiktok_finalize.finalize_native(native, project, board, app_id): installs the standard parts in place (the
        v7.5 adapter_fix rewrite is its first step). The writers never pass --policy: the policy comes from the
        project marker / the frozen legacy list (design section 2).
+    v7.8 (U7 补): with step 1 the art receipt <project>/.tiktok-kit/art-receipt.json is CHECKED (art_receipt.check,
+       never a new art run): a new remake game whose receipt is missing, not a pass, or whose images changed is
+       refused here, before the build folder is touched; legacy / English games and "3.x 未覆盖" get a warning and a
+       row in the finalize table (record['art_receipt']).
     -> (record, gate_context, problems). problems non-empty = refuse; record is None when step 1 refused."""
     import tiktok_finalize as F
     options = dict(options or {})
@@ -245,13 +261,39 @@ def finalize_for_writer(native, project, board, app_id, options=None):
     except F.T.KitError as error:
         return None, None, ['K_kit_unusable: %s' % error]
     problems = ['%s: %s' % (f['id'], f['message']) for f in F.check_source_record(project, kit, options=options)]
+    art = art_receipt_check(project, board)
+    if art and art['level'] == 'block':
+        problems.append('%s: %s' % (art['gate'], art['message']))
     if problems:
         return None, None, problems
     record = F.finalize_native(native, project, board, app_id, manifest=kit, options=options)
     record['source_record'] = source_record_ref(project)
+    add_art_receipt(record, art)
     problems = ['%s: %s' % (b['id'], b['message']) for b in record['blocks']]
     context = {'writer': True, 'finalize_record': record, 'project': project, 'finalize_options': options}
     return record, context, problems
+
+
+def art_receipt_check(project, board):
+    """v7.8 U7（补）, both writers via finalize_for_writer: CHECK the art receipt (art_receipt.py), never re-run the art
+    check (Saul 10-24). Board/policy come from the writer and the K5-checked source record. None without --project."""
+    if not project:
+        return None
+    import art_receipt
+    return art_receipt.check(project, board)
+
+
+def add_art_receipt(record, art):
+    """Put the receipt result in the finalize record: a warning (legacy / English / 3.x 未覆盖) goes to `warnings`,
+    which the ZIP receipt and the report carry, and every result is one row of the delivery table."""
+    if not art:
+        return
+    import art_receipt
+    record['art_receipt'] = art_receipt.summary(art)
+    item = art_receipt.finding(art)
+    if item and item['level'] == 'warn':
+        record.setdefault('warnings', []).append(dict(item, step='art_receipt'))
+    record.setdefault('table', []).append(art_receipt.table_row(art))
 
 
 def finalize_report(record):
@@ -259,6 +301,8 @@ def finalize_report(record):
     import tiktok_finalize as F
     out = vnz.finalize_summary(record)
     out['table_markdown'] = F.table_markdown(record)
+    if record.get('art_receipt'):
+        out['art_receipt'] = record['art_receipt']        # v7.8: which art receipt the writer checked
     return out
 
 
@@ -270,6 +314,27 @@ def adapter_step(record):
     return None
 
 
+
+
+CHECK_SCRIPTS = HERE.parents[1] / 'cocos-game-check' / 'package-check' / 'scripts'
+
+
+def writer_regressions(folder, adapter, policy, board):
+    """v7.8 (W97): check_package.writer_regressions on the files of `folder` (the independent extraction of the ZIP
+    about to be published). The import or a crash is a refusal for a new game, never a skip."""
+    folder = Path(folder)
+    files = {p.relative_to(folder).as_posix(): p.read_bytes() for p in sorted(folder.rglob('*')) if p.is_file()}
+    try:
+        if str(CHECK_SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(CHECK_SCRIPTS))
+        import check_package
+    except Exception as error:  # noqa: BLE001
+        text = 'rewarded-ad / runtime regression not run: cocos-game-check package-check unusable (%r)' % (error,)
+        legacy = policy == 'legacy'
+        return {'id': 'writer_regressions', 'policy': policy, 'board': board, 'blocked': not legacy,
+                'problems': [] if legacy else [text], 'warnings': [text + ' [legacy game: warning]'] if legacy else [],
+                'rewarded_ad_regression': None, 'runtime_regression': None, 'adapter': str(adapter) if adapter else None}
+    return check_package.writer_regressions(files, folder, str(adapter) if adapter else None, policy=policy, board=board)
 
 
 def write_zip(native, files, target):
@@ -303,6 +368,11 @@ def main():
     ap.add_argument('--resource-manifest', type=Path, help='complete current production resource requests; shared mandatory gate')
     ap.add_argument('--keep-webp-exception', metavar='REASON', help='design D77 3.6: keep WebP (still over 30 MB after '
                     'shrinking); finalize installs the kit WebP probe. Same reason as `tiktok_finalize.py source`')
+    ap.add_argument('--keep-old-packages', action='store_true', help='v7.8: leave older packages of this game in the '
+                    'output folder and do not write 最新.txt (e.g. a writer-refusal test ZIP); default: they go into 旧包/')
+    ap.add_argument('--ad-regression', type=Path, help='v7.8: adapter JSON for the rewarded-ad and runtime regressions, '
+                    'as build_checked_zip.py (default $TIKTOK_AD_REGRESSION_ADAPTER; usually <project>/qa/'
+                    'ad-regression.json). A new game is refused without it; a legacy game gets a warning')
     a = ap.parse_args()
     if not (a.review and a.project and a.web and a.build_tag):
         print('REFUSED, no ZIP written: all upload/test/detection packages require --review, --project, --web and --build-tag; use verify_native_zip.py --structure-only for read-only structure diagnosis', file=sys.stderr)
@@ -474,6 +544,16 @@ def main():
         again = {f.relative_to(check).as_posix(): sha(f) for f in check.rglob('*') if f.is_file()}
         if again != result['file_sha256']:
             raise ValueError('independent extraction differs from the ZIP listing')
+        # v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions build_checked_zip runs through
+        # check_package.check(), here on the extracted bytes of the ZIP about to be published (same adapter, policy
+        # and board). A new game is refused; a game on the frozen legacy list gets warnings.
+        regressions = writer_regressions(check, a.ad_regression, gate_policy, a.board)
+        if regressions['blocked']:
+            print('REFUSED, no ZIP written (rewarded-ad / runtime regression, policy %s):\n- %s'
+                  % (gate_policy, '\n- '.join(regressions['problems'])), file=sys.stderr)
+            return 1
+        if hashlib.sha256(tmp.read_bytes()).hexdigest() != result['sha256']:
+            raise ValueError('ZIP changed during the runtime regression')
         receipt = vnz.make_receipt('make_tiktok_zip', tmp, result['sha256'], result['file_sha256'],
                                    info['package_gates'], a.board,
                                    {'tool_sha256': sha(Path(__file__))}, finalize=finalized)
@@ -505,17 +585,28 @@ def main():
                                                    'written ZIP re-read: CRC, safe paths, root entry, App ID, limits',
                                                    'every file byte-equal to the Native tree',
                                                    'independent extraction (folder with a space) equal'],
-              'warnings': result.get('warnings', []), 'left_out_junk': SKIPPED, 'limits_source': vnz.LIMITS_SOURCE,
+              'warnings': result.get('warnings', []) + regressions['warnings'], 'left_out_junk': SKIPPED, 'limits_source': vnz.LIMITS_SOURCE,
               'upload': 'upload this ZIP directly - do not unzip, re-zip or wrap it',
               'not_verified': result['not_verified'],
               'board': a.board, 'package_gates': info['package_gates'], 'pre_home_bytes': info['pre_home_bytes'],
               'finalize': finalize_report(finalized), 'adapter_fix': adapter_step(finalized),
-              'entry': result['entry'], 'receipt': str(receipt_file)}
+              'entry': result['entry'], 'receipt': str(receipt_file),
+              # v7.8 (W97): same keys as check_package.check() / build_checked_zip reports
+              'rewarded_ad_regression': regressions['rewarded_ad_regression'],
+              'runtime_regression': regressions['runtime_regression'],
+              'regressions': {k: regressions.get(k) for k in ('policy', 'board', 'adapter', 'problems', 'warnings',
+                                                              'seconds')}}
+    if isinstance(info.get('pre_home_bytes'), dict) and isinstance(regressions['runtime_regression'], dict):
+        info['pre_home_bytes']['measured'] = regressions['runtime_regression'].get('startup_measured')
     if a.review is not None:            # BUILD-04 auto report: bound to this build like every other automatic check
         try:
             report['binding'] = json.loads(a.review.read_text(encoding='utf-8')).get('binding')
         except (OSError, ValueError):
             pass
+    # v7.8 (总表 B32 b): older packages of this game go into 旧包/, the folder keeps this one package and 最新.txt.
+    import delivery_folder
+    report['delivery_folder'] = delivery_folder.tidy(out, a.app_id, 'make_tiktok_zip', report['zip_sha256'],
+                                                     keep=a.keep_old_packages)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({k: report[k] for k in ('status', 'zip', 'zip_sha256', 'zip_bytes', 'appId', 'sizes', 'warnings',
@@ -523,7 +614,12 @@ def main():
                      ensure_ascii=False, indent=2))
     print('finalize (policy %s, kit %s):\n%s' % (finalized['policy'], finalized['kit_version'],
                                                  report['finalize']['table_markdown']))
+    runtime = regressions['runtime_regression'] or {}
+    print('rewarded-ad / runtime regression (policy %s, %s s): suites %s%s' % (
+        gate_policy, regressions.get('seconds'), ', '.join(runtime.get('required') or []) or '-',
+        ''.join('\n  warning: %s' % w for w in regressions['warnings'])))
     print('report: %s' % report_path)
+    print('\n'.join(delivery_folder.describe(report['delivery_folder'])))
     return 0
 
 

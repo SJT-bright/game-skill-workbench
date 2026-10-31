@@ -135,11 +135,13 @@ class IntroSamplingTests(unittest.TestCase):
         from audit_level_plan import audit_plan
         data = make(40, 50, None, 19, 'Coins')
         data['why'] = 'Existing project keeps the explicitly approved original forty levels.'
-        def count_check():
+        def count_check(board='remake'):
             checks = {}
-            audit_plan(data, None, lambda name, passed, detail: checks.update({name: passed}), 'localize')
+            audit_plan(data, None, lambda name, passed, detail: checks.update({name: passed}), board)
             return checks['levels_at_least_70']
         self.assertFalse(count_check())
+        # 英化不补关 (Saul 2026-10-28): the generated table carries bonus levels marked "new", which an English game may not add
+        self.assertFalse(count_check('localize'))
         data['explicit_total'] = {'count': 40, 'authorized_by': 'current project contract',
             'reason': 'The current project explicitly preserves its original forty levels and all progression values.'}
         self.assertTrue(count_check())

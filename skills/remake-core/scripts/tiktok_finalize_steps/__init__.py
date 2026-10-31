@@ -18,7 +18,9 @@ HERE = Path(__file__).resolve().parent
 KIT_DIR = HERE.parent.parent / 'assets' / 'platform-kit'
 MANIFEST = KIT_DIR / 'KIT_MANIFEST.json'
 
-SOURCE_STEPS = ('images', 'kit_sources', 'build_templates', 'settings')
+SOURCE_STEPS = ('images', 'kit_sources', 'physics_clock',   # physics_clock: v7.8 P16 (new 2.4 physics games)
+                'build_templates', 'settings', 'orientation',   # orientation: v7.8 B31
+                'art_static')        # art_static: v7.8 U7（补）squashed sprites, invisible colliders (read only, after images)
 NATIVE_STEPS = ('adapter', 'touch', 'storage', 'startup', 'login', 'appid', 'png', 'structure')
 POLICIES = ('new', 'legacy')
 MARK = re.compile(r'//\s*tiktok-kit:([\w.-]+):([\w.-]+)')

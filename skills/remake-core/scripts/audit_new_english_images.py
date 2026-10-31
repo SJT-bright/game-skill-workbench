@@ -12,7 +12,8 @@ Export new English images at 2x display size, then compress (the 2x rule of audi
 
 API:  check(images, pre_english, display=None) -> {"passed": bool, "problems": [...], "new_images": [...]}
   images: {name: bytes} or iterable of (name, bytes); pre_english: iterable of SHA-256 strings, or a JSON file
-  {"images": {sha: name}} / [sha, ...]; display: optional {name or sha: (width, height)}.
+  {"images": {sha: name}} / [sha, ...], or (v7.8) the original recorded by `art_records.py base`
+  (docs/art/base-assets.json); display: optional {name or sha: (width, height)}.
 CLI:  python3 audit_new_english_images.py --zip <upload.zip> --pre-english <list.json> [--out report.json]
       python3 audit_new_english_images.py --make-list <Chinese original project dir> --out <list.json>
 Exit 0 pass, 1 refused, 2 bad input.
@@ -58,6 +59,9 @@ def pixels(data):
 def load_pre(pre_english):
     if isinstance(pre_english, (str, Path)):
         doc = json.loads(Path(pre_english).read_text(encoding='utf-8-sig'))
+        if isinstance(doc, dict) and doc.get('kind') == 'base-assets':
+            # v7.8: the original recorded by art_records.py base (docs/art/base-assets.json, {path: sha})
+            return {str(s).lower() for key in ('images', 'embedded') for s in (doc.get(key) or {}).values()}
         pre_english = doc.get('images', doc) if isinstance(doc, dict) else doc
     return {str(s).lower() for s in pre_english}
 

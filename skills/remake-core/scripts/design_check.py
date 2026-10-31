@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """设计关自检（用户 2026-10-24，remake-core/references/check-stages.md）：玩法和板块设计定下来就跑，不等到最终总检测。
 
-什么时候跑：英化在阶段 1.5（优化做完、进阶段 2 美术之前）；重塑在第一轮玩法（节点 1 之前）；之后只要改了关卡表、
-皮肤表、docs/modules.json、docs/features.json 或排名决定，就对改动重跑一次。最终总检测（check_known_issues.py）
-不再重复这些检查（MOD-01、ECON-01、LEVEL-01、FEAT-00、RANK-01 标 gate "design"）。
+什么时候跑：重塑在第一轮玩法（节点 1 之前）；之后只要改了关卡表、皮肤表、docs/modules.json、docs/features.json
+或排名决定，就对改动重跑一次。英化默认没有设计关（不改玩法、不补关、不加皮肤，Saul 2026-10-28）；创新玩法用了关卡/皮肤/经济板块、
+维护范围要求复核时才用 --board localize 跑。最终总检测（check_known_issues.py）不再重复这些检查（MOD-01、ECON-01、
+LEVEL-01、FEAT-00、RANK-01 标 gate "design"）。
 
 依次运行（缺输入就是"需处理"，不跳过）：
-  关卡板块    audit_level_plan.py              重塑 60 关及以上、英化 70 关及以上（Saul 2026-10-29/用户 2026-10-24）、难度按 difficulty_policy（wave-tiers.v1 波浪分档）、
+  关卡板块    audit_level_plan.py              重塑 60 关及以上（Saul 2026-10-29），英化保留原关数、不补关（Saul 2026-10-28）、难度按 difficulty_policy（新表 wave-tiers.v2：1–2 教学、第 3 关起变难；旧 v1 表照旧查）、
                                                每 10 关一个限定关、每 10 关一个按种子随机的奖励关；限定皮肤两种格式都行：
                                                只在最后一个限定关送（final），或每个限定关各送一款（every_10）
                                                （地图页要 dump，没有 dump 时这里只提示，美术关 art_check.py 再查）
@@ -15,6 +16,8 @@
   皮肤数值    audit_acquisition_progression.py unlock_table.json（skin.v1：价格台阶、加成、限定皮肤排最前）
   排名扩展    audit_league.py                  docs/league/decision.json（默认关闭）
   可选扩展    audit_optional_features.py       docs/features.json（签到默认关闭）
+  样板先行    （本脚本）                        v7.8：docs/samples/samples.json，自制新游戏先给 Saul 看首页样图、20 秒试玩、
+                                               BGM 三选一、3～5 个样关；只提示，不算需处理；英化不查
 
   python design_check.py --project <工程> [--dumps <文件夹>] [--board localize|remake] [--out <输出>]
 
@@ -46,6 +49,53 @@ def report_checks(path, text):
         return json.loads(Path(path).read_text(encoding='utf-8'))['checks']
     except (OSError, ValueError, KeyError, TypeError):
         return [{'id': 'run', 'passed': False, 'detail': text.strip()[-300:] or 'no report'}]
+
+
+SAMPLES = Path('docs') / 'samples' / 'samples.json'
+SAMPLE_PARTS = {'home_image': '1 张首页样图', 'playtest_20s': '1 段 20 秒试玩', 'bgm': 'BGM 三选一',
+                'sample_levels': '3～5 个样关'}
+
+
+def _signed(part):
+    return isinstance(part, dict) and part.get('verdict') in ('ok', 'pass', '通过', '定了') \
+        and str(part.get('by', '')).strip() and len(str(part.get('date', ''))) >= 10
+
+
+def samples_status(proj, board, reskin=False):
+    """样板先行（Saul 2026-10-30，总表 22.6 第 3 问）: a new self-made game shows Saul samples before the batch work:
+    1 home picture, a 20-second playtest, BGM 1 of 3, 3-5 sample levels. Only a reminder (None) or pass (True):
+    a game that started before v7.8 never has to go back or stops shipping because of it. English games skip it.
+    -> (status None|True|'skip', detail)."""
+    if board == 'localize':
+        return 'skip', '英化游戏不用样板（Saul 2026-10-30）'
+    path = Path(proj) / SAMPLES
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None, ('没有 %s：自制新游戏先给 Saul 看样板（%s），他定了再批量做；已开工的游戏写 "skip": {"why": ...}'
+                      % (SAMPLES, '、'.join(SAMPLE_PARTS.values())))
+    if not isinstance(data, dict):
+        return None, '%s 不是 JSON 对象' % SAMPLES
+    skip = data.get('skip')
+    if isinstance(skip, dict) and len(str(skip.get('why', '')).strip()) >= 10:
+        return True, '样板不做：%s' % str(skip['why'])[:120]
+    need = dict(SAMPLE_PARTS)
+    if reskin:
+        need.pop('sample_levels')                       # P18: a reskin keeps the base's levels
+    bgm = data.get('bgm') if isinstance(data.get('bgm'), dict) else {}
+    missing = []
+    for key, name in need.items():
+        part = data.get(key)
+        if key == 'bgm' and not (isinstance(bgm.get('options'), list) and len(bgm['options']) >= 3 and bgm.get('chosen')):
+            missing.append(name + '（options 3 个、chosen）')
+        elif key == 'sample_levels' and not (isinstance(part, dict) and isinstance(part.get('levels'), list)
+                                             and 3 <= len(part['levels']) <= 5):
+            missing.append(name + '（levels 列 3～5 关）')
+        elif not _signed(part):
+            missing.append(name + '（verdict、by、date）')
+    if missing:
+        return None, '样板还没定：%s（%s）' % ('；'.join(missing), SAMPLES)
+    return True, '样板都定了：%s' % '、'.join(need.values())
 
 
 def main():
@@ -112,6 +162,16 @@ def main():
     code, text = run('audit_optional_features.py', ['--project', proj, '--out', out / 'optional_features.json'], logs)
     checks = report_checks(out / 'optional_features.json', text)
     add('可选扩展（FEAT-00）', all(c['passed'] for c in checks), summary(checks, '通过'), 'optional_features.json')
+
+    try:
+        from audit_level_plan import find_plan, is_reskin
+        plan_path = find_plan(proj)
+        reskin = bool(plan_path) and is_reskin(json.loads(plan_path.read_text(encoding='utf-8-sig')))
+    except (OSError, ValueError, ImportError):
+        reskin = False
+    state, detail = samples_status(proj, board, reskin)
+    if state != 'skip':
+        add('样板先行（只提示）', state, detail)          # never 需处理: started games do not go back for it
 
     blocking = [r for r in rows if r['status'] == '需处理']
     report = {'tool': 'design_check', 'schema': 1, 'board': board, 'checked': len(rows), 'failed': len(blocking),

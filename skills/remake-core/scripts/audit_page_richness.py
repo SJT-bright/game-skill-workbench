@@ -42,6 +42,9 @@ LEVELS/SKINS/Add to Home/Revisit tiles, typed numbers 0/9 and 0):
   font_number     a number (coins, energy, level, score, price, timer, percent: "0", "0/9", "+50", "70%") drawn with a TTF or
                   system font: generate the digit pictures in the game style and use them as a BitmapFont (.fnt) / LabelAtlas
                   (dump_ui records label font_kind: bitmap / ttf / system); colours of bitmap digits are measured on pixels
+  font_value_label  a level/score/currency value typed in one font label (Label or RichText) with its word: "LEVEL 1",
+                  "Coins 120", "+10 PEARLS", "LEVEL 1 • +10 PEARLS" (user 2026-10-30): word = picture text, value = bitmap
+                  digits, currency = icon. runtime-text.json does not waive it; sentences and fused names are not judged
   typed_title     on home, the game title or subtitle typed with a font (a label in the top part >= 40% wide or >= 36 px), or
                   picture text laid over the title plate: the title is ONE stylized logo picture generated in the game style
   dark_bold_text  PERMANENT BAN (user 2026-10-23, both boards, every page, gameplay HUD included): dark bold / heavy text
@@ -153,6 +156,46 @@ ARROWS = re.compile(r'^\s*[<>‹›«»←→◀▶◁▷^vV＜＞]+\s*$')
 WORDS = re.compile(r'[A-Za-z]{2,}')
 NUMERIC = re.compile(r'^[\s\d+\-xX×/:.,%$#·]*\d[\s\d+\-xX×/:.,%$#·]*$')   # "0", "0/9", "+50", "1,250", "70%", "x2", "02:30"
 DENSE_TEXT = 40       # user 2026-10-23: announcements / how-to-play paragraphs (> 40 characters) may be a thinner font
+# user 2026-10-30 (Saul, the "LEVEL 1 • +10 PEARLS" result line): a level / stage / score / currency value typed in ONE
+# font label together with its word ("LEVEL 1", "Coins 120", "+10 PEARLS", "40 EGGS", "BEST 1200", "3/5 STARS") is still
+# a font number. font_number only saw labels that are digits alone, so mixed lines listed as run-time text passed.
+VALUE_TOKEN = re.compile(r'^[+\-x×]?\d[\d,.:/%]*[x×%]?$|^[x×]\d+$', re.I)
+LEVEL_TOKEN = re.compile(r'^(?:lv|lvl|lev|level|stage|wave|round|x)\.?\d+$', re.I)        # "Lv.3", "Stage12", "x2"
+SENTENCE_WORD = re.compile(r'^(?:reach|collect|clear|get|gets|make|merge|match|tap|drag|swipe|find|beat|win|survive|avoid|'
+                           r'pop|connect|sort|fill|remove|destroy|save|need|needs|earn|watch|play|unlock|buy|spend|use|'
+                           r'complete|finish|hit|break|catch|eat|deliver|build|open|claim|ends|end|starts|to|the|a|an|and|'
+                           r'or|for|you|your|in|than|more|until|every|each|with|on|at)$', re.I)
+MAX_VALUE_WORDS = 3
+# user (美工调查 2026-10-30: "删除credit这部分然后，版本号也删掉", "为什么在游戏里展示这个版本呢", "这些东西应该是明令禁止的呀"):
+# version numbers, Credits, original-game / AI / font notes are never shown to players. Seen on settings pages:
+# "Fruit Escape • v1.3.0", "Version 1.0.0", "CORGI RUSH • English Edition / Original art ...".
+DEV_INFO_TEXT = re.compile(r'(?:^|[\s•·(|])v(?:er(?:sion)?)?\.?\s?\d+(?:\.\d+){1,3}\b|\bversion\s*\d|'
+                           r'\boriginal\s*(?:game|art|artwork|by|author)\b(?!\s+rewards?)|'
+                           r'\b(?:made|generated|created|drawn)\s+(?:with|by)\s+(?:ai|gpt|codex|grok|chatgpt)\b|'
+                           r'\bfonts?\s*(?:by|licen[cs]e)\b|\bSIL\s*OFL\b|'
+                           # diagnostic markers left on screen (user 10-13 "V25 INPUT READY", 10-15 "v11 sdk miss",
+                           # 10-16 "又出现什么V9了"): a bare build tag vN, or SDK / input diagnostics
+                           r'(?:^|[\s•·(|/])v\d{1,3}(?=$|[\s/•·)|])|\bsdk[-_ ]?miss|\binput\s+ready\b|'
+                           # edition notes and test leftovers (冲吧柯基 10-24 "CORGI RUSH • English Edition";
+                           # Meadow Match 10-23 "SIMULATED · Computer rivals"; 10-26 a test reward button marked 模拟广告)
+                           r'\benglish\s+(?:edition|version)\b|\b(?:simulated|mock(?:ed)?|debug|placeholder)\b|'
+                           r'\btest\s+(?:ads?|rewards?|button|mode|build|only)\b|模拟广告|调试|测试(?:按钮|奖励|模式|用)', re.I)
+# A lone "Credits" is the banned Credits page/button only in settings/about/menu panels; space games use CREDITS as the
+# currency name in the HUD and the store (行星射击: GameplayHUD/Credits, Modal-store/UpgradeCredits), which is not dev info.
+CREDITS_WORD = re.compile(r'^\s*credits\s*$', re.I)
+CREDITS_PAGE = re.compile(r'setting|sound|about|option|optimi|pause|menu|credits?[-_ ]?(?:page|panel|modal|btn|button)|'
+                          r'action[-_ ]?credits', re.I)
+CURRENCY_PLACE = re.compile(r'hud|store|shop|price|upgrade|wallet|coin|resource|reward|item|bar\b', re.I)
+
+
+def dev_info(n):
+    value = text(n)
+    if not value:
+        return False
+    if DEV_INFO_TEXT.search(value):
+        return True
+    path = n.get('path', '')
+    return bool(CREDITS_WORD.match(value) and CREDITS_PAGE.search(path) and not CURRENCY_PLACE.search(path))
 BITMAP_FONT_NAME = re.compile(r'fnt|bitmap|bmfont|atlas|digit|num', re.I)
 MIN_BAKED_TEXT_BUTTON = 0.012   # a btn_<words> picture this big counts as a text button (icons are smaller)
 GENERATED_TEXT_SOURCES = {}
@@ -292,6 +335,15 @@ def text_problems(d, nodes, buttons, image_module):
             # entrance/exit tween. Its centered tween frame is captured and checked separately.
             continue
         lab = n['comps'].get('label')
+        rich = n['comps'].get('richtext')
+        if dev_info(n):
+            out.append('dev_info_text: "%s" (%s) shows a version number, Credits or an original-game/AI/font note to '
+                       'players: remove it from the player UI (user 2026-10-30)' % (text(n)[:40].replace('\n', ' '), n['path']))
+        if (lab or rich) and not (lab and bitmap_font(lab)) and value_label(text(n)):
+            out.append('font_value_label: "%s" (%s) is a level/score/currency value typed in one font label with its word '
+                       '(user 2026-10-30, "LEVEL 1 • +10 PEARLS"): make the word generated picture text (txt_level, '
+                       'txt_<currency>), the value a bitmap-digit label from the generated 0-9 set, and show the currency '
+                       'as its icon; docs/text/runtime-text.json does not waive this' % (text(n)[:30], n['path']))
         if not lab and text(n) and img is not None:            # picture text (frame txt_*): measured on the pixels
             surface = text_surface(n, nodes)
             dark_ink = picture_text_dark(img, n.get('screen') or n['rect'], surface)
@@ -681,6 +733,45 @@ def countdown_hint(n, nodes):
         if abs(cy - py) <= max(r[3], q[3]) * 0.75 and gap <= 0.18:
             return True
     return False
+
+
+def value_label(s):
+    """True for a short value line typed with its word: 'LEVEL 1', 'Coins 120', '+10 PEARLS', 'LEVEL 1 • +10 PEARLS',
+    '3/5 STARS', 'x2 COINS', 'Lv.3', 'Score: 300' (user 2026-10-30). False for digits alone (font_number covers them),
+    sentences ('Reach 200 points', 'Ends in 02:30'), names or codes with digits fused into a word ('CozyWaffle85',
+    'v1.0') and text over 40 characters. A line joined with a spaced slash is also judged part by part: 'POOL 3 / The
+    side pocket' (Mosslight Ferry home page, user 10-21 "这些文字都也美化一下") carries the level label 'POOL 3'."""
+    s = re.sub(r'<[^>]*>', ' ', s or '').strip()          # RichText markup: <color=#fff>LEVEL</color> 1
+    if not s or len(s) > DENSE_TEXT or not DIGIT.search(s) or NUMERIC.match(s):
+        return False
+    if _value_line(s):
+        return True
+    parts = re.split(r'\s+/\s+', s)
+    return len(parts) > 1 and any(not NUMERIC.match(p) and _value_line(p) for p in parts)
+
+
+def _value_line(s):
+    if not DIGIT.search(s):
+        return False
+    words, values = [], 0
+    for part in re.split(r'[\s•·|]+', s):
+        p = part.strip('()[]!?,.;:')
+        if not p or re.fullmatch(r'[\-–—/+:]+', p):
+            continue
+        if VALUE_TOKEN.match(p):
+            values += 1
+        elif LEVEL_TOKEN.match(p):
+            values += 1
+            words.append('level')
+        elif DIGIT.search(p):
+            return False                       # digits fused into a word: a name or a code, not a value line
+        elif re.fullmatch(r"[A-Za-z][A-Za-z'’]*", p):
+            words.append(p.lower())
+        else:
+            return False                       # other scripts or symbols: not judged here
+    if not values or not words or len(words) > MAX_VALUE_WORDS:
+        return False
+    return not any(SENTENCE_WORD.match(w) for w in words)
 
 
 def bitmap_font(lab):
@@ -1151,6 +1242,57 @@ def clock_glyph_clearance_problems(d, project):
     return out
 
 
+def solid_fill(n):
+    """(colour, visible alpha 0-1) of a flat UI fill: a Graphics fill, or a 2x2/placeholder texture stretched over a
+    box; None for real pictures."""
+    comps = n.get('comps', {})
+    opacity = float(n.get('opacity', 1) or 0)
+    g = comps.get('graphics')
+    if isinstance(g, dict):
+        c = g.get('fill_rgba') or g.get('fillColor')
+        if isinstance(c, list) and len(c) >= 3:
+            return tuple(c[:3]), opacity * ((c[3] / 255.0) if len(c) >= 4 else 1.0)
+    s = comps.get('sprite')
+    if isinstance(s, dict):
+        frame = str(s.get('frame', ''))
+        size = s.get('frame_size') or [99, 99]
+        if PLACEHOLDER_FRAMES.search(frame) or (isinstance(size, list) and len(size) == 2 and max(size) <= 4):
+            return tuple((s.get('color') or [255, 255, 255])[:3]), opacity
+    return None
+
+
+def flat_value_plate_problems(nodes):
+    """User 2026-10-28/29 (冲鸭小巴 "数据后面有纯色背景的在skill也要限制住", 坦克 "金币后面的蓝色背景去掉", 人鱼逃脱 blue strip
+    behind "LEVEL 1 • +10 PEARLS"): no flat solid-colour box of ANY colour behind a level/score/currency value. A plate
+    behind data is a picture generated with the art; text-backplate-review.md already bans the dark ones."""
+    out = []
+    for n in nodes:
+        value = text(n)
+        if not value or not DIGIT.search(value) or len(value) > DENSE_TEXT:
+            continue
+        if not (NUMERIC.match(value) or value_label(value)):
+            continue
+        r = n.get('screen') or n['rect']
+        a = area(r)
+        if a <= 0:
+            continue
+        for p in nodes:
+            if p is n or node_under(p, n):
+                continue
+            q = p.get('screen') or p['rect']
+            if not (1.2 * a <= area(q) <= 0.15) or inter(r, q) / a < 0.85:
+                continue
+            fill = solid_fill(p)
+            if fill is None or fill[1] < 0.35:      # a faint tint is not a box; popup masks are full-screen anyway
+                continue
+            out.append('flat_value_plate: "%s" (%s) sits on a flat colour box %s (colour %s, %.0f%% visible): no flat '
+                       'colour plate of any colour behind data (user 2026-10-29); use a plate picture generated with the '
+                       'art, or no plate and a clear outline on the digits'
+                       % (value[:30], n['path'], p['path'], fill[0], fill[1] * 100))
+            break
+    return out
+
+
 def decor(n):
     """Small marks that may overlap on purpose (sparkles, badges, red dots, lock/gift marks); "lightning" is not "light"."""
     return any(t.lower() in DECOR for t in NAME_TOKENS.findall(n['name'] + ' ' + str(n['comps'].get('sprite', {}).get('frame', ''))))
@@ -1286,7 +1428,8 @@ def fully_occluded(node, masks):
 
 
 def modal_masks(nodes):
-    """Full-screen input blockers are the only nodes that can hide a lower screen from visual audits."""
+    """Full-screen input blockers are the only nodes that can hide a lower screen from visual audits.
+    No dim-opacity limit (Saul 10-31): how dark a popup dim is follows the game's style and is judged by eye."""
     return [n for n in nodes if area(n['rect']) >= 0.85 and n.get('comps', {}).get('block_input')]
 
 
@@ -1428,6 +1571,437 @@ def caption_style_problems(d, nodes, buttons, image_module):
         elif len(inks) > 1:
             out.append('mixed_caption_style: the captions of %s are different colours (%s): one group, one caption style and colour'
                        % (', '.join(b['name'] for b in captioned), ' vs '.join(sorted(inks))))
+    return out
+
+
+POINTER = re.compile(r'hand|finger|pointer|guide|tutorial|cursor|(?:^|[_\-\s])(?:shou|tip|tips)(?:$|[_\-\s\d])', re.I)
+MIN_FRAME_UNDER_CONTROL = 0.35   # a badge / red dot smaller than 35% of the control may sit on its corner
+FRAME_WORDS = {'card', 'frame', 'slot', 'cell', 'box', 'plate', 'panel', 'board', 'border', 'ribbon', 'banner', 'toast',
+               'bg', 'backplate', 'tile', 'capsule', 'pill', 'window', 'dialog', 'popup', 'shelf'}
+
+
+def frame_like(n):
+    """A frame / box / plate / toast picture (node name, sprite frame or parent name), or a baked btn_ picture.
+    Cover art and characters are not frames: their box is mostly transparent (calibration: SushiDash home cover)."""
+    frame = str((n['comps'].get('sprite') or {}).get('frame', ''))
+    if frame.lower().startswith('btn_'):
+        return True
+    words = n['name'] + ' ' + frame + ' ' + path_parent(n['path']).rsplit('/', 1)[-1]
+    return any(t.lower() in FRAME_WORDS for t in NAME_TOKENS.findall(words.replace('-', ' ').replace('_', ' ')))
+
+
+def path_parent(path):
+    return path.rsplit('/', 1)[0] if '/' in path else ''
+
+
+def common_group(a, b, nodes):
+    """Area of the lowest common ancestor of a and b found in the dump (1.0 when it is a full-screen layer or not drawn)."""
+    pa, pb = a['path'].split('/'), b['path'].split('/')
+    k = 0
+    while k < min(len(pa), len(pb)) - 1 and pa[k] == pb[k]:
+        k += 1
+    lca = '/'.join(pa[:k])
+    owner = next((n for n in nodes if n['path'] == lca), None)
+    return area(owner['rect']) if owner else 1.0
+
+
+def attached_tag(cr, pr):
+    """A tag centred on one edge of the control, overlapping only an edge strip of at most 35% of the control (丛林荡藤
+    props: the VIDEO UNLOCK tag under each prop button). Holly's gameBox frame covers 60% of the gear's height: not a tag."""
+    ox = min(cr[0] + cr[2], pr[0] + pr[2]) - max(cr[0], pr[0])
+    oy = min(cr[1] + cr[3], pr[1] + pr[3]) - max(cr[1], pr[1])
+    dx = abs((cr[0] + cr[2] / 2) - (pr[0] + pr[2] / 2))
+    dy = abs((cr[1] + cr[3] / 2) - (pr[1] + pr[3] / 2))
+    bottom_or_top = oy <= 0.35 * cr[3] and dx <= 0.25 * cr[2]
+    side = ox <= 0.35 * cr[2] and dy <= 0.25 * cr[3]
+    return bottom_or_top or side
+
+
+def control_picture_problems(nodes, buttons, full, kind=None, blockers=()):
+    """v7.8 U11 (a): a control drawn over a picture frame that is not its own plate or the panel it sits on (Holly v1:
+    the in-game Settings gear over the leftover cross-promotion frame gameBox/bg "Try It", 60% of the gear).
+    Controls: interactable cc.Button / cc.Toggle and small touch controls (a picture with BlockInputEvents, Holly's
+    PauseSettings has no cc.Button). Frames: every visible picture that is not text, decoration, a tutorial pointer, a
+    full-screen backdrop, part of another button (button vs button is overlap_buttons) or a small badge on the corner.
+    Gameplay pages compare only inside one local HUD group (game objects pass under the HUD on purpose). A control and a
+    picture on different sides of a full-screen input blocker (a popup over the page below) are not compared."""
+    out = []
+    level = lambda n: sum(1 for m in blockers if m is not n and m.get('order', 0) < n.get('order', 0) and not node_under(n, m))
+    controls = [b for b in buttons if 0 < area(b['rect']) < 0.5]
+    seen = {id(b) for b in controls}
+    controls += [n for n in nodes if id(n) not in seen and n.get('comps', {}).get('block_input') and 'sprite' in n['comps']
+                 and 0 < area(n['rect']) < 0.05]
+    frames = [n for n in nodes if 'sprite' in n['comps'] and not text(n) and n not in full and 0.0015 <= area(n['rect']) < 0.3
+              and not decor(n) and not POINTER.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
+              and frame_like(n) and not any(node_under(n, b) for b in buttons)]
+    for c in controls:
+        cr, ca = c['rect'], area(c['rect'])
+        for p in frames:
+            if related(c, p) or level(c) != level(p):
+                continue
+            pr, pa = p['rect'], area(p['rect'])
+            i = inter(cr, pr)
+            small = min(ca, pa)
+            if not i or i < 0.10 * small:
+                continue
+            if pa >= 2.5 * ca and i >= 0.8 * ca:           # the panel / plate the control sits on
+                continue
+            if pa < MIN_FRAME_UNDER_CONTROL * ca:            # a badge or red dot on the control's corner
+                continue
+            if attached_tag(cr, pr) and pa <= ca:              # an UNLOCK / price tag hung on the control's edge
+                continue
+            if kind == 'gameplay' and common_group(c, p, nodes) >= 0.85:
+                continue
+            out.append('overlap_button_picture: the control %s and the picture %s ("%s") overlap (%.0f%% of the smaller one): '
+                       'a button never sits on another frame - delete the leftover frame or move the button to free space '
+                       '(Holly v1: the in-game Settings gear over the old cross-promotion "Try It" frame)'
+                       % (c['path'], p['path'], str(p['comps']['sprite'].get('frame', ''))[:30], 100 * i / small))
+            break
+    return out
+
+
+def stacked_text_problems(nodes):
+    """v7.8 U11 (c): one text drawn in two layers (剪刀达人 v26: the status line kept its old GeneratedLetters picture text
+    when the Label switched to a sentence, 2-3 layers on top of each other; v27 clears the old letters first).
+      - a visible Label/RichText with words AND a picture layer under it covering >= 50% of its box (children draw on top
+        of their parent in Cocos), or
+      - two or more same-named visible child layers of one text node, each drawing pictures, covering each other >= 50%.
+    Parent/child exemptions of the other overlap rules do not apply here: this rule exists for exactly that relation."""
+    out = []
+    pics = [n for n in nodes if 'sprite' in n['comps'] and not decor(n)]
+    for t in nodes:
+        comps = t.get('comps', {})
+        if not ({'label', 'richtext', 'image_text'} & set(comps)):
+            continue
+        tr = t.get('screen') or t['rect']
+        ta = area(tr)
+        if ta <= 0:
+            continue
+        under = [p for p in pics if p is not t and node_under(p, t)]
+        if not under:
+            continue
+        layers = {}
+        for p in under:
+            rel = p['path'][len(t['path']) + 1:] if p['path'].startswith(t['path'] + '/') else p['name']
+            layers.setdefault(rel.split('/', 1)[0], []).append(p)
+        boxes = {}
+        for name, members in layers.items():
+            rs = [m.get('screen') or m['rect'] for m in members]
+            x0, y0 = min(r[0] for r in rs), min(r[1] for r in rs)
+            boxes[name] = [x0, y0, max(r[0] + r[2] for r in rs) - x0, max(r[1] + r[3] for r in rs) - y0]
+        own = str((comps.get('label') or comps.get('richtext') or {}).get('string', '')).strip()
+        if own and WORDS.search(own) and 'image_text' not in comps:
+            # a picture-text layer: an image_text group or two+ glyph pictures, mostly inside the Label box, at least a
+            # quarter of it (a coin icon in a Label is not a word layer)
+            covered = [n for n, b in boxes.items()
+                       if (len(layers[n]) >= 2 or any('image_text' in q['comps'] for q in nodes
+                                                       if q['path'] == t['path'] + '/' + n))
+                       and area(b) >= 0.25 * ta and inter(b, tr) >= 0.6 * area(b)]
+            if covered:
+                out.append('stacked_text_layers: "%s" (%s) is drawn as a Label and again as the picture layer %s on top of it: '
+                           'clear the old picture text (every child with the same name) before changing the words '
+                           '(剪刀达人 v26 status line, 2-3 layers; v27 clears them first)' % (own[:30], t['path'], covered[0]))
+                continue
+        # same-named sibling layers (Cocos keeps duplicate names; the dump lists each one)
+        def inside(q, m):
+            if q is m:
+                return True
+            if '_audit_ancestors' in q and m.get('id'):
+                return m['id'] in q['_audit_ancestors']
+            return q['path'].startswith(m['path'] + '/')
+
+        def box(m):
+            rs = [q.get('screen') or q['rect'] for q in under if inside(q, m)]
+            if not rs:
+                return None
+            x0, y0 = min(r[0] for r in rs), min(r[1] for r in rs)
+            return [x0, y0, max(r[0] + r[2] for r in rs) - x0, max(r[1] + r[3] for r in rs) - y0]
+        groups = {}
+        for p in nodes:
+            b_ = box(p) if p is not t and path_parent(p['path']) == t['path'] and inside(p, t) else None
+            if b_ is not None and area(b_) >= 0.25 * ta:           # whole layers, not single glyphs
+                groups.setdefault(p['name'], []).append(p)
+        for name, members in groups.items():
+            if len(members) < 2:
+                continue
+            bs = [box(m) for m in members]
+            stacked = any(inter(bs[i], bs[j]) >= 0.5 * min(area(bs[i]), area(bs[j])) > 0
+                          for i in range(len(bs)) for j in range(i + 1, len(bs)))
+            if stacked:
+                out.append('stacked_text_layers: %s has %d visible "%s" picture-text layers on top of each other: clear every '
+                           'child with that name before drawing the new words (剪刀达人 v26: GeneratedLetters left behind, '
+                           'v27 clears them first)' % (t['path'], len(members), name))
+                break
+    return out
+
+
+BUSY_TEXT_PX = 24            # measured with the text scaled to 24 px high
+BUSY_TEXT_MARGIN = 0.5       # ring around the text box: half the text height on every side
+MAX_TEXT_COLOURS = 13        # background colours behind the words (see text_backdrop_busy)
+MIN_TEXT_BG_SHARE = 0.3      # at least 30% of the text box must be background to measure it
+
+
+def _bin(q):
+    return q[0] >> 4, q[1] >> 4, q[2] >> 4
+
+
+def text_backdrop_busy(img, r, skip):
+    """(background colours, ring edge share) behind text box r (normalised) in the RGB screenshot img, or None.
+    The text is scaled to 24 px high. ring = half a text height around the box, other UI pictures and texts (skip) cut
+    out: the colours around the words. Background pixels in the box = pixels whose 16-level colour bin (or a
+    neighbouring bin) makes up >= 0.5% of the ring; the rest is glyph ink and outline. Colours = how many bins cover
+    90% of those background pixels. Calibration (W88, 10-30): calm 3-11 (Holly v3 PROFILE on its plate 4, Meteor 250
+    on its capsule 3, Nanas map 6, 丛林荡藤 BEST 6, Maya revive text 8, Holly SHORTCUT 5-11); busy 16-119 (Holly v1/v2
+    PROFILE over the fence 16-30, 泡泡六角龙 score over the bubbles 28, 水果逃亡 chapter line over the kitchen 119)."""
+    W, H = img.size
+    x, y, w, h = r[0] * W, r[1] * H, r[2] * W, r[3] * H
+    if w < 2 or h < 2:
+        return None
+    s = BUSY_TEXT_PX / h
+    m = BUSY_TEXT_MARGIN * h
+    X0, Y0, X1, Y1 = max(0, int(x - m)), max(0, int(y - m)), min(W, int(x + w + m + 1)), min(H, int(y + h + m + 1))
+    if X1 - X0 < 4 or Y1 - Y0 < 4:
+        return None
+    from PIL import Image
+    crop = img.crop((X0, Y0, X1, Y1))
+    crop = crop.resize((max(4, int(crop.width * s)), max(4, int(crop.height * s))), Image.BOX)
+    cw, ch = crop.size
+    px = list(crop.getdata())
+
+    def cells(q):
+        return (max(0, int((q[0] * W - X0) * s)), max(0, int((q[1] * H - Y0) * s)),
+                min(cw, int(((q[0] + q[2]) * W - X0) * s + 0.999)), min(ch, int(((q[1] + q[3]) * H - Y0) * s + 0.999)))
+    bx0, by0, bx1, by1 = cells(r)
+    other = bytearray(cw * ch)
+    for q in skip:
+        qx0, qy0, qx1, qy1 = cells(q)
+        for yy in range(qy0, qy1):
+            for xx in range(qx0, qx1):
+                other[yy * cw + xx] = 1
+    inside = lambda i: bx0 <= i % cw < bx1 and by0 <= i // cw < by1
+    ring = [i for i in range(cw * ch) if not inside(i) and not other[i]]
+    box = [i for i in range(cw * ch) if inside(i)]
+    if len(ring) < 0.15 * cw * ch or not box:
+        return None
+    seen = Counter(_bin(px[i]) for i in ring)
+    floor_ = 0.005 * len(ring)
+    near = lambda k: any(seen.get((k[0] + a, k[1] + b, k[2] + c), 0) >= floor_
+                         for a in (-1, 0, 1) for b in (-1, 0, 1) for c in (-1, 0, 1))
+    bg = [px[i] for i in box if near(_bin(px[i]))]
+    if len(bg) < MIN_TEXT_BG_SHARE * len(box):
+        return None
+    colours = acc = 0
+    for _k, count in Counter(_bin(q) for q in bg).most_common():
+        acc += count
+        colours += 1
+        if acc >= 0.9 * len(bg):
+            break
+    edges = n = 0
+    ringset = set(ring)
+    for i in ring:
+        if i % cw + 1 < cw and i + 1 in ringset and i + cw in ringset:
+            n += 1
+            a_, b_, c_ = px[i], px[i + 1], px[i + cw]
+            lum = lambda q: 0.299 * q[0] + 0.587 * q[1] + 0.114 * q[2]
+            edges += max(abs(lum(b_) - lum(a_)), abs(lum(c_) - lum(a_))) > BUSY_STEP
+    return colours, (edges / n if n else 0.0)
+
+
+def busy_text_problems(d, nodes, image_module):
+    """v7.8 U11 (b): text that sits on no plate (only the full-screen background behind it) needs a calm patch of
+    background (Holly v2: the home PROFILE caption crossed by the fence of the farm background; v3 draws a cream plate
+    behind it). On the screenshot (text_backdrop_busy): busy = more than 13 background colours behind the words.
+    Plate = a Sprite / Graphics (or a panel with BlockInputEvents) drawn after the last full-screen backdrop, under the
+    text's centre and covering half of its box (remake-art/references/text-backplate-review.md「文字身后太花」)."""
+    if image_module is None or not d.get('_file'):
+        return []
+    shot = screenshot_of(d)
+    if not shot.is_file():
+        return []
+    img = image_module.open(shot).convert('RGB')
+    out = []
+    others = [n for n in nodes if ('sprite' in n['comps'] or text(n)) and area(n['rect']) < 0.85]
+    for t in nodes:
+        # Labels / RichText / image_text only: a txt_ word picture carries its own generated plate and outline
+        if not text(t) or not ({'label', 'richtext', 'image_text'} & set(t['comps'])) or not 0 < area(t['rect']) <= 0.2:
+            continue
+        r = t.get('screen') or t['rect']
+        order = t.get('order', 0)
+        # pictures drawn before the last full-screen backdrop under the text are hidden by it (Holly: the level tiles
+        # behind the home page); only a plate drawn after that backdrop counts
+        floor = max((n.get('order', 0) for n in nodes if 'sprite' in n['comps'] and area(n['rect']) >= 0.85
+                     and n.get('order', 0) < order), default=-1)
+        # a plate under the text's centre covering at least half of the (often wider than the words) Label box
+        if 'sprite' in t['comps'] or 'graphics' in t['comps'] or 'button' in t['comps']:
+            continue                                  # the text's own node draws the plate (a button picture + label)
+        if any('button' in b['comps'] and node_under(t, b) for b in nodes):
+            continue                                  # words on a button: the button art is their plate
+        if any(m is not t and 'sprite' in m['comps'] and node_under(m, t) and
+               inter(r, m.get('screen') or m['rect']) >= 0.5 * area(r) for m in nodes):
+            continue                                  # the words' own generated picture (txt_/whole-word art) under the node
+        if any(m is not t and ({'sprite', 'graphics', 'block_input'} & set(m['comps'])) and floor < m.get('order', 0) < order
+               and area(m['rect']) < 0.85 and center_in(r, m.get('screen') or m['rect'])
+               and inter(r, m.get('screen') or m['rect']) >= 0.5 * area(r) for m in nodes):
+            continue                                  # on a plate / panel / button picture
+        skip = [n.get('screen') or n['rect'] for n in others
+                if n is not t and not node_under(t, n) and n.get('order', 0) > floor]
+        m = text_backdrop_busy(img, r, skip)
+        if m is None:
+            continue
+        colours, edges = m
+        if colours > MAX_TEXT_COLOURS:
+            out.append('busy_text_background: "%s" (%s) has no plate and the background behind the words is busy (%d colours, '
+                       'max %d; edges around it %.0f%%): add a plate behind it or move it to a calm part of the background '
+                       '(Holly v2: PROFILE crossed by the fence)' % (text(t)[:24], t['path'], colours, MAX_TEXT_COLOURS, 100 * edges))
+    return out
+
+
+HERO_GLOBS = []              # docs/art/hero.json {"home": ["node path or sprite frame glob", ...]}: the game's hero
+HERO_NAME = re.compile(r'hero|player|mascot|character|protagonist|zhujue|juese|主角|角色', re.I)
+MIN_HERO_ON_SCREEN, MIN_HERO_AREA = 0.90, 0.08      # H11: >= 90% of the hero box on screen, >= 8% of the screen
+MIN_HUD_DIGIT, MIN_HUD_CONTRAST = 0.03, 3.0         # H11: HUD digits >= 3% of the screen height, contrast >= 3:1
+HUD_BAND = (0.18, 0.90)      # HUD = numbers in the top 18% / bottom 10% of the screen or under a node named hud/top bar
+HUD_NAME = re.compile(r'hud|topbar|top_bar|top-bar|resource|wallet|scorebar', re.I)
+DIGIT_HEIGHT = 1.0           # 字高 = the on-screen font size (Label fontSize scaled to the screen; picture digits: their box)
+
+
+def hero_of(nodes, buttons):
+    """(node, how) of the home hero: 1) docs/art/hero.json "home" globs (node path or sprite frame), 2) a picture whose
+    node or frame is named hero / player / mascot / character / role (主角), the biggest one, 3) the biggest
+    character-like picture: not a button or in one, not the title logo, not a backdrop / panel / frame / plate / tiled.
+    (None, reason) when none qualifies: reported as home_hero_unknown, never passed."""
+    pics = [n for n in nodes if 'sprite' in n['comps'] and 0 < area(n.get('unclipped_rect') or n['rect']) < 0.85
+            and not any(node_under(n, b) for b in buttons) and 'button' not in n['comps']
+            and not any(node_under(b, n) for b in buttons)]          # a board holding buttons is not a character
+    if HERO_GLOBS:
+        hit = [n for n in pics if any(fnmatch.fnmatch(n['path'], g) or fnmatch.fnmatch(n['path'], '*/' + g) or
+                                      fnmatch.fnmatch(str(n['comps']['sprite'].get('frame', '')), g) for g in HERO_GLOBS)]
+        if hit:
+            return max(hit, key=lambda n: area(n.get('unclipped_rect') or n['rect'])), 'docs/art/hero.json'
+        return None, 'docs/art/hero.json names %s but no visible picture matches on this home page' % ', '.join(HERO_GLOBS[:3])
+    named = [n for n in pics if HERO_NAME.search('/' + n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))]
+    if named:
+        return max(named, key=lambda n: area(n.get('unclipped_rect') or n['rect'])), 'node/frame name'
+    rest = [n for n in pics if not frame_like(n) and not BACKGROUND_NAME.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
+            and not TITLE_DECOR.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
+            and not n['comps']['sprite'].get('sliced') and not n['comps']['sprite'].get('tiled') and not decor(n)
+            and not re.search(r'logo|title|gift|coin|icon|play|start|begin|btn|button', n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')), re.I)
+            and not any(m is not n and text(m) and node_under(m, n) for m in nodes)     # a capsule holding a value
+            and area(n.get('unclipped_rect') or n['rect']) >= 0.02]
+    if rest:
+        return max(rest, key=lambda n: area(n.get('unclipped_rect') or n['rect'])), 'biggest character-like picture'
+    return None, 'no picture named hero/player/mascot/character and no character-like picture of 2% of the screen or more'
+
+
+def hero_problems(d, nodes, buttons):
+    """v7.8 H11 (企鹅雪道美术 v3: the home penguin showed only half its body): the home hero is seen whole and big."""
+    if d.get('purpose') != 'home' or 'home_original_composition' in MAINTENANCE_RULES:
+        return []
+    hero, how = hero_of(nodes, buttons)
+    if hero is None:
+        return ['home_hero_unknown: cannot tell the home hero (%s): name the hero node or frame in docs/art/hero.json '
+                '{"home": ["<node path or frame glob>"]} (H11, 企鹅雪道美术 v3)' % how]
+    whole = hero.get('unclipped_screen') or hero.get('unclipped_rect') or hero.get('screen') or hero['rect']
+    seen = hero.get('screen') or hero['rect']
+    shown = inter(seen, [0.0, 0.0, 1.0, 1.0])
+    share = shown / area(whole) if area(whole) else 0.0
+    out = []
+    if share < MIN_HERO_ON_SCREEN:
+        out.append('home_hero_hidden: the home hero %s (%s) is only %.0f%% on screen (min %.0f%%): show the whole hero '
+                   '(企鹅雪道美术 v3: half a penguin)' % (hero['path'], how, 100 * share, 100 * MIN_HERO_ON_SCREEN))
+    if shown < MIN_HERO_AREA:
+        out.append('home_hero_small: the home hero %s (%s) covers %.1f%% of the screen (min %.0f%%): make it bigger (H11)'
+                   % (hero['path'], how, 100 * shown, 100 * MIN_HERO_AREA))
+    return out
+
+
+PIECE_REPEAT = 3     # a picture node path drawn 3+ times on one page is a game piece (block, tile, ball), not the HUD
+
+
+def on_repeated_piece(t, path_counts):
+    """True when the number's parent or grandparent is a picture whose path repeats PIECE_REPEAT+ times on the page:
+    a value printed on one of many play pieces (Meteor Blaster Canvas/gameBox/blockList/block/boxtext, blocks that fall
+    into the top 18% band). A HUD counter has its own single path; repeated HUD counters sit under a hud/top-bar node,
+    which is checked before this."""
+    parts = t['path'].split('/')
+    for cut in (1, 2):
+        if len(parts) > cut and path_counts.get('/'.join(parts[:-cut]), 0) >= PIECE_REPEAT:
+            return True
+    return False
+
+
+def hud_digit_problems(d, nodes, buttons, image_module):
+    """v7.8 H11 (企鹅雪道 v4: score and currency too small): every visible HUD number on a gameplay page (not inside a
+    button; in the top 18% / bottom 10% of the screen or under a hud / top-bar / resource node) has digits >= 3% of the screen height and >= 3:1 contrast with what is behind it. Digit height: the drawn
+    box of picture digits (image_text / glyph sprites), else the label's font size scaled to the screen (企鹅雪道
+    v4 ~1.8%; the current EnglishUI.ts sizes HUD digits to 44-58% of a 96-unit plate = 3.2-4.2% of 1334)."""
+    if d.get('kind') != 'gameplay':
+        return []
+    img = None
+    if image_module is not None and d.get('_file') and screenshot_of(d).is_file():
+        img = image_module.open(screenshot_of(d)).convert('RGB')
+    out = []
+    path_counts = {}
+    for n in nodes:
+        path_counts[n['path']] = path_counts.get(n['path'], 0) + (1 if 'sprite' in n['comps'] else 0)
+    for t in nodes:
+        s = text(t)
+        if not s or not NUMERIC.match(s) or any(node_under(t, b) for b in buttons) or 'button' in t['comps']:
+            continue
+        r = t.get('screen') or t['rect']
+        if area(r) <= 0 or inter(r, [0, 0, 1, 1]) < 0.5 * area(r):
+            continue
+        cy = r[1] + r[3] / 2
+        if HUD_BAND[0] <= cy <= HUD_BAND[1] and not HUD_NAME.search(t['path']):
+            continue                       # numbers on game objects in the play field are not the HUD
+        if not HUD_NAME.search(t['path']) and on_repeated_piece(t, path_counts):
+            continue                       # W88: Meteor block/boxtext, a number on one of many pieces in the top band
+        lab = t['comps'].get('label') or t['comps'].get('richtext')
+        if 'image_text' in t['comps'] or not lab:
+            h = r[3]
+        else:
+            size = lab.get('actualFontSize') or lab.get('fontSize') or 0
+            box_h = lab.get('height') or 0
+            h = DIGIT_HEIGHT * size * r[3] / box_h if size and box_h else DIGIT_HEIGHT * r[3]
+            h = min(h, r[3])
+        if h < MIN_HUD_DIGIT:
+            out.append('hud_digit_small: the HUD number "%s" (%s) is %.1f%% of the screen high (min %.0f%%): make it bigger '
+                       '(H11, 企鹅雪道 v4 score and currency)' % (s[:12], t['path'], 100 * h, 100 * MIN_HUD_DIGIT))
+            continue
+        if img is not None:
+            ratio = picture_text_contrast(img, r, MIN_HUD_CONTRAST, text_surface(t, nodes))
+            if ratio is not None:
+                out.append('hud_digit_contrast: the HUD number "%s" (%s) has contrast %.1f:1 with its background (min 3:1): '
+                           'lighter digits with a dark outline, or a darker plate (H11)' % (s[:12], t['path'], ratio))
+    return out
+
+
+EDGE_BAND = 0.04             # H6 / AP 第五节: the top and bottom 4% rows of revive and result pages
+
+
+def edge_band_problems(d, image_module):
+    """v7.8 (H6, AP 第五节): a revive or result page with an empty black band at the top or bottom (方块冲冲 BUGFIX:
+    the sky was 145 units too low, 390x844 showed a black strip). A band = >= 90% of the outer 4% rows near-black
+    (every channel <= 24) while the next 4% inward is not (< 50%): a real dark scene is not a band."""
+    if image_module is None or d.get('purpose') not in END_PAGES or not d.get('_file'):
+        return []
+    shot = screenshot_of(d)
+    if not shot.is_file():
+        return []
+    im = image_module.open(shot).convert('RGB')
+    im = im.resize((max(8, im.width // 6), max(16, im.height // 6)))
+    W, H = im.size
+    px = im.load()
+    k = max(1, int(EDGE_BAND * H))
+
+    def dark(rows):
+        cells = [px[x, y] for y in rows for x in range(W)]
+        return sum(1 for c in cells if max(c) <= 24) / len(cells)
+    out = []
+    for side, outer, inner in (('top', range(0, k), range(k, 2 * k)), ('bottom', range(H - k, H), range(H - 2 * k, H - k))):
+        if dark(outer) >= 0.9 and dark(inner) < 0.5:
+            out.append('black_edge_band: the %s %d%% of this %s page is an empty black band: stretch the background / '
+                       'Widget to the real screen edge (H6; 方块冲冲 BUGFIX 390x844)' % (side, round(EDGE_BAND * 100), d.get('purpose')))
     return out
 
 
@@ -1805,7 +2379,8 @@ def check(d, image_module=None, project=None, binding=None):
         # An authenticated official brand image is not generated game picture text.
         readable = [n for n in nodes if not ('sprite' in n.get('comps', {}) and not text(n))]
         problems += [v for v in text_problems(d, readable, buttons, image_module)
-                     if v.split(':', 1)[0] not in {'plain_text', 'font_text', 'font_number', 'text_arrow'}]
+                     if v.split(':', 1)[0] not in {'plain_text', 'font_text', 'font_number', 'font_value_label',
+                                                   'dev_info_text', 'text_arrow'}]
         problems += squash_problems(nodes, full) + low_res_problems(nodes, full)
         problems += overlap_problems(nodes, buttons, full) + glyph_problems(nodes)
         if project is not None:
@@ -1860,9 +2435,18 @@ def check(d, image_module=None, project=None, binding=None):
     problems += one_piece_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)])
     problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module) + low_res_problems(nodes, full)
     problems += overlap_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)], full)
+    # v7.8 U11: buttons over any picture frame, text on a busy background without a plate, one text drawn twice
+    blockers = [n for n in all_full if n.get('comps', {}).get('block_input')]
+    problems += control_picture_problems(nodes, [n for n in nodes if 'button' in n['comps'] and
+                                                 n['comps']['button'].get('interactable', True)], full, kind, blockers)
+    problems += stacked_text_problems(nodes) + busy_text_problems(d, nodes, image_module)
+    problems += edge_band_problems(d, image_module)
+    # v7.8 H11: home hero seen whole and big, HUD numbers big and clear
+    problems += hero_problems(d, nodes, [n for n in nodes if 'button' in n['comps']])
+    problems += hud_digit_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
     problems += caption_style_problems(d, nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)],
                                        image_module)
-    problems += glyph_problems(nodes)
+    problems += glyph_problems(nodes) + flat_value_plate_problems(nodes)
     if project is not None:
         problems += clock_glyph_clearance_problems(d, project)
     if image_module is not None:
@@ -2146,6 +2730,13 @@ def main():
     folders = a.dumps or [proj / 'docs/test']
     dumps = load([f for f in folders if Path(f).is_dir()])
     global CAPTION_FRAMES, RUNTIME_TEXT, BUTTON_SET, CANVAS_TEXT_FILES, CLARITY_EXEMPT, MODE, OPTIONAL, GENERATED_TEXT_SOURCES
+    global HERO_GLOBS
+    try:                                     # v7.8 H11: the hero named by the project (else found by name / size)
+        hero_spec = json.loads((proj / 'docs/art/hero.json').read_text(encoding='utf-8-sig'))
+        HERO_GLOBS = [str(g) for g in (hero_spec.get('home') if isinstance(hero_spec.get('home'), list)
+                                       else [hero_spec.get('home')]) if g and str(g).strip()]
+    except (OSError, ValueError, AttributeError):
+        HERO_GLOBS = []
     GENERATED_TEXT_SOURCES={}
     for source in (proj/'assets').rglob('*.png'):
         if (Path(str(source)+'.meta')).is_file():

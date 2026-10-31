@@ -30,19 +30,42 @@ def inside(component,rect):
 import argparse,json,hashlib
 from PIL import ImageDraw
 
+# v7.8 (总表 H9（补）, Ingrid's Snowball Stack 10-26: three rounds of slice residue on caption_*, closet, snowball): every
+# other slice is checked too - picture text, game pieces, projectiles, obstacles. Role "scope_body": the main body must
+# not be cut by the rect and no thin alpha strip may hang on the rect edge (a neighbour's sliver). Detached own parts
+# (letters, sparkles) are allowed. Tilesets / seamless tiles / sliced plates are skipped: they are meant to join.
+TILE_NAME=re.compile(r'tile|tileset|terrain|ground|floor|wall|road|grass|water|map|bg|background|backdrop|pattern|seamless|loop|strip|border|frame9|9slice|sliced|nine|panel|bar|fill|line',re.I)
+def _flat_any(data):
+ return isinstance(data,dict) and bool(data) and all(isinstance(v,dict) and all(x in v for x in ('image','x','y','w','h')) for k,v in data.items() if not str(k).startswith('_'))
+def opaque_edges(image,rect,threshold=64,share=0.9):
+ x,y,w,h=rect;a=image.getchannel('A')
+ sides=[[a.getpixel((x+i,y)) for i in range(w)],[a.getpixel((x+i,y+h-1)) for i in range(w)],[a.getpixel((x,y+j)) for j in range(h)],[a.getpixel((x+w-1,y+j)) for j in range(h)]]
+ return all(sum(v>threshold for v in side)>=share*len(side) for side in sides)
+def edge_fragments(comps,rect,main_area):
+ x,y,w,h=rect;out=[]
+ for n,c in comps:
+  if n>=main_area:continue
+  b=c['bbox'];bx0,by0,bx1,by1=max(b[0],x),max(b[1],y),min(b[2],x+w),min(b[3],y+h)
+  touch=bx0<=x or by0<=y or bx1>=x+w or by1>=y+h
+  thin=(bx1-bx0)<=max(3,0.2*w) or (by1-by0)<=max(3,0.2*h)
+  if touch and thin:out.append([bx0,by0,bx1-bx0,by1-by0])
+ return out
+
 def audit(manifest_path,out=None,only=None):
  manifest_path=Path(manifest_path);manifest=json.loads(manifest_path.read_text());cache={};issues=[];rows=[]
  from flat_atlas_adapter import is_flat_atlas,normalize
- if is_flat_atlas(manifest):manifest=normalize(manifest_path,manifest,only)
+ if is_flat_atlas(manifest) or _flat_any(manifest):manifest=normalize(manifest_path,manifest,only or sorted(k for k in manifest if not str(k).startswith('_')))
  elif only:
   if set(only)-set(manifest['frames']):raise ValueError('declared_frames_missing')
   manifest=dict(manifest,frames={k:v for k,v in manifest['frames'].items()if k in set(only)})
  if not manifest['frames']:raise ValueError('empty_declared_frames')
+ skipped=[]
  if out:Path(out).mkdir(parents=True,exist_ok=True)
  for name,frame in manifest['frames'].items():
   # Only standalone UI silhouettes have this contract. Titles and punctuation can
   # have intentional detached pieces; those require an explicit different role.
   role=frame.get('slice_role')
+  if role=='tileset':skipped.append({'frame':name,'reason':'slice_role tileset'});continue
   if role and role not in ('single_body','two_marks','multi_body'):
    issues.append({'frame':name,'kind':'unsupported_slice_role'});continue
   if role=='multi_body' and not frame.get('part_reason'):
@@ -50,30 +73,36 @@ def audit(manifest_path,out=None,only=None):
   if not role:
    if name.startswith(('icon_','node_','btn_')) or (name.startswith('digit_') and name[-1:].isdigit()):role='single_body'
    elif name=='digit_:':role='multi_body'
-   else:continue
-  if role not in ('single_body','two_marks','multi_body'):continue
+   elif TILE_NAME.search(name) or frame.get('sliced') or frame.get('tiled'):skipped.append({'frame':name,'reason':'tileset/sliced name'});continue
+   else:role='scope_body'
+  if role not in ('single_body','two_marks','multi_body','scope_body'):continue
   tex=manifest_path.parent/(frame['texture']+'.png')
+  if role=='scope_body' and not tex.is_file():skipped.append({'frame':name,'reason':'texture missing: '+tex.name});continue
   if str(tex) not in cache:
    image=Image.open(tex).convert('RGBA');cache[str(tex)]=(image,components(image))
   image,cs=cache[str(tex)];rect=frame['rect']
   if not isinstance(rect,list) or len(rect)!=4 or not all(isinstance(x,int) for x in rect) or min(rect[:2])<0 or min(rect[2:])<=0 or rect[0]+rect[2]>image.width or rect[1]+rect[3]>image.height:
    issues.append({'frame':name,'kind':'invalid_or_out_of_texture_rect'});continue
+  if role=='scope_body' and opaque_edges(image,rect):skipped.append({'frame':name,'reason':'opaque to all four edges (tile)'});continue
   visible=sorted([(inside(c,rect),c) for c in cs.values()],key=lambda q:-q[0]);visible=[q for q in visible if q[0]>0]
   if not visible:issues.append({'frame':name,'kind':'empty_slice'});continue
   area=visible[0][0];significant=[q for q in visible if q[0]>=max(24,area*.005)]
   row={'frame':name,'texture':str(tex),'texture_sha256':hashlib.sha256(tex.read_bytes()).hexdigest(),'rect':rect,'role':role,'components':[{'visible_area':n,'full_area':c['area'],'bbox':c['bbox']} for n,c in significant],'problems':[]}
   expected=2 if role=='two_marks' else 1
-  if role!='multi_body' and len(significant)>expected:row['problems'].append('foreign_alpha_island')
-  if role!='multi_body' and len(significant)<expected:row['problems'].append('declared_part_missing')
+  if role not in ('multi_body','scope_body') and len(significant)>expected:row['problems'].append('foreign_alpha_island')
+  if role not in ('multi_body','scope_body') and len(significant)<expected:row['problems'].append('declared_part_missing')
   for n,c in significant:
    if c['area']-n>=max(24,c['area']*.002):row['problems'].append('connected_body_cut_by_rect')
+  if role=='scope_body':
+   strips=edge_fragments(significant,rect,area)
+   if strips:row['problems'].append('edge_fragment');row['edge_fragments']=strips
   row['problems']=sorted(set(row['problems']));rows.append(row)
   for problem in row['problems']:issues.append({'frame':name,'kind':problem,'rect':rect,'components':row['components']})
   if out:
    x,y,w,h=rect;crop=image.crop((x,y,x+w,y+h));board=Image.new('RGBA',crop.size,'#e6dfd0');board.alpha_composite(crop);board.convert('RGB').save(Path(out)/(name.replace(':','colon').replace('/','slash')+'-slice.png'))
    if row['problems']:
     pad=45;box=[max(0,x-pad),max(0,y-pad),min(image.width,x+w+pad),min(image.height,y+h+pad)];neighbour=image.crop(box);bg=Image.new('RGBA',neighbour.size,'#e6dfd0');bg.alpha_composite(neighbour);draw=ImageDraw.Draw(bg);draw.rectangle((x-box[0],y-box[1],x+w-box[0]-1,y+h-box[1]-1),outline='#e43937',width=3);bg.convert('RGB').save(Path(out)/(name.replace(':','colon').replace('/','slash')+'-context.png'))
- return {'tool':'audit_atlas_slices','passed':not issues,'manifest':str(manifest_path.resolve()),'manifest_sha256':hashlib.sha256(manifest_path.read_bytes()).hexdigest(),'checked':len(rows),'issues':issues,'frames':rows,'declared_frames':{k:v['rect']for k,v in manifest['frames'].items()},'adapter':manifest.get('adapter','frames_v1'),'scope':'Declared standalone UI silhouettes and single glyphs; intended multipart art needs an explicit role and normal control.'}
+ return {'tool':'audit_atlas_slices','passed':not issues,'manifest':str(manifest_path.resolve()),'manifest_sha256':hashlib.sha256(manifest_path.read_bytes()).hexdigest(),'checked':len(rows),'issues':issues,'frames':rows,'declared_frames':{k:v['rect']for k,v in manifest['frames'].items()},'adapter':manifest.get('adapter','frames_v1'),'skipped':skipped,'scope':'v7.8: every slice. icon_/node_/btn_/digit_ = one body; other slices (picture text, pieces, projectiles, obstacles) = body not cut and no edge strip; tilesets/sliced plates/opaque tiles skipped (listed).'}
 
 
 def check_project(project,dumps=None,out=None,only=None):
@@ -86,7 +115,7 @@ def check_project(project,dumps=None,out=None,only=None):
    try:
     value=json.loads(path.read_text())
     from flat_atlas_adapter import is_flat_atlas
-    if (isinstance(value.get('frames'),dict) and isinstance(value.get('textures'),dict)) or is_flat_atlas(value):manifests.append(path)
+    if (isinstance(value.get('frames'),dict) and isinstance(value.get('textures'),dict)) or is_flat_atlas(value) or _flat_any(value):manifests.append(path)
    except (OSError,ValueError):continue
  results=[];expected={};issues=[]
  for i,path in enumerate(sorted(manifests)):

@@ -11,11 +11,17 @@
 | --- | --- |
 | 必须交付：TikTok 上传测试 ZIP | 实际 Native 构建；根目录直接有 game.js、game.json、project.config.json，可直接选择或拖入当前指定应用上传。与试玩链接同时提供，附目标 App ID 和实际待验状态；无需解压、提取内包或重压。 |
 | 内部：英文源码、Web 和核验 | 保留可编辑 Cocos 工程、实际引擎/构建、公开配置、启动器和证据；不为单 ZIP 交付额外压成总包，用户另要时再整理。 |
-| 必须交付：本地试玩链接 | 从同版真实 Cocos Web 构建用 `serve_preview.py --keep` 启动 HTTP 服务，确认游戏能加载、能操作，再在 Codex 回复里给可点击的本地预览 URL（自动请求独立 Google Chrome 窗口，核实实际可见后交接；同时保留链接，按[用户试玩](user-phone-preview.md)）。 |
+| 必须交付：本地试玩链接 | 从同版真实 Cocos Web 构建用 `serve_preview.py --keep --project <工程>` 启动 HTTP 服务，确认游戏能加载、能操作，再在 Codex 回复里给可点击的本地预览 URL（自动请求独立 Google Chrome 窗口，核实实际可见后交接；同时保留链接，按[用户试玩](user-phone-preview.md)）。 |
 
 交付时本地服务必须开着：记录 URL、端口、实际 Web 目录和重启命令（普通内部服务空闲20分钟关闭；用户试玩加 `--keep` 保留，结束或替代后由 Agent 关闭自有窗口与服务），不能只给文件路径或已停的链接。浏览器能玩不代表手机、真实广告或平台审核通过。
 
-具体 Native 结构、大小和独立核验按 Native 与 IAA（重塑包 remake-ads 板块，英化包不含）。文件名包含游戏、用途和版本；说明放在平台 ZIP 外。清掉本次无用候选与临时依赖，保留已确认包、原始资料和可追溯证据；不停止其他游戏或任务的服务。
+**交付文件夹只留一个包（v7.8，总表 B32 b）**：两个写包入口出包后，同一输出文件夹里同款游戏的旧包（App ID 相同，游戏自己的文件至少三成相同）连同它的 `.receipt.json`、`.report.json` 挪进「旧包/」，再写「最新.txt」：上传用哪个包（完整路径）、sha256、大小、时间、这次挪了哪些。源码 ZIP、试玩文件夹、别的游戏的包和其他文件一律不动；「旧包/」里重名的加「 (2)」，不覆盖、不删除；不是写包入口写的「最新.txt」不改。回复照「最新.txt」写明「上传 TikTok 用这个」和完整路径，源码包标「不能上传」。写包拒收测试（`test_writer_refusal.py`）的检查 ZIP 不要写进交付文件夹，或给写包入口加 `--keep-old-packages`。
+
+**两个写包入口都跑运行时回归（v7.8 W97）**：`make_tiktok_zip.py` 也在写 ZIP 前对要发出去的字节跑激励广告回归和运行时套件，命令带 `--ad-regression <工程>/qa/ad-regression.json`（或设 `$TIKTOK_AD_REGRESSION_ADAPTER`）。新游戏（工程标记 new 的英化游戏也算）没跑通就不写 ZIP、列出全部原因；名单上的老游戏照样出包，原因写进报告 `warnings`，交付说明照实写。`test_writer_refusal.py` 的写包命令也要带同一个 `--ad-regression`，否则它的 normal 用例会被拒。
+
+**检查工具要用安装版（v7.8，总表 B32 d）**：`check_package.py`、`build_checked_zip.py`、`runtime_regression.py` 发现用的检查工具不是安装目录里那份（复制到游戏文件夹里改过，或直接改了安装版），报告里写「改过的工具」，并在 `！Skill更新/` 写一份反馈草稿（`反馈草稿_改过的工具_<游戏>_<日期>.md`，只写新文件，同一天同样的改动只写一次）。工具有毛病就把草稿交给 Skill 制作会话改，不在游戏里长期留一份自己的检查工具。
+
+具体 Native 结构、大小和独立核验按 [Native 与 IAA](../../remake-ads/references/tiktok-native-iaa.md)。文件名包含游戏、用途和版本；说明放在平台 ZIP 外。清掉本次无用候选与临时依赖，保留已确认包、原始资料和可追溯证据；不停止其他游戏或任务的服务。
 
 最终打包前按[适用功能与输入检查](../../cocos-game-check/test/references/prepackage-mobile-review.md)执行：复用用户试玩前已完成并认可的美术结论，不重新审查或优化按钮美术；完成本轮适用的功能、触屏及原自动失败门禁，真实运行故障定点处理。用户明确要求测试候选时按实际范围交付，保留真实手机/IAA待验与原自动失败门禁。
 

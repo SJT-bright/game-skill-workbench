@@ -5,7 +5,7 @@
 | 当前工作/症状 | 需要读取的正文 |
 |---|---|
 | 新制作的默认模块、货币、皮肤、广告 | [融合边界](fusion-policy.md)、[模块](game-modules.md)、关卡与顶部栏（重塑包 remake-levels 板块，英化包不含） |
-| 新制作/处理原有入口 | [分享与全部排行榜禁用](no-social-features.md)、禁止广告跳关与教程（重塑包 remake-onboarding 板块，英化包不含） |
+| 新制作/处理原有入口 | [分享与联网排行榜禁用（局内本地名次可以留）](no-social-features.md)、禁止广告跳关与教程（重塑包 remake-onboarding 板块，英化包不含） |
 | 设计确认前、玩法确认后、功能验收与增量维护 | [阶段与执行范围](../../cocos-game-check/test/references/review-execution-plan.md)、[停止条件](../../cocos-game-check/test/references/testing-scope-and-stop.md) |
 | 美术制作或受影响页面 | [美术前移与锁定](../../remake-art/references/art-before-trial.md)、[UI规范与样板](../../remake-art/references/ui-style-and-samples.md)、[图片字与布局](../../remake-art/references/page-richness.md)、[按钮分区](../../remake-art/references/mobile-button-size-and-home-layout.md) |
 | 遮字、灰格、列表首尾、关闭/返回压装饰 | [集合预览](../../remake-art/references/collection-preview-review.md)、[字底与字形](../../remake-art/references/text-backplate-review.md)、[局部UI契约](../../remake-art/references/local-ui-contract.md) |
@@ -28,8 +28,8 @@
 | 条件 | 正文与动作 |
 |---|---|
 | 玩家可见设置/制作说明 | [设置与玩家界面](../../remake-art/references/common-game-components.md)：不展示Credits或同义About制作说明；许可证与素材出处保留项目，符合许可后处理，不直接抹掉义务 |
-| 用户试玩有广告入口 | 可操作广告模拟（重塑包 remake-ads 板块，英化包不含）：本地服务经原奖励流程提供看完/取消/失败；上传Native/ZIP由既有拒包器排除模拟残留 |
-| 完整功能测试或广告相关修复 | AI逐入口广告模拟（重塑包 remake-ads 板块，英化包不含）：覆盖当前范围的原广告按钮、期望/实际奖励、保存、后续合法使用；写F11/R04，局部只测相关入口 |
+| 用户试玩有广告入口 | [可操作广告模拟](../../remake-ads/references/manual-ad-simulation.md)：本地服务经原奖励流程提供看完/取消/失败；上传Native/ZIP由既有拒包器排除模拟残留 |
+| 完整功能测试或广告相关修复 | [AI逐入口广告模拟](../../remake-ads/references/automated-ad-simulation.md)：覆盖当前范围的原广告按钮、期望/实际奖励、保存、后续合法使用；写F11/R04，局部只测相关入口 |
 | 制作记录、项目完结 | [生产统计](production-accounting.md)：增量记录步骤、时间、结果与证据；只用真实会话数据汇总token，不增加游戏CI或常驻任务 |
 | 首页回访与快捷方式 | [共用任务流程](tiktok-home-growth.md)：实际Open、返回查询、单次持久领奖与Claimed，展示和入账使用同值 |
 | 设计/改关、评价故障 | 关卡评价（重塑包 remake-levels 板块，英化包不含）：普通与完美需有可操作差异、真实奖励和结算；不固定通关即满星 |

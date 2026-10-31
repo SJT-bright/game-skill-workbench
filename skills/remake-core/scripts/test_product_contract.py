@@ -66,16 +66,20 @@ class ProductContractTests(unittest.TestCase):
     def test_original_level_scope_preserves_or_extends_actual_maps(self):
         from audit_level_plan import audit_original_levels
         def rows(count):return [dict(level=i,layout=[i,i+1,i+2])for i in range(1,count+1)]
+        # 英化不补关 (Saul 2026-10-28; replaces the 2026-10-24 rule "pad to 70"): production keeps the original count.
         for count in (1,40,69,70,75,121):
-            checks=[];audit_original_levels(rows(count),rows(max(70,count)),lambda i,ok,d:checks.append((i,ok)))
+            checks=[];audit_original_levels(rows(count),rows(count),lambda i,ok,d:checks.append((i,ok)))
             self.assertTrue(all(ok for _,ok in checks),checks)
-        for original,current in [(rows(75),rows(70)),(rows(75),rows(80)),(rows(70),rows(71)),(rows(40),rows(69)),(rows(40),rows(71)),(rows(40),rows(75))]:
+        for original,current in [(rows(40),rows(70)),(rows(69),rows(70)),(rows(75),rows(70)),(rows(75),rows(80)),(rows(70),rows(71)),(rows(40),rows(69)),(rows(40),rows(71)),(rows(40),rows(75))]:
             checks=[];audit_original_levels(original,current,lambda i,ok,d:checks.append(ok));self.assertFalse(all(checks))
+        # Levels the user asked for (explicit_total) must still be distinct actual maps.
+        ask={'count':70,'authorized_by':'Saul 2026-10-30','reason':'Saul asked for one more real level in this English game'}
         duplicate=rows(69)+[dict(level=70,layout=rows(69)[0]['layout'])]
-        checks=[];audit_original_levels(rows(69),duplicate,lambda i,ok,d:checks.append(ok));self.assertFalse(all(checks))
+        checks=[];audit_original_levels(rows(69),duplicate,lambda i,ok,d:checks.append(ok),ask);self.assertFalse(all(checks))
         # Shared grid with a materially different puzzle target is not just a renamed map.
         changed_goal=rows(69)+[dict(level=70,layout=rows(69)[0]['layout'],goal={'target':42})]
-        checks=[];audit_original_levels(rows(69),changed_goal,lambda i,ok,d:checks.append(ok));self.assertTrue(all(checks))
+        checks=[];audit_original_levels(rows(69),changed_goal,lambda i,ok,d:checks.append(ok),ask);self.assertTrue(all(checks))
+        checks=[];audit_original_levels(rows(69),changed_goal,lambda i,ok,d:checks.append(ok));self.assertFalse(all(checks))
         shuffled=rows(75);shuffled[0],shuffled[1]=shuffled[1],shuffled[0]
         checks=[];audit_original_levels(rows(75),shuffled,lambda i,ok,d:checks.append(ok));self.assertFalse(all(checks))
 

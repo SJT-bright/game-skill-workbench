@@ -24,6 +24,9 @@ Writers only (the view carries finalize_record / writer=True: package_gates.run(
                       revisit pay 0 instead of 5B. Legacy games: warning.
 Source-phase parts (2.4 modules, 3.x plugin scripts) are not byte-checked here: Creator may minify or rename them in a
 build, so they are proven by the source record (kit_sources.py, W-A2 request 2).
+    K6_kit_module_old (v7.8, 总表 B30 C, kit_versions.py): 2.4 only, every entry: the kit modules INSIDE the minified
+                      script bundle, recognised by version-only names / strings (KIT_FINGERPRINTS.json); an old version
+                      blocks a new game, warns a legacy one (a stale build passes K5 because the project is current).
 
 Policy: view.policy when the caller sets it ('new' | 'legacy'); otherwise decided from the package itself
 (tiktok_finalize_steps.policy.decide(files=...): scene / asset uuids against LEGACY_GAMES.json, default new).
@@ -184,6 +187,10 @@ def check(view):
     out += structure.verify(files, manifest, policy, getattr(view, 'finalize_options', None))
     if engine == 3 and policy == 'new':
         out += plugin_findings(files, manifest, policy)
+    if engine == 2:
+        # v7.8 (总表 B30 C): the kit SOURCE modules as the build really contains them (K6_kit_module_old)
+        from . import kit_versions
+        out += kit_versions.verify(files, {'files': manifest.files, 'version': manifest.version}, policy, engine)
     out += config_findings(view, policy)
     if getattr(view, 'writer', False) or getattr(view, 'finalize_record', None) is not None:
         import tiktok_finalize as F

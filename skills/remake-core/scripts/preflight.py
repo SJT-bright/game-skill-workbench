@@ -6,9 +6,10 @@
                       [--binding <当前review.json>] [--maintenance-visual-policy <视觉映射.json>]
                       [--copy-table <文案表.csv>] [--glossary <词表.json>] [--out <输出文件夹>]
 
---board：localize = 英化＋优化（中文源码转英文并按通用标准优化，核心玩法和原声音不动；docs/art-style.txt 写 remake 时美术按重塑查），remake = 重塑（启动包做游戏）。
+--board：localize = 英化（中文源码转英文，只做英化入口 cocos-game-to-english 列的固定几项，核心玩法、关卡、原画风和原声音不动；docs/art-style.txt 写 remake 时美术按重塑查），remake = 重塑（启动包做游戏）。
 不写时读 <工程>/docs/board.txt；都没有时按重塑（最严）检查并提示。见 remake-core/references/two-boards.md。
-英化＋优化：截图亮度/大块深色、UI 占比与排版、皮肤表照查；清晰度和音频来源只作提示（原图、原声音文件保留）。
+英化：查英文、新图、删掉的分享/排行、两个音量和通用项；默认不补关、不加皮肤/经济/签到/教程（Saul 2026-10-28，旧的“英化＋优化”清单作废），
+工程里没有关卡表、皮肤表、docs/modules.json 这些板块记录时，设计关那几行写不适用；Saul 要求创新玩法、用了对应板块时照查（Saul 2026-10-30）；清晰度和音频来源只作提示（原图、原声音文件保留）。
 
 跑哪些检查（缺对应输入的自动跳过）：
   清晰度        audit_image_clarity.py    场景/预制体里被放大、不到2倍的图片
@@ -40,7 +41,7 @@
   可选玩法      audit_optional_features.py 新建玩法查皮肤增益和七日签到模板；维护范围复验已存在的生产 JS
   单调页面      audit_page_richness.py    首页/过关/失败（和排名页）是否单调：纯色底、只有字的按钮、系统字体、空白面板
   顶部资源栏    audit_top_bar.py          货币/体力/关卡进度在最上方、货币贴合题材、体力是闪电、过关后数字马上变
-  关卡地图      audit_level_plan.py       有关卡就有地图（显示总关数）、70关及以上、难度逐关递增、随机奖励关、每10关限定关奖励；无尽没有地图
+  关卡地图      audit_level_plan.py       有关卡就有地图（显示总关数）、重塑60关及以上（英化保留原关数，不补关）、难度按波浪分档、随机奖励关、每10关限定关奖励；无尽没有地图
 
 用户 2026-10-24（remake-core/references/check-stages.md）：设计和美术在它们自己的阶段查过了（设计关 design_check.py，美术关
 art_check.py），默认不再执行：清晰度、大块深色与纯色底、UI不挡玩法、单调页面、皮肤收集梯度、内置板块、排名扩展、
@@ -69,6 +70,13 @@ HERE = Path(__file__).resolve().parent
 EARLIER_ROWS = {'清晰度': '美术关', '大块深色与纯色底': '美术关', 'UI不挡玩法': '美术关', '单调页面': '美术关', '顶部资源栏': '美术关',
                 '关卡地图': '设计关', '皮肤收集梯度': '设计关', '内置板块': '设计关', '排名扩展': '设计关', '签到扩展': '设计关'}
 EARLIER_SCRIPT = {'设计关': 'design_check.py', '美术关': 'art_check.py'}
+# Rows an English game does not add by default (英化默认没有设计关, Saul 2026-10-28): not applicable, unless the project
+# used those boards for new gameplay Saul asked for (any record below exists, Saul 2026-10-30) or a maintenance scope
+# rechecks them.
+LOCALIZE_NOT_ADDED = {'关卡地图', '皮肤收集梯度', '内置板块', '排名扩展', '签到扩展', '顶部资源栏'}
+LOCALIZE_BOARD_RECORDS = ('docs/modules.json', 'docs/features.json', 'docs/top-bar.json', 'docs/league/decision.json',
+                          'assets/resources/config/level_plan.json', 'docs/levels/level_plan.json',
+                          'assets/resources/config/unlock_table.json', 'docs/economy/unlock_table.json')
 USER_ADS = Path.home() / '.game-skill' / 'ad-config.json'
 SKILL_ADS = HERE.parent / 'assets' / 'ad-config.json'
 
@@ -160,7 +168,17 @@ def main():
     def add(title, status, detail, log=''):
         rows.append({'check': title, 'status': status, 'detail': detail, 'log': log})
 
+    # 英化默认没有设计关（Saul 2026-10-28）：不补关、不加皮肤/经济/签到/顶部资源栏/关卡地图，这些行不适用。
+    # Saul 要求创新玩法时，新加的部分用关卡/皮肤/经济板块做，板块会写下记录（Saul 2026-10-30）：有记录就照查。
+    # 维护已批准的英化成品（--maintenance-scope）照旧复核原有内容。
+    used_boards = [r for r in LOCALIZE_BOARD_RECORDS if (proj / r).is_file()]
+
     def skip_earlier(*titles):
+        if localize and not a.maintenance_scope and not used_boards and all(t in LOCALIZE_NOT_ADDED for t in titles):
+            for title in titles:
+                add(title, '不适用', '英化默认不加这一项（不补关、不加皮肤/经济/签到/顶部资源栏/关卡地图）；'
+                    'Saul 要求创新玩法、用了对应板块时（工程里有板块记录）照查')
+            return True
         if a.recheck_earlier:
             return False
         for title in titles:
@@ -171,8 +189,9 @@ def main():
     if board_guessed:
         add('板块', '提示', '没写 --board，也没有 docs/board.txt：按重塑（最严）检查。英化请加 --board localize，并在 docs/board.txt 写 localize')
     else:
-        add('板块', '提示', ('英化＋优化，美术按重塑画风重做：美术按重塑查，原声音保留' if remake_art else
-                             '英化＋优化：查英文、新图、排版、禁止的UI、纯色背景、皮肤收集、设置页和通用项（原画风和原声音保留）') if localize
+        add('板块', '提示', ('英化，美术按重塑画风重做：美术按重塑查，原声音保留' if remake_art else
+                             '英化：查英文、新图、删掉的分享/排行、两个音量、设置页和通用项（默认保留原玩法、原关卡、原画风和原声音；'
+                             '创新玩法用了关卡/皮肤/经济板块时照查）') if localize
             else '重塑（启动包做游戏）：执行本轮功能预检，设计与美术归所属阶段')
 
     # Page entry regression: only static triage here; LOAD-01 still requires runtime coverage.
@@ -378,7 +397,7 @@ def main():
         add('广告位绑定', '跳过', '没有给 --native-zip')
 
     if not skip_earlier('大块深色与纯色底'):
-        # 8 截图亮度与背景（英化＋优化也要去掉大块深色/白板/纯色；用户 2026-10-21：纯色背景没被查出来，
+        # 8 截图亮度与背景（英化只查改过的页面，原画风不重做；用户 2026-10-21：纯色背景没被查出来，
         #   因为没给 --screens 时这一项被跳过了。现在默认读 docs/test 里 dump_ui 一起保存的截图，没有截图就是"需处理"）
         screens = a.screens or (proj / 'docs/test')
         if screens.is_dir():
@@ -483,8 +502,8 @@ def main():
             else:
                 add('皮肤收集梯度', '出错', text.strip()[-300:], 'logs/audit_acquisition_progression.log')
         else:
-            add('皮肤收集梯度', '需处理' if localize else '跳过',
-                '没有找到 unlock_table.json' + ('：英化＋优化要给每个游戏加皮肤/收集系统（按优化清单）' if localize else '（游戏没有皮肤/收集系统时可以忽略）'))
+            add('皮肤收集梯度', '不适用' if localize else '跳过',
+                '没有找到 unlock_table.json' + ('：英化默认不加皮肤/收集系统，原游戏没有就不用；创新玩法加了皮肤时要有 unlock_table.json' if localize else '（游戏没有皮肤/收集系统时可以忽略）'))
 
     # 11 严格禁止看广告跳关
     ns = ['--project', proj, '--out', out / 'no_ad_skip.json']

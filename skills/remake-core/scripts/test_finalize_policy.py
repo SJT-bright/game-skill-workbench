@@ -103,6 +103,105 @@ class Rules(unittest.TestCase):
         self.assertEqual(P.decide(project=game, legacy=legacy)['policy'], 'new')   # a marker still wins
 
 
+SUBS = ['3c000000-0000-4000-8000-%012d' % i for i in range(10)]
+
+
+def sprite_project(root):
+    """A project whose own scene / top-level uuids are not listed; only its sprite-frame subMetas are."""
+    root = project(root, scene='4d000000-0000-4000-8000-000000000001')
+    meta = {'uuid': '4d000000-0000-4000-8000-000000000002', 'importer': 'texture',
+            'subMetas': {'f%d' % i: {'uuid': u, 'importer': 'sprite-frame'} for i, u in enumerate(SUBS[:6])}}
+    (root / 'assets' / 'atlas.png.meta').write_text(json.dumps(meta))
+    return root
+
+
+class SubAssets(unittest.TestCase):
+    """v7.8 B27 second half: sub-asset uuids count, but never for a game opened from a starter pack or a remake."""
+    legacy = {'games': [{'name': 'g', 'folder': 'J/g', 'board': 'localize', 'scene_uuids': [], 'asset_uuids': SUBS}]}
+
+    def test_moved_legacy_project_is_legacy_by_sub_assets(self):
+        p = sprite_project(H.tmpdir(self) / 'moved' / 'Game')
+        out = P.decide(project=p, legacy=self.legacy)
+        self.assertEqual(out['policy'], 'legacy', out['reason'])
+        self.assertEqual(out['legacy_match'][0]['by'], 'sub-asset uuids')
+        self.assertEqual(P.decide(project=p, legacy=self.legacy, board='localize')['policy'], 'legacy')
+
+    def test_remake_board_is_never_legacy_by_sub_assets(self):
+        p = sprite_project(H.tmpdir(self) / 'moved' / 'Game')
+        out = P.decide(project=p, legacy=self.legacy, board='remake')
+        self.assertEqual(out['policy'], 'new', out['reason'])
+        self.assertEqual(out['auto_new'], '--board remake')
+        self.assertEqual(out['sub_asset_match'][0]['folder'], 'J/g')
+
+    def test_inside_or_next_to_a_starter_pack_is_new(self):
+        root = H.tmpdir(self)
+        pack = root / 'inside' / 'X_StarterPack'
+        pack.mkdir(parents=True)
+        (pack / 'START_HERE.md').write_text('x')
+        (pack / 'GAME_DESIGN.md').write_text('x')
+        out = P.decide(project=sprite_project(pack / 'source'), legacy=self.legacy)
+        self.assertEqual(out['policy'], 'new', out['reason'])
+        self.assertIn('inside starter pack', out['auto_new'])
+        game = root / 'next' / '新150_Game'
+        (game / 'Game_StarterPack').mkdir(parents=True)
+        (game / 'Game_StarterPack' / 'workshop.json').write_text('{}')
+        out = P.decide(project=sprite_project(game / '工程' / 'Proj'), legacy=self.legacy)
+        self.assertEqual(out['policy'], 'new', out['reason'])
+        self.assertIn('next to starter pack', out['auto_new'])
+        many = root / 'collection'
+        for i in range(3):
+            (many / ('G%d_StarterPack' % i)).mkdir(parents=True)
+        out = P.decide(project=sprite_project(many / 'old' / 'Game'), legacy=self.legacy)
+        self.assertEqual(out['policy'], 'legacy', out['reason'])     # a folder holding many packs is no trace
+
+    def test_top_level_match_and_marker_still_first(self):
+        p = sprite_project(H.tmpdir(self) / 'p')
+        top = {'games': [dict(self.legacy['games'][0], scene_uuids=['4d000000-0000-4000-8000-000000000001'])]}
+        self.assertEqual(P.decide(project=p, legacy=top, board='remake')['policy'], 'legacy')   # unchanged rule
+        P.write_marker(p, 'remake', '2.0')
+        self.assertEqual(P.decide(project=p, legacy=self.legacy)['policy'], 'new')
+
+    def test_source_writes_the_marker_so_later_callers_agree(self):
+        p = sprite_project(H.tmpdir(self) / 'moved' / 'Game')
+        self.assertIsNone(P.read_marker(p))
+        record = F.finalize_source(p, 'remake', engine=2, legacy=self.legacy, steps=())
+        self.assertEqual(record['policy'], 'new')
+        self.assertTrue(record['decision'].get('marker_written'))
+        self.assertIn('source (auto', P.read_marker(p)['by'])
+        self.assertEqual(P.decide(project=p, legacy=self.legacy)['policy'], 'new')     # no board needed any more
+        q = sprite_project(H.tmpdir(self) / 'en' / 'Game')
+        F.finalize_source(q, 'localize', engine=2, legacy=self.legacy, steps=())
+        self.assertIsNone(P.read_marker(q))                                            # an English legacy game
+
+    def test_source_zip_reads_sub_assets(self):
+        import zipfile
+        p = sprite_project(H.tmpdir(self) / 'z' / 'Game')
+        z = p.parent / 'src.zip'
+        with zipfile.ZipFile(z, 'w') as out:
+            for f in p.rglob('*'):
+                if f.is_file():
+                    out.write(f, 'Game/' + f.relative_to(p).as_posix())
+        ident = P.identity_from_zip(z)
+        self.assertEqual(ident['sub_assets'], set(SUBS[:6]))
+        kw = dict(uuids=ident['scenes'], assets=ident['assets'], legacy=self.legacy, sub_assets=ident['sub_assets'])
+        self.assertEqual(P.decide(**kw)['policy'], 'legacy')
+        self.assertEqual(P.decide(board='remake', **kw)['policy'], 'new')
+
+
+SCISSORS_V30 = Path('/Users/sijunting/Downloads/！自制游戏/启动包工坊/_内部/maintenance/updates/release-selftest/corpus/'
+                    '6141967d9c28/ScissorsMaster-v30')
+
+
+@unittest.skipUnless(SCISSORS_V30.is_dir(), 'release-selftest corpus not on this machine')
+class RealSubAssets(unittest.TestCase):
+    def test_scissors_v30_moved_project_is_legacy(self):
+        legacy = P.load_legacy()
+        out = P.decide(project=SCISSORS_V30, legacy=legacy)
+        self.assertEqual(out['policy'], 'legacy', out['reason'])
+        self.assertEqual([h['name'] for h in out['legacy_match']], ['剪刀达人'])
+        self.assertEqual(P.decide(project=SCISSORS_V30, legacy=legacy, board='remake')['policy'], 'new')
+
+
 @unittest.skipUnless(J.is_dir(), 'real packages not on this machine')
 class RealIdentity(unittest.TestCase):
     def test_pkg85_source_and_build_agree(self):

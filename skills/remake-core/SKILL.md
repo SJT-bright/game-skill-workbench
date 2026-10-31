@@ -3,7 +3,7 @@ name: remake-core
 description: "共享脚本与规则库（英化包内供统一检查 cocos-game-check 和美工调用；触发词：检查脚本库、症状对照）。英化流程不使用其中的重塑板块规则（关卡、经济、皮肤、签到、教程等），英化只做 cocos-game-to-english 列出的事。"
 ---
 
-> **英化包说明（Saul 2026-10-28）**：本库在英化包里只作为脚本与规则库，供 cocos-game-check 与 remake-art 调用；文中指向重塑板块（关卡、经济、皮肤、广告、引导等）的内容不适用于英化，英化按 [英化入口](../cocos-game-to-english/SKILL.md) 只做固定几项。
+> **英化包说明（Saul 2026-10-28，10-31 补）**：本库在英化包里只作为脚本与规则库，供 cocos-game-check、remake-art 和广告、货币两个板块调用；文中指向重塑板块（关卡、经济、皮肤、广告、引导等）的内容默认不适用于英化，英化按 [英化入口](../cocos-game-to-english/SKILL.md) 只做固定几项，其中结算 x2、看广告复活、领奖窗勾选框、广告计时和广告回归按本包的 [广告板块](../remake-ads/SKILL.md) 做，数额按 [货币板块](../remake-economy/SKILL.md)；Saul 要求创新玩法时，新加的部分按这些板块做（广告、货币在本包里，关卡、皮肤、引导在重塑包里）。
 
 
 # 游戏 Skill 总合同与共享工具库
@@ -26,10 +26,10 @@ description: "共享脚本与规则库（英化包内供统一检查 cocos-game-
 | 板块 | Skill | 管什么 |
 |---|---|---|
 | 玩法与规格 | remake-game（重塑包 remake-game 板块，英化包不含） | 核心玩法、启动包导入、项目规格、手感 |
-| 关卡 | remake-levels（重塑包 remake-levels 板块，英化包不含） | 关数（重塑≥60、英化≥70）、限定关、奖励关、波浪分档难度、关卡地图与顶部栏 |
-| 经济 | remake-economy（重塑包 remake-economy 板块，英化包不含） | B值、普通关收入、五档预算、结算×2、礼盒、独立广告领币、钱包事务 |
+| 关卡 | remake-levels（重塑包 remake-levels 板块，英化包不含） | 关数（重塑≥60；英化不补关）、限定关、奖励关、波浪分档难度、关卡地图与顶部栏 |
+| 经济 | [remake-economy](../remake-economy/SKILL.md) | B值、普通关收入、五档预算、结算×2、礼盒、独立广告领币、钱包事务 |
 | 皮肤与道具 | remake-skins（重塑包 remake-skins 板块，英化包不含） | 皮肤数量、稀有度、解锁方式、加成、皮肤页、试用弹窗、道具商店 |
-| 广告 | remake-ads（重塑包 remake-ads 板块，英化包不含） | 广告入口、频率、防连点只发一次、不卡顿、SDK与测试ID、复活、难关看广告提示、广告模拟 |
+| 广告 | [remake-ads](../remake-ads/SKILL.md) | 广告入口、频率、防连点只发一次、不卡顿、SDK与测试ID、复活、难关看广告提示、广告模拟 |
 | 美术与UI | [remake-art](../remake-art/SKILL.md) | 画风、页面布局、按钮、图片字、图标、动效、首页和设置页 |
 | 新手引导 | remake-onboarding（重塑包 remake-onboarding 板块，英化包不含） | 首关教程、横竖屏说明、引导拖动、暂停恢复 |
 | 英文文案 | remake-copy（重塑包 remake-copy 板块，英化包不含） | 全英文覆盖、文案质量、换图中的文字、缺字字形 |
@@ -66,7 +66,7 @@ description: "共享脚本与规则库（英化包内供统一检查 cocos-game-
 | 皮肤（数量、加成） | 经济购买预算、结算页"Skin bonus"、试用弹窗广告入口、美术皮肤页 |
 | 广告（入口、回调） | 经济发奖、存档事务、页面恢复、启动/加载期间的广告会话 |
 | 美术与UI（布局、按钮） | 按钮真实点击、文案是否放得下、教程手指坐标、广告按钮位置 |
-| 新手引导 | 第 1–3 关难度、首关输入、暂停/恢复 |
+| 新手引导 | 第 1–2 关（教学）难度、首关输入、暂停/恢复 |
 | 英文文案 | 按钮和面板是否放得下（美术）、图片字重做（美术） |
 | 启动与稳定 | 首次进入的教程、存档读写、广告 SDK 初始化顺序 |
 
@@ -89,7 +89,7 @@ description: "共享脚本与规则库（英化包内供统一检查 cocos-game-
 
 ## 六、共享脚本与模块
 
-所有板块共用一个脚本库，放在本 Skill 的 `scripts/`（互相调用，不拆散）；各板块 Skill 的"工具"一节列出它用哪些。共享模块：`assets/modules/AdRewards.ts`（经济数值与广告去重，原样复制进游戏）、`assets/known-issues.json`（门禁目录）、`assets/ad-simulator.js`、`assets/rewarded-service-cocos24.js`。命令里的路径写 `<remake-core>/scripts/...`，按本次实际加载的 skills 目录解析。
+所有板块共用一个脚本库，放在本 Skill 的 `scripts/`（互相调用，不拆散）；各板块 Skill 的"工具"一节列出它用哪些。共享模块：`assets/modules/AdRewards.ts`（经济数值与广告去重，原样复制进游戏）、`assets/known-issues.json`（门禁目录）、`assets/ad-simulator.js`。激励广告、加桌面和回访只用平台包 `assets/platform-kit/`（`RewardedService.js`、`TikTokMissionService.js`）；`assets/rewarded-service-cocos24.js` 是历史快照，只作失败对照，不许复制进游戏。命令里的路径写 `<remake-core>/scripts/...`，按本次实际加载的 skills 目录解析。
 
 一键预检、总门禁：`scripts/preflight.py`、`scripts/check_known_issues.py`、`scripts/design_check.py`、`scripts/art_check.py`、`scripts/logic_check.py`。
 

@@ -358,7 +358,6 @@ if (sceneName === 'bold_api') {
       label(row, 'Name', -40, 0, 260, 44, t, 30);
       plateBtn(row, 'Btn', 190, 0, 140, 70, v || 'Open');
     });
-    label(panel, 'Version', 0, -380, 200, 30, 'v1.0.3', 24);
   } else {
     [['Music', '70%'], ['Sound Effects', '100%']].forEach(([t, v], i) => {
       const row = sprite(panel, 'Row' + i, 0, 60 - i * 250, 520, 210, true);
@@ -391,7 +390,7 @@ if (sceneName === 'bold_api') {
   for (let i = 0; i < 6; i++) board.kid(new Node('Tile' + i, -250 + i * 100, 0, 90, 90)).add(new Sprite({ spriteFrame: { name: 'tile' }, type: 0 }));
   const top = canvas.kid(new Node('TopBar', 0, 740, 750, 120)).add(new Sprite({ spriteFrame: { name: 'topbar' }, type: 1 }));
   top.kid(new Node('CoinIcon', -300, 0, 60, 60)).add(new Sprite({ spriteFrame: { name: 'coin' }, type: 0 }));
-  top.kid(new Node('CoinText', -220, 0, 120, 50)).add(new Label(Object.assign({ string: '1,250', fontSize: 36, overflow: 0 }, BMFONT)));
+  top.kid(new Node('CoinText', -220, 0, 120, 60)).add(new Label(Object.assign({ string: '1,250', fontSize: 52, overflow: 0 }, BMFONT)));   // v7.8 H11: HUD digits >= 3% of the screen
   canvas.kid(new Node('BtnPause', 310, 600, 80, 80)).add(new Button({ interactable: true })).add(new Sprite({ spriteFrame: { name: 'pause' }, type: 0 }));
   canvas.kid(new Node('Hidden', 0, 0, 300, 300, { active: false })).add(new Label({ string: 'SECRET', fontSize: 30, overflow: 0 }));
   canvas.kid(new Node('Faded', 0, 300, 300, 100, { opacity: 0 })).add(new Label({ string: 'GONE', fontSize: 30, overflow: 0 }));

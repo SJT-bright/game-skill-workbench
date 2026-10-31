@@ -13,7 +13,7 @@
 - 本次修复仅测显示容器和一次开始操作，不重跑已通过的全游戏CI。验证完成后关闭自有 QA 页面；保留正在交给用户的 Chrome 窗口与试玩服务。用户结束或被新版替代后，通过受支持接口关闭准确 URL 对应的自有页面，再关闭服务并核实；不退出整个 Chrome、不清登录/存档，不关闭用户其他页面。
 
 ```sh
-python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep --name "游戏 用户试玩"
+python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep --project <工程> --name "游戏 用户试玩"
 # 项目明确机型时：--phone-width 393 --phone-height 852
 # 横屏游戏：--orientation landscape
 ```
@@ -22,4 +22,8 @@ python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep
 
 `--raw` 仅供必须使用顶层 Canvas 的内部自动化 QA，不能与 `--keep` 合用，打印的内部 URL 不得作为用户试玩链接。旧项目复制的脚本可能没有手机外壳，优先使用当前共享脚本；不能靠旧记录里写过“手机预览”就认定已落实。
 
-已有广告入口的重塑/英化可玩候选，默认按用户可操作广告模拟（重塑包 remake-ads 板块，英化包不含）启用 `--ad-simulator`，交接前核真实按钮→模拟结果→原奖励业务。仅交试玩不因此扩大为全量验收。
+**试玩链接冒烟（v7.8，总表 B21 / B30 F）**：`--keep` 起服务后、打印链接之前，自动在这个链接上按 Saul 的用法点一次看广告（cocos-game-check 的 `runtime_regression.py` trial_smoke，套件 `trial_link`）：电脑窗口 1180×960、清存档，等场景稳定，真实鼠标点到看广告入口；2.5 秒内模拟广告窗必须盖在游戏上面（画面中心点到的是广告窗），点「模拟看完」后游戏必须有变化。不过就**不给链接**（退出码 1，打印原因）；没法跑（没有 Ego、首页没找到看广告入口）就打印「试玩链接冒烟没跑：原因」再给链接；导出里不调用 `createRewardedVideoAd` 的不跑。看广告入口不在首页一层的，用 `--adapter <运行时 adapter.json>`，在它的 `trial` 里写 `taps`（节点路径，按顺序点）和 `reward_js`（返回奖励数值）。别的链接也能手动跑：`python3 -B cocos-game-check/package-check/scripts/runtime_regression.py trial --url http://127.0.0.1:端口/ [--adapter ...]`。英化包的入口 `cocos-game-to-english/scripts/serve_preview.py` 转到同一个 `remake-core/scripts/serve_preview.py`（v7.8 前它指向不存在的 cocos-game-core，起不来）。原因：全民飞车漂移 v1～v3 的旧试玩宿主把模拟广告窗挂在适配器换掉的 body 上，点看广告后什么都看不到，像卡死。往页面上加的元素一律挂在画布的父节点上。
+
+手机比例（B7）：默认链接就是固定的竖屏手机（390×844，窗口小只等比缩小，不放大）；`--raw` 是检查用的整窗页面，不能给用户。
+
+已有广告入口的重塑/英化可玩候选，默认按[用户可操作广告模拟](../../remake-ads/references/manual-ad-simulation.md)启用 `--ad-simulator`，交接前核真实按钮→模拟结果→原奖励业务。仅交试玩不因此扩大为全量验收。

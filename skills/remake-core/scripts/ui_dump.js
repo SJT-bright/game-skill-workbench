@@ -265,6 +265,8 @@
             }
             const col = is3 ? spr.color : node.color;                 // tint: a white frame tinted blue is a flat colour
             if (col && typeof col.r === 'number') rec.comps.sprite.color = [col.r, col.g, col.b];
+            // v7.8 U7: a 3.x sprite colour alpha dims the picture (2.x draws node.opacity, already in rec.opacity)
+            if (is3 && col && typeof col.a === 'number' && col.a < 255) rec.comps.sprite.alpha = col.a;
             if (sf && spr.type === SLICED) {
               const ins = [sf.insetLeft || 0, sf.insetRight || 0, sf.insetTop || 0, sf.insetBottom || 0];
               rec.comps.sprite.insets = ins;

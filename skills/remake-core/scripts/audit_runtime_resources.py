@@ -21,9 +21,36 @@ _RESOURCE_PROJECT = ContextVar('resource_project', default=None)
 # v7.7 W-G2: the platform-kit main.js is recognised by the hashes KIT_MANIFEST.json lists at run time (current and
 # previous_sha256); tests point this at a copy.
 KIT_MANIFEST = HERE.parent / 'assets' / 'platform-kit' / 'KIT_MANIFEST.json'
+OFFICIAL_ENGINE_MANIFEST = HERE / 'official_engine_sources.json'
 # The one loader call of the kit main.js that is script loading: every settings.jsList entry, as 'src/' + entry.
 KIT_JSLIST_CALL = re.compile(r"cc\.assetManager\.loadScript\(\(settings\.jsList \|\| \[\]\)\.map\(function \(x\) \{\s*"
                              r"return 'src/' \+ x;\s*\}\)")
+
+def verified_official_engine_sources(sources):
+    """Only reviewed exact official engine bytes are outside business inference.
+
+    Names and paths never classify a source. Modified/appended files return to
+    strict discovery. Complete source identities remain in the report.
+    """
+    raw = OFFICIAL_ENGINE_MANIFEST.read_bytes()
+    manifest = json.loads(raw)
+    if not isinstance(manifest, dict) or manifest.get('schema') != 'official_cocos_engine_sources.v1' or not isinstance(manifest.get('artifacts'), list):
+        raise ValueError('invalid official engine identity manifest')
+    artifacts = {}
+    for row in manifest['artifacts']:
+        if not isinstance(row, dict) or not re.fullmatch(r'[0-9a-f]{64}', str(row.get('sha256', ''))) or type(row.get('bytes')) is not int or row['bytes'] <= 0 or not row.get('engine_version') or not isinstance(row.get('provenance'), dict):
+            raise ValueError('invalid reviewed official engine artifact')
+        if row['sha256'] in artifacts:
+            raise ValueError('duplicate official engine artifact identity')
+        artifacts[row['sha256']] = row
+    verified = {}
+    for name, content in sources.items():
+        identity = hashlib.sha256(content).hexdigest()
+        row = artifacts.get(identity)
+        if row and len(content) == row['bytes']:
+            verified[name] = dict(row)
+    return verified, raw
+
 
 def resource_profile_file(name):
     import project_qa
@@ -360,7 +387,9 @@ def discover(files):
                and not n.startswith(('cocos/', 'jsb-adapter/'))
                and not (systemjs and (n.startswith('cocos-js/') or n in ('engine-adapter.js', 'web-adapter.js')))}
     source_hashes = {n: hashlib.sha256(b).hexdigest() for n, b in sources.items()}
-    payload = {'files': {n: b.decode('utf-8-sig') for n, b in sources.items()}, 'json_domains': {},
+    verified_engines, official_engine_manifest_bytes = verified_official_engine_sources(sources)
+    payload = {'files': {n: b.decode('utf-8-sig') for n, b in sources.items() if n not in verified_engines}, 'json_domains': {},
+               'verified_engine_sources': verified_engines,
                'reviewed_data_sha256': _profile_data_hashes(files, source_hashes)}
     system_profile_path = resource_profile_file('systemjs_finite_profiles.json')
     system_profile_bytes = system_profile_path.read_bytes() if system_profile_path.is_file() else b''
@@ -373,7 +402,7 @@ def discover(files):
             raise ValueError('ambiguous reviewed SystemJS profile')
         if matches:
             payload['systemjs_profile'] = matches[0]
-    for name in sources:
+    for name in payload['files']:
         domains = {}
         requests = {m[1] for m in re.findall(r'\brequire\(\s*([\'"])(.*?)\1\s*\)', payload['files'][name])}
         for request in requests:
@@ -432,7 +461,7 @@ def discover(files):
         reviewed_digest = hashlib.sha256(profile_bytes).hexdigest()
         system_profile_bytes = json.dumps([payload['systemjs_profile']] if payload.get('systemjs_profile') else [],sort_keys=True,separators=(',', ':')).encode()
     kit = {'hashes': [], 'extra_files': []} if systemjs else kit_main_identity()
-    tool_sha = hashlib.sha256(tool_sha.encode() + profile_bytes + system_profile_bytes + special_bytes + Path(__file__).read_bytes() + (HERE/'scan_native_file_requests.cjs').read_bytes()).hexdigest()
+    tool_sha = hashlib.sha256(tool_sha.encode() + official_engine_manifest_bytes + profile_bytes + system_profile_bytes + special_bytes + Path(__file__).read_bytes() + (HERE/'scan_native_file_requests.cjs').read_bytes()).hexdigest()
     if kit['hashes']:  # the kit main.js identity decides the jsList expansion, so it is part of the cache key
         tool_sha = hashlib.sha256((tool_sha + json.dumps(kit, sort_keys=True)).encode()).hexdigest()
     key = (node, tool_sha, hashlib.sha256(raw).hexdigest(), reviewed_digest)
@@ -525,6 +554,7 @@ def discover(files):
             report['sites'].append(dict(site, bundles=None, paths=None))
         report['native_file_inventory'] = native_report['sites']
     report['source_sha256'] = current_source_hashes
+    report['verified_engine_sources'] = verified_engines
     report['scanner_sha256'] = tool_sha
     report = apply_reviewed_profile(report, files)
     # After the reviewed profile: a profile that already resolved the jsList call keeps its own resolution.

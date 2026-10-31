@@ -1,28 +1,43 @@
 #!/usr/bin/env python3
-"""Wave difficulty with tiers (wave-tiers.v1, user 2026-10-27; remake-levels/references/difficulty-curve.md).
+"""Wave difficulty with tiers (remake-levels/references/difficulty-curve.md). Two versions, told apart by the plan's
+"difficulty_policy":
 
-Opening: levels 1-3 tutorial, level 4 the first spike, levels 5-9 step down (recovery), level 10 the chapter exam.
-Levels 11+: tiers low/medium/high/extreme in the ratio 25/45/15/15 (non-bonus levels), placed as an irregular wave:
-a new mechanic's first level (tag "intro") is low, the next level is medium practice, the level before it is a high
-exam; every limited level (20, 30, ...) is a high chapter exam; never two high/extreme in a row, never more than five
-medium or three low in a row; every chapter's median is above the previous one. Difficulty = slowly rising baseline x
-tier factor. Shared by make_level_plan.py (writes it) and audit_level_plan.py (checks it).
+wave-tiers.v2 (default from v7.8, Saul 2026-10-29): levels 1-2 are tutorial levels, level 3 is already a hard level
+(high, role "first-hard"), and from level 3 on no level is as easy as levels 1-2. There is no level-4 spike and no
+5-9 recovery any more: levels 4+ are one irregular wave of low/medium/high/extreme in the ratio 25/45/15/15 (non-bonus
+levels from level 3 on); every limited level (10, 20, ...) is a high chapter exam.
+
+wave-tiers.v1 (user 2026-10-27, plans made before v7.8; still generated with --policy wave-v1 and still audited by its
+own rules, so games already planned on it are not reworked): levels 1-3 tutorial, level 4 the first spike, levels 5-9
+step down (recovery), level 10 the chapter exam, then the wave from level 11.
+
+Both: a new mechanic's first level (tag "intro") is low, the next level is medium practice, the level before it is a
+high exam; never two high/extreme in a row, never more than five medium or three low in a row; every chapter's median
+is above the previous one. Difficulty = slowly rising baseline x tier factor. Shared by make_level_plan.py (writes it)
+and audit_level_plan.py (checks it).
 """
 import random
 
-POLICY = 'wave-tiers.v1'
+POLICY = 'wave-tiers.v2'          # default (Saul 2026-10-29: levels 1-2 teach, level 3 is already hard)
+POLICY_V1 = 'wave-tiers.v1'       # older plans: tutorial 1-3, spike 4, recovery 5-9
+POLICIES = (POLICY, POLICY_V1)
 TIERS = ('tutorial', 'low', 'medium', 'high', 'extreme')
 RANK = {t: i for i, t in enumerate(TIERS)}
 FACTOR = {'low': 0.8, 'medium': 1.0, 'high': 1.3, 'extreme': 1.6}
 RATIO = {'low': 0.25, 'medium': 0.45, 'high': 0.15, 'extreme': 0.15}
 HARD = ('high', 'extreme')
 # level -> (tier, role, difficulty)
-OPENING = {1: ('tutorial', 'tutorial', 0.6), 2: ('tutorial', 'tutorial', 0.7), 3: ('tutorial', 'tutorial', 0.8),
-           4: ('high', 'first-spike', 1.6), 5: ('medium', 'recovery', 1.25), 6: ('medium', 'recovery', 1.15),
-           7: ('low', 'recovery', 1.05), 8: ('low', 'recovery', 1.0), 9: ('low', 'recovery', 0.95),
-           10: ('high', 'chapter-exam', 1.55)}
+OPENING_V1 = {1: ('tutorial', 'tutorial', 0.6), 2: ('tutorial', 'tutorial', 0.7), 3: ('tutorial', 'tutorial', 0.8),
+              4: ('high', 'first-spike', 1.6), 5: ('medium', 'recovery', 1.25), 6: ('medium', 'recovery', 1.15),
+              7: ('low', 'recovery', 1.05), 8: ('low', 'recovery', 1.0), 9: ('low', 'recovery', 0.95),
+              10: ('high', 'chapter-exam', 1.55)}
+OPENING = OPENING_V1               # old name, kept for callers of v1
+OPENING_V2 = {1: ('tutorial', 'tutorial', 0.6), 2: ('tutorial', 'tutorial', 0.7)}
+TUTORIAL_LAST = {POLICY: 2, POLICY_V1: 3}
+FIRST_HARD = 3                     # v2: the first hard level
 MAX_RUN = {'medium': 5, 'low': 3}
-SPIKE = 4          # the bonus level of the first chapter never takes this place
+NO_BONUS = 4       # never a bonus level: v1 = the first spike, v2 = the level right after the first hard level
+SPIKE = NO_BONUS   # old name (v1)
 
 
 def baseline(n):
@@ -66,21 +81,33 @@ def values_rise(levels, values):
     return all(b > a for a, b in zip(meds, meds[1:]))
 
 
-def medians_rise(levels, tiers):
-    return values_rise(levels, [difficulty_of(n, t) for n, t in zip(levels, tiers)])
+def medians_rise(levels, tiers, policy=POLICY_V1):
+    return values_rise(levels, [difficulty_of(n, t, policy) for n, t in zip(levels, tiers)])
 
 
-def schedule(total, bonus, limited, intros, seed):
+def opening(policy):
+    """(fixed opening rows, last fixed level, last level whose mechanics the opening teaches)."""
+    if policy == POLICY_V1:
+        return OPENING_V1, 10, 10
+    if policy == POLICY:
+        return OPENING_V2, TUTORIAL_LAST[POLICY], FIRST_HARD
+    raise ValueError('unknown difficulty_policy %r (use %s)' % (policy, ' or '.join(POLICIES)))
+
+
+def schedule(total, bonus, limited, intros, seed, policy=POLICY):
     """Return {level: (tier, role)} for every non-bonus level 1..total. Raises ValueError when constraints clash."""
+    head, cut, taught = opening(policy)
     levels = [n for n in range(1, total + 1) if n not in bonus]
-    fixed = {n: (OPENING[n][0], OPENING[n][1]) for n in levels if n <= 10}
-    later = [n for n in levels if n > 10]
+    fixed = {n: (head[n][0], head[n][1]) for n in levels if n <= cut}
+    later = [n for n in levels if n > cut]
     pos = {n: i for i, n in enumerate(later)}
+    if policy == POLICY and FIRST_HARD in pos:
+        fixed[FIRST_HARD] = ('high', 'first-hard')       # Saul 2026-10-29: level 3 is already hard
     for n in limited:
-        if n > 10 and n in pos:
+        if n > cut and n in pos:
             fixed[n] = ('high', 'chapter-exam' if n != total else 'finale')
     for n in sorted(intros):
-        if n <= 10:
+        if n <= taught:
             continue                                     # opening mechanics are taught by the tutorial
         if n not in pos:
             raise ValueError('level %d cannot introduce a mechanic (bonus level)' % n)
@@ -91,7 +118,7 @@ def schedule(total, bonus, limited, intros, seed):
         if i + 1 < len(later) and later[i + 1] not in fixed:
             fixed[later[i + 1]] = ('medium', 'practice')
         if i - 1 >= 0 and later[i - 1] not in fixed:
-            before = later[i - 2] if i >= 2 else 10
+            before = later[i - 2] if i >= 2 else cut
             if fixed.get(before, (None,))[0] not in HARD:
                 fixed[later[i - 1]] = ('high', 'pre-mechanic-exam')
     want = targets(len(later))
@@ -144,20 +171,29 @@ def schedule(total, bonus, limited, intros, seed):
                 break
         if not ok or not run_ok([tiers[n] for n in later]):
             continue
-        if not medians_rise(levels, [OPENING[n][0] if n <= 10 else tiers[n] for n in levels]):
+        if not medians_rise(levels, [head[n][0] if n <= cut else tiers[n] for n in levels], policy):
             continue
-        out = {n: (OPENING[n][0], OPENING[n][1]) for n in levels if n <= 10}
+        out = {n: (head[n][0], head[n][1]) for n in levels if n <= cut}
         for n in later:
             out[n] = (tiers[n], fixed[n][1] if n in fixed else 'wave')
         return out
     raise ValueError('could not place tiers under the wave rules; move the intro levels apart')
 
 
-def difficulty_of(n, tier):
-    return OPENING[n][2] if n <= 10 else value(n, tier)
+def difficulty_of(n, tier, policy=POLICY):
+    head, cut, _ = opening(policy)
+    return head[n][2] if n <= cut else value(n, tier)
 
 
-def problems(rows, total):
+def problems(rows, total, policy=POLICY_V1):
+    """Audit rows of a plan by its difficulty_policy (bonus rows excluded by the caller). The default is v1 because
+    callers that do not pass a policy are older than v2."""
+    if policy == POLICY:
+        return problems_v2(rows, total)
+    return problems_v1(rows, total)
+
+
+def problems_v1(rows, total):
     """Audit rows of a plan with difficulty_policy wave-tiers.v1 (bonus rows excluded by the caller)."""
     out = []
     by = {r['level']: r for r in rows}
@@ -208,6 +244,70 @@ def problems(rows, total):
         off = {t: (got[t], want[t]) for t in RATIO if abs(got[t] - want[t]) > slack}
         if off:
             out.append('tier ratio after level 10 should be about 25/45/15/15 (got/want %s)' % off)
+    levels = sorted(by)
+    if not values_rise(levels, [by[n]['difficulty'] for n in levels]):
+        out.append('a chapter is not harder overall than the one before it (median difficulty must rise chapter by chapter)')
+    return out
+
+
+def problems_v2(rows, total):
+    """Audit rows of a plan with difficulty_policy wave-tiers.v2 (bonus rows excluded by the caller): levels 1-2
+    tutorial, level 3 already hard, nothing from level 3 on as easy as levels 1-2, every limited level hard, then the
+    same wave rules as v1 from level 3 on (no level-4 spike, no 5-9 recovery)."""
+    out = []
+    by = {r['level']: r for r in rows}
+    for r in rows:
+        if r.get('tier') not in TIERS:
+            out.append('level %d needs tier tutorial|low|medium|high|extreme' % r['level'])
+    if out:
+        return out
+    last = TUTORIAL_LAST[POLICY]
+    for n, r in by.items():
+        if (r['tier'] == 'tutorial') != (n <= last):
+            out.append('level %d: only levels 1-2 are tutorial levels (Saul 2026-10-29: level 3 is already hard)' % n)
+    if FIRST_HARD in by and by[FIRST_HARD]['tier'] not in HARD:
+        out.append('level 3 is the first hard level (Saul 2026-10-29: levels 1-2 teach, level 3 is already hard): '
+                   'make it high/extreme')
+    teach = [by[n]['difficulty'] for n in range(1, last + 1) if n in by]
+    if teach:
+        floor = max(teach)
+        easy = [n for n in sorted(by) if n > last and by[n]['difficulty'] <= floor]
+        if easy:
+            out.append('levels %s are as easy as the tutorial levels 1-2 (difficulty <= %s): from level 3 on no level '
+                       'drops back to tutorial ease' % (easy[:8], floor))
+    for n in sorted(by):
+        if by[n].get('type') == 'milestone' and by[n]['tier'] not in HARD:
+            out.append('level %d is a limited level (chapter exam): high/extreme' % n)
+    later = [by[n] for n in sorted(by) if n > last]
+    seq = [r['tier'] for r in later]
+    prev = None
+    run = 0
+    for r in later:
+        t = r['tier']
+        if prev in HARD and t in HARD:
+            out.append('levels %d: two high/extreme levels in a row; put a low/medium level between' % r['level'])
+        run = run + 1 if t == prev else 1
+        if t in MAX_RUN and run > MAX_RUN[t]:
+            out.append('level %d: more than %d %s levels in a row' % (r['level'], MAX_RUN[t], t))
+        prev = t
+    for i, r in enumerate(later):
+        if r['level'] > FIRST_HARD and 'intro' in (r.get('tags') or []):
+            if r['tier'] != 'low':
+                out.append('level %d introduces a mechanic: make it low' % r['level'])
+            if i + 1 < len(later) and later[i + 1]['tier'] != 'medium':
+                out.append('level %d follows a mechanic intro: make it medium practice' % later[i + 1]['level'])
+    for a, b in zip(later, later[1:]):
+        ra, rb = RANK[a['tier']], RANK[b['tier']]
+        if (rb > ra and b['difficulty'] <= a['difficulty']) or (rb < ra and b['difficulty'] >= a['difficulty']):
+            out.append('level %d: difficulty %s does not match tier %s after level %d (%s, %s)'
+                       % (b['level'], b['difficulty'], b['tier'], a['level'], a['difficulty'], a['tier']))
+    if seq:
+        want = targets(len(seq))
+        slack = max(2, round(len(seq) * 0.05))
+        got = {t: seq.count(t) for t in RATIO}
+        off = {t: (got[t], want[t]) for t in RATIO if abs(got[t] - want[t]) > slack}
+        if off:
+            out.append('tier ratio from level 3 on should be about 25/45/15/15 (got/want %s)' % off)
     levels = sorted(by)
     if not values_rise(levels, [by[n]['difficulty'] for n in levels]):
         out.append('a chapter is not harder overall than the one before it (median difficulty must rise chapter by chapter)')

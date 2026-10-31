@@ -307,7 +307,7 @@ class LevelPlanTests(Fixture):
         self.assertEqual([(b - 1) // 10 for b in bonus], list(range(10)))         # exactly one per block of 10
         self.assertGreater(len({(b - 1) % 10 for b in bonus}), 1)                 # not the same place every time
         self.assertTrue(any(91 <= r['level'] <= 100 and r['type'] == 'bonus' for r in p['levels']))
-        self.assertNotIn(4, bonus)                                                # level 4 is the first spike
+        self.assertNotIn(4, bonus)                     # level 4 is never a bonus level (v2: right after hard level 3)
 
     def test_more_than_70_passes_on_both_boards(self):
         """重塑 60 or more passes (Saul 2026-10-29); a game with more levels is not cut."""
@@ -375,10 +375,73 @@ class LevelPlanTests(Fixture):
             audit_plan(data, None, lambda name, passed, detail: checks.update({name: passed}), board)
             self.assertEqual(checks['levels_at_least_70'], expected, board)
 
-    def test_wave_tiers_policy(self):
-        """User 2026-10-27: wave-tiers.v1 - tutorial 1-3, spike 4, recovery 5-9, exam 10, tiered irregular wave after."""
+    def test_wave_tiers_v2_is_the_default(self):
+        """Saul 2026-10-29 (v7.8): levels 1-2 teach, level 3 is already hard; no level-4 spike, no 5-9 recovery."""
         root = self.project()
         plan(root, intros=['23:wind', '51:ice'])
+        p = json.loads((root / 'assets/resources/config/level_plan.json').read_text())
+        self.assertEqual(p['difficulty_policy'], 'wave-tiers.v2')
+        by = {r['level']: r for r in p['levels']}
+        self.assertEqual([by[n]['tier'] for n in (1, 2)], ['tutorial'] * 2)
+        self.assertIn(by[3]['tier'], ('high', 'extreme'))                       # level 3 is already hard
+        self.assertEqual(by[3]['role'], 'first-hard')
+        self.assertGreater(by[3]['difficulty'], max(by[1]['difficulty'], by[2]['difficulty']))
+        self.assertNotIn(by[4]['tier'], ('high', 'extreme'))                    # no spike at 4 (and never two hard in a row)
+        roles = {r.get('role') for r in p['levels']}
+        self.assertFalse(roles & {'first-spike', 'recovery'}, roles)            # no spike-and-recovery opening any more
+        floor = max(by[1]['difficulty'], by[2]['difficulty'])
+        self.assertTrue(all(r['difficulty'] > floor for r in p['levels'] if r['level'] >= 3 and r['type'] != 'bonus'))
+        self.assertTrue(all(r['tier'] in ('high', 'extreme') for r in p['levels'] if r['type'] == 'milestone'))
+        self.assertEqual((by[23]['tier'], by[23]['role']), ('low', 'intro'))
+        self.assertEqual(self.level_audit(root)[0], 0, self.level_audit(root)[2])
+        normal = [r for r in p['levels'] if r['level'] >= 3 and r['type'] != 'bonus']
+        tiers = [r['tier'] for r in normal]
+        self.assertTrue(all(not (a in ('high', 'extreme') and b in ('high', 'extreme')) for a, b in zip(tiers, tiers[1:])))
+
+        def old_opening(p):                                                     # a v1 opening under a v2 label
+            v1 = {1: ('tutorial', 0.6), 2: ('tutorial', 0.7), 3: ('tutorial', 0.8), 4: ('high', 1.6)}
+            for r in p['levels']:
+                if r['level'] in v1:
+                    r['tier'], r['difficulty'] = v1[r['level']]
+        for spoil, words in [
+                (old_opening, 'only levels 1-2 are tutorial levels'),
+                (lambda p: p['levels'][2].update(tier='low', difficulty=1.0), 'level 3 is the first hard level'),
+                (lambda p: next(r for r in p['levels'] if r['level'] == 5).update(tier='low', difficulty=0.65),
+                 'drops back to tutorial ease'),
+                (lambda p: next(r for r in p['levels'] if r['level'] == 20).update(tier='medium', difficulty=1.95),
+                 'level 20 is a limited level (chapter exam)'),
+                (lambda p: next(r for r in p['levels'] if r['level'] == 23).update(tier='high', difficulty=9.0), 'introduces a mechanic'),
+                (lambda p: [r.update(tier='extreme', difficulty=round(r['difficulty'] * 3, 2)) for r in p['levels']
+                            if 31 <= r['level'] <= 34 and r['type'] == 'normal'], 'two high/extreme levels in a row')]:
+            root = self.project()
+            plan(root, intros=['23:wind', '51:ice'])
+            self.rewrite(root, spoil)
+            self.assertIn(words, self.level_audit(root)[2])
+
+    def test_old_v1_plans_still_pass(self):
+        """Games already planned on wave-tiers.v1 are not reworked: the plan's own difficulty_policy picks the rules."""
+        from make_level_plan import make
+        from audit_level_plan import audit_plan
+        for seed in (7, 19, 1029):
+            old = make(60, 50, None, seed, 'Pearls', intros={23: ['wind']}, policy='wave-tiers.v1')
+            new = make(60, 50, None, seed, 'Pearls', intros={23: ['wind']})
+            self.assertEqual(old['difficulty_policy'], 'wave-tiers.v1')
+            self.assertEqual(old['levels'][2]['tier'], 'tutorial')               # v1: level 3 still teaches
+            self.assertEqual(old['levels'][3]['role'], 'first-spike')
+            self.assertEqual([r['level'] for r in old['levels'] if r['type'] == 'bonus'],
+                             [r['level'] for r in new['levels'] if r['type'] == 'bonus'])   # same seed, same bonus places
+            for p in (old, new):
+                p['why'] = 'Sixty fixed levels cleared one by one.'
+                checks = {}
+                audit_plan(p, None, lambda name, passed, detail: checks.update({name: (passed, detail)}), 'remake')
+                self.assertEqual([k for k, v in checks.items() if not v[0]], [], (seed, p['difficulty_policy']))
+                self.assertIn(p['difficulty_policy'], checks['difficulty_rises'][1])     # audited by its own version
+
+    def test_wave_tiers_v1_policy(self):
+        """User 2026-10-27: wave-tiers.v1 - tutorial 1-3, spike 4, recovery 5-9, exam 10, tiered irregular wave after
+        (now only with --policy wave-v1, for plans made before v7.8)."""
+        root = self.project()
+        plan(root, intros=['23:wind', '51:ice'], policy='wave-v1')
         p = json.loads((root / 'assets/resources/config/level_plan.json').read_text())
         self.assertEqual(p['difficulty_policy'], 'wave-tiers.v1')
         by = {r['level']: r for r in p['levels']}
@@ -397,7 +460,7 @@ class LevelPlanTests(Fixture):
                 (lambda p: [r.update(tier='extreme', difficulty=round(r['difficulty'] * 3, 2)) for r in p['levels']
                             if 31 <= r['level'] <= 34 and r['type'] == 'normal'], 'two high/extreme levels in a row')]:
             root = self.project()
-            plan(root, intros=['23:wind', '51:ice'])
+            plan(root, intros=['23:wind', '51:ice'], policy='wave-v1')
             self.rewrite(root, spoil)
             self.assertIn(words, self.level_audit(root)[2])
 

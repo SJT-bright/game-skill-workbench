@@ -75,6 +75,9 @@ class PreviewProcess(unittest.TestCase):
             web = root / 'web'; web.mkdir()
             original = b'<!doctype html><title>fixture only</title><button>fixture</button>'
             (web / 'index.html').write_bytes(original)
+            if '--keep' in flags:        # v7.8: a user trial checks the art receipt of --project (no image: nothing to check)
+                (root / 'project' / 'assets').mkdir(parents=True)
+                flags = [*flags, '--project', str(root / 'project')]
             runner = root / 'runner.py'
             runner.write_text('''import json,sys,types
 from pathlib import Path

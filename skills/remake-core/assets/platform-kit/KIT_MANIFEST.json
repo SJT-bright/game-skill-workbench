@@ -49,6 +49,28 @@
       "project_path": "build-templates/bytedance/storage-guard.js",
       "origin": "new in kit 2.0 (v7.7): MergeShot2048 v85 storage-guard.js (40aee1a4, real-iPhone vConsole 10-28/10-29) + TobinsGem / Tansys key-list rule; SaveStore keys read raw; Node-tested (tests/storage-guard.test.js + negative controls); 待真机复测"
     },
+    "parts/CapsuleLayout.js": {
+      "sha256": "ba5ba44835b8584a98c8780aa019e00f90b298df6e87a4224f3c666d6988dc50",
+      "origin": "new in v7.8 (总表 U1 / B30): reads tt.getMenuButtonBoundingClientRect(), decides points vs pixels itself (Saul's iPhone 14 returned pixels 2026-10-29; 全民飞车漂移 v2, SpiderSwing, Hollys, FoxDenDash moved their top bar with the raw value) and converts to UI world coordinates incl. letterbox bars; one file for Cocos 2.4 (require('CapsuleLayout')) and 3.x (plugin script, global TikTokCapsuleLayout). Node-tested (tests/capsule-layout.test.js), runtime suite layout_state unit_shift; 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: copy into the game's assets/ when the game places nodes next to the capsule (top bar, settings button). Not installed by tiktok_finalize, not required by check_kit_project or K1/K2, so a project without it is never refused for that; layout_state's unit_shift refuses the bug itself, whatever the fix"
+    },
+    "parts/CourseLane.js": {
+      "sha256": "f67b32140a5642ce7fa218d9e6d619b2b5583e16531be386cf05fe5af12eb96d",
+      "origin": "new in v7.8 (总表 P2 补): spawnX / recycleX / lanesNeeded / clearForRevive for scrolling obstacles from the engine's real visible rect (cc.view visible size + origin, or the camera that draws the course), wide screens and letterbox included; BreezyBalloon v2.1 recycled pillars at a design-width x and they jumped into wide screens. One file for Cocos 2.4 (require('CourseLane')) and 3.x (plugin script, global TikTokCourseLane). Node-tested (tests/course-lane.test.js); BreezyBalloon v2.1 with its recycle and revive replaced by it at runtime passes the runtime suite popin on 390x844, 375x667, 768x1024, 1115x791; 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: copy into the game's assets/ when the game scrolls obstacles (runner, flyer). Not installed by tiktok_finalize, not required by check_kit_project or K1/K2, so a project without it is never refused for that; the runtime suite popin refuses the bug itself, whatever the fix"
+    },
+    "parts/PhysicsClock.js": {
+      "sha256": "e791dee7b4b0c75b163bf0a8adf7fbfca4a23530dddd048124254b805f9fec94",
+      "project_path": "assets/tiktok-platform/PhysicsClock.js",
+      "origin": "new in v7.8 (总表 P16): Cocos 2.4 only. At load and before every scene launch sets cc.director.getPhysicsManager().enabledAccumulator = true (fixed 1/60 s steps that follow real time); Clock.scale(dt) / Clock.force(v, dt) scale a push tuned at 60 fps. 全民飞车漂移 v3.1 steps physics 1/60 s per frame and pushes per call: 19.9 % farther at 1 s on a 120 Hz screen; with the accumulator and scaled pushes 1.05 % (runtime suite frame_rate). Node-tested (tests/physics-clock.test.js); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "tiktok_finalize source (step physics_clock) copies it to assets/tiktok-platform/PhysicsClock.js for a NEW 2.4 game whose scripts switch physics on without enabledAccumulator; legacy games are never given it. Not required by check_kit_project or K1/K2. The pushes stay the game's code (scale them by dt); the runtime suite frame_rate is the final judge"
+    },
     "webp-probe/cocos2.4/webp-decode-probe.js": {
       "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
       "origin": "Mabel's Meadow r8 package, byte-identical (decodes main-package loading/webp-probe.webp, 5 s no answer = WebP off, Retry re-checks); old WebP games and the --keep-webp-exception case only, new games use PNG/JPG; main.js v1.3 loads it only when __TIKTOK_KIT_WEBP_PROBE__ = true; 待真机复测",

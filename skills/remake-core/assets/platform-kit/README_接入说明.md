@@ -27,6 +27,10 @@ v1.1（2026-10-27）：卡住判定 20 秒 → 10 秒（skill 规定 10 秒无�
 | `build-templates/bytedance/main.js` | 启动：每一步失败或卡住都在 20 秒内出可见 Retry，10 秒没进度就提示；v7.5：包内每个文件 10 秒没结果再请求一次（先到的结果为准），30 秒算失败，切后台不计时、每帧最多计 1 秒；启动异常会被接住并显示，不会停在 \"Starting...\"；v1.3（2.0）：触摸修正之后装 `storage-guard.js`（出错不挡启动），启动时发一次静默登录（不等结果），只有包里设了 `__TIKTOK_KIT_WEBP_PROBE__ = true` 才加载 `webp-decode-probe.js`；v1.4：图片解码（小游戏里图片在解析这一步才真正解码，`downloader.downloadDomImage`，引擎没有超时）也按同一规则 10 秒重发、30 秒算失败；v1.2～v1.3 找的 `parser._parsers` 在所有 2.4 引擎里都不存在，这一半以前没生效；场景已经出来后点到迟到的 Retry，只关掉加载提示，不再盖一个一直不消失的 "Loading 95%"；v1.5：10 秒重发、30 秒失败、后台不计时这几个数字不变，单个文件重发算进度，而且有文件还在自己的 30 秒里时，10 秒总看守等它（它 10 秒重发、30 秒失败，失败会经这一步的出错回调出 Retry）：卡一个文件只在它真失败时出 Retry，重发后进了首页不会压着 "Load failed"（v1.4 两个 10 秒同时到期，宿主每秒约 1 帧时 Retry 先弹出）；v1.6：启动场景的 JSON 已经反序列化、它用的图片超时导致场景失败时，引擎把这份已被改写的 JSON 留在文件缓存（`cc.assetManager._files`）里，场景又不进解析缓存，下一次加载就拿它再反序列化一次，马上失败（调试版引擎报 \"Can not deserialize the same JSON data again\"，去掉这条调试检查的正式版报 `TypeError: Cannot read properties of undefined (reading '0')`），所以以前第一次 Retry 一定失败、第二次才进得去；Retry 重新加载场景前先从缓存里删掉这一项（2.4.4 / 2.4.6 / 2.4.13 / 2.4.15 引擎这段代码相同），计时数字不变。`main.js` 第 33 行在开关里 require `./webp-decode-probe`，静态启动依赖检查不看 `if`，所以 finalize 装平台包 `main.js` 时总是把 `webp-decode-probe.js` 一起放进包根（`KIT_MANIFEST` 的 `startup24.extra_files`，K1 查它的哈希） | MetalMaster r5 + 1 行触摸修正，v7.5 按射击高手2048 v82 的加载守卫改写 | Node 测试通过，**待真机复测** |
 | `build-templates/bytedance/touch-coordinates.js` | TikTok 触点只有 screenX/screenY、Cocos 2.4 读 clientX/clientY：不装就按钮点不动（必装，探针校验） | StarPop v50，逐字节相同（交付包根目录和源码 `build-templates/bytedance/` 都是 `1aeb690c…`）。注意：躲雨小鸭 v20、射击高手 pkg85 用的 `0369875d…` 是另一份代码，不是这个文件 | StarPop v50 没有找到扫码确认记录，**待真机复测** |
 | `parts/storage-guard.js` | 2.0 新增存档层：写入一律存文字（数字、布尔转成字符串）；读到 null/undefined/''/false/true 时用 `getStorageInfoSync().keys` 判断键在不在，不在就当新玩家（返回 null）；读出对象原样给；SaveStore 的键原样读（SaveStore 自己判断坏档）。工程里放在 `build-templates/bytedance/storage-guard.js`（`KIT_MANIFEST.json` 的 `project_path`），由 `main.js` 在游戏脚本之前装上 | 射击高手2048 v85 的 `storage-guard.js` + TobinsGem/Tansys 的键列表判断 | Node 测试通过，**待真机复测** |
+| `parts/PhysicsClock.js` | v7.8 新增：Cocos 2.4 物理按真实时间走（`enabledAccumulator = true`），给推力按时间缩放的 `Clock.force(v, dt)` / `Clock.scale(dt)`。用了 2.4 物理的**新游戏**由 `tiktok_finalize.py source` 自动装到 `assets/tiktok-platform/PhysicsClock.js`，老游戏不装（见第十节） | 平台包新写（全民飞车漂移 v3.1 在 120 帧屏幕上起步 1 秒多跑 19.9%） | Node 测试通过（`tests/physics-clock.test.js`），**待真机复测** |
+| `parts/CourseLane.js` | v7.8 新增、**按需用**：滚动障碍的出生位置、回收时机、要几组、复活怎么清障，全按引擎真实可见范围算（宽屏、上下黑边都对）。2.4 和 3.x 同一个文件（见第九节） | 平台包新写（BreezyBalloon v2.1 按设计宽度回收柱子，宽屏上柱子在屏幕中间凭空出现） | Node 测试通过（`tests/course-lane.test.js`），**待真机复测** |
+| `parts/CapsuleLayout.js` | v7.8 新增、**按需用**：读 `tt.getMenuButtonBoundingClientRect()`，自己判断返回的是点还是像素（Saul 的 iPhone 14 返回的是像素），换算成界面世界坐标（含上下黑边），给顶栏、设置钮这些贴着胶囊的节点用。2.4 和 3.x 同一个文件（见第八节） | 平台包新写（全民飞车漂移 v2、SpiderSwing、Hollys、FoxDenDash 都是拿原始值摆顶栏，按像素返回时顶栏掉下去） | Node 测试通过（`tests/capsule-layout.test.js`），**待真机复测** |
+| `KIT_FINGERPRINTS.json`、`tools/build_kit_fingerprints.py`、`tools/kit_versions/` | v7.8 新增：认出包里脚本合并文件中旧版平台包模块（门禁 K6_kit_module_old）用的特征；改了 `assets/tiktok-platform/*.js` 就重跑 `build_kit_fingerprints.py`，旧版原文按 `<模块>/<sha256>.txt` 留在 `tools/kit_versions/` | 全民飞车门禁原型 C | `remake-core/scripts/test_kit_module_versions.py` |
 | `settings/bytedance.json` | 字节构建设置模板：数字 App ID（7683427172773644296 是多款游戏共用的测试组 ID，相同是正常的）、首场景分包关、REMOTE_SERVER_ROOT 空。没有它命令行出包会是 `testappId` | 细菌2048 build2 起验证过的写法 | 检查脚本强制 |
 | `webp-probe/cocos2.4/` | 老游戏保留 WebP 时用的标准探针：`webp-decode-probe.js` + `loading/webp-probe.webp`（放主包），用 TikTok 的 createImage 真解码这张图，解出宽高才开 WebP，5 秒没回应算不开、显示 Retry、点了重新检测 | Mabel's Meadow r8，逐字节相同 | `test_webp_decode_probe.cjs` 通过，**待真机复测** |
 | `webp-probe/cocos3.x-reference/` | 已有 3.x 游戏的参考件：`webp-probe.js`（`check(cc, sdk, timeout, done)` / `apply(cc, ok)`）、`webp-check.webp`、`boot-loading.js` | LunasJade v0.10.1；v7.5 去掉了 data: 备用 | `test_webp_decode_probe.cjs` 通过，**待真机复测** |
@@ -219,3 +223,78 @@ node tests/run-all.js
 - `PlatformConfig.plugin.js` 只改 BEGIN 和 END 之间的 `gameId`、`appId`、`placementMap`、`normalLevelCoins`，和 2.4 一样（生成的文件头也这样写）；加桌面、回访奖励 `growthReward()` 固定 5B，不改。
 - 3.x 没有 `HomeGrowthEntries`（它是 2.4 的 `cc.Class` 组件），首页底排两个入口直接用 `TikTokKit.MissionFlow`（不传 `reward` 时自己发 `growthReward()`）。
 - 触摸修正 `build-templates/bytedance-mini-game/tiktok-touch-3x.js` 插在 `game.js` 的 `require('./web-adapter')` 之前；存档层 `storage-guard.js` 插在它之后（之前插时 `window.localStorage` 还不存在，什么都装不上，Marlows R4 实测）。v7.7 不给 3.x 装启动件（没有真机通过的底子）。
+
+---
+
+## 八、胶囊位置标准件 `parts/CapsuleLayout.js`（v7.8，总表 U1 / B30）
+
+为什么要有：TikTok 的 `getMenuButtonBoundingClientRect()` 文档和模拟器给的是点，Saul 的 iPhone 14（2026-10-29）给的是像素（每个值乘 3）。
+全民飞车漂移 v2 拿原始值把顶栏摆到胶囊下面，真机上顶栏掉下去 166 像素压进 3D 展台；SpiderSwing、Hollys、FoxDenDash 同一类。
+这个件自己判断单位，不要每款游戏自己换算。
+
+- **按需用，不是必装件**：只有把顶栏、设置钮这类节点贴着胶囊放的游戏才用。`tiktok_finalize` 不装它，`check_kit_project.py` 和 K1/K2 不要求它，
+  所以没装它的老工程不会因此被拒（清单里登记为 `reference: true, optional: true`）。真正拦问题的是写包入口必跑的运行时套件
+  `layout_state`：胶囊按点和按像素两遍里，不动的按钮或文字位置差超过 4 点就拦（`unit_shift`），不管游戏用的是这个件还是自己的写法。
+- 2.4：复制到 `assets/`（例如 `assets/tiktok-platform/CapsuleLayout.js`），`var Capsule = require('CapsuleLayout');`。
+  3.x：放进 `assets/` 并勾「导入为插件」，用全局 `TikTokCapsuleLayout`。
+- 用法：
+  - `Capsule.screenRect()`：胶囊在屏幕上的位置（点，y 向下），带 `unit`（SDK 给的是 `pt` 还是 `px`）。判断办法：右边超出窗口宽度、或高度超过 80 点，就是像素，除以 pixelRatio。没有接口或返回空框时用默认胶囊（87×32，距右 10，状态栏下 4）。
+  - `Capsule.designRect(cc)`：同一个框换成界面世界坐标（y 向上），按引擎真实视口换算，上下有黑边的游戏也对。
+  - `Capsule.safeTopY(cc, 8)`：胶囊下沿再往下 8 个设计单位，节点顶边要在它下面。
+  - `Capsule.placeBelow(cc, node, 8)`：节点顶边高过 `safeTopY` 就往下挪到正好在它下面，返回挪了多少；已经在下面的不动。在 `onLoad` / 首页打开时调一次。
+  - `Capsule.alignBelow(cc, node, 8)`：顶边正好放在 `safeTopY`（往上往下都挪），给「紧贴胶囊下沿」的顶栏用。
+- 测试：`node tests/capsule-layout.test.js`（按点、按像素得到同一个设计坐标；2.4 竖屏铺满、2.4 上下黑边、3.x；原样把像素当点用会差 300 多个设计单位；没有接口时用默认值；`placeBelow` 两种单位挪到同一个位置）。
+  运行时：全民飞车漂移 v1 首页用这个件把顶栏放到胶囊下，`layout_state` 的 `unit_shift` 从 10 个节点下移 166 点变成 0（证据 `briefs/out/W87/RESULT.md`）。**待真机复测**。
+
+---
+
+## 九、滚动障碍标准件 `parts/CourseLane.js`（v7.8，总表 P2 补）
+
+为什么要有：BreezyBalloon v2.1（底子潜艇冲冲）按设计宽度 750 回收柱子（回收到世界坐标 816）。宽屏上真实可见宽度是 1000～1880，
+回收的柱子在屏幕中间凭空出现，1115×791 上飞 18 秒瞬移 39 次；复活时又把看得见的柱子一帧挪走 796。这个件所有数都按引擎真实可见范围算
+（`cc.view` 的可见尺寸和原点，或画这条赛道的相机），宽屏、上下黑边都对。
+
+- **按需用，不是必装件**：跑酷、飞行这类有滚动障碍的游戏用。`tiktok_finalize` 不装它，`check_kit_project.py` 和 K1/K2 不要求它，
+  没装它的老工程不会因此被拒（清单里登记为 `reference: true, optional: true`）。真正拦问题的是写包入口必跑的运行时套件 `popin`：
+  四种屏幕上主角无敌飞 18 秒再复活一次，障碍在屏幕里凭空出现、消失、一帧跳 40 以上就拦，不管游戏用的是这个件还是自己的写法。
+- 2.4：复制到 `assets/`（例如 `assets/tiktok-platform/CourseLane.js`），`var Lane = require('CourseLane');`。
+  3.x：放进 `assets/` 并勾「导入为插件」，用全局 `TikTokCourseLane`。
+- 用法（`opts` 里 `halfWidth` 是障碍半宽，`space` 是障碍所在的父节点，`camera` 是跟着赛道走的相机，都可不填）：
+  - `Lane.visibleRect(cc, opts)`：玩家真实看得见的范围 `{left, right, bottom, top, width, height}`。
+  - `Lane.spawnX(cc, {halfWidth, lastX, gap})`：新障碍放的 x = 右边缘 + 半宽 + 至少 100；比「上一个 + 间距」小时用后者。
+  - `Lane.isGone(cc, x, {halfWidth})` / `Lane.recycleX(...)`：障碍完全离开左边缘（x + 半宽 < 左边缘）才回收。
+  - `Lane.lanesNeeded(cc, {gap, halfWidth, screens})`：要同时活着的障碍组数，屏幕越宽越多；开局 `screens: 3` 一次生成前方 3 个屏宽。
+  - `Lane.clearForRevive(cc, items, {playerX, clearAhead, apply, onFaded})`：复活清障分三组：屏幕外的随便挪；看得见、在主角前方
+    `clearAhead`（默认 300）以内的淡出（至少 0.3 秒，`apply: true` 时件自己用 `cc.tween` 做，做完调 `onFaded(item)`，在里面挪走并把透明度设回）；
+    看得见、更远的不动。淡出期间要先关掉这些障碍的碰撞体（件只管透明度），挪走后再打开。也可以不清障，把主角退回安全点（BreezyBalloon v2.2 的做法），或在不透明遮罩下处理。
+- 测试：`node tests/course-lane.test.js`（可见范围按引擎、出生在右边缘外、完全离开才回收、宽屏组数多、复活淡出 ≥0.3 秒、相机和父节点坐标、3.x；
+  含 v2.1 按设计宽度出生在宽屏里的反例）。运行时：BreezyBalloon v2.1 只在运行时把回收和复活换成这个件的算法，`popin` 四种屏幕全过
+  （原包四种全拦，证据 `briefs/out/W89/RESULT.md`）。**待真机复测**。
+
+## 十、物理时钟 `parts/PhysicsClock.js`（v7.8，总表 P16）
+
+为什么要有：Cocos 2.4 没开 `enabledAccumulator` 时，物理每一帧固定走 1/60 秒，不看真实过了多久。游戏循环跑到 120 帧（Saul 的 Mac、测试浏览器）
+时整个物理就跑成两倍速；每帧推一次、或用 `schedule(cb, 0.01)`（每帧最多触发一次）推的力也跟着屏幕走。全民飞车漂移 v3.1
+（`pysTouchEvent.ts:91` 每 0.01 秒推 65、`RunUI.ts:145` 只写了 `enabled = true`）起步 1 秒时 120 帧比 60 帧多跑 19.9%；
+拿它当底子的 Pizza Drift 换美术后第 1 到 5 关第一个弯就掉下去。
+
+- **谁装**：`tiktok_finalize.py source` 的 `physics_clock` 步骤，只给**新游戏**、Cocos 2.4、游戏脚本里打开了物理
+  （`getPhysicsManager().enabled = true`，或先存进变量再 `.enabled = true`）、自己又没写 `enabledAccumulator = true` 的工程，
+  复制成 `assets/tiktok-platform/PhysicsClock.js`（和清单哈希一致；工程里那份被改过就换回、旧的挪进 `.tiktok-kit/removed/`）。
+  **老游戏一律不装**（手感是按老写法调、测过的），只在 finalize 记录里写一条警告。游戏自己已经开了 accumulator、没用物理、3.x
+  （物理本来就是固定步长）都不装。游戏里已有同名脚本 `PhysicsClock` 时不装，写警告（2.4 模块名是全局的）。
+  清单里登记为 `reference: true, optional: true`，`kit_sources` 不会把它复制进每个游戏，`check_kit_project.py`、K1/K2 都不要求它。
+- **它做什么**：2.4 的脚本在游戏启动时全部执行一遍，它在那时、以及每次切场景前把
+  `cc.director.getPhysicsManager().enabledAccumulator = true`：物理按固定 1/60 秒一步、按真实时间走（120 帧时每帧 0 或 1 步）。
+  装上以后 logic_check 的 L-FPS-ACCUM 就不报了。
+- **推力还是游戏自己的代码，要自己改**：每次调用推一次的力按它覆盖的时间缩放：
+  `var Clock = require('PhysicsClock');`、`body.applyForceToCenter(Clock.force(cc.v2(fx, fy), dt), true)`、`body.applyTorque(Clock.scale(dt) * 10, true)`；
+  移动一律「每秒多少 × dt」；`schedule` 的间隔不要小于 1/60（用 `update(dt)`）。`dt` 用回调自己收到的（`schedule(cb, interval)` 会把这次经过的时间传进来）。
+  logic_check 的 L-FPS-DT、L-FPS-SCHEDULE 会列出没乘 dt 的地方。实测：飞车 v3.1 的 `schedule(run_time, 0.01)` 在 120 帧时隔一帧才触发一次，
+  正好每 1/60 秒推一次，所以只装这个时钟就过了（差 1.39%）；BreezyBalloon v2.2 的障碍靠 `linearVelocity` 走，只装时钟也过（差 1.08%，不装 49.9%）。
+  写在 `update` 里每帧推一次的游戏只装时钟不够（Node 测试里「只开 accumulator」那个反例），推力必须乘 dt。
+- **最终裁判**是写包入口必跑的运行时套件 `frame_rate`（`cocos-game-check/package-check/references/runtime-regression.md`）：同一段操作在 60 Hz 和 120 Hz 的显示时钟下各跑一次，按真实时间比位置，差超过 5% 新游戏拦、老游戏警告。
+- 测试：`node tests/physics-clock.test.js`（载入时和切场景前打开 accumulator；引擎还没好时等 EVENT_GAME_INITED；按 2.4 PhysicsManager 的步进算 2 秒距离：
+  accumulator + 按时间推 60/120 帧相同，飞车 v3.1 的写法差 57%、只开 accumulator 不改推力差 50%，两个反例都必须被抓到）。运行时：全民飞车漂移 v3.1
+  在运行时打开 accumulator、把 `run_time` 里的推力和扭矩乘 dt×60（和 `Clock.force` 同一个算法）后 `frame_rate` 过（最大差 1.05%），原包拒（19.9%）
+  （`briefs/out/W92/RESULT.md`）。**待真机复测**。

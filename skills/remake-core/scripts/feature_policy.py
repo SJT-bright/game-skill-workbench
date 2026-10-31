@@ -16,7 +16,8 @@ def enabled(project):
             # explicitly writes false (which audit_optional_features.py then rejects).
             'checkin': read_record(project, 'docs/features.json').get('daily_checkin') is not False}
 
-LEAGUE_WORDS = re.compile(r'leader|ranking|rank|league|排行|排名', re.I)
+# v7.8 (Saul 10-31, W99): a local in-game ranking is allowed, so plain rank / ranking / 排名 names no longer count
+LEAGUE_WORDS = re.compile(r'leader_?board|friend_?rank|league|排行|好友榜|周榜', re.I)
 CHECKIN_WORDS = re.compile(r'check[-_ ]?in|sign[-_ ]?in|签到|daily[-_ ]?(reward|bonus|login)', re.I)
 PERMANENT_WORDS = re.compile(r'share|分享|invite|邀请|more[-_ ]?games?|cross[-_ ]?promo|更多游戏|互推|串联', re.I)
 

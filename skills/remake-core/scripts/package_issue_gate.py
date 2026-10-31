@@ -1,7 +1,16 @@
 """Append-only reported defects and dependency-scoped executable retests.
 No issues are inferred from prose or cleared by a hand-written status flag.
+
+v7.8 (总表 B32 a, supersede-by-design): when Saul changes the design, an old issue's cases may no longer apply. Register
+the issue for the new design (report, own cases and runner), then
+    package_issue_gate.py supersede --project <工程> --id <旧问题> --by <新问题> --quote '<Saul 原话>' --date YYYY-MM-DD
+        [--message '<新设计是什么>']
+The old report, cases and proof stay in the history; the old issue stops blocking, the new one blocks until its own
+retest passes. Without Saul's words, the date or a registered new issue ID the event is refused (a hand-written event
+like that makes the whole ledger refuse).
 """
 import argparse
+import datetime
 import hashlib
 import json
 import os
@@ -92,8 +101,13 @@ def append(project, kind, payload, initial=False):
             current = issue_state(events)
             if kind == 'reported' and payload['id'] in current:
                 raise ValueError('issue already registered')
-            if kind in ('retested', 'scope_updated', 'external_deferred') and payload.get('id') not in current:
+            if kind in ('retested', 'scope_updated', 'external_deferred', 'runner_revised', 'superseded') \
+                    and payload.get('id') not in current:
                 raise ValueError('cannot retest an unknown issue')
+            if kind in ('retested', 'scope_updated', 'external_deferred', 'runner_revised') \
+                    and current[payload['id']].get('superseded'):
+                raise ValueError('issue %s was superseded by %s (design change); retest the new issue instead'
+                                 % (payload['id'], current[payload['id']]['superseded']['by']))
         body = {'seq': len(events), 'previous': events[-1]['hash'] if events else '0'*64,
                 'event': kind, 'payload': payload}
         events.append(dict(body, hash=digest(body)))
@@ -143,9 +157,69 @@ def issue_state(events):
                     or not data.get('reason', '').strip()):
                 raise ValueError('issue scope revision may not erase the original report or weaken its postconditions')
             issues[data['id']] = {'contract': updated, 'proof': None}
+        elif event['event'] == 'superseded' and data.get('id') in issues:
+            problem = supersede_problem(issues, data)
+            if problem:
+                raise ValueError('invalid supersede-by-design event for %s: %s' % (data.get('id'), problem))
+            issues[data['id']]['superseded'] = {k: data[k] for k in ('by', 'user_quote', 'date', 'reason')}
         else:
             raise ValueError('unsupported issue event; manual closed/pass flags do not resolve defects')
     return issues
+
+
+# Earlier versions of this file whose retest proofs are checked by exactly the same rules (validate_proof, retest,
+# assertions_pass, target_hashes unchanged). v7.8 only added the supersede event, so a proof written by the v7 - v7.7.5
+# checker (one file since 2026-10-27) stays valid and no game has to retest closed issues because the Skill changed.
+SAME_PROOF_RULES = frozenset({'edaad58253327c1794e55b8b13154f9ce26b0d422d5c3b45d276bdd8c087ad2f'})
+SUPERSEDE_FIELDS = ('id', 'by', 'user_quote', 'date', 'reason')
+
+
+def supersede_problem(issues, data):
+    """v7.8 (总表 B32 a): why a supersede-by-design record is not accepted, or None. Saul's own words, the date he said
+    them and the ID of the issue registered for the new design are all required; an issue that is not registered yet,
+    the issue itself, or one that is itself superseded cannot be the replacement."""
+    if not isinstance(data, dict) or set(data) != set(SUPERSEDE_FIELDS):
+        return 'needs exactly %s' % ', '.join(SUPERSEDE_FIELDS)
+    old, new = data['id'], data['by']
+    if old not in issues:
+        return 'unknown issue'
+    if issues[old].get('superseded'):
+        return 'already superseded by %s' % issues[old]['superseded']['by']
+    if not isinstance(new, str) or new not in issues:
+        return 'the new design issue %r is not registered (report it first: package_issue_gate.py report)' % (new,)
+    if new == old:
+        return 'an issue cannot supersede itself'
+    if issues[new].get('superseded'):
+        return 'the new design issue %s is itself superseded' % new
+    quote = data['user_quote']
+    if not isinstance(quote, str) or len(''.join(quote.split())) < 4:
+        return "Saul's own words (user_quote) are required"
+    try:
+        said = datetime.date.fromisoformat(data['date']) if isinstance(data['date'], str) and \
+            re.fullmatch(r'\d{4}-\d{2}-\d{2}', data['date']) else None
+    except ValueError:
+        said = None
+    if said is None:
+        return 'date must be the day Saul said it, YYYY-MM-DD'
+    if said > datetime.date.today() + datetime.timedelta(days=1):
+        return 'date %s is in the future' % data['date']
+    if not isinstance(data['reason'], str):
+        return 'reason must be text (may be empty)'
+    return None
+
+
+def supersede(project, issue_id, new_id, user_quote, date, reason=''):
+    """v7.8 (总表 B32 a, supersede-by-design): Saul changed the design, so an old reported issue's cases no longer apply.
+    Register the issue for the new design first (report, with its own cases and runner), then call this with Saul's own
+    words and the date. The old report, its cases and any proof stay in the history; the old issue no longer blocks a
+    package, the new one does until its own retest passes. Without the words, the date or a registered new ID: refused."""
+    events, _ = load(project)
+    payload = {'id': issue_id, 'by': new_id, 'user_quote': str(user_quote or '').strip(), 'date': str(date or '').strip(),
+               'reason': str(reason or '').strip()}
+    problem = supersede_problem(issue_state(events), payload)
+    if problem:
+        raise ValueError('supersede refused: ' + problem)
+    return append(project, 'superseded', payload)
 
 
 def target_hashes(native, targets):
@@ -261,7 +335,7 @@ def validate_proof(contract, ref, native):
     if (proof.get('schema') != 'package_issue_retest.v1' or proof.get('issue_signature') != digest(contract)
             or proof.get('target_sha256') != current_targets):
         raise ValueError('issue retest is stale, incomplete or belongs to another defect')
-    if proof.get('checker_sha256') != sha(__file__):
+    if proof.get('checker_sha256') != sha(__file__) and proof.get('checker_sha256') not in SAME_PROOF_RULES:
         raise ValueError('issue retest checker changed; regenerate affected evidence')
     if set(proof.get('cases', {})) != {c['id'] for c in contract['cases']}:
         raise ValueError('issue retest case coverage incomplete')
@@ -303,6 +377,9 @@ def retest(project, native, issue_id, negative_native, normal_native, output):
     state = issue_state(events)
     if issue_id not in state:
         raise ValueError('unknown reported issue')
+    if state[issue_id].get('superseded'):
+        raise ValueError('issue %s was superseded by %s (design change); retest the new issue instead'
+                         % (issue_id, state[issue_id]['superseded']['by']))
     contract = state[issue_id]['contract']
     runner = contract['runner']
     if sha(runner['path']) != runner['sha256']:
@@ -376,7 +453,13 @@ def audit(project, native):
     issues = issue_state(events)
     checked = []
     deferred = []
+    superseded = []
     for issue_id, state in issues.items():
+        if state.get('superseded'):
+            # v7.8 B32 a: replaced by a design change Saul made; the new issue (state['superseded']['by']) is checked
+            # like any other one in this loop.
+            superseded.append(dict(state['superseded'], id=issue_id))
+            continue
         if state['proof'] is None and state.get('external_deferral'):
             pending = state['external_deferral']
             doc = read_ref(pending['authorization'])
@@ -399,12 +482,15 @@ def audit(project, native):
         checked.append({'id': issue_id, 'proof': state['proof'], 'target_sha256': proof['target_sha256'],
                         'executed_native_root': executed_root, 'current_native_root': current_root,
                         'dependency_bytes_reused': executed_root != current_root})
-    return {'passed': True, **binding, 'checked_issues': checked, 'pending_external_issues': deferred, 'scope': 'Registered defects only; no unrelated gameplay/level/art CI replay.'}
+    out = {'passed': True, **binding, 'checked_issues': checked, 'pending_external_issues': deferred, 'scope': 'Registered defects only; no unrelated gameplay/level/art CI replay.'}
+    if superseded:
+        out['superseded_issues'] = superseded
+    return out
 
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('command', choices=['init', 'report', 'revise-scope', 'retest', 'defer-external', 'check'])
+    ap.add_argument('command', choices=['init', 'report', 'revise-scope', 'retest', 'defer-external', 'supersede', 'check'])
     ap.add_argument('--project', type=Path, required=True)
     ap.add_argument('--native', type=Path)
     ap.add_argument('--id')
@@ -416,6 +502,9 @@ if __name__ == '__main__':
     ap.add_argument('--negative-native', type=Path)
     ap.add_argument('--normal-native', type=Path)
     ap.add_argument('--out', type=Path)
+    ap.add_argument('--by', help='supersede: ID of the issue registered for the new design')
+    ap.add_argument('--quote', help="supersede: Saul's own words that changed the design")
+    ap.add_argument('--date', help='supersede: the day Saul said it, YYYY-MM-DD')
     a = ap.parse_args()
     try:
         if a.command == 'init':
@@ -428,6 +517,8 @@ if __name__ == '__main__':
             result = defer_external(a.project, a.native, a.id, a.authorization)
         elif a.command == 'retest':
             result = retest(a.project, a.native, a.id, a.negative_native, a.normal_native, a.out)
+        elif a.command == 'supersede':
+            result = supersede(a.project, a.id, a.by, a.quote, a.date, a.message)
         else:
             result = audit(a.project, a.native)
         print(json.dumps({'status': 'passed', 'result': result}, ensure_ascii=False))

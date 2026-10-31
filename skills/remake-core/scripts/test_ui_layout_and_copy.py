@@ -969,7 +969,8 @@ class PageRichnessTests(unittest.TestCase):
 @unittest.skipUnless(NODE, 'node not installed')
 class ArtCheckTests(unittest.TestCase):
     """art_check.py: the art line's own check right after each art round (user 2026-10-21)."""
-    def run_check(self, scenes, flat=(), bar=False, extra_screens=(), board=None, runtime_verified=True, screen_alias=False):
+    def run_check(self, scenes, flat=(), bar=False, extra_screens=(), board=None, runtime_verified=True, screen_alias=False,
+                  flash_frame=None):
         helper = PageRichnessTests()
         helper.addCleanup = self.addCleanup
         root = helper.project(scenes, league_add=False, flat=flat)
@@ -1032,10 +1033,33 @@ class ArtCheckTests(unittest.TestCase):
             ImageDraw.Draw(image).rounded_rectangle((8,8,55,55), radius=12, fill=(80,150,220,255))
             image.save(texture_root / name)
             (texture_root / (name + '.meta')).write_text(json.dumps({'subMetas': {frame: {}}}))
+        # v7.8 H8 / H10: the synthetic fixture has no base game and its pictures count as generated
+        (root / 'docs/art/base-assets.json').write_text(json.dumps({'kind': 'base-assets', 'base': 'none', 'why': 'test fixture'}))
+        (root / 'docs/art/generated.json').write_text(json.dumps({'kind': 'generated-art', 'images': [
+            {'sha256': hashlib.sha256(p.read_bytes()).hexdigest(), 'file': p.relative_to(root).as_posix(),
+             'prompt': 'fixture plate', 'tool': 'test'} for p in sorted((root / 'assets').rglob('*.png'))]}))
+        # user (美工调查 2026-10-30): every art round records taps/popups/volume/clears (chrome_touch.py --record)
+        recorded = root / 'docs/test' / 'record-home-taps' / 'frames'
+        recorded.mkdir(parents=True, exist_ok=True)
+        for i in range(60):          # 2.4 s at 25 fps; the tool ignores the first second (load-in)
+            still = Image.new('RGB', (180, 320), (70, 120, 170))
+            ImageDraw.Draw(still).rectangle((40, 200, 140, 240), fill=(230, 180, 60))
+            if flash_frame is not None and i == flash_frame:
+                still = Image.new('RGB', (180, 320), (255, 255, 255))
+            still.save(recorded / ('%05d_%07dms.jpg' % (i, i * 40)), quality=90)
         out = Path(tempfile.mkdtemp(prefix='artcheck-out-')) / 'r'
         self.addCleanup(shutil.rmtree, out.parent, True)
         code, text = py('art_check.py', '--project', root, '--out', out, *(['--board', board] if board else []))
         return code, json.loads((out / 'art-check.json').read_text()), text
+
+    def test_recorded_flash_fails_the_flicker_row(self):
+        scenes = [('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
+        code, r, text = self.run_check(scenes, bar=True, flash_frame=40)
+        rows = {x['check']: x['status'] for x in r['rows']}
+        flicker = [k for k in rows if k.startswith('动态闪屏')]
+        self.assertEqual(len(flicker), 1, rows)
+        self.assertEqual(rows[flicker[0]], '需处理')
+        self.assertEqual(code, 1)
 
     def test_good_pages_pass(self):
         scenes = [('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']

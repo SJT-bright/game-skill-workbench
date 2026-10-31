@@ -17,7 +17,11 @@ G7_file_load_guard (block, MergeShot2048 v82 item 1): a custom downloader/parser
     local file after less than 20 s with no second attempt (maxRetryCount 0, late answers dropped). On a real
     iPhone package files can answer late; v81 lost its home-page buttons this way.
 W8_prehome_bytes (warn, MusicSlice problem 6.3): main package plus subpackages loaded before the home page exceed
-    15 MB. pre_home_bytes(view) returns the numbers for reports.
+    15 MB. pre_home_bytes(view) returns the numbers for reports. v7.8 (S8 补): this is the static estimate (load
+    names read from the startup code); the runtime suite layout_state measures the same thing in the host
+    (subpackages requested before EVENT_BEFORE_SCENE_LOADING of the home scene) and refuses a new game over 10 MiB or
+    with sound in it. W8 stays a warning so the two never disagree on a refusal; check_package reports both
+    (pre_home_bytes and pre_home_bytes.measured).
 G9_doc_hidden_clock / G9_dom_retry (block, Finger Mahjong v57): game code times foreground with document.hidden /
     visibilityState and has no onHide / EVENT_HIDE nearby, or draws a Retry with DOM elements and never calls
     showModal. TikTok keeps document.hidden false and draws no DOM; v57 locked its home page this way. The runtime
@@ -250,7 +254,9 @@ def check_prehome(view):
     if info['total_bytes'] > PREHOME_WARN:
         return [finding('W8_prehome_bytes', 'warn',
                         'about %.1f MB must download before the home page (main %.1f MB + %s); over 15 MB keeps '
-                        'players on the TikTok spinner on a slow network'
+                        'players on the TikTok spinner on a slow network. Static estimate from the startup code; the '
+                        'measured number (runtime suite layout_state, 10 MiB and no sound, v7.8 S8) is the one that '
+                        'refuses'
                         % (info['total_bytes'] / 1e6, info['main_bytes'] / 1e6,
                            ', '.join('%s %.1f MB' % (k, v / 1e6) for k, v in info['subpackages'].items()) or 'no subpackage'),
                         info)]

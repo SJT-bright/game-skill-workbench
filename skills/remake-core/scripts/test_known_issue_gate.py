@@ -368,8 +368,10 @@ def main():
         probe('localize may still carry a remake-only row', lambda d: (localize(d), d['checks'].update(
             {'ART-02': {'status': 'not_applicable', 'reason': 'Localize keeps the original art'}})), 'passed')
         probe('localize review without the design-stage ECON-01 row accepted', lambda d: (localize(d), d['checks'].pop('ECON-01')), 'passed')
-        probe('localize cannot mark the skin trial/map flow not applicable', lambda d: (localize(d), d['checks']['ECON-02'].update(
-            status='not_applicable', reason='original game had no skins', evidence=[deepcopy(ref)])))
+        # 英化不加皮肤 (Saul 2026-10-28; replaces 英化＋优化 2026-10-21): an English game whose original has no skins
+        # marks the skin trial/map flow not applicable with evidence. The sound settings stay required (next probe).
+        probe('localize may mark the skin trial/map flow not applicable when the original has none', lambda d: (localize(d), d['checks']['ECON-02'].update(
+            status='not_applicable', reason='original game had no skins', evidence=[deepcopy(ref)])), 'passed')
         probe('localize cannot skip the sound settings', lambda d: (localize(d), d['checks'].pop('AUDIO-01')))
         probe('localize cannot waive no-ad-skip', lambda d: (localize(d), d['checks']['NOSKIP-01'].update(
             status='not_applicable', reason='Synthetic skip')))

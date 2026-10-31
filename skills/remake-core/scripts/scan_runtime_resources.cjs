@@ -165,6 +165,27 @@ process.stdin.on('end', () => {
       const variableDefinitions=new Map();
       for(const n of nodes)if(n.type==='VariableDeclarator'&&n.id.type==='Identifier'){const key=bindingKey(n.id.name,n);if(!variableDefinitions.has(key))variableDefinitions.set(key,[]);variableDefinitions.get(key).push(n)}
       const ownedMethodProofs=new WeakMap();
+      // v7.8 B3: a function constructor (platform kit SaveStore). `function A(){}` declared exactly once in its
+      // scope, with no var/let/const/param/class of the same name there, is the owner of A.prototype, of new A()
+      // and of `this` inside A and inside A.prototype.x = function(){...}. The bare name A is not an owner.
+      const functionDeclarations=new Set(), declaredFunctions=new Map(), declaredClasses=new Map(), constructorCache=new WeakMap();
+      for(const n of nodes)if((n.type==='FunctionDeclaration'||n.type==='ClassDeclaration')&&n.id?.type==='Identifier'){
+        const key=scopeId.get(scopeOf(parents.get(n)))+':'+n.id.name,index=n.type==='ClassDeclaration'?declaredClasses:declaredFunctions;
+        if(n.type==='FunctionDeclaration')functionDeclarations.add(n);
+        if(!index.has(key))index.set(key,[]);index.get(key).push(n);
+      }
+      // Same lookup as before (a class declared in the expression's own scope), by index instead of a node scan.
+      const sameScopeClasses=(name,expr)=>declaredClasses.get(scopeId.get(scopeOf(expr))+':'+name)||[];
+      function constructorDeclaration(id){
+        if(id?.type!=='Identifier')return null;
+        if(constructorCache.has(id))return constructorCache.get(id);
+        let found=null;
+        for(let s=scopeOf(id);s;s=s===ast?null:scopeOf(parents.get(s))){
+          const key=scopeId.get(s)+':'+id.name,fns=declaredFunctions.get(key)||[],other=declared.has(key)||declaredClasses.has(key);
+          if(fns.length||other){found=fns.length===1&&!other?fns[0]:null;break}
+        }
+        constructorCache.set(id,found);return found;
+      }
       function definition(expr,seen=new Set()){
         if(!expr||seen.has(expr))return null;seen.add(expr);
         if(expr.type==='Identifier'){
@@ -176,17 +197,23 @@ process.stdin.on('end', () => {
       function objectOrigin(expr,seen=new Set()){
         expr=definition(expr,seen);if(!expr)return null;
         if(expr.type==='ObjectExpression'||expr.type==='ClassBody')return expr;
-        if(expr.type==='Identifier'){const classes=nodes.filter(n=>n.type==='ClassDeclaration'&&n.id?.name===expr.name&&scopeOf(parents.get(n))===scopeOf(expr));return classes.length===1?classes[0].body:null}
+        if(expr.type==='Identifier'){const classes=sameScopeClasses(expr.name,expr);return classes.length===1?classes[0].body:null}
         if(expr.type==='NewExpression'&&expr.callee.type==='Identifier'){
-          const classes=nodes.filter(n=>n.type==='ClassDeclaration'&&n.id?.name===expr.callee.name&&scopeOf(parents.get(n))===scopeOf(expr));
-          return classes.length===1?classes[0].body:null;
+          const classes=sameScopeClasses(expr.callee.name,expr);
+          return classes.length===1?classes[0].body:classes.length===0?constructorDeclaration(expr.callee):null;
         }
         if(expr.type==='ThisExpression'){
           let f=parents.get(expr);while(f&&(!/Function/.test(f.type)||f.type==='ArrowFunctionExpression'))f=parents.get(f);
           const owner=parents.get(f);if(owner?.type==='Property'&&owner.value===f)return parents.get(owner);
           if(owner?.type==='MethodDefinition'&&owner.value===f)return parents.get(owner);
+          if(owner?.type==='AssignmentExpression'&&owner.operator==='='&&owner.right===f&&owner.left.type==='MemberExpression'){
+            const proto=owner.left.object;
+            if(proto.type==='MemberExpression'&&!proto.computed&&prop(proto)==='prototype'){const c=constructorDeclaration(proto.object);if(c)return c}
+          }
+          if(f?.type==='FunctionDeclaration'&&functionDeclarations.has(f)&&constructorDeclaration(f.id)===f)return f;
         }
         if(expr.type==='MemberExpression'){
+          if(!expr.computed&&prop(expr)==='prototype'&&expr.object.type==='Identifier'){const c=constructorDeclaration(expr.object);if(c)return c}
           const owner=objectOrigin(expr.object,seen),name=prop(expr);if(owner?.type==='ClassBody'&&name==='prototype')return owner;if(owner?.type==='ObjectExpression'&&typeof name==='string'){
             const properties=owner.properties.filter(p=>p.type==='Property'&&!p.computed&&(p.key.name??p.key.value)===name);
             return properties.length===1?objectOrigin(properties[0].value,seen):null;
@@ -194,7 +221,21 @@ process.stdin.on('end', () => {
         }
         return null;
       }
+      // The one write of A.prototype.<name>: `A.prototype.<name> = function(){...}` exactly once. Any other write
+      // of that name through A.prototype, an alias of it, an instance or `this` makes the method unproved.
+      const memberWrites=nodes.filter(n=>n.type==='AssignmentExpression'&&n.left.type==='MemberExpression');
+      const prototypeMethods=new WeakMap();
+      function prototypeMethod(owner,name){
+        if(!prototypeMethods.has(owner))prototypeMethods.set(owner,new Map());
+        const known=prototypeMethods.get(owner);if(known.has(name))return known.get(name);
+        known.set(name,null);
+        const writes=memberWrites.filter(n=>prop(n.left)===name&&objectOrigin(n.left.object)===owner);
+        const w=writes.length===1?writes[0]:null,proto=w?.left.object;
+        const fn=w&&w.operator==='='&&w.right.type==='FunctionExpression'&&proto.type==='MemberExpression'&&!proto.computed&&prop(proto)==='prototype'&&constructorDeclaration(proto.object)===owner?w.right:null;
+        known.set(name,fn);return fn;
+      }
       function ownFunction(owner,name){
+        if(owner?.type==='FunctionDeclaration')return prototypeMethod(owner,name);
         const properties=owner?.type==='ObjectExpression'?owner.properties:owner?.type==='ClassBody'?owner.body:[];
         const matches=properties.filter(p=>['Property','MethodDefinition'].includes(p.type)&&!p.computed&&(p.key.name??p.key.value)===name&&/Function/.test(p.value?.type));
         return matches.length===1?matches[0].value:null;
@@ -204,8 +245,13 @@ process.stdin.on('end', () => {
         if(!ownedMethodProofs.has(owner))ownedMethodProofs.set(owner,new Map());
         const proofs=ownedMethodProofs.get(owner);if(proofs.has(name))return proofs.get(name);
         const reject=()=>{proofs.set(name,false);return false};
+        const constructor=owner.type==='FunctionDeclaration',definingWrite=constructor?parents.get(ownFunction(owner,name)):null;
         for(const n of nodes){
-          const target=n.type==='AssignmentExpression'?n.left:n.type==='UpdateExpression'?n.argument:null;
+          if(n===definingWrite)continue;
+          const target=n.type==='AssignmentExpression'?n.left:n.type==='UpdateExpression'?n.argument:(n.type==='UnaryExpression'&&n.operator==='delete')?n.argument:null;
+          if(constructor&&target?.type==='Identifier'&&constructorDeclaration(target)===owner)return reject();
+          if(constructor&&target?.type==='MemberExpression'&&constructorDeclaration(target.object)===owner&&(prop(target)===null||prop(target)==='prototype'))return reject();
+          if(constructor&&n.type==='CallExpression'&&n.arguments.some(a=>a.type==='Identifier'&&constructorDeclaration(a)===owner))return reject();
           if(target?.type==='Identifier'&&objectOrigin(target)===owner)return reject();
           if(target?.type==='MemberExpression'&&objectOrigin(target.object)===owner&&(prop(target)===null||prop(target)===name||prop(target)==='prototype'))return reject();
           if(n.type==='CallExpression'&&n.arguments.some(a=>objectOrigin(a)===owner)){

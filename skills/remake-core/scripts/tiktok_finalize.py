@@ -2,6 +2,8 @@
 """tiktok_finalize (v7.7, design D77 sections 1-2): install the platform-kit standard parts at packaging time.
 
     tiktok_finalize.py init    --project P --board remake|localize      write the new-game marker (start of a project)
+                               [--base <base folder or source ZIP> | --no-base-why "..."]
+                                   v7.8 H8: also record the base game's images and sounds (art_records.py)
     tiktok_finalize.py adopt   --project P                               a legacy game switches to the kit (marker)
     tiktok_finalize.py decide  [--project P] [--native N | --zip Z]      new or legacy, and why
     tiktok_finalize.py source  --project P --board B [--app-id ID]      source phase, BEFORE the Cocos build
@@ -17,6 +19,12 @@ Library (the two package writers call these; package_gates.kit_parts reuses the 
         requires the same --keep-webp-exception as the source record's `options`)
     check_finalize_record(record, files) -> findings (K4_finalize_ran)
 A record with any block means: refuse the package.
+v7.8 (U7 补): `source` reads the art receipt (<project>/.tiktok-kit/art-receipt.json, art_receipt.py) before its steps
+and, only when every image still matched it, carries it to the image bytes its `images` step wrote (record key
+`art_receipt`). The source step `art_static` blocks squashed SIMPLE/CUSTOM sprites and colliders without a visible picture (no
+popup-dim opacity limit since Saul 10-31).
+v7.8 (H8 / H10): `source` also follows its own image conversions in docs/art/generated.json (derived entries) and
+docs/art/base-assets.json (record key `art_records`), so a recorded picture never needs a manual re-record after it.
 """
 import argparse
 import hashlib
@@ -33,7 +41,7 @@ from tiktok_finalize_steps import policy as P  # noqa: E402
 SOURCE_RECORD = Path('.tiktok-kit') / 'finalize-source.json'
 SOURCE_TREES = ('assets', 'build-templates', 'settings')
 SKIP = {'library', 'temp', 'build', 'local', 'node_modules', '.git', '.tiktok-kit', '__MACOSX'}
-SOURCE_STEPS = T.SOURCE_STEPS                       # images, kit_sources, build_templates, settings
+SOURCE_STEPS = T.SOURCE_STEPS        # images, kit_sources, build_templates, settings, orientation, art_static
 # startup runs before touch/storage: whether main.js is the kit main.js decides where their load lines go.
 NATIVE_STEPS = ('adapter', 'startup', 'touch', 'storage', 'login', 'appid', 'png', 'structure')
 JUNK = ('.DS_Store', 'Thumbs.db')
@@ -92,15 +100,15 @@ def _collect(results):
     return blocks, warnings
 
 
-def decide_policy(project=None, native=None, files=None, override=None, legacy=None, record=None):
+def decide_policy(project=None, native=None, files=None, override=None, legacy=None, record=None, board=None):
     """Design section 2. override is for tests/calibration only. A source record that says new keeps it new
-    (a policy can only become stricter)."""
+    (a policy can only become stricter). board: v7.8 B27, a remake is never legacy by sub-asset uuids alone."""
     if override:
         if override not in T.POLICIES:
             raise ValueError('policy must be new or legacy')
         return {'policy': override, 'reason': '--policy %s (tests / calibration only)' % override,
                 'scene_uuids': [], 'legacy_match': []}
-    out = P.decide(project=project, native=native, files=files, legacy=legacy)
+    out = P.decide(project=project, native=native, files=files, legacy=legacy, board=board)
     if record and record.get('policy') == 'new' and out['policy'] != 'new':
         out = dict(out, policy='new', reason='source record says new (%s); a policy only becomes stricter'
                    % record.get('decision', {}).get('reason'))
@@ -109,6 +117,9 @@ def decide_policy(project=None, native=None, files=None, override=None, legacy=N
 
 def _trim_decision(decision):
     out = {k: decision.get(k) for k in ('policy', 'reason', 'legacy_match', 'legacy_list', 'legacy_frozen')}
+    for key in ('auto_new', 'marker_written'):          # v7.8 B27
+        if decision.get(key):
+            out[key] = decision[key]
     out['scene_uuids'] = list(decision.get('scene_uuids') or [])[:20]
     return out
 
@@ -136,10 +147,18 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
     project = Path(project)
     manifest = manifest or T.load_manifest()
     engine = engine or P.engine_of_project(project)
-    decision = decide_policy(project=project, override=policy, legacy=legacy)
+    decision = decide_policy(project=project, override=policy, legacy=legacy, board=board)
+    if decision.get('auto_new') and write_record:
+        # v7.8 B27: a game opened from a starter pack (or a remake) that only sub-asset uuids tie to a listed game is
+        # new; write the marker now so callers without a board (writers, art_receipt, logic_check) agree, even when
+        # the session never ran init.
+        P.write_marker(project, board, manifest.version, reason='source (auto: %s)' % decision['auto_new'])
+        decision = dict(decision, marker_written=True)
     ctx = T.Ctx('source', project, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest, app_id=app_id, options=options)
     refused = webp_exception_3x(engine, options)
+    art_before = _art_receipt_before(project, board, decision['policy']) if write_record else None
+    records_before = _art_records_before(project) if write_record else None
     results = [] if refused else _run_steps(ctx, steps)       # a refused option changes nothing
     blocks, warnings = _collect(results)
     blocks = refused + blocks
@@ -151,11 +170,75 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
               'blocks': blocks, 'warnings': warnings,
               'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'source_sha256': source_sha256(project),
               'backups': str(project / '.tiktok-kit')}
+    if art_before is not None:
+        record['art_receipt'] = _art_receipt_carry(project, art_before)
+    if records_before is not None:
+        record['art_records'] = _art_records_carry(project, records_before)
     if write_record:
         path = project / SOURCE_RECORD
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(record, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     return record
+
+
+def _art_receipt_before(project, board, policy):
+    """v7.8 U7（补）: the art receipt as it stands BEFORE any source step (art_receipt.check, read only)."""
+    try:
+        import art_receipt
+        return art_receipt.check(project, board, policy)
+    except Exception as error:  # noqa: BLE001 - never stops the source phase; the writers check the receipt again
+        return {'state': 'error', 'level': 'warn', 'message': repr(error)}
+
+
+def _art_receipt_carry(project, before):
+    """The images step converts WebP and shrinks textures, so the bytes art_check fingerprinted change here. Only when
+    every image matched the receipt before this run is the receipt moved to the bytes this run wrote (art_receipt.carry);
+    otherwise it is left alone and the writers still say 重跑 art_check. -> short note for the source record."""
+    note = {'before': before.get('state'), 'carried': False}
+    try:
+        import art_receipt
+        if art_receipt.carry(project, 'tiktok_finalize source', before) is not None:
+            after = art_receipt.check(project, before.get('board'), before.get('policy'))
+            note.update(carried=True, after=after.get('state'))
+    except Exception as error:  # noqa: BLE001
+        note['error'] = repr(error)
+    return note
+
+
+def _art_records_before(project):
+    """v7.8 H8 / H10: image and sound hashes before the steps, so the pictures the images step converts or shrinks stay
+    recorded (docs/art/generated.json gets derived entries, base-assets.json keeps knowing a converted base file)."""
+    try:
+        import art_records
+        return art_records.snapshot(project)
+    except Exception:  # noqa: BLE001 - recording never stops the source phase
+        return None
+
+
+def _art_records_carry(project, before):
+    try:
+        import art_records
+        return art_records.carry(project, before, 'tiktok_finalize source')
+    except Exception as error:  # noqa: BLE001
+        return {'error': repr(error)}
+
+
+def record_base_at_init(project, board, base=None, no_base_why=None):
+    """v7.8 H8, `init --base <folder or ZIP>` / `init --no-base-why "..."`: record the base game's images and sounds
+    (docs/art/base-assets.json) at project start. -> short text for the console (None for English games)."""
+    import art_records
+    if base:
+        data = art_records.record_base(project, base)
+        return '底子已记下：%s（图 %d、模型内嵌贴图 %d、声音 %d）→ %s' % (
+            data['base'], data['counts']['images'], data['counts']['embedded'], data['counts']['audio'],
+            Path(project) / art_records.BASE_FILE)
+    if no_base_why:
+        art_records.record_none(project, no_base_why)
+        return '已记下没有底子：%s' % no_base_why
+    if board == 'remake' and not (Path(project) / art_records.BASE_FILE).is_file():
+        return ('还没记底子（H8：美术检查会因此不通过）。有底子：init 加 --base <底子工程文件夹或源码 ZIP>，或跑 %s；'
+                '从零做：--no-base-why "<原因>"' % (art_records.BASE_CMD % project))
+    return None
 
 
 def read_source_record(project):
@@ -215,7 +298,8 @@ def finalize_native(native, project=None, board=None, app_id=None, policy=None, 
     names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
     engine = P.engine_of_names(names)
     record_src = read_source_record(project) if project else None
-    decision = decide_policy(project=project, native=native, override=policy, legacy=legacy, record=record_src)
+    decision = decide_policy(project=project, native=native, override=policy, legacy=legacy, record=record_src,
+                             board=board)
     ctx = T.Ctx('native', native, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest, app_id=app_id, options=options)
     refused = webp_exception_3x(engine, options)
@@ -336,14 +420,27 @@ def main(argv=None):
         p.add_argument('--app-id')
         p.add_argument('--policy', choices=T.POLICIES, help='tests and calibration only')
         p.add_argument('--keep-webp-exception', metavar='REASON')
+        if name == 'init':     # v7.8 H8: record the base game at project start
+            p.add_argument('--base', help='底子工程文件夹或源码 ZIP（重塑开工时记下底子的图和声音）')
+            p.add_argument('--no-base-why', help='从零做、没有底子时写原因')
     args = ap.parse_args(argv)
     options = {'keep_webp_exception': args.keep_webp_exception} if args.keep_webp_exception else {}
     if args.cmd in ('init', 'adopt'):
         if not args.project:
             ap.error('--project is required')
         manifest = T.load_manifest()
+        if args.cmd == 'init' and args.base and args.no_base_why:
+            ap.error('--base and --no-base-why exclude each other')
         data = P.write_marker(args.project, args.board, manifest.version, reason=args.cmd)
         print(json.dumps(data, ensure_ascii=False))
+        if args.cmd == 'init':
+            try:
+                note = record_base_at_init(args.project, args.board, args.base, args.no_base_why)
+            except ValueError as error:
+                print('底子没记下：%s' % error, file=sys.stderr)
+                return 1
+            if note:
+                print(note)
         return 0
     if args.cmd == 'inventory':
         result = inventory(args.project)
@@ -355,9 +452,10 @@ def main(argv=None):
     if args.cmd == 'decide':
         if args.zip:
             ident = P.identity_from_zip(args.zip)
-            out = P.decide(uuids=ident['scenes'], assets=ident['assets'])
+            out = P.decide(uuids=ident['scenes'], assets=ident['assets'], board=args.board,
+                           sub_assets=ident.get('sub_assets'))
         else:
-            out = decide_policy(project=args.project, native=args.native, override=args.policy)
+            out = decide_policy(project=args.project, native=args.native, override=args.policy, board=args.board)
         print(json.dumps(out, ensure_ascii=False, indent=1, default=sorted))
         return 0
     if not args.board:

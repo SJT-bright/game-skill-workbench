@@ -193,7 +193,7 @@ REVISIT_NAMES = re.compile(r'revisit|profile|entrance|sidebar|side_?bar|return_?
 SHARE_WORDS = re.compile(r'share|分享|invite|邀请|tell_?friends?|send_?to_?friends?|炫耀|转发', re.I)
 # user 2026-10-23 (both boards): "do more, break more" - no ranking/leaderboard, no 7-day check-in, no more-games cross-promotion
 OPTIONAL = {}
-REMOVED_WORDS = re.compile(r'leader_?board|ranking|rank_?list|league|排行|排名|check_?in|sign_?in|签到|daily_?login|more_?games|'
+REMOVED_WORDS = re.compile(r'leader_?board|friend_?rank|league|排行|好友榜|周榜|check_?in|sign_?in|签到|daily_?login|more_?games|'
                            r'moregame|cross_?promo|更多游戏|交叉推广', re.I)
 CORNER_TOP, CORNER_SIDE, TOP_BAND, BOTTOM_AREA, MAX_ROWS, GAP_SHARE = 0.25, 0.25, 0.20, 0.65, 2, 0.12
 

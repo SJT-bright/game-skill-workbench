@@ -8,8 +8,16 @@ decide():
     marker <project>/.tiktok-kit/policy.json says new          -> new   (a marker can only make things stricter)
     scene uuids overlap an entry of the frozen LEGACY_GAMES.json -> legacy
     the project folder is exactly an entry's recorded last source -> legacy (v7.7.5, 总表 B27)
-      (sub-asset uuids are deliberately NOT read from projects: 51 workshop starter packs are copies of listed games
-       and would then match; a new game started from one without init would be judged legacy. Moved to v7.8.)
+    v7.8 (总表 B27, second half): the sub-asset uuids of the project's .meta files (subMetas: sprite frames, ...) are
+      read too, because the list was built from packages, whose config.json holds them. They only count when the two
+      rules above found nothing, and never for a game started from a workshop starter pack (many packs carry the
+      original source of a listed English game, so the same uuids are in them):
+        the project sits in / next to a starter pack (starter_trace)   -> new
+        the caller says --board remake                                 -> new (a remake is never legacy by
+                                                                          sub-asset uuids alone; v7.7.5 said new too)
+        otherwise (board localize or not given)                        -> legacy (剪刀达人 v30 moved out of its folder)
+      tiktok_finalize `source` writes the new-game marker in the first two cases (`auto_new`), so every later
+      caller without a board (writers, art_receipt, logic_check) agrees without the session having run init.
     anything else (not listed, no uuid readable)                -> new (Saul Q1, 2026-10-29: every game not on the
                                                                    frozen list is new, including games in progress)
 """
@@ -163,6 +171,80 @@ def asset_uuids_from_project(project):
     return out
 
 
+def _sub_meta_uuids(data):
+    """Every subMetas uuid of one .meta (2.4 sprite frames / textures, nested ones too; 3.x 'uuid@sub' decodes to
+    the parent, which is already a top-level uuid)."""
+    try:
+        meta = json.loads(data.decode('utf-8-sig'))
+    except (ValueError, UnicodeDecodeError):
+        return set()
+    out = set()
+    stack = [meta.get('subMetas')] if isinstance(meta, dict) else []
+    while stack:
+        subs = stack.pop()
+        if not isinstance(subs, dict):
+            continue
+        for value in subs.values():
+            if isinstance(value, dict):
+                u = decode_uuid(value.get('uuid'))
+                if u:
+                    out.add(u)
+                stack.append(value.get('subMetas'))
+    return out
+
+
+def sub_asset_uuids_from_project(project):
+    """v7.8 (B27): sub-asset uuids of every .meta under assets/ (what a package's config.json `uuids` also lists)."""
+    project = Path(project)
+    out = set()
+    for p in (project / 'assets').rglob('*.meta') if (project / 'assets').is_dir() else []:
+        if p.is_file() and not SKIP & set(p.relative_to(project).parts):
+            out |= _sub_meta_uuids(p.read_bytes())
+    return out
+
+
+STARTER_FILES = ('workshop.json', 'starter.json')
+
+
+def _is_starter_pack(d):
+    """A workshop / design starter pack folder: workshop.json or starter.json, or START_HERE.md with GAME_DESIGN.md
+    or ECONOMY.json next to it (starter-pack-spec.md)."""
+    try:
+        if any((d / n).is_file() for n in STARTER_FILES):
+            return True
+        return (d / 'START_HERE.md').is_file() and ((d / 'GAME_DESIGN.md').is_file() or (d / 'ECONOMY.json').is_file())
+    except OSError:
+        return False
+
+
+def starter_trace(project, max_packs=2):
+    """v7.8 (B27): the project was opened from a starter pack -> short text, else None. Read only.
+    - inside a pack: the project folder or one of its 3 parents is a starter pack (pack/source, pack/source/x, ...);
+    - next to a pack: one of the 3 parents holds a starter-pack child (a folder that is one, or *_StarterPack /
+      *_StarterPack.zip). A folder with more than `max_packs` such children is a collection (下载/！自制游戏 itself
+      holds dozens) and does not count."""
+    try:
+        here = Path(project).resolve()
+    except (OSError, TypeError):
+        return None
+    if not here.is_dir():
+        return None
+    chain = [here] + list(here.parents)[:3]
+    for d in chain:
+        if _is_starter_pack(d):
+            return 'inside starter pack %s' % d
+    for d in chain[1:4]:
+        try:
+            kids = [c for c in d.iterdir() if c != here and not c.name.startswith('.')]
+        except OSError:
+            continue
+        packs = {re.sub(r'(?i)\.zip$', '', c.name) for c in kids
+                 if re.search(r'(?i)_StarterPack(\.zip)?$', c.name) or (c.is_dir() and _is_starter_pack(c))}
+        if 0 < len(packs) <= max_packs:
+            return 'next to starter pack %s' % (d / sorted(packs)[0])
+    return None
+
+
 def engine_of_names(names, texts=None):
     names = list(names)
     if any(re.search(r'(^|/)cocos2d-js(-min)?(\.[0-9a-f]+)?\.js$', n) for n in names):
@@ -209,19 +291,21 @@ def _identity_from_zipfile(z, max_bytes):
     base = project_base(names)
     if base is not None:
         prefix = base + '/' if base else ''
-        scenes, assets = set(), set()
+        scenes, assets, subs = set(), set(), set()
         for i in infos:
             n = i.filename
             if not n.startswith(prefix + 'assets/') or not n.endswith('.meta') or i.file_size > max_bytes \
                     or SKIP & set(PurePosixPath(n[len(prefix):]).parts):
                 continue
-            u = _any_meta_uuid(z.read(i))
+            data = z.read(i)
+            u = _any_meta_uuid(data)
             if u:
                 assets.add(u)
                 if n.endswith('.fire.meta') or n.endswith('.scene.meta'):
                     scenes.add(u)
+            subs |= _sub_meta_uuids(data)
         get = lambda n: z.read(prefix + n) if (prefix + n) in names else None
-        source = {'kind': 'source', 'scenes': scenes, 'assets': assets, 'base': base,
+        source = {'kind': 'source', 'scenes': scenes, 'assets': assets, 'base': base, 'sub_assets': subs - assets,
                   'engine': engine_of_project_texts(get('project.json'), get('package.json'))}
         if scenes:
             return source
@@ -370,8 +454,11 @@ def identity(project=None, files=None, native=None):
     return scenes, assets
 
 
-def decide(project=None, files=None, native=None, legacy=None, uuids=None, assets=None):
-    """-> {'policy': 'new'|'legacy', 'reason': str, 'scene_uuids': [...], 'legacy_match': [...]}"""
+def decide(project=None, files=None, native=None, legacy=None, uuids=None, assets=None, board=None, sub_assets=None):
+    """-> {'policy': 'new'|'legacy', 'reason': str, 'scene_uuids': [...], 'legacy_match': [...]}
+    board: the caller's --board when it has one (only the v7.8 sub-asset rule reads it). sub_assets: sub-asset uuids
+    already read (source ZIP); with a project they are read from its .meta files. A new decision the sub-asset rule
+    turned around carries 'auto_new' (why) and 'sub_asset_match' (what would have matched)."""
     legacy = legacy if legacy is not None else load_legacy()
     mark = read_marker(project)
     if uuids is None:
@@ -389,10 +476,27 @@ def decide(project=None, files=None, native=None, legacy=None, uuids=None, asset
     if not hits and project is not None:
         hits = match_legacy_path(project, legacy)
         by_path = bool(hits)
+    by_sub = False
+    if not hits:
+        subs = set(sub_assets or ())
+        if project is not None and sub_assets is None and Path(project, 'assets').is_dir():
+            subs = sub_asset_uuids_from_project(project)
+        subs -= assets
+        out['sub_asset_uuids_read'] = len(subs)
+        sub_hits = match_legacy(uuids, legacy, assets | subs) if subs else []
+        if sub_hits:
+            names = ', '.join(str(h['folder']) for h in sub_hits)
+            trace = starter_trace(project) if project is not None else None
+            if trace or board == 'remake':
+                why = trace or '--board remake'
+                return dict(out, policy='new', auto_new=why, sub_asset_match=sub_hits,
+                            reason='only sub-asset uuids match %s, but %s -> new game (v7.8 B27)' % (names, why))
+            hits, by_sub = [dict(h, by='sub-asset uuids') for h in sub_hits], True
     if hits:
+        how = ' (same folder as its recorded last package)' if by_path else \
+            ' (by sub-asset uuids; a game opened from a starter pack is new: run init)' if by_sub else ''
         return dict(out, policy='legacy', legacy_match=hits,
-                    reason='on the legacy list: %s%s' % (', '.join(str(h['folder']) for h in hits),
-                                                          ' (same folder as its recorded last package)' if by_path else ''))
+                    reason='on the legacy list: %s%s' % (', '.join(str(h['folder']) for h in hits), how))
     why = 'no scene uuid readable' if not uuids else 'not on the legacy list'
     if legacy.get('missing'):
         why += ' (LEGACY_GAMES.json missing)'

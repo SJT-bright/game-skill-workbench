@@ -93,8 +93,40 @@ def parse_levels(value):
     return sorted(levels)
 
 
+STROKE_INPUTS = ('cut', 'slice', 'draw', 'line', 'swipe', 'stroke')   # 划线、切割类 (总表 T7)
+INSIDE_PX = 8
+
+
+def stroke_touch_cases():
+    """总表 T7 (剪刀达人 10-30): auto cuts always started outside the strip and let go inside the screen, so "划了剪不到"
+    never showed. Three fixed real-touch cases a person does, for every stroke game, on the first tested level of each
+    mechanic and on every level whose target is thin."""
+    return [
+        {'id': 'release_outside', 'expect': 'same as the design stroke',
+         'how': 'start the design stroke normally, keep moving and let go OUTSIDE the game canvas (past the screen edge); '
+                'the cut / line must still count, nothing may stay stuck in the dragging state'},
+        {'id': 'start_inside_%dpx' % INSIDE_PX, 'expect': 'same as the design stroke',
+         'how': 'start the stroke %d px INSIDE the target (not before it), end normally' % INSIDE_PX},
+        {'id': 'end_inside_%dpx' % INSIDE_PX, 'expect': 'same as the design stroke',
+         'how': 'start normally, let go %d px INSIDE the target (stop short of its far edge)' % INSIDE_PX},
+    ]
+
+
+def solution_cases(levels):
+    """总表 T7: the level runner plays two kinds of solution on every listed level. The design solution must pass;
+    wrong solutions must NOT pass (剪刀达人: a 40-50 degree slant passed levels it should not)."""
+    out = []
+    for n in levels:
+        out += [{'level': n, 'case': 'design_solution', 'expect': 'pass'},
+                {'level': n, 'case': 'wrong_offset', 'expect': 'fail',
+                 'how': 'the design stroke moved sideways by 1.5x the thinnest part of its target (at least 24 px)'},
+                {'level': n, 'case': 'wrong_slant', 'expect': 'fail',
+                 'how': 'the design stroke turned 45 degrees around its middle'}]
+    return out
+
+
 def build_report(total, rows=None, *, scope='full', changed_levels=None,
-                 related_levels=None, regression_levels=None):
+                 related_levels=None, regression_levels=None, input_kind=None):
     baseline = plan(total)
     if scope not in {'full', 'changed'}:
         raise ValueError('scope must be full or changed')
@@ -144,7 +176,19 @@ def build_report(total, rows=None, *, scope='full', changed_levels=None,
     tested = sorted(reasons)
     if total > 15 and len(tested) == total:
         warnings.append('The selected sample covers every level. Inspect selection_reasons and intro tags; do not silently drop genuine first-use mechanics to reduce coverage.')
-    return {'total_levels': total, 'tested_with_real_touch': tested, 'tested_count': len(tested),
+    stroke = {}
+    if input_kind in STROKE_INPUTS:
+        stroke = {'input_kind': input_kind, 'stroke_touch_cases': stroke_touch_cases(),
+                  'solution_cases': solution_cases(tested),
+                  'stroke_rule': ('总表 T7: a stroke game runs the 3 fixed touch cases with real touch, and its level '
+                                  'runner plays the design solution (must pass) and two wrong ones, offset and slant '
+                                  '(must fail), on every listed level. A runner without wrong solutions is not done.')}
+    elif input_kind is None and rows is not None and any(
+            m in STROKE_INPUTS for r in rows for m in (r.get('mechanics') or [])):
+        warnings.append('Mechanics name a stroke input (%s) but no input kind is set: add "input": "cut|draw|..." to '
+                        'level_plan.json or pass --input, so the stroke touch cases and wrong solutions are planned.'
+                        % ', '.join(STROKE_INPUTS))
+    return dict({'total_levels': total, 'tested_with_real_touch': tested, 'tested_count': len(tested),
             'skipped_count': total - len(tested), 'scope': scope,
             'baseline_levels': baseline if scope == 'full' else [], 'intro_levels': sorted(set(intros)),
             'selection_reasons': {str(n): sorted(reasons[n]) for n in tested},
@@ -153,7 +197,8 @@ def build_report(total, rows=None, *, scope='full', changed_levels=None,
             'warnings': warnings,
             'rule': ('1-15 all; 16-30 every 2nd; 31-40 every 3rd; 41-50 every 4th; +1 per further 10; last level and every tagged intro always'
                      if scope == 'full' else 'Only explicit changed/related/regression levels and their mechanic first-use representatives; no unrelated baseline replay'),
-            'boundary': 'A sampling checklist, not evidence that any level was played or passed. Changed scope is local regression only, not full release acceptance.'}
+            'boundary': 'A sampling checklist, not evidence that any level was played or passed. Changed scope is local regression only, not full release acceptance.'},
+                **stroke)
 
 
 def main():
@@ -165,6 +210,8 @@ def main():
     ap.add_argument('--changed-levels', default='', help='changed levels, e.g. 18,25-26')
     ap.add_argument('--related-levels', default='', help='levels selected from actual shared dependencies')
     ap.add_argument('--regression-levels', default='', help='relevant previously failing levels')
+    ap.add_argument('--input', choices=STROKE_INPUTS + ('tap', 'drag', 'other'),
+                    help='main input; cut/slice/draw/line/swipe/stroke adds the T7 stroke cases (default: level_plan "input")')
     a = ap.parse_args()
     if a.total is not None and a.total < 1:
         ap.error('--total must be at least 1')
@@ -172,6 +219,8 @@ def main():
     if a.level_plan:
         try:
             count, rows = read_level_plan(a.level_plan)
+            if a.input is None:
+                a.input = json.loads(a.level_plan.read_text(encoding='utf-8-sig')).get('input')
         except (OSError, ValueError) as exc:
             ap.error(str(exc))
         if total is not None and total != count:
@@ -183,7 +232,8 @@ def main():
         report = build_report(total, rows, scope=a.scope,
                               changed_levels=parse_levels(a.changed_levels),
                               related_levels=parse_levels(a.related_levels),
-                              regression_levels=parse_levels(a.regression_levels))
+                              regression_levels=parse_levels(a.regression_levels),
+                              input_kind=a.input)
     except ValueError as exc:
         ap.error(str(exc))
     if a.level_plan:

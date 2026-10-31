@@ -616,7 +616,8 @@ def audit(args):
         if item.get('always_applicable') and rows.get(item['id'], {}).get('status') == 'not_applicable':
             errors.append(item['id'] + ': baseline/build/test integrity checks cannot be waived as not-applicable')
         if board in item.get('required_boards', []) and rows.get(item['id'], {}).get('status') == 'not_applicable' and not (no_collection and item['id'] in ('ECON-01', 'ECON-02')):
-            errors.append(item['id'] + ': required for ' + board + ' (英化＋优化 adds this to every game)')
+            errors.append(item['id'] + ': required for ' + board + (' (英化入口第 3 项：每个英化游戏都有音效、BGM 两个音量)'
+                                                                     if board == 'localize' else ''))
         if item['id'] in required_checks and rows.get(item['id'], {}).get('status') == 'not_applicable':
             errors.append(item['id'] + (': required for every TikTok game (add-to-desktop and profile revisit)'
                                         if item['id'] == 'GROW-01' else ': required by declared reward mechanisms'))

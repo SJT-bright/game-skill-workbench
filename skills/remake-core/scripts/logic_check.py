@@ -65,6 +65,148 @@ PHYSICS_OFF = re.compile(r'(PhysicsSystem2D|PhysicsSystem)\.instance\.enabled\s*
                          r'enabledContactListener|timeScale\s*=\s*0')
 
 
+# v7.8 P16 (全民飞车漂移 pysTouchEvent.ts:91 schedule(run_time, 0.01) pushing a fixed force, RunUI.ts:145 physics on without
+# enabledAccumulator): Cocos 2.4 steps physics 1/60 s per frame and fires a short-interval schedule once per frame, so on a
+# 120 Hz screen the whole drive runs twice as fast. Static only; the 60/120 fps hand-feel comparison is the final judge.
+PHYS_ON = re.compile(r'getPhysicsManager\s*\(\s*\)\s*\.enabled\s*=\s*(?:true|!0)\b')
+PHYS_ALIAS = re.compile(r'([A-Za-z_$][\w$]*)\s*=\s*(?:cc\.)?director\.getPhysicsManager\s*\(\s*\)')
+PHYS_ACCUM = re.compile(r'\benabledAccumulator\s*=\s*(?:true|!0)\b')
+# Calibration 2026-10-30 (9 projects): a spinner's angle, a local copy (pos.y += 40), setting a constant velocity, copying
+# another body's velocity and an absolute wrap-around setPosition are not frame-rate bugs, so only these count: a force or
+# impulse; a compound change of a velocity; a position step on this.<...> / a node / a body (x += v, x = x + v,
+# node.setPosition(node.x + v, ...)).
+FRAME_MOVE = re.compile(
+    r'\.(?:applyForce\w*|applyLinearImpulse\w*|applyTorque|applyAngularImpulse)\s*\(|'
+    r'\.(?:linearVelocity|angularVelocity)\s*(?:\.\s*[xyz]\s*)?[+\-*]=(?!=)|'
+    r'(?<![\w$.])(?P<recv>(?:this|self|_this)(?:\.[\w$]+)*|[\w$]*(?:[Nn]ode|[Bb]ody)[\w$]*)\.(?P<axis>x|y|z)\s*'
+    r'(?:[+\-]=(?!=)|=(?!=)\s*(?P=recv)\.(?P=axis)\s*[+\-])|'
+    r'(?<![\w$.])(?P<srecv>(?:this|self|_this)(?:\.[\w$]+)*|[\w$]*[Nn]ode[\w$]*)\.setPosition\s*\(\s*(?P=srecv)\.[xyz]\s*[+\-]')
+SCHEDULE = re.compile(r'(?<![\w$])schedule\s*\(')
+FRAME_HOOK = re.compile(r'(?<![\w.$])(update|lateUpdate)\s*(?::\s*function\s*[\w$]*\s*)?\(([^()]*)\)\s*(?::\s*[\w$<>\[\]|. ]+)?\s*\{')
+
+
+def _block(code, brace):
+    """Text between the brace at code[brace] and its match (comments are already stripped)."""
+    depth = 0
+    for i in range(brace, len(code)):
+        if code[i] == '{':
+            depth += 1
+        elif code[i] == '}':
+            depth -= 1
+            if depth == 0:
+                return code[brace + 1:i]
+    return code[brace + 1:]
+
+
+def _args(code, paren):
+    """Top-level comma-separated arguments of the call whose '(' is at code[paren]."""
+    depth, start, out = 0, paren + 1, []
+    for i in range(paren, len(code)):
+        ch = code[i]
+        if ch in '([{':
+            depth += 1
+        elif ch in ')]}':
+            depth -= 1
+            if depth == 0:
+                out.append(code[start:i].strip())
+                return out
+        elif ch == ',' and depth == 1:
+            out.append(code[start:i].strip())
+            start = i + 1
+    return out
+
+
+def _callback(code, expr):
+    """(first parameter name or '', body) of a schedule callback expression, or None when it cannot be read."""
+    first = lambda params: re.match(r'\s*([A-Za-z_$][\w$]*)?', params or '').group(1) or ''  # noqa: E731
+    m = re.match(r'(?:async\s+)?function\s*[\w$]*\s*\(([^()]*)\)\s*\{', expr)
+    if m:
+        return first(m.group(1)), _block(expr, m.end() - 1)
+    m = re.match(r'(?:async\s+)?(?:\(([^()]*)\)|([A-Za-z_$][\w$]*))\s*(?::\s*[\w$<>\[\]|. ]+)?\s*=>\s*', expr)
+    if m:
+        rest = expr[m.end():]
+        return first(m.group(1) if m.group(1) is not None else m.group(2)), (_block(rest, 0) if rest.startswith('{') else rest)
+    name = re.match(r'(?:this|self|that|_this|[a-z])\s*\.\s*([A-Za-z_$][\w$]*)\s*(?:\.\s*bind\s*\([^()]*\))?\s*$', expr) or \
+        re.match(r'([A-Za-z_$][\w$]*)\s*$', expr)
+    if not name:
+        return None
+    n = re.escape(name.group(1))
+    d = re.search(r'(?<![\w.$])%s\s*(?::\s*function\s*[\w$]*\s*)?\(([^()]*)\)\s*(?::\s*[\w$<>\[\]|. ]+)?\s*\{|'
+                  r'(?<![\w.$])%s\s*[=:]\s*(?:async\s+)?(?:function\s*[\w$]*\s*)?\(([^()]*)\)\s*(?:=>\s*)?\{|'
+                  r'function\s+%s\s*\(([^()]*)\)\s*\{' % (n, n, n), code)
+    if not d:
+        return None
+    params = next((g for g in d.groups() if g is not None), '')
+    return re.match(r'\s*([A-Za-z_$][\w$]*)?', params).group(1) or '', _block(code, d.end() - 1)
+
+
+def _scaled(param, body):
+    return bool((param and re.search(r'(?<![\w$])%s(?![\w$])' % re.escape(param), body)) or
+                re.search(r'getDeltaTime\s*\(|\bdeltaTime\b', body))
+
+
+def game_policy(proj):
+    """'new' | 'legacy' from the frozen legacy list (tiktok_finalize_steps.policy, same decision as the package gates)."""
+    try:
+        from tiktok_finalize_steps import policy as decide_policy
+        return 'legacy' if decide_policy.decide(project=proj).get('policy') == 'legacy' else 'new'
+    except Exception:  # noqa: BLE001 - a broken decision never makes a game legacy
+        return 'new'
+
+
+def frame_rate_suspects(files, policy='new'):
+    """L-FPS-ACCUM / L-FPS-SCHEDULE / L-FPS-DT. New games: fail (需处理); games on the legacy list: hint (警告)."""
+    sev = 'hint' if policy == 'legacy' else 'fail'
+    tail = '（名单上的老游戏：只警告）' if policy == 'legacy' else ''
+    found = []
+
+    def add(rule, rel, code, pos, msg):
+        found.append({'rule': rule, 'severity': sev, 'file': rel, 'line': line_of(code, pos), 'message': msg + tail})
+    allcode = '\n'.join(c for _, c in files)
+    aliases = {m.group(1) for _, c in files for m in PHYS_ALIAS.finditer(c)}
+    alias_on = re.compile(r'(?<![\w.$])(?:%s)\s*\.enabled\s*=\s*(?:true|!0)\b' % '|'.join(map(re.escape, sorted(aliases)))) if aliases else None
+    if not PHYS_ACCUM.search(allcode):
+        for rel, code in files:
+            m = PHYS_ON.search(code) or (alias_on.search(code) if alias_on else None)
+            if m:
+                add('L-FPS-ACCUM', rel, code, m.start(),
+                    '2.4 physics is switched on without cc.director.getPhysicsManager().enabledAccumulator = true: the engine then '
+                    'steps physics 1/60 s every frame, so on a 120 Hz screen everything moves twice as fast (全民飞车漂移 RunUI.ts:145)')
+                break
+    for rel, code in files:
+        hooks = []
+        for m in SCHEDULE.finditer(code):
+            args = _args(code, m.end() - 1)
+            if not args or not args[0]:
+                continue
+            interval = None
+            if len(args) > 1 and args[1]:
+                try:
+                    interval = float(args[1])
+                except ValueError:
+                    continue  # a computed interval is not judged here
+            cb = _callback(code, args[0])
+            if interval is not None and 0 < interval < 1 / 60:
+                if cb is None or not _scaled(*cb):
+                    add('L-FPS-SCHEDULE', rel, code, m.start(),
+                        'schedule interval %g s is shorter than one 60 Hz frame and the callback does not use its dt: it runs once '
+                        'per frame, so twice as often on a 120 Hz screen (全民飞车漂移 pysTouchEvent.ts:91 schedule(run_time, 0.01)); '
+                        'use update(dt) / an interval >= 1/60 and scale by dt' % interval)
+            if cb is not None and (interval is None or interval < 1 / 60):
+                hooks.append((m.start(), cb[0], cb[1]))
+        for m in FRAME_HOOK.finditer(code):
+            param = re.match(r'\s*([A-Za-z_$][\w$]*)?', m.group(2)).group(1) or ''
+            hooks.append((m.start(), param, _block(code, m.end() - 1)))
+        for pos, param, body in hooks:
+            move = FRAME_MOVE.search(body)
+            if move and not _scaled(param, body):
+                add('L-FPS-DT', rel, code, pos,
+                    'a per-frame callback applies force / impulse or changes speed or position (%s) without using dt: the amount '
+                    'per second doubles on a 120 Hz screen; multiply by dt (forces: dt * 60 or apply in a fixed step)'
+                    % move.group(0).strip()[:40])
+    return found
+
+
 def strip_comments(code):
     code = re.sub(r'/\*.*?\*/', lambda m: '\n' * m.group(0).count('\n'), code, flags=re.S)
     return re.sub(r'(^|[^:\'"\\])//.*$', r'\1', code, flags=re.M)
@@ -242,6 +384,7 @@ def scan(proj):
             add('L-CONFIG', 'fail', rel, 1, 'level config has empty entries %s: remove the holes (Double Jump level 85 had an empty slot) '
                 'and check every level loads' % ', '.join(holes[:4]))
     found.extend(regressions.static_suspects(files))
+    found.extend(frame_rate_suspects(files, game_policy(proj)))
     return found, len(files)
 
 

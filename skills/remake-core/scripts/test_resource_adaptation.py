@@ -74,6 +74,57 @@ class ResourceAdaptation(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'unresolved dynamic'):
             resources.generate(self.files(source.replace("'icons/a'",'userInput')))
 
+    # v7.8 B3: function-constructor prototype methods (platform kit SaveStore: this.load() is the save, not Cocos).
+    def test_platform_kit_save_store_has_no_resource_sites(self):
+        kit = resources.HERE.parent/'assets'/'platform-kit'
+        for label, folder, pattern in [('2.4', kit/'assets'/'tiktok-platform', '*.js'), ('3.x', kit/'plugins-3x', '*.plugin.js')]:
+            files = {'src/'+p.name: p.read_bytes() for p in sorted(folder.glob(pattern))}
+            self.assertIn('src/SaveStore.js' if label == '2.4' else 'src/SaveStore.plugin.js', files)
+            with self.subTest(kit=label):
+                report = resources.discover(files)
+                self.assertEqual((report['sites'], report['escapes']), ([], []))
+
+    def test_constructor_prototype_methods_do_not_create_cocos_requests(self):
+        for source in ["function S(){this.n=0}S.prototype.load=function(){return this.n};S.prototype.get=function(){if(!this.n)this.load();return 1};new S().get()",
+                       "function S(){this.load()}S.prototype.load=function(){return 1};S.prototype['get']=function(){return this.load()}",
+                       "(function(){function S(){}S.prototype.load=function(){};S.prototype.get=function(){var self=this;self.load()};module.exports=S})()",
+                       "function S(){}S.prototype.load=function(){};S._reset=function(){};var s=new S();s.load();Object.keys(S.prototype)"]:
+            with self.subTest(source=source):
+                self.assertEqual(resources.generate(self.files(source))['resources'], [])
+
+    def test_constructor_prototype_method_body_still_contributes_real_requests(self):
+        source = "function S(){}S.prototype.load=function(){cc.resources.load('icons/a',cc.SpriteFrame)};S.prototype.get=function(){this.load()}"
+        self.assertEqual(len(resources.generate(self.files(source))['resources']), 1)
+        with self.assertRaisesRegex(ValueError, 'unresolved dynamic'):
+            resources.generate(self.files(source.replace("'icons/a'", 'userInput')))
+
+    def test_constructor_prototype_counterexamples_remain_refused(self):
+        get = "S.prototype.get=function(){this.load(input,cc.SpriteFrame)};"
+        for source in ["function S(){}S.prototype.load=cc.resources.load;"+get,
+                       "function S(){}S.prototype.load=function(){};S.prototype.load=function(){};"+get,
+                       "function S(){}S.prototype.load=function(){};"+get+"S.prototype.load=cc.resources.load",
+                       "function S(){}S.prototype.load=function(){};"+get+"S.prototype={load:cc.resources.load}",
+                       "function S(){}S.prototype.load=function(){};"+get+"S.prototype=Object.create(cc.resources)",
+                       "function S(){}S.prototype.load=function(){};"+get+"Object.assign(S.prototype,{load:cc.resources.load})",
+                       "function S(){}S.prototype.load=function(){};"+get+"var p=S.prototype;p.load=cc.resources.load",
+                       "function S(){this.load=cc.resources.load}S.prototype.load=function(){};"+get,
+                       "function S(){}S.prototype.load=function(){};"+get+"var s=new S();s.load=cc.resources.load",
+                       "function S(){}S.prototype.load=function(){};"+get+"S.prototype[key]=cc.resources.load",
+                       "function S(){}S.prototype.load=function(){};"+get+"delete S.prototype.load",
+                       "function S(){}S.prototype.load=function(){};"+get+"inherit(S,cc.resources)",
+                       "function S(){}S.prototype.load=function(){};"+get+"S=cc.resources",
+                       "function S(){}function S(){}S.prototype.load=function(){};"+get,
+                       "var S=cc.resources;function S(){}S.prototype.load=function(){};"+get,
+                       "function S(){}S.prototype.load=()=>1;"+get,
+                       "function S(){}S.prototype.load=function(){};function T(){}T.prototype.get=function(){this.load(input,cc.SpriteFrame)}",
+                       "function S(){}S.prototype.load=function(){};this.load(input,cc.SpriteFrame)",
+                       "function S(){}S.prototype.load=function(){};S.prototype.get=function(){setTimeout(function(){this.load(input,cc.SpriteFrame)})}",
+                       "function S(){}S.prototype.load=function(){};S.load(input,cc.SpriteFrame)",
+                       "function S(){}S.prototype.load=function(){};function f(S){S.prototype.get=function(){this.load(input,cc.SpriteFrame)}}"]:
+            with self.subTest(source=source):
+                with self.assertRaisesRegex(ValueError, 'unresolved dynamic'):
+                    resources.generate(self.files(source))
+
     def system_source(self, argument="'config/game'", module='Scene'):
         return "System.register('"+module+"',['cc'],function(e){var r,J;return{setters:[function(cc){r=cc.resources;J=cc.JsonAsset}],execute(){r.load("+argument+",J)}}})"
 

@@ -103,6 +103,52 @@ class RenamedZip(unittest.TestCase):
         self.assertIn('renamed', out['entry_reason'])
 
 
+class CheckPackageCommand(unittest.TestCase):
+    """v7.8 (总表 B17): check_package.py run by hand on a ZIP no official writer wrote says "只读预检，不可交付" and
+    exits 3 (丛林荡藤 v6, 剪刀达人 v30 were called a pass). --structure-only keeps the old answer. check() itself is
+    unchanged (both writers import it), so it is patched here and only main()'s verdict is tested."""
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(HERE.parent.parent / 'cocos-game-check' / 'package-check' / 'scripts'))
+        import check_package
+        cls.C = check_package
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.zip = Path(tmp.name) / 'game.zip'
+        self.zip.write_bytes(b'not read: check is patched')
+
+    def run_main(self, entry, *extra):
+        result = {'status': 'pass', 'entry': entry, 'entry_reason': 'matching receipt from build_checked_zip'
+                  if entry == 'official' else 'no writer receipt game.zip.receipt.json'}
+        out, err = io.StringIO(), io.StringIO()
+        with patch.object(self.C, 'check', return_value=result), \
+                patch.object(sys, 'argv', ['check_package.py', '--input', str(self.zip), *extra]), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = self.C.main()
+        return code, out.getvalue(), err.getvalue()
+
+    def test_unofficial_zip_is_read_only_not_deliverable(self):
+        code, out, err = self.run_main('unofficial')
+        self.assertEqual(code, 3)
+        self.assertIn('unofficial_not_deliverable', out)
+        self.assertIn('只读预检，不可交付', err)
+        self.assertIn('REFUSED', err)
+
+    def test_structure_only_keeps_the_old_answer(self):
+        code, out, err = self.run_main('unofficial', '--structure-only')
+        self.assertEqual(code, 0)
+        self.assertIn('structure-only', out)
+        self.assertIn('只读预检，不可交付', err)       # still says it is not a delivery approval
+
+    def test_official_zip_passes(self):
+        code, out, err = self.run_main('official')
+        self.assertEqual(code, 0)
+        self.assertIn('官方入口', err)
+        self.assertNotIn('REFUSED', err)
+
+
 class UploadPreflight(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()

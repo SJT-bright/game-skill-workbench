@@ -42,7 +42,7 @@
 反例（用户截图）：Ego 的空间列表里堆着"需要你处理 · HSS-v2-user-preview""需要你处理 · Battle Cars v7 local preview"这种等用户去试玩的空间；AI 汇报"试玩页已在 Ego Lite 中打开并交给你操作，看到 Swipe to Play 后滑动即可开始"。**这两种都禁止。**
 
 1. **禁止一切在 Ego 里让用户试玩的行为**：不开"给用户试玩"的 Ego 窗口或空间；不把页面置前、不 `handOff()` 给用户；`chrome_touch.py --handoff` 已停用（直接报错）；`browser_slots.py register --kind ego_space --keep` 会被拒绝；不在回复里写"已在 Ego 里打开，交给你"。
-2. **用户试玩怎么给**：`python scripts/serve_preview.py --directory <最新一次完成的 Web 导出> --keep --name "<线名> 用户试玩"`（默认自动请求打开独立 Google Chrome 窗口），把打印出的 `http://127.0.0.1:端口/` **写在 Codex 回复里**，按[固定手机试玩](user-phone-preview.md)读回实际 Chrome 窗口后交接；同时写清"这是竖屏/横屏游戏"、建议的窗口尺寸和怎么操作。这个预览服务用户玩完就关（`browser_slots.py close --id <slot>`）。
+2. **用户试玩怎么给**：`python scripts/serve_preview.py --directory <最新一次完成的 Web 导出> --keep --project <工程> --name "<线名> 用户试玩"`（默认自动请求打开独立 Google Chrome 窗口；v7.8 起 `--keep` 必须带 `--project`，重塑新游戏没有通过的美术回执就不起服务），把打印出的 `http://127.0.0.1:端口/` **写在 Codex 回复里**，按[固定手机试玩](user-phone-preview.md)读回实际 Chrome 窗口后交接；同时写清"这是竖屏/横屏游戏"、建议的窗口尺寸和怎么操作。这个预览服务用户玩完就关（`browser_slots.py close --id <slot>`）。
 3. **历史 Ego 空间先核用途再处理**：用 `python scripts/browser_slots.py ego-list` 只读取得列表。名称含试玩或显示“需要你处理”只作为候选；核实已完成、取消或被新版替代且不再使用后，通过受支持的当前拥有者接口结束，再 `ego-finish --space-id <ID>` 读取列表核对原空间消失。用户当前在用、明确要求保留或未知归属不动；遇到工具 hard stop 立即停止。新任务不再为用户创建 Ego 试玩空间。集中移出按现有十小时自动化，不在本次 Skill 更新里运行真实清理或新增循环。
 4. **AI 自己测试照常用 Ego**：触摸计划、截图、录屏、批量跑关、加载测试、手机模拟都还在 Ego 里，后台跑，测完马上关（上一节）。
 

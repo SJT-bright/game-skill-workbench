@@ -50,3 +50,28 @@ test('Merge installation leaves identical files untouched, adds new files and re
  assert.equal(after.mtimeMs,before.mtimeMs);if(process.platform!=='win32')assert.equal(after.ino,before.ino);assert.equal(await fs.readFile(path.join(b.path,'personal.md'),'utf8'),'local note');assert.equal(await fs.readFile(path.join(b.path,'SKILL.md'),'utf8'),'updated rules');assert.equal(await fs.readFile(path.join(b.path,'new.md'),'utf8'),'new file');assert.deepEqual(b.installStats,{unchanged:1,updated:1,added:1});
  const again=await client.install(c,next.release.id);assert.deepEqual(again.installStats,{unchanged:3,updated:0,added:0});
 });
+
+
+test('Directory claims do not block distinct Skills or overwrite another installation',async t=>{
+ const {root,source,store}=await fixture(t);const named=path.join(root,'cocos-game-check');await fs.rename(source,named);
+ const a=await store.publish(named,'Legacy display title');const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token},client=new ClientStore(path.join(root,'client'));
+ const first=await client.install(c,a.release.id);await fs.writeFile(path.join(first.path,'personal.md'),'keep original');
+ await fs.writeFile(path.join(named,'SKILL.md'),'# Other independent rules');const b=await store.publish(named,'Different workflow');
+ const second=await client.install(c,b.release.id);assert.notEqual(first.path,second.path);assert.match(await fs.readFile(path.join(first.path,'SKILL.md'),'utf8'),/Keep saves/);assert.equal(await fs.readFile(path.join(second.path,'SKILL.md'),'utf8'),'# Other independent rules');
+ assert.equal(await fs.readFile(path.join(first.path,'personal.md'),'utf8'),'keep original');assert.equal((await client.install(c,b.release.id)).path,second.path);
+});
+
+test('Canonical component replaces duplicate legacy identity only after successful validation and keeps local additions',async t=>{
+ const {root,source,store}=await fixture(t);const named=path.join(root,'cocos-game-check');await fs.rename(source,named);
+ const p=await store.publish(named,'cocos-game-check');const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token},client=new ClientStore(path.join(root,'client'));
+ const first=await client.install(c,p.release.id);const ledger=await client.state();delete ledger[p.release.skillId];ledger['legacy-id']={...first,skillId:'legacy-id'};await fs.writeFile(path.join(first.path,'personal.md'),'keep');await fs.writeFile(path.join(client.root,'installed.json'),JSON.stringify(ledger));
+ await fs.writeFile(path.join(named,'SKILL.md'),'# Current rules');const next=await store.publish(named,'cocos-game-check');const release=await store.release(next.release.id);const f=release.files.find(f=>f.path==='SKILL.md'),blob=path.join(store.root,'blobs',f.hash),bytes=await fs.readFile(blob);await fs.writeFile(blob,'bad');
+ await assert.rejects(client.install(c,next.release.id),/哈希/);assert.deepEqual(await client.state(),ledger);assert.match(await fs.readFile(path.join(first.path,'SKILL.md'),'utf8'),/Keep saves/);
+ await fs.writeFile(blob,bytes);const current=await client.install(c,next.release.id);assert.equal(current.path,first.path);assert.equal(await fs.readFile(path.join(current.path,'personal.md'),'utf8'),'keep');assert.equal(await fs.readFile(path.join(current.path,'SKILL.md'),'utf8'),'# Current rules');assert.deepEqual(Object.keys(await client.state()),[p.release.skillId]);
+});
+
+
+test('Parallel component updates serialize their shared journal and retain both installed versions',async t=>{
+ const {root,source,store}=await fixture(t);const named=path.join(root,'cocos-game-check');await fs.rename(source,named);const a=await store.publish(named,'Workflow A'),b=await store.publish(named,'Workflow B');const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token},client=new ClientStore(path.join(root,'client'));
+ const results=await Promise.all([client.install(c,a.release.id),client.install(c,b.release.id)]);assert.equal(Object.keys(await client.state()).length,2);assert.notEqual(results[0].path,results[1].path);for(const r of results)assert.match(await fs.readFile(path.join(r.path,'SKILL.md'),'utf8'),/Keep saves/);await assert.rejects(fs.access(path.join(client.root,'transaction.json')));
+});

@@ -8,7 +8,7 @@ async function safeLinks(root){async function walk(dir){for(const e of await fs.
 async function prepare(update,{repo,root,platform=process.platform,arch=process.arch,onProgress=()=>{},download=github.downloadAsset}={}){const m=manifest(update,repo),pkg=m.packages[platform+'-'+arch];if(!pkg)throw Error('此平台暂无更新包');const dir=path.join(root,'updates',m.version),archive=path.join(dir,'application.zip');await fs.mkdir(dir,{recursive:true});try{await download(repo,pkg.assetId,pkg.url,archive,onProgress);const data=await fs.readFile(archive);if(data.length!==pkg.bytes||crypto.createHash('sha256').update(data).digest('hex')!==pkg.sha256)throw Error('更新包哈希校验失败');zipEntries(data);const extract=path.join(dir,'extracted');await fs.rm(extract,{recursive:true,force:true});await fs.mkdir(extract);if(process.platform==='win32'){const quote=v=>"'"+v.replaceAll("'","''")+"'";await run('powershell.exe',['-NoProfile','-Command','Expand-Archive -LiteralPath '+quote(archive)+' -DestinationPath '+quote(extract)+' -Force'],{windowsHide:true});}else await run('unzip',['-q',archive,'-d',extract]);await safeLinks(extract);let entry=platform==='darwin'?path.join(extract,'游戏工作台.app'):extract;if(platform==='darwin'){const {stdout}=await run('/usr/libexec/PlistBuddy',['-c','Print :CFBundleIdentifier',path.join(entry,'Contents/Info.plist')]);if(stdout.trim()!=='studio.gamedesk.skill.personal')throw Error('更新包应用身份不匹配');await run('codesign',['--verify','--deep','--strict',entry]);}else{const p=JSON.parse(await fs.readFile(path.join(entry,'resources/app/package.json'),'utf8'));if(p.name!=='skill-game-dock'||p.version!==m.version)throw Error('Windows 更新包身份不匹配');const exe=await fs.readFile(path.join(entry,'GameDeskSkill.exe'));if(exe.subarray(0,2).toString()!=='MZ')throw Error('Windows 更新程序无效');}return {version:m.version,archive,entry};}catch(e){await fs.rm(archive,{force:true});throw e;}}
 function sh(v){return "'"+String(v).replaceAll("'","'\\''")+"'";}
 function ps(v){return "'"+String(v).replaceAll("'","''")+"'";}
-function installerScript({platform,target,candidate,pid,receipt,version:nextVersion,bootstrapPointer,fallbackExe,fallbackArgs=[]}){
+function installerScript({platform,target,candidate,pid,receipt,version:nextVersion,bootstrapPointer,fallbackExe,fallbackArgs=[],startup}){
  if(!Number.isSafeInteger(pid)||pid<1)throw Error('更新进程无效');const backup=target+'.previous',failed=target+'.failed';
  if(platform==='darwin')return `#!/bin/sh
 set -eu
@@ -38,9 +38,18 @@ mv ${sh(backup)} ${sh(target)}
 printf '%s' ${sh(JSON.stringify({status:'rolled-back',version:nextVersion,failed,reason:'startup-not-confirmed'}))} > ${sh(receipt)}
 open ${sh(target)}
 `;
+ if(startup&&(!startup.path||!startup.cancelPath||!startup.attemptId||startup.version!==nextVersion||startup.target!==target))throw Error('更新启动握手参数无效');
+ const cancelled=startup?`if(Test-Path -LiteralPath ${ps(startup.cancelPath)}){exit 2}`:'';
+ const ready=startup?`${cancelled}
+$ready=@{status='ready';attemptId=${ps(startup.attemptId)};version=${ps(nextVersion)};target=${ps(target)};pid=$PID} | ConvertTo-Json -Compress
+[IO.File]::WriteAllText(${ps(startup.path+'.tmp')},$ready,[Text.UTF8Encoding]::new($false))
+Move-Item -LiteralPath ${ps(startup.path+'.tmp')} -Destination ${ps(startup.path)} -Force
+${cancelled}`:'';
  return `$ErrorActionPreference = 'Stop'
+${ready}
 Wait-Process -Id ${pid} -Timeout 60 -ErrorAction SilentlyContinue
 if(Get-Process -Id ${pid} -ErrorAction SilentlyContinue){exit 1}
+${cancelled}
 $target=${ps(target)}
 $backup=${ps(backup)}
 $candidate=${ps(candidate)}

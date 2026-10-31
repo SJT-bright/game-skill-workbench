@@ -136,8 +136,8 @@ async function linkTree(source,target){
  for(const entry of await fs.readdir(source,{withFileTypes:true})){
   const from=path.join(source,entry.name),to=path.join(target,entry.name);
   if(entry.isSymbolicLink())throw Error('本机 Skill 包含符号链接：'+entry.name);
-  if(entry.isDirectory()){await fs.mkdir(to);await linkTree(from,to);}
-  else if(entry.isFile()){try{await fs.link(from,to);}catch(e){if(!['ENOTSUP','EPERM','EXDEV'].includes(e.code))throw e;await fs.copyFile(from,to);const st=await fs.stat(from);await fs.utimes(to,st.atime,st.mtime);}}
+  if(entry.isDirectory()){await fs.mkdir(to,{recursive:true});await linkTree(from,to);}
+  else if(entry.isFile()){if(await exists(to))continue;try{await fs.link(from,to);}catch(e){if(!['ENOTSUP','EPERM','EXDEV'].includes(e.code))throw e;await fs.copyFile(from,to);const st=await fs.stat(from);await fs.utimes(to,st.atime,st.mtime);}}
   else throw Error('Skill 含不支持的本机文件');
  }
 }
@@ -164,15 +164,35 @@ class ClientStore {
     for(const r of index.releases)if(!ID.test(r.id)||!ID.test(r.skillId)||typeof r.name!=='string'||typeof r.version!=='string'||typeof r.summary!=='string'||!HASH.test(r.treeHash))throw Error('订阅索引条目无效');
     await atomicJSON(path.join(this.root,'index.json'),index); return index;
   }
-  async install(c,id,{replace=false}={}) {
+  async install(c,id,options={}) {
+    const operation=(this.installQueue||Promise.resolve()).catch(()=>{}).then(()=>this.installOne(c,id,options));
+    this.installQueue=operation;return operation;
+  }
+  async installOne(c,id,{replace=false}={}) {
     const release=validateRelease(await request(c,'/releases/'+id));
     await this.recover();
-    const directory=release.directory||release.skillId;const existing=await this.state();if(Object.entries(existing).some(([id,s])=>id!==release.skillId&&path.basename(s.path)===directory))throw Error('Skill 目录冲突');
+    let directory=release.directory||release.skillId;const existing=await this.state();
+    const normalize=value=>String(value||'').normalize('NFC').toLowerCase();
+    const samePath=(a,b)=>process.platform==='win32'?normalize(path.resolve(a))===normalize(path.resolve(b)):path.resolve(a)===path.resolve(b);
+    // Directory identity is stronger than a display title. Only a canonical
+    // component may adopt legacy records with the same canonical name.
+    const canonical=release.directory&&(release.skillId==='s-'+digest(release.directory).slice(0,20)||normalize(release.name)===normalize(release.directory));
+    const aliases=Object.entries(existing).filter(([key,s])=>key!==release.skillId&&canonical&&normalize(s.name)===normalize(release.directory)&&normalize(path.basename(s.path))===normalize(release.directory));
+    const aliasIds=new Set(aliases.map(([key])=>key));
+    const claimed=folder=>Object.entries(existing).some(([key,s])=>key!==release.skillId&&!aliasIds.has(key)&&samePath(s.path,path.join(this.root,'skills',folder)));
+    // A different Skill can legitimately use the same preferred folder name.
+    // Give it a stable private directory instead of mixing files or blocking all updates.
+    if(claimed(directory))directory+='--'+digest(release.skillId).slice(0,20);
+    if(claimed(directory))throw Error('Skill 安装记录异常：'+release.name+'，目标目录被其他组件占用');
     const stageId=crypto.randomUUID(),dest=path.join(this.root,'skills',directory), stage=dest+'.stage-'+stageId, backup=dest+'.previous';
     await fs.mkdir(stage,{recursive:true});
     try {
-      const current=existing[release.skillId]||this.seeds?.[release.skillId];
-      if(!replace&&await exists(dest))await linkTree(dest,stage);
+      const current=existing[release.skillId]||aliases[0]?.[1]||this.seeds?.[release.skillId];
+      if(!replace){
+        if(await exists(dest))await linkTree(dest,stage);
+        // ZIP imports live outside skills/. Preserve their local additions too.
+        for(const item of [current,...aliases.map(([,s])=>s)])if(item?.path&&!samePath(item.path,dest)&&await exists(item.path))await linkTree(item.path,stage);
+      }
       const stats={unchanged:0,added:0,updated:0};
       for(const f of release.files){
         const p=path.join(stage,...f.path.split('/'));let data,match=false;
@@ -189,9 +209,9 @@ class ClientStore {
       if(await exists(backup)&&!await exists(dest))await fs.rename(backup,dest);
       await fs.rm(backup,{recursive:true,force:true});
       const had=await exists(dest);
-      await atomicJSON(path.join(this.root,'transaction.json'),{skillId:release.skillId,releaseId:release.id,stageId,had,directory:release.directory});
+      await atomicJSON(path.join(this.root,'transaction.json'),{skillId:release.skillId,releaseId:release.id,stageId,had,directory});
       if(had)await fs.rename(dest,backup);
-      try {await fs.rename(stage,dest);const state=await this.state();state[release.skillId]=installation;await atomicJSON(path.join(this.root,'installed.json'),state);}
+      try {await fs.rename(stage,dest);const state=await this.state();for(const key of aliasIds)delete state[key];state[release.skillId]=installation;await atomicJSON(path.join(this.root,'installed.json'),state);}
       catch(e){await fs.rm(dest,{recursive:true,force:true});if(had)await fs.rename(backup,dest);await fs.rm(path.join(this.root,'transaction.json'),{force:true});throw e;}
       await fs.rm(backup,{recursive:true,force:true});
       await fs.rm(path.join(this.root,'transaction.json'),{force:true});

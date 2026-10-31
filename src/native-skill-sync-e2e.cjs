@@ -4,7 +4,11 @@ const {HubStore,startHub,digest}=require('./core.cjs');
 module.exports=async({win,handlers,root})=>{
  const source=path.join(root,'sync-fixture','cocos-game-to-english');await fs.mkdir(source,{recursive:true});await fs.writeFile(path.join(source,'SKILL.md'),'# Native updated English rules');
  const hub=new HubStore(path.join(root,'sync-fixture','hub')),published=await hub.publish(source,'cocos-game-to-english');const server=await startHub(hub);
- const call=(name,value)=>win.webContents.executeJavaScript(`window.dock.call(${JSON.stringify(name)},${JSON.stringify(value)})`);
+ const trace=[];const call=async(name,value)=>{
+  trace.push({method:name,status:'started'});await fs.writeFile(path.join(root,'skill-sync-native.json'),JSON.stringify(trace));
+  const result=await win.webContents.executeJavaScript(`(async()=>{try{return {ok:true,value:await window.dock.call(${JSON.stringify(name)},${JSON.stringify(value)})};}catch(error){return {ok:false,error:String(error.message||error)};}})()`);
+  trace.push({method:name,status:result.ok?'completed':'rejected',error:result.error});await fs.writeFile(path.join(root,'skill-sync-native.json'),JSON.stringify(trace));if(!result.ok)throw Error(result.error);return result.value;
+ };
  try{
   const id='s-'+digest('cocos-game-to-english').slice(0,20),ledgerPath=path.join(root,'subscriber','installed.json'),ledger=JSON.parse(await fs.readFile(ledgerPath,'utf8')),prior=ledger[id];assert.ok(prior);
   // Simulate the duplicate ID left by a historical installation without deleting originals.

@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-29.remake-v7.7.2",
+  "revision": "2026-10-30.remake-v7.8",
   "skill": "chrome-mobile-testing",
-  "previous_provenance_sha256": "901cbde963f27720c7cff449cbb604ddcc17e4dd5905d0d2f2290ee2e4783f85",
+  "previous_provenance_sha256": "a89ee70efeb63e96479b9f6e8515ed25a0bcd67f05b21bc354065b4bd8e3ea3a",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "01a7f5f84ecda77fb21570bcec9dc26419a4a11bd951518c0388e209d46c95b1",
-      "bytes": 15278
+      "sha256": "0c545a21ac0197aa0fb9ef6c1eb254779da946aa3ab5a8cada2a77e920491577",
+      "bytes": 17086
     },
     {
       "path": "scripts/chrome_touch.py",

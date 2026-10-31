@@ -33,7 +33,7 @@ python3 scripts/chrome_touch.py --url http://127.0.0.1:8765/ --plan tests/calibr
 
 ## iPhone 模拟、一个浏览器测一次（用户 2026-10-22）
 
-Ego Lite 和 Chrome 都基于 Chromium，但宿主和设置可能不同；默认**只在一个浏览器里测一次**（默认 Ego Lite）。计划里写 `"device": "iphone_15"`（不写也是它）；短屏比例用 `"iphone_se"`。报告里记着用了哪个机型。这是 Chromium 模拟的 iPhone 屏幕、触摸和浏览器标识，不是苹果真机和 Safari 内核。每个按钮都要点一遍：每页先 dump_ui，再逐个点、点完等一下再截图，最后用cocos-game-core 的 `audit_button_coverage.py` 出《按钮清单》。
+Ego Lite 和 Chrome 都基于 Chromium，但宿主和设置可能不同；默认**只在一个浏览器里测一次**（默认 Ego Lite）。计划里写 `"device": "iphone_15"`（不写也是它）；短屏比例用 `"iphone_se"`。报告里记着用了哪个机型。这是 Chromium 模拟的 iPhone 屏幕、触摸和浏览器标识，不是苹果真机和 Safari 内核。每个按钮都要点一遍：每页先 dump_ui，再逐个点、点完等一下再截图，最后用remake-core 的 `audit_button_coverage.py` 出《按钮清单》。
 
 ## 从游戏里读布局和文字（dump_ui）
 
@@ -53,15 +53,34 @@ py -3 scripts/prepare_chrome.py --install-runtime
 python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan 当前计划.json --out 全新证据目录 --name "<线名+做什么>"
 ```
 
-计划字段：`device`（用户 2026-10-22：手机用 iPhone；默认 `iphone_15` = 393×852、3 倍像素、iPhone 浏览器标识、触摸；短屏 `iphone_se` = 375×667；还有 `iphone_15_pro_max`），或者自己写 `viewport`含width/height、`dpr`、`user_agent`；`actions`数组；支持`tap`（selector或x/y）、`drag`（points数组）、`cancel`（points数组）、`wait`（ms≤10000）、`assert_text`（selector、equals）、`snapshot`，以及计时用的`mark`（wait_js 轮询到为真，记下离开始多少毫秒；条件一旦成立要一直成立，例如"加载动画可见或首页已可点"）、`background`（切到后台 ms 毫秒，记录游戏页当时是否真的 hidden；浏览器不让真切后台时自动改用模拟 visibilitychange，并在报告里注明）、`unblock`（解除 `block_urls`）、`dump_ui`。计划还可写 `timing:true`（步骤间不截图，免得拖慢计时）、`network`（真实限速）、`cache`（cold 禁缓存 / warm 先预热一次再计时）、`block_urls`（让指定资源请求失败，测卡住和 Retry）。报告里有每个 mark 的时间、全部网络请求的大小和完成时间，供cocos-game-core 的 `audit_startup_loading.py` 计算启动/进关时间、加载动画是否卡住、首页前下载了哪些大文件。动作后自动截图和只读快照（timing 模式除外）。`--handoff` 已停用：用户试玩不在 Ego，由共享预览入口自动打开 Chrome，并在回复中保留链接。需进一步自定义真实多指/按下中截图时，用 `ego-browser nodejs` 写独立脚本（同样用 `page.cdp()` 的 `Input.dispatchTouchEvent`、同样的唯一空间名和记录标识），保留原始输入；现有helper未覆盖的能力如实标待验。
+计划字段：`device`（用户 2026-10-22：手机用 iPhone；默认 `iphone_15` = 393×852、3 倍像素、iPhone 浏览器标识、触摸；短屏 `iphone_se` = 375×667；还有 `iphone_15_pro_max`），或者自己写 `viewport`含width/height、`dpr`、`user_agent`；`actions`数组；支持`tap`（selector或x/y）、`drag`（points数组）、`cancel`（points数组）、`wait`（ms≤10000）、`assert_text`（selector、equals）、`snapshot`，以及计时用的`mark`（wait_js 轮询到为真，记下离开始多少毫秒；条件一旦成立要一直成立，例如"加载动画可见或首页已可点"）、`background`（切到后台 ms 毫秒，记录游戏页当时是否真的 hidden；浏览器不让真切后台时自动改用模拟 visibilitychange，并在报告里注明）、`unblock`（解除 `block_urls`）、`dump_ui`。计划还可写 `timing:true`（步骤间不截图，免得拖慢计时）、`network`（真实限速）、`cache`（cold 禁缓存 / warm 先预热一次再计时）、`block_urls`（让指定资源请求失败，测卡住和 Retry）。报告里有每个 mark 的时间、全部网络请求的大小和完成时间，供remake-core 的 `audit_startup_loading.py` 计算启动/进关时间、加载动画是否卡住、首页前下载了哪些大文件。动作后自动截图和只读快照（timing 模式除外）。`--handoff` 已停用：用户试玩不在 Ego，由共享预览入口自动打开 Chrome，并在回复中保留链接。需进一步自定义真实多指/按下中截图时，用 `ego-browser nodejs` 写独立脚本（同样用 `page.cdp()` 的 `Input.dispatchTouchEvent`、同样的唯一空间名和记录标识），保留原始输入；现有helper未覆盖的能力如实标待验。
 
 ## 少占电脑
 
-**被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑cocos-game-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。（用户同意改用 Chrome 时）自动测试加 `--headless`。不要再用排队锁包本命令（包了也会直接放行）。遗留的用cocos-game-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用cocos-game-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
+**被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑remake-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。（用户同意改用 Chrome 时）自动测试加 `--headless`。不要再用排队锁包本命令（包了也会直接放行）。遗留的用remake-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用remake-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
 
 ## 录屏（动态画面检查）
 
 加 `--record` 会把画面帧存到 `<输出>/frames/`，交给 `scripts/audit_frame_glitches.py`（英化包在 cocos-game-core，重塑包在 remake-core）。Ego 里是连续截图（每秒几帧）：查黑屏、白屏、卡住不动、错页。**一帧闪烁**要每秒60帧，只有经用户同意的 Chrome 路线能录，Ego 录不到时在报告里写"闪烁未测"，不说通过。一个流程一次录制，每段不超过60秒。
+
+### 美术关必录的四段（v7.8，`art_check.py` 的「动态闪屏」一行没有录屏就不通过）
+
+每轮美术（两个板块）在 dump 完页面后，再录下面四段，一段一次运行、各自一个输出目录，**输出目录放在 art_check 读的 dump 目录下面**（默认 `<工程>/docs/test/`）：
+
+| 段 | 输出目录 | 计划里做什么 |
+| --- | --- | --- |
+| 首页点按钮 | `docs/test/rec-home-buttons/` | 进首页等 3 秒，依次点每个功能按钮，每次点完 `wait` 1500，再点关闭回首页 |
+| 开关弹窗 | `docs/test/rec-popups/` | 打开设置、礼盒、皮肤/商店等每个弹窗，停 1 秒再关，含切标签页 |
+| 调音量 | `docs/test/rec-volume/` | 打开设置的声音页，拖音乐、音效滑条到 0 再拖回，点静音开关两次 |
+| 局内消除 | `docs/test/rec-gameplay/` | 开一局，做 10～20 秒真实操作，至少触发几次消除/得分/碰撞特效，再暂停、继续 |
+
+命令（Ego 路线，计划里不用写 `"record"`，加 `--record` 即可）：
+
+```sh
+python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan rec-popups.json --out <工程>/docs/test/rec-popups --record --name "<线名> 美术录屏 弹窗"
+```
+
+每段跑完会得到 `<输出>/frames/NNNNN_TTTTTTTms.jpg`。`art_check.py --dumps <工程>/docs/test` 会找出 dump 目录下所有名叫 `frames` 的文件夹（最多 12 段），逐段跑 `audit_frame_glitches.py`，结果在 art_check 输出的 `frame_glitches/NN/report.json`；有闪黑、闪白、空帧、闪烁就是「需处理」，一段都没有也是「需处理」。录好的帧在美术检查跑完之前不要删（输出目录要是新的空目录，脚本会新建 `frames/`）。Ego 录不到一帧闪烁，报告写"闪烁未测（Ego 每秒几帧）"，不能写成通过。
 
 ## 启动与触控核验
 
@@ -80,4 +99,4 @@ Ego 接口以本机 `ego-browser skill` 输出为准。Chrome 路线官方API：
 
 测试完成后正常退出自有环境；Ego 空间由当前拥有者用已绑定的官方 API 结束，再由 `close` / `ego-finish` 读列表确认消失。预览服务核对原进程身份、退出与端口状态；无法确认时保留 `cleanup_pending` 及登记，`check` 不放行，不能因连接断开推断空间关闭。`--keep` 用户试玩仍有明确用途时保留，结束试玩或被新版替代后由 Agent 清理并核实。
 
-旧版未登记 PID、仅心跳超时仍在运行、已交用户或未知所有权只列待核候选；历史名称和“需要你处理”标签不证明可关闭。持续 CPU 超载的测量与关闭授权、现有低频巡检及空间移出频次遵守当前 canonical `AGENTS.md`，不每轮机械执行整机清理，不新增常驻清理循环。详见cocos-game-core 的 `references/machine-load.md`。
+旧版未登记 PID、仅心跳超时仍在运行、已交用户或未知所有权只列待核候选；历史名称和“需要你处理”标签不证明可关闭。持续 CPU 超载的测量与关闭授权、现有低频巡检及空间移出频次遵守当前 canonical `AGENTS.md`，不每轮机械执行整机清理，不新增常驻清理循环。详见remake-core 的 `references/machine-load.md`。

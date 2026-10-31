@@ -1,0 +1,20 @@
+{
+  "runaway_native_final": {
+    "project": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds",
+    "runner_scope": "project",
+    "control_profile": "runaway_native_input_retry.v1",
+    "native_binding": {
+      "kind": "fixed_project_path",
+      "relative_path": "build/bytedance"
+    },
+    "path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/runner.py",
+    "sha256": "bf690b9239f4ed31ad38741fe4f4b6cb2f4cdb0eb3b5d26aa1494acea8b67a58",
+    "dependencies": {
+      "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/probe.mjs": "47604089e822b4e4ba7f81a7d75266e008e3267650feebe57f725eb611af94d3",
+      "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/runtime-lib.mjs": "184309714ace87efccb8b766cb37bea7d08d09a3cbd3ca5b07e3a001b158cbcb",
+      "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/host/server.py": "bdc7878870930eb557beed0a3ab6bded888c1ecea5d2070a57b1aa14731d1faa",
+      "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/host/host.js": "b4d9e163d29743ceb38026787a433e901fb9cdb909a8b8f2893b6ccb44648937",
+      "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/host/play.html": "352626a9d6c6df9a6bc8dd5493572cea649e3d1ded7bb0cffb7533fa0d5a2af7"
+    }
+  }
+}

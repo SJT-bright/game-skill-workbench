@@ -187,8 +187,11 @@ class ClientStore {
     const claimed=folder=>Object.entries(existing).some(([key,s])=>key!==release.skillId&&!aliasIds.has(key)&&samePath(s.path,path.join(this.root,'skills',folder)));
     // A different Skill can legitimately use the same preferred folder name.
     // Give it a stable private directory instead of mixing files or blocking all updates.
-    if(claimed(directory))directory+='--'+digest(release.skillId).slice(0,20);
-    if(claimed(directory))throw Error('Skill 安装记录异常：'+release.name+'，目标目录被其他组件占用');
+    const prior=existing[release.skillId],base=path.join(this.root,'skills');
+    if(prior?.path&&samePath(path.dirname(prior.path),base)){directory=path.basename(prior.path);safePath(directory);}
+    const owned=folder=>[prior,...aliases.map(([,s])=>s)].some(s=>s?.path&&samePath(s.path,path.join(base,folder)));
+    if(claimed(directory)||(!owned(directory)&&await exists(path.join(base,directory))))directory=(release.directory||release.skillId)+'--'+digest(release.skillId).slice(0,20);
+    if(claimed(directory)||(!owned(directory)&&await exists(path.join(base,directory))))directory+='--'+crypto.randomUUID();
     const stageId=crypto.randomUUID(),dest=path.join(this.root,'skills',directory), stage=dest+'.stage-'+stageId, backup=dest+'.previous';
     await fs.mkdir(stage,{recursive:true});
     try {

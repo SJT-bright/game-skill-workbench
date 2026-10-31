@@ -80,3 +80,8 @@ test('Parallel component updates serialize their shared journal and retain both 
 test('Automatic updates respect a history pin under a canonical legacy identity',()=>{
  const {releasePinned}=require('../src/core.cjs');const r={skillId:'s-'+digest('cocos-game-check').slice(0,20),directory:'cocos-game-check',name:'cocos-game-check'};const installed={legacy:{name:r.name,path:path.join('/managed','skills',r.directory)}};assert.equal(releasePinned(r,installed,{legacy:true}),true);assert.equal(releasePinned(r,installed,{legacy:false}),false);assert.equal(releasePinned({...r,skillId:'different',name:'Unrelated'},installed,{legacy:true}),false);
 });
+
+
+test('Unrecorded same-name folders are preserved and subsequent updates reuse the newly owned path',async t=>{
+ const {root,source,store}=await fixture(t),named=path.join(root,'cocos-game-check');await fs.rename(source,named);const p=await store.publish(named,'cocos-game-check'),h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token},client=new ClientStore(path.join(root,'client')),orphan=path.join(client.root,'skills','cocos-game-check');await fs.mkdir(orphan,{recursive:true});await fs.writeFile(path.join(orphan,'SKILL.md'),'unknown existing data');const current=await client.install(c,p.release.id);assert.notEqual(current.path,orphan);assert.equal(await fs.readFile(path.join(orphan,'SKILL.md'),'utf8'),'unknown existing data');assert.equal((await client.install(c,p.release.id)).path,current.path);
+});

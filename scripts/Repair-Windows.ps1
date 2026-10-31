@@ -1,6 +1,21 @@
 param([string]$InstallDirectory='', [switch]$NoLaunch)
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)
+# Use framework hashing directly; recovery must work even when the shell's
+# utility-module discovery is unavailable in the inherited Electron environment.
+function Get-RepairSha256([string]$LiteralPath) {
+ $stream=$null
+ $sha=$null
+ try {
+  $stream=[IO.File]::OpenRead($LiteralPath)
+  $sha=[Security.Cryptography.SHA256]::Create()
+  return [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-','').ToLowerInvariant()
+ } finally {
+  if($null -ne $sha){$sha.Dispose()}
+  if($null -ne $stream){$stream.Dispose()}
+ }
+}
+
 try {
  if(-not $InstallDirectory){
   Add-Type -AssemblyName System.Windows.Forms
@@ -24,14 +39,14 @@ try {
  foreach($file in $manifest.files){
   if($file.path -match '(^/|\\|:|(^|/)\.\.(/|$))'){throw 'Invalid repair path.'}
   $p=Join-Path $payload $file.path
-  if((Get-Item -LiteralPath $p).Length -ne $file.bytes -or (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256){throw ('Repair file verification failed: '+$file.path)}
+  if((Get-Item -LiteralPath $p).Length -ne $file.bytes -or (Get-RepairSha256 -LiteralPath $p) -ne $file.sha256){throw ('Repair file verification failed: '+$file.path)}
  }
  $incoming=$app+'.repair-'+[guid]::NewGuid().ToString('N')
  $backup=$app+'.before-repair-'+[guid]::NewGuid().ToString('N')
  Copy-Item -LiteralPath $payload -Destination $incoming -Recurse
  foreach($file in $manifest.files){
   $p=Join-Path $incoming $file.path
-  if((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256){throw 'Copied repair file verification failed.'}
+  if((Get-Item -LiteralPath $p).Length -ne $file.bytes -or (Get-RepairSha256 -LiteralPath $p) -ne $file.sha256){throw 'Copied repair file verification failed.'}
  }
  Move-Item -LiteralPath $app -Destination $backup
  try {Move-Item -LiteralPath $incoming -Destination $app}

@@ -1,0 +1,14 @@
+{
+  "name": "frame_rate",
+  "about": "v7.8 总表 P16 第 3 步: the same operation at a 60 Hz and a 120 Hz display clock; the tracked node's position at the same real time may differ by at most 5 % (new game blocks, legacy warns; a run whose clock missed its rate is invalid and always refused; adapter.frame_rate {\"n/a\": reason} passes without a browser; Cocos 3.x not covered: warning)",
+  "applies": ["tiktok"],
+  "needs": [],
+  "needs_new": ["frame_rate"],
+  "na_field": "frame_rate",
+  "fields": ["frame_rate", "home", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "uncovered": {"3.x": "the display clock and the sampler were proven on Cocos 2.4 (cc.game._setAnimFrame takes window.requestAnimationFrame, the 2.4 PhysicsManager steps per frame); no 3.x physics game was available to calibrate (W92, 2026-10-30)"},
+  "timeout_s": 600,
+  "owner": "W92",
+  "proof": "briefs/out/W92/RESULT.md (DriftRacer3D v3.1 refused; the same package with enabledAccumulator and pushes scaled by dt passes)"
+}

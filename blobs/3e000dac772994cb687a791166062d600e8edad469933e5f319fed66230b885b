@@ -1,0 +1,12 @@
+{
+  "name": "trial_link",
+  "about": "v7.8 B21 / B30 F: the local trial link as Saul opens it: one rewarded-ad entry tapped with the real mouse, the simulated ad window must be on top of the game and its 看完 button must change the game. Runs only with a trial link (serve_preview.py --keep before it prints the link, or runtime_regression.py trial --url)",
+  "applies": ["trial_url"],
+  "needs": [],
+  "fields": ["trial"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 300,
+  "host": "none",
+  "owner": "W87",
+  "proof": "briefs/out/W87/RESULT.md"
+}

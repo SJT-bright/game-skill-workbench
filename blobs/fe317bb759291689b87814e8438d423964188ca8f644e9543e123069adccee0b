@@ -1,0 +1,11 @@
+{
+  "name": "button_sweep",
+  "about": "v7.8 B30 E: iPhone 14, every home button and one level of popup buttons tapped with the real mouse: dead buttons, popup buttons off screen / on the capsule / in the home-indicator band, buttons that appear painted over by 3D; lists the ad entries found. W93: a popup's close button hid it, then without a reload the opener must open it again and an earlier reacting button must still react (blocked_after_close); every dead tap says where it got stuck (covered by X / callback not run / callback threw / request not answered / ran but nothing changed); with adapter.play the running level and its popups are swept too (new game blocks, legacy warns, 3.x warns)",
+  "applies": ["tiktok"],
+  "needs": [],
+  "fields": ["home_scene", "layout_query", "after_home_js", "sweep_skip", "sweep_budget_s", "play", "in_level"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 1200,
+  "owner": "W87, W93",
+  "proof": "briefs/out/W87/RESULT.md (全民飞车漂移 v1 shop-header dead button and v3 RACE behind the 3D turntable refused, v3.1 and HappyCup v20.7.1 pass); briefs/out/W93/RESULT.md (close-to-opacity-0 / full-screen BlockInputEvents left behind refused as blocked_after_close, callback that throws and transparent cover diagnosed)"
+}

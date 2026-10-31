@@ -70,18 +70,22 @@ jobs:
           if($report.embeddedCount -lt 15 -or -not $report.api){throw 'Embedded Skill startup verification failed'}
           $e2e = Get-Content '.qa/ci-native/native-e2e.json' -Raw | ConvertFrom-Json
           if(-not $e2e.nativeDrop -or $e2e.bundleQueue.Count -ne 2){throw 'Native import/bundle queue verification failed'}
-      - name: Verify Windows published old version to public latest native upgrade
+      - name: Build Windows one-time legacy recovery package
         if: matrix.kind == 'win'
-        timeout-minutes: 15
         shell: pwsh
-        run: node scripts/verify-windows-upgrade.cjs --published
-      - name: Verify Windows native upgrade from published 0.2.14
+        run: node scripts/build-repair.cjs
+      - name: Verify legacy repair and repaired production automatic upgrade
         if: matrix.kind == 'win'
-        timeout-minutes: 15
+        timeout-minutes: 20
         shell: pwsh
-        env:
-          WINDOWS_UPGRADE_BASELINE: 0.2.14
-        run: node scripts/verify-windows-upgrade.cjs
+        run: |
+          node scripts/verify-windows-recovery.cjs
+          if($LASTEXITCODE -ne 0){throw 'Legacy recovery and future production update gate failed'}
+          $version = node -p "require('./package.json').version"
+          Compress-Archive -Path "release/GameDesk-$version-Windows-Repair/*" -DestinationPath "release/GameDesk-$version-Windows-Repair.zip"
+      # Frozen 0.2.13/0.2.14 launchers cannot receive the launcher fix before installation.
+      # Their original failed path stays available in windows-upgrade-check.yml and
+      # its diagnostic reports; it is not represented as a passing automatic upgrade.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -99,9 +103,9 @@ jobs:
             .qa/ci-error.log
             .qa/windows-upgrade-*/upgrade-proof.json
             .qa/windows-upgrade-*/installer-*.json
-            .qa/windows-upgrade-*/用户数据/updates/apply.ps1
+            .qa/windows-upgrade-*/用户数据/updates/apply*.ps1
             .qa/windows-upgrade-*/*.log
-            .qa/windows-upgrade-*/用户数据/updates/receipt.json
+            .qa/windows-upgrade-*/用户数据/updates/*.json
             .qa/windows-upgrade-*/upgraded-native-stages/*.json
             .qa/windows-upgrade-*/upgraded-native-stages/smoke-error.txt
   publish:

@@ -75,3 +75,8 @@ test('Parallel component updates serialize their shared journal and retain both 
  const {root,source,store}=await fixture(t);const named=path.join(root,'cocos-game-check');await fs.rename(source,named);const a=await store.publish(named,'Workflow A'),b=await store.publish(named,'Workflow B');const h=await startHub(store);t.after(()=>h.close());const c={url:`http://127.0.0.1:${h.port}`,token:h.token},client=new ClientStore(path.join(root,'client'));
  const results=await Promise.all([client.install(c,a.release.id),client.install(c,b.release.id)]);assert.equal(Object.keys(await client.state()).length,2);assert.notEqual(results[0].path,results[1].path);for(const r of results)assert.match(await fs.readFile(path.join(r.path,'SKILL.md'),'utf8'),/Keep saves/);await assert.rejects(fs.access(path.join(client.root,'transaction.json')));
 });
+
+
+test('Automatic updates respect a history pin under a canonical legacy identity',()=>{
+ const {releasePinned}=require('../src/core.cjs');const r={skillId:'s-'+digest('cocos-game-check').slice(0,20),directory:'cocos-game-check',name:'cocos-game-check'};const installed={legacy:{name:r.name,path:path.join('/managed','skills',r.directory)}};assert.equal(releasePinned(r,installed,{legacy:true}),true);assert.equal(releasePinned(r,installed,{legacy:false}),false);assert.equal(releasePinned({...r,skillId:'different',name:'Unrelated'},installed,{legacy:true}),false);
+});

@@ -141,6 +141,12 @@ async function linkTree(source,target){
   else throw Error('Skill 含不支持的本机文件');
  }
 }
+function componentAliases(release,existing){
+ const normalize=value=>String(value||'').normalize('NFC').toLowerCase();
+ const canonical=release.directory&&(release.skillId==='s-'+digest(release.directory).slice(0,20)||normalize(release.name)===normalize(release.directory));
+ return Object.entries(existing).filter(([key,s])=>key!==release.skillId&&canonical&&normalize(s.name)===normalize(release.directory)&&normalize(path.basename(s.path))===normalize(release.directory));
+}
+function releasePinned(release,existing,pins){return !!pins[release.skillId]||componentAliases(release,existing).some(([id])=>!!pins[id]);}
 class ClientStore {
   constructor(root){this.root=root;}
   async recover(){
@@ -176,8 +182,7 @@ class ClientStore {
     const samePath=(a,b)=>process.platform==='win32'?normalize(path.resolve(a))===normalize(path.resolve(b)):path.resolve(a)===path.resolve(b);
     // Directory identity is stronger than a display title. Only a canonical
     // component may adopt legacy records with the same canonical name.
-    const canonical=release.directory&&(release.skillId==='s-'+digest(release.directory).slice(0,20)||normalize(release.name)===normalize(release.directory));
-    const aliases=Object.entries(existing).filter(([key,s])=>key!==release.skillId&&canonical&&normalize(s.name)===normalize(release.directory)&&normalize(path.basename(s.path))===normalize(release.directory));
+    const aliases=componentAliases(release,existing);
     const aliasIds=new Set(aliases.map(([key])=>key));
     const claimed=folder=>Object.entries(existing).some(([key,s])=>key!==release.skillId&&!aliasIds.has(key)&&samePath(s.path,path.join(this.root,'skills',folder)));
     // A different Skill can legitimately use the same preferred folder name.
@@ -225,4 +230,4 @@ function makePrompt(game, installed, action='update') {
   return `当前游戏：${game.name}\n项目目录：${game.path}\n\n请重新读取本机 Skill 文件，不沿用对话里的旧版摘要：\nSkill：${installed.name} ${installed.version}\nSkill 目录：${installed.path}\n文件树 SHA-256：${installed.treeHash}\n先读取该目录的 SKILL.md，再按需读取其 references、scripts 等配套文件。\n\n本次更新说明：\n${installed.summary}\n\n${tasks[action]||tasks.update}\n保留原始素材、存档与已确认的玩法。说明本次实际读取的 Skill 版本、处理内容、验证结果及未完成项。此次不自动上传或发布游戏。\n`;
 }
 const addresses=()=>Object.values(os.networkInterfaces()).flat().filter(a=>a.family==='IPv4'&&!a.internal).map(a=>a.address);
-module.exports={HubStore,ClientStore,startHub,collect,validateRelease,makePrompt,atomicJSON,readJSON,connection,request,digest,addresses};
+module.exports={releasePinned,HubStore,ClientStore,startHub,collect,validateRelease,makePrompt,atomicJSON,readJSON,connection,request,digest,addresses};

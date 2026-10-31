@@ -1,6 +1,6 @@
 const {app,BrowserWindow,ipcMain,dialog,clipboard,shell,Notification,screen,nativeImage,Menu,nativeTheme,powerMonitor}=require('electron');
 const fs=require('node:fs/promises');const path=require('node:path');const crypto=require('node:crypto');const {pathToFileURL}=require('node:url');
-const {HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,request,addresses}=require('./core.cjs');const {zipFolder}=require('./zip.cjs');
+const {releasePinned,HubStore,ClientStore,startHub,makePrompt,atomicJSON,readJSON,connection,request,addresses}=require('./core.cjs');const {zipFolder}=require('./zip.cjs');
 const {discover,queueMessage:codexQueueMessage,STAGES,UUID,cancelReaders,isMaintenanceTitle}=require('./codex.cjs');
 const {sendWithReceipt}=require('./send-receipts.cjs');
 const {scanTelemetries}=require('./telemetry.cjs');const updater=require('./updater.cjs');const github=require('./github.cjs');const {spawn}=require('node:child_process');
@@ -41,7 +41,7 @@ async function sync(){
     if(!config.url&&!(config.feedMode==='github'&&config.repository))return state();busy=true;lastError='';await emit();
     try{const known=new Set(index.releases.map(r=>r.id));index=await client.sync(config);lastCheck=new Date().toISOString();const latest=new Map();for(const r of index.releases)if(!latest.has(r.skillId))latest.set(r.skillId,r);
       const pins=await readJSON(path.join(root,'pins.json'),{});let changed=[],failed=[];
-      for(const r of latest.values())if(config.autoDownload&&!pins[r.skillId]&&installed[r.skillId]?.id!==r.id){try{await installSkill(r.id);changed.push(r);}catch(e){failed.push(r.name+'（'+e.message+'）');}}
+      for(const r of latest.values())if(config.autoDownload&&!releasePinned(r,installed,pins)&&installed[r.skillId]?.id!==r.id){try{await installSkill(r.id);changed.push(r);}catch(e){failed.push(r.name+'（'+e.message+'）');}}
       const updates=[...new Map([...latest.values()].filter(r=>!known.has(r.id)).concat(changed).map(r=>[r.id,r])).values()];if(updates.length){updateNotices=mergeNotices(updateNotices,updates,{installed,pins});await atomicJSON(path.join(root,'update-notices.json'),updateNotices);notify('Skill 更新',notificationBody(updateNotices.filter(n=>updates.some(r=>r.id===n.id))));}
       await require('./skill-archive.cjs').cleanImports(client.root);
       lastError=failed.length?'部分 Skill 待重试：'+failed.join('、'):'';status=failed.length?'部分文件待重试':'已同步 · '+latest.size+' 个 Skill';

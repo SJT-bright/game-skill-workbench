@@ -1,0 +1,13 @@
+{
+  "runaway_native_final": {
+    "project": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds",
+    "runner_scope": "project",
+    "control_profile": "runaway_native_input_retry.v1",
+    "native_binding": {
+      "kind": "fixed_project_path",
+      "relative_path": "build/bytedance"
+    },
+    "legacy_full_validation": true,
+    "validator_path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/美女快跑2.4.5-yaqin-English-v2-ArtAds/qa/final-native/validator.py"
+  }
+}

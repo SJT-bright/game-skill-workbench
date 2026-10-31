@@ -1,0 +1,85 @@
+{
+  "id": "e804112a-7f07-4496-bb60-4e185cad1755",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v40",
+  "createdAt": "2026-10-31T18:20:14.261Z",
+  "summary": "文件变更：新增 1，修改 4，移除 0。",
+  "changes": {
+    "added": 1,
+    "modified": 4,
+    "deleted": 0
+  },
+  "treeHash": "b1ac126be57cf4d792a77f468ee798b58616453b8f8ce9b8c51ebde25c015b66",
+  "bytes": 130801,
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "2a9bb7fc3efc7cf9c250ee25a7f038f9fe81a2e9e3a5a08608bc694adaff2142",
+      "size": 1629,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "fc6c81f7c352d947b958b52a4520062df7da5da3fd2ee5bc6a7ef9d63f615c10",
+      "size": 32049,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "hash": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "size": 1380,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "hash": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+      "size": 1434,
+      "executable": false
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "hash": "980b284103da07481dd00a9f2b1e33f1bead7d7cbd7c39b67d176278fc37366e",
+      "size": 22834,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "hash": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
+      "size": 9768,
+      "executable": false
+    },
+    {
+      "path": "scripts/native_startup_trusted_runners.json",
+      "hash": "bacba9c6ab139196b43344ad4acd3d6e7831792cb00431a65a512564033c2758",
+      "size": 572,
+      "executable": false
+    },
+    {
+      "path": "scripts/reviewed_resource_profiles.json",
+      "hash": "8ed389331021fbc0c111d5b9f78fac9159f2168471d758f9d4e7c2174bf83327",
+      "size": 30291,
+      "executable": false
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "aed87b24c933829e1429597f0744aedecf203bad25972ca000bac1f0f491e183",
+      "size": 950,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "hash": "f605b8fa53f7b58b447beb6b4b95ad2767933d367fb7ae8f8da4861b984bccf5",
+      "size": 29718,
+      "executable": false
+    }
+  ]
+}

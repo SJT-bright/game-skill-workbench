@@ -1,0 +1,980 @@
+{
+  "runaway-rush": {
+    "source_sha256": {
+      "storage-guard.js": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "game.js": "7d1d4092866d88fdb17b3c8ef3f26de46459f6f695a575346b78b0858bdf34f6",
+      "webp-decode-probe.js": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+      "main.js": "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42",
+      "adapter-min.js": "1eb4159b1bb40c30e2ee8a8eb43bf80c16e3186a347618e884317cd94960d2f2",
+      "native245-compat.js": "8c38f8906828072bde252db23a8cd127d671d02c77ff72901f38569640a969bf",
+      "ccRequire.js": "6b01bbbc6ef4c68762b391999b670d2d7bd8af4f2c62b4d4599e12d973d9ecef",
+      "touch-coordinates.js": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520",
+      "subpackages/hallScene/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/gameScene/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "07c226eaa86be0f44d896f91f15a4c8e5f825b62a51f603b9efcef570eff6e8a",
+      "src/settings.js": "7039d523e7cdbb8059562137ec64daeb30c38ce0cd02823ada1a1d8d27217651",
+      "src/assets/Script/Framework/Library/Encrypt/algo.js": "99cccc45f0f6bc2d373634e2be2cd41b709905df40096dbac865ec769095c184",
+      "src/assets/Script/Framework/Library/Encrypt/encryptjs.js": "14db80f8ada78503e76c370829a605c0a58e639915a44a30b99724206af38bfe"
+    },
+    "resolutions": {
+      "assets/main/index.js:6192": {
+        "reason": "ArtPresentation.image direct literals plus fixed positions table; home selected heroIds exact six-value mapping and fallback6.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "art_v2/icons/coin",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art_v2/loading/cocos",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "art_v2/panels/pause",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/coins_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/heroes_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/home_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/map_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/play",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/settings_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/upgrade_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:8752": {
+        "reason": "ArtPresentation.image direct literals plus fixed positions table; home selected heroIds exact six-value mapping and fallback6.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_1",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_2",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_3",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_4",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_5",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_6",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:64109": {
+        "reason": "DragonAnim.ChangeDragonSkin switch on six original SkinDataList IDs; no external IDs.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_1",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_2",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_3",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_4",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_5",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "dragons/Hero_Zombie_6",
+            "type": "sp.SkeletonData",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:70732": {
+        "reason": "EnglishTypography.wordNames fixed value set; refresh indexes only this object.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/text/coins",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/damage",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/final_wave",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/fire_rate",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/heroes",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/level",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/magazine",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/music",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/next",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/settings",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/sfx",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/shrink",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/upgrade",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/text/watch_unlock",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:72751": {
+        "reason": "EnglishUI exported art/button/adButton/modal callers exhaustively audited; all dynamic file/name arguments expand to listed authored literals.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/ads/icon_coin",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/link_claim",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/panel_boost",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/panel_coins",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/panel_revive",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/panel_run_over",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/panel_success",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/revive_shield",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/state_loading",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/state_retry_save",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:73399": {
+        "reason": "EnglishUI exported art/button/adButton/modal callers exhaustively audited; all dynamic file/name arguments expand to listed authored literals.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/ads/btn_coins",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/btn_double",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/btn_revive",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/icon_close",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/icon_home",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/icon_retry",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/ads/link_no_thanks",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/add_home",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/home",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/pause",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/profile",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/resume",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/settings_button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:81576": {
+        "reason": "Facade.loadTexture callers: six SkinDataList paths/locked suffix1, weapon levels1..30 ceil/3, three explicit gkbg status branches, four chapter/map IDs, and original literal victory/boost assets. No other callers after dead API removal.",
+        "requests": [
+          {
+            "bundle": "gameScene",
+            "path": "texture/game/1",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "texture/game/2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "texture/game/3",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "texture/game/4",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "texture/game/5",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "texture/game/6",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/ditu/dtbg1",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/ditu/dtbg2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/ditu/dtbg3",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/ditu/dtbg4",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/gka/gkbg1",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/gka/gkbg2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/gka/gkbg3",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/01",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/011",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/02",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/021",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/03",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/031",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/04",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/041",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/05",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/051",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/06",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/pifu/061",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_1",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_10",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_2",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_3",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_4",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_5",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_6",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_7",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_8",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "texture/ui/wuqi/wq_9",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:88409": {
+        "reason": "FunctionalArt.replaceArt literal callers and five fixed functionalPanel names; volume controls three literal assets.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/buttons/close_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/music_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/sfx_icon",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/buttons/upgrade_button",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/chapters_panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/heroes_panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/levels_panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/settings_panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/volume_fill",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/volume_knob",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/volume_track",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/v2/weapon_panel",
+            "type": "cc.SpriteFrame",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:104597": {
+        "reason": "LegacyWallet imports exact local ../tiktok-platform/SaveStore constructor; .load invokes SaveStore.prototype.load, a storage method rather than Cocos resource loading. Exact function body and its independently inventoried nested sites are pinned.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 149962,
+          "end": 150019,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:177526": {
+        "reason": "SoundManager static authored sound constants and direct callsites; official Cocos2.4.5 deprecated.js loadRes strips filename extension before resources.load (lines233-240).",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "Audio/InGame1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/InGame2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/Levelup",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/bgm_1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/enemy_die1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/enemy_die2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/fail",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/jiasu",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/niaozhamao",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/smg1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/smg2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/smg3",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/start",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/success",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/zombie_die",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:178582": {
+        "reason": "SoundManager static authored sound constants and direct callsites; official Cocos2.4.5 deprecated.js loadRes strips filename extension before resources.load (lines233-240).",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "Audio/InGame1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/InGame2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/Levelup",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/bgm_1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/enemy_die1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/enemy_die2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/fail",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/jiasu",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/niaozhamao",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/smg1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/smg2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/smg3",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/start",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/success",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "Audio/zombie_die",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:216795": {
+        "reason": "ViewManager.__showView__ static path() of actual popView callers, split first bundle segment; resources paths begin slash for InsufficientPanel/TipPanel, other seven use hallScene/gameScene. No data-provided view classes.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "prefabs/InsufficientPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "prefabs/TipPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:216999": {
+        "reason": "ViewManager.__showView__ static path() of actual popView callers, split first bundle segment; resources paths begin slash for InsufficientPanel/TipPanel, other seven use hallScene/gameScene. No data-provided view classes.",
+        "requests": [
+          {
+            "bundle": "hallScene",
+            "path": "prefabs/ChooseLevelPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "prefabs/ChooseSanLevelPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "prefabs/ChooseSkinPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "prefabs/MissionPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "hallScene",
+            "path": "prefabs/SetNormalPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "prefabs/FailPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          },
+          {
+            "bundle": "gameScene",
+            "path": "prefabs/SuccessPanel",
+            "type": "cc.Prefab",
+            "kind": "load"
+          }
+        ]
+      }
+    },
+    "escapes": {},
+    "scope": "Runaway Rush actual Creator2.4.5 Native29 finite authored resource requests; exact original business program inventory; no not_executed/delegated_sdk/escape waivers.",
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  }
+}

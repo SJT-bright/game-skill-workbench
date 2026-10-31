@@ -11,6 +11,9 @@ module.exports=async({win,handlers,root})=>{
   ledger['legacy-english']={...prior,skillId:'legacy-english'};delete ledger[id];await fs.writeFile(ledgerPath,JSON.stringify(ledger));
   const live=(await handlers.state()).installed;delete live[id];live['legacy-english']=ledger['legacy-english'];
   await fs.writeFile(path.join(prior.path,'personal-native.md'),'preserve imported note');
+  // Changing subscription sources intentionally clears that source's old pins.
+  // Establish this fixture source first, then lock its legacy component.
+  await call('settings',{url:`http://127.0.0.1:${server.port}`,token:server.token,autoDownload:false});
   await fs.writeFile(path.join(root,'pins.json'),JSON.stringify({'legacy-english':true}));
   await call('settings',{url:`http://127.0.0.1:${server.port}`,token:server.token,autoDownload:true});
   assert.ok((await handlers.state()).installed['legacy-english'],'automatic sync must respect legacy history pin');

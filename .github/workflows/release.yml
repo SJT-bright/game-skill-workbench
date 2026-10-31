@@ -78,6 +78,8 @@ jobs:
         if: matrix.kind == 'win'
         timeout-minutes: 20
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           node scripts/verify-windows-recovery.cjs
           if($LASTEXITCODE -ne 0){throw 'Legacy recovery and future production update gate failed'}

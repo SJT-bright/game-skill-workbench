@@ -3,7 +3,8 @@
 
 Runs the 10 rewarded-ad cases (200 s video, playback after 16 s, background 200 s during
 playback / loading, close midway, error, show failure, never starts, starts but never calls
-back then X, normal) against the package's REAL game.js inside the simulated TikTok host,
+back then X, normal; v7.8: plus double_watch / double_quit / double_free for a claim window with the "watch ad x2"
+checkbox when the adapter has double_claim) against the package's REAL game.js inside the simulated TikTok host,
 in the Ego browser. After each case it checks: reward count, no pending ad, no lock, music
 resumed, and that an immediate second request starts and pays its reward.
 
@@ -12,6 +13,10 @@ ad-timeout-and-regression.md). The regression fails closed: no browser, no adapt
 failure or a missing result is a refusal, never a pass.
 
   python3 -B ad_regression.py --package <unzipped dir or .zip> --adapter <adapter.json> [--report out.json]
+
+Exit 0 passed, 1 包不通过 (a case failed or the run refused), 2 环境不完整 (v7.8, 总表 A6 补: a Cocos package without the
+kit touch part, or a ZIP given here without the writer receipt for its bytes; the writers' in-process call is never
+asked for a receipt).
 """
 import argparse
 import hashlib
@@ -31,10 +36,14 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 TOOL = HERE / 'ad_regression'
 CASES = ['long200', 'late16', 'bgplay', 'bgload', 'cancel', 'error', 'showfail', 'hang', 'nocallback', 'normal']
+# v7.8 (Saul 2026-10-31): check-in / spin result / gift pack window with the ticked-by-default "watch ad x2" checkbox.
+# Run (and required) only when the adapter has double_claim = {open, claim, balance}; see cases.mjs double-claim block.
+DOUBLE_CASES = ['double_watch', 'double_quit', 'double_free']
+DOUBLE_KEYS = ('open', 'claim', 'balance')
 ENV_ADAPTER = 'TIKTOK_AD_REGRESSION_ADAPTER'
 ENV_BROWSER = 'EGO_BROWSER'
 _which = shutil.which  # patch point for tests; shutil.which itself is shared
-ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note'}
+ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim'}
 # v7.7.5 (总表 A14): adapter.exit returns the X node (or {node, x, y} in its anchor space) and the tool finds where it
 # is on screen. Before v7.7.4 the tool's formula was wrong, so adapters converted the position themselves to
 # compensate (全民飞车漂移, 回家快跑, 狐狸回窝, 珊瑚守卫). With the corrected formula that compensation moves the tap
@@ -45,6 +54,30 @@ SELF_CONVERT = re.compile(r'getScreenToWorldPoint|convertToNodeSpace(?:AR)?|devi
 
 class RegressionRefused(ValueError):
     """The regression could not run or did not pass; the package must not ship."""
+
+
+class EnvironmentIncomplete(RegressionRefused):
+    """v7.8 (总表 A6 补): 「环境不完整」, not 「包不通过」: a Cocos package without the kit touch part (a real tap on the X
+    misses, 企鹅雪道 v4), or a ZIP given on the command line without its writer receipt. Still a refusal; the CLI exits 2."""
+
+
+def _environment():
+    """runtime_regression holds the one environment check both regressions use (touch_problem, receipt_problem)."""
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        import runtime_regression
+    except Exception as error:  # noqa: BLE001 - never skip the check silently
+        raise RegressionRefused('ad regression: environment check unavailable (%s)' % error)
+    return runtime_regression
+
+
+def environment_problem(package_dir):
+    """Why this unzipped package cannot be judged here (no touch part), or None."""
+    root = Path(package_dir)
+    rr = _environment()
+    return rr.touch_problem(rr.package_files(root))
 
 
 def needs_regression(files):
@@ -86,7 +119,19 @@ def load_adapter(path):
     for key in ('state', 'ready', 'exit', 'exit_label'):
         if key in adapter and not isinstance(adapter[key], str):
             raise RegressionRefused('ad regression adapter "%s" must be a string' % key)
+    if 'double_claim' in adapter:
+        d = adapter['double_claim']
+        if not isinstance(d, dict) or set(d) - set(DOUBLE_KEYS) - {'note'} or \
+                not all(isinstance(d.get(k), str) and d[k].strip() for k in DOUBLE_KEYS):
+            raise RegressionRefused('ad regression adapter "double_claim" must be {"open", "claim", "balance"}: page JavaScript '
+                                    'that opens a fresh claim window and returns its 1x amount, sets the x2 checkbox to '
+                                    '`checked` and presses CLAIM, and returns the currency balance')
     return adapter
+
+
+def default_cases(adapter):
+    """The 10 cases, plus the three claim-window cases when the adapter describes the x2 checkbox."""
+    return CASES + (DOUBLE_CASES if isinstance(adapter, dict) and 'double_claim' in adapter else [])
 
 
 def adapter_warnings(adapter):
@@ -158,11 +203,16 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
     if not (package_dir / 'game.js').is_file():
         raise RegressionRefused('ad regression: no game.js at package root ' + str(package_dir))
     adapter = load_adapter(adapter_path)
+    problem = environment_problem(package_dir)
+    if problem:
+        raise EnvironmentIncomplete(problem)
     browser = find_browser()
-    cases = list(cases or CASES)
-    unknown = [c for c in cases if c not in CASES]
+    cases = list(cases or default_cases(adapter))
+    unknown = [c for c in cases if c not in CASES + DOUBLE_CASES]
     if unknown:
         raise RegressionRefused('unknown ad regression cases: ' + ', '.join(unknown))
+    if any(c in DOUBLE_CASES for c in cases) and 'double_claim' not in adapter:
+        raise RegressionRefused('ad regression cases %s need adapter "double_claim"' % ', '.join(c for c in cases if c in DOUBLE_CASES))
     owned = work is None
     work = Path(work or tempfile.mkdtemp(prefix='tiktok-ad-regression-')).resolve()
     work.mkdir(parents=True, exist_ok=True)
@@ -210,7 +260,8 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
     if not passed:
         problems = problems + hints          # shown next to the failure, where a session reads it
     summary = {'id': 'rewarded_ad_regression', 'passed': passed, 'cases': [
-        {k: row.get(k) for k in ('case', 'ok', 'want', 'granted', 'problems')} for row in result.get('cases', [])],
+        dict({k: row.get(k) for k in ('case', 'ok', 'want', 'granted', 'problems')}, **({'paid': row['paid']} if 'paid' in row else {}))
+        for row in result.get('cases', [])],
         'boot': result.get('boot'), 'warnings': (result.get('warnings') or []) + hints, 'tool_sha256': tool_digest(),
         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
         'seconds': round(time.monotonic() - started, 1)}
@@ -225,12 +276,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--package', required=True, type=Path, help='unzipped TikTok package dir or .zip')
     parser.add_argument('--adapter', type=Path, default=os.environ.get(ENV_ADAPTER) or None)
-    parser.add_argument('--cases', help='comma-separated subset (default: all 10)')
+    parser.add_argument('--cases', help='comma-separated subset (default: all 10, plus double_watch / double_quit / '
+                                        'double_free when the adapter has double_claim)')
     parser.add_argument('--work', type=Path, help='keep host log and raw result here')
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
     cases = args.cases.split(',') if args.cases else None
     try:
+        # v7.8 (总表 A6 补): by hand, a ZIP must carry the writer receipt for its bytes; the writers call run() on their
+        # staged bytes before the receipt exists and are never asked for it.
+        problem = _environment().receipt_problem(args.package) if args.package.is_file() else None
+        if problem:
+            raise EnvironmentIncomplete(problem)
         if args.package.is_file():
             with tempfile.TemporaryDirectory(prefix='tiktok-ad-regression-pkg-') as folder:
                 with zipfile.ZipFile(args.package) as archive:
@@ -243,9 +300,14 @@ def main():
         summary = getattr(error, 'summary', {'id': 'rewarded_ad_regression', 'passed': False})
         summary['error'] = str(error)
         code = 1
+        if isinstance(error, EnvironmentIncomplete):
+            summary.update(status='environment_incomplete', environment=str(error))
+            code = 2
+    summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200]}[code]
     if args.report:
         args.report.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(summary, ensure_ascii=False))
+    print('结论: %s' % summary['verdict'], file=sys.stderr)
     return code
 
 

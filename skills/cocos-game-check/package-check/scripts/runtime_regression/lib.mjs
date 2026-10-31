@@ -101,8 +101,22 @@ export const findLabels = (page, pattern) => ev(page, (pattern) => {
     if (l && typeof l.string === 'string' && rx.test(l.string)) {
       try {
         let p;
-        if (v2api) { const w = n.convertToWorldSpaceAR(cc.v2(0, 0)); p = cc.Camera.findCamera(n).getWorldToScreenPoint(w); }
-        else { const ui = n.getComponent(cc.UITransform); const w = ui.convertToWorldSpaceAR(new cc.Vec3(0, 0, 0)); const cams = cc.director.getScene().getComponentsInChildren(cc.Camera); p = new cc.Vec3(); cams[0].worldToScreen(w, p); }
+        const w = v2api ? n.convertToWorldSpaceAR(cc.v2(0, 0)) : n.getComponent(cc.UITransform).convertToWorldSpaceAR(new cc.Vec3(0, 0, 0));
+        // cam-point:begin (v7.8, 总表 A13 补) world point -> camera screen point; identical in ad_regression/cases.mjs and runtime_regression/lib.mjs.
+        // 2.x: the node's own camera. 3.x: the cameraComponent of the Canvas the node sits under (walk up the parents);
+        // only when there is none, the first camera of the scene. cams[0] alone is the 3D world camera in a 3D game
+        // (企鹅雪道 v4: the X came out at (818, -918) and nocallback failed a game whose ad was fine).
+        if (v2api) p = cc.Camera.findCamera(n).getWorldToScreenPoint(w);
+        else {
+          let cam = null;
+          for (let a = n; a && !cam; a = a.parent) {
+            const cv = a.getComponent && a.getComponent(cc.Canvas);
+            cam = (cv && (cv.cameraComponent || cv._cameraComponent)) || null;
+          }
+          if (!cam) cam = cc.director.getScene().getComponentsInChildren(cc.Camera)[0];
+          p = new cc.Vec3(); cam.worldToScreen(w, p);
+        }
+        // cam-point:end
         hits.push(Object.assign({ text: l.string }, toCss(p)));
       } catch (e) { hits.push({ text: l.string, error: String(e.message || e) }); }
     }
@@ -149,8 +163,22 @@ export async function locate(page, code, labelPattern) {
       };
       try {
         let p;
-        if (v2api) p = cc.Camera.findCamera(n).getWorldToScreenPoint(n.convertToWorldSpaceAR(cc.v2(0, 0)));
-        else { const w = n.getComponent(cc.UITransform).convertToWorldSpaceAR(new cc.Vec3(0, 0, 0)); const cams = cc.director.getScene().getComponentsInChildren(cc.Camera); p = new cc.Vec3(); cams[0].worldToScreen(w, p); }
+        const w = v2api ? n.convertToWorldSpaceAR(cc.v2(0, 0)) : n.getComponent(cc.UITransform).convertToWorldSpaceAR(new cc.Vec3(0, 0, 0));
+        // cam-point:begin (v7.8, 总表 A13 补) world point -> camera screen point; identical in ad_regression/cases.mjs and runtime_regression/lib.mjs.
+        // 2.x: the node's own camera. 3.x: the cameraComponent of the Canvas the node sits under (walk up the parents);
+        // only when there is none, the first camera of the scene. cams[0] alone is the 3D world camera in a 3D game
+        // (企鹅雪道 v4: the X came out at (818, -918) and nocallback failed a game whose ad was fine).
+        if (v2api) p = cc.Camera.findCamera(n).getWorldToScreenPoint(w);
+        else {
+          let cam = null;
+          for (let a = n; a && !cam; a = a.parent) {
+            const cv = a.getComponent && a.getComponent(cc.Canvas);
+            cam = (cv && (cv.cameraComponent || cv._cameraComponent)) || null;
+          }
+          if (!cam) cam = cc.director.getScene().getComponentsInChildren(cc.Camera)[0];
+          p = new cc.Vec3(); cam.worldToScreen(w, p);
+        }
+        // cam-point:end
         return onCanvas(toCss(p));
       } catch (e) { return { error: String(e.message || e) }; }
     }, code);

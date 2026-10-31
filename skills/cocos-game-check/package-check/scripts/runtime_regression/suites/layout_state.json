@@ -1,0 +1,11 @@
+{
+  "name": "layout_state",
+  "about": "v7.8 B30 D: iPhone 14 + SE x capsule pt/px x adapter states: buttons off screen, on the capsule, in the home-indicator band, painted over by 3D, moving with the capsule unit; home rules by board; startup download <= 10 MiB without sound (new game blocks, legacy warns, 3.x blocks only on the startup download)",
+  "applies": ["tiktok"],
+  "needs": [],
+  "fields": ["home_scene", "layout_states", "layout_query", "settings", "platform_entries", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 1200,
+  "owner": "W87",
+  "proof": "briefs/out/W87/RESULT.md (全民飞车漂移 v1/v3 refused, v3.1 and HappyCup v20.7.1 pass, 9-game calibration)"
+}

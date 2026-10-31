@@ -9,7 +9,18 @@ v7.7 (design D77 1.1-1.2): --project is required. The source record <project>/.t
 match the project and kit version (K5, checked before the build folder is touched), then
 make_tiktok_zip.finalize_for_writer runs tiktok_finalize.finalize_native in place of adapter_fix.apply (same function
 as make_tiktok_zip.py), the App ID is compared after finalize wrote it, and every package gate runs with the finalize
-record (K4) and its policy. Report and receipt carry `finalize`."""
+record (K4) and its policy. Report and receipt carry `finalize`.
+
+v7.8 (U7 补): the same finalize_for_writer also CHECKS the art receipt <project>/.tiktok-kit/art-receipt.json written by
+art_check.py (remake-core/scripts/art_receipt.py; the art check itself is never re-run here, Saul 10-24). A new remake
+game without a passing receipt whose image fingerprints equal the project's is refused before the build folder is
+touched; legacy and English games get a warning, a Cocos 3.x receipt "3.x 未覆盖" passes with a warning, and the result
+is a row of the finalize table printed below.
+
+v7.8 (总表 B32 b, d): after the ZIP is published, older packages of the same game in the --out folder go into 旧包/
+with their receipts and 最新.txt names the file to upload (remake-core/scripts/delivery_folder.py; --keep-old-packages
+leaves the folder alone); check() lists check tools that are not the released / installed ones (tool_identity.py,
+result modified_tools) and a feedback draft goes into ！Skill更新/ (new file only)."""
 import argparse
 import hashlib
 import json
@@ -23,7 +34,7 @@ from audit_final_package_startup import audit_final_startup
 import package_obligations
 
 
-def build(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None, project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None, board=None, keep_webp_exception=None):
+def build(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None, project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None, board=None, keep_webp_exception=None, keep_old_packages=False):
     started = time.monotonic()
     native, out = Path(native).resolve(), Path(out).resolve()
     if not native.is_dir():
@@ -143,6 +154,14 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
                 if report_published and report_temp.samefile(report):
                     report.unlink()
                 raise
+        # v7.8 (总表 B32 b): older packages of this game go into 旧包/, the folder keeps this one and 最新.txt.
+        import delivery_folder
+        result['delivery_folder'] = delivery_folder.tidy(out, app_id, 'build_checked_zip', result['sha256'],
+                                                         keep=keep_old_packages)
+        # v7.8 (总表 B32 d): check() listed changed tools (tool_identity); they get a feedback draft for the Skill.
+        draft = package_checks.feedback_draft(result.get('tool_identity'), Path(project).name if project else out.stem)
+        if draft:
+            result['tool_feedback_draft'] = draft
         return result
     finally:
         temporary.unlink(missing_ok=True)
@@ -166,13 +185,20 @@ def main():
     parser.add_argument('--ad-regression', type=Path, help='adapter JSON for the rewarded-ad and runtime regressions (default $TIKTOK_AD_REGRESSION_ADAPTER); every package with game.js is refused without it')
     parser.add_argument('--board', choices=['remake', 'localize'], help='remake | localize; package gates use it only to choose block vs warning (default: unknown)')
     parser.add_argument('--keep-webp-exception', metavar='REASON', help='design D77 3.6 WebP exception (same reason as tiktok_finalize.py source)')
+    parser.add_argument('--keep-old-packages', action='store_true', help='v7.8: leave older packages of this game in the '
+                        'output folder and do not write 最新.txt (e.g. a writer-refusal test ZIP); default: they go into 旧包/')
     args = parser.parse_args()
     try:
         if args.report and args.report.exists():
             raise ValueError('report already exists')
-        result = build(args.native, args.expected_app_id, args.out, args.report, args.interaction_audio_trace, args.resource_manifest, args.project, args.startup_contract, args.loading_recovery_runtime, args.ad_regression, args.board, args.keep_webp_exception)
+        result = build(args.native, args.expected_app_id, args.out, args.report, args.interaction_audio_trace, args.resource_manifest, args.project, args.startup_contract, args.loading_recovery_runtime, args.ad_regression, args.board, args.keep_webp_exception, args.keep_old_packages)
         print(json.dumps({k:result.get(k) for k in ('archive','sha256','archive_bytes','main_bytes','uncompressed_total_bytes','expected_tree_exact','check_timings','pre_home_bytes','entry','receipt')}, ensure_ascii=False))
         print('finalize (policy %s):\n%s' % (result['finalize']['policy'], result['finalize']['table_markdown']))
+        import delivery_folder
+        print('\n'.join(delivery_folder.describe(result['delivery_folder'])))
+        if result.get('modified_tools'):
+            print('改过的工具：%s%s' % ('; '.join(result['modified_tools']),
+                                     '（反馈草稿：%s）' % result['tool_feedback_draft'] if result.get('tool_feedback_draft') else ''))
         return 0
     except (ValueError, OSError, RuntimeError) as error:
         print(json.dumps({'status':'refuse', 'error':str(error)}, ensure_ascii=False))

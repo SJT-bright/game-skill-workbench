@@ -13,8 +13,27 @@
 'use strict';
 const Q = new URLSearchParams(location.search);
 const F = new Set((Q.get('fault') || '').split(',').filter(Boolean));
-const ADS = (Q.get('ads') || '').split(',').filter(Boolean);
-const W = +(Q.get('w') || 393), H = +(Q.get('h') || 852), DPR = +(Q.get('dpr') || 3);
+// v7.8 (总表 B30): ad=<policy> is the same as ads=<policy> (the 2.x host query name)
+const ADS = (Q.get('ads') || Q.get('ad') || '').split(',').filter(Boolean);
+let W = +(Q.get('w') || 393), H = +(Q.get('h') || 852), DPR = +(Q.get('dpr') || 3);
+// ---- v7.8 (总表 B30, 全民飞车门禁 2026-10-30): the same switches as the 2.x host ad_regression/host.js ----
+// dev=iphone14|se: device profile measured from real phones (points); the gate sets the page viewport to W x H.
+// capsule=pt (default) | px: getMenuButtonBoundingClientRect in points, or every value multiplied by pixelRatio
+// (what Saul's iPhone TikTok returned on 2026-10-29); getSystemInfoSync stays in points.
+// reset=1: start from an empty save (same as fresh=1). window.__gateLog / __gateNow / __gateDevice / __adStats.
+const DEVS = {
+  iphone14: { model: 'iPhone 14', W: 390, H: 844, pr: 3, sb: 47, cap: { left: 293, top: 51, right: 380, bottom: 83 }, safeBottom: 810 },
+  se: { model: 'iPhone SE', W: 375, H: 667, pr: 2, sb: 20, cap: { left: 278, top: 24, right: 365, bottom: 56 }, safeBottom: 667 },
+};
+const DEV = DEVS[Q.get('dev') || ''] || null;
+let CAPK = 1;
+if (DEV) { W = DEV.W; H = DEV.H; DPR = DEV.pr; CAPK = Q.get('capsule') === 'px' ? DEV.pr : 1; }
+window.__gateDevice = DEV ? { name: Q.get('dev'), W, H, pixelRatio: DPR, statusBarHeight: DEV.sb, capsule: DEV.cap, capsuleUnit: CAPK === 1 ? 'pt' : 'px', capsuleK: CAPK, safeBottom: DEV.safeBottom, host: 'host3x' } : null;
+const PNow = performance.now.bind(performance);
+const GATE = window.__gateLog = [];
+function gateLog(kind, data) { GATE.push({ t: Math.round(PNow()), kind, data }); }
+window.__gateNow = () => Math.round(PNow());
+const AD = window.__adStats = { created: 0, reused: 0, shown: 0, closedEnded: 0, closedEarly: 0, errors: 0, live: 0, units: {} };
 const STORE = 'RR3:' + (Q.get('store') || 'default') + ':';
 const T0 = performance.now();
 const now = () => Math.round(performance.now() - T0);
@@ -136,7 +155,7 @@ function load(p) {
   const dir = p.split('/').slice(0, -1).join('/');
   const fn = new Function('__G', '__FAST',
     'with(__G){return (function(' + FAST.join(',') + ',require,module,exports,__filename,__dirname){' + code + '\n}).apply(this,__FAST);}\n//# sourceURL=' + location.origin + '/' + p);
-  log('require', p);
+  log('require', p); beacon('require', { path: p });
   fn.call(module.exports, G, FAST.map(k => window[k]).concat([makeRequire(dir), module, module.exports, p, dir]));
   return module.exports;
 }
@@ -198,7 +217,7 @@ class TTAudio {
 let fontN = 0;
 
 // ---------- storage ----------
-if (F.has('firstrun') || Q.get('fresh') === '1') Object.keys(localStorage).filter(k => k.startsWith(STORE)).forEach(k => localStorage.removeItem(k));
+if (F.has('firstrun') || Q.get('fresh') === '1' || Q.get('reset') === '1') Object.keys(localStorage).filter(k => k.startsWith(STORE)).forEach(k => localStorage.removeItem(k));
 const storage = {
   get(k) { const v = localStorage.getItem(STORE + k); if (v == null) return ''; try { return JSON.parse(v).v; } catch (e) { return ''; } },
   set(k, v) { if (F.has('storage_throw')) throw new Error('setStorageSync:fail exceeded'); localStorage.setItem(STORE + k, JSON.stringify({ v })); },
@@ -236,15 +255,17 @@ function subFault(name, n) {
 function loadSubpackage(o) {
   const name = o.name; const n = attempts[name] = (attempts[name] || 0) + 1; const mode = subFault(name, n);
   log('sub.request', name + ' #' + n + ' ' + mode);
+  // v7.8 (B30): the same subpackage beacons as the 2.x host (startup download size, "home = nothing still downloading")
+  beacon('subpackage', { name, attempt: n, fault: mode });
   const pcbs = []; const task = { onProgressUpdate(f) { pcbs.push(f); }, offProgressUpdate() {} };
-  if (!roots[name]) { cb(o, false, { errMsg: 'loadSubpackage:fail subpackage not found' }); return task; }
-  if (loaded.has(name)) { cb(o, true, { errMsg: 'loadSubpackage:ok' }); return task; }
+  if (!roots[name]) { beacon('subpackage-fail', { name, msg: 'not found' }); cb(o, false, { errMsg: 'loadSubpackage:fail subpackage not found' }); return task; }
+  if (loaded.has(name)) { beacon('subpackage-ok', { name, attempt: n, cached: true }); cb(o, true, { errMsg: 'loadSubpackage:ok' }); return task; }
   if (mode === 'hang') return task;
   const total = SIZES[name] || 500000, bps = +(Q.get('bps') || 2e7); let got = 0;
   const finish = () => {
-    if (mode === 'fail') { log('sub.fail', name); cb(o, false, { errMsg: 'loadSubpackage:fail network error' }); return; }
-    try { const entry = clean(roots[name] + 'game.js'); if (xhrSync(entry, 'HEAD')) load(entry); loaded.add(name); log('sub.ok', name); cb(o, true, { errMsg: 'loadSubpackage:ok' }); }
-    catch (e) { log('sub.exec_error', String(e && e.stack || e)); cb(o, false, { errMsg: String(e) }); }
+    if (mode === 'fail') { log('sub.fail', name); beacon('subpackage-fail', { name, msg: 'network error' }); cb(o, false, { errMsg: 'loadSubpackage:fail network error' }); return; }
+    try { const entry = clean(roots[name] + 'game.js'); if (xhrSync(entry, 'HEAD')) load(entry); loaded.add(name); log('sub.ok', name); beacon('subpackage-ok', { name, attempt: n }); cb(o, true, { errMsg: 'loadSubpackage:ok' }); }
+    catch (e) { log('sub.exec_error', String(e && e.stack || e)); beacon('subpackage-fail', { name, msg: String(e) }); cb(o, false, { errMsg: String(e) }); }
   };
   const step = () => {
     got = Math.min(total, got + bps * 0.2);
@@ -259,6 +280,7 @@ function loadSubpackage(o) {
 // ---------- modal / ads / growth ----------
 function showModal(o) {
   o = o || {}; X.modals.push({ t: now(), title: o.title, content: o.content }); log('modal.show', o.title + ' | ' + o.content);
+  gateLog('modal', o.title || o.content); beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText });
   const ov = document.getElementById('ov'); document.getElementById('ovt').textContent = o.title || ''; document.getElementById('ovc').textContent = o.content || '';
   const b = document.getElementById('ovb'); b.textContent = o.confirmText || 'OK'; ov.style.display = 'flex';
   b.onclick = () => { ov.style.display = 'none'; log('modal.confirm', o.title); if (F.has('modal_nocb')) { log('modal.no_callback', o.title); return; } cb(o, true, { confirm: true, cancel: false }); };
@@ -266,6 +288,7 @@ function showModal(o) {
 let adSeq = 0;
 function createRewardedVideoAd(opt) {
   const id = ++adSeq; const unit = opt && opt.adUnitId; log('ad.create', id + ' ' + unit);
+  AD.created++; AD.units[unit] = (AD.units[unit] || 0) + 1; gateLog('ad-create', unit); beacon('ad-create', unit);
   const h = { close: [], error: [], load: [] }; let destroyed = false;
   const fire = (k, e) => h[k].slice().forEach(f => { try { f(e); } catch (err) { log('ad.cb_err', String(err)); } });
   return {
@@ -276,12 +299,13 @@ function createRewardedVideoAd(opt) {
     show() {
       const showN = X.ads.length; const mode = ADS[showN] || ADS[ADS.length - 1] || 'complete';
       X.ads.push({ id, unit, mode, t: now() }); log('ad.show', id + ' ' + mode + ' ' + unit);
+      AD.shown++; gateLog('ad-show', unit); beacon('ad-show', { unit, policy: mode });
       if (destroyed) return Promise.reject({ errMsg: 'show:fail destroyed' });
-      if (mode === 'reject') return Promise.reject({ errMsg: 'show:fail no ad', errCode: 1004 });
-      if (mode === 'error') { setTimeout(() => fire('error', { errMsg: 'ad load error', errCode: 1004 }), 300); return Promise.resolve(); }
+      if (mode === 'reject') { AD.errors++; return Promise.reject({ errMsg: 'show:fail no ad', errCode: 1004 }); }
+      if (mode === 'error') { AD.errors++; setTimeout(() => fire('error', { errMsg: 'ad load error', errCode: 1004 }), 300); return Promise.resolve(); }
       if (mode === 'hang') return Promise.resolve();
       const el = document.getElementById('ad'); el.style.display = 'flex'; el.textContent = 'Rewarded video (' + mode + ')';
-      setTimeout(() => { el.style.display = 'none'; log('ad.close', id + ' ended=' + (mode === 'complete')); fire('close', { isEnded: mode === 'complete' }); }, mode === 'complete' ? 1500 : 700);
+      setTimeout(() => { el.style.display = 'none'; log('ad.close', id + ' ended=' + (mode === 'complete')); AD[mode === 'complete' ? 'closedEnded' : 'closedEarly']++; fire('close', { isEnded: mode === 'complete' }); }, mode === 'complete' ? 1500 : 700);
       return Promise.resolve();
     },
   };
@@ -289,15 +313,20 @@ function createRewardedVideoAd(opt) {
 
 // ---------- tt ----------
 const showCbs = [], hideCbs = [];
-const sys = { brand: 'Apple', model: 'iPhone', pixelRatio: DPR, devicePixelRatio: DPR, screenWidth: W, screenHeight: H, windowWidth: W, windowHeight: H,
-  statusBarHeight: 47, language: 'en', version: '34.0.0', system: 'iOS 17.5', platform: Q.get('os') || 'ios', SDKVersion: Q.get('sdk') || '3.9.0', appName: 'TikTok',
-  safeArea: { top: 47, left: 0, right: W, bottom: H - 34, width: W, height: H - 81 }, deviceOrientation: 'portrait', benchmarkLevel: 30 };
+const sys = { brand: 'Apple', model: DEV ? DEV.model : 'iPhone', pixelRatio: DPR, devicePixelRatio: DPR, screenWidth: W, screenHeight: H, windowWidth: W, windowHeight: H,
+  statusBarHeight: DEV ? DEV.sb : 47, language: 'en', version: '34.0.0', system: 'iOS 17.5', platform: Q.get('os') || 'ios', SDKVersion: Q.get('sdk') || '3.9.0', appName: 'TikTok',
+  safeArea: DEV ? { top: DEV.sb, left: 0, right: W, bottom: DEV.safeBottom, width: W, height: DEV.safeBottom - DEV.sb } : { top: 47, left: 0, right: W, bottom: H - 34, width: W, height: H - 81 },
+  deviceOrientation: 'portrait', benchmarkLevel: 30 };
 const tt = {
   env: { USER_DATA_PATH: 'ttfile://user' },
   getSystemInfoSync: () => Object.assign({}, sys, { safeArea: Object.assign({}, sys.safeArea) }),
   getSystemInfo(o) { cb(o, true, tt.getSystemInfoSync()); },
   getLaunchOptionsSync: () => ({ scene: '011004', query: {}, path: '' }), getEnterOptionsSync: () => ({ scene: '011004', query: {} }),
-  getMenuButtonBoundingClientRect: () => ({ top: 52, left: W - 95, right: W - 8, bottom: 84, width: 87, height: 32 }),
+  getMenuButtonBoundingClientRect: () => {
+    const c = DEV ? DEV.cap : { top: 52, left: W - 95, right: W - 8, bottom: 84 }, k = CAPK;
+    const r = { top: c.top * k, left: c.left * k, right: c.right * k, bottom: c.bottom * k, width: (c.right - c.left) * k, height: (c.bottom - c.top) * k };
+    gateLog('capsule-rect', r); return r;
+  },
   onShow(f) { showCbs.push(f); }, offShow(f) { const i = showCbs.indexOf(f); if (i >= 0) showCbs.splice(i, 1); },
   onHide(f) { hideCbs.push(f); }, offHide(f) { const i = hideCbs.indexOf(f); if (i >= 0) hideCbs.splice(i, 1); },
   onError(f) {}, offError() {}, onMemoryWarning() {}, onWindowResize() {}, offWindowResize() {}, onAudioInterruptionBegin() {}, onAudioInterruptionEnd() {},
@@ -321,11 +350,11 @@ const tt = {
   downloadFile(o) { log('net.download', o && o.url); cb(o, false, { errMsg: 'downloadFile:fail offline in simulator' }); return { onProgressUpdate() {}, abort() {} }; },
   connectSocket() { return { onOpen() {}, onClose() {}, onError() {}, onMessage() {}, send() {}, close() {} }; },
   getUpdateManager: () => ({ onCheckForUpdate() {}, onUpdateReady() {}, onUpdateFailed() {}, applyUpdate() {} }),
-  showModal, showToast(o) { log('toast', o && o.title); o && cb(o, true, {}); }, hideToast() {}, showLoading(o) { log('showLoading', o && o.title); }, hideLoading() {},
-  vibrateShort(o) { log('vibrate', 'short'); o && cb(o, true, {}); }, vibrateLong(o) { o && cb(o, true, {}); },
+  showModal, showToast(o) { log('toast', o && o.title); gateLog('toast', o && o.title); beacon('toast', o && o.title); o && cb(o, true, {}); }, hideToast() {}, showLoading(o) { log('showLoading', o && o.title); }, hideLoading() {},
+  vibrateShort(o) { log('vibrate', 'short'); beacon('vibrate', 'short'); o && cb(o, true, {}); }, vibrateLong(o) { beacon('vibrate', 'long'); o && cb(o, true, {}); },
   createRewardedVideoAd,
-  addShortcut(o) { log('growth.addShortcut'); cb(o, true, {}); }, getShortcutMissionReward(o) { cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
-  startEntranceMission(o) { log('growth.startEntranceMission'); cb(o, true, {}); }, getEntranceMissionReward(o) { cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
+  addShortcut(o) { log('growth.addShortcut'); beacon('mission', 'addShortcut'); cb(o, true, {}); }, getShortcutMissionReward(o) { beacon('mission', 'getShortcutMissionReward'); cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
+  startEntranceMission(o) { log('growth.startEntranceMission'); beacon('mission', 'startEntranceMission'); cb(o, true, {}); }, getEntranceMissionReward(o) { beacon('mission', 'getEntranceMissionReward'); cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
   setPreferredFramesPerSecond() {}, getBatteryInfoSync: () => ({ level: 80, isCharging: false }), getPerformance: () => performance,
   showKeyboard() {}, hideKeyboard() {}, onKeyboardInput() {}, offKeyboardInput() {}, onKeyboardConfirm() {}, offKeyboardConfirm() {}, onKeyboardComplete() {}, offKeyboardComplete() {},
 };
@@ -376,11 +405,17 @@ document.addEventListener('visibilitychange', () => log('visibility', document.v
 log('boot', JSON.stringify({ W, H, DPR, faults: [...F], ads: ADS, sdk: sys.SDKVersion }));
 setTimeout(() => {
   try { load('game.js'); } catch (e) { log('boot.throw', String(e && e.stack || e)); X.firstErr = X.firstErr || String(e); }
+  // v7.8 (B30): poll every 30 ms (was 300) and beacon scene-loading / scene-launch, so the startup-download cut-off
+  // (subpackages requested before the home scene starts loading) is seen for a fast-booting 3.x game too
+  let asked = false;
   const poll = setInterval(() => {
-    const S = GT.System; if (!S || ccNS || !GT.cc) return; // only after the game itself has evaluated cc.js
+    const S = GT.System; if (!S || ccNS || !GT.cc || asked) return; // only after the game itself has evaluated cc.js
+    asked = true;
     try { const p = S.import('cc'); p.then(ns => { if (ns && ns.director && !ccNS) { ccNS = ns; window.cc = ns; mark('ccReady');
-      ns.director.on(ns.Director.EVENT_AFTER_DRAW, () => { const sc = X.scene(); if (sc) mark('scene:' + sc); }); } }).catch(() => {}); } catch (e) {}
-  }, 300);
+      try { ns.director.on(ns.Director.EVENT_BEFORE_SCENE_LOADING, (name) => beacon('scene-loading', name));
+        ns.director.on(ns.Director.EVENT_AFTER_SCENE_LAUNCH, (s) => beacon('scene-launch', s && s.name)); } catch (e) {}
+      ns.director.on(ns.Director.EVENT_AFTER_DRAW, () => { const sc = X.scene(); if (sc) mark('scene:' + sc); }); } else asked = false; }).catch(() => { asked = false; }); } catch (e) { asked = false; }
+  }, 30);
   setTimeout(() => clearInterval(poll), 120000);
 }, 0);
 })();

@@ -35,13 +35,13 @@
 完整基线：
 
 ```sh
-python scripts/plan_level_tests.py --level-plan <实际关卡表> --out <新清单.json>
+python <skills>/remake-core/scripts/plan_level_tests.py --level-plan <实际关卡表> --out <新清单.json>
 ```
 
 局部修复已有完整基线时，按真实差异及依赖列关号；例如以下数字只是参数格式：
 
 ```sh
-python scripts/plan_level_tests.py --level-plan <实际关卡表> --scope changed \
+python <skills>/remake-core/scripts/plan_level_tests.py --level-plan <实际关卡表> --scope changed \
   --changed-levels 18,25-26 --related-levels 27 --regression-levels 69 \
   --out <新局部清单.json>
 ```

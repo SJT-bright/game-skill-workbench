@@ -16,7 +16,7 @@
 
 ## 用户试玩入口
 
-Ego Lite **只是** Agent 自己的检查工具，**从不是**用户的试玩入口（用户 2026-10-23）。用户要求可玩结果时，用 `serve_preview.py --keep` 起本地服务，自动请求独立 Google Chrome 手机框窗口并在回复里保留本地链接（真实 Cocos 页面），并说明方向、已核验比例和最少操作；不要求用户进入受限 Ego 窗口操作或回复画风认可才能继续制作。
+Ego Lite **只是** Agent 自己的检查工具，**从不是**用户的试玩入口（用户 2026-10-23）。用户要求可玩结果时，用 `serve_preview.py --keep --project <工程>` 起本地服务，自动请求独立 Google Chrome 手机框窗口并在回复里保留本地链接（真实 Cocos 页面），并说明方向、已核验比例和最少操作；不要求用户进入受限 Ego 窗口操作或回复画风认可才能继续制作。
 
 1. 复用本游戏健康服务，核对准确 Web 目录、版本与 HTTP 字节，从无关 cwd 实际验证启动器。普通试玩不含 QA 或模拟 SDK；不清存档，也不覆盖用户正在进行的游戏。
 2. Agent 在**本会话自己新开的** Ego TaskSpace（或 `chrome_touch.py` 新开的独立窗口）中单独完成手机模拟检查（被占就再新开一个，不等，见[被占就开新的](../../../remake-core/references/machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）：在引擎启动前配置视口、DPR、方向、移动端 UA、触摸和鼠标转触摸，再读回 DOM/Canvas、maxTouchPoints、引擎能力及实际输入链。具体方法沿用手机触屏 Skill 的 [启动与触控核验](../../../mobile-touch-computer-use/references/computer-use.md#启动与触控核验)。
@@ -77,7 +77,7 @@ Ego Lite **只是** Agent 自己的检查工具，**从不是**用户的试玩�
 生成骨架时可用 `make_level_plan.py --intro 17:wind --intro 23:ice ...`；随后按真实关卡补齐玩法标识和全部首现标记，不照抄示例玩法或关号。测试前运行：
 
 ```sh
-python scripts/plan_level_tests.py --level-plan <实际关卡表level_plan.json> --out <本轮必测清单.json>
+python <skills>/remake-core/scripts/plan_level_tests.py --level-plan <实际关卡表level_plan.json> --out <本轮必测清单.json>
 ```
 
 完整基线清单为原逐段抽测规则、末关与所有 `intro` 关卡的并集，再补本轮修改关和相关故障关；`--scope changed` 的局部清单只补其受影响机制的首现关，不包含无关首现关。即使某个首现关本来会被跳过，也必须真实触摸完整玩过。脚本在终端和 JSON 的 `warnings` 中提醒：没有关卡表、全表没有 `intro`、或 `mechanics` 首次出现却漏标。看到漏标后回关卡表补标并重新生成清单；没有玩法标识时不能靠脚本推断全部新玩法，须对照玩法规格人工核对。提醒不算测试通过，清单也不算实际游玩证据。

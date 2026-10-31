@@ -28,7 +28,7 @@
 采集后用下列命令绑定实际代码、包内官方原图、dump和配对截图。所有 `--source-file` 与 `--logo-asset` 都相对工程；`--dump` 可相对工程或用绝对路径。对正常与重试分别调用，多个同比例状态可重复 `--dump`：
 
 ```sh
-python3 <Skill目录>/scripts/official_loading.py --project <工程> \
+python3 <skills>/remake-core/scripts/official_loading.py --project <工程> \
   --dump docs/test/<实际ui-dump文件>.json --logo-node <实际Logo节点路径> \
   --logo-asset assets/<官方原图>.png --creator-version <实际Creator版本> \
   --phase engine_resources --source-file assets/<实际加载实现>.ts
@@ -39,7 +39,7 @@ DOM默认背景 Logo 路径为 `DOMLoading/Logo`；普通IMG和Cocos节点用实
 只复查受影响加载链时运行实际入口：
 
 ```sh
-python3 <Skill目录>/scripts/art_check.py --project <工程> \
+python3 <skills>/remake-core/scripts/art_check.py --project <工程> \
   --loading-only --dumps <实际采集目录> --out <新报告目录>
 ```
 

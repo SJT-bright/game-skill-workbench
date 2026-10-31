@@ -58,7 +58,7 @@ Cocos 3.x 优先内置 Button 或当前引擎公开的屏幕命中方法，核�
 从技能根目录运行，或用脚本绝对路径。首次为当前**干净源码和最终 Native ZIP**建立待验记录：
 
 ```sh
-python3 scripts/audit_mobile_input.py /path/to/current-project \
+python3 <skills>/remake-core/scripts/audit_mobile_input.py /path/to/current-project \
   --native-zip /path/to/final-native.zip --build-tag Game-vN \
   --stage code --init-review /path/to/evidence/mobile-review.json \
   --report /path/to/evidence/mobile-code-audit.json
@@ -80,7 +80,7 @@ python3 scripts/audit_mobile_input.py /path/to/current-project \
 最终调用默认严格模式：
 
 ```sh
-python3 scripts/audit_mobile_input.py /path/to/current-project \
+python3 <skills>/remake-core/scripts/audit_mobile_input.py /path/to/current-project \
   --native-zip /path/to/final-native.zip \
   --review /path/to/evidence/mobile-review.json \
   --report /path/to/evidence/mobile-final-gate.json

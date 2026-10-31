@@ -71,11 +71,11 @@ Mosslight具体机制还覆盖：60关/末关无Next、每关一次免费提示�
 从本Skill根目录使用已有Python（Pillow；全美术检查另需NumPy）和Node：
 
 ```bash
-python3 scripts/test_loading_recovery_gate.py
-python3 scripts/test_startup_animation_phases.py
-node scripts/test_image_inflight_example.cjs
-node scripts/test_native_load_guard_example.cjs
-python3 scripts/test_known_issue_gate.py --report known-issue-selftest-report.json
+python3 <skills>/remake-core/scripts/test_loading_recovery_gate.py
+python3 <skills>/remake-core/scripts/test_startup_animation_phases.py
+node <skills>/remake-core/scripts/test_image_inflight_example.cjs
+node <skills>/remake-core/scripts/test_native_load_guard_example.cjs
+python3 <skills>/remake-core/scripts/test_known_issue_gate.py --report known-issue-selftest-report.json
 ```
 
 恢复门禁负例覆盖缺场景、错误请求身份、缺真实图片重试、时序/哈希/绑定错误。图片示例覆盖引擎风格同ID队列释放、旧结果隔离、60秒启动空档、24秒真实进度、进度先于首帧、后台与解码结算一次。动画自测包含静止拒绝、运动接受、缺标签拒绝、终点取整接受和中途ready拒绝。**这些是检查器/示例自测，不是任何当前游戏通过证明。** 修改相应逻辑后跑相关负例，避免产品与测试共同遗漏同一条返回路。

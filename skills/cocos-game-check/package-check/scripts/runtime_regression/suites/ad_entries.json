@@ -1,0 +1,11 @@
+{
+  "name": "ad_entries",
+  "about": "v7.8 A12 / B30 B: every rewarded-ad entry in adapter.ad_entries (states reached with real actions; revive waits for the hero to fail by itself) reacts to a real click within 2 s: ad call, toast / modal, or new text (new game blocks, legacy warns). Runs only when the adapter has ad_entries",
+  "applies": ["adapter:ad_entries"],
+  "needs": ["ad_entries"],
+  "fields": ["ad_entries_query", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 1500,
+  "owner": "W87",
+  "proof": "briefs/out/W87/RESULT.md (全民飞车漂移 v1 offline x2 at reward 0 and the missing revive page refused, v3.1 passes)"
+}

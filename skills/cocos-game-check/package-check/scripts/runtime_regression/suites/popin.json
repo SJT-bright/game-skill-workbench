@@ -1,0 +1,14 @@
+{
+  "name": "popin",
+  "about": "v7.8 总表 P2 补: 390x844, 375x667, 768x1024, 1115x791; invincible player flies 18 s, then the revive path; every frame no collider obstacle may appear, vanish or jump (> 40 per frame) inside the real visible area (new game blocks, legacy warns; adapter.popin {\"n/a\": reason} passes without a browser; Cocos 3.x not covered: warning)",
+  "applies": ["tiktok"],
+  "needs": [],
+  "needs_new": ["popin"],
+  "na_field": "popin",
+  "fields": ["popin", "home", "play", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "uncovered": {"3.x": "the obstacle watch reads 2.4 colliders (cc.PhysicsCollider / cc.Collider) and 2.4 camera boxes; no 3.x scrolling-obstacle game was available to calibrate a Collider2D / UITransform version (W89, 2026-10-30)"},
+  "timeout_s": 900,
+  "owner": "W89",
+  "proof": "briefs/out/W89/RESULT.md (BreezyBalloon v2.1 refused on all 4 screens, v2.2 and v2.1 with platform-kit CourseLane pass)"
+}

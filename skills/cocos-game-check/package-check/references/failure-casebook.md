@@ -20,6 +20,8 @@ BadHairDay最新v9（另查旧“自制”包）、EmberCircuit DeviceFix、Juni
 
 原verify_native_zip保留格式/路径/CRC/体积/目标ID/原树字节校验。原audit_packed_assets保留字面资源路径、图集尺寸/边界/哈希。新增audit_upload_startup补入口传递闭包、Cocos2 jsList/scene注册/import packs与分包入口。它们共用最终ZIP输入，报告包含覆盖范围，不能把静态检查记作真实renderer成功。
 
+2026-10-28 SimonsScrew扫码进不去调研补入package_gates/tiktok_compat.py：game.json分离引擎插件（ttmg报"The current game plugin version does not exist"）与subPackages大小写（@ttmg/cli拒收、verify_native_zip漏读分包）新老都拦，ogg、超4096纹理、路径含空格/#/?/%新游戏拦；触摸client坐标、开放数据域、WebP、0字节文件已由原检查覆盖，不重复。
+
 已有Ember案例还发现：共享Canvas先取2D会阻止WebGL建立；下载器返回Image与Native parser所需路径字符串不符。普通Web、宽松SDK替身和仅方法断言不能覆盖这些问题。沿用已有真实Native renderer/parser正反例执行协议，不能为出包添加永远成功的SDK/资源回调。
 
 ## 正式资料与运行证据

@@ -189,6 +189,23 @@
 
   // ---------- canvas / system info ----------
   var W = window.innerWidth, H = window.innerHeight, DPR = window.devicePixelRatio || 1;
+  // v7.8 (总表 B30, 全民飞车门禁): dev=iphone14|se device profiles measured from real phones (points); the caller sets
+  // the page viewport to the same W x H over CDP. capsule=pt (default) | px: getMenuButtonBoundingClientRect in points,
+  // or every value times pixelRatio (what Saul's iPhone TikTok returned on 2026-10-29); getSystemInfoSync stays in
+  // points. Without dev= nothing changes. SE capsule x (278..365) is derived (87 wide, 10 from the right), not measured.
+  var DEVS = {
+    iphone14: { model: 'iPhone 14', W: 390, H: 844, pr: 3, sb: 47, cap: { left: 293, top: 51, right: 380, bottom: 83 }, safeBottom: 810 },
+    se: { model: 'iPhone SE', W: 375, H: 667, pr: 2, sb: 20, cap: { left: 278, top: 24, right: 365, bottom: 56 }, safeBottom: 667 }
+  };
+  var DEV = DEVS[Q.get('dev') || ''] || null;
+  var CAPK = 1;
+  if (DEV) { W = DEV.W; H = DEV.H; DPR = DEV.pr; CAPK = Q.get('capsule') === 'px' ? DEV.pr : 1; }
+  window.__gateDevice = DEV ? { name: Q.get('dev'), W: W, H: H, pixelRatio: DPR, statusBarHeight: DEV.sb, capsule: DEV.cap, capsuleUnit: CAPK === 1 ? 'pt' : 'px', capsuleK: CAPK, safeBottom: DEV.safeBottom, host: 'host' } : null;
+  // Every ad / prompt / capsule call with host time, for the layout, button-sweep and ad-entry suites. The TikTok
+  // adapter replaces performance.now with Date.now, so the gate clock is the host's own (PNow, captured above).
+  var GATE = window.__gateLog = [];
+  function gateLog(kind, data) { GATE.push({ t: Math.round(PNow()), kind: kind, data: data }); }
+  window.__gateNow = function () { return Math.round(PNow()); };
   var main = nCreate('canvas');
   main.id = 'GameCanvas';
   main.width = W; main.height = H;
@@ -198,9 +215,10 @@
   // sdk=missing: no SDKVersion field at all (MergeShot2048 v83/v84, MusicSlice adapter case); sdk=<x.y.z> sets it.
   var sdkQ = Q.get('sdk');
   var sys = {
-    brand: 'Apple', model: 'iPhone 15', pixelRatio: DPR, devicePixelRatio: DPR,
-    screenWidth: W, screenHeight: H, windowWidth: W, windowHeight: H, statusBarHeight: 47,
-    safeArea: { left: 0, right: W, top: 47, bottom: H - 34, width: W, height: H - 81 },
+    brand: 'Apple', model: DEV ? DEV.model : 'iPhone 15', pixelRatio: DPR, devicePixelRatio: DPR,
+    screenWidth: W, screenHeight: H, windowWidth: W, windowHeight: H, statusBarHeight: DEV ? DEV.sb : 47,
+    safeArea: DEV ? { left: 0, right: W, top: DEV.sb, bottom: DEV.safeBottom, width: W, height: DEV.safeBottom - DEV.sb }
+                  : { left: 0, right: W, top: 47, bottom: H - 34, width: W, height: H - 81 },
     language: 'en', version: '37.0.0', SDKVersion: sdkQ || '3.60.0', system: 'iOS 17.5',
     platform: Q.get('platform') || 'devtools', appName: 'TikTok', benchmarkLevel: 30
   };
@@ -383,7 +401,7 @@
     var unit = String(opt.adUnitId || ''), close = hub(), err = hub(), load = hub(), used = false;
     var rec = { unit: unit, shown: false, finished: false, close: close, err: err };
     adRecords.push(rec);
-    adStats.created++; adStats.units[unit] = (adStats.units[unit] || 0) + 1;
+    adStats.created++; adStats.units[unit] = (adStats.units[unit] || 0) + 1; gateLog('ad-create', unit);
     beacon('ad-create', unit);
     function finish(r) {
       rec.finished = true;
@@ -400,7 +418,7 @@
       destroy: function () {},
       show: function () {
         if (used) return Promise.reject({ errorCode: 1003, errMsg: 'instance already shown' });
-        used = true; rec.shown = true; adStats.shown++; adStats.live++;
+        used = true; rec.shown = true; adStats.shown++; adStats.live++; gateLog('ad-show', unit);
         beacon('ad-show', { unit: unit, policy: adPolicy });
         if (adPolicy === 'showfail') { rec.finished = true; adStats.live--; adStats.errors++; return Promise.reject({ errorCode: 1000, errMsg: 'show fail (simulated)' }); }
         if (adPolicy === 'hang') return Promise.resolve();
@@ -435,7 +453,7 @@
   window.__modalOpen = null;
   function showModal(o) {
     o = o || {};
-    beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText });
+    beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText }); gateLog('modal', o.title || o.content);
     var box = nCreate('div');
     box.id = '__hostModal';
     box.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font:16px -apple-system,Helvetica,sans-serif';
@@ -577,7 +595,7 @@
     setKeepScreenOn: function (o) { o && setTimeout(function () { cb(o, true, {}); }); },
     vibrateShort: function (o) { beacon('vibrate', 'short'); o && setTimeout(function () { cb(o, true, {}); }); },
     vibrateLong: function (o) { beacon('vibrate', 'long'); o && setTimeout(function () { cb(o, true, {}); }); },
-    getMenuButtonBoundingClientRect: function () { return { left: W - 97, right: W - 10, top: 51, bottom: 83, width: 87, height: 32 }; },
+    getMenuButtonBoundingClientRect: function () { var c = DEV ? DEV.cap : { left: W - 97, right: W - 10, top: 51, bottom: 83 }, k = CAPK; var r = { left: c.left * k, right: c.right * k, top: c.top * k, bottom: c.bottom * k, width: (c.right - c.left) * k, height: (c.bottom - c.top) * k }; gateLog('capsule-rect', r); return r; },
     getUpdateManager: function () { return { onCheckForUpdate: function () {}, onUpdateReady: function () {}, onUpdateFailed: function () {}, applyUpdate: function () {} }; },
     getOpenDataContext: function () { return { postMessage: function () {}, canvas: nCreate('canvas') }; },
     onNetworkStatusChange: function () {}, offNetworkStatusChange: function () {},
@@ -607,7 +625,7 @@
     // login is counted; login=fail makes it fail. The game must never wait on it (Mabel W2_login).
     login: function (o) { o = o || {}; loginCalls++; window.__loginCalls = loginCalls; beacon('login', loginCalls); setTimeout(function () { cb(o, Q.get('login') !== 'fail', Q.get('login') === 'fail' ? { errMsg: 'login:fail' } : { code: 'qa-code', anonymousCode: 'qa-anon' }); }, 200); },
     showModal: showModal,
-    showToast: function (o) { o = o || {}; toasts.push({ title: o.title, t: now() }); beacon('toast', o.title); if (o.success) setTimeout(function () { cb(o, true, {}); }); },
+    showToast: function (o) { o = o || {}; gateLog('toast', o.title); toasts.push({ title: o.title, t: now() }); beacon('toast', o.title); if (o.success) setTimeout(function () { cb(o, true, {}); }); },
     hideToast: function (o) { o && setTimeout(function () { cb(o, true, {}); }); },
     showLoading: function (o) { o = o || {}; loadingTitle = String(o.title || ''); loadingShown = true; o.success && setTimeout(function () { cb(o, true, {}); }); },
     hideLoading: function (o) { loadingShown = false; o && setTimeout(function () { cb(o, true, {}); }); }
@@ -639,5 +657,16 @@
       faults: { hits: FAULT.hits.length, accessCalls: FAULT.accessCalls || 0, pkg: FAULT.pkg }, missions: missionCalls, missionMode: missionMode, login: loginCalls,
       modal: window.__modalOpen, toasts: toasts.slice(-5), loading: loadingShown ? loadingTitle : null, net: NET.length };
   };
+  // v7.8 (总表 B30 / S8 补): scene-loading / scene-launch beacons as soon as the game has created cc.director, so the
+  // layout_state suite can cut the startup download at EVENT_BEFORE_SCENE_LOADING of the home scene (host3x does the same).
+  var sceneHook = setInterval(function () {
+    var c = window.cc;
+    if (!c || !c.director || !c.director.on || !c.Director) return;
+    clearInterval(sceneHook);
+    try {
+      c.director.on(c.Director.EVENT_BEFORE_SCENE_LOADING, function (name) { beacon('scene-loading', name); });
+      c.director.on(c.Director.EVENT_AFTER_SCENE_LAUNCH, function (s) { beacon('scene-launch', s && s.name); });
+    } catch (e) {}
+  }, 30);
   beacon('host-ready', { W: W, H: H, DPR: DPR, platform: sys.platform });
 })();

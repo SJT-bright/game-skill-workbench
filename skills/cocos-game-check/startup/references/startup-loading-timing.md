@@ -97,7 +97,7 @@ Cocos 游戏的 wait_js 可以读引擎状态（例如场景名、某个节点�
 ## 六、判定与出包
 
 ```
-python scripts/audit_startup_loading.py --plan docs/test/startup-plan.json --runs <每次运行的输出文件夹...> --binding <review.json> --out <报告.json>
+python <skills>/remake-core/scripts/audit_startup_loading.py --plan docs/test/startup-plan.json --runs <每次运行的输出文件夹...> --binding <review.json> --out <报告.json>
 ```
 
 **什么时候跑两次**：测试阶段第 1 段跑一次；全部修复做完后，在**最终构建**上把整套（三种网络、两种比例、全部故障）再跑一次（第 9 段之前）——后面段落的修复常常把加载改坏。Codex 最终验收再亲自在慢网冷启动走一遍"首页 → PLAY → 第一关真实触摸生效"。

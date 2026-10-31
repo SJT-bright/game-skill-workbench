@@ -4,7 +4,7 @@
 
 ## 没有功能的原游戏入口
 
-英化不继承空实现。排行榜、更多游戏、分享、跳转等旧入口必须追到实际业务和目标平台能力：空 handler、只有音效、只打开无数据空框、依赖已失效原平台服务，都移除入口、事件和不可达页面，调整附近布局。不能为保留空入口新增虚构功能。原游戏自带并不构成 keep_original 的理由；分享与全部排行榜即使可用也移除；其他非禁止业务有实际可用功能及本次运行证据才可保留。临时无数据但有真实服务/空态与重试，不自动判为无功能。TikTok 系统右上角胶囊属于平台，不是游戏旧按钮，不按此规则删除。
+英化不继承空实现。排行榜、更多游戏、分享、跳转等旧入口必须追到实际业务和目标平台能力：空 handler、只有音效、只打开无数据空框、依赖已失效原平台服务，都移除入口、事件和不可达页面，调整附近布局。不能为保留空入口新增虚构功能。原游戏自带并不构成 keep_original 的理由；分享与联网/全服排行榜即使可用也移除（局内对本地机器人的名次可以留，Saul 10-31）；其他非禁止业务有实际可用功能及本次运行证据才可保留。临时无数据但有真实服务/空态与重试，不自动判为无功能。TikTok 系统右上角胶囊属于平台，不是游戏旧按钮，不按此规则删除。
 
 ## 确认过的失败链
 
@@ -36,7 +36,7 @@ Tower Heroes 暴露出原规则的执行缺口：Web `localStorage` 的缺键 `n
 
 将执行记录写成 `native_storage_trace.v1` JSON：顶层 `binding` 等于本轮 review 的完整 binding；`execution` 含绝对 `runner`、`runner_sha256`、实际命令参数数组 `command`（例如 `node /path/runner.mjs --bundle {bundle} --adapter {adapter}`，数组中 `{bundle}`、`{adapter}` 是必须的独立参数）；`current` 与 `negative_control` 各含 `bundle`、`bundle_sha256`、`adapter`、`adapter_sha256`、`raw_report`、`raw_sha256`。两个 raw JSON 均含 `runner_sha256`、`bundle_sha256`、`adapter_sha256`、`cases`。审计脚本会亲自重跑两次命令、解析 stdout JSON，并与原始结果比较，不能手填通过。bundle 与 adapter 可以是同一编译文件，但 `current` 两者必须在最终 Native 树内。完整场景名以脚本 `CASES` 为准，不允许缺项或“暂无相关功能”替代；无广告入口的取消和完成场景，用本游戏真实的持久化写入动作检查未误记及只记一次，不能虚构广告成功。
 
-执行：`python3 scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json> --out <storage-report.json>`。将报告 SHA 放到 `STORAGE-01.auto_reports`。`check_known_issues.py` 会复核 trace、原始结果、重跑 runner、最终 Native 树哈希；只写一个 `passed:true` 报告无法过门禁。游戏打包脚本必须执行本轮 `pre_scan`，不通过不得写任何测试 ZIP。真实触控录像/截图另记 `STORAGE-01` 六个观察字段，尤其主页→地图→关卡详情的重开、Retry 可用、遮罩退出和已知运行错误关闭。
+执行：`python3 <skills>/remake-core/scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json> --out <storage-report.json>`。将报告 SHA 放到 `STORAGE-01.auto_reports`。`check_known_issues.py` 会复核 trace、原始结果、重跑 runner、最终 Native 树哈希；只写一个 `passed:true` 报告无法过门禁。游戏打包脚本必须执行本轮 `pre_scan`，不通过不得写任何测试 ZIP。真实触控录像/截图另记 `STORAGE-01` 六个观察字段，尤其主页→地图→关卡详情的重开、Retry 可用、遮罩退出和已知运行错误关闭。
 
 ## 既有 JavaScript 游戏的明确保留范围
 

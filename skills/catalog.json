@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T12:10:56.222Z",
-  "treeHash": "0f6028750620234954832fd2126eefc2f6ee74c125b86faf87c55f1f2bddcdeb",
+  "createdAt": "2026-10-31T15:14:07.095Z",
+  "treeHash": "5e330431ec82c1b39774c1c99488778425b1c47d44629cede9638f20e3238965",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,26 +251,140 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "cdbe45f8b86ee1de55d8d54af4c8588175855078af237969cfdb6e932a054886",
-      "fileCount": 87,
-      "bytes": 824904,
+      "treeHash": "8a387364b3350b900f2c2bafe2e4fc3de4d6f4d3d4aadde40bd2d868a791025f",
+      "fileCount": 135,
+      "bytes": 1304006,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "e40d4863fce4f0be890c114a894b00faae0a1f6fc5535b1e535b4e4ac4dfd065",
-          "size": 15782,
+          "hash": "19dfa04bf199c2a2936cff9ccabadc91caf7e9d38e684ba0a24af704fd894b68",
+          "size": 24462,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "678a56d0e9b441221356067e6144ad5faa4d5d538c7ba20095ea87aeaa074fdc",
-          "size": 9760,
+          "hash": "861c334159113745b0fe3f329eee16f17bb33aa56ec3e2ca5539adb6714c0259",
+          "size": 14026,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
           "hash": "4f6b7a64a78f8715eb61122b6a25101af8ed36c6dce5e6df46b0b92c75e2de89",
           "size": 188,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/art_check.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_audio_sources.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_english_coverage.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_mobile_input.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_page_readiness.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_page_richness.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_runtime_resources.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_startup_contract.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/audit_upload_startup.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/check_known_issues.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/design_check.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/extract_ui_layout.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/logic_check.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/make_tiktok_zip.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/package_issue_gate.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/preflight.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/project_qa.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/serve_preview.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
+          "executable": false
+        },
+        {
+          "path": "core/scripts/verify_native_zip.py",
+          "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+          "size": 1161,
           "executable": false
         },
         {
@@ -323,14 +437,14 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "8048e499c64d2181644ad5ebdcf6feae473f44d6ba99d7fc4d0adc19ede45438",
-          "size": 7898,
+          "hash": "3127eb6547b575540fd3ad1a1056314ad79122875fb1d4b0917b0aad0533c540",
+          "size": 11677,
           "executable": false
         },
         {
           "path": "package-check/references/check-contract.md",
-          "hash": "a897ab479d3ce0a015d441d17814f2960ff10dacd09d12299eb0b2a5b06ce93c",
-          "size": 11029,
+          "hash": "e3b1d468b1ecc5a7c8a6d8508072cbce52609780d023de26984f456b9bc2bd75",
+          "size": 11375,
           "executable": false
         },
         {
@@ -341,8 +455,8 @@
         },
         {
           "path": "package-check/references/failure-casebook.md",
-          "hash": "a97ac51e9e0466e2a6c81173058b1ef9fda98ddd0adf1e3e3b67677f4d05041d",
-          "size": 3742,
+          "hash": "ff12586bca39bc3e09144fc50599fee6eb5dbebf7414b0012804c73338f3e33d",
+          "size": 4158,
           "executable": false
         },
         {
@@ -365,8 +479,8 @@
         },
         {
           "path": "package-check/references/resource-and-reported-issues.md",
-          "hash": "28a852c773764ad70c51580cf6135aeb537334a7e3229592074aff28f89cef45",
-          "size": 10237,
+          "hash": "e163d732443f748a7d50ebab983331df95b37dac003d8cd50e8a24ec96caff8e",
+          "size": 11900,
           "executable": false
         },
         {
@@ -383,8 +497,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "0490b303b465691138fe2a4d005b2f0223187a99c243daf9500bb61088d13fd2",
-          "size": 14585,
+          "hash": "d638ad45804c1d27634dae66ef61e15f5d233addda9831a8e84de247fd094bd0",
+          "size": 40773,
           "executable": false
         },
         {
@@ -395,14 +509,14 @@
         },
         {
           "path": "package-check/scripts/ad_regression/cases.mjs",
-          "hash": "e4bad304968d8ae1cdc4cecbe680ab3145c76b938888e139618303acadf2f5cc",
-          "size": 15222,
+          "hash": "07ac772721df53bb78188f14a8b93a2868663bb352153999cfcda07281ddadd7",
+          "size": 20604,
           "executable": false
         },
         {
           "path": "package-check/scripts/ad_regression/host.js",
-          "hash": "bf8920728ea2bae27b6f0783e83b30c9e280ce3db30f47af10514c82898837af",
-          "size": 50801,
+          "hash": "b4d9e163d29743ceb38026787a433e901fb9cdb909a8b8f2893b6ccb44648937",
+          "size": 53546,
           "executable": false
         },
         {
@@ -419,8 +533,8 @@
         },
         {
           "path": "package-check/scripts/ad_regression.py",
-          "hash": "a5f2446f06da84a2eeeb4e6f00cfe64b21ad2b330a3e67054b803d9c73b83fac",
-          "size": 12341,
+          "hash": "73c79250aa6978aacf43507f6a4baf0e6241231aa975c6ef5600bf1fc8b5bfa8",
+          "size": 16226,
           "executable": false
         },
         {
@@ -443,14 +557,14 @@
         },
         {
           "path": "package-check/scripts/build_checked_zip.py",
-          "hash": "c09ea25e73d092b34e5ae35b9052257d9b05eaa5bfb6c61f459915da35756d66",
-          "size": 11229,
+          "hash": "174af20eebe04fc13761fd6c0868992598abc1070446134b1a8293d258d2059e",
+          "size": 13522,
           "executable": false
         },
         {
           "path": "package-check/scripts/check_package.py",
-          "hash": "acce4bc144e554c793e44b0b4d35b0b667621c042da09cd03e6579a631e8244b",
-          "size": 11730,
+          "hash": "e217ac0b35e4c02ec8e08ba3d348511363180ddae5acdc198fbbda01e2ca0a7c",
+          "size": 20520,
           "executable": false
         },
         {
@@ -467,14 +581,32 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/README.md",
-          "hash": "8c04c954b88b763d197dc742e4d674ece79afaaea5b07d4bb765be2406fd0a34",
-          "size": 6046,
+          "hash": "3410f54073898f4824800f12fdc8a0c153ffba1fa3441cb5015f9e56ca08b676",
+          "size": 9830,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/frame_rate_compare.mjs",
+          "hash": "35bc4b5bd9063462eab2219f08ae3e1574c4a7e376879c14f10720caacbfef05",
+          "size": 7591,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/gates.mjs",
+          "hash": "afa7f4f87825b8fdccb51bbb0b7c75eec841bfdb806758749753bd25bcddd093",
+          "size": 34265,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/geom.mjs",
+          "hash": "9fecf5013e7d5cf7bdd858c6de636b1ec01bd3bfbd3e0238a9ec1f96bc250f77",
+          "size": 9941,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_regression/host3x/host.js",
-          "hash": "7d41c5939068a6f7d01a51b5a1dc9d2d8b6ad06572629fb586e4664b0052bb5e",
-          "size": 31626,
+          "hash": "bab9731a8df0543b0bf605be1719facd53a123c414db3a060f75130a6ae59a6a",
+          "size": 35421,
           "executable": false
         },
         {
@@ -490,15 +622,87 @@
           "executable": false
         },
         {
+          "path": "package-check/scripts/runtime_regression/layout_rules.mjs",
+          "hash": "1c269d9dba393a333568284235e4a980a46ce3c1ef971831b97e756bcb99e93a",
+          "size": 20861,
+          "executable": false
+        },
+        {
           "path": "package-check/scripts/runtime_regression/lib.mjs",
-          "hash": "3485c92a6e37a1fb8d80a3dd7766c3512e47e8901060fbadb0d0f7f21bd9fc7f",
-          "size": 10674,
+          "hash": "184309714ace87efccb8b766cb37bea7d08d09a3cbd3ca5b07e3a001b158cbcb",
+          "size": 12270,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_regression/network-allowlist.json",
           "hash": "fe4337552b6981115c5cd6cd787b012dcf3c0d17d857d69b2d672bc535e1d05b",
           "size": 265,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/popin_watch.mjs",
+          "hash": "e8373509585907634e0b46e760c48849534cd90ea3c43bff4669e742f8e0a2f2",
+          "size": 6040,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/ad_entries.json",
+          "hash": "f86c098c71e02f6dc89fdeadd3290da0d509180ab4bd5f52635affba6fc2a4ee",
+          "size": 663,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/ad_entries.mjs",
+          "hash": "7f3ed69c9431fa559ed1221d5760ca51518728dd0b1e2fe866cea1dc5c04245a",
+          "size": 6738,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/button_sweep.json",
+          "hash": "fe317bb759291689b87814e8438d423964188ca8f644e9543e123069adccee0b",
+          "size": 1268,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/button_sweep.mjs",
+          "hash": "802a8315bf7e660994745aa610c883d1cd6b2066eaaf9a59e83d85730a7a70f8",
+          "size": 24505,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/dead_shell.json",
+          "hash": "03c604cb083c42cd315fb82015a8321ba27f0c6d3bd8e477289e1897fbc9d12e",
+          "size": 720,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/dead_shell.mjs",
+          "hash": "2a39315029923dbe45b490e96ed732a544d03f7ee0bc9736c4cf5899a898b66c",
+          "size": 8697,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/frame_rate.json",
+          "hash": "6de397e1d468028bdd85ba3b32ea381bfa65fe23cfb2e4b901fff86ecbb5f780",
+          "size": 1018,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/frame_rate.mjs",
+          "hash": "45bb675a0363200f55e46d4989bd01b1f88fae9fb9dd40b3ed605b1367247102",
+          "size": 7084,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/layout_state.json",
+          "hash": "31eb7b1103452f40d94a1e6bce7c8e91b576a24b3fbcdfc04fc10551222a5231",
+          "size": 697,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/layout_state.mjs",
+          "hash": "e81678a0f0e6cddd2570217a6ce791c2a469b20f52767f68e4e825dfd8cbe963",
+          "size": 11522,
           "executable": false
         },
         {
@@ -511,6 +715,18 @@
           "path": "package-check/scripts/runtime_regression/suites/network.mjs",
           "hash": "7192b6069ce2a108da44031bbc558fa25da686973156139767ae0f3c54f64114",
           "size": 3719,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/popin.json",
+          "hash": "a5b3b0eb70017ef0786b1517ba0d359595b82e29876e3b058c1046fa40f369eb",
+          "size": 968,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/popin.mjs",
+          "hash": "b2f2dc9b82d3e8465fa9858b8cf11add244834f18cafa8d6df897577ca226ddc",
+          "size": 9659,
           "executable": false
         },
         {
@@ -538,21 +754,57 @@
           "executable": false
         },
         {
+          "path": "package-check/scripts/runtime_regression/suites/trial_link.json",
+          "hash": "3e000dac772994cb687a791166062d600e8edad469933e5f319fed66230b885b",
+          "size": 551,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/trial_link.mjs",
+          "hash": "59dd1390e66ab63ada7444f5a76793194e1337842ef615d24a3b95b388146855",
+          "size": 16199,
+          "executable": false
+        },
+        {
           "path": "package-check/scripts/runtime_regression.py",
-          "hash": "b3abb7cc55a62d2facdd78f2f94d3e9cbfcb6005cd7389224ee61062e594d49f",
-          "size": 18810,
+          "hash": "d06ac89080a018abbc56a83f484fbc157cd63b6d061a3f6fbd2cee4f380d7a60",
+          "size": 43935,
           "executable": false
         },
         {
           "path": "package-check/scripts/test_ad_regression.py",
-          "hash": "549cfc4c24b194cbdf5c286215a0ae9a1dcd9721c07ac4615f2101e710610ed6",
-          "size": 12954,
+          "hash": "fa34aa1d93c9703d839e7599efaafa2b63329f4fc2e94f43a85cc9f6b50d8df0",
+          "size": 23786,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_button_sweep_diag.py",
+          "hash": "28dde957467ae08d1b393c3352ed916f39d79863a11b7cbcc24bce69acb4fca0",
+          "size": 14974,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_dead_shell.py",
+          "hash": "40183b5d531a5bb9f7818c3ce10b0b5dd4793f7a5934d09399daa4253100a1af",
+          "size": 12438,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_delivery_folder.py",
+          "hash": "85d6a2f0ff7c563f336a8d6211d933681b605ff15624847504b118de81771c66",
+          "size": 9085,
           "executable": false
         },
         {
           "path": "package-check/scripts/test_final_startup_gate.py",
           "hash": "ba71f6f17fad5577e7609d8bd2515cc02fe564d832935c0325000c9c1eaca5eb",
           "size": 5050,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_frame_rate_gate.py",
+          "hash": "ea1fb265349b895b8823e2e231ee3c6e8058a402aace470f1766172150ab39f7",
+          "size": 10806,
           "executable": false
         },
         {
@@ -565,6 +817,18 @@
           "path": "package-check/scripts/test_issue_relocation.py",
           "hash": "1bff6652db8259d2b24b4087e0b5aabb6f0e2b2166f3458ad30bdf8c9957a206",
           "size": 12115,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_issue_supersede.py",
+          "hash": "72f518289f4cc36d180d7cd8bf4bd607bba2a16707fcdcdc44453a733daf54e2",
+          "size": 8039,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_layout_gates.py",
+          "hash": "340a05b3b32785c5b9bbf11a977c983d7e39748a46fe5f7af7072ac644fbe78b",
+          "size": 13358,
           "executable": false
         },
         {
@@ -586,6 +850,12 @@
           "executable": false
         },
         {
+          "path": "package-check/scripts/test_popin_gate.py",
+          "hash": "492279e9c88905027dc508e2e9deb5d32099b36452f550e1dc1f835211cfcd8a",
+          "size": 15022,
+          "executable": false
+        },
+        {
           "path": "package-check/scripts/test_resource_and_issue_obligations.py",
           "hash": "ed76deafa606adfc378b04ab33074164a636cf1b7f483848e337185adc59c69c",
           "size": 19876,
@@ -593,8 +863,8 @@
         },
         {
           "path": "package-check/scripts/test_runtime_regression.py",
-          "hash": "9e9c99cac82717c566ec79ba118a82b1fc3f27d5e1c7825550b10dd5fd2f2155",
-          "size": 10530,
+          "hash": "97d30873f7c5257a22a0ae7b908379afa2668614370db5d08400b93aa3eb872e",
+          "size": 23732,
           "executable": false
         },
         {
@@ -604,9 +874,21 @@
           "executable": false
         },
         {
+          "path": "package-check/scripts/test_stable_paths.py",
+          "hash": "dc39fd9a919cc3502cb506c47b223966deb8d3fb918da81c52804a1b3887abb6",
+          "size": 2941,
+          "executable": false
+        },
+        {
           "path": "package-check/scripts/test_tap_point.py",
-          "hash": "8c7cd23cd5c33524b52eb89c41d22f752725a643ad086a42cf1e164cef4d60c5",
-          "size": 5631,
+          "hash": "12829076b574cdb76118f671fb2c3947e5776e0798260372f7e3001cbe3e4644",
+          "size": 13655,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_tool_identity.py",
+          "hash": "85e2fc01ba74113e5e3268e079295ced590ea2734a73d45bbf25ac8a69eede23",
+          "size": 10139,
           "executable": false
         },
         {
@@ -616,9 +898,15 @@
           "executable": false
         },
         {
+          "path": "package-check/scripts/tool_identity.py",
+          "hash": "63a14772c7422a7df80e87b920e243dd29566234cb641ac449e8a5b83823d8f4",
+          "size": 12744,
+          "executable": false
+        },
+        {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "8a5fca2ccfeed48cb57ce619175ea5a1b10ae4e74c23841a7cb1dfd52cda472a",
-          "size": 54256,
+          "hash": "42babcb0ace559aa392f6ada6920ec8f178fe43f460ff5bc70a0c632335f2871",
+          "size": 97411,
           "executable": false
         },
         {
@@ -629,8 +917,8 @@
         },
         {
           "path": "review/references/review-mode.md",
-          "hash": "f5042680c4a55ca6c10bd4ae92bff4d1509e448a778be39898e2dd335809511d",
-          "size": 5620,
+          "hash": "b2069bb97415b80c77520cf73c094bc639a02f60bf809c6d05523ffb4906ae20",
+          "size": 5789,
           "executable": false
         },
         {
@@ -641,8 +929,8 @@
         },
         {
           "path": "startup/references/cocos-loading-screen.md",
-          "hash": "7f7025890fc9b529b8a41ad0f8d60533de3c9dffd161c0358467dca786d97a2e",
-          "size": 6421,
+          "hash": "6bbd13941f241f41008e8e38fa07e36bbff314e576cfc79121ad9c5fc8526cff",
+          "size": 6435,
           "executable": false
         },
         {
@@ -659,14 +947,14 @@
         },
         {
           "path": "startup/references/loading-recovery-casebook.md",
-          "hash": "de4a1080205fb8dcd3002b726f6e4ac285f9242b6cb17da07e9ea1341cf6a5fb",
-          "size": 13083,
+          "hash": "c388c37b99d3ccae9bd593fbae6ce38cb2ab9bfae77b73f17d651c309519cbbd",
+          "size": 13188,
           "executable": false
         },
         {
           "path": "startup/references/loading-recovery-regression.md",
-          "hash": "9b283e5263464b0ffe4cdebad000b85364124a33cb73839a4d9f728d1a56fd94",
-          "size": 18326,
+          "hash": "ff76c9974f5922c6f8b0909504bfd4033fd2283f0905a80c21008a05b664ae6b",
+          "size": 18347,
           "executable": false
         },
         {
@@ -677,8 +965,8 @@
         },
         {
           "path": "startup/references/native-reward-storage-and-empty-features.md",
-          "hash": "cafdb1294bb9772a1eb1d44ae79fa2e0dd31de1b5b0bea62a58dfa5732b869f3",
-          "size": 17913,
+          "hash": "34ecfb237fa3b1e2c2f78e7a2cad22ddeb268d14d2cc1c301afd4f2a179d9b33",
+          "size": 18002,
           "executable": false
         },
         {
@@ -701,8 +989,8 @@
         },
         {
           "path": "startup/references/startup-loading-timing.md",
-          "hash": "74caf92d637773a0e4a8c8ed30ebe95b6aa55276df66c962cb77d007e731bd83",
-          "size": 14304,
+          "hash": "8a05c71564e1a6e55c5021f5595fc4bbbd0f14885aae706cecfcd02c63f93557",
+          "size": 14325,
           "executable": false
         },
         {
@@ -737,8 +1025,8 @@
         },
         {
           "path": "test/references/mobile-input-gates.md",
-          "hash": "7982fa2e96cf3dfb1180eeca83918c23eb8e49853f40bd1f30695c2411c88947",
-          "size": 17063,
+          "hash": "f1ac27ede0e946a04e42d84313a6f723370adb6f1db59a3e609d9e93bde76b99",
+          "size": 17105,
           "executable": false
         },
         {
@@ -755,20 +1043,20 @@
         },
         {
           "path": "test/references/prepackage-mobile-review.md",
-          "hash": "cd270bb81b8681bc7be4072801b6de34d2cf92752a7a6da5544627e652feb120",
-          "size": 22787,
+          "hash": "c82d436e867fd4870773cecf3fe8a7820bedf2d4343af29c22dce4a5a877b164",
+          "size": 22827,
           "executable": false
         },
         {
           "path": "test/references/replay-and-input-checks.md",
-          "hash": "d7d819c20f3baeeca5e8080b68716e4470f6716971fa63587739b9ae95410e25",
-          "size": 9991,
+          "hash": "94cbda17f6ba851b6a682c6b5549ad66b5f65f186ec25a9a432e4b54750dbcfe",
+          "size": 10012,
           "executable": false
         },
         {
           "path": "test/references/review-execution-plan.md",
-          "hash": "9cd08dd631318df88b91c134b999f379f99ccddae69b3552158ac5ed2d7c9182",
-          "size": 8752,
+          "hash": "b5ba8c4ff66456e729cab0cb0e99ac7ab3676ac60f08a117a63c280f78cb8516",
+          "size": 8794,
           "executable": false
         },
         {

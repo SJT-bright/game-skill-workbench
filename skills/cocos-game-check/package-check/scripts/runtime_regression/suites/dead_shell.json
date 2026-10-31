@@ -1,0 +1,11 @@
+{
+  "name": "dead_shell",
+  "about": "VIS_DEAD_SHELL (总表 E1 补, Holly's Hay Hop v1): home, then in game (a real tap on adapter.play; adapter.enter_level too when given) scanned for a retired cross-promo / ranking / more-games slot still drawn on screen: active, opacity > 0, enabled Sprite with a frame or non-empty Label, > 4 px and on screen, its own node or sprite frame name on the slot list (item_bg only inside a slot). New game refuses, legacy game (frozen list) warns",
+  "applies": ["tiktok"],
+  "needs": ["home"],
+  "fields": ["play", "enter_level", "in_level"],
+  "engines": ["2.x"],
+  "timeout_s": 420,
+  "owner": "W85",
+  "proof": "20261030-remake-v78-work/briefs/out/W85/evidence/dead_shell-*.json"
+}

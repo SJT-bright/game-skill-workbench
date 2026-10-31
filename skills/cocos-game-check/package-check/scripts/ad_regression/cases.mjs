@@ -29,6 +29,56 @@ const PLAN = {
   normal: { steps: ['start', 'end'], want: 1, about: 'normal full watch' },
 };
 
+// double-claim:begin (v7.8, Saul 2026-10-31) check-in / spin result / gift pack claim window with the "watch ad x2"
+// checkbox, ticked by default. Runs only when the adapter has double_claim = {open, claim, balance} (page JavaScript):
+//   open      make a fresh claim available and open the window; return its 1x amount (a number, or {base})
+//   claim     set the checkbox to the argument `checked` (true / false) and press CLAIM, the way a player does
+//   balance   return the currency balance (a number)
+// want = how many times the 1x amount the claim pays. then_free: after the closed video, the SAME window (no new open)
+// unticked must pay 1x without a video (没看完不吞掉 1 倍). io = {open, claim, balance, shown, step, sleep}.
+const DOUBLE_PLAN = {
+  double_watch: { checked: true, steps: ['start', 'end'], want: 2, about: 'ticked x2, video watched to the end: 2x' },
+  double_quit: { checked: true, steps: ['start', 'quit'], want: 0, then_free: true, about: 'ticked x2, video closed midway: nothing; then unticked CLAIM pays 1x' },
+  double_free: { checked: false, steps: [], want: 1, about: 'unticked CLAIM: no video, 1x' },
+};
+async function runDouble(name, io) {
+  const plan = DOUBLE_PLAN[name];
+  const row = { case: name, about: plan.about, problems: [] };
+  const num = (v) => (typeof v === 'number' && isFinite(v) ? v : null);
+  const o = await io.open();
+  const base = num(o && typeof o === 'object' ? o.base : o);
+  if (o && o.error) row.problems.push('double_claim.open threw: ' + o.error);
+  else if (!(base > 0)) row.problems.push('double_claim.open must open the window and return its 1x amount (got ' + JSON.stringify(o) + ')');
+  const b0 = num(await io.balance());
+  if (b0 === null) row.problems.push('double_claim.balance must return a number');
+  if (row.problems.length) { row.ok = false; return row; }
+  const s0 = await io.shown();
+  const c = await io.claim(plan.checked); await io.sleep(500);
+  if (c && c.error) row.problems.push('double_claim.claim threw: ' + c.error);
+  const s1 = await io.shown();
+  row.videos = s1 - s0;
+  if (plan.checked && s1 !== s0 + 1) row.problems.push('ticked x2 + CLAIM did not start one rewarded video (' + (s1 - s0) + ' started)');
+  if (!plan.checked && s1 !== s0) row.problems.push('unticked CLAIM played a video: it must pay 1x for free');
+  for (const s of plan.steps) { await io.step(s); await io.sleep(700); }
+  await io.sleep(700);
+  const b1 = num(await io.balance());
+  row.base = base; row.want = plan.want * base; row.paid = b1 === null ? null : b1 - b0;
+  if (row.paid !== row.want) row.problems.push('paid ' + row.paid + ', expected ' + row.want + ' (' + plan.want + 'x of ' + base + ')');
+  if (plan.then_free) {
+    const s2 = await io.shown();
+    const c2 = await io.claim(false); await io.sleep(900);
+    if (c2 && c2.error) row.problems.push('double_claim.claim(false) after the closed video threw: ' + c2.error);
+    const b2 = num(await io.balance()), s3 = await io.shown();
+    row.thenFree = b2 === null || b1 === null ? null : b2 - b1;
+    if (s3 !== s2) row.problems.push('unticked CLAIM after the closed video played a video');
+    if (row.thenFree !== base) row.problems.push('after the closed video, unticked CLAIM paid ' + row.thenFree + ', expected ' + base +
+      ': the window stays open and the 1x is not lost (没看完不吞掉 1 倍)');
+  }
+  row.ok = row.problems.length === 0;
+  return row;
+}
+// double-claim:end
+
 let task, page;
 try {
   task = await taskSpace(C.space || 'tiktok-ad-regression');
@@ -90,16 +140,21 @@ const findExit = () => ev((A) => {
     : (n.getComponent(cc.UITransform) || n.getComponent('cc.UITransform')).convertToWorldSpaceAR(new cc.Vec3(x, y, 0));
   const toCss = (n, w) => {
     let p;
+    // cam-point:begin (v7.8, 总表 A13 补) world point -> camera screen point; identical in ad_regression/cases.mjs and runtime_regression/lib.mjs.
+    // 2.x: the node's own camera. 3.x: the cameraComponent of the Canvas the node sits under (walk up the parents);
+    // only when there is none, the first camera of the scene. cams[0] alone is the 3D world camera in a 3D game
+    // (企鹅雪道 v4: the X came out at (818, -918) and nocallback failed a game whose ad was fine).
     if (v2api) p = cc.Camera.findCamera(n).getWorldToScreenPoint(w);
     else {
       let cam = null;
-      for (let parent = n; parent && !cam; parent = parent.parent) {
-        const cv = parent.getComponent && parent.getComponent(cc.Canvas);
-        if (cv && cv.cameraComponent) cam = cv.cameraComponent;
+      for (let a = n; a && !cam; a = a.parent) {
+        const cv = a.getComponent && a.getComponent(cc.Canvas);
+        cam = (cv && (cv.cameraComponent || cv._cameraComponent)) || null;
       }
-      if (!cam) throw new Error('Exit control has no owning Canvas camera');
+      if (!cam) cam = cc.director.getScene().getComponentsInChildren(cc.Camera)[0];
       p = new cc.Vec3(); cam.worldToScreen(w, p);
     }
+    // cam-point:end
     // css-point:begin (v7.7.4, 总表 A5) Cocos 2.x getWorldToScreenPoint works in cc.visibleRect units, not canvas
     // pixels: dividing by canvas.width put the X off screen at DPR 2 (MusicSlice v31, 回家快跑, Meteor Blaster r3).
     const vis = (v2api && cc.visibleRect) ? { w: cc.visibleRect.width, h: cc.visibleRect.height } : { w: canvas.width, h: canvas.height };
@@ -201,6 +256,34 @@ try {
   await sleep(C.settleMs || 2000);
 
   for (const k of (C.cases || Object.keys(PLAN))) {
+    if (DOUBLE_PLAN[k]) {
+      const D = A.double_claim || {};
+      const call = (code, arg) => ev(([code, arg]) => {
+        try { return { value: new Function('checked', code)(arg) }; } catch (e) { return { error: String(e && e.message || e).slice(0, 200) }; }
+      }, [code || 'throw new Error("adapter.double_claim has no such function")', arg]);
+      const io = {
+        open: async () => { const r = await call(D.open); return r.error ? r : r.value; },
+        claim: async (checked) => {
+          await ev(() => { window.__setAdPolicy('manual'); window.__adCtl = null; });
+          const r = await call(D.claim, checked); return r.error ? r : null;
+        },
+        balance: async () => (await call(D.balance)).value,
+        shown: () => ev(() => window.__adStats.shown),
+        step, sleep,
+      };
+      const row = await runDouble(k, io);
+      const end = await state();
+      if (end.hostPending) row.problems.push('an ad that never finished still has callbacks bound');
+      if (end.game && end.game.locked) row.problems.push('game reports an ad lock');
+      const n = await nextAd();
+      row.nextAd = n;
+      if (!(n.started && n.rewarded)) row.problems.push('next ad request failed (' + (n.started ? 'no reward' : 'did not start') + (n.message ? ': ' + n.message : '') + ')');
+      row.ok = row.problems.length === 0;
+      out.cases.push(row);
+      console.log(JSON.stringify(row));
+      save();
+      continue;
+    }
     const plan = PLAN[k];
     if (!plan) { out.cases.push({ case: k, ok: false, problems: ['unknown case'] }); continue; }
     const before = await state();

@@ -175,6 +175,89 @@ class RuntimeGateFailClosed(unittest.TestCase):
         self.assertIn('game.js', files)
         self.assertEqual(adapter, 'adapter.json')
 
+    def test_runtime_gate_passes_policy_to_suites(self):
+        """v7.8: dead_shell blocks a new game and only warns a legacy one, so the runtime suites must get the same
+        policy as the package gates (W85 RESULT 1: FoxDenDash v1's finalize record says new, its bytes say legacy)."""
+        with patch('runtime_regression.required_suites', return_value=['dead_shell']), \
+                patch('runtime_regression.run', return_value={'id': 'runtime_regression', 'passed': True}) as run:
+            runtime_gate({'game.js': b'x'}, self.root, 'adapter.json', policy='new')
+            self.assertEqual(run.call_args.kwargs.get('policy'), 'new')
+            runtime_gate({'game.js': b'x'}, self.root, 'adapter.json')
+            self.assertIsNone(run.call_args.kwargs.get('policy'))
+
+    def test_check_gives_runtime_gate_the_package_gate_policy(self):
+        archive = self.root / 'plain.zip'
+        write_archive(archive, fixture())
+        for policy in ('new', 'legacy'):
+            with patch('check_package.runtime_gate', side_effect=ValueError('runtime regression required')) as gate:
+                with self.assertRaisesRegex(ValueError, 'runtime regression required'):
+                    check(archive, APP, ad_regression='adapter.json', policy=policy)
+            self.assertEqual(gate.call_args.kwargs.get('policy'), policy)
+
+
+class Environment(unittest.TestCase):
+    """v7.8 (总表 A6 补): 企鹅雪道 v4 ran the ad regression on an unfinished build (tiktok-touch-3x.js not installed), the X
+    tap missed and nocallback looked like a broken ad. Such a run is 「环境不完整」 (exit 2), not 「包不通过」 (exit 1)."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='ad regression env ')
+        self.root = Path(self.temp.name)
+        self.package = self.root / 'pkg'
+        (self.package / 'cocos-js').mkdir(parents=True)
+        (self.package / 'cocos-js' / 'cc.js').write_text('')
+        (self.package / 'web-adapter.js').write_text('')
+        (self.package / 'game.js').write_text("require('./web-adapter');")
+        (self.package / 'assets').mkdir()
+        (self.package / 'assets' / 'index.js').write_bytes(AD_JS)
+        self.adapter = self.root / 'adapter.json'
+        self.adapter.write_text(json.dumps({'request': 'grant();'}))
+        import sys
+        sys.path.insert(0, str(runtime_regression.SHARED))
+        import audit_upload_startup
+        self.probe = patch.object(audit_upload_startup, 'audit_files', return_value={'errors': [
+            'Cocos3 native touch coordinates rejected: SDK identifier/screenX/screenY/force touches must reach ...']})
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_run_without_touch_part_is_environment_incomplete(self):
+        with self.probe, patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None):
+            with self.assertRaises(ad_regression.EnvironmentIncomplete) as ctx:
+                ad_regression.run(self.package, self.adapter)
+        self.assertTrue(str(ctx.exception).startswith('环境不完整：'))
+        self.assertIn('tiktok-touch-3x.js', str(ctx.exception))
+        self.assertIsInstance(ctx.exception, ad_regression.RegressionRefused)
+
+    def test_writer_gate_still_refuses_and_names_the_environment(self):
+        files = {'game.js': b'', 'assets/index.js': AD_JS}
+        with self.probe:
+            with self.assertRaisesRegex(ValueError, '^环境不完整：'):
+                rewarded_ad_gate(files, self.package, self.adapter)
+
+    def main(self, package):
+        import sys
+        report = self.root / 'report.json'
+        report.unlink(missing_ok=True)
+        argv = ['ad_regression.py', '--package', str(package), '--adapter', str(self.adapter), '--report', str(report)]
+        with patch.object(sys, 'argv', argv):
+            code = ad_regression.main()
+        return code, json.loads(report.read_text())
+
+    def test_cli_exit_codes(self):
+        with self.probe:
+            code, doc = self.main(self.package)                     # a folder: only the touch part is checked
+        self.assertEqual((code, doc['status']), (2, 'environment_incomplete'))
+        archive = self.root / 'Game.zip'
+        write_archive(archive, fixture())
+        code, doc = self.main(archive)                              # a ZIP by hand: the writer receipt is needed
+        self.assertEqual(code, 2)
+        self.assertIn('no writer receipt', doc['environment'])
+        self.assertTrue(doc['verdict'].startswith('环境不完整：'))
+        failed = ad_regression.RegressionRefused('rewarded-ad regression failed: nocallback: reward count 1')
+        with patch('ad_regression.run', side_effect=failed):
+            code, doc = self.main(self.package)
+        self.assertEqual((code, doc['verdict']), (1, '包不通过'))
+
 
 class ExitTapPoint(unittest.TestCase):
     """v7.7.4 (总表 A5): the X control is tapped where it really is on screen.
@@ -240,6 +323,109 @@ class ExitTapPoint(unittest.TestCase):
         for s, g in list(zip(self.SCENARIOS, got))[:2]:
             with self.subTest(scenario=s):
                 self.assertGreater(abs(g['x'] - s['want'][0]) + abs(g['y'] - s['want'][1]), 40, g)
+
+
+class DoubleClaim(unittest.TestCase):
+    """v7.8 (Saul 2026-10-31): check-in / spin result / gift pack window with the ticked-by-default "watch ad x2"
+    checkbox. Ticked + watched -> 2x; ticked + closed midway -> nothing, the window stays and unticked pays 1x;
+    unticked -> 1x, no video. The double-claim block of cases.mjs runs in Node against fake games."""
+    CASES_MJS = Path(__file__).resolve().parent / 'ad_regression' / 'cases.mjs'
+    GOOD = {'open': 'return 30;', 'claim': 'x', 'balance': 'return 0;'}
+    # A fake claim window. flags turn on one bug each.
+    GAME = r'''
+const fake = (flags) => {
+  const g = { balance: 100, base: 30, open: false, claimed: false, pending: null, shown: 0 };
+  return {
+    open: async () => { g.open = true; g.claimed = false; return flags.noBase ? null : { base: g.base }; },
+    claim: async (checked) => {
+      if (!g.open || g.claimed) return null;
+      if (checked || flags.alwaysAd) { g.shown++; g.pending = { paid: false }; if (flags.payOnShow) g.balance += 2 * g.base; return null; }
+      g.balance += (flags.freePays2x ? 2 : 1) * g.base; g.claimed = true; g.open = false; return null;
+    },
+    balance: async () => g.balance,
+    shown: async () => g.shown,
+    step: async (s) => {
+      if (s === 'end' && g.pending) { g.balance += (flags.watchPays1x ? 1 : 2) * g.base; g.claimed = true; g.open = false; g.pending = null; }
+      if (s === 'quit' && g.pending) { if (flags.quitPays) g.balance += g.base; if (flags.quitSwallows) { g.claimed = true; g.open = false; } g.pending = null; }
+    },
+    sleep: async () => {},
+  };
+};
+'''
+
+    def block(self):
+        text = self.CASES_MJS.read_text(encoding='utf-8')
+        return text[text.index('// double-claim:begin'):text.index('// double-claim:end')]
+
+    def run_fake(self, flags):
+        import shutil
+        import subprocess
+        node = shutil.which('node')
+        self.assertIsNotNone(node, 'node is required for the ad regression and this test')
+        js = (self.block() + self.GAME + '(async () => { const r = {};\n'
+              'for (const k of Object.keys(DOUBLE_PLAN)) r[k] = await runDouble(k, fake(' + json.dumps(flags) + '));\n'
+              'console.log(JSON.stringify(r)); })();\n')
+        r = subprocess.run([node, '--input-type=module', '-e', js], capture_output=True, text=True, timeout=30)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout)
+
+    def test_good_window_passes_all_three(self):
+        rows = self.run_fake({})
+        self.assertEqual(sorted(rows), sorted(ad_regression.DOUBLE_CASES))
+        for name, row in rows.items():
+            self.assertTrue(row['ok'], (name, row['problems']))
+        self.assertEqual((rows['double_watch']['paid'], rows['double_quit']['paid'], rows['double_quit']['thenFree'],
+                          rows['double_free']['paid']), (60, 0, 30, 30))
+
+    def test_bad_windows_fail_the_right_case(self):
+        for flags, case, words in (
+                ({'quitPays': True}, 'double_quit', 'paid 30, expected 0'),          # closed midway still pays
+                ({'quitSwallows': True}, 'double_quit', 'not lost'),                 # closing the video ate the 1x
+                ({'alwaysAd': True}, 'double_free', 'unticked CLAIM played a video'),  # must watch to claim
+                ({'freePays2x': True}, 'double_free', 'expected 30'),
+                ({'watchPays1x': True}, 'double_watch', 'expected 60'),
+                ({'payOnShow': True}, 'double_quit', 'expected 0'),                  # paid before the video ended
+                ({'noBase': True}, 'double_watch', 'return its 1x amount')):
+            with self.subTest(flags=flags):
+                row = self.run_fake(flags)[case]
+                self.assertFalse(row['ok'], row)
+                self.assertIn(words, ' '.join(row['problems']))
+
+    def tmp(self):
+        t = tempfile.TemporaryDirectory(prefix='ad regression double ')
+        self.addCleanup(t.cleanup)
+        return Path(t.name)
+
+    def test_adapter_field_is_validated_and_adds_the_cases(self):
+        root = self.tmp()
+        path = root / 'adapter.json'
+        for bad in ('return 1;', {'open': 'return 1;'}, dict(self.GOOD, extra='x'), dict(self.GOOD, claim='')):
+            path.write_text(json.dumps({'request': 'grant();', 'double_claim': bad}))
+            with self.assertRaisesRegex(ad_regression.RegressionRefused, 'double_claim'):
+                ad_regression.load_adapter(path)
+        path.write_text(json.dumps({'request': 'grant();', 'double_claim': self.GOOD}))
+        adapter = ad_regression.load_adapter(path)
+        self.assertEqual(ad_regression.default_cases(adapter), ad_regression.CASES + ad_regression.DOUBLE_CASES)
+        self.assertEqual(ad_regression.default_cases({'request': 'grant();'}), ad_regression.CASES)
+
+    def test_judge_requires_the_double_cases_when_asked(self):
+        cases = ad_regression.CASES + ad_regression.DOUBLE_CASES
+        result = passing_result()
+        self.assertFalse(ad_regression.judge(result, cases)[0])
+        result['cases'] += [{'case': c, 'ok': True, 'problems': []} for c in ad_regression.DOUBLE_CASES]
+        self.assertEqual(ad_regression.judge(result, cases), (True, []))
+        result['cases'][-2] = {'case': 'double_quit', 'ok': False, 'problems': ['paid 30, expected 0 (0x of 30)']}
+        self.assertIn('double_quit: paid 30', ad_regression.judge(result, cases)[1][0])
+
+    def test_double_case_without_adapter_field_refuses(self):
+        root = self.tmp()
+        (root / 'game.js').write_text('')
+        path = root / 'adapter.json'
+        path.write_text(json.dumps({'request': 'grant();'}))
+        with patch('ad_regression.environment_problem', return_value=None), \
+                patch('ad_regression.find_browser', return_value='ego-browser'):
+            with self.assertRaisesRegex(ad_regression.RegressionRefused, 'need adapter "double_claim"'):
+                ad_regression.run(root, path, ['double_free'])
 
 
 if __name__ == '__main__':

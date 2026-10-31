@@ -27,6 +27,7 @@
 - verify_native_zip.verify直接检查最终ZIP启动闭包，原正式writer在Native预检和ZIP回读均接入；不能只有入口文案。
 - 成品维护的build_checked_zip在临时ZIP通过同一verifier及资源检查后才原子发布最终文件，无需全量CI。失败无最终ZIP，旧文件不覆盖。
 - 新框架/模块协议只扩展经过真实反例校准的解析/运行器；不能为让当前游戏过关而排除整个启动依赖检查。
+- TikTok兼容静态检查在remake-core/scripts/package_gates/tiktok_compat.py（GATE_MODULES末项，writer、build_checked_zip、check_package都经package_gates.run()执行）：分离引擎插件、subPackages大小写新老都拦；ogg、超4096纹理、路径空格/#/?/%新游戏拦老游戏警告；回归test_package_gates_compat.py。
 
 ## 解析器与已有检验的结合
 

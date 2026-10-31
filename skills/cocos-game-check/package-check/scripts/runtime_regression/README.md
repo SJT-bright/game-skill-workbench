@@ -68,6 +68,7 @@ Python 侧给父级用：`run(package_dir, adapter_path, suites=None, work=None)
 | `resultFile` | 套件必须写的结果 |
 | `evidenceDir` | 截图、录屏、额外证据放这里 |
 | `lib` | `lib.mjs` 的 file URL |
+| `policy` / `policyReason` | v7.8：`"new"` 或 `"legacy"`（`run(policy=...)`，不给时按包的字节判，判不出 = new）和判定理由；名单上的老游戏只警告的套件读它（`dead_shell`） |
 
 结果 JSON（写到 `CFG.resultFile`）：
 
@@ -110,3 +111,31 @@ v7.5 新增（旧调用不变）：`touchTap(page, x, y)`（真实触摸）、`k
 
 `startup`、`network`（2.x）和 `startup3x`（3.x），都归 W3a。W3b 的玩法类套件（missions、capsule、result_x2、ad_entry、
 save_claim、modal_pause、home_motion/interaction）2026-10-29 改到下一版，不在本目录；运行器和测试不依赖它们。
+
+## v7.8 加的
+
+- `dead_shell`（2.x，归 W85，规则名 VIS_DEAD_SHELL，总表 E1 补）：首页、真点 `play` 之后、`enter_level` 之后三个画面，找还显示着的退役
+  互推 / 排行榜 / 更多游戏槽位。新游戏拒，老游戏（`CFG.policy === 'legacy'`）只警告。逻辑测试 `../test_dead_shell.py`（假 lib.mjs + 假场景树）。
+- `frame_rate`（2.x，归 W92，总表 P16 第 3 步）：页面加载前用 CDP `Page.addScriptToEvaluateOnNewDocument` 把 `requestAnimationFrame`
+  换成定频时钟（`frame_rate_compare.mjs` 的 `RAF_JS`），60 Hz 和 120 Hz 各跑一次 adapter `frame_rate` 那段操作，按真实时间比
+  `track` 节点的位置，差超过 5% 不过（新游戏拒、老游戏警告；时钟没跑到目标帧率 = 本次无效，一律拒）。`{"n/a": 原因}` 不开浏览器直接过，
+  3.x 只警告「未覆盖」。逻辑测试 `../test_frame_rate_gate.py`（Node 跑 `compare()` 和时钟）。
+- 运行器开跑前查环境（总表 A6 补）：`touch_problem(files)`（上传触摸探针不过）→ `EnvironmentIncomplete`，命令行对 ZIP 跑再查
+  `receipt_problem(zip)`（写包回执）；CLI 退出码 2。`ad_regression.py` 用同一套。见 `../../references/runtime-regression.md`。
+- `lib.mjs` 的 findLabels、locate 和 `../ad_regression/cases.mjs` 用同一段 `cam-point` 块选相机（3.x 用节点所在 Canvas 的相机，总表 A13 补）。
+- v7.8 第三批（总表 B30，归 W87，来自全民飞车门禁原型 `1全民飞车漂移/_work/skill_feedback/gates/`）：
+  - `layout_state`（D）、`button_sweep`（E）：所有 TikTok 包（2.x、3.x），新游戏拦、老游戏只警告、3.x 只有开局下载会拦（判定在
+    `layout_rules.level`）。`ad_entries`（B）：adapter 有 `ad_entries` 才跑。`trial_link`（F）：只有给了试玩链接才跑
+    （`run(trial_url=...)`、`runtime_regression.py run --trial`、`trial --url`、`serve_preview.py --keep`），sidecar 写 `"host": "none"`，
+    运行器不起包的宿主服务，`CFG.base` 是 null，套件自己打开 `CFG.trialUrl`。
+  - 新的共享文件：`geom.mjs`（页面里的坐标换算：2.x 按 `cc.view` 真实视口，3.x 用 cam-point + css-point 块）、`gates.mjs`（机型、
+    进首页判断、可见节点、真实操作、3D 遮挡像素测法）、`layout_rules.mjs`（纯规则，`../test_layout_gates.py` 在 Node 里测）。
+  - `popin`（2.x，归 W89，总表 P2 补）：障碍不许在屏幕里凭空出现、消失、瞬移。在页面里每帧看的部分在 `popin_watch.mjs`
+    （`../test_popin_gate.py` 在 Node 假引擎上跑它）。sidecar 新键（运行器 `precheck()` 不开浏览器就判）：`needs_new`（新游戏必须有的
+    adapter 字段：缺了新游戏拒、老游戏警告不跑）、`na_field`（这个字段写 `{"n/a": "原因"}` 就直接过）、`uncovered`
+    （`{"3.x": "原因"}`：这个引擎只警告「未覆盖」）。
+  - `CFG` 多了 `board`（`"remake"` / `"localize"` / null）和 `trialUrl`；摘要多了 `not_run`（没跑的套件和原因）、`board`、
+    `startup_measured`（layout_state 实测的开局下载）。
+  - 宿主（2.x `../ad_regression/host.js`、3.x `host3x/`）都加了 `dev=iphone14|se`、`capsule=pt|px`、`window.__gateLog` /
+    `__gateNow` / `__gateDevice` 和 `scene-loading` / `scene-launch` 日志；3.x 另加 `reset=1`、`ad=`、广告 / toast / 平台调用日志。
+    不带这些参数时宿主行为不变（原有套件和广告回归照旧）。

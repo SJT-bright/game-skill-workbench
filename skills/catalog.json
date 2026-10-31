@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T15:18:13.331Z",
-  "treeHash": "c430eb45edad87b4e19355065e7416a2c80759e3616ae255d039e9cd8842eb5f",
+  "createdAt": "2026-10-31T15:18:41.321Z",
+  "treeHash": "961bfab782e8cdfd975e25c0733772abca525538153b5242a79e554787001012",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1753,20 +1753,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "a579917b76b66ea4749a2e26c6b6d134d316610c930ad39f0ad8f139ac37cdad",
-      "fileCount": 8,
-      "bytes": 41977,
+      "treeHash": "c6fc7489aec2c9c6c516f3cb9a7931815616290ff93cd0e9ba8b54c76eca1931",
+      "fileCount": 10,
+      "bytes": 98676,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "4f15b6224890fd01c731353206b9cd5dc8d172fa65418195193695cca6c45f99",
-          "size": 1454,
+          "hash": "497c5dd0f1ff87cdea773753a7ef1e6e56e64c354d4dbf9aaa43bc1f3813419f",
+          "size": 1629,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "aa7d5d44f9f35f7b15ae2010aa37198af034fe7ddd1af7e3514c927757a18867",
-          "size": 9748,
+          "hash": "dc4e35dd84e9d294fa270e8c892a2ca9a12e60915afd6de1ef0b36e9b4e27bd7",
+          "size": 20455,
           "executable": false
         },
         {
@@ -1789,20 +1789,32 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
-          "size": 21567,
+          "hash": "980b284103da07481dd00a9f2b1e33f1bead7d7cbd7c39b67d176278fc37366e",
+          "size": 22834,
           "executable": false
         },
         {
           "path": "references/fixed-entries.md",
-          "hash": "35825f8ab50a25d2a3c84560d47ff73ef8cabdda9ea6b66f761b26386baf2d51",
-          "size": 5758,
+          "hash": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
+          "size": 9768,
+          "executable": false
+        },
+        {
+          "path": "scripts/reviewed_resource_profiles.json",
+          "hash": "40faff0424210e01168c3a8bdebd5b9cf5d2def904c3eaa8abb143e5af70ca8e",
+          "size": 20205,
           "executable": false
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
-          "size": 460,
+          "hash": "aed87b24c933829e1429597f0744aedecf203bad25972ca000bac1f0f491e183",
+          "size": 950,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_entry_consistency.py",
+          "hash": "a3da1fbaa883001cad97c27409bf62a6ca0c929a90cc4a0a2069eb5ccd489ede",
+          "size": 19845,
           "executable": false
         }
       ]

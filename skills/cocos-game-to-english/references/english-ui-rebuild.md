@@ -1,6 +1,6 @@
 # 全英文覆盖、英化换图与重塑全 UI
 
-本页三部分的适用范围（以两个板块（重塑包 cocos-game-check 板块，英化包不含）为准）：**第一步全量中文检索**两个板块共用（源码是中文就要做）；**英化：只换带中文字的图**只属于英化；**重塑：全 UI 生图重构**只属于重塑，英化不做。先保存原包和真实基线，再按板块做，之后接回功能、Ego Lite 触屏、平台接入与单 Native ZIP 流程。用户指定局部维护或其他顺序时以当前指令为准；不因此重做已结项游戏。
+本页三部分的适用范围（以[两个板块](../../remake-core/references/two-boards.md)为准）：**第一步全量中文检索**两个板块共用（源码是中文就要做）；**英化：只换带中文字的图**只属于英化；**重塑：全 UI 生图重构**只属于重塑，英化不做。先保存原包和真实基线，再按板块做，之后接回功能、Ego Lite 触屏、平台接入与单 Native ZIP 流程。用户指定局部维护或其他顺序时以当前指令为准；不因此重做已结项游戏。
 
 ## 第一步：全量中文检索与英化
 
@@ -19,11 +19,11 @@
 ### 可复用静态检索
 
 ```sh
-python3 /path/to/cocos-game-check/core/scripts/audit_english_coverage.py \
+python3 <skills>/remake-core/scripts/audit_english_coverage.py \
   --source /path/to/current-source \
   --output /path/to/project-evidence/english-source-scan.json
 
-python3 /path/to/cocos-game-check/core/scripts/audit_english_coverage.py \
+python3 <skills>/remake-core/scripts/audit_english_coverage.py \
   --source /path/to/current-source --web /path/to/current-Web \
   --native /path/to/current-Native-or-upload.zip \
   --output /path/to/project-evidence/english-final-scan.json
@@ -49,18 +49,19 @@ python3 /path/to/cocos-game-check/core/scripts/audit_english_coverage.py \
 
 ## 英化：只换带中文字的图（画风跟原游戏一致）
 
-用户 2026-10-21：英化时原游戏已经有美术，画风不改；带中文字的图做成美化的英文版。排版、禁止的UI 和新功能的图另按英化＋优化（重塑包 cocos-game-check 板块，英化包不含）的优化清单做，同样沿用原画风。
+用户 2026-10-21：英化时原游戏已经有美术，画风不改；带中文字的图做成美化的英文版。新加的入口（两个主页入口、两个音量、Watch Ad x2、看广告复活）的图同样沿用原画风；英化不写优化清单、不重新排版（Saul 2026-10-28，旧的“英化＋优化”清单作废）。
 
 1. **先把全部图片看一遍**：图片里画死的中文，扫描脚本读不出来，最容易漏。用 `make_contact_sheet.py <工程>/assets --out <核验目录>/asset-sheets --per-sheet 12` 把 assets 里所有图片（含图集整张、位图字体图）拼成编号总览图（透明图会垫上灰色棋盘格，深色字和浅色字都看得见），GPT 一张张看完，记下带中文字的编号；看不清的打开原图。`UI-01` 的 `image_and_frame_text_review` 观察写总览图的 `contact-sheets.json` 路径、总张数和带中文的编号。动画/Spine 的帧、远程加载的图另外补看。
 2. **列清单**：文案线从上面"图片和动画文字"清单和总览图里挑出所有带中文字的图（按钮、图标、标题、横幅、图片字、图集里的帧、位图字体），每行记：原图路径、出现的页面和状态、中文原文、英文定稿、原图尺寸和显示尺寸。不带中文字的图不进清单、不动。
 3. **GPT 生图做英文版**：每张图都用 GPT/Codex 内置 image_gen，以原图为参考生成。尺寸、轮廓、配色、边框、材质、阴影和原图一致，**只把中文换成美化的英文字**（字体气质贴合原图，比如原来是圆润卡通字就用圆润卡通英文字）。字和底图在同一张图里一起生成，不在空底图上叠 Label；生成后逐字核对拼写。原图≥显示尺寸 2 倍出图，见[清晰度硬规则](../../remake-art/references/artwork-and-feedback.md#清晰度硬规则禁止低分辨率像素风和粗糙边缘)。
 4. **同名替换**：按原路径同名替换并保留 `.meta`，引用自动生效；图集里的帧按原帧尺寸和位置替换。换图这一步本身不改节点结构和布局（重新排版、补单调页面、加设置页等按优化清单另做）。
+4a. **运行时换字先清旧字图**（v7.8，剪刀达人 v26）：代码把 Label 换成一串字图（GeneratedLetters 这类子节点）时，**每次换字前先清掉同名子节点**（`node.children.filter(c => c.name === '<字图节点名>').forEach(c => { c.active = false; c.removeFromParent(false); c.destroy(); })`，只 `destroy()` 本帧还会画出来），再关掉 Label 或清空它的字。剪刀达人 v26 回访弹窗点 CHECK STATUS 后状态行叠了 2～3 层字，v27 照这样清掉后只剩 1 层。状态会变的弹窗每个状态都 dump，美术检查的 `stacked_text_layers` 会拦。
 5. **英文放不下**：英文通常比中文长。先在生图时调整英文排版（缩写、两行、字号），再考虑调 Label 的字号、宽度、换行；不改页面布局，不放大按钮挤到别的元素。
 6. **固定英文字也要设计**（用户 2026-10-22）：原游戏里用字体 Label 显示的固定英文（按钮字、标题、页面名、弹窗标题、栏目名、物品名、任务名、COINS/Price 这类），**全部用 GPT 按原画风生成图片字替换**（图片名 `txt_<字>`）；会变的数字改用按原画风生成的数字图做成的位图字体，单位用图标；**按钮连同上面的字一次生成整张图，游戏标题重做成一张风格化 logo**（用户 2026-10-23，英化也一样，见[所有字都是生成的图片字](../../remake-art/references/page-richness.md#所有字都是生成的图片字和画面一体按钮连字一张图标题是-logo用户-2026-10-23两个板块重点强调)）。**深绿/深青色的字、直接调用字体打的固定字、细字明令禁止**；按钮（含左右箭头）全部来自同一套，写 `docs/art/button-set.json`。不能把系统细字体直接摆在新图上，见[文字也要设计](../../remake-art/references/page-richness.md#六文字也要设计两个板块用户-2026-10-22)。
-7. **画风规则**：美术第一版不按明亮Q版重画、有背景图的页面不重新生成背景、不做全 UI 重构；但明令禁止的UI、页面布局、单调页面补充、**纯色背景重做（含游戏中）**英化也要做（按优化清单），改的部分用原游戏色系里的颜色和材质（[页面不能单调](../../remake-art/references/page-richness.md)）。用户看完说"按重塑画风重做"后，改按重塑的美术规则（下面的全 UI 生图重构），见英化的美术分两步（重塑包 cocos-game-check 板块，英化包不含）。
-8. **检查**：每个页面实际打开，和 `docs/baseline/` 里的原版对照截图并排看：除了文字换成英文和优化清单里的改动，其他都应该一样。英文不越框、不盖字、不裁切，两种手机比例都看。结果记入 ART-01、UI-02、UI-03、ART-05、PAGE-01。英化重新排版后同样要用 dump_ui 读出 `docs/ui-layout.json` 跑 `audit_ui_coverage.py`（英化＋优化以后这一项和重塑一样），每个页面的截图跑 `audit_page_richness.py`。
+7. **画风规则**：美术第一版不按明亮Q版重画、有背景图的页面不重新生成背景、不做全 UI 重构；明令禁止的 UI（版本号、Credits、分享/排行入口）照样删掉；页面布局、单调页面补充、纯色背景重做只在用户点名用美工 Skill 时做（英化入口最后一节），改的部分用原游戏色系里的颜色和材质（[页面不能单调](../../remake-art/references/page-richness.md)）。用户看完说"按重塑画风重做"后，改按重塑的美术规则（下面的全 UI 生图重构）。
+8. **检查**：每个页面实际打开，和 `docs/baseline/` 里的原版对照截图并排看：除了文字换成英文、英化入口第 2～7 项加的入口和数值美化，其他都应该一样。英文不越框、不盖字、不裁切，两种手机比例都看。结果记入 ART-01、UI-02、UI-03、ART-05、PAGE-01。加了入口的页面同样要用 dump_ui 读出 `docs/ui-layout.json` 跑 `audit_ui_coverage.py`，改过的页面截图跑 `audit_page_richness.py`。
 
-TikTok 两个主页能力（加桌面、个人主页回访）原游戏没有时**直接在首页加上这两个功能键，不问用户**（用户 2026-10-23），入口图标和弹窗按原游戏画风用 GPT 生图做；原游戏的**分享功能全部删掉**（分享用不了），见首页必加两个主页按钮、去掉分享（重塑包 cocos-game-check 板块，英化包不含）。
+TikTok 两个主页能力（加桌面、个人主页回访）原游戏没有时**直接在首页加上这两个功能键，不问用户**（用户 2026-10-23），入口图标和弹窗按原游戏画风用 GPT 生图做；原游戏的**分享功能全部删掉**（分享用不了），见[首页必加两个主页按钮、去掉分享](../../remake-core/references/tiktok-home-growth.md#英化首页必加两个主页按钮去掉分享不问用户用户-2026-10-23)。
 
 ## 英文文案质量（两个板块都要）
 
@@ -68,7 +69,7 @@ TikTok 两个主页能力（加桌面、个人主页回访）原游戏没有时*
 
 1. **定词表**：文案线写 `docs/copy/glossary.json`：`allow` 放游戏名和专有词（拼写检查放行），`terms` 定统一叫法，例如 `{"Coins": ["Gold", "Gold Coins"], "Claim": ["Receive"]}`，之后出现被禁的叫法就拦。英化另写 `docs/copy/copy-table.csv`（列 `zh,en`），每条中文对应一条英文，占位符（`{0}`、`%d`）要一致。
 2. **读出玩家真正看到的字**：测试时用 `chrome_touch.py` 的 dump_ui 把每个页面、弹窗和条件状态（已领、锁定、金币不足、加载失败……）在两种比例下读一遍，dump 放在 `docs/test/` 下。
-3. **跑检查**：`audit_copy_quality.py --project <工程> --require-runtime --sheet <核验目录>/copy-review.md --binding <review.json> --out <报告>`。必须改的：中文或全角标点、拼写错误、重复词、占位符不一致、被禁的叫法、**文字超出按钮或底图**（按游戏里实际位置量）。要看的：中式英语（Receive、Gold coins、Click、Congratulations on passing the level……，每条带建议）、同一个东西多个叫法、按钮大小写混用、可能被截断或缩得太小、按钮字太长。
+3. **跑检查**：`audit_copy_quality.py --project <工程> --require-runtime --sheet <核验目录>/copy-review.md --binding <review.json> --out <报告>`。必须改的：中文或全角标点、拼写错误、重复词、占位符不一致、被禁的叫法、**文字超出按钮或底图**（按游戏里实际位置量）、**商标词**（v7.8 E8：车名、角色名，词表在 `remake-core/assets/trademark-words.json`，报告写出命中的词；Codex 首轮英化全民飞车漂移把「法拉利458」直译成 Ferrari 458。中文原版里的品牌车名、动漫角色名一律换成通用叫法，如 Ferrari 458 → Supercar、擎天柱 → Semi Truck；真有授权的写进 `docs/copy/glossary.json` 的 `trademark_ok`，带 `why`）。Mustang、Bumblebee 这类本身也是普通英文的词、以及代码或数据表里的字符串（`trademark_literal`）只提示，自己看是不是会显示给玩家。要看的：中式英语（Receive、Gold coins、Click、Congratulations on passing the level……，每条带建议）、同一个东西多个叫法、按钮大小写混用、可能被截断或缩得太小、按钮字太长。
 4. **GPT 审语感**：GPT 读 `copy-review.md`，逐条看是否自然地道、语气统一（轻松友好的休闲游戏口吻）、意思和中文一致、按钮短而清楚；改完重跑。COPY-01 行 `reviewer` 写 `gpt`，`native_phrasing_review` 写改了哪些、为什么保留哪些"待看"项。
 5. 常用说法：领取 Claim，金币 Coins（货币按题材起名时用那个名字，如 Pearls，全游戏统一，见顶部资源栏（remake-levels，英化不使用）），体力 Energy/Lives，奖励关 Bonus Level，限定关 Reward Level / Chapter Reward，道具 Items/Boosters，过关 Level Complete!，失败 Level Failed，复活 Revive，再来一次 Retry，返回 Back，转盘 Lucky Spin，看广告 Watch Ad，双倍 x2，开/关 On/Off，点击 Tap。
 
@@ -91,7 +92,7 @@ Home Screen 使用可识别小房子，Profile Revisit 用独立的个人主页/
 
 ## 生图后先全量视觉巡检，再接回后续流程
 
-中文覆盖与换图（英化）或全 UI 重构（重塑）之后，先独立完成 [全量视觉巡检、自动优化和复查](../../remake-art/references/full-visual-review.md)：全部可见图像的原件及每处实际页面/状态组合均要覆盖，检查穿插/越框/盖字/裁切、层级、清晰度和整体观感，直接修复并按同状态复查；不能因为生图成功就跳过。之后继续 全流程检查（重塑包 cocos-game-check 板块，英化包不含）：真实首关教程与阶段流程、全部功能/加载恢复、奖励保存/消费、Ego Lite 手机模拟、IAA 与两个主页能力、实际 Web/Native、旧问题回归、唯一 Native 测试 ZIP及独立回解。Agent 自主实施和检查，制作中途不停下等用户审美确认，整套完成后按四个阶段（重塑包 cocos-game-check 板块，英化包不含）交用户试玩验收；真实手机、真实 IAA、平台接受与发布各自按实际结果记录。
+中文覆盖与换图（英化）或全 UI 重构（重塑）之后，先独立完成 [全量视觉巡检、自动优化和复查](../../remake-art/references/full-visual-review.md)：全部可见图像的原件及每处实际页面/状态组合均要覆盖，检查穿插/越框/盖字/裁切、层级、清晰度和整体观感，直接修复并按同状态复查；不能因为生图成功就跳过。之后继续 [全流程检查](../../remake-core/references/process-gates.md)：真实首关教程与阶段流程、全部功能/加载恢复、奖励保存/消费、Ego Lite 手机模拟、IAA 与两个主页能力、实际 Web/Native、旧问题回归、唯一 Native 测试 ZIP及独立回解。Agent 自主实施和检查，制作中途不停下等用户审美确认，整套完成后按[四个阶段](../../remake-core/references/stage-flow.md)交用户试玩验收；真实手机、真实 IAA、平台接受与发布各自按实际结果记录。
 
 ## 标题图片与可读区域
 

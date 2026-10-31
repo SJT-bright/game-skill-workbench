@@ -1,0 +1,485 @@
+{
+  "sausage-run-v2-original-style-20261031-final": {
+    "source_sha256": {
+      "storage-guard.js": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "game.js": "bc3b38a58a8fc5b5b74bdab680a29b1c2efcd2dac9f1a24a356388c99ee67398",
+      "webp-decode-probe.js": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+      "main.js": "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42",
+      "adapter-min.js": "66b969435208dfb90e86ce5c13f5b67e52b31304ec982bc249dbf4e4f154b7c6",
+      "cocos2d-js-min.js": "97aaed0a7cc35981ef7dfbf57c68abd2474be17e187f6cbdbed0cfe2efa34eaa",
+      "ccRequire.js": "6b01bbbc6ef4c68762b391999b670d2d7bd8af4f2c62b4d4599e12d973d9ecef",
+      "touch-coordinates.js": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/game-audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "9b8f57815d1cd7dea54706e5576459c2e695f18f3e023481092528ddd6f121af",
+      "src/settings.js": "927658b07382f857c758e078ff429f7e8117b100dc299278726a065eaa2a8faf",
+      "src/assets/Script/Framework/Library/Encrypt/algo.js": "99cccc45f0f6bc2d373634e2be2cd41b709905df40096dbac865ec769095c184",
+      "src/assets/Script/Framework/Library/Encrypt/encryptjs.js": "8ea241b709b27c2b4a85c741b99ca65b868189f2f79756fef918887c3544004d"
+    },
+    "resolutions": {
+      "assets/main/index.js:10137": {
+        "reason": "Actual AssetRetry.loadSprite serves BaseProp level element.path, SkinItem data.path and UiSkin.image. Finite authored level configs, four skin rows, literal english/original_ui caller keys and the explicit HomePlatform english home_screen/profile pair are cross-checked against actual files and serialized Native. Original-style byte-copy manifest SHA256 cfc0ff634dd0f8d48debf3fb8e70cea4511479443d40b5b747c59904d29c76f9",
+        "paths": [
+          "english/claim_link",
+          "english/energy_ad",
+          "english/equip",
+          "english/home_screen",
+          "english/no_thanks_link",
+          "english/profile",
+          "english/resume",
+          "english/try_skin",
+          "english/watch_ad",
+          "english/watch_ad_x2",
+          "english/watch_continue",
+          "original_ui/button_blank",
+          "original_ui/close",
+          "original_ui/coin",
+          "original_ui/home",
+          "original_ui/panel",
+          "original_ui/retry",
+          "original_ui/settings_icon",
+          "texture/BG05",
+          "texture/bg shizhong",
+          "texture/bg01",
+          "texture/bg02",
+          "texture/bg03",
+          "texture/bg04",
+          "texture/bgchoufengji",
+          "texture/bgguizi",
+          "texture/bgzhuanzs",
+          "texture/bgzhuanzs2",
+          "texture/skin/default",
+          "texture/skin/skin_one",
+          "texture/skin/skin_three",
+          "texture/skin/skin_two"
+        ]
+      },
+      "assets/main/index.js:66009": {
+        "reason": "GameSave.store is the actual SaveStore; SaveStore.get/update/isClaimed call its same local persistence load body, not a Cocos loader. Exact body and its independently inventoried nested calls are bound.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 112150,
+          "end": 112207,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:133359": {
+        "reason": "SoundManager.loadAudio closure receives only the game-audio bundle from getBundle/loadBundle; all callers use the nine preserved static SoundManager .mp3 names and remove their extension.",
+        "requests": [
+          {
+            "bundle": "game-audio",
+            "path": "bgm_1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "bgm_2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "clickclose",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "coin",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "fail",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "jump",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "penhuo",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "success",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:167713": {
+        "reason": "UiSkin.loadFont receives only text -> english/EnglishRounded with cc.Font and bitmap -> english/digits with cc.BitmapFont. This visible-retry delegate is not an unbounded asset source; the actual compiled callers and source map are bound.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/EnglishRounded",
+            "type": "cc.Font",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/digits",
+            "type": "cc.BitmapFont",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:173951": {
+        "reason": "ViewManager receives only registered BaseView classes whose static path methods return these existing authored prefabs; empty path creates a runtime node without loading.",
+        "paths": [
+          "prefabs/AddCoinPanel",
+          "prefabs/ChooseLevelPanel",
+          "prefabs/ChooseSkinPanel",
+          "prefabs/FailPanel",
+          "prefabs/InsufficientPanel",
+          "prefabs/ResetPanel",
+          "prefabs/SetNormalPanel",
+          "prefabs/SuccessPanel",
+          "prefabs/TipPanel"
+        ]
+      }
+    },
+    "escapes": {},
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "af953f04eed4b736f1bcadb7a9a8e8fe6c7071d9be8faefaee48cb4c52f97426"
+  },
+  "sausage-run-v2-original-style-20261031-r2": {
+    "source_sha256": {
+      "storage-guard.js": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "game.js": "bc3b38a58a8fc5b5b74bdab680a29b1c2efcd2dac9f1a24a356388c99ee67398",
+      "webp-decode-probe.js": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+      "main.js": "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42",
+      "adapter-min.js": "66b969435208dfb90e86ce5c13f5b67e52b31304ec982bc249dbf4e4f154b7c6",
+      "cocos2d-js-min.js": "97aaed0a7cc35981ef7dfbf57c68abd2474be17e187f6cbdbed0cfe2efa34eaa",
+      "ccRequire.js": "6b01bbbc6ef4c68762b391999b670d2d7bd8af4f2c62b4d4599e12d973d9ecef",
+      "touch-coordinates.js": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/game-audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "77e4e66362397e8bc0336f14798192e7472eb3be0c68811b8e32de6e2dc4deec",
+      "src/settings.js": "927658b07382f857c758e078ff429f7e8117b100dc299278726a065eaa2a8faf",
+      "src/assets/Script/Framework/Library/Encrypt/algo.js": "99cccc45f0f6bc2d373634e2be2cd41b709905df40096dbac865ec769095c184",
+      "src/assets/Script/Framework/Library/Encrypt/encryptjs.js": "8ea241b709b27c2b4a85c741b99ca65b868189f2f79756fef918887c3544004d"
+    },
+    "resolutions": {
+      "assets/main/index.js:10159": {
+        "reason": "Actual AssetRetry.loadSprite serves BaseProp level element.path, SkinItem data.path and UiSkin.image. Finite authored level configs, four skin rows, literal english/original_ui caller keys and the explicit HomePlatform english home_screen/profile pair are cross-checked against actual files and serialized Native. Original-style byte-copy manifest SHA256 cfc0ff634dd0f8d48debf3fb8e70cea4511479443d40b5b747c59904d29c76f9",
+        "paths": [
+          "english/claim_link",
+          "english/energy_ad",
+          "english/equip",
+          "english/home_screen",
+          "english/no_thanks_link",
+          "english/profile",
+          "english/resume",
+          "english/try_skin",
+          "english/watch_ad",
+          "english/watch_ad_x2",
+          "english/watch_continue",
+          "original_ui/button_blank",
+          "original_ui/close",
+          "original_ui/coin",
+          "original_ui/home",
+          "original_ui/panel",
+          "original_ui/retry",
+          "original_ui/settings_icon",
+          "texture/BG05",
+          "texture/bg shizhong",
+          "texture/bg01",
+          "texture/bg02",
+          "texture/bg03",
+          "texture/bg04",
+          "texture/bgchoufengji",
+          "texture/bgguizi",
+          "texture/bgzhuanzs",
+          "texture/bgzhuanzs2",
+          "texture/skin/default",
+          "texture/skin/skin_one",
+          "texture/skin/skin_three",
+          "texture/skin/skin_two"
+        ]
+      },
+      "assets/main/index.js:66031": {
+        "reason": "GameSave.store is the actual SaveStore; SaveStore.get/update/isClaimed call its same local persistence load body, not a Cocos loader. Exact body and its independently inventoried nested calls are bound.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 112172,
+          "end": 112229,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:133381": {
+        "reason": "SoundManager.loadAudio closure receives only the game-audio bundle from getBundle/loadBundle; all callers use the nine preserved static SoundManager .mp3 names and remove their extension.",
+        "requests": [
+          {
+            "bundle": "game-audio",
+            "path": "bgm_1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "bgm_2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "clickclose",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "coin",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "fail",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "jump",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "penhuo",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "success",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:167735": {
+        "reason": "UiSkin.loadFont receives only text -> english/EnglishRounded with cc.Font and bitmap -> english/digits with cc.BitmapFont. This visible-retry delegate is not an unbounded asset source; the actual compiled callers and source map are bound.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/EnglishRounded",
+            "type": "cc.Font",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/digits",
+            "type": "cc.BitmapFont",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:174051": {
+        "reason": "ViewManager receives only registered BaseView classes whose static path methods return these existing authored prefabs; empty path creates a runtime node without loading.",
+        "paths": [
+          "prefabs/AddCoinPanel",
+          "prefabs/ChooseLevelPanel",
+          "prefabs/ChooseSkinPanel",
+          "prefabs/FailPanel",
+          "prefabs/InsufficientPanel",
+          "prefabs/ResetPanel",
+          "prefabs/SetNormalPanel",
+          "prefabs/SuccessPanel",
+          "prefabs/TipPanel"
+        ]
+      }
+    },
+    "escapes": {},
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "af953f04eed4b736f1bcadb7a9a8e8fe6c7071d9be8faefaee48cb4c52f97426"
+  },
+  "sausage-run-v2-original-style-20261031-r3": {
+    "source_sha256": {
+      "storage-guard.js": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "game.js": "bc3b38a58a8fc5b5b74bdab680a29b1c2efcd2dac9f1a24a356388c99ee67398",
+      "webp-decode-probe.js": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+      "main.js": "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42",
+      "adapter-min.js": "66b969435208dfb90e86ce5c13f5b67e52b31304ec982bc249dbf4e4f154b7c6",
+      "cocos2d-js-min.js": "97aaed0a7cc35981ef7dfbf57c68abd2474be17e187f6cbdbed0cfe2efa34eaa",
+      "ccRequire.js": "6b01bbbc6ef4c68762b391999b670d2d7bd8af4f2c62b4d4599e12d973d9ecef",
+      "touch-coordinates.js": "1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/game-audio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "ecad833e841682d9adb2a11b06c277236fb6769538eb0fa6ea58dee10e14a280",
+      "src/settings.js": "927658b07382f857c758e078ff429f7e8117b100dc299278726a065eaa2a8faf",
+      "src/assets/Script/Framework/Library/Encrypt/algo.js": "99cccc45f0f6bc2d373634e2be2cd41b709905df40096dbac865ec769095c184",
+      "src/assets/Script/Framework/Library/Encrypt/encryptjs.js": "8ea241b709b27c2b4a85c741b99ca65b868189f2f79756fef918887c3544004d"
+    },
+    "resolutions": {
+      "assets/main/index.js:10159": {
+        "reason": "Actual AssetRetry.loadSprite serves BaseProp level element.path, SkinItem data.path and UiSkin.image. Finite authored level configs, four skin rows, literal english/original_ui caller keys and the explicit HomePlatform english home_screen/profile pair are cross-checked against actual files and serialized Native. Original-style byte-copy manifest SHA256 cfc0ff634dd0f8d48debf3fb8e70cea4511479443d40b5b747c59904d29c76f9",
+        "paths": [
+          "english/claim_link",
+          "english/energy_ad",
+          "english/equip",
+          "english/home_screen",
+          "english/no_thanks_link",
+          "english/profile",
+          "english/resume",
+          "english/try_skin",
+          "english/watch_ad",
+          "english/watch_ad_x2",
+          "english/watch_continue",
+          "original_ui/button_blank",
+          "original_ui/close",
+          "original_ui/coin",
+          "original_ui/home",
+          "original_ui/panel",
+          "original_ui/retry",
+          "original_ui/settings_icon",
+          "texture/BG05",
+          "texture/bg shizhong",
+          "texture/bg01",
+          "texture/bg02",
+          "texture/bg03",
+          "texture/bg04",
+          "texture/bgchoufengji",
+          "texture/bgguizi",
+          "texture/bgzhuanzs",
+          "texture/bgzhuanzs2",
+          "texture/skin/default",
+          "texture/skin/skin_one",
+          "texture/skin/skin_three",
+          "texture/skin/skin_two"
+        ]
+      },
+      "assets/main/index.js:66031": {
+        "reason": "GameSave.store is the actual SaveStore; SaveStore.get/update/isClaimed call its same local persistence load body, not a Cocos loader. Exact body and its independently inventoried nested calls are bound.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 112172,
+          "end": 112229,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:133917": {
+        "reason": "SoundManager.loadAudio closure receives only the game-audio bundle from getBundle/loadBundle; all callers use the nine preserved static SoundManager .mp3 names and remove their extension.",
+        "requests": [
+          {
+            "bundle": "game-audio",
+            "path": "bgm_1",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "bgm_2",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "click",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "clickclose",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "coin",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "fail",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "jump",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "penhuo",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          },
+          {
+            "bundle": "game-audio",
+            "path": "success",
+            "type": "cc.AudioClip",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:168369": {
+        "reason": "UiSkin.loadFont receives only text -> english/EnglishRounded with cc.Font and bitmap -> english/digits with cc.BitmapFont. This visible-retry delegate is not an unbounded asset source; the actual compiled callers and source map are bound.",
+        "requests": [
+          {
+            "bundle": "resources",
+            "path": "english/EnglishRounded",
+            "type": "cc.Font",
+            "kind": "load"
+          },
+          {
+            "bundle": "resources",
+            "path": "english/digits",
+            "type": "cc.BitmapFont",
+            "kind": "load"
+          }
+        ]
+      },
+      "assets/main/index.js:174685": {
+        "reason": "ViewManager receives only registered BaseView classes whose static path methods return these existing authored prefabs; empty path creates a runtime node without loading.",
+        "paths": [
+          "prefabs/AddCoinPanel",
+          "prefabs/ChooseLevelPanel",
+          "prefabs/ChooseSkinPanel",
+          "prefabs/FailPanel",
+          "prefabs/InsufficientPanel",
+          "prefabs/ResetPanel",
+          "prefabs/SetNormalPanel",
+          "prefabs/SuccessPanel",
+          "prefabs/TipPanel"
+        ]
+      }
+    },
+    "escapes": {},
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "af953f04eed4b736f1bcadb7a9a8e8fe6c7071d9be8faefaee48cb4c52f97426"
+  }
+}

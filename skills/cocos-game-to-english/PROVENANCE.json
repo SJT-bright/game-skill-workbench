@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-10-29.english-simple.9",
+  "revision": "2026-10-31.english-simple.10.2.2",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "aa7d5d44f9f35f7b15ae2010aa37198af034fe7ddd1af7e3514c927757a18867",
-      "bytes": 9748
+      "sha256": "dc4e35dd84e9d294fa270e8c892a2ca9a12e60915afd6de1ef0b36e9b4e27bd7",
+      "bytes": 20455
     },
     {
       "path": "agents/openai.yaml",
@@ -26,19 +26,24 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "de7191b841797458535d48b616bdcc4e3df355be93ac0da0476d78587047ff65",
-      "bytes": 21567
+      "sha256": "980b284103da07481dd00a9f2b1e33f1bead7d7cbd7c39b67d176278fc37366e",
+      "bytes": 22834
     },
     {
       "path": "references/fixed-entries.md",
-      "sha256": "35825f8ab50a25d2a3c84560d47ff73ef8cabdda9ea6b66f761b26386baf2d51",
-      "bytes": 5758
+      "sha256": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
+      "bytes": 9768
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "92e4a1307f33e2e98c6046584f5718ce43be02358c241b5ecd51eea5b963f434",
-      "bytes": 460
+      "sha256": "aed87b24c933829e1429597f0744aedecf203bad25972ca000bac1f0f491e183",
+      "bytes": 950
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "sha256": "a3da1fbaa883001cad97c27409bf62a6ca0c929a90cc4a0a2069eb5ccd489ede",
+      "bytes": 19845
     }
   ],
-  "previous_provenance_sha256": "97f07aa3d38975fbccea503c74349bcb06001a7b28e414827de9e5efc31c0aff"
+  "previous_provenance_sha256": "f515f289dc44b5c041a111eab053ca264d431d41c0679d8813505022fed620d4"
 }

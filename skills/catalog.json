@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T15:18:41.321Z",
-  "treeHash": "961bfab782e8cdfd975e25c0733772abca525538153b5242a79e554787001012",
+  "createdAt": "2026-10-31T18:18:57.417Z",
+  "treeHash": "1c2f84e0a95245679bce79f007e67ae78810785d9666ade9d14a6c19e3ffce2a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2811,9 +2811,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "8d833b666e5b6f7def1aa5aa38cda349f9bd68e66bc59742762d1b3a251bb623",
+      "treeHash": "906ad097275abb477513dfcf1fbb469d9fe0fd44902956e731ed329806ba7db4",
       "fileCount": 395,
-      "bytes": 8605400,
+      "bytes": 8614858,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -4245,8 +4245,8 @@
         },
         {
           "path": "scripts/probe_cocos3_touch_coordinates.cjs",
-          "hash": "cd802a00e416dab93612fca7bda5f9475f3b87e28f18cee6791f448d9a269182",
-          "size": 13499,
+          "hash": "38e776cef42eb029faaf986ae215caa74d86334ef31d94262db63fc5288e3e37",
+          "size": 17125,
           "executable": false
         },
         {
@@ -4947,8 +4947,8 @@
         },
         {
           "path": "scripts/test_tiktok_touch_coordinates.py",
-          "hash": "97815dd70bd3ca3fb28e42682e8b56dbdee4f11b26fb1b85a02c461d9b5cbde4",
-          "size": 17927,
+          "hash": "a604d1ced4d2bc908e7d586bf49653f10f52108113934baa3c78c49eac1b6e71",
+          "size": 23759,
           "executable": false
         },
         {

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T18:19:12.663Z",
-  "treeHash": "2d8307327b9b148c3a4ea97b03df5fb826a6585b4b939db3ac8130548b81853c",
+  "createdAt": "2026-10-31T18:19:35.149Z",
+  "treeHash": "39026356260dbef4392ae314ff7420010eac77f28576ab9fb28cd0e825428a43",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1753,20 +1753,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "c6fc7489aec2c9c6c516f3cb9a7931815616290ff93cd0e9ba8b54c76eca1931",
-      "fileCount": 10,
-      "bytes": 98676,
+      "treeHash": "b1ac126be57cf4d792a77f468ee798b58616453b8f8ce9b8c51ebde25c015b66",
+      "fileCount": 11,
+      "bytes": 130801,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "497c5dd0f1ff87cdea773753a7ef1e6e56e64c354d4dbf9aaa43bc1f3813419f",
+          "hash": "2a9bb7fc3efc7cf9c250ee25a7f038f9fe81a2e9e3a5a08608bc694adaff2142",
           "size": 1629,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "dc4e35dd84e9d294fa270e8c892a2ca9a12e60915afd6de1ef0b36e9b4e27bd7",
-          "size": 20455,
+          "hash": "fc6c81f7c352d947b958b52a4520062df7da5da3fd2ee5bc6a7ef9d63f615c10",
+          "size": 32049,
           "executable": false
         },
         {
@@ -1800,9 +1800,15 @@
           "executable": false
         },
         {
+          "path": "scripts/native_startup_trusted_runners.json",
+          "hash": "bacba9c6ab139196b43344ad4acd3d6e7831792cb00431a65a512564033c2758",
+          "size": 572,
+          "executable": false
+        },
+        {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "40faff0424210e01168c3a8bdebd5b9cf5d2def904c3eaa8abb143e5af70ca8e",
-          "size": 20205,
+          "hash": "8ed389331021fbc0c111d5b9f78fac9159f2168471d758f9d4e7c2174bf83327",
+          "size": 30291,
           "executable": false
         },
         {
@@ -1813,8 +1819,8 @@
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "a3da1fbaa883001cad97c27409bf62a6ca0c929a90cc4a0a2069eb5ccd489ede",
-          "size": 19845,
+          "hash": "f605b8fa53f7b58b447beb6b4b95ad2767933d367fb7ae8f8da4861b984bccf5",
+          "size": 29718,
           "executable": false
         }
       ]

@@ -22,8 +22,14 @@
    installed ad-boost Skill with the English limits (only the boards Saul ticks, original home buttons untouched, some
    boards only when the original game has that system), and the pack's remake-ads copy has the same ad-boost section as
    the remake pack. A "redesign" request keeps the original game's art style (香肠太难了 Redesign v2 replaced it).
+8. (10.2.4, Saul 2026-10-31) Round-1 art regenerates buttons and text with the art Skill in the original style; the
+   English link needs only a start check and comes with the manual checklist typed into the reply; the trial-and-improve
+   stage runs no checks; every check, the old pre-link ones included, runs after Saul says the trial is fine.
+9. (10.2.5, Saul 2026-10-31) Round 1 regenerates every button; the ad Skill ad-boost ships in the pack (item 8) and the
+   English work runs its diagnosis and adds the recommended ad boards without asking, with the English limits.
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 """
+import json
 import os
 import re
 import subprocess
@@ -169,7 +175,7 @@ class AdBoardsUsedWithoutAsking(unittest.TestCase):
                        '../remake-economy/SKILL.md', '../remake-economy/references/economy-rules.md'):
             self.assertIn('](%s' % target, block)
         self.assertIn('不用 Saul 点名', block)
-        self.assertIn('Saul 要求创新玩法时才按广告板块做', block)
+        self.assertIn('由第 8 项 ad-boost 默认按诊断推荐加', block)
         rows = {l.split('|')[1].strip(): l for l in text.splitlines() if re.match(r'^\| *[67] *\|', l)}
         for n in ('6', '7'):
             self.assertIn('看广告的几项按广告板块做', rows[n])
@@ -195,7 +201,7 @@ class AdBoardsUsedWithoutAsking(unittest.TestCase):
         self.assertIn('> **英化包说明（Saul 2026-10-31）**', ads)
         self.assertIn('不用等 Saul 点名', ads)
         self.assertIn('只指新加的看广告入口', ads)
-        self.assertIn('英化自动用的只有固定入口的数额', eco.split('\n---', 1)[0])
+        self.assertIn('英化自动用的是固定入口的数额', eco.split('\n---', 1)[0])
         self.assertIn('> **英化包说明（Saul 2026-10-31）**', eco)
         self.assertIn('原游戏的货币名、价格、礼盒和其他数值都不改', eco)
 
@@ -275,30 +281,176 @@ class ResultPageClaimLink(unittest.TestCase):
 class AdBoostAndRedesign(unittest.TestCase):
     """10.2.2 (Saul 2026-10-31): ad-boost for "too few ads", and a redesign keeps the original art style."""
 
-    def test_entry_sends_too_few_ads_to_ad_boost_with_english_limits(self):
+    def test_entry_runs_ad_boost_by_default_with_english_limits(self):
+        """10.2.5 (Saul 2026-10-31): runs by default without asking; until 10.2.4 only when Saul said "too few ads"."""
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
         block = text.split('**看广告的几项按广告板块做', 1)[1].split('\n## ', 1)[0]
-        self.assertEqual(block.count('**Saul 说广告太少时用 ad-boost（Saul 2026-10-31）**'), 1)
-        part = block.split('**Saul 说广告太少时用 ad-boost', 1)[1]
-        for phrase in ('~/.kiro/crew/skills/ad-boost/SKILL.md', '可多选的选择题',
-                       'Saul 在 ad-boost 的选择题里选了哪个板块，就是授权', '没选的不加',
-                       '只在原游戏本来就有这个系统时才加', '原首页按钮一个都不动', '新入口只放空位', '跟原游戏画风走'):
-            self.assertIn(phrase, part)
+        mark = '**默认按 ad-boost 加广告板块，不问 Saul（Saul 2026-10-31：英化 Skill 融合广告 Skill，默认执行，不需要询问）**'
+        self.assertEqual(block.count(mark), 1)
+        part = block.split(mark, 1)[1]
+        for phrase in ('](../ad-boost/SKILL.md)', '--mode localize', '不出选择题、不问 Saul', '「缺必备」或「少」加前 3 个',
+                       '「一般」加前 2 个', '「多」加第 1 个', '只在原游戏本来就有这个系统时才加', '奖励关会动原关卡，不加',
+                       '原首页按钮一个都不动', '新入口只放空位', '没有空位时不问', '跟原游戏画风走', 'CHANGELOG.md',
+                       '放到第 5 阶段一起做', '英化游戏以本页为准', '按英化默认做法加入'):
+            self.assertIn(phrase, part, phrase)
+        for old in ('Saul 说广告太少时用 ad-boost', '选择题里选了哪个板块，就是授权', '没有空位时问 Saul 放哪'):
+            self.assertNotIn(old, text, old)
 
     def test_ad_board_copy_has_the_ad_boost_section(self):
         lines = (PACK / 'remake-ads' / 'SKILL.md').read_text(encoding='utf-8').splitlines()
         self.assertEqual(lines.count('## 加广告载体用 ad-boost（Saul 2026-10-31）'), 1)
         self.assertEqual(sum(l.startswith('- [ ] 用 ad-boost 加的板块（Saul 2026-10-31）') for l in lines), 1)
         section = '\n'.join(lines).split('## 加广告载体用 ad-boost', 1)[1].split('\n## ', 1)[0]
-        self.assertIn('英化游戏只在 Saul 说广告太少', section)
+        self.assertIn('英化游戏默认由英化入口跑 ad-boost', section)
+        self.assertNotIn('英化游戏只在 Saul 说广告太少', section)
         self.assertIn('原首页按钮不动', section)
+        self.assertIn('15 个板块', section)
 
     def test_redesign_keeps_the_original_art_style(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
-        section = text.split('## 美工 Skill 只在点名时用', 1)[1].split('\n## ', 1)[0]
+        section = text.split(ART_HEADING, 1)[1].split('\n## ', 1)[0]
         for phrase in ('“重新设计”英化游戏时，画风也照原游戏', '原图能用就用', '按钮底色不用深色', '图标后面不另加底板',
                        '只有他明说换画风'):
             self.assertIn(phrase, section)
+
+
+ART_HEADING = '\n## 美工：第一轮按美工 Skill 照原画风重做按钮和文字'
+
+
+class TrialFirstThenFullChecks(unittest.TestCase):
+    """10.2.4 (Saul 2026-10-31): round-1 art regenerates buttons and text with the art Skill in the original style; the
+    English link needs only a start check and comes with a manual checklist typed in the reply; Saul's trial-and-improve
+    stage runs no checks; every check (the 10.2.3 pre-link ones included) runs after he says the trial is fine."""
+
+    def stages(self):
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        section = text.split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        parts = re.split(r'\n(?=[1-5]\. \*\*)', section)
+        return section, {int(p[0]): p for p in parts if p[:1].isdigit()}
+
+    def test_order_link_then_trial_improve_then_full_checks(self):
+        section, st = self.stages()
+        self.assertEqual(sorted(st), [1, 2, 3, 4, 5])
+        self.assertIn('英文试玩链接＋人工检测清单', st[3])
+        self.assertIn('试玩改进', st[4])
+        self.assertIn('全量检查和出包（Saul 说试玩没问题以后）', st[5])
+        lead = section.split('1. **盘点**', 1)[0]
+        for phrase in ('检查一条都不减', '出包门禁一条都不放松', '电脑上试玩看不出来的', '英化以本页为准'):
+            self.assertIn(phrase, lead, phrase)
+        for late in ('art_check.py', '两种手机尺寸', 'check_known_issues.py', 'preflight.py', 'make_tiktok_zip.py',
+                     'build_checked_zip.py', '广告回归 10 例', 'tiktok_finalize.py source', 'image-review.json'):
+            self.assertNotIn(late, st[3], late)
+            self.assertNotIn(late, st[4], late)
+            self.assertIn(late, st[5], late)
+
+    def test_link_needs_only_the_start_checks(self):
+        _, st = self.stages()
+        for phrase in ('只确认三件', '能进首页', '能开始玩一局', '没有报错卡死', '--ad-simulator', '不加 `--keep`',
+                       '--idle-minutes 0'):
+            self.assertIn(phrase, st[3], phrase)
+        self.assertNotIn('--snapshot --keep', st[3])
+        self.assertIn('--snapshot --keep --project', st[5])
+
+    def test_manual_checklist_is_typed_in_the_reply(self):
+        _, st = self.stages()
+        self.assertIn('写在回复正文里', st[3])
+        self.assertIn('不写成文件、不发文件路径', st[3])
+        bullets = [l.split('：', 1)[0] for l in st[3].splitlines() if l.startswith('   - ')]
+        self.assertEqual(bullets, ['   - 画面', '   - 新加的东西', '   - 游玩', '   - 玩法改进', '   - 不用你查', '   - 怎么告诉我'])
+        dont = [l for l in st[3].splitlines() if l.startswith('   - 不用你查')][0]
+        for phrase in ('广告', 'TikTok', '手机上'):
+            self.assertIn(phrase, dont)
+
+    def test_trial_improve_stage_runs_no_checks(self):
+        _, st = self.stages()
+        for phrase in ('AI 不跑检查', '一次全部改完', '只构建一次', '只看改过的地方', 'Saul 点名', '直到 Saul 说试玩没问题',
+                       '先停掉上一轮的试玩服务', '不能只叫他刷新'):
+            self.assertIn(phrase, st[4], phrase)
+        self.assertNotIn('刷新同一个链接', (ENTRY / 'SKILL.md').read_text(encoding='utf-8'))
+
+    def test_full_checks_keep_every_check(self):
+        _, st = self.stages()
+        for phrase in ('检查一条不减', '原来给链接前做的，挪到这里', '只修硬问题', '没提意见的画风和配色不重做',
+                       '用鼠标把首页和各页面的按钮点一遍', 'logic_check.py', 'TikTok 固定适配', '运行时套件由写包入口跑',
+                       '不再问一次'):
+            self.assertIn(phrase, st[5], phrase)
+
+    def test_round1_art_uses_the_art_skill_in_the_original_style(self):
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        _, st = self.stages()
+        art = [l for l in st[2].splitlines() if l.startswith('   - **第一轮美工')]
+        self.assertEqual(len(art), 1)
+        for phrase in ('](../remake-art/SKILL.md)', '照原画风', '原图放进参考图', '代码和字体画的按钮、数字不算',
+                       'art_records.py generated', '新加的按钮', '不等点名', '第一轮所有按钮都重新生成'):
+            self.assertIn(phrase, art[0], phrase)
+        self.assertNotIn('好的照用', art[0])          # 10.2.4 kept good icon buttons; 10.2.5 regenerates every button
+        self.assertNotIn('## 美工 Skill 只在点名时用', text)
+        self.assertIn('仍只在 Saul 点名时做', text.split(ART_HEADING, 1)[1].split('\n## ', 1)[0])
+        art_skill = (PACK / 'remake-art' / 'SKILL.md').read_text(encoding='utf-8')
+        self.assertNotIn('英化流程不自动调用', art_skill)
+        self.assertIn('英化第一轮由英化入口调用', art_skill.split('\n---', 1)[0])
+        self.assertIn('英化第一轮由英化入口调用本 Skill', art_skill)
+
+    def test_readme_says_the_new_order(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        text = README.read_text(encoding='utf-8')
+        self.assertIn('人工检测清单', text)
+        self.assertIn('英化第一轮按它照原画风重新生成按钮和文字', text)
+        self.assertNotIn('只在你点名时使用，英化流程不自动调用', text)
+
+    def test_records_for_packaging_do_not_block_the_link(self):
+        _, st = self.stages()
+        for record in ('`qa/ad-regression.json`', '`docs/english/image-review.json`'):
+            line = [l for l in st[2].splitlines() if l.startswith('   - **') and record in l.split('**')[1]]
+            self.assertEqual(len(line), 1, record)
+            self.assertIn('第 5 阶段写，不挡英文试玩链接', line[0])
+
+    def test_art_redo_starts_with_samples(self):
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        section = text.split(ART_HEADING, 1)[1].split('\n## ', 1)[0]
+        for phrase in ('**重做美术先出小样（Saul 2026-10-31）**', '2～3 套', '1 张首页加 2 个按钮', '保持原画风，只改英文和新入口',
+                       '他选了再做整套', '不碰美术的部分', 'docs/samples/samples.json'):
+            self.assertIn(phrase, section, phrase)
+
+
+class AdBoostBundled(unittest.TestCase):
+    """10.2.5 (Saul 2026-10-31): the ad Skill ad-boost ships in the pack and the English work runs it without asking."""
+
+    def test_ad_boost_is_in_the_pack(self):
+        for rel in ('SKILL.md', 'CHANGELOG.md', 'scripts/diagnose_ads.py', 'scripts/doctor.py', 'modules/wheel/README.md'):
+            self.assertTrue((PACK / 'ad-boost' / rel).is_file(), rel)
+        manifest = PACK / 'distribution-manifest.json'
+        if manifest.is_file():
+            self.assertIn('ad-boost', json.loads(manifest.read_text(encoding='utf-8'))['skills'])
+
+    def test_entry_lists_ad_boost_as_item_8(self):
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        row8 = [l for l in text.splitlines() if l.startswith('| 8 |')]
+        self.assertEqual(len(row8), 1)
+        for phrase in ('广告加量', '](../ad-boost/SKILL.md)', '不问 Saul', '原首页按钮不动'):
+            self.assertIn(phrase, row8[0], phrase)
+        self.assertIn('按上表 1–8 做', text)
+
+    def test_stages_carry_the_ad_boards(self):
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        section = text.split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        st = {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', section) if p[:1].isdigit()}
+        self.assertIn('第 8 项 ad-boost 默认加的看广告板块', section.split('1. **盘点**', 1)[0])
+        self.assertIn('默认加了哪几个板块', st[3])
+        self.assertIn('第 8 项加的板块', st[3])
+        self.assertIn('modules/<板块>/README.md` 第 8 节验收', st[5])
+        self.assertIn('double_claim', st[5])
+
+    def test_readme_and_install_text_name_ad_boost(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        readme = README.read_text(encoding='utf-8')
+        skills = readme.split('本包的 Skill：', 1)[1].split('\n\n', 1)[0]
+        self.assertIn('- ad-boost：', skills)
+        self.assertIn('（上面 8 项）', readme)
+        if CODEX_TEXT.is_file():
+            self.assertIn('ad-boost', CODEX_TEXT.read_text(encoding='utf-8'))
 
 
 class OriginalTrialServer(unittest.TestCase):

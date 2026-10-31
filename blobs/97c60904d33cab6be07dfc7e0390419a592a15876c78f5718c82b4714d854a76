@@ -1,0 +1,43 @@
+# 图集切片内容检查
+
+切片框在纹理内，只能证明坐标合法，不能证明图案完整。支持已校准的透明 frames.json（textures、frames、texture、rect）和扁平 atlas.json（条目含 image、x、y、w、h）；后者按工程 assets 内唯一 PNG 解析贴图，再交同一个主体/残片检查器。贴图缺失、同名歧义、声明帧缺失必须拒绝。其他格式须先接入适配，不能用不适用/检查0项当作内容合格。
+
+1. 一体图标、关卡节点、按钮和单体数字使用 `single_body`；有意多部件声明角色及原因，不能一刀切删除分离装饰。冒号默认允许多轮廓；`two_marks` 明确要求两部分。
+2. 在原图 alpha>64 的连通主体上计算：切片是否截断主体、是否包含相邻主体残片。默认显著部分≥max(24px,主体0.5%)，丢失≥max(24px,完整主体0.2%)即拒绝；该阈值仅为本检测的覆盖边界，不证明小于阈值的像素必然合理。
+3. 同时查看输出的原图邻域红框和中性底切片。修复 rect/offset/缩放，不用遮盖残片或抹图掩盖错误，不自动改未授权画风。
+4. `--dumps` 对照运行帧实际 rect/frame_size，防止清单修好但JS内置清单或场景仍用旧框。两比例验证当前/锁定/完成三态、双位数及页面操作，原始截图留项目。
+5. 沉淀前用真实未修版本失败、修复版本通过，加正常图标/有意多部件正常对照；生产代码与素材SHA绑定。脚本自测 `test_atlas_slices.py` 只证明门禁校准，不代替本游戏截图。
+
+命令：
+
+```sh
+python3 <skills>/remake-core/scripts/audit_atlas_slices.py --project <当前工程或Native目录> --dumps <当前dump目录> --out <本轮输出>
+python3 <skills>/remake-core/scripts/test_atlas_slices.py
+```
+
+正式 `art_check.py` 自动调用同一检查并保留独立报告。静态连通轮廓不替代布局、叠层和审美检查。
+
+## 固定格偏移与扁平图集短回放（2026-10-25）
+
+出现按钮上下细线、异色条片或花叶平切时，先对照原图邻域和实际 rect；对原图完整 Alpha 主体求框，不能只在已切坏的 crop 上紧裁。共享图集须检查同来源按钮及别名，保持图案、文字、点击与业务语义。
+
+顺序：项目候选 → 原配置/原图/真实运行旧框失败 → 完整主体和正常多部件对照通过 → 重导出并在两手机比例读取实际 SpriteFrame 与完整弹窗 → 正式沉淀。运行旧框与新配置不同必须报 runtime_rect_differs_from_manifest，不能只看 frame_size。局部可用 `--frames btn_try,btn_nothanks` 声明精确受影响帧，不记作整套图集通过；完整美工默认扫描全部适用条目。
+
+Pippa 原工具对 atlas.json 返回 applicable=false、checked=0；适配后原 TRY OUTFIT/NO THANKS 各命中主体截断和邻排碎片。原图未改，12个按钮与 toast 别名共13框修正后，静态及48条实际帧观测通过；正常 PLAY/NEXT 及有意多部件未误报。回归：`python3 <skills>/remake-core/scripts/test_flat_atlas_adapter.py` 与现有 `test_atlas_slices.py`。实际原图和旧/新矩形固定为回归样本；项目证据留 docs/art/button-slice-review-20261025/。
+
+
+## 独立源图也可能已经切坏（2026-10-26）
+
+出现平切、横条、按钮缺边或疑似遮盖时，按“源PNG → 实际SpriteFrame → 整页合成”三层短检。独立PNG、rect在纹理内、节点在屏内，都不能证明完整；历史切图可能已丢主体像素，运行时二次裁框又可能藏残片但留下缺边。
+
+1. 保留未修候选，拍完整页面及局部。查源PNG四边连续不透明平切、主体外邻图残片，并对照同组完整按钮。透明单体图可用 `remake-art/scripts/check_native_sprite_sources.py <Native根> <帧名...>` 辅助定位；当前仅支持Cocos2独立序列化SpriteFrame/PNG。它只报告源图疑点，平直边和多个alpha部件可能是合法设计，不直接判美术失败或自动修图。`--role background|tile|multi_body`明确不适用单体判据；`incomplete`/退出2表示缺材料或协议不支持，`needs_review`/退出1表示待对照，`no_signals`只表示未检出这些源图信号，均不认证整页美术。支持assets与普通subpackages的独立import/native布局，其他协议单列缺口；零条目不能通过。
+2. 读回运行帧的rect、原始尺寸、纹理URL与资源版本；同时查动态 `new SpriteFrame`/裁框辅助函数。源PNG已缺失不能再缩框或盖住缺边，应恢复完整源或补齐同组素材。配置已改但实际仍用旧框/旧纹理，仍判未修；刷新后重新核对，不以文件哈希替代实景。
+3. 按语义组核标题、品质、插画、分页、条件/价格、动作与装饰内区；检查同源弹窗与最长名称。旧版同法须检出，完整正常对照不误报，修复版两手机比例实际复查后再收尾。自然到达实景与隔离呈现回放分别标明；只固化通用方法，项目坐标和截图留项目。
+
+工具校准采用独立合成源图：完整单体、平切边、额外残片、合法多部件、不支持布局、重名和缺图。具体游戏的帧名、数量、图像、裁框和实景结果留项目。本项不增加全游戏CI，也不替代运行SpriteFrame和整页观察。
+
+## v7.8：所有切片都查（Ingrid's Snowball Stack 10-26 连续三轮漏）
+
+`audit_atlas_slices.py` 以前只查 `icon_`、`node_`、`btn_`、`digit_` 开头的切片，图片字、局内棋子、投射物、障碍打进图集后一张都不查。现在其余切片按 `scope_body` 查：主体不能被切片框切断（`connected_body_cut_by_rect`），切片边上不能挂一条细的别家残片（`edge_fragment`，宽或高不到切片的 20%、贴着切片边）；字母、闪光这类自己分开的部分不算。本来就相连的不查（报告 `skipped` 里列出原因）：名字带 tile/tileset/terrain/ground/floor/wall/road/grass/water/map/bg/background/pattern/seamless/border/panel/bar/fill/line 的、九宫格/平铺的、四条边都不透明的整块图，以及 `frames.json` 里写了 `"slice_role": "tileset"` 的。贴图文件不存在的新范围切片也只列进 `skipped`。扁平 `atlas.json`（image/x/y/w/h）不再要求有 btn_/icon_/node_ 开头的条目。
+
+校准：把 Ingrid r3 的独立 PNG（closet、caption_closet、caption_energy、caption_level、snowball 等 12 张）原样打成一张图集，报出 5 张 `edge_fragment`，正是那三轮里修的；r9 修好的同名图全过；v7.7.5 只查到 1 张（btn_play），一张都不报。Holly 的地面 tile 和天空切成 40 格的整块图集全部按 tileset 跳过，不误报。

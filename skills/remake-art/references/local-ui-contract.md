@@ -11,7 +11,7 @@
 局部入口（只执行此契约，不进入完整美术脚本或CI）：
 
 ```sh
-python3 scripts/art_check.py --project PROJECT --ui-contract CONTRACT.json \
+python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --ui-contract CONTRACT.json \
   --ui-native EXACT_NATIVE --ui-runner REVIEWED_KEY --ui-calibrate --out FRESH_OUT
 ```
 
@@ -21,4 +21,4 @@ python3 scripts/art_check.py --project PROJECT --ui-contract CONTRACT.json \
 
 运行报告`ui_contract_runtime.v1`顶层固定`producer:real_browser_ui_contract`及`execution`。execution含variant、base/实际native_tree_sha256、renderer_identity五项原始身份、viewport、非空events、errors、states；每状态有同次截图路径/SHA和buttons数组。每entity含稳定slot、id、kind、visible、effective_opacity、parent.world_rect、sprites及captions；子项也记录真实world_rect与有效可见性。Sprite另有frame、loaded、texture_loaded；caption另有text、font_size。tools同样记录真实frame/texture状态及实际click_return_page。有效opacity使用0..255范围，至少1才算可见；所有rect必须有限且宽高正。collector不填pass，由checker判定。
 
-拒绝逻辑自测：`python3 scripts/test_ui_contract_refusal.py`。这些合成几何单测不能替代真实runner的正反例运行。
+拒绝逻辑自测：`python3 <skills>/remake-core/scripts/test_ui_contract_refusal.py`。这些合成几何单测不能替代真实runner的正反例运行。

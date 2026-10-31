@@ -22,7 +22,7 @@
 ## 三、怎么分析
 
 ```
-python scripts/audit_frame_glitches.py <frames文件夹或视频> --report <报告.json> --delete-frames [--binding <review.json>]
+python <skills>/remake-core/scripts/audit_frame_glitches.py <frames文件夹或视频> --report <报告.json> --delete-frames [--binding <review.json>]
 ```
 
 录屏本身（`chrome_touch.py --record`）和录屏分析都不排队：录屏在自己新开的独立测试窗口里跑，被占就再新开（用户 2026-10-22/23）；`--delete-frames` 在存好证据图后删掉帧文件夹，省硬盘。

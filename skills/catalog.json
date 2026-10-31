@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T09:07:48.289Z",
-  "treeHash": "4d84eb437ad84a522402b2ccc15d27684dd56c8f135883a9d81e177be30f1c60",
+  "createdAt": "2026-10-31T12:10:56.222Z",
+  "treeHash": "0f6028750620234954832fd2126eefc2f6ee74c125b86faf87c55f1f2bddcdeb",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2269,20 +2269,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "f17f040dc7768dcc4f567a8ddb3aa9b8c0b438840de35de668d3374c7b2e0cc4",
-      "fileCount": 36,
-      "bytes": 1024040,
+      "treeHash": "590e72682b61e40f2a427437ac5cc72de437d1ea79bd6c957ae795c8f238def4",
+      "fileCount": 39,
+      "bytes": 1093958,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "8933f3c8c195055ec24965ed7895c1dc335e8f2b313d2b56ff6dd0ef85b10c87",
-          "size": 6227,
+          "hash": "b03a03085a8c070813cf4de03faf125c866df6814b439a39f370ccd39a4d0cbc",
+          "size": 6729,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "6bbdf830fb76f5223a36fe699ed6f5f0b92d919a2883ad65c68eddb94142df67",
-          "size": 8828,
+          "hash": "7293b66780e01b3112c4de01ef0c45c73711073f1e62494edae6609312a30775",
+          "size": 11066,
           "executable": false
         },
         {
@@ -2311,14 +2311,14 @@
         },
         {
           "path": "references/artwork-and-feedback.md",
-          "hash": "92b864efb4480f04789e2f13bc9dc71c609f0643aaa4de52d64883d781c9bfd2",
-          "size": 23464,
+          "hash": "fcf70487b437c90369578a43ff815beb81585ff5a51aa0c91ce9385874ae2676",
+          "size": 24597,
           "executable": false
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "0121dd76de6a8437d244b377d4dd043708f578cabc7deb4d5fcba8093a34fef3",
-          "size": 5298,
+          "hash": "97c60904d33cab6be07dfc7e0390419a592a15876c78f5718c82b4714d854a76",
+          "size": 6756,
           "executable": false
         },
         {
@@ -2353,14 +2353,14 @@
         },
         {
           "path": "references/common-game-components.md",
-          "hash": "3d79a10b9296d332d87753d5bbb180d000ac0bb2a42c0978e507aca69ad38737",
-          "size": 14217,
+          "hash": "4558749502a157d4c0da41186270b31489dbc1805395009e34cc51072f442002",
+          "size": 16067,
           "executable": false
         },
         {
           "path": "references/dynamic-visual-review.md",
-          "hash": "4e06f44dd40c69ea00b45861e086efd4b6d7f0ea7cc54d09be0ad20b2bcd8c6a",
-          "size": 4333,
+          "hash": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
+          "size": 4354,
           "executable": false
         },
         {
@@ -2383,20 +2383,20 @@
         },
         {
           "path": "references/local-ui-contract.md",
-          "hash": "14e2349cd29d9c2a08c32355986b858f3c6a057a1f69669054aa5a2f71a504d3",
-          "size": 3999,
+          "hash": "05f28ab19cd56b0fb1c8fbdd91d0e6c6a10de953f313f1f39825143032a84716",
+          "size": 4041,
           "executable": false
         },
         {
           "path": "references/mobile-button-size-and-home-layout.md",
-          "hash": "3204347e7d5d19589c31b19e111defc11b999d800e2242e6cab04bead540863a",
-          "size": 7670,
+          "hash": "318dae22288084d3e7c1eb7814abac3526ae0c37c4c0ab9561e6b65013c20b78",
+          "size": 7738,
           "executable": false
         },
         {
           "path": "references/page-richness.md",
-          "hash": "bda480bb55dec5c90dfe2b01e4b69543e99b2304b7015ee1f9211c7a801fb6d1",
-          "size": 80132,
+          "hash": "91c0ab9017901f69de583e7427bd6b3dd5838da69bcc11ed47ac62030884d59b",
+          "size": 83559,
           "executable": false
         },
         {
@@ -2409,6 +2409,12 @@
           "path": "references/phone-preview-boundary.md",
           "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
           "size": 2724,
+          "executable": false
+        },
+        {
+          "path": "references/saul-art-rules.md",
+          "hash": "f34bb4833f736dffb2f41621288206d405418cf24dfd2c9d2bc341e3089660cd",
+          "size": 43674,
           "executable": false
         },
         {
@@ -2425,14 +2431,14 @@
         },
         {
           "path": "references/style-limits.md",
-          "hash": "6c9a98498ab2d64dc578f3509393fee9a93c8251ee3888b6c6f0888466bc09ec",
-          "size": 24561,
+          "hash": "2c81d7a738261b97ad373e5fd8104999c9b13a6c7491fbb19bbeba274950294d",
+          "size": 25643,
           "executable": false
         },
         {
           "path": "references/text-backplate-review.md",
-          "hash": "0558302863e92c9b2c75e4acaf3bc5219e4b4da81066d9a7930a3e2175bf2084",
-          "size": 2959,
+          "hash": "324750481195bc7a1a0503b39ce62f3286f834a1f7c99174e02c45e465cd53f3",
+          "size": 3811,
           "executable": false
         },
         {
@@ -2443,8 +2449,8 @@
         },
         {
           "path": "references/ui-style-and-samples.md",
-          "hash": "93e657886351827e9b2d0fb8907535907f2912945c51c13eecb0177d2e65c44e",
-          "size": 16079,
+          "hash": "22abbae6dc5d2d6391c0cb6d952f35d59037e4350e768c092ec48b6e6cc92770",
+          "size": 16131,
           "executable": false
         },
         {
@@ -2475,6 +2481,18 @@
           "path": "scripts/check_phone_boundary.py",
           "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
           "size": 3800,
+          "executable": false
+        },
+        {
+          "path": "scripts/make_greybox_reference.py",
+          "hash": "2a6360eb4a2156ea342a962a9d8116a436b2e4f51fda4d2c11d207eb77f382c7",
+          "size": 9354,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_greybox_reference.py",
+          "hash": "30a36a66fda8c55c9a039ead59a42471d23b15b76d1c03007deb0c690b9dab19",
+          "size": 4165,
           "executable": false
         },
         {

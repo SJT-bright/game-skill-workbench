@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-30.english-simple.9.5",
+  "revision": "2026-10-31.english-simple.10.2",
   "skill": "remake-art",
-  "previous_provenance_sha256": "7714f22fb6ebb8c098f4dc7109f1e6800a53b4091375b23dc867d2cacf4163be",
+  "previous_provenance_sha256": "9c9560db0735f5039180a054ca406182f1e27ebab91f0e1f85f488c441a6d44d",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "6bbdf830fb76f5223a36fe699ed6f5f0b92d919a2883ad65c68eddb94142df67",
-      "bytes": 8828
+      "sha256": "7293b66780e01b3112c4de01ef0c45c73711073f1e62494edae6609312a30775",
+      "bytes": 11066
     },
     {
       "path": "agents/openai.yaml",
@@ -32,13 +32,13 @@
     },
     {
       "path": "references/artwork-and-feedback.md",
-      "sha256": "92b864efb4480f04789e2f13bc9dc71c609f0643aaa4de52d64883d781c9bfd2",
-      "bytes": 23464
+      "sha256": "fcf70487b437c90369578a43ff815beb81585ff5a51aa0c91ce9385874ae2676",
+      "bytes": 24597
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "0121dd76de6a8437d244b377d4dd043708f578cabc7deb4d5fcba8093a34fef3",
-      "bytes": 5298
+      "sha256": "97c60904d33cab6be07dfc7e0390419a592a15876c78f5718c82b4714d854a76",
+      "bytes": 6756
     },
     {
       "path": "references/button-group-review.md",
@@ -67,13 +67,13 @@
     },
     {
       "path": "references/common-game-components.md",
-      "sha256": "3d79a10b9296d332d87753d5bbb180d000ac0bb2a42c0978e507aca69ad38737",
-      "bytes": 14217
+      "sha256": "4558749502a157d4c0da41186270b31489dbc1805395009e34cc51072f442002",
+      "bytes": 16067
     },
     {
       "path": "references/dynamic-visual-review.md",
-      "sha256": "4e06f44dd40c69ea00b45861e086efd4b6d7f0ea7cc54d09be0ad20b2bcd8c6a",
-      "bytes": 4333
+      "sha256": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
+      "bytes": 4354
     },
     {
       "path": "references/full-visual-review.md",
@@ -92,18 +92,18 @@
     },
     {
       "path": "references/local-ui-contract.md",
-      "sha256": "14e2349cd29d9c2a08c32355986b858f3c6a057a1f69669054aa5a2f71a504d3",
-      "bytes": 3999
+      "sha256": "05f28ab19cd56b0fb1c8fbdd91d0e6c6a10de953f313f1f39825143032a84716",
+      "bytes": 4041
     },
     {
       "path": "references/mobile-button-size-and-home-layout.md",
-      "sha256": "3204347e7d5d19589c31b19e111defc11b999d800e2242e6cab04bead540863a",
-      "bytes": 7670
+      "sha256": "318dae22288084d3e7c1eb7814abac3526ae0c37c4c0ab9561e6b65013c20b78",
+      "bytes": 7738
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "bda480bb55dec5c90dfe2b01e4b69543e99b2304b7015ee1f9211c7a801fb6d1",
-      "bytes": 80132
+      "sha256": "91c0ab9017901f69de583e7427bd6b3dd5838da69bcc11ed47ac62030884d59b",
+      "bytes": 83559
     },
     {
       "path": "references/panel-composite-review.md",
@@ -114,6 +114,11 @@
       "path": "references/phone-preview-boundary.md",
       "sha256": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
       "bytes": 2724
+    },
+    {
+      "path": "references/saul-art-rules.md",
+      "sha256": "f34bb4833f736dffb2f41621288206d405418cf24dfd2c9d2bc341e3089660cd",
+      "bytes": 43674
     },
     {
       "path": "references/standalone-alpha-review.md",
@@ -127,13 +132,13 @@
     },
     {
       "path": "references/style-limits.md",
-      "sha256": "6c9a98498ab2d64dc578f3509393fee9a93c8251ee3888b6c6f0888466bc09ec",
-      "bytes": 24561
+      "sha256": "2c81d7a738261b97ad373e5fd8104999c9b13a6c7491fbb19bbeba274950294d",
+      "bytes": 25643
     },
     {
       "path": "references/text-backplate-review.md",
-      "sha256": "0558302863e92c9b2c75e4acaf3bc5219e4b4da81066d9a7930a3e2175bf2084",
-      "bytes": 2959
+      "sha256": "324750481195bc7a1a0503b39ce62f3286f834a1f7c99174e02c45e465cd53f3",
+      "bytes": 3811
     },
     {
       "path": "references/theme-readability.md",
@@ -142,8 +147,8 @@
     },
     {
       "path": "references/ui-style-and-samples.md",
-      "sha256": "93e657886351827e9b2d0fb8907535907f2912945c51c13eecb0177d2e65c44e",
-      "bytes": 16079
+      "sha256": "22abbae6dc5d2d6391c0cb6d952f35d59037e4350e768c092ec48b6e6cc92770",
+      "bytes": 16131
     },
     {
       "path": "scripts/check_button_group.py",
@@ -169,6 +174,16 @@
       "path": "scripts/check_phone_boundary.py",
       "sha256": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
       "bytes": 3800
+    },
+    {
+      "path": "scripts/make_greybox_reference.py",
+      "sha256": "2a6360eb4a2156ea342a962a9d8116a436b2e4f51fda4d2c11d207eb77f382c7",
+      "bytes": 9354
+    },
+    {
+      "path": "scripts/test_greybox_reference.py",
+      "sha256": "30a36a66fda8c55c9a039ead59a42471d23b15b76d1c03007deb0c690b9dab19",
+      "bytes": 4165
     },
     {
       "path": "scripts/test_native_sprite_sources.py",

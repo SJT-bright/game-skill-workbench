@@ -10,3 +10,9 @@
 Pippa 2026-10-25：`number()` 给每个数字新建 Graphics 并填充 `#082D26`；旧整屏明暗/面积检查漏掉小底块，旧采集仅记 lineWidth。候选在原版首页检出2处、首关检出6处，随后删除共用填充并重制带细巧克力描边的透明数字图。详细证据留该项目 `docs/art/dark-value-review-20261025/`，该局部结果不扩写成全游戏验收。
 
 回归命令：`python3 <skills>/remake-core/scripts/test_text_backplates.py`（真实旧图5处失败，修复实景与透明字图通过）。局部检查：`python3 <skills>/remake-core/scripts/check_text_backplates.py CAPTURE.json --out REPORT.json`。采集字段为 `screenshot`、`screenshot_sha256`、非空 `targets:[{path,rect:[x,y,w,h]}]`；运行证据另附构建/字图哈希与视口，矩形来自实际相机投影，用户截图手工框只作线索。`source_kind:generated_font_asset` 时按 Alpha 排除透明像素。
+
+## 文字身后太花（v7.8，`busy_text_background`）
+
+没有底板的字（Label、位图字；按钮上的字和自带字图的不算）要放在安静的背景上。量法：把字按 24 像素高缩放，取字框外半个字高的一圈当背景样本，字框里和样本颜色相近的像素算背景、其余算字墨，数这些背景像素要多少种颜色（每通道 16 级）才盖住 90%。超过 13 种就报「加底板或挪位置」。
+
+门槛怎么定的（W88，10-30，真截图）：安静的 3～11 种（Holly v3 PROFILE 加底板后 4、Meteor 250 在胶囊上 3、Nanas 地图 6、丛林荡藤 BEST 6、Maya 复活说明 8、Holly SHORTCUT 5～11）；太花的 16～119 种（Holly v1/v2 PROFILE 压栅栏 16～30、泡泡六角龙结算分数压彩球 28、水果逃亡章节行压厨房 119）。13 在两组中间。

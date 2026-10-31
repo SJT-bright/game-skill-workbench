@@ -11,8 +11,8 @@
 命令：
 
 ```sh
-python3 scripts/audit_atlas_slices.py --project <当前工程或Native目录> --dumps <当前dump目录> --out <本轮输出>
-python3 scripts/test_atlas_slices.py
+python3 <skills>/remake-core/scripts/audit_atlas_slices.py --project <当前工程或Native目录> --dumps <当前dump目录> --out <本轮输出>
+python3 <skills>/remake-core/scripts/test_atlas_slices.py
 ```
 
 正式 `art_check.py` 自动调用同一检查并保留独立报告。静态连通轮廓不替代布局、叠层和审美检查。
@@ -23,7 +23,7 @@ python3 scripts/test_atlas_slices.py
 
 顺序：项目候选 → 原配置/原图/真实运行旧框失败 → 完整主体和正常多部件对照通过 → 重导出并在两手机比例读取实际 SpriteFrame 与完整弹窗 → 正式沉淀。运行旧框与新配置不同必须报 runtime_rect_differs_from_manifest，不能只看 frame_size。局部可用 `--frames btn_try,btn_nothanks` 声明精确受影响帧，不记作整套图集通过；完整美工默认扫描全部适用条目。
 
-Pippa 原工具对 atlas.json 返回 applicable=false、checked=0；适配后原 TRY OUTFIT/NO THANKS 各命中主体截断和邻排碎片。原图未改，12个按钮与 toast 别名共13框修正后，静态及48条实际帧观测通过；正常 PLAY/NEXT 及有意多部件未误报。回归：`python3 scripts/test_flat_atlas_adapter.py` 与现有 `test_atlas_slices.py`。实际原图和旧/新矩形固定为回归样本；项目证据留 docs/art/button-slice-review-20261025/。
+Pippa 原工具对 atlas.json 返回 applicable=false、checked=0；适配后原 TRY OUTFIT/NO THANKS 各命中主体截断和邻排碎片。原图未改，12个按钮与 toast 别名共13框修正后，静态及48条实际帧观测通过；正常 PLAY/NEXT 及有意多部件未误报。回归：`python3 <skills>/remake-core/scripts/test_flat_atlas_adapter.py` 与现有 `test_atlas_slices.py`。实际原图和旧/新矩形固定为回归样本；项目证据留 docs/art/button-slice-review-20261025/。
 
 
 ## 独立源图也可能已经切坏（2026-10-26）
@@ -35,3 +35,9 @@ Pippa 原工具对 atlas.json 返回 applicable=false、checked=0；适配后原
 3. 按语义组核标题、品质、插画、分页、条件/价格、动作与装饰内区；检查同源弹窗与最长名称。旧版同法须检出，完整正常对照不误报，修复版两手机比例实际复查后再收尾。自然到达实景与隔离呈现回放分别标明；只固化通用方法，项目坐标和截图留项目。
 
 工具校准采用独立合成源图：完整单体、平切边、额外残片、合法多部件、不支持布局、重名和缺图。具体游戏的帧名、数量、图像、裁框和实景结果留项目。本项不增加全游戏CI，也不替代运行SpriteFrame和整页观察。
+
+## v7.8：所有切片都查（Ingrid's Snowball Stack 10-26 连续三轮漏）
+
+`audit_atlas_slices.py` 以前只查 `icon_`、`node_`、`btn_`、`digit_` 开头的切片，图片字、局内棋子、投射物、障碍打进图集后一张都不查。现在其余切片按 `scope_body` 查：主体不能被切片框切断（`connected_body_cut_by_rect`），切片边上不能挂一条细的别家残片（`edge_fragment`，宽或高不到切片的 20%、贴着切片边）；字母、闪光这类自己分开的部分不算。本来就相连的不查（报告 `skipped` 里列出原因）：名字带 tile/tileset/terrain/ground/floor/wall/road/grass/water/map/bg/background/pattern/seamless/border/panel/bar/fill/line 的、九宫格/平铺的、四条边都不透明的整块图，以及 `frames.json` 里写了 `"slice_role": "tileset"` 的。贴图文件不存在的新范围切片也只列进 `skipped`。扁平 `atlas.json`（image/x/y/w/h）不再要求有 btn_/icon_/node_ 开头的条目。
+
+校准：把 Ingrid r3 的独立 PNG（closet、caption_closet、caption_energy、caption_level、snowball 等 12 张）原样打成一张图集，报出 5 张 `edge_fragment`，正是那三轮里修的；r9 修好的同名图全过；v7.7.5 只查到 1 张（btn_play），一张都不报。Holly 的地面 tile 和天空切成 40 格的整块图集全部按 tileset 跳过，不误报。

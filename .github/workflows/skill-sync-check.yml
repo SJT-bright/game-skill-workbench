@@ -1,0 +1,82 @@
+name: Verify Skill sync repair
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            kind: mac
+          - os: windows-latest
+            kind: win
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm test
+      - name: Verify real Codex queue in isolated profile
+        run: |
+          npm install --prefix .qa/codex --no-audit --no-fund @openai/codex@0.158.0
+          node scripts/verify-codex-queue.cjs
+      - name: Build Mac
+        if: matrix.kind == 'mac'
+        shell: bash
+        env:
+          ARCH: arm64
+        run: |
+          npm run build:mac
+          node scripts/build-skill-bundles.cjs
+          version=$(node -p "require('./package.json').version")
+          mkdir -p release
+          ditto -c -k --keepParent "dist/$version/游戏工作台.app" "release/GameDesk-$version-mac-arm64.zip"
+      - name: Verify Mac native import and bundle push
+        if: matrix.kind == 'mac'
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          SKILL_DOCK_DATA_DIR="$PWD/.qa/ci-native" SKILL_DOCK_SMOKE_EMBEDDED=1 SKILL_DOCK_SMOKE_SELECTION=1 SKILL_DOCK_SMOKE_E2E=1 SKILL_DOCK_SMOKE_FIXTURE=1 "dist/$version/游戏工作台.app/Contents/MacOS/GameDeskSkill" --smoke-test --disable-gpu
+          node -e "const r=require('./.qa/ci-native/native-e2e.json');if(!r.nativeDrop||r.bundleQueue.length!==2)process.exit(1)"
+      - name: Build Windows
+        if: matrix.kind == 'win'
+        shell: pwsh
+        run: |
+          npm run build:win
+          $version = node -p "require('./package.json').version"
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Compress-Archive -Path "dist/$version/GameDesk-Skill-$version-win-x64/*" -DestinationPath "release/GameDesk-$version-windows-x64.zip"
+      - name: Verify Windows startup with embedded Skill files
+        if: matrix.kind == 'win'
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $env:SKILL_DOCK_DATA_DIR = Join-Path $PWD '.qa/ci-native'
+          $env:SKILL_DOCK_SMOKE_EMBEDDED = '1'
+          $env:SKILL_DOCK_SMOKE_SELECTION = '1'
+          $env:SKILL_DOCK_SMOKE_E2E = '1'
+          $env:SKILL_DOCK_SMOKE_FIXTURE = '1'
+          New-Item -ItemType Directory -Path '.qa/ci-native' -Force | Out-Null
+          $exe = Join-Path $PWD "dist/$version/GameDesk-Skill-$version-win-x64/GameDeskSkill.exe"
+          $env:ELECTRON_ENABLE_LOGGING = '1'
+          $process = Start-Process -FilePath $exe -ArgumentList @('--smoke-test','--disable-gpu') -Wait -PassThru -RedirectStandardOutput '.qa/ci-out.log' -RedirectStandardError '.qa/ci-error.log'
+          if($process.ExitCode -ne 0){Get-Content '.qa/ci-error.log' -ErrorAction SilentlyContinue; Get-Content '.qa/ci-native/smoke-error.txt' -ErrorAction SilentlyContinue; throw ('Native Windows smoke failed: '+$process.ExitCode)}
+          $report = Get-Content '.qa/ci-native/smoke.json' -Raw | ConvertFrom-Json
+          if($report.embeddedCount -lt 15 -or -not $report.api){throw 'Embedded Skill startup verification failed'}
+          $e2e = Get-Content '.qa/ci-native/native-e2e.json' -Raw | ConvertFrom-Json
+          if(-not $e2e.nativeDrop -or $e2e.bundleQueue.Count -ne 2){throw 'Native import/bundle queue verification failed'}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skill-sync-repair-${{ matrix.kind }}
+          include-hidden-files: true
+          path: |
+            .qa/ci-native/*.json
+            .qa/ci-native/smoke-error.txt
+            .qa/ci-error.log
+            release/*.zip

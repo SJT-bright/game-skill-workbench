@@ -2,7 +2,7 @@
 
 2026-10-15 用户指定以后默认用 Ego Lite；替代本页旧 Chrome/CUA 默认路线。用户本次明确选择优先于默认工具和历史任务路线。先读已安装 `ego-browser` Skill（本机 `<SKILLS_DIR>/ego-browser/SKILL.md`），以其当前 API 为准。
 
-用 `ego-browser nodejs` 的 heredoc 执行。**每个会话、每次测试新建自己的 TaskSpace，名字必须唯一**（用户 2026-10-23：被占就开新的，绝不等待；2026-10-27：`taskSpace(名字)` 遇到同名会恢复旧空间，两个测试同名就共用一个空间，一个 `finish()` 把另一个关掉，这是"测试空间反复失效"的原因。名字写成 `<用途> <线名> <年月日-时分秒> <6位随机>`，不用固定名字）：新建前先跑 `browser_slots.py sweep --close`（cocos-game-core 的 scripts）关掉空了的旧空间；新建后打印 `spaceId` 并 `browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>"`；本次测试内用 `taskSpace(同一数字ID)` 恢复（用 ID，不用名字）；JS 变量不跨命令保存。用 `task.page("p1")`，复用 Page。空间被别的会话/测试占用、正在被用、排队或还没轮到时，**不等待、不接管，立刻新建一个**；同一个错误在自己的空间里复现时才按失败排查（换新空间不能把真失败说成通过）。不能操作其他任务的空间。
+用 `ego-browser nodejs` 的 heredoc 执行。**每个会话、每次测试新建自己的 TaskSpace，名字必须唯一**（用户 2026-10-23：被占就开新的，绝不等待；2026-10-27：`taskSpace(名字)` 遇到同名会恢复旧空间，两个测试同名就共用一个空间，一个 `finish()` 把另一个关掉，这是"测试空间反复失效"的原因。名字写成 `<用途> <线名> <年月日-时分秒> <6位随机>`，不用固定名字）：新建前先跑 `browser_slots.py sweep --close`（remake-core 的 scripts）关掉空了的旧空间；新建后打印 `spaceId` 并 `browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>"`；本次测试内用 `taskSpace(同一数字ID)` 恢复（用 ID，不用名字）；JS 变量不跨命令保存。用 `task.page("p1")`，复用 Page。空间被别的会话/测试占用、正在被用、排队或还没轮到时，**不等待、不接管，立刻新建一个**；同一个错误在自己的空间里复现时才按失败排查（换新空间不能把真失败说成通过）。不能操作其他任务的空间。
 
 页面优先使用官方 `goto/reload/snapshot/screenshot/mouse/keyboard`。普通 DOM 用 snapshot 与语义选择器，Canvas 先 screenshot 再按 CSS 坐标。每组动作后读回真实状态；回执只证明派发。状态变化或尺寸变化后重新观察，不盲目连点。
 
@@ -35,6 +35,6 @@
 **用户 2026-10-23：Ego 只给 Agent 自己测试，用户试玩按固定手机入口自动打开 Google Chrome；禁止一切在 Ego 里让用户试玩的行为。**（取代以前"在 Ego 里配置手机模拟页、置前 handOff 给用户"的做法。）
 
 1. Agent 自己的手机模拟检查照常在本会话新建的 Ego 空间里做（上方启动与触控核验），测完马上 `browser_slots.py close --name "<线名>"`。
-2. 给用户试玩：cocos-game-core 的 `serve_preview.py --directory <准确版本的 Web 导出> --keep --name "<线名> 用户试玩"` 起本地服务，把打印的本地预览链接写在 Codex 回复里，共享脚本自动请求独立 Google Chrome 窗口，读回实际窗口后交接；写清"这是竖屏/横屏游戏"、建议窗口尺寸和操作方法。已有进行中的用户预览不刷新、不清存档。
+2. 给用户试玩：remake-core 的 `serve_preview.py --directory <准确版本的 Web 导出> --keep --name "<线名> 用户试玩"` 起本地服务，把打印的本地预览链接写在 Codex 回复里，共享脚本自动请求独立 Google Chrome 窗口，读回实际窗口后交接；写清"这是竖屏/横屏游戏"、建议窗口尺寸和操作方法。已有进行中的用户预览不刷新、不清存档。
 3. 不开"等用户试玩"的 Ego 空间或窗口，不置前、不 `handOff()`，不写"试玩页已在 Ego Lite 中打开并交给你"。
 4. Ego 里出现"需要你处理"、等用户试玩或等用户操作的空间（旧会话留下的），先用 `browser_slots.py ego-list` 找到；核实当前归属和用途后由拥有者用已有绑定结束，再 `ego-finish --space-id <ID>` 确认消失；不盲接管、不触及用户在用或未知归属空间；别的会话正在跑的测试空间不动。

@@ -9,7 +9,7 @@ description: 用户要求游戏本地预览、试玩、游玩或打开游戏时�
 
 让 Agent 直接操作界面完成测试，用户不必自己切设备模式、逐个点击或抄日志。**浏览器严格用 Ego Lite（用户 2026-10-21）**：自动测试（触摸计划、截图、录屏）在 Ego Lite 里做；**Ego 只给 Agent 自己测试，用户试玩按上述入口自动打开独立 Google Chrome（用户 2026-10-27）**。先运行 `ego-browser skill` 按它的说明操作；触摸计划、截图、录屏、加载计时直接用 `chrome_touch.py`（不加连接参数），它通过 `ego-browser nodejs` 在 Ego 里新建名字唯一的空间，设手机尺寸和触摸、跑计划，跑完只结束自己的空间，不关 Ego。**统一连接方式（用户 2026-10-27）**：只走 Ego 官方 `ego-browser nodejs`，没有 CDP 地址、不接 Playwright；空间名必须唯一（`<用途> <线名> <年月日-时分秒> <6位随机>`），同名会恢复成同一个空间，一个结束就把另一个关掉——这就是"测试空间反复失效"的原因。测试记录统一写 `browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=数字 spaceId、`space_name`。详见 [chrome-mobile-testing 的 Ego 连接方式](../chrome-mobile-testing/SKILL.md#ego-连接方式用户-2026-10-27统一)。Ego 没装就按 ego-browser 的安装说明装；连不上、装不好时，**先问用户**"装 Ego 还是这次改用 Chrome"，得到同意才可以用 Chrome（`chrome_touch.py --user-approved-chrome`）。本 Skill 不做 TikTok 真机测试，不需要 DevTool；浏览器结果不能标成平台手机通过。第一次在一台电脑上用 Ego 跑脚本时，先按 [一条命令校准](../chrome-mobile-testing/SKILL.md#第一次用先校准一条命令) 跑通再批量跑。
 
-**禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用cocos-game-core 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，脚本自动请求独立 Chrome 窗口，Agent 核实实际可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
+**禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用remake-core 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，脚本自动请求独立 Chrome 窗口，Agent 核实实际可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
 
 文档命令中的 `<SKILLS_DIR>` 取本次实际加载的 skills 目录，先解析再执行，不沿用其他电脑的用户名或盘符。Windows使用已安装的 `py -3 -X utf8 -B`，macOS使用实际 `python3 -B`；不为示例路径重新安装解释器。
 
@@ -76,4 +76,4 @@ Cocos/TikTok任务同时读取 通用问题适用范围与重点（英化包 `re
 
 ## 资源争用与关闭回执
 
-普通并发占用时新建独立空间，不抢其他会话资源。自己绑定的测试空间失活或未分配时，先停止旧 ID 的操作并读列表核实原 ID 消失，再自动新建、登记独立空间继续；无法核实消失时先排查，不能盲接管。用户明确接管、要求停止或浏览器安全 hard stop 时立即停止对应操作，不换空间、接口或系统信号绕过。测试结束后由当前拥有者用已绑定的官方 API `finish({keep:[]})`，`close` / `ego-finish` 读列表确认消失；预览服务核对原进程及端口退出，不能要求用户手动关闭。无法确认时退出码 2，记录保留，`check` 不放行。历史空间的名称或“需要你处理”标签不能单独证明可以关闭；先核当前归属与用途。详见cocos-game-core 的 `references/machine-load.md`。
+普通并发占用时新建独立空间，不抢其他会话资源。自己绑定的测试空间失活或未分配时，先停止旧 ID 的操作并读列表核实原 ID 消失，再自动新建、登记独立空间继续；无法核实消失时先排查，不能盲接管。用户明确接管、要求停止或浏览器安全 hard stop 时立即停止对应操作，不换空间、接口或系统信号绕过。测试结束后由当前拥有者用已绑定的官方 API `finish({keep:[]})`，`close` / `ego-finish` 读列表确认消失；预览服务核对原进程及端口退出，不能要求用户手动关闭。无法确认时退出码 2，记录保留，`check` 不放行。历史空间的名称或“需要你处理”标签不能单独证明可以关闭；先核当前归属与用途。详见remake-core 的 `references/machine-load.md`。

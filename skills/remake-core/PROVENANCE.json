@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-31.english-simple.10.2",
+  "revision": "2026-10-31.english-simple.10.2.6",
   "skill": "remake-core",
-  "previous_provenance_sha256": "fcd38f2bf4ca8d368c6bc7e64f7c5fe7b9db2ff3e429eb3d87205107f797aac0",
+  "previous_provenance_sha256": "9ce0c66e40b9ac36455d0f41371c027a601b6061037cbab9e63ebc77a5d337be",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -613,8 +613,8 @@
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "65e1976a6d610fe82ba308b22da9e88fa7f89d3e3a59c078a27fd3fa19d5ba61",
-      "bytes": 60729
+      "sha256": "baa526f27bee692156726b5ba763c5c12f62a756d44f83b485facd6a4fb9791b",
+      "bytes": 62990
     },
     {
       "path": "scripts/art_receipt.py",
@@ -660,6 +660,11 @@
       "path": "scripts/audit_bitmap_letter_fonts.py",
       "sha256": "f0982e695acbfdd19b7bd3a329ccfb9987e599551f6696f22496ac0853ff2be4",
       "bytes": 5083
+    },
+    {
+      "path": "scripts/audit_button_colour.py",
+      "sha256": "a2f13de7d0c7b403909a589288e97a3622ce19dbaad5845ab8bd7fc614f9b0ce",
+      "bytes": 37051
     },
     {
       "path": "scripts/audit_button_coverage.py",
@@ -808,8 +813,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "ff810fbc5ff8cfed30d32eaab99a7c75533104f05a3bf23bfb28b6e402a51c47",
-      "bytes": 175397
+      "sha256": "efa93f0fc2109cdc9deee23b29a123d0ccf95f60621c09bc0d45e8ddf1a772e9",
+      "bytes": 176855
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1380,6 +1385,11 @@
       "path": "scripts/test_bitmap_letter_fonts.py",
       "sha256": "65ad4c96d2c65bbd622b6878b6f00ab3f8654b76667fbd8efff8ff7586b2df1f",
       "bytes": 2745
+    },
+    {
+      "path": "scripts/test_button_colour.py",
+      "sha256": "588a6971a0f33eee98119652c5ef8e7ade78eb134fdf601a23e344b6990aa50c",
+      "bytes": 13696
     },
     {
       "path": "scripts/test_button_coverage.py",

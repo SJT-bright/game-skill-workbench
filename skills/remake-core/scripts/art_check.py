@@ -77,6 +77,9 @@ SHAPE_COLOUR_KINDS = {'squashed_text', 'squashed_picture', 'uniform_text_colour'
 HERO_HUD_KINDS = {'home_hero_unknown', 'home_hero_hidden', 'home_hero_small', 'hud_digit_small', 'hud_digit_contrast',
                   'black_edge_band'}
 STYLE_KINDS = {'mixed_caption_style', 'off_style_button', 'flat_button', 'text_arrow'}   # user 2026-10-23: one style per group
+# Saul 2026-10-31 (香肠太难了): "不要这种深色背景，的按钮，也不要图案后面还跟着这个背景"
+BUTTON_COLOUR_KINDS = {'dark_button', 'icon_plate', 'dark_button_state', 'button_colour_unavailable'}
+BUTTON_COLOUR_TITLE = '按钮底色不深、物品图标不另垫底板（Saul 2026-10-31，香肠太难了）'
 OVERLAP_KINDS = {'overlap_text_picture', 'overlap_text', 'overlap_buttons', 'clip_out', 'text_outside', 'action_caption',
                  # user 2026-10-23 Daily Rewards: "100" printed as "10" over "100", day-7 car out of its card, checkerboard
                  'glyph_overlap', 'double_number', 'negative_spacing', 'font_advance', 'font_advance_rendered', 'checker_fill', 'checker_unavailable',
@@ -90,7 +93,8 @@ LOOK = [
     '【用户 2026-10-28，画风只查负向】画风按启动包 ART_DIRECTION，不按明亮/Q版/糖果色/光泽/华丽与否评判，也不看亮度够不够；只看有没有禁止项：大面积深色、纯黑/纯色底、大白板、单色图标、刺眼的整屏高亮、无层次平涂、图片模糊、按钮/文字被遮挡或穿模',
     '首页：有大标题和封面画面（主角/场景），按钮加起来不超过屏幕 40%，中间没有大片空白；货币在屏幕最上方（不在中间），设置在左上或右上角，主角中部左右各有真实功能入口；PLAY下方所有行合计最多5个，图标沿用固定两倍尺寸，不重复翻倍',
     '没有空白卡片、蓝色/灰色占位方块、大块灰色锁定块；选关页一屏至少 6 关，每关有编号、星星和状态',
-    '按钮都有底板；没有纯色方块按钮、没有无层次平涂的扁平色块按钮、没有近黑/藏青/深灰的特粗字；字不超出按钮、不被遮挡',
+    '带字的按钮都有底板；没有纯色方块按钮、没有无层次平涂的扁平色块按钮、没有近黑/藏青/深灰的特粗字；字不超出按钮、不被遮挡',
+    '【Saul 2026-10-31，香肠太难了】按钮底色和金币、钻石、爱心、体力图标的底板已由「按钮底色不深、物品图标不另垫底板」一行自动量过，这里只看它量不到的：列为接近深色的按钮、礼盒和道具图标后面有没有另垫底板、原来单独的功能图标有没有被垫上底；方向键的箭头和它的功能同一个方向；英化（包括要求重新设计的）：按钮、图标、金币的画法和原游戏是一套（把原游戏的按钮图放在旁边一起看）',
     '没有单色图标（黑色线框/剪影、整页只有黑白灰），图标下的小字不压图标',
     '【重点，用户 2026-10-23】所有字都是生成的图片字、和画面一体（正例：THE COLLECTION 收藏页；反例：Scissors Master 首页）：游戏大标题是一张按画风一次生成的风格化 logo（不打字、不在底板上拼字母，副标题也在 logo 图里）；每个按钮连同上面的风格化文字一次生成成一整张图（PLAY、VIDEO +50、USE CLASSIC KIT、COMMON/RARE 标签都是整图），不是"生成的底板＋字体字/另一张字图"；金币、体力、关卡、价格、百分比等数字用按画风生成的数字图做成位图字体；页面文字、栏目名、物品名、任务名都是 GPT 图片字；只有公告、玩法说明这类大段文字可以用细一点的字体；没有深绿/深青色字',
     '【用户 2026-10-23】放大看每个图片字：没有被压扁或拉长的字（反例：DETAILS 被压扁 2.89 倍、SKINS/DAILY 1.80 倍）——每个字单独裁到可见边缘、按原比例缩放，放不下就改按钮尺寸或重新生成；不是用 Canvas 字体画出来的字',
@@ -101,7 +105,7 @@ LOOK = [
     '【用户 2026-10-23/24，数字叠印与字距】放大看每个数字，尤其三位数、分隔符和最大值（100、150、200、300、1,250、0:14、00:59:59）：数字之间不重叠、没有"10"叠在"100"上这种印两遍的情况；固定数字和图标/底板一张图，会变的数字用一个位图字体 Label，`.fnt` 每字 xadvance >= xoffset + width + max(2px, 0.1 × lineHeight)，且在两种手机比例实看描边之间留有背景缝隙；不手摆数字图、不叠第二个 Label、不用负字距；卡片奖励图在卡片内且未拉长，卡片底是真画面而非假透明棋盘格',
     '【用户 2026-10-23】道具数量、体力、金币、关卡这些和闯关有关的东西：边框/胶囊、按钮、收集功能键的图案都是生成的图；会变的数字单独生成数字图做成位图字体，不用原生字体',
     '【用户 2026-10-23】同一组按钮（比如首页一排功能键）放在一起看：按钮和下面的字是同一种做法（都烘焙在图标图里，或都用同一种底板＋图片字）、同一种底板、同一种字形和颜色；不能有的是白底条、有的是蓝底条、有的是打字、有的是云朵底板＋打字（反例：LEVELS/SOUVENIRS/SETTINGS/HOME SCREEN +2/PROFILE REVISIT +2 五个键四种风格）',
-    '按钮是一整套：主按钮、图标按钮、左右箭头、关闭、返回都同一种材质边框，没有扁平色块、没有打出来的"<"">""X"',
+    '按钮是一整套：主按钮、图标按钮、左右箭头、关闭、返回都同一种材质边框，没有扁平色块、没有打出来的"<"">""X"；整套统一不是给每个图标垫同一块底',
     '面板/弹窗里不空，内容在边框内框里；没有 LOCAL PREVIEW 这类开发用字；每个弹窗都有生成的插图（礼物/宝箱、角色、带游戏图标的手机、奖励物品＋货币图标）和图片字标题，不是浅色平板上只有字和三个扁平按钮（反例：Home screen reward 弹窗）',
     '所有页面风格统一，新做的图和原有的图（英化）或整套新图（重塑）看起来是一套；能用生成图的地方都用生成图，游戏里画质差、无层次平涂、用字体画出来的图都已按画风重新生成替换',
     '顶部资源栏：在最上方、不是深色整条，体力是闪电、货币图标贴合题材（海底→珍珠），数字看得清；右上角给平台胶囊留空',
@@ -621,6 +625,22 @@ def main():
     add('同组按钮同一种风格（按钮和下面的字做法、底板、颜色一致）', dark_ok and not same, '；'.join(same[:6])[:700] if same else
         ('通过：每组按钮的字都是同一种做法、同一种底板和颜色，按钮全部来自同一套' if dark_ok else '没有页面报告：先 dump 全部页面'),
         'page_richness.json')
+    # Saul 2026-10-31 (香肠太难了 Redesign v2): no dark button bodies, no plate behind coin / gem / heart / energy icons.
+    # Measured by audit_page_richness on the screenshots it already has (audit_button_colour.py): no extra capture.
+    colour_, hints_ = [], []
+    try:
+        for pg in rep.get('pages', []):
+            for prob in pg.get('problems', []):
+                if prob.split(':', 1)[0] in BUTTON_COLOUR_KINDS:
+                    colour_.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', prob[:120]))
+            hints_ += ['%s：%s' % (pg.get('screen') or '?', h) for h in (pg.get('stats') or {}).get('dark_button_hints') or []]
+        colour_ += ['按钮状态：%s' % p_[:120] for p_ in rep.get('setup', []) if p_.split(':', 1)[0] in BUTTON_COLOUR_KINDS]
+    except (NameError, AttributeError):
+        pass
+    add(BUTTON_COLOUR_TITLE, dark_ok and not colour_, '；'.join(colour_[:6])[:700] if colour_ else (
+        ('通过：每页按钮底色都不深（含游戏中的方向键、按下和禁用状态），金币、钻石、爱心、体力图标没有另垫底板' +
+         ('；接近深色、请看图确认：' + '；'.join(sorted(set(hints_))[:4]) if hints_ else '')) if dark_ok
+        else '没有页面报告：先 dump 全部页面'), 'page_richness.json')
     hero = []
     try:
         for pg in rep.get('pages', []):

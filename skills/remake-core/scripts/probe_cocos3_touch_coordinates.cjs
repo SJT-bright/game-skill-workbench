@@ -63,15 +63,7 @@ function engineParts(engine) {
   // The engine binds a copy of the global SDK when cc is evaluated: `X=tt,Object.keys(X).forEach(...bind...)`.
   const clone = /([\w$]+)=([\w$]+),([\w$]+)=tt,Object\.keys\(\3\)\.forEach\(\(function\(([\w$]+)\)\{"function"!=typeof \3\[\4\]\?\1\[\4\]=\3\[\4\]:\1\[\4\]=\3\[\4\]\.bind\(\3\)\}\)\)/.exec(engine);
   if (!clone) throw Error('unsupported Cocos 3 SDK clone (expected Object.keys(tt) bind copy); do not mark input verified');
-  // Cocos 3.8 registers with string phases and getOrCreateTouch. Cocos 3.7 (verified on Creator 3.7.1 bytedance
-  // builds) registers with one shared enum object `E.TOUCH_START/...`, calls getTouch and reads macro
-  // ENABLE_MULTI_TOUCH. Only these two closed profiles are accepted; anything else is refused.
-  let profile = 'cocos3.8', enumName = null;
-  let reg = /_registerEvent=function\(\)\{([\w$]+)\.onTouchStart\(this\._createCallback\("touch-start"\)\),\1\.onTouchMove\(this\._createCallback\("touch-move"\)\),\1\.onTouchEnd\(this\._createCallback\("touch-end"\)\),\1\.onTouchCancel\(this\._createCallback\("touch-cancel"\)\)\}/.exec(engine);
-  if (!reg) {
-    reg = /_registerEvent=function\(\)\{([\w$]+)\.onTouchStart\(this\._createCallback\(([\w$]+)\.TOUCH_START\)\),\1\.onTouchMove\(this\._createCallback\(\2\.TOUCH_MOVE\)\),\1\.onTouchEnd\(this\._createCallback\(\2\.TOUCH_END\)\),\1\.onTouchCancel\(this\._createCallback\(\2\.TOUCH_CANCEL\)\)\}/.exec(engine);
-    if (reg) { profile = 'cocos3.7'; enumName = reg[2]; }
-  }
+  const reg = /_registerEvent=function\(\)\{([\w$]+)\.onTouchStart\(this\._createCallback\("touch-start"\)\),\1\.onTouchMove\(this\._createCallback\("touch-move"\)\),\1\.onTouchEnd\(this\._createCallback\("touch-end"\)\),\1\.onTouchCancel\(this\._createCallback\("touch-cancel"\)\)\}/.exec(engine);
   if (!reg) throw Error('unsupported Cocos 3 minigame TouchInputSource; do not mark input verified');
   if (reg[1] !== clone[2]) throw Error('engine touch source does not read the cloned SDK object');
   const start = engine.indexOf('e._createCallback=function(t){', reg.index);
@@ -79,44 +71,13 @@ function engineParts(engine) {
   if (start < 0 || end < 0 || start - reg.index > 400) throw Error('unsupported Cocos 3 touch callback shape');
   const body = engine.slice(start, end);
   const screen = /=([\w$]+)\.windowSize,[\w$]+=\1\.devicePixelRatio/.exec(body);
-  const manager = (profile === 'cocos3.8' ? /([\w$]+)\.getOrCreateTouch\(/ : /([\w$]+)\.getTouch\(/).exec(body);
+  const manager = /([\w$]+)\.getOrCreateTouch\(/.exec(body);
   const event = /new ([\w$]+)\([\w$]+,!1,[\w$]+,/.exec(body);
   const vec = /_getLocation=function\([\w$]+,[\w$]+,[\w$]+\)\{[^}]*return new ([\w$]+)\([\w$]+,[\w$]+\)\}$/.exec(body);
   if (!screen || !manager || !event || !vec || !body.includes('.clientX') || !body.includes('.clientY'))
     throw Error('unsupported Cocos 3 touch location shape; do not mark input verified');
-  const parts = {profile, cloneLoop: clone[0].slice(clone[0].indexOf('Object.keys(')), sdkName: clone[3], targetName: clone[1],
-    body, names: {screen: screen[1], manager: manager[1], event: event[1], vec: vec[1]},
-    managerMethod: profile === 'cocos3.8' ? 'getOrCreateTouch' : 'getTouch'};
-  if (profile === 'cocos3.7') {
-    // The phase enum is taken from its own definition in the same engine (`function(t){t.TOUCH_START="touch-start",...}(E||(E={}))`),
-    // never filled in by the probe. Every phase must be defined exactly once with a string value, and the four
-    // values must be distinct; the expected 3.7 values are checked so a remapped enum is refused.
-    const esc = enumName.replace(/\$/g, '\\$');
-    const defs = [...engine.matchAll(new RegExp('function\\(([\\w$]+)\\)\\{((?:\\1\\.[A-Z_]+="[^"]*",?)+)\\}\\(' + esc + '\\|\\|\\(' + esc + '=\\{\\}\\)\\)', 'g'))];
-    if (defs.length !== 1) throw Error('cocos3.7 touch phase enum ' + enumName + ' definition not found exactly once; do not mark input verified');
-    const values = {};
-    for (const m of defs[0][2].matchAll(/[\w$]+\.([A-Z_]+)="([^"]*)"/g)) {
-      if (m[1] in values) throw Error('cocos3.7 touch phase enum defines ' + m[1] + ' twice');
-      values[m[1]] = m[2];
-    }
-    const wanted = {TOUCH_START: 'touch-start', TOUCH_MOVE: 'touch-move', TOUCH_END: 'touch-end', TOUCH_CANCEL: 'touch-cancel'};
-    for (const k of Object.keys(wanted))
-      if (values[k] !== wanted[k]) throw Error('cocos3.7 touch phase enum ' + k + ' is ' + JSON.stringify(values[k]) + ', expected ' + wanted[k]);
-    parts.enumName = enumName;
-    parts.enumValues = values;
-    // ENABLE_MULTI_TOUCH is read from the engine's own macro object definition, `X=t("macro",{...ENABLE_MULTI_TOUCH:!0|!1...`.
-    const flag = /([\w$]+)\.ENABLE_MULTI_TOUCH/.exec(body);
-    if (flag) {
-      const fesc = flag[1].replace(/\$/g, '\\$');
-      const macro = new RegExp('\\b' + fesc + '=[\\w$]+\\("macro",\\{').exec(engine);
-      const at = macro ? engine.indexOf('ENABLE_MULTI_TOUCH:', macro.index) : -1;
-      const value = at >= 0 && at - macro.index < 20000 ? /^ENABLE_MULTI_TOUCH:(!0|!1|true|false)/.exec(engine.slice(at)) : null;
-      if (!value) throw Error('cocos3.7 macro ' + flag[1] + '.ENABLE_MULTI_TOUCH definition not found; do not mark input verified');
-      parts.macroName = flag[1];
-      parts.multiTouch = value[1] === '!0' || value[1] === 'true';
-    }
-  }
-  return parts;
+  return {cloneLoop: clone[0].slice(clone[0].indexOf('Object.keys(')), sdkName: clone[3], targetName: clone[1],
+    body, names: {screen: screen[1], manager: manager[1], event: event[1], vec: vec[1]}};
 }
 
 function runPrefix(files, sdk) {
@@ -170,14 +131,12 @@ function probe(files, engine) {
   scope[parts.targetName] = {};
   scope[parts.names.screen] = {windowSize: SCREEN, devicePixelRatio: INFO.pixelRatio};
   scope[parts.names.manager] = {
-    [parts.managerMethod](id, x, y) { const touch = {id, x, y}; received.push(touch); return touch; },
+    getOrCreateTouch(id, x, y) { const touch = {id, x, y}; received.push(touch); return touch; },
     releaseTouch() {}, getAllTouches() { return received.slice(-1); }};
   scope[parts.names.event] = function EventTouch(touches, bubbles, type) { this.touches = touches; this.type = type; };
   // Cocos 3.8 Vec2 stores `x || 0`, so a NaN location reaches the touch manager as 0: a finite, on-screen
   // (0, 0). The probe keeps that coercion and records the raw location, which is why it checks position too.
   scope[parts.names.vec] = function Vec2(x, y) { raw.push({x, y}); this.x = x || 0; this.y = y || 0; };
-  if (parts.enumName) scope[parts.enumName] = Object.freeze(Object.assign({}, parts.enumValues));
-  if (parts.macroName) scope[parts.macroName] = Object.freeze({ENABLE_MULTI_TOUCH: parts.multiTouch});
   scope.Object = Object;
   vm.createContext(scope);
   vm.runInContext(parts.cloneLoop, scope, {timeout: 1000});
@@ -186,9 +145,7 @@ function probe(files, engine) {
   const engineSdk = scope[parts.targetName];
   const before = {};
   for (const phase of PHASES) before[phase] = listeners[phase].length;
-  const callbacks = parts.enumValues
-    ? {Start: parts.enumValues.TOUCH_START, Move: parts.enumValues.TOUCH_MOVE, End: parts.enumValues.TOUCH_END, Cancel: parts.enumValues.TOUCH_CANCEL}
-    : {Start: 'touch-start', Move: 'touch-move', End: 'touch-end', Cancel: 'touch-cancel'};
+  const callbacks = {Start: 'touch-start', Move: 'touch-move', End: 'touch-end', Cancel: 'touch-cancel'};
   for (const phase of PHASES) {
     if (typeof engineSdk['onTouch' + phase] !== 'function') throw Error('engine SDK copy has no onTouch' + phase);
     engineSdk['onTouch' + phase](source._createCallback(callbacks[phase]));
@@ -227,9 +184,7 @@ function probe(files, engine) {
   row('sdk_screen_zero', zero, fire('Start', zero)); fire('End', zero);
   const client = {identifier: 0, clientX: 20, clientY: 30, force: 1};
   row('client_coordinates_preserved', client, fire('Start', client)); fire('End', client);
-  return {schema: 'cocos3_touch_coordinates.v1', passed: rows.length > 0 && rows.every(r => r.passed), profile: parts.profile,
-    engine_constants: parts.enumValues ? {phase_enum: parts.enumValues, ENABLE_MULTI_TOUCH: parts.multiTouch === undefined ? null : parts.multiTouch} : null,
-    screen: SCREEN,
+  return {schema: 'cocos3_touch_coordinates.v1', passed: rows.every(r => r.passed), screen: SCREEN,
     sdk_fields: ['identifier', 'screenX', 'screenY', 'force'], prefix, emitted: [...new Set(emitted)], rows,
     boundary: "package game.js -> web-adapter.js prefix, engine's own SDK copy and TouchInputSource callbacks, controlled SDK payloads; not renderer/hit-test/device acceptance"};
 }

@@ -85,6 +85,12 @@ LEVELS/SKINS/Add to Home/Revisit tiles, typed numbers 0/9 and 0):
                   SETTINGS typed with no plate, HOME SCREEN +2 / PROFILE REVISIT +2 typed on cloud plates)
   text_arrow      a typed arrow ("<", ">") inside a button instead of a drawn arrow icon
   flat_button     a button that is one flat colour in the screenshot (a plain rounded box)
+  dark_button     every page, gameplay included: a button body (the biggest picture under it) whose main colour on the
+                  screenshot is dark (L* < 40, or L* < 50 and dull, or L* < 55 and very dull: tomato/brick red, dark
+                  brown, navy, dark green, grey, black); an English game's original button pictures are not reported
+  icon_plate      a coin / gem / heart / energy icon with a plate of its own: painted into its picture, or a squarish
+                  picture right behind it that holds no text                 (Saul 2026-10-31, audit_button_colour.py)
+  dark_button_state (setup) a cc.Button pressed / disabled sprite or COLOR tint that comes out dark
   off_style_button a button plate whose frame is not in docs/art/button-set.json (one button set per game)
   solid_block     a flat single-colour rectangle >= 2% of the screen besides the background (placeholder squares,
                   grey lock blocks, blank card insides; from the screenshot)            (user 2026-10-21 round 2)
@@ -202,6 +208,7 @@ GENERATED_TEXT_SOURCES = {}
 RUNTIME_TEXT = []     # docs/text/runtime-text.json: labels that really change at run time (rival names ...), path globs
 CAPTION_FRAMES = []    # Explicit whole-button word artworks; style membership alone does not imply a caption.
 BUTTON_SET = None     # docs/art/button-set.json: frame-name globs of the one button set drawn for this game
+ORIGINAL_ART = ()     # audit_button_colour.OriginalArt(project), set in main(): an English game's own original pictures
 PLACEHOLDER_FRAMES = re.compile(r'placeholder|default_sprite|singlecolor|single_color|blank|^white$|^1x1', re.I)
 WORDLIKE = {'txt', 'text', 'texts', 'word', 'words', 'label', 'labels', 'caption', 'title', 'font', 'letter', 'letters', 'logo'}
 NAME_TOKENS = re.compile(r'[A-Z]?[a-z]+|[A-Z]+(?![a-z])')   # BtnWord -> Btn, Word; txt_play -> txt, play (sword, texture: no)
@@ -2424,13 +2431,23 @@ def check(d, image_module=None, project=None, binding=None):
     if image_module is not None:
         flat, pixels = flat_background(d, image_module)
         problems += flat
-    # Local text backing audit must run before the gameplay early return.
+    # One decode of the screenshot serves the text backing audit, the button colour checks and flat_button below.
+    shot_img = None
     if image_module is not None and screenshot_of(d).is_file():
+        shot_img = image_module.open(screenshot_of(d)).convert('RGB')
+    # Local text backing audit must run before the gameplay early return.
+    if shot_img is not None:
         from check_text_backplates import ui_dump_problems
-        problems += ui_dump_problems(d, image_module.open(screenshot_of(d)).convert('RGB'), nodes, words)
+        problems += ui_dump_problems(d, shot_img, nodes, words)
+    # Saul 2026-10-31 (香肠太难了): dark button bodies and item icons on their own plate, gameplay controls included
+    import audit_button_colour
+    colour_found, colour_hints = audit_button_colour.page_problems(d, nodes, shot_img, ORIGINAL_ART)
+    problems += colour_found
     kind, purpose = d.get('kind'), d.get('purpose', 'other')
     reported_numbers = league_number_count(content) if purpose == 'league' else len(numbers)
     pix = {'flat_ratio': pixels['flat_ratio'], 'plain_block_ratio': pixels['plain_block_ratio']} if pixels else {}
+    if colour_hints:
+        pix['dark_button_hints'] = colour_hints
     problems += text_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
     problems += one_piece_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)])
     problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module) + low_res_problems(nodes, full)
@@ -2478,9 +2495,6 @@ def check(d, image_module=None, project=None, binding=None):
         has_plate = any('sprite' in n['comps'] and area(n['rect']) >= 0.3 * area(b['rect']) for n in sub)
         if not has_plate and any(text(n) for n in sub):
             problems.append('bare_button: %s is only text ("%s"); give it a plate picture' % (b['path'], next(text(n) for n in sub if text(n))[:30]))
-    shot_img = None
-    if image_module is not None and screenshot_of(d).is_file():
-        shot_img = image_module.open(screenshot_of(d)).convert('RGB')
     for b in buttons:
         sub = [n for n in nodes if node_under(n, b)]
         plates = [n for n in sub if 'sprite' in n['comps'] and not text(n)]
@@ -2791,6 +2805,10 @@ def main():
         setup.append('button_set: docs/art/button-set.json missing: generate every button (main, small, icon, arrows, close, back, '
                      'tabs) as one set in the game style and list their frame names ({"style": "...", "frames": ["btn_*", ...]})')
     setup += canvas_text_code(proj) + font_advance_problems(proj)
+    global ORIGINAL_ART
+    import audit_button_colour        # Saul 2026-10-31: pressed / disabled button states nobody screenshots
+    ORIGINAL_ART = audit_button_colour.OriginalArt(proj)
+    setup += audit_button_colour.state_problems(proj, ORIGINAL_ART)
     try:
         from PIL import Image
     except ImportError:

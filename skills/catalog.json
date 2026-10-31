@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T21:19:54.575Z",
-  "treeHash": "95da1fcdd545eedef86c843ce71f92fffcefafac9c3bc45d51d1b6e378825a99",
+  "createdAt": "2026-10-31T21:20:20.460Z",
+  "treeHash": "ba5dd133d6ea07c054db1a8aba17e8b9f2aa571fc5b798561619930ac4fad919",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2817,14 +2817,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "906ad097275abb477513dfcf1fbb469d9fe0fd44902956e731ed329806ba7db4",
-      "fileCount": 395,
-      "bytes": 8614858,
+      "treeHash": "a5595f933465517df68c3bf49d6426e626d8724d64a7d9b6dc47a12041935aa2",
+      "fileCount": 397,
+      "bytes": 8660199,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "9ce0c66e40b9ac36455d0f41371c027a601b6061037cbab9e63ebc77a5d337be",
-          "size": 68354,
+          "hash": "c26de271f3e922a4d592096bef6d078ef697a1b5671795db8ca661bc7e582dd2",
+          "size": 68687,
           "executable": false
         },
         {
@@ -3555,8 +3555,8 @@
         },
         {
           "path": "scripts/art_check.py",
-          "hash": "65e1976a6d610fe82ba308b22da9e88fa7f89d3e3a59c078a27fd3fa19d5ba61",
-          "size": 60729,
+          "hash": "baa526f27bee692156726b5ba763c5c12f62a756d44f83b485facd6a4fb9791b",
+          "size": 62990,
           "executable": false
         },
         {
@@ -3611,6 +3611,12 @@
           "path": "scripts/audit_bitmap_letter_fonts.py",
           "hash": "f0982e695acbfdd19b7bd3a329ccfb9987e599551f6696f22496ac0853ff2be4",
           "size": 5083,
+          "executable": false
+        },
+        {
+          "path": "scripts/audit_button_colour.py",
+          "hash": "a2f13de7d0c7b403909a589288e97a3622ce19dbaad5845ab8bd7fc614f9b0ce",
+          "size": 37051,
           "executable": false
         },
         {
@@ -3789,8 +3795,8 @@
         },
         {
           "path": "scripts/audit_page_richness.py",
-          "hash": "ff810fbc5ff8cfed30d32eaab99a7c75533104f05a3bf23bfb28b6e402a51c47",
-          "size": 175397,
+          "hash": "efa93f0fc2109cdc9deee23b29a123d0ccf95f60621c09bc0d45e8ddf1a772e9",
+          "size": 176855,
           "executable": false
         },
         {
@@ -4251,8 +4257,8 @@
         },
         {
           "path": "scripts/probe_cocos3_touch_coordinates.cjs",
-          "hash": "38e776cef42eb029faaf986ae215caa74d86334ef31d94262db63fc5288e3e37",
-          "size": 17125,
+          "hash": "cd802a00e416dab93612fca7bda5f9475f3b87e28f18cee6791f448d9a269182",
+          "size": 13499,
           "executable": false
         },
         {
@@ -4475,6 +4481,12 @@
           "path": "scripts/test_bitmap_letter_fonts.py",
           "hash": "65ad4c96d2c65bbd622b6878b6f00ab3f8654b76667fbd8efff8ff7586b2df1f",
           "size": 2745,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_button_colour.py",
+          "hash": "588a6971a0f33eee98119652c5ef8e7ade78eb134fdf601a23e344b6990aa50c",
+          "size": 13696,
           "executable": false
         },
         {
@@ -4953,8 +4965,8 @@
         },
         {
           "path": "scripts/test_tiktok_touch_coordinates.py",
-          "hash": "a604d1ced4d2bc908e7d586bf49653f10f52108113934baa3c78c49eac1b6e71",
-          "size": 23759,
+          "hash": "97815dd70bd3ca3fb28e42682e8b56dbdee4f11b26fb1b85a02c461d9b5cbde4",
+          "size": 17927,
           "executable": false
         },
         {

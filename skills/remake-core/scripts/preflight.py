@@ -15,9 +15,18 @@
   音频来源      audit_audio_sources.py    每个音频都有合格授权记录
   中文残留      audit_english_coverage.py 源码/包里的中文候选数量（需人工分类：注释不算）
   英文文案      audit_copy_quality.py     拼写、中文/全角标点、占位符、中式英语、叫法统一、字放不下（读 docs/test 里的 dump_ui）
-  广告接入标记  audit_platform_markers.py 激励广告必需的接口调用是否存在
+  广告接入标记  audit_platform_markers.py 激励广告和成长（加桌面、主页回访）必需的接口调用；状态不正常就是需处理
+  互推          audit_platform_markers.py 跳转其他小游戏（navigateToMiniProgram 等）
   异步返回方式  audit_async_contracts.py  奖励查询的回调和 Promise 都接住了吗（Monkey Dash 2026-10-21）
   触屏写法      audit_mobile_input.py     已知会让手机点不中的写法
+  分享/排行榜   audit_no_social_features.py --stage final   分享、排行榜、邀请入口（v7.5 细菌2048）
+  分享换奖励    audit_share_entries.py    “本平台不可用”的死按钮；每个分享调用在 docs/ 记录删掉或改成看广告
+  声音设置      audit_sound_settings_static.py  有背景音乐、音乐和音效分开调（实际输出仍看 audit_sound_settings.py）
+  逻辑检查      logic_check.py --mode review   静态疑点；--stage final 时 R01–R09 缺失也不通过
+  包体估算      audit_package_estimate.py 源码阶段估总包/主包、图片比显示尺寸大3倍以上
+  App ID        audit_source_appid.py     settings/bytedance.json 的 appid 是数字（共用测试组 ID 正常）
+  平台包        audit_platform_kit_required.py  用本机 2.4.15 出包就必须带平台包（自写广告封装只提示）
+  广告入口      audit_ad_entry_reachability.py  激励广告按钮在预制体里关着、又没有代码打开 → 需处理
   上传包结构    verify_native_zip.py      包结构、App ID、测试跳关标记是否残留     （需 --native-zip）
   广告位绑定    audit_ad_binding.py       包里的广告配置与当前广告配置一致           （需 --native-zip）
   画面亮度背景  audit_dark_area.py        截图深色/大块白色/大块纯色/纯黑底         （默认读 docs/test 里 dump_ui 的截图）
@@ -38,6 +47,7 @@ art_check.py），默认不再执行：清晰度、大块深色与纯色底、UI
 签到扩展、顶部资源栏、关卡地图这些行只记录“本次未执行”，不冒充通过；缺失/改动回所属阶段。
 加 --recheck-earlier 时实际执行这些检查，并将失败列为需处理（比如没走设计关/美术关的老工程）。
 
+--stage final（出包前）：任何一项“跳过”都算需处理（比如没给 --native-zip）。
 结果：<输出文件夹>/preflight.md（一页摘要）、preflight.json、logs/（每项完整输出）。
 退出码：0 全部通过；1 有"需处理"；2 参数错误。
 本预检只做静态与截图测量，不代替真实触摸测试、真机和真实广告验收；它的作用是让 GUI 测试少跑几轮。
@@ -48,6 +58,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import subprocess
 import time
 import sys
@@ -114,6 +125,8 @@ def main():
     ap.add_argument('--out', type=Path)
     ap.add_argument('--board', choices=['localize', 'remake'],
                     help='localize=英化（中文源码转英文）, remake=重塑（启动包做游戏）；不写时读 docs/board.txt')
+    ap.add_argument('--stage', choices=['code', 'final'], default='code',
+                    help='final = 出包前最后一次预检：任何一项“跳过”都算不通过（比如没给 --native-zip），逻辑检查的 R01–R09 缺失也不通过')
     ap.add_argument('--recheck-earlier', action='store_true',
                     help='实际执行设计关/美术关项目，失败计为需处理；默认不执行这些前置阶段检查')
     a = ap.parse_args()
@@ -232,16 +245,32 @@ def main():
     else:
         add('英文文案', '出错', text.strip()[-300:], 'logs/audit_copy_quality.log')
 
-    # 4 广告接入标记
-    pm_args = [proj, '--features', 'iaa', '--report', out / 'platform.json']
+    # 4 广告接入标记（v7.5 细菌2048 第2条 / 方块迷阵 第2条：成长标记每个 TikTok 游戏都查；status 不是正常值就是需处理）
+    pm_args = [proj, '--report', out / 'platform.json']
     if a.native_zip:
         pm_args += ['--native-zip', a.native_zip]
     code, text = run('audit_platform_markers.py', pm_args, logs)
     j = first_json(text)
     if j:
         miss = (j.get('source_missing') or []) + (j.get('native_missing') or [])
-        add('广告接入标记', '需处理' if miss else '通过',
-            ('缺少：' + '、'.join(dict.fromkeys(miss))) if miss else '激励广告必需的接口调用都在（不代表广告能播）', 'platform.json')
+        st = j.get('status') or ''
+        share = j.get('share_calls_in_source') or {}   # {call: [files]}
+        share = share if isinstance(share, dict) else {str(x): [] for x in share}
+        bad = miss or st != 'markers_present_requires_behavior_review' or code != 0
+        why = []
+        if miss:
+            why.append('缺少：' + '、'.join(dict.fromkeys(miss)))
+        if share or st.startswith('share_feature'):
+            why.append(('有分享/互推/排行调用要删：' + '；'.join(f"{k}（{'、'.join(Path(f).name for f in v[:3])}）" for k, v in list(share.items())[:4]))
+                       if share else '分享/排行检查没通过（见 platform.json no_social_features）')
+        if bad and not why:
+            why.append(f'状态 {st or "未知"}（退出码 {code}）')
+        add('广告接入标记', '需处理' if bad else '通过',
+            '；'.join(why) if bad else '激励广告和成长（加桌面、主页回访）必需的接口调用都在（不代表广告能播）', 'platform.json')
+        cross = {k: v for k, v in share.items() if re.search(r'navigateTo(?:MiniProgram|Mini)|MoreGames', k)}
+        add('互推', '需处理' if cross else '通过',
+            ('互推/跳转其他小游戏要删掉：' + '；'.join(f"{k}（{'、'.join(v[:4])}）" for k, v in cross.items())) if cross
+            else '没有跳转其他小游戏的调用', 'platform.json')
     else:
         add('广告接入标记', '出错', text.strip()[-300:], 'logs/audit_platform_markers.log')
 
@@ -276,9 +305,60 @@ def main():
     else:
         add('触屏写法', '出错', text.strip()[-300:], 'logs/audit_mobile_input.log')
 
+    # 5b v7.5（细菌2048 第2-8、10条）：SKILL.md 里的必查项和源码阶段就能查出的上传问题，都在预检里跑
+    def tool_row(title, script, args, report, judge):
+        code, text = run(script, args, logs)
+        j = first_json(text)
+        if not j or j.get('status') == 'error' or code not in (0, 1, 2):
+            add(title, '出错', text.strip()[-300:], f'logs/{Path(script).stem}.log')
+            return
+        status, detail = judge(code, j)
+        add(title, status, detail, report)
+
+    def first_items(items, n=3):
+        return '；'.join(str(x)[:120] for x in (items or [])[:n])
+
+    code, text = run('audit_no_social_features.py', ['--project', proj, '--stage', 'final', '--out', out / 'social.json'], logs)
+    sj = first_json(text)
+    if sj and code in (0, 2):
+        hits = sj.get('findings') or []
+        add('分享/排行榜', '通过' if code == 0 else '需处理',
+            '没有分享、排行榜、邀请入口' if code == 0 else f'发现{len(hits)}处分享/排行榜/邀请（TikTok 版要删掉，核心玩法里的分享奖励改看广告）：'
+            + first_items([f"{Path(h.get('file', '')).name} {h.get('match', '')}" if isinstance(h, dict) else h for h in hits]), 'social.json')
+    else:
+        add('分享/排行榜', '出错', text.strip()[-300:], 'logs/audit_no_social_features.log')
+
+    tool_row('分享换奖励', 'audit_share_entries.py', ['--project', proj, '--out', out / 'share_entries.json'], 'share_entries.json',
+             lambda code, j: ('通过', '没有“本平台不可用”的死按钮；每个分享调用都在 docs/ 记录了删掉或改成看广告') if code == 0 else
+             ('需处理', first_items(j.get('problems'))))
+    tool_row('声音设置', 'audit_sound_settings_static.py', ['--project', proj, '--out', out / 'sound_settings.json'], 'sound_settings.json',
+             lambda code, j: ('需处理', first_items(j.get('problems'))) if j.get('status') == 'needs_fix' else
+             ('提示', '源码里没认出：' + first_items(j.get('review')) + '；用设置页实际试音乐和音效两个音量') if j.get('status') == 'review' else
+             ('通过', '有背景音乐，音乐和音效分开调（实际输出仍由 audit_sound_settings.py 按录制记录判断）'))
+    lc_args = ['--project', proj, '--mode', 'review', '--out', out / 'logic.json'] + (['--stage', 'final'] if a.stage == 'final' else [])
+    tool_row('逻辑检查', 'logic_check.py', lc_args, 'logic.json',
+             lambda code, j: ('需处理', f"静态疑点{j.get('open_findings')}处待处理：" + first_items(j.get('top'))
+                             + ('；最终阶段 R01–R09 回归缺失/未测也不通过' if a.stage == 'final' and j.get('status') == 'fail' else ''))
+             if j.get('open_findings') or j.get('status') == 'fail' else
+             ('通过', f"静态疑点0处；流程 F01–F20 和回归 R01–R09 在触摸测试里补（未测{j.get('flow_problems')}条）"))
+    tool_row('包体估算', 'audit_package_estimate.py', ['--project', proj, '--out', out / 'package_estimate.json'], 'package_estimate.json',
+             lambda code, j: ('需处理', first_items(j.get('problems'))) if code else
+             ('通过', f"估算总包 {(j.get('estimate') or {}).get('total_bytes', 0) / 1e6:.1f}MB、主包 {(j.get('estimate') or {}).get('main_bytes', 0) / 1e6:.1f}MB"
+                     + ('；' + first_items(j.get('warnings'), 1) if j.get('warnings') else '')))
+    tool_row('App ID', 'audit_source_appid.py', ['--project', proj, '--out', out / 'source_appid.json'], 'source_appid.json',
+             lambda code, j: ('需处理', first_items(j.get('problems'))) if code else
+             ('通过' if j.get('status') == 'pass' else '不适用', f"settings/bytedance.json appid {j.get('appid')}" if j.get('appid') else first_items(j.get('notes'))))
+    tool_row('平台包', 'audit_platform_kit_required.py', ['--project', proj, '--out', out / 'platform_kit.json'], 'platform_kit.json',
+             lambda code, j: ('需处理', first_items(j.get('problems'))) if code else
+             (('提示' if j.get('warnings') else '通过') if j.get('status') == 'pass' else '不适用',
+              first_items(j.get('warnings'), 2) or first_items(j.get('notes'), 1) or '平台包文件与 KIT_MANIFEST 一致'))
+    tool_row('广告入口', 'audit_ad_entry_reachability.py', ['--project', proj, '--out', out / 'ad_entry.json'], 'ad_entry.json',
+             lambda code, j: ('需处理', first_items(j.get('problems'))) if code else
+             ('提示', first_items(j.get('review'), 2)) if j.get('review') else ('通过', f"{j.get('reachable_entries')}个激励广告入口能点到"))
+
     # 6 上传包结构 + 7 广告位绑定
     if a.native_zip:
-        vz = [a.native_zip, '--report', out / 'native_zip.json']
+        vz = [a.native_zip, '--report', out / 'native_zip.json', '--structure-only']   # v7.7.4: structure row only
         if a.expected_app_id:
             vz += ['--expected-app-id', a.expected_app_id]
         code, text = run('verify_native_zip.py', vz, logs)
@@ -506,6 +586,12 @@ def main():
             if stage and r['status'] in ('需处理', '出错'):
                 r['detail'] = f"（{stage}已查，这里只提示；有改动就重跑 {EARLIER_SCRIPT[stage]}）" + r['detail']
                 r['status'] = '提示'
+    # v7.5（细菌2048 第2条）：最终阶段“跳过”不能当通过
+    if a.stage == 'final':
+        for r in rows:
+            if r['status'] == '跳过':
+                r['status'] = '需处理'
+                r['detail'] = '最终阶段不能跳过：' + r['detail']
     todo = [r for r in rows if r['status'] in ('需处理', '出错')]
     md = ['# 一键预检结果', '', f"工程：{proj}", f"板块：{'英化' if localize else '重塑'}", f"时间：{dt.datetime.now():%Y-%m-%d %H:%M}", '',
           f"**需处理 {sum(r['status'] == '需处理' for r in rows)} 项，出错 {sum(r['status'] == '出错' for r in rows)} 项。**"
@@ -515,7 +601,7 @@ def main():
     md += ['', '说明：本预检只做静态检查和截图测量，不代替真实触摸测试、真机和真实广告验收。']
     (out / 'preflight.md').write_text('\n'.join(md) + '\n', encoding='utf-8')
     from check_runner import read_timings
-    (out / 'preflight.json').write_text(json.dumps({'project': str(proj), 'board': board, 'results': rows, 'check_timings': read_timings(logs), 'total_elapsed_seconds': round(time.monotonic()-started,6)}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (out / 'preflight.json').write_text(json.dumps({'project': str(proj), 'board': board, 'stage': a.stage, 'results': rows, 'check_timings': read_timings(logs), 'total_elapsed_seconds': round(time.monotonic()-started,6)}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('\n'.join(md))
     print(f"\n完整结果：{out}")
     return 1 if todo else 0

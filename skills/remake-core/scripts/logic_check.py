@@ -136,6 +136,35 @@ def scan(proj):
                 'level index clamped to the last level: after the last level NEXT must not replay it forever (F08)')
         if re.search(r'setItem\s*\(', code) and not re.search(r'\btry\s*\{', code):
             add('L-SAVE', 'hint', rel, 1, 'saves without try/catch: a failed write must show an error and keep the old data (F10)')
+        # v7.5 (Germ2048 item 10): a loaded save parsed without try/catch is listed with its line (L-SAVE-PARSE, hint after
+        # calibration); one bad byte in storage and the game never reaches the home page again.
+        for m in re.finditer(r'JSON\.parse\s*\(', code):
+            before = code[max(0, m.start() - 400):m.start()]
+            arg = code[m.end():m.end() + 160]
+            if re.match(r'\s*JSON\.stringify\s*\(', arg):
+                continue   # deep copy, not a save read
+            var = re.match(r'\s*([A-Za-z_$][\w$]*)\s*\)', arg)
+            loaded = re.match(r'[^;\n]*(?:getItem|getStorageSync)\s*\(', arg) or (var and re.search(
+                r'\b%s\s*=\s*[^;\n]*(?:getItem|getStorageSync)\s*\(' % re.escape(var.group(1)), before))
+            tries = list(re.finditer(r'\btry\s*\{', before))
+            guarded = bool(tries) and not re.search(r'\}\s*catch\b', before[tries[-1].end():])
+            if loaded and not guarded:
+                # Calibration 2026-10-29 (20 completed games): 4 delivered games parse their save outside a local try on
+                # purpose (the save module throws, the caller shows recovery), so a fail here would refuse them. Stays a hint
+                # (with the exact line) until a caller-aware check exists; R02 (malformed save) is the behavioural proof.
+                no_try = not re.search(r'\btry\s*\{', code)
+                add('L-SAVE-PARSE', 'hint', rel, line_of(code, m.start()),
+                    'saved data is parsed with JSON.parse outside try/catch%s: a corrupt save throws on every start; wrap it, '
+                    'fall back to defaults and keep the other keys (F10, R02)' % (' and the file has no try/catch at all' if no_try
+                                                                              else ' (check the caller catches it)'))
+        # v7.5 (Germ2048 item 10): "same day" decided by getDate() alone repeats every month (the 5th equals next month's 5th).
+        if re.search(r'daily|sign|checkin|check_in|reward\w*day|lastDay|today', code, re.I) and re.search(r'\.getDate\s*\(', code) and \
+                not re.search(r'getFullYear|getUTCFullYear|getMonth|toDateString|toISOString|toLocaleDateString|86400000|864e5|'
+                              r'24\s*\*\s*60\s*\*\s*60|\w*(?:date|day)(?:key|string|str)\s*\(|daysBetween', code, re.I):
+            m = re.search(r'\.getDate\s*\(', code)
+            add('L-DAILY-DATE', 'fail', rel, line_of(code, m.start()),
+                'daily/check-in logic compares getDate() alone: store and compare the full date (year-month-day), otherwise the '
+                'reward repeats or never resets across months (F18)')
         for m in re.finditer(r'\[[^\[\]\n]*,\s*,[^\[\]\n]*\]', code):
             if re.search(r'level|Level|stage|LEVEL', code[max(0, m.start() - 300):m.start()]):
                 add('L-CONFIG', 'fail', rel, line_of(code, m.start()), 'level data array with an empty slot ", ,": remove the hole or fill it')
@@ -163,11 +192,31 @@ def scan(proj):
         rel = next((r for r, c in files if PHYSICS.search(c)), 'assets')
         add('L-PAUSE', 'fail', rel, 1, 'physics is used and the game pauses, but nothing stops the physics step: pause must stop physics, '
             'timers and spawning and resume them on continue/restart (Double Jump: pause only changed a flag)')
+    # v7.5 L-MODAL-PAUSE (Germ2048 item 11): physics or in-level schedule + popups with BlockInputEvents, and no code that
+    # ties an open popup to stopping the board. Hint only: the runtime case (open each popup 3 s, nothing moves) decides.
+    if (PHYSICS.search(allcode) or re.search(r'\bschedule\s*\(', allcode)) and (proj / 'assets').is_dir():
+        popups = [p.relative_to(proj).as_posix() for p in sorted((proj / 'assets').rglob('*.prefab'))
+                  if not SKIP_DIRS & set(p.relative_to(proj).parts) and '"cc.BlockInputEvents"' in p.read_text(encoding='utf-8', errors='ignore')]
+        modal_stop = re.search(r'BlockInputEvents[\s\S]{0,600}?(?:\.enabled\s*=|[Pp]aused?\b)|'
+                               r'[Pp]aused?\w*\s*=\s*[^;\n]*(?:popup|dialog|modal)|'
+                               r'(?:popup|dialog|modal)\w*[\s\S]{0,300}?(?:getPhysicsManager\(\)|PhysicsSystem2D\.instance|physics\w*)\.enabled\s*=',
+                               allcode, re.I)
+        if popups and not modal_stop:
+            add('L-MODAL-PAUSE', 'hint', popups[0], 1,
+                '%d popup prefab(s) block input (BlockInputEvents) while physics or in-level schedule runs, and no code stops the '
+                'board when a popup opens: open each in-level popup 3 s, physics positions/score/spawns must not change (F03)'
+                % len(popups))
     if (re.search(r'setTimeout\s*\(|scheduleOnce\s*\(', allcode) and
             not re.search(r'clearTimeout|unscheduleAllCallbacks|unschedule\s*\(|Tween\.stopAll|stopAllByTarget', allcode)):
         add('L-ASYNC', 'hint', 'assets', 1, 'delayed callbacks are never cleared: leaving a round must cancel them or check a round token')
-    if files and not re.search(r'EVENT_HIDE|visibilitychange|onHide|game\.on\(\s*[\'"]hide|Game\.EVENT_HIDE', allcode):
-        add('L-PAUSE', 'hint', 'assets', 1, 'no hide/visibility handling: switching to the background should pause the round (F19)')
+    # TikTok never fires visibilitychange and keeps document.hidden false (Finger Mahjong v57), so only
+    # onHide / cc.game EVENT_HIDE count as background handling.
+    if files and not re.search(r'EVENT_HIDE|onHide|game\.on\(\s*[\'"]hide|Game\.EVENT_HIDE', allcode):
+        add('L-PAUSE', 'hint', 'assets', 1, 'no hide handling (visibilitychange never fires on TikTok): use cc.game EVENT_HIDE / '
+            'tt.onHide so switching to the background pauses the round and loading timers (F19)')
+    elif re.search(r'document\.(?:hidden|visibilityState)|visibilitychange', allcode):
+        add('L-PAUSE', 'hint', 'assets', 1, 'document.hidden / visibilitychange is used; on TikTok it never changes, so a timer that '
+            'relies on it counts background and lock-screen time. Gate G9 blocks it in the package')
     for f in sorted((proj / 'assets').rglob('*.json')) if (proj / 'assets').is_dir() else []:
         rel = f.relative_to(proj).as_posix()
         if SKIP_DIRS & set(rel.split('/')[:-1]) or not re.search(r'level|stage|chapter', rel, re.I) or f.stat().st_size > 5_000_000:
@@ -211,6 +260,9 @@ def main():
     ap.add_argument('--mode', choices=('build', 'review'), default='build')
     ap.add_argument('--init', action='store_true', help='write the docs/logic/flows.json template and stop')
     ap.add_argument('--binding', type=Path)
+    ap.add_argument('--stage', choices=('code', 'final'), default='code',
+                    help='final (before the upload package): in --mode review, a missing/untested/failed R01-R09 row also fails '
+                         '(v7.5, Germ2048 item 10: R01-R09 all "missing" still showed failed 0)')
     ap.add_argument('--out', type=Path)
     a = ap.parse_args()
     proj = a.project.resolve()
@@ -296,6 +348,13 @@ def main():
     if a.mode == 'review':
         report['status'] = 'review'
         report['passed'] = False  # a review report never passes the build gate (LOGIC-01 needs --mode build)
+    report['stage'] = a.stage
+    final_missing = [r['id'] for r in regression_rows if r.get('status') in ('missing', 'untested', 'fail')] if a.stage == 'final' else []
+    if final_missing:
+        report['final_stage_regression_failures'] = final_missing
+        report['failed'] = max(report['failed'], len(final_missing))
+        report['status'] = 'fail'
+        report['passed'] = False
     if a.binding:
         try:
             b = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')
@@ -325,7 +384,7 @@ def main():
                       'regression_problems': len(regression_problems),
                       'top': [('%s %s:%s' % (f['rule'], f['file'], f['line'])) for f in open_fails[:6]], 'report': str(out)},
                      ensure_ascii=False))
-    return 0 if a.mode == 'review' or report['passed'] else 1  # review: exit 0, only reports
+    return 1 if final_missing else (0 if a.mode == 'review' or report['passed'] else 1)  # review: exit 0, only reports
 
 
 if __name__ == '__main__':

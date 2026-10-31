@@ -58,7 +58,7 @@
 |---|---|
 | MOD-01（必查） | `audit_game_modules.py --project <工程> --binding <review.json> --out <报告>`：问过并记录、没有排名/更多游戏/分享、按钮审查、AdRewards.ts 未改且模拟通过（`modules_harness.mjs`）、皮肤表 skin.v1、限定皮肤来路（`final`/`every_10`）；**设计关**用 `design_check.py` 跑，最终总检测不重查（礼盒 10 帧在美术关 `art_check.py` 查） |
 | ECON-01（设计关） | `audit_acquisition_progression.py`：皮肤表的数量（19＋限定款数）、台阶、加成 |
-| LEVEL-01（设计关） | `audit_level_plan.py`：英化原关保留/不足补至70；重塑至少100关；新设计才查限定/奖励模板与3B |
+| LEVEL-01（设计关） | `audit_level_plan.py`：英化原关保留/不足补至70；重塑至少60关；新设计才查限定/奖励模板与3B |
 | PAGE-01（美术关） | `audit_page_richness.py`：首页有礼盒和签到入口、过关页有×2大按钮＋下方 Claim 文字、背景不花哨、没有排名页 |
 | ART-05 | `audit_ui_coverage.py`、`audit_platform_markers.py`：没有排名/更多游戏/分享按钮和调用 |
 | MOD-02、FEAT-01、LEVEL-02 | 浏览器实测（上面第六节） |

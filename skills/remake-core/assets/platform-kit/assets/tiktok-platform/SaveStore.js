@@ -19,11 +19,59 @@ function isRecord(value) { return !!value && typeof value === 'object' && !Array
 function defaultStorage() {
   return typeof cc !== 'undefined' && cc.sys && cc.sys.localStorage ? cc.sys.localStorage : null;
 }
+// getStorageInfoSync().keys from the platform SDK (same lookup order as TikTokMissionService.js).
+// Returns an array of keys, or null when the runtime cannot tell which keys exist.
+function defaultStorageKeys() {
+  var candidates = [
+    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
+    typeof tt !== 'undefined' && tt,
+    typeof wx !== 'undefined' && wx
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    var c = candidates[i];
+    if (!c || typeof c.getStorageInfoSync !== 'function') continue;
+    try {
+      var info = c.getStorageInfoSync();
+      if (info && Array.isArray(info.keys)) return info.keys;
+    } catch (_) {}
+  }
+  return null;
+}
+function isUnreadable(raw) { return raw === undefined || raw === true || raw === false; }
+
+// v1.2 (Mabel's Meadow r8, D4 problem 6): TikTok's publish scan asks for the Login API. The kit sends ONE
+// login after the save has loaded and never waits for it: no flow, reward or save depends on the answer,
+// and a missing API, a throw, fail or a rejected Promise are all ignored.
+var loginSent = false;
+function noop() {}
+function defaultLogin() {
+  if (loginSent) return false;
+  var candidates = [
+    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
+    typeof tt !== 'undefined' && tt,
+    typeof wx !== 'undefined' && wx
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    var c = candidates[i];
+    if (!c || typeof c.login !== 'function') continue;
+    loginSent = true;
+    try {
+      var r = c.login({success: noop, fail: noop, complete: noop});
+      if (r && typeof r.then === 'function') r.then(noop, noop);
+    } catch (_) {}
+    return true;
+  }
+  return false;
+}
 
 function SaveStore(defaults, options) {
   options = options || {};
   this.key = options.key || config.saveKey();
   this.storage = options.storage || defaultStorage();
+  this.storageKeys = options.storageKeys || defaultStorageKeys;
+  // login: false turns the fire-and-forget login off (tests); a function replaces the platform call.
+  this.login = options.login === false ? noop : (typeof options.login === 'function' ? options.login : defaultLogin);
+  this.loginTried = false;
   this.now = options.now || Date.now;
   this.defaults = clone(isRecord(defaults) ? defaults : {});
   if (!isRecord(this.defaults.platformClaims)) this.defaults.platformClaims = {shortcut: false, profile: false};
@@ -43,12 +91,40 @@ SaveStore.prototype._fill = function (data) {
 };
 
 // Returns {ok, status: 'new'|'loaded'|'recovered'|'unavailable', data}.
+// v1.2 (MergeShot2048 v81-v85 on a real iPhone): TikTok storage can read back true/false/undefined, or throw,
+// for a key. Such a read is never treated as a save. getStorageInfoSync().keys decides whether the key exists:
+// missing key = no save yet, defaults are written once; existing key with an unreadable value = corrupt save
+// (backed up, defaults written once, one-time rewards treated as claimed). Nothing is logged per read.
 SaveStore.prototype.load = function () {
+  var result = this._load();
+  this._loginOnce();
+  return result;
+};
+
+// After the first load only; deferred so a slow or throwing SDK can never delay or break the load.
+SaveStore.prototype._loginOnce = function () {
+  if (this.loginTried) return;
+  this.loginTried = true;
+  var login = this.login;
+  function send() { try { login(); } catch (_) {} }
+  try { if (typeof setTimeout === 'function') setTimeout(send, 0); else send(); } catch (_) {}
+};
+
+SaveStore.prototype._load = function () {
   if (!this.storage) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'storage_unavailable'); }
-  var raw = null;
+  var raw = null, threw = false;
   try { raw = this.storage.getItem(this.key); }
-  catch (_) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'read_failed'); }
-  if (raw === null || raw === undefined || raw === '') {
+  catch (_) { threw = true; }
+  if (threw || isUnreadable(raw)) {
+    var keys = null;
+    try { keys = this.storageKeys(); } catch (_) { keys = null; }
+    var known = Array.isArray(keys);
+    if (known && keys.indexOf(this.key) < 0) return this._fresh();
+    if (threw) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'read_failed'); }
+    if (raw === undefined && !known) { this.data = clone(this.defaults); this.status = 'new'; return this._result(true); }
+    return this._recover(raw);
+  }
+  if (raw === null || raw === '') {
     this.data = clone(this.defaults); this.status = 'new'; return this._result(true);
   }
   var parsed = null;
@@ -57,6 +133,14 @@ SaveStore.prototype.load = function () {
   this.data = this._fill(parsed);
   this.status = 'loaded';
   return this._result(true);
+};
+
+// No save under this key: start from defaults and write them once, so the next read returns a string.
+SaveStore.prototype._fresh = function () {
+  this.data = clone(this.defaults);
+  this.status = 'new';
+  var written = this._write(this.data);
+  return this._result(true, written);
 };
 
 SaveStore.prototype._recover = function (raw) {
@@ -115,4 +199,6 @@ SaveStore.prototype.isClaimed = function (kind) {
   return this.data.platformClaims[kind] === true;
 };
 
+// Test hook only: lets a test send the one-per-process login again.
+SaveStore._resetLoginForTests = function () { loginSent = false; };
 module.exports = SaveStore;

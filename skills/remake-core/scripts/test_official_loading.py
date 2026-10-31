@@ -160,6 +160,19 @@ class LoadingConsumers(unittest.TestCase):
         d['nodes'][-1]['comps']['label']['string']='My wonderful game';self.refresh(d);self.assertTrue(self.errors(d))
         d['nodes'][-1]['comps']['label']['string']='Loading...';im=Image.open(loading.screenshot(d)).convert('RGB');ImageDraw.Draw(im).rectangle((10,10,45,45),fill=(255,20,20));im.save(loading.screenshot(d));self.refresh(d,True);self.assertTrue(self.errors(d))
 
+    def test_enlarged_logo_covering_failure_text_refused(self):
+        # Marlows r4 (user 2026-10-28): logo body reached past "Unable to load. Please retry." on the failed frame.
+        d=self.data[2];logo=d['nodes'][2];text=d['nodes'][-1]
+        w,h=d['viewport']['width'],d['viewport']['height']
+        # Place the logo so its opaque body (not just its transparent box) reaches 12 px into the text.
+        art=Image.open(self.logo).convert('RGBA');body_bottom=60*art.getbbox()[3]/art.height
+        top=round(text['rect'][1]*h-body_bottom)+12
+        logo['rect']=[(w/2-82)/w,top/h,164/w,60/h];logo['screen']=logo['rect']
+        im=Image.new('RGB',(w,h),(23,23,23));source=Image.open(self.logo).convert('RGBA').resize((164,60),Image.Resampling.BILINEAR)
+        im.paste(source,(w//2-82,top),source);ImageDraw.Draw(im).text((w//2-25,round(h*.65)),'Retry',fill=(255,255,255));im.save(loading.screenshot(d))
+        self.refresh(d,screenshot=True)
+        self.assertTrue(any('overlaps loading text' in e for e in self.errors(d)), self.errors(d))
+
     def test_inoperable_retry_or_missing_ratio_stays_blocking(self):
         d=self.data[2];d['nodes'][-1]['comps']['button']['interactable']=False;self.refresh(d);self.assertTrue(self.errors(d))
         if not Path('/Applications/Cocos/Creator/2.4.15').exists():return

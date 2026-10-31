@@ -3,7 +3,9 @@ import collections,hashlib,json,tempfile,unittest,zipfile
 from pathlib import Path
 from unittest.mock import patch
 from check_package import check,write_archive,verifier
-from test_package_checks import fixture
+from test_package_checks import fixture, runtime_patch, APP, fixture_project
+_RUNTIME = runtime_patch()
+setUpModule, tearDownModule = _RUNTIME.start, _RUNTIME.stop
 
 class PackageReadReuse(unittest.TestCase):
     def setUp(self):
@@ -14,7 +16,7 @@ class PackageReadReuse(unittest.TestCase):
         def read(z,name,*a,**kw):
             calls[name.filename if isinstance(name,zipfile.ZipInfo) else name]+=1
             return original(z,name,*a,**kw)
-        with patch.object(zipfile.ZipFile,'read',read):result=check(self.archive,'test-target')
+        with patch.object(zipfile.ZipFile,'read',read):result=check(self.archive,APP)
         self.assertTrue(result['packed_resource_check']['passed']);self.assertEqual(calls,collections.Counter({name:1 for name in self.files}))
     def test_wrong_target_or_nonempty_payload_output_refused(self):
         payload={}
@@ -46,28 +48,40 @@ class PackageReadReuse(unittest.TestCase):
             with self.archive.open('ab') as stream:stream.write(b'changed')
             return {'passed':True}
         with patch('check_package.packed_assets',side_effect=assets):
-            with self.assertRaisesRegex(ValueError,'changed during package checks'):check(self.archive,'test-target')
+            with self.assertRaisesRegex(ValueError,'changed during package checks'):check(self.archive,APP)
         self.assertTrue(seen);self.assertTrue(all(not folder.exists() for folder in seen))
     def test_original_native_mismatch_still_refused(self):
         native=self.root/'native';native.mkdir()
         for name,data in self.files.items():
             p=native/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
         (native/'child.js').write_bytes(b'changed')
-        with self.assertRaisesRegex(ValueError,'differs from actual Native'):check(self.archive,'test-target',native)
+        with self.assertRaisesRegex(ValueError,'differs from actual Native'):check(self.archive,APP,native)
     def test_delivery_still_rechecks_final_file_against_original_native(self):
         from prepare_delivery import prepare
         native=self.root/'native';native.mkdir()
         for name,data in self.files.items():
             p=native/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
         other=self.root/'other-temp';other.mkdir()
-        from package_issue_gate import initialize
         from audit_runtime_resources import generate
-        project=self.root/'project';project.mkdir();initialize(project)
+        project=fixture_project(self.root/'project')          # v7.7: current source record (K5)
         manifest=self.root/'resources.json';manifest.write_text(json.dumps(generate(self.files)))
+        # v7.7 receipt schema 2: the official writer records its finalize_native run (0 changes on this build)
+        import tiktok_finalize
+        finalize=tiktok_finalize.finalize_native(native,project,'remake',APP)
+        self.assertEqual(finalize['blocks'],[])
+        self.assertEqual({n:hashlib.sha256(d).hexdigest() for n,d in self.files.items()},
+                         {p.relative_to(native).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in native.rglob('*') if p.is_file()})
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)), patch('prepare_delivery.audit_final_startup',return_value={'passed':True}):
-            receipt=prepare(self.archive,native,'test-target',self.root/'delivery.json',project=project,resource_manifest=manifest)
+            # v7.5: a hand-written ZIP without a writer receipt is an unofficial entry and is refused first.
+            with self.assertRaisesRegex(ValueError,'unofficial entry'):prepare(self.archive,native,APP,self.root/'no-receipt.json',project=project,resource_manifest=manifest)
+            self.assertFalse((self.root/'no-receipt.json').exists())
+            # Stand-in for the official writer: the receipt binds these exact ZIP bytes and Native tree.
+            digests={n:hashlib.sha256(d).hexdigest() for n,d in self.files.items()}
+            stamp=verifier.make_receipt('build_checked_zip',self.archive,hashlib.sha256(self.archive.read_bytes()).hexdigest(),digests,{'blocks':[],'warnings':[],'gates':[]},None,finalize=finalize)
+            verifier.receipt_path(self.archive).write_text(json.dumps(stamp))
+            receipt=prepare(self.archive,native,APP,self.root/'delivery.json',project=project,resource_manifest=manifest)
             self.assertEqual(receipt['sha256'],hashlib.sha256(self.archive.read_bytes()).hexdigest())
             (native/'child.js').write_bytes(b'changed')
-            with self.assertRaisesRegex(ValueError,'differs from actual Native'):prepare(self.archive,native,'test-target',self.root/'bad-delivery.json',project=project,resource_manifest=manifest)
+            with self.assertRaisesRegex(ValueError,'differs from actual Native'):prepare(self.archive,native,APP,self.root/'bad-delivery.json',project=project,resource_manifest=manifest)
         self.assertFalse((self.root/'bad-delivery.json').exists())
 if __name__=='__main__':unittest.main()

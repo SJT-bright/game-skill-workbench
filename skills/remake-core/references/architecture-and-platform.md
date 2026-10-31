@@ -38,6 +38,6 @@
 
 平台层只报告可信事件，不直接改余额；事务服务保留完整凭证、幂等、跨入口互斥及失败恢复，再把持久结果交UI和真实消费者。存储接口不能吞掉写入/读回失败并返回成功。完整后保存失败继续按原账本恢复，不再次播广告；旧局/销毁/重复回调不作用新局。详见[累积问题清单](known-issue-checklist.md)，不另写简化实现覆盖原要求。
 
-普通Web沿用可关闭、零假奖的LOCAL PREVIEW；SDK替身留隔离QA入口。共同业务方法分别在当前源/实际Native执行，实际触摸/手机另取证。[输入门禁](../../cocos-game-check/test/references/mobile-input-gates.md)、[主页能力](tiktok-home-growth.md)和现有打包拦截继续生效。
+普通Web沿用可关闭、零假奖的平台提示（平台包写的是 "Available in TikTok."，不写 LOCAL PREVIEW 这类开发用字，v7.7.4）；SDK替身留隔离QA入口。共同业务方法分别在当前源/实际Native执行，实际触摸/手机另取证。[输入门禁](../../cocos-game-check/test/references/mobile-input-gates.md)、[主页能力](tiktok-home-growth.md)和现有打包拦截继续生效。
 
 方法来源与许可见[蒸馏说明](method-provenance.md)。

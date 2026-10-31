@@ -25,7 +25,19 @@ var variants = [
   {name: 'readback_not_compared', file: 'SaveStore.js',
     before: 'if (back === text) return null;', after: 'return null;'},
   {name: 'corrupt_save_treated_as_new', file: 'SaveStore.js',
-    before: 'fresh.meta.recoveredFromCorrupt = this.now();', after: ''}
+    before: 'fresh.meta.recoveredFromCorrupt = this.now();', after: ''},
+  // v1.2 (D4 1.3, D4 6, D6 4/9)
+  {name: 'mission_sdk_lookup_only_ttminis', file: 'MissionFlow.js',
+    before: "typeof tt !== 'undefined' && tt,\n    typeof wx !== 'undefined' && wx\n  ];\n  for (var i = 0; i < candidates.length; i++) {\n    var c = candidates[i];\n    if (c && (typeof c === 'object'",
+    after: "false,\n    false\n  ];\n  for (var i = 0; i < candidates.length; i++) {\n    var c = candidates[i];\n    if (c && (typeof c === 'object'"},
+  {name: 'unreadable_value_not_checked_against_storage_keys', file: 'SaveStore.js',
+    before: 'if (known && keys.indexOf(this.key) < 0) return this._fresh();', after: ''},
+  {name: 'missing_key_defaults_not_written', file: 'SaveStore.js',
+    before: 'var written = this._write(this.data);\n  return this._result(true, written);', after: 'return this._result(true);'},
+  {name: 'login_never_sent', file: 'SaveStore.js',
+    before: 'this._loginOnce();\n  return result;', after: 'return result;'},
+  {name: 'login_awaited_inside_load', file: 'SaveStore.js',
+    before: "try { if (typeof setTimeout === 'function') setTimeout(send, 0); else send(); } catch (_) {}", after: 'send();'}
 ];
 var results = variants.map(function (v) {
   var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-neg-'));

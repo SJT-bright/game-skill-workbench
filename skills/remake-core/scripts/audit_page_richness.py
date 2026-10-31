@@ -178,6 +178,10 @@ CLAIM_LINK = re.compile(r'link_?claim|claim_?link', re.I)
 GIFT_NAME = re.compile(r'gift|present|giftbox|礼盒|礼物', re.I)
 CHECKIN_ENTRY = re.compile(r'check_?in|calendar|daily_?reward|签到|日历', re.I)   # remake home entry (user 2026-10-27)
 REMOVED_NAME = re.compile(r'leader|ranking|league|checkin|check_in|daily_?reward|signin|sign_in|more_?games|moregame|cross_?promo', re.I)
+# One video button per end screen (user 2026-10-28, 方块迷阵 v6 -> v6.1)
+VIDEO_BUTTON = re.compile(r'watch[\s_-]*(?:an?[\s_-]*)?(?:ad|video)|rewarded|video|(?<![a-z])ads?(?![a-z])|看广告|激励|视频|广告', re.I)
+REVIVE_BUTTON = re.compile(r'revive|revival|second[\s_-]*chance|复活', re.I)
+END_PAGES = ('result_win', 'result_fail', 'revive')
 OPTIONAL = {}
 MODE = None           # level_plan.json mode (levels / endless): endless result_fail pages need the x2 button too
 
@@ -1760,6 +1764,32 @@ def result_claim_problems(buttons, sub_names):
     return out
 
 
+def video_button_problems(purpose, content, nodes):
+    """D8 / user 2026-10-28 (方块迷阵 v6: revive WATCH AD and result WATCH AD x2 in one end popup): one video button per
+    screen. A run ends on the revive page (revive video + free NO THANKS), then the result page (x2 video, RESTART/HOME).
+    End pages (result_win / result_fail / revive) may show one video button; any other page fails when a revive video
+    and an x2 video are on it together."""
+    def names(b):
+        return ' '.join([b['name'], str((b['comps'].get('sprite') or {}).get('frame', ''))] +
+                        [n['name'] + ' ' + str((n['comps'].get('sprite') or {}).get('frame', '')) + ' ' + text(n)
+                         for n in nodes if node_under(n, b)])
+    found = []
+    for b in [n for n in content if 'button' in n.get('comps', {})]:
+        if is_claim_link(b) or any(node_under(b, x) for x, _ in found):
+            continue
+        s = names(b)
+        kind = 'revive' if REVIVE_BUTTON.search(s) else 'x2' if DOUBLE_BUTTON.search(s) else 'video' if VIDEO_BUTTON.search(s) else None
+        if kind:
+            found.append((b, kind))
+    kinds = [k for _, k in found]
+    if len(found) > 1 and (purpose in END_PAGES or ('revive' in kinds and 'x2' in kinds)):
+        return ['two_video_buttons: %d watch-ad buttons on one %s screen (%s): one video button per screen - the run ends on '
+                'the revive page (revive video + free NO THANKS), then the result page (x2 video, RESTART/HOME below) '
+                '(user 2026-10-28, remake-ads/references/end-flow-one-video.md)'
+                % (len(found), purpose, ', '.join('%s=%s' % (b['path'], k) for b, k in found[:4]))]
+    return []
+
+
 def check(d, image_module=None, project=None, binding=None):
     from official_loading import audit as audit_official_loading
     official = audit_official_loading(d, project, image_module, binding)
@@ -1929,6 +1959,7 @@ def check(d, image_module=None, project=None, binding=None):
             else:
                 problems += result_claim_problems(buttons, sub_names)
     button_share = coverage([b['rect'] for b in buttons])
+    problems += video_button_problems(purpose, content, nodes)
     if purpose in FUNCTION_PAGES and button_share > MAX_BUTTON_SHARE:
         problems.append('buttons_too_big: function buttons cover %.0f%% of the screen (max 40%%; the title and cover art do not '
                         'count): make the buttons smaller and give the space to the title and cover art' % (button_share * 100))

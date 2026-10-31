@@ -16,13 +16,22 @@
 
 `check_package.py` 检查目录或最终ZIP时，发现 `.webp` 自动输出 `runtime_requirements` 中的 `webp_decode_capability`，状态为 `requires_runtime_evidence`，含实际资源列表与七类回归。该字段是运行待核项，不能因静态检查成功而删除或改为已通过；最终交付前由 Agent 按本页执行并关联当前Native/ZIP指纹的实际证据。当前脚本没有伪装成能自动操作手机，也不会仅凭资源后缀拒绝本来可用的包。
 
-项目采用 `module.exports = function(root, ready)` 的能力探针时，运行：
+项目采用 `module.exports = function(root, ready)`（Cocos 2.4）或 `exports.check(cc, sdk, timeout, done)` + `exports.apply(cc, ok)`（Cocos 3.x，`cc.sys.hasFeature(cc.sys.Feature.WEBP)`）的能力探针时，运行：
 
 ```sh
-node scripts/test_webp_decode_probe.cjs /absolute/project/probe.js
+node scripts/test_webp_decode_probe.cjs /absolute/project/probe.js --package /解包后的包目录
 ```
 
-脚本读取并执行实际模块，验证成功、错误、超时、旧属性事件、已有支持、零尺寸及SDK抛错七项；成功/错误/超时重复终态只结束一次。通过只证明探针模块合同，不能替代旧包故障、最终Native真实图片/纹理选择、HOME显示、触控与最终ZIP回解的定点复验。其他模块协议按实际接口验证，不强制改成此接口。
+脚本自动认接口，读取并执行实际模块，验证成功、错误、超时、旧属性事件、已有支持、零尺寸及SDK抛错七项；成功/错误/超时重复终态只结束一次；3.x 另验证 `apply` 只在真解码成功时把"不支持"改成"支持"，引擎原本是"支持"时不改回"不支持"。v7.5 起（Mabel's Meadow 问题 3 取代 Basil 那份"把 fix1 探针做成标准件"）：探针的 `img.src` 必须是包内相对路径的 .webp 文件，**出现 data: URI 就判失败（做备用也不行）**；带 `--package` 时还检查这张图真的在主包里（不在 `subpackages/`）且是 WebP 文件。通过只证明探针模块合同，不能替代旧包故障、最终Native真实图片/纹理选择、HOME显示、触控与最终ZIP回解的定点复验。
+
+## 标准件（v7.5，待真机复测）
+
+统一规则：新游戏图片只用 PNG/JPG，不用 WebP；老游戏要保留 WebP，必须带下面的标准探针，出包检查 G4（`remake-core/scripts/package_gates/webp.py`）拦住没有探针、探针用 data: URI、探针图不在主包的包。v7.7 起新游戏工程里的 WebP 由 `tiktok_finalize.py source` 自动换成 PNG/JPG，构建产物里还有 `.webp` 就拦（`K_S_webp`）；只有缩完图仍超 30 MB 的 2.4 新游戏能走 WebP 例外（源码段和写包入口都给同一个 `--keep-webp-exception <原因>`），这时标准探针由出包入口自动装（需要平台包 `main.js`），不再手接，规则见 [TikTok 固定适配·第 6 条](../../references/tiktok-fixed-adaptation.md)。平台包 `main.js` 每次都带着 `webp-decode-probe.js` 脚本（不开例外时不执行），探针图和开关行只在例外时装。3.x 在 v7.7 没有 WebP 例外：带这个参数源码段、产物段和写包门禁都拒绝（`K_webp_exception_3x`），3.x 新游戏只能用 PNG/JPG 和 `max_side` 缩到 30 MB 以内，3.x 探针放到 v7.8。下面的手接方法只给保留 WebP 的旧游戏。
+
+- Cocos 2.4：`remake-core/assets/platform-kit/webp-probe/cocos2.4/webp-decode-probe.js` + `loading/webp-probe.webp`（Mabel's Meadow r8 原字节）。放主包；在 `adaptEngine()` 之后、加载 `src/settings.js`/`main.js` 之前调用 `require('./webp-decode-probe')(root, done)`；`done` 里 `cc.sys.capabilities.webp` 仍是 false 就显示 Retry，Retry 重新跑探针。5 秒没回应算不支持。
+- Cocos 3.x：`remake-core/assets/platform-kit/webp-probe/cocos3.x-reference/`（LunasJade v0.10.1 的 `webp-probe.js`、`webp-check.webp`、`boot-loading.js`），v7.5 删掉了原件的 data: 备用，只解码 `webp-check.webp`（VP8L 无损，和游戏美术同类）。只作已有 3.x 游戏的参考。
+
+已在 `test_webp_decode_probe.cjs` 上核对：Mabel r8 探针、标准件两套通过；Mabel r7、Basil fix1（data: URI）、LunasJade v0.10.1 原件（data: 备用）、把 r8 改回 data: URI、强制设 true、探针图不在包里都失败。
 
 ## 本次漏测的直接原因
 

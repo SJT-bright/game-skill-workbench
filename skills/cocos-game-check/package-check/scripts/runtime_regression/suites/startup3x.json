@@ -1,0 +1,11 @@
+{
+  "name": "startup3x",
+  "about": "Cocos 3.x: first frame of the package on a 1.5 MB/s cold start (<= first_frame_ms, default 5 s), webp_slow -> home not blank, img_events_only -> first frame + home; < 30 fps run = invalid",
+  "applies": ["tiktok"],
+  "needs": ["home"],
+  "fields": ["first_frame_ms"],
+  "engines": ["3.x"],
+  "timeout_s": 420,
+  "owner": "W3a",
+  "proof": "evidence/W3a/item4-startup3x-*.json"
+}

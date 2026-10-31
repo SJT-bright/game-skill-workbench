@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-10-28.remake-v7.3.3",
+  "revision": "2026-10-30.remake-v7.7.5",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "2e3450c5376e625a5506941781f879da0710540b140fb67906866467df93281f",
-      "bytes": 6586
+      "sha256": "678a56d0e9b441221356067e6144ad5faa4d5d538c7ba20095ea87aeaa074fdc",
+      "bytes": 9760
     },
     {
       "path": "agents/openai.yaml",
@@ -16,8 +16,8 @@
     },
     {
       "path": "package/README.md",
-      "sha256": "8a152d092d29b1e03c9dee64e7b252745cf6c879d51c6dd96816e7153728090f",
-      "bytes": 4100
+      "sha256": "0d0073dda4ba5079798155f9e753b5845041c2276427e7575eba83b46fcfa41a",
+      "bytes": 5063
     },
     {
       "path": "package/references/check-fix-package-loop.md",
@@ -41,8 +41,8 @@
     },
     {
       "path": "package/scripts/upload_preflight.py",
-      "sha256": "07e21ed8a34ddafda6636dc4f2030925291da2b66d07f9d421c0688b17afe876",
-      "bytes": 1339
+      "sha256": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
+      "bytes": 2366
     },
     {
       "path": "package-check/README.md",
@@ -56,8 +56,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "8a92d86f6acb53c2e88be90faf625806eb19d1b3e6a5e3322bb6b96e048178fb",
-      "bytes": 10106
+      "sha256": "8048e499c64d2181644ad5ebdcf6feae473f44d6ba99d7fc4d0adc19ede45438",
+      "bytes": 7898
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -91,8 +91,8 @@
     },
     {
       "path": "package-check/references/resource-and-reported-issues.md",
-      "sha256": "447f089ed38e8da834377a0758485dc16f738640b2dae503a70f7fb3f8ca9006",
-      "bytes": 9694
+      "sha256": "28a852c773764ad70c51580cf6135aeb537334a7e3229592074aff28f89cef45",
+      "bytes": 10237
     },
     {
       "path": "package-check/references/resource-loss-recovery.md",
@@ -105,9 +105,39 @@
       "bytes": 3828
     },
     {
+      "path": "package-check/references/runtime-regression.md",
+      "sha256": "0490b303b465691138fe2a4d005b2f0223187a99c243daf9500bb61088d13fd2",
+      "bytes": 14585
+    },
+    {
       "path": "package-check/references/webp-decode-capability.md",
-      "sha256": "e0b55d230c3e8e368c69d8ecf4889a7004408b714eece31ac7937b80442a07d8",
-      "bytes": 3680
+      "sha256": "216e3c6ecd181acb85ddcd791d7e2f6b55103130ab94dbeed22c864f208d39aa",
+      "bytes": 6405
+    },
+    {
+      "path": "package-check/scripts/ad_regression/cases.mjs",
+      "sha256": "e74e56ed58ca54cafad7f420fedd5e613f4943e23961af1d4dd8ad33d759aa08",
+      "bytes": 14974
+    },
+    {
+      "path": "package-check/scripts/ad_regression/host.js",
+      "sha256": "bf8920728ea2bae27b6f0783e83b30c9e280ce3db30f47af10514c82898837af",
+      "bytes": 50801
+    },
+    {
+      "path": "package-check/scripts/ad_regression/play.html",
+      "sha256": "352626a9d6c6df9a6bc8dd5493572cea649e3d1ded7bb0cffb7533fa0d5a2af7",
+      "bytes": 765
+    },
+    {
+      "path": "package-check/scripts/ad_regression/server.py",
+      "sha256": "bdc7878870930eb557beed0a3ab6bded888c1ecea5d2070a57b1aa14731d1faa",
+      "bytes": 2622
+    },
+    {
+      "path": "package-check/scripts/ad_regression.py",
+      "sha256": "a5f2446f06da84a2eeeb4e6f00cfe64b21ad2b330a3e67054b803d9c73b83fac",
+      "bytes": 12341
     },
     {
       "path": "package-check/scripts/audit_interaction_audio.py",
@@ -126,58 +156,153 @@
     },
     {
       "path": "package-check/scripts/build_checked_zip.py",
-      "sha256": "ff36bff9cf415de07d3bba2dd08ef27b9f572b2974a83b07121ec5a896520216",
-      "bytes": 6714
+      "sha256": "c09ea25e73d092b34e5ae35b9052257d9b05eaa5bfb6c61f459915da35756d66",
+      "bytes": 11229
     },
     {
       "path": "package-check/scripts/check_package.py",
-      "sha256": "0be0a352f055ecbf5c3ce80449182e925b5108d65855148f5799fa9cc62fa8b9",
-      "bytes": 5185
+      "sha256": "acce4bc144e554c793e44b0b4d35b0b667621c042da09cd03e6579a631e8244b",
+      "bytes": 11730
+    },
+    {
+      "path": "package-check/scripts/make_runtime_resource_manifest.py",
+      "sha256": "52f70e3a3bdc1bddbd33675732e8eeab028fa752b4a7e7ef02f4eb54ed9c6607",
+      "bytes": 8579
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "e69113d5a4788db27b645db43d564d1ce238ccb8f774c58e3846878d238c4bb7",
-      "bytes": 4044
+      "sha256": "8ef8c63f6499ba7c6b9addfa8c83e0d35d8e95e0a03a4c89ca69b43226b13105",
+      "bytes": 9615
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/README.md",
+      "sha256": "8c04c954b88b763d197dc742e4d674ece79afaaea5b07d4bb765be2406fd0a34",
+      "bytes": 6046
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/host3x/host.js",
+      "sha256": "7d41c5939068a6f7d01a51b5a1dc9d2d8b6ad06572629fb586e4664b0052bb5e",
+      "bytes": 31626
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/host3x/play.html",
+      "sha256": "aecb30c8d63354871f7f521b7776e2a1db745aac4ee9ed23ac3937f1682c53f5",
+      "bytes": 1376
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/host3x/server.py",
+      "sha256": "9c5aa36daefe09fca28cc42ca7429729d64482af6b61fcaa7beedcc2e09a247f",
+      "bytes": 3987
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/lib.mjs",
+      "sha256": "3485c92a6e37a1fb8d80a3dd7766c3512e47e8901060fbadb0d0f7f21bd9fc7f",
+      "bytes": 10674
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/network-allowlist.json",
+      "sha256": "fe4337552b6981115c5cd6cd787b012dcf3c0d17d857d69b2d672bc535e1d05b",
+      "bytes": 265
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/network.json",
+      "sha256": "7e8695fa155403513d1f1819202855d788d322b4b5ba937717a8fe7f1afe6144",
+      "bytes": 418
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/network.mjs",
+      "sha256": "7192b6069ce2a108da44031bbc558fa25da686973156139767ae0f3c54f64114",
+      "bytes": 3719
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup.json",
+      "sha256": "3cd02b5940936f4aa0d9ad7b2cd23ba33635d47c609cf2b51dd7f5b6508d8c5c",
+      "bytes": 738
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup.mjs",
+      "sha256": "13893b0d60ff5d904ac2283eb12d30c05006083fcaf9bdb04ba1cc7e3f398a49",
+      "bytes": 13743
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup3x.json",
+      "sha256": "d6aaac29d74449abad48b390bdd94ae988ca72de12d689c382555dfedd28fed9",
+      "bytes": 416
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup3x.mjs",
+      "sha256": "f854b8fce655cfbd89bc455bd5be7a25d6809d7e01e22a459577811f377eaa4e",
+      "bytes": 3617
+    },
+    {
+      "path": "package-check/scripts/runtime_regression.py",
+      "sha256": "b3abb7cc55a62d2facdd78f2f94d3e9cbfcb6005cd7389224ee61062e594d49f",
+      "bytes": 18810
+    },
+    {
+      "path": "package-check/scripts/test_ad_regression.py",
+      "sha256": "549cfc4c24b194cbdf5c286215a0ae9a1dcd9721c07ac4615f2101e710610ed6",
+      "bytes": 12954
     },
     {
       "path": "package-check/scripts/test_final_startup_gate.py",
-      "sha256": "bed009ad442262763b6e597c7d6b7f494f03532207bac1e865de3d8ddd53ab7d",
-      "bytes": 5078
+      "sha256": "ba71f6f17fad5577e7609d8bd2515cc02fe564d832935c0325000c9c1eaca5eb",
+      "bytes": 5050
     },
     {
       "path": "package-check/scripts/test_gate_order_and_identity.py",
-      "sha256": "5bc322c7067b3eda69544b5df3d21bfdc6101334b5fa3e7ea48e523853449f69",
-      "bytes": 8317
+      "sha256": "29bb7dd8043b9829b9f9e78aadd83627918d767a9fe8cd7ef215db41a2cdc144",
+      "bytes": 8499
     },
     {
       "path": "package-check/scripts/test_issue_relocation.py",
-      "sha256": "39890e93c822c6c2701db1cef52faf191cd19e2eeef5b3f3e5e4bf85cceedf39",
-      "bytes": 12027
+      "sha256": "1bff6652db8259d2b24b4087e0b5aabb6f0e2b2166f3458ad30bdf8c9957a206",
+      "bytes": 12115
+    },
+    {
+      "path": "package-check/scripts/test_make_runtime_resource_manifest.py",
+      "sha256": "034d4e1a88a9352167bb0b904e2940faca030cce4f72f3ad8c1c9a9b2f05fb07",
+      "bytes": 9524
     },
     {
       "path": "package-check/scripts/test_package_checks.py",
-      "sha256": "a8dd8046349e1fa0b6c42ec1457ddf99d24068e4fa79c44eb75e6735259c7d91",
-      "bytes": 12363
+      "sha256": "2c5807659593ca31b42a6dbe9bd7e1b619c239468eb6bfe1efccaadb9c91daac",
+      "bytes": 21047
     },
     {
       "path": "package-check/scripts/test_package_reuse.py",
-      "sha256": "4d79f88796f87bfd43b3c38492f1fe71217f290f0d54a6ab23479f64e185f73a",
-      "bytes": 4975
+      "sha256": "6049a8e185a9145d44a3ed3a09b2894e63e6f0b4bb36d9065b0faa0400d31cce",
+      "bytes": 6346
     },
     {
       "path": "package-check/scripts/test_resource_and_issue_obligations.py",
-      "sha256": "8a13414380af2e3fef29bc55e0b51f2791a20db3db9179a79fd895ff295ae075",
-      "bytes": 15878
+      "sha256": "ed76deafa606adfc378b04ab33074164a636cf1b7f483848e337185adc59c69c",
+      "bytes": 19876
+    },
+    {
+      "path": "package-check/scripts/test_runtime_regression.py",
+      "sha256": "9e9c99cac82717c566ec79ba118a82b1fc3f27d5e1c7825550b10dd5fd2f2155",
+      "bytes": 10530
     },
     {
       "path": "package-check/scripts/test_sound_settings_profile.py",
-      "sha256": "209df017e383579012691ae6e7ebc6815a19667274e804dc8587fc0c143ec74d",
-      "bytes": 11124
+      "sha256": "678fc2cade9c6dd8e4d3008d0f7f90680cc9a5e45ae60d7f2e8af66a62f9e359",
+      "bytes": 11150
+    },
+    {
+      "path": "package-check/scripts/test_tap_point.py",
+      "sha256": "8c7cd23cd5c33524b52eb89c41d22f752725a643ad086a42cf1e164cef4d60c5",
+      "bytes": 5631
     },
     {
       "path": "package-check/scripts/test_webp_decode_probe.cjs",
-      "sha256": "1180e07ee9e62603312ac53c2d8f97f424883431320a8a125bbff48b013a3df6",
-      "bytes": 1822
+      "sha256": "f72cc30ec839cb32bc367cd253dd3528a986c866dbe6c486901cee1d3ce62556",
+      "bytes": 7549
+    },
+    {
+      "path": "references/tiktok-fixed-adaptation.md",
+      "sha256": "8a5fca2ccfeed48cb57ce619175ea5a1b10ae4e74c23841a7cb1dfd52cda472a",
+      "bytes": 54256
     },
     {
       "path": "review/README.md",
@@ -191,8 +316,8 @@
     },
     {
       "path": "startup/README.md",
-      "sha256": "51a980d017a2687207e8fa150a949f0b56c32311abb87498ff3533837945ca17",
-      "bytes": 5437
+      "sha256": "988dfc870201784e0ad7ba8611142ffa6861849e58cc7c66d81efd7723386ec7",
+      "bytes": 7849
     },
     {
       "path": "startup/references/cocos-loading-screen.md",
@@ -211,8 +336,8 @@
     },
     {
       "path": "startup/references/loading-recovery-casebook.md",
-      "sha256": "3283579aac0afec934c667e2742982074ccde936059bdf23c9d3ccfaa21a1a84",
-      "bytes": 12581
+      "sha256": "de4a1080205fb8dcd3002b726f6e4ac285f9242b6cb17da07e9ea1341cf6a5fb",
+      "bytes": 13083
     },
     {
       "path": "startup/references/loading-recovery-regression.md",
@@ -246,8 +371,8 @@
     },
     {
       "path": "startup/references/startup-loading-timing.md",
-      "sha256": "a9cb38484eb1779473ffe63968caa27482d8d8bd96c7ed12ef4524828e0eace1",
-      "bytes": 14050
+      "sha256": "74caf92d637773a0e4a8c8ed30ebe95b6aa55276df66c962cb77d007e731bd83",
+      "bytes": 14304
     },
     {
       "path": "test/README.md",
@@ -271,13 +396,13 @@
     },
     {
       "path": "test/references/logic-rules.md",
-      "sha256": "2a348b2c5b8550fc7d4a8a64e4398a538eab4963de70ff5bdc19002d388b42df",
-      "bytes": 9059
+      "sha256": "fb532bfcbffc47d4a1cb8ff1e6da74e5c71e3dc6f24ece3cd5b049270e63945e",
+      "bytes": 11508
     },
     {
       "path": "test/references/mobile-input-gates.md",
-      "sha256": "e422c236eaba29620faff4f4035ab09ba1dd0b285267ee2ef41638d352966129",
-      "bytes": 15910
+      "sha256": "7982fa2e96cf3dfb1180eeca83918c23eb8e49853f40bd1f30695c2411c88947",
+      "bytes": 17063
     },
     {
       "path": "test/references/mobile-motion-state-review.md",
@@ -296,8 +421,8 @@
     },
     {
       "path": "test/references/replay-and-input-checks.md",
-      "sha256": "24e037f4ad83892c8c8ef53ac26f5d5d502684e3febb12e23ed2a7afa58bbdfc",
-      "bytes": 9539
+      "sha256": "d7d819c20f3baeeca5e8080b68716e4470f6716971fa63587739b9ae95410e25",
+      "bytes": 9991
     },
     {
       "path": "test/references/review-execution-plan.md",
@@ -310,5 +435,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "85d9e3cc05c1e6e4f44c1ecd26addbf6fdfa8fed97e15d84174da1cce9912939"
+  "previous_provenance_sha256": "da61dd890d32af9244aea922d53bcb9f878f79c500a7355c34b0c21f105d2085"
 }

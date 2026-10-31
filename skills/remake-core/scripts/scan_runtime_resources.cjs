@@ -6,7 +6,7 @@ process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => input += chunk);
 process.stdin.on('end', () => {
   try {
-    const payload = JSON.parse(input), sites = [], escapes = [];
+    const payload = JSON.parse(input), sites = [], escapes = [], settingsJs = {}, settingsWrites = [];
     const U = null, limit = 10000;
     const symbolic = name => ({symbol:name});
     const union = values => {
@@ -327,8 +327,57 @@ process.stdin.on('end', () => {
           }
         }
       }
+      // v7.7 W-G2: facts for the kit main.js jsList expansion (the auditor decides, by KIT_MANIFEST hash).
+      // The literal jsList of the Cocos 2.4 settings script, and every write that could change it: an assignment,
+      // update or delete whose target chain names jsList or _CCSettings, an array mutator on a jsList chain, or a
+      // call that passes such a chain. Nothing here resolves a site; a non-literal jsList is reported as null.
+      const isSettings=/^src\/settings(\.[0-9a-fA-F]+)?\.js$/.test(file);
+      const chainOf=t=>{const out=[];for(;t?.type==='MemberExpression';t=t.object)out.push(prop(t));if(t?.type==='Identifier')out.push(t.name);return out};
+      const names=c=>c.includes('jsList')||c.includes('_CCSettings');
+      const writeRow=n=>({id:file+':'+n.start,source:file,line:n.loc.start.line,expression:source.slice(n.start,n.end).slice(0,200)});
+      const declarations=[];
+      // Aliases: s = window._CCSettings (settings object) and k = s.jsList (the list itself), followed transitively.
+      const aliases=new Set(), listAliases=new Set();
+      for(let pass=0;pass<4;pass++)for(const n of nodes)if(n.type==='VariableDeclarator'&&n.id.type==='Identifier'&&(n.init?.type==='MemberExpression'||n.init?.type==='Identifier')){
+        const c=chainOf(n.init),root=c[c.length-1];
+        if(c[0]==='jsList'||(c.length===1&&listAliases.has(root)))listAliases.add(n.id.name);
+        else if(c[0]==='_CCSettings'||(c.length===1&&aliases.has(root)))aliases.add(n.id.name);
+      }
+      const named=c=>c.length>0&&(c[0]==='jsList'||c[0]==='_CCSettings'||(c.length===1&&(aliases.has(c[0])||listAliases.has(c[0]))));
+      const written=c=>c.includes('jsList')||c[0]==='_CCSettings'||(c.length>1&&listAliases.has(c[c.length-1]))||(c.length>1&&(c.includes('_CCSettings')||aliases.has(c[c.length-1]))&&c.includes(null));
+      const listChain=c=>c.includes('jsList')||(c.length===1&&listAliases.has(c[0]));
+      for(const n of nodes){
+        const target=n.type==='AssignmentExpression'?n.left:n.type==='UpdateExpression'?n.argument:(n.type==='UnaryExpression'&&n.operator==='delete')?n.argument:null;
+        if(target){
+          const c=chainOf(target);
+          if(isSettings&&n.type==='AssignmentExpression'&&n.operator==='='&&target.type==='MemberExpression'&&prop(target)==='_CCSettings'&&c.length===2&&c[1]==='window'&&parents.get(n)?.type==='ExpressionStatement'&&parents.get(parents.get(n))===ast)declarations.push(n);
+          else if(written(c))settingsWrites.push(writeRow(n));
+          continue;
+        }
+        if(n.type==='CallExpression'){
+          const method=n.callee.type==='MemberExpression'?prop(n.callee):null;
+          if(['push','pop','shift','unshift','splice','sort','reverse','fill','copyWithin'].includes(method)&&listChain(chainOf(n.callee.object)))settingsWrites.push(writeRow(n));
+          else if(n.arguments.some(a=>(a.type==='MemberExpression'||a.type==='Identifier')&&named(chainOf(a))))settingsWrites.push(writeRow(n));
+        }
+      }
+      if(isSettings){
+        let jsList=null,why='';
+        if(declarations.length!==1)why='expected exactly one top-level window._CCSettings = {...}, found '+declarations.length;
+        else if(declarations[0].right.type!=='ObjectExpression')why='window._CCSettings is not an object literal';
+        else{
+          const props=declarations[0].right.properties;
+          const keyOf=p=>p.type==='Property'&&!p.computed?(p.key.name??p.key.value):null;
+          const hits=props.filter(p=>keyOf(p)==='jsList');
+          if(props.some(p=>p.type!=='Property'||p.computed))why='_CCSettings has a spread or computed key';
+          else if(hits.length>1)why='jsList defined twice';
+          else if(!hits.length)jsList=[];
+          else if(hits[0].value.type!=='ArrayExpression'||hits[0].value.elements.some(e=>e?.type!=='Literal'||typeof e.value!=='string'))why='jsList is not an array of string literals';
+          else jsList=hits[0].value.elements.map(e=>e.value);
+        }
+        settingsJs[file]={jsList,why};
+      }
     }
-    process.stdout.write(JSON.stringify({schema:'cocos_resource_sites.v1',sites,escapes}));
+    process.stdout.write(JSON.stringify({schema:'cocos_resource_sites.v1',sites,escapes,settings_js:settingsJs,settings_writes:settingsWrites}));
   } catch (error) {
     process.stdout.write(JSON.stringify({error:String(error)}));process.exitCode=1;
   }

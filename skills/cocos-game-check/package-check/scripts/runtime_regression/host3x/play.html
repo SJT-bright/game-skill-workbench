@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><base href="/">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>TikTok 3.x strict host</title>
+<style>
+html,body{margin:0;padding:0;background:#222;overflow:hidden;font-family:-apple-system,Helvetica,sans-serif}
+#cv{position:absolute;left:0;top:0;touch-action:none;background:#000}
+#ov{position:absolute;left:0;top:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:5}
+#ov .box{background:#fff;color:#111;border-radius:12px;width:78%;padding:18px;text-align:center}
+#ov button{margin-top:14px;font-size:17px;padding:10px 28px;border:0;border-radius:8px;background:#fe2c55;color:#fff}
+#ad{position:absolute;left:0;top:0;display:none;align-items:center;justify-content:center;background:#111;color:#fff;z-index:6;font-size:20px}
+#spin{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;background:#fff;color:#555;z-index:4;font-size:15px;flex-direction:column}
+</style></head>
+<body>
+<canvas id="cv"></canvas>
+<div id="spin"><div>(spinner)</div><div>Platform launch screen (no game frame yet)</div></div>
+<div id="ov"><div class="box"><b id="ovt"></b><p id="ovc"></p><button id="ovb">OK</button></div></div>
+<div id="ad">Rewarded video playing...</div>
+<script src="/__host/host.js"></script>
+</body></html>

@@ -4,16 +4,15 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-from test_package_checks import fixture
+from test_package_checks import fixture, APP, fixture_project
 from build_checked_zip import build
 import audit_final_package_startup as gate
 
 class FinalStartupGate(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
-        self.native=self.root/'native';self.native.mkdir();self.project=self.root/'project';self.project.mkdir()
-        from package_issue_gate import initialize
-        initialize(self.project)
+        self.native=self.root/'native';self.native.mkdir()
+        self.project=fixture_project(self.root/'project')     # v7.7: current source record (K5)
         files=fixture();c=json.loads(files['assets/main/config.json']);c.update(paths={'0':['fixture',0]},types=['cc.JsonAsset']);files['assets/main/config.json']=json.dumps(c).encode()
         for name,data in files.items():
             p=self.native/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
@@ -29,7 +28,7 @@ class FinalStartupGate(unittest.TestCase):
     def test_no_runtime_proof_no_zip(self):
         out=self.root/'test.zip'
         with self.assertRaisesRegex(ValueError,'startup evidence required'):
-            build(self.native,'test-target',out,resource_manifest=self.manifest,project=self.project)
+            build(self.native,APP,out,resource_manifest=self.manifest,project=self.project)
         self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))
     def test_failed_contract_rejected(self):
         self.data['passed']=False;self.save()

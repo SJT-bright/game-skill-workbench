@@ -9,7 +9,9 @@ import unittest
 from unittest.mock import patch
 
 import test_final_startup_gate as startup_cases
-from test_package_checks import fixture
+from test_package_checks import fixture, runtime_patch, APP, OTHER_APP, fixture_project
+_RUNTIME = runtime_patch()
+setUpModule, tearDownModule = _RUNTIME.start, _RUNTIME.stop
 from check_package import write_archive
 from build_checked_zip import build
 from prepare_delivery import prepare
@@ -19,8 +21,7 @@ class WriterOrder(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
-        from package_issue_gate import initialize
-        self.project=self.root/"project";self.project.mkdir();initialize(self.project)
+        self.project=fixture_project(self.root/"project")     # v7.7: current source record (K5)
         (self.root / 'other-temp').mkdir()
         self.native = self.root / 'native'
         self.native.mkdir()
@@ -43,8 +44,9 @@ class WriterOrder(unittest.TestCase):
 
     def test_wrong_app_id_never_starts_runtime(self):
         with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
-            with self.assertRaisesRegex(ValueError, 'App ID'):
-                build(self.native, 'other-target', self.out, resource_manifest=self.manifest, project=self.project)
+            # v7.7: tiktok_finalize's appid step compares the target with the project's PlatformConfig first
+            with self.assertRaisesRegex(ValueError, 'K_appid_mismatch: --app-id %s differs' % OTHER_APP):
+                build(self.native, OTHER_APP, self.out, resource_manifest=self.manifest, project=self.project)
             run.assert_not_called()
         self.assertFalse(self.out.exists())
 
@@ -52,7 +54,7 @@ class WriterOrder(unittest.TestCase):
         out = self.root / 'looks-like-source.txt'
         with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
             with self.assertRaisesRegex(ValueError, r'\.zip'):
-                build(self.native, 'test-target', out, resource_manifest=self.manifest, project=self.project)
+                build(self.native, APP, out, resource_manifest=self.manifest, project=self.project)
             run.assert_not_called()
         self.assertFalse(out.exists())
 
@@ -61,7 +63,7 @@ class WriterOrder(unittest.TestCase):
                 'passed': False, 'errors': ['missing fixture texture']}) as assets, \
                 patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
             with self.assertRaisesRegex(ValueError, 'missing fixture texture'):
-                build(self.native, 'test-target', self.out, resource_manifest=self.manifest, project=self.project)
+                build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
             run.assert_not_called()
             self.assertTrue(assets.called)
         self.assertFalse(self.out.exists())
@@ -72,7 +74,7 @@ class WriterOrder(unittest.TestCase):
             return {'passed': True}
         with patch('build_checked_zip.audit_final_startup', side_effect=change):
             with self.assertRaisesRegex(ValueError, 'manifest changed'):
-                build(self.native, 'test-target', self.out, resource_manifest=self.manifest, project=self.project)
+                build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
         self.assertFalse(self.out.exists())
         self.assertFalse(list(self.root.glob('.tiktok-package-*')))
 
@@ -80,7 +82,7 @@ class WriterOrder(unittest.TestCase):
         import audit_upload_startup
         with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run, \
                 patch.object(audit_upload_startup, 'audit_files', wraps=audit_upload_startup.audit_files) as dependency:
-            result = build(self.native, 'test-target', self.out, resource_manifest=self.manifest, project=self.project)
+            result = build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
         run.assert_called_once()
         self.assertEqual(dependency.call_count, 2)  # Native preflight, then the actual ZIP.
         self.assertTrue(result['expected_tree_exact'])
@@ -97,7 +99,7 @@ class WriterOrder(unittest.TestCase):
         with patch('prepare_delivery.tempfile.gettempdir', return_value=str(self.root / 'other-temp')), \
                 patch('prepare_delivery.check') as check:
             with self.assertRaisesRegex(ValueError, 'record already exists'):
-                prepare(archive, self.native, 'test-target', record, project=self.project, resource_manifest=self.manifest)
+                prepare(archive, self.native, APP, record, project=self.project, resource_manifest=self.manifest)
             check.assert_not_called()
         self.assertEqual(json.loads(record.read_text()), {'original': True})
 
@@ -111,7 +113,7 @@ class WriterOrder(unittest.TestCase):
         with patch('prepare_delivery.tempfile.gettempdir', return_value=str(self.root / 'other-temp')), \
                 patch('prepare_delivery.audit_final_startup', side_effect=mutate):
             with self.assertRaisesRegex(ValueError, 'Native changed'):
-                prepare(archive, self.native, 'test-target', record, project=self.project, resource_manifest=self.manifest)
+                prepare(archive, self.native, APP, record, project=self.project, resource_manifest=self.manifest)
         self.assertFalse(record.exists())
 
 

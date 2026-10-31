@@ -494,7 +494,8 @@ def spot_check(review, base, expected_binding, applicable_ids, declared):
     ids = {f.get('check_id') for f in flows}
     if any(e.get('trigger') == 'rewarded_video' for e in declared) and not any(str(i).startswith(('AD-', 'CLAIM-')) for i in ids):
         errors.append('gpt_spot_check: include one rewarded-ad flow (AD-* or CLAIM-*)')
-    if any(e.get('trigger') == 'platform_mission' for e in declared) and not ids & {'GROW-01', 'ASYNC-01', 'LIFE-02'}:
+    # v7.5 (Mabel 1.2): every TikTok game has add-to-desktop and profile revisit, declared or not.
+    if not ids & {'GROW-01', 'ASYNC-01', 'LIFE-02'}:
         errors.append('gpt_spot_check: include one platform-task leave-and-return flow (GROW-01/ASYNC-01/LIFE-02)')
     if v.get('disagreements') not in ([], None):
         errors.append('gpt_spot_check: GPT found records that do not match; re-test that whole category and clear the list')
@@ -579,6 +580,9 @@ def audit(args):
         required_checks.update({'AD-01', 'AD-02', 'AD-03', 'AD-04', 'AD-05'})
     if declared:
         required_checks.update({'CLAIM-01', 'CLAIM-02', 'CLAIM-03', 'CLAIM-04', 'CLAIM-05', 'CLAIM-06'})
+    # v7.5 (Mabel 1.2 / Fangkuai 2): add-to-desktop and profile revisit are required for every TikTok game, so GROW-01
+    # can no longer be marked not_applicable because no reward entry declared trigger=platform_mission.
+    required_checks.add('GROW-01')
     if any(entry.get('trigger') == 'platform_mission' for entry in declared):
         # Monkey Dash 2026-10-20: a declared platform task must run its own leave/return checks.
         required_checks.update({'GROW-01', 'LIFE-02'})
@@ -614,7 +618,8 @@ def audit(args):
         if board in item.get('required_boards', []) and rows.get(item['id'], {}).get('status') == 'not_applicable' and not (no_collection and item['id'] in ('ECON-01', 'ECON-02')):
             errors.append(item['id'] + ': required for ' + board + ' (英化＋优化 adds this to every game)')
         if item['id'] in required_checks and rows.get(item['id'], {}).get('status') == 'not_applicable':
-            errors.append(item['id'] + ': required by declared reward mechanisms')
+            errors.append(item['id'] + (': required for every TikTok game (add-to-desktop and profile revisit)'
+                                        if item['id'] == 'GROW-01' else ': required by declared reward mechanisms'))
         # User 2026-10-22: the test stage ends only when everything is done except what only Codex may fill.
         if executor_exit and item.get('reviewer') and rows.get(item['id'], {}).get('status') in (None, 'pending'):
             left_for_codex.append(item['id'])

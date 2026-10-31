@@ -12,7 +12,15 @@ var variants = [
     after:'TikTokMissionService.prototype.onResume = function () {};'},
   {name:'undefined_ad_close_grants_reward',file:'RewardedService.js',
     before:"res && res.isEnded === true ? 'completed' : 'cancelled'",
-    after:"!res || res.isEnded === true ? 'completed' : 'cancelled'"}
+    after:"!res || res.isEnded === true ? 'completed' : 'cancelled'"},
+  // Basil rule (2026-10-28): r4's retiredAd failure, a session kept locked after timeout/exit.
+  {name:'timeout_or_exit_keeps_session_lock',file:'RewardedService.js',
+    before:'if (nativeSession === s) nativeSession = null;',after:'if (false) nativeSession = null;'},
+  {name:'playback_phase_times_out',file:'RewardedService.js',
+    before:"} else if (!s.exitNotified && this.exitAvailable()) {",
+    after:"} else if (this.now() >= s.exitAt) { s.finish('timeout'); } else if (!s.exitNotified && this.exitAvailable()) {"},
+  {name:'background_time_counts_in_request_phase',file:'RewardedService.js',
+    before:'if (s.hiddenAt === null && this.now() >= s.deadline)',after:'if (this.now() >= s.deadline)'}
 ];
 var results=variants.map(function(v){
   var target=path.join(__dirname,v.file), test=path.join(__dirname,'platform-components.test.js');

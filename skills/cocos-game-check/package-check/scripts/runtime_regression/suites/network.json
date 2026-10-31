@@ -1,0 +1,11 @@
+{
+  "name": "network",
+  "about": "log every external URL (tt.request, downloadFile, XHR, fetch, WebSocket, sendBeacon, image) during startup, home and one level; URLs outside network-allowlist.json are a WARNING",
+  "applies": ["tiktok"],
+  "needs": ["home"],
+  "fields": ["enter_level", "level_timeout_s"],
+  "engines": ["2.x"],
+  "timeout_s": 300,
+  "owner": "W3a",
+  "proof": "evidence/W3a/item3-network-*.json"
+}

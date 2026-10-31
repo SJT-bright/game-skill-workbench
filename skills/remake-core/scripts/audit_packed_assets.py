@@ -266,7 +266,8 @@ def audit(root):
    if not candidate.is_file():errors.append('missing packaged asset: '+rel+' from '+str(p.relative_to(root)))
  for p in [root/'game.js',root/'ccRequire.js']:
   if not p.is_file():continue
-  for name in re.findall(r'''require\(\s*["']([^"']+)["']\s*\)''',p.read_text()):
+  live='\n'.join(l for l in p.read_text().split('\n') if not l.lstrip().startswith('//'))  # v7.7: tiktok_finalize leaves removed load lines as // comments
+  for name in re.findall(r'''require\(\s*["']([^"']+)["']\s*\)''',live):
    candidate=root/name
    if not candidate.is_file() and not candidate.with_suffix('.js').is_file():errors.append('missing entry require: '+name)
  for p in root.rglob('frames.json'):

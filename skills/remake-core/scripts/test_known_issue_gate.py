@@ -324,6 +324,15 @@ def main():
         mission = lambda d: d['reward_entries'][1]['states']
         probe('declared platform task cannot waive GROW-01', lambda d: d['checks']['GROW-01'].update(
             status='not_applicable', reason='Synthetic skip'))
+        # v7.5 (Mabel 1.2): GROW-01 is required even when no reward entry declares trigger=platform_mission.
+        undeclared = deepcopy(baseline)
+        undeclared['reward_entries'] = [e for e in undeclared['reward_entries'] if e.get('trigger') != 'platform_mission']
+        undeclared['checks']['GROW-01'].update(status='not_applicable', reason='Synthetic: no platform task declared')
+        a.review.write_text(json.dumps(undeclared))
+        grow = gate.audit(a)
+        results.append({'name': 'undeclared platform task still cannot waive GROW-01',
+                        'passed': grow['status'] == 'blocked' and any('GROW-01: required for every TikTok game' in e for e in grow['errors']),
+                        'actual': grow['status'], 'errors': grow['errors'][:5]})
         probe('platform task cannot skip leave-and-return', lambda d: mission(d)['leave_and_return'].update(
             status='not_applicable', reason='Synthetic skip'))
         probe('return must start a new check', lambda d: mission(d)['leave_and_return']['postconditions'].update(new_check_started=False))

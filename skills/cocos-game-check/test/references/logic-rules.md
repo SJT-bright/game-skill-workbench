@@ -16,11 +16,14 @@
 
 - **L-EXIT**（F04 F05 F07 F09 F17 F20）：每个页面都有出路；两种比例下按钮都看得到、点得到。查：盘点按钮去向表，真实触摸逐个点。
 - **L-BUTTON-FIXED**（F05 F06）：按钮位置和含义固定，**不随机交换**（Mahjong 失败弹窗 Retry/Continue/Close 12–15% 概率换位置，玩家会点错）。查：扫描 `Math.random` 附近改按钮位置的代码。修：去掉随机换位；需要测试不同布局用 A/B 配置，同一个玩家始终一样。
-- **L-PLATFORM**（F15）：平台按钮（加桌面、侧边栏回访，以及当前明确要求的兼容功能）点了要有反馈：成功/失败提示，或者平台不支持时隐藏。没有点了没反应的按钮。默认模块不含排名、七日签到、更多游戏、分享；依据[融合政策](../../../remake-core/references/fusion-policy.md)核当前范围。review 只报告不修改，纯修复不借此删除明确保留的业务。
+- **L-PLATFORM**（F15）：平台按钮（加桌面、侧边栏回访，以及当前明确要求的兼容功能）点了要有反馈：成功/失败提示；平台不支持（含本地浏览器试玩）时按钮照样显示、点击给提示，**不隐藏**（用户 2026-10-28）。没有点了没反应的按钮。默认模块不含排名、七日签到、更多游戏、分享；依据[融合政策](../../../remake-core/references/fusion-policy.md)核当前范围。review 只报告不修改，纯修复不借此删除明确保留的业务。
 
 ## 二、一局状态：暂停、离开、重开
 
 - **L-PAUSE**（F03 F19）：暂停要真的停住：物理（`PhysicsSystem2D.instance.enabled = false` 或停步进）、计时器、生成器、动画、相机跟随；继续/重开时恢复。只改一个 `paused` 标记不算（Double Jump：暂停后角色还在掉）。切后台/失焦自动暂停，回来不跳过计时。
+- **L-MODAL-PAUSE**（F03，v7.5 细菌2048 第11条）：用了物理（`getPhysicsManager().enabled = true`、`PhysicsSystem2D`）或局内 `schedule` 计时的游戏，每个局内弹窗（领奖、复活、道具看广告、升级、提示框等带 `BlockInputEvents` 的弹窗根节点）打开时，棋盘都要停：物理、出球/生成计时、合成检查、障碍掉落、拖动输入；弹窗关掉后恢复。只停暂停按钮那一条路不算（细菌2048 原件：Free Gift 开着，球照样动、每 7 秒照样掉障碍、弹窗后面还能拖动发射）。
+  - 静态提示（`logic_check.py`，hint）：同时有物理或局内 `schedule`、又有带 `BlockInputEvents` 的弹窗，而代码里看不到“弹窗打开 → 停物理/停计时”的写法时列出，按 F03 去实测。
+  - 运行判据：打开每个局内弹窗至少 3 秒，采样物理节点位置和分数必须不变、拖动不发射；关掉后恢复（细菌2048 v3 `qa/ego/r12-popup-pause.mjs`，15 项）。运行用例本版不进门禁（Saul 2026-10-29 06:21：W3b 运行套件移到下一版），先按 F03 记录证据。
 - **L-EXIT 清理**（F04 F20）：离开一局（Home、Retry、Next、失败、胜利）统一走一个清理函数：销毁本局节点（角色、绳索、道具、特效）、注销触摸、`unscheduleAllCallbacks`/`clearTimeout`、停止 Tween、重置相机和物理、清掉选中态。查：回首页再开局 3 次（两种比例各一遍），每次触摸有效、没有残留。
 - **L-ROUND**（F02 F06）：结算只发生一次；Retry 回到起点，扣费和奖励一致。
 
@@ -44,12 +47,14 @@
 - **L-AUDIO-OUTPUT**（F10/R09）：声音设置必须影响实际输出；两类分别核0/中/满档、开/关、失败隔离与重试、关闭设置/前后台恢复。保留增益后PCM/录音与原始日志；音量值、播放标记不能替代有声。
 - 存档读回要**校验**：坏 JSON、负数、超过关卡数、类型不对 → 用默认值并保留能用的部分，不崩；写入用 try/catch，写失败提示并保留旧数据。
 - 存了不读、读了不存的键都是问题（扫描列出）。
+- **L-SAVE-PARSE**（F10，v7.5 细菌2048 第10条）：读回的存档用 `JSON.parse` 解析时必须在 try/catch 里，解析失败用默认值、保留其他键。`logic_check.py` 列出每个没包 try 的位置（文件:行）。本版是提示：20 款完结游戏里有 4 款故意让存档模块抛错、由调用方接住，脚本看不出调用方，做成“需处理”会误拦；坏存档的真实恢复由 R02 证明。
 
 ## 六、关卡和模式
 
 - **L-CONFIG**（F02 F08）：关卡配置完整：没有空槽、`null`、空对象，关卡数和配置条数一致，每关都能加载（Double Jump 第 85 关空槽）。离线脚本把每关都加载一遍。
 - **L-LEVELS**（F08 F16）：最后一关之后要有全通关页（或明确的循环/无尽），**Next 不能反复重开最后一关**（Mahjong B02）。教程比第一关简单、能完成、能跳过。
 - **L-MODE**（F18）：叫 Daily/每日/签到的，必须真的按日期：日期种子、每天一份存档、跨日重置、同一天不重复领；做不到就改名（Mahjong：Daily Challenge 就是普通关卡）。
+- **L-DAILY-DATE**（F18，v7.5 细菌2048 第10条，需处理）：判断“今天领过没有”要存、要比完整日期（年-月-日，或 `toDateString`/日期键函数），不能只比 `getDate()`（几号）：只比几号时，下个月同一天也算领过（细菌2048 原件 `StartUISc.ts:77-80`）。`logic_check.py` 在签到/每日代码只用 `getDate()`、同文件没有完整日期时报 fail；20 款完结游戏 0 误报。
 - **L-LOOP**：没有无上限的同步循环（`while(true)`、`for(;;)`）：洗牌、生成、找可消除对要有次数上限和兜底（Mahjong：自动洗牌 `while(true)` 可能卡死主线程）。
 
 ## 七、经济和奖励
@@ -66,17 +71,19 @@
 |---|---|
 | F01 加载失败 Retry | L-LOAD |
 | F02 第一关真实通关 / F06 Retry | L-ROUND L-CONFIG |
-| F03 暂停 / F19 切后台 | L-PAUSE |
+| F03 暂停 / F19 切后台 | L-PAUSE L-MODAL-PAUSE |
 | F04 F05 F07 F09 F17 F20 出路和清理 | L-EXIT L-BUTTON-FIXED |
 | F08 末关 / F16 教程 | L-LEVELS |
-| F10 刷新后进度 | L-SAVE |
+| F10 刷新后进度 | L-SAVE L-SAVE-PARSE |
 | F11 广告 6 种结果 / F12 最后一秒 | L-AD L-ASYNC |
 | F13 触摸取消 | L-INPUT-CANCEL L-HIT L-RULE-ONE |
 | F14 商店皮肤 | L-ECON |
 | F15 平台按钮 | L-PLATFORM |
-| F18 每日 | L-MODE |
+| F18 每日 | L-MODE L-DAILY-DATE |
 | （镜头） | L-CAMERA：写进 F02/F03 的证据里 |
 
 ## 十、实际缺陷回归（2026-10-23）
 
 每次检查同时按[learned-regressions.md](learned-regressions.md)走R01–R08：L-CYCLIC循环列表反向多圈；L-SAVE-RECOVERY坏/部分旧存档真正恢复；L-LOAD-RETRY旧请求挂起后的新底层下载；L-CONSUMER先有有效消费者再消耗；L-BUTTON-EFFECT按页面和状态核业务反馈；L-POINTER主指归属与取消；L-RUNTIME-DATA实际运行配置与测试绑定。标准出口L-EXIT同时检查暂停重开和失败Home。详细判据只维护于该页，脚本缺项自动拦截build；静态疑点仍须读源码判定。
+
+v7.5（细菌2048 第10条）：出包前的最终检查用 `logic_check.py --mode review --stage final`（`preflight.py --stage final` 自动这样跑）：R01–R09 任何一条是 `missing`、`untested` 或 `fail` 都算失败、退出码 1，不再出现“全部 missing 但 failed: 0”。

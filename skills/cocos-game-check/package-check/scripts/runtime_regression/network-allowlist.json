@@ -1,0 +1,4 @@
+{
+  "about": "Domains a TikTok package may contact (registered in the TikTok developer console). Empty today: current games do not use the network. An entry is a host name; it also allows its subdomains. Edit only with Saul's approval (D5 4.2).",
+  "domains": []
+}

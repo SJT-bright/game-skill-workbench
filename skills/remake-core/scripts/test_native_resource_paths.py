@@ -5,12 +5,17 @@ from pathlib import Path
 from audit_native_resource_paths import audit,inventory
 HERE=Path(__file__).resolve().parent
 results=[]
+def png1x1():
+    # v7.7: finalize compresses every PNG in the build, so the fixture art must be a real PNG
+    import struct,zlib
+    chunk=lambda t,d:struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
+    return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',1,1,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(b'\0\0\0\0\0'))+chunk(b'IEND',b'')
 def check(name,condition):
     if not condition: raise AssertionError(name)
     results.append({'id':name,'pass':True})
 with tempfile.TemporaryDirectory(prefix='native-path-gate ') as td:
     root=Path(td);native=root/'native';cfg=native/'assets/resources/config.json';cfg.parent.mkdir(parents=True)
-    cfg.write_text(json.dumps({'nativeBase':'../../subpackages/core/native'}));asset=native/'subpackages/core/native/ab/a.png';asset.parent.mkdir(parents=True);asset.write_bytes(b'fixture')
+    cfg.write_text(json.dumps({'nativeBase':'../../subpackages/core/native'}));asset=native/'subpackages/core/native/ab/a.png';asset.parent.mkdir(parents=True);asset.write_bytes(png1x1())
     raw=root/'raw.json';raw.write_text('{"fixture":"synthetic checker calibration, not gameplay"}')
     proof=root/'proof.json'
     d={'schema':'native_resource_paths_runtime.v1','native_files':inventory(native),'raw_evidence':[{'path':'raw.json','sha256':hashlib.sha256(raw.read_bytes()).hexdigest()}],'strict_filesystem':True,'old_same_boundary_failed':True,'calibration_evidence_refs':[0],
@@ -24,8 +29,14 @@ with tempfile.TemporaryDirectory(prefix='native-path-gate ') as td:
     for name,change in mutations:
         bad=copy.deepcopy(d);change(bad);check(name+'-refused',run(bad)=='blocked')
     review=root/'review.json';review.write_text('{}');out=root/'must-not-exist.zip'
-    for f,body in [('game.js','void 0;'),('game.json','{}'),('project.config.json','{"appid":"test"}')]: (native/f).write_text(body)
-    command=[sys.executable,str(HERE/'make_tiktok_zip.py'),'--native',str(native),'--app-id','test','--out',str(out),'--project',str(root),'--web',str(native),'--build-tag','fixture','--review',str(review)]
+    # v7.7: the writer checks the source record (K5) and runs tiktok_finalize before this check, so the fixture is a
+    # finalized 2.4 project and a 2.4 build (test_tiktok_finalize fixtures) with a numeric App ID.
+    import tiktok_finalize as F, test_tiktok_finalize as H
+    H.build24(native);project=H.project24(root/'project')
+    kitcfg=(HERE.parent/'assets/platform-kit/assets/tiktok-platform/PlatformConfig.js').read_text(encoding='utf-8')
+    (project/'assets/tiktok-platform/PlatformConfig.js').write_text(kitcfg.replace("gameId: 'change-me'","gameId: 'fixture'").replace('normalLevelCoins: 0,','normalLevelCoins: 12,'),encoding='utf-8')
+    check('fixture-source-finalized',F.finalize_source(project,'remake')['blocks']==[])
+    command=[sys.executable,str(HERE/'make_tiktok_zip.py'),'--native',str(native),'--app-id',H.APP,'--out',str(out),'--project',str(project),'--web',str(native),'--build-tag','fixture','--review',str(review)]
     r=subprocess.run(command,capture_output=True,text=True)
     check('actual-formal-writer-refuses-before-zip',r.returncode!=0 and not out.exists() and 'native resource path check' in r.stderr+r.stdout)
     cfg.write_text(json.dumps({'nativeBase':'native'}));check('normal-unrelocated-control',audit(native)['status']=='pass')

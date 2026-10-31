@@ -20,7 +20,7 @@ PLAN_PATHS = ('assets/resources/config/level_plan.json', 'docs/levels/level_plan
 TABLE_PATHS = ('assets/resources/config/unlock_table.json', 'docs/economy/unlock_table.json')
 EVERY = (10,)          # user 2026-10-23: every 10th level is a limited level
 LEVELS = 70            # 英化 (board localize): 70 levels or more (user 2026-10-24)
-REMAKE_LEVELS = 100    # 重塑/new designs: 100 levels or more (user 2026-10-27); check id stays levels_at_least_70
+REMAKE_LEVELS = 60     # 重塑/new designs: 60 levels or more (Saul 2026-10-29; was 100 from 2026-10-27); check id stays levels_at_least_70
 MIN_LEVELS = LEVELS
 SKIN_MODES = ('final', 'every_10')   # user 2026-10-24: the two limited-skin formats
 BUYABLE = ('ads', 'coins', 'ads_coins', 'ads_or_coins')
@@ -122,6 +122,31 @@ def intro_levels(plan):
             and type(r.get('level')) is int}
 
 
+def check_base_mode(plan, mode, add):
+    """Saul 2026-10-29: a remake follows its original game. Endless original -> endless remake (no map, no
+    60+ levels); level original -> level remake. Only checked when the plan records base_game."""
+    base = plan.get('base_game')
+    if base is None:
+        return
+    if not isinstance(base, dict) or base.get('mode') not in ('levels', 'endless') \
+            or not str(base.get('name', '')).strip() or len(str(base.get('evidence', '')).strip()) < 10:
+        add('mode_matches_base', False, 'base_game needs {name, mode levels|endless, evidence (>=10 chars: what in the '
+            'original source shows it, e.g. no level table/map, endless score loop)}')
+        return
+    if base['mode'] == mode:
+        add('mode_matches_base', True, '%s, same as original %s (%s)' % (mode, base['name'], str(base['evidence'])[:120]))
+        return
+    ovr = plan.get('mode_override') if isinstance(plan.get('mode_override'), dict) else None
+    if ovr and len(str(ovr.get('authorized_by', '')).strip()) >= 2 and len(str(ovr.get('reason', '')).strip()) >= 30:
+        add('mode_matches_base', True, '%s but original %s is %s: OVERRIDE authorized by %s: %s'
+            % (mode, base['name'], base['mode'], ovr['authorized_by'], str(ovr['reason'])[:180]))
+    else:
+        add('mode_matches_base', False, '%s but the original game %s is %s (Saul 2026-10-29: endless original stays '
+            'endless, only a level original gets 60+ levels). Regenerate with make_level_plan.py --%s, or record '
+            '"mode_override": {authorized_by, reason>=30 chars}' % (mode, base['name'], base['mode'],
+                                                                   'endless' if base['mode'] == 'endless' else 'levels 60'))
+
+
 def audit_plan(plan, items, add, board=None):
     mode = plan.get('mode')
     if plan.get('schema') != 'level_plan.v1' or mode not in ('levels', 'endless') or not str(plan.get('why', '')).strip() \
@@ -129,6 +154,7 @@ def audit_plan(plan, items, add, board=None):
         add('mode_recorded', False, 'level_plan.json needs schema level_plan.v1, mode levels|endless and why (how you decided)')
         return mode
     add('mode_recorded', True, '%s: %s' % (mode, plan['why']))
+    check_base_mode(plan, mode, add)
     if mode == 'endless':
         return mode
     total, every = plan.get('total_levels'), plan.get('milestone_every')
@@ -139,7 +165,7 @@ def audit_plan(plan, items, add, board=None):
         return mode
     minimum = LEVELS if board == 'localize' else REMAKE_LEVELS
     if total >= minimum:
-        ok, detail = True, '%d levels (%d or more: %s)' % (total, minimum, '英化 user 2026-10-24' if minimum == LEVELS else '重塑 user 2026-10-27')
+        ok, detail = True, '%d levels (%d or more: %s)' % (total, minimum, '英化 user 2026-10-24' if minimum == LEVELS else '重塑 Saul 2026-10-29')
     elif total < minimum:
         # User-authorized explicit level count (from-starter SKILL.md: 用户或项目明确关数优先).
         # The plan itself must record who authorized it and why; the override is printed in the report.
@@ -149,7 +175,7 @@ def audit_plan(plan, items, add, board=None):
             ok, detail = True, ('%d levels: OVERRIDE recorded in level_plan.json (authorized by %s): %s — skill default is %d; '
                                 'kept because 用户或项目明确关数优先' % (total, ovr.get('authorized_by'), str(ovr.get('reason'))[:180], minimum))
         else:
-            ok, detail = False, ('%d levels: this board needs %d levels or more (重塑 100, user 2026-10-27; 英化 70), add at least %d '
+            ok, detail = False, ('%d levels: this board needs %d levels or more (重塑 60, Saul 2026-10-29; 英化 70), add at least %d '
                                  '(new levels in the original/starter gameplay, each one proven solvable). A user-authorized '
                                  'count must be recorded as "explicit_total": {count, authorized_by, reason>=30 chars}' % (total, minimum, minimum - total))
     else:

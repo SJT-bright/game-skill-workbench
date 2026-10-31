@@ -192,6 +192,12 @@ def check(plan, run_dirs, plan_sha):
             P.append('run was not made for this startup plan (startup_plan_sha256 differs or missing)')
         if rep.get('status') != 'completed_pending_business_and_visual_review':
             P.append('run did not complete: ' + str(rep.get('error', rep.get('status'))))
+        # v7.5 chrome_touch.py reports (they carry frame_rate) must say timing_valid true: a covered/throttled Ego
+        # tab stretches every timing, so such a run is not LOAD-03 evidence (D3 problem 4, W3a R5).
+        if rep.get('timing') is True and 'frame_rate' in rep and rep.get('timing_valid') is not True:
+            P.append('timing run invalid (lowest %s fps in the timing window, need >= %s); re-run with the Ego window '
+                     'uncovered' % ((rep.get('frame_rate') or {}).get('lowest_fps_in_window'),
+                                     (rep.get('frame_rate') or {}).get('min_fps', 30)))
         marks = rep.get('marks') or {}
         if any(type(value) not in (int, float) or not math.isfinite(value) or value < 0 for value in marks.values()):
             P.append('startup marks must be finite nonnegative measurements')

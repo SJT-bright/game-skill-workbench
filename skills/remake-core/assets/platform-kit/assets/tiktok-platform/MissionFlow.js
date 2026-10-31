@@ -4,7 +4,8 @@
 //
 //   var flow = new MissionFlow({
 //     store: save,                                   // SaveStore of this game (coins live in the same save)
-//     reward: function (kind, draft) { draft.coins += 25; },   // edit the draft only
+//     reward: function (kind, draft) { draft.coins += 25; },   // edit the draft only; v7.7: omit it to pay
+//                                                    // PlatformConfig.growthReward() (5B) into draft.coins
 //     rewardText: {shortcut: '+25 Coins', profile: '+25 Coins'},
 //     render: function (view) { ...update the panel from view... },
 //     onGranted: function (kind, data) { ...refresh the top bar from data... }
@@ -35,16 +36,42 @@ var TEXT = {
   granted: 'Reward received: ',
   claimed: 'Reward already collected.',
   saveFailed: 'Could not save your reward. Please try again.',
-  preview: 'LOCAL PREVIEW: open the game inside TikTok to use this.'
+  preview: 'Available in TikTok.'
 };
 var KINDS = {shortcut: true, profile: true};
 
+// Same lookup order as TikTokMissionService.js (TTMinis.game, then tt, then wx). v1.2: a runtime that
+// only exposes tt (Mabel's Meadow r7/r8) used to show the LOCAL PREVIEW text inside TikTok.
 function hasNativeSDK() {
-  return typeof TTMinis !== 'undefined' && !!TTMinis && !!TTMinis.game;
+  var candidates = [
+    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
+    typeof tt !== 'undefined' && tt,
+    typeof wx !== 'undefined' && wx
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    var c = candidates[i];
+    if (c && (typeof c === 'object' || typeof c === 'function') && typeof c.canIUse === 'function') return true;
+  }
+  return false;
 }
 
 function MissionFlow(options) {
   options = options || {};
+  var copy = {};
+  for (var key in options) if (Object.prototype.hasOwnProperty.call(options, key)) copy[key] = options[key];
+  options = copy;
+  // v7.7 (kit 2.0): reward omitted = the fixed growth reward of PlatformConfig.js (5B in this game's
+  // currency, Saul 2026-10-29), added to draft.coins; reward text '+N Coins'. growthReward() throws until
+  // normalLevelCoins is set, so a forgotten B pays nothing (SaveStore.update refuses the write).
+  if (options.store && options.reward === undefined && typeof options.render === 'function') {
+    var growth = options.config || require('./PlatformConfig');
+    options.reward = function (kind, draft) { draft.coins = (Number(draft.coins) || 0) + growth.growthReward(); };
+    if (!options.rewardText) {
+      var amount = '';
+      try { amount = '+' + growth.growthReward() + ' Coins'; } catch (_) {}
+      options.rewardText = {shortcut: amount, profile: amount};
+    }
+  }
   if (!options.store || typeof options.reward !== 'function' || typeof options.render !== 'function') {
     throw new Error('MissionFlow needs store, reward(kind, draft) and render(view)');
   }

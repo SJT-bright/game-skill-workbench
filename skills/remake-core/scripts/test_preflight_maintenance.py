@@ -52,6 +52,8 @@ class PreflightMaintenanceTests(unittest.TestCase):
                     'passed': True, 'implementation': 'production_js', 'mode': 'endless',
                     'errors': [], 'warnings': [], 'dev_text': [],
                 }
+                if name == 'audit_platform_markers.py':   # v7.5: preflight requires the tool's normal status
+                    payload['status'] = 'markers_present_requires_behavior_review'
                 return 0, json.dumps(payload)
 
             argv = [
@@ -121,6 +123,8 @@ class PreflightMaintenanceTests(unittest.TestCase):
                         payload.update(failed=1, problems=['required startup request failed'])
                     if name == 'audit_image_clarity.py':
                         payload.update(upscaled=1)
+                    if name == 'audit_platform_markers.py':   # v7.5: preflight requires the tool's normal status
+                        payload['status'] = 'markers_present_requires_behavior_review'
                     return 0, json.dumps(payload)
 
                 out = root / 'out'

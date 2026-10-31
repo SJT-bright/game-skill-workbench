@@ -127,13 +127,15 @@ if (sceneName === 'bold_api') {
   sprite(canvas, 'Logo', 0, 520, 480, 280);
   sprite(canvas, 'Mascots', 0, 20, 560, 420);
   plateBtn(canvas, 'BtnPlay', 0, -420, 380, 130, 'PLAY');
-  // user 2026-10-23: settings in a top corner (below the platform capsule), currency at the top; current rule puts real features on both sides above PLAY
-  iconBtn(canvas, 'BtnSettings', 310, 590, '');
+  // user 2026-10-23: settings in a top corner, currency at the top; current rule puts real features on both sides above PLAY.
+  // v7.5 remake home zoning (user 2026-10-28, audit_ui_coverage home_zones_remake; also fits the English corner rule):
+  // settings top-left in the capsule row (centre above 10%), check-in beside the hero, below PLAY only Add to Home + Revisit.
+  iconBtn(canvas, 'BtnSettings', -310, 660, '');
   iconBtn(canvas, 'BtnSkins', -300, -240, '');
   iconBtn(canvas, 'BtnGift', 300, -240, '');             // user 2026-10-23: animated gift box -> ad -> coins
-  iconBtn(canvas, 'BtnCheckin', -65, -640, '');        // user 2026-10-27: remake home always has the 7-day check-in (calendar)
-  iconBtn(canvas, 'BtnShortcut', 65, -640, 'Home');
-  iconBtn(canvas, 'BtnRevisit', 195, -640, 'Revisit');
+  iconBtn(canvas, 'BtnCheckin', -300, -370, '');       // user 2026-10-27: remake home always has the 7-day check-in (calendar)
+  iconBtn(canvas, 'BtnShortcut', -65, -640, 'Home');
+  iconBtn(canvas, 'BtnRevisit', 65, -640, 'Revisit');
 } else if (sceneName === 'scattered_home') {      // user 2026-10-23 negative example (Hazel's Shelf Scramble home)
   sprite(canvas, 'Logo', 0, 560, 480, 260);
   sprite(canvas, 'Mascots', 0, 250, 560, 300);

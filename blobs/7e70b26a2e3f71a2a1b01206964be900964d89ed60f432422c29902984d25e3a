@@ -1,0 +1,28 @@
+{
+  "schema": "official_cocos_engine_sources.v1",
+  "artifacts": [
+    {
+      "engine": "Cocos Creator",
+      "engine_version": "2.4.3",
+      "export_target": "bytedance",
+      "bytes": 1685569,
+      "sha256": "97aaed0a7cc35981ef7dfbf57c68abd2474be17e187f6cbdbed0cfe2efa34eaa",
+      "provenance": {
+        "official_archive_url": "https://download.cocos.com/CocosCreator/v2.4.3/CocosCreator_v2.4.3_20200927_mac.zip",
+        "archive_sha256": "947a4fc5f43785fcaff7393f78f12b900ac5873e1c54c51aecfc137f22d5c706",
+        "application_identifier": "com.cocos.creator",
+        "signing_authority": "Developer ID Application: Xiamen YAJI Software Co.,LTD (NQ596S94Q5)",
+        "signing_team": "NQ596S94Q5",
+        "version_identity": "2.4.3",
+        "export_cache_relative_path": "Contents/Resources/engine/bin/.cache/bytedance/cocos2d-js-min.js",
+        "comparison": "Installation signature verified before first project launch (retained acquisition receipt). The exported engine is byte-equal to the matching official Creator-generated export cache. Post-build app seal includes Creator-generated cache/default-asset metadata changes; no current pristine whole-app claim.",
+        "sealed_engine_source_verification": {
+          "source": "Official signed application Contents/_CodeSignature/CodeResources files2",
+          "checked_hashes": 2302,
+          "mismatches": 0,
+          "note": "Every originally sealed engine-subtree hash still matches after exporting; .cache is a generated added artifact."
+        }
+      }
+    }
+  ]
+}

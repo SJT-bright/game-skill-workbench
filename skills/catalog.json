@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T21:20:20.460Z",
-  "treeHash": "ba5dd133d6ea07c054db1a8aba17e8b9f2aa571fc5b798561619930ac4fad919",
+  "createdAt": "2026-10-31T21:20:43.110Z",
+  "treeHash": "e75bb84efa40b2cb0674b0fec7482b26a36b40d41e19ad34cef3fe57ad74125b",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2575,20 +2575,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "6c8d25eedf85bdba07488454787d12ac407892ac28409047f502a11bf4942c79",
+      "treeHash": "01ba94b57f746e06f0c5354e2fef877f355ea85ea5089515cf598297c80bb45a",
       "fileCount": 39,
-      "bytes": 1094294,
+      "bytes": 1105113,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "4b5a1d14cb3da575c3821c7d262b6b1fafc9b8751b15c5a2ae2152dc52ab6682",
+          "hash": "2c508dfff67cfa0bc0ec6aa7173725da53924807d5874142541418ad496a8f2a",
           "size": 6731,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "91eab9951ad4e007b87c7a66874fd8ce12bab6ab5a680d7623e37731adb1f6a2",
-          "size": 11400,
+          "hash": "e5d99c9dbbe0cf2dcc726f43775117b0f5580254ee0a26e1eb74922292fb850b",
+          "size": 11865,
           "executable": false
         },
         {
@@ -2701,8 +2701,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "91c0ab9017901f69de583e7427bd6b3dd5838da69bcc11ed47ac62030884d59b",
-          "size": 83559,
+          "hash": "c575e6d269daba7de207d85cf73a7ba37a2087d4b79f16e1b6e747c965fd675d",
+          "size": 87518,
           "executable": false
         },
         {
@@ -2719,8 +2719,8 @@
         },
         {
           "path": "references/saul-art-rules.md",
-          "hash": "f34bb4833f736dffb2f41621288206d405418cf24dfd2c9d2bc341e3089660cd",
-          "size": 43674,
+          "hash": "3311c7d72ec085bdb327e198d779e48386dfef24633c9dfdd16c2ee7b32233ed",
+          "size": 47073,
           "executable": false
         },
         {
@@ -2737,8 +2737,8 @@
         },
         {
           "path": "references/style-limits.md",
-          "hash": "2c81d7a738261b97ad373e5fd8104999c9b13a6c7491fbb19bbeba274950294d",
-          "size": 25643,
+          "hash": "4139a363c20d55fe0e482d411dc22761fcfb8e96977998095903dc3b6b9b568f",
+          "size": 28452,
           "executable": false
         },
         {
@@ -2755,8 +2755,8 @@
         },
         {
           "path": "references/ui-style-and-samples.md",
-          "hash": "22abbae6dc5d2d6391c0cb6d952f35d59037e4350e768c092ec48b6e6cc92770",
-          "size": 16131,
+          "hash": "a4a3930dc4c7df08540c03f612ee7bcbeba12921cbf75fb6c6f6115d70628ebd",
+          "size": 16318,
           "executable": false
         },
         {

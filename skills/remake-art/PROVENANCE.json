@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-31.english-simple.10.2.4",
+  "revision": "2026-10-31.english-simple.10.2.6",
   "skill": "remake-art",
-  "previous_provenance_sha256": "b03a03085a8c070813cf4de03faf125c866df6814b439a39f370ccd39a4d0cbc",
+  "previous_provenance_sha256": "4b5a1d14cb3da575c3821c7d262b6b1fafc9b8751b15c5a2ae2152dc52ab6682",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "91eab9951ad4e007b87c7a66874fd8ce12bab6ab5a680d7623e37731adb1f6a2",
-      "bytes": 11400
+      "sha256": "e5d99c9dbbe0cf2dcc726f43775117b0f5580254ee0a26e1eb74922292fb850b",
+      "bytes": 11865
     },
     {
       "path": "agents/openai.yaml",
@@ -102,8 +102,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "91c0ab9017901f69de583e7427bd6b3dd5838da69bcc11ed47ac62030884d59b",
-      "bytes": 83559
+      "sha256": "c575e6d269daba7de207d85cf73a7ba37a2087d4b79f16e1b6e747c965fd675d",
+      "bytes": 87518
     },
     {
       "path": "references/panel-composite-review.md",
@@ -117,8 +117,8 @@
     },
     {
       "path": "references/saul-art-rules.md",
-      "sha256": "f34bb4833f736dffb2f41621288206d405418cf24dfd2c9d2bc341e3089660cd",
-      "bytes": 43674
+      "sha256": "3311c7d72ec085bdb327e198d779e48386dfef24633c9dfdd16c2ee7b32233ed",
+      "bytes": 47073
     },
     {
       "path": "references/standalone-alpha-review.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "references/style-limits.md",
-      "sha256": "2c81d7a738261b97ad373e5fd8104999c9b13a6c7491fbb19bbeba274950294d",
-      "bytes": 25643
+      "sha256": "4139a363c20d55fe0e482d411dc22761fcfb8e96977998095903dc3b6b9b568f",
+      "bytes": 28452
     },
     {
       "path": "references/text-backplate-review.md",
@@ -147,8 +147,8 @@
     },
     {
       "path": "references/ui-style-and-samples.md",
-      "sha256": "22abbae6dc5d2d6391c0cb6d952f35d59037e4350e768c092ec48b6e6cc92770",
-      "bytes": 16131
+      "sha256": "a4a3930dc4c7df08540c03f612ee7bcbeba12921cbf75fb6c6f6115d70628ebd",
+      "bytes": 16318
     },
     {
       "path": "scripts/check_button_group.py",

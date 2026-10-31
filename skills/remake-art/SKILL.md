@@ -59,10 +59,11 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 
 ## 验收清单
 
-- [ ] 画风照启动包、不混用几套；没有[禁止项](references/style-limits.md#〇画风禁止项清单只查负向用户-2026-10-28)：深色/过密/过细的字、大面积深色/纯黑纯色底、大白板、单色图标、刺眼整屏高亮、无层次平涂、字压复杂底图、遮挡穿模、模糊；玩区 ≥80%
+- [ ] 画风照启动包（英化照原游戏，Saul 要求重新设计时也一样）、不混用几套；没有[禁止项](references/style-limits.md#〇画风禁止项清单只查负向用户-2026-10-28)：深色/过密/过细的字、大面积深色/纯黑纯色底、大白板、单色图标、刺眼整屏高亮、无层次平涂、字压复杂底图、遮挡穿模、模糊；玩区 ≥80%
 - [ ] 功能按上/左/右/下分区，次要功能用小图标
 - [ ] `art_check.py` 按适用行运行通过，两种比例截图看过
 - [ ] [Saul 的美术禁区与必做项](references/saul-art-rules.md)第一节逐项做了；`font_value_label`、`flat_value_plate`、`dev_info_text` 没有报出
+- [ ] `art_check.py` 的「按钮底色不深、物品图标不另垫底板」一行通过（`dark_button`、`icon_plate`、`dark_button_state` 没有报出，列为接近深色的看过图）；英化（包括要求重新设计的）按钮、图标、金币画法和原游戏是一套（Saul 2026-10-31，[美术总表](references/saul-art-rules.md) T02、T09、T11；`visual_verdict` 第 6–8 项）
 - [ ] 录了点按钮、开关弹窗、调音量、局内消除的录屏（dump 目录下的 `frames/`），`art_check.py` 的"动态闪屏"一行通过
 - [ ] 改动页面的按钮真实点击有效
 - [ ] 只交 PNG/JPG、素材都是 CC0；代码加载或带裁边的大图已在 `image-overrides.json` 写 `max_side`；有色带的图已按张处理

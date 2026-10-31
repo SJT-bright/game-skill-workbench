@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "f512f800-9965-4795-b52f-4844d039c35a",
+      "skillId": "s-16601c48e7f1b99915ae",
+      "directory": "mobile-touch-computer-use",
+      "name": "mobile-touch-computer-use",
+      "version": "v10",
+      "createdAt": "2026-10-31T09:07:49.930Z",
+      "summary": "文件变更：新增 0，修改 3，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 3,
+        "deleted": 0
+      },
+      "treeHash": "018c23cb6122316d0a4a6906926c44223ca2f9309c5e4ad9262db00c0107ace3",
+      "bytes": 45258,
+      "fileCount": 8
+    },
+    {
       "id": "ec7a4404-77a7-4a20-a292-bbc3667cc63f",
       "skillId": "s-c80e30dda4e7623bf0ac",
       "name": "remake-art",

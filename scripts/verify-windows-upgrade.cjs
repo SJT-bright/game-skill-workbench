@@ -52,7 +52,9 @@ async function main(){
   const repairedVersion=require('../package.json').version,repair=path.resolve(`release/GameDesk-${repairedVersion}-Windows-Repair/Repair.ps1`);
   const preservation=path.join(profile,'pre-repair.bin'),marker=crypto.randomBytes(256);await fs.mkdir(profile,{recursive:true});await fs.writeFile(preservation,marker);
   const beforeMain=await fs.readFile(path.join(target,'resources/app/src/main.cjs'));
-  await run('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',repair,'-InstallDirectory',target,'-NoLaunch'],{timeout:120000,maxBuffer:1024*1024});
+  const repairLog=path.join(base,'repair.log');
+  try{const result=await run('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',repair,'-InstallDirectory',target,'-NoLaunch'],{timeout:120000,maxBuffer:1024*1024});await fs.writeFile(repairLog,'exitCode=0\nSTDOUT\n'+result.stdout+'\nSTDERR\n'+result.stderr);}
+  catch(error){const output='exitCode='+error.code+' signal='+error.signal+'\nSTDOUT\n'+String(error.stdout||'')+'\nSTDERR\n'+String(error.stderr||'');await fs.writeFile(repairLog,output);proof.repairFailure={exitCode:error.code,signal:error.signal,stdout:String(error.stdout||''),stderr:String(error.stderr||'')};throw Error('Legacy repair failed: '+output);}
   const receipt=await json(path.join(target,'repair-receipt.json'));
   if(receipt.previousVersion!==baseline||receipt.version!==repairedVersion||(await json(path.join(target,'resources/app/package.json'))).version!==repairedVersion)throw Error('Legacy repair version receipt mismatch');
   if(!marker.equals(await fs.readFile(preservation)))throw Error('Repair changed user profile');

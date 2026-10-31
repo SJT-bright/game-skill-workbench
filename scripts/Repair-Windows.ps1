@@ -1,5 +1,6 @@
 param([string]$InstallDirectory='', [switch]$NoLaunch)
 $ErrorActionPreference='Stop'
+[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)
 try {
  if(-not $InstallDirectory){
   Add-Type -AssemblyName System.Windows.Forms
@@ -12,13 +13,13 @@ try {
  $exe=Join-Path $target 'GameDeskSkill.exe'
  $app=Join-Path $target 'resources/app'
  if(-not(Test-Path -LiteralPath $exe) -or -not(Test-Path -LiteralPath (Join-Path $app 'package.json'))){throw 'Select the original installation folder containing GameDeskSkill.exe, not this repair folder.'}
- $old=Get-Content -LiteralPath (Join-Path $app 'package.json') -Raw | ConvertFrom-Json
+ $old=Get-Content -LiteralPath (Join-Path $app 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
  if($old.name -ne 'skill-game-dock'){throw 'This folder is not the game workbench.'}
  $busy=Get-Process -Name GameDeskSkill -ErrorAction SilentlyContinue | Where-Object {$_.Path -eq $exe}
  if($busy){throw 'Please exit the workbench from Settings > Exit, then run this repair again. Closing the floating window is not enough.'}
  $payload=Join-Path $PSScriptRoot 'payload'
- $manifest=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'repair-manifest.json') -Raw | ConvertFrom-Json
- $package=Get-Content -LiteralPath (Join-Path $payload 'package.json') -Raw | ConvertFrom-Json
+ $manifest=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'repair-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+ $package=Get-Content -LiteralPath (Join-Path $payload 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
  if($package.name -ne 'skill-game-dock' -or $package.version -ne $manifest.version){throw 'Repair package identity mismatch.'}
  foreach($file in $manifest.files){
   if($file.path -match '(^/|\\|:|(^|/)\.\.(/|$))'){throw 'Invalid repair path.'}
@@ -42,6 +43,8 @@ try {
  if(-not $NoLaunch){Start-Process -FilePath $exe}
 } catch {
  Write-Host ('Repair did not complete: '+$_.Exception.Message) -ForegroundColor Red
+ Write-Host ($_.InvocationInfo.PositionMessage)
+ Write-Host ($_.ScriptStackTrace)
  if(-not $NoLaunch){Read-Host 'Press Enter to close'}
  exit 1
 }

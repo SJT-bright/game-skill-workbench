@@ -50,6 +50,7 @@
 - **v7.8 前已有的图（Saul 10-30 21:3x）**：新游戏标记日期在 2026-10-31 或以前的游戏，可以一次性跑 `art_records.py pre-v78 --project <工程> --why "装 v7.8 时工程里已有的图"`，把工程里已有、没有生成记录的图登记成「v7.8 前已有」（`generated.json` 里 `pre_v78: true`）。只能跑一次；美术检查每次都列出这些图的数量；和底子相同的图照样拦（H8 不受影响）。
 - **美术检查新加的其他行**（都在美术关跑，需处理就写 fail 回执）：
   - 首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边（H11、H6）：`home_hero_hidden`（主角可见包围盒在屏幕内不到 90%）、`home_hero_small`（占屏不到 8%）、`home_hero_unknown`（认不出主角；确实没有主角或认错时在 `docs/art/hero.json` 写 `{"home": ["节点路径或帧名"]}`）；`hud_digit_small`（HUD 数字按屏幕上的字号算不到屏高 3%）、`hud_digit_contrast`（和背景对比度不到 3:1）；同一页出现 3 次以上的局内棋子上的数字不算 HUD；`black_edge_band`（复活、结算页最上或最下 4% 近黑）。
+  - 按钮底色不深、物品图标不另垫底板（Saul 2026-10-31 香肠太难了）：`dark_button`（每页、游戏中也算，按钮主色 L* < 40，或 < 50 且不鲜亮，或 < 55 且很暗淡）、`icon_plate`（金币、钻石、爱心、体力图标自带或背后另垫的底板）、`dark_button_state`（按下图、禁用图、变暗的按下色）；英化里和原版逐字节相同的图不报。在页面检查已经打开的截图上量，不另外截图。
   - 「位置穿模」一行多三类：`overlap_button_picture`、`busy_text_background`、`stacked_text_layers`，见第二部分第 3 节。
   - 图集切片（`audit_atlas_slices.py`）：图片字、局内棋子、投射物、障碍的切片也查，报 `connected_body_cut_by_rect`（主体被切断）、`edge_fragment`（边上挂着别家的细残片）；tile、地面、九宫格、平铺、四边不透明的整块和写了 `"slice_role": "tileset"` 的跳过。
   - 动态闪屏：美术关要录四段（首页点按钮、开关弹窗、调音量、局内消除，见 `chrome-mobile-testing/SKILL.md`「美术关必录的四段」），一段都没有这一行不通过；Ego 录不到一帧闪烁时写「闪烁未测」。

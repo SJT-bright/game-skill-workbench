@@ -335,6 +335,69 @@ class MakeEconomyConfig(unittest.TestCase):
                 rep = pc.economy_audit(bad, 'remake')
                 self.assertFalse(rep['ok'], rule)
 
+    def test_three_ad_boost_boards(self):
+        """Rules table v3.2 (货币skill 会话 11-01): --systems timer_chest,online_gift,key_chest. Every B passes economy-audit
+        with the three rules and the claim double checked (pass, not skip), and the numbers are the table's."""
+        boards = ',timer_chest,online_gift,key_chest'
+        for name, args in (('B10', CASES['B10']), ('B72.5', CASES['B72.5']), ('B3', CASES['B3'])):
+            args = list(args)
+            args[args.index('--systems') + 1] += boards
+            out = self.tmp / ('boards_' + name)
+            p = run(args, out)
+            with self.subTest(name):
+                self.assertEqual(p.returncode, 0, p.stderr)
+                c = json.loads((out / 'economy_config.json').read_text(encoding='utf-8'))
+                s = json.loads((out / 'economy_snapshot.json').read_text(encoding='utf-8'))
+                B = s['B']['value']
+                rep = pc.economy_audit(copy.deepcopy(s), 'remake')
+                self.assertEqual(rep.get('schema_warnings', []), [])
+                self.assertEqual([(r['id'], r['details']) for r in rep['results'] if r['status'] == 'error'], [])
+                status = {r['id']: r['status'] for r in rep['results']}
+                for rule in ('ECON-TIMERCHEST', 'ECON-ONLINE', 'ECON-KEYCHEST', 'ECON-CLAIMX2'):
+                    self.assertEqual(status[rule], 'pass', rule)
+                tc, t = c['timer_chest'], R['ECON-TIMERCHEST']
+                self.assertTrue(eq(tc['amount'], t['free_open_B'], B))
+                self.assertEqual({k: tc[k] for k in ('wait_sec', 'ad_cut_sec', 'ad_cuts_per_round', 'rounds_per_day')},
+                                 {k: t[k] for k in ('wait_sec', 'ad_cut_sec', 'ad_cuts_per_round', 'rounds_per_day')})
+                self.assertEqual(s['systems']['timer_chest']['wait_sec'], t['wait_sec'])
+                o = R['ECON-ONLINE']
+                tiers = c['online_gift']['tiers']
+                self.assertEqual([x['minutes'] for x in tiers], o['tiers_min'])
+                self.assertLessEqual(sum(x['amount'] for x in tiers), math.ceil(o['day_total_max_B'] * B))
+                self.assertEqual(len(c['key_chest']['cells']), R['ECON-KEYCHEST']['cells'])
+                windows = {x['window'] for x in s['inflows'] if x['rule'] in ('ECON-TIMERCHEST', 'ECON-ONLINE', 'ECON-KEYCHEST')}
+                self.assertEqual(windows, {'timer_chest', 'online_gift', 'key_chest'})
+                self.assertTrue(all(x['x2'] == 'checkbox_default_on' for x in s['inflows']
+                                    if x['rule'] in ('ECON-TIMERCHEST', 'ECON-ONLINE', 'ECON-KEYCHEST')))
+
+    def test_three_boards_refused_when_numbers_break_the_rules(self):
+        """A key-chest cell of 6B, or cells that do not add up to 15B, in the generator's defaults; a timer chest whose ads
+        open it at once and online tiers over 10B a day in the rules table: refused, nothing written."""
+        import make_economy_config as mec
+        from unittest import mock
+        base = ['--B', '10', '--systems', 'checkin,shortcut,revisit,key_chest']
+        for cells in (('6',) + mec.KEY_CHEST_CELLS_B[1:], mec.KEY_CHEST_CELLS_B[:-1] + ('1',)):
+            out = self.tmp / ('key_refused_%s' % '_'.join(cells))
+            with self.subTest(cells), mock.patch.object(mec, 'KEY_CHEST_CELLS_B', cells), \
+                    mock.patch('sys.stderr', new_callable=__import__('io').StringIO) as err:
+                self.assertEqual(mec.main(base + ['--out-dir', str(out)]), 2)
+                self.assertIn('key chest default cells do not match ECON-KEYCHEST', err.getvalue())
+                self.assertFalse(out.exists())
+        self.assertEqual(mec.main(base + ['--out-dir', str(self.tmp / 'key_ok')]), 0)      # the shipped defaults pass
+        for rule, key, value, words in (('ECON-TIMERCHEST', 'ad_cuts_per_round', 4, 'below wait_sec'),
+                                        ('ECON-ONLINE', 'per_tier_max_B', 4, 'over 10B a day')):
+            table = copy.deepcopy(TABLE)
+            next(r for r in table['rules'] if r['id'] == rule)['params'][key] = value
+            rules = self.tmp / ('rules_%s.json' % rule)
+            rules.write_text(json.dumps(table, ensure_ascii=False), encoding='utf-8')
+            out = self.tmp / ('refused_' + rule)
+            p = run(['--B', '10', '--systems', 'checkin,shortcut,revisit,timer_chest,online_gift', '--rules', str(rules)], out)
+            with self.subTest(rule):
+                self.assertEqual(p.returncode, 2, p.stdout + p.stderr)
+                self.assertIn('refused, nothing written', p.stderr)
+                self.assertIn(words, p.stderr)
+                self.assertFalse(out.exists())
+
     def test_skin_tables_merge(self):
         """Skin rows come from W1b's make_skin_table.py + ad-unlock, never priced here."""
         d = self.tmp / 'skins'

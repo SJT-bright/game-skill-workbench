@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T18:34:28.418Z",
-  "treeHash": "efe7807d807d04ae3dcc48fddce39cd102ea4865bde3ee7e3d99984b449434a9",
+  "createdAt": "2026-11-01T18:35:03.787Z",
+  "treeHash": "996a6b736694629a8a4a5b6345e618498e9d5a80fd58cbc4e7b7ffa5a3cca164",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3021,14 +3021,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "6012d3b6ee252b3abcefddf9b49b74df075fab9a752bf135beff3df366f2073c",
+      "treeHash": "4814e284a72492be39a7ea195875943a16b87a198eacbcb97e7455f355e1f7ae",
       "fileCount": 410,
-      "bytes": 9081939,
+      "bytes": 9090932,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "45a90d03e4c7c5f38d6feb9f8cfc728019005137065011efecc4cc858d4a6fce",
-          "size": 70876,
+          "hash": "1bfb8bde644deb5405cb11430700230e1602b6e4ea05fe9eec53cba813404550",
+          "size": 70878,
           "executable": false
         },
         {
@@ -4299,8 +4299,8 @@
         },
         {
           "path": "scripts/make_economy_config.py",
-          "hash": "30ff619abd332637f138e872cdded0282c1c8054dcce92c56c89b1e0f12d8f74",
-          "size": 31183,
+          "hash": "95579b628579efd8ebccf35eb05d9323e4977661c893dde3bada2c7a55033d7b",
+          "size": 34826,
           "executable": false
         },
         {
@@ -4827,8 +4827,8 @@
         },
         {
           "path": "scripts/test_fusion_policy.py",
-          "hash": "a637ea1edcb93316c78655b868813845ede94a46615965af8545271e5c74602f",
-          "size": 3203,
+          "hash": "565f132063ca5dde247cbcb8f2e598ddda4cdfe2f5c23acb09c29af764cf5ffe",
+          "size": 3844,
           "executable": false
         },
         {
@@ -4959,8 +4959,8 @@
         },
         {
           "path": "scripts/test_make_economy_config.py",
-          "hash": "a98e427d206629162a5e49241b2318acfe246fed10d9aaf0a55d91d3febc1246",
-          "size": 22669,
+          "hash": "26dcec0782ad9a8c1230159f40d279784b70ec94573f7dbb97d545a1096d5d14",
+          "size": 27376,
           "executable": false
         },
         {

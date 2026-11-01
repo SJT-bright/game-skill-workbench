@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-01.english-simple.11",
+  "revision": "2026-11-01.english-simple.11.2",
   "skill": "remake-core",
-  "previous_provenance_sha256": "6228ecb04a9e17c7a8a0ac539014ce81c180c1a549b3d98806a1be4bdab901a2",
+  "previous_provenance_sha256": "45a90d03e4c7c5f38d6feb9f8cfc728019005137065011efecc4cc858d4a6fce",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -1063,8 +1063,8 @@
     },
     {
       "path": "scripts/make_economy_config.py",
-      "sha256": "30ff619abd332637f138e872cdded0282c1c8054dcce92c56c89b1e0f12d8f74",
-      "bytes": 31183
+      "sha256": "95579b628579efd8ebccf35eb05d9323e4977661c893dde3bada2c7a55033d7b",
+      "bytes": 34826
     },
     {
       "path": "scripts/make_legacy_list.py",
@@ -1503,8 +1503,8 @@
     },
     {
       "path": "scripts/test_fusion_policy.py",
-      "sha256": "a637ea1edcb93316c78655b868813845ede94a46615965af8545271e5c74602f",
-      "bytes": 3203
+      "sha256": "565f132063ca5dde247cbcb8f2e598ddda4cdfe2f5c23acb09c29af764cf5ffe",
+      "bytes": 3844
     },
     {
       "path": "scripts/test_game_modules.py",
@@ -1613,8 +1613,8 @@
     },
     {
       "path": "scripts/test_make_economy_config.py",
-      "sha256": "a98e427d206629162a5e49241b2318acfe246fed10d9aaf0a55d91d3febc1246",
-      "bytes": 22669
+      "sha256": "26dcec0782ad9a8c1230159f40d279784b70ec94573f7dbb97d545a1096d5d14",
+      "bytes": 27376
     },
     {
       "path": "scripts/test_make_legacy_list.py",

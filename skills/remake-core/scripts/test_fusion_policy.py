@@ -20,12 +20,19 @@ class FusionPolicyTests(unittest.TestCase):
             flags = enabled(root)
             self.assertFalse(flags['league'])
             self.assertTrue(removed('Weekly League', flags))
-            self.assertTrue(removed('Daily Check-in', flags))
+            # 2026-10-27 (user): the 7-day check-in is a required module, so feature_policy.enabled() has it on unless
+            # docs/features.json says daily_checkin false (audit_optional_features.py checkin_required rejects that for
+            # remake games). This test still expected the pre-10-27 default (off) and failed from then on
+            # (release-selftest known_failures.json: "原因没查", found 2026-11-01).
+            self.assertTrue(flags['checkin'])
+            self.assertFalse(removed('Daily Check-in', flags))
             self.assertIn('setImRankData', audit(root, features=('iaa',))['share_calls_in_source'])
             source.write_text('setImRankData(); shareAppMessage(); navigateToMiniProgram();')
             hits = audit(root, features=('iaa',))['share_calls_in_source']
             self.assertIn('shareAppMessage', hits)
             self.assertIn('navigateToMiniProgram', hits)
+            (root / 'docs/features.json').write_text(json.dumps({'daily_checkin': False}))
+            self.assertTrue(removed('Daily Check-in', enabled(root)))
             (root / 'docs/features.json').write_text(json.dumps({'daily_checkin': True}))
             self.assertFalse(removed('Daily Check-in', enabled(root)))
             self.assertTrue(removed('More Games', enabled(root)))

@@ -25,7 +25,7 @@ import argparse
 import json
 import math
 import sys
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -39,7 +39,11 @@ DEFAULT_RULES = HERE.parent.parent / 'remake-economy' / 'references' / 'economy_
 SYSTEMS = {'items': 'items', 'item_pack': 'items', 'ad_item': 'ad_item', 'wheel': 'wheel', 'offline': 'offline',
            'upgrade': 'upgrade', 'checkin': 'checkin', 'quests': 'quests', 'energy': 'energy', 'chest': 'chest',
            'float_gift': 'float_gift', 'bonus_level': 'bonus_level', 'ad_coin': 'ad_coin', 'shop_free': 'shop_free',
-           'home_gift': 'gift_home', 'shortcut': 'shortcut', 'revisit': 'revisit', 'skins': 'skins', 'skin_trial': 'skins'}
+           'home_gift': 'gift_home', 'shortcut': 'shortcut', 'revisit': 'revisit', 'skins': 'skins', 'skin_trial': 'skins',
+           'timer_chest': 'timer_chest', 'online_gift': 'online_gift', 'key_chest': 'key_chest'}
+# ad-boost board defaults the rules table only bounds (ad-boost v1.2.4 controllers): online-ladder tier shares run evenly from
+# ECON-ONLINE per_tier_min_B to per_tier_max_B; key-chest nine cells (KeyChestController DEFAULT_CELLS_B, 15B, a cell <= 5B).
+KEY_CHEST_CELLS_B = ('5', '3', '2', '1', '1', '1', '1', '0.5', '0.5')
 MUST_HAVE = ('checkin', 'shortcut', 'revisit')  # remake games (economy-rules.md; Saul 2026-10-27 / 10-29)
 
 
@@ -118,7 +122,7 @@ def build(a, table, rules):
     inflows, sinks, configs, unknowns = [], [], {}, []
     systems = {k: False for k in ('shop', 'skins', 'items', 'checkin', 'wheel', 'gift_home', 'gift_window', 'offline', 'upgrade',
                                   'quests', 'energy', 'shortcut', 'revisit', 'chest', 'float_gift', 'bonus_level', 'shop_free',
-                                  'ad_coin', 'ad_item')}
+                                  'ad_coin', 'ad_item', 'timer_chest', 'online_gift', 'key_chest')}
     for s in have:
         systems[SYSTEMS[s]] = True
     systems['result_x2'] = True
@@ -285,6 +289,44 @@ def build(a, table, rules):
             x2='ad_button', window='bonus_level')
         row('bonus_level_ad', 'ECON-BONUS', cfg['bonus_level']['ad_total'], 'bonus_level/ad_total', per='level', needs_ad=True,
             x2='ad_button', window='bonus_level')
+
+    # timer chest (ECON-TIMERCHEST), online-time gift (ECON-ONLINE), key chest (ECON-KEYCHEST): ad-boost boards, Saul 2026-11-01
+    # 「默认数值就这样」. Every claim window is ECON-CLAIMX2 (default-ticked watch-ad x2).
+    if 'timer_chest' in have:
+        p = rules['ECON-TIMERCHEST']
+        in_range('timer chest free open (B)', float(p['free_open_B']), 0, p['free_open_max_B'])
+        if p['ad_cut_sec'] * p['ad_cuts_per_round'] >= p['wait_sec']:
+            raise Refused('ECON-TIMERCHEST: ad_cut_sec x ad_cuts_per_round must be below wait_sec (no opening at once by ads)')
+        timing = {k: p[k] for k in ('placement', 'wait_sec', 'ad_cut_sec', 'ad_cuts_per_round', 'rounds_per_day')}
+        cfg['timer_chest'] = dict(timing, amount=m.exact(p['free_open_B']), double=box)
+        row('timer_chest', 'ECON-TIMERCHEST', cfg['timer_chest']['amount'], 'timer_chest/amount', per='claim', needs_ad=False,
+            x2='checkbox_default_on', count_per_day=p['rounds_per_day'], window='timer_chest')
+        systems['timer_chest'] = timing
+    if 'online_gift' in have:
+        p = rules['ECON-ONLINE']
+        tiers, lo, hi = p['tiers_min'], Decimal(repr(p['per_tier_min_B'])), Decimal(repr(p['per_tier_max_B']))
+        step = (hi - lo) / (len(tiers) - 1) if len(tiers) > 1 else Decimal(0)
+        # same as the online-ladder controller: floor(B x share), at least 1
+        amounts = [max(1, int((m.B * (lo + step * i)).to_integral_value(rounding=ROUND_FLOOR))) for i in range(len(tiers))]
+        if sum(amounts) > m.exact(p['day_total_max_B']):
+            raise Refused('online-time gift tiers add up to %d, over %sB a day' % (sum(amounts), p['day_total_max_B']))
+        cfg['online_gift'] = {'tiers': [{'minutes': t, 'amount': a_} for t, a_ in zip(tiers, amounts)],
+                              'day_total_max': m.exact(p['day_total_max_B']), 'foreground_only': p['foreground_only'],
+                              'reset': p['reset'], 'double': box}
+        for n, (t, a_) in enumerate(zip(tiers, amounts)):
+            row('online_%d' % t, 'ECON-ONLINE', a_, 'online_gift/tiers/%d/amount' % n, per='claim', needs_ad=False,
+                x2='checkbox_default_on', count_per_day=1, tier_min=t, window='online_gift')
+    if 'key_chest' in have:
+        p = rules['ECON-KEYCHEST']
+        cells = [Decimal(x) for x in KEY_CHEST_CELLS_B]
+        if len(cells) != p['cells'] or max(cells) > Decimal(repr(p['cell_max_B'])) or sum(cells) != Decimal(repr(p['total_B'])):
+            raise Refused('key chest default cells do not match ECON-KEYCHEST (%d cells, <= %sB, about %sB)'
+                          % (p['cells'], p['cell_max_B'], p['total_B']))
+        amounts = [m.at_most(c) for c in cells]  # KeyChestController cellCoins: round(min(cell, 5) x B), at least 1
+        cfg['key_chest'] = {'cells': amounts, 'double': box, 'note': 'x2 on the summary window after leaving; cells opened with the ad +3 KEYS do not double'}
+        for n, a_ in enumerate(amounts):
+            row('key_cell_%d' % (n + 1), 'ECON-KEYCHEST', a_, 'key_chest/cells/%d' % n, per='open', needs_ad=False,
+                x2='checkbox_default_on', window='key_chest')
 
     # offline income (ECON-OFFLINE), idle games only
     if 'offline' in have:

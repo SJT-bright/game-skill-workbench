@@ -1,0 +1,121 @@
+{
+  "id": "ffdd5733-b5c6-40e8-bf26-1296c8a00d0a",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v42",
+  "createdAt": "2026-11-01T03:22:19.414Z",
+  "summary": "文件变更：新增 6，修改 4，移除 0。",
+  "changes": {
+    "added": 6,
+    "modified": 4,
+    "deleted": 0
+  },
+  "treeHash": "f513df2afcc3b386e6c20af7df2253314b30bd0783ff2e3ef7360f727a62209d",
+  "bytes": 168459,
+  "fileCount": 17,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "5eca53f42dcbdc6b5e995e834010f4d870cceea82b125fcff648ed1af8b916e5",
+      "size": 2669,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "05628a577de1599be210dea8f100397a0b58c12d2e46fbe85ce98eea68e8c54c",
+      "size": 36381,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/README.md",
+      "hash": "6308ef3ac51b7339e333e20c6dd156ba2521a50d2e0a5eb90028fa2ecdc89af2",
+      "size": 1824,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/main.js",
+      "hash": "a00ae9866bab67708122c6c567b677bad046aa91e75a07b5dac462353d3525f0",
+      "size": 4190,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/package.json",
+      "hash": "9fa38054d0cb490c108c6ce1f45967b05ac7141d939e2fa03aef3ded17e8689a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "hash": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "size": 1380,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "hash": "01cd8999666f21e091eba5080adb1d8c610734a13b7255aab72fd8a259e5cada",
+      "size": 1434,
+      "executable": false
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "hash": "41f7377d2fe99832b00d860cdbd0a23c9dedff27468532fc399e53980c9ff0ec",
+      "size": 24467,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "hash": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
+      "size": 9768,
+      "executable": false
+    },
+    {
+      "path": "references/local-creator-versions.md",
+      "hash": "af848ebb951312dbee13e740e8ce2e88077105cef3a14f461b36f4dd3b45313e",
+      "size": 4119,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "hash": "21fda56bc9ed0cd548c5cd8be4190294cbcb45888a9ad38f3a27b9367d365321",
+      "size": 7959,
+      "executable": false
+    },
+    {
+      "path": "scripts/native_startup_trusted_runners.json",
+      "hash": "ddae803e1c653b36ac83bb2752c36e5b418ed41155bde0ee04f9247d72c14c0e",
+      "size": 1752,
+      "executable": false
+    },
+    {
+      "path": "scripts/reviewed_resource_profiles.json",
+      "hash": "8ed389331021fbc0c111d5b9f78fac9159f2168471d758f9d4e7c2174bf83327",
+      "size": 30291,
+      "executable": false
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "aed87b24c933829e1429597f0744aedecf203bad25972ca000bac1f0f491e183",
+      "size": 950,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_check_export_images.py",
+      "hash": "b1bcaf2de070c1c4d6782d0cd39c5fa350d6632f95674d9d77adf3b8c09dda4d",
+      "size": 5626,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "hash": "cd051ea37d7a54ecee333300b240950cd07c41aa8a0f1a41498a1e15da2b411d",
+      "size": 35297,
+      "executable": false
+    }
+  ]
+}

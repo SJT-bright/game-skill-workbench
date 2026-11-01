@@ -1,0 +1,9 @@
+# Creator 2.4.3 asset worker compatibility
+
+On this macOS host, unmodified Creator 2.4.3's build worker selects WebGL automatically, obtains a null GL context and fails in Device._initCaps/getParameter. The project-local extension selects the original engine's supported Canvas renderer for that dedicated asset serialization worker only.
+
+The extension is active only for macOS + electron.app.getVersion() exactly 2.4.3, and only for the editor/page/build/build-worker URL and app:init-build-worker IPC. It preserves the original engine-dev module and changes only a copy of cc.game.run options to renderMode:1. It does not change engine files, GPU capability reporting, game assets, or the exported game renderer. The exported Web/ByteDance game remains renderMode:0 (AUTO/WebGL as available); the final native game must still pass real-engine simulated-host startup/ad checks and real-device retesting.
+
+Injection has a 10-second limit. Synchronous errors, Promise rejections and timeouts invoke the initialization failure callback once, close the dedicated failed worker window and ignore late successes. Unloading restores the previous spawnWorker only when this extension still owns the installed wrapper, so a later extension is preserved. Each load captures its own predecessor, so unloading/reloading beneath another wrapper cannot recurse.
+
+To disable, remove this package directory from the project and restart Creator; no installed application or global editor setting needs restoring. Use a compatible graphics host when building without the extension. Tests: qa/editor-worker-compat-test.cjs / qa/editor-worker-compat-result.json. The tests cover the wrapper boundaries and error paths; actual full Creator builds are recorded separately in qa/build-web-243-canvas-worker.log and the current Native build log.

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T03:21:44.797Z",
-  "treeHash": "be5d135a6b7e0d6104ffbfdef9f720ee8339233e4b66d002867cd3a0b4b24ce4",
+  "createdAt": "2026-11-01T06:22:00.233Z",
+  "treeHash": "d83e805ce91e66fc75308e4cf300de9b617d7771c4e3f40467f03a831ea4c8d4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,13 +251,13 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "5f1a3dc485dc0261cf8377762ef074c94061828bf2aa7103a8e1623b240198e2",
+      "treeHash": "f8f5405911ef607b41b2b799232290a9ac24823ae99bec37f6d93b803d2cee22",
       "fileCount": 135,
-      "bytes": 1304491,
+      "bytes": 1304649,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "268e854d7a1317a6cba36f8c5d24c397b58853b9a07be1d6ebd62e3f91b043aa",
+          "hash": "dcf2ed22df8ddfb9c3d65b3a78310bc90c4220e1f7443ac124c9b0fe3a0a6ab5",
           "size": 24464,
           "executable": false
         },
@@ -437,8 +437,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "739680d8b1ed7d016f5761c9a538099c55fdcefc15d1c76ecc32485765c2b281",
-          "size": 11679,
+          "hash": "4b240ac7a6199f5cd681c678958ca390fce7ba4bdef583a1e8d2150e73e1ca02",
+          "size": 11837,
           "executable": false
         },
         {

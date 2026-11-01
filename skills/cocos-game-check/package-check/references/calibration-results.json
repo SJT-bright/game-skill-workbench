@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-10-31",
- "release_label": "v7.8.1",
- "selftest_report_sha256": "2355eeea517ec9df66c7412aa8322abab397fd53cfc9f1fb6444fe860bcc8f3b",
+ "release_label": "v7.8.2",
+ "selftest_report_sha256": "0908f18ce8111caff948c95b9a2dd4df2d14af126bd6f052a2cd25dd3fedf316",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c11c26c1460dcb4070fe5ec3e2d1f2f295f1a3b07579ad9f37f5078c6805a596",
@@ -390,7 +390,7 @@
   }
  ],
  "test_inventory": {
-  "files": 167,
+  "files": 206,
   "failing_known": [
    "chrome-mobile-testing/tests/test_ego_route.py",
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
@@ -405,7 +405,9 @@
    "remake-core/scripts/test_official_loading.py",
    "remake-core/scripts/test_ui_layout_and_copy.py",
    "remake-core/scripts/test_workflow_tools.py",
-   "remake-core/scripts/test_writer_refusal.py"
+   "remake-core/scripts/test_writer_refusal.py",
+   "ad-boost/vendor/系统库/05_礼盒与礼包/参考实现/test_GiftCenter.js",
+   "ad-boost/vendor/系统库/07_签到/参考实现/test_CheckinFlow.js"
   ],
   "new_failures": 0
  }

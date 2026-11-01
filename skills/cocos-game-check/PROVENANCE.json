@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-10-31.remake-v7.8.1",
+  "revision": "2026-10-31.remake-v7.8.2",
   "files": [
     {
       "path": "SKILL.md",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "739680d8b1ed7d016f5761c9a538099c55fdcefc15d1c76ecc32485765c2b281",
-      "bytes": 11679
+      "sha256": "4b240ac7a6199f5cd681c678958ca390fce7ba4bdef583a1e8d2150e73e1ca02",
+      "bytes": 11837
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -675,5 +675,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "19dfa04bf199c2a2936cff9ccabadc91caf7e9d38e684ba0a24af704fd894b68"
+  "previous_provenance_sha256": "0e2e7abe4570dd368424d66dae367f387c022af1691379de4f29596eaaa5691b"
 }

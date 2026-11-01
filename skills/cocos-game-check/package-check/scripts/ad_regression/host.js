@@ -19,6 +19,12 @@
 (function () {
   'use strict';
   var Q = new URLSearchParams(location.search);
+  // English 11.1 (Cube Digits 3.7.1, 10-31): the 3.x runtime host (runtime_regression/host3x) runs the game in a sandbox
+  // whose global object is window.__H.G; this host runs it on window. Both read the same adapter file
+  // (qa/ad-regression.json), so a 3.x adapter that reads a game global as window.__H.G.<name> never got ready here
+  // ("game did not become ready for ad requests within 90000 ms" with the game on its home page). Same path here:
+  // window.__H.G is window itself. Only G is provided (no log, fps or sprites of host3x's __H).
+  if (!window.__H) window.__H = { G: window };
   // Test clock warp: __warp(ms) moves Date.now forward so 60 s / 200 s ad cases run instantly.
   var RealNow = Date.now.bind(Date), warpOff = 0;
   Date.now = function () { return RealNow() + warpOff; };

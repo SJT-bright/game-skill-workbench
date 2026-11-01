@@ -210,7 +210,7 @@ v7.8 起两个宿主（2.x 和 3.x）都有：`window.__gateLog`（`ad-create`�
 - **不用浏览器缓存**：`lib.mjs` 的 `open()` 和 `ad_regression/cases.mjs` 打开页面后关掉 HTTP 缓存。Ego 是所有会话共用的一个浏览器，别的会话以前在同一个 127.0.0.1 端口上开过试玩服务（`python3 -m http.server` 不发 Cache-Control），它的 `main.js` 留在缓存里，后来的运行就把别的游戏的代码当成这个包来测（2026-11-01 甜点消消乐 R48 报「home not reached」，`main.js` 要的 `touch-coordinates.js` R48 根本没有）。
 - **服务端口核对**：`runtime_regression.py` 起宿主服务后先读一次 `/game.js`，和这个包的字节比对，对不上（端口被别的服务占着）就换端口重起，最多 4 次。
 
-用不了的情况：射击高手 v81、v84 没有触摸件，模拟宿主里根本点不动（运行器报「环境不完整」），这两个旧包只能靠静态门禁。换过相机的游戏（SorensRivet），`tap` 按路径点会点偏，要在 adapter 里用 `tap_js` 返回相机算出来的点。
+用不了的情况：射击高手 v81、v84 没有触摸件，模拟宿主里根本点不动（运行器报「环境不完整」），这两个旧包只能靠静态门禁。换过相机的游戏（SorensRivet）：英化 简化.11.1 起 2.x 的节点框先过这个节点的相机（`geom.mjs` 的 `cssBox`，相机没动过时和以前一字不差），`tap` 按路径也点得中，不用再在 adapter 里写 `tap_js` 绕过；回归 `test_geom_camera.py`。
 
 ## 广告期间的声音（D7 第 9 条，v7.5 只警告）
 

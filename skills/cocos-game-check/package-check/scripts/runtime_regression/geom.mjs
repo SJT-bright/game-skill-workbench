@@ -7,7 +7,8 @@
 //   shownChain(n)          no opacity 0 / scale 0 on the node or an ancestor (2.x node.opacity, 3.x UIOpacity)
 //   cssBox(n)              {x0,y0,x1,y1} in page CSS px (= phone points), or null
 //                            2.x: through cc.view's real viewport (getViewportRect + getScaleX()/dpr): letterboxed
-//                                 SHOW_ALL games have bars (MergeShot2048 75 pt top and bottom)
+//                                 SHOW_ALL games have bars (MergeShot2048 75 pt top and bottom); a node whose camera is
+//                                 moved or zoomed goes through that camera first (camPoint2, English 11.1, SorensRivet)
 //                            3.x: the cam-point block (the camera of the node's Canvas, identical text in
 //                                 ad_regression/cases.mjs and lib.mjs) and the css-point block, corner by corner
 //   frameCss()             the game canvas in page CSS px {left, top, w, h}
@@ -82,9 +83,27 @@ export const GEOM_JS = `
     return { x: rect.left + p.x * rect.width / vis.w, y: rect.top + rect.height - p.y * rect.height / vis.h };
     // css-point:end
   }
+  // 2.x: the node's camera (cc.Camera.findCamera), used only when it does not map world points to themselves. A default
+  // camera at its Canvas centre is the identity in every fit policy, so letterboxed and ordinary games keep the map2 path
+  // unchanged; a moved or zoomed camera (SorensRivet, English 11.1: taps by path missed every button) goes through it.
+  function camPoint2(n, x, y) {
+    try {
+      var c = cc.Camera && cc.Camera.findCamera && cc.Camera.findCamera(n);
+      if (!c || !c.getWorldToScreenPoint) return null;
+      var p = c.getWorldToScreenPoint(cc.v2(x, y));
+      return p && isFinite(p.x) && isFinite(p.y) ? p : null;
+    } catch (e) { return null; }
+  }
   function cssBox(n) {
     var r = worldBox(n); if (!r) return null;
-    if (!V3) { var m = map2(); return { x0: m.ox + r.x * m.kx, x1: m.ox + (r.x + r.width) * m.kx, y0: m.fh - (m.oy + (r.y + r.height) * m.ky), y1: m.fh - (m.oy + r.y * m.ky) }; }
+    if (!V3) {
+      var m = map2(), x0 = r.x, y0 = r.y, x1 = r.x + r.width, y1 = r.y + r.height;
+      var a = camPoint2(n, x0, y0), b = camPoint2(n, x1, y1);
+      if (a && b && (Math.abs(a.x - x0) > 0.5 || Math.abs(a.y - y0) > 0.5 || Math.abs(b.x - x1) > 0.5 || Math.abs(b.y - y1) > 0.5)) {
+        x0 = Math.min(a.x, b.x); x1 = Math.max(a.x, b.x); y0 = Math.min(a.y, b.y); y1 = Math.max(a.y, b.y);
+      }
+      return { x0: m.ox + x0 * m.kx, x1: m.ox + x1 * m.kx, y0: m.fh - (m.oy + y1 * m.ky), y1: m.fh - (m.oy + y0 * m.ky) };
+    }
     var z = n.worldPosition ? n.worldPosition.z : 0;
     var a = cssPoint3(camPoint3(n, new cc.Vec3(r.x, r.y, z))), b = cssPoint3(camPoint3(n, new cc.Vec3(r.x + r.width, r.y + r.height, z)));
     return { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) };

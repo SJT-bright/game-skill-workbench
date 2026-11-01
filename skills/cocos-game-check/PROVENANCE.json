@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-01.english-simple.11",
+  "revision": "2026-11-01.english-simple.11.1",
   "files": [
     {
       "path": "SKILL.md",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "293d8f9795bf9aed604592c038cacbf058486e10685b741d34ba3f82f639adda",
-      "bytes": 15378
+      "sha256": "2f1da26dcaa4ebb076bf6d753e2746f413b82aa5b9f745a80b1120408a82fcfb",
+      "bytes": 15380
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -201,8 +201,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "3994860a1cf443fc1020c6b5d679fe09eb1599ccd807c26cad1ea3f19f6eea43",
-      "bytes": 51198
+      "sha256": "656c9916832189b10d90834d8fcd42fdf3983f803fd34119c2a90290fcf94387",
+      "bytes": 51354
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -216,8 +216,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
-      "sha256": "808172379868c9571a32a7a1f8e3b0d5e639c8be590c44de147ebbf346ef85b1",
-      "bytes": 55002
+      "sha256": "f99e155fe1cf79765416d06919a127ed74687eeba9adfcf21ab849472b02a6d5",
+      "bytes": 55602
     },
     {
       "path": "package-check/scripts/ad_regression/play.html",
@@ -286,8 +286,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/geom.mjs",
-      "sha256": "9fecf5013e7d5cf7bdd858c6de636b1ec01bd3bfbd3e0238a9ec1f96bc250f77",
-      "bytes": 9941
+      "sha256": "9ab62d0220949858f3081e5dcd002699905da3cd7f9b7dbd808f52077595a565",
+      "bytes": 11133
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/host.js",
@@ -476,8 +476,8 @@
     },
     {
       "path": "package-check/scripts/test_ad_regression.py",
-      "sha256": "fa34aa1d93c9703d839e7599efaafa2b63329f4fc2e94f43a85cc9f6b50d8df0",
-      "bytes": 23786
+      "sha256": "9e0c6c44231754e0c1aa3eafacc15caa00a5514e476263dd845143cf14f99503",
+      "bytes": 25195
     },
     {
       "path": "package-check/scripts/test_button_sweep_diag.py",
@@ -518,6 +518,11 @@
       "path": "package-check/scripts/test_gate_order_and_identity.py",
       "sha256": "29bb7dd8043b9829b9f9e78aadd83627918d767a9fe8cd7ef215db41a2cdc144",
       "bytes": 8499
+    },
+    {
+      "path": "package-check/scripts/test_geom_camera.py",
+      "sha256": "f74664c32ef10e39c2d65958533236000719a7b5776b5b1924ba2f6456d65fee",
+      "bytes": 5548
     },
     {
       "path": "package-check/scripts/test_issue_relocation.py",
@@ -646,8 +651,8 @@
     },
     {
       "path": "startup/references/loading-recovery-regression.md",
-      "sha256": "ff76c9974f5922c6f8b0909504bfd4033fd2283f0905a80c21008a05b664ae6b",
-      "bytes": 18347
+      "sha256": "90604dd1673d930fcd91432da41df414712319f04afc0522c4cfaeecfba734e4",
+      "bytes": 19589
     },
     {
       "path": "startup/references/loading-scene-false-positive.md",
@@ -740,5 +745,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "ddee1d9b968da14a72e35bfa4f7503507d435b14f6bcf7e26ba73107fbcf3f21"
+  "previous_provenance_sha256": "a297e8c98b16cd5b68fae3aaa064fbdb9f60acc549d0cb19a4bcffdafb6e9ba7"
 }

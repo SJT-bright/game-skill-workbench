@@ -27,6 +27,8 @@ Mosslight Ferry 的真实反馈是：首页可以显示，点 SET SAIL 后停在
 
 每条真实入口（PLAY、地图选关、Next、失败 Retry、复活、后台返回、关掉重开）沿 LOAD-02/03 原路线表逐一检查。至少两种手机比例；故障组合的 Retry→第二次请求→关卡动作链在两种比例均走完。首次修复保留同判据旧版失败、新版通过、正常对照；新游戏没有旧包时可用隔离的已知坏加载器校准判据，明确“合成校准”，不得伪造旧游戏失败。
 
+**游戏的设计和矩阵某一行对不上时（英化 简化.11.1，Cube Digits 3.7.1）**：有的游戏首页不等 SDK（SDK 回调扣住照样进首页、能玩），`sdk_and_watchdog_held` 那一行就等不到 Retry；有的游戏字体是必需资源（数字是位图字体，字体失败要出 Retry），`optional_font` 那一行的「字体失败不挡首页」就不适用。这时不改标准矩阵，也不把不适用的那几项写成 true：在 `loading-recovery-runtime.json` 写 `profile`，用项目自己的加载合同（`remake-core/scripts/project_qa.py` 按 `profile` 找项目的 `validate_loading`，登记见[项目QA注册](../../../remake-core/references/project-qa-registration.md)）逐条证明替代的那几行：SDK 扣住时首页真能玩、没有 SDK 门控；必需字体失败和挂起都出 Retry、点一次发新请求、ready 属于新请求、两种手机比例都测；坏变体（SDK 门控、字体失败照样进首页、Retry 复用旧请求、要点两次 Retry）都要被拒。Cube Digits 用的是 `cube_digits_required_resources_sdk_independent_v1`，`audit_loading_recovery.py` 12 项都过。10-31 它卡在这一步，是因为当时还没写这份合同，不是检查判错。
+
 ## 注入和证据边界
 
 - 注入只在 SDK/网络/引擎外部依赖和被隔离的原定时器处；不改生产加载器、超时判断、ready 或 Retry 业务，不直接调用按钮回调。不暂停全部 JS/渲染循环来要求 JS watchdog 工作；那种全线程冻结需另查主线程阻塞。

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T12:31:33.112Z",
-  "treeHash": "30956d5bb8a6e8bc04b8302381628ce1315c9e71f99e4b10e64fd0fb3b88e6d2",
+  "createdAt": "2026-11-01T15:32:45.392Z",
+  "treeHash": "28ce499370afee3573b05b133c8c2481a0d856de28a52f283ec1d5bd53912f1a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,14 +251,14 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "de5467d3ada1da41a2079861c0f6e704e022f91ce2a03f1c4d3b197104babc79",
-      "fileCount": 148,
-      "bytes": 1448792,
+      "treeHash": "af0daffcfdfc3e85b81f04767bd454e79b7b67cbd50a3556860dcfd3b4139875",
+      "fileCount": 149,
+      "bytes": 1459120,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a297e8c98b16cd5b68fae3aaa064fbdb9f60acc549d0cb19a4bcffdafb6e9ba7",
-          "size": 26951,
+          "hash": "d831241f74b54a7b9b3ce077d8ab6de455fa0769698be9902886e09884fa6922",
+          "size": 27130,
           "executable": false
         },
         {
@@ -437,8 +437,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "293d8f9795bf9aed604592c038cacbf058486e10685b741d34ba3f82f639adda",
-          "size": 15378,
+          "hash": "2f1da26dcaa4ebb076bf6d753e2746f413b82aa5b9f745a80b1120408a82fcfb",
+          "size": 15380,
           "executable": false
         },
         {
@@ -497,8 +497,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "3994860a1cf443fc1020c6b5d679fe09eb1599ccd807c26cad1ea3f19f6eea43",
-          "size": 51198,
+          "hash": "656c9916832189b10d90834d8fcd42fdf3983f803fd34119c2a90290fcf94387",
+          "size": 51354,
           "executable": false
         },
         {
@@ -515,8 +515,8 @@
         },
         {
           "path": "package-check/scripts/ad_regression/host.js",
-          "hash": "808172379868c9571a32a7a1f8e3b0d5e639c8be590c44de147ebbf346ef85b1",
-          "size": 55002,
+          "hash": "f99e155fe1cf79765416d06919a127ed74687eeba9adfcf21ab849472b02a6d5",
+          "size": 55602,
           "executable": false
         },
         {
@@ -599,8 +599,8 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/geom.mjs",
-          "hash": "9fecf5013e7d5cf7bdd858c6de636b1ec01bd3bfbd3e0238a9ec1f96bc250f77",
-          "size": 9941,
+          "hash": "9ab62d0220949858f3081e5dcd002699905da3cd7f9b7dbd808f52077595a565",
+          "size": 11133,
           "executable": false
         },
         {
@@ -827,8 +827,8 @@
         },
         {
           "path": "package-check/scripts/test_ad_regression.py",
-          "hash": "fa34aa1d93c9703d839e7599efaafa2b63329f4fc2e94f43a85cc9f6b50d8df0",
-          "size": 23786,
+          "hash": "9e0c6c44231754e0c1aa3eafacc15caa00a5514e476263dd845143cf14f99503",
+          "size": 25195,
           "executable": false
         },
         {
@@ -877,6 +877,12 @@
           "path": "package-check/scripts/test_gate_order_and_identity.py",
           "hash": "29bb7dd8043b9829b9f9e78aadd83627918d767a9fe8cd7ef215db41a2cdc144",
           "size": 8499,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_geom_camera.py",
+          "hash": "f74664c32ef10e39c2d65958533236000719a7b5776b5b1924ba2f6456d65fee",
+          "size": 5548,
           "executable": false
         },
         {
@@ -1031,8 +1037,8 @@
         },
         {
           "path": "startup/references/loading-recovery-regression.md",
-          "hash": "ff76c9974f5922c6f8b0909504bfd4033fd2283f0905a80c21008a05b664ae6b",
-          "size": 18347,
+          "hash": "90604dd1673d930fcd91432da41df414712319f04afc0522c4cfaeecfba734e4",
+          "size": 19589,
           "executable": false
         },
         {

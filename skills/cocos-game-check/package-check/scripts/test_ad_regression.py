@@ -428,5 +428,28 @@ const fake = (flags) => {
                 ad_regression.run(root, path, ['double_free'])
 
 
+SCRIPTS = Path(__file__).resolve().parent
+
+
+class HostGlobalBridge(unittest.TestCase):
+    """English 11.1 (Cube Digits 3.7.1): one adapter file is read by the ad regression (ad_regression/host.js, the game on
+    window) and by the 3.x runtime suites (runtime_regression/host3x/host.js, the game in a sandbox whose global object is
+    window.__H.G). A 3.x adapter that read window.__H.G.__cubeDigits never got ready in the ad host. The ad host now
+    provides window.__H.G = window, before any game script loads, and never replaces a host's own __H."""
+
+    def test_ad_host_provides_the_sandbox_global_path(self):
+        host = (SCRIPTS / 'ad_regression' / 'host.js').read_text(encoding='utf-8')
+        line = 'if (!window.__H) window.__H = { G: window };'
+        self.assertEqual(host.count(line), 1)
+        self.assertLess(host.index(line), host.index('window.__warp'))        # first thing the host sets up
+        self.assertLess(host.index(line), host.index('function require'))     # before the game's require chain
+
+    def test_runtime_3x_host_keeps_its_own_bridge(self):
+        host3x = (SCRIPTS / 'runtime_regression' / 'host3x' / 'host.js').read_text(encoding='utf-8')
+        self.assertIn('const X = window.__H = {', host3x)
+        self.assertIn('X.G = G;', host3x)
+        self.assertIn("GT.GameGlobal = G; GT.globalThis = G;", host3x)          # globalThis.x in game code = __H.G.x
+
+
 if __name__ == '__main__':
     unittest.main()

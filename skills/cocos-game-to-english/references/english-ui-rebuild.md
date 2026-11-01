@@ -63,6 +63,15 @@ python3 <skills>/remake-core/scripts/audit_english_coverage.py \
 
 TikTok 两个主页能力（加桌面、个人主页回访）原游戏没有时**直接在首页加上这两个功能键，不问用户**（用户 2026-10-23），入口图标和弹窗按原游戏画风用 GPT 生图做；原游戏的**分享功能全部删掉**（分享用不了），见[首页必加两个主页按钮、去掉分享](../../remake-core/references/tiktok-home-growth.md#英化首页必加两个主页按钮去掉分享不问用户用户-2026-10-23)。
 
+## 常见坑（英化包 10.2.7，Saul 2026-10-31）
+
+下面每一条都在 2026-10-30、10-31 的英化游戏里多花了一轮「发现、排查、修改、重新构建」。换图、换字时先照着做。
+
+1. **换成位图数字后，数字被染黑**（Cube Digits 00:05、Runaway Rush 01:24）。原因：原来的 Label 是黑色的，Label 的颜色会乘到位图字上。改法：换成位图字体时，把颜色设成白色（2.4 是节点的 `node.color = cc.Color.WHITE`，3.x 是 `Label.color`），原来的描边、阴影（`LabelOutline`、`LabelShadow`）关掉。
+2. **3.x 新加的 PNG 显示不出来，按钮上还是备用字体**（Cube Digits 23:54）。原因：3.x 新放进工程的图默认导入成纹理（texture），不是精灵帧。改法：把这张图 `.meta` 里的 `userData.type` 设成 `"sprite-frame"`（或在编辑器里把导入类型改成 sprite-frame），再挂到 Sprite 上。
+3. **换了图，Web 导出里还是旧图**（Cube Digits 01:09、02:53 两次）。改法：每次导出后跑 `python3 <skills>/cocos-game-to-english/scripts/check_export_images.py --project <工程> --export <这次的 web-mobile>`（几秒）。报旧图就删掉这次的导出目录，重新构建，再跑一次，到 0 张旧图再给试玩链接。
+4. **代码新建的 Label 不显示**（香肠太难了 03:13，Creator 2.4.3）。原因：新建的 Label 把节点宽度清成 0。改法：`addComponent(cc.Label)` 以后重新设节点宽高（2.4 是 `node.width`、`node.height`，3.x 是 `UITransform.setContentSize`）和 `overflow`（`SHRINK` 或 `RESIZE_HEIGHT`），再设字。
+
 ## 英文文案质量（两个板块都要）
 
 用户 2026-10-21：英文不能像机翻。门禁 COPY-01，两个板块都查（重塑查启动包 `COPY_EN.md` 落到游戏里的样子）。

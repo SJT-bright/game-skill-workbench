@@ -27,6 +27,9 @@
    stage runs no checks; every check, the old pre-link ones included, runs after Saul says the trial is fine.
 9. (10.2.5, Saul 2026-10-31) Round 1 regenerates every button; the ad Skill ad-boost ships in the pack (item 8) and the
    English work runs its diagnosis and adds the recommended ad boards without asking, with the English limits.
+10. (10.2.7, Saul 2026-10-31) The first link waits only for the main pages' new art (the rest and the ad-boost boards come
+   in round 2); the local Creator version table and the 2.4.3 build extension; parallel division by file; the four
+   recurring pitfalls; every export is checked for old pictures (check_export_images.py, own test file).
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 """
 import json
@@ -436,8 +439,10 @@ class AdBoostBundled(unittest.TestCase):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
         section = text.split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
         st = {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', section) if p[:1].isdigit()}
-        self.assertIn('第 8 项 ad-boost 默认加的看广告板块', section.split('1. **盘点**', 1)[0])
-        self.assertIn('默认加了哪几个板块', st[3])
+        lead = section.split('1. **盘点**', 1)[0]
+        self.assertIn('第 8 项 ad-boost 的诊断', lead)          # 10.2.7: the boards themselves come in round 2
+        self.assertIn('第 8 项的板块做完', lead)
+        self.assertIn('默认加哪几个板块', st[3])
         self.assertIn('第 8 项加的板块', st[3])
         self.assertIn('modules/<板块>/README.md` 第 8 节验收', st[5])
         self.assertIn('double_claim', st[5])
@@ -451,6 +456,84 @@ class AdBoostBundled(unittest.TestCase):
         self.assertIn('（上面 8 项）', readme)
         if CODEX_TEXT.is_file():
             self.assertIn('ad-boost', CODEX_TEXT.read_text(encoding='utf-8'))
+
+
+class FasterFirstLink(unittest.TestCase):
+    """10.2.7 (Saul 2026-10-31 approved Kiro's recommendation): the first link waits only for the main pages' new art;
+    the local Creator version table; parallel division by file; the four recurring pitfalls; the stale-export check."""
+    VERSIONS = ('2.4.15', '2.4.3', '2.4.4', '2.4.5', '2.4.6', '3.0.0', '3.6.2', '3.7.1', '3.8.8')
+
+    def stages(self):
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        section = text.split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        return text, {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', section) if p[:1].isdigit()}
+
+    def test_first_link_waits_only_for_the_main_pages(self):
+        _, st = self.stages()
+        art = [l for l in st[2].splitlines() if l.startswith('   - **第一轮美工')][0]
+        for phrase in ('**分两批做（10.2.7', '第一个链接只等主要页面', '首页、设置、暂停、复活、结算', '局内的等级、关卡号、分数、货币数字',
+                       '其余页面', 'ad-boost 板块的图', '第二轮链接带上', '第一轮所有按钮都重新生成'):
+            self.assertIn(phrase, art, phrase)
+        self.assertIn('还是原图的页面', st[3])
+        self.assertIn('第二轮链接带上', st[3])
+        for phrase in ('等的时候接着做第一个链接没等的部分', '其余页面的按钮和图片字', '第 8 项 ad-boost 板块', '先改他说的',
+                       '不为了等图拖住他的修改', '至少要有一轮链接带齐所有页面的新图和第 8 项的板块'):
+            self.assertIn(phrase, st[4], phrase)
+
+    def test_ad_boost_install_moves_after_the_first_link(self):
+        text, _ = self.stages()
+        part = text.split('**默认按 ad-boost 加广告板块', 1)[1].split('\n## ', 1)[0]
+        self.assertIn('第一个链接前只跑 ⓪ ①', part)
+        self.assertIn('第二轮链接带上', part)
+        self.assertNotIn('和第一轮美工一起排生图', text)
+
+    def test_every_export_is_checked_for_old_pictures(self):
+        _, st = self.stages()
+        self.assertIn('check_export_images.py --project <工程> --export', st[3])
+        self.assertTrue((HERE / 'check_export_images.py').is_file())
+        self.assertTrue((HERE / 'test_check_export_images.py').is_file())
+        r = subprocess.run([sys.executable, '-B', str(HERE / 'check_export_images.py'), '--help'], capture_output=True,
+                           text=True, env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1'))
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_version_table_lists_every_installed_creator(self):
+        text, st = self.stages()
+        self.assertIn('](references/local-creator-versions.md)', st[1])
+        doc = (ENTRY / 'references' / 'local-creator-versions.md').read_text(encoding='utf-8')
+        rows = [l for l in doc.splitlines() if l.startswith('| ')]
+        for v in self.VERSIONS:
+            self.assertTrue(any(v in r.split('|')[1] for r in rows), v)
+        for phrase in ('--use-gl=desktop', 'build-worker-canvas-compat', '**不用 2.4.4 构建，改用 2.4.5**', 'index.html',
+                       'official-entry-repair.json', '退出码是 36', 'pgrep'):
+            self.assertIn(phrase, doc, phrase)
+        ext = ENTRY / 'assets' / 'build-worker-canvas-compat'
+        for name in ('README.md', 'main.js', 'package.json'):
+            self.assertTrue((ext / name).is_file(), name)
+        self.assertIn("version !== '2.4.3'", (ext / 'main.js').read_text(encoding='utf-8'))
+
+    def test_parallel_division_section(self):
+        text, _ = self.stages()
+        self.assertEqual(text.count('\n## 并行分工（10.2.7'), 1)
+        section = text.split('\n## 并行分工', 1)[1].split('\n## ', 1)[0]
+        for phrase in ('子进程最多 3 个', '按文件分', '**美术**', '**代码**', '**文字**', '**只有主线程**', '不构建、不起试玩服务',
+                       '不轮询', '主线程只构建一次', '活不多时不开子进程'):
+            self.assertIn(phrase, section, phrase)
+        self.assertLess(text.index('\n## 并行分工'), text.index(ART_HEADING))
+
+    def test_pitfalls_section(self):
+        doc = (ENTRY / 'references' / 'english-ui-rebuild.md').read_text(encoding='utf-8')
+        self.assertEqual(doc.count('\n## 常见坑（英化包 10.2.7'), 1)
+        section = doc.split('\n## 常见坑', 1)[1].split('\n## ', 1)[0]
+        self.assertEqual(re.findall(r'^([1-9])\. \*\*', section, re.M), ['1', '2', '3', '4'])
+        for phrase in ('染黑', 'sprite-frame', 'check_export_images.py', 'node.width', 'overflow'):
+            self.assertIn(phrase, section, phrase)
+
+    def test_readme_names_10_2_7(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        text = README.read_text(encoding='utf-8')
+        self.assertTrue(text.startswith('Cocos 游戏 Skill —— 英化包（简化版）20261031-english-simple.10.2.7'))
+        self.assertIn('english-simple.10.2.7 / 2026-10-31', text)
 
 
 class OriginalTrialServer(unittest.TestCase):

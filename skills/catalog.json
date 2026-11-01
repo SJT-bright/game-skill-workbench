@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T03:21:15.981Z",
-  "treeHash": "5ab87fb5853273a2da495b3dc0c946489a294836dc9bf66de5d000819b70f0fb",
+  "createdAt": "2026-11-01T03:21:44.797Z",
+  "treeHash": "be5d135a6b7e0d6104ffbfdef9f720ee8339233e4b66d002867cd3a0b4b24ce4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1753,25 +1753,43 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "6d8f6715e1a844a23071fc6b8c704e04ccd3be789a2ec8937f17d1bb2910097d",
-      "fileCount": 11,
-      "bytes": 131981,
+      "treeHash": "f513df2afcc3b386e6c20af7df2253314b30bd0783ff2e3ef7360f727a62209d",
+      "fileCount": 17,
+      "bytes": 168459,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "2a9bb7fc3efc7cf9c250ee25a7f038f9fe81a2e9e3a5a08608bc694adaff2142",
-          "size": 1629,
+          "hash": "5eca53f42dcbdc6b5e995e834010f4d870cceea82b125fcff648ed1af8b916e5",
+          "size": 2669,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "fc6c81f7c352d947b958b52a4520062df7da5da3fd2ee5bc6a7ef9d63f615c10",
-          "size": 32049,
+          "hash": "05628a577de1599be210dea8f100397a0b58c12d2e46fbe85ce98eea68e8c54c",
+          "size": 36381,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
           "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+          "size": 176,
+          "executable": false
+        },
+        {
+          "path": "assets/build-worker-canvas-compat/README.md",
+          "hash": "6308ef3ac51b7339e333e20c6dd156ba2521a50d2e0a5eb90028fa2ecdc89af2",
+          "size": 1824,
+          "executable": false
+        },
+        {
+          "path": "assets/build-worker-canvas-compat/main.js",
+          "hash": "a00ae9866bab67708122c6c567b677bad046aa91e75a07b5dac462353d3525f0",
+          "size": 4190,
+          "executable": false
+        },
+        {
+          "path": "assets/build-worker-canvas-compat/package.json",
+          "hash": "9fa38054d0cb490c108c6ce1f45967b05ac7141d939e2fa03aef3ded17e8689a",
           "size": 176,
           "executable": false
         },
@@ -1789,14 +1807,26 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "980b284103da07481dd00a9f2b1e33f1bead7d7cbd7c39b67d176278fc37366e",
-          "size": 22834,
+          "hash": "41f7377d2fe99832b00d860cdbd0a23c9dedff27468532fc399e53980c9ff0ec",
+          "size": 24467,
           "executable": false
         },
         {
           "path": "references/fixed-entries.md",
           "hash": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
           "size": 9768,
+          "executable": false
+        },
+        {
+          "path": "references/local-creator-versions.md",
+          "hash": "af848ebb951312dbee13e740e8ce2e88077105cef3a14f461b36f4dd3b45313e",
+          "size": 4119,
+          "executable": false
+        },
+        {
+          "path": "scripts/check_export_images.py",
+          "hash": "21fda56bc9ed0cd548c5cd8be4190294cbcb45888a9ad38f3a27b9367d365321",
+          "size": 7959,
           "executable": false
         },
         {
@@ -1818,9 +1848,15 @@
           "executable": false
         },
         {
+          "path": "scripts/test_check_export_images.py",
+          "hash": "b1bcaf2de070c1c4d6782d0cd39c5fa350d6632f95674d9d77adf3b8c09dda4d",
+          "size": 5626,
+          "executable": false
+        },
+        {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "f605b8fa53f7b58b447beb6b4b95ad2767933d367fb7ae8f8da4861b984bccf5",
-          "size": 29718,
+          "hash": "cd051ea37d7a54ecee333300b240950cd07c41aa8a0f1a41498a1e15da2b411d",
+          "size": 35297,
           "executable": false
         }
       ]

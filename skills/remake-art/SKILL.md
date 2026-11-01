@@ -51,7 +51,7 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 ## 广告 Skill 加的板块也照本页做（Saul 2026-11-01）
 
 Saul 2026-11-01：「我要使用广告skill，你做一个转盘也要结合美工skill，一起」。ad-boost `~/.kiro/crew/skills/ad-boost/`（Codex：`~/.codex/skills/ad-boost/`；Claude Code：`~/.claude/skills/ad-boost/`） 给游戏加的转盘、礼包、签到、离线收益、皮肤试用这类板块，面板、按钮、图标、位图数字**都按本页做**，不另起一套画风；ad-boost 和本页说法不一样时以本页为准。
-- 重塑：色板和画风照这款的 `ART_DIRECTION.md`（强调色只给 PLAY、NEXT、Watch Ad x2 和转盘指针）；提示词照[提示词模板](references/image-prompts-and-3d-reskin.md#二提示词模板)，默认不写 highlight、outline、glossy 这些词；[Saul 的美术禁区与必做项](references/saul-art-rules.md)照做（按钮底色不深、物品图标不垫底板、不加装饰）。ad-boost 的生图流水线（`scripts/art/`）由它的 `scripts/art/skill_link.py` 读这几条，并把每张图用 `art_records.py generated` 记进 `docs/art/generated.json`；整页检查用本板块的 `art_check.py`，过[验收清单](#验收清单)。
+- 重塑：色板和画风照这款的 `ART_DIRECTION.md`（强调色只给 PLAY、NEXT、Watch Ad x2 和转盘指针）；提示词照提示词模板（重塑包 remake-art 的 image-prompts-and-3d-reskin.md 第二节，英化包不含），默认不写 highlight、outline、glossy 这些词；[Saul 的美术禁区与必做项](references/saul-art-rules.md)照做（按钮底色不深、物品图标不垫底板、不加装饰）。ad-boost 的生图流水线（`scripts/art/`）由它的 `scripts/art/skill_link.py` 读这几条，并把每张图用 `art_records.py generated` 记进 `docs/art/generated.json`；整页检查用本板块的 `art_check.py`，过[验收清单](#验收清单)。
 - 英化：照原游戏画风（[T11](references/saul-art-rules.md#t11-风格统一与换皮完整度)），原图能沿用就沿用。
 - 每个板块做哪几张图、多大，看 ad-boost 的 `modules/<板块>/art.json`；分工全文在 ad-boost 的 `references/联动.md`「美术」。没装 ad-boost 时这段不适用。
 

@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-01.english-simple.11",
+  "revision": "2026-11-01.english-simple.11.1",
   "skill": "remake-art",
-  "previous_provenance_sha256": "377d1ef7c00c8977e5b349101d1948755a582c73f2e43794d48cd166e7c3f207",
+  "previous_provenance_sha256": "1c57421acd14b71e19decfcdf9d9797fb33837261eae36d442d4a72bc20557bb",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "b924d20b449c71f0da40da42dd3bc1ba7a929c36a864639d60a74b978ce24520",
-      "bytes": 15497
+      "sha256": "eda7a15725e4ddbd6954574d1e279235015f1962a05103afb83cd3d1101ce483",
+      "bytes": 15522
     },
     {
       "path": "agents/openai.yaml",

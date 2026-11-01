@@ -30,11 +30,22 @@
 10. (10.2.7, Saul 2026-10-31) The first link waits only for the main pages' new art (the rest and the ad-boost boards come
    in round 2); the local Creator version table and the 2.4.3 build extension; parallel division by file; the four
    recurring pitfalls; every export is checked for old pictures (check_export_images.py, own test file).
+11. (10.2.8, Saul 2026-10-31 "加速，你看哪些方面你可以继续优化一下结构") Structure only: a one-screen summary and a
+   reading map come first (the 98 KB fixed-adaptation page is still binding, but the start reads its ~30 KB of rules a
+   session acts on; the auto-installed standard parts are read when a gate names them); the two ad sections follow the
+   item table; the revision line keeps only the current version (history in 版本历史.md) and the README's old version
+   notes move to 更新记录.txt; the English-pack copies of the shared docs that still asked for checks before the trial
+   carry the English exception where the old sentence stands (2026-10-30 timing reports: 3.5-5 h before the link).
+12. (10.2.10, Saul 2026-10-31 "我的英化skill基本是给别人用的……各个步骤都要具有不同电脑的通用性") Any computer: a machine
+   check first, Creator found by script (Dashboard record, usual folders, COCOS_CREATOR), every browser command wrapped
+   by browser_env.py (Ego when installed, else Chrome/Edge/Chromium), the 3.x entry-page fix, Windows wording, and
+   what to do without an image tool or Grok; no Saul-only command or path left in the entry and the version doc.
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 """
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -503,9 +514,12 @@ class FasterFirstLink(unittest.TestCase):
         rows = [l for l in doc.splitlines() if l.startswith('| ')]
         for v in self.VERSIONS:
             self.assertTrue(any(v in r.split('|')[1] for r in rows), v)
-        for phrase in ('--use-gl=desktop', 'build-worker-canvas-compat', '**不用 2.4.4 构建，改用 2.4.5**', 'index.html',
-                       'official-entry-repair.json', '退出码是 36', 'pgrep'):
+        for phrase in ('--use-gl=desktop', 'build-worker-canvas-compat', '**构建报一次 WebGL 初始化错误就别再试，改用同一小版本里装了的另一个**',
+                       'index.html', 'fix_web_entry_3x.py', '退出码是 36', 'find_creator.py --project', 'find_creator.py --busy',
+                       '.cocos/profiles/editor.json', 'COCOS_CREATOR', 'CocosCreator.exe'):
             self.assertIn(phrase, doc, phrase)
+        for gone in ('pgrep', '！游戏学习库', '这台电脑上实测'):     # 10.2.10: no Saul-only command or path
+            self.assertNotIn(gone, doc, gone)
         ext = ENTRY / 'assets' / 'build-worker-canvas-compat'
         for name in ('README.md', 'main.js', 'package.json'):
             self.assertTrue((ext / name).is_file(), name)
@@ -528,12 +542,174 @@ class FasterFirstLink(unittest.TestCase):
         for phrase in ('染黑', 'sprite-frame', 'check_export_images.py', 'node.width', 'overflow'):
             self.assertIn(phrase, section, phrase)
 
-    def test_readme_names_10_2_7(self):
+    def test_readme_names_the_current_version(self):
+        """10.2.8: the README names the current version; 10.2.7 and older notes moved to 更新记录.txt."""
         if not README.is_file():
             self.skipTest('installed copies have no pack README; the release tree and ZIP do')
         text = README.read_text(encoding='utf-8')
-        self.assertTrue(text.startswith('Cocos 游戏 Skill —— 英化包（简化版）20261031-english-simple.10.2.7'))
-        self.assertIn('english-simple.10.2.7 / 2026-10-31', text)
+        # 10.2.9 (2026-10-31): the title names this release, 10.2.8 or later, and its own note comes first; a version
+        # number written into the test made every later hotfix fail here.
+        title = re.match(r'Cocos 游戏 Skill —— 英化包（简化版）\d{8}-english-simple\.(\d+(?:\.\d+)*)\n', text)
+        self.assertIsNotNone(title, text.split('\n', 1)[0])
+        self.assertGreaterEqual(tuple(int(x) for x in title.group(1).split('.')), (10, 2, 8))
+        self.assertIn('\n\nenglish-simple.%s / 2026-' % title.group(1), text)
+        self.assertNotIn('english-simple.10.2.7 / 2026-10-31', text)
+        self.assertIn('english-simple.10.2.7 / 2026-10-31', UPDATES.read_text(encoding='utf-8'))
+
+
+UPDATES = PACK / '更新记录.txt'
+AD_SECTION = '\n## 看广告：固定几项按广告板块做，第 8 项默认加 ad-boost 板块'
+OLD_VERSION_NOTES = ('10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1', '10.2', '10.1', '10')
+# (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
+PRE_TRIAL_NOTES = (
+    ('remake-art/SKILL.md', '两轮自审', '英化第一轮重新生成按钮和文字不算下文说的“完整首次重做”'),
+    ('remake-art/references/art-before-trial.md', '加载失败/重试状态', '> **英化包说明（10.2.8）**：英化游戏不照本页把美术检查放在交试玩前'),
+    ('remake-art/references/page-richness.md', '至少两轮自审', '英化例外：英化第一轮重新生成按钮和文字不算整套重做'),
+    ('remake-core/references/tiktok-home-growth.md', '交用户试玩前就做小样本', '英化游戏例外：都放到英化入口第 5 阶段做'),
+    ('remake-core/assets/user-playtest-checklist-template.md', 'AI 在给你试玩前已经走过', '英化游戏不用本模板'),
+    ('remake-core/references/stage-flow.md', '所有美术测试在交用户试玩前完成', '英化游戏不照这条：美术检查都在英化入口第 5 阶段做'),
+    ('remake-core/references/check-stages.md', '| 美术关 |', '英化在英化入口第 5 阶段（Saul 说试玩没问题以后）查'),
+    ('cocos-game-to-english/references/dynamic-text-glyph-review.md', '成功/失败结算', '第 5 阶段全量检查时覆盖'),
+)
+
+
+class StructureAndReadingMap(unittest.TestCase):
+    """10.2.8 (Saul 2026-10-31): structure only; every rule of 10.2.7 is still in the entry or its version history."""
+
+    def text(self):
+        return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+
+    def test_summary_and_reading_map_come_before_the_details(self):
+        text = self.text()
+        order = [text.index(h) for h in ('\n## 一屏看懂', '\n## 读哪些文件', '\n## 只做这几件事', AD_SECTION, '\n## 阶段',
+                                         '\n## 并行分工', ART_HEADING)]
+        self.assertEqual(order, sorted(order))
+        summary = text.split('\n## 一屏看懂', 1)[1].split('\n## ', 1)[0]
+        self.assertEqual(re.findall(r'^- ([①②③④⑤]) ', summary, re.M), ['①', '②', '③', '④', '⑤'])
+        ads = text.split(AD_SECTION, 1)[1].split('\n## ', 1)[0]
+        self.assertEqual(ads.count('**看广告的几项按广告板块做'), 1)
+        self.assertEqual(ads.count('**默认按 ad-boost 加广告板块'), 1)
+        for n in ('6', '7', '8'):
+            row = [l for l in text.splitlines() if l.startswith('| %s |' % n)][0]
+            self.assertNotIn('见上面「', row, n)
+
+    def test_reading_map_keeps_the_fixed_adaptation_binding(self):
+        part = self.text().split('\n## 读哪些文件', 1)[1].split('\n## ', 1)[0]
+        for phrase in ('](../cocos-game-check/references/tiktok-fixed-adaptation.md#已定口径不再让模型临场决定)', '必须遵循',
+                       '第二部分：跨游戏通用流程」8 条', '第一部分第 9 条', '「第四部分：不要做」', '「出包时怎么装」', '到第 5 阶段出包前再读',
+                       '门禁报到哪一条再读那一条', '照样必须遵循', '**子进程**', '子进程不整页读 TikTok 固定适配', '新游戏和旧游戏'):
+            self.assertIn(phrase, part, phrase)
+        par = self.text().split('\n## 并行分工', 1)[1].split('\n## ', 1)[0]
+        self.assertIn('每个子进程读哪些文件见上面「读哪些文件」', par)
+
+    def test_revision_line_keeps_only_the_current_version(self):
+        rev = [l for l in self.text().splitlines() if l.startswith('修订：')]
+        self.assertEqual(len(rev), 1)
+        self.assertIn('english-simple.10.2.10', rev[0])
+        self.assertIn('](版本历史.md)', rev[0])
+        for old in ('10.2.8：', '10.2.7：', '10.2.5：', '10.1：', '上一版 `2026-10-28.english-simple.1`'):
+            self.assertNotIn(old, rev[0], old)
+        history = (ENTRY / '版本历史.md').read_text(encoding='utf-8')
+        for old in ('10.2.8：只调结构', '10.2.7：第一个链接只等主要页面的新图', '10.2.5：第一轮所有按钮都重新生成',
+                    '上一版 `2026-10-28.english-simple.1`'):
+            self.assertIn(old, history, old)
+        self.assertLess(len((ENTRY / 'SKILL.md').read_text(encoding='utf-8').split('\n---', 2)[0]), 1000)   # description
+
+    def test_pre_trial_sentences_carry_the_english_exception(self):
+        for rel, old, note in PRE_TRIAL_NOTES:
+            text = read(*rel.split('/'))
+            self.assertIn(old, text, rel)
+            self.assertIn(note, text, rel)
+        lead = self.text().split('\n## 阶段', 1)[1].split('1. **盘点**', 1)[0]
+        for shared in ('`cocos-game-check/SKILL.md`', '`cocos-game-check/startup/references/cocos-loading-screen.md`', 'v7.9 两包一起改'):
+            self.assertIn(shared, lead, shared)
+
+    def test_readme_keeps_only_the_current_note(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        readme, updates = README.read_text(encoding='utf-8'), UPDATES.read_text(encoding='utf-8')
+        self.assertIn('见同目录「更新记录.txt」', readme)
+        for v in OLD_VERSION_NOTES:
+            mark = 'english-simple.%s / 2026-10-' % v
+            self.assertNotIn('\n' + mark, readme, v)
+            self.assertIn(mark, updates, v)
+        self.assertLess(len(readme.encode('utf-8')), 16000)
+
+
+class PortableOnAnyComputer(unittest.TestCase):
+    """10.2.10 (Saul 2026-10-31): the English Skill is used on other people's computers: a machine check first, Creator
+    found by script, every browser command wrapped so it runs without Ego, Windows wording, and what to do without an
+    image tool or Grok."""
+    TOOLS = ('check_machine.py', 'find_creator.py', 'browser_env.py', 'fix_web_entry_3x.py')
+
+    def text(self):
+        return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+
+    def stages(self):
+        section = self.text().split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        return {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', section) if p[:1].isdigit()}
+
+    def test_section_sits_before_the_reading_map(self):
+        text = self.text()
+        self.assertEqual(text.count('\n## 换电脑也能用（10.2.10'), 1)
+        order = [text.index(h) for h in ('\n## 一屏看懂', '\n## 换电脑也能用', '\n## 读哪些文件', '\n## 阶段')]
+        self.assertEqual(order, sorted(order))
+        summary = text.split('\n## 一屏看懂', 1)[1].split('\n## ', 1)[0]
+        self.assertIn('check_machine.py', [l for l in summary.splitlines() if l.startswith('- ①')][0])
+
+    def test_section_covers_every_portability_point(self):
+        part = self.text().split('\n## 换电脑也能用', 1)[1].split('\n## ', 1)[0]
+        for phrase in ('**「Saul」是谁**', '正在用这个 Skill 的人', 'check_machine.py --project', 'find_creator.py --project',
+                       'find_creator.py --busy', 'fix_web_entry_3x.py --export', 'browser_env.py --`', '**不用让用户装 Ego。**',
+                       '--browser chrome', '不要让用户重启 Ego', 'make_tiktok_zip.py', 'build_checked_zip.py', 'check_package.py',
+                       'prepare_delivery.py', 'ad_regression.py', 'runtime_regression.py', 'serve_preview.py --keep',
+                       'chrome_touch.py', '逐条相同', '**自己看画面**', 'page_errors', '**Windows**', '`python3` 写成 `python`',
+                       '`pgrep` 用 `find_creator.py --busy`', '`/usr/bin/python3` 用 `python`', '`cp -c`', '`open -R`',
+                       '**试玩链接打不开窗口**', '**没有生图工具**', 'art-todo.json', 'record_manual.py', '**没有 Grok**',
+                       '**只在 Saul 电脑上有的路径**'):
+            self.assertIn(phrase, part, phrase)
+
+    def test_stages_use_the_tools(self):
+        st = self.stages()
+        for phrase in ('check_machine.py --project <中文原工程>', 'find_creator.py --project <副本>', 'fix_web_entry_3x.py'):
+            self.assertIn(phrase, st[1], phrase)
+        self.assertIn('fix_web_entry_3x.py --export <这轮的 Web 导出>', st[3])
+        self.assertIn('scripts/browser_env.py --`', st[5])
+        for n in (1, 3):
+            self.assertIn('怎么自己看画面见「换电脑也能用」', st[n], n)
+
+    def test_no_saul_only_instruction_left_in_the_entry(self):
+        text = self.text()
+        for gone in ('pgrep -fl', '本机 Creator 版本表', '/Applications/', '本机已装'):
+            self.assertNotIn(gone, text, gone)
+        # the only pgrep left is the Windows note that replaces it
+        self.assertEqual(text.count('pgrep'), text.count('`pgrep` 用 `find_creator.py --busy`'))
+        ui = (ENTRY / 'references' / 'english-ui-rebuild.md').read_text(encoding='utf-8')
+        self.assertNotIn('每张图都用 GPT/Codex 内置 image_gen，', ui)
+        self.assertNotIn('使用 Codex 内置 image_gen，', ui)
+
+    def test_tools_are_present_and_start(self):
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
+        for name in self.TOOLS:
+            r = subprocess.run([sys.executable, '-B', str(HERE / name), '--help'], capture_output=True, text=True, env=env)
+            self.assertEqual(r.returncode, 0, name + ': ' + r.stderr[-300:])
+        self.assertTrue((HERE / 'cdp_browser.mjs').is_file())
+        self.assertTrue((HERE / 'test_portable_tools.py').is_file())
+        node = shutil.which('node')
+        if node:
+            r = subprocess.run([node, str(HERE / 'cdp_browser.mjs'), '--help'], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr[-300:])
+
+    def test_readme_and_install_text_name_the_tools(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        readme = README.read_text(encoding='utf-8')
+        for name in self.TOOLS:
+            self.assertIn(name, readme, name)
+        if CODEX_TEXT.is_file():
+            codex = CODEX_TEXT.read_text(encoding='utf-8')
+            self.assertIn('check_machine.py', codex)
+            self.assertIn('不用装 Ego', codex)
 
 
 class OriginalTrialServer(unittest.TestCase):

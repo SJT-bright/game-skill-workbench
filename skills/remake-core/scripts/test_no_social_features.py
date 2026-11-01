@@ -65,6 +65,22 @@ class NoSocialTests(unittest.TestCase):
  def test_native_only_and_dump_residuals(self):
   native=self.root/'native';native.mkdir();(native/'main.js').write_text('TTMinis.game.shareToStory({})');self.assertFalse(audit(self.root,native=native)['passed'])
   dump=self.root/'dump';dump.mkdir();(dump/'ui.json').write_text('{"nodes":[{"name":"Friends Rankings"}]}');self.assertFalse(audit(self.root,dumps=dump)['passed'])
+ def test_cocos3_engine_bundle_is_engine_not_business(self):
+  """Cocos 3.x cocos-js/cc.js carries the engine SubContextView (getOpenDataContext); like 2.x cocos2d-js-min.js."""
+  engine='i.onLoad=function(){Fu.getOpenDataContext?(this._openDataContext=Fu.getOpenDataContext()):this.enabled=!1}'
+  for label in ['native','web']:
+   with self.subTest(label=label):
+    out=self.root/label;(out/'cocos-js').mkdir(parents=True);(out/'cocos-js/cc.js').write_text(engine)
+    r=audit(self.root,**{label:out});self.assertTrue(r['passed'],r['findings'])
+    # game code outside cocos-js is still checked, and so is a scene that uses the open-data view
+    (out/'assets/main').mkdir(parents=True);(out/'assets/main/index.js').write_text('tt.getOpenDataContext().postMessage({})')
+    self.assertFalse(audit(self.root,**{label:out})['passed'])
+    (out/'assets/main/index.js').write_text('')
+    (out/'assets/main/game.json').write_text(json.dumps([{'__type__':'cc.SubContextView'}]))
+    self.assertFalse(audit(self.root,**{label:out})['passed'])
+  # a source folder named cocos-js is not an engine export and stays checked
+  (self.root/'assets/cocos-js').mkdir();(self.root/'assets/cocos-js/x.ts').write_text('tt.getOpenDataContext()')
+  self.assertFalse(audit(self.root)['passed'])
  def test_historical_explicit_rank_record_no_longer_enables(self):
   p=self.root/'docs/league';p.mkdir(parents=True);(p/'decision.json').write_text('{"decision":"keep_original"}');self.assertFalse(enabled(self.root)['league']);self.assertTrue(removed('Weekly League',enabled(self.root)))
   self.assertFalse(audit(self.root)['passed'])

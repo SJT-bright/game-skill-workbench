@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-10-31T21:20:56.893Z",
-  "treeHash": "abddbb74276e430d74b862adec015285a49944497aff23d265a0e8e35af7a340",
+  "createdAt": "2026-11-01T03:21:15.981Z",
+  "treeHash": "5ab87fb5853273a2da495b3dc0c946489a294836dc9bf66de5d000819b70f0fb",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2817,9 +2817,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "a5595f933465517df68c3bf49d6426e626d8724d64a7d9b6dc47a12041935aa2",
+      "treeHash": "b2fc173ba90c24cf7cf404c47e781e130bed9004413a7c3ebb9730dea4d0f697",
       "fileCount": 397,
-      "bytes": 8660199,
+      "bytes": 8671394,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3759,8 +3759,8 @@
         },
         {
           "path": "scripts/audit_no_social_features.py",
-          "hash": "6c1b0d8b4b5a436b9d954f1050504bf98f1d51cf27b46ac5e3fec9c8bb0124e0",
-          "size": 8038,
+          "hash": "162c07b20521d661527e925bdb870d6d5b1d399d8d717d5b03e6beff72c1610c",
+          "size": 8499,
           "executable": false
         },
         {
@@ -4257,8 +4257,8 @@
         },
         {
           "path": "scripts/probe_cocos3_touch_coordinates.cjs",
-          "hash": "cd802a00e416dab93612fca7bda5f9475f3b87e28f18cee6791f448d9a269182",
-          "size": 13499,
+          "hash": "38e776cef42eb029faaf986ae215caa74d86334ef31d94262db63fc5288e3e37",
+          "size": 17125,
           "executable": false
         },
         {
@@ -4737,8 +4737,8 @@
         },
         {
           "path": "scripts/test_no_social_features.py",
-          "hash": "187620e3defefe54268b054b094885ef0b4d067198491123afb45438646c9333",
-          "size": 6280,
+          "hash": "aaba87689bb6492f0440af8d857d033062a8f61d37172bd4e40234303c6c2af8",
+          "size": 7556,
           "executable": false
         },
         {
@@ -4965,8 +4965,8 @@
         },
         {
           "path": "scripts/test_tiktok_touch_coordinates.py",
-          "hash": "97815dd70bd3ca3fb28e42682e8b56dbdee4f11b26fb1b85a02c461d9b5cbde4",
-          "size": 17927,
+          "hash": "a604d1ced4d2bc908e7d586bf49653f10f52108113934baa3c78c49eac1b6e71",
+          "size": 23759,
           "executable": false
         },
         {

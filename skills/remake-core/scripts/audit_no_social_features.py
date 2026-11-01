@@ -60,6 +60,10 @@ def audit(project,web=None,native=None,dumps=None):
     # Open-data subcontexts are player-facing ranking candidates, not vendor exceptions.
     if 'subcontext'not in low:excluded.append(str(p));continue
    if p.name in{'adapter-min.js','weapp-adapter.js','cocos2d-js-min.js'}:excluded.append(str(p));continue
+   # Cocos 3.x exports ship the engine as top-level cocos-js/ (the 2.x counterpart is cocos/cocos2d-js-min.js above):
+   # its built-in SubContextView calls getOpenDataContext only when a scene uses that component, which the
+   # open_data_view scene/prefab check still catches. Game scripts never live in cocos-js/ (CubeDigits 3.7.1, 2026-10-31).
+   if label in{'web','native'}and len(rel.parts)>1 and rel.parts[0]=='cocos-js':excluded.append(str(p));continue
    
    if p.name.lower() in {'share.png.meta','invite.png.meta','邀请好友.png.meta'} or any(v in {'friendrank','league'}for v in low[:-1]):add(p,'feature_asset',str(rel))
    text=p.read_text(errors='replace');files[label+'/'+str(rel)]=hashlib.sha256(p.read_bytes()).hexdigest()

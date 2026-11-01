@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-01",
- "release_label": "v7.9-en11.1",
- "selftest_report_sha256": "d25097fad1916f3ea86cb8ae73c0c06b3c313835a331278309ad87569da59342",
+ "release_label": "v7.9-en11.2",
+ "selftest_report_sha256": "7ea890d86e2bd7b3636cefe164424e5b41f4fe8ce239e55d11486e15d7aafa04",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c11c26c1460dcb4070fe5ec3e2d1f2f295f1a3b07579ad9f37f5078c6805a596",
@@ -574,7 +574,7 @@
   }
  ],
  "test_inventory": {
-  "files": 243,
+  "files": 248,
   "failing_known": [
    "chrome-mobile-testing/tests/test_ego_route.py",
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
@@ -584,7 +584,6 @@
    "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js",
    "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
    "remake-core/scripts/test_fused_cleanup.py",
-   "remake-core/scripts/test_fusion_policy.py",
    "remake-core/scripts/test_known_issue_gate.py",
    "remake-core/scripts/test_official_loading.py",
    "remake-core/scripts/test_ui_layout_and_copy.py",

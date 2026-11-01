@@ -83,6 +83,9 @@ let task, page;
 try {
   task = await taskSpace(C.space || 'tiktok-ad-regression');
   page = task.page('p1');
+  // v7.9: no HTTP cache (runtime_regression/lib.mjs open(): another session's trial server on the same port left its
+  // files in the shared Ego cache, and a run booted that other game's main.js)
+  try { await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true }); } catch (_) {}
 } catch (e) {
   out.fatal = 'browser unavailable: ' + String(e && e.message || e).slice(0, 300);
   save(); console.log('AD_REGRESSION_DONE'); throw e;

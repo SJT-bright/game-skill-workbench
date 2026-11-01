@@ -34,6 +34,10 @@ OFFICIAL_VERDICT = '官方入口写出的包，本地检查通过（不代表平
 UNOFFICIAL_CLI = (READ_ONLY_VERDICT + ': %s. Only a ZIP written by build_checked_zip.py or make_tiktok_zip.py (with '
                   '<zip>.receipt.json beside it, or a receipt for the same ZIP bytes in that folder) may be delivered; '
                   'add --structure-only for a read-only check that does not judge delivery')
+# v7.9 (总表 19 ④): the last part of a refusal whose static reasons made check() skip the browser regressions
+BROWSER_SKIPPED_NOTE = ('browser suites not run (rewarded-ad regression, runtime regression): the static reasons above '
+                        'already refuse this package; fix them and check the new package '
+                        '(浏览器套件没跑：先修上面的问题，出了新包再跑)')
 
 
 def native_files(root):
@@ -101,6 +105,102 @@ NO_ADAPTER_HINT = ('write the game\'s adapter JSON (usually <project>/qa/ad-regr
                    % ad_regression_gate.ENV_ADAPTER)
 
 
+REUSE_SCHEMA = 'writer-regressions.v1'
+
+
+def regression_record(ad, runtime):
+    """v7.9 (出包检查提速 S1, 总表 19 ①): what an official writer keeps in its receipt of the two regressions it just
+    passed on the bytes it publishes, so prepare_delivery can reuse them instead of running them again on the same ZIP
+    (7.5-15 minutes per delivery). None when either did not pass (nothing to reuse: delivery runs them again)."""
+    def part(summary, runtime_part):
+        if not isinstance(summary, dict):
+            return None
+        if summary.get('status') == 'not_applicable':
+            return {'status': 'not_applicable', 'reason': summary.get('reason')}
+        if summary.get('passed') is not True or not summary.get('tool_sha256') or not summary.get('adapter_sha256'):
+            return None
+        keep = {'status': 'passed', 'passed': True, 'tool_sha256': summary['tool_sha256'],
+                'adapter_sha256': summary['adapter_sha256'], 'seconds': summary.get('seconds'),
+                'warnings': list(summary.get('warnings') or [])}
+        if runtime_part:
+            keep.update(required=list(summary.get('required') or []), engine=summary.get('engine'),
+                        policy=summary.get('policy'), board=summary.get('board'),
+                        suites=[{'suite': r.get('suite'), 'passed': r.get('passed')} for r in summary.get('suites') or []
+                                if isinstance(r, dict)],
+                        startup_measured=summary.get('startup_measured'))
+        else:
+            keep['cases'] = [c.get('case') for c in summary.get('cases') or [] if isinstance(c, dict)]
+        return keep
+    a, r = part(ad, False), part(runtime, True)
+    if a is None or r is None:
+        return None
+    return {'schema': REUSE_SCHEMA, 'rewarded_ad_regression': a, 'runtime_regression': r}
+
+
+def reusable_regressions(receipt_file, files, adapter=None, policy=None):
+    """v7.9 (出包检查提速 S1, 总表 19 ①): the writer receipt's regression record, when it still holds for these bytes.
+    Called only for an official entry (receipt_status already matched the receipt to these ZIP bytes, this Native tree
+    and a passed finalize). It holds when each regression passed (or did not apply) as this package needs, the adapter
+    file and both check tools are byte-equal to the ones the writer ran, the same runtime suites are required, and the
+    writer judged the game at least as strictly. Anything else: the regressions run again, as before v7.9.
+    -> {reused: True, note, rewarded_ad_regression, runtime_regression} or {reused: False, why}."""
+    def no(why):
+        return {'reused': False, 'why': why}
+    adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER) or None
+    try:
+        receipt = json.loads(Path(receipt_file).read_text(encoding='utf-8'))
+    except (OSError, TypeError, ValueError) as error:
+        return no('writer receipt unreadable: %s' % error)
+    record = receipt.get('regressions') if isinstance(receipt, dict) else None
+    if not isinstance(record, dict) or record.get('schema') != REUSE_SCHEMA:
+        return no('writer receipt has no regression record (written before v7.9, or a regression did not pass there)')
+    ad, rt = record.get('rewarded_ad_regression'), record.get('runtime_regression')
+    if not isinstance(ad, dict) or not isinstance(rt, dict):
+        return no('writer receipt regression record is incomplete')
+    adapter_sha = None
+    if adapter:
+        try:
+            adapter_sha = hashlib.sha256(Path(adapter).read_bytes()).hexdigest()
+        except OSError as error:
+            return no('adapter unreadable: %s' % error)
+    if ad_regression_gate.needs_regression(files):
+        if ad.get('status') != 'passed':
+            return no('the writer did not run the rewarded-ad regression on a package that needs it')
+        if adapter_sha is None or ad.get('adapter_sha256') != adapter_sha:
+            return no('adapter differs from the one the writer ran (rewarded-ad regression)')
+        if ad.get('tool_sha256') != ad_regression_gate.tool_digest():
+            return no('rewarded-ad regression tool differs from the one the writer ran')
+    elif ad.get('status') != 'not_applicable':
+        return no('rewarded-ad record does not fit this package')
+    rr = runtime_regression_gate
+    if 'game.js' in files:
+        if rt.get('status') != 'passed':
+            return no('the writer did not run the runtime regression')
+        if adapter_sha is None or rt.get('adapter_sha256') != adapter_sha:
+            return no('adapter differs from the one the writer ran (runtime regression)')
+        try:
+            catalog = rr.load_suites()
+            names = rr.required_suites(files, adapter, catalog)
+            judged = rr.package_policy(files, policy)[0]
+        except rr.RuntimeRefused as error:
+            return no(str(error))
+        if rt.get('tool_sha256') != rr.tool_digest(catalog):
+            return no('runtime regression tools differ from the ones the writer ran')
+        if sorted(rt.get('required') or []) != sorted(names):
+            return no('the runtime suites this package needs differ from the ones the writer ran')
+        if rt.get('policy') not in ('new', judged):
+            return no('the writer ran the runtime suites as a %s game; this check judges it %s'
+                      % (rt.get('policy'), judged))
+    elif rt.get('status') != 'not_applicable':
+        return no('runtime record does not fit this package')
+    source = str(receipt_file)
+    return {'reused': True, 'receipt': source,
+            'note': 'reused from the writer receipt %s: same ZIP bytes, adapter and check tools, not run again '
+                    '(总表 19 ①)' % Path(source).name,
+            'rewarded_ad_regression': dict(ad, reused_from=source),
+            'runtime_regression': dict(rt, reused_from=source)}
+
+
 def writer_regressions(files, folder, adapter=None, policy=None, board=None):
     """v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions for make_tiktok_zip.py, which does not call
     check(). Same two gates as check() (rewarded_ad_gate, then runtime_gate with the same adapter, policy and board) on
@@ -156,10 +256,16 @@ def _fallback_entries(archive):
     return out
 
 
-def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None):
+def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None,
+          reuse_writer_regressions=False):
+    # v7.9 (出包检查提速 S1, 总表 19 ①): reuse_writer_regressions (prepare_delivery only) takes an official writer
+    # receipt's record of the two regressions for the same bytes, adapter and check tools (reusable_regressions).
     """Read-only final check of the exact bytes. Every reason is collected and the package is refused ONCE with
     all of them (verifier, Credits/no-ad-simulator, startup, packed assets, shared package gates, rewarded-ad
     and runtime regressions) instead of stopping at the first (MusicSlice 0f).
+    v7.9 (总表 19 ④): when the static checks (verifier, startup, packed assets, package gates) already refuse, the two
+    browser regressions are not run - the package has to be rebuilt anyway and the 7.5-15 minutes would be thrown
+    away; the refusal still lists every static reason at once and ends with BROWSER_SKIPPED_NOTE.
 
     ad_regression: adapter JSON path for the mandatory rewarded-ad regression; falls back to
     $TIKTOK_AD_REGRESSION_ADAPTER. A package that can request a rewarded video is refused
@@ -202,6 +308,15 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     gates = package_gates.run(verified_files, None, board, policy=policy, context=context)
     reasons.extend(package_gates.messages(gates['blocks']))
     regression = runtime = None
+    # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses what the official writer ran on exactly these bytes with
+    # this adapter and these check tools (its receipt keeps the record) instead of running it again.
+    reuse = None
+    if reuse_writer_regressions:
+        reuse = (reusable_regressions(result.get('receipt'), verified_files, ad_regression, gates.get('policy'))
+                 if result is not None and result.get('entry') == 'official'
+                 else {'reused': False, 'why': 'not a ZIP an official writer wrote (no matching receipt)'})
+    reused = bool(reuse and reuse.get('reused'))
+    browser_skipped = False
     with tempfile.TemporaryDirectory(prefix='TikTok package extract ') as folder:
         # Paths and CRC were validated above; stage those exact bytes, not a second ZIP read.
         for name, data in verified_files.items():
@@ -211,23 +326,31 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
         assets = packed_assets(folder)
         if not assets['passed']:
             reasons.append('packed resource check: ' + '; '.join(assets['errors']))
-        try:
-            regression = rewarded_ad_gate(verified_files, folder, ad_regression)
-        except ValueError as error:
-            reasons.append(str(error))
-        try:
-            runtime = runtime_gate(verified_files, folder, ad_regression, policy=gates.get('policy'), board=board)
-        except ValueError as error:
-            reasons.append(str(error))
+        # v7.9 (总表 19 ④): already refused by the static checks above -> the browser suites wait for the new package.
+        browser_skipped = bool(reasons) and not reused
+        if reused:
+            regression, runtime = reuse['rewarded_ad_regression'], reuse['runtime_regression']
+        elif not browser_skipped:
+            try:
+                regression = rewarded_ad_gate(verified_files, folder, ad_regression)
+            except ValueError as error:
+                reasons.append(str(error))
+            try:
+                runtime = runtime_gate(verified_files, folder, ad_regression, policy=gates.get('policy'), board=board)
+            except ValueError as error:
+                reasons.append(str(error))
     if hashlib.sha256(Path(archive).read_bytes()).hexdigest() != (result['sha256'] if result else start_sha):
         raise ValueError('ZIP changed during package checks')
     if reasons:
+        tail = [BROWSER_SKIPPED_NOTE] if browser_skipped else []
         if len(reasons) == 1:
-            raise ValueError(reasons[0])
-        raise ValueError('%d reasons, all listed: ' % len(reasons) + ' || '.join(reasons))
+            raise ValueError(' || '.join(reasons + tail))
+        raise ValueError('%d reasons, all listed: ' % len(reasons) + ' || '.join(reasons + tail))
     result['packed_resource_check'] = assets
     result['rewarded_ad_regression'] = regression
     result['runtime_regression'] = runtime
+    if reuse is not None:
+        result['regression_reuse'] = {k: reuse[k] for k in ('reused', 'why', 'note', 'receipt') if k in reuse}
     result['package_gates'] = package_gates.summary(gates)
     from make_tiktok_zip import pre_home
     result['pre_home_bytes'] = pre_home(verified_files, None, board)

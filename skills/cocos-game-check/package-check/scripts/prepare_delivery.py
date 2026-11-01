@@ -90,7 +90,9 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     if record.exists() or record.is_symlink():
         raise ValueError('delivery record already exists; choose a new record path')
     before = hashlib.sha256(archive.read_bytes()).hexdigest()
-    result = check(archive, app_id, native, ad_regression)
+    # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
+    # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
+    result = check(archive, app_id, native, ad_regression, reuse_writer_regressions=True)
     files = native_files(native)
     obligations = package_obligations.verify(files, native, project, resource_manifest)
     startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, replay=False)
@@ -122,6 +124,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
                'markdown_link': '[' + archive.name + '](<' + str(archive) + '>)',
                'runtime_execution': result['runtime_execution'],
+               'regression_reuse': result.get('regression_reuse'),     # v7.9: reused from the writer receipt, or why not
                'final_startup_runtime': startup_runtime,
                'package_obligations': obligations,
                'entry': result['entry'], 'receipt': result.get('receipt'),

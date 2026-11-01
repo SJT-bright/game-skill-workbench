@@ -1,0 +1,12 @@
+{
+  "name": "save_restart",
+  "about": "v7.9 手机才出的五类问题 3: with TikTok phone storage (a key never written reads false, a number reads back true), the steps in adapter.save_restart (win a level, claim a reward, buy an item: real actions) earn something, then the game is closed and reopened (storage kept) and every value must still be there (new game blocks, legacy warns; adapter.save_restart {\"n/a\": reason} passes without a browser)",
+  "applies": ["tiktok"],
+  "needs_new": ["save_restart"],
+  "na_field": "save_restart",
+  "fields": ["home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 900,
+  "owner": "v7.9 手机才出的五类问题",
+  "proof": "补丁_手机才出的五类问题_给v7.9/测试记录.md (射击高手2048 v84 refused, v86 passes)"
+}

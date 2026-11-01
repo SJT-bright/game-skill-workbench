@@ -34,6 +34,9 @@ import time
 import zipfile
 
 HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+import watched_run  # noqa: E402 - v7.9 (出包检查提速 S7): a stuck browser step is stopped after 240 s without progress
 TOOL = HERE / 'ad_regression'
 CASES = ['long200', 'late16', 'bgplay', 'bgload', 'cancel', 'error', 'showfail', 'hang', 'nocallback', 'normal']
 # v7.8 (Saul 2026-10-31): check-in / spin result / gift pack window with the ticked-by-default "watch ad x2" checkbox.
@@ -193,6 +196,7 @@ def tool_digest():
     h = hashlib.sha256()
     for name in ('host.js', 'play.html', 'server.py', 'cases.mjs'):
         h.update(name.encode() + b'\0' + (TOOL / name).read_bytes())
+    h.update(b'watched_run.py\0' + (HERE / 'watched_run.py').read_bytes())     # v7.9: it decides when a step is stuck
     h.update(Path(__file__).read_bytes())
     return h.hexdigest()
 
@@ -229,7 +233,8 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         # Unique space per run: Ego taskSpace(name) RESUMES a same-name space, so two runs would drive one page.
         space = os.environ.get('AD_REGRESSION_SPACE') or 'tiktok-ad-regression-%d-%s' % (os.getpid(), secrets.token_hex(3))
         cfg = {'space': space, 'url': 'http://127.0.0.1:%d/__host/play.html?mouse=1&ad=manual' % port,
-               'adapter': adapter, 'cases': cases, 'bootTimeoutMs': boot_ms, 'resultFile': str(result_file)}
+               'adapter': adapter, 'cases': cases, 'bootTimeoutMs': boot_ms, 'resultFile': str(result_file),
+               'progressFile': str(work / 'progress.txt')}
         entry = work / 'run-ad-regression.mjs'
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (
             json.dumps(cfg, ensure_ascii=False), json.dumps((TOOL / 'cases.mjs').as_uri())), encoding='utf-8')
@@ -237,10 +242,15 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         limit = timeout or (boot_ms / 1000 + 60 + 25 * len(cases))
         try:
             # stdin closed (v7.7.5, Holly v3): an inherited open stdin pipe made ego-browser nodejs -e wait forever.
-            proc = subprocess.run([browser, 'nodejs', '-e', 'await import(%s)' % json.dumps(entry.as_uri())],
-                                  capture_output=True, text=True, timeout=limit, stdin=subprocess.DEVNULL)
-        except subprocess.TimeoutExpired:
+            # v7.9 (出包检查提速 S7): watched_run stops the step when nothing moved for 240 s (no output line, and no
+            # change in the work folder: host log, the result cases.mjs saves after every case).
+            proc = watched_run.run([browser, 'nodejs', '-e', 'await import(%s)' % json.dumps(entry.as_uri())], limit,
+                                   [work])
+        except watched_run.TimedOut:
             raise RegressionRefused('ad regression timed out after %d s' % limit)
+        except watched_run.Stalled as stalled:
+            raise RegressionRefused('ad regression stopped: %s - the browser or the game page is stuck; refused without '
+                                    'waiting for the %d s limit (总表 19 ③)' % (stalled, limit))
         try:
             result = json.loads(result_file.read_text(encoding='utf-8'))
         except (OSError, ValueError):

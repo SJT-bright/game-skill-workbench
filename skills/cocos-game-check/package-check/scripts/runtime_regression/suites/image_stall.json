@@ -1,0 +1,12 @@
+{
+  "name": "image_stall",
+  "about": "v7.9 手机才出的五类问题 4 (射击高手 v81): the pictures of PLAY, add-to-desktop and profile revisit never arrive (host imghang + accesshang on exactly their files); every entry must stay on screen, drawn (picture or text fallback) and react to a real tap (new game blocks, legacy warns; adapter.image_stall {\"n/a\": reason} passes without a browser; Cocos 3.x not covered: warning)",
+  "applies": ["tiktok"],
+  "na_field": "image_stall",
+  "fields": ["image_stall", "play", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "uncovered": { "3.x": "the 3.x host has no per-file image stall (only res_hang for the next resource); 2.x only for now" },
+  "timeout_s": 600,
+  "owner": "v7.9 手机才出的五类问题",
+  "proof": "补丁_手机才出的五类问题_给v7.9/测试记录.md (射击高手2048 v81 refused, v83 / v86 pass)"
+}

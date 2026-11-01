@@ -32,6 +32,11 @@ export function evidence(name, data) {
 export async function open(name) {
   const task = await taskSpace(C.space || ('tiktok-runtime-' + C.suite));
   const page = task.page(name || 'p1');
+  // v7.9: no HTTP cache. Ego is one browser for every session; a trial server another session ran earlier on the same
+  // 127.0.0.1 port (python http.server sends no Cache-Control, so files are kept by heuristic freshness) left its
+  // main.js in the cache, and a later run here booted that other game's code (2026-11-01, 甜点消消乐 R48: "home not
+  // reached" while main.js asked for touch-coordinates.js that R48 does not have).
+  try { await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true }); } catch (_) {}
   return { task, page };
 }
 export async function close(task, page) {
@@ -42,7 +47,21 @@ export function url(query) {
   const q = [C.hostQuery, query].filter(Boolean).join('&');
   return C.base + (C.hostPage || '/__host/play.html') + (q ? '?' + q : '');
 }
-export const ev = (page, fn, a) => (a === undefined ? page.evaluate(fn) : page.evaluate(fn, a));
+// v7.9 (出包检查提速 S7, 总表 19 ③): every finished page round trip touches CFG.progressFile (at most once a second),
+// so the runner can tell a slow suite from a stuck one (runtime_regression.py stops a suite after 240 s without any
+// change in its folder or output). No progressFile (an older runner): nothing is written.
+let lastTick = 0;
+export function progress() {
+  const now = Date.now();
+  if (!C.progressFile || now - lastTick < 1000) return;
+  lastTick = now;
+  try { fs.writeFileSync(C.progressFile, String(now)); } catch (_) {}
+}
+export function track(p) {
+  if (!p || typeof p.then !== 'function') { progress(); return p; }
+  return p.then((v) => { progress(); return v; }, (e) => { progress(); throw e; });
+}
+export const ev = (page, fn, a) => track(a === undefined ? page.evaluate(fn) : page.evaluate(fn, a));
 
 // Run an adapter JavaScript string (function body) in the page; returns its value or {adapterError}.
 export const adapterCall = (page, code) => ev(page, (code) => {
@@ -70,7 +89,7 @@ export async function waitFor(page, code, timeoutMs, everyMs = 500) {
 // Load the host with extra query (fault parameters) and wait until `until` (default adapter.home,
 // else adapter.ready, else engine scene) is true. Returns {ok, ms, errors}.
 export async function boot(page, query, opt = {}) {
-  await page.goto(url(query));
+  await track(page.goto(url(query)));
   const until = opt.until || A.home || A.ready || READY;
   const w = await waitFor(page, until, opt.timeoutMs || C.bootTimeoutMs || 60000);
   return { ok: w.ok, ms: w.ms, errors: await errors(page) };
@@ -129,7 +148,7 @@ export const findLabels = (page, pattern) => ev(page, (pattern) => {
 // Real pointer tap at CSS (x, y); the host turns mouse into a TikTok touch (mouse=1).
 export async function tap(page, x, y) {
   for (const type of ['mouseMoved', 'mousePressed', 'mouseReleased']) {
-    await page.cdp('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+    await track(page.cdp('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 }));
     if (type === 'mousePressed') await sleep(60);
   }
 }
@@ -137,9 +156,9 @@ export async function tap(page, x, y) {
 // Real touch tap (needs viewport(page, w, h, dpr, true)): reaches tt.onTouch*, DOM touch listeners on the
 // canvas (platform-kit retry) and DOM buttons (host modal) like a finger does.
 export async function touchTap(page, x, y) {
-  await page.cdp('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1, radiusX: 4, radiusY: 4, force: 1 }] });
+  await track(page.cdp('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1, radiusX: 4, radiusY: 4, force: 1 }] }));
   await sleep(70);
-  await page.cdp('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await track(page.cdp('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }));
 }
 
 // Locate a control: adapter JS (returns {x,y} CSS point, or a cc.Node -> its centre) or a label regexp.

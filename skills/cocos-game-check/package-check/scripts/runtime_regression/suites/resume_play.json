@@ -1,0 +1,12 @@
+{
+  "name": "resume_play",
+  "about": "v7.9 手机才出的五类问题 1 (甜点消消乐 R39-R47): in a level that plays, the phone takes the game away and gives it back: onHide/onShow, a finger left on the glass without touchend, the pause popup open, a rewarded ad playing as on a phone (onHide at start, onShow + onClose at the end, both orders). After each: the pause popup closes with one tap, the clock moves, one real probe changes state (new game blocks, legacy warns; adapter.resume_play {\"n/a\": reason} passes without a browser)",
+  "applies": ["tiktok"],
+  "needs_new": ["resume_play"],
+  "na_field": "resume_play",
+  "fields": ["home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 1200,
+  "owner": "v7.9 手机才出的五类问题",
+  "proof": "补丁_手机才出的五类问题_给v7.9/测试记录.md (甜点消消乐 R47 refused, R48 passes)"
+}

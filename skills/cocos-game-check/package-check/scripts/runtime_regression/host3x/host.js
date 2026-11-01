@@ -15,6 +15,8 @@ const Q = new URLSearchParams(location.search);
 const F = new Set((Q.get('fault') || '').split(',').filter(Boolean));
 // v7.8 (总表 B30): ad=<policy> is the same as ads=<policy> (the 2.x host query name)
 const ADS = (Q.get('ads') || Q.get('ad') || '').split(',').filter(Boolean);
+// v7.9 (手机才出的五类问题): adhide=1, adhideorder=show-first|close-first, adms=<ms> (see the ad's show() below)
+const ADHIDE = Q.get('adhide') === '1', ADHIDE_ORDER = Q.get('adhideorder') === 'close-first' ? 'close-first' : 'show-first';
 let W = +(Q.get('w') || 393), H = +(Q.get('h') || 852), DPR = +(Q.get('dpr') || 3);
 // ---- v7.8 (总表 B30, 全民飞车门禁 2026-10-30): the same switches as the 2.x host ad_regression/host.js ----
 // dev=iphone14|se: device profile measured from real phones (points); the gate sets the page viewport to W x H.
@@ -305,7 +307,16 @@ function createRewardedVideoAd(opt) {
       if (mode === 'error') { AD.errors++; setTimeout(() => fire('error', { errMsg: 'ad load error', errCode: 1004 }), 300); return Promise.resolve(); }
       if (mode === 'hang') return Promise.resolve();
       const el = document.getElementById('ad'); el.style.display = 'flex'; el.textContent = 'Rewarded video (' + mode + ')';
-      setTimeout(() => { el.style.display = 'none'; log('ad.close', id + ' ended=' + (mode === 'complete')); AD[mode === 'complete' ? 'closedEnded' : 'closedEarly']++; fire('close', { isEnded: mode === 'complete' }); }, mode === 'complete' ? 1500 : 700);
+      // v7.9 adhide=1 (same switch as the 2.x host): the video sends the game to the background, its close brings it back
+      // (adhideorder=show-first: onShow, 50 ms later onClose; close-first: the reverse)
+      const hid = ADHIDE; if (hid) setTimeout(X.hide, 30);
+      const closeNow = () => { log('ad.close', id + ' ended=' + (mode === 'complete')); AD[mode === 'complete' ? 'closedEnded' : 'closedEarly']++; fire('close', { isEnded: mode === 'complete' }); };
+      setTimeout(() => {
+        el.style.display = 'none';
+        if (!hid) closeNow();
+        else if (ADHIDE_ORDER === 'close-first') { closeNow(); setTimeout(X.show, 50); }
+        else { X.show(); setTimeout(closeNow, 50); }
+      }, +(Q.get('adms') || (mode === 'complete' ? 1500 : 700)));
       return Promise.resolve();
     },
   };
@@ -374,6 +385,8 @@ GT.TTWebAssembly = Object.assign({}, WebAssembly, {
 // lifecycle helpers for tests
 X.hide = () => { log('lifecycle', 'hide'); hideCbs.slice().forEach(f => f({})); };
 X.show = () => { log('lifecycle', 'show'); showCbs.slice().forEach(f => f({ scene: '011004', query: {} })); };
+// v7.9: the same names as the 2.x host, so a suite drives the lifecycle the same way on both engines
+window.__simHide = X.hide; window.__simShow = X.show;
 
 // ---------- inspection (read-only, game-generic) ----------
 let ccNS = null;

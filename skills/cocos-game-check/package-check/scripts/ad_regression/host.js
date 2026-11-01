@@ -384,6 +384,13 @@
     return adRecords.filter(function (r) { return r.shown && !r.finished && (r.close.size() + r.err.size()) > 0; }).length;
   };
   var adPolicy = Q.get('ad') || 'ask'; // ask | complete | cancel | error | showfail | hang | pending (show() never settles, no callback ever; alias never)
+  // v7.9 (手机才出的五类问题): adhide=1 = what a phone does: TikTok plays a rewarded video as a native page, so the game gets
+  // tt.onHide when the video starts and tt.onShow when it closes. A game that pauses on onHide opened its pause popup in the
+  // middle of the ad, and the ad's close callback then ran under that popup (甜点消消乐 R39-R47: after Resume the round
+  // stayed frozen). Without adhide the host never hides the game during an ad, as before. adhideorder=show-first (default:
+  // onShow, then 50 ms later onClose / onError) or close-first (onClose first, onShow 50 ms later).
+  var adHide = Q.get('adhide') === '1', adHideOrder = Q.get('adhideorder') === 'close-first' ? 'close-first' : 'show-first';
+  window.__adHideMode = function () { return adHide ? adHideOrder : null; };
   function overlay(unit, done) {
     var box = nCreate('div');
     box.id = '__adOverlay';
@@ -407,10 +414,19 @@
       rec.finished = true;
       adStats.live = Math.max(0, adStats.live - 1);
       beacon('ad-result', { unit: unit, result: r });
-      if (r === 'complete') { adStats.closedEnded++; close.emit({ isEnded: true }); }
-      else if (r === 'cancel') { adStats.closedEarly++; close.emit({ isEnded: false }); }
-      else { adStats.errors++; err.emit({ errCode: 1004, errorCode: 1004, errMsg: 'no ad fill (simulated)' }); }
+      var emit = function () {
+        if (r === 'complete') { adStats.closedEnded++; close.emit({ isEnded: true }); }
+        else if (r === 'cancel') { adStats.closedEarly++; close.emit({ isEnded: false }); }
+        else { adStats.errors++; err.emit({ errCode: 1004, errorCode: 1004, errMsg: 'no ad fill (simulated)' }); }
+      };
+      // adhide=1: the video page closes -> the game comes back (tt.onShow) and gets the ad result, in adhideorder
+      if (rec.hid && hidden) {
+        rec.hid = false;
+        if (adHideOrder === 'close-first') { emit(); setTimeout(function () { setHidden(false); }, 50); }
+        else { setHidden(false); setTimeout(emit, 50); }
+      } else emit();
     }
+    function playing() { if (adHide && !rec.finished) { rec.hid = true; setHidden(true); } }
     return {
       adUnitId: unit,
       onClose: close.on, offClose: close.off, onError: err.on, offError: err.off, onLoad: load.on, offLoad: load.off,
@@ -427,7 +443,7 @@
           // Test script drives it: __adCtl.start() resolves show(), close(ended) / error() end it.
           var ctl = window.__adCtl = { unit: unit, started: false };
           return new Promise(function (res, rej) {
-            ctl.start = function () { ctl.started = true; res(); };
+            ctl.start = function () { ctl.started = true; res(); setTimeout(playing, 30); };
             ctl.rejectShow = function () { rec.finished = true; adStats.live--; adStats.errors++; rej({ errorCode: 1000, errMsg: 'show fail (simulated)' }); };
             ctl.close = function (ended) { finish(ended ? 'complete' : 'cancel'); };
             ctl.error = function () { finish('error'); };
@@ -435,6 +451,7 @@
         }
         var pick = adPolicy === 'ask' ? null : adPolicy;
         setHidden(false);
+        if (pick !== 'error') setTimeout(playing, 30);   // adhide=1: a video that plays sends the game to the background
         if (pick) setTimeout(function () { finish(pick); }, +(Q.get('adms') || 600));
         else overlay(unit, finish);
         return Promise.resolve();

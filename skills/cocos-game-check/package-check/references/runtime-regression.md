@@ -61,6 +61,27 @@ python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapt
 `cams[0]`，3D 游戏取到世界相机：企鹅雪道 v7 包的 X 被算到 (818, -918)，nocallback 报 5 条问题；改后点到 (354, 78)，nocallback 通过。
 `test_tap_point.py` 用假数据核对（含「3D 场景 + UI 相机」），在 cocos-game-check 里不在 cam-point 块中取 `cams[0]` 就失败。
 
+### 出包检查提速（v7.9，总表 19 ①②③）
+
+判定一条没改、用例一条没少，只是不再做改变不了结论的等待和重跑。来由和估时见 `！Skill更新/提速调查_20261031/出包检查提速_读代码.md`。
+
+- **开浏览器前先查 adapter（②）**：`runtime_regression.run()` 在第一个套件开浏览器之前，把这次要跑的每个套件缺的东西一次列全
+  （`config_problems`：套件 `needs` 里的字段、`needs_new`、`na_field` 的格式、引擎不支持），有就拒，一个浏览器都不开；老游戏的
+  `needs_new` 照旧只警告。以前要等前面的套件跑完才报，而且只报最后撞到的那一条：全民飞车漂移 v3.1 跑了 883 秒才报缺
+  frame_rate、popin，FoxDenDash v1 跑了 457 秒只报缺 play（它也缺 frame_rate、popin）。广告回归（约 1.5 分钟）照旧先跑。
+  `build_checked_zip.py` 也在启动检查和回归之前先核对 finalize 记录和要压进 ZIP 的文件。
+- **静态已经拒了就不跑浏览器套件（总表 19 ④）**：`check_package.check()` 的静态检查（verifier、启动、打包资源、共用门禁）已经拒了的包，
+  反正要修好重出，广告回归和运行时套件（7.5～15 分钟）不跑；拒绝原因照旧一次列全，最后一段写「浏览器套件没跑：先修上面的问题，出了
+  新包再跑」（`BROWSER_SKIPPED_NOTE`）。两个写包入口本来就是静态问题先拒、不开浏览器。静态全过的包照旧两套都跑。
+- **卡住就停（③）**：广告回归和每个运行时套件边跑边看（`cocos-game-check/package-check/scripts/watched_run.py`）：240 秒里既没有新的
+  输出行，工作目录里（宿主日志、结果、证据、`progress.txt`）也没有任何文件变化，就停掉这一步和它起的进程，按「没有进展」拒，不再等
+  到套件自己的上限（startup、ad_entries 1500 秒）。`lib.mjs`、`gates.mjs` 每次页面往返写一次 `progress.txt`（最多每秒一次），所以慢
+  但在动的套件不会被停。总超时照旧。`$TIKTOK_REGRESSION_STALL_S` 改这个窗口，只给测试用。
+- **交付不重跑（①）**：两个写包入口把通过的两项回归记进收据（`regressions`）。`prepare_delivery.py` 对同一个 ZIP 核对 adapter 文件和
+  两套检查工具的 SHA-256 都和写包时一样、要跑的套件一样、写包时按新游戏或同样的口径判，就直接用收据里的结果，不再开浏览器（每次交付
+  省 7.5～15 分钟）；有一样不同就照旧全跑。交付记录的 `regression_reuse` 写明复用了，或者为什么没复用。v7.9 以前的收据没有这条记录，
+  交付时照旧全跑。
+
 ## 套件（v7.5 起；v7.8 加 dead_shell、layout_state、button_sweep、ad_entries、trial_link、popin、frame_rate）
 
 | 套件 | 引擎 | 何时必跑 | 内容 | 证明 |
@@ -75,6 +96,10 @@ python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapt
 | `popin`（v7.8，总表 P2 补） | 2.x（3.x 只警告「未覆盖」） | 所有 TikTok 包（两个写包入口必跑）；adapter `popin` 写 `{"n/a": 原因}` 的不开浏览器直接过 | 障碍不许在屏幕里凭空出现、消失、瞬移。四种屏幕 390×844、375×667、768×1024、1115×791（CSS 点，新存档）：进首页，开局（`popin.start` 或真点 `play`），等 `game_node`，`invincible_js` 让主角无敌，在屏幕中间按一下，飞 18 秒，调 `revive_js`（复活那段代码），再看 4 秒。每画一帧，查所有带碰撞体（`cc.PhysicsCollider` / `cc.Collider`）而且画得出东西（自己或下面有渲染组件）的节点，主角和它下面的、`ignore` / `ignore_groups` 不算：`appeared_on_screen` 上一帧没显示（或透明度不到 5%）、这一帧在可见范围里显示（≥25%）；`vanished_on_screen` 在可见范围里显示着，下一帧没了、关了或透明度不到 5%（被销毁也算）；`jumped_on_screen` 前后一帧有一帧在可见范围里，一帧挪了 40 以上（按帧时间放大：卡一下 100 ms 门槛是 240）。可见范围按引擎真实可见区（2.4 经节点的相机 `getWorldToScreenPoint`，宽屏和上下黑边跟着 `cc.view`）。允许的：淡入淡出（0.3 秒的淡出不会一帧从 ≥25% 掉到 <5%）、在整屏不透明（≥98%）的遮罩下面处理。一个障碍都没看到 = 适配写错，不过。页面低于 20 帧 = `invalid_run`，重跑。缺 `popin` 或写错：新游戏拒、老游戏警告不跑。**新游戏拦、名单上的老游戏只警告**。写法要求见 `remake-game/references/creation-gates.md`「滚动障碍」，标准件 `platform-kit/parts/CourseLane.js`。每款多约 2 分钟 | BreezyBalloon v2.1（9b7b556a…）四种全拒（390×844 复活 2 次、375×667 复活 4 次、768×1024 飞行 28 次 + 复活 8 次、1115×791 飞行 26 次 + 复活 6 次）、v2.2 四种全过、v2.1 运行时换成 CourseLane 回收和复活四种全过；底子潜艇冲冲 V32 拒；VineSwing v6、SpiderSwing v2.4 过；全民飞车漂移 v3.1、HappyCup v20.7.1 写 n/a 过（`briefs/out/W89/RESULT.md`）。观察器的纯逻辑测试 `test_popin_gate.py`（Node 假引擎） |
 | `frame_rate`（v7.8，总表 P16 第 3 步） | 2.x（3.x 只警告「未覆盖」） | 所有 TikTok 包（两个写包入口必跑）；adapter `frame_rate` 写 `{"n/a": 原因}` 的不开浏览器直接过 | 物理和推力不许跟着屏幕帧率走，这一条是 P16 的最终裁判（logic_check 的 L-FPS 三条只是静态提示）。同一段操作跑两次：页面加载前用 CDP 把 `requestAnimationFrame` 换成定频时钟，一次 60 Hz（手机）、一次 120 Hz（Saul 的 Mac、测试浏览器），Cocos 2.4 主循环、`dt` 和 2.4 物理都跟着它走。每次：新存档进首页、`after_home_js`、`frame_rate.start`（真实操作，可选）、`prepare_js`（可选）、等 `settle_ms`，然后在 t0 跑 `drive_js`（那段操作，例如按 RACE），`steps` 按真实时间再跑几步，每 10 ms 记一次 `track` 节点的世界坐标，记 `run_s` 秒。比较：从节点开始动的那一刻（`align: "move"`，默认；`"drive"` 从 t0 起）往后 1 秒起每 0.25 秒一个比较点，两次的位移差除以较大的位移，最大的超过 5% `same_motion` 不通过；节点没动够 `min_move`（默认 20 世界单位）`no_motion` = 适配写错。时钟没跑到目标帧率（差 8% 以上，机器太忙或窗口被挡）`clock_60` / `clock_120` = 本次无效，一律拒、重跑；引擎帧数和时钟对不上（frameRate 30 之类）只警告。缺 `frame_rate` 或写错：新游戏拒、老游戏警告不跑。**新游戏拦、名单上的老游戏只警告**。修法：开 `enabledAccumulator`（用了 2.4 物理的新游戏 `tiktok_finalize.py source` 自动装平台包 `parts/PhysicsClock.js`），推力按时间缩放（`Clock.force(v, dt)`），移动乘 dt，schedule 间隔不小于 1/60。每款多约 1 分钟 | 全民飞车漂移 v3.1 拒（起步 1 秒时 60 Hz 走 111.9、120 Hz 走 139.7，差 19.9%）；同一个包运行时打开 enabledAccumulator 并把 run_time 里的推力和扭矩乘 dt×60 后过（最大差 1.05%），只在页面里跑一遍平台包 `PhysicsClock.js` 也过（1.39%）。BreezyBalloon v2.2 拒（障碍按 linearVelocity 走，120 Hz 快一倍，差 49.9%），跑一遍 `PhysicsClock.js` 后过（1.08%）（`briefs/out/W92/RESULT.md`，适配 `briefs/out/W92/adapters/`）。纯逻辑测试 `test_frame_rate_gate.py`（Node：时钟真到 60/120 Hz、每帧推的写法拒、按时间推的写法带起步差和采样抖动照样过） |
 | `trial_link`（v7.8，总表 B21、B30 F） | 2.x、3.x | 有试玩链接时：`serve_preview.py --keep` 给出链接之前；`runtime_regression.py trial --url <链接>` 手动对任意链接；写包入口没有链接，不跑（摘要 `not_run` 写明） | 按 Saul 的用法打开链接（1180×960 电脑窗口、清存档），等场景稳定，真实鼠标点到看广告（adapter `trial.taps`，或 `trial.open` + `trial.ad_button`；没写就找首页上文字 / 图名像看广告的按钮，最多试 3 个）。2.5 秒内画面中心必须被模拟广告窗盖住（serve_preview 的 `#__ad-simulator`，在 shadow root 里；TikTok 宿主的 `#__adOverlay`），或有 toast / modal、或文字变化；否则 `ad_window_hidden`。有广告窗就等「看完」可点后点它，游戏必须变化（`trial.reward_js`，没写看画面文字），否则 `reward_missing`。不知道、也找不到看广告入口 = 没跑（写原因，只警告） | 原型：全民飞车漂移 v1～v3 的旧试玩宿主（广告窗挂在适配器换掉的 body 上）拦，v3.1 过 |
+| `resume_play`（v7.9，手机才出的五类问题 1，甜点消消乐 R39～R47） | 2.x、3.x（3.x 宿主收 pointer，`finger_held` 两例只警告「未覆盖」） | 所有 TikTok 包（两个写包入口必跑）；adapter `resume_play` 写 `{"n/a": 原因}` 的不开浏览器直接过 | iPhone 14、新存档，`start` 真实操作进到一关、先确认这关能玩（`clock_js` 2 秒内在走、`probe` 真点一下 `state_js` 变）。然后逐例：`background` 切后台 3 秒再回来；`finger_held` / `finger_held_new_id` 手指按在屏幕上时被切后台、永远收不到 touchend（下一个手指 id 0 / 新 id）；`pause_background` 游戏自己的暂停窗开着时切后台（`pause_button`）；`ad_background` / `ad_background_close_first` 关内看广告时像手机一样被切后台（宿主 `adhide=1`：开播 onHide、播完 onShow 和 onClose，两种先后）。每例之后：暂停窗（`continue_button`）一下就关（要点两下 = 回来后的第一下丢了，不过）、计时在走、真点一下有变化。能过的几例在同一关里接着跑，广告两例和重试都重新加载 | 甜点消消乐 R47 拒（看广告时切后台两例：点继续后计时不走），R48 过 |
+| `ad_outcome`（v7.9，手机才出的五类问题 2） | 2.x、3.x | adapter 有 `ad_entries` 时；新游戏还必须有 `ad_outcome` | `ad_entries` 每个入口的每个状态，真点按钮，广告像手机一样播（`adhide=1`）：`complete` 看完后 `reward_js` 要变（奖励到账）、`after_js` 为真（能接着玩，比如复活后主角在跑）、`after_visible` 的节点都在（拇指弹球 v5 复活后 BACK 不见了）；`cancel` 中途关掉后 `reward_js` 不变、同一个按钮再点一下要有反应（广告锁没放开 = 「广告点了第二次没反应」）。暂停窗先用 `continue_button` 关掉 | 甜点消消乐 R48 过；R47（看完后这一关不能玩）、往 R48 里故意弄坏的「看完不发奖」「取消后锁死」都拒 |
+| `save_restart`（v7.9，手机才出的五类问题 3） | 2.x、3.x（3.x 宿主没有手机存储怪癖，只测重开） | 所有 TikTok 包（两个写包入口必跑）；adapter `save_restart` 写 `{"n/a": 原因}` 的不开浏览器直接过 | 手机存储（`missing=false&numbool=01`：没存过的键读到 false，存的 0/1 读回 false/true）下，新存档按 `steps` 真实操作赚到东西（过一关、领一次奖、买一件），关掉游戏再打开（同一页不带 `reset=1` 重新加载，存档保留），每个 `read_js` 都要和重开前一样。某一步在手机存储下赚不到时，用浏览器存储再跑一次对照：浏览器里能赚到 = 手机存储把游戏弄坏了，拒 | SorensRivet r21 拒（手机存储下首页礼盒发 0），r22 过；射击高手 v86 过 |
+| `image_stall`（v7.9，手机才出的五类问题 4） | 2.x（3.x 只警告「未覆盖」） | 所有 TikTok 包（两个写包入口必跑）；adapter `image_stall` 写 `{"n/a": 原因}` 的不开浏览器直接过 | 第一次加载到首页，记下加桌面、主页回访两个入口（`image_stall.entries` 可指定；`image_stall.play: true` 连 PLAY 也测）自己和子节点画的图片文件；第二次加载让这些文件一直不回（`imghang` + `accesshang`，每次都卡）。等 4 秒（平台包 HomeGrowthEntries 2 秒后换文字），每个入口都要在屏幕上、画得出东西（图还在或有字）、真点 2.5 秒内有反应 | Holly's Hay Hop v6 过（平台包换成文字）；射击高手 v86、MeteorBlaster r7 入口变空位、BreezyBalloon v2.2 首页等这两张图进不去，按规则都算问题（都是完结游戏，不改） |
 
 v7.8 B30 的套件都来自全民飞车门禁原型（`1全民飞车漂移/_work/skill_feedback/gates/`，`README_通用自查.md`），原型校准时修掉的 10 条
 2.4 误报和 4 条 3.x 误报都保留在代码里（`runtime_regression/layout_rules.mjs`、`gates.mjs`、`geom.mjs` 的注释标了是第几条）。
@@ -118,6 +143,10 @@ v7.8 B30 的套件都来自全民飞车门禁原型（`1全民飞车漂移/_work
 | `trial` | trial_link（可选） | `{taps: [路径…]}` 或 `{open: [{tap}], ad_button}`，`reward_js` 返回奖励数值 |
 | `popin` | popin（v7.8，**新游戏必填**；名单上的老游戏缺了只警告） | 对象。必填四个字符串：`player` 主角节点（名字或路径尾，`*/a/b` 也行；它和它下面的节点不算障碍）、`invincible_js` 让主角无敌（返回 `true`）、`revive_js` 看完复活广告后游戏跑的那段复活（不经过广告，直接调）、`game_node` 进局后才出现的节点。可选：`start` 开局的真实操作（格式同 `layout_states.actions`；不写就真点 `play`）、`first_touch`（默认 `true`：开局后在屏幕中间按一下）、`fly_s`（默认 18，5～60）、`settle_ms`（进局后等多久，默认 2500）、`after_start_js`（开局后跑一次，证明或调试用）、`ignore`（路径正则：不算障碍的节点，例如主角射出去的钩子 `^Canvas/point$`）、`ignore_groups`（分组名：例如连续的地面条 `["bottom"]`）、`query`（宿主参数）、`note`。没有滚动障碍的游戏写 `{"n/a": "原因"}`，运行器不开浏览器直接过。BreezyBalloon：`{"player": "submarineItem", "game_node": "LevelView", "invincible_js": "…getComponent('SubmarineItem').safeUntil=Date.now()+1e9;return true;", "revive_js": "…getComponent('LevelView').resumeSameDive();return true;", "ignore_groups": ["bottom"]}`（全文 `briefs/out/W89/adapters/breezyballoon.json`） |
 | `frame_rate` | frame_rate（v7.8，**新游戏必填**；名单上的老游戏缺了只警告） | 对象。必填两个字符串：`track` 返回要跟踪的节点（或 `{x, y[, z]}` 世界坐标；还没生成时返回 `null`）、`drive_js` 那段操作的开头（t0 跑一次，例如按开始）。可选：`start` 进局前的真实操作（格式同 `layout_states.actions`）、`prepare_js`（t0 前跑一次）、`steps` `[{"at_s": 秒, "js": "..."}]` 按真实时间跑的后续操作（转向、松手）、`run_s`（默认 5，2～20，要包含倒计时）、`settle_ms`（默认 1000）、`min_move`（默认 20）、`align`（`"move"` 默认 / `"drive"`）、`query`（宿主参数）、`note`。没有物理、没有自己会动的东西的游戏写 `{"n/a": "原因"}`。全民飞车漂移 v3.1：`{"start": [{"tap": "Canvas/MenuBottom/button/btnkj", "after": 2500}], "drive_js": "<W87 的 enter_level：按 RACE>", "track": "try{var R=__require('RunUI').RunUI;return R.car&&R.car.isValid?R.car:null;}catch(e){return null;}", "run_s": 10}`（全文 `briefs/out/W92/adapters/driftracer3d_frame_rate.json`） |
+| `resume_play` | resume_play（v7.9，**新游戏必填**；名单上的老游戏缺了只警告；没有关卡的写 `{"n/a": 原因}`） | 对象。`start` 从首页进到一关能玩的真实操作（支持 `tap`、`tap_js`、`drag_js`、`js`、`wait`、`wait_js`、`wait_node`、`wait_scene`、`repeat`：`{"repeat": N, "until_js": "...", "do": [...]}`，教程关就用它一张张点）；`probe` 一次真实操作（`{"tap": 路径}` / `{"tap_js": "...return 节点"}` / `{"drag_js": ...}`）；`state_js` 返回 probe 会改的东西（剩几块、托盘、分数）；可选 `clock_js`（自己会走的数：倒计时、距离）、`pause_button` + `continue_button`（局内暂停钮和暂停窗的继续钮）、`ad`（`{actions, tap}`：关内会放广告的入口，比如次数用完的道具）、`background_ms`、`settle_ms`、`query`；`cases` 只跑这几例，调试用，出包时不要填 |
+| `ad_outcome` | ad_outcome（v7.9，有 `ad_entries` 的新游戏必填） | `{"entries": {"<ad_entries 的 id>": {"reward_js": "返回这个广告给的东西（金币、道具次数、命数）", "after_js": "能接着玩时返回 true", "after_visible": [看完必须还在的节点], "continue_button": 路径}}, "continue_button": 默认的暂停窗继续钮}`。每个入口至少写 `reward_js` 或 `after_js` 一个 |
+| `save_restart` | save_restart（v7.9，**新游戏必填**；老游戏缺了只警告） | `{"steps": [{"name", "why", "actions": [真实操作], "read_js": "返回玩家看得到的数（关卡、金币、拥有的皮肤）"}], "query"}`；每一步都要真的赚到东西 |
+| `image_stall` | image_stall（v7.9，可选） | `{"entries": [首页入口路径], "play": true（连 PLAY 一起测）, "settle_ms", "query"}`；不写就自动找加桌面、主页回访两个入口 |
 
 v7.8 全民飞车漂移的正式适配文件（原型三个适配文件合成一个）：`briefs/out/W87/adapters/driftracer3d.json`。
 
@@ -158,6 +187,8 @@ URL 参数（都要主动打开）：
 | `mouse=1` | 鼠标转 TikTok 触摸（运行器总是带上） | - |
 | `dev=iphone14\|se` | 机型（点）：iPhone 14 = 390×844、pixelRatio 3、状态栏 47、胶囊 293/51/380/83、安全区底 810；SE = 375×667、pixelRatio 2、状态栏 20、胶囊 278/24/365/56（横向是推算的）、安全区底 667。套件同时用 CDP 把页面设成同样大小 | v7.8 B30（Saul iPhone 14 实测） |
 | `capsule=pt\|px` | `getMenuButtonBoundingClientRect` 按点给，或每个值乘 pixelRatio（Saul 的 iPhone 2026-10-29 返回的是像素）；`getSystemInfoSync` 始终按点 | v7.8 B30、U1 |
+| `adhide=1&adhideorder=show-first\|close-first`（v7.9，2.x 和 3.x 宿主都有） | 像手机一样：激励视频一开播游戏收到 onHide，播完收到 onShow，50 ms 后才是 onClose（`close-first` 反过来）。不带就和以前一样，广告期间游戏不会被切后台 | 甜点消消乐 R39～R47 |
+| `adms=N`（v7.9 起 3.x 宿主也认） | 模拟广告从开播到结束多少毫秒 | - |
 
 v7.8 起两个宿主（2.x 和 3.x）都有：`window.__gateLog`（`ad-create`、`ad-show`、`toast`、`modal`、`capsule-rect`，用宿主自己的时钟
 `window.__gateNow()`）、`window.__gateDevice`，宿主日志里 `scene-loading` / `scene-launch`（首页场景开始加载的时间点）和
@@ -170,6 +201,16 @@ v7.8 起两个宿主（2.x 和 3.x）都有：`window.__gateLog`（`ad-create`�
 `res_fail[N]` `res_hang[N]` `res_stall[N]`（resources 分包，第 N 次）、`wasm_*`、`modal_nocb`、`storage_throw`、
 `caniuse_false`、`no_ads`、`no_ttminis`、`firstrun`；`bps=<字节/秒>` 限速；`ads=complete,cancel,...`。
 `__H.summary()` 有第一帧时间（`marks.firstDraw`）、WebP 判定、`__H.sprites()`、`__H.fps()`。
+
+## 手机才出的五类问题（v7.9）
+
+桌面浏览器里从来不会发生、手机上天天发生的几件事，以前没有套件模拟：激励视频一播游戏就被切到后台；切后台时手指还按在屏幕上；关掉游戏再打开时存储按 TikTok 的规矩读回来；首页入口的图一直不回。`resume_play`、`ad_outcome`、`save_restart`、`image_stall` 四个套件补上了，和静态的 `H15_package_read_via_request`、`H16_font_path_as_family`、`H17_resource_path_missing`（`remake-core/scripts/package_gates/network.py`）一起，新游戏没过就出不了包，老游戏只提醒。
+
+顺手修了两处会让任何套件测错包的地方：
+- **不用浏览器缓存**：`lib.mjs` 的 `open()` 和 `ad_regression/cases.mjs` 打开页面后关掉 HTTP 缓存。Ego 是所有会话共用的一个浏览器，别的会话以前在同一个 127.0.0.1 端口上开过试玩服务（`python3 -m http.server` 不发 Cache-Control），它的 `main.js` 留在缓存里，后来的运行就把别的游戏的代码当成这个包来测（2026-11-01 甜点消消乐 R48 报「home not reached」，`main.js` 要的 `touch-coordinates.js` R48 根本没有）。
+- **服务端口核对**：`runtime_regression.py` 起宿主服务后先读一次 `/game.js`，和这个包的字节比对，对不上（端口被别的服务占着）就换端口重起，最多 4 次。
+
+用不了的情况：射击高手 v81、v84 没有触摸件，模拟宿主里根本点不动（运行器报「环境不完整」），这两个旧包只能靠静态门禁。换过相机的游戏（SorensRivet），`tap` 按路径点会点偏，要在 adapter 里用 `tap_js` 返回相机算出来的点。
 
 ## 广告期间的声音（D7 第 9 条，v7.5 只警告）
 

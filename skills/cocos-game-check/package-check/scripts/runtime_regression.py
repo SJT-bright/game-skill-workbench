@@ -51,6 +51,9 @@ import time
 import zipfile
 
 HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+import watched_run  # noqa: E402 - v7.9 (出包检查提速 S7): a stuck suite is stopped after 240 s without progress
 TOOL = HERE / 'runtime_regression'
 SUITES_DIR = TOOL / 'suites'
 HOST2 = HERE / 'ad_regression'          # Cocos 2.x strict host (host.js, play.html, server.py)
@@ -139,6 +142,25 @@ def frame_rate_problems(value):
 
 # na_field values the runner can judge without a browser (sidecar "na_field")
 FIELD_SHAPES = {'popin': popin_problems, 'frame_rate': frame_rate_problems}
+NA_FIELD_NAME = re.compile(r'^[a-z][a-z0-9_]{1,40}$')
+
+
+def block_problems(field):
+    """v7.9 (手机才出的五类问题): the shape check of a suite's adapter block that has no own entry in FIELD_SHAPES: an
+    object, and {"n/a": "reason"} has no other keys and a reason. The suite itself checks the keys inside the block."""
+    def problems(value):
+        if not isinstance(value, dict):
+            return ['%s must be an object' % field]
+        if 'n/a' in value:
+            if set(value) != {'n/a'}:
+                return ['%s {"n/a": ...} must have no other keys' % field]
+            return [] if isinstance(value['n/a'], str) and value['n/a'].strip() else ['%s "n/a" needs the reason (text)' % field]
+        return []
+    return problems
+
+
+def field_shape(field):
+    return FIELD_SHAPES.get(field) or block_problems(field)
 
 
 def is_na(value):
@@ -296,8 +318,8 @@ def load_suites(folder=None):
             problems.append('"host" must be "package" or "none"')
         if not isinstance(meta.get('needs_new', []), list) or not all(isinstance(x, str) for x in meta.get('needs_new', [])):
             problems.append('"needs_new" must be a list of strings')
-        if 'na_field' in meta and meta['na_field'] not in FIELD_SHAPES:
-            problems.append('"na_field" must be one of ' + ', '.join(sorted(FIELD_SHAPES)))
+        if 'na_field' in meta and not (isinstance(meta['na_field'], str) and NA_FIELD_NAME.match(meta['na_field'])):
+            problems.append('"na_field" must be an adapter field name (lower case, e.g. popin)')
         uncovered = meta.get('uncovered', {})
         if not isinstance(uncovered, dict) or not set(uncovered) <= {'2.x', '3.x'} or not all(
                 isinstance(v, str) and v.strip() for v in uncovered.values()):
@@ -480,6 +502,43 @@ def _wait_port(port, proc, seconds=15):
     raise RuntimeRefused('runtime regression host server did not start')
 
 
+def _serves_package(port, package_dir, proc):
+    """v7.9: the server on `port` is OUR server and serves THIS package. Two runs on one machine (another session, a
+    worker) can be handed the same free port at the same moment: our server then fails to bind and exits, the port
+    still answers (the other run's server), and the suite would test the other run's package (seen 2026-11-01: a
+    甜点消消乐 run booted 射击高手2048's main.js and reported 'home not reached')."""
+    import urllib.request
+    try:
+        mine = (Path(package_dir) / 'game.js').read_bytes()
+        with urllib.request.urlopen('http://127.0.0.1:%d/game.js' % port, timeout=5) as r:
+            served = r.read()
+    except OSError:
+        return False
+    time.sleep(0.3)
+    return proc.poll() is None and served == mine
+
+
+def _start_host(host, package_dir, log, tries=4):
+    """Start the host server on a free port and make sure it is ours (see _serves_package); a new port otherwise."""
+    for _ in range(tries):
+        port = _free_port()
+        server = subprocess.Popen([sys.executable, '-B', str(host / 'server.py'), str(port), str(package_dir), str(log)],
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            _wait_port(port, server)
+            if _serves_package(port, package_dir, server):
+                return port, server
+        except RuntimeRefused:
+            pass
+        server.terminate()
+        try:
+            server.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            server.kill()
+            server.wait()
+    raise RuntimeRefused('runtime regression host server did not start on a port of its own (%d tries)' % tries)
+
+
 def tool_digest(suites):
     h = hashlib.sha256()
     for path in sorted(list(HOST2.glob('*.js')) + list(HOST2.glob('*.py')) + list(HOST2.glob('*.html')) +
@@ -488,6 +547,7 @@ def tool_digest(suites):
             h.update(path.name.encode() + b'\0' + path.read_bytes())
     for name in sorted(suites):
         h.update(name.encode() + b'\0' + suites[name]['script'].read_bytes())
+    h.update(b'watched_run.py\0' + (HERE / 'watched_run.py').read_bytes())     # v7.9: it decides when a suite is stuck
     h.update(Path(__file__).read_bytes())
     return h.hexdigest()
 
@@ -505,15 +565,12 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
     folder.mkdir(parents=True, exist_ok=True)
     log = folder / 'host-log.jsonl'
     result_file = folder / 'result.json'
-    for f in (log, result_file):
+    progress_file = folder / 'progress.txt'      # v7.9 (S7): lib.mjs / gates.mjs touch it after every page round trip
+    for f in (log, result_file, progress_file):
         f.unlink(missing_ok=True)
-    port = _free_port() if serves else None
-    server = subprocess.Popen([sys.executable, '-B', str(host / 'server.py'), str(port), str(package_dir), str(log)],
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) if serves else None
+    port, server = _start_host(host, package_dir, log) if serves else (None, None)
     started = time.monotonic()
     try:
-        if server is not None:
-            _wait_port(port, server)
         cfg = {'suite': name, 'space': os.environ.get(ENV_SPACE) or 'tiktok-runtime-%s-%d-%s' % (name, os.getpid(), secrets.token_hex(3)), 'engine': engine,
                'base': 'http://127.0.0.1:%d' % port if serves else None, 'hostPage': '/__host/play.html',
                'hostQuery': 'mouse=1&run=' + name + ('&' + adapter['host_query'] if adapter.get('host_query') else ''),
@@ -521,6 +578,7 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
                'adapterPath': str(adapter_path) if adapter_path else None,
                'bootTimeoutMs': int(adapter.get('boot_timeout_s', 60) * 1000), 'logFile': str(log),
                'resultFile': str(result_file), 'evidenceDir': str(folder), 'lib': (TOOL / 'lib.mjs').as_uri(),
+               'progressFile': str(progress_file),
                'policy': policy, 'policyReason': policy_reason, 'board': board, 'trialUrl': trial_url}
         entry = folder / 'entry.mjs'
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (
@@ -529,10 +587,16 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
         try:
             # stdin closed (v7.7.5, Holly v3): with the caller's stdin left open as a pipe, ego-browser nodejs -e
             # waited on it, the probe never wrote a line and the run timed out twice.
-            proc = subprocess.run([browser, 'nodejs', '-e', 'await import(%s)' % json.dumps(entry.as_uri())],
-                                  capture_output=True, text=True, timeout=limit, stdin=subprocess.DEVNULL)
-        except subprocess.TimeoutExpired:
+            # v7.9 (出包检查提速 S7): watched_run stops the suite when nothing moved for 240 s: no output line, and no
+            # change in its folder (host log, result, evidence, and progress.txt, which lib.mjs / gates.mjs touch after
+            # every page round trip).
+            proc = watched_run.run([browser, 'nodejs', '-e', 'await import(%s)' % json.dumps(entry.as_uri())], limit,
+                                   [folder])
+        except watched_run.TimedOut:
             raise RuntimeRefused('runtime suite %s timed out after %d s' % (name, limit))
+        except watched_run.Stalled as stalled:
+            raise RuntimeRefused('runtime suite %s stopped: %s - the browser or the game page is stuck; refused without '
+                                 'waiting for the %d s limit (总表 19 ③)' % (name, stalled, limit))
         try:
             result = json.loads(result_file.read_text(encoding='utf-8'))
         except (OSError, ValueError):
@@ -571,7 +635,7 @@ def precheck(name, meta, adapter, engine, policy):
                     ['%s: Cocos %s 未覆盖（只警告）：%s' % (name, engine, why)])
     problems = ['adapter has no "%s"' % k for k in meta.get('needs_new', []) if k not in adapter]
     if field and field in adapter:
-        problems += FIELD_SHAPES[field](adapter[field])
+        problems += field_shape(field)(adapter[field])
     if not problems:
         return None
     text = '; '.join(problems)
@@ -580,6 +644,29 @@ def precheck(name, meta, adapter, engine, policy):
                     ['%s not run: %s [legacy game: warning]' % (name, text)])
     return _row(name, [{'id': 'adapter', 'passed': False, 'detail': text}], (),
                 ['%s/adapter: %s (new game: write the field, see references/runtime-regression.md)' % (name, text)])
+
+
+def config_problems(names, catalog, adapter, engine, policy):
+    """v7.9 (出包检查提速 S3, 总表 19 ②): what the adapter lacks for the suites of this run, for all of them at once and
+    before any suite opens a browser: a suite that does not support the engine, the fields a suite needs, and the
+    precheck (needs_new / na_field; a legacy game only warns, as before). Until v7.8 these turned up one suite at a time
+    after the suites before them had run: 全民飞车漂移 v3.1 was refused after 883 s for a missing frame_rate / popin,
+    FoxDenDash v1 after 457 s, partly for a missing play. -> ([problem], {name: finished precheck row})."""
+    problems, rows = [], {}
+    for name in names:
+        meta = catalog[name]
+        if engine not in meta['engines']:
+            problems.append('runtime suite %s does not support Cocos %s' % (name, engine))
+            continue
+        row = precheck(name, meta, adapter, engine, policy)
+        if row is not None:
+            rows[name] = row
+            problems.extend(row['problems'])
+            continue
+        missing = [k for k in meta['needs'] if k not in adapter]
+        if missing:
+            problems.append('runtime suite %s needs adapter field(s) %s' % (name, ', '.join(missing)))
+    return problems, rows
 
 
 def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_dir=None, policy=None, board=None,
@@ -610,6 +697,20 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
         raise RuntimeRefused('unknown runtime suites: ' + ', '.join(unknown))
     if not names:
         raise RuntimeRefused('runtime regression: no suite applies (the startup suite applies to every TikTok package)')
+    # v7.9 (出包检查提速 S3, 总表 19 ②): what the adapter lacks for any suite of this run refuses before the first suite
+    # opens a browser, every problem at once (config_problems). The verdict and the texts are the ones the suites gave.
+    early, early_rows = config_problems(names, catalog, adapter, engine, policy)
+    if early:
+        error = RuntimeRefused('runtime regression failed before the browser (adapter check, 总表 19 ②): '
+                               + ' | '.join(early))
+        error.summary = {'id': 'runtime_regression', 'passed': False, 'engine': engine,
+                         'suites': list(early_rows.values()), 'required': names, 'not_run': skipped, 'board': board,
+                         'problems': early, 'policy': policy, 'policy_reason': policy_reason, 'startup_measured': None,
+                         'warnings': [w for r in early_rows.values() for w in r['warnings']],
+                         'tool_sha256': tool_digest(catalog),
+                         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
+                         'seconds': 0.0, 'stopped_before_browser': True}
+        raise error
     owned = work is None
     work = Path(work or tempfile.mkdtemp(prefix='tiktok-runtime-regression-')).resolve()
     work.mkdir(parents=True, exist_ok=True)

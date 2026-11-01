@@ -90,6 +90,12 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
     assets = package_checks.packed_assets(native)
     if not assets['passed']:
         raise ValueError('packed resource check: ' + '; '.join(assets['errors']))
+    # v7.9 (出包检查提速 S8, 总表 19 ②): the finalize record is compared with the bytes about to be zipped before the
+    # startup runtime check and the regressions; until v7.8 only after check() had run every regression.
+    summary = verifier.finalize_summary(finalized) if isinstance(finalized, dict) and 'decision' in finalized else finalized
+    problem = verifier.finalize_problem(summary, {name: hashlib.sha256(data).hexdigest() for name, data in files.items()})
+    if problem:
+        raise ValueError('finalize record does not match the ZIP: ' + problem)
     observed = None
     if interaction_audio_trace:
         from audit_interaction_audio import audit
@@ -118,7 +124,10 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
         result['native_pre_home_bytes'] = sizes.get('pre_home_bytes')
         receipt = verifier.make_receipt('build_checked_zip', temporary, result['sha256'], result['file_sha256'],
                                         result['package_gates'], board,
-                                        {'tool_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
+                                        {'tool_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                                         # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses these for the same bytes
+                                         'regressions': package_checks.regression_record(
+                                             result.get('rewarded_ad_regression'), result.get('runtime_regression'))},
                                         finalize=finalized)
         problem = verifier.finalize_problem(receipt['finalize'], result['file_sha256'])
         if problem:

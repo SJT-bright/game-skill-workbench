@@ -7,6 +7,9 @@
 import { GEOM_JS } from './geom.mjs';
 export { GEOM_JS };
 const L = await import(globalThis.CFG.lib);
+// v7.9 (出包检查提速 S7, 总表 19 ③): every page round trip here goes through lib.mjs track(), which touches
+// CFG.progressFile, so runtime_regression.py can tell a slow suite from a stuck one.
+const pe = (page, ...a) => L.track(page.evaluate(...a));
 
 // Real phone numbers in points (Saul's iPhone 14 TikTok, 2026-10-29). SE capsule x is derived, not measured: warn only.
 export const DEVICES = {
@@ -26,7 +29,7 @@ export async function setViewport(page, dev) {
 }
 
 export async function pageFps(page) {
-  return page.evaluate(() => new Promise((done) => { let n = 0; const t0 = Date.now(); const f = () => { n++; if (Date.now() - t0 < 1000) requestAnimationFrame(f); else done(n); }; requestAnimationFrame(f); setTimeout(() => done(n), 2500); })).catch(() => null);
+  return pe(page, () => new Promise((done) => { let n = 0; const t0 = Date.now(); const f = () => { n++; if (Date.now() - t0 < 1000) requestAnimationFrame(f); else done(n); }; requestAnimationFrame(f); setTimeout(() => done(n), 2500); })).catch(() => null);
 }
 
 // Fresh load: device profile, empty save, the base host query (mouse=1&run=<suite> + adapter.host_query) and `query`.
@@ -46,7 +49,7 @@ export async function waitHome(page, { homeScene = null, adapterHome = null, tim
   const t0 = Date.now();
   let last = null, stableSince = 0, st = null;
   while (Date.now() - t0 < timeout) {
-    st = await page.evaluate(() => {
+    st = await pe(page, () => {
       const cc = window.cc, s = cc && cc.director && cc.director.getScene && cc.director.getScene();
       const log = window.__hostLog || [];
       let lastLoad = 0;
@@ -73,7 +76,7 @@ export async function waitHome(page, { homeScene = null, adapterHome = null, tim
     if (okScene && st.frames > 60 && st.sinceLoad >= quietMs && stableSince && Date.now() - stableSince >= quietMs) {
       const f1 = st.frames;
       await sleep(500);
-      const f2 = await page.evaluate(() => window.cc.director.getTotalFrames()).catch(() => f1);
+      const f2 = await pe(page, () => window.cc.director.getTotalFrames()).catch(() => f1);
       if (f2 > f1) return { ok: true, ms: Date.now() - t0, scene: st.scene, frames: f2 };
     }
     await sleep(500);
@@ -82,7 +85,7 @@ export async function waitHome(page, { homeScene = null, adapterHome = null, tim
 }
 
 export async function engineMajor(page) {
-  return page.evaluate(() => {
+  return pe(page, () => {
     const c = window.cc, legacy = window.__H && window.__H.G && window.__H.G.cc;
     const v = String((c && (c.ENGINE_VERSION || c.VERSION)) || (legacy && legacy.ENGINE_VERSION) || '');
     const m = v.match(/^(\d+)/);
@@ -149,7 +152,7 @@ const VISIBLE_BODY = `
 `;
 
 export async function visibleNodes(page) {
-  return page.evaluate('(function(){' + GEOM_JS + VISIBLE_BODY + '})()');
+  return pe(page, '(function(){' + GEOM_JS + VISIBLE_BODY + '})()');
 }
 
 export async function shot(page, file) {
@@ -191,7 +194,7 @@ export const HELPERS = GEOM_JS + `
 `;
 
 export function evalJs(page, body) {
-  return page.evaluate('(function(){' + HELPERS + '\n' + body + '\n})()');
+  return pe(page, '(function(){' + HELPERS + '\n' + body + '\n})()');
 }
 
 // ---------- tap probe (v7.8 W93: where a dead tap got stuck) ----------
@@ -347,15 +350,15 @@ export const PROBE_JS = `(function () {
 })()`;
 
 export async function installProbe(page) {
-  return page.evaluate(PROBE_JS).catch(() => false);
+  return pe(page, PROBE_JS).catch(() => false);
 }
 // Open a tap window; returns the page clock (ms) at its start (pass it to probeRead as `since`), or null.
 export async function probeStart(page, target) {
   await installProbe(page);
-  return page.evaluate((t) => { const P = window.__bsProbe; if (!P) return null; P.cur = { t0: Date.now(), target: t, hit: null, end: null, cancel: null, emits: [], clicks: [], calls: [], err: null }; return P.cur.t0; }, target).catch(() => null);
+  return pe(page, (t) => { const P = window.__bsProbe; if (!P) return null; P.cur = { t0: Date.now(), target: t, hit: null, end: null, cancel: null, emits: [], clicks: [], calls: [], err: null }; return P.cur.t0; }, target).catch(() => null);
 }
 export async function probeStop(page) {
-  await page.evaluate(() => { if (window.__bsProbe) window.__bsProbe.cur = null; }).catch(() => {});
+  await pe(page, () => { if (window.__bsProbe) window.__bsProbe.cur = null; }).catch(() => {});
 }
 // What the open tap window saw, plus the target button's own state; `since` = page ms from which unanswered requests
 // count (a tap's own start, or the tap that opened a popup), hostIdx = window.__hostLog length at that point.
@@ -425,7 +428,7 @@ export async function runActions(page, actions) {
       continue;
     }
     if (a.wait_scene) {
-      const ms = await poll(() => page.evaluate((s) => { const sc = window.cc && cc.director.getScene(); return !!(sc && (sc.name === s)); }, a.wait_scene), a.timeout || 30000);
+      const ms = await poll(() => pe(page, (s) => { const sc = window.cc && cc.director.getScene(); return !!(sc && (sc.name === s)); }, a.wait_scene), a.timeout || 30000);
       log.push({ wait_scene: a.wait_scene, ms });
       if (ms < 0) return { ok: false, log, why: 'scene ' + a.wait_scene + ' not reached' };
       await sleep(a.after || 1000);
@@ -499,7 +502,7 @@ export const OCCLUSION_JS = `(function (cands) {
 // out of a list window, or under a frame drawn later). W87 calibration, 指尖麻将 v56: Skin5/6 of the Tile Collection
 // sit below the list window under the panel frame; the mask box is larger than what is drawn, so only pixels tell.
 export async function drawnShare(page, path) {
-  await page.evaluate('(function(path){' + GEOM_JS + `
+  await pe(page, '(function(path){' + GEOM_JS + `
     window.__drawn = null;
     var n = cc.find(path.replace(/#[0-9]+$/, '')); var gl = glContext(); if (!n || !gl || !gl.readPixels) { window.__drawn = { error: 'no node or no webgl' }; return; }
     var W = gl.drawingBufferWidth, H = gl.drawingBufferHeight, F = V3 ? frameCss() : null, FS = V3 ? null : cc.view.getFrameSize();
@@ -515,16 +518,16 @@ export async function drawnShare(page, path) {
       window.__drawn = { share: +(c / area).toFixed(3), area: area };
     }).catch(function (e) { try { restore && restore(); } catch (x) {} window.__drawn = { error: String(e) }; });
   })(` + JSON.stringify(path) + ')');
-  for (let i = 0; i < 40; i++) { await sleep(150); const d = await page.evaluate(() => window.__drawn).catch(() => null); if (d) return d; }
+  for (let i = 0; i < 40; i++) { await sleep(150); const d = await pe(page, () => window.__drawn).catch(() => null); if (d) return d; }
   return { error: 'timeout' };
 }
 
 // Measure 3D occlusion of candidates {path, kind, box} with the director paused (caller pauses / resumes).
 export async function occlusion(page, cands, maxPolls = 240) {
   if (!cands.length) return { res: [], meshes: 0 };
-  await page.evaluate(OCCLUSION_JS + '(' + JSON.stringify(cands) + ')');
+  await pe(page, OCCLUSION_JS + '(' + JSON.stringify(cands) + ')');
   let occ = null;
-  for (let i = 0; i < maxPolls && !occ; i++) { await sleep(250); occ = await page.evaluate(() => window.__occ).catch(() => null); }
+  for (let i = 0; i < maxPolls && !occ; i++) { await sleep(250); occ = await pe(page, () => window.__occ).catch(() => null); }
   return occ || { error: 'timeout' };
 }
 // covered_3d thresholds: a button >= 30 % painted over, a label >= 50 %, on at least 40 px of its own footprint

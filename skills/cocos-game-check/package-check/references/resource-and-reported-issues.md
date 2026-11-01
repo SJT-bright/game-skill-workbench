@@ -48,7 +48,8 @@ python <skills>/remake-core/scripts/package_issue_gate.py init --project <工程
 python <skills>/remake-core/scripts/package_issue_gate.py report \
   --project <工程> --native <故障Native> --id <稳定问题ID> \
   --message '<反馈原话或准确描述>' --targets <实际业务.js> <相关数据.json> \
-  --cases <case合同.json> --runner <已审阅的项目定点运行器.py或.cjs>
+  --cases <case合同.json> --runner <已审阅的项目定点运行器.py或.cjs> \
+  --source local     # 手机上看到的：--source device --device-zip <手机上那个ZIP> --symptom '<看到了什么>' [--phone-error '<报错那一行>']
 ```
 
 case合同示例（只是格式，实际字段和预期必须来自本游戏）：
@@ -58,6 +59,21 @@ case合同示例（只是格式，实际字段和预期必须来自本游戏）�
 ```
 
 运行器须实际执行当前Native的生产逻辑/加载/输入链并输出`{"observed":{...}}`，不能只输出预期数字或恒定pass。登记时固定运行器哈希，调用使用固定的解释器与`--native/--case`参数，不执行报告里提供的任意shell命令。新增运行器须先审阅实际调用目标；观察边界继续如实记录。
+
+### 手机上看到的问题（v7.9，指尖麻将 v42～v57）
+
+`report` 必须写 `--source device|local`。Saul 或测试的人在手机上看到的问题写 `device`，同时给：
+
+- `--device-zip`：手机上跑的那个 ZIP 原件（不是重新出的包）。
+- `--symptom`：手机上看到了什么，用报告人的话。
+- `--phone-error`：手机上有报错就照抄那一行（vConsole、录屏里的红字）。
+- case 里加 `"phone"` 断言：手机画面是什么样，例如首页显示着（`home_visible eq true`）。
+
+复验时，失败的一方必须是这个 ZIP 原样解出来的目录，改过一个字节、重新出的包、自己造的反例都拒（复验前就拒，不浪费浏览器时间）。在这个包上，`"phone"` 断言必须成立（画面对上），手机报错那一行必须出现；修好的包上那一行不能再出现。对不上就说明电脑上复现的是另一个问题，要先找出测试环境和手机差在哪。
+
+`check` 的结果多一项 `device_issues`，每条带一句中文 `line`，交付回复原样转给 Saul：对上报错的写「复现了手机上的画面和同一行报错」；手机上没报错的写「不能完全确定是同一个原因」。电脑上实在复现不出来、Saul 说先出测试包时，用 `defer-external`（`external_requirement: device_not_reproduced`，要他的原话），这条写「电脑上没复现，不能说修好了」。没有这条记录就一直拦包。
+
+起因：这款游戏首页点不动的手机问题，Codex 三次（v43、v44、v45）都在电脑上修了另一个问题或一个自己造的条件，就报了「已修复」，从没对上手机那行报错 `No loading progress for 10 foreground seconds`。同一个 v57 包，「时钟跳 12 秒」报的是另一行错；「卡住 JS 12 秒」才出手机那一行和首页显示着点不动的画面。回归：`scripts/test_device_issue_repro.py`。
 
 ## 定点复验通过才形成关闭事件
 

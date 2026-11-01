@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-31.english-simple.10.2.6",
+  "revision": "2026-10-31.english-simple.10.2.8",
   "skill": "remake-art",
-  "previous_provenance_sha256": "4b5a1d14cb3da575c3821c7d262b6b1fafc9b8751b15c5a2ae2152dc52ab6682",
+  "previous_provenance_sha256": "2c508dfff67cfa0bc0ec6aa7173725da53924807d5874142541418ad496a8f2a",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "e5d99c9dbbe0cf2dcc726f43775117b0f5580254ee0a26e1eb74922292fb850b",
-      "bytes": 11865
+      "sha256": "d6bbc9817e1f28e6ef13cc298994b8bffdd580bcb5399dc56238097eb39cc98d",
+      "bytes": 12129
     },
     {
       "path": "agents/openai.yaml",
@@ -27,8 +27,8 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "c05650a7a6a0a92ef686063acf86defe21ecbe4781b3d233980e1967cf5a2dbd",
-      "bytes": 5289
+      "sha256": "e4b27375686ee3790bfb315496f9feb5f747c3c31e7b760b7f552ae63ccc0572",
+      "bytes": 5604
     },
     {
       "path": "references/artwork-and-feedback.md",
@@ -102,8 +102,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "c575e6d269daba7de207d85cf73a7ba37a2087d4b79f16e1b6e747c965fd675d",
-      "bytes": 87518
+      "sha256": "c614846e638d7470ae2cac118b7940dd86533002b9540018acd513e22793a38f",
+      "bytes": 87677
     },
     {
       "path": "references/panel-composite-review.md",

@@ -41,3 +41,36 @@ Pippa 原工具对 atlas.json 返回 applicable=false、checked=0；适配后原
 `audit_atlas_slices.py` 以前只查 `icon_`、`node_`、`btn_`、`digit_` 开头的切片，图片字、局内棋子、投射物、障碍打进图集后一张都不查。现在其余切片按 `scope_body` 查：主体不能被切片框切断（`connected_body_cut_by_rect`），切片边上不能挂一条细的别家残片（`edge_fragment`，宽或高不到切片的 20%、贴着切片边）；字母、闪光这类自己分开的部分不算。本来就相连的不查（报告 `skipped` 里列出原因）：名字带 tile/tileset/terrain/ground/floor/wall/road/grass/water/map/bg/background/pattern/seamless/border/panel/bar/fill/line 的、九宫格/平铺的、四条边都不透明的整块图，以及 `frames.json` 里写了 `"slice_role": "tileset"` 的。贴图文件不存在的新范围切片也只列进 `skipped`。扁平 `atlas.json`（image/x/y/w/h）不再要求有 btn_/icon_/node_ 开头的条目。
 
 校准：把 Ingrid r3 的独立 PNG（closet、caption_closet、caption_energy、caption_level、snowball 等 12 张）原样打成一张图集，报出 5 张 `edge_fragment`，正是那三轮里修的；r9 修好的同名图全过；v7.7.5 只查到 1 张（btn_play），一张都不报。Holly 的地面 tile 和天空切成 40 格的整块图集全部按 tileset 跳过，不误报。
+
+## .plist 图集也查（v7.8 补）
+
+TexturePacker / Cocos 的 `.plist` 图集（原版中文游戏和英化游戏大多用它）以前一张都不查。现在 `audit_atlas_slices.py --project` 会在同样的根目录里找 `.plist`，只认带 `frames` 字典和 `metadata` 的精灵图集；粒子 `.plist`（没有 frames）、`Info.plist` 之类不算，test/tests/docs/node_modules/.git/build/simulation 下的不进。`plist_atlas_adapter.py` 读 format 0～3（format 2 的 frame/rotated/sourceSize，format 3 的 textureRect/textureRotated/spriteSourceSize/aliases），贴图按 metadata 的 realTextureFileName 或 textureFileName 在 .plist 同目录找，不猜。找不到时照上面口径：普通切片列进 `skipped` 写原因，icon_/node_/btn_/digit_ 单体切片直接报错。
+
+判定和角色不变：帧名去掉文件夹和 `.png` 后再看 icon_/btn_ 前缀、tile/bg 等名字；转过 90° 的帧（rotated）按它在贴图里实际占的 h×w 区域查切片，运行帧对比（`--dumps`）用没转过的 w×h，dump 里帧名带不带 `.png`、用 format 3 别名都能对上；`trim` 关掉的精灵按 sourceSize 对。
+
+打包器出的图集有三处和手拼图集不同，只对 .plist 生效：
+
+1. 间距为 0 时相邻帧的图案会贴在一起。别的帧框里的像素算那一帧的，查本帧主体时先遮掉；主体伸进没有帧占的空白区仍算被切。
+2. 打包时开了 extrude（把每张图的边缘像素往外复制 1 像素）的图集，自动识别复制圈的宽度，这一圈不算丢失的主体；主体越过这一圈继续延伸，仍报 `connected_body_cut_by_rect`。
+3. 打包器会把每张图紧裁到自身外框，所以图自己的闪光点、武器尖必然贴边。`edge_fragment` 只报两种：落在别的帧框里的像素，或沿切片边延伸的细长条（贴着的那条边方向长度 ≥ 厚度的 4 倍，厚度 ≤ max(3px, 切片 20%)）。
+
+另外，按 Aseprite/拆图默认命名的 `tile000`、`tile001`……帧是动画格，照常检查，不按 tileset 名字跳过。
+
+校准：本机 71 个不重复的 .plist 图集，共 1608 帧，全部当作在页面上显示来跑：查 1498 帧，跳过 108 帧（名字像 tile/bg 的 57 帧，四边都不透明的整块图 51 帧），报 9 帧。不加上面三条时报 190 帧，多出来的 181 帧都是误报（DessertMatch 无间距方格 20 帧、BallPopParty extrude 1 的 140 多帧、特效闪光贴边 14 帧等）。剩下 9 帧里，BallPopParty 的 3 张英文字图和指尖麻将的 backdown 是真问题（重画的图比帧框大 1 像素，描边被切掉一条）；2 帧是图上被抹空、游戏已改用单图的废帧（`empty_slice`）；2 帧是 icon_ 开头但本来就是多部件的图（暂停双竖条、放射光），属于命名规则要求声明角色的情况；1 帧是塔防英雄像素图帽尖贴边的已知误报。真工程 ReefGuard 全流程：34 个 .plist、查 209 帧、1761 条运行帧观测，其中 19 个转过的帧尺寸对上，通过。
+
+命令和原来一样：
+
+```sh
+python3 <skills>/remake-core/scripts/audit_atlas_slices.py --project <工程> --dumps <dump目录> --out <输出>
+python3 <skills>/remake-core/scripts/audit_atlas_slices.py --manifest <某个.plist> --out <输出>
+cd <skills>/remake-core/scripts && python3 -m unittest test_plist_atlas
+```
+
+## 两处默认角色修正（美工补丁第三版，2026-10-31）
+
+拿第二版补丁和 v7.8 在本机 13 个图集上对比后改的两处：
+
+1. 名字带 `panel` 的切片不再按 tileset 跳过。PaperCutKid 的 `panel_reward`、`panel_settings` 顶部的礼盒、闪电、齿轮、星星装饰被切掉，以前因为名字带 panel 一张都不查。真正的九宫格面板仍然靠九宫格、平铺标记和"四边都不透明"跳过。
+2. 扁平 `atlas.json` 里没写 `slice_role` 的条目，按名字给默认角色：icon_/node_/btn_/digit_N 按一个主体查，其余按 `scope_body` 查，和 frames.json 一样。以前适配器给每个条目都默认 single_body，BalloonRun 的 `txt_Profile_Revisit` 这类几个词分开的图片字被当成"混进别家残片"误报。
+
+第二版补丁里"只查 dump 里显示过的切片"（displayed、edge_sliver）不用了：v7.8 的 scope_body 不要 dump 也能查全部切片，抓得更多；第二版只多抓到 panel_reward，已由上面第 1 条补上。

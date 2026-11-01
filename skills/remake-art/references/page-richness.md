@@ -320,7 +320,13 @@
   - `home_hero_unknown` / `home_hero_hidden` / `home_hero_small`：首页主角可见包围盒至少 90% 在屏幕内、面积至少占屏幕 8%（企鹅雪道美术 v3 只露半个企鹅）。主角按顺序认：`docs/art/hero.json` 的 `{"home": ["节点路径或帧名通配"]}` → 节点或帧名带 hero/player/mascot/character/主角 的最大一张 → 最大的角色样图片（不是按钮、logo、背景、面板、框、胶囊、装着按钮的板子，至少占屏 2%）；都认不出就报「认不出主角」，不放过。
   - `hud_digit_small` / `hud_digit_contrast`：游戏中屏幕上方 18%、下方 10% 或 hud/顶栏节点下的数字，字高至少屏高 3%、和身后对比度至少 3:1（企鹅雪道 v4 分数、货币约 1.3%）。
   - `black_edge_band`：复活页、结算页最上或最下 4% 是空黑条（H6，方块冲冲 BUGFIX 390×844）。
-  这些进 art_check 的「位置穿模」一行和新的「首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边」一行，美术回执跟着结论走。
+  - `clear_color_band`（美工补丁第三版并入）：任何页面，页面背景图没铺到屏幕上下边，最上或最下 4% 里没画图的地方是同一种纯色（不只黑色），而且和紧挨着的背景图颜色不同。黑条比 4% 厚、只黑了一部分也能报（泡泡六角龙上下各约 9% 的黑边，首页、局内、结算页都有；方块冲冲局内左上角黑块）。没有 2D 背景的 3D 场景、弹窗四周露着同一种颜色的不判。同一页 `black_edge_band` 已报就不再报。
+  - **看得见的字芯**（`audit_glyph_core.py`，Milo's Bubble Cove 10-24 "2比5文字怎么这么小，生成出来的文字怎么这么小"、TankAce 10-26、企鹅雪道 10-30）：`hud_digit_small` 量的是字号，生成的数字图自带宽透明边时，字号够大、看得见的数字仍然很小。
+    - `small_glyph_core`：字号或数字图框够大，但屏幕上看得见的数字（字号 × 字体墨迹比）不到门槛。核心数值（分数、货币、体力、关卡数、结算奖励）至少 18 CSS px，推荐 22 px 以上；次要数值（价格、卡片等级、数量角标）至少 12 px。
+    - `small_value_font`：游戏中 HUD 以外的核心数值（首页顶栏、结算页、复活页），字号或图框本身就小（游戏中 HUD 仍归 `hud_digit_small`）。只拦重塑游戏；英化游戏（新游戏标记、源码记录或 `docs/board.txt` 写 localize，或 `docs/art-style.txt` 写 original）改报 `small_value_font_hint`，只列在这一行「通过」后面请人看图，不算不通过（Saul 2026-10-31：「small_value_font 先只拦重塑」）。
+    - `digit_glyph_padding`（工程字体，静态）：.fnt / .labelatlas 的数字墨迹不到字号的 65%。生成的数字图要紧裁到墨迹再做字体，`info size` 接近数字实际高度。
+    - `glyph_core_review`：找不到字体数据、只能在截图上量到偏小，只提示，不算失败，要看截图。
+  这些进 art_check 的「位置穿模」一行和「首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边」一行（字芯三条也算在这一行），美术回执跟着结论走。
 - 数字是原生字体照旧由 `font_number` 拦。一张整图里画出来的穿模（程序分不出来）靠穿模审查图人工看。
 - 数字叠印、卡片、假透明格子见下一节（`glyph_overlap`、`double_number`、`negative_spacing`、`font_advance`、卡片里的 `clip_out`、`checker_fill`）。
 
@@ -399,6 +405,25 @@
 - iPhone 上小于 24px 的字，对比度至少 4.5:1；24px 以上的至少 3:1；
 - 有描边时，描边和背景对比度≥3:1、字和描边对比度≥3:1，也算合格；
 - 浅色字压浅底、深色字压深底、字压在很花的图上，都不合格：优先调整字芯与描边（描边不能细到发丝）；确需承载时只用主题/生成插画底图，禁止深色实心字底和数字值槽。
+
+### 别的板块交来的页面：美术归美工（Saul 2026-11-01，两个板块）
+
+Saul：「广告skill做新的转盘的时候，你就要去做这个转盘的美工」。别的板块决定**有什么、发多少、怎么接**，画出来什么样、能不能过检查归本板块。新加的页面和弹窗和本板块自己做的页面一样：照启动包（英化照原游戏）画风生图，按钮和数字生图，写进 `docs/art/screens.json`，两种手机尺寸都 `dump_ui`，`art_check.py` 整页检查（深色按钮、物品图标底板、字和数字写在一行、穿模、对比度、单调弹窗……）照样跑。
+
+| 元素 | 谁定内容和数额 | 图从哪来 | dump 时写的 purpose | 除了通用的整页检查，还查什么 |
+|---|---|---|---|---|
+| 转盘（每天免费 + 看广告转、结果窗看广告 x2） | ad-boost `modules/wheel`、经济 | ad-boost 流水线按 `modules/wheel/art.json` 生成（盘面、指针、SPIN、结果窗、勾选框……29 张） | `wheel`、`wheel_result` | `adboost_page`：转盘页要看得到盘面、指针和 SPIN 按钮；指针下的格子和发的奖一致由 ad-boost 的测试查 |
+| 签到（七天、领奖窗看广告 x2 勾选框） | ad-boost `modules/checkin`、经济 | ad-boost 流水线 | `checkin` | `checkin_page`：七张卡、每张有奖励、第 7 天大卡、有 CLAIM（ad-boost 的 Day1–Day7 卡片和图片数字也认） |
+| 礼包（每 N 关宝箱、漂浮礼物）、离线收益、体力、道具补给、开局增益、提示、看广告领币、任务 x2、商店免费领、奖励关，以及 key-chest、moment-boost、extra-slot、online-ladder、timer-chest | ad-boost 各板块、经济 | ad-boost 流水线 | `gift`、`offline`、`energy`、`booster_refill`、`prestart_boost`、`hint`、`coin_ad`、`quest`、`shop_free`、`bonus_level`、`key_chest`、`moment_boost`、`extra_slot`、`online_ladder`、`timer_chest` | 弹窗规则（插图占面板 ≥10%、不是大白板） |
+| 看广告解锁皮肤（2/5）、下一关前试用 | ad-boost `modules/skin-ad`、皮肤、经济 | ad-boost 流水线；皮肤本身按皮肤板块出图 | `skin_ad`、`trial`、`skins` | 功能页按钮面积不超 40%（试用）；皮肤页规则 |
+| 复活、结算 x2 和 Claim | 广告、经济（ad-boost `base-check` 只补缺的） | 本板块 | `revive`、`result_win`、`result_fail` | 结算页规则（x2 大按钮、Claim 一行字、≥3 张图） |
+| 首页礼盒（10 帧动画）、顶部资源栏、看广告领币入口 | 经济、广告 | 本板块 | `home` | 首页规则；礼盒 10 帧动画在美术关查 |
+| 关卡地图、奖励关节点、限定关 | 关卡 | 本板块 | `map` | 一屏至少 6 关、每关编号星星状态 |
+| 教程手指和气泡 | 新手引导 | 本板块 | 教程那一页的 purpose | 只能看图：两种比例下对准 |
+
+- **ad-boost 的图放在 `assets/resources/adboost/<板块>/`**。工程里有这个文件夹，`art_check.py` 就要求每个板块至少有一张图出现在两种手机尺寸的 dump 里，否则报「缺采集: ad-boost 板块 <板块>…」，整份美术检查不算通过（`shared` 共用图不单独算）。
+- **生成记录**：ad-boost 的图是它的流水线用 image_gen 生成的，提示词和原图在它的 `gen_log.json` 里。放进工程后跑 ad-boost 的 `scripts/art/skill_link.py record --project <工程> --gen <art_<板块> 生图目录>`，写进 `docs/art/generated.json`；没记的话「新做的图都有生成记录」一行会点名是哪个 ad-boost 板块、该跑哪一步，重塑新游戏出不了包。
+- **规则以本板块为准**：ad-boost 的提示词规则只从它的 `skill_link.py` 读本板块（T02 按钮底色不深、T09 物品图标不垫底板、T11 英化照原游戏、提示词禁用词……）；本板块改了规则，`skill_link.py info` 能看出用的是哪一版。
 
 ### 按钮全部来自同一套（用户 2026-10-22）
 

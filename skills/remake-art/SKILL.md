@@ -48,6 +48,13 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 
 [原画风与反馈](references/artwork-and-feedback.md)、[生图后全量巡检](references/full-visual-review.md)、[动态画面](references/dynamic-visual-review.md)、[题材与可读性](references/theme-readability.md)、[图集切片](references/atlas-slice-integrity.md)、[角色姿态交接](references/actor-pose-handoffs.md)、[首页与设置页](references/common-game-components.md)。
 
+## 广告 Skill 加的板块也照本页做（Saul 2026-11-01）
+
+Saul 2026-11-01：「我要使用广告skill，你做一个转盘也要结合美工skill，一起」。ad-boost `~/.kiro/crew/skills/ad-boost/`（Codex：`~/.codex/skills/ad-boost/`；Claude Code：`~/.claude/skills/ad-boost/`） 给游戏加的转盘、礼包、签到、离线收益、皮肤试用这类板块，面板、按钮、图标、位图数字**都按本页做**，不另起一套画风；ad-boost 和本页说法不一样时以本页为准。
+- 重塑：色板和画风照这款的 `ART_DIRECTION.md`（强调色只给 PLAY、NEXT、Watch Ad x2 和转盘指针）；提示词照[提示词模板](references/image-prompts-and-3d-reskin.md#二提示词模板)，默认不写 highlight、outline、glossy 这些词；[Saul 的美术禁区与必做项](references/saul-art-rules.md)照做（按钮底色不深、物品图标不垫底板、不加装饰）。ad-boost 的生图流水线（`scripts/art/`）由它的 `scripts/art/skill_link.py` 读这几条，并把每张图用 `art_records.py generated` 记进 `docs/art/generated.json`；整页检查用本板块的 `art_check.py`，过[验收清单](#验收清单)。
+- 英化：照原游戏画风（[T11](references/saul-art-rules.md#t11-风格统一与换皮完整度)），原图能沿用就沿用。
+- 每个板块做哪几张图、多大，看 ad-boost 的 `modules/<板块>/art.json`；分工全文在 ad-boost 的 `references/联动.md`「美术」。没装 ad-boost 时这段不适用。
+
 ## 联动表：改了美术与UI，要回查
 
 | 改了 | 回查 |
@@ -57,13 +64,22 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 | 皮肤页、商店页 | 价格/加成显示与表一致（皮肤、经济） |
 | 地图、资源栏 | 总关数和数字实时更新（关卡） |
 
+**反过来：别的板块新加了页面或弹窗，美术归本板块**（Saul 2026-11-01：「广告skill做新的转盘的时候，你就要去做这个转盘的美工」）。广告加量 ad-boost 的转盘、礼包、签到、离线收益、体力、道具补给、提示、看广告领币、任务 x2、商店免费领、奖励关等板块，经济的礼盒和看广告领币，皮肤页和试用窗，关卡地图和奖励关节点，教程手指和气泡，都按下表做，见[别的板块交来的页面](references/page-richness.md#别的板块交来的页面美术归美工saul-2026-11-01两个板块)：
+
+| 别的板块加了 | 本板块要做 |
+|---|---|
+| 新页面、新弹窗、新入口按钮 | 照启动包（英化照原游戏）画风生图，按本板块的禁止项做；写进 `docs/art/screens.json`，两种手机尺寸都 `dump_ui`，过 `art_check.py` |
+| ad-boost 的板块（图在 `assets/resources/adboost/<板块>/`） | ad-boost 的流水线按本板块的规则生图（它的 `scripts/art/skill_link.py` 是唯一入口）；放进工程后跑 `skill_link.py record` 写生成记录；面板和结果窗两种尺寸都要有 dump，否则 `art_check.py` 报「缺采集: ad-boost 板块…」，不算美术通过 |
+| 两边规则说法不一样 | 以本板块为准（ad-boost `references/联动.md` 也这样写） |
+
 ## 验收清单
 
 - [ ] 画风照启动包（英化照原游戏，Saul 要求重新设计时也一样）、不混用几套；没有[禁止项](references/style-limits.md#〇画风禁止项清单只查负向用户-2026-10-28)：深色/过密/过细的字、大面积深色/纯黑纯色底、大白板、单色图标、刺眼整屏高亮、无层次平涂、字压复杂底图、遮挡穿模、模糊；玩区 ≥80%
 - [ ] 功能按上/左/右/下分区，次要功能用小图标
 - [ ] `art_check.py` 按适用行运行通过，两种比例截图看过
-- [ ] [Saul 的美术禁区与必做项](references/saul-art-rules.md)第一节逐项做了；`font_value_label`、`flat_value_plate`、`dev_info_text` 没有报出
+- [ ] [Saul 的美术禁区与必做项](references/saul-art-rules.md)第一节逐项做了；`font_value_label`、`flat_value_plate`、`dev_info_text`、`small_glyph_core`、`small_value_font`（只拦重塑，英化只提示）、`digit_glyph_padding`（数字看得见的字芯够大、数字图紧裁）没有报出
 - [ ] `art_check.py` 的「按钮底色不深、物品图标不另垫底板」一行通过（`dark_button`、`icon_plate`、`dark_button_state` 没有报出，列为接近深色的看过图）；英化（包括要求重新设计的）按钮、图标、金币画法和原游戏是一套（Saul 2026-10-31，[美术总表](references/saul-art-rules.md) T02、T09、T11；`visual_verdict` 第 6–8 项）
+- [ ] 别的板块加的页面和弹窗（ad-boost 的转盘、礼包、签到……，礼盒、皮肤页、试用窗、地图）都在 `docs/art/screens.json` 里、两种尺寸都有 dump，`art_check.py` 没有报「缺采集: ad-boost 板块…」；ad-boost 的图都有生成记录（`skill_link.py record`，Saul 2026-11-01）
 - [ ] 录了点按钮、开关弹窗、调音量、局内消除的录屏（dump 目录下的 `frames/`），`art_check.py` 的"动态闪屏"一行通过
 - [ ] 改动页面的按钮真实点击有效
 - [ ] 只交 PNG/JPG、素材都是 CC0；代码加载或带裁边的大图已在 `image-overrides.json` 写 `max_side`；有色带的图已按张处理

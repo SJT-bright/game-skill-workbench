@@ -318,8 +318,11 @@ def main():
     j = first_json(text)
     if j:
         risks = j.get('known_risks') or []
-        add('触屏写法', '需处理' if risks else '通过',
-            (f"发现{len(risks)}处已知会让手机点不中的写法：" + '；'.join(str(r)[:80] for r in risks[:3])) if risks else '没有发现已知的危险写法',
+        pause = [r for r in j.get('review_risks') or [] if str(r.get('rule', '')).startswith('pause_restore')]
+        note = ('。暂停关窗把存下的值写回，要补「暂停期间别的停顿结束→点继续→计时走、点牌有效」短用例：'
+                + '；'.join(f"{r['file']}:{r['line']} {r['live']}={r['saved']}" for r in pause[:3])) if pause else ''
+        add('触屏写法', '需处理' if risks else ('提示' if pause else '通过'),
+            ((f"发现{len(risks)}处已知会让手机点不中的写法：" + '；'.join(f"{r.get('file')}:{r.get('line')} {r.get('rule')}" if isinstance(r, dict) else str(r)[:80] for r in risks[:3])) if risks else '没有发现已知的危险写法') + note,
             'mobile_input.json')
     else:
         add('触屏写法', '出错', text.strip()[-300:], 'logs/audit_mobile_input.log')

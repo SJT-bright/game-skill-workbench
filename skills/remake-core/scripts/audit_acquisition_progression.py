@@ -15,7 +15,9 @@ SKIN MODULE (user 2026-10-23, both boards, remake-core/references/game-modules.m
     background (when the game has a scene):
     exactly 10 = the free starting one + 9 for coins (3 common, 3 rare, 2 epic, 1 legendary)
   - only coins (no ad-only / ads+coins / either-or skins): ads feed the coins (x2 at every level end, gift box, bonus levels)
-  - prices: new tables ordinary-levels = 10/15/20/25 ordinary base rewards (+-10%);
+  - prices: ordinary-levels tables follow their economy_policy: normal-5-80.v1 (new, Saul 2026-11-01) = 5/10/20/40/80
+    ordinary base rewards, a frozen normal-10-50.v1 table = 10/20/30/40/50 (+-10% here, exact in budget_errors);
+    an ordinary-levels table without economy_policy keeps 10/20/30/40/50;
     explicit legacy-2r or unmarked old tables retain the 2R +1/4/10/20 R curve
   - every non-free item has a coin bonus that rises with rarity, bands are errors here: skin 5-10 / 11-20 / 21-32 / 33-50,
     limited 51-60 (above every legendary); background 2-5 / 6-10 / 11-16 / 17-25
@@ -48,6 +50,12 @@ Usage:
 Exit codes: 0 pass, 2 fail or bad input. Configuration only; runtime, ads and saving are checked elsewhere.
 """
 from make_skin_table import PRICE_PROFILES, tier_levels
+from product_contract import ECONOMY_POLICIES, SKIN_POLICY_LEGACY, skin_tiers_B
+
+
+def tier_policy(economy_policy):
+    """Price policy of a table: its own normal-5-80.v1 / normal-10-50.v1, else (unmarked old table) normal-10-50.v1."""
+    return economy_policy if isinstance(economy_policy, str) and economy_policy in ECONOMY_POLICIES else SKIN_POLICY_LEGACY
 import argparse
 from fractions import Fraction
 import hashlib
@@ -223,7 +231,10 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
     if not isinstance(rows, list) or not rows:
         return {'status': 'fail', 'errors': ['Table must be a nonempty array of items'], 'warnings': [], 'groups': []}
     rank = {name.lower(): i for i, name in enumerate(tiers)}
-    if module == 'skin.v1' or economy_policy=='normal-10-50.v1':
+    priced_policy = isinstance(economy_policy, str) and economy_policy in ECONOMY_POLICIES
+    if price_level_targets is None:  # the table's own tiers; unmarked old tables keep 10/20/30/40/50
+        price_level_targets = skin_tiers_B(tier_policy(economy_policy))
+    if module == 'skin.v1' or priced_policy:
         rank['limited'] = len(tiers)
     elif module is not None:
         errors.append(f'unknown module {module!r} (the skin module is "skin.v1", make_skin_table.py)')
@@ -243,7 +254,7 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
                 raise ValueError(f'unknown rarity {rarity!r} (expected one of {", ".join(tiers)})')
             if unlock in REMOVED and not optional.get(unlock):
                 raise ValueError(f'{item}: unlock {unlock!r} is gone ({REMOVED[unlock]}, user 2026-10-23, both boards)')
-            if rarity == 'limited' and not ((module == 'skin.v1' and group == 'skin' or economy_policy=='normal-10-50.v1') and row.get('limited') is True):
+            if rarity == 'limited' and not ((module == 'skin.v1' and group == 'skin' or priced_policy) and row.get('limited') is True):
                 raise ValueError(f'{item}: rarity "limited" only for the limited protagonist skin(s) of the skin module ("limited": true)')
             in_module = module == 'skin.v1' and group in SKIN_GROUPS
             if unlock not in UNLOCKS and not (unlock in REMOVED and optional.get(unlock)):
@@ -300,12 +311,12 @@ def audit_rarity(rows, f, tiers, coins_per_level=None, coins_per_ad=None, max_ad
         entries.sort(key=lambda r: r['order'])
         if len({r['order'] for r in entries}) != len(entries):
             errors.append(f'Group {group}: duplicate display order')
-        if economy_policy=='normal-10-50.v1':
-            from product_contract import PRICE_LEVEL_TARGETS
+        if priced_policy:
+            exact=skin_tiers_B(economy_policy)
             base=normal_level_coins or coins_per_level
             for row in entries:
                 if row['unlock']=='free':continue
-                if not base or row['unlock']!='coins' or row['ads'] or row['coins']!=base*PRICE_LEVEL_TARGETS[row['rarity']]:errors.append('Group '+group+': exact ordinary reward budget required')
+                if not base or row['unlock']!='coins' or row['ads'] or row['coins']!=base*exact[row['rarity']]:errors.append('Group '+group+': exact ordinary reward budget required ('+'/'.join(str(v) for v in exact.values())+'B, '+economy_policy+')')
             result.append({'group':group,'items':entries});any_buyable=True
             continue
         buy = [r for r in entries if r['unlock'] in BUYABLE]
@@ -468,7 +479,8 @@ def main():
                                   meta.get('module'), enabled(next((p for p in a.table.resolve().parents if (p / 'docs').is_dir()), a.table.parent)),
                                   a.price_profile or meta.get('price_profile'),
                                   a.normal_level_coins if a.normal_level_coins is not None else meta.get('normal_level_coins', coins_per_level),
-                                  tier_levels(a.tier_levels) if a.tier_levels else meta.get('price_level_targets'), meta.get('economy_policy'))
+                                  tier_levels(a.tier_levels, tier_policy(meta.get('economy_policy'))) if a.tier_levels else meta.get('price_level_targets'),
+                                  meta.get('economy_policy'))
         else:
             if a.coins_per_ad is not None and a.coins_per_ad <= 0:
                 raise ValueError('coins-per-ad must be positive')
@@ -479,7 +491,7 @@ def main():
         if meta.get('module') == 'skin.v1':
             result['pricing'] = {'profile': a.price_profile or meta.get('price_profile') or 'legacy-2r',
                                  'normal_level_coins': a.normal_level_coins if a.normal_level_coins is not None else meta.get('normal_level_coins', coins_per_level),
-                                 'tier_level_targets': tier_levels(a.tier_levels) if a.tier_levels else tier_levels(meta.get('price_level_targets')),
+                                 'tier_level_targets': tier_levels(a.tier_levels or meta.get('price_level_targets'), tier_policy(meta.get('economy_policy'))),
                                  'boundary': 'Single-item ordinary-base-income target only; actual acquisition requires level-sequence income, purchase and equipped-bonus simulation.'}
         result.update(table=str(a.table.resolve()), table_sha256=hashlib.sha256(raw).hexdigest())
         if a.binding:

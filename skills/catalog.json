@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T12:27:29.508Z",
-  "treeHash": "915103493d2c8a3c689920e939b7548d0621234ae71a68d29c2b43fc6df8dd49",
+  "createdAt": "2026-11-01T12:29:53.039Z",
+  "treeHash": "7288248c32a200f6cf72faba8deb014a879bfc6748d271f61766fc0de22d14af",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2973,20 +2973,20 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "990789ee6461c0cb28223f294ca2ee4393088edcf871e46ec6a3578304bc2c57",
-      "fileCount": 397,
-      "bytes": 8671893,
+      "treeHash": "6012d3b6ee252b3abcefddf9b49b74df075fab9a752bf135beff3df366f2073c",
+      "fileCount": 410,
+      "bytes": 9081939,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "6228ecb04a9e17c7a8a0ac539014ce81c180c1a549b3d98806a1be4bdab901a2",
-          "size": 68687,
+          "hash": "45a90d03e4c7c5f38d6feb9f8cfc728019005137065011efecc4cc858d4a6fce",
+          "size": 70876,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "e87419ebe22e3f720defb9b896120a1a4359e91b506a3ae98e493990b906d8be",
-          "size": 11293,
+          "hash": "642de2460f08d5fb0e46d86e96691104e74a781cbfbc719c38557ff44a88c8fa",
+          "size": 11401,
           "executable": false
         },
         {
@@ -3446,6 +3446,18 @@
           "executable": false
         },
         {
+          "path": "examples/economy-snapshot/bad.json",
+          "hash": "a5e878e5d24a88ea2e633e41c474fc23a6c008c2ec04fc9f02cfe67f30c4b220",
+          "size": 10329,
+          "executable": false
+        },
+        {
+          "path": "examples/economy-snapshot/good.json",
+          "hash": "d4c76f068d4e34a8e7dc519486f529bc194af0608f8f7899f501fa362bed31f7",
+          "size": 9796,
+          "executable": false
+        },
+        {
           "path": "examples/flat-atlas/buttons.png",
           "hash": "bf215cdb65e3e422279b84d297dd084d41db5162d8b6dcff548e1005a32b006b",
           "size": 375810,
@@ -3669,8 +3681,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "1f1175d8f4016325bf0ecb2d64bcaaa6e3cb17bbe894add620f9fc9073f93cae",
-          "size": 40608,
+          "hash": "e84231f09c1a4a1657aeb63c6d2bcff34b2558ff144cfbe12f309dd77665434f",
+          "size": 40676,
           "executable": false
         },
         {
@@ -3711,8 +3723,8 @@
         },
         {
           "path": "scripts/art_check.py",
-          "hash": "baa526f27bee692156726b5ba763c5c12f62a756d44f83b485facd6a4fb9791b",
-          "size": 62990,
+          "hash": "e6594ecdc885b3b523ee2425be13b2b9f5d75a2b9afd0101ffa12982ccb3ccbd",
+          "size": 66947,
           "executable": false
         },
         {
@@ -3723,14 +3735,14 @@
         },
         {
           "path": "scripts/art_records.py",
-          "hash": "f8f7f02a7dc5e2c2bc9a7415191ea1f71dca3586de3b8e416769a7f55429cab1",
-          "size": 60730,
+          "hash": "bb8ca27661c01499e95a782e090c87a6917d8ce1ff88b2b4082dcdcbc0b88e42",
+          "size": 61726,
           "executable": false
         },
         {
           "path": "scripts/audit_acquisition_progression.py",
-          "hash": "35cc7df491fe94ee8b646f377a60c6e3d316f993ed9b7f03b33813e7ee0ac388",
-          "size": 35029,
+          "hash": "2319d8076a1887b9a5ae954e1749793de513fae26618f19404ac5300947f0c48",
+          "size": 35938,
           "executable": false
         },
         {
@@ -3753,8 +3765,8 @@
         },
         {
           "path": "scripts/audit_atlas_slices.py",
-          "hash": "98b54fac76fe0a659ddb69434ed32e777b98712331152e3a74058a734971f900",
-          "size": 11406,
+          "hash": "e988c914d1086701e158b8ece7b5bfb02ee35d641ed8358a1fcc7b55fba5f340",
+          "size": 17165,
           "executable": false
         },
         {
@@ -3831,8 +3843,14 @@
         },
         {
           "path": "scripts/audit_game_modules.py",
-          "hash": "707ccc4bab7dc044cb35b66852c8a3ec7c6ab27bcb1e716996ab83664255ca28",
-          "size": 25944,
+          "hash": "1f5b35c473db3e4c3a75f57f5ff199da912bbbf0916f9a4acbb98c7c369cf08f",
+          "size": 26236,
+          "executable": false
+        },
+        {
+          "path": "scripts/audit_glyph_core.py",
+          "hash": "047976695c70c523614c76d125d98e636ff0edd298bee27eb8bc47fe7520a739",
+          "size": 28956,
           "executable": false
         },
         {
@@ -3855,8 +3873,8 @@
         },
         {
           "path": "scripts/audit_level_plan.py",
-          "hash": "4c956e68429ed4c75e3144bb6a7be97fec3b90619d3307d9bb77c88d1e392e2b",
-          "size": 40636,
+          "hash": "ad4c2d43c952b8e580b91ce308981cfa258b59859d05a5de77e7650807f03c09",
+          "size": 40970,
           "executable": false
         },
         {
@@ -3867,8 +3885,8 @@
         },
         {
           "path": "scripts/audit_mobile_input.py",
-          "hash": "0063a2e62f56f47798e64e45bd7df63ae0922292460b01a5067cd5f5b0ac9a1d",
-          "size": 22150,
+          "hash": "95fcb6199077d5be083617bd0eccf65d8561cc6e35a99738b3d07783d2cce181",
+          "size": 26305,
           "executable": false
         },
         {
@@ -3951,8 +3969,8 @@
         },
         {
           "path": "scripts/audit_page_richness.py",
-          "hash": "efa93f0fc2109cdc9deee23b29a123d0ccf95f60621c09bc0d45e8ddf1a772e9",
-          "size": 176855,
+          "hash": "1fab385db624d854ce5a06d2868b0cd0cba78cf957e38f48ef74887554050d03",
+          "size": 188707,
           "executable": false
         },
         {
@@ -4035,8 +4053,8 @@
         },
         {
           "path": "scripts/audit_upload_startup.py",
-          "hash": "cf29f354009bbd9e5616d1341967bbe8aafe8fe818de5aea238c6eb842daddbf",
-          "size": 22607,
+          "hash": "025856760f82d4403ae4308e28638dbeb0fcf466232b517eefe5e7b1cd5200cd",
+          "size": 22901,
           "executable": false
         },
         {
@@ -4232,6 +4250,12 @@
           "executable": false
         },
         {
+          "path": "scripts/make_economy_config.py",
+          "hash": "30ff619abd332637f138e872cdded0282c1c8054dcce92c56c89b1e0f12d8f74",
+          "size": 31183,
+          "executable": false
+        },
+        {
           "path": "scripts/make_legacy_list.py",
           "hash": "ad94ce0ea296afd9581f887d16c1ea065eb5dcaf9b0944fe60b59f12aa3453e8",
           "size": 55404,
@@ -4245,14 +4269,14 @@
         },
         {
           "path": "scripts/make_skin_table.py",
-          "hash": "206f1225c327b074cef62577501aaf1c125daf18df85886c1cc0bc048940f681",
-          "size": 11054,
+          "hash": "104d9eaa8c51a903f329fd0adfeecfabc3369ff9e30487dc5d36b97ead782107",
+          "size": 13324,
           "executable": false
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "1d44d439c1425e13449d4c37fe6cbce40dac77a2f80e72756048cc71e86b31fd",
-          "size": 39205,
+          "hash": "844e04d1fa0e9bd43b89a07c06124343f3b8a30147fe6ea7db57a8bb02abd222",
+          "size": 40129,
           "executable": false
         },
         {
@@ -4323,8 +4347,8 @@
         },
         {
           "path": "scripts/package_gates/network.py",
-          "hash": "556c5a84823c2d310688ce48deb1cdc2a68a904f03264d562e44e7401dfaf883",
-          "size": 6427,
+          "hash": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
+          "size": 26122,
           "executable": false
         },
         {
@@ -4353,8 +4377,8 @@
         },
         {
           "path": "scripts/package_issue_gate.py",
-          "hash": "f15395aa873bb3b8763b12befad6f1b8190a6b31cdbfc80b3d0c651da711a0be",
-          "size": 29345,
+          "hash": "3abba91ebf5ab492bba1f6e0c96ee1c085eb340f7cf617f4b4438dd8af4331f8",
+          "size": 39680,
           "executable": false
         },
         {
@@ -4382,9 +4406,15 @@
           "executable": false
         },
         {
+          "path": "scripts/plist_atlas_adapter.py",
+          "hash": "8b86568f0e70474ae103e0c0f78f3af4a7564e5f0927faec6cda2fc92634e739",
+          "size": 4176,
+          "executable": false
+        },
+        {
           "path": "scripts/preflight.py",
-          "hash": "6ccddc71e40ad999c6226761ff405bf149c0768de609fcf3f5d8f612ea7ba396",
-          "size": 46199,
+          "hash": "06950049d2d16987c34d9a06cc1f9690220d934b5f8e0d0372864d292688cf0a",
+          "size": 46693,
           "executable": false
         },
         {
@@ -4407,8 +4437,8 @@
         },
         {
           "path": "scripts/probe_cocos2_touch_coordinates.cjs",
-          "hash": "8c1a0d26802cee214018f86aa069866cba6589ab8217988391f3658276c8a713",
-          "size": 9135,
+          "hash": "59057aabd2dbcc38e6d96a4b5abc884e41e9df70a9768c3a2a1cddc27d19f118",
+          "size": 11610,
           "executable": false
         },
         {
@@ -4437,8 +4467,8 @@
         },
         {
           "path": "scripts/product_contract.py",
-          "hash": "e6b9a1e4cf8ba8f85c4dfd2c12a061dd64682d2c4ee5094fce0b955a4d145574",
-          "size": 14463,
+          "hash": "a31f5c0623ee519a210879bfd0fa08ccbf5b273452e34fd840b40fa8f0603097",
+          "size": 105477,
           "executable": false
         },
         {
@@ -4545,8 +4575,14 @@
         },
         {
           "path": "scripts/test_ad_unlock.py",
-          "hash": "6f804305bd426c068f38ce7b1451f174d3dfb9d291d6f3c1b82ac5cf15dea53c",
-          "size": 6847,
+          "hash": "ca21458af89d23ffb08f7e1f07a1790b505410cd4162b0110daf231bd82d7cb9",
+          "size": 21763,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_adboost_art_link.py",
+          "hash": "2f05ddce2941dbea894022fa961e41f1f976f58e8daa581a93eb504484d19dc4",
+          "size": 10394,
           "executable": false
         },
         {
@@ -4676,6 +4712,18 @@
           "executable": false
         },
         {
+          "path": "scripts/test_economy_extended.py",
+          "hash": "e8c597cb2932e6bd834932ef257fdf6720d6c99904c0e0e85bb9ba752ab23ce1",
+          "size": 70519,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_edge_band_and_atlas_roles.py",
+          "hash": "85513c46381a6a0133fb0c412f3ae9df80c0d84e900a0e6a675a2857f0a81079",
+          "size": 3973,
+          "executable": false
+        },
+        {
           "path": "scripts/test_end_flow_one_video.py",
           "hash": "ae4b7bd0292f25f3ac319dae1e0775eadc8a324eaf82c58a8bc599f5e7612892",
           "size": 3603,
@@ -4745,6 +4793,12 @@
           "path": "scripts/test_gate_fail_closed.py",
           "hash": "7fb557b4025a66414319b153f5d2733c04cf0afa6becf07b0a7a208595514adc",
           "size": 2082,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_glyph_core.py",
+          "hash": "36d156dcbcf20dd024623325e33b3539a090d60513a9a53b03e725a683b90a02",
+          "size": 12523,
           "executable": false
         },
         {
@@ -4856,6 +4910,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_make_economy_config.py",
+          "hash": "a98e427d206629162a5e49241b2318acfe246fed10d9aaf0a55d91d3febc1246",
+          "size": 22669,
+          "executable": false
+        },
+        {
           "path": "scripts/test_make_legacy_list.py",
           "hash": "3b370b4e4520dd6201b8021be08fba31f674b408c0a321fe730901de6135a78a",
           "size": 7655,
@@ -4940,6 +5000,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_package_gates_local_files.py",
+          "hash": "c89cd55bd8b5b92422831ee5c568a0f2ef1183b612a8d5490ecfd8097e15b054",
+          "size": 10549,
+          "executable": false
+        },
+        {
           "path": "scripts/test_package_gates_network.py",
           "hash": "99fbdcfd22cd60a47ac15b29e39f45cee83e7f61666dd4254ba8bcf3b9b1ceae",
           "size": 7606,
@@ -4970,6 +5036,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_pause_restore_rule.py",
+          "hash": "af186175bb931c039c970d2fcca0e6a92f15090d8d3feeaa8872b14a452abace",
+          "size": 5173,
+          "executable": false
+        },
+        {
           "path": "scripts/test_physics_clock.py",
           "hash": "0fcd98442eee7bb6b500b8d595ef2e7cf6d79fa03afcd69a6a5dc6c816efb7d6",
           "size": 7017,
@@ -4979,6 +5051,12 @@
           "path": "scripts/test_platform_kit_gate.py",
           "hash": "eeb8135125d6be65e7e001bfe0d78f2351eeb2e2b0588b319b675194febe2a64",
           "size": 4146,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_plist_atlas.py",
+          "hash": "84e26632b8afca6b70039c605bb7fbebcec4c08745c6203cbe5bd7f85c0b8e66",
+          "size": 10131,
           "executable": false
         },
         {
@@ -5013,8 +5091,8 @@
         },
         {
           "path": "scripts/test_product_contract.py",
-          "hash": "489725498c2cf84ea197cf5e3eb5db6b175247dbc531e61e01776bfb0a3f9269",
-          "size": 8240,
+          "hash": "b8bc3404e3b294daf6da1f79c2b6602395f514e55651e3b863d550ea641fc6ea",
+          "size": 11815,
           "executable": false
         },
         {
@@ -5121,14 +5199,14 @@
         },
         {
           "path": "scripts/test_tiktok_touch_coordinates.py",
-          "hash": "a604d1ced4d2bc908e7d586bf49653f10f52108113934baa3c78c49eac1b6e71",
-          "size": 23759,
+          "hash": "7bad296f4285450a99ec46db19e89776516ed4a7105e8c0119f7597cf5b6c2b8",
+          "size": 26750,
           "executable": false
         },
         {
           "path": "scripts/test_top_bar_and_levels.py",
-          "hash": "fd8b1e2f9cf36ce001f64871e8032e5d316258fe8889186faec117822f6ce95f",
-          "size": 28863,
+          "hash": "162a8d4de30a49ae5db0921f0503cf6da232f9f66406f02b8d34b83def0e5bad",
+          "size": 28936,
           "executable": false
         },
         {

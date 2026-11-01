@@ -127,7 +127,64 @@ def risks(name, data, native=False):
                 if '.clientX' in fragment and '.clientY' in fragment and '.height' in fragment and '.screenX' not in fragment:
                     issues.append({'file': name, 'line': source.count('\n', 0, match.start()) + 1,
                                    'rule': 'minigame_pal_client_only_rejects_documented_screen_fields'})
-    return issues
+    return issues + pause_restore_risks(name, source, code, regions)
+
+
+# 暂停窗关闭时照搬打开时存下的暂停值（甜点消消乐 R39-R47 卡了 6 版，2026-11-01）：
+#   打开暂停： this.pauseWasClockPaused = this.is_pause      关窗： this.is_pause = this.pauseWasClockPaused
+# 打开那一刻这局若正被别的来源停着（看广告等待、发牌动画、切后台），那个来源在暂停期间结束时
+# 又因暂停窗开着跳过了恢复，点继续后就把「暂停」写回去，这局永远停住：点击有按钮音但不处理。
+MEMBER_COPY = re.compile(r'(?<![\w$.])[A-Za-z_$][\w$]*\.([A-Za-z_$][\w$]*)\s*(?<![=!<>+\-*/%&|^])=(?![=>])\s*'
+                         r'[A-Za-z_$][\w$]*\.([A-Za-z_$][\w$]*)(?![\w$.(\[])')
+PAUSE_NAME = re.compile(r'pause|suspend|frozen|freeze|halt', re.I)
+NOT_ROUND = re.compile(r'music|bgm|sound|audio|sfx|volume|video', re.I)
+SAVED_NAME = re.compile(r'was|before|prev|saved|old|last|stored|backup|snapshot', re.I)
+PAUSE_DECLARE = re.compile(r'pause-restore\s*:\s*(\S.{6,})', re.I)
+
+
+def pause_restore_risks(name, source, code, regions):
+    """Pairs `a.X = b.Y` and `c.Y = d.X` where X or Y names a round pause flag.
+
+    Blocking (pause_close_restores_saved_pause_flag): both names are pause flags and the snapshot
+    is taken without first testing the live flag. Other pairs, or a reviewed `// pause-restore: why`
+    on the snapshot/restore line or the line above, are listed with level review (not blocking).
+    """
+    copies = {}
+    for match in MEMBER_COPY.finditer(code):
+        dest, src = match.group(1), match.group(2)
+        if dest != src:
+            copies.setdefault((dest, src), match.start())
+    lines, out, done = source.split('\n'), [], set()
+    line_of = lambda pos: source.count('\n', 0, pos) + 1
+    for (dest, src) in list(copies):
+        pair = frozenset((dest, src))
+        if pair in done or (src, dest) not in copies:
+            continue
+        if not (PAUSE_NAME.search(dest) or PAUSE_NAME.search(src)) or NOT_ROUND.search(dest + ' ' + src):
+            continue
+        done.add(pair)
+        if SAVED_NAME.search(dest) and not SAVED_NAME.search(src):
+            saved, live = dest, src
+        elif SAVED_NAME.search(src) and not SAVED_NAME.search(dest):
+            saved, live = src, dest
+        else:
+            saved, live = sorted((dest, src))
+        snap, restore = copies[(saved, live)], copies[(live, saved)]
+        lead = next(((a, b) for a, b in regions if a <= snap < b), (0, len(code)))
+        before = code[lead[0]:snap]
+        tested = re.search(r'(?:[=!]==?|[!(&|?])\s*[\w$]+\.' + re.escape(live) + r'(?![\w$])', before) or \
+            re.search(r'[\w$]+\.' + re.escape(live) + r'\s*(?:[=!]==?|&&|\|\||\?)', before)
+        reason = next((m.group(1).strip() for n in (line_of(snap), line_of(restore)) for i in (n - 1, n - 2)
+                       if 0 <= i < len(lines) for m in [PAUSE_DECLARE.search(lines[i])] if m), '')
+        issue = {'file': name, 'line': line_of(restore), 'snapshot_line': line_of(snap), 'live': live, 'saved': saved}
+        if reason:
+            issue.update(rule='pause_restore_declared', level='review', declared=reason)
+        elif PAUSE_NAME.search(live) and PAUSE_NAME.search(saved) and not tested:
+            issue.update(rule='pause_close_restores_saved_pause_flag', level='blocking')
+        else:
+            issue.update(rule='pause_restore_snapshot_needs_runtime_case', level='review')
+        out.append(issue)
+    return out
 
 
 def camera_risks(project):
@@ -323,6 +380,13 @@ def audit(project, native=None, review=None, stage='complete', build_tag=''):
         with zipfile.ZipFile(native) as z:
             found.extend(i for name in native_files if Path(name).suffix in JS
                          for i in risks(name, z.read(name), True))
+    # Comments are gone in the built package: a pair reviewed in source is reviewed in Native too.
+    declared = {frozenset((i['live'], i['saved'])): i['declared'] for i in found if i.get('rule') == 'pause_restore_declared'}
+    for i in found:
+        if i.get('rule') == 'pause_close_restores_saved_pause_flag' and frozenset((i['live'], i['saved'])) in declared:
+            i.update(rule='pause_restore_declared', level='review', declared=declared[frozenset((i['live'], i['saved']))])
+    review_risks = [i for i in found if i.get('level') == 'review']
+    found = [i for i in found if i.get('level') != 'review']
     binding = {'source_sha256': source_sha, 'native_zip_sha256': native_sha, 'build_tag': build_tag}
     pending = GATES.copy()
     if found:
@@ -369,6 +433,7 @@ def audit(project, native=None, review=None, stage='complete', build_tag=''):
     return {'schema': 1, 'binding': binding, 'stage': stage,
             'status': 'blocked' if blocked else ('static_checks_clear_mobile_pending' if stage == 'code' else 'mobile_review_evidence_complete'),
             'source_files': len(files), 'native_files': len(native_files), 'known_risks': found,
+            'review_risks': review_risks,
             'pending_gates': pending, 'errors': errors,
             'limits': 'Text rules cannot detect every alias/dynamic transform. Evidence authenticity and inventory completeness require an actual reviewer; this does not certify IAA, upload/review/release or zero future bugs.'}
 

@@ -27,7 +27,7 @@ description: "共享脚本与规则库（英化包内供统一检查 cocos-game-
 |---|---|---|
 | 玩法与规格 | remake-game（重塑包 remake-game 板块，英化包不含） | 核心玩法、启动包导入、项目规格、手感 |
 | 关卡 | remake-levels（重塑包 remake-levels 板块，英化包不含） | 关数（重塑≥60；英化不补关）、限定关、奖励关、波浪分档难度、关卡地图与顶部栏 |
-| 经济 | [remake-economy](../remake-economy/SKILL.md) | B值、普通关收入、五档预算、结算×2、礼盒、独立广告领币、钱包事务 |
+| 经济 | [remake-economy](../remake-economy/SKILL.md) | B值、普通关收入、皮肤和永久物品金币价（新游戏 5/10/20/40/80B）、看广告解锁（60%）、结算×2、礼盒、独立广告领币、所有领奖窗看广告双倍、钱包事务 |
 | 皮肤与道具 | remake-skins（重塑包 remake-skins 板块，英化包不含） | 皮肤数量、稀有度、解锁方式、加成、皮肤页、试用弹窗、道具商店 |
 | 广告 | [remake-ads](../remake-ads/SKILL.md) | 广告入口、频率、防连点只发一次、不卡顿、SDK与测试ID、复活、难关看广告提示、广告模拟 |
 | 美术与UI | [remake-art](../remake-art/SKILL.md) | 画风、页面布局、按钮、图片字、图标、动效、首页和设置页 |

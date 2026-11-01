@@ -337,6 +337,18 @@ def writer_regressions(folder, adapter, policy, board):
     return check_package.writer_regressions(files, folder, str(adapter) if adapter else None, policy=policy, board=board)
 
 
+def regression_receipt(regressions):
+    """v7.9 (出包检查提速 S1, 总表 19 ①): the receipt's record of the two regressions this writer passed
+    (check_package.regression_record), so prepare_delivery reuses them for the same bytes instead of running them
+    again. None when there is nothing to reuse (prepare_delivery then runs them, as before v7.9)."""
+    try:
+        import check_package
+        return check_package.regression_record(regressions.get('rewarded_ad_regression'),
+                                               regressions.get('runtime_regression'))
+    except Exception:  # noqa: BLE001 - no record only means prepare_delivery runs the regressions again
+        return None
+
+
 def write_zip(native, files, target):
     from upload_size_gate import enforce
     enforce({rel: (native / rel).stat().st_size for rel in files}, json.loads((native / 'game.json').read_text(encoding='utf-8-sig')))
@@ -556,7 +568,9 @@ def main():
             raise ValueError('ZIP changed during the runtime regression')
         receipt = vnz.make_receipt('make_tiktok_zip', tmp, result['sha256'], result['file_sha256'],
                                    info['package_gates'], a.board,
-                                   {'tool_sha256': sha(Path(__file__))}, finalize=finalized)
+                                   {'tool_sha256': sha(Path(__file__)),
+                                    # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses these for the same bytes
+                                    'regressions': regression_receipt(regressions)}, finalize=finalized)
         receipt_tmp = tmpdir / receipt_file.name
         receipt_tmp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         with package_obligations.publication_guard(obligation_files, native, a.project, a.resource_manifest, obligations):

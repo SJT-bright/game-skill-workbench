@@ -372,5 +372,52 @@ class NullTouchProbeIsNotAPass(unittest.TestCase):
         self.assertTrue(report['passed'], report['errors'])
 
 
+
+class LegacyRegisteredTouchAdapter(unittest.TestCase):
+    def legacy_package(self):
+        adapter = b'''var adapter={registerSystemEvent:function(e){var n=this,r={onTouchStart:this.handleTouchesBegin,onTouchMove:this.handleTouchesMove,onTouchEnd:this.handleTouchesEnd,onTouchCancel:this.handleTouchesCancel};for(var k in r)(function(k){var callback=r[k];__globalAdapter[k](__mouseChefTouchListener2_4(k,n,function(event){callback.call(n,n.getTouchesByEvent(event,o))}));})(k);}};
+// MouseChef Cocos 2.4.15 documented touch fields v2
+function __mouseChefTouchFields2_4(event){return {changedTouches:event.changedTouches.map(function(t){return {identifier:t.identifier,clientX:Number.isFinite(t.clientX)?t.clientX:t.screenX,clientY:Number.isFinite(t.clientY)?t.clientY:t.screenY};})};}
+function __mouseChefTouchListener2_4(phase,manager,callback){return function(event){callback(__mouseChefTouchFields2_4(event));};}
+'''
+        files = package()
+        files['adapter-min.js'] = adapter
+        files['game.json'] = b'{}'
+        files['project.config.json'] = b'{"appid":"test"}'
+        return files
+
+    def test_legacy_actual_registration_is_executed(self):
+        result = audit_files(self.legacy_package())
+        self.assertTrue(result['passed'], result['errors'])
+        self.assertTrue(result['touch_coordinates']['passed'])
+
+    def test_legacy_helper_without_entry_load_is_rejected(self):
+        files = self.legacy_package()
+        files['game.js'] = files['game.js'].replace(b"require('adapter-min.js');", b'')
+        self.assertFalse(audit_files(files)['passed'])
+
+    def test_legacy_unwrapped_callback_is_rejected(self):
+        files = self.legacy_package()
+        files['adapter-min.js'] = files['adapter-min.js'].replace(b'callback(__mouseChefTouchFields2_4(event))', b'callback(event)')
+        self.assertFalse(audit_files(files)['passed'])
+
+    def test_legacy_overwriting_valid_client_is_rejected(self):
+        files = self.legacy_package()
+        files['adapter-min.js'] = files['adapter-min.js'].replace(b'Number.isFinite(t.clientX)?t.clientX:t.screenX', b'Number.isFinite(t.screenX)?t.screenX:t.clientX')
+        result = audit_files(files)
+        self.assertFalse(result['passed'])
+        row = next(r for r in result['touch_coordinates']['rows'] if r['id']=='preserve_client_coordinates')
+        self.assertFalse(row['passed'])
+
+    def test_legacy_shifted_coordinates_are_rejected(self):
+        files = self.legacy_package()
+        files['adapter-min.js'] = files['adapter-min.js'].replace(b'clientY:Number.isFinite(t.clientY)?t.clientY:t.screenY', b'clientY:(Number.isFinite(t.clientY)?t.clientY:t.screenY)+1')
+        self.assertFalse(audit_files(files)['passed'])
+
+    def test_legacy_missing_cancel_subscription_is_rejected(self):
+        files = self.legacy_package()
+        files['adapter-min.js'] = files['adapter-min.js'].replace(b',onTouchCancel:this.handleTouchesCancel', b'')
+        self.assertFalse(audit_files(files)['passed'])
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

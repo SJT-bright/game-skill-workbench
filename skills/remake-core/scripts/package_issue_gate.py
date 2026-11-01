@@ -8,6 +8,16 @@ the issue for the new design (report, own cases and runner), then
 The old report, cases and proof stay in the history; the old issue stops blocking, the new one blocks until its own
 retest passes. Without Saul's words, the date or a registered new issue ID the event is refused (a hand-written event
 like that makes the whole ledger refuse).
+
+v7.9 (指尖麻将 v42-v57, phone reports): `report --source device|local` is required. A problem seen on a phone is
+registered with the ZIP that ran on that phone (--device-zip), what was seen (--symptom) and, when the phone showed
+one, its error line (--phone-error); at least one case lists in "phone" what the phone screen showed. Its retest must
+run that very ZIP as the failing side, the "phone" assertions must hold there, and the phone's error line must show
+up there and not on the fixed package (v57: the same line came with a black screen under one test condition and the
+home-shown-but-dead screen only under another). `check` returns `device_issues`, each with the plain-Chinese line the
+delivery reply must repeat. Not reproduced: it blocks; only Saul's words (defer-external, device_not_reproduced) let a
+test package out, and the line then says it is not fixed. For this game's phone report Codex shipped v43, v44 and
+v45 as fixes after reproducing a different defect or a made-up condition; the phone's error line was never matched.
 """
 import argparse
 import datetime
@@ -153,7 +163,7 @@ def issue_state(events):
             updated = data['contract']
             if (data.get('previous_contract_signature') != digest(original)
                     or not isinstance(updated, dict) or set(updated) != set(original)
-                    or any(updated.get(k) != original.get(k) for k in ('id', 'message', 'cases'))
+                    or any(updated.get(k) != original.get(k) for k in ('id', 'message', 'cases', 'device'))
                     or not data.get('reason', '').strip()):
                 raise ValueError('issue scope revision may not erase the original report or weaken its postconditions')
             issues[data['id']] = {'contract': updated, 'proof': None}
@@ -170,7 +180,10 @@ def issue_state(events):
 # Earlier versions of this file whose retest proofs are checked by exactly the same rules (validate_proof, retest,
 # assertions_pass, target_hashes unchanged). v7.8 only added the supersede event, so a proof written by the v7 - v7.7.5
 # checker (one file since 2026-10-27) stays valid and no game has to retest closed issues because the Skill changed.
-SAME_PROOF_RULES = frozenset({'edaad58253327c1794e55b8b13154f9ce26b0d422d5c3b45d276bdd8c087ad2f'})
+# v7.9 adds the v7.8 file (f15395aa...): it only adds phone-report checks, which validate_proof re-runs on the saved raw
+# observations at every check, so closed local issues of any game stay closed after the Skill update.
+SAME_PROOF_RULES = frozenset({'edaad58253327c1794e55b8b13154f9ce26b0d422d5c3b45d276bdd8c087ad2f',
+                              'f15395aa873bb3b8763b12befad6f1b8190a6b31cdbfc80b3d0c651da711a0be'})
 SUPERSEDE_FIELDS = ('id', 'by', 'user_quote', 'date', 'reason')
 
 
@@ -238,18 +251,71 @@ def target_hashes(native, targets):
     return result
 
 
-def register(project, native, issue_id, message, targets, cases, runner):
+SOURCES = ('device', 'local')
+DEVICE_KEYS = ('zip_name', 'zip_sha256', 'files', 'symptom', 'phone_error')
+JUNK_NAMES = ('.DS_Store', 'Thumbs.db')
+
+
+def _junk(rel):
+    parts = PurePosixPath(rel).parts
+    return not parts or '__MACOSX' in parts or parts[-1] in JUNK_NAMES or parts[-1].startswith('._')
+
+
+def zip_files(zip_path):
+    import zipfile
+    with zipfile.ZipFile(zip_path) as archive:
+        return {i.filename: hashlib.sha256(archive.read(i)).hexdigest() for i in archive.infolist()
+                if not i.is_dir() and not _junk(i.filename)}
+
+
+def tree_files(root):
+    root = Path(root).resolve()
+    return {p.relative_to(root).as_posix(): sha(p) for p in sorted(root.rglob('*'))
+            if p.is_file() and not _junk(p.relative_to(root).as_posix())}
+
+
+def _words(text):
+    return ' '.join(str(text or '').lower().split()).strip(' .。')
+
+
+def device_record(zip_path, symptom, phone_error=''):
+    """v7.9: what a phone report is bound to. The ZIP is the one that ran on the phone (not a rebuild)."""
+    if not zip_path or not Path(zip_path).is_file():
+        raise ValueError('a phone report needs --device-zip: the very ZIP that ran on the phone')
+    zip_path = Path(zip_path).resolve()
+    symptom, phone_error = str(symptom or '').strip(), str(phone_error or '').strip()
+    if len(''.join(symptom.split())) < 4:
+        raise ValueError('a phone report needs --symptom: what was seen on the phone, in the reporter\'s words')
+    if phone_error and len(_words(phone_error)) < 6:
+        raise ValueError('--phone-error is too short to match; copy the error line as shown on the phone')
+    files = zip_files(zip_path)
+    if 'game.js' not in files:
+        raise ValueError('--device-zip %s has no game.js at its root: not the TikTok package that ran' % zip_path.name)
+    return {'zip_name': zip_path.name, 'zip_sha256': sha(zip_path), 'files': files, 'symptom': symptom,
+            'phone_error': phone_error}
+
+
+def register(project, native, issue_id, message, targets, cases, runner, device=None):
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', issue_id) or not message.strip():
         raise ValueError('issue ID/message required')
+    if device is not None and (not isinstance(device, dict) or set(device) != set(DEVICE_KEYS)
+                               or not isinstance(device.get('files'), dict) or not device['files']):
+        raise ValueError('invalid phone report record; build it with device_record()')
     target_hashes(native, targets)
     if not isinstance(cases, list) or not cases or any(not isinstance(c, dict) or not isinstance(c.get('id'), str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', c['id']) or not isinstance(c.get('assertions'), list) or not c['assertions'] for c in cases):
         raise ValueError('issue needs specific cases and postcondition assertions')
     if len({c['id'] for c in cases}) != len(cases):
         raise ValueError('duplicate issue case ID')
     for case in cases:
-        for assertion in case['assertions']:
+        if 'phone' in case and (device is None or not isinstance(case['phone'], list)):
+            raise ValueError('"phone" assertions belong to a phone report (--source device) and must be a list')
+        for assertion in case['assertions'] + list(case.get('phone') or []):
             if not isinstance(assertion, dict) or assertion.get('op') not in ('eq', 'ne', 'gt', 'ge', 'lt', 'le') or not isinstance(assertion.get('path'), list) or not assertion['path'] or any(not isinstance(k, (str, int)) for k in assertion['path']):
                 raise ValueError('unsupported/empty issue postcondition assertion')
+    if device is not None and not any(c.get('phone') for c in cases):
+        raise ValueError('a phone report needs at least one case with "phone": assertions for what the phone screen '
+                         'showed (for example home_visible eq true). They must hold when the phone package runs, so a '
+                         'black screen cannot stand in for "home shown but buttons dead"')
     runner = Path(runner).resolve()
     if not runner.is_file() or runner.suffix not in ('.py', '.cjs', '.js', '.mjs'):
         raise ValueError('reviewed project runner must be a real Python/Node file')
@@ -258,6 +324,8 @@ def register(project, native, issue_id, message, targets, cases, runner):
         raise ValueError('issue already registered; do not replace its original report')
     contract = {'id': issue_id, 'message': message, 'targets': sorted(set(targets)), 'cases': cases,
                 'runner': {'path': str(runner), 'sha256': sha(runner)}}
+    if device is not None:
+        contract['device'] = device       # only phone reports carry it, so older contracts keep their signature
     return append(project, 'reported', contract)
 
 
@@ -369,7 +437,57 @@ def validate_proof(contract, ref, native):
             actual = assertions_pass(raw.get('observed'), case['assertions'])
             if actual is None or actual != expected:
                 raise ValueError('issue %s/%s postconditions not verified' % (case['id'], kind))
+    if contract.get('device'):
+        check_device_proof(contract, proof)
     return proof
+
+
+def _shows(raw, needle):
+    errors = raw.get('errors')
+    return isinstance(errors, list) and any(needle in _words(e) for e in errors if isinstance(e, str))
+
+
+def require_phone_package(contract, negative_root):
+    device = contract['device']
+    if tree_files(negative_root) != device['files']:
+        raise ValueError('phone report %s: the failing side must be the very package that ran on the phone (%s, sha256 '
+                         '%s...); a rebuilt, edited or made-up copy does not reproduce the phone. Unzip that ZIP '
+                         'unchanged and pass it as --negative-native'
+                         % (contract['id'], device['zip_name'], device['zip_sha256'][:12]))
+
+
+def check_device_proof(contract, proof):
+    """v7.9: a phone report closes only when the phone's own package fails the way the phone did (its "phone"
+    assertions hold, and the phone's error line shows when there was one) and the fixed package passes the same cases
+    without that line."""
+    device, issue = contract['device'], contract['id']
+    require_phone_package(contract, proof['executed_native_roots']['negative'])
+    runs = {kind: [read_ref(proof['cases'][c['id']][kind]) for c in contract['cases']] for kind in ('negative', 'current')}
+    for case, raw in zip(contract['cases'], runs['negative']):
+        if case.get('phone') and assertions_pass(raw.get('observed'), case['phone']) is not True:
+            raise ValueError('phone report %s/%s: the phone package failed, but not the way the phone did (its "phone" '
+                             'assertions, what the phone screen showed, do not hold): a different failure was '
+                             'reproduced. Find what the phone did differently first' % (issue, case['id']))
+    needle = _words(device.get('phone_error'))
+    if not needle:
+        return
+    if not any(_shows(raw, needle) for raw in runs['negative']):
+        raise ValueError('phone report %s: the phone showed "%s" but no case printed it on the phone package; a '
+                         'different failure was reproduced. Find what the phone did differently first'
+                         % (issue, device['phone_error']))
+    if any(_shows(raw, needle) for raw in runs['current']):
+        raise ValueError('phone report %s: the fixed package still prints "%s"' % (issue, device['phone_error']))
+
+
+def device_line(issue, device, status):
+    symptom = device['symptom']
+    if status == 'pending':
+        return '手机问题 %s（%s）：电脑上没复现，不能说修好了，要上手机再看。' % (issue, symptom)
+    if device.get('phone_error'):
+        return ('手机问题 %s（%s）：用手机上那个包在电脑上复现了手机上的画面和同一行报错「%s」，修好的包过了同一个测试，'
+                '报错不再出现。' % (issue, symptom, device['phone_error']))
+    return ('手机问题 %s（%s）：用手机上那个包在电脑上复现了手机上的画面，修好的包过了同一个测试。手机上没有报错可对，'
+            '不能完全确定是同一个原因，上手机再确认。' % (issue, symptom))
 
 
 def retest(project, native, issue_id, negative_native, normal_native, output):
@@ -384,6 +502,8 @@ def retest(project, native, issue_id, negative_native, normal_native, output):
     runner = contract['runner']
     if sha(runner['path']) != runner['sha256']:
         raise ValueError('reviewed issue runner changed')
+    if contract.get('device'):
+        require_phone_package(contract, negative_native)   # before any run: a wrong failing side wastes no browser time
     output = Path(output).resolve()
     if output.exists() or any(output.is_relative_to(Path(tree).resolve()) for tree in (native, negative_native, normal_native)):
         raise ValueError('retest output must be new and outside all Native/control trees')
@@ -430,18 +550,26 @@ def native_files(native):
     return {p.relative_to(root).as_posix(): sha(p) for p in sorted(root.rglob('*')) if p.is_file()}
 
 
+def _external_ok(doc, issue_id, contract):
+    # v7.9: device_not_reproduced = a phone report the computer could not reproduce; Saul said to send a test package.
+    allowed = ('original_device_save_replay', 'device_not_reproduced') if contract.get('device') \
+        else ('original_device_save_replay',)
+    return bool(doc.get('schema') == 'external_test_scope.v1' and doc.get('issue_id') == issue_id
+                and doc.get('authority') == 'explicit_current_user_instruction'
+                and doc.get('scope') == 'local_test_candidate_only'
+                and doc.get('external_requirement') in allowed
+                and str(doc.get('user_quote', '')).strip() and str(doc.get('reason', '')).strip())
+
+
 def defer_external(project, native, issue_id, authorization):
     """Keep a device-only issue pending for one user-authorized local test candidate."""
     events, _ = load(project)
-    if issue_id not in issue_state(events):
+    state = issue_state(events)
+    if issue_id not in state:
         raise ValueError('unknown issue')
     authorization = Path(authorization).resolve()
     doc = json.loads(authorization.read_text())
-    if (doc.get('schema') != 'external_test_scope.v1' or doc.get('issue_id') != issue_id
-            or doc.get('authority') != 'explicit_current_user_instruction'
-            or doc.get('scope') != 'local_test_candidate_only'
-            or doc.get('external_requirement') != 'original_device_save_replay'
-            or not doc.get('user_quote', '').strip() or not doc.get('reason', '').strip()):
+    if not _external_ok(doc, issue_id, state[issue_id]['contract']):
         raise ValueError('not an explicit device-only local test scope authorization')
     return append(project, 'external_deferred', {'id': issue_id, 'reason': doc['reason'],
         'authorization': _ref(authorization), 'native_files': native_files(native),
@@ -454,6 +582,7 @@ def audit(project, native):
     checked = []
     deferred = []
     superseded = []
+    devices = []
     for issue_id, state in issues.items():
         if state.get('superseded'):
             # v7.8 B32 a: replaced by a design change Saul made; the new issue (state['superseded']['by']) is checked
@@ -463,15 +592,21 @@ def audit(project, native):
         if state['proof'] is None and state.get('external_deferral'):
             pending = state['external_deferral']
             doc = read_ref(pending['authorization'])
-            if (doc.get('issue_id') != issue_id or doc.get('authority') != 'explicit_current_user_instruction'
-                    or doc.get('scope') != 'local_test_candidate_only'
-                    or doc.get('external_requirement') != 'original_device_save_replay'
-                    or pending['native_files'] != native_files(native)):
+            if not _external_ok(doc, issue_id, state['contract']) or pending['native_files'] != native_files(native):
                 raise ValueError('external scope authorization is stale or invalid: '+issue_id)
             deferred.append({'id': issue_id, 'status': 'pending_external_verification',
                              'authorization': pending['authorization'], 'reason': pending['reason']})
+            if state['contract'].get('device'):
+                devices.append({'id': issue_id, 'status': 'not_reproduced', 'symptom': state['contract']['device']['symptom'],
+                                'line': device_line(issue_id, state['contract']['device'], 'pending')})
             continue
         if state['proof'] is None:
+            if state['contract'].get('device'):
+                raise ValueError('phone report %s (%s) is not reproduced on the computer yet, so it cannot be called '
+                                 'fixed. Run the phone package %s as the failing side (package_issue_gate.py retest); '
+                                 'if it cannot be reproduced and Saul says to send a test package anyway, record his '
+                                 'words with defer-external (external_requirement device_not_reproduced)'
+                                 % (issue_id, state['contract']['device']['symptom'], state['contract']['device']['zip_name']))
             raise ValueError('reported issue has no passed retest: '+issue_id)
         try:
             proof = validate_proof(state['contract'], state['proof'], native)
@@ -482,9 +617,15 @@ def audit(project, native):
         checked.append({'id': issue_id, 'proof': state['proof'], 'target_sha256': proof['target_sha256'],
                         'executed_native_root': executed_root, 'current_native_root': current_root,
                         'dependency_bytes_reused': executed_root != current_root})
+        device = state['contract'].get('device')
+        if device:
+            devices.append({'id': issue_id, 'symptom': device['symptom'], 'line': device_line(issue_id, device, 'closed'),
+                            'status': 'phone_error_matched' if device.get('phone_error') else 'symptom_only'})
     out = {'passed': True, **binding, 'checked_issues': checked, 'pending_external_issues': deferred, 'scope': 'Registered defects only; no unrelated gameplay/level/art CI replay.'}
     if superseded:
         out['superseded_issues'] = superseded
+    if devices:
+        out['device_issues'] = devices    # v7.9: the delivery reply repeats each 'line' word for word
     return out
 
 
@@ -505,12 +646,23 @@ if __name__ == '__main__':
     ap.add_argument('--by', help='supersede: ID of the issue registered for the new design')
     ap.add_argument('--quote', help="supersede: Saul's own words that changed the design")
     ap.add_argument('--date', help='supersede: the day Saul said it, YYYY-MM-DD')
+    ap.add_argument('--source', choices=SOURCES, help='report (required): device = seen on a phone; local = found on the computer')
+    ap.add_argument('--device-zip', type=Path, help='report --source device: the ZIP that ran on the phone')
+    ap.add_argument('--symptom', help='report --source device: what was seen on the phone')
+    ap.add_argument('--phone-error', default='', help='report --source device: the error line the phone showed, if any')
     a = ap.parse_args()
     try:
         if a.command == 'init':
             result = initialize(a.project)
         elif a.command == 'report':
-            result = register(a.project, a.native, a.id, a.message, a.targets, json.loads(a.cases.read_text()), a.runner)
+            if a.source is None:
+                raise ValueError('report needs --source device|local: device = Saul or a tester saw it on a phone '
+                                 '(then also --device-zip and --symptom), local = found on the computer')
+            if a.source == 'local' and (a.device_zip or a.symptom or a.phone_error):
+                raise ValueError('--device-zip/--symptom/--phone-error belong to --source device')
+            device = device_record(a.device_zip, a.symptom, a.phone_error) if a.source == 'device' else None
+            result = register(a.project, a.native, a.id, a.message, a.targets, json.loads(a.cases.read_text()), a.runner,
+                              device=device)
         elif a.command == 'revise-scope':
             result = revise_scope(a.project, a.native, a.id, a.targets, a.runner, a.message)
         elif a.command == 'defer-external':

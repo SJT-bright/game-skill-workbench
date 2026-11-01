@@ -47,21 +47,45 @@ class ProductContractTests(unittest.TestCase):
                 self.assertEqual(row['reward']['amount'],sum(r['coins'] for r in p['levels'][row['level']-6:row['level']-1]))
 
     def test_actual_normal_wins_afford_exact_tier_boundaries(self):
-        from product_contract import PRICE_LEVEL_TARGETS
+        from product_contract import PRICE_LEVEL_TARGETS,PRICE_LEVEL_TARGETS_LEGACY
         for base in (1,9,10,37,50,100):
             plan=make(100,base,None,57,'Tokens')
             income=[r['coins']for r in plan['levels']if r['type']!='bonus']
-            for wins in PRICE_LEVEL_TARGETS.values():
+            for wins in sorted(set(PRICE_LEVEL_TARGETS.values())|set(PRICE_LEVEL_TARGETS_LEGACY.values())):
+                if wins%10:  # 5B (normal-5-80.v1 common): ten-level groups sum to 10B, so 5B is reached on win 5 or 6
+                    self.assertGreaterEqual(sum(income[:6]),wins*base);self.assertLess(sum(income[:4]),wins*base)
+                    continue
                 self.assertEqual(sum(income[:wins]),wins*base)
                 self.assertLess(sum(income[:wins-1]),wins*base)
 
     def test_current_budget_rejects_wrong_prices_ad_or_cooldown(self):
-        from product_contract import budget_errors
-        table=skin_table(50,'levels',70,True,'hero')
-        self.assertEqual(budget_errors(table),[])
-        for key,value in [('coins_per_ad',50),('gift_multiplier',4),('gift_cooldown_ms',60_000)]:
-            broken=copy.deepcopy(table);broken[key]=value;self.assertTrue(budget_errors(broken))
-        broken=copy.deepcopy(table);broken['items'][0]['coins']+=1;self.assertTrue(budget_errors(broken))
+        from product_contract import budget_errors,SKIN_POLICY,SKIN_POLICY_LEGACY
+        for policy in (SKIN_POLICY,SKIN_POLICY_LEGACY):  # the frozen policy is still checked by its own numbers
+            table=skin_table(50,'levels',70,True,'hero',economy_policy=policy)
+            self.assertEqual(table['economy_policy'],policy)
+            self.assertEqual(budget_errors(table),[])
+            for key,value in [('coins_per_ad',50),('gift_multiplier',4),('gift_cooldown_ms',60_000)]:
+                broken=copy.deepcopy(table);broken[key]=value;self.assertTrue(budget_errors(broken))
+            broken=copy.deepcopy(table);broken['items'][0]['coins']+=1;self.assertTrue(budget_errors(broken))
+        new=skin_table(50,'levels',70,True,'hero');old=skin_table(50,'levels',70,True,'hero',economy_policy=SKIN_POLICY_LEGACY)
+        self.assertEqual(sorted({r['coins']//50 for r in new['items'] if r['coins']}),[5,10,20,40,80])
+        self.assertEqual(sorted({r['coins']//50 for r in old['items'] if r['coins']}),[10,20,30,40,50])
+        self.assertTrue(budget_errors(dict(old,economy_policy=SKIN_POLICY)))  # old prices under the new label
+        self.assertTrue(budget_errors(dict(new,economy_policy=SKIN_POLICY_LEGACY)))
+
+    def test_make_skin_table_cli_policy(self):
+        import tempfile,subprocess,sys
+        from pathlib import Path
+        script=str(Path(__file__).with_name('make_skin_table.py'))
+        with tempfile.TemporaryDirectory()as td:
+            out=Path(td)/'t.json'
+            for extra,policy,common in [([],'normal-5-80.v1',250),(['--economy-policy','normal-10-50.v1'],'normal-10-50.v1',500)]:
+                r=subprocess.run([sys.executable,script,'--R','50','--levels','--out',str(out),*extra],capture_output=True,text=True)
+                self.assertEqual(r.returncode,0,r.stderr)
+                t=json.loads(out.read_text());self.assertEqual(t['economy_policy'],policy)
+                self.assertEqual(min(x['coins'] for x in t['items'] if x['coins']),common)
+            r=subprocess.run([sys.executable,script,'--R','50','--levels','--tier-levels','10,20,30,40,50','--out',str(out)],capture_output=True,text=True)
+            self.assertNotEqual(r.returncode,0,'old tiers under the new default policy are refused')
 
     def test_original_level_scope_preserves_or_extends_actual_maps(self):
         from audit_level_plan import audit_original_levels
@@ -102,15 +126,35 @@ class ProductContractTests(unittest.TestCase):
     def test_non_skin_item_shop_uses_same_five_tier_budget(self):
         import tempfile,subprocess,sys
         from pathlib import Path
-        from product_contract import PRICE_LEVEL_TARGETS,ECONOMY_POLICY,GIFT_COOLDOWN_MS
-        table={'economy_policy':ECONOMY_POLICY,'normal_level_coins':20,'coins_per_level':20,'coins_per_ad':100,'gift_multiplier':5,'gift_cooldown_ms':GIFT_COOLDOWN_MS,'price_level_targets':PRICE_LEVEL_TARGETS,'price_profile':'ordinary-levels','items':[]}
-        for i,(rarity,count)in enumerate(PRICE_LEVEL_TARGETS.items(),1):table['items'].append({'id':rarity,'group':'tools','order':i,'rarity':rarity,'limited':rarity=='limited','unlock':'coins','coins':20*count,'ads':0})
-        with tempfile.TemporaryDirectory()as td:
-            root=Path(td);path=root/'table.json';report=root/'report.json';path.write_text(json.dumps(table))
-            cmd=[sys.executable,str(Path(__file__).with_name('audit_acquisition_progression.py')),'--table',str(path),'--report',str(report)]
-            result=subprocess.run(cmd,capture_output=True,text=True);self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-            table['items'][-1]['coins']=980;path.write_text(json.dumps(table))
-            self.assertNotEqual(subprocess.run(cmd,capture_output=True,text=True).returncode,0)
+        from product_contract import ECONOMY_POLICIES,GIFT_COOLDOWN_MS,skin_tiers_B
+        for policy in ECONOMY_POLICIES:  # new normal-5-80.v1 and frozen normal-10-50.v1
+            targets=skin_tiers_B(policy)
+            table={'economy_policy':policy,'normal_level_coins':20,'coins_per_level':20,'coins_per_ad':100,'gift_multiplier':5,'gift_cooldown_ms':GIFT_COOLDOWN_MS,'price_level_targets':targets,'price_profile':'ordinary-levels','items':[]}
+            for i,(rarity,count)in enumerate(targets.items(),1):table['items'].append({'id':rarity,'group':'tools','order':i,'rarity':rarity,'limited':rarity=='limited','unlock':'coins','coins':20*count,'ads':0})
+            with tempfile.TemporaryDirectory()as td:
+                root=Path(td);path=root/'table.json';report=root/'report.json';path.write_text(json.dumps(table))
+                cmd=[sys.executable,str(Path(__file__).with_name('audit_acquisition_progression.py')),'--table',str(path),'--report',str(report)]
+                result=subprocess.run(cmd,capture_output=True,text=True);self.assertEqual(result.returncode,0,policy+result.stdout+result.stderr)
+                table['items'][-1]['coins']=980;path.write_text(json.dumps(table))
+                self.assertNotEqual(subprocess.run(cmd,capture_output=True,text=True).returncode,0,policy)
+                table['items'][-1]['coins']=20*80 if policy!='normal-5-80.v1' else 20*50  # the other policy's top tier
+                path.write_text(json.dumps(table))
+                self.assertNotEqual(subprocess.run(cmd,capture_output=True,text=True).returncode,0,policy)
+
+    def test_skin_module_audit_both_policies(self):
+        import tempfile,subprocess,sys
+        from pathlib import Path
+        from product_contract import ECONOMY_POLICIES
+        for policy in ECONOMY_POLICIES:
+            table=skin_table(50,'levels',70,True,'hero',economy_policy=policy)
+            with tempfile.TemporaryDirectory()as td:
+                root=Path(td);path=root/'unlock_table.json';report=root/'report.json'
+                cmd=[sys.executable,str(Path(__file__).with_name('audit_acquisition_progression.py')),'--table',str(path),'--report',str(report)]
+                path.write_text(json.dumps(table))
+                r=subprocess.run(cmd,capture_output=True,text=True);self.assertEqual(r.returncode,0,policy+r.stdout)
+                limited=next(x for x in table['items'] if x.get('limited'));limited['coins']+=50
+                path.write_text(json.dumps(table))
+                self.assertNotEqual(subprocess.run(cmd,capture_output=True,text=True).returncode,0,policy)
 
 
 if __name__=='__main__':unittest.main()

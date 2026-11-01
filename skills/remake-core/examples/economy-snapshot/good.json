@@ -1,0 +1,62 @@
+{
+  "schema": "economy_snapshot.v1",
+  "_说明": "好样例（v3，2026-11-01）：B = 10 的重塑游戏，每条 ECON 规则都合规。皮肤按新口径 normal-5-80.v1（普通 50、稀有 100、限定 800），看广告款 50->3 次、100->5 次；有皮肤所以有看广告试用（前 2 关不弹、每 3 关）；宝箱、关卡地图页的倒计时宝箱（5B）、漂浮礼物、奖励关、任务领奖都带双倍；试用一关、不翻倍；看广告领金币、商店免费领每天 3 次。",
+  "meta": {"source": "hand"},
+  "game": {"name": "样例_好的重塑游戏", "no": "00", "engine": "2.4", "kind": "remake", "mode": "levels", "project": "/tmp/example-good", "platform_kit": "current", "economy_policy": "normal-5-80.v1"},
+  "B": {"value": 10, "how": "config_normalLevelCoins", "evidence": "assets/scripts/PlatformConfig.js:12"},
+  "currencies": [
+    {"id": "coins", "label": "Coins", "role": "main", "evidence": "assets/scripts/Wallet.js:5"},
+    {"id": "energy", "label": "Energy", "role": "energy", "evidence": "assets/scripts/Energy.js:3"}
+  ],
+  "inflows": [
+    {"id": "level_clear", "rule": "ECON-LEVEL10", "currency": "coins", "amount": 10, "per": "level", "needs_ad": false, "x2": "ad_button", "count_per_day": null, "evidence": "level_plan.json:1"},
+    {"id": "result_x2", "rule": "ECON-X2", "window": "result", "currency": "coins", "amount": 10, "per": "level", "needs_ad": true, "x2": "ad_button", "count_per_day": null, "evidence": "Result.js:40"},
+    {"id": "gift_home", "rule": "ECON-GIFT", "window": "home_gift", "currency": "coins", "amount": 50, "per": "ad", "needs_ad": true, "x2": "none", "count_per_day": null, "cooldown_ms": 1800000, "evidence": "AdRewards.ts:20"},
+    {"id": "ad_coins", "rule": "ECON-ADCOIN", "window": "ad_coin", "currency": "coins", "amount": 50, "per": "ad", "needs_ad": true, "x2": "none", "count_per_day": 3, "evidence": "Shop.js:88"},
+    {"id": "shortcut", "rule": "ECON-SHORTCUT", "currency": "coins", "amount": 50, "per": "once", "needs_ad": false, "x2": "none", "count_per_day": null, "evidence": "MissionFlow.js:30"},
+    {"id": "revisit", "rule": "ECON-REVISIT", "currency": "coins", "amount": 50, "per": "once", "needs_ad": false, "x2": "none", "count_per_day": null, "evidence": "MissionFlow.js:31"},
+    {"id": "checkin_d1", "rule": "ECON-CHECKIN", "window": "checkin", "day": 1, "currency": "coins", "amount": 10, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:3"},
+    {"id": "checkin_d2", "rule": "ECON-CHECKIN", "window": "checkin", "day": 2, "currency": "hint", "amount": 1, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:4"},
+    {"id": "checkin_d3", "rule": "ECON-CHECKIN", "window": "checkin", "day": 3, "currency": "coins", "amount": 20, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:5"},
+    {"id": "checkin_d4", "rule": "ECON-CHECKIN", "window": "checkin", "day": 4, "currency": "hint", "amount": 1, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:6"},
+    {"id": "checkin_d5", "rule": "ECON-CHECKIN", "window": "checkin", "day": 5, "currency": "coins", "amount": 30, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:7"},
+    {"id": "checkin_d6", "rule": "ECON-CHECKIN", "window": "checkin", "day": 6, "currency": "skin", "amount": 1, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:8"},
+    {"id": "checkin_d7", "rule": "ECON-CHECKIN", "window": "checkin", "day": 7, "currency": "coins", "amount": 60, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "checkin-config.json:9"},
+    {"id": "wheel_free", "rule": "ECON-WHEEL", "window": "wheel_result", "currency": "coins", "amount": 10, "weight": 5, "per": "spin", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "LuckyWheel.js:10"},
+    {"id": "wheel_ad", "rule": "ECON-WHEEL", "window": "wheel_result", "currency": "coins", "amount": 30, "weight": 1, "per": "spin", "needs_ad": true, "x2": "checkbox_default_on", "count_per_day": 2, "evidence": "LuckyWheel.js:11"},
+    {"id": "wheel_big", "rule": "ECON-WHEEL", "window": "wheel_result", "currency": "coins", "amount": 50, "weight": 1, "per": "spin", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": null, "evidence": "LuckyWheel.js:12"},
+    {"id": "chest_5", "rule": "ECON-CHEST", "window": "chest", "currency": "coins", "amount": 20, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": null, "every_levels": 5, "origin": "ad-boost", "evidence": "GiftPack.js:20"},
+    {"id": "timer_chest", "rule": "ECON-TIMERCHEST", "window": "timer_chest", "currency": "coins", "amount": 50, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": null, "placement": "level_map", "origin": "ad-boost", "evidence": "TimerChest.js:18"},
+    {"id": "float_gift", "rule": "ECON-FLOAT", "window": "float_gift", "currency": "coins", "amount": 5, "per": "claim", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": null, "per_round_max": 5, "origin": "ad-boost", "evidence": "GiftPack.js:44"},
+    {"id": "bonus_level", "rule": "ECON-BONUS", "window": "bonus_level", "currency": "coins", "amount": 30, "per": "claim", "needs_ad": false, "x2": "ad_button", "count_per_day": null, "origin": "ad-boost", "evidence": "BonusLevel.js:15"},
+    {"id": "shop_free_coins", "rule": "ECON-SHOPFREE", "window": "shop_free", "currency": "coins", "amount": 50, "per": "ad", "needs_ad": true, "x2": "none", "count_per_day": 3, "origin": "ad-boost", "evidence": "ShopFree.js:30"},
+    {"id": "shop_free_hint", "rule": "ECON-SHOPFREE", "window": "shop_free", "currency": "hint", "amount": 1, "per": "ad", "needs_ad": true, "x2": "none", "count_per_day": 3, "origin": "ad-boost", "evidence": "ShopFree.js:31"},
+    {"id": "hint_ad", "rule": "ECON-ADITEM", "window": "ad_item", "currency": "hint", "amount": 1, "per": "ad", "needs_ad": true, "x2": "none", "count_per_day": null, "evidence": "Booster.js:44"},
+    {"id": "daily_1", "rule": "ECON-QUEST", "window": "quest_claim", "currency": "coins", "amount": 10, "per": "day", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "Quests.js:5"},
+    {"id": "daily_2", "rule": "ECON-QUEST", "window": "quest_claim", "currency": "coins", "amount": 10, "per": "day", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "Quests.js:6"},
+    {"id": "daily_3", "rule": "ECON-QUEST", "window": "quest_claim", "currency": "coins", "amount": 10, "per": "day", "needs_ad": false, "x2": "checkbox_default_on", "count_per_day": 1, "evidence": "Quests.js:7"},
+    {"id": "energy_ad", "rule": "ECON-ENERGY", "window": "energy_ad", "currency": "energy", "amount": 3, "per": "ad", "needs_ad": true, "x2": "none", "count_per_day": null, "evidence": "Energy.js:30"}
+  ],
+  "sinks": [
+    {"id": "skin_c1", "rule": "ECON-TIER", "kind": "skin", "currency": "coins", "price": 50, "pack_size": 1, "ad_unlock_views": 0, "rarity": "common", "evidence": "unlock_table.json:3"},
+    {"id": "skin_c2", "rule": "ECON-ADUNLOCK", "kind": "skin", "currency": "coins", "price": 50, "pack_size": 1, "ad_unlock_views": 3, "rarity": "common", "evidence": "ad_unlock_table.json:3"},
+    {"id": "skin_r1", "rule": "ECON-TIER", "kind": "skin", "currency": "coins", "price": 100, "pack_size": 1, "ad_unlock_views": 0, "rarity": "rare", "evidence": "unlock_table.json:5"},
+    {"id": "skin_r2", "rule": "ECON-ADUNLOCK", "kind": "skin", "currency": "coins", "price": 100, "pack_size": 1, "ad_unlock_views": 5, "rarity": "rare", "evidence": "ad_unlock_table.json:5"},
+    {"id": "skin_lim", "rule": "ECON-TIER", "kind": "skin", "currency": "coins", "price": 800, "pack_size": 1, "ad_unlock_views": 0, "rarity": "limited", "evidence": "unlock_table.json:9"},
+    {"id": "hint_1", "rule": "ECON-ITEM", "kind": "item", "item": "hint", "currency": "coins", "price": 30, "pack_size": 1, "ad_unlock_views": 0, "rarity": null, "evidence": "Booster.js:10"},
+    {"id": "hint_3", "rule": "ECON-PACK", "kind": "item", "item": "hint", "currency": "coins", "price": 81, "pack_size": 3, "ad_unlock_views": 0, "rarity": null, "evidence": "Booster.js:11"}
+  ],
+  "systems": {"shop": true, "skins": true, "items": true, "checkin": true, "wheel": true, "gift_home": true,
+              "gift_window": false, "offline": true, "upgrade": true, "quests": true, "energy": true,
+              "shortcut": true, "revisit": true, "revive": true, "result_x2": true,
+              "chest": true, "float_gift": true, "bonus_level": true, "shop_free": true, "ad_coin": true, "ad_item": true, "timer_chest": true,
+              "skin_trial": {"present": true, "no_popup_levels": [1, 2], "every_levels": 3, "endless_every_rounds": 3, "endless_no_popup_rounds": [1, 2], "trial": "one_level", "claim_double": false, "evidence": "SkinTrial.js:12"}},
+  "systems_origin": {"gift": "ad-boost", "bonus-level": "ad-boost", "shop-free": "ad-boost", "timer-chest": "ad-boost"},
+  "configs": {
+    "offline": {"min_away_sec": 300, "cap_sec": 7200, "ad_multiplier": 2, "min_payout": 1},
+    "upgrade_lines": [[30, 38, 48, 61, 77, 97, 123, 156, 198, 250]],
+    "quests": {"daily": [10, 10, 10], "achievements": [[10, 20, 30, 40, 50]], "achievement_gives_skin": false, "claim_double": {"enabled": true, "default_checked": true}},
+    "energy": {"original_has_energy": true, "ad_refill": 3, "skip_if_no_room": true}
+  },
+  "unknowns": []
+}

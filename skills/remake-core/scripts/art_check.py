@@ -75,7 +75,11 @@ SHAPE_COLOUR_KINDS = {'squashed_text', 'squashed_picture', 'uniform_text_colour'
 # user 2026-10-23: energy "20" over the lightning icon, coin pile hanging off WATCH AD, "WATCH AD" as a caption: 穿模
 # v7.8 H11 (企鹅雪道美术 v3 half a penguin, v4 tiny score) + H6 black bands on revive / result pages
 HERO_HUD_KINDS = {'home_hero_unknown', 'home_hero_hidden', 'home_hero_small', 'hud_digit_small', 'hud_digit_contrast',
-                  'black_edge_band'}
+                  'black_edge_band',
+                  # any page: the page background stops short of the top / bottom edge (泡泡六角龙, 方块冲冲; art patch v3)
+                  'clear_color_band',
+                  # glyph core (Milo 10-24 "生成出来的文字怎么这么小", TankAce 10-26, 企鹅雪道 10-30): the digits actually seen
+                  'small_glyph_core', 'small_value_font', 'digit_glyph_padding'}
 STYLE_KINDS = {'mixed_caption_style', 'off_style_button', 'flat_button', 'text_arrow'}   # user 2026-10-23: one style per group
 # Saul 2026-10-31 (香肠太难了): "不要这种深色背景，的按钮，也不要图案后面还跟着这个背景"
 BUTTON_COLOUR_KINDS = {'dark_button', 'icon_plate', 'dark_button_state', 'button_colour_unavailable'}
@@ -206,7 +210,56 @@ def capture_inventory(project, dumps):
     if 'gameplay' not in kinds:errors.append('缺游戏中kind=gameplay的有效采集')
     gaps=screen_viewport_gaps(valid,valid_vp,observed)
     errors.extend('缺采集: %s@%sx%s'%gap for gap in gaps)
+    errors.extend(adboost_capture_gaps(project, records))
     return {'ready':not errors,'errors':errors,'dump_files':dump_files,'shots':sorted(shots), 'records':records,'observed':sorted(observed),'listed':valid,'viewports':valid_vp}
+
+
+ADBOOST_DIR = Path('assets') / 'resources' / 'adboost'
+ADBOOST_SHARED = {'shared', '_shared', 'common', 'kit', 'ui-kit'}
+
+
+def _dump_frames(data):
+    """Sprite frame names drawn on one dumped page (nodes visible enough to be seen)."""
+    out = set()
+    for n in data.get('nodes') or []:
+        if not isinstance(n, dict) or (n.get('opacity', 1) or 0) <= 0.05:
+            continue
+        frame = ((n.get('comps') or {}).get('sprite') or {}).get('frame')
+        if frame:
+            out.add(str(frame).strip().lower())
+    return out
+
+
+def adboost_capture_gaps(project, records):
+    """Saul 2026-11-01 (「广告skill做新的转盘的时候，你就要去做这个转盘的美工」): every ad-boost board copied into
+    the game (assets/resources/adboost/<board>/*.png) must show up on dumped pages at two phone sizes, so its panels
+    go through the same page checks as every other page (dark_button, icon_plate, font_value_label, overlap ...).
+    ad-boost checks each picture alone; without these dumps nobody looks at the assembled wheel / gift / check-in
+    window. A board passes when at least one of its pictures is drawn on dumps of two different viewport sizes."""
+    root = Path(project) / ADBOOST_DIR
+    if not root.is_dir():
+        return []
+    seen = {}
+    for data in records:
+        vp = data.get('viewport') or {}
+        size = (vp.get('width'), vp.get('height'))
+        for frame in _dump_frames(data):
+            seen.setdefault(frame, set()).add(size)
+    out = []
+    for board in sorted(p for p in root.iterdir() if p.is_dir() and p.name.lower() not in ADBOOST_SHARED):
+        names = sorted({f.stem.lower() for f in board.glob('*.png')})
+        if not names:
+            continue
+        sizes = set()
+        for name in names:
+            sizes |= seen.get(name, set())
+        if len(sizes) >= 2:
+            continue
+        where = ('只在 %dx%d 一种尺寸的采集里出现过' % sorted(sizes)[0]) if sizes else '没有出现在任何页面采集里'
+        out.append('缺采集: ad-boost 板块 %s 的图（%d 张，如 %s）%s：把它的面板和结果窗打开，两种手机尺寸各 dump_ui 一次，'
+                   '页面写进 docs/art/screens.json，整页美术检查才查得到它（Saul 2026-11-01，广告板块的美术也要过美工检查）'
+                   % (board.name, len(names), '、'.join(names[:3]), where))
+    return out
 
 
 def fixed_text_inventory_findings(page_report):
@@ -506,7 +559,8 @@ def main():
         '检查 %s 项；%s；信号须结合源图及实景复核，非整页验收' % (source.get('checked', 0), source.get('status', 'tool_error')),
         'sprite_sources.json')
 
-    code, text = run('audit_page_richness.py', ['--project', proj, '--dumps', dumps, '--out', out / 'page_richness.json', *binding], logs)
+    code, text = run('audit_page_richness.py', ['--project', proj, '--dumps', dumps, '--out', out / 'page_richness.json', *binding,
+                                                *(['--board', a.board] if a.board else [])], logs)
     j = first_json(text)
     found = '；'.join('%s：%s' % (x.get('screen') or '缺页面', p[:90]) for x in j.get('found', []) for p in x.get('problems', [])[:2])[:900]
     add('页面内容与背景', code == 0, found or '通过（%s 个页面）' % j.get('checked', 0), 'page_richness.json')
@@ -641,17 +695,27 @@ def main():
         ('通过：每页按钮底色都不深（含游戏中的方向键、按下和禁用状态），金币、钻石、爱心、体力图标没有另垫底板' +
          ('；接近深色、请看图确认：' + '；'.join(sorted(set(hints_))[:4]) if hints_ else '')) if dark_ok
         else '没有页面报告：先 dump 全部页面'), 'page_richness.json')
-    hero = []
+    hero, value_hints = [], []
     try:
         for pg in rep.get('pages', []):
             for prob in pg.get('problems', []):
                 if prob.split(':', 1)[0] in HERO_HUD_KINDS:
                     hero.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', prob[:110]))
+            # Saul 2026-10-31 "small_value_font 先只拦重塑": English games only list it here, for a look
+            value_hints += ['%s：%s' % (pg.get('screen') or '?', h_.split(': ', 1)[-1].split(' - English game')[0][:120])
+                            for h_ in (pg.get('stats') or {}).get('small_value_font_hints') or []]
+        hero += ['工程字体：%s' % p_[:110] for p_ in rep.get('setup', []) if p_.split(':', 1)[0] in HERO_HUD_KINDS]
     except (NameError, AttributeError):
         pass
-    add('首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边（H11、H6）', dark_ok and not hero, '；'.join(hero[:6])[:700] if hero else
-        ('通过：首页主角至少 90%% 在屏内、占屏 8%% 以上；HUD 数字字高至少屏高 3%%、对比度至少 3:1；复活和结算页上下没有黑边' if dark_ok
-         else '没有页面报告：先 dump 首页、游戏中、复活和结算页'), 'page_richness.json')
+    hero_pass = ('通过：首页主角至少 90%% 在屏内、占屏 8%% 以上；HUD 数字字高至少屏高 3%%、对比度至少 3:1；分数、货币、体力、关卡数'
+                 '看得见的字芯至少 18 CSS px，价格、卡片等级至少 12 px，数字字体的字芯至少占字号 65%%；复活和结算页上下没有黑边，'
+                 '其他页面背景也铺到屏幕上下边（不露清屏色）')
+    if value_hints:
+        hero_pass += ('；英化游戏数值字号偏小只提示、不算不通过（small_value_font 只拦重塑，Saul 2026-10-31），请看图：'
+                      + '；'.join(sorted(set(value_hints))[:4]))
+    add('首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边（H11、H6）', dark_ok and not hero,
+        '；'.join(hero[:6])[:700] if hero else
+        (hero_pass if dark_ok else '没有页面报告：先 dump 首页、游戏中、复活和结算页'), 'page_richness.json')
     sheets_ = overlap_sheets(dump_files, out)
     add('穿模审查图（给 Codex 看）', None if sheets_ else False, ('%d 张：%s（放大看每个按钮、胶囊、数字有没有穿模）' % (len(sheets_), out / 'overlap'))
         if sheets_ else '没有可裁的按钮/胶囊（缺 dump 或截图）', 'overlap')

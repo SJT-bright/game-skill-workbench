@@ -41,7 +41,7 @@ function probe(files){
   const context={module:{exports:{}},Number,Object,Array,Error};vm.runInNewContext(files['touch-coordinates.js']||'',context,{timeout:1000});
   context.module.exports.install({internal:{inputManager:manager}});
  }
- let adapterNormalize=null;
+ let adapterNormalize=null, adapterDispatch=null;
  const adapter=files['adapter-min.js']||'';
  const adapterStart=adapter.indexOf('function __restoreTouchFields2_4('),adapterEnd=adapter.indexOf('function __restoreTouchListener2_4(',adapterStart);
  if(adapterStart>=0&&adapterEnd>adapterStart){
@@ -50,6 +50,33 @@ function probe(files){
   const scope={Number,Object,Math,__restoreTouchPoints2_4:{},__restoreTouchTrace2_4:[]};
   vm.createContext(scope);vm.runInContext(adapter.slice(adapterStart,adapterEnd),scope,{timeout:1000});
   adapterNormalize=scope.__restoreTouchFields2_4;
+ }
+ // Legacy Mouse Chef adapters normalize inside the actual four-phase registration.
+ // Execute that registration and the shipped helper, not a renamed/synthetic normalizer.
+ if(adapter.includes('function __mouseChefTouchFields2_4(')){
+  const loaded=requires(entry,'adapter-min'),engineAt=requires(entry,'cocos/cocos2d-js-min');
+  if(loaded<0||engineAt<0||loaded>engineAt)throw Error('legacy touch adapter is not loaded before engine');
+  const marker='// MouseChef Cocos 2.4.15 documented touch fields v';
+  const helperAt=adapter.indexOf(marker),heads=[...adapter.matchAll(/registerSystemEvent\s*:\s*(function\([^)]*\)\{)/g)];
+  if(helperAt<0||heads.length!==1)throw Error('unsupported legacy registration');
+  const start=heads[0].index+heads[0][0].indexOf('function'),brace=adapter.indexOf('{',start);
+  let depth=0,end=-1,quote=null;
+  for(let i=brace;i<helperAt;i++){const c=adapter[i];if(quote){if(c==='\\'){i++;continue;}if(c===quote)quote=null;continue;}if(c==='"'||c==="'"){quote=c;continue;}if(c==='{')depth++;if(c==='}'&&--depth===0){end=i+1;break;}}
+  if(end<0)throw Error('unclosed legacy registration');
+  const registration=adapter.slice(start,end),canvas=(/getTouchesByEvent\(\w+,(\w+)\)/.exec(registration)||[])[1];
+  if(!canvas)throw Error('unsupported legacy canvas binding');
+  const callbacks={},phases={onTouchStart:'handleTouchesBegin',onTouchMove:'handleTouchesMove',onTouchEnd:'handleTouchesEnd',onTouchCancel:'handleTouchesCancel'};
+  let received=null;
+  manager._touchesIntegerDict={};
+  for(const handler of Object.values(phases))manager[handler]=touches=>{received=touches};
+  const scope={Number,Object,Math,cc:{view:manager._glView},console:{info(){}},__globalAdapter:{}};
+  scope[canvas]={};
+  for(const phase of Object.keys(phases))scope.__globalAdapter[phase]=fn=>{callbacks[phase]=fn};
+  vm.createContext(scope);vm.runInContext(adapter.slice(helperAt),scope,{timeout:1000});
+  scope.manager=manager;
+  vm.runInContext('('+registration+').call(manager,{})',scope,{timeout:1000});
+  if(Object.keys(phases).some(p=>typeof callbacks[p]!=='function'))throw Error('missing legacy touch phase');
+  adapterDispatch=event=>{received=null;scope.event=event;scope.dispatch=callbacks.onTouchStart;vm.runInContext('dispatch(event)',scope,{timeout:1000});if(!received)throw Error('legacy adapter did not deliver touches');return received};
  }
  // An SDK touch wrapper module required by game.js before the adapter: Basil's tiktok-input.js, or a module the
  // project declares with a line `// tiktok-touch-adapter: ./name.js` in game.js. Execute the shipped module on an
@@ -104,7 +131,7 @@ function probe(files){
   adapterNormalize=event=>{mapped=null;listener(event);return mapped;};
  }
  const cases=[['sdk_screen_coordinates',{identifier:0,screenX:195,screenY:392},195,392],['client_coordinates',{identifier:0,clientX:20,clientY:30},20,30],['preserve_client_coordinates',{identifier:0,clientX:11,clientY:12,screenX:99,screenY:98},11,12],['zero_coordinates',{identifier:0,screenX:0,screenY:0},0,0]];
- const rows=cases.map(([id,t,x,y])=>{const a=manager.getTouchesByEvent(adapterNormalize?adapterNormalize({changedTouches:[t],touches:[t]},'onTouchStart'):{changedTouches:[t],touches:[t]},{});return{id,passed:a.length===1&&a[0].x===x&&a[0].y===y&&a[0].id===0,observed:a.map(t=>({x:t.x,y:t.y,id:t.id}))};});
+ const rows=cases.map(([id,t,x,y])=>{const a=adapterDispatch?adapterDispatch({changedTouches:[t],touches:[t]}):manager.getTouchesByEvent(adapterNormalize?adapterNormalize({changedTouches:[t],touches:[t]},'onTouchStart'):{changedTouches:[t],touches:[t]},{});return{id,expected:{x,y,id:0},passed:a.length===1&&a[0].x===x&&a[0].y===y&&a[0].id===0,observed:a.map(t=>({x:t.x,y:t.y,id:t.id}))};});
  return{schema:'cocos2_touch_coordinates.v1',passed:rows.every(r=>r.passed),rows,boundary:'actual converter with controlled SDK payloads; not renderer/device acceptance'};
 }
 if(require.main===module){try{const payload=JSON.parse(fs.readFileSync(0,'utf8'));const r=probe(payload.files);console.log(JSON.stringify(r));process.exitCode=r.passed?0:1;}catch(e){console.log(JSON.stringify({passed:false,error:e.message}));process.exitCode=1;}}

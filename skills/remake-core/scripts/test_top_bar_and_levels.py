@@ -338,7 +338,7 @@ class LevelPlanTests(Fixture):
         t = json.loads((root / 'docs/economy/unlock_table.json').read_text())
         lim = [x for x in t['items'] if x.get('limited')]
         self.assertEqual([x['award_level'] for x in lim], list(range(10, 101, 10)))
-        self.assertTrue(all(x['unlock'] == 'coins' and x['coins'] == 50 * t['normal_level_coins'] and x['ads'] == 0 for x in lim))
+        self.assertTrue(all(x['unlock'] == 'coins' and x['coins'] == __import__('product_contract').skin_tiers_B(t['economy_policy'])['limited'] * t['normal_level_coins'] and x['ads'] == 0 for x in lim))
         self.assertEqual([x['order'] for x in lim], list(range(1, 11)))                # all first in the list
 
         def coins_on_40(p):

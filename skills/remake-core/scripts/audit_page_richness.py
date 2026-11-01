@@ -1097,6 +1097,47 @@ def checker_problems(d, nodes):
             % (100 * share, holder[0]['path'] if holder else 'x=%.2f y=%.2f' % (mx, my))]
 
 
+_GLYPH_RATIOS = {}
+_ENGLISH = {}
+BOARD = None          # main() --board (art_check.py passes its own --board); else the board recorded in the project
+
+
+def english_board(project):
+    """Saul 2026-10-31 "small_value_font 先只拦重塑": True for an English game (audit_glyph_core.english_game),
+    cached per project."""
+    if project is None:
+        return BOARD == 'localize'
+    key = (str(project), BOARD)
+    if key not in _ENGLISH:
+        import audit_glyph_core
+        _ENGLISH[key] = audit_glyph_core.english_game(project, BOARD)
+    return _ENGLISH[key]
+
+
+def glyph_ratios(project, image_module):
+    """Digit ink / font size of every digit font of the project (audit_glyph_core.font_ink_ratios), cached per project."""
+    if project is None or image_module is None:
+        return {}
+    key = str(project)
+    if key not in _GLYPH_RATIOS:
+        import audit_glyph_core
+        try:
+            _GLYPH_RATIOS[key] = audit_glyph_core.font_ink_ratios(project, image_module)
+        except (OSError, ValueError):
+            _GLYPH_RATIOS[key] = {}
+    return _GLYPH_RATIOS[key]
+
+
+def glyph_padding_problems(proj):
+    """Static digit_glyph_padding: .fnt / .labelatlas digits that fill less than 65% of their font size."""
+    import audit_glyph_core
+    try:
+        from PIL import Image
+    except ImportError:
+        return []
+    return audit_glyph_core.digit_glyph_padding_problems(glyph_ratios(proj, Image), proj)
+
+
 def font_advance_problems(proj):
     """Require visible separation between adjacent BMFont glyphs after outlines and shadows are rasterized.
 
@@ -1438,6 +1479,128 @@ def modal_masks(nodes):
     """Full-screen input blockers are the only nodes that can hide a lower screen from visual audits.
     No dim-opacity limit (Saul 10-31): how dark a popup dim is follows the game's style and is judged by eye."""
     return [n for n in nodes if area(n['rect']) >= 0.85 and n.get('comps', {}).get('block_input')]
+
+
+# --- clear_color_band (art patch v3, 2026-10-31: v2's band check merged into v7.8 after a 725-dump comparison) -----------
+# v7.8 black_edge_band only reads revive / result pages (purpose result_win / result_fail / revive), needs >= 90% of
+# the outer 4% rows near-black and the next 4% inward not dark. It missed 泡泡六角龙 (black bars of ~9% top and bottom on
+# home, game and its "result" page: the inner 4% is black too) and 方块冲冲 gameplay (a black block top-left, 42% of
+# the band, the sky starts 9% down). clear_color_band reads every page: the part of the outer 4% where no picture is
+# drawn (dump geometry) is one flat colour that differs from the big picture starting just inside; a 3D scene with no
+# 2D background, or the same colour beside a popup in the middle of the screen, is not judged.
+DIM_NAME = re.compile(r'mask|dim|shade|shadow|overlay|veil|black|blocker|modal|splash|vignette', re.I)
+CLEAR_BAND = 0.04
+CLEAR_GRID = 96
+
+
+def clear_band_problems(d, nodes, image_module):
+    """clear_color_band: the page background picture stops short of the top / bottom edge, and inside that 4% of the
+    screen the part where no picture is drawn (dump geometry) is one flat colour that does not continue into the page.
+    Any page; any band thickness; partial bands too. A 3D scene with no 2D background is not judged."""
+    import math
+    if image_module is None or not d.get('_file'):
+        return []
+    shot = screenshot_of(d)
+    if not shot.is_file():
+        return []
+    try:
+        img = image_module.open(shot).convert('RGB')
+    except (OSError, ValueError):
+        return []
+    W, H = img.size
+    w, h = CLEAR_GRID, max(20, round(CLEAR_GRID * H / float(W)))
+    px = img.resize((w, h)).load()
+    band = max(1, round(h * CLEAR_BAND))
+    drawn, big = bytearray(w * h), bytearray(w * h)
+    for n in nodes:
+        s = n.get('comps', {}).get('sprite')
+        if not isinstance(s, dict) or solid_fill(n) is not None or float(n.get('opacity', 1) or 0) < 0.5:
+            continue
+        if DIM_NAME.search(str(n.get('name', '')) + ' ' + str(s.get('frame', ''))):
+            continue
+        r = n.get('screen') or n['rect']
+        x0, x1 = max(0, int(r[0] * w)), min(w, math.ceil((r[0] + r[2]) * w))
+        y0, y1 = max(0, int(r[1] * h)), min(h, math.ceil((r[1] + r[3]) * h))
+        if x1 <= x0 or y1 <= y0:
+            continue
+        large = area([max(0.0, r[0]), max(0.0, r[1]), min(1.0, r[0] + r[2]) - max(0.0, r[0]),
+                      min(1.0, r[1] + r[3]) - max(0.0, r[1])]) >= 0.3
+        for y in range(y0, y1):
+            drawn[y * w + x0:y * w + x1] = b'\x01' * (x1 - x0)
+            if large:
+                big[y * w + x0:y * w + x1] = b'\x01' * (x1 - x0)
+    q = lambda c: (c[0] >> 3, c[1] >> 3, c[2] >> 3)
+    out = []
+    for side, rows, deeper in (('top', range(0, band), range(band, 4 * band)),
+                               ('bottom', range(h - band, h), range(h - band - 1, h - 4 * band - 1, -1))):
+        points = [(x, y) for y in rows for x in range(w)]
+        free = [p for p in points if not drawn[p[1] * w + p[0]]]
+        if len(free) < 0.2 * len(points):
+            continue
+        colour, count = Counter(q(px[p]) for p in free).most_common(1)[0]
+        if count < 0.85 * len(free):
+            continue
+        edge = []
+        for x in sorted({p[0] for p in free}):
+            y = next((y for y in deeper if big[y * w + x]), None)
+            if y is not None:
+                edge.append(px[x, y])
+        if len(edge) < 0.6 * len({p[0] for p in free}):
+            continue
+        other = [c for c in edge if q(c) != colour]
+        if len(other) < 0.5 * len(edge):
+            continue
+        middle = [(x, y) for y in range(int(0.25 * h), int(0.75 * h)) for x in range(w) if not drawn[y * w + x]]
+        if middle and sum(q(px[p]) == colour for p in middle) >= 0.3 * len(middle):
+            continue
+        flat = [px[p] for p in free if q(px[p]) == colour]
+        rgb = tuple(sum(c[i] for c in flat) // len(flat) for i in range(3))
+        l_band = audit_dark_area._lstar(*rgb)
+        l_near = sum(audit_dark_area._lstar(*c) for c in other) / len(other)
+        if abs(l_band - l_near) < 10:
+            continue
+        out.append('clear_color_band: the %s %.0f%% of the screen shows one flat colour rgb%s where no picture is drawn '
+                   '(%.0f%% of the band, L* %.0f next to L* %.0f of the page): the camera clear colour (black bars) - '
+                   'stretch the page background to the live canvas on long phones, or set the clear colour to the scene '
+                   'colour (H6; 泡泡六角龙, 方块冲冲)' % (side, CLEAR_BAND * 100, rgb, 100.0 * len(free) / len(points), l_band, l_near))
+    return out
+# --- end of merged block ---------------------------------------------------------------------------------------------
+
+
+# Saul 2026-11-01 (「广告skill做新的转盘的时候，你就要去做这个转盘的美工」): the pages ad-boost adds. Dump them with these
+# purposes; every page check runs on them like on any popup (dark_button, icon_plate, plain_popup, overlap ...), and
+# art_check.py refuses an ad-boost board whose pictures were never dumped at two phone sizes. check-in, skin trial,
+# revive and the result x2 keep their own purposes (checkin, trial, revive, result_win / result_fail).
+ADBOOST_PURPOSES = {'wheel', 'wheel_result', 'gift', 'offline', 'booster_refill', 'prestart_boost', 'skin_ad', 'energy',
+                    'hint', 'coin_ad', 'bonus_level', 'quest', 'shop_free', 'key_chest', 'moment_boost', 'extra_slot',
+                    'online_ladder', 'timer_chest'}
+WHEEL_PARTS = (('the wheel disc', re.compile(r'wheel|disc|sector|roulette|turntable|zhuanpan|转盘', re.I), False),
+               ('the pointer', re.compile(r'pointer|needle|arrow|zhizhen|指针', re.I), False),
+               ('the spin button', re.compile(r'spin|free|start|(?<![a-z])go(?![a-z])|转', re.I), True))
+
+
+def adboost_page_problems(purpose, nodes):
+    """adboost_page: the lucky-spin page shows its disc, its pointer and a spin button (丛林荡藤 v8: the pointer did not
+    match the prize; ad-boost's own tests check that sector 0 sits under the pointer, this checks it is drawn)."""
+    if purpose != 'wheel':
+        return []
+    def ident(n):
+        return ' '.join([str(n.get('name', '')), str(n.get('path', '')).rsplit('/', 1)[-1],
+                         str((n.get('comps', {}).get('sprite') or {}).get('frame', '')), words(n)])
+    missing = []
+    for what, rx, button in WHEEL_PARTS:
+        pool = [n for n in nodes if ('button' in n.get('comps', {})) == button or (button and any(
+            node_under(n, b) for b in nodes if 'button' in b.get('comps', {})))] if button else \
+            [n for n in nodes if 'sprite' in n.get('comps', {})]
+        if what == 'the wheel disc':
+            pool = [n for n in pool if not WHEEL_PARTS[1][1].search(ident(n)) and 'button' not in n.get('comps', {})]
+        if not any(rx.search(ident(n)) for n in pool):
+            missing.append(what)
+    if not missing:
+        return []
+    return ['adboost_page: the lucky-spin page does not show %s: the wheel page needs the disc, the pointer over it and '
+            'the spin button (FREE / SPIN / SPIN with the video icon), all generated in the game style (ad-boost '
+            'modules/wheel/art.json; Saul 2026-11-01)' % ', '.join(missing)]
 
 
 def claim_button(button, nodes):
@@ -2413,6 +2576,8 @@ def check(d, image_module=None, project=None, binding=None):
     all_pictures = [n for n in all_visual if 'sprite' in n['comps']]
     all_full = [n for n in nodes if area(n['rect']) >= 0.85]
     masks = modal_masks(all_full)
+    # measured before the underlay is dropped below: the clear colour at the top / bottom edge (clear_color_band)
+    clear_band = clear_band_problems(d, nodes, image_module)
     # Do not audit gameplay/home nodes hidden by an active modal shade; their muted pixels and
     # rectangles otherwise create false low-contrast and overlap defects on the popup above them.
     nodes = [n for n in nodes if not fully_occluded(n, masks)]
@@ -2457,10 +2622,22 @@ def check(d, image_module=None, project=None, binding=None):
     problems += control_picture_problems(nodes, [n for n in nodes if 'button' in n['comps'] and
                                                  n['comps']['button'].get('interactable', True)], full, kind, blockers)
     problems += stacked_text_problems(nodes) + busy_text_problems(d, nodes, image_module)
-    problems += edge_band_problems(d, image_module)
+    edge = edge_band_problems(d, image_module)
+    problems += edge + ([] if edge else clear_band)     # one report per page: black_edge_band wins when both see it
     # v7.8 H11: home hero seen whole and big, HUD numbers big and clear
     problems += hero_problems(d, nodes, [n for n in nodes if 'button' in n['comps']])
     problems += hud_digit_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
+    # Glyph core (Milo's Bubble Cove 10-24 "2比5文字怎么这么小", TankAce 10-26, 企鹅雪道 10-30): the digits actually seen,
+    # not the font size - generated digit pictures with wide transparent margins look small at a big font size.
+    import audit_glyph_core                      # local import: audit_glyph_core imports this module for its helpers
+    core = audit_glyph_core.glyph_core_problems(d, nodes, glyph_ratios(project, image_module), image_module, img=shot_img,
+                                                english=english_board(project))
+    # advisory, never a failure: screenshot-only measures, and small_value_font in an English game (Saul 2026-10-31)
+    advice = {'glyph_core_review': 'glyph_core_review:', 'small_value_font_hints': 'small_value_font_hint:'}
+    problems += [p for p in core if not p.startswith(tuple(advice.values()))]
+    for key, prefix in advice.items():
+        if any(p.startswith(prefix) for p in core):
+            pix[key] = [p for p in core if p.startswith(prefix)]
     problems += caption_style_problems(d, nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)],
                                        image_module)
     problems += glyph_problems(nodes) + flat_value_plate_problems(nodes)
@@ -2670,6 +2847,7 @@ def check(d, image_module=None, project=None, binding=None):
                                                                       if any(text(n) for n in nodes if node_under(n, b)) else
                                                                       next(baked(n) for n in nodes if node_under(n, b) and baked(n))[:16]
                                                                       for b in texted)))
+    problems += adboost_page_problems(purpose, content)
     if purpose == 'map':
         level_count = visible_level_button_count(nodes)
         if level_count < 6:
@@ -2696,6 +2874,26 @@ def check(d, image_module=None, project=None, binding=None):
                           area(m['rect']) < 0.9 * area(card['rect'])]
                 if coverage([m.get('screen') or m['rect'] for m in inside], card.get('screen') or card['rect']) < 0.10:
                     need.append('day %d card has no visible reward content (CardSurface inner coverage < 10%%)' % day)
+        if len({d for d, _ in cards}) < 7:
+            # ad-boost's check-in panel (2026-11-01): the day number is picture digits (Kit.digits) under a node named
+            # Day1..Day7 whose biggest picture is the card (cell_bg / cell_big ...), rewards under Day<N>/Rewards
+            found = {d for d, _ in cards}
+            for root in nodes:
+                m = re.fullmatch(r'Day([1-7])', str(root.get('name', '')))
+                if not m or int(m.group(1)) in found:
+                    continue
+                inside = [p for p in pictures if node_under(p, root) and p is not root and 0.01 <= area(p['rect']) < 0.5]
+                if not inside:
+                    continue
+                card = max(inside, key=lambda p: area(p['rect']))
+                day = int(m.group(1))
+                found.add(day)
+                cards.append((day, card))
+                content_in = [p for p in content if node_under(p, root) and p is not card and
+                              center_in(p.get('screen') or p['rect'], card.get('screen') or card['rect']) and
+                              area(p['rect']) < 0.9 * area(card['rect'])]
+                if coverage([p.get('screen') or p['rect'] for p in content_in], card.get('screen') or card['rect']) < 0.10:
+                    need.append('day %d card has no visible reward content (inner coverage < 10%%)' % day)
         days = {d for d, _ in cards}
         if days != set(range(1, 8)): need.append('7 day cards with their numbers 1-7 (found %s)' % sorted(days))
         if 7 in days and len(cards) >= 2:
@@ -2739,7 +2937,11 @@ def main():
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--maintenance-scope', type=Path)
     ap.add_argument('--maintenance-visual-policy', type=Path)
+    ap.add_argument('--board', choices=['localize', 'remake'],
+                    help='overrides the board recorded in the project (small_value_font blocks remake games only)')
     a = ap.parse_args()
+    global BOARD
+    BOARD = a.board
     proj = a.project.resolve()
     folders = a.dumps or [proj / 'docs/test']
     dumps = load([f for f in folders if Path(f).is_dir()])
@@ -2804,7 +3006,7 @@ def main():
         BUTTON_SET = None;CAPTION_FRAMES=[]
         setup.append('button_set: docs/art/button-set.json missing: generate every button (main, small, icon, arrows, close, back, '
                      'tabs) as one set in the game style and list their frame names ({"style": "...", "frames": ["btn_*", ...]})')
-    setup += canvas_text_code(proj) + font_advance_problems(proj)
+    setup += canvas_text_code(proj) + font_advance_problems(proj) + glyph_padding_problems(proj)
     global ORIGINAL_ART
     import audit_button_colour        # Saul 2026-10-31: pressed / disabled button states nobody screenshots
     ORIGINAL_ART = audit_button_colour.OriginalArt(proj)

@@ -29,7 +29,8 @@ BUYABLE = ('ads', 'coins', 'ads_coins', 'ads_or_coins')
 MAP_GROUPS = ('map', 'maps', 'world', 'worlds', 'chapter', 'chapters')
 
 
-from product_contract import limited_levels, reward_errors, REWARD_POLICY
+from product_contract import limited_levels, reward_errors, REWARD_POLICY, ECONOMY_POLICIES, skin_tiers_B, _b_amount_ok
+LIMITED_PURCHASE_B = tuple(sorted({skin_tiers_B(p)['limited'] for p in ECONOMY_POLICIES}))  # (50, 80)
 
 
 def _every_milestone(plan):
@@ -422,7 +423,8 @@ def audit_plan(plan, items, add, board=None, proj=None):
                 if not item.get('limited'):
                     problems.append('every-milestone skin %s must be marked limited in unlock_table.json' % reward.get('id'))
             else:
-                if not (plan.get('reward_policy')==REWARD_POLICY and item.get('unlock')=='coins' and item.get('coins')==50*plan.get('coins_per_level',0) and item.get('ads')==0) and (str(item.get('unlock', '')).lower() != 'level' or str(item.get('condition', '')).lower() != 'clear' \
+                # top-tier limited purchase: 80B on normal-5-80.v1, 50B on a frozen normal-10-50.v1 table (exact per policy: budget_errors)
+                if not (plan.get('reward_policy')==REWARD_POLICY and item.get('unlock')=='coins' and any(_b_amount_ok(item.get('coins'),k,plan.get('coins_per_level',0)) for k in LIMITED_PURCHASE_B) and item.get('ads')==0) and (str(item.get('unlock', '')).lower() != 'level' or str(item.get('condition', '')).lower() != 'clear' \
                         or item.get('level') != n or item.get('ads') or item.get('coins')):
                     problems.append('limited skin %s must be unlock "level", condition "clear", level %d, ads 0, coins 0 '
                                     '(only won here, cannot be bought)' % (reward.get('id'), n))

@@ -256,10 +256,14 @@ def audit(proj, board, reference, maintenance=None, binding=None):
             add('ad_module', True, 'AdRewards.ts is the skill copy')
             for c in sim:
                 add('sim_' + c['id'], c['passed'], c['detail'])
-    if table and table.get('economy_policy')=='normal-10-50.v1':
+    from product_contract import ECONOMY_POLICIES, skin_tiers_B
+    policy = table.get('economy_policy') if table else None
+    priced_policy = isinstance(policy, str) and policy in ECONOMY_POLICIES  # normal-5-80.v1, or a frozen normal-10-50.v1 table
+    if priced_policy:
         from product_contract import budget_errors
         problems=budget_errors(table)
-        add('economy_budget',not problems,'; '.join(problems) if problems else '10/20/30/40/50B prices, ad/gift 5B and 30-minute gift cooldown')
+        add('economy_budget',not problems,'; '.join(problems) if problems else '%sB prices (%s), ad/gift 5B and 30-minute gift cooldown'
+            % ('/'.join(str(v) for v in skin_tiers_B(policy).values()), policy))
     # the skin module
     items = [r for r in (table or {}).get('items', []) if isinstance(r, dict)]
     by_group = {}
@@ -304,10 +308,10 @@ def audit(proj, board, reference, maintenance=None, binding=None):
             add('limited_skin_route', False, 'level_plan.json missing (make_level_plan.py): it says levels or endless')
         elif not lim:
             add('limited_skin_route', False, 'no limited skin in unlock_table.json')
-        elif table.get('economy_policy')=='normal-10-50.v1':
-            base=table.get('normal_level_coins',0)
-            ok=all(r.get('unlock')=='coins' and r.get('coins')==50*base and r.get('ads')==0 for r in lim)
-            add('limited_skin_route',ok,'limited purchase: 50 ordinary base rewards; existing first-clear award is optional and grants no duplicate payout')
+        elif priced_policy:
+            base=table.get('normal_level_coins',0);top=skin_tiers_B(policy)['limited']
+            ok=all(r.get('unlock')=='coins' and r.get('coins')==top*base and r.get('ads')==0 for r in lim)
+            add('limited_skin_route',ok,'limited purchase: %d ordinary base rewards; existing first-clear award is optional and grants no duplicate payout' % top)
         elif mode == 'levels' and isinstance(plan.get('limited_skin_policy'), dict) \
                 and plan['limited_skin_policy'].get('mode') == 'every_milestone' and _ovr('limited_skin_route'):
             import audit_level_plan as _alp

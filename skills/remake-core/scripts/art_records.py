@@ -95,6 +95,7 @@ GEN_CMD = 'python3 %s generated --project "%%s" --prompt "<提示词>" --tool "<
 LOCALIZE_STYLES = ('original',)
 PRE_V78_CUTOFF = '2026-10-31'      # v7.8 release day: games marked new on or before it may register 「v7.8 前已有」 once
 MARKER_FILE = Path('.tiktok-kit') / 'policy.json'
+ADBOOST_ART = 'assets/resources/adboost'   # ad-boost copies each board's finished pictures to <this>/<board>/
 
 
 def sha(data):
@@ -1005,6 +1006,15 @@ def check_generated(project, board=None, art_style=None, assets=None, ship=None,
     if problems:
         out['message'] = '；'.join(tail) + '。按钮和数字要用生图工具出图，每出一张跑 %s；确实要代码画的（纯色九宫格底板）写进 %s 并写 why' % (
             GEN_CMD % project, ALLOW_FILE.as_posix())
+        adboost = sorted({r['file'].split('/')[3] for r in problems
+                          if r['file'].startswith(ADBOOST_ART + '/') and r['file'].count('/') >= 4})
+        if adboost:
+            # Saul 2026-11-01: a wheel / gift / check-in board added by ad-boost goes through the art Skill too. Its
+            # pictures were made by ad-boost's image_gen pipeline; its gen_log.json holds the prompts and raw files.
+            out['adboost_boards'] = adboost
+            out['message'] += ('。其中 ad-boost 板块 %s 的图：照 ad-boost 第 ④ 步，用 ad-boost 的 scripts/art/skill_link.py '
+                               'record --project "%s" --gen <这个板块的 art_<板块> 生图目录> 把它的生图记录（提示词、原图）'
+                               '写进 %s，不要逐张手抄' % ('、'.join(adboost), project, GENERATED_FILE.as_posix()))
         if not strict:
             out['message'] = '英化游戏只提示：' + out['message']
     elif not out['recorded'] and not out['allowed']:

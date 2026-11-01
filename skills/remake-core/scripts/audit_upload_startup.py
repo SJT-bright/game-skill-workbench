@@ -297,8 +297,12 @@ def audit_files(files):
             run = subprocess.run([node, str(Path(__file__).with_name('probe_cocos2_touch_coordinates.cjs'))], input=json.dumps(payload), capture_output=True, text=True, timeout=20)
             touch_coordinates = json.loads(run.stdout)
             if run.returncode or touch_coordinates.get('schema') != 'cocos2_touch_coordinates.v1' or touch_coordinates.get('passed') is not True:
+                failed = [str(row.get('id')) + ' expected ' + str(row.get('expected')) +
+                          ', observed ' + str(row.get('observed'))
+                          for row in touch_coordinates.get('rows', []) if row.get('passed') is not True]
+                reason = touch_coordinates.get('error') or '; '.join(failed) or 'probe did not pass'
                 errors.append('Cocos2 native touch coordinates rejected: SDK screenX/screenY must reach finite engine coordinates'
-                              + (' (' + str(touch_coordinates.get('error')) + ')' if touch_coordinates.get('error') else ''))
+                              + ' (' + str(reason) + ')')
         except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
             errors.append('Cocos2 native touch-coordinate probe unavailable: ' + str(exc))
     # Cocos 3.x reads clientX/clientY in its minigame TouchInputSource through its own copy of `tt`. Run the

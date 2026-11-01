@@ -40,6 +40,14 @@
    check first, Creator found by script (Dashboard record, usual folders, COCOS_CREATOR), every browser command wrapped
    by browser_env.py (Ego when installed, else Chrome/Edge/Chromium), the 3.x entry-page fix, Windows wording, and
    what to do without an image tool or Grok; no Saul-only command or path left in the entry and the version doc.
+13. (10.2.12, Saul 2026-11-01 "能不能在skill放一个阶段用时的汇报……全面一点设计") Timing report: every stage and step is
+   timed by stage_timer.py; the entry says when to run which command in each stage, the step names and reference times
+   in the entry are the tool's own, and the report goes to Saul after every stage, with every trial link and at delivery.
+14. (简化.11, Saul 2026-11-01, 总表第 28 条) Every English trial link passes the Chinese check first (Garden Guardians:
+   "高波来袭！" in one slice of a Spine atlas reached Saul's trial while the old image record said no Chinese): the
+   summary, the stage lead, stages 2-5 and the art copy say so, stage 1 marks its link --chinese-original, the English
+   serve_preview.py offers --chinese-original / --draft, and the 10.2.4 "only three start checks" wording is replaced
+   by "the Chinese check, then three start checks" (the gate itself is tested in test_serve_preview_gate.py).
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 """
 import json
@@ -318,7 +326,8 @@ class AdBoostAndRedesign(unittest.TestCase):
         self.assertIn('英化游戏默认由英化入口跑 ad-boost', section)
         self.assertNotIn('英化游戏只在 Saul 说广告太少', section)
         self.assertIn('原首页按钮不动', section)
-        self.assertIn('15 个板块', section)
+        self.assertIn('20 个板块', section)                      # ad-boost v1.2.0 (v7.9); 15 until 10.2.10
+        self.assertNotIn('15 个板块', section)
 
     def test_redesign_keeps_the_original_art_style(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -359,7 +368,8 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_link_needs_only_the_start_checks(self):
         _, st = self.stages()
-        for phrase in ('只确认三件', '能进首页', '能开始玩一局', '没有报错卡死', '--ad-simulator', '不加 `--keep`',
+        # 简化.11 (Saul 2026-11-01): the Chinese check comes first, then the same three start checks
+        for phrase in ('中文专项检查过了，再确认三件', '能进首页', '能开始玩一局', '没有报错卡死', '--ad-simulator', '不加 `--keep`',
                        '--idle-minutes 0'):
             self.assertIn(phrase, st[3], phrase)
         self.assertNotIn('--snapshot --keep', st[3])
@@ -377,7 +387,7 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_trial_improve_stage_runs_no_checks(self):
         _, st = self.stages()
-        for phrase in ('AI 不跑检查', '一次全部改完', '只构建一次', '只看改过的地方', 'Saul 点名', '直到 Saul 说试玩没问题',
+        for phrase in ('AI 不跑别的检查', '一次全部改完', '只构建一次', '只看改过的地方', 'Saul 点名', '直到 Saul 说试玩没问题',
                        '先停掉上一轮的试玩服务', '不能只叫他刷新'):
             self.assertIn(phrase, st[4], phrase)
         self.assertNotIn('刷新同一个链接', (ENTRY / 'SKILL.md').read_text(encoding='utf-8'))
@@ -426,6 +436,19 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         for phrase in ('**重做美术先出小样（Saul 2026-10-31）**', '2～3 套', '1 张首页加 2 个按钮', '保持原画风，只改英文和新入口',
                        '他选了再做整套', '不碰美术的部分', 'docs/samples/samples.json'):
             self.assertIn(phrase, section, phrase)
+
+    def test_samples_three_points(self):
+        # v7.9 (Saul 2026-11-01「把这三点补进v7.9一起改」): show the buttons on the real page, pass the art check first,
+        # pick once and keep it
+        text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        section = text.split('**重做美术先出小样（Saul 2026-10-31）**', 1)[1].split('\n\n', 1)[0]
+        for phrase in ('**给 Saul 挑的是做出来的样子**', '游戏真实首页', '不拿一次画出的整页效果图给他挑',
+                       '**每套先过美术检查再给他看**', '`art_check.py`', '按钮底色不深、物品图标不另垫底板', '深色粗字（永久禁止）',
+                       '**挑一次就定死**', '之后每轮美工不再重新挑', '颜色（HEX）、材质、圆角、描边', '先做 3 个放进游戏看对不对'):
+            self.assertIn(phrase, section, phrase)
+        samples = (PACK / 'remake-art' / 'references' / 'ui-style-and-samples.md').read_text(encoding='utf-8')
+        step4 = [l for l in samples.splitlines() if '样板阶段不停下等用户' in l]
+        self.assertTrue(step4 and all('英化' in l for l in step4), step4)   # the English copy says English games wait for Saul
 
 
 class AdBoostBundled(unittest.TestCase):
@@ -559,7 +582,8 @@ class FasterFirstLink(unittest.TestCase):
 
 UPDATES = PACK / '更新记录.txt'
 AD_SECTION = '\n## 看广告：固定几项按广告板块做，第 8 项默认加 ad-boost 板块'
-OLD_VERSION_NOTES = ('10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1', '10.2', '10.1', '10')
+OLD_VERSION_NOTES = ('10.2.12', '10.2.11', '10.2.10', '10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1',
+                     '10.2', '10.1', '10')
 # (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
 PRE_TRIAL_NOTES = (
     ('remake-art/SKILL.md', '两轮自审', '英化第一轮重新生成按钮和文字不算下文说的“完整首次重做”'),
@@ -605,12 +629,17 @@ class StructureAndReadingMap(unittest.TestCase):
     def test_revision_line_keeps_only_the_current_version(self):
         rev = [l for l in self.text().splitlines() if l.startswith('修订：')]
         self.assertEqual(len(rev), 1)
-        self.assertIn('english-simple.10.2.10', rev[0])
+        # 10.2.12: the revision is 10.2.12 or later (a version written into the test failed every later release)
+        version = re.search(r'english-simple\.(\d+(?:\.\d+)*)`', rev[0])
+        self.assertIsNotNone(version, rev[0])
+        self.assertGreaterEqual(tuple(int(x) for x in version.group(1).split('.')), (10, 2, 12))
         self.assertIn('](版本历史.md)', rev[0])
-        for old in ('10.2.8：', '10.2.7：', '10.2.5：', '10.1：', '上一版 `2026-10-28.english-simple.1`'):
+        for old in ('10.2.10：', '10.2.8：', '10.2.7：', '10.2.5：', '10.1：', '上一版 `2026-10-28.english-simple.1`'):
             self.assertNotIn(old, rev[0], old)
         history = (ENTRY / '版本历史.md').read_text(encoding='utf-8')
-        for old in ('10.2.8：只调结构', '10.2.7：第一个链接只等主要页面的新图', '10.2.5：第一轮所有按钮都重新生成',
+        if 'english-simple.10.2.12`' not in rev[0]:
+            self.assertIn('10.2.12：用时汇报', history)
+        for old in ('10.2.10：换电脑也能用', '10.2.8：只调结构', '10.2.7：第一个链接只等主要页面的新图', '10.2.5：第一轮所有按钮都重新生成',
                     '上一版 `2026-10-28.english-simple.1`'):
             self.assertIn(old, history, old)
         self.assertLess(len((ENTRY / 'SKILL.md').read_text(encoding='utf-8').split('\n---', 2)[0]), 1000)   # description
@@ -630,7 +659,7 @@ class StructureAndReadingMap(unittest.TestCase):
         readme, updates = README.read_text(encoding='utf-8'), UPDATES.read_text(encoding='utf-8')
         self.assertIn('见同目录「更新记录.txt」', readme)
         for v in OLD_VERSION_NOTES:
-            mark = 'english-simple.%s / 2026-10-' % v
+            mark = 'english-simple.%s / 2026-' % v          # 10.2.12: 10.2.11 is dated 2026-11-01
             self.assertNotIn('\n' + mark, readme, v)
             self.assertIn(mark, updates, v)
         self.assertLess(len(readme.encode('utf-8')), 16000)
@@ -712,6 +741,165 @@ class PortableOnAnyComputer(unittest.TestCase):
             self.assertIn('不用装 Ego', codex)
 
 
+class TimingReport(unittest.TestCase):
+    """10.2.12 (Saul 2026-11-01): a timing report after every stage, with every step (the art included), every trial
+    round and the whole run; the entry and stage_timer.py use the same step names and reference times."""
+    HEADING = '\n## 用时汇报（10.2.12'
+
+    def text(self):
+        return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+
+    def section(self):
+        return self.text().split(self.HEADING, 1)[1].split('\n## ', 1)[0]
+
+    def stages(self):
+        part = self.text().split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        return {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', part) if p[:1].isdigit()}
+
+    def tool(self):
+        sys.path.insert(0, str(HERE))
+        import stage_timer
+        return stage_timer
+
+    def test_section_sits_between_the_stages_and_the_parallel_division(self):
+        text = self.text()
+        self.assertEqual(text.count(self.HEADING), 1)
+        order = [text.index(h) for h in ('\n## 阶段\n', self.HEADING, '\n## 并行分工')]
+        self.assertEqual(order, sorted(order))
+        summary = text.split('\n## 一屏看懂', 1)[1].split('\n## ', 1)[0]
+        self.assertIn('每个阶段做完都把用时发给 Saul，见「用时汇报」', summary)
+
+    def test_section_says_when_to_run_every_command(self):
+        part = self.section()
+        for phrase in ('scripts/stage_timer.py --project <工程>`', '`<工程>/docs/timing/stage-timing.jsonl`', '不要自己估、自己算',
+                       '`T stage <1-5>`', '`T done`', '原样发给 Saul', '单独发一条短消息，不等回复', '`T begin <步骤>`',
+                       '`T end <步骤>`', '`--count 图=<张数>`', '`--who 美术子进程`', '子进程自己不记', '`T link <第几轮>`',
+                       '`T ask <事情>`', '`T back`', '不算进 Saul 等你的时间', '`T mark 中文原版链接`', '`T mark 改要求：<几个字>`',
+                       '`T link <N>`', '贴在新链接那条回复最后', '`T mark 交付`、`T done`、`T report --all`',
+                       '`docs/timing/timing-report.md`', '每阶段、每轮只提醒一次', '不是硬限制，不为了赶时间少做一步', '`T status`',
+                       '`--at 时:分`', '**不挡流程**'):
+            self.assertIn(phrase, part, phrase)
+
+    def test_reference_times_and_step_names_are_the_tools_own(self):
+        st = self.tool()
+        part = self.section()
+        for n, minutes in st.REF_MIN.items():
+            self.assertIn('第 %d 阶段 %s' % (n, st.fmt(minutes * 60)), part, n)
+        self.assertIn('从 Saul 回复到新链接 %s' % st.fmt(st.ROUND_REF_MIN * 60), part)
+        table = part.split('| 阶段 | 步骤名', 1)[1].split('\n\n', 1)[0]
+        rows = {}
+        for line in table.splitlines()[2:]:
+            cells = [c.strip() for c in line.strip('|').split('|')]
+            rows[cells[0]] = cells[1]
+        for n, names in st.STEPS:
+            label = '%d %s' % (n, st.STAGES[n]) if n else '哪个阶段都可能有'
+            self.assertIn(label, rows, label)
+            for name in names:
+                self.assertIn(name, rows[label], (label, name))
+
+    def test_every_stage_says_when_to_time(self):
+        st = self.stages()
+        lead = self.text().split('\n## 阶段', 1)[1].split('1. **盘点**', 1)[0]
+        self.assertIn('`T` 是 `python3 <skills>/cocos-game-to-english/scripts/stage_timer.py --project <工程>`', lead)
+        for n, phrases in ((1, ('`T stage 1`', '`T mark 中文原版链接`', '`T done`')), (2, ('`T stage 2`', '`T done`')),
+                           (3, ('`T stage 3`', '`T link 1`', '`T done`', '贴在这条回复最后')),
+                           (4, ('`T stage 4`', '`T back`', '`T link <第几轮>`', '`T done`')),
+                           (5, ('`T stage 5`', '`T mark 交付`', '`T report --all`'))):
+            for phrase in phrases:
+                self.assertIn(phrase, st[n], (n, phrase))
+        par = self.text().split('\n## 并行分工', 1)[1].split('\n## ', 1)[0]
+        self.assertIn('`T begin <步骤> --who 美术子进程`', par)
+        self.assertIn('子进程自己不记', par)
+
+    def test_tool_and_its_test_ship_with_the_entry(self):
+        self.assertTrue((HERE / 'stage_timer.py').is_file())
+        self.assertTrue((HERE / 'test_stage_timer.py').is_file())
+        r = subprocess.run([sys.executable, '-B', str(HERE / 'stage_timer.py'), '--help'], capture_output=True, text=True,
+                           env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONIOENCODING='utf-8'))
+        self.assertEqual(r.returncode, 0, r.stderr[-300:])
+
+    def test_readme_names_the_timing_report(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        readme = README.read_text(encoding='utf-8')
+        self.assertIn('stage_timer.py', readme)
+        self.assertIn('用时', readme)
+
+
+class ChineseAuditBeforeTrial(unittest.TestCase):
+    """简化.11 (Saul 2026-11-01, 总表第 28 条): every English trial link passes the Chinese check first."""
+
+    def text(self):
+        return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+
+    def stages(self):
+        section = self.text().split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        return section, {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', section) if p[:1].isdigit()}
+
+    def test_summary_and_lead_put_the_check_before_every_link(self):
+        summary = self.text().split('\n## 一屏看懂', 1)[1].split('\n## ', 1)[0]
+        three = [l for l in summary.splitlines() if l.startswith('- ③')][0]
+        four = [l for l in summary.splitlines() if l.startswith('- ④')][0]
+        self.assertIn('chinese_audit.py', three)
+        self.assertIn('不过不给链接', three)
+        self.assertLess(three.index('中文专项检查'), three.index('能进首页'))
+        self.assertIn('中文专项检查', four)
+        self.assertNotIn('④ 试玩改进：不跑检查', summary)
+        section, _ = self.stages()
+        lead = section.split('1. **盘点**', 1)[0]
+        self.assertIn('**中文专项检查例外（Saul 2026-11-01）**', lead)
+        self.assertNotIn('只确认能进首页、能玩一局，不跑检查。', lead)
+
+    def test_stage_three_runs_scan_review_check_and_the_gated_link(self):
+        _, st = self.stages()
+        three = st[3]
+        for phrase in ('chinese_audit.py', '`scan --project <工程> --export <这轮的 Web 导出>`', '`sheet --project <工程> --pending`',
+                       'review --project <工程> --id <编号> --verdict', '--evidence', '`false_positive`', 'not_displayed --reason',
+                       '`check --project <工程> --export <这轮的 Web 导出>`', 'isolated_render', '不能当成没有字',
+                       'trial-links.json', '--draft', '一字不差', '手写的记录不算'):
+            self.assertIn(phrase, three, phrase)
+        link = [l for l in three.splitlines() if l.startswith('   起链接：')][0]
+        self.assertIn('serve_preview.py --directory <这轮的 Web 导出> --project <工程> --snapshot --open --idle-minutes 0', link)
+        self.assertLess(three.index('**中文专项检查'), three.index('中文专项检查过了，再确认三件'))
+
+    def test_stage_one_link_is_marked_chinese_original(self):
+        _, st = self.stages()
+        self.assertIn('--idle-minutes 0 --chinese-original --name "<游戏> 中文原版"', st[1])
+
+    def test_later_rounds_and_the_delivery_link_check_again(self):
+        _, st = self.stages()
+        self.assertIn('只有每轮起新链接前的中文专项检查照做', st[4])
+        self.assertIn('scan 只识新加和改过的图', st[4])
+        self.assertIn('中文专项检查照第 3 阶段对这份导出再过一次', st[5])
+        self.assertIn('不能拿试玩的结果代替', st[5])
+
+    def test_image_record_follows_the_chinese_check(self):
+        _, st = self.stages()
+        bullet = [l for l in st[2].splitlines() if l.startswith('   - **图片复核记录')][0]
+        for phrase in ('照中文专项检查的结果写', 'docs/english/chinese-audit/', 'chinese_audit 自动扫描', '不能凭印象手写'):
+            self.assertIn(phrase, bullet, phrase)
+
+    def test_any_computer_section_names_the_recognizers(self):
+        part = self.text().split('\n## 换电脑也能用', 1)[1].split('\n## ', 1)[0]
+        bullet = [l for l in part.splitlines() if l.startswith('- **识字工具**')][0]
+        for phrase in ('Vision', 'Windows', 'tesseract', '`sheet`', '不能当成没有字'):
+            self.assertIn(phrase, bullet, phrase)
+
+    def test_art_copy_names_the_exception(self):
+        self.assertIn('英文试玩链接前只过中文专项检查', read('remake-art', 'references', 'art-before-trial.md'))
+
+    def test_wrapper_offers_the_two_flags_and_the_tools_exist(self):
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')
+        r = subprocess.run([sys.executable, '-B', 'serve_preview.py', '--help'], cwd=str(HERE), env=env,
+                           stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 0, (r.stderr or r.stdout)[-300:])
+        for flag in ('--chinese-original', '--draft'):
+            self.assertIn(flag, r.stdout, flag)
+        for name in ('chinese_audit.py', 'ocr_vision.swift', 'ocr_windows.ps1', 'test_chinese_audit.py',
+                     'test_serve_preview_gate.py'):
+            self.assertTrue((HERE / name).is_file(), name)
+
+
 class OriginalTrialServer(unittest.TestCase):
     """The stage-1 command (no --keep, no --project) serves the fixed-phone page for a Chinese-original export."""
 
@@ -722,7 +910,8 @@ class OriginalTrialServer(unittest.TestCase):
             (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas></html>', encoding='utf-8')
             env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', GAME_SKILL_LOCK_DIR=str(Path(td) / 'locks'))
             p = subprocess.Popen([sys.executable, '-B', 'serve_preview.py', '--directory', str(web), '--snapshot',
-                                  '--no-browser', '--idle-minutes', '0', '--name', 'test 中文原版'], cwd=str(HERE), env=env,
+                                  '--no-browser', '--idle-minutes', '0', '--chinese-original', '--name', 'test 中文原版'],
+                                 cwd=str(HERE), env=env,
                                  stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             lines = []
             reader = threading.Thread(target=lambda: [lines.append(l) for l in p.stdout], daemon=True)

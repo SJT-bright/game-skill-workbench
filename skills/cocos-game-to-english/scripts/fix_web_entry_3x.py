@@ -143,7 +143,9 @@ def fix(export, template_dir, title, force=False):
     written = []
     for name, data in (('index.html', html), ('index.js', INDEX_JS)):
         if force or not (export / name).is_file():
-            (export / name).write_text(data, encoding='utf-8', newline='\n')
+            # open() instead of Path.write_text(newline=...): that keyword needs Python 3.10, macOS's own python3 is 3.9
+            with open(export / name, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(data)
             written.append(name)
     if force or not (export / 'style.css').is_file():
         shutil.copyfile(css, export / 'style.css')

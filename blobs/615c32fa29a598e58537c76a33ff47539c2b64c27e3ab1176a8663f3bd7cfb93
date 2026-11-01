@@ -1,0 +1,12 @@
+{
+  "name": "ad_outcome",
+  "about": "v7.9 手机才出的五类问题 2: every rewarded-ad entry of adapter.ad_entries tapped for real while the ad plays like on a phone (onHide at start, onShow + onClose at the end): complete -> the reward arrives (ad_outcome.entries[id].reward_js changes), the game is usable again (after_js, after_visible); cancel -> no reward and the same button reacts to a second tap (new game blocks, legacy warns). Runs only when the adapter has ad_entries; then adapter.ad_outcome is required for a new game",
+  "applies": ["adapter:ad_entries"],
+  "needs": ["ad_entries"],
+  "needs_new": ["ad_outcome"],
+  "fields": ["ad_entries_query", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 1800,
+  "owner": "v7.9 手机才出的五类问题",
+  "proof": "补丁_手机才出的五类问题_给v7.9/测试记录.md (甜点消消乐 R48 passes; R47 and two faults injected into R48 refused)"
+}

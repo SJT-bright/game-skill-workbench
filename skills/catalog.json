@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T06:22:00.233Z",
-  "treeHash": "d83e805ce91e66fc75308e4cf300de9b617d7771c4e3f40467f03a831ea4c8d4",
+  "createdAt": "2026-11-01T06:22:21.671Z",
+  "treeHash": "ddf6a3b62ec92e9e40d1b6d9d5a630772b7cbf447c067dfe1f52c4afd084fa83",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2853,13 +2853,13 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "b2fc173ba90c24cf7cf404c47e781e130bed9004413a7c3ebb9730dea4d0f697",
+      "treeHash": "990789ee6461c0cb28223f294ca2ee4393088edcf871e46ec6a3578304bc2c57",
       "fileCount": 397,
-      "bytes": 8671394,
+      "bytes": 8671893,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "c26de271f3e922a4d592096bef6d078ef697a1b5671795db8ca661bc7e582dd2",
+          "hash": "6228ecb04a9e17c7a8a0ac539014ce81c180c1a549b3d98806a1be4bdab901a2",
           "size": 68687,
           "executable": false
         },
@@ -3321,8 +3321,8 @@
         },
         {
           "path": "assets/user-playtest-checklist-template.md",
-          "hash": "6eeeab8707b77c0c26e2924d655d775ec93a684a66aa6438da68c756c4358cd9",
-          "size": 6204,
+          "hash": "45b19db1e450c295df9e5c00f64761be3173148677e625e1e5d0e4e52cdf1a85",
+          "size": 6378,
           "executable": false
         },
         {
@@ -3399,8 +3399,8 @@
         },
         {
           "path": "references/check-stages.md",
-          "hash": "f20b08b0b174bd617078a23ff2d436c7a36f80476002a4aadc797524082c173d",
-          "size": 7361,
+          "hash": "7589802bfcca4b9b89bace5117d9694f941f0e7a536742086e36296207d96246",
+          "size": 7449,
           "executable": false
         },
         {
@@ -3549,14 +3549,14 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "93434d5f765f7153a6e5942bf07591b8e07599a221ac1cf00a37bcfd7fb6d82d",
-          "size": 40473,
+          "hash": "1f1175d8f4016325bf0ecb2d64bcaaa6e3cb17bbe894add620f9fc9073f93cae",
+          "size": 40608,
           "executable": false
         },
         {
           "path": "references/tiktok-home-growth.md",
-          "hash": "7218f89b5025d6b41bdc47918ede3605c73b95ccc0ed065d9a68c4664f06ffa3",
-          "size": 18625,
+          "hash": "0c8810a8806c34c8ce0858890469ed08a4fc28f5e6b6a07097344696d51c27e4",
+          "size": 18727,
           "executable": false
         },
         {

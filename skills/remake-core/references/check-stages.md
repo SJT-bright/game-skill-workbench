@@ -14,8 +14,8 @@
 | 关 | 英化在哪 | 重塑在哪 | 跑什么 | 查哪些（门禁 ID） |
 |---|---|---|---|---|
 | 设计关 | 默认没有（不改玩法、不补关、不加皮肤，Saul 2026-10-28）；Saul 要求创新玩法时，新加的部分在这里查 | 第一轮（玩法＋关卡表＋皮肤表＋模块写好），节点 1 交用户之前 | `scripts/design_check.py --project <工程> --board localize\|remake` | 关卡板块 LEVEL-01、内置板块 MOD-01、皮肤数值 ECON-01、排名扩展 RANK-01、可选扩展 FEAT-00 |
-| 美术关 | 只查改过的页面（英化入口第 3 步）；用户要求整体换画风时执行完整检查 | 第二轮全部美术做完、节点2交用户前；之后局部修改按影响复查 | `scripts/art_check.py --project <工程> --dumps <dump目录> --board localize\|remake` ＋ Codex 看总览图 | ART-01～06、PAGE-01、UI-02、UI-03、UI-05，**首页礼盒 10 帧动画**也在这里查 |
-| 最终总检测 | 英化入口第 3、5 步：用户试玩确认后、出包前 | 阶段 4 锁定后测试＋最终验收 | `check_known_issues.py`、`preflight.py`、`logic_check.py`、构建/打包工具 | 只查功能项（见第三节） |
+| 美术关 | 英化在英化入口第 5 阶段（Saul 说试玩没问题以后）查，只查改过的页面，英文试玩链接前不查（10.2.8）；用户要求整体换画风时执行完整检查 | 第二轮全部美术做完、节点2交用户前；之后局部修改按影响复查 | `scripts/art_check.py --project <工程> --dumps <dump目录> --board localize\|remake` ＋ Codex 看总览图 | ART-01～06、PAGE-01、UI-02、UI-03、UI-05，**首页礼盒 10 帧动画**也在这里查 |
+| 最终总检测 | 英化入口第 5 阶段：用户试玩确认后、出包前 | 阶段 4 锁定后测试＋最终验收 | `check_known_issues.py`、`preflight.py`、`logic_check.py`、构建/打包工具 | 只查功能项（见第三节） |
 
 完整美术入口先核采集输入，缺材料只报具体缺项，不启动长分析；[局部修改](../../remake-art/references/art-before-trial.md#完整与局部美术检查的执行)不强制全游戏dump，也不记完整通过。设计、美术、功能预检在原报告保留工具与总耗时；同版有效结果沿用。
 

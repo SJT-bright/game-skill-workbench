@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-31.english-simple.10.2.6",
+  "revision": "2026-10-31.english-simple.10.2.9",
   "skill": "remake-core",
-  "previous_provenance_sha256": "9ce0c66e40b9ac36455d0f41371c027a601b6061037cbab9e63ebc77a5d337be",
+  "previous_provenance_sha256": "f7194a0173f2faec041a9b447db91502dd39482873dd71d01ecbaa2291a9f0d9",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -388,8 +388,8 @@
     },
     {
       "path": "assets/user-playtest-checklist-template.md",
-      "sha256": "6eeeab8707b77c0c26e2924d655d775ec93a684a66aa6438da68c756c4358cd9",
-      "bytes": 6204
+      "sha256": "45b19db1e450c295df9e5c00f64761be3173148677e625e1e5d0e4e52cdf1a85",
+      "bytes": 6378
     },
     {
       "path": "examples/flat-atlas/buttons.png",
@@ -453,8 +453,8 @@
     },
     {
       "path": "references/check-stages.md",
-      "sha256": "f20b08b0b174bd617078a23ff2d436c7a36f80476002a4aadc797524082c173d",
-      "bytes": 7361
+      "sha256": "7589802bfcca4b9b89bace5117d9694f941f0e7a536742086e36296207d96246",
+      "bytes": 7449
     },
     {
       "path": "references/cocos-runtime.md",
@@ -578,13 +578,13 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "93434d5f765f7153a6e5942bf07591b8e07599a221ac1cf00a37bcfd7fb6d82d",
-      "bytes": 40473
+      "sha256": "1f1175d8f4016325bf0ecb2d64bcaaa6e3cb17bbe894add620f9fc9073f93cae",
+      "bytes": 40608
     },
     {
       "path": "references/tiktok-home-growth.md",
-      "sha256": "7218f89b5025d6b41bdc47918ede3605c73b95ccc0ed065d9a68c4664f06ffa3",
-      "bytes": 18625
+      "sha256": "0c8810a8806c34c8ce0858890469ed08a4fc28f5e6b6a07097344696d51c27e4",
+      "bytes": 18727
     },
     {
       "path": "references/token-economy.md",
@@ -783,8 +783,8 @@
     },
     {
       "path": "scripts/audit_no_social_features.py",
-      "sha256": "6c1b0d8b4b5a436b9d954f1050504bf98f1d51cf27b46ac5e3fec9c8bb0124e0",
-      "bytes": 8038
+      "sha256": "162c07b20521d661527e925bdb870d6d5b1d399d8d717d5b03e6beff72c1610c",
+      "bytes": 8499
     },
     {
       "path": "scripts/audit_official_loading.py",
@@ -1198,8 +1198,8 @@
     },
     {
       "path": "scripts/probe_cocos3_touch_coordinates.cjs",
-      "sha256": "cd802a00e416dab93612fca7bda5f9475f3b87e28f18cee6791f448d9a269182",
-      "bytes": 13499
+      "sha256": "38e776cef42eb029faaf986ae215caa74d86334ef31d94262db63fc5288e3e37",
+      "bytes": 17125
     },
     {
       "path": "scripts/probe_host.py",
@@ -1598,8 +1598,8 @@
     },
     {
       "path": "scripts/test_no_social_features.py",
-      "sha256": "187620e3defefe54268b054b094885ef0b4d067198491123afb45438646c9333",
-      "bytes": 6280
+      "sha256": "aaba87689bb6492f0440af8d857d033062a8f61d37172bd4e40234303c6c2af8",
+      "bytes": 7556
     },
     {
       "path": "scripts/test_official_engine_sources.py",
@@ -1788,8 +1788,8 @@
     },
     {
       "path": "scripts/test_tiktok_touch_coordinates.py",
-      "sha256": "97815dd70bd3ca3fb28e42682e8b56dbdee4f11b26fb1b85a02c461d9b5cbde4",
-      "bytes": 17927
+      "sha256": "a604d1ced4d2bc908e7d586bf49653f10f52108113934baa3c78c49eac1b6e71",
+      "bytes": 23759
     },
     {
       "path": "scripts/test_top_bar_and_levels.py",

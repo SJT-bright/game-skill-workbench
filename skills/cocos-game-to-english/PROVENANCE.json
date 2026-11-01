@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-01.english-simple.11",
+  "revision": "2026-11-01.english-simple.11.1",
   "files": [
     {
       "path": "SKILL.md",
@@ -121,8 +121,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "53d4f8856e1d6fe962ea43ac8ff48539fbdd0f36908862930236b84e52293d1b",
-      "bytes": 60674
+      "sha256": "16eb007b636d5f2a8b82b4fb4afd5426169dd88132cc4c3d1f8e08aa0342b698",
+      "bytes": 60680
     },
     {
       "path": "scripts/test_portable_tools.py",
@@ -141,9 +141,9 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "21b4d48862bfac89e55f04c3f4e192ca5f178160f3f3e831f45a98bfffc38650",
-      "bytes": 3630
+      "sha256": "6eb8b92efddb5e693389285b8ba3fc46635faade64db54ba2c2d1567aaa7115a",
+      "bytes": 3780
     }
   ],
-  "previous_provenance_sha256": "1433fd0e0db0e3eb219e398f987433e7b51f64b788366efa13df16f3986b1c10"
+  "previous_provenance_sha256": "aa6fe7e1e702d412da588e0515ce88bad3c1ae9d0661270d8a017ec516779449"
 }

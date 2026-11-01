@@ -1,0 +1,149 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "skill": "cocos-game-to-english",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "revision": "2026-11-01.english-simple.11.1",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "c6a80cd7f85c0fc93b65c648fdc7e3a9a0e55bc9ed1c8a58152a44159662793b",
+      "bytes": 58582
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "bytes": 176
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/README.md",
+      "sha256": "6308ef3ac51b7339e333e20c6dd156ba2521a50d2e0a5eb90028fa2ecdc89af2",
+      "bytes": 1824
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/main.js",
+      "sha256": "a00ae9866bab67708122c6c567b677bad046aa91e75a07b5dac462353d3525f0",
+      "bytes": 4190
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/package.json",
+      "sha256": "9fa38054d0cb490c108c6ce1f45967b05ac7141d939e2fa03aef3ded17e8689a",
+      "bytes": 176
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "sha256": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "bytes": 1380
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "sha256": "a8a75cdffd9d7f89490f61dc559a0704f77ef3ddc635382a51b9bf3654e004e8",
+      "bytes": 1479
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "sha256": "559ba99616c85bcc94a25c9a728011103a10af8c5ef52427d9c04eed3b728eb3",
+      "bytes": 24655
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "sha256": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
+      "bytes": 9768
+    },
+    {
+      "path": "references/local-creator-versions.md",
+      "sha256": "2557c5cd165168eb2259849f798b00fbc7f69c4ae8ce05f0b3f77b53bea1da90",
+      "bytes": 4768
+    },
+    {
+      "path": "scripts/browser_env.py",
+      "sha256": "09bbdd441792896f3c330b0cb494e6cedd301eb3838da0b600c92217f8854eb4",
+      "bytes": 9108
+    },
+    {
+      "path": "scripts/cdp_browser.mjs",
+      "sha256": "34650ec70c22e9ad1e1645be77a2bd78478b6dda347924a269e7128ac93be0df",
+      "bytes": 22862
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "sha256": "21fda56bc9ed0cd548c5cd8be4190294cbcb45888a9ad38f3a27b9367d365321",
+      "bytes": 7959
+    },
+    {
+      "path": "scripts/check_machine.py",
+      "sha256": "0a8717f7f82bb47420c9e39e93dc34ec873ab4ed99e6fd89286863573765a402",
+      "bytes": 7985
+    },
+    {
+      "path": "scripts/chinese_audit.py",
+      "sha256": "edab5cfb54d72946924896ff5b749e19e56dac1d237ae92de7a342d3ef7cecde",
+      "bytes": 99151
+    },
+    {
+      "path": "scripts/find_creator.py",
+      "sha256": "b9b251d24daf379de0ec1a762977227e85673f50e68e34ccbdaec59b6c0f2cc0",
+      "bytes": 15961
+    },
+    {
+      "path": "scripts/fix_web_entry_3x.py",
+      "sha256": "25db43d136f17f2ea0872e13d9f906cbcd04556d48b5187337320f6f9f7f5b71",
+      "bytes": 8620
+    },
+    {
+      "path": "scripts/ocr_vision.swift",
+      "sha256": "0e9e8100c5338c6c77fe6c142be1745402786fa00eb238c629d6b447740d0850",
+      "bytes": 2854
+    },
+    {
+      "path": "scripts/ocr_windows.ps1",
+      "sha256": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
+      "bytes": 4615
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "sha256": "8b6a07dd1bae5856fad042390a753817fb46b5a51a8bd346255f917ea177b9f0",
+      "bytes": 8255
+    },
+    {
+      "path": "scripts/stage_timer.py",
+      "sha256": "53588e9c21b58de43eca74f7f235a7a57e0b3edc768f1b6988be9e7ac0923d94",
+      "bytes": 32866
+    },
+    {
+      "path": "scripts/test_check_export_images.py",
+      "sha256": "b1bcaf2de070c1c4d6782d0cd39c5fa350d6632f95674d9d77adf3b8c09dda4d",
+      "bytes": 5626
+    },
+    {
+      "path": "scripts/test_chinese_audit.py",
+      "sha256": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
+      "bytes": 31960
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "sha256": "16eb007b636d5f2a8b82b4fb4afd5426169dd88132cc4c3d1f8e08aa0342b698",
+      "bytes": 60680
+    },
+    {
+      "path": "scripts/test_portable_tools.py",
+      "sha256": "e811ab2bf9d9b2e308c91b72872b34428cc9ff923afe12b097940a2f29358c96",
+      "bytes": 15714
+    },
+    {
+      "path": "scripts/test_serve_preview_gate.py",
+      "sha256": "287618def7ced660117ec544a5b68d1858848e7f1acd4bd14ade2607b2f9a217",
+      "bytes": 11876
+    },
+    {
+      "path": "scripts/test_stage_timer.py",
+      "sha256": "05be4c10e8aae6ef1923a038c713776701bee43c23c566aa89b0180d1e54cab2",
+      "bytes": 16311
+    },
+    {
+      "path": "版本历史.md",
+      "sha256": "6eb8b92efddb5e693389285b8ba3fc46635faade64db54ba2c2d1567aaa7115a",
+      "bytes": 3780
+    }
+  ],
+  "previous_provenance_sha256": "aa6fe7e1e702d412da588e0515ce88bad3c1ae9d0661270d8a017ec516779449"
+}

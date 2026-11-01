@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-01T18:35:03.787Z",
-  "treeHash": "996a6b736694629a8a4a5b6345e618498e9d5a80fd58cbc4e7b7ffa5a3cca164",
+  "createdAt": "2026-11-01T18:35:39.063Z",
+  "treeHash": "cc1a2e07d2f73b3c1d3a1ea86c0f93c2b1895249be4e581ddf5764f328ca0766",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1837,13 +1837,13 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "4f7136915e4978e548c5ff36afb8cf3360298d7ff570e77fc1868663d4bf1865",
+      "treeHash": "a25b44dedd007a3c1e2addf079c8c8c7cd7112112bcf77e2ee9f1f19b085c6f0",
       "fileCount": 31,
-      "bytes": 510137,
+      "bytes": 510370,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "47b34cc62ec3ca0d5a2438d0681b5ec6498457ba56fe0c3f8bcb903214f8d1d4",
+          "hash": "12d005473df10d57a47b3e3d8f7b0556cfe71bc98392fd76273dd005d16b7ac5",
           "size": 4913,
           "executable": false
         },
@@ -1999,8 +1999,8 @@
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "16eb007b636d5f2a8b82b4fb4afd5426169dd88132cc4c3d1f8e08aa0342b698",
-          "size": 60680,
+          "hash": "66caa5dc30b9962ada9231c2d7dcd64beb96d939785329af05152c56cfd463b6",
+          "size": 60688,
           "executable": false
         },
         {
@@ -2023,8 +2023,8 @@
         },
         {
           "path": "版本历史.md",
-          "hash": "6eb8b92efddb5e693389285b8ba3fc46635faade64db54ba2c2d1567aaa7115a",
-          "size": 3780,
+          "hash": "2cff394207eb1cc7c6921c0c5c0bc5c9517fb6fea78639d1326e902141a291d5",
+          "size": 4005,
           "executable": false
         }
       ]

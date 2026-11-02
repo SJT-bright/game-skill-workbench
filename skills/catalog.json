@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-02T06:55:01.054Z",
-  "treeHash": "94c68442d89123ffaa6df73382839c5fb6b63bf1b602091ba0d67855c77eda2f",
+  "createdAt": "2026-11-02T09:59:48.583Z",
+  "treeHash": "0090918eec84d6a069bee7fa832410a1a1877bd310e3fa5ec19dcef384123561",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,9 +251,9 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "c1cc273996c18d061a721ecb3ba8714a64e55bc9c85df4794df2f34fdaefd55d",
+      "treeHash": "734bfa2f61b369a288ac8a3890c259105977aba09408c4b822b0ab64766d24f6",
       "fileCount": 149,
-      "bytes": 1459072,
+      "bytes": 1461177,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -515,8 +515,8 @@
         },
         {
           "path": "package-check/scripts/ad_regression/host.js",
-          "hash": "f99e155fe1cf79765416d06919a127ed74687eeba9adfcf21ab849472b02a6d5",
-          "size": 55602,
+          "hash": "6149a8c7432bf87f9a967a34e17a93205b58703f66ab7dcec909d4f34f83d287",
+          "size": 55763,
           "executable": false
         },
         {
@@ -575,8 +575,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "c34751f69c83afc52d1ea54a5a813b04128469ac2554925fcc6cf758e634f3bd",
-          "size": 10004,
+          "hash": "042159523f9945386ac20ae0ec6ebed31a7d39f6bc47a1acbedb3079d6101246",
+          "size": 11948,
           "executable": false
         },
         {

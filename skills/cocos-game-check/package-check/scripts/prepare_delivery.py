@@ -78,6 +78,35 @@ def source_sha256(source):
     return digest.hexdigest()
 
 
+def project_policy_for_delivery(project, native):
+    """Re-derive a writer's policy from its current finalized source, without an override.
+
+    A Native build can omit source asset UUIDs used by the frozen legacy list. Classifying it alone can
+    disagree with the writer. Only a fresh, non-calibration source record supplies this context; new-game
+    markers and a source record that says new keep their original strict precedence. Bare ZIP checks still
+    use package bytes. This helper is read-only and never finalizes or edits a project.
+    """
+    if project is None:
+        return None
+    import tiktok_finalize as F
+    problems = F.check_source_record(project)
+    if problems:
+        raise ValueError('delivery source policy is not current: ' + '; '.join(
+            '%s: %s' % (p.get('id'), p.get('message')) for p in problems))
+    source_record = F.read_source_record(project)
+    board = source_record.get('board')
+    if board not in ('remake', 'localize'):
+        raise ValueError('delivery source policy has no valid board')
+    decision = F.decide_policy(project=project, native=native, record=source_record, board=board)
+    if decision.get('policy') not in ('new', 'legacy'):
+        raise ValueError('delivery source policy decision is invalid')
+    return {'policy': decision['policy'], 'reason': decision.get('reason'), 'board': board,
+            'source_record_sha256': hashlib.sha256(
+                (Path(project) / F.SOURCE_RECORD).read_bytes()).hexdigest(),
+            'source_sha256': source_record['source_sha256'],
+            'scope': 'independently re-derived from current finalized source; no policy override'}
+
+
 def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None):
     archive, native, record = (Path(p).resolve() for p in (archive, native, record))
     temporary = Path(tempfile.gettempdir()).resolve()
@@ -92,7 +121,10 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     before = hashlib.sha256(archive.read_bytes()).hexdigest()
     # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
     # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
-    result = check(archive, app_id, native, ad_regression, reuse_writer_regressions=True)
+    policy_context = project_policy_for_delivery(project, native)
+    check_options = ({'board': policy_context['board'], 'policy': policy_context['policy']}
+                     if policy_context is not None else {})
+    result = check(archive, app_id, native, ad_regression, reuse_writer_regressions=True, **check_options)
     files = native_files(native)
     obligations = package_obligations.verify(files, native, project, resource_manifest)
     startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, replay=False)
@@ -124,6 +156,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
                'markdown_link': '[' + archive.name + '](<' + str(archive) + '>)',
                'runtime_execution': result['runtime_execution'],
+               'policy_context': policy_context,
                'regression_reuse': result.get('regression_reuse'),     # v7.9: reused from the writer receipt, or why not
                'final_startup_runtime': startup_runtime,
                'package_obligations': obligations,

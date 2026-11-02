@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-02T13:02:36.081Z",
-  "treeHash": "83f4acc8a6759953e4e8b4ecf81efbd56fcd1a1542f3af22507a3f51718a82c1",
+  "createdAt": "2026-11-02T19:04:51.338Z",
+  "treeHash": "a603b525eee415b37ae46e244b30669ed184849678c34503a51db7eb4d3d666f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,9 +251,9 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "1bbb8b14a8bcee1c9d0f08910b20fa3d849ea81218f9c60f6ef67a31770efbaa",
+      "treeHash": "a79dd68bc4e263401b91f9725f30403658b77f2953862481290163a68a8613c8",
       "fileCount": 149,
-      "bytes": 1461585,
+      "bytes": 1461776,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -533,8 +533,8 @@
         },
         {
           "path": "package-check/scripts/ad_regression.py",
-          "hash": "9f8f25173a2467f7ae18fb962ef2c6831e50daad59e9f030e6f44d691595f143",
-          "size": 17281,
+          "hash": "cfa435029b336d0fb6102e82b9ad9862d5143ddda78c37d38e209bddd1759580",
+          "size": 17453,
           "executable": false
         },
         {
@@ -821,8 +821,8 @@
         },
         {
           "path": "package-check/scripts/runtime_regression.py",
-          "hash": "05615cd534fe580cc368c334729af966141b288b001484bb935e1ecef02318e3",
-          "size": 49764,
+          "hash": "4dd3005b8eb2ac7b2caa80c7ba9a1a7e02be153755204a438e849322afdc18f7",
+          "size": 49783,
           "executable": false
         },
         {

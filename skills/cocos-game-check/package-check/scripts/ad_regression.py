@@ -46,7 +46,7 @@ DOUBLE_KEYS = ('open', 'claim', 'balance')
 ENV_ADAPTER = 'TIKTOK_AD_REGRESSION_ADAPTER'
 ENV_BROWSER = 'EGO_BROWSER'
 _which = shutil.which  # patch point for tests; shutil.which itself is shared
-ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim'}
+ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim', 'real_time_clock'}
 # v7.7.5 (总表 A14): adapter.exit returns the X node (or {node, x, y} in its anchor space) and the tool finds where it
 # is on screen. Before v7.7.4 the tool's formula was wrong, so adapters converted the position themselves to
 # compensate (全民飞车漂移, 回家快跑, 狐狸回窝, 珊瑚守卫). With the corrected formula that compensation moves the tap
@@ -119,6 +119,8 @@ def load_adapter(path):
     unknown = set(adapter) - allowed_adapter_keys()
     if unknown:
         raise RegressionRefused('ad regression adapter has unknown keys: ' + ', '.join(sorted(unknown)))
+    if 'real_time_clock' in adapter and type(adapter['real_time_clock']) is not bool:
+        raise RegressionRefused('real_time_clock must be boolean')
     for key in ('state', 'ready', 'exit', 'exit_label'):
         if key in adapter and not isinstance(adapter[key], str):
             raise RegressionRefused('ad regression adapter "%s" must be a string' % key)

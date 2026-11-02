@@ -239,7 +239,9 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (
             json.dumps(cfg, ensure_ascii=False), json.dumps((TOOL / 'cases.mjs').as_uri())), encoding='utf-8')
         # Real need: boot + ~12 s per case on a loaded machine.
-        limit = timeout or (boot_ms / 1000 + 60 + 25 * len(cases))
+        real_time_seconds = {'long200': 200, 'late16': 86, 'bgplay': 200, 'bgload': 200, 'hang': 200, 'nocallback': 31}
+        elapsed_budget = sum(real_time_seconds.get(case, 0) for case in cases) if adapter.get('real_time_clock') else 0
+        limit = timeout or (boot_ms / 1000 + 60 + 25 * len(cases) + elapsed_budget)
         try:
             # stdin closed (v7.7.5, Holly v3): an inherited open stdin pipe made ego-browser nodejs -e wait forever.
             # v7.9 (出包检查提速 S7): watched_run stops the step when nothing moved for 240 s (no output line, and no

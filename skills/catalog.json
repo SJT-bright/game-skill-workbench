@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-02T10:01:20.709Z",
-  "treeHash": "8c8c4aca5e08b60d498f22e14e5cfe64e2f97c09b2a43bca380dd3c0ba55b783",
+  "createdAt": "2026-11-02T13:02:36.081Z",
+  "treeHash": "83f4acc8a6759953e4e8b4ecf81efbd56fcd1a1542f3af22507a3f51718a82c1",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,9 +251,9 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "734bfa2f61b369a288ac8a3890c259105977aba09408c4b822b0ab64766d24f6",
+      "treeHash": "1bbb8b14a8bcee1c9d0f08910b20fa3d849ea81218f9c60f6ef67a31770efbaa",
       "fileCount": 149,
-      "bytes": 1461177,
+      "bytes": 1461585,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -509,14 +509,14 @@
         },
         {
           "path": "package-check/scripts/ad_regression/cases.mjs",
-          "hash": "f9b02a20f8a75e0b2a378f845e0147865ada9afffdf2f1e87170b53ae9e3d610",
-          "size": 20932,
+          "hash": "bd630ccadf7940e3f1b4a126b8e4e9647d9af6249944fb2a194fea6709e33a3f",
+          "size": 21024,
           "executable": false
         },
         {
           "path": "package-check/scripts/ad_regression/host.js",
-          "hash": "6149a8c7432bf87f9a967a34e17a93205b58703f66ab7dcec909d4f34f83d287",
-          "size": 55763,
+          "hash": "3c7e32b1ab090155306711dc7b6176df7c6b4fb9dff5a86451421e7c43fa7679",
+          "size": 55822,
           "executable": false
         },
         {
@@ -533,8 +533,8 @@
         },
         {
           "path": "package-check/scripts/ad_regression.py",
-          "hash": "94e992a2b60d8a7c901eabe30b1394472853e7558da86ecb72c66292c433c236",
-          "size": 17024,
+          "hash": "9f8f25173a2467f7ae18fb962ef2c6831e50daad59e9f030e6f44d691595f143",
+          "size": 17281,
           "executable": false
         },
         {

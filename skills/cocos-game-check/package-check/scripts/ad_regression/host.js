@@ -669,10 +669,11 @@
 
   // TikTok WebAssembly: instantiate(path, imports) reads a package file.
   if (Q.get('nowasm') !== '1') {
-    var TW = Object.create(WebAssembly);
+    var NativeWebAssembly = WebAssembly;
+    var TW = Object.create(NativeWebAssembly);
     TW.instantiate = function (src, imports) {
-      if (typeof src === 'string') { beacon('wasm', src); return fetch(norm(src)).then(function (r) { if (!r.ok) throw new Error('wasm fetch ' + r.status + ' ' + src); return r.arrayBuffer(); }).then(function (b) { return WebAssembly.instantiate(b, imports); }); }
-      return WebAssembly.instantiate(src, imports);
+      if (typeof src === 'string') { beacon('wasm', src); return fetch(norm(src)).then(function (r) { if (!r.ok) throw new Error('wasm fetch ' + r.status + ' ' + src); return r.arrayBuffer(); }).then(function (b) { return NativeWebAssembly.instantiate(b, imports); }); }
+      return NativeWebAssembly.instantiate(src, imports);
     };
     window.TTWebAssembly = TW;
   }

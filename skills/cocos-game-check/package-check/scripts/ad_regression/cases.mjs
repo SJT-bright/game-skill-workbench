@@ -115,7 +115,9 @@ const request = () => ev(() => {
   catch (e) { return { ok: false, error: String(e && e.message || e).slice(0, 200) }; }
 });
 
-const step = (code) => ev((code) => {
+const step = (code) => A.real_time_clock && code.startsWith('warp')
+  ? sleep(+code.slice(4)).then(() => true)
+  : ev((code) => {
   const c = window.__adCtl, h = window.__adHeld;
   if (code === 'start') c && c.start();
   else if (code === 'end') c && c.close(true);

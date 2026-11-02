@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-02T06:54:21.386Z",
-  "treeHash": "5d4edf4bfb00fbb9bf60e3d806c626670b54a80b47624b7bc336d5afa2c1dfc9",
+  "createdAt": "2026-11-02T06:54:42.532Z",
+  "treeHash": "ccbd833a05e743300f226210b4ec22b2f6788ad4b1035c0a527fc44479de6178",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2617,9 +2617,9 @@
     },
     {
       "name": "grok-delegate",
-      "treeHash": "f4b4f18ebc6fb8846f46f70063c50ac8115870f0b15003c722f0fe67a98f74b0",
+      "treeHash": "a895f724fb5cf75e19f6dbad511d959bed21595f681f63ed9c53ff77ef1f1728",
       "fileCount": 11,
-      "bytes": 49182,
+      "bytes": 48385,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2629,8 +2629,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "b8e8c73d670e66b2bfd1d5fe21834c74b7979ad706a7baa448fa56e956596b46",
-          "size": 6131,
+          "hash": "d814515c9f6cddf200e4fec3b6de68e9e3fa34201fb428c50ea0bcb7b7f21728",
+          "size": 5875,
           "executable": false
         },
         {
@@ -2677,8 +2677,8 @@
         },
         {
           "path": "references/task-matrix.md",
-          "hash": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
-          "size": 4946,
+          "hash": "9bef2451455ad374d52912d1d800501f9aea1c4ec7b7de97107f7a332f1d2b3e",
+          "size": 4405,
           "executable": false
         },
         {

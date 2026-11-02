@@ -1,6 +1,6 @@
 interface:
-  display_name: "Grok 图片查看"
-  short_description: "自动用 Grok 读取清晰截图文字及核对封面字段，复杂视觉判断留主模型"
-  default_prompt: "使用 $grok-image-review 调用本地 Grok CLI 独立转录指定截图文字，再核对字段并保留实际读取证据。"
+  display_name: "Grok 图片识别（已停用）"
+  short_description: "用户已停用 Grok 图片识别；所有截图文字、字段核对与视觉验收由 Codex 直接完成"
+  default_prompt: "遇到 $grok-image-review 时遵守停用规则，由 Codex 自己读图，不调用 Grok。"
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

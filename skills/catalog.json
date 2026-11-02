@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-02T06:54:42.532Z",
-  "treeHash": "ccbd833a05e743300f226210b4ec22b2f6788ad4b1035c0a527fc44479de6178",
+  "createdAt": "2026-11-02T06:55:01.054Z",
+  "treeHash": "94c68442d89123ffaa6df73382839c5fb6b63bf1b602091ba0d67855c77eda2f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2691,9 +2691,9 @@
     },
     {
       "name": "grok-image-review",
-      "treeHash": "26a3b1a92b4ffd3ab796e72a2ce2564610653bf0a22d546a0df1dcb49ca55c98",
+      "treeHash": "7f5ba58ee39539be651e807dbe25267d3255b05a54edb5c17ecee99fdf8cdd59",
       "fileCount": 4,
-      "bytes": 18470,
+      "bytes": 12241,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2703,14 +2703,14 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "cb7e36f252ef140a66c834a1e8a14d0cc1aa0e2ee5e56986060f59322825abfc",
-          "size": 6853,
+          "hash": "4a54592a303c91244a966e9f24981ef3c387907491659952f8a193c488bb9034",
+          "size": 629,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
-          "hash": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
-          "size": 353,
+          "hash": "f87ff8ea6dba7afe8c77227efb805c3520a6a8d381044388d3c0d6df66b183d3",
+          "size": 348,
           "executable": false
         },
         {

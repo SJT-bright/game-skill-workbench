@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-02T03:46:03.851Z",
-  "treeHash": "73dfaeb8a09a5e39644a9ef4cd519b604a001443ae39f4edc30cb76c3d6e2d75",
+  "createdAt": "2026-11-02T06:53:56.995Z",
+  "treeHash": "cc8cf06ed5cbeee6bfc08dad7b9d0d072786111513ac23012beb6c474c3929f6",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3021,9 +3021,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "4196bbe3343b5a35a60e6e16da10d53722bd6ca504e37f06ce83397203453a64",
+      "treeHash": "0e1b3b5e250841908c5f8090fffa71c2d5aeabadb8f32f85f1de50a5cf8960d8",
       "fileCount": 410,
-      "bytes": 9092328,
+      "bytes": 9092580,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3687,8 +3687,8 @@
         },
         {
           "path": "references/optional-grok.md",
-          "hash": "b51f2e00174edbdee49e383631cceb6e43cde5587d64df4a1697cc928fb0dc18",
-          "size": 3869,
+          "hash": "2dbc3a0460c3ebaf96874be425563b652d9eb4090d432434c8d811c99f4feb22",
+          "size": 4121,
           "executable": false
         },
         {

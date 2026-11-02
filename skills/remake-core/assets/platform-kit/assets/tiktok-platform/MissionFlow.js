@@ -114,7 +114,7 @@ MissionFlow.prototype._guard = function () {
   return function () { return self.version === version && self.kind === kind; };
 };
 
-MissionFlow.prototype.open = function (kind) {
+MissionFlow.prototype.open = function (kind, options) {
   if (!KINDS[kind]) return;
   this.missions.cancel();
   this.kind = kind;
@@ -123,7 +123,10 @@ MissionFlow.prototype.open = function (kind) {
   this.phase = 'idle';
   this.message = this.isClaimed(kind) ? TEXT.claimed : (this.native ? TEXT['intro_' + kind] : TEXT.preview);
   this._render();
-  if (!this.isClaimed(kind) && this.native) this.check();
+  if (!this.isClaimed(kind) && this.native) {
+    if (options && options.navigate === true) return this.start();
+    this.check();
+  }
 };
 
 MissionFlow.prototype.start = function () {

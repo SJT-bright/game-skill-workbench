@@ -68,29 +68,40 @@ function setup(opts) {
       var t = setup();
       assert.strictEqual(t.state().shortcut.reward, '+60', '5B with B = 12');
       t.c.press('shortcut');
+      assert.strictEqual(t.fake.count('addShortcut'), 1);
+      assert.strictEqual(t.fake.count('getShortcutMissionReward'), 0);
+      t.fake.last('addShortcut').opts.success({}); await flush(); t.c.onShow();
       t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.store.get().coins, 60);
       assert.strictEqual(t.state().shortcut.reward, 'Collected');
     });
     await test('repeated_taps_send_one_request_and_pay_once', async function () {
       var t = setup();
-      assert.strictEqual(t.c.press('profile'), 'opened');
+      assert.strictEqual(t.c.press('profile'), 'start');
       assert.strictEqual(t.c.press('profile'), 'busy');
       assert.strictEqual(t.c.press('profile'), 'busy');
-      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1, 'one query for three taps');
+      assert.strictEqual(t.fake.count('startEntranceMission'), 1, 'one navigation for three taps');
+      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 0, 'no query before return');
+      t.fake.last('startEntranceMission').opts.success({}); await flush(); t.c.onShow();
+      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1, 'one query on return');
       t.fake.last('getEntranceMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.c.press('profile'), 'claimed');
       t.c.onShow(); await flush();
       assert.strictEqual(t.store.get().coins, 60, 'paid once');
       assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1);
     });
-    await test('not_eligible_then_second_tap_goes_to_tiktok', async function () {
-      var t = setup();
-      t.c.press('shortcut');
-      t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: false}); await flush();
-      assert.strictEqual(t.c.press('shortcut'), 'start');
-      assert.strictEqual(t.fake.count('addShortcut'), 1);
-      assert.strictEqual(t.store.get().coins, 0);
+    await test('first_tap_navigates_and_return_queries_for_both_entries', async function () {
+      for (var kind of ['shortcut','profile']) {
+        var t=setup(), nav=kind==='shortcut'?'addShortcut':'startEntranceMission', query=kind==='shortcut'?'getShortcutMissionReward':'getEntranceMissionReward';
+        assert.strictEqual(t.c.press(kind),'start');
+        assert.strictEqual(t.fake.count(nav),1,'navigation in the first synchronous gesture');
+        assert.strictEqual(t.fake.count(query),0,'no query ahead of navigation');
+        t.fake.last(nav).opts.success({}); await flush();
+        assert.strictEqual(t.store.get().coins,0,'navigation is not eligibility');
+        t.c.onShow(); assert.strictEqual(t.fake.count(query),1);
+        t.fake.last(query).opts.success({canReceiveReward:false});await flush();
+        assert.strictEqual(t.store.get().coins,0,'ineligible return pays nothing');
+      }
     });
     await test('unset_B_pays_nothing', async function () {
       config.normalLevelCoins = 0;
@@ -98,6 +109,7 @@ function setup(opts) {
         var t = setup();
         assert.strictEqual(t.state().shortcut.reward, '');
         t.c.press('shortcut');
+        t.fake.last('addShortcut').opts.success({}); await flush(); t.c.onShow();
         t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
         assert.strictEqual(t.store.get().coins, 0);
         assert.strictEqual(t.store.isClaimed('shortcut'), false);

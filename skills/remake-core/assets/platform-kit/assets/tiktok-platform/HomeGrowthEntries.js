@@ -69,7 +69,7 @@ Controller.prototype.press = function (kind) {
   var flow = this.flow;
   if (!flow.native) { this.toast(TEXT.unsupported); return 'unsupported'; }
   if (flow.isClaimed(kind)) { this.toast(MissionFlow.TEXT.claimed); return 'claimed'; }
-  if (flow.kind !== kind) { flow.open(kind); return 'opened'; }   // open() checks first
+  if (flow.kind !== kind) { flow.open(kind, {navigate: true}); return 'start'; } // same user gesture; query only on return
   var view = flow.view();
   if (view.busy) return 'busy';                                    // merged
   if (view.action === 'check') { flow.check(); return 'check'; }

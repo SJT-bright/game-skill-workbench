@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T07:19:12.339Z",
-  "treeHash": "a5762d7489584deb2f88c36c776a0c113d22243fec8b13aaa0f16a304e84b539",
+  "createdAt": "2026-11-04T07:19:36.669Z",
+  "treeHash": "b813e27f9062edd28bc338845db69b8d1ba9f0c4490c27b62469481024234407",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1843,9 +1843,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "68516c63937b7eb4f153e2e902f7fab5bee8383ea62ea29c26221d1f539f259e",
-      "fileCount": 31,
-      "bytes": 510603,
+      "treeHash": "7086ec6222a148a02b071094b66f617bfa7e941abf1edc19d20ca96a24e2d6cd",
+      "fileCount": 29,
+      "bytes": 483650,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -1855,8 +1855,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "07a2bbab2c2b00a96c78d25dc833af09f587112b170735bb3954cfffaba26603",
-          "size": 58815,
+          "hash": "7e4fc963a5040330021db3dcd0a68a828f36a56b908c6e1f78f89cf1a49ad3af",
+          "size": 60748,
           "executable": false
         },
         {
@@ -1897,8 +1897,8 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "559ba99616c85bcc94a25c9a728011103a10af8c5ef52427d9c04eed3b728eb3",
-          "size": 24655,
+          "hash": "056f896d37a494d1fa18eafc1a01dacc2e6475c860cacb804c882437daa69192",
+          "size": 27812,
           "executable": false
         },
         {
@@ -1956,12 +1956,6 @@
           "executable": false
         },
         {
-          "path": "scripts/native_startup_trusted_runners.json",
-          "hash": "ddae803e1c653b36ac83bb2752c36e5b418ed41155bde0ee04f9247d72c14c0e",
-          "size": 1752,
-          "executable": false
-        },
-        {
           "path": "scripts/ocr_vision.swift",
           "hash": "0e9e8100c5338c6c77fe6c142be1745402786fa00eb238c629d6b447740d0850",
           "size": 2854,
@@ -1971,12 +1965,6 @@
           "path": "scripts/ocr_windows.ps1",
           "hash": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
           "size": 4615,
-          "executable": false
-        },
-        {
-          "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "8ed389331021fbc0c111d5b9f78fac9159f2168471d758f9d4e7c2174bf83327",
-          "size": 30291,
           "executable": false
         },
         {

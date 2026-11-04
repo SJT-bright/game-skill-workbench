@@ -85,9 +85,7 @@
       var e = CTEXT[i];
       if (e.t <= (after || -1) || !rx.test(e.text)) continue;
       var c = e.canvas, r = c && c.getBoundingClientRect ? c.getBoundingClientRect() : null;
-      // Cocos paints labels into detached glyph canvases. Their text is not a
-      // screen control; treating a zero rect as the viewport invents a tap point.
-      if (!c || c.isConnected !== true || !r || !(r.width > 0 && r.height > 0)) continue;
+      if (!r || !r.width) r = { left: 0, top: 0, width: innerWidth, height: innerHeight };
       return { text: e.text, t: e.t, x: r.left + e.cx * r.width / (c.width || r.width), y: r.top + e.cy * r.height / (c.height || r.height) };
     }
     return null;
@@ -669,11 +667,10 @@
 
   // TikTok WebAssembly: instantiate(path, imports) reads a package file.
   if (Q.get('nowasm') !== '1') {
-    var NativeWebAssembly = WebAssembly;
-    var TW = Object.create(NativeWebAssembly);
+    var TW = Object.create(WebAssembly);
     TW.instantiate = function (src, imports) {
-      if (typeof src === 'string') { beacon('wasm', src); return fetch(norm(src)).then(function (r) { if (!r.ok) throw new Error('wasm fetch ' + r.status + ' ' + src); return r.arrayBuffer(); }).then(function (b) { return NativeWebAssembly.instantiate(b, imports); }); }
-      return NativeWebAssembly.instantiate(src, imports);
+      if (typeof src === 'string') { beacon('wasm', src); return fetch(norm(src)).then(function (r) { if (!r.ok) throw new Error('wasm fetch ' + r.status + ' ' + src); return r.arrayBuffer(); }).then(function (b) { return WebAssembly.instantiate(b, imports); }); }
+      return WebAssembly.instantiate(src, imports);
     };
     window.TTWebAssembly = TW;
   }

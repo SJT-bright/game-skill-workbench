@@ -64,7 +64,7 @@ ENV_SPACE = 'RUNTIME_REGRESSION_SPACE'   # optional Ego task-space name; default
 _which = shutil.which  # patch point for tests
 # Keys of the v7.4 rewarded-ad adapter (ad_regression.ADAPTER_KEYS) plus runtime core keys.
 AD_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note',
-           'double_claim', 'real_time_clock'}   # v7.8 (Saul 10-31, W100): ad_regression double_watch / double_quit / double_free
+           'double_claim'}   # v7.8 (Saul 10-31, W100): ad_regression double_watch / double_quit / double_free
 CORE_KEYS = {'home', 'retry', 'retry_label', 'enter_level', 'host_query', 'engine', 'remake_home',
              'save_keys', 'level_timeout_s', 'runtime_note'}
 PREDICATES = ('tiktok', 'rewarded_ads', 'missions', 'remake_home', 'trial_url')

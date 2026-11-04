@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-01.english-simple.11.2",
+  "revision": "2026-11-03.english-simple.11.3",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "3725bc1579df9f33b319c9ae79488a7422b1e46ef6f69e8ce1bb8f314e93cedf",
-      "bytes": 13952
+      "sha256": "083bfb176b43d05a9e6b74369253360c4e974eee3e2a4caa2f8a155e7beeb306",
+      "bytes": 14387
     },
     {
       "path": "agents/openai.yaml",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "25f1f2077eec6f2df379fe4cdb9c07a5f0788cd909f606e55400bca3c4eebd23",
-      "bytes": 15332
+      "sha256": "fe4fa237f4b56172c8631dccf26d87425ea7850634f511f364b608f45ac319b9",
+      "bytes": 17150
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -611,8 +611,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "4785fd07bedd2e2b64c7854b2ae4fb7a1a16a2ce3556e23e03325af262d6041c",
-      "bytes": 99892
+      "sha256": "10d9232f2666b4003285b7d873cdd0ba5870c0c9eb7591d382d1591e2a918730",
+      "bytes": 102711
     },
     {
       "path": "review/README.md",
@@ -745,5 +745,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "d831241f74b54a7b9b3ce077d8ab6de455fa0769698be9902886e09884fa6922"
+  "previous_provenance_sha256": "7d606b48a3ca6476a61878325677b1f827240626d22261c71745663d853d5a09"
 }

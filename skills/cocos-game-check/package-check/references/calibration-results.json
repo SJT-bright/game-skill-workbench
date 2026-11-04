@@ -1,11 +1,11 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
- "date": "2026-11-01",
- "release_label": "v7.9-en11.2",
- "selftest_report_sha256": "7ea890d86e2bd7b3636cefe164424e5b41f4fe8ce239e55d11486e15d7aafa04",
+ "date": "2026-11-03",
+ "release_label": "v7.9-en11.3-final-canonical",
+ "selftest_report_sha256": "f9af5774f8c12cba9ba4811c21d609a43939075ff7c2e139b034288a7435f5ee",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
-  "remake-core/scripts/package_gates/__init__.py": "c11c26c1460dcb4070fe5ec3e2d1f2f295f1a3b07579ad9f37f5078c6805a596",
+  "remake-core/scripts/package_gates/__init__.py": "dcdae8c69f63caade86e63d4df8397127d4f6cb74dfab0b29a3d3b1f71224d17",
   "remake-core/scripts/package_gates/adapter_fix.py": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19",
   "remake-core/scripts/package_gates/ads_static.py": "b9899ddb19396c1b740a438c85e93a7ef12298b343ab0b34eaa7c98668b7c71b",
   "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
@@ -14,6 +14,7 @@
   "remake-core/scripts/package_gates/mission.py": "65b1ab8cebd4cf0a95ab9230bf66a9c8e57e9a45a77086dd28f4472fa8ac2c54",
   "remake-core/scripts/package_gates/network.py": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
   "remake-core/scripts/package_gates/portrait.py": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
+  "remake-core/scripts/package_gates/sound.py": "12c34267f17d582ef2f6ee214dd5e74b466837bdadadd158e023de970d6b6d29",
   "remake-core/scripts/package_gates/startup.py": "1cf45b50c1dd0c471d0aadbee033d134a1f9b2aacf69f9276059a762a91dd356",
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
@@ -98,13 +99,29 @@
    "check": "gates",
    "item": "B18",
    "expect": {
-    "blocks": [
+    "blocks_include": [
      "A1_audio_loudness",
      "A2_fail_sound_length"
     ]
    },
    "ok": true,
    "since": null
+  },
+  {
+   "id": "foxdendash-v1",
+   "game": "狐狸回窝",
+   "role": "good",
+   "check": "gates",
+   "item": "B18；简化.11.3 平台包",
+   "expect": {
+    "blocks": [
+     "A1_audio_loudness",
+     "A2_fail_sound_length",
+     "K6_kit_module_old"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
   },
   {
    "id": "foxdendash-v1",
@@ -571,10 +588,73 @@
    },
    "ok": true,
    "since": "v7.9"
+  },
+  {
+   "id": "cubedigits-371-sound-missing",
+   "game": "Cube Digits",
+   "role": "bad",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_include": [
+     "S1_sound_no_audio_files",
+     "S3_sound_engine_no_audio"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "cubedigits-371-sound-fixed",
+   "game": "Cube Digits",
+   "role": "good",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_exclude": [
+     "S1_sound_no_audio_files",
+     "S2_sound_no_play_call",
+     "S3_sound_engine_no_audio",
+     "S4_sound_silent_record_contradicted"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "grasscutter-v011-sound-missing",
+   "game": "割草小能手",
+   "role": "bad",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_include": [
+     "S1_sound_no_audio_files"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "grasscutter-v012-sound-ok",
+   "game": "割草小能手",
+   "role": "good",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_exclude": [
+     "S1_sound_no_audio_files",
+     "S2_sound_no_play_call",
+     "S3_sound_engine_no_audio",
+     "S4_sound_silent_record_contradicted"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
   }
  ],
  "test_inventory": {
-  "files": 248,
+  "files": 250,
   "failing_known": [
    "chrome-mobile-testing/tests/test_ego_route.py",
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
@@ -583,14 +663,11 @@
    "game-audio-library/scripts/test_index_identity.py",
    "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js",
    "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
-   "remake-core/scripts/test_fused_cleanup.py",
    "remake-core/scripts/test_known_issue_gate.py",
    "remake-core/scripts/test_official_loading.py",
    "remake-core/scripts/test_ui_layout_and_copy.py",
-   "remake-core/scripts/test_workflow_tools.py",
    "remake-core/scripts/test_writer_refusal.py",
-   "ad-boost/vendor/系统库/05_礼盒与礼包/参考实现/test_GiftCenter.js",
-   "ad-boost/vendor/系统库/07_签到/参考实现/test_CheckinFlow.js"
+   "ad-boost/audio/test/test_pick_sfx.py"
   ],
   "new_failures": 0
  }

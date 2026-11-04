@@ -46,7 +46,7 @@ DOUBLE_KEYS = ('open', 'claim', 'balance')
 ENV_ADAPTER = 'TIKTOK_AD_REGRESSION_ADAPTER'
 ENV_BROWSER = 'EGO_BROWSER'
 _which = shutil.which  # patch point for tests; shutil.which itself is shared
-ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim', 'real_time_clock'}
+ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim'}
 # v7.7.5 (总表 A14): adapter.exit returns the X node (or {node, x, y} in its anchor space) and the tool finds where it
 # is on screen. Before v7.7.4 the tool's formula was wrong, so adapters converted the position themselves to
 # compensate (全民飞车漂移, 回家快跑, 狐狸回窝, 珊瑚守卫). With the corrected formula that compensation moves the tap
@@ -119,8 +119,6 @@ def load_adapter(path):
     unknown = set(adapter) - allowed_adapter_keys()
     if unknown:
         raise RegressionRefused('ad regression adapter has unknown keys: ' + ', '.join(sorted(unknown)))
-    if 'real_time_clock' in adapter and type(adapter['real_time_clock']) is not bool:
-        raise RegressionRefused('real_time_clock must be boolean')
     for key in ('state', 'ready', 'exit', 'exit_label'):
         if key in adapter and not isinstance(adapter[key], str):
             raise RegressionRefused('ad regression adapter "%s" must be a string' % key)
@@ -241,9 +239,7 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (
             json.dumps(cfg, ensure_ascii=False), json.dumps((TOOL / 'cases.mjs').as_uri())), encoding='utf-8')
         # Real need: boot + ~12 s per case on a loaded machine.
-        real_time_seconds = {'long200': 200, 'late16': 86, 'bgplay': 200, 'bgload': 200, 'hang': 200, 'nocallback': 31}
-        elapsed_budget = sum(real_time_seconds.get(case, 0) for case in cases) if adapter.get('real_time_clock') else 0
-        limit = timeout or (boot_ms / 1000 + 60 + 25 * len(cases) + elapsed_budget)
+        limit = timeout or (boot_ms / 1000 + 60 + 25 * len(cases))
         try:
             # stdin closed (v7.7.5, Holly v3): an inherited open stdin pipe made ego-browser nodejs -e wait forever.
             # v7.9 (出包检查提速 S7): watched_run stops the step when nothing moved for 240 s (no output line, and no

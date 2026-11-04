@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T13:27:58.926Z",
-  "treeHash": "05d21660c55036cc95da573d2c85eaf534903a962c193c4d91ba23f8dc3eee92",
+  "createdAt": "2026-11-04T13:28:37.125Z",
+  "treeHash": "8d0c38eff9389d58434d294a9fe9024d1c908b29463acc974274fc88947728bd",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2773,13 +2773,13 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "64c394b8ffc70f91d818cabb68500408678abb77710821bdb1c855c4c31b1cca",
-      "fileCount": 40,
-      "bytes": 1135218,
+      "treeHash": "89ed277127b8bb6215473a93e67d5253cc59ae39b1214b3244adae7b50680cb7",
+      "fileCount": 42,
+      "bytes": 1153690,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "e63488d027acc46ba8f7dab664ef1aafc512dde560b27acb095cffeb50d3a06f",
+          "hash": "7732a2eb4d234327e8fce33cd85b43c9c0b608f209697dc2bdf136a92a02a4d2",
           "size": 6730,
           "executable": false
         },
@@ -2821,8 +2821,8 @@
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "4e4c64944809de253326d85467a29660e0c22186790b22c2de11c4c1a7060c82",
-          "size": 11167,
+          "hash": "6571f06b2cbf4ecbae0809fd7fc4919b35ab8012fd9f0ec4a714f79af000f7a4",
+          "size": 12751,
           "executable": false
         },
         {
@@ -2887,8 +2887,8 @@
         },
         {
           "path": "references/local-ui-contract.md",
-          "hash": "05f28ab19cd56b0fb1c8fbdd91d0e6c6a10de953f313f1f39825143032a84716",
-          "size": 4041,
+          "hash": "b6c569e4c14e0b11937e5dbf2134f0ebae4be8640a78903534b03696bc3f24ad",
+          "size": 6750,
           "executable": false
         },
         {
@@ -2899,8 +2899,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "84b8b31fc9882c188dde0f557ea35d21cd90b7b7820b7a73a49ce03814aec722",
-          "size": 93681,
+          "hash": "746519d642ea92c9d20f3d11f1ff8da19c50a127dd271b9c31a1baac77bfb647",
+          "size": 93685,
           "executable": false
         },
         {
@@ -2917,8 +2917,8 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "1cf0f2311e57145e7e10c4ad7f518e1c418d554102008f456e011f4c4f00cb46",
-          "size": 11493,
+          "hash": "4cba82b2cce30fa1875e04fd9c0d5c34c38fdd2b9605f7a35d2aedc2da522fc8",
+          "size": 20132,
           "executable": false
         },
         {
@@ -2983,8 +2983,8 @@
         },
         {
           "path": "scripts/check_native_sprite_sources.py",
-          "hash": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
-          "size": 9544,
+          "hash": "883985feea39cbc3006bd612f5725cc04918de195f9bf0e212cfb0ded7876403",
+          "size": 10422,
           "executable": false
         },
         {
@@ -2994,9 +2994,21 @@
           "executable": false
         },
         {
+          "path": "scripts/cut_sheet_frame.py",
+          "hash": "db7525042a2c83c4dc92266ec3286c5663bbd985a93754e7d910441f209212e4",
+          "size": 3187,
+          "executable": false
+        },
+        {
           "path": "scripts/make_greybox_reference.py",
           "hash": "2a6360eb4a2156ea342a962a9d8116a436b2e4f51fda4d2c11d207eb77f382c7",
           "size": 9354,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_cut_sheet_frame.py",
+          "hash": "85d20a7f947299526bb9e471ea4455a489b93f82135bcc0b0cd5cfd0960c50ad",
+          "size": 1471,
           "executable": false
         },
         {

@@ -22,3 +22,15 @@ python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --ui-contrac
 运行报告`ui_contract_runtime.v1`顶层固定`producer:real_browser_ui_contract`及`execution`。execution含variant、base/实际native_tree_sha256、renderer_identity五项原始身份、viewport、非空events、errors、states；每状态有同次截图路径/SHA和buttons数组。每entity含稳定slot、id、kind、visible、effective_opacity、parent.world_rect、sprites及captions；子项也记录真实world_rect与有效可见性。Sprite另有frame、loaded、texture_loaded；caption另有text、font_size。tools同样记录真实frame/texture状态及实际click_return_page。有效opacity使用0..255范围，至少1才算可见；所有rect必须有限且宽高正。collector不填pass，由checker判定。
 
 拒绝逻辑自测：`python3 <skills>/remake-core/scripts/test_ui_contract_refusal.py`。这些合成几何单测不能替代真实runner的正反例运行。
+
+## 开始接图时先预防
+
+按[统一坐标与绘制职责](production-prevention.md#接入前统一坐标与绘制职责2026-11-03)先明确锚点、父变换、布局控制者、裁切及实际渲染路径。当前几何契约本身不能证明像素没被覆盖；配合同版本截图直接查看与真实点击，不能把 node active / world_rect 通过写成可见按钮通过。自定义批量绘制的覆盖要在真实引擎里回归，简单 DOM 或节点桩不算该项证据。
+
+**静态按钮遮挡或错图复发时**，给受影响的单 Sprite 槽在已审核契约中声明 `pixel_reference`，例如 `{"frame":"upgrade","path":"assets/ui/upgrade.png","sha256":"<参考原图实际 SHA256>","max_mae":35}`。收集整张 viewport 截图。检查器解码 PNG，按当前截图与 CSS 视口换算像素坐标，在目标位置对照参考图不透明部分。资源节点正常但像素偏差超过该槽上限时报告 `sprite_pixel_mismatch`。阈值用本项目同状态正常和遮挡截图校准，35 只是示例。只用于完整、无旋转、无染色、无额外覆盖的固定画面。多层按钮、动画、九宫格或局部文字遮挡要选稳定独立子槽或直接看图，整块平均值不能证明每个字正确。更新契约按原流程重新登记，原有 runner 的几何检查继续适用。
+
+采集配对时等待布局与入场动画稳定，在同一稳定渲染状态保存 screenshot 与节点框。若肉眼可见的对照按钮也超过误差限，先查同帧坐标、缩放和资源状态，结果记为“参考图与截图不匹配，原因待查”。禁止直接归因为遮挡或调高阈值。离屏和只露半个的控件保留越界失败，不能裁到可见部分再算通过。
+
+### 已知风险槽的小区域检查
+
+在已审核的状态槽上可声明非空 `pixel_regions` 数组。例：`{"id":"badge-visible-height","region":[0,0,1,1],"rgb_min":[150,0,0],"rgb_max":[255,95,120],"metric":"height","range":[0.45,1]}`。region 为相对已声明槽的左、上、右、下，截图换算遵循 viewport；颜色、范围和通过区间由本游戏的正常资产和问题样本校准，只对声明状态生效。metric 选 fill（像素面积占比）、width 或 height（匹配像素包围范围）；invert=true 可反选稳定背景色。检查图标占用不足、保留空隙被文字侵入、活动角标只露细边。背景变化、相同颜色来自多层或粒子混入时改用静态参考图/分层采集。不能凭区域报警指定是哪一层，不能把没有声明的状态当成已检查。每个已知故障至少跑一次原问题图和一个正常对照，缺少同状态采集不得作为交付通过依据。

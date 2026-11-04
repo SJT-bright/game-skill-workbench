@@ -41,7 +41,11 @@ def inspect_texture(path):
     fragments=[c for c in parts[1:] if c['area']>=floor]
     margin=max(2,min(width,height)*.005);b=parts[0]['bbox'];touches=min(b[0],b[1],width-b[2],height-b[3])<margin
     signals=(['straight_source_edge'] if cuts else [])+(['extra_alpha_components'] if fragments else [])+(['main_body_lacks_safety_margin'] if touches else [])
-    return {'size':[width,height],'suspects':signals,'edge_runs':cuts,'components':fragments,'main_component':parts[0],'alpha_threshold':8,'component_floor':floor,'pixel_sha256':hashlib.sha256(im.tobytes()).hexdigest()}
+    # Entire visible silhouette (including legitimate detached pieces), not just the largest component.
+    ink=im.getchannel('A').point(lambda a:255 if a>8 else 0).getbbox()
+    if (ink[2]-ink[0])/width < .2 and (ink[3]-ink[1])/height < .2:
+        signals.append('tiny_content_in_frame')
+    return {'size':[width,height],'suspects':signals,'edge_runs':cuts,'components':fragments,'ink_bbox':ink,'main_component':parts[0],'alpha_threshold':8,'component_floor':floor,'pixel_sha256':hashlib.sha256(im.tobytes()).hexdigest()}
 
 def check(root,names,role='single_body'):
     root=Path(root).resolve();names=list(dict.fromkeys(names));errors=[];matches={name:[] for name in names}
@@ -51,11 +55,22 @@ def check(root,names,role='single_body'):
     if role!='single_body':
         return {'input':str(root),'status':'not_applicable','passed':None,'checked':0,'missing':[],'errors':[],'rows':[],'role':role,'art_verdict':'not_assessed'}
     source_mode=(root/'project.json').is_file()
+    package=root/'package.json'
+    creator3=False
+    if package.is_file():
+        try:
+            creator3=str(json.loads(package.read_text()).get('creator',{}).get('version','')).startswith('3.')
+        except (OSError,ValueError,AttributeError):
+            pass
+    source_mode=source_mode or creator3
     if source_mode:
         for p in (root/'assets').rglob('*.png.meta'):
             try:
                 doc=json.loads(p.read_text())
-                for name in set(doc.get('subMetas',{}))&set(names):
+                metas=doc.get('subMetas',{})
+                frame_names=({m.get('displayName') for m in metas.values() if isinstance(m,dict) and m.get('importer')=='sprite-frame'}
+                             if creator3 else set(metas))
+                for name in frame_names.intersection(names):
                     tex=Path(str(p)[:-5]).resolve()
                     if not tex.is_relative_to(root) or not tex.is_file():raise ValueError('missing source PNG')
                     matches[name].append(tex)
@@ -90,7 +105,7 @@ def check(root,names,role='single_body'):
         except (OSError,ValueError,ImportError) as exc:errors.append({'frame':name,'error':str(exc)})
     missing=sorted(set(names)-{row['name'] for row in rows});review=any(row['suspects'] for row in rows)
     status='incomplete' if missing or errors or not rows else 'needs_review' if review else 'no_signals'
-    return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'art_verdict':'not_assessed','coverage':'named standalone Cocos2 SpriteFrame/PNG source signals only; actual frame rect and whole-page composition need project observation'}
+    return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'art_verdict':'not_assessed','coverage':'named standalone Cocos2/3 source or Cocos2 export PNG signals only; actual frame rect and whole-page composition need project observation'}
 
 def captured_inventory(dumps):
     names=set();pages=set()
@@ -122,7 +137,7 @@ def apply_review(result):
     for row in result['rows']:
         for entry in entries:
             if entry.get('frame')!=row['name'] or entry.get('sha256')!=row['sha256'] or not entry.get('why','').strip():continue
-            accepted=set(entry.get('normal_signals',[]))&{'straight_source_edge','main_body_lacks_safety_margin','extra_alpha_components'}
+            accepted=set(entry.get('normal_signals',[]))&{'straight_source_edge','main_body_lacks_safety_margin','extra_alpha_components','tiny_content_in_frame'}
             row['observed_suspects']=row['suspects'][:];row['suspects']=[x for x in row['suspects'] if x not in accepted];row['human_review']=entry
     result['status']='needs_review' if any(r['suspects'] for r in result['rows']) else 'no_signals';result['passed']=result['status']=='no_signals'
     return result

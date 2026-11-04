@@ -74,3 +74,9 @@ cd <skills>/remake-core/scripts && python3 -m unittest test_plist_atlas
 2. 扁平 `atlas.json` 里没写 `slice_role` 的条目，按名字给默认角色：icon_/node_/btn_/digit_N 按一个主体查，其余按 `scope_body` 查，和 frames.json 一样。以前适配器给每个条目都默认 single_body，BalloonRun 的 `txt_Profile_Revisit` 这类几个词分开的图片字被当成"混进别家残片"误报。
 
 第二版补丁里"只查 dump 里显示过的切片"（displayed、edge_sliver）不用了：v7.8 的 scope_body 不要 dump 也能查全部切片，抓得更多；第二版只多抓到 panel_reward，已由上面第 1 条补上。
+
+## 透明拼图切出独立 PNG：先定归属，再紧裁
+
+从生成拼图取按钮、图标、标题时，先看原图确认行列和完整主体（含描边、阴影、分开的字母/图标）。同页行距常不均匀，不能直接用图宽÷列数、图高÷行数切，也不能删掉最大连通块之外的所有像素。优先单独生图。透明且按行列排列的现成拼图，使用 `python3 <skills>/remake-art/scripts/cut_sheet_frame.py sheet.png --grid 行数 列数 --cell 行号 列号 --out 新母图.png`（从 1 数起）。脚本先沿整行找清晰分隔带，再在该行找列间隔，判界使用 alpha>8，保留主体外两像素及框内原始透明值。没有唯一分隔、触边、空格就停在该帧，不硬切。连通的原画、深阴影、偏排或不透明拼图改用已核实的作者帧框或单图。保存裁切收据及母图；行列语义仍须按原图核对。拿母图和引擎实际使用的切片等比并排看四边；母图完好但游戏仍露旧字/角标时查同位置子节点和旧底图。两个独立合法元素重叠不能靠裁掉其中一个修复。
+
+验收读取实际被使用的帧。Creator 3 源工程以 package.json 的 creator.version 识别，通过 image .meta 的 sprite-frame 子项 displayName 映射独立 PNG。同名不唯一须按 UUID/路径复核。独立图检查零项或缺帧记未覆盖，不能拿 OCR 已过或图集不适用代替。已有孤立碎片标记只要求复核，不自动擦除合法多部件。背景、运行时动态图集和叠层仍需同版本实际截图。

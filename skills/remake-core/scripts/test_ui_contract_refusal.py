@@ -6,7 +6,8 @@ import audit_ui_contract as audit
 class Refusal(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.project=Path(self.temp.name).resolve();self.picture=self.project/'same-run.png'
-        self.picture.write_bytes(b'\x89PNG\r\n\x1a\n'+b'x'*6000)
+        from PIL import Image
+        Image.new('RGB',(250,400),(40,80,120)).save(self.picture, compress_level=0)
         self.sha='a'*64
         self.contract={'schema':'ui_contract.v1','tolerance_px':1,'states':{'ready':{'modal':'result','slots':{
             'left':{'kind':'button','rect':{'x':10,'y':20,'width':100,'height':50}},
@@ -19,6 +20,24 @@ class Refusal(unittest.TestCase):
     def tearDown(self): self.temp.cleanup()
     def codes(self, raw=None): return {e['code'] for e in audit.validate(raw if raw is not None else self.raw,self.contract,self.sha,'final',self.project)}
     def test_evaluator_valid_geometry_only(self): self.assertEqual(self.codes(),set())
+    def test_header_only_evidence_refused(self):
+        self.picture.write_bytes(b'\x89PNG\r\n\x1a\n'+b'x'*6000)
+        self.raw['execution']['states'][0]['screenshot']['sha256']=audit.sha(self.picture)
+        self.assertIn('evidence',self.codes())
+
+    def test_covered_sprite_despite_correct_node(self):
+        from PIL import Image
+        ref=self.project/'reference.png'
+        Image.new('RGB',(100,50),(40,80,120)).save(ref)
+        rule=self.contract['states']['ready']['slots']['left']
+        rule['pixel_reference']=dict(path='reference.png',sha256=audit.sha(ref),frame='plate',max_mae=5)
+        self.assertEqual(self.codes(),set())
+        with Image.open(self.picture) as original: shot=original.copy()
+        shot.paste((200,200,200),(10,20,110,70))
+        shot.save(self.picture,compress_level=0)
+        self.raw['execution']['states'][0]['screenshot']['sha256']=audit.sha(self.picture)
+        self.assertEqual(self.codes(),{'sprite_pixel_mismatch'})
+
     def test_parent_only_resize_actual_sprite_still_overlaps(self):
         self.raw['execution']['states'][0]['buttons'][0]['sprites'][0]['world_rect']['width']=180
         self.assertTrue({'cross_slot_overlap','parent_overflow','slot_overflow'}<=self.codes())

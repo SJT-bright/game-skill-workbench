@@ -39,6 +39,27 @@ def slot_rect(spec, viewport):
     else: raise ValueError('unknown anchor_y')
     return [x, y, w, h]
 
+def compare_sprite_pixels(screenshot, reference, bounds, viewport):
+    """Full viewport screenshot and unrotated, untinted, whole-frame sprite."""
+    from PIL import Image, ImageChops, ImageStat
+    x, y, w, h = bounds
+    vx, vy, vw, vh = viewport
+    sx, sy = screenshot.width / vw, screenshot.height / vh
+    if abs(screenshot.width - vw * sy) > 1:
+        raise ValueError('screenshot and CSS viewport aspect ratios differ')
+    box = (round((x-vx)*sx), round((y-vy)*sy), round((x+w-vx)*sx), round((y+h-vy)*sy))
+    if (box[0] < 0 or box[1] < 0 or box[2] > screenshot.width or box[3] > screenshot.height
+            or box[2] <= box[0] or box[3] <= box[1]):
+        raise ValueError('pixel comparison requires a complete on-screen sprite')
+    actual = screenshot.crop(box).convert('RGB')
+    expected = reference.convert('RGBA').resize(actual.size, Image.Resampling.BILINEAR)
+    mask = expected.getchannel('A').point(lambda a: 255 if a > 245 else 0)
+    if not mask.getbbox():
+        raise ValueError('no opaque reference pixels to compare')
+    diff = ImageChops.difference(actual, expected.convert('RGB'))
+    return sum(ImageStat.Stat(diff, mask).mean) / 3
+
+
 def validate(raw, contract, expected_hash, variant, project):
     """Pure evaluator also used by refusal self-tests. Public CLI always runs the pinned collector."""
     errors = []
@@ -53,7 +74,12 @@ def validate(raw, contract, expected_hash, variant, project):
                 raise ValueError('screenshot missing, outside project or changed')
             if p.stat().st_size < 5000 or not p.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
                 raise ValueError('nonempty same-run PNG screenshot required')
-        except (KeyError, TypeError, ValueError, OSError) as exc: fail('evidence', str(exc), state)
+            from PIL import Image
+            with Image.open(p) as im:
+                if im.format != 'PNG': raise ValueError('expected PNG')
+                im.verify()
+            with Image.open(p) as im: return im.convert('RGB')
+        except (KeyError, TypeError, ValueError, OSError, SyntaxError) as exc: fail('evidence', str(exc), state)
     if not isinstance(raw, dict): return [dict(code='schema', detail='object report required')]
     if raw.get('schema') != 'ui_contract_runtime.v1' or raw.get('producer') != 'real_browser_ui_contract':
         fail('schema', 'real_browser_ui_contract ui_contract_runtime.v1 required')
@@ -87,7 +113,7 @@ def validate(raw, contract, expected_hash, variant, project):
         if len(matching) != 1: fail('missing_state', 'exactly one affected state required', state_id); continue
         state = matching[0]
         if state.get('modal') != rules['modal']: fail('state', 'actual modal mismatch', state_id)
-        evidence(state.get('screenshot', {}), state_id)
+        screenshot = evidence(state.get('screenshot', {}), state_id)
         buttons = state.get('buttons')
         if not isinstance(buttons, list) or not buttons: fail('empty_capture', 'target buttons/statuses absent', state_id); continue
         all_content = []
@@ -108,7 +134,7 @@ def validate(raw, contract, expected_hash, variant, project):
             sprites, captions = entity.get('sprites'), entity.get('captions')
             if not isinstance(sprites, list) or not isinstance(captions, list):
                 fail('empty_capture', 'actual sprite and caption arrays both required', state_id, slot); continue
-            if policy.get('require_sprite', policy['kind'] == 'button') and not sprites:
+            if (policy.get('require_sprite', policy['kind'] == 'button') or 'pixel_reference' in policy) and not sprites:
                 fail('missing_sprite', 'button has no actual sprite', state_id, slot)
             if policy.get('require_caption', True) and not captions: fail('missing_caption', 'actual caption absent', state_id, slot)
             if not sprites and not captions: fail('empty_capture', 'all content absent', state_id, slot)
@@ -120,6 +146,22 @@ def validate(raw, contract, expected_hash, variant, project):
                     if kind == 'sprite':
                         if not node.get('frame') or node.get('loaded') is not True or node.get('texture_loaded') is not True:
                             fail('missing_sprite', 'empty or unloaded actual SpriteFrame/texture', state_id, slot)
+                        if 'pixel_reference' in policy and screenshot is not None:
+                            try:
+                                from PIL import Image
+                                spec = policy['pixel_reference']
+                                path = (project / spec['path']).resolve()
+                                limit = spec['max_mae']
+                                if (not path.is_relative_to(project) or sha(path) != spec['sha256']
+                                        or node.get('frame') != spec['frame']
+                                        or type(limit) not in (int, float) or not 0 <= limit < 255):
+                                    raise ValueError('invalid pixel reference, frame, hash or tolerance')
+                                with Image.open(path) as ref:
+                                    score = compare_sprite_pixels(screenshot, ref, bounds, viewport)
+                                if score > limit:
+                                    fail('sprite_pixel_mismatch', f'{score:.2f} MAE exceeds {limit}', state_id, slot)
+                            except (KeyError, ValueError, TypeError, OSError) as exc:
+                                fail('evidence', str(exc), state_id, slot)
                         if policy.get('frames') and node.get('frame') not in policy['frames']:
                             fail('sprite_frame', 'unexpected actual SpriteFrame', state_id, slot)
                     else:

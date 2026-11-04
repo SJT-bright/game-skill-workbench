@@ -182,7 +182,9 @@ def issue_state(events):
 # checker (one file since 2026-10-27) stays valid and no game has to retest closed issues because the Skill changed.
 # v7.9 adds the v7.8 file (f15395aa...): it only adds phone-report checks, which validate_proof re-runs on the saved raw
 # observations at every check, so closed local issues of any game stay closed after the Skill update.
-SAME_PROOF_RULES = frozenset({'edaad58253327c1794e55b8b13154f9ce26b0d422d5c3b45d276bdd8c087ad2f',
+# Prior proofs are re-evaluated against their raw observations below.
+SAME_PROOF_RULES = frozenset({'3abba91ebf5ab492bba1f6e0c96ee1c085eb340f7cf617f4b4438dd8af4331f8',
+                              'edaad58253327c1794e55b8b13154f9ce26b0d422d5c3b45d276bdd8c087ad2f',
                               'f15395aa873bb3b8763b12befad6f1b8190a6b31cdbfc80b3d0c651da711a0be'})
 SUPERSEDE_FIELDS = ('id', 'by', 'user_quote', 'date', 'reason')
 
@@ -309,7 +311,14 @@ def register(project, native, issue_id, message, targets, cases, runner, device=
     for case in cases:
         if 'phone' in case and (device is None or not isinstance(case['phone'], list)):
             raise ValueError('"phone" assertions belong to a phone report (--source device) and must be a list')
-        for assertion in case['assertions'] + list(case.get('phone') or []):
+        if 'reached' in case and (not isinstance(case['reached'], list) or not case['reached']):
+            raise ValueError('reached requires at least one observable trigger assertion')
+        if 'negative_error' in case and (device or 'reached' not in case or not isinstance(case['negative_error'], str)
+                                         or not _words(case['negative_error'])):
+            raise ValueError('negative_error is for a specific expected error in a local transition case')
+        if 'symptom' in case and (not isinstance(case['symptom'], list) or not case['symptom']):
+            raise ValueError('symptom requires assertions describing the observed fault')
+        for assertion in case['assertions'] + list(case.get('phone') or []) + case.get('reached', []) + case.get('symptom', []):
             if not isinstance(assertion, dict) or assertion.get('op') not in ('eq', 'ne', 'gt', 'ge', 'lt', 'le') or not isinstance(assertion.get('path'), list) or not assertion['path'] or any(not isinstance(k, (str, int)) for k in assertion['path']):
                 raise ValueError('unsupported/empty issue postcondition assertion')
     if device is not None and not any(c.get('phone') for c in cases):
@@ -394,6 +403,26 @@ def read_ref(ref):
     return json.loads(Path(ref['path']).read_text())
 
 
+def check_transition_run(case, raw, kind, device):
+    if 'reached' not in case:
+        return
+    if assertions_pass(raw.get('observed'), case['reached']) is not True:
+        raise ValueError('issue %s/%s: trigger phase not reached' % (case['id'], kind))
+    errors = raw.get('errors')
+    if not isinstance(errors, list):
+        raise ValueError('issue %s/%s: runtime error capture missing' % (case['id'], kind))
+    expected = _words((device or {}).get('phone_error')) if kind == 'negative' and case.get('phone') else ''
+    if kind == 'negative' and case.get('negative_error'):
+        expected = _words(case['negative_error'])
+        if not any(isinstance(error, str) and _words(error.partition('\n')[0]) == expected for error in errors):
+            raise ValueError('registered local error not reproduced')
+    for error in errors:
+        line = _words(error.partition('\n')[0]) if isinstance(error, str) else ''
+        matches = expected == line if case.get('negative_error') else expected in line
+        if not expected or not matches:
+            raise ValueError('issue %s/%s: unexpected runtime error: %s' % (case['id'], kind, str(error)[:240]))
+
+
 def validate_proof(contract, ref, native):
     proof = read_ref(ref)
     runner = contract['runner']
@@ -434,6 +463,12 @@ def validate_proof(contract, ref, native):
                 # candidate. A directory name alone is not a production change.
                 if kind == 'current' and artifact.get('sha256') != current_targets[target]:
                     raise ValueError('current Native targets differ from the actual issue execution')
+            check_transition_run(case, raw, kind, contract.get('device'))
+            if 'symptom' in case:
+                matched = assertions_pass(raw.get('observed'), case['symptom'])
+                if matched is not (kind == 'negative'):
+                    raise ValueError('issue %s/%s: observation does not distinguish the reported symptom'
+                                     % (case['id'], kind))
             actual = assertions_pass(raw.get('observed'), case['assertions'])
             if actual is None or actual != expected:
                 raise ValueError('issue %s/%s postconditions not verified' % (case['id'], kind))
@@ -471,7 +506,7 @@ def check_device_proof(contract, proof):
     needle = _words(device.get('phone_error'))
     if not needle:
         return
-    if not any(_shows(raw, needle) for raw in runs['negative']):
+    if not any(case.get('phone') and _shows(raw, needle) for case, raw in zip(contract['cases'], runs['negative'])):
         raise ValueError('phone report %s: the phone showed "%s" but no case printed it on the phone package; a '
                          'different failure was reproduced. Find what the phone did differently first'
                          % (issue, device['phone_error']))

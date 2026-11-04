@@ -545,7 +545,7 @@ def main():
             detail += '；' + '；'.join(str(x.get('frame','')) + ':' + x['kind'] for x in atlas['issues'][:10])
         applicable = atlas.get('applicable', True)
         add('图集裁切完整性（主体不截断、不混入相邻图、运行帧一致）',
-            (code == 0 and atlas.get('passed') is True) if applicable else None,
+            (code == 0 and atlas.get('passed') is True and atlas.get('checked', 0) > 0) if applicable else None,
             detail if applicable else '未发现受支持的 frames.json 透明图集；其他格式需接入适配器，本项未对其作通过判定', 'atlas_slices/report.json')
     except (OSError, ValueError, TypeError):
         add('图集裁切完整性（主体不截断、不混入相邻图、运行帧一致）', False, text.strip()[-400:], 'atlas_slices')

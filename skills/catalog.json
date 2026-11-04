@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T07:19:36.669Z",
-  "treeHash": "b813e27f9062edd28bc338845db69b8d1ba9f0c4490c27b62469481024234407",
+  "createdAt": "2026-11-04T10:22:42.245Z",
+  "treeHash": "e13311d2ba337325fa6d9121cae1ca499900df667a771316248819d1cf495345",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3021,14 +3021,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "e6b5a06c9ea6caf185d71d3289e7b0c938578bfdf25cf0a833996af6da725208",
+      "treeHash": "74d7572654b8388180b9bf6279a2ef3f8e6912f68f5a068407b8a7c76ff59e07",
       "fileCount": 416,
-      "bytes": 9160091,
+      "bytes": 9166388,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "5b154bddf0da153bf2bdf5c77e2983886886ab2e67870dbd20d820cb485c0083",
-          "size": 72172,
+          "hash": "50fc9a713df64bf7e7669c54f1dbcf4056f212427b1733669e4e9e179d1daed9",
+          "size": 72174,
           "executable": false
         },
         {
@@ -3789,8 +3789,8 @@
         },
         {
           "path": "scripts/art_check.py",
-          "hash": "e6594ecdc885b3b523ee2425be13b2b9f5d75a2b9afd0101ffa12982ccb3ccbd",
-          "size": 66947,
+          "hash": "abf095f1d35b3e58f611fca6064346016a9f4f6dceb8a3b3d9b318f48dc012d6",
+          "size": 66979,
           "executable": false
         },
         {
@@ -4107,8 +4107,8 @@
         },
         {
           "path": "scripts/audit_ui_contract.py",
-          "hash": "91ba4b8c6eb754b58e049da04d627382e52687cddf8ca000341688744c9b929e",
-          "size": 16663,
+          "hash": "bc0167c03b64ae720d954845c13bf7daf5ccd04f80dbc4111f5bf11d3d4960f7",
+          "size": 19370,
           "executable": false
         },
         {
@@ -4449,8 +4449,8 @@
         },
         {
           "path": "scripts/package_issue_gate.py",
-          "hash": "3abba91ebf5ab492bba1f6e0c96ee1c085eb340f7cf617f4b4438dd8af4331f8",
-          "size": 39680,
+          "hash": "259fbfe4f7627a7778fd522db8b2346ae1d7d6b61ebe8d0cb0513a58ac8f902f",
+          "size": 42211,
           "executable": false
         },
         {
@@ -5295,8 +5295,8 @@
         },
         {
           "path": "scripts/test_ui_contract_refusal.py",
-          "hash": "583011216760432ba68142c972d321a7745bd4163ecb53b3b9139c30d6e2ce03",
-          "size": 8543,
+          "hash": "da6010d886a6da7e9baa4c0cd8f22e31b9081c7c95b263e4edd98c2d311ed84d",
+          "size": 9568,
           "executable": false
         },
         {

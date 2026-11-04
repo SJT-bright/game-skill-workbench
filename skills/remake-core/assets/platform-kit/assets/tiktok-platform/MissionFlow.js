@@ -42,15 +42,18 @@ var KINDS = {shortcut: true, profile: true};
 
 // Same lookup order as TikTokMissionService.js (TTMinis.game, then tt, then wx). v1.2: a runtime that
 // only exposes tt (Mabel's Meadow r7/r8) used to show the LOCAL PREVIEW text inside TikTok.
+// 简化.11.3: a runtime counts when it has canIUse or one of the four mission methods (canIUse is not required).
 function hasNativeSDK() {
   var candidates = [
     typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
     typeof tt !== 'undefined' && tt,
     typeof wx !== 'undefined' && wx
   ];
+  var names = ['canIUse', 'addShortcut', 'startEntranceMission', 'getShortcutMissionReward', 'getEntranceMissionReward'];
   for (var i = 0; i < candidates.length; i++) {
     var c = candidates[i];
-    if (c && (typeof c === 'object' || typeof c === 'function') && typeof c.canIUse === 'function') return true;
+    if (!c || (typeof c !== 'object' && typeof c !== 'function')) continue;
+    for (var j = 0; j < names.length; j++) if (typeof c[names[j]] === 'function') return true;
   }
   return false;
 }
@@ -114,6 +117,9 @@ MissionFlow.prototype._guard = function () {
   return function () { return self.version === version && self.kind === kind; };
 };
 
+// open(kind)                    panel games: show the intro and check the reward first (unchanged)
+// open(kind, {navigate: true})  简化.11.3, home-entry taps: the tap itself goes to TikTok at once (same user
+//                               gesture, no reward query in front of it); the reward is checked in onShow().
 MissionFlow.prototype.open = function (kind, options) {
   if (!KINDS[kind]) return;
   this.missions.cancel();
@@ -123,23 +129,25 @@ MissionFlow.prototype.open = function (kind, options) {
   this.phase = 'idle';
   this.message = this.isClaimed(kind) ? TEXT.claimed : (this.native ? TEXT['intro_' + kind] : TEXT.preview);
   this._render();
-  if (!this.isClaimed(kind) && this.native) {
-    if (options && options.navigate === true) return this.start();
-    this.check();
-  }
+  if (!this.native) return;
+  if (options && options.navigate === true) return this.start();
+  if (!this.isClaimed(kind)) this.check();
 };
 
+// 简化.11.3: going to TikTok is allowed after the reward was collected too (the entry keeps working; the reward
+// is still paid once, _grant() checks platformClaims).
 MissionFlow.prototype.start = function () {
   if (!this.kind) return;
-  if (this.isClaimed(this.kind)) { this.message = TEXT.claimed; this._render(); return; }
   if (this.phase === 'opening' || this.phase === 'checking') { this.message = TEXT.wait; this._render(); return; }
   var self = this, op = ++this.op, isCurrent = this._guard();
   this.phase = 'opening'; this.message = TEXT.opening; this._render();
   return this.missions.navigate(this.kind, {isCurrent: isCurrent}).then(function (r) {
     if (!isCurrent() || op !== self.op) return;
     self.phase = 'idle';
-    if (r.status === 'success') { self.navigatedOnce = true; self.message = TEXT.navigated; }
-    else self.message = r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;
+    if (r.status === 'success') {
+      self.navigatedOnce = true;
+      self.message = self.isClaimed(self.kind) ? TEXT.claimed : TEXT.navigated;
+    } else self.message = r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;
     self._render();
   });
 };

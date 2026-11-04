@@ -1,6 +1,6 @@
 'use strict';
 // TikTok Platform Kit 2.0 - fixed home entries: "Add to Home Screen" and "Profile Revisit". Copy unchanged.
-// 待真机复测 (Node-tested only: tests/home-entries.test.js).
+// 待真机复测 (Node-tested only: tests/home-entries.test.js). 简化.11.3: one tap goes to TikTok; the reward is checked on return.
 //
 // Put two button nodes in the home bottom row (nothing else goes in that row, rule U3), add this
 // component to their parent, drag the two nodes into shortcutNode / profileNode, then from the home scene:
@@ -37,7 +37,62 @@ function Controller(options) {
     render: function (view) { self.lastView = view; self._render(); },
     onGranted: options.onGranted
   });
+  logPlatformCalls(this.flow.missions);
+  log('runtime ' + describeRuntime() + ', native ' + this.flow.native);
   this._render();
+}
+
+// 简化.11.3: what the platform answered goes to the console (vConsole on the phone), so a tap that does nothing
+// can be told apart: no SDK object, canIUse false, a fail() with errorCode, or no answer (timeout).
+// Only inside the engine (cc.sys exists): the Node tests keep their stdout for the JSON result.
+function log(text) {
+  try {
+    if (typeof cc === 'undefined' || !cc || !cc.sys) return;
+    if (typeof console === 'undefined' || !console || typeof console.info !== 'function') return;
+    console.info('[TikTokKit] ' + text);
+  } catch (_) {}
+}
+
+function describeRuntime() {
+  var found = [], names = ['addShortcut', 'getShortcutMissionReward', 'startEntranceMission', 'getEntranceMissionReward'];
+  var candidates = [
+    ['TTMinis.game', typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game],
+    ['tt', typeof tt !== 'undefined' && tt],
+    ['wx', typeof wx !== 'undefined' && wx]
+  ];
+  candidates.forEach(function (pair) {
+    var sdk = pair[1];
+    if (!sdk) return;
+    var can = typeof sdk.canIUse === 'function';
+    var parts = names.map(function (name) {
+      var answer = '?';
+      try { answer = can ? String(sdk.canIUse(name)) : 'no canIUse'; } catch (e) { answer = 'throws'; }
+      return name + (typeof sdk[name] === 'function' ? '' : '(missing)') + '=' + answer;
+    });
+    found.push(pair[0] + ' {' + parts.join(', ') + '}');
+  });
+  return found.length ? found.join('; ') : 'no TTMinis.game / tt / wx';
+}
+
+function logPlatformCalls(missions) {
+  if (!missions) return;
+  ['navigate', 'query'].forEach(function (action) {
+    var call = missions[action];
+    if (typeof call !== 'function') return;
+    missions[action] = function (kind, opts) {
+      log(kind + ' ' + action + ' ...');
+      var answer = call.call(missions, kind, opts);
+      if (answer && typeof answer.then === 'function') {
+        answer.then(function (r) {
+          r = r || {};
+          log(kind + ' ' + action + ' -> ' + r.status + (r.api ? ' (' + r.api + ')' : '') +
+            (r.errorCode !== null && r.errorCode !== undefined ? ' errorCode ' + r.errorCode : '') +
+            (r.errMsg ? ' errMsg ' + r.errMsg : ''));
+        }, function () {});
+      }
+      return answer;
+    };
+  });
 }
 
 Controller.TEXT = TEXT;
@@ -64,15 +119,16 @@ Controller.prototype.state = function () {
 Controller.prototype._render = function () { try { this.renderState(this.state()); } catch (_) {} };
 
 // One tap on an entry. Returns what happened, for tests and logs.
+// 简化.11.3 (Saul 2026-11-02): every tap goes to TikTok at once (addShortcut / startEntranceMission inside the
+// tap, the user gesture). Until 简化.11.2 the first tap only asked for the reward and a second tap was needed;
+// together with canIUse answering undefined on the phone, the entries looked dead (77~86, Mosslight v20).
+// Coming back to the game (onShow) checks the reward and pays once. A collected entry still opens TikTok.
 Controller.prototype.press = function (kind) {
   if (kind !== 'shortcut' && kind !== 'profile') return 'ignored';
   var flow = this.flow;
   if (!flow.native) { this.toast(TEXT.unsupported); return 'unsupported'; }
-  if (flow.isClaimed(kind)) { this.toast(MissionFlow.TEXT.claimed); return 'claimed'; }
-  if (flow.kind !== kind) { flow.open(kind, {navigate: true}); return 'start'; } // same user gesture; query only on return
-  var view = flow.view();
-  if (view.busy) return 'busy';                                    // merged
-  if (view.action === 'check') { flow.check(); return 'check'; }
+  if (flow.kind !== kind) { flow.open(kind, {navigate: true}); return 'start'; }
+  if (flow.view().busy) return 'busy';                             // merged
   flow.start();
   return 'start';
 };

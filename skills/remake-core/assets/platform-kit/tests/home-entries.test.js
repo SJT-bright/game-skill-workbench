@@ -68,40 +68,125 @@ function setup(opts) {
       var t = setup();
       assert.strictEqual(t.state().shortcut.reward, '+60', '5B with B = 12');
       t.c.press('shortcut');
-      assert.strictEqual(t.fake.count('addShortcut'), 1);
-      assert.strictEqual(t.fake.count('getShortcutMissionReward'), 0);
-      t.fake.last('addShortcut').opts.success({}); await flush(); t.c.onShow();
+      t.fake.last('addShortcut').opts.success({}); await flush();
+      t.c.onShow(); await flush();                                       // back from the new icon
       t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.store.get().coins, 60);
       assert.strictEqual(t.state().shortcut.reward, 'Collected');
+    });
+    // 简化.11.3 (Saul 2026-11-02): until 简化.11.2 the first tap only asked for the reward and a second tap was
+    // needed to navigate; on the phone (77~86, Mosslight v20) the entries looked dead.
+    await test('one_tap_goes_to_tiktok_at_once', function () {
+      var t = setup();
+      assert.strictEqual(t.c.press('shortcut'), 'start');
+      assert.strictEqual(t.fake.count('addShortcut'), 1, 'addShortcut inside the tap');
+      assert.strictEqual(t.fake.count('getShortcutMissionReward'), 0, 'no reward query in front of the jump');
+      var u = setup();
+      assert.strictEqual(u.c.press('profile'), 'start');
+      assert.strictEqual(u.fake.count('startEntranceMission'), 1);
+      assert.strictEqual(u.fake.count('getEntranceMissionReward'), 0);
     });
     await test('repeated_taps_send_one_request_and_pay_once', async function () {
       var t = setup();
       assert.strictEqual(t.c.press('profile'), 'start');
       assert.strictEqual(t.c.press('profile'), 'busy');
       assert.strictEqual(t.c.press('profile'), 'busy');
-      assert.strictEqual(t.fake.count('startEntranceMission'), 1, 'one navigation for three taps');
-      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 0, 'no query before return');
-      t.fake.last('startEntranceMission').opts.success({}); await flush(); t.c.onShow();
-      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1, 'one query on return');
+      assert.strictEqual(t.fake.count('startEntranceMission'), 1, 'one jump for three taps');
+      t.fake.last('startEntranceMission').opts.success({}); await flush();
+      t.c.onShow(); await flush();
       t.fake.last('getEntranceMissionReward').opts.success({canReceiveReward: true}); await flush();
-      assert.strictEqual(t.c.press('profile'), 'claimed');
+      assert.strictEqual(t.store.get().coins, 60);
       t.c.onShow(); await flush();
       assert.strictEqual(t.store.get().coins, 60, 'paid once');
-      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1);
+      assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1, 'no query once collected');
     });
-    await test('first_tap_navigates_and_return_queries_for_both_entries', async function () {
-      for (var kind of ['shortcut','profile']) {
-        var t=setup(), nav=kind==='shortcut'?'addShortcut':'startEntranceMission', query=kind==='shortcut'?'getShortcutMissionReward':'getEntranceMissionReward';
-        assert.strictEqual(t.c.press(kind),'start');
-        assert.strictEqual(t.fake.count(nav),1,'navigation in the first synchronous gesture');
-        assert.strictEqual(t.fake.count(query),0,'no query ahead of navigation');
-        t.fake.last(nav).opts.success({}); await flush();
-        assert.strictEqual(t.store.get().coins,0,'navigation is not eligibility');
-        t.c.onShow(); assert.strictEqual(t.fake.count(query),1);
-        t.fake.last(query).opts.success({canReceiveReward:false});await flush();
-        assert.strictEqual(t.store.get().coins,0,'ineligible return pays nothing');
-      }
+    await test('collected_entry_still_opens_tiktok_and_pays_nothing', async function () {
+      var t = setup();
+      t.c.press('shortcut');
+      t.fake.last('addShortcut').opts.success({}); await flush();
+      t.c.onShow(); await flush();
+      t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
+      assert.strictEqual(t.c.press('shortcut'), 'start');
+      assert.strictEqual(t.fake.count('addShortcut'), 2, 'the entry keeps working');
+      t.fake.last('addShortcut').opts.success({}); await flush();
+      t.c.onShow(); await flush();
+      assert.strictEqual(t.store.get().coins, 60, 'no second reward');
+    });
+    await test('not_eligible_after_return_then_tap_goes_again', async function () {
+      var t = setup();
+      t.c.press('shortcut');
+      t.fake.last('addShortcut').opts.success({}); await flush();
+      t.c.onShow(); await flush();
+      t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: false}); await flush();
+      assert.strictEqual(t.store.get().coins, 0);
+      assert.strictEqual(t.fake.count('addShortcut'), 1, 'the check after returning does not jump by itself');
+      assert.strictEqual(t.c.press('shortcut'), 'start');
+      assert.strictEqual(t.fake.count('addShortcut'), 2, 'one more tap goes again');
+    });
+    await test('navigation_failure_message_carries_the_platform_error', async function () {
+      var t = setup();
+      t.c.press('profile');
+      t.fake.last('startEntranceMission').opts.fail({errMsg: 'startEntranceMission:fail not support', errCode: 10002}); await flush();
+      assert.strictEqual(t.c.flow.phase, 'idle', 'a failed jump frees the entry');
+      assert.strictEqual(t.store.get().coins, 0, 'a failed jump pays nothing');
+      assert.strictEqual(t.c.press('profile'), 'start', 'the next tap tries again');
+      assert.strictEqual(t.fake.count('startEntranceMission'), 2);
+      var seen = null;
+      var m = new Mission({getSDK: function () { return {startEntranceMission: function (o) { o.fail({errMsg: 'x:fail not support', errCode: 10002}); }}; }, autoPoll: false});
+      seen = await m.navigate('profile');
+      assert.strictEqual(seen.errorCode, 10002);
+      assert.strictEqual(seen.errMsg, 'x:fail not support');
+      assert.strictEqual(seen.api, 'startEntranceMission');
+    });
+    await test('canIUse_undefined_or_missing_still_calls_the_platform', async function () {
+      var Missions = require(path.join(base, 'TikTokMissionService.js'));
+      var calls = [];
+      var undef = {canIUse: function () { return undefined; }, startEntranceMission: function () { calls.push('undef'); }};
+      var none = {addShortcut: function () { calls.push('none'); }};
+      var no = {canIUse: function () { return false; }, addShortcut: function () { calls.push('false'); }};
+      var throws = {canIUse: function () { throw new Error('x'); }, addShortcut: function () { calls.push('throws'); }};
+      var r1 = new Missions({getSDK: function () { return undef; }, autoPoll: false}).navigate('profile');
+      var r2 = new Missions({getSDK: function () { return none; }, autoPoll: false}).navigate('shortcut');
+      var r3 = await new Missions({getSDK: function () { return no; }, autoPoll: false}).navigate('shortcut');
+      var r4 = await new Missions({getSDK: function () { return throws; }, autoPoll: false}).navigate('shortcut');
+      assert.deepStrictEqual(calls, ['undef', 'none'], 'only an explicit false or a throwing canIUse stops the call');
+      assert.strictEqual(r3.status, 'unsupported');
+      assert.strictEqual(r4.status, 'unsupported');
+      void r1; void r2;
+    });
+    await test('default_lookup_takes_tt_when_canIUse_answers_undefined', function () {
+      var Missions = require(path.join(base, 'TikTokMissionService.js'));
+      var calls = [];
+      global.TTMinis = {game: {canIUse: function () { return false; }, addShortcut: function () { calls.push('TTMinis'); }}};
+      global.tt = {canIUse: function () { return undefined; }, addShortcut: function () { calls.push('tt'); }};
+      try {
+        new Missions({autoPoll: false}).navigate('shortcut');
+      } finally { delete global.TTMinis; delete global.tt; }
+      assert.deepStrictEqual(calls, ['tt'], 'TTMinis.game said false, tt (undefined) is used');
+    });
+    await test('returning_cancels_a_pending_jump_answer', async function () {
+      var t = setup();
+      t.c.press('shortcut');
+      var jump = t.fake.last('addShortcut');
+      t.c.onShow(); await flush();                                       // back before the jump answered
+      jump.opts.success({}); await flush();                              // late answer of the old jump
+      assert.strictEqual(t.fake.count('getShortcutMissionReward'), 1, 'one check after returning');
+      assert.strictEqual(t.c.flow.phase, 'checking', 'the late jump answer does not reset the check');
+    });
+    await test('platform_answers_are_logged_in_the_engine', async function () {
+      var lines = [], keep = console.info;
+      global.cc = {sys: {}};
+      global.tt = {canIUse: function (m) { return m === 'getShortcutMissionReward' ? false : undefined; }, addShortcut: function () {}};
+      console.info = function (s) { lines.push(String(s)); };
+      try {
+        var t = setup();
+        t.c.press('shortcut');
+        t.fake.last('addShortcut').opts.fail({errMsg: 'addShortcut:fail cancel', errCode: 21500}); await flush();
+      } finally { console.info = keep; delete global.cc; delete global.tt; }
+      var text = lines.join('\n');
+      assert(/\[TikTokKit\] runtime tt \{addShortcut=undefined, getShortcutMissionReward\(missing\)=false/.test(text), text);
+      assert(/shortcut navigate -> error \(addShortcut\) errorCode 21500 errMsg addShortcut:fail cancel/.test(text), text);
+      assert(/shortcut navigate \.\.\./.test(text), text);
     });
     await test('unset_B_pays_nothing', async function () {
       config.normalLevelCoins = 0;
@@ -109,7 +194,8 @@ function setup(opts) {
         var t = setup();
         assert.strictEqual(t.state().shortcut.reward, '');
         t.c.press('shortcut');
-        t.fake.last('addShortcut').opts.success({}); await flush(); t.c.onShow();
+        t.fake.last('addShortcut').opts.success({}); await flush();
+        t.c.onShow(); await flush();
         t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
         assert.strictEqual(t.store.get().coins, 0);
         assert.strictEqual(t.store.isClaimed('shortcut'), false);

@@ -21,8 +21,6 @@ The SDK test is the split('.') form already used by duo_sdk_ui_retry_contract.FI
 MusicSlice v30's String(X.SDKVersion||"2")[0] still reads "10.x" as 1, so it counts as an old form and is rewritten.
 """
 import re
-import hashlib
-import json
 from pathlib import Path
 
 from . import finding
@@ -147,34 +145,6 @@ LABEL = {'sdk_version': 'adapter reads SDKVersion major with split(".") (missing
          'pkg_fs_access': 'adapter skips fs.access for in-package (non-http, non-user-dir) files'}
 
 
-def _reviewed_root_context(files, adapters):
-    """Recognise only the reviewed 2.4.15 main-only adapter, never sub-contexts.
-
-    Its complete bytes were verified by the actual main-context runtime matrix.
-    Other SDK/fs rules are still checked independently. Unknown bytes stay blocked.
-    """
-    if adapters != ['adapter-min.js'] or _engine_version(files) != '2.4.15':
-        return False
-    data = files['adapter-min.js']
-    if isinstance(data, str):
-        data = data.encode('utf-8')
-    if hashlib.sha256(data).hexdigest() not in {
-        '4f876481a124898d5988f5240f976d03627453f6533b2eeb7cc1a8ed852f7b6f',
-        '8605a4d416ed553d4235abc5eacb532654d008c8424158476aad92de497ae579',
-    }:
-        return False
-    try:
-        game = json.loads(files['game.json'])
-        entry = files['game.js']
-        if isinstance(entry, bytes):
-            entry = entry.decode('utf-8')
-        return (not any(k in game for k in ('openDataContext', 'openDataContextRoot', 'subContextRoot', 'isSubContext'))
-                and entry.count("require('adapter-min.js')") == 1
-                and entry.index("require('adapter-min.js')") < entry.index('window.boot();'))
-    except (ValueError, TypeError, KeyError):
-        return False
-
-
 def detect(files):
     """Read-only: {'target': [...], 'reason': str, 'rules': {rule: 'old'|'fixed'|'ambiguous'|'unknown'}}."""
     adapters, why = target(files)
@@ -189,8 +159,6 @@ def detect(files):
             old += len(scan['old'])
             fixed += 1 if scan['fixed'] else 0
         rules[rule] = 'ambiguous' if old > 1 else 'old' if old == 1 else 'fixed' if fixed else 'unknown'
-    if rules['sub_context'] == 'unknown' and _reviewed_root_context(files, adapters):
-        rules['sub_context'] = 'fixed'
     return {'target': adapters, 'reason': 'Cocos ' + why + ' ByteDance build', 'rules': rules}
 
 

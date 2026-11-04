@@ -2,8 +2,7 @@
  "manifest_version": "2.0",
  "modules": {
   "HomeGrowthEntries": {
-   "common": [],
-   "current_only": [
+   "common": [
     "p:Button",
     "p:CENTER",
     "p:Class",
@@ -26,11 +25,9 @@
     "p:_onShow",
     "p:_paint",
     "p:_render",
-    "p:action",
     "p:active",
     "p:addComponent",
     "p:busy",
-    "p:check",
     "p:claimed",
     "p:collected",
     "p:color",
@@ -65,69 +62,51 @@
     "p:native",
     "p:node",
     "p:onDestroy",
-    "p:onGranted",
-    "p:onShow",
-    "p:open",
-    "p:overflow",
-    "p:parent",
-    "p:press",
-    "p:profile",
-    "p:profileNode",
-    "p:properties",
-    "p:render",
-    "p:renderState",
-    "p:reward",
-    "p:rewardAmount",
-    "p:scheduleOnce",
-    "p:setContentSize",
-    "p:shortcut",
-    "p:shortcutNode",
-    "p:showToast",
-    "p:spriteFrame",
-    "p:start",
-    "p:state",
-    "p:statics",
-    "p:store",
-    "p:text",
-    "p:tick",
-    "p:title",
-    "p:toast",
-    "p:type",
-    "p:unsupported",
-    "p:update",
-    "p:view",
-    "p:width",
-    "s:)) :",
-    "s:+ TEXT.collected : (amount > 0 ?",
-    "s:+ amount :",
-    "s:+ e.reward :",
-    "s:./MissionFlow",
-    "s:./PlatformConfig",
-    "s:Add to Home",
-    "s:Available in TikTok",
-    "s:Collected",
-    "s:HomeEntryText",
-    "s:HomeGrowthEntries needs the game SaveStore",
-    "s:HomeGrowthEntries:",
-    "s:Node",
-    "s:Node is not set",
-    "s:Profile Revisit",
-    "s:_tap_",
-    "s:busy",
-    "s:check",
-    "s:claimed",
-    "s:ignored",
-    "s:none",
-    "s:opened",
-    "s:profile",
-    "s:shortcut",
-    "s:start",
-    "s:unsupported",
-    "s:use strict"
+    "p:onGranted"
    ],
-   "current_sha256": "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474",
+   "current_only": [
+    "p:canIUse",
+    "p:errMsg",
+    "p:errorCode",
+    "p:info",
+    "p:join",
+    "p:navigate",
+    "p:status",
+    "s:) +",
+    "s:) :",
+    "s:+ action +",
+    "s:+ parts.join(",
+    "s:+ r.api +",
+    "s:+ r.status + (r.api ?",
+    "s:, native",
+    "s:, typeof tt !==",
+    "s:, typeof wx !==",
+    "s::",
+    "s:TTMinis.game",
+    "s:[TikTokKit]",
+    "s:addShortcut",
+    "s:errMsg",
+    "s:errorCode",
+    "s:getEntranceMissionReward",
+    "s:getShortcutMissionReward",
+    "s:navigate",
+    "s:no canIUse",
+    "s:query",
+    "s:runtime",
+    "s:startEntranceMission",
+    "s:throws"
+   ],
+   "current_sha256": "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122",
    "editable": false,
-   "previous": {},
+   "previous": {
+    "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474": [
+     "p:action",
+     "p:check",
+     "s:check",
+     "s:claimed",
+     "s:opened"
+    ]
+   },
    "previous_without_text": []
   },
   "MissionFlow": {
@@ -139,7 +118,6 @@
     "p:action",
     "p:busy",
     "p:canCheck",
-    "p:canIUse",
     "p:canStart",
     "p:cancel",
     "p:check",
@@ -191,18 +169,28 @@
     "p:timeoutMs",
     "p:update",
     "p:version",
-    "p:view"
+    "p:view",
+    "p:wait"
    ],
    "current_only": [
-    "s:Available in TikTok."
+    "s:addShortcut",
+    "s:canIUse",
+    "s:getEntranceMissionReward",
+    "s:getShortcutMissionReward",
+    "s:startEntranceMission"
    ],
-   "current_sha256": "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f",
+   "current_sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
    "editable": false,
    "previous": {
+    "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f": [
+     "p:canIUse"
+    ],
     "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee": [
+     "p:canIUse",
      "s:LOCAL PREVIEW: open the game inside TikTok to use this."
     ],
     "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348": [
+     "p:canIUse",
      "s:LOCAL PREVIEW: open the game inside TikTok to use this."
     ],
     "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a": [
@@ -399,8 +387,7 @@
    "previous_without_text": []
   },
   "TikTokMissionService": {
-   "common": [],
-   "current_only": [
+   "common": [
     "p:_call",
     "p:action",
     "p:autoPoll",
@@ -460,20 +447,18 @@
     "s:eligible",
     "s:getEntranceMissionReward",
     "s:getShortcutMissionReward",
-    "s:ineligible",
-    "s:invalid",
-    "s:navigate",
-    "s:query",
-    "s:stale",
-    "s:startEntranceMission",
-    "s:success",
-    "s:timeout",
-    "s:unsupported",
-    "s:use strict"
+    "s:ineligible"
    ],
-   "current_sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
+   "current_only": [
+    "p:code",
+    "p:errCode",
+    "p:errMsg"
+   ],
+   "current_sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
    "editable": false,
-   "previous": {},
+   "previous": {
+    "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4": []
+   },
    "previous_without_text": []
   }
  },

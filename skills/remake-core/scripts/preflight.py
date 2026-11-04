@@ -354,9 +354,14 @@ def main():
              lambda code, j: ('通过', '没有“本平台不可用”的死按钮；每个分享调用都在 docs/ 记录了删掉或改成看广告') if code == 0 else
              ('需处理', first_items(j.get('problems'))))
     tool_row('声音设置', 'audit_sound_settings_static.py', ['--project', proj, '--out', out / 'sound_settings.json'], 'sound_settings.json',
-             lambda code, j: ('需处理', first_items(j.get('problems'))) if j.get('status') == 'needs_fix' else
-             ('提示', '源码里没认出：' + first_items(j.get('review')) + '；用设置页实际试音乐和音效两个音量') if j.get('status') == 'review' else
-             ('通过', '有背景音乐，音乐和音效分开调（实际输出仍由 audit_sound_settings.py 按录制记录判断）'))
+             # 简化.11.3（CubeDigits 声音要求第 1 步）：review 不算通过，最终阶段是需处理；有声音控件就要查，英化/老游戏/
+             # “这轮没改声音”都不是理由；不适用只认 docs/audio/silent_design.md 且没有任何声音控件
+             lambda code, j: ('需处理', first_items(j.get('problems'))) if j.get('status') in ('fail', 'needs_fix') else
+             (('需处理' if a.stage == 'final' else '提示'), '未确认，不算通过：' + first_items(j.get('review'))
+              + '；用设置页实际试音乐和音效两个音量') if j.get('status') == 'review' else
+             ('不适用', '静音设计（' + str(j.get('silent_record')) + '），源码里没有声音控件、音频文件和播放调用')
+             if j.get('status') == 'not_applicable' else
+             ('通过', '有背景音乐，音乐和音效分开调，有音频文件和播放调用（实际输出仍由 audit_sound_settings.py 按录制记录判断）'))
     lc_args = ['--project', proj, '--mode', 'review', '--out', out / 'logic.json'] + (['--stage', 'final'] if a.stage == 'final' else [])
     tool_row('逻辑检查', 'logic_check.py', lc_args, 'logic.json',
              lambda code, j: ('需处理', f"静态疑点{j.get('open_findings')}处待处理：" + first_items(j.get('top'))

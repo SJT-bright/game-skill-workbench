@@ -28,8 +28,12 @@ var variants = [
     before: 'fresh.meta.recoveredFromCorrupt = this.now();', after: ''},
   // v1.2 (D4 1.3, D4 6, D6 4/9)
   {name: 'mission_sdk_lookup_only_ttminis', file: 'MissionFlow.js',
-    before: "typeof tt !== 'undefined' && tt,\n    typeof wx !== 'undefined' && wx\n  ];\n  for (var i = 0; i < candidates.length; i++) {\n    var c = candidates[i];\n    if (c && (typeof c === 'object'",
-    after: "false,\n    false\n  ];\n  for (var i = 0; i < candidates.length; i++) {\n    var c = candidates[i];\n    if (c && (typeof c === 'object'"},
+    before: "typeof tt !== 'undefined' && tt,\n    typeof wx !== 'undefined' && wx\n  ];\n  var names = ",
+    after: "false,\n    false\n  ];\n  var names = "},
+  // 简化.11.3: a runtime whose mission methods exist but has no canIUse must still count as TikTok.
+  {name: 'flow_native_requires_canIUse', file: 'MissionFlow.js',
+    before: "var names = ['canIUse', 'addShortcut', 'startEntranceMission', 'getShortcutMissionReward', 'getEntranceMissionReward'];",
+    after: "var names = ['canIUse'];"},
   {name: 'unreadable_value_not_checked_against_storage_keys', file: 'SaveStore.js',
     before: 'if (known && keys.indexOf(this.key) < 0) return this._fresh();', after: ''},
   {name: 'missing_key_defaults_not_written', file: 'SaveStore.js',

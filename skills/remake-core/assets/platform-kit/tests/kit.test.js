@@ -355,6 +355,26 @@ function setup(options) {
       flow.dispose();
     } finally { delete globalThis.tt; }
   });
+  await test('flow_runtime_without_canIUse_is_native_and_still_calls', async function () {
+    // 简化.11.3: a runtime with the mission methods but no canIUse (or canIUse answering undefined) is TikTok.
+    var fake = missionSDK();
+    delete fake.sdk.canIUse;
+    delete globalThis.TTMinis; globalThis.tt = fake.sdk;
+    try {
+      var store = new SaveStore({coins: 0}, {storage: memoryStorage(), key: 'k'}); store.load();
+      var last = null;
+      var flow = new MissionFlow({store: store, missionTimeoutMs: 60, reward: function () {}, render: function (v) { last = v; }});
+      flow.open('profile', {navigate: true});
+      assert.strictEqual(last.native, true, 'no canIUse is still native');
+      assert.strictEqual(fake.calls.filter(function (c) { return c.method === 'startEntranceMission'; }).length, 1, 'the tap goes to TikTok');
+      flow.dispose();
+      fake.sdk.canIUse = function () { return undefined; };
+      flow = new MissionFlow({store: store, missionTimeoutMs: 60, reward: function () {}, render: function (v) { last = v; }});
+      flow.open('shortcut', {navigate: true});
+      assert.strictEqual(fake.calls.filter(function (c) { return c.method === 'addShortcut'; }).length, 1, 'canIUse answering undefined does not block');
+      flow.dispose();
+    } finally { delete globalThis.tt; }
+  });
   await test('flow_no_sdk_at_all_is_local_preview', async function () {
     delete globalThis.TTMinis; delete globalThis.tt; delete globalThis.wx;
     var store = new SaveStore({coins: 0}, {storage: memoryStorage(), key: 'k'}); store.load();

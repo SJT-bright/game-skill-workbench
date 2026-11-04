@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T07:17:12.185Z",
-  "treeHash": "2953c2d50ef57a10c3957e51f2db5c300d4f6c9a95a1862a31088d0db6f3fbcd",
+  "createdAt": "2026-11-04T07:18:40.902Z",
+  "treeHash": "c1c0fa28c843fbf8edba4cbde749a209085675e7d793e3537138e9fe66b75482",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3027,14 +3027,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "1a9d282eafc1cda5668c7e9fb41380b4f6a5cedb2d5a2685e60a3dbaeff6c963",
-      "fileCount": 410,
-      "bytes": 9095987,
+      "treeHash": "e6b5a06c9ea6caf185d71d3289e7b0c938578bfdf25cf0a833996af6da725208",
+      "fileCount": 416,
+      "bytes": 9160091,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "1bfb8bde644deb5405cb11430700230e1602b6e4ea05fe9eec53cba813404550",
-          "size": 70878,
+          "hash": "5b154bddf0da153bf2bdf5c77e2983886886ab2e67870dbd20d820cb485c0083",
+          "size": 72172,
           "executable": false
         },
         {
@@ -3111,14 +3111,14 @@
         },
         {
           "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-          "hash": "37ecb21d772eafc37714fd475873983c5271adb7bbafc6d839497858b86384a3",
-          "size": 10219,
+          "hash": "450f896907af032640bdf096448828ea49ed59ffc6768c0bf2dc527123e351f1",
+          "size": 10029,
           "executable": false
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "13a4c81b8839a85f2715e4c89ad6692b39fe4f9708474c2e50b922d6918b55a9",
-          "size": 23679,
+          "hash": "6228f95721e9a1d8e992d3075213452577bdd49e2eca520def378d9c860394ee",
+          "size": 22853,
           "executable": false
         },
         {
@@ -3135,14 +3135,14 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
-          "hash": "990838bec8137648276bc7e69b0d99bd4ceefcd9ebfcf884d0d3ddfe97b582e4",
-          "size": 8235,
+          "hash": "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122",
+          "size": 10854,
           "executable": false
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
-          "hash": "956d1446df9293d0d70c815053f45b95e564a309b13e1956c08db6abe705e25d",
-          "size": 9860,
+          "hash": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
+          "size": 10614,
           "executable": false
         },
         {
@@ -3165,8 +3165,8 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
-          "hash": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
-          "size": 5288,
+          "hash": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
+          "size": 5880,
           "executable": false
         },
         {
@@ -3213,14 +3213,14 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-          "hash": "095c412d4c7b682460e4f67d04f429ad2cc171ce03527000e37f61e5fc6b645f",
+          "hash": "1716e25e6ab7f6be06b68cfd30a2d2fe490f38392e97be30e95027e84c1c6fb1",
           "size": 7312,
           "executable": false
         },
         {
           "path": "assets/platform-kit/plugins-3x/MissionFlow.plugin.js",
-          "hash": "962b9ce639885d9db9e3e7eb1c99153ec5604731ada16d8bdbeca608afe87d8f",
-          "size": 11970,
+          "hash": "fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919",
+          "size": 12810,
           "executable": false
         },
         {
@@ -3243,8 +3243,8 @@
         },
         {
           "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
-          "hash": "87459c5d43580e94de6531f24e59c5cc75ba8072f0ab013b5badb8c162c41df8",
-          "size": 7538,
+          "hash": "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d",
+          "size": 8130,
           "executable": false
         },
         {
@@ -3285,26 +3285,26 @@
         },
         {
           "path": "assets/platform-kit/tests/home-entries-negative-controls.js",
-          "hash": "768bba9214b6c4a6e1cebb6709a3eaf51916e6029b77d8d22109df86b1dd836d",
-          "size": 2136,
+          "hash": "ae56da710dfdd1bd2cdbf3f37bc13ee90f4e876937fc9cce5fe1c7a072b918de",
+          "size": 3406,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/home-entries.test.js",
-          "hash": "d9746e6421590eeb43792caa86fc9cba357c48045384eee92a3111a15d3467a2",
-          "size": 9944,
+          "hash": "f6f5f3a788acbdf43131f8477a4d36e260649c77aef278ce1f1c3c8344d5f1a0",
+          "size": 15471,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/kit-negative-controls.js",
-          "hash": "174a71b3b8c785e8f8db18b85435640187bf9513f7d342d64f6a6382727bfda7",
-          "size": 4412,
+          "hash": "097634ad7070a3dd55efd8c8629aeaee2e14d04b487f7efe54b653fb52f9400a",
+          "size": 4559,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/kit.test.js",
-          "hash": "256cf2c7c149fa5ed7d19dc920767ea8a9876d4a5d0e277a39be6551b60be704",
-          "size": 25377,
+          "hash": "63a081fa9f41c24dffec09cd857ea8198cf11a756163aca91a40acc3abac8c1a",
+          "size": 26702,
           "executable": false
         },
         {
@@ -3392,6 +3392,18 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474.txt",
+          "hash": "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474",
+          "size": 8200,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/MissionFlow/273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f.txt",
+          "hash": "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f",
+          "size": 9774,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tools/kit_versions/MissionFlow/306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee.txt",
           "hash": "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee",
           "size": 9809,
@@ -3425,6 +3437,12 @@
           "path": "assets/platform-kit/tools/kit_versions/SaveStore/954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406.txt",
           "hash": "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406",
           "size": 5391,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4.txt",
+          "hash": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
+          "size": 5288,
           "executable": false
         },
         {
@@ -3585,8 +3603,8 @@
         },
         {
           "path": "references/check-stages.md",
-          "hash": "7589802bfcca4b9b89bace5117d9694f941f0e7a536742086e36296207d96246",
-          "size": 7449,
+          "hash": "5c7703205df674e8ec46bae79944fe66823dad4242dd2a376157f993181344f6",
+          "size": 7549,
           "executable": false
         },
         {
@@ -3693,8 +3711,8 @@
         },
         {
           "path": "references/optional-grok.md",
-          "hash": "2dbc3a0460c3ebaf96874be425563b652d9eb4090d432434c8d811c99f4feb22",
-          "size": 4121,
+          "hash": "b51f2e00174edbdee49e383631cceb6e43cde5587d64df4a1697cc928fb0dc18",
+          "size": 3869,
           "executable": false
         },
         {
@@ -3735,8 +3753,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "e84231f09c1a4a1657aeb63c6d2bcff34b2558ff144cfbe12f309dd77665434f",
-          "size": 40676,
+          "hash": "7ba0cde2dcb7651b352c3c4ae445491717c7d3edfd0671b062ee12a8f48b86ca",
+          "size": 40736,
           "executable": false
         },
         {
@@ -4065,8 +4083,8 @@
         },
         {
           "path": "scripts/audit_sound_settings_static.py",
-          "hash": "1ef1cd6ff5df98fa979cfcc42cfaaa99c69fdad2bf566e2a79ffd282c3b61dce",
-          "size": 5363,
+          "hash": "6b17c825a9d4c2a09616b08d54278bc9d52c4d55b646a6ef99922391cecaea7f",
+          "size": 11372,
           "executable": false
         },
         {
@@ -4359,14 +4377,14 @@
         },
         {
           "path": "scripts/package_gates/__init__.py",
-          "hash": "c11c26c1460dcb4070fe5ec3e2d1f2f295f1a3b07579ad9f37f5078c6805a596",
-          "size": 10611,
+          "hash": "dcdae8c69f63caade86e63d4df8397127d4f6cb74dfab0b29a3d3b1f71224d17",
+          "size": 10620,
           "executable": false
         },
         {
           "path": "scripts/package_gates/adapter_fix.py",
-          "hash": "bbddfbd34ca392cea83f5e2640e389c05690b8a25a1837530a26a2b01f2b221e",
-          "size": 14543,
+          "hash": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19",
+          "size": 13147,
           "executable": false
         },
         {
@@ -4409,6 +4427,12 @@
           "path": "scripts/package_gates/portrait.py",
           "hash": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
           "size": 1647,
+          "executable": false
+        },
+        {
+          "path": "scripts/package_gates/sound.py",
+          "hash": "12c34267f17d582ef2f6ee214dd5e74b466837bdadadd158e023de970d6b6d29",
+          "size": 9009,
           "executable": false
         },
         {
@@ -4467,8 +4491,8 @@
         },
         {
           "path": "scripts/preflight.py",
-          "hash": "06950049d2d16987c34d9a06cc1f9690220d934b5f8e0d0372864d292688cf0a",
-          "size": 46693,
+          "hash": "a6c113c7454ef1739bbf09280d030cbf8c634b7425df9277b119111478d96504",
+          "size": 47288,
           "executable": false
         },
         {
@@ -4721,6 +4745,12 @@
           "path": "scripts/test_audit_copy_dynamic_labels.py",
           "hash": "c703e25bcbcb3985a4ba83fd978d6dfeb086459c887874ac700bae3507d66c78",
           "size": 2596,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_audit_sound_settings_static.py",
+          "hash": "d605b07cc0c2631833573773b4a233da09d4dbd517c1c1932481d6766489c5a6",
+          "size": 5804,
           "executable": false
         },
         {
@@ -5037,8 +5067,8 @@
         },
         {
           "path": "scripts/test_package_gates_audio.py",
-          "hash": "83f29182c2b0510ba6493166f8226b1540cf206e416b2a5da38310473f78eca3",
-          "size": 11013,
+          "hash": "3d5e4fac0b1457f788634d7650a3e436a063da60ea197b8c4ec66c860899943f",
+          "size": 11115,
           "executable": false
         },
         {
@@ -5063,6 +5093,12 @@
           "path": "scripts/test_package_gates_network.py",
           "hash": "99fbdcfd22cd60a47ac15b29e39f45cee83e7f61666dd4254ba8bcf3b9b1ceae",
           "size": 7606,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_package_gates_sound.py",
+          "hash": "55c4b1b6139e542120d9405fdf6c0a9e67f7b1019caefdb7afd240a514dbd44e",
+          "size": 6858,
           "executable": false
         },
         {

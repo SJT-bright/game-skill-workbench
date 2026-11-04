@@ -33,7 +33,7 @@ import re
 from pathlib import Path
 
 GATE_MODULES = ('network', 'mission', 'startup', 'webp', 'ads_static', 'adapter_fix', 'kit_parts', 'tiktok_compat',
-                'portrait', 'audio')
+                'portrait', 'audio', 'sound')
 POLICIES = ('new', 'legacy')
 CONTEXT_KEYS = ('writer', 'finalize_record', 'project', 'finalize_options')
 

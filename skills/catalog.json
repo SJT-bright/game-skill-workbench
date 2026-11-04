@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T13:28:37.125Z",
-  "treeHash": "8d0c38eff9389d58434d294a9fe9024d1c908b29463acc974274fc88947728bd",
+  "createdAt": "2026-11-04T13:29:05.867Z",
+  "treeHash": "12e267e9c4bd5020bf73b38745c168a9aa2160fb54d613f785ccd4b75a4ea629",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1843,20 +1843,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "7086ec6222a148a02b071094b66f617bfa7e941abf1edc19d20ca96a24e2d6cd",
+      "treeHash": "a00c356dbf36d3d545d37790f762ab32d05a5ce668a87dae99e2bd69a57145df",
       "fileCount": 29,
-      "bytes": 483650,
+      "bytes": 485560,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "12d005473df10d57a47b3e3d8f7b0556cfe71bc98392fd76273dd005d16b7ac5",
+          "hash": "91c334c01283ce10b9e309b19a6cd851f6f907c55fe7ea5f818a7a1526e71736",
           "size": 4913,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "7e4fc963a5040330021db3dcd0a68a828f36a56b908c6e1f78f89cf1a49ad3af",
-          "size": 60748,
+          "hash": "d5991d2a9d869a7edb3fec3a1c1d37b9a75aa26daeb354af870f094ca4dda507",
+          "size": 61106,
           "executable": false
         },
         {
@@ -1975,8 +1975,8 @@
         },
         {
           "path": "scripts/stage_timer.py",
-          "hash": "53588e9c21b58de43eca74f7f235a7a57e0b3edc768f1b6988be9e7ac0923d94",
-          "size": 32866,
+          "hash": "b644164a830b4de9305c9f97378038f381a6f69d2693bde6955c5daab8faa564",
+          "size": 32922,
           "executable": false
         },
         {
@@ -1993,8 +1993,8 @@
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "66caa5dc30b9962ada9231c2d7dcd64beb96d939785329af05152c56cfd463b6",
-          "size": 60688,
+          "hash": "a8cc55efb8203d35b09698576a64643be5991adae7b7a40f21f7d3950399c1e1",
+          "size": 62184,
           "executable": false
         },
         {

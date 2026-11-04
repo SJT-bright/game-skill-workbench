@@ -71,7 +71,8 @@ README = PACK / 'README_先看这里.txt'
 CODEX_TEXT = PACK / '发给Codex自动安装_复制这段话.txt'
 AD_BOARDS = ('remake-ads', 'remake-economy')
 # This pack's Skill folders (an install folder such as ~/.agents/skills also holds other people's Skills).
-OWN = ('cocos-game-to-english', 'cocos-game-check', 'remake-core', 'remake-art') + AD_BOARDS
+SKIN_BOARD = 'remake-skins'   # 简化.11.4 (Saul 2026-11-04): the skin board ships with the English pack
+OWN = ('cocos-game-to-english', 'cocos-game-check', 'remake-core', 'remake-art') + AD_BOARDS + (SKIN_BOARD,)
 LINK = re.compile(r'\]\(([^)\s]+)\)')
 
 
@@ -236,7 +237,7 @@ class AdBoardsUsedWithoutAsking(unittest.TestCase):
 
     def test_links_of_entry_and_boards_resolve(self):
         bad = []
-        for name in ('cocos-game-to-english',) + AD_BOARDS:
+        for name in ('cocos-game-to-english',) + AD_BOARDS + (SKIN_BOARD,):
             for p in sorted((PACK / name).rglob('*.md')):
                 for m in LINK.finditer(p.read_text(encoding='utf-8')):
                     t = m.group(1)
@@ -255,10 +256,26 @@ class AdBoardsUsedWithoutAsking(unittest.TestCase):
             self.skipTest('installed copies have no pack README; the release tree and ZIP do')
         readme = README.read_text(encoding='utf-8')
         skills = readme.split('本包的 Skill：', 1)[1].split('\n\n', 1)[0]
-        for name in AD_BOARDS:
+        for name in AD_BOARDS + (SKIN_BOARD,):
             self.assertIn('- %s：' % name, skills)
         if CODEX_TEXT.is_file():
             self.assertNotIn('本包不需要重塑包', CODEX_TEXT.read_text(encoding='utf-8'))
+
+
+class SkinBoardLinks(unittest.TestCase):
+    """简化.11.4 (Saul 2026-11-04): skins always come with the currency and the ads; the three boards point at each other."""
+
+    def test_skin_board_is_in_the_pack_and_says_so(self):
+        text = (PACK / SKIN_BOARD / 'SKILL.md').read_text(encoding='utf-8')
+        self.assertIn('## 皮肤一定连着货币和广告（Saul 2026-11-04）', text)
+        for target in ('../remake-economy/SKILL.md', '../remake-ads/SKILL.md',
+                       '../remake-economy/references/economy-rules.md#6-看广告试用皮肤的弹窗econ-skintrial'):
+            self.assertIn('](%s' % target, text)
+        self.assertIn('skin_links', text)
+
+    def test_economy_and_ads_link_back(self):
+        for name in AD_BOARDS:
+            self.assertIn('](../remake-skins/SKILL.md)', (PACK / name / 'SKILL.md').read_text(encoding='utf-8'), name)
 
 
 class ResultPageClaimLink(unittest.TestCase):
@@ -313,7 +330,7 @@ class AdBoostAndRedesign(unittest.TestCase):
         for phrase in ('](../ad-boost/SKILL.md)', '--mode localize', '不出选择题、不问 Saul', '「缺必备」或「少」加前 3 个',
                        '「一般」加前 2 个', '「多」加第 1 个', '只在原游戏本来就有这个系统时才加', '奖励关会动原关卡，不加',
                        '原首页按钮一个都不动', '新入口只放空位', '没有空位时不问', '跟原游戏画风走', 'CHANGELOG.md',
-                       '放到第 5 阶段一起做', '英化游戏以本页为准', '按英化默认做法加入'):
+                       '广告奖励行为及广告回归）放到第 5 阶段', '英化游戏以本页为准', '按英化默认做法加入'):
             self.assertIn(phrase, part, phrase)
         for old in ('Saul 说广告太少时用 ad-boost', '选择题里选了哪个板块，就是授权', '没有空位时问 Saul 放哪'):
             self.assertNotIn(old, text, old)
@@ -358,18 +375,21 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         self.assertIn('试玩改进', st[4])
         self.assertIn('全量检查和出包（Saul 说试玩没问题以后）', st[5])
         lead = section.split('1. **盘点**', 1)[0]
-        for phrase in ('检查一条都不减', '出包门禁一条都不放松', '电脑上试玩看不出来的', '英化以本页为准'):
+        for phrase in ('修复并复查通过后给英文试玩链接', '已知问题、平台兼容和写包入口仍在第 5 阶段', '以本页为准'):
             self.assertIn(phrase, lead, phrase)
-        for late in ('art_check.py', '两种手机尺寸', 'check_known_issues.py', 'preflight.py', 'make_tiktok_zip.py',
+        for early in ('art_check.py', 'iPhone SE', '真实点击', '动态画面', '修复'):
+            self.assertIn(early, st[3])
+        self.assertIn('复查受影响整页、共享组件和新增页面', st[4])
+        for late in ('check_known_issues.py', 'preflight.py', 'make_tiktok_zip.py',
                      'build_checked_zip.py', '广告回归 10 例', 'tiktok_finalize.py source', 'image-review.json'):
             self.assertNotIn(late, st[3], late)
             self.assertNotIn(late, st[4], late)
             self.assertIn(late, st[5], late)
 
-    def test_link_needs_only_the_start_checks(self):
+    def test_trial_link_requires_language_art_and_playable_start(self):
         _, st = self.stages()
         # 简化.11 (Saul 2026-11-01): the Chinese check comes first, then the same three start checks
-        for phrase in ('中文专项检查过了，再确认三件', '能进首页', '能开始玩一局', '没有报错卡死', '--ad-simulator', '不加 `--keep`',
+        for phrase in ('中文专项检查和完整美工检查都通过后，再确认三件', '能进首页', '能开始玩一局', '没有报错卡死', '--ad-simulator', '不加 `--keep`',
                        '--idle-minutes 0'):
             self.assertIn(phrase, st[3], phrase)
         self.assertNotIn('--snapshot --keep', st[3])
@@ -385,17 +405,17 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         for phrase in ('广告', 'TikTok', '手机上'):
             self.assertIn(phrase, dont)
 
-    def test_trial_improve_stage_runs_no_checks(self):
+    def test_trial_improve_rechecks_changed_art_before_next_link(self):
         _, st = self.stages()
-        for phrase in ('AI 不跑别的检查', '一次全部改完', '只构建一次', '只看改过的地方', 'Saul 点名', '直到 Saul 说试玩没问题',
+        for phrase in ('其余检查留到第 5 阶段', '一次全部改完', '只构建一次', '复查受影响整页、共享组件和新增页面', 'Saul 点名', '直到 Saul 说试玩没问题',
                        '先停掉上一轮的试玩服务', '不能只叫他刷新'):
             self.assertIn(phrase, st[4], phrase)
         self.assertNotIn('刷新同一个链接', (ENTRY / 'SKILL.md').read_text(encoding='utf-8'))
 
     def test_full_checks_keep_every_check(self):
         _, st = self.stages()
-        for phrase in ('检查一条不减', '原来给链接前做的，挪到这里', '只修硬问题', '没提意见的画风和配色不重做',
-                       '用鼠标把首页和各页面的按钮点一遍', 'logic_check.py', 'TikTok 固定适配', '运行时套件由写包入口跑',
+        for phrase in ('检查一条不减', '核对最后通过的美工证据与当前交付版本一致', '缺图、变形、色带', '不重复评审已认可的画风和配色',
+                       '用户可见的改动先给通过美工检查的新链接确认', 'logic_check.py', 'TikTok 固定适配', '运行时套件由写包入口跑',
                        '不再问一次'):
             self.assertIn(phrase, st[5], phrase)
 
@@ -474,8 +494,8 @@ class AdBoostBundled(unittest.TestCase):
         section = text.split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
         st = {int(p[0]): p for p in re.split(r'\n(?=[1-5]\. \*\*)', section) if p[:1].isdigit()}
         lead = section.split('1. **盘点**', 1)[0]
-        self.assertIn('第 8 项 ad-boost 的诊断', lead)          # 10.2.7: the boards themselves come in round 2
-        self.assertIn('第 8 项的板块做完', lead)
+        self.assertIn('第一轮美工和 ad-boost 诊断', lead)          # 10.2.7: the boards themselves come in round 2
+        self.assertIn('ad-boost 板块也先查再带入链接', lead)
         self.assertIn('默认加哪几个板块', st[3])
         self.assertIn('第 8 项加的板块', st[3])
         self.assertIn('modules/<板块>/README.md` 第 8 节验收', st[5])
@@ -587,12 +607,12 @@ OLD_VERSION_NOTES = ('11.1', '11', '10.2.12', '10.2.11', '10.2.10', '10.2.9', '1
 # (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
 PRE_TRIAL_NOTES = (
     ('remake-art/SKILL.md', '两轮自审', '英化第一轮重新生成按钮和文字不算下文说的“完整首次重做”'),
-    ('remake-art/references/art-before-trial.md', '加载失败/重试状态', '> **英化包说明（10.2.8）**：英化游戏不照本页把美术检查放在交试玩前'),
-    ('remake-art/references/page-richness.md', '至少两轮自审', '英化例外：英化第一轮重新生成按钮和文字不算整套重做'),
+    ('remake-art/references/art-before-trial.md', '加载失败/重试状态', '英化每轮英文试玩链接前同样要完成美工检查'),
+    ('remake-art/references/page-richness.md', '至少两轮自审', '每轮英文试玩链接前须按英化入口第 3 阶段完成美工检查'),
     ('remake-core/references/tiktok-home-growth.md', '交用户试玩前就做小样本', '英化游戏例外：都放到英化入口第 5 阶段做'),
     ('remake-core/assets/user-playtest-checklist-template.md', 'AI 在给你试玩前已经走过', '英化游戏不用本模板'),
-    ('remake-core/references/stage-flow.md', '所有美术测试在交用户试玩前完成', '英化游戏不照这条：美术检查都在英化入口第 5 阶段做'),
-    ('remake-core/references/check-stages.md', '| 美术关 |', '英化在英化入口第 5 阶段（Saul 说试玩没问题以后）查'),
+    ('remake-core/references/stage-flow.md', '所有美术测试在交用户试玩前完成', '英化同样在每轮英文试玩链接前完成美工检查'),
+    ('remake-core/references/check-stages.md', '| 美术关 |', '英化在每轮英文试玩链接前查'),
     ('cocos-game-to-english/references/dynamic-text-glyph-review.md', '成功/失败结算', '第 5 阶段全量检查时覆盖'),
 )
 
@@ -650,7 +670,7 @@ class StructureAndReadingMap(unittest.TestCase):
             self.assertIn(old, text, rel)
             self.assertIn(note, text, rel)
         lead = self.text().split('\n## 阶段', 1)[1].split('1. **盘点**', 1)[0]
-        for shared in ('`cocos-game-check/SKILL.md`', '`cocos-game-check/startup/references/cocos-loading-screen.md`', 'v7.9 两包一起改'):
+        for shared in ('第 3 阶段和美工 Skill 验收清单','其余全量检查和出包','写包入口仍在第 5 阶段'):
             self.assertIn(shared, lead, shared)
 
     def test_readme_keeps_only_the_current_note(self):
@@ -847,7 +867,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
         self.assertNotIn('④ 试玩改进：不跑检查', summary)
         section, _ = self.stages()
         lead = section.split('1. **盘点**', 1)[0]
-        self.assertIn('**中文专项检查例外（Saul 2026-11-01）**', lead)
+        self.assertIn('中文专项检查、完整美工检查，修复并复查通过后给英文试玩链接', lead)
         self.assertNotIn('只确认能进首页、能玩一局，不跑检查。', lead)
 
     def test_stage_three_runs_scan_review_check_and_the_gated_link(self):
@@ -860,7 +880,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
             self.assertIn(phrase, three, phrase)
         link = [l for l in three.splitlines() if l.startswith('   起链接：')][0]
         self.assertIn('serve_preview.py --directory <这轮的 Web 导出> --project <工程> --snapshot --open --idle-minutes 0', link)
-        self.assertLess(three.index('**中文专项检查'), three.index('中文专项检查过了，再确认三件'))
+        self.assertLess(three.index('**中文专项检查'), three.index('中文专项检查和完整美工检查都通过后，再确认三件'))
 
     def test_stage_one_link_is_marked_chinese_original(self):
         _, st = self.stages()
@@ -868,7 +888,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
 
     def test_later_rounds_and_the_delivery_link_check_again(self):
         _, st = self.stages()
-        self.assertIn('只有每轮起新链接前的中文专项检查照做', st[4])
+        self.assertIn('每轮起新链接前做中文专项检查和受影响范围的完整美工复查', st[4])
         self.assertIn('scan 只识新加和改过的图', st[4])
         self.assertIn('中文专项检查照第 3 阶段对这份导出再过一次', st[5])
         self.assertIn('不能拿试玩的结果代替', st[5])
@@ -886,7 +906,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
             self.assertIn(phrase, bullet, phrase)
 
     def test_art_copy_names_the_exception(self):
-        self.assertIn('英文试玩链接前只过中文专项检查', read('remake-art', 'references', 'art-before-trial.md'))
+        self.assertIn('中文专项检查另行照做；广告回归、平台兼容和其余出包检查仍在英化入口第 5 阶段', read('remake-art', 'references', 'art-before-trial.md'))
 
     def test_wrapper_offers_the_two_flags_and_the_tools_exist(self):
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')

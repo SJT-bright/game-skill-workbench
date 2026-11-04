@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T07:18:40.902Z",
-  "treeHash": "c1c0fa28c843fbf8edba4cbde749a209085675e7d793e3537138e9fe66b75482",
+  "createdAt": "2026-11-04T07:19:12.339Z",
+  "treeHash": "a5762d7489584deb2f88c36c776a0c113d22243fec8b13aaa0f16a304e84b539",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2785,9 +2785,9 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "239dc3347d57a3723de1c98ccd2a29383493f4b7ccb7b25ab640378a138a38d9",
-      "fileCount": 39,
-      "bytes": 1122131,
+      "treeHash": "64c394b8ffc70f91d818cabb68500408678abb77710821bdb1c855c4c31b1cca",
+      "fileCount": 40,
+      "bytes": 1135218,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2797,8 +2797,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "eda7a15725e4ddbd6954574d1e279235015f1962a05103afb83cd3d1101ce483",
-          "size": 15522,
+          "hash": "7314e954075ea109cd5eca2b1260c7ac352c609e3e1261c9d77863b08dd0792d",
+          "size": 16714,
           "executable": false
         },
         {
@@ -2821,8 +2821,8 @@
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "8d161f671dce519283268050dcea7a47c2e5a4525b14e47ef0bb0ca84977eaa0",
-          "size": 5697,
+          "hash": "f312f438c383f7563342033acd7577e961d64b18381d29e960cfc73bc4f9e0bc",
+          "size": 5852,
           "executable": false
         },
         {
@@ -2911,8 +2911,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "49336c1017d726302fb40707b117237799d106754ef43f25b81080eb0c3ca95c",
-          "size": 93612,
+          "hash": "84b8b31fc9882c188dde0f557ea35d21cd90b7b7820b7a73a49ce03814aec722",
+          "size": 93681,
           "executable": false
         },
         {
@@ -2928,9 +2928,15 @@
           "executable": false
         },
         {
+          "path": "references/production-prevention.md",
+          "hash": "1cf0f2311e57145e7e10c4ad7f518e1c418d554102008f456e011f4c4f00cb46",
+          "size": 11493,
+          "executable": false
+        },
+        {
           "path": "references/saul-art-rules.md",
-          "hash": "f285acb5eb1d0ae6f118e80c3f4135bc8fbe37d9365a83b029252c896c160842",
-          "size": 49342,
+          "hash": "e1fb3c4097bef119feae94b69bffde9233f1a13f129f099ce667b183a34fec2c",
+          "size": 49520,
           "executable": false
         },
         {

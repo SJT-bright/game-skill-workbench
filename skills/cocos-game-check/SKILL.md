@@ -59,6 +59,8 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 模拟功能验收必须先按实际画面盘点，再逐个实点并验证业务结果；只有 Sprite、没有点击绑定的按钮样式区域也须纳入。完整验收覆盖实际存在的页面与条件状态，局部修复覆盖受影响页面和状态；同版有效证据可复用。漏测、受限、无响应不得写“所有按钮通过”。执行时必读[逐按钮覆盖规则](test/references/button-interaction-coverage.md)，报告应测、实点、复用、失败和未测数量；button_sweep 的 passed 不能代替此项验收。
 
+英化复合控件有历史漏检时，制作方提供目标槽、状态、正常参考和原问题图；统一检查按[局部 UI 契约](../remake-art/references/local-ui-contract.md)调用 art_check 的局部入口，使用 pixel_reference 或 pixel_regions 校准按钮占用、文字分区和角标可见性；素材切片另走源图检查。记录具体声明和跑到的状态。
+
 ## 规则
 
 - **TikTok 与 Cocos 的触摸差别（用户 2026-10-28，最严重的一类“点不动”）**：Cocos Creator 2.4 的触摸转换（`getTouchesByEvent`）读触点的 `clientX/clientY`，TikTok 运行环境给的触点只有 `screenX/screenY`，算出的坐标是无效值，扫码后按钮点不动、常卡在首页。浏览器手机模拟会给 `clientX`，**测不出这个问题**。所以每个 Cocos 2.x 的 TikTok 包都必须带平台包的 `touch-coordinates.js`（v7.7 起由写包入口里的 `tiktok_finalize` 自动装上：产物 `main.js` 是平台包 `main.js` 时由它加载，否则在 `game.js` 里插一行；不要自写 patch_build 替代，见 [TikTok 固定适配·出包时怎么装](references/tiktok-fixed-adaptation.md)），并通过 `remake-core/scripts/audit_upload_startup.py` 里的触摸坐标探针（`probe_cocos2_touch_coordinates.cjs`，对打包产物真实执行，只给 screenX/screenY 也要得到有效坐标）。探针不过不出包。**Cocos 3.x 包同样必查（v7.4，Marlows r4 漏过）**：3.x 的小游戏触摸输入同样读 `clientX/clientY`，缺字段时引擎的 Vec2 把 NaN 变成 0，点哪里都落在左下角 (0,0)。`audit_upload_startup.py` 对 `web-adapter.js` + `cocos-js/` 的包运行 `probe_cocos3_touch_coordinates.cjs`：真实执行包里的 `game.js` → `web-adapter.js`（以及引擎加载前 require 的修正模块，如 `marlow-touch.js`、`grotto-touch.js`），触点只带 `identifier/screenX/screenY/force`，再走引擎自己的 SDK 拷贝和触摸回调；引擎收到的坐标必须是有限值、在屏幕内、并且落在点按的位置上才算通过。修正要在引擎加载（`System.warmup`/`System.import`）之前装到 `tt.onTouch*` 上。**探针结果为空（`touch_coordinates: null`）不算通过**：TikTok 的 Cocos 2.x/3.x 包认不出引擎触摸转换时直接失败，并写明原因。

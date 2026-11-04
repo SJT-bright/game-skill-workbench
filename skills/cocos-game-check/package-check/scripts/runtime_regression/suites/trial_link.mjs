@@ -3,14 +3,9 @@
 // (found by window.cc): serve_preview.py's fixed-phone shell with --ad-simulator, or a TikTok-package host page.
 // Desktop window 1180 x 960, fresh save, stable scene, then the taps that lead to a rewarded ad with the real mouse:
 // adapter.trial.taps (or trial.open[].tap + trial.ad_button), else the first home button whose texts / sprite names
-// read like an ad entry (layout_rules.AD_WORDS; up to 3 tried). Within 2.5 s the player must SEE an answer:
-//   a page element covers the game and is on top at its centre (the simulated ad window: serve_preview's
-//   #__ad-simulator in its shadow root, the TikTok host's #__adOverlay), or a toast / modal, or an on-screen text change.
-// If an ad window is up, its 看完 / complete button is clicked once it is enabled; the game must then change
-// (adapter.trial.reward_js changes, else any on-screen text changes).
-//   ad_window_hidden  tapped, nothing visible: the game waits for an ad result and looks frozen (B21: the window was
-//                     appended to the adapter's fake body)
-//   reward_missing    看完 picked in the ad window, nothing changed in the game
+// read like an ad entry. A plain preview checks for a visible response (including unavailable).
+// An injected preview or a simulated TikTok host requires its actual ad panel to open in 2.5 s,
+// then waits separately for an enabled completion control and observes the game after tapping it.
 // No ad entry known or found: the suite records "not run" with the reason (a warning, never a pass of the window check).
 const L = await import(globalThis.CFG.lib);
 const R = await import(new URL('layout_rules.mjs', globalThis.CFG.lib).href);
@@ -81,27 +76,48 @@ const SEEN = `(function(){ var g = ${GW}; if (!g) return { err: 'no game window'
   var cv = Document.prototype.querySelector.call(g.w.document, 'canvas'), cr = Element.prototype.getBoundingClientRect.call(cv);
   var fr = g.f ? g.f.getBoundingClientRect() : { left: 0, top: 0, width: 0 }, sc = g.f ? (fr.width / (g.f.offsetWidth || fr.width)) : 1;
   var tt0 = g.w.tt || (g.w.__H && g.w.__H.G && g.w.__H.G.tt);
-  var res = { smoke: tt0 && tt0.__smoke, overlay: null };
-  function findBtn(root) { var all = root.querySelectorAll('button,[data-r],a,div'), hit = null;
-    for (var i = 0; i < all.length && !hit; i++) { var tx = (all[i].textContent || '') + ' ' + (all[i].getAttribute('data-r') || '');
-      if (/看完|complete|finish|发奖|watched/i.test(tx) && all[i].children.length === 0) hit = all[i]; } return hit; }
+  var local = g.w.__adSimulator;
+  var injected = Document.prototype.querySelector.call(g.w.document, 'script[src="/__local_ad_simulator.js"]');
+  var record = local && local.records && local.records[local.records.length - 1];
+  var res = { simulation: !!(local || injected || g.w.__adStats), local: !!(local || injected),
+    record: record ? { id: record.id, outcome: record.outcome || null } : null,
+    smoke: tt0 && tt0.__smoke, overlay: null, otherOverlay: false };
   for (var k = 0; k < docs.length && !res.overlay; k++) { var d = docs[k], inGame = k === 1;
     var cx = inGame ? cr.left + cr.width / 2 : fr.left + (cr.left + cr.width / 2) * sc, cy = inGame ? cr.top + cr.height / 2 : fr.top + (cr.top + cr.height / 2) * sc;
     var hit = Document.prototype.elementFromPoint.call(d, cx, cy);
-    if (!hit || hit === cv || hit.tagName === 'CANVAS' || hit.tagName === 'IFRAME' || hit === d.body || hit === d.documentElement) continue;
-    var el = hit; while (el.parentElement && el.parentElement !== d.body) { var r0 = Element.prototype.getBoundingClientRect.call(el.parentElement); if (r0.width >= cr.width * 0.5) el = el.parentElement; else break; }
-    var r = Element.prototype.getBoundingClientRect.call(el); if (r.width < cr.width * 0.5 * (inGame ? 1 : sc) || r.height < cr.height * 0.3 * (inGame ? 1 : sc)) continue;
-    var btn = findBtn(el) || (el.shadowRoot && findBtn(el.shadowRoot)) || (hit.shadowRoot && findBtn(hit.shadowRoot));
-    var br = btn && btn.getBoundingClientRect(), off = inGame ? fr : { left: 0, top: 0 }, k2 = inGame ? sc : 1;
-    res.overlay = { doc: inGame ? 'game' : 'top', tag: el.tagName, id: el.id, size: [Math.round(r.width), Math.round(r.height)],
-      complete: br ? { x: off.left + (br.left + br.width / 2) * k2, y: off.top + (br.top + br.height / 2) * k2, disabled: !!btn.disabled, text: String(btn.textContent).slice(0, 40) } : null }; }
+    if (!hit) continue;
+    if (inGame && Document.prototype.elementFromPoint.call(document, fr.left + cx * sc, fr.top + cy * sc) !== g.f) continue;
+    var el = hit.closest && hit.closest('#__ad-simulator,#__adOverlay');
+    if (!el) {
+      if (hit !== cv && hit.tagName !== 'CANVAS' && hit.tagName !== 'IFRAME' && hit !== d.body && hit !== d.documentElement && (!g.f || inGame)) {
+        var rr = hit.getBoundingClientRect(); res.otherOverlay = rr.width > cr.width / 2 && rr.height > cr.height / 3;
+      }
+      continue;
+    }
+    var panel = el.shadowRoot ? el.shadowRoot.querySelector('#box #actions') : el;
+    if (!panel) continue;
+    var btn = el.shadowRoot ? Array.from(panel.querySelectorAll('button')).find(function(b){ return /^模拟看完/.test(b.textContent.trim()); })
+      : panel.querySelector('button[data-r="complete"]');
+    var br = btn && btn.getBoundingClientRect(), off = inGame ? fr : {left: 0, top: 0}, k2 = inGame ? sc : 1;
+    res.overlay = { doc: inGame ? 'game' : 'top', id: el.id, complete: null };
+    if (br && br.width && br.height) {
+      var bx = br.left + br.width / 2, by = br.top + br.height / 2, px = off.left + bx * k2, py = off.top + by * k2;
+      var top = Document.prototype.elementFromPoint.call(d, bx, by);
+      var accessible = el.shadowRoot ? top === el && el.shadowRoot.elementFromPoint(bx, by) === btn : top === btn;
+      res.overlay.complete = {x: px, y: py, disabled: btn.disabled || !accessible ||
+        (inGame && Document.prototype.elementFromPoint.call(document, px, py) !== g.f), text: btn.textContent};
+    }
+  }
   return res; })()`;
 
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'trial_link', url: URL0, taps: null, steps: [], notRun: null };
   const shot = async (name) => { const r = await page.cdp('Page.captureScreenshot', { format: 'png' }); const f = path.join(C.evidenceDir, 'trial-' + name + '.png'); await fs.writeFile(f, Buffer.from(r.data, 'base64')); return f; };
   const tapXY = (x, y) => L.tap(page, x, y);
-  const reward = () => (T.reward_js ? page.evaluate(`(function(){ var g = ${GW}; try { return String(g.w.eval('(function(){' + ${JSON.stringify(T.reward_js || '')} + '\\n})()')); } catch (e) { return 'err ' + e; } })()`) : texts(page));
+  const reward = () => (T.reward_js ? page.evaluate(`(function(){ var g = ${GW};
+    var v = g.w.eval('(function(){' + ${JSON.stringify(T.reward_js || '')} + '\\n})()');
+    if (v === undefined || v === null) throw Error('trial.reward_js returned no value');
+    return JSON.stringify(v); })()`) : texts(page));
   const finish = () => { out.evidence.report = L.evidence('trial_link.json', rep); out.evidence.notRun = rep.notRun; };
   if (!URL0) { rep.notRun = 'no trial link given'; out.warn('trial_link: not run: ' + rep.notRun); out.add('ran', true, 'not run: ' + rep.notRun); return finish(); }
   await page.cdp('Emulation.setDeviceMetricsOverride', { width: 1180, height: 960, deviceScaleFactor: 1, mobile: false });
@@ -128,14 +144,16 @@ await L.suite(async ({ out, page }) => {
   else if (T.open || T.ad_button) plans = [(T.open || []).filter((s) => s.tap).map((s) => s.tap).concat(T.ad_button ? [T.ad_button] : [])];
   else plans = (await adCandidates(page)).slice(0, 3).map((c) => [c.path]);
   if (!plans.length) { rep.notRun = 'no ad entry known (adapter trial.taps) and no home button reads like one'; out.warn('trial_link: not run: ' + rep.notRun); out.add('ran', true, 'not run: ' + rep.notRun); return finish(); }
-  let seen = null, taps = null, before = null;
+  const initial = await page.evaluate(SEEN);
+  const simulated = initial.simulation;
+  let seen = null, before = null, previous = initial;
   for (const plan of plans) {
-    taps = plan; rep.taps = plan;
+    rep.taps = plan;
     let reached = true;
     for (let i = 0; i < plan.length; i++) {
       const p = await where(page, plan[i]);
       if (!p) { reached = false; rep.steps.push({ tap: plan[i], reached: false }); break; }
-      if (i === plan.length - 1) before = await reward();
+      if (i === plan.length - 1) { previous = await page.evaluate(SEEN); before = await texts(page); }
       await tapXY(p.x, p.y);
       rep.steps.push({ tap: plan[i], at: [Math.round(p.x), Math.round(p.y)] });
       await L.sleep(i === plan.length - 1 ? 250 : 1500);
@@ -144,36 +162,56 @@ await L.suite(async ({ out, page }) => {
     const t1 = Date.now();
     while (Date.now() - t1 < 2500) {
       seen = await page.evaluate(SEEN).catch((e) => ({ err: String(e) }));
-      if ((seen && seen.overlay) || (seen && seen.smoke && seen.smoke.toasts)) break;
+      const prompted = (seen?.smoke?.toasts || 0) > (previous.smoke?.toasts || 0);
+      if (seen?.overlay || (!simulated && (prompted || seen?.otherOverlay))) break;
       await L.sleep(250);
     }
-    const now = await reward();
+    const prompt = (seen?.smoke?.toasts || 0) > (previous.smoke?.toasts || 0);
+    const response = !!(seen?.overlay || seen?.otherOverlay || prompt || await texts(page) !== before);
     rep.afterTap = seen;
-    if ((seen && seen.overlay) || (seen && seen.smoke && seen.smoke.toasts) || now !== before) break;
-    // an auto-found candidate that asked for no ad at all is not an ad entry: try the next one
-    if (!T.taps && !T.open && !T.ad_button && !(seen && seen.smoke && (seen.smoke.ads || seen.smoke.shows))) { seen = null; continue; }
-    break;
+    rep.response = response;
+    if (simulated ? seen?.overlay : response) break;
+    if (T.taps || T.open || T.ad_button ||
+        (seen?.smoke?.ads || 0) > (previous.smoke?.ads || 0) ||
+        (seen?.record && seen.record.id !== previous.record?.id)) break;
   }
   rep.shotAfterTap = await shot('after-ad-tap');
-  if (!rep.afterTap && !T.taps && !T.open && !T.ad_button) {
-    rep.notRun = 'none of the ad-like home buttons (' + plans.map((p) => p.join(' > ')).join('; ') + ') asked for an ad; give adapter trial.taps';
-    out.warn('trial_link: not run: ' + rep.notRun); out.add('ran', true, 'not run: ' + rep.notRun); return finish();
+  if (!simulated) {
+    out.add('entry_response', !!rep.response, rep.response ? 'visible response to the entry' : 'no visible response within 2.5 s');
+    return finish();
   }
-  const r1 = await reward();
-  const visible = !!((seen && seen.overlay) || (seen && seen.smoke && seen.smoke.toasts) || r1 !== before);
-  out.add('ad_window_visible', visible, visible ? { overlay: seen && seen.overlay, smoke: seen && seen.smoke }
-    : 'ad_window_hidden: tapped ' + taps[taps.length - 1] + ': within 2.5 s no ad window over the game, no toast, nothing changed on screen; the game waits for an ad result (looks frozen). ad calls: ' + JSON.stringify(seen && seen.smoke) + ' (B21: append trial-page elements to the canvas parent, not document.body)');
-  if (!visible) return finish();
-  if (seen && seen.overlay && seen.overlay.complete) {
-    let c = seen.overlay.complete;
-    for (let i = 0; i < 20 && c && c.disabled; i++) { await L.sleep(250); const s2 = await page.evaluate(SEEN).catch(() => null); c = (s2 && s2.overlay && s2.overlay.complete) || c; if (s2 && s2.overlay && s2.overlay.complete) c = s2.overlay.complete; }
-    await tapXY(c.x, c.y);
-    let after = before;
-    for (let i = 0; i < 16 && after === before; i++) { await L.sleep(250); after = await reward(); }
-    rep.changed = after !== before;
-    rep.after = T.reward_js ? after : undefined;
-    rep.shotAfterReward = await shot('after-complete');
-    out.add('reward_after_complete', rep.changed, rep.changed ? { button: c.text } : 'reward_missing: picked ' + (c.text || '看完') + ' in the ad window: nothing changed in the game');
-  } else if (seen && seen.overlay) out.warn('trial_link: the ad window is visible but has no recognisable 看完 / complete button; only visibility was checked');
+  const overlay = seen?.overlay, local = initial.local;
+  const first = seen?.record;
+  const opened = !!(overlay && (!local || (overlay.id === '__ad-simulator' && first && first.id !== previous.record?.id && !first.outcome)));
+  out.add('ad_window_visible', opened, opened ? overlay.id : 'ad_window_hidden: no new visible simulation panel within 2.5 s');
+  if (!opened) return finish();
+  // The normal manual preview enables completion at 5 s. Never tap stale coordinates or a disabled control.
+  let c = null;
+  const deadline = Date.now() + 7000;
+  while (Date.now() < deadline) {
+    const view = await page.evaluate(SEEN);
+    if (view.overlay?.id !== overlay.id || (local && view.record?.id !== first.id)) break;
+    c = view.overlay.complete;
+    if (c && !c.disabled) break;
+    await L.sleep(200);
+  }
+  out.add('completion_enabled', !!c && !c.disabled, 'completion button must become visible and enabled');
+  if (!c || c.disabled) return finish();
+  const beforeComplete = await reward();
+  await tapXY(c.x, c.y);
+  let after, completed = false;
+  for (let i = 0; i < 16; i++) {
+    await L.sleep(250);
+    const view = await page.evaluate(SEEN);
+    completed = local ? view.record?.id === first.id && view.record?.outcome === 'completed' : !view.overlay;
+    after = await reward();
+    if (completed && after !== beforeComplete) break;
+  }
+  out.add('simulation_completed', completed, 'completion tap must settle the displayed ad');
+  rep.shotAfterReward = await shot('after-complete');
+  rep.changed = after !== beforeComplete;
+  out.add('response_after_complete', rep.changed, T.reward_js ? 'project readback changed after completion' : 'on-screen game text changed after completion');
+  out.evidence.simulatorCompleted = completed;
+  out.evidence.responseKind = T.reward_js ? 'project_readback' : 'screen_text';
   finish();
 }, { w: 1180, h: 960 });

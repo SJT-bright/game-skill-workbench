@@ -200,6 +200,76 @@ class PhoneReports(Base):
             issues.audit(self.project, self.native)
 
 
+class TransitionProof(Base):
+    def setUp(self):
+        super().setUp()
+        # Both controls and the candidate must actually be at the transition.
+        self.cases[0]['reached'] = [{'path': ['home_visible'], 'op': 'eq', 'value': True}]
+
+    def test_transition_with_expected_phone_error_passes(self):
+        self.report()
+        self.retest()
+        issues.audit(self.project, self.native)
+
+    def test_second_exception_in_negative_is_not_a_reproduction(self):
+        self.report()
+        self.errors(self.negative, [PHONE_LINE, 'Uncaught TypeError: Texture2D is not a constructor'])
+        with self.assertRaisesRegex(ValueError, 'unexpected runtime error'):
+            self.retest()
+
+    def test_normal_control_must_reach_trigger_even_if_postcondition_passes(self):
+        self.report()
+        (self.normal / 'state.json').write_text(json.dumps({'home_visible': False, 'home_play_works': True}))
+        with self.assertRaisesRegex(ValueError, 'trigger phase not reached'):
+            self.retest()
+
+    def test_absent_error_collection_is_inconclusive(self):
+        self.runner.write_text(RUNNER.replace("'errors':", "'ignored':"))
+        self.report(phone_error='')
+        with self.assertRaisesRegex(ValueError, 'runtime error capture missing'):
+            self.retest()
+
+    def test_error_from_different_case_cannot_stand_in_for_phone_screen(self):
+        self.cases.append(dict(self.local_cases[0], id='other_case'))
+        self.runner.write_text(RUNNER.replace("if side.exists()", "if side.exists() and a.case=='other_case'"))
+        self.report()
+        with self.assertRaisesRegex(ValueError, 'no case printed it'):
+            self.retest()
+
+    def test_local_expected_exception_must_match_its_registered_line(self):
+        case = dict(self.cases[0], negative_error='Uncaught TypeError: original')
+        del case['phone']
+        issues.register(self.project, self.native, 'local', 'broken transition', ['state.json'], [case], self.runner)
+        self.errors(self.negative, ['Uncaught TypeError: original'])
+        self.retest(issue='local')
+        self.errors(self.negative, ['Uncaught TypeError: original extra'])
+        with self.assertRaisesRegex(ValueError, 'not reproduced'):
+            self.retest(issue='local', out='wrong-local')
+
+
+class ReportedOutcome(Base):
+    def test_distinguish_reported_outcome_from_other_failures(self):
+        # Each path has two observable ways to miss the intended result.
+        for name, field, healthy, reported, unrelated in (
+                ('open', 'pages_opened', 1, 0, 2),
+                ('reward', 'coins_granted', 10, 20, 0),
+                ('drop', 'occupied_slot', 'target', 'origin', 'other_slot')):
+            with self.subTest(name=name):
+                case = {'id': name,
+                        'assertions': [{'path': [field], 'op': 'eq', 'value': healthy}],
+                        'symptom': [{'path': [field], 'op': 'eq', 'value': reported}]}
+                for tree in (self.native, self.normal):
+                    (tree / 'state.json').write_text(json.dumps({field: healthy}))
+                issues.register(self.project, self.native, name, name, ['state.json'], [case], self.runner)
+                for value, outcome in ((unrelated, 'wrong'), (reported, 'right')):
+                    (self.negative / 'state.json').write_text(json.dumps({field: value}))
+                    if outcome == 'wrong':
+                        with self.assertRaisesRegex(ValueError, 'reported symptom'):
+                            self.retest(issue=name, out=name + outcome)
+                    else:
+                        self.retest(issue=name, out=name + outcome)
+
+
 class CommandLine(Base):
     def run_cli(self, *extra):
         cases = self.root / 'cases.json'

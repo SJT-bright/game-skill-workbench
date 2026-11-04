@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-04T10:22:42.245Z",
-  "treeHash": "e13311d2ba337325fa6d9121cae1ca499900df667a771316248819d1cf495345",
+  "createdAt": "2026-11-04T13:26:28.569Z",
+  "treeHash": "fb9c8fbcd7336d221797eb89d655013529c2f031adfbe26a52a8a862ce539c20",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -251,20 +251,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "9c41059312515064fdec37ed376b1637f0ef4258ee95e569a100b9fa13c9496b",
+      "treeHash": "2a32b8cf2f54bc9fdc952be9cd2b375215c8d6faec36854bdaaeb1f2db68bf90",
       "fileCount": 150,
-      "bytes": 1471663,
+      "bytes": 1478865,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "2e80ef8059b689c629ad7e05d8b7beec92dcd68cbfd5f52f90f144ffb0c2a976",
-          "size": 27131,
+          "hash": "fd0b615087975d8938d5c046f3a3fc900a0d8362a96657c146e6ed2d0a2a6a2a",
+          "size": 27312,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "14ab83ed65380ab40bdd1cce4b046fb12cef91770ad7b22fda9d3aac706974d7",
-          "size": 14996,
+          "hash": "a2d657ce74f049faf809f6285e49b41bea27ce21c2b9a42780492fb3f7d1240f",
+          "size": 15385,
           "executable": false
         },
         {
@@ -437,8 +437,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "fe4fa237f4b56172c8631dccf26d87425ea7850634f511f364b608f45ac319b9",
-          "size": 17150,
+          "hash": "6f8d2beff19be492291405167d902b1951fd985bc0efe0077dff40d17a68090a",
+          "size": 17188,
           "executable": false
         },
         {
@@ -479,8 +479,8 @@
         },
         {
           "path": "package-check/references/resource-and-reported-issues.md",
-          "hash": "d17d3a42307dcdb905b2283e43f73b99742348e2dd7e3440ab2579234fdf4dac",
-          "size": 13998,
+          "hash": "35c25eb5f3380e8fa6ab53f7049350acaf00b77d6bbe35d10b29e96923fa02a5",
+          "size": 15433,
           "executable": false
         },
         {
@@ -605,8 +605,8 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/host3x/host.js",
-          "hash": "f6674af4a9882787473cafca90223588dd83b1e7ce5f122d9c84edb21e5e05ed",
-          "size": 36339,
+          "hash": "65c0ac18e7af86972fc1013cfc03a4db9f619f8f56949698bd1fc867567f16a9",
+          "size": 36413,
           "executable": false
         },
         {
@@ -815,8 +815,8 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/trial_link.mjs",
-          "hash": "59dd1390e66ab63ada7444f5a76793194e1337842ef615d24a3b95b388146855",
-          "size": 16199,
+          "hash": "d96f4dd0a944d7172bc60a6ccc5ba92a77bf6a2578f8ed35f59a438c355bded8",
+          "size": 16705,
           "executable": false
         },
         {
@@ -857,8 +857,8 @@
         },
         {
           "path": "package-check/scripts/test_device_issue_repro.py",
-          "hash": "8818b2ee3e97ab29096cdf5af760df9330a89f3fa8d144c82c3ff1773030c40e",
-          "size": 13252,
+          "hash": "4ffeb76b0a7bdc26e40a3e43f18bf61e4067d6607f7c92270a368970378d6d71",
+          "size": 16926,
           "executable": false
         },
         {
@@ -995,8 +995,8 @@
         },
         {
           "path": "review/README.md",
-          "hash": "6affc02c4b95151819713c8b600c7a41d0d21c783a721397f296f5b15755eb06",
-          "size": 2120,
+          "hash": "f4aab015771ba8a134a63f9f4cfadccbfc4d492c80e86374643b93d2f577f9ae",
+          "size": 2116,
           "executable": false
         },
         {
@@ -1079,8 +1079,8 @@
         },
         {
           "path": "test/README.md",
-          "hash": "4ccd7491950a385049032cbec9d3a89b7dddbe26ac601da113aa2e541c519e7f",
-          "size": 3254,
+          "hash": "426a520b40788e2b1035969835f4512e701b6c4bd0f1b3af597b5f976decaa31",
+          "size": 4163,
           "executable": false
         },
         {

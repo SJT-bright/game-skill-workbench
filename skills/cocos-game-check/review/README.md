@@ -13,7 +13,7 @@
 | 3. 玩法逻辑 | [测试与修复](../test/README.md) 的 review 模式 |
 | 4. 关卡与难度 | 关卡（重塑包 remake-levels 板块） |
 | 5. 经济 | 经济（重塑包 remake-economy 板块） |
-| 6. 皮肤与道具 | 皮肤与道具（重塑包 remake-skins 板块） |
+| 6. 皮肤与道具 | [皮肤与道具](../../remake-skins/SKILL.md) |
 | 7. 广告 | 广告（重塑包 remake-ads 板块）：每个入口的完成/取消/失败/连点 |
 | 8. 美术与UI | 美术与UI（重塑包 remake-art 板块） |
 | 9. 新手引导 | 新手引导（重塑包 remake-onboarding 板块） |

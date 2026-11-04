@@ -291,7 +291,7 @@ let adSeq = 0;
 function createRewardedVideoAd(opt) {
   const id = ++adSeq; const unit = opt && opt.adUnitId; log('ad.create', id + ' ' + unit);
   AD.created++; AD.units[unit] = (AD.units[unit] || 0) + 1; gateLog('ad-create', unit); beacon('ad-create', unit);
-  const h = { close: [], error: [], load: [] }; let destroyed = false;
+  const h = { close: [], error: [], load: [] }; let destroyed = false, used = false;
   const fire = (k, e) => h[k].slice().forEach(f => { try { f(e); } catch (err) { log('ad.cb_err', String(err)); } });
   return {
     onClose(f) { h.close.push(f); }, offClose(f) { h.close = h.close.filter(x => x !== f); },
@@ -299,10 +299,11 @@ function createRewardedVideoAd(opt) {
     onLoad(f) { h.load.push(f); }, offLoad(f) { h.load = h.load.filter(x => x !== f); },
     load() { return Promise.resolve(); }, destroy() { destroyed = true; log('ad.destroy', id); },
     show() {
+      if (destroyed || used) return Promise.reject({ errorCode: 1003, errMsg: 'instance already shown or destroyed' });
+      used = true;
       const showN = X.ads.length; const mode = ADS[showN] || ADS[ADS.length - 1] || 'complete';
       X.ads.push({ id, unit, mode, t: now() }); log('ad.show', id + ' ' + mode + ' ' + unit);
       AD.shown++; gateLog('ad-show', unit); beacon('ad-show', { unit, policy: mode });
-      if (destroyed) return Promise.reject({ errMsg: 'show:fail destroyed' });
       if (mode === 'reject') { AD.errors++; return Promise.reject({ errMsg: 'show:fail no ad', errCode: 1004 }); }
       if (mode === 'error') { AD.errors++; setTimeout(() => fire('error', { errMsg: 'ad load error', errCode: 1004 }), 300); return Promise.resolve(); }
       if (mode === 'hang') return Promise.resolve();

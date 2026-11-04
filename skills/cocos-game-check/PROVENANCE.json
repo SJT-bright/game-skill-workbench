@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-03.english-simple.11.3",
+  "revision": "2026-11-04.english-simple.11.5",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "083bfb176b43d05a9e6b74369253360c4e974eee3e2a4caa2f8a155e7beeb306",
-      "bytes": 14387
+      "sha256": "14ab83ed65380ab40bdd1cce4b046fb12cef91770ad7b22fda9d3aac706974d7",
+      "bytes": 14996
     },
     {
       "path": "agents/openai.yaml",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "fe4fa237f4b56172c8631dccf26d87425ea7850634f511f364b608f45ac319b9",
-      "bytes": 17150
+      "sha256": "6f8d2beff19be492291405167d902b1951fd985bc0efe0077dff40d17a68090a",
+      "bytes": 17188
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -186,8 +186,8 @@
     },
     {
       "path": "package-check/references/resource-and-reported-issues.md",
-      "sha256": "d17d3a42307dcdb905b2283e43f73b99742348e2dd7e3440ab2579234fdf4dac",
-      "bytes": 13998
+      "sha256": "35c25eb5f3380e8fa6ab53f7049350acaf00b77d6bbe35d10b29e96923fa02a5",
+      "bytes": 15433
     },
     {
       "path": "package-check/references/resource-loss-recovery.md",
@@ -201,8 +201,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "656c9916832189b10d90834d8fcd42fdf3983f803fd34119c2a90290fcf94387",
-      "bytes": 51354
+      "sha256": "d1163542d5c8c4ab725d55d7d962758d434e3635d273e1c7fcfe2f52d6e8c59b",
+      "bytes": 52072
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -291,8 +291,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/host.js",
-      "sha256": "f6674af4a9882787473cafca90223588dd83b1e7ce5f122d9c84edb21e5e05ed",
-      "bytes": 36339
+      "sha256": "65c0ac18e7af86972fc1013cfc03a4db9f619f8f56949698bd1fc867567f16a9",
+      "bytes": 36413
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/play.html",
@@ -466,8 +466,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/trial_link.mjs",
-      "sha256": "59dd1390e66ab63ada7444f5a76793194e1337842ef615d24a3b95b388146855",
-      "bytes": 16199
+      "sha256": "d96f4dd0a944d7172bc60a6ccc5ba92a77bf6a2578f8ed35f59a438c355bded8",
+      "bytes": 16705
     },
     {
       "path": "package-check/scripts/runtime_regression.py",
@@ -501,8 +501,8 @@
     },
     {
       "path": "package-check/scripts/test_device_issue_repro.py",
-      "sha256": "8818b2ee3e97ab29096cdf5af760df9330a89f3fa8d144c82c3ff1773030c40e",
-      "bytes": 13252
+      "sha256": "4ffeb76b0a7bdc26e40a3e43f18bf61e4067d6607f7c92270a368970378d6d71",
+      "bytes": 16926
     },
     {
       "path": "package-check/scripts/test_final_startup_gate.py",
@@ -616,8 +616,8 @@
     },
     {
       "path": "review/README.md",
-      "sha256": "6affc02c4b95151819713c8b600c7a41d0d21c783a721397f296f5b15755eb06",
-      "bytes": 2120
+      "sha256": "f4aab015771ba8a134a63f9f4cfadccbfc4d492c80e86374643b93d2f577f9ae",
+      "bytes": 2116
     },
     {
       "path": "review/references/review-mode.md",
@@ -686,18 +686,23 @@
     },
     {
       "path": "test/README.md",
-      "sha256": "882a8e8b9ffc416ca30415a656dbd4e354dd38cccb4478a941f3c9439df9e7f2",
-      "bytes": 3056
+      "sha256": "426a520b40788e2b1035969835f4512e701b6c4bd0f1b3af597b5f976decaa31",
+      "bytes": 4163
     },
     {
       "path": "test/assets/logic-report-template.md",
-      "sha256": "4314b355ca00810c6b8d4b29fd96eae8707d7744df1767f6363038c54489878d",
-      "bytes": 2939
+      "sha256": "bf2c938b9593886334c8cc733e67c8e45c264edcb3bb68d15078eb766160760f",
+      "bytes": 3956
+    },
+    {
+      "path": "test/references/button-interaction-coverage.md",
+      "sha256": "e06a6a4dd3d7b06ee7331ff747f2de348656b1f5898d6840f6152b7c8c8a1d91",
+      "bytes": 4705
     },
     {
       "path": "test/references/button-state-check.md",
-      "sha256": "4e9bc895761701a10f26a31101c28141dfe70f5df952a40628e094751a59dc1a",
-      "bytes": 17568
+      "sha256": "2cb559c4dd4dbbabaa180659afe27181eb5e575a6cc270e8b80dd0633ec23cd4",
+      "bytes": 17839
     },
     {
       "path": "test/references/learned-regressions.md",
@@ -745,5 +750,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "7d606b48a3ca6476a61878325677b1f827240626d22261c71745663d853d5a09"
+  "previous_provenance_sha256": "9e0513a49fa8b0583ff2f4d81465194752e8414909167ee6224ca28b86d277e4"
 }

@@ -10,6 +10,7 @@
   // __adSimulator.mode('video130'); several may be combined; '' or 'normal' restores the default.
   var MODES = {video60: 60000, video130: 130000, start16: 16000, background: 3000}, modes = {};
   var hideListeners = [], showListeners = [];
+  var MANUAL_PREVIEW_MS = 5000;
   function setModes(value) {
     var next = {};
     String(value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean).forEach(function (name) {
@@ -77,12 +78,25 @@
     var h = document.createElement('h2'); h.textContent = '模拟激励广告'; box.appendChild(h);
     var p = document.createElement('p'); p.textContent = '入口：' + attempt.entry + '\n广告位：' + attempt.adUnitId + '\n选择结果后，由游戏原有流程处理奖励。'; p.style.whiteSpace='pre-wrap'; box.appendChild(p);
     var actions = document.createElement('div'); actions.id='actions'; box.appendChild(actions);
-    var length = videoMs(), unlock = length || 2000;
-    var complete = button(length ? '视频 ' + length / 1000 + ' 秒 · 播完后自动关闭（isEnded=true）' : '模拟看完 · 2 秒后可点', function () { finish(attempt, 'completed'); }); complete.disabled=true; actions.appendChild(complete);
-    attempt.timer = setTimeout(function () {
-      if (length) { finish(attempt, 'completed'); return; }
-      complete.disabled=false; complete.textContent='模拟看完（应发一次奖励）';
-    }, unlock);
+    var length = videoMs();
+    attempt.record.playbackStartedAt = Date.now();
+    var complete = button('', function () {
+      if (!complete.disabled) finish(attempt, 'completed');
+    });
+    complete.disabled = true; actions.appendChild(complete);
+    if (length) {
+      complete.textContent = '视频 ' + length / 1000 + ' 秒 · 播完后自动关闭（isEnded=true）';
+      attempt.timer = setTimeout(function () { finish(attempt, 'completed'); }, length);
+    } else {
+      var unlockAt = Date.now() + MANUAL_PREVIEW_MS;
+      function updateButton() {
+        var left = Math.max(0, unlockAt - Date.now());
+        complete.disabled = left > 0;
+        complete.textContent = left ? '模拟看完 · ' + Math.ceil(left / 1000) + ' 秒后可点' : '模拟看完（应发一次奖励）';
+        if (left) attempt.timer = setTimeout(updateButton, Math.min(1000, left));
+      }
+      updateButton();
+    }
     if (modes.background) {
       attempt.hideTimer = setTimeout(function () {
         if (active !== attempt) return;
@@ -94,15 +108,17 @@
     actions.appendChild(button('模拟加载／播放失败（不应发奖）', function () { finish(attempt,'failed'); }));
     actions.appendChild(button('模拟暂无广告（不应发奖）', function () { finish(attempt,'no-fill'); }));
     actions.appendChild(button('一直等待（观察游戏自己的超时）', function () {
+      clearTimeout(attempt.timer); complete.disabled = true;
       attempt.record.waiting=true; box.style.display='none'; badge.textContent='广告模拟 · 等待中，点此终止';
       badge.onclick=function(){ if(active===attempt) finish(attempt,'cancelled'); };
     }));
   }
   function finish(attempt, outcome) {
     if (active !== attempt || attempt.record.outcome) return false;
+    if (outcome === 'completed' && (attempt.record.waiting || attempt.record.playbackStartedAt === undefined)) return false;
     clearTimeout(attempt.timer); clearTimeout(attempt.hideTimer); clearTimeout(attempt.showTimer); // startTimer keeps running: a late start after give-up is part of start16
-    if (attempt.record.hiddenAt && !attempt.record.shownAt) lifecycle('show', attempt.record);
     active=null; attempt.record.outcome=outcome; attempt.record.finishedAt=Date.now();
+    if (attempt.record.hiddenAt !== undefined && attempt.record.shownAt === undefined) lifecycle('show', attempt.record);
     box.style.display='none'; badge.textContent='广告模拟 · '+outcome+' · 查看记录'; badge.onclick=function(){if(!active)history();};
     var handlers = outcome==='completed'||outcome==='cancelled' ? attempt.close.slice() : attempt.error.slice();
     var payload = outcome==='completed'||outcome==='cancelled' ? {isEnded:outcome==='completed'} : {errorCode:'SIM_'+outcome.toUpperCase(),errMsg:'Local ad simulation: '+outcome};
@@ -115,9 +131,15 @@
     var close=[],error=[],load=[],used=false,destroyed=false;
     function on(list,fn){if(typeof fn==='function'&&list.indexOf(fn)<0)list.push(fn);}
     function off(list,fn){if(!fn)list.splice(0);else{var i=list.indexOf(fn);if(i>=0)list.splice(i,1);}}
+    function unsubscribe(list, fn) {
+      var before = list.length;
+      off(list, fn);
+      // The game can retire its request by removing both handlers without calling destroy().
+      if (before && !close.length && !error.length && active && active.close === close) finish(active, 'detached');
+    }
     return {
-      onClose:function(fn){on(close,fn);}, offClose:function(fn){off(close,fn);},
-      onError:function(fn){on(error,fn);}, offError:function(fn){off(error,fn);},
+      onClose:function(fn){on(close,fn);}, offClose:function(fn){unsubscribe(close,fn);},
+      onError:function(fn){on(error,fn);}, offError:function(fn){unsubscribe(error,fn);},
       onLoad:function(fn){on(load,fn);}, offLoad:function(fn){off(load,fn);},
       load:function(){return Promise.resolve().then(function(){load.slice().forEach(function(fn){fn();});});},
       show:function(){
@@ -132,7 +154,6 @@
         ui(); badge.textContent='广告模拟 · 16 秒后才开始播放…';
         return new Promise(function(resolve){
           attempt.startTimer=setTimeout(function(){
-            record.playbackStartedAt=Date.now();
             if(active===attempt)present(attempt);else record.lateStartAfterFinish=true;
             resolve();
           },MODES.start16);

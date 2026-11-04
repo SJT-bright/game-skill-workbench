@@ -14,8 +14,8 @@ v7.8 (U7 补): --keep needs --project (the game's Cocos project) and checks its 
 art_check.py; never a new art run): a new remake game without a passing receipt whose image fingerprints match gets no
 trial server; legacy / English games and "3.x 未覆盖" print a warning. Internal QA without --keep is unchanged.
 v7.8 (总表 B21 / B30 F): --keep runs the trial-link smoke on the link before printing it (cocos-game-check
-runtime_regression.py trial_smoke: tap one rewarded-ad entry, the simulated ad window must be on top, 看完 must change
-the game; --adapter gives the taps). Smoke failed: no link, exit 1. Smoke could not run (no Ego, no ad entry found):
+runtime_regression.py trial_smoke: tap one rewarded-ad entry. Ordinary links need a visible response. Simulated links
+need a visible ad panel, an enabled completion button, and a subsequent game response; --adapter gives the taps). Smoke failed: no link, exit 1. Smoke could not run (no Ego, no ad entry found):
 the reason is printed and the link is given. Exports that never call createRewardedVideoAd skip it.
 Phone shape (B7): the default page is a fixed portrait phone (390x844, only scaled down); --raw is the full-window page
 for internal checks.
@@ -49,10 +49,9 @@ def uses_rewarded_ads(directory):
     return False
 
 
-def trial_smoke_gate(url, directory, adapter=None, smoke=None):
+def trial_smoke_gate(url, directory, adapter=None, smoke=None, *, ad_simulator=False):
     """v7.8 (总表 B21 / B30 F): before a user trial link is printed, tap one rewarded-ad entry on the link exactly as
-    Saul opens it (runtime_regression.trial_smoke, suite trial_link): the simulated ad window must be on top of the
-    game and 看完 must change the game. Returns (level, message): 'block' = do not give the link out, 'warn' = the smoke
+    Saul opens it (runtime_regression.trial_smoke, suite trial_link). An injected preview must also complete its ad. Returns (level, message): 'block' = do not give the link out, 'warn' = the smoke
     did not run (reason printed), 'pass'. smoke: the trial_smoke function (tests)."""
     if not uses_rewarded_ads(directory):
         return 'pass', '试玩链接冒烟：这个导出不调用 createRewardedVideoAd，不涉及看广告，没跑'
@@ -74,7 +73,15 @@ def trial_smoke_gate(url, directory, adapter=None, smoke=None):
         return 'warn', '试玩链接冒烟没跑：%s' % error
     if summary.get('not_run'):
         return 'warn', '试玩链接冒烟没跑：%s（可用 --adapter 给出 trial.taps）' % summary['not_run']
-    return 'pass', '试玩链接冒烟通过：点看广告后模拟广告窗在最上层，点「看完」后游戏有变化'
+    evidence = summary.get('evidence') or {}
+    if not summary.get('passed'):
+        return 'block', '不给试玩链接：没有通过本次入口响应检查'
+    if evidence.get('simulatorCompleted') is True:
+        response = '项目读数' if evidence.get('responseKind') == 'project_readback' else '画面文字'
+        return 'pass', '试玩链接冒烟通过：已点开模拟广告并选择看完，%s随后有变化' % response
+    if ad_simulator:
+        return 'block', '不给模拟试玩链接：未证实独立模拟面板已打开并完成'
+    return 'pass', '试玩链接冒烟通过：点击广告入口后游戏给出了可见响应'
 
 
 def phone_preview_html(width=390, height=844, entry="index.html"):
@@ -237,7 +244,7 @@ def main():
         # link from the user (the ad window behind the game looked like a frozen game in 全民飞车漂移 v1-v3)
         serving = threading.Thread(target=server.serve_forever, daemon=True)
         serving.start()
-        level, message = trial_smoke_gate(url, directory, args.adapter)
+        level, message = trial_smoke_gate(url, directory, args.adapter, ad_simulator=args.ad_simulator)
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
         if level == 'block':
             server.shutdown()

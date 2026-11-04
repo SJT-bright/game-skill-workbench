@@ -33,6 +33,22 @@ class NoAdSimulator(unittest.TestCase):
             with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'simulator'):
                 guard.enforce_files({name: content})
 
+    def test_renamed_regression_hosts_cannot_ship(self):
+        scripts = HERE.parents[1] / 'cocos-game-check/package-check/scripts'
+        sources = [scripts / 'ad_regression/host.js', scripts / 'runtime_regression/host3x/host.js']
+        trial = HERE.parents[1] / 'ad-boost/scripts/trial_host/host/host.js'
+        if trial.is_file():
+            sources.append(trial)
+        for source in sources:
+            with self.subTest(host=str(source)), self.assertRaisesRegex(ValueError, 'QA ad host'):
+                guard.check_entry('assets/runtime.min.js', source.read_bytes())
+
+    def test_production_labels_and_partial_host_markers_are_allowed(self):
+        guard.check_entry('game.js', b'ui.title="AD PREVIEW"; ui.claim="COLLECT"; '
+                                    b'const stats=window.__adStats; const ad=tt.createRewardedVideoAd(cfg); '
+                                    b'ad.onClose(receipt=>settle(receipt));')
+        guard.check_entry('assets/card.json', b'{"label":"COLLECT","help":"AD PREVIEW"}')
+
     def test_both_writers_refuse_without_output_and_accept_clean_control(self):
         for writer in ('full', 'light'):
             for dirty in (True, False):
@@ -83,6 +99,8 @@ class ForbiddenWindows(unittest.TestCase):
     dirty = [
         ('assets/renamed.bin', b'Local test ad'),
         ('assets/main.js', b'if(false){show("Complete test ad")}'),
+        ('assets/bundled.bin', b'__adStats __adCtl no ad fill (simulated) createRewardedVideoAd'),
+        ('assets/bundled.mjs', br'__adStats __gateDevice host3x ad\u0068ideorder createRewardedVideoAd'),
         ('preview-ads.js', b'// disabled'),
         ('assets/main.js', b'this.button(body, template, "Credits / About", 0, 50, 460, 110, callback)'),
         ('assets/main.js', b'openCredits()'),

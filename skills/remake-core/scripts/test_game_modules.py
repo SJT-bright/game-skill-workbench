@@ -159,8 +159,13 @@ class GameModulesAuditTests(unittest.TestCase):
                'button_audit': [{'page': 'home', 'button': 'Play', 'works': True, 'keep': True, 'why': 'starts the level'},
                                 {'page': 'home', 'button': 'More Games', 'works': True, 'keep': False, 'why': 'cross-promotion'},
                                 {'page': 'home', 'button': 'Rank', 'works': False, 'keep': False, 'why': 'leaderboard, removed'}]}
+        # 简化.11.4 skin_links: a game with skins also has the watch-ad unlock table and the watch-ad trial popup
+        (root / 'assets/scripts').mkdir(parents=True)
+        (root / 'assets/scripts/SkinTrialPopup.ts').write_text('export class SkinTrialPopup { offerTrial(level: number) {} }\n')
         if change:
             change(root, dec)
+        if (cfg / 'unlock_table.json').is_file() and not (cfg / 'ad_unlock_table.json').exists():
+            py('product_contract.py', 'ad-unlock', '--table', cfg / 'unlock_table.json', '--out', cfg / 'ad_unlock_table.json')
         (root / 'docs/modules.json').write_text(json.dumps(dec))
         return root
 
@@ -264,6 +269,48 @@ class GameModulesAuditTests(unittest.TestCase):
         # the remake board needs no audit of original buttons
         code, r, bad = self.audit(self.project('remake', lambda root, dec: dec.pop('button_audit')))
         self.assertEqual(code, 0, bad)
+
+    def test_skins_need_currency_ad_unlock_and_trial(self):
+        """简化.11.4 (Saul 2026-11-04): with skins there is always the currency, watch-ad unlock skins and the trial popup."""
+        cfg = 'assets/resources/config/'
+
+        def links(root):
+            code, r, bad = self.audit(root)
+            row = next(c for c in r['checks'] if c['id'] == 'skin_links')
+            return row['passed'], row['detail']
+
+        ok, detail = links(self.project())
+        self.assertTrue(ok, detail)
+        self.assertIn('watch-ad skins', detail)
+        bad_cases = {
+            'no ad unlock table': (lambda root, dec: (root / (cfg + 'ad_unlock_table.json')).write_text('{"items": []}'),
+                                   'lists no skin'),
+            'ad unlock table missing': (lambda root, dec: (root / (cfg + 'ad_unlock_table.json')).mkdir(), 'no ad_unlock_table.json'),
+            'ad skin not in the skin table': (lambda root, dec: (root / (cfg + 'ad_unlock_table.json')).write_text(
+                json.dumps({'items': [{'id': 'hero_nowhere', 'ads_required': 3}]})), 'not in unlock_table.json'),
+            'no trial popup': (lambda root, dec: (root / 'assets/scripts/SkinTrialPopup.ts').unlink(), 'no trial popup'),
+            'no B': (lambda root, dec: self.edit_table(root, lambda t: t.pop('normal_level_coins')), 'no B'),
+            'no coin skins': (lambda root, dec: self.edit_table(root, lambda t: [x.update(unlock='free', coins=0) for x in t['items']
+                                                                                if x.get('unlock') == 'coins']), 'no skin is bought with coins'),
+        }
+        for name, (change, words) in bad_cases.items():
+            ok, detail = links(self.project('localize', change))
+            self.assertFalse(ok, name)
+            self.assertIn(words, detail, name)
+        # no currency name is already refused by decision_recorded, before the skin rows
+        code, r, bad = self.audit(self.project('localize', lambda root, dec: dec['currency'].update(name=' ')))
+        self.assertEqual(code, 1)
+        self.assertIn('currency.name', bad)
+        # older tables (no economy_policy as legacy-2r writes, or the frozen normal-10-50.v1) -> a note, never a refusal
+        for name, change in {'legacy-2r': lambda t: t.pop('economy_policy'),
+                             'frozen': lambda t: t.update(economy_policy='normal-10-50.v1')}.items():
+            def old(root, dec, change=change):
+                (root / 'assets/scripts/SkinTrialPopup.ts').unlink()
+                self.edit_table(root, change)
+            ok, detail = links(self.project('localize', old))
+            self.assertTrue(ok, name)
+            self.assertIn('note only', detail, name)
+            self.assertIn('no trial popup', detail, name)
 
     def test_legacy_league_decision_cannot_reenable_removed_ranking(self):
         def extensions(root, dec):

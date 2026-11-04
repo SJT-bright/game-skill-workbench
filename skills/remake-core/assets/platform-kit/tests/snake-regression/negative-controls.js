@@ -20,7 +20,7 @@ var variants = [
     before:"} else if (!s.exitNotified && this.exitAvailable()) {",
     after:"} else if (this.now() >= s.exitAt) { s.finish('timeout'); } else if (!s.exitNotified && this.exitAvailable()) {"},
   {name:'background_time_counts_in_request_phase',file:'RewardedService.js',
-    before:'if (s.hiddenAt === null && this.now() >= s.deadline)',after:'if (this.now() >= s.deadline)'}
+    before:"s.phase !== 'request' || s.hiddenAt !== null",after:"s.phase !== 'request'"}
 ];
 var results=variants.map(function(v){
   var target=path.join(__dirname,v.file), test=path.join(__dirname,'platform-components.test.js');

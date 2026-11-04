@@ -65,7 +65,20 @@ class TrialSmokeGate(unittest.TestCase):
         self.assertIn('no ad entry known', message)
 
     def test_pass_and_no_ads(self):
-        self.assertEqual(serve_preview.trial_smoke_gate('http://127.0.0.1:9/', self.web, 'a.json', smoke=fake({'passed': True}))[0], 'pass')
+        plain = fake({'passed': True, 'evidence': {}})
+        level, message = serve_preview.trial_smoke_gate('http://127.0.0.1:9/', self.web, 'a.json', smoke=plain)
+        self.assertEqual(level, 'pass')
+        self.assertIn('可见响应', message)
+        self.assertNotIn('看完', message)
+        level, _ = serve_preview.trial_smoke_gate('http://127.0.0.1:9/', self.web, smoke=plain, ad_simulator=True)
+        self.assertEqual(level, 'block')
+        for kind, label in [('screen_text', '画面文字'), ('project_readback', '项目读数')]:
+            with self.subTest(kind=kind):
+                done = fake({'passed': True, 'evidence': {'simulatorCompleted': True, 'responseKind': kind}})
+                level, msg = serve_preview.trial_smoke_gate('http://127.0.0.1:9/', self.web, smoke=done, ad_simulator=True)
+                self.assertEqual(level, 'pass')
+                self.assertIn(label, msg)
+
         (self.web / 'main.js').write_text('cc.log(1)')
         s = fake({'passed': True})
         level, message = serve_preview.trial_smoke_gate('http://127.0.0.1:9/', self.web, None, smoke=s)
@@ -75,7 +88,7 @@ class TrialSmokeGate(unittest.TestCase):
     def test_main_runs_it_before_printing_the_link_only_for_keep(self):
         text = (HERE / 'serve_preview.py').read_text(encoding='utf-8')
         main = text[text.index('def main('):]
-        self.assertLess(main.index('trial_smoke_gate(url, directory, args.adapter)'), main.index("print(f'{entry_kind}"))
+        self.assertLess(main.index('trial_smoke_gate(url, directory, args.adapter, ad_simulator=args.ad_simulator)'), main.index("print(f'{entry_kind}"))
         self.assertIn('if args.keep:\n        # v7.8 (总表 B21 / B30 F)', main)
         self.assertTrue((serve_preview.CHECK_SCRIPTS / 'runtime_regression.py').is_file())
 

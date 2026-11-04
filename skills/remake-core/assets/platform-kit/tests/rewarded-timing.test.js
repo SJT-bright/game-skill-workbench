@@ -11,7 +11,7 @@
 var assert = require('assert'), fs = require('fs'), os = require('os'), path = require('path');
 var KIT = path.join(__dirname, '..', 'assets', 'tiktok-platform');
 var target = path.resolve(process.argv[2] || path.join(KIT, 'RewardedService.js'));
-var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-rewarded-'));
+var dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'kit-rewarded-')));
 fs.copyFileSync(target, path.join(dir, 'RewardedService.js'));
 fs.copyFileSync(path.join(KIT, 'PlatformConfig.js'), path.join(dir, 'PlatformConfig.js'));
 // A fresh module per case: the one-live-session lock is module-global, so cases never leak into each other.
@@ -104,6 +104,78 @@ function released(w, label) {
     await w.run(47000);
     assert.strictEqual(r.result.status, 'timeout', 'a video that starts after the timeout never grants');
     assert.strictEqual(r.result.rewarded, false);
+  });
+
+  await test('synchronous_complete_is_rejected_during_registration_but_accepted_during_show', async function () {
+    for (var eager of [true, false]) {
+      var w = world(), creates = w.sdk.createRewardedVideoAd, calls = 0;
+      w.sdk.createRewardedVideoAd = function () {
+        var ad = creates();
+        ad.onClose = function (fn) { ad.h.close = fn; if (eager) fn({isEnded: true}); };
+        ad.show = function () { calls++; ad.close({isEnded: true}); return Promise.resolve(); };
+        return ad;
+      };
+      var outcome = await w.request().promise;
+      assert.strictEqual(outcome.status, eager ? 'error' : 'completed');
+      assert.strictEqual(outcome.rewarded, !eager);
+      assert.strictEqual(calls, eager ? 0 : 1);
+      assert.strictEqual(w.service.isNativeBusy(), false);
+    }
+  });
+
+  await test('deadline_checked_at_show_close_and_hide_even_before_next_poll', async function () {
+    for (var action of ['start', 'close', 'error', 'hide']) {
+      var w = world(), r = w.request();
+      w.time = 15000;
+      if (action === 'start') w.ads[0].start();
+      if (action === 'close') w.ads[0].close({isEnded: true});
+      if (action === 'error') w.ads[0].h.error({errorCode: 123});
+      if (action === 'hide') w.background();
+      await flush();
+      assert.strictEqual(r.result && r.result.status, 'timeout', action);
+      assert.strictEqual(r.result.rewarded, false);
+      await released(w, action);
+    }
+  });
+
+  await test('expired_owner_releases_before_a_different_service_requests_same_placement', async function () {
+    var w = world(), first = w.request();
+    var secondService = new w.service.constructor({getSDK: function () { return w.sdk; },
+      now: function () { return w.time; }, autoPoll: false});
+    var lateClose = w.ads[0].h.close;
+    w.time = 15001;
+    var second = secondService.request({placementKey: 'double_coins'});
+    assert.strictEqual(w.ads.length, 2);
+    lateClose({isEnded: true});
+    w.ads[1].start(); await flush(); w.ads[1].close({isEnded: true});
+    assert.strictEqual((await first.promise).status, 'timeout');
+    assert.strictEqual((await second).status, 'completed');
+  });
+
+  await test('hide_before_deadline_freezes_budget_and_old_lifecycle_callbacks_do_not_affect_retry', async function () {
+    var w = world(), r = w.request(), oldHide = w.hide[0], oldShow = w.show[0];
+    w.time = 14999;
+    w.background();
+    w.time = 90000;
+    w.foreground();
+    assert.strictEqual(r.result, null);
+    w.time++;
+    w.ads[0].close({isEnded: true});
+    await flush();
+    assert.strictEqual(r.result && r.result.status, 'timeout');
+    var next = w.request();
+    w.time += 1000; oldHide();
+    w.time += 16000; oldShow(); w.ads[1].start();
+    await flush();
+    assert.strictEqual(next.result && next.result.status, 'timeout');
+  });
+
+  await test('show_started_while_hidden_with_foreground_budget_left_can_complete', async function () {
+    var w = world(), r = w.request();
+    w.time = 14999; w.background();
+    w.time = 90000; w.ads[0].start(); await flush();
+    w.foreground(); w.time += 200000; w.ads[0].close({isEnded: true}); await flush();
+    assert.strictEqual(r.result && r.result.status, 'completed');
   });
 
   await test('bgplay_background_during_playback_then_completed_is_rewarded', async function () {

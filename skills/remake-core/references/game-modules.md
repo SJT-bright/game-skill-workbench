@@ -16,7 +16,7 @@
 
 **保留**：首页的 Add to Home Screen（桌面快捷方式）和 Profile Revisit（个人主页回访）两个键（ART-05）。
 
-**重塑必做：七日签到**（用户 2026-10-27 改回）：首页日历图标＋7 天签到弹窗，逻辑原样复制 `assets/checkin/DailyCheckin.ts`，只改 `checkin-config.json`；金币按 B 值，签到送的皮肤用已有的普通/稀有款。规则见签到（重塑包 remake-skins 板块，英化包不含），数值见[经济规则](../../remake-economy/references/economy-rules.md#四七日签到的数值用户-2026-10-27)。
+**重塑必做：七日签到**（用户 2026-10-27 改回）：首页日历图标＋7 天签到弹窗，逻辑原样复制 `assets/checkin/DailyCheckin.ts`，只改 `checkin-config.json`；金币按 B 值，签到送的皮肤用已有的普通/稀有款。规则见[签到](../../remake-skins/references/skin-bonus-and-checkin.md)，数值见[经济规则](../../remake-economy/references/economy-rules.md#四七日签到的数值用户-2026-10-27)。
 
 **英化先做按钮审查**：开工时把原游戏每个页面、每个弹窗的每个按钮列出来，判断能不能用、有没有用，写进 `docs/modules.json` 的 `button_audit`：
 
@@ -36,7 +36,7 @@
 | 板块 | Skill | 正文 |
 |---|---|---|
 | 货币、结算×2、礼盒、独立广告领币 | [remake-economy](../../remake-economy/SKILL.md) | [经济规则](../../remake-economy/references/economy-rules.md) |
-| 皮肤与道具 | remake-skins（重塑包 remake-skins 板块，英化包不含） | 皮肤规则（重塑包 remake-skins 板块，英化包不含） |
+| 皮肤与道具 | [remake-skins](../../remake-skins/SKILL.md) | [皮肤规则](../../remake-skins/references/skin-rules.md) |
 | 关卡数量、限定关、奖励关、难度曲线 | remake-levels（重塑包 remake-levels 板块，英化包不含） | 关卡规则（重塑包 remake-levels 板块，英化包不含）、难度曲线（重塑包 remake-levels 板块，英化包不含） |
 | 广告按钮防重、不卡顿、体力广告 | [remake-ads](../../remake-ads/SKILL.md) | [广告机制](../../remake-ads/references/ad-mechanism.md) |
 

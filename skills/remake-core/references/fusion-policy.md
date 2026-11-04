@@ -17,7 +17,7 @@
 
 排名/联赛相关历史材料仅保留供历史溯源，不再作为可启用扩展；按[前置禁用规则](no-social-features.md)删除联网、全服排行榜和假联赛（局内对本地机器人的名次可以用，Saul 2026-10-31）。签到、其他收集物算法、模拟器和回归用例供已明确要求的项目继续维护。不能自动问每个新项目要不要排名或签到，不能把AI建议当用户授权。
 
-- 签到：重塑一律 docs/features.json 的 daily_checkin=true（写 false 会被 FEAT-00 拦下，用户 2026-10-27），skin_bonus 按实际皮肤配置记录。启用后读 skin-bonus-and-checkin.md（重塑包 remake-skins 板块，英化包不含），执行 FEAT-00/02 及现有回归。
+- 签到：重塑一律 docs/features.json 的 daily_checkin=true（写 false 会被 FEAT-00 拦下，用户 2026-10-27），skin_bonus 按实际皮肤配置记录。启用后读 [skin-bonus-and-checkin.md](../../remake-skins/references/skin-bonus-and-checkin.md)，执行 FEAT-00/02 及现有回归。
 - 排名（Saul 2026-10-31 改）：一局里玩家和本地机器人的名次（局内分数牌、结算名次）、按名次加本地奖杯、奖杯换段位、个人星级和最高分可以做；数据只在本机、不联网、不冒充真人（匹配页写 Finding opponents，机器人不用真人风格名字）。仍禁：联网的世界/好友/地区/周榜，本地编的全服名次（如「You are #3,512」）、假联赛（LeagueSim.ts 那种上千人的假榜），改名保留比较功能也不行；旧 docs/league/decision.json 的 add/keep_original 不再构成豁免。先按[前置禁用规则](no-social-features.md)清理入口、页面与业务调用。
 - 扩展的允许范围、源码扫描、页面审计与门禁必须一致；授权不等于测试通过，不能把允许功能的所有扫描整项关掉。扩展与 skin.v1 不兼容时用单独组/表和明确配置，不改固定表数量去伪装通过。
 

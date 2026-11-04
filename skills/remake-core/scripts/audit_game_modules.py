@@ -20,6 +20,10 @@ Checks:
     one ad per tap and one reward per ad, the price curve)
   - skin_module: skins.user_choice true -> unlock_table.json is a skin.v1 table that passes
     audit_acquisition_progression.py, 20 protagonist skins, 10 backgrounds when skins.backgrounds; false -> no skin groups
+  - skin_links (简化.11.4, Saul 2026-11-04): skins chosen -> the currency (currency.name, B in unlock_table.json, coin
+    skins), the watch-ad unlock skins (ad_unlock_table.json next to it, every id in the skin table) and the watch-ad skin
+    trial popup in game code are all there. Enforced for a normal-5-80.v1 table (the default of make_skin_table.py);
+    an older table (frozen normal-10-50.v1, legacy-2r) gets a note only. Original-game skins kept by a maintenance scope are not checked.
   - limited_skin_route: level games win the limited skin on the last level of level_plan.json ("final"), or one limited
     skin on every limited level 10, 20 ... last ("every_10"; user 2026-10-24: both formats pass); endless games buy it
     with coins + >= 5 ads
@@ -79,6 +83,90 @@ def table_of(proj):
             data = json.loads(c.read_text(encoding='utf-8-sig'))
             return (data if isinstance(data, dict) else {'items': data}), c
     return None, None
+
+
+AD_TABLE_NAME = 'ad_unlock_table.json'
+# a skin trial popup in game code: the ad-boost skin-ad part (offerTrial / skin_trial placement) or an own popup
+TRIAL_NAME = re.compile(r'offerTrial|skin_?trial|SkinTrial|trial_?skin|trySkin|try_skin|TRY FOR 1', re.I)
+TRIAL_WORD, SKIN_WORD = re.compile(r'trial', re.I), re.compile(r'skin', re.I)
+FROZEN_POLICY = 'normal-10-50.v1'
+NEW_POLICY = 'normal-5-80.v1'
+
+
+def trial_popup_in_code(proj):
+    """-> 'file: marker' of the first game code file with a skin trial popup, or None."""
+    for dirpath, dirs, fs in os.walk(proj / 'assets'):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and d != 'tiktok-platform']
+        for f in sorted(fs):
+            if not f.endswith(('.ts', '.js')) or f.endswith('.d.ts'):
+                continue
+            p = Path(dirpath) / f
+            try:
+                text = p.read_text(encoding='utf-8', errors='ignore')
+            except OSError:
+                continue
+            m = TRIAL_NAME.search(text)
+            if m or (TRIAL_WORD.search(text) and SKIN_WORD.search(text)):
+                return '%s: %s' % (p.relative_to(proj).as_posix(), m.group(0) if m else 'trial + skin')
+    return None
+
+
+def skin_links(proj, dec, table, table_path, items):
+    """简化.11.4 (Saul 2026-11-04): a game with skins also has the currency, the watch-ad unlock skins and the watch-ad
+    skin trial popup (remake-skins/SKILL.md「皮肤一定连着货币和广告」). Enforced for a skin table on the new economy
+    (economy_policy normal-5-80.v1, what make_skin_table.py writes by default); an older table (frozen normal-10-50.v1,
+    legacy-2r, none) only gets a note. -> (passed, detail)"""
+    if not table:
+        return False, 'skins chosen but no unlock_table.json, so there is no price, no watch-ad unlock and no trial to check'
+    B = table.get('normal_level_coins')
+    policy = table.get('economy_policy')
+    new_table = policy == NEW_POLICY
+    problems = []
+    currency = (dec.get('currency') or {}).get('name') if isinstance(dec.get('currency'), dict) else None
+    if not str(currency or '').strip():
+        problems.append('currency: docs/modules.json has no currency.name')
+    if not (type(B) in (int, float) and B > 0):
+        problems.append('currency: unlock_table.json has no B (normal_level_coins); make it with make_skin_table.py '
+                        '--normal-level-coins <B>')
+    coin_items = [r for r in items if r.get('unlock') == 'coins' and (r.get('coins') or 0) > 0]
+    if not coin_items:
+        problems.append('currency: no skin is bought with coins')
+    ad_path = None
+    for cand in [Path(table_path).parent / AD_TABLE_NAME] + [proj / Path(rel).parent / AD_TABLE_NAME for rel in TABLE_PATHS]:
+        if cand.is_file():
+            ad_path = cand
+            break
+    ad_items = []
+    if ad_path is None:
+        problems.append('watch-ad unlock: no ad_unlock_table.json next to unlock_table.json (product_contract.py ad-unlock '
+                        '--table <unlock_table.json> --out <ad_unlock_table.json>)')
+    else:
+        try:
+            ad = json.loads(ad_path.read_text(encoding='utf-8-sig'))
+            ad_items = [r for r in (ad.get('items') or []) if isinstance(r, dict)] if isinstance(ad, dict) else []
+        except (OSError, ValueError):
+            problems.append('watch-ad unlock: %s is not readable JSON' % ad_path.relative_to(proj).as_posix())
+        else:
+            if not ad_items:
+                problems.append('watch-ad unlock: %s lists no skin' % ad_path.relative_to(proj).as_posix())
+            ids = {str(r.get('id')) for r in items}
+            stray = [str(r.get('id')) for r in ad_items if str(r.get('id')) not in ids]
+            if stray:
+                problems.append('watch-ad unlock: %s lists skins that are not in unlock_table.json: %s'
+                                % (ad_path.relative_to(proj).as_posix(), ', '.join(stray[:5])))
+    trial = trial_popup_in_code(proj)
+    if not trial:
+        problems.append('watch-ad skin trial: no trial popup in the game code (ad-boost modules/skin-ad offerTrial, or an own '
+                        'popup whose code says trial and skin)')
+    found = 'currency %s, B %s, %d coin skins, %d watch-ad skins (%s), trial popup %s' % (
+        currency, B, len(coin_items), len(ad_items), ad_path.relative_to(proj).as_posix() if ad_path else 'none', trial or 'none')
+    if not new_table:
+        return True, ('note only (old skin table: economy_policy %s, not %s): %s%s' % (policy, NEW_POLICY,
+                      found, '; would be missing: ' + '; '.join(problems) if problems else ''))
+    if problems:
+        return False, 'skins need the currency, watch-ad unlock skins and the watch-ad trial popup (Saul 2026-11-04, ' \
+                      'remake-skins「皮肤一定连着货币和广告」): ' + '; '.join(problems)
+    return True, found
 
 
 def harness(module, table_path, R):
@@ -296,6 +384,8 @@ def audit(proj, board, reference, maintenance=None, binding=None):
                 errs.append('background skins listed although skins.backgrounds is false')
             add('skin_module', not errs, '%d skins, %d backgrounds, price curve and bonuses fit' % (
                 len(by_group.get('skin', [])), len(by_group.get('background', []))) if not errs else '; '.join(errs[:6]))
+        ok, detail = skin_links(proj, dec, table, table_path, items)
+        add('skin_links', ok, detail)
         try:
             from audit_level_plan import find_plan
             plan_path = find_plan(proj)

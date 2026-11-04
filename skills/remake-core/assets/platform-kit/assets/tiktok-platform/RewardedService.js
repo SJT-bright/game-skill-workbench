@@ -58,8 +58,7 @@ RewardedService.prototype.tick = function () {
   if (!s || s.terminal) return;
   if (!current(s.options)) return s.finish('stale');
   if (s.phase === 'request') {
-    // Background time does not count: the deadline is frozen while hidden.
-    if (s.hiddenAt === null && this.now() >= s.deadline) s.finish('timeout');
+    s.expireRequest();
   } else if (!s.exitNotified && this.exitAvailable()) {
     s.exitNotified = true;
     if (typeof s.options.onExitAvailable === 'function') safely(function () { s.options.onExitAvailable(); });
@@ -68,14 +67,16 @@ RewardedService.prototype.tick = function () {
 // Lifecycle forwarding (cc.game EVENT_HIDE / EVENT_SHOW, or tt.onHide / tt.onShow).
 RewardedService.prototype.onHide = function () {
   var s = this.pending;
-  if (s && s.hiddenAt === null) s.hiddenAt = this.now();
+  if (!s || s.hiddenAt !== null) return;
+  var now = this.now();
+  if (!s.expireRequest(now)) s.hiddenAt = now;
 };
 RewardedService.prototype.onShow = function () {
   var s = this.pending;
   if (!s || s.hiddenAt === null) return;
   var away = Math.max(0, this.now() - s.hiddenAt);
   s.hiddenAt = null;
-  if (s.phase === 'request') s.deadline += away;
+  if (s.phase === 'request') s.requestDeadline += away;
 };
 // True once playback has run exitAfterMs with no callback: show the X now.
 RewardedService.prototype.exitAvailable = function () {
@@ -89,6 +90,7 @@ RewardedService.prototype.exit = function () {
 RewardedService.prototype.request = function (options) {
   options = options || {};
   this.tick();
+  if (nativeSession && nativeSession !== this.pending) nativeSession.expireRequest();
   if (nativeSession) return Promise.resolve(makeResult('busy', null));
   var sdk;
   try { sdk = this.getSDK('createRewardedVideoAd'); } catch (_) {}
@@ -101,13 +103,29 @@ RewardedService.prototype.request = function (options) {
   var self = this;
   return new Promise(function (resolve) {
     var s = {id: ++sequence, options: options, phase: 'request', ad: null, hiddenAt: null,
-      deadline: self.now() + self.requestTimeoutMs, exitAt: Infinity, exitNotified: false, terminal: false};
+      requestDeadline: self.now() + self.requestTimeoutMs, exitAt: Infinity, exitNotified: false, terminal: false};
     self.pending = s;
     nativeSession = s;
-    function onClose(res) { s.finish(res && res.isEnded === true ? 'completed' : 'cancelled'); }
-    function onError(e) { s.finish('error', e); }
-    function onHide() { self.onHide(); }
-    function onShow() { self.onShow(); }
+    // A native callback can run before a delayed poll. Apply the same foreground deadline in both paths.
+    s.expireRequest = function (now) {
+      if (s.terminal || s.phase !== 'request' || s.hiddenAt !== null) return false;
+      if ((now === undefined ? self.now() : now) < s.requestDeadline) return false;
+      s.finish('timeout');
+      return true;
+    };
+    var showInvoked = false;
+    function onClose(res) {
+      if (!showInvoked) { s.finish('error', null, 'close_before_show'); return; }
+      if (!s.expireRequest()) s.finish(res && res.isEnded === true ? 'completed' : 'cancelled');
+    }
+    function onError(e) { if (!s.expireRequest()) s.finish('error', e); }
+    function onHide() { if (self.pending === s) self.onHide(); }
+    function onShow() { if (self.pending === s) self.onShow(); }
+    function onStarted() {
+      if (s.terminal || s.expireRequest()) return;
+      s.phase = 'playing';
+      s.exitAt = self.now() + self.exitAfterMs;
+    }
     // Single terminal path: every outcome unbinds callbacks and releases the session together.
     s.finish = function (status, error, reason) {
       if (s.terminal) return;
@@ -131,21 +149,14 @@ RewardedService.prototype.request = function (options) {
         s.finish('unsupported'); return;
       }
       s.ad.onClose(onClose);
-      s.ad.onError(onError);
       if (s.terminal) return;
+      s.ad.onError(onError);
+      if (s.terminal || s.expireRequest()) return;
+      showInvoked = true; // A host may call onClose synchronously from inside show().
       var shown = s.ad.show();
-      if (shown && typeof shown.then === 'function') {
-        shown.then(function () {
-          // Resolving show means playback started, never watched/completed. No timeout from here.
-          if (s.terminal) return;
-          s.phase = 'playing';
-          s.exitAt = self.now() + self.exitAfterMs;
-        }, function (e) { s.finish('error', e); });
-      } else {
-        s.phase = 'playing';
-        s.exitAt = self.now() + self.exitAfterMs;
-      }
-    } catch (e) { s.finish('error', e); }
+      if (shown && typeof shown.then === 'function') shown.then(onStarted, onError);
+      else onStarted();
+    } catch (e) { onError(e); }
   });
 };
 RewardedService.prototype.cancelOwner = function (ownerId) {

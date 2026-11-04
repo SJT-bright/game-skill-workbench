@@ -131,6 +131,17 @@ def validate(raw, contract, expected_hash, variant, project):
                 parent = rect(entity.get('parent', {}).get('world_rect'))
                 target = slot_rect(policy['rect'], viewport)
             except ValueError as exc: fail('rect', str(exc), state_id, slot); continue
+            if 'pixel_regions' in policy and screenshot is not None:
+                from ui_region_probe import measure
+                try:
+                    vx,vy,vw,vh=viewport
+                    sx,sy=screenshot.width/vw,screenshot.height/vh
+                    if abs(screenshot.width-vw*sy)>1: raise ValueError('viewport aspect mismatch')
+                    # Use the reviewed slot, not the defective sprite's own (possibly tiny) bounds.
+                    bounds=((target[0]-vx)*sx,(target[1]-vy)*sy,target[2]*sx,target[3]*sy)
+                    for result in measure(screenshot,bounds,policy['pixel_regions']):
+                        if not result['passed']: fail('pixel_region_mismatch',str(result),state_id,slot)
+                except (KeyError,TypeError,ValueError) as exc: fail('evidence',str(exc),state_id,slot)
             sprites, captions = entity.get('sprites'), entity.get('captions')
             if not isinstance(sprites, list) or not isinstance(captions, list):
                 fail('empty_capture', 'actual sprite and caption arrays both required', state_id, slot); continue

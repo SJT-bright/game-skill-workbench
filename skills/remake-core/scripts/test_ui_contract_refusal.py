@@ -38,6 +38,19 @@ class Refusal(unittest.TestCase):
         self.raw['execution']['states'][0]['screenshot']['sha256']=audit.sha(self.picture)
         self.assertEqual(self.codes(),{'sprite_pixel_mismatch'})
 
+    def test_registered_slot_pixel_regions(self):
+        from PIL import Image
+        rule=dict(id='badge-height',region=[0,0,1,1],rgb_min=[170,0,0],rgb_max=[255,90,100],metric='height',range=[0.4,1])
+        self.contract['states']['ready']['slots']['left']['pixel_regions']=[rule]
+        for visible_height,expected in [(4,{'pixel_region_mismatch'}),(30,set())]:
+            shot=Image.new('RGB',(250,400),(40,80,120))
+            shot.paste((225,30,40),(20,25,45,25+visible_height))
+            shot.save(self.picture,compress_level=0)
+            self.raw['execution']['states'][0]['screenshot']['sha256']=audit.sha(self.picture)
+            self.assertEqual(self.codes(),expected)
+        rule['region']=[0,0,0,0]
+        self.assertIn('evidence',self.codes())
+
     def test_parent_only_resize_actual_sprite_still_overlaps(self):
         self.raw['execution']['states'][0]['buttons'][0]['sprites'][0]['world_rect']['width']=180
         self.assertTrue({'cross_slot_overlap','parent_overflow','slot_overflow'}<=self.codes())

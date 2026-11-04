@@ -7,6 +7,12 @@ import json
 
 MARKERS = (b'__adSimulator', b'__local_ad_simulator', b'__ad-simulator', b'SIM_BUSY_OR_USED',
            b'Local test ad', b'Complete test ad', b'merge-preview-ad', b'installMergePreviewAds')
+# Fingerprint our deployed QA hosts, including minified copies that keep the public
+# window hooks and SDK literals. Common player labels or SDK operations are insufficient.
+HOST_SIGNATURES = (
+    ('2.x QA ad host', ('__adStats', '__adCtl', 'no ad fill (simulated)', 'createRewardedVideoAd')),
+    ('3.x QA ad host', ('__adStats', '__gateDevice', 'host3x', 'adhideorder', 'createRewardedVideoAd')),
+)
 TOOL_FILES = {'ad-simulator.js', 'ad-simulator.min.js', 'preview-ads.js', 'preview-ads.min.js'}
 # Exact UI labels/routes, not currency credits, comments, licenses or art filenames.
 WINDOW_LABEL = re.compile(r'''(["'`])(?:credits(?:\s*/\s*about)?|制作人员|制作说明|鸣谢)\1''', re.I)
@@ -18,19 +24,27 @@ def check_entry(name, data):
     filename = PurePosixPath(name).name.casefold()
     if filename in TOOL_FILES:
         raise ValueError('Local ad simulator must not ship in the TikTok upload package: ' + name)
+    folded = data.lower()
     for marker in MARKERS:
-        if marker.lower() in data.lower():
+        if marker.lower() in folded:
             raise ValueError('Local ad simulator residue (' + marker.decode() + ') in upload package: ' + name)
+    for label, signature in HOST_SIGNATURES:
+        if all(part.lower().encode('ascii') in folded for part in signature):
+            raise ValueError('Local ad simulator (' + label + ') in upload package: ' + name)
     # Scan code and serialized UI, including disabled/unreachable routes and escaped labels.
     # LICENSE/NOTICE documents and unused texture filenames are not player windows.
-    if PurePosixPath(name).suffix.lower() in ('.js', '.json', '.html', '.htm', '.prefab', '.fire', '.scene'):
+    if PurePosixPath(name).suffix.lower() in ('.js', '.mjs', '.cjs', '.json', '.html', '.htm', '.prefab', '.fire', '.scene'):
         text = data.decode('utf-8', errors='replace')
         text = re.sub(r'\\u([0-9a-fA-F]{4})|\\x([0-9a-fA-F]{2})',
                       lambda m: chr(int(m.group(1) or m.group(2), 16)), text)
+        folded_text = text.casefold()
         for marker in MARKERS:
-            if marker.decode().casefold() in text.casefold():
+            if marker.decode().casefold() in folded_text:
                 raise ValueError('Local ad simulator escaped residue in upload package: ' + name)
-        if filename.endswith('.js'):
+        for label, signature in HOST_SIGNATURES:
+            if all(part.casefold() in folded_text for part in signature):
+                raise ValueError('Local ad simulator (' + label + ') escaped residue in upload package: ' + name)
+        if filename.endswith(('.js', '.cjs', '.mjs')):
             text = re.sub(r"""("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(//[^\n]*|/\*[\s\S]*?\*/)""",
                           lambda m: m.group(1) or '', text)
         # Cocos 2.4 standalone SpriteFrame import metadata names an art asset,

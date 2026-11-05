@@ -1,0 +1,26 @@
+{
+  "caption": "CLAIM",
+  "safe_box": [
+    17,
+    8,
+    119,
+    37
+  ],
+  "gap": 6,
+  "base": {
+    "file": "base.png",
+    "sha256": "f5d81f5323e3d5441e333107ce31b63c2a7e7c6bc8d4b17e72cf4df48f335317"
+  },
+  "icon": {
+    "file": "video.png",
+    "sha256": "456f783b4aaf6c327152cb1ffe6ae635696f414c51d747887b2f2f642e47b860",
+    "height": 17
+  },
+  "word": {
+    "file": "claim.png",
+    "sha256": "aa4ccea4099f36c2a6e42f87b46b2dba47100dad842c54867f6227c6cdf280f8",
+    "approved_text": "CLAIM",
+    "min_height": 19,
+    "max_height": 24
+  }
+}

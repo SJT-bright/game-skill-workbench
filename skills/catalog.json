@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-05T10:49:10.333Z",
-  "treeHash": "07621a65a4ff27f4dac6fe240aa6dfe7125d883315b701f96e2c5c179ca307ce",
+  "createdAt": "2026-11-05T10:50:43.841Z",
+  "treeHash": "bc6a2bf8a2c0e014a71d18a5e82eb7dfd99b740a4553ba1727e2a301ec3fd85f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2833,20 +2833,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "9144a121d69d4e08e735f12b22207a4ec37c15b75fb415da1bce54d05c4c64e7",
-      "fileCount": 51,
-      "bytes": 1246888,
+      "treeHash": "d2ba76e851feb1640e7c46711c13ef71f94a722e889722f3b2ca74174c001990",
+      "fileCount": 52,
+      "bytes": 1279918,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "c3e1997c126fabfbc4e41957ba60ad23eec5f6f9b696678afcc2dcb4eaa1a865",
-          "size": 8717,
+          "hash": "73b17a946b6f6d35c0bfebc86e7b1556a92c6d28d75462e8876442198eaf5506",
+          "size": 8880,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "68645b3d263a5be399800defbb99e4d9837b311ee982d870c81a80c5eb9201d1",
-          "size": 18831,
+          "hash": "e6fd9ec5a817eeb0f37f3e29c5dd90c79cfed7c062758ea0070caca5dc3336b9",
+          "size": 19275,
           "executable": false
         },
         {
@@ -3007,14 +3007,14 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "2f9654c8614fd99654b686227df5620efe2de3a31b0288097f836d0ae694f002",
-          "size": 25579,
+          "hash": "178f4d91b0ab0158759b82dc3cf7960e0b324e7fd514a81c408cea548f9e320e",
+          "size": 27962,
           "executable": false
         },
         {
           "path": "references/saul-art-rules.md",
-          "hash": "e1fb3c4097bef119feae94b69bffde9233f1a13f129f099ce667b183a34fec2c",
-          "size": 49520,
+          "hash": "d0c7f036c9ccafb33c93fe3da2de9a9642245962888400f7597cb22ce4e11013",
+          "size": 49657,
           "executable": false
         },
         {
@@ -3061,14 +3061,14 @@
         },
         {
           "path": "scripts/bind_art.py",
-          "hash": "c429362fec7600d3907ab8151b065c70fbac088148a9ee25ba9c6633a2aa5573",
-          "size": 17660,
+          "hash": "5d68a36e4443381d0630d82d9b73cac2d1846bd1dcc9322d7e6ebe277efd9030",
+          "size": 26142,
           "executable": false
         },
         {
           "path": "scripts/check_button_group.py",
-          "hash": "3b7996281a06955651a937f6cc4e0cd003594d0bcc9d8c04d807ac98a29689c7",
-          "size": 2024,
+          "hash": "a4674efc8cacf8510335d935b6d42e1dab9c48dd5c66ec323e7ffa441873f61d",
+          "size": 2996,
           "executable": false
         },
         {
@@ -3079,8 +3079,8 @@
         },
         {
           "path": "scripts/check_collection_preview.py",
-          "hash": "f64d71be0c2176cd3091d1b17f7f551fe29cae8bfd3e994c02c5555f050809b2",
-          "size": 2573,
+          "hash": "1d2d288a3ec8b93a3320fd5fbba03f05d98cf6c247343293f9548d70e22bf699",
+          "size": 3181,
           "executable": false
         },
         {
@@ -3097,14 +3097,14 @@
         },
         {
           "path": "scripts/compose_fixed_button.py",
-          "hash": "c01f435eb1012f09132f168e5f161afd12b0ff16213f221c7a00ac5db0df486d",
-          "size": 3920,
+          "hash": "197add49614a3fc77496abe016c21266ce3f2d9937902b1f802bc7ac3bdd0212",
+          "size": 4528,
           "executable": false
         },
         {
           "path": "scripts/cut_sheet_frame.py",
-          "hash": "370aab40de58e7110d45e94a1006dee3a2d2c1f502bcc1bf2a525999ad7b1048",
-          "size": 4863,
+          "hash": "93da29d8474a71b82f1e06c016eeb4c73f6ddbe37817ec3ba711f25836c3263e",
+          "size": 5471,
           "executable": false
         },
         {
@@ -3117,6 +3117,12 @@
           "path": "scripts/test_bind_art.py",
           "hash": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
           "size": 8821,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_bind_art_3x.py",
+          "hash": "92d0966f9d848e403e31f9e9e23b1c8c79da55ba09c1f71844be0e1d3d4d007c",
+          "size": 18625,
           "executable": false
         },
         {

@@ -22,8 +22,16 @@ def check(d):
    dx=min(a['right'],b['right'])-max(a['x'],b['x']);dy=min(a['bottom'],b['bottom'])-max(a['y'],b['y'])
    if dx>1 and dy>1:errors.append({'code':'independent_button_overlap','slots':[a['slot'],b['slot']],'intersection_css_px':{'width':round(dx,3),'height':round(dy,3)}})
  return errors
+USAGE='Usage: python3 check_button_group.py <button-group-capture.json> [more.json ...]\nEach capture: producer real_cocos_sprite_geometry, viewport, screenshot + sha256, bundle_sha256, 2+ groups of sprites.'
 if __name__=='__main__':
+ # P20 (问题普查 T20): --help was opened as a capture file (Traceback) and no argument printed [] with exit 0, a pass
+ # after checking nothing. Now --help prints usage, no capture is not_run (exit 2), an unreadable capture is a failure row.
+ if any(a in ('-h','--help') for a in sys.argv[1:]):print(USAGE);sys.exit(0)
+ if not sys.argv[1:]:print(json.dumps({'tool':'check_button_group','status':'not_run','passed':False,'checked':0,'reason':'没有给按钮组采集文件，本项检查没有执行，不算通过','usage':USAGE},ensure_ascii=False));sys.exit(2)
  all_reports=[]
  for arg in sys.argv[1:]:
-  p=Path(arg);d=json.loads(p.read_text());errors=check(d);all_reports.append({'capture':str(p),'viewport':d.get('viewport'),'passed':not errors,'errors':errors})
+  p=Path(arg)
+  try:d=json.loads(p.read_text(encoding='utf-8'));errors=check(d) if isinstance(d,dict) else [{'code':'invalid_capture'}]
+  except (OSError,ValueError,KeyError,TypeError) as exc:d={};errors=[{'code':'unreadable_capture','why':str(exc)}]
+  all_reports.append({'capture':str(p),'viewport':d.get('viewport'),'passed':not errors,'errors':errors})
  print(json.dumps(all_reports,ensure_ascii=False,indent=2));sys.exit(1 if any(not r['passed'] for r in all_reports) else 0)

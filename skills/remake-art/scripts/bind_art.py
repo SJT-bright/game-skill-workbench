@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Bind new pictures to Cocos Creator 2.4 prefab/scene nodes so they keep their own ratio (P08).
+"""Bind new pictures to Cocos Creator 2.4 / 3.x prefab/scene nodes so they keep their own ratio (P08).
 
 Do not hand-edit node width/height after swapping a picture: this script does it.
 
-  python3 bind_art.py --project <Cocos 2.4 project> --map bind.json [--gen-log <gen_log.json>] [--dry-run]
-  python3 bind_art.py --project <Cocos 2.4 project> --check [<prefab or .fire> ...]     read-only, about 1 s
+  python3 bind_art.py --project <Cocos project> --map bind.json [--gen-log <gen_log.json>] [--dry-run]
+  python3 bind_art.py --project <Cocos project> --check [<prefab, .fire or .scene> ...]     read-only, about 1 s
+
+Cocos 2.4 (.prefab/.fire): size is the node's _contentSize, scale _trs/_scale. Cocos 3.x (.prefab/.scene): size is
+the cc.UITransform component's _contentSize, scale _lscale; the sprite frame is the "<uuid>@f9941" sub-asset.
+The rules below are the same for both.
 
 bind.json: {"bindings": [{"prefab": "assets/prefabs/Result.prefab", "node": "Result/panel/btn_claim",
                           "image": "assets/resources/ui/btn_claim.png"}, ...]}
@@ -14,7 +18,12 @@ bind.json: {"bindings": [{"prefab": "assets/prefabs/Result.prefab", "node": "Res
   "by"     "rect" (default): the visible part fills the node; "original": the node stands for the whole PNG
            including its transparent border (glow/alignment kept on purpose).
 
-What a binding does (Cocos 2.4 Sprite.trim, as in ad-boost AdBoostKit 1.2.0 trimFor):
+Import type (P12): a bound picture must be imported as a sprite (2.4 .meta "type": "sprite" with a sprite-frame
+sub-meta; 3.x .meta userData.type "sprite-frame" with the "f9941" sprite-frame sub-asset). A picture imported as
+a plain texture (2.4 "raw"/"texture", 3.x "texture") is switched to sprite in the same run (the texture uuid stays,
+so code that loads it as a texture keeps working); any other type is an error that names the type.
+
+What a binding does (Cocos 2.4/3.x Sprite.trim, as in ad-boost AdBoostKit 1.2.0 trimFor):
   * node size = the picture's ratio contained in the node's old box (never stretched, never larger than the box);
   * by rect -> trim on; by original -> trim off; sizeMode CUSTOM; the sprite frame is set to the picture;
   * SLICED / TILED / FILLED sprites keep their size (stretching is their job), only the frame is set.
@@ -24,8 +33,9 @@ Errors (nothing is written for the whole run):
   * cover_old_text: under the bound node there is a flat colour block (built-in single-colour frame, a flat
     PNG or cc.Graphics) and a cc.Label -> old words covered by a patch and new words typed on top;
     regenerate the whole picture with the new word instead (rule T02);
-  * no Sprite on the node, a Label on the same node (2.4 draws one render component per node), node not
-    found / ambiguous, picture not imported.
+  * no Sprite on the node, a Label on the same node (2.4 and 3.x draw one render component per node), node not
+    found / ambiguous, picture not imported, picture imported as a type that is not a sprite or a texture,
+    a 3.x picture bound into a 2.4 file (or the other way round), a 3.x node without cc.UITransform.
 Every binding is recorded with the old box and the new size in <project>/docs/art/bind_log.json.
 --check lists every SIMPLE sprite whose drawn picture is more than 10 % off its own ratio (the old way: a new
 frame dropped into the old box); exit 1 when there is one.
@@ -36,13 +46,19 @@ import math
 import os
 import pathlib
 import sys
+import uuid as uuidlib
 
 MAX_UPSCALE = 2.0
 RATIO_TOL = 0.10
-# Cocos 2.4 built-in single-colour frames (default_sprite_splash, default_sprite)
-BUILTIN_FLAT = {'a23235d1-15db-4b95-8439-a2e005bfff91', '8cdb44ac-a3f6-449f-b354-7cd48cf84061'}
+# Cocos built-in single-colour frames (default_sprite_splash, default_sprite): 2.4, then 3.x (Creator 3.8.8
+# editor/assets/default_ui, sprite-frame sub-asset f9941)
+BUILTIN_FLAT = {'a23235d1-15db-4b95-8439-a2e005bfff91', '8cdb44ac-a3f6-449f-b354-7cd48cf84061',
+                '7d8f9b89-4fd1-4c9f-a3ab-38ec7cded7ca@f9941', '57520716-48c8-4a19-8acf-41c9f8777fb0@f9941'}
 SIMPLE, SLICED = 0, 1
 CUSTOM = 0
+V3_FRAME_ID, V3_TEX_ID = 'f9941', '6c48a'   # fixed sub-asset ids of a 3.x image: spriteFrame, texture
+TEXTURE_TYPES_24 = ('raw', 'texture')
+TEXTURE_TYPES_3X = ('texture',)
 
 
 class BindError(Exception):
@@ -64,6 +80,26 @@ def write_json(p, data):
 
 
 # ---------------------------------------------------------------- project pictures
+def meta_is_3x(m):
+    """3.x image metas have a top-level "importer" ("image") and sub-assets with their own importer."""
+    return isinstance(m, dict) and 'importer' in m
+
+
+def frame_subs(m):
+    """(frame uuid, trim fields) for each sprite frame a .meta declares. 2.4: every sub-meta of a "sprite" meta
+    (the trim fields sit on the sub-meta); 3.x: the "sprite-frame" sub-assets (trim fields in its userData)."""
+    out = []
+    for sub in (m.get('subMetas') or {}).values():
+        if not isinstance(sub, dict) or not sub.get('uuid'):
+            continue
+        if meta_is_3x(m):
+            if sub.get('importer') == 'sprite-frame':
+                out.append((sub['uuid'], sub.get('userData') or {}))
+        else:
+            out.append((sub['uuid'], sub))
+    return out
+
+
 def index_frames(project):
     """frame uuid -> {png, meta entry}; png path (relative) -> (frame uuid, entry)."""
     by_uuid, by_png = {}, {}
@@ -74,12 +110,78 @@ def index_frames(project):
         except (ValueError, OSError):
             continue
         png = meta.with_suffix('')
-        for sub in (m.get('subMetas') or {}).values():
-            if isinstance(sub, dict) and sub.get('uuid'):
-                rel = png.relative_to(project).as_posix()
-                by_uuid[sub['uuid']] = {'png': png, 'rel': rel, 'meta': sub}
-                by_png.setdefault(rel, (sub['uuid'], sub))
+        rel = png.relative_to(project).as_posix()
+        for u, sub in frame_subs(m):
+            by_uuid[u] = {'png': png, 'rel': rel, 'meta': sub, 'v3': meta_is_3x(m)}
+            by_png.setdefault(rel, (u, sub))
     return by_uuid, by_png
+
+
+def _trim_fields(png):
+    """Auto-trim fields as the Cocos importer writes them (threshold 1), measured on the PNG."""
+    from PIL import Image
+    with Image.open(png) as src:
+        im = src.convert('RGBA')
+    W, H = im.size
+    box = im.getchannel('A').point(lambda v: 255 if v > 1 else 0).getbbox() or (0, 0, W, H)
+    w, h = box[2] - box[0], box[3] - box[1]
+    return {'trimType': 'auto', 'trimThreshold': 1, 'rotated': False,
+            'offsetX': box[0] + w / 2.0 - W / 2.0, 'offsetY': -(box[1] + h / 2.0 - H / 2.0),
+            'trimX': box[0], 'trimY': box[1], 'width': w, 'height': h, 'rawWidth': W, 'rawHeight': H,
+            'borderTop': 0, 'borderBottom': 0, 'borderLeft': 0, 'borderRight': 0}
+
+
+def sprite_frame_of(project, rel, by_png):
+    """P12: the bound picture must be imported as a sprite. Returns (frame uuid, trim fields, is_3x, fix) where
+    fix is None or {'meta': path, 'data': new meta, 'from': old type} to be written with the rest of the batch."""
+    meta_path = pathlib.Path(project) / (rel + '.meta')
+    if not meta_path.exists():
+        raise BindError('%s is not an imported sprite in the project (no .png.meta with a sprite frame); '
+                        'open the project in Cocos Creator once so it imports the picture' % rel)
+    try:
+        m = read_json(meta_path)
+    except ValueError as e:
+        raise BindError('%s.meta is not valid JSON (%s)' % (rel, e))
+    if rel in by_png:
+        u, sub = by_png[rel]
+        typ = (m.get('userData') or {}).get('type') if meta_is_3x(m) else m.get('type')
+        if typ in ('sprite-frame', 'sprite'):
+            return u, sub, meta_is_3x(m), None
+    png = pathlib.Path(project) / rel
+    name = pathlib.Path(rel).stem
+    data = json.loads(json.dumps(m))
+    if meta_is_3x(m):
+        ud = data.setdefault('userData', {})
+        typ = ud.get('type')
+        if typ not in TEXTURE_TYPES_3X + ('sprite-frame',):
+            raise BindError('%s is imported as "%s" (3.x .meta userData.type); a bound picture must be "sprite-frame". '
+                            'Set the type to sprite-frame in Creator, or use another picture for this node' % (rel, typ))
+        subs = data.setdefault('subMetas', {})
+        tex = subs.get(V3_TEX_ID)
+        if not isinstance(tex, dict) or not tex.get('uuid'):
+            raise BindError('%s.meta has no texture sub-asset "%s"; open the project in Cocos Creator once so it '
+                            'imports the picture' % (rel, V3_TEX_ID))
+        u = '%s@%s' % (data['uuid'], V3_FRAME_ID)
+        fields = dict(_trim_fields(png), packable=True, pixelsToUnit=100, pivotX=0.5, pivotY=0.5, meshType=0,
+                      isUuid=True, imageUuidOrDatabaseUri=tex['uuid'], atlasUuid='')
+        subs[V3_FRAME_ID] = {'importer': 'sprite-frame', 'uuid': u, 'displayName': name, 'id': V3_FRAME_ID,
+                             'name': 'spriteFrame', 'userData': fields, 'ver': '1.0.12', 'imported': False,
+                             'files': ['.json'], 'subMetas': {}}
+        ud['type'] = 'sprite-frame'
+        ud.setdefault('redirect', tex['uuid'])
+        return u, fields, True, {'meta': meta_path, 'data': data, 'from': typ}
+    typ = data.get('type')
+    if typ not in TEXTURE_TYPES_24 + ('sprite',):
+        raise BindError('%s is imported as "%s" (2.4 .meta type); a bound picture must be "sprite". Set the type '
+                        'to sprite in Creator, or use another picture for this node' % (rel, typ))
+    if not data.get('uuid'):
+        raise BindError('%s.meta has no uuid; open the project in Cocos Creator once so it imports the picture' % rel)
+    # same uuid every run (dry run and real run agree; Creator keeps a sub-meta uuid it finds in the .meta)
+    u = str(uuidlib.uuid5(uuidlib.NAMESPACE_URL, 'cocos-sprite-frame:' + data['uuid']))
+    fields = dict(_trim_fields(png), ver='1.0.6', uuid=u, rawTextureUuid=data['uuid'], subMetas={})
+    data['type'] = 'sprite'
+    data['subMetas'] = {name: fields}
+    return u, fields, False, {'meta': meta_path, 'data': data, 'from': typ}
 
 
 def picture_geometry(png, sub):
@@ -119,8 +221,15 @@ class Doc:
         self.path = pathlib.Path(path)
         self.data = read_json(path)
         if not isinstance(self.data, list):
-            raise BindError('%s: not a Cocos 2.4 prefab/scene (JSON array expected)' % path)
+            raise BindError('%s: not a Cocos prefab/scene (JSON array expected)' % path)
         self.nodes = [i for i, o in enumerate(self.data) if isinstance(o, dict) and o.get('__type__') == 'cc.Node']
+        # 3.x: sizes live on cc.UITransform, nodes carry _lpos/_lscale; 2.4: _contentSize on the node
+        self.v3 = any(isinstance(o, dict) and (o.get('__type__') == 'cc.UITransform' or '_lscale' in o)
+                      for o in self.data)
+
+    def transform(self, i):
+        t = self.comps(i, 'cc.UITransform')
+        return t[0] if t else None
 
     def obj(self, ref):
         return self.data[ref['__id__']] if isinstance(ref, dict) and '__id__' in ref else None
@@ -139,7 +248,11 @@ class Doc:
     def find(self, path):
         hits = [i for i in self.nodes if self.path_of(i) == path]
         if not hits:
-            raise BindError('%s: node "%s" not found' % (self.path.name, path))
+            hint = ''
+            if self.v3 and any(isinstance(o, dict) and o.get('__type__') == 'cc.PrefabInstance' for o in self.data):
+                hint = ('; this 3.x file has nested prefab instances whose children are not stored here: bind the '
+                        'node in that prefab\'s own .prefab file')
+            raise BindError('%s: node "%s" not found%s' % (self.path.name, path, hint))
         if len(hits) > 1:
             raise BindError('%s: node "%s" is ambiguous (%d nodes); rename them first' % (self.path.name, path, len(hits)))
         return hits[0]
@@ -162,22 +275,35 @@ class Doc:
             out += level
         return out
 
+    def size_owner(self, i):
+        """The object holding _contentSize: the node (2.4) or its cc.UITransform (3.x)."""
+        if not self.v3:
+            return self.data[i]
+        t = self.transform(i)
+        if t is None:
+            raise BindError('%s: node "%s" has no cc.UITransform (Cocos 3.x keeps the size there)'
+                            % (self.path.name, self.path_of(i)))
+        return t
+
     def size(self, i):
-        s = self.data[i].get('_contentSize') or {}
+        s = self.size_owner(i).get('_contentSize') or {}
         return [float(s.get('width', 0)), float(s.get('height', 0))]
 
     def set_size(self, i, w, h):
-        self.data[i].setdefault('_contentSize', {'__type__': 'cc.Size'})
-        self.data[i]['_contentSize']['width'] = w
-        self.data[i]['_contentSize']['height'] = h
+        o = self.size_owner(i)
+        o.setdefault('_contentSize', {'__type__': 'cc.Size'})
+        o['_contentSize']['width'] = w
+        o['_contentSize']['height'] = h
 
     def scale(self, i):
-        """Product of |scale| from the node up to the root (2.4 _trs array or older _scale)."""
+        """Product of |scale| from the node up to the root (3.x _lscale, 2.4 _trs array or older _scale)."""
         sx = sy = 1.0
         while i is not None and self.data[i].get('__type__') == 'cc.Node':
             n = self.data[i]
             trs = n.get('_trs')
-            if isinstance(trs, dict) and isinstance(trs.get('array'), list) and len(trs['array']) >= 9:
+            if isinstance(n.get('_lscale'), dict):
+                sx *= abs(n['_lscale'].get('x', 1)); sy *= abs(n['_lscale'].get('y', 1))
+            elif isinstance(trs, dict) and isinstance(trs.get('array'), list) and len(trs['array']) >= 9:
                 sx *= abs(trs['array'][7]); sy *= abs(trs['array'][8])
             elif isinstance(n.get('_scale'), dict):
                 sx *= abs(n['_scale'].get('x', 1)); sy *= abs(n['_scale'].get('y', 1))
@@ -231,20 +357,27 @@ def cover_old_text(doc, i, frames):
 
 
 # ---------------------------------------------------------------- bind
-def bind_one(doc, b, frames, by_png, project):
+def bind_one(doc, b, frames, by_png, project, meta_fixes=None):
     i = doc.find(b['node'])
     if doc.comps(i, 'cc.Label') or doc.comps(i, 'cc.RichText'):
-        raise BindError('%s: node has a Label; Cocos 2.4 draws one render component per node, put the picture on a '
+        raise BindError('%s: node has a Label; Cocos 2.4/3.x draw one render component per node, put the picture on a '
                         'child Sprite node' % b['node'])
     sprites = doc.comps(i, 'cc.Sprite')
     if not sprites:
         raise BindError('%s: node has no cc.Sprite' % b['node'])
     sp = sprites[0]
     rel = b['image']
-    if rel not in by_png:
-        raise BindError('%s: %s is not an imported sprite in the project (no .png.meta with a sprite frame); '
-                        'open the project in Cocos Creator once so it imports the picture' % (b['node'], rel))
-    uuid, sub = by_png[rel]
+    try:
+        uuid, sub, pic_v3, fix = sprite_frame_of(project, rel, by_png)
+    except BindError as e:
+        raise BindError('%s: %s' % (b['node'], e))
+    if pic_v3 != doc.v3:
+        raise BindError('%s: %s was imported by Cocos %s but %s is a Cocos %s file; bind pictures of the same project'
+                        % (b['node'], rel, '3.x' if pic_v3 else '2.4', doc.path.name, '3.x' if doc.v3 else '2.4'))
+    if fix is not None and meta_fixes is not None:
+        meta_fixes[str(fix['meta'])] = fix
+        by_png[rel] = (uuid, sub)
+        frames[uuid] = {'png': pathlib.Path(project) / rel, 'rel': rel, 'meta': sub, 'v3': pic_v3}
     geo = picture_geometry(pathlib.Path(project) / rel, sub)
     blocks, labels = cover_old_text(doc, i, frames)
     if blocks and labels:
@@ -260,6 +393,10 @@ def bind_one(doc, b, frames, by_png, project):
            'old_size': old, 'picture_raw': geo['raw'], 'picture_rect': geo['rect'], 'by': by}
     if geo['meta_stale']:
         rec['meta_stale'] = 'the .meta does not match the PNG yet; Cocos updates it on the next import'
+    if fix is not None:
+        rec['meta_fixed'] = 'import type %s -> %s' % (fix['from'], 'sprite-frame' if pic_v3 else 'sprite')
+    if doc.v3:
+        rec['engine'] = '3.x'
     if stype != SIMPLE:
         new, trim = old, sp.get('_isTrimmedMode', True)
         rec['kept'] = 'sprite type %s keeps its size' % stype
@@ -275,7 +412,12 @@ def bind_one(doc, b, frames, by_png, project):
         raise BindError('%s: upscale: the node shows %s at %.1fx its pixels (> %.0fx); regenerate it at about %dx%d px'
                         % (b['node'], rel, up, MAX_UPSCALE, math.ceil(new[0] * sx * 2), math.ceil(new[1] * sy * 2)))
     doc.set_size(i, new[0], new[1])
-    sp['_spriteFrame'] = {'__uuid__': uuid}
+    if doc.v3:
+        sp['_spriteFrame'] = {'__uuid__': uuid, '__expectedType__': 'cc.SpriteFrame'}
+        if sp.get('_atlas'):
+            sp['_atlas'] = None  # the picture is a standalone sprite frame now, not a frame of the old atlas
+    else:
+        sp['_spriteFrame'] = {'__uuid__': uuid}
     sp['_sizeMode'] = CUSTOM
     sp['_isTrimmedMode'] = bool(trim)
     r = drawn_ratio(new, trim, geo)
@@ -308,13 +450,15 @@ def run_bind(project, map_path, gen_log, dry):
     project = pathlib.Path(project).resolve()
     frames, by_png = index_frames(project)
     bindings = resolve_bindings(read_json(map_path), gen_log, project)
-    docs, records = {}, []
+    docs, records, meta_fixes = {}, [], {}
     for b in bindings:
         p = (project / b['prefab']).resolve()
         if p not in docs:
             docs[p] = Doc(p)
-        records.append(bind_one(docs[p], b, frames, by_png, project))
+        records.append(bind_one(docs[p], b, frames, by_png, project, meta_fixes))
     if not dry:
+        for fix in meta_fixes.values():
+            write_json(fix['meta'], fix['data'])
         for d in docs.values():
             write_json(d.path, d.data)
         log_path = project / 'docs' / 'art' / 'bind_log.json'
@@ -331,7 +475,7 @@ def run_check(project, files):
     project = pathlib.Path(project).resolve()
     frames, _ = index_frames(project)
     if not files:
-        files = [p for ext in ('*.prefab', '*.fire') for p in (project / 'assets').rglob(ext)]
+        files = [p for ext in ('*.prefab', '*.fire', '*.scene') for p in (project / 'assets').rglob(ext)]
     bad = []
     for f in files:
         try:
@@ -345,15 +489,19 @@ def run_check(project, files):
                     continue
                 if sp.get('_sizeMode', CUSTOM) != CUSTOM:
                     continue  # TRIMMED / RAW: the engine sizes the node from the frame itself
+                try:
+                    node_size = doc.size(i)
+                except BindError:
+                    continue  # 3.x sprite node without cc.UITransform: nothing to measure
                 geo = picture_geometry(frames[u]['png'], frames[u]['meta'])
-                r = drawn_ratio(doc.size(i), sp.get('_isTrimmedMode', True), geo)
+                r = drawn_ratio(node_size, sp.get('_isTrimmedMode', True), geo)
                 if r is None:
                     continue
                 want = geo['rect'][0] / float(geo['rect'][1])
                 diff = abs(r / want - 1)
                 if diff > RATIO_TOL:
                     bad.append({'file': pathlib.Path(f).resolve().relative_to(project).as_posix(), 'node': doc.path_of(i),
-                                'image': frames[u]['rel'], 'node_size': doc.size(i), 'picture_rect': geo['rect'],
+                                'image': frames[u]['rel'], 'node_size': node_size, 'picture_rect': geo['rect'],
                                 'ratio_diff': round(diff, 3)})
     return bad
 
@@ -380,7 +528,8 @@ def main():
         for r in run_bind(a.project, a.map, a.gen_log, a.dry_run):
             print('[ok]   %s %s: %gx%g -> %gx%g (trim %s, upscale %.2fx)%s' % (
                 r['prefab'], r['node'], r['old_size'][0], r['old_size'][1], r['new_size'][0], r['new_size'][1],
-                'on' if r['trim'] else 'off', r['upscale'], ' [meta stale]' if r.get('meta_stale') else ''))
+                'on' if r['trim'] else 'off', r['upscale'], ' [meta stale]' if r.get('meta_stale') else '')
+                + (' [%s]' % r['meta_fixed'] if r.get('meta_fixed') else ''))
         if a.dry_run:
             print('dry run: nothing written')
         return 0

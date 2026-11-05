@@ -86,6 +86,36 @@ python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapt
   省 7.5～15 分钟）；有一样不同就照旧全跑。交付记录的 `regression_reuse` 写明复用了，或者为什么没复用。v7.9 以前的收据没有这条记录，
   交付时照旧全跑。
 
+### 出包后返工只查改动（简化.11.15，Saul 2026-11-04）
+
+Saul 2026-11-04：「出包后的返工修改，就只检查修改涉及的那些部分……比如我修改了贴图，之后出包甚至又要检查一遍音频，这种情况不要发生」。
+测试包交了以后再改，两个写包入口拿新包和上一个通过的包逐文件比（`rework_scope.py`），只重跑看得见这次改动的浏览器检查：
+
+- **上一个包**：`--rework-of`，默认 `auto`＝出包文件夹 `最新.txt` 写的那个包（改了名、挪进 `旧包/` 的按 sha256 找回）；也可以给 ZIP 或
+  文件夹；`none` 全部照跑。它要有官方回执（`verify_native_zip.receipt_status` 认这几个字节），回执里两项回归都是通过。
+- **能沿用的条件**（缺一样就全部照跑，并写明原因）：改动的文件只有图片、音频、字体（`.png .jpg .webp .plist`，只定义 SpriteFrame /
+  Texture2D / SpriteAtlas / AudioClip / BitmapFont 的 import JSON）；代码（`.js`）、设置和分包清单（根目录文件、`config.json`）、页面结构
+  （预制体、场景、动画等 import JSON）、数据表、其他文件一个没变；adapter 文件、两套检查工具的 SHA-256、引擎、新老游戏、board、要跑的
+  套件都和上一个包一样。
+- **重跑哪些**：改了图片、字体：`layout_state`、`button_sweep`、`image_stall`、`dead_shell`、`ad_entries`；改了音频：`layout_state`
+  （开局下载量、首页前不带声音）；改的文件在首页前就下载的分包里（上一个包 `layout_state` 量到的 `beforeHome`，加上 main、internal；
+  没量到时当作都在首页前）再加 `startup`、`startup3x`、`network`。重跑的套件按 `after` 把它依赖的也带上。
+- **沿用**：其余套件和激励广告回归 10 例沿用上一个包的通过结果，汇总里每一条写 `reused_from`（上一个包的回执）；新收据照样记下
+  两项回归（沿用了哪些、从哪个包），交付时 `prepare_delivery.py` 照样复用新收据。
+- **每次都跑**：静态检查（共用门禁、ZIP 核对、启动闭包、打包资源、finalize、美术回执）。几秒钟，不省。
+- **真包核对（11-05，割草小能手工程副本，Creator 2.4.15）**：同一工程不改再构建一次，Native 143 个文件和上一次逐字节相同；只改一张按钮图
+  再构建，只变那一张 PNG，`tiktok_finalize.py native` 之后照样只变那一张。这款的 resources 分包在首页前下载，改它里面的图要重跑 6 个
+  套件（看画面的 4 个加 startup、network），沿用 frame_rate、popin、resume_play、save_restart 和广告回归 10 例。用时按 SLS07 v6 写包
+  报告里各套件的实测：改的图不在首页前的分包里时，浏览器检查从约 12.7 分钟（运行时套件 687 秒＋广告回归约 75 秒）降到约 5 分钟（看画面
+  的 5 个套件 312 秒）。
+- 写包入口打印「返工范围｜……」几行（改了什么、用到改动的页面、重跑了什么、沿用了什么、AI 自己还要查什么）；报告和 `check()` 的结果
+  里有 `rework`。出完包写包入口自己把这份计划记进 `<工程>/docs/checks/rework-<时间>.json`（报告里 `rework_record`；写不成只提示，
+  不影响已经出好的包），下一个接手的 AI 读它就知道查过什么、改了什么。
+- 出包前先看：`rework_scope.py --old <出包文件夹> --native <新构建> --project <工程>`。写包入口会先在构建上装平台件、压 PNG
+  （`tiktok_finalize.finalize_native`），没装过的 Creator 构建和交付包比，代码和大部分 PNG 都不一样（割草小能手 2.4.15：3 个代码文件、
+  66 张 PNG），所以预览先在构建的副本上做同一步再比（约 2 秒，构建文件夹不动；App ID 用上一个交付包的，board 和选项用工程 source
+  记录里的），和写包入口的判断一样。`--new <新包.zip>` 直接比两个包。
+
 ## 套件（v7.5 起；v7.8 加 dead_shell、layout_state、button_sweep、ad_entries、trial_link、popin、frame_rate）
 
 | 套件 | 引擎 | 何时必跑 | 内容 | 证明 |
@@ -143,7 +173,7 @@ v7.8 B30 的套件都来自全民飞车门禁原型（`1全民飞车漂移/_work
 | `after_home_js` | layout_state、button_sweep、ad_entries（可选） | 每次进首页后在页面里跑的函数体（关掉新手引导） |
 | `sweep_skip` / `sweep_budget_s` | button_sweep（可选） | 不点的按钮（正则）/ 时间上限秒数（默认 480） |
 | `play` / `in_level`（button_sweep 用法，v7.8 W93） | button_sweep（可选） | 同 startup 的 `play` / `in_level`。有 `play` 时 button_sweep 真点它进局，`in_level` 为 true（或 `home` 变 false；两个都没写时看场景换了、首页按钮大半不见）就算进了局，等 2.5 秒再扫局内按钮；10 秒没进局不扫局内、写进 `notRun` |
-| `ad_entries` / `ad_entries_query` | ad_entries（有它才跑；手机问题源头约束起有激励广告的新游戏必写结算 x2 和复活两项） | `[{id, role, button, states: [{name, why, actions, setup_js, settle_ms}]}]`；`role` 写这个入口是什么：`double`（结算 Watch Ad x2）、`revive`（复活）必有，其他写 `home_reward`、`checkin`、`spin` 这类小写词；宿主参数默认 `ad=complete` |
+| `ad_entries` / `ad_entries_query` | ad_entries（有它才跑；手机问题源头约束起有激励广告的新游戏必写结算 x2 和复活两项） | `[{id, role, button, states: [{name, why, actions, setup_js, settle_ms}]}]`；`role` 写这个入口是什么：`double`（结算 Watch Ad x2）、`revive`（复活）必有，其他写 `home_gift`（首页礼盒；旧记录里的 `home_reward` 照样认成它）、`checkin`、`spin` 这类小写词；宿主参数默认 `ad=complete` |
 | `trial` | trial_link（可选） | `{taps: [路径…]}` 或 `{open: [{tap}], ad_button}`，`reward_js` 返回奖励数值 |
 | `popin` | popin（v7.8，**新游戏必填**；名单上的老游戏缺了只警告） | 对象。必填四个字符串：`player` 主角节点（名字或路径尾，`*/a/b` 也行；它和它下面的节点不算障碍）、`invincible_js` 让主角无敌（返回 `true`）、`revive_js` 看完复活广告后游戏跑的那段复活（不经过广告，直接调）、`game_node` 进局后才出现的节点。可选：`start` 开局的真实操作（格式同 `layout_states.actions`；不写就真点 `play`）、`first_touch`（默认 `true`：开局后在屏幕中间按一下）、`fly_s`（默认 18，5～60）、`settle_ms`（进局后等多久，默认 2500）、`after_start_js`（开局后跑一次，证明或调试用）、`ignore`（路径正则：不算障碍的节点，例如主角射出去的钩子 `^Canvas/point$`）、`ignore_groups`（分组名：例如连续的地面条 `["bottom"]`）、`query`（宿主参数）、`note`。没有滚动障碍的游戏写 `{"n/a": "原因"}`，运行器不开浏览器直接过。BreezyBalloon：`{"player": "submarineItem", "game_node": "LevelView", "invincible_js": "…getComponent('SubmarineItem').safeUntil=Date.now()+1e9;return true;", "revive_js": "…getComponent('LevelView').resumeSameDive();return true;", "ignore_groups": ["bottom"]}`（全文 `briefs/out/W89/adapters/breezyballoon.json`） |
 | `frame_rate` | frame_rate（v7.8，**新游戏必填**；名单上的老游戏缺了只警告） | 对象。必填两个字符串：`track` 返回要跟踪的节点（或 `{x, y[, z]}` 世界坐标；还没生成时返回 `null`）、`drive_js` 那段操作的开头（t0 跑一次，例如按开始）。可选：`start` 进局前的真实操作（格式同 `layout_states.actions`）、`prepare_js`（t0 前跑一次）、`steps` `[{"at_s": 秒, "js": "..."}]` 按真实时间跑的后续操作（转向、松手）、`run_s`（默认 5，2～20，要包含倒计时）、`settle_ms`（默认 1000）、`min_move`（默认 20）、`align`（`"move"` 默认 / `"drive"`）、`query`（宿主参数）、`note`。没有物理、没有自己会动的东西的游戏写 `{"n/a": "原因"}`。全民飞车漂移 v3.1：`{"start": [{"tap": "Canvas/MenuBottom/button/btnkj", "after": 2500}], "drive_js": "<W87 的 enter_level：按 RACE>", "track": "try{var R=__require('RunUI').RunUI;return R.car&&R.car.isValid?R.car:null;}catch(e){return null;}", "run_s": 10}`（全文 `briefs/out/W92/adapters/driftracer3d_frame_rate.json`） |
@@ -189,7 +219,7 @@ URL 参数（都要主动打开）：
 | `ad=manual\|complete\|cancel\|error\|pending`，`adms=N` | 广告模式；`pending` = 永远不回调 | D7 9 / 13 |
 | `legacyads=1` | 提供横幅/插屏空实现 | D5 |
 | `login=...`，`mission(s)=...`，`__setMission()` | 登录计数、侧边栏任务 | D4 |
-| `mouse=1` | 鼠标转 TikTok 触摸（运行器总是带上） | - |
+| `mouse=1` | 鼠标转 TikTok 触摸（运行器总是带上）。#41 起 2.x 宿主不带参数也默认开（手开 `/__host/play.html` 也能用鼠标点、拖），`mouse=0` 关；只认左键，真手指按着或刚抬起 800 ms 内的鼠标事件不再重发 | - |
 | `dev=iphone14\|se` | 机型（点）：iPhone 14 = 390×844、pixelRatio 3、状态栏 47、胶囊 293/51/380/83、安全区底 810；SE = 375×667、pixelRatio 2、状态栏 20、胶囊 278/24/365/56（横向是推算的）、安全区底 667。套件同时用 CDP 把页面设成同样大小 | v7.8 B30（Saul iPhone 14 实测） |
 | `capsule=pt\|px` | `getMenuButtonBoundingClientRect` 按点给，或每个值乘 pixelRatio（Saul 的 iPhone 2026-10-29 返回的是像素）；`getSystemInfoSync` 始终按点 | v7.8 B30、U1 |
 | `adhide=1&adhideorder=show-first\|close-first`（v7.9，2.x 和 3.x 宿主都有） | 像手机一样：激励视频一开播游戏收到 onHide，播完收到 onShow，50 ms 后才是 onClose（`close-first` 反过来）。不带就和以前一样，广告期间游戏不会被切后台 | 甜点消消乐 R39～R47 |

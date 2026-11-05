@@ -249,11 +249,20 @@
       H_[type].emit({ touches: tlist(e.touches), changedTouches: tlist(e.changedTouches), timeStamp: e.timeStamp });
     }, { passive: false });
   });
-  // Mouse -> single touch for desktop preview only (?mouse=1).
-  if (Q.get('mouse') === '1') {
+  // Mouse -> single TikTok touch. 生成时预防 #41 (普查 hit_area_misaligned 13/17, BrothersRush「本地预览鼠标划不动」):
+  // on by default, so a person or AI opening this host page without ?mouse=1 can still tap and drag with the mouse
+  // (the runners always passed mouse=1; hand-opened pages did not). ?mouse=0 turns it off. Only the left button; a
+  // mouse event while a real finger is down or within 800 ms after a real touch (the browser's compatibility mouse
+  // event) is ignored, so one tap is never delivered twice and the mouse never reuses a held finger's id 0.
+  var lastRealTouch = -1e9, fingersDown = 0;
+  ['touchstart', 'touchend', 'touchcancel'].forEach(function (type) {
+    main.addEventListener(type, function (e) { lastRealTouch = now(); fingersDown = e.touches ? e.touches.length : 0; }, { passive: true });
+  });
+  if (Q.get('mouse') !== '0') {
     var down = false;
     function mt(e) { return [shape(0, e.clientX, e.clientY, 1)]; }
-    main.addEventListener('mousedown', function (e) { down = true; H_.touchstart.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
+    function fromTouch() { return fingersDown > 0 || now() - lastRealTouch < 800; }
+    main.addEventListener('mousedown', function (e) { if ((e.button || 0) !== 0 || fromTouch()) return; down = true; H_.touchstart.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
     window.addEventListener('mousemove', function (e) { if (down) H_.touchmove.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
     window.addEventListener('mouseup', function (e) { if (!down) return; down = false; H_.touchend.emit({ touches: [], changedTouches: mt(e), timeStamp: e.timeStamp }); });
   }

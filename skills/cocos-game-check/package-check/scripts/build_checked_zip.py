@@ -34,7 +34,12 @@ from audit_final_package_startup import audit_final_startup
 import package_obligations
 
 
-def build(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None, project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None, board=None, keep_webp_exception=None, keep_old_packages=False):
+def build(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None, project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None, board=None, keep_webp_exception=None, keep_old_packages=False, rework_of=None):
+    """rework_of (简化.11.15, --rework-of; Saul 2026-11-04「出包后的返工修改，就只检查修改涉及的那些部分」): the last
+    passed package, a folder with 最新.txt, 'auto' (the --out folder's 最新.txt) or None/'none' (every check runs). When
+    only pictures, sounds or fonts changed since it, check() keeps its passes for the browser suites that cannot see the
+    change (rework_scope.py); every static check runs either way. After publishing, the plan, the pages that use the
+    change and the AI's hand checks go to <project>/docs/checks/rework-<time>.json (result['rework_record'])."""
     started = time.monotonic()
     native, out = Path(native).resolve(), Path(out).resolve()
     if not native.is_dir():
@@ -117,7 +122,11 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
     try:
         archive_started = time.monotonic()
         write_archive(temporary, files)
-        result = check(temporary, app_id, native, ad_regression, board, policy=gate_policy, context=gate_context)
+        import rework_scope
+        rework_path, rework_note = rework_scope.resolve(rework_of, out)
+        result = check(temporary, app_id, native, ad_regression, board, policy=gate_policy, context=gate_context,
+                       rework_of=str(rework_path) if rework_path else None)
+        result.setdefault('rework', {'reuse': False, 'why': rework_note})
         result['archive'] = str(out)
         result['finalize'] = finalize_report(finalized)
         result['adapter_fix'] = adapter_step(finalized)
@@ -167,6 +176,11 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
         import delivery_folder
         result['delivery_folder'] = delivery_folder.tidy(out, app_id, 'build_checked_zip', result['sha256'],
                                                          keep=keep_old_packages)
+        # 简化.11.15 (出包后返工): what was compared, rerun and kept, and what the AI checks by hand, in docs/checks/
+        # (rework_scope.record_for_writer never raises; the ZIP is already published)
+        record = rework_scope.record_for_writer(project, result.get('rework'))
+        if record:
+            result['rework_record'] = record
         # v7.8 (总表 B32 d): check() listed changed tools (tool_identity); they get a feedback draft for the Skill.
         draft = package_checks.feedback_draft(result.get('tool_identity'), Path(project).name if project else out.stem)
         if draft:
@@ -188,6 +202,10 @@ def main():
     parser.add_argument('--report', type=Path)
     parser.add_argument('--resource-manifest', type=Path, help='expanded business load requests for final bundle path/type validation')
     parser.add_argument('--interaction-audio-trace', type=Path, help='required by workflow for reported drag/audio defects; checked before ZIP creation')
+    parser.add_argument('--rework-of', default='auto', help='简化.11.15 出包后返工: the last passed package (a ZIP, or a folder '
+                        'with 最新.txt; default auto = the 最新.txt of the --out folder; none = run every check). When '
+                        'only pictures, sounds or fonts changed since it, only the browser checks that can see the change '
+                        'run again (rework_scope.py); static checks always run')
     parser.add_argument('--project', type=Path, required=True, help='the Cocos project (v7.7: its tiktok_finalize source record is checked)')
     parser.add_argument('--startup-contract', type=Path)
     parser.add_argument('--loading-recovery-runtime', type=Path)
@@ -200,9 +218,13 @@ def main():
     try:
         if args.report and args.report.exists():
             raise ValueError('report already exists')
-        result = build(args.native, args.expected_app_id, args.out, args.report, args.interaction_audio_trace, args.resource_manifest, args.project, args.startup_contract, args.loading_recovery_runtime, args.ad_regression, args.board, args.keep_webp_exception, args.keep_old_packages)
+        result = build(args.native, args.expected_app_id, args.out, args.report, args.interaction_audio_trace, args.resource_manifest, args.project, args.startup_contract, args.loading_recovery_runtime, args.ad_regression, args.board, args.keep_webp_exception, args.keep_old_packages, args.rework_of)
         print(json.dumps({k:result.get(k) for k in ('archive','sha256','archive_bytes','main_bytes','uncompressed_total_bytes','expected_tree_exact','check_timings','pre_home_bytes','entry','receipt')}, ensure_ascii=False))
         print('finalize (policy %s):\n%s' % (result['finalize']['policy'], result['finalize']['table_markdown']))
+        import rework_scope
+        rework = result.get('rework') or {}
+        print('\n'.join(rework_scope.writer_lines(rework, result.get('rework_record'))) if rework.get('old')
+              else '返工范围｜%s' % rework.get('why'))
         import delivery_folder
         print('\n'.join(delivery_folder.describe(result['delivery_folder'])))
         if result.get('modified_tools'):

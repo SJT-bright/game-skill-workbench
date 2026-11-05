@@ -68,39 +68,62 @@ def write_archive(path, files):
             archive.writestr(name, content)
 
 
-def rewarded_ad_gate(files, folder, adapter=None):
+def rewarded_ad_gate(files, folder, adapter=None, rework=None):
     """Mandatory rewarded-ad regression on the exact verified bytes staged in folder
     (Basil timeout rule, remake-ads/references/ad-timeout-and-regression.md). Refuses unless
-    every case passes; a missing adapter or browser is a refusal, never a skip."""
+    every case passes; a missing adapter or browser is a refusal, never a skip.
+    rework (简化.11.15, rework_scope.plan): a reuse plan against the last passed package -> its pass is kept (only
+    pictures, sounds or fonts changed; same code, adapter and tool) instead of running the 10 cases again."""
     if not ad_regression_gate.needs_regression(files):
         return {'id': 'rewarded_ad_regression', 'status': 'not_applicable',
                 'reason': 'no createRewardedVideoAd call in package JavaScript'}
     adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
     input_gate('rewarded_ad_regression', adapter)
+    if isinstance(rework, dict) and rework.get('reuse') and rework.get('ad') == 'reuse':
+        import rework_scope
+        return rework_scope.reused_ad(rework)
     try:
         return ad_regression_gate.run(folder, adapter)
     except ad_regression_gate.RegressionRefused as error:
         raise ValueError(str(error))
 
 
-def runtime_gate(files, folder, adapter=None, policy=None, board=None):
+def runtime_gate(files, folder, adapter=None, policy=None, board=None, rework=None):
     """Mandatory runtime regression (runtime_regression.py, references/runtime-regression.md) on the same staged
     bytes and the same adapter as the rewarded-ad regression. Every package with game.js runs the suites shipped
     in runtime_regression/suites that apply to it; a missing adapter/field/browser or a failed case refuses.
     policy (v7.8): the package gates' policy ('new' | 'legacy'), so a writer's finalize record decides the runtime
     suites too (dead_shell: FoxDenDash v1's record says new, its bytes say legacy); None = judged from the bytes.
     board (v7.8, 总表 B30): 'remake' | 'localize' picks layout_state's home rules; None = not checked (warning).
-    The writers have no trial link, so trial_link never runs here (summary not_run says so)."""
+    The writers have no trial link, so trial_link never runs here (summary not_run says so).
+    rework (简化.11.15, Saul 2026-11-04「出包后的返工修改，就只检查修改涉及的那些部分」): a reuse plan from
+    rework_scope.plan -> only the suites that can see the change run again (rework_scope RERUN), the old passes of the
+    rest are kept with their receipt named (reused_from); every required suite is in the summary either way."""
     if 'game.js' not in files:
         return {'id': 'runtime_regression', 'status': 'not_applicable', 'reason': 'no game.js at package root'}
     adapter = adapter or os.environ.get(runtime_regression_gate.ENV_ADAPTER)
     input_gate('runtime_regression', adapter)
+    board = board if board in runtime_regression_gate.BOARDS else None
     try:
         names = runtime_regression_gate.required_suites(files, adapter)
-        return runtime_regression_gate.run(folder, adapter, names, policy=policy,
-                                           board=board if board in runtime_regression_gate.BOARDS else None)
+        if isinstance(rework, dict) and rework.get('reuse'):
+            import rework_scope
+            rerun = rework_scope.to_rerun(rework, names)
+            summary = (runtime_regression_gate.run(folder, adapter, rerun, policy=policy, board=board) if rerun
+                       else None)
+            return rework_scope.merge_runtime(rework, summary, names)
+        return runtime_regression_gate.run(folder, adapter, names, policy=policy, board=board)
     except runtime_regression_gate.RuntimeRefused as error:
         raise ValueError(str(error))
+
+
+def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
+    """简化.11.15: rework_scope.plan for the writers (None when no old package is given). A planning problem is never a
+    refusal: the plan says reuse False and why, and every check runs as before."""
+    if not rework_of:
+        return None
+    import rework_scope
+    return rework_scope.plan(rework_of, files, adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER), policy, board)
 
 
 NO_ADAPTER_HINT = ('write the game\'s adapter JSON (usually <project>/qa/ad-regression.json; fields: '
@@ -154,14 +177,21 @@ def regression_record(ad, runtime):
         keep = {'status': 'passed', 'passed': True, 'tool_sha256': summary['tool_sha256'],
                 'adapter_sha256': summary['adapter_sha256'], 'seconds': summary.get('seconds'),
                 'warnings': list(summary.get('warnings') or [])}
+        # 简化.11.15 (出包后返工): which passes were kept from an earlier package, and from which receipt
+        if summary.get('reused_from'):
+            keep['reused_from'] = summary['reused_from']
         if runtime_part:
             keep.update(required=list(summary.get('required') or []), engine=summary.get('engine'),
                         policy=summary.get('policy'), board=summary.get('board'),
-                        suites=[{'suite': r.get('suite'), 'passed': r.get('passed')} for r in summary.get('suites') or []
-                                if isinstance(r, dict)],
+                        suites=[dict({'suite': r.get('suite'), 'passed': r.get('passed')},
+                                     **({'reused_from': r['reused_from']} if r.get('reused_from') else {}))
+                                for r in summary.get('suites') or [] if isinstance(r, dict)],
                         startup_measured=summary.get('startup_measured'))
+            if isinstance(summary.get('rework'), dict):
+                keep['rework'] = summary['rework']
         else:
-            keep['cases'] = [c.get('case') for c in summary.get('cases') or [] if isinstance(c, dict)]
+            keep['cases'] = [c if isinstance(c, str) else c.get('case') for c in summary.get('cases') or []
+                             if isinstance(c, (dict, str))]
         return keep
     a, r = part(ad, False), part(runtime, True)
     if a is None or r is None:
@@ -233,22 +263,28 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             'runtime_regression': dict(rt, reused_from=source)}
 
 
-def writer_regressions(files, folder, adapter=None, policy=None, board=None):
+def writer_regressions(files, folder, adapter=None, policy=None, board=None, rework_of=None):
     """v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions for make_tiktok_zip.py, which does not call
     check(). Same two gates as check() (rewarded_ad_gate, then runtime_gate with the same adapter, policy and board) on
     the staged bytes of the ZIP about to be published. Never raises: -> {blocked, problems, warnings, policy, adapter,
     rewarded_ad_regression, runtime_regression, seconds}. policy 'legacy' (the writer's finalize record: a game on the
     frozen legacy list) turns every refusal into a warning; anything else (new, or None judged from the bytes as new
-    when the bytes cannot decide) refuses. check() and build_checked_zip are unchanged."""
+    when the bytes cannot decide) refuses. check() and build_checked_zip are unchanged.
+    rework_of (简化.11.15): the last passed package (make_tiktok_zip --rework-of); out['rework'] is the plan."""
     import time
     started = time.monotonic()
     adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER) or None
     legacy = policy == 'legacy'
     out = {'id': 'writer_regressions', 'policy': policy, 'board': board, 'adapter': str(adapter) if adapter else None,
            'rewarded_ad_regression': None, 'runtime_regression': None, 'problems': [], 'warnings': []}
+    rework = rework_plan(rework_of, files, adapter, policy, board)
+    if rework is not None:
+        import rework_scope
+        out['rework'] = rework_scope.public(rework)
     reasons = []
-    for key, gate in (('rewarded_ad_regression', lambda: rewarded_ad_gate(files, folder, adapter)),
-                      ('runtime_regression', lambda: runtime_gate(files, folder, adapter, policy=policy, board=board))):
+    for key, gate in (('rewarded_ad_regression', lambda: rewarded_ad_gate(files, folder, adapter, rework=rework)),
+                      ('runtime_regression', lambda: runtime_gate(files, folder, adapter, policy=policy, board=board,
+                                                                  rework=rework))):
         try:
             out[key] = gate()
         except Exception as error:  # noqa: BLE001 - fail closed: a crash refuses a new game like a failed case
@@ -291,7 +327,9 @@ def _fallback_entries(archive):
 
 
 def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None,
-          reuse_writer_regressions=False):
+          reuse_writer_regressions=False, rework_of=None):
+    # 简化.11.15 (出包后返工): rework_of (build_checked_zip --rework-of) is the last passed package; when only pictures,
+    # sounds or fonts changed since it, the browser suites that cannot see the change keep its passes (rework_scope).
     # v7.9 (出包检查提速 S1, 总表 19 ①): reuse_writer_regressions (prepare_delivery only) takes an official writer
     # receipt's record of the two regressions for the same bytes, adapter and check tools (reusable_regressions).
     """Read-only final check of the exact bytes. Every reason is collected and the package is refused ONCE with
@@ -350,6 +388,8 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
                  if result is not None and result.get('entry') == 'official'
                  else {'reused': False, 'why': 'not a ZIP an official writer wrote (no matching receipt)'})
     reused = bool(reuse and reuse.get('reused'))
+    rework = None if reuse_writer_regressions else rework_plan(rework_of, verified_files, ad_regression,
+                                                               gates.get('policy'), board)
     browser_skipped = False
     with tempfile.TemporaryDirectory(prefix='TikTok package extract ') as folder:
         # Paths and CRC were validated above; stage those exact bytes, not a second ZIP read.
@@ -366,11 +406,12 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
             regression, runtime = reuse['rewarded_ad_regression'], reuse['runtime_regression']
         elif not browser_skipped:
             try:
-                regression = rewarded_ad_gate(verified_files, folder, ad_regression)
+                regression = rewarded_ad_gate(verified_files, folder, ad_regression, rework=rework)
             except ValueError as error:
                 reasons.append(str(error))
             try:
-                runtime = runtime_gate(verified_files, folder, ad_regression, policy=gates.get('policy'), board=board)
+                runtime = runtime_gate(verified_files, folder, ad_regression, policy=gates.get('policy'), board=board,
+                                       rework=rework)
             except ValueError as error:
                 reasons.append(str(error))
     if hashlib.sha256(Path(archive).read_bytes()).hexdigest() != (result['sha256'] if result else start_sha):
@@ -385,6 +426,9 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     result['runtime_regression'] = runtime
     if reuse is not None:
         result['regression_reuse'] = {k: reuse[k] for k in ('reused', 'why', 'note', 'receipt') if k in reuse}
+    if rework is not None:
+        import rework_scope
+        result['rework'] = rework_scope.public(rework)
     result['package_gates'] = package_gates.summary(gates)
     from make_tiktok_zip import pre_home
     result['pre_home_bytes'] = pre_home(verified_files, None, board)

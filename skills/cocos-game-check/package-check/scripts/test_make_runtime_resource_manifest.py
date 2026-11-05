@@ -137,6 +137,8 @@ class KitMainObserved(unittest.TestCase):
             'game.js': b"require('./src/settings');\nrequire('./main');\nwindow.boot();\n", 'main.js': main,
             'src/settings.js': b'window._CCSettings = {jsList: []};\n',
             'webp-decode-probe.js': (kit / 'webp-probe/cocos2.4/webp-decode-probe.js').read_bytes(),
+            # 简化.11.14 R4A: main.js v1.7 requires ./rewarded-guard, shipped next to it (startup24.extra_files)
+            'rewarded-guard.js': (kit / 'parts/rewarded-guard.js').read_bytes(),
             'assets/resources/config.json': json.dumps({'name': 'resources', 'types': ['cc.SpriteFrame'],
                                                         'paths': {'0': ['a', 0]}}).encode(),
             'assets/resources/index.js': b"cc.resources.load('a', cc.SpriteFrame, function () {});\n",
@@ -155,7 +157,7 @@ class KitMainObserved(unittest.TestCase):
     def test_kit_main_with_static_business_code_refuses_observed(self):
         doc, files = self.write()
         static = self.resources.generate(files)
-        self.assertEqual([r['path'] for r in static['script_files']], ['webp-decode-probe.js'])
+        self.assertEqual([r['path'] for r in static['script_files']], ['rewarded-guard.js', 'webp-decode-probe.js'])
         self.assertTrue(self.resources.audit(files, static)['passed'])
         with self.assertRaisesRegex(ValueError, 'expands statically'):
             self.resources.audit(files, doc)

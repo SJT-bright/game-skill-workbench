@@ -398,11 +398,25 @@ def _js_contains(files, needle):
     return any(name.endswith('.js') and needle in data for name, data in files.items())
 
 
+def rewarded_callers(files):
+    """JavaScript files that can request a rewarded video. 简化.11.14 R4A: the platform kit's own rewarded-guard.js
+    (main.js v1.7 installs it in every 2.4 package) is recognised by its KIT_MANIFEST hash and left out
+    (remake-core/scripts/package_gates/ads_static.rewarded_callers). When remake-core cannot be read every file naming
+    createRewardedVideoAd counts (stricter, never looser)."""
+    try:
+        if str(SHARED) not in sys.path:
+            sys.path.insert(0, str(SHARED))
+        from package_gates.ads_static import rewarded_callers as shared
+        return shared(files)
+    except Exception:  # noqa: BLE001 - the plain scan still applies
+        return sorted(n for n, d in files.items() if n.endswith('.js') and b'createRewardedVideoAd' in d)
+
+
 def predicate(name, files, adapter, trial_url=None):
     if name == 'tiktok':
         return 'game.js' in files
     if name == 'rewarded_ads':
-        return _js_contains(files, b'createRewardedVideoAd')
+        return bool(rewarded_callers(files))
     if name == 'missions':
         return any(_js_contains(files, n) for n in (b'startEntranceMission', b'addShortcut', b'navigateToScene'))
     if name == 'remake_home':
@@ -431,6 +445,14 @@ _NOT_RUN = {'trial_url': 'no trial link given (serve_preview.py --keep runs it b
             'missions': 'no mission / shortcut call in the package JavaScript', 'remake_home': 'adapter.remake_home is not set'}
 
 
+NOT_SELECTED = 'applies, but not selected in this run (--suites)'
+INCOMPLETE_EXIT = 3          # 简化.11.14 R4D: selected suites passed, but the case list was not run to the end
+
+
+def incomplete_verdict(planned_not_run):
+    return '没跑完：这些适用的套件没跑：%s（只跑一部分不算通过，去掉 --suites 跑完整清单）' % '、'.join(planned_not_run)
+
+
 def not_run(files, adapter, names, suites, trial_url=None):
     """[{suite, reason}] for every catalogued suite this run does not include (v7.8, 总表 B30: the summary says which
     suites did not run and why, e.g. ad_entries without adapter.ad_entries, trial_link without a trial link)."""
@@ -444,7 +466,7 @@ def not_run(files, adapter, names, suites, trial_url=None):
         if engine not in meta['engines']:
             reason = 'Cocos %s not supported (engines %s)' % (engine, ', '.join(meta['engines']))
         elif any(predicate(p, files, adapter, trial_url) for p in meta['applies']):
-            reason = 'applies, but not selected in this run (--suites)'
+            reason = NOT_SELECTED
         else:
             reason = '; '.join('adapter has no "%s"' % p[8:] if p.startswith('adapter:') else _NOT_RUN.get(p, p + ' does not apply')
                                for p in meta['applies'])
@@ -869,7 +891,11 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
     finally:
         if owned:
             shutil.rmtree(work, ignore_errors=True)
+    # 简化.11.14 R4D（喵咪小吃铺全量测试只跑首轮就收尾）: the case list is required_suites(); a --suites run that left
+    # out an applicable suite is 「没跑完」, never 通过 (main() exits INCOMPLETE_EXIT). planned_not_run lists them.
+    planned_not_run = [s['suite'] for s in skipped if s['reason'] == NOT_SELECTED]
     summary = {'id': 'runtime_regression', 'passed': not problems, 'engine': engine, 'suites': rows,
+               'complete': not planned_not_run, 'planned_not_run': planned_not_run,
                'required': names, 'not_run': skipped, 'board': board, 'problems': problems, 'policy': policy,
                'policy_reason': policy_reason, 'startup_measured': _startup_measured(rows),
                'warnings': input_warnings + [w for r in rows for w in r['warnings']],
@@ -1003,7 +1029,11 @@ def main(argv=None):
         elif isinstance(error, InputsNotRun):       # 总表 P19 ②: 「未执行」, exit 2 like every not_run
             summary.update(status='not_run', environment='未执行：' + str(summary.get('reason', error)))
             code = check_guard.NOT_RUN_EXIT
-    summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200]}[code]
+    if code == 0 and summary.get('planned_not_run'):
+        code = INCOMPLETE_EXIT
+        summary.update(passed=False, selected_passed=True, status='incomplete')
+    summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200],
+                          INCOMPLETE_EXIT: incomplete_verdict(summary.get('planned_not_run') or [])}[code]
     # v7.8 (总表 B32 d): a copied / changed runtime tool says so (企鹅雪道 ran its own edited copy) and leaves a draft
     try:
         import tool_identity
@@ -1018,7 +1048,8 @@ def main(argv=None):
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({k: summary.get(k) for k in ('id', 'passed', 'status', 'engine', 'policy', 'board', 'required',
-                                                  'not_run', 'startup_measured', 'problems', 'warnings', 'error')},
+                                                  'planned_not_run', 'not_run', 'startup_measured', 'problems',
+                                                  'warnings', 'error')},
                      ensure_ascii=False))
     print('结论: %s' % summary['verdict'], file=sys.stderr)
     return code

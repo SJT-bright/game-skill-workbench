@@ -17,7 +17,7 @@ python <skills>/remake-core/scripts/audit_runtime_resources.py \
 - 无法确定的真实资源动态输入、未知加载协议或逃逸的加载方法明确拒绝，并列出源码位置。同名`.load()`先核接收者：只有可证明的本地方法体或已知平台广告对象才与Cocos加载区分；本地方法体仍独立清点，改写/逃逸后不能沿用此结论。为实际有限数据域补解析适配/生产配置，不能写通配忽略、假列表或`passed:true`放行。
 - v7.7：包里的 `main.js` 字节等于 `KIT_MANIFEST.json` 里平台包 `main.js` 的当前哈希或 `previous_sha256` 时，它的 `loadScript(settings.jsList)` 不算动态调用，生成的清单多一个 `script_files` 数组：jsList 里的每个脚本，加上 `main.js` require 的 `webp-decode-probe.js`，各带 sha256。写包入口核对这些文件都在、非空、字节没变，少列、多列、字节变了都拒绝；不是平台包 `main.js` 的包带 `script_files` 也拒绝。其他 `main.js` 照旧算动态调用。
 - 这是静态有限域验证，不通过“把所有关卡玩一遍”收集路径。现有Cocos引擎内部、场景/原生加载和真实解码仍由所属启动/资源合同覆盖；不把静态清单称为任意JS全程序证明。
-- 缓存只复用当前进程内、当前代码/数据域/解析器指纹相同的发现结果；每次仍核实际清单与catalog，不缓存跨版本通过章。 SystemJS通用分支按真实`cc`导入setter识别别名，不要求游戏具有Art模块或固定关数；项目专用展开必须额外匹配完整程序与其语义数据指纹。配置驱动的有限ID从当前绑定JsonAsset推导，不能只保留上次ID列表。文件存在/非空/路径及当前指纹检查在缓存外执行。
+- 缓存只复用当前进程内、当前代码/数据域/解析器指纹相同的发现结果；每次仍核实际清单与catalog，不缓存跨版本通过章。 SystemJS通用分支按真实`cc`导入setter识别别名，不要求游戏具有Art模块或固定关数；项目专用展开必须额外匹配完整程序与其语义数据指纹。配置驱动的有限ID从当前绑定JsonAsset推导，不能只保留上次ID列表。文件存在/非空/路径及当前指纹检查在缓存外执行。 3.6/3.7 官方导出（R4K2）：import-map 的 `chunks:///<名>` 对到包内唯一一个字面量 `System.register("chunks:///<名>",…)` 的脚本，按本地模块继续扫；没人注册、被两个脚本注册、带 `..` 的照旧拒。scriptPackages 的 `../src/chunks/bundle.js` 按包根解析、文件必须在包内；模板的 `'plugin:': u=>{requirePlugin(u)}` 只在 `plugin:` 键下认。远程地址照旧拒。
 
 两个writer都传`--resource-manifest`；最终`prepare_delivery.py`同样必传。只运行只读`check_package.py`仍只是文件诊断，不能替代上述三处交付门禁。
 

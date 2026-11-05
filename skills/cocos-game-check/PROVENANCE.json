@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-04.english-simple.11.14",
+  "revision": "2026-11-05.english-simple.11.15",
   "files": [
     {
       "path": "SKILL.md",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "b7b475b65e7b2fe8d2da500eba96547fcb53cad68e884ca4d46339537e222377",
-      "bytes": 17806
+      "sha256": "61239343b906e090cf5a9f77ed2d15eaa76bcad9dc9e7cb230dead804ccb1bd0",
+      "bytes": 18008
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -161,8 +161,8 @@
     },
     {
       "path": "package-check/references/check-status.json",
-      "sha256": "83e05d7bc50ff3fe0508b43d11d7c02b43c9667c9b458d3964f302afe854f4b9",
-      "bytes": 1583
+      "sha256": "77ac2031df9bc636f59a7ce14ada35c20937ac995c89fb93bb44a9476ad7d079",
+      "bytes": 3269
     },
     {
       "path": "package-check/references/drag-audio-postconditions.md",
@@ -191,8 +191,8 @@
     },
     {
       "path": "package-check/references/resource-and-reported-issues.md",
-      "sha256": "35c25eb5f3380e8fa6ab53f7049350acaf00b77d6bbe35d10b29e96923fa02a5",
-      "bytes": 15433
+      "sha256": "f750353d440798d70df83e9d3318bc98bc8deb086f4b93319af19eed884fb0a9",
+      "bytes": 15862
     },
     {
       "path": "package-check/references/resource-loss-recovery.md",
@@ -206,8 +206,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "9ce4dd6ff7a2c16f06dbb31e026d10742fdf8eea8b3172e85389c52af7aba4cd",
-      "bytes": 67564
+      "sha256": "316f0281c9293c8e26fca6c7c3a476328c341240006083ef82616df6742ede9a",
+      "bytes": 71871
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -221,8 +221,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
-      "sha256": "8d5deb0708ee8e9049fbc5058e0c36817e87c1d1162c379c0215baca9dc28606",
-      "bytes": 55902
+      "sha256": "ab1bf32ac73e77e0382f6888d06a6bad1916642002c9e6281c31401ec085179c",
+      "bytes": 56829
     },
     {
       "path": "package-check/scripts/ad_regression/play.html",
@@ -236,8 +236,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression.py",
-      "sha256": "6056cbe62cdf28afe040a272ea73067c6f6030f766d8be8e552035f49c30eee8",
-      "bytes": 18120
+      "sha256": "68aaac70cfc1fbdffea5fba111084258f4d4a0a4f88f1ff4c558178dc37a1076",
+      "bytes": 19662
     },
     {
       "path": "package-check/scripts/audit_interaction_audio.py",
@@ -256,8 +256,8 @@
     },
     {
       "path": "package-check/scripts/build_checked_zip.py",
-      "sha256": "6f96a0d5b0704109e5cf1e8d1d7338e42763a897afd43b130ed15660a09ef057",
-      "bytes": 14443
+      "sha256": "9be1842ebd675cf8e0a9b59de21e46f11dbf45382ad79c6abda1199276c64382",
+      "bytes": 16407
     },
     {
       "path": "package-check/scripts/check_guard.cjs",
@@ -271,8 +271,8 @@
     },
     {
       "path": "package-check/scripts/check_package.py",
-      "sha256": "c380ddd020a5425a5b7078cfdc80e078f8bf1e1d3e3853a395e40de42fa6ee62",
-      "bytes": 30711
+      "sha256": "d51d07707a4db3c13ca6e5c59978001f37c23da3f49524d6d7b3420228c596ac",
+      "bytes": 33825
     },
     {
       "path": "package-check/scripts/make_runtime_resource_manifest.py",
@@ -283,6 +283,11 @@
       "path": "package-check/scripts/prepare_delivery.py",
       "sha256": "18a5c3e497045783439db71402081dd6fcc7210fcdc3d3f43101f69b11302771",
       "bytes": 10751
+    },
+    {
+      "path": "package-check/scripts/rework_scope.py",
+      "sha256": "c277d2e2a5b53bb4e2c4c85256f1d0547dab9b74574c4399abdeac6aff7c063e",
+      "bytes": 39390
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -486,8 +491,13 @@
     },
     {
       "path": "package-check/scripts/runtime_regression.py",
-      "sha256": "a90e7c70847d562f0552a3c51ce94d1d98cb9a30bb87e201e3e3ae233e18dcc0",
-      "bytes": 58789
+      "sha256": "54e43a8d5f8f14de3170d6b17e43d1c8a55fd2ba9cd4c596ae3ab6b140190fcb",
+      "bytes": 60681
+    },
+    {
+      "path": "package-check/scripts/test_ad_host_mouse_touch.py",
+      "sha256": "df27ecf52f0543eaca729681fe8c5d425b773821095919c61cd6e68b42590c5f",
+      "bytes": 4636
     },
     {
       "path": "package-check/scripts/test_ad_regression.py",
@@ -506,8 +516,8 @@
     },
     {
       "path": "package-check/scripts/test_check_inputs.py",
-      "sha256": "e45100f8038e397c5434add39433c0e362506825036def332503f4ff1e1c614e",
-      "bytes": 12824
+      "sha256": "2c974db50a3cded1cda9fbe097003d37f1f050534b28fb40e652a2c76ab7dbd8",
+      "bytes": 17151
     },
     {
       "path": "package-check/scripts/test_check_speedups.py",
@@ -560,14 +570,19 @@
       "bytes": 8039
     },
     {
+      "path": "package-check/scripts/test_kit_rewarded_guard.py",
+      "sha256": "3c7341039a248326ba7f7795b254d47765065aefd6a9522fabdf567cf4d1322a",
+      "bytes": 5386
+    },
+    {
       "path": "package-check/scripts/test_layout_gates.py",
       "sha256": "340a05b3b32785c5b9bbf11a977c983d7e39748a46fe5f7af7072ac644fbe78b",
       "bytes": 13358
     },
     {
       "path": "package-check/scripts/test_make_runtime_resource_manifest.py",
-      "sha256": "034d4e1a88a9352167bb0b904e2940faca030cce4f72f3ad8c1c9a9b2f05fb07",
-      "bytes": 9524
+      "sha256": "52e59cdb3e572614076ffda7b79f8c41ea8a0479c69b0973f93cdb74acd8920b",
+      "bytes": 9741
     },
     {
       "path": "package-check/scripts/test_package_checks.py",
@@ -590,9 +605,19 @@
       "bytes": 15022
     },
     {
+      "path": "package-check/scripts/test_r4d_case_list_complete.py",
+      "sha256": "cf1e05d4480d207842a5e9b253beb69398934491b7730f81b016e9a2b9123173",
+      "bytes": 4486
+    },
+    {
       "path": "package-check/scripts/test_resource_and_issue_obligations.py",
-      "sha256": "ed76deafa606adfc378b04ab33074164a636cf1b7f483848e337185adc59c69c",
-      "bytes": 19876
+      "sha256": "eea0ea40b499a8750046f4bb32d1f0cea9f26484aff70ca9b29624dfc1195724",
+      "bytes": 20013
+    },
+    {
+      "path": "package-check/scripts/test_rework_scope.py",
+      "sha256": "abe8617de87ada26ae83cbab1e40601d0b3dc674726079236ce97352d8d63d8d",
+      "bytes": 35700
     },
     {
       "path": "package-check/scripts/test_runtime_regression.py",
@@ -775,5 +800,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "09db9a0eb4ce301c20b09641270634145644c995b8adb344369367b95da1407e"
+  "previous_provenance_sha256": "a981b8d94ec215a2e4ac5fb075141115f00216e204fa031cdf546cd24dcaea79"
 }

@@ -242,6 +242,77 @@ class StatusSchema(unittest.TestCase):
         self.assertIn('not_run', check_guard.status_values())
         self.assertNotIn('not_run', check_guard.status_passing())
 
+    def test_every_check_package_status_is_listed(self):
+        """R4H 批 (Round4 #21): every status word check_package.py writes is in check-status.json (it used to list only
+        the regression-record and check_guard words: requires_runtime_evidence, unofficial_not_deliverable, refuse and
+        error were nowhere). The new kinds never widen the check values a receiver accepts."""
+        import re
+        src = (HERE / 'check_package.py').read_text(encoding='utf-8')
+        words = set(re.findall(r"""(?:'status':\s*|status=)'([a-z_]+)'""", src))
+        listed = set()
+        doc = json.loads(check_guard.STATUS_FILE.read_text(encoding='utf-8'))
+        for kind, sec in doc.items():
+            if isinstance(sec, dict) and 'values' in sec:
+                listed |= set(sec['values'])
+        self.assertTrue({'requires_runtime_evidence', 'unofficial_not_deliverable', 'refuse', 'error'} <= words, words)
+        self.assertEqual(sorted(words - listed), [], 'status words not in check-status.json')
+        for k in ('package_cli', 'runtime_requirement', 'tool_identity'):
+            self.assertTrue(set(check_guard.status_values(k)).isdisjoint(check_guard.status_passing()), k)
+        self.assertEqual(check_guard.status_values(), ('passed', 'failed', 'not_run', 'not_applicable',
+                                                       'environment_incomplete'))
+
+
+class CapabilitiesMerge(unittest.TestCase):
+    """R4H 批 (Round4 #21): game_capabilities.py write and page_registry.py make write the same docs/game_capabilities.json.
+    Old: the later writer replaced the file, silently dropping what only the first one knew."""
+
+    def caps(self, proj):
+        return json.loads((proj / 'docs' / 'game_capabilities.json').read_text(encoding='utf-8'))
+
+    def test_make_after_write_keeps_and_says(self):
+        import contextlib, io
+        import game_capabilities as g
+        import page_registry
+        pages = json.loads(json.dumps(PAGES))
+        pages.pop('no_ad_roles')
+        proj = project_with(pages)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(g.main(['write', '--project', str(proj), '--pause-button', 'Canvas/Level/HUD/btn_pause',
+                                     '--no-ad-entries', 'not decided yet', '--no-ad-role', 'revive=no fail state',
+                                     '--evidence', 'pause=Level.js:40']), 0)
+        outputs, report = page_registry.build(proj)
+        self.assertTrue(report['passed'], report)
+        page_registry.write(proj, outputs)
+        doc = self.caps(proj)
+        self.assertEqual(doc.get('no_ad_roles'), {'revive': 'no fail state'}, 'OLD WAY BUG: make dropped no_ad_roles')
+        self.assertEqual(doc['evidence'].get('pause'), 'Level.js:40')
+        self.assertEqual(doc['ad_entries'][0]['role'], 'double')               # pages.json is the source for ad entries
+        self.assertIn('game_capabilities.py write', doc['written_by'])
+        self.assertIn('page_registry.py make', doc['written_by'])
+        self.assertEqual(g.validate(doc), [])
+        said = ' '.join(report.get('capabilities_merged') or [])
+        self.assertIn('no_ad_roles', said)
+        self.assertIn('ad_entries', said)
+        self.assertEqual(page_registry.check(proj)['status'], 'passed')
+
+    def test_write_after_make_keeps_and_says(self):
+        import contextlib, io
+        import game_capabilities as g
+        import page_registry
+        proj = project_with(PAGES)
+        outputs, report = page_registry.build(proj)
+        page_registry.write(proj, outputs)
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            self.assertEqual(g.main(['write', '--project', str(proj), '--pause-button', 'Canvas/Level/HUD/btn_settings',
+                                     '--ad-entry', 'double=Canvas/Result/btn_x2']), 0)
+        doc = self.caps(proj)
+        self.assertEqual(doc['pause_button'], 'Canvas/Level/HUD/btn_settings')
+        self.assertEqual(doc.get('no_ad_roles'), {'revive': 'no fail state in this fixture'},
+                         'OLD WAY BUG: write dropped what make wrote')
+        self.assertIn('pause_button', err.getvalue())
+        self.assertIn('no_ad_roles', err.getvalue())
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

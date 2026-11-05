@@ -277,7 +277,8 @@ class KitMainStaticManifest(unittest.TestCase):
     def test_static_manifest_lists_kit_scripts_and_writer_resource_step_accepts_it(self):
         manifest=self.setup_package()
         rows=json.loads(manifest.read_text())['script_files']
-        self.assertEqual(sorted(r['path'] for r in rows),['src/assets/plugins/fixture-plugin.js','webp-decode-probe.js'])
+        # 简化.11.14 R4A: main.js v1.7 also requires rewarded-guard.js (startup24.extra_files)
+        self.assertEqual(sorted(r['path'] for r in rows),['rewarded-guard.js','src/assets/plugins/fixture-plugin.js','webp-decode-probe.js'])
         self.assertTrue(obligations.verify(native_files(self.native),self.native,self.project,manifest)['passed'])
 
     def test_light_writer_writes_zip_with_the_static_manifest(self):
@@ -289,7 +290,7 @@ class KitMainStaticManifest(unittest.TestCase):
             result=build(self.native,APP,out,self.root/'report.json',resource_manifest=manifest,project=self.project)
         self.assertTrue(out.exists())
         listed=result['package_obligations']['resources']['kit_script_files']
-        self.assertEqual(sorted(r['path'] for r in listed),['src/assets/plugins/fixture-plugin.js','webp-decode-probe.js'])
+        self.assertEqual(sorted(r['path'] for r in listed),['rewarded-guard.js','src/assets/plugins/fixture-plugin.js','webp-decode-probe.js'])
 
     def test_writer_refuses_package_missing_a_jslist_script(self):
         manifest=self.setup_package();(self.native/'src/assets/plugins/fixture-plugin.js').unlink();out=self.root/'game.zip'

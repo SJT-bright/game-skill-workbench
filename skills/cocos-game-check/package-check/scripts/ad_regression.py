@@ -84,8 +84,13 @@ def environment_problem(package_dir):
 
 
 def needs_regression(files):
-    """files: {relative name: bytes}. True when the package can request a rewarded video."""
-    return any(name.endswith('.js') and b'createRewardedVideoAd' in data for name, data in files.items())
+    """files: {relative name: bytes}. True when the package can request a rewarded video.
+    简化.11.14 R4A: the platform kit's own rewarded-guard.js (main.js v1.7 puts it in every 2.4 package; recognised by
+    its KIT_MANIFEST hash, runtime_regression.rewarded_callers) is not a caller; a changed copy still is."""
+    try:
+        return bool(_environment().rewarded_callers(files))
+    except RegressionRefused:
+        return any(name.endswith('.js') and b'createRewardedVideoAd' in data for name, data in files.items())
 
 
 def allowed_adapter_keys():
@@ -293,11 +298,34 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         'boot': result.get('boot'), 'warnings': (result.get('warnings') or []) + hints, 'tool_sha256': tool_digest(),
         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
         'seconds': round(time.monotonic() - started, 1)}
+    # 简化.11.14 R4D: the case list is default_cases(adapter); a --cases subset is 「没跑完」, never 通过 (main()).
+    summary['planned_not_run'] = planned_not_run(adapter, cases)
+    summary['complete'] = not summary['planned_not_run']
     if not passed:
         error = RegressionRefused('rewarded-ad regression failed: ' + ' | '.join(problems))
         error.summary = summary
         raise error
     return summary
+
+
+INCOMPLETE_EXIT = 3          # 简化.11.14 R4D: the selected cases passed, but the case list was not run to the end
+
+
+def planned_not_run(adapter, cases):
+    """Cases of the full list (default_cases(adapter)) that this run did not include."""
+    ran = set(cases or [])
+    return [c for c in default_cases(adapter if isinstance(adapter, dict) else {}) if c not in ran]
+
+
+def finish(summary, code):
+    """Exit code and Chinese verdict. A passing run that left planned cases out is 「没跑完」 (exit 3), not 通过."""
+    if code == 0 and summary.get('planned_not_run'):
+        code = INCOMPLETE_EXIT
+        summary.update(passed=False, selected_passed=True, status='incomplete')
+    summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200],
+                          INCOMPLETE_EXIT: '没跑完：这些用例没跑：%s（只跑一部分不算通过，去掉 --cases 跑完整清单）'
+                          % '、'.join(summary.get('planned_not_run') or [])}[code]
+    return code
 
 
 def main():
@@ -331,7 +359,7 @@ def main():
         if isinstance(error, EnvironmentIncomplete):
             summary.update(status='environment_incomplete', environment=str(error))
             code = 2
-    summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200]}[code]
+    code = finish(summary, code)
     if args.report:
         args.report.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(summary, ensure_ascii=False))

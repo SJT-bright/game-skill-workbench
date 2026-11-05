@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "game_capabilities.v1",
+  "title": "这款游戏关内有没有暂停键、有哪些看广告入口（P20 第 3 点「能力先判」，2026-11-04）",
+  "description": "docs/game_capabilities.json，由 remake-core/scripts/game_capabilities.py write 在做游戏时写。钱包、道具、皮肤、体力不在这里，在 docs/economy/economy_capabilities.json（make_economy_config.py 写，见 remake-economy/references/economy_capabilities.schema.json）。game_capabilities.load() 把两份合起来，feature_policy.applies / capability、product_contract economy-audit --project、runtime_regression --capabilities 都读它：记录说没有 = 不适用（写原因），没记录 = not_run（写缺什么）。",
+  "type": "object",
+  "required": ["schema"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "game_capabilities.v1"},
+    "pause_button": {
+      "oneOf": [
+        {"type": "string", "minLength": 1, "description": "关内暂停或设置键的节点路径（和 runtime adapter resume_play.pause_button 同写法）"},
+        {"type": "object", "required": ["none"], "additionalProperties": false,
+         "properties": {"none": {"type": "string", "minLength": 1, "description": "为什么关内没有暂停键"}}}
+      ]
+    },
+    "ad_entries": {
+      "oneOf": [
+        {"type": "array", "minItems": 1, "items": {
+          "type": "object", "required": ["role", "button"],
+          "properties": {
+            "id": {"type": "string"},
+            "role": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,30}$", "description": "double、revive、home_gift、checkin、spin……"},
+            "button": {"type": "string", "minLength": 1},
+            "states": {"type": "array", "minItems": 1, "description": "可选：runtime adapter ad_entries 的 states 写法；写了就能直接填进适配文件"}
+          }}},
+        {"type": "object", "required": ["none"], "additionalProperties": false,
+         "properties": {"none": {"type": "string", "minLength": 1, "description": "为什么没有看广告入口"}}}
+      ]
+    },
+    "no_ad_roles": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1},
+                    "description": "某个必有的广告入口（double、revive）这款没有的原因"},
+    "evidence": {"type": "object", "additionalProperties": {"type": "string"}},
+    "written_by": {"type": "string"}
+  }
+}

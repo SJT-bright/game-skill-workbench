@@ -1,0 +1,223 @@
+{
+  "id": "7afb2f4e-06aa-4521-98eb-fe549c3b7b19",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v50",
+  "createdAt": "2026-11-05T04:37:45.132Z",
+  "summary": "文件变更：新增 5，修改 10，移除 0。",
+  "changes": {
+    "added": 5,
+    "modified": 10,
+    "deleted": 0
+  },
+  "treeHash": "c5b3e25ce93ea1b150e1123f44891431ca788988a712930500cf6173f74a960b",
+  "bytes": 576182,
+  "fileCount": 34,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "fa406db2b985c3ece8a08e80e5fb210ab367427736547ead9e89ab453b13c67c",
+      "size": 5574,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "c2ae117094f951f3b8aa3b8a2e1f7bcf2ff6f200a1299506df6663eb4521b17b",
+      "size": 72726,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/README.md",
+      "hash": "6308ef3ac51b7339e333e20c6dd156ba2521a50d2e0a5eb90028fa2ecdc89af2",
+      "size": 1824,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/main.js",
+      "hash": "a00ae9866bab67708122c6c567b677bad046aa91e75a07b5dac462353d3525f0",
+      "size": 4190,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/package.json",
+      "hash": "9fa38054d0cb490c108c6ce1f45967b05ac7141d939e2fa03aef3ded17e8689a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "hash": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "size": 1380,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "hash": "a8a75cdffd9d7f89490f61dc559a0704f77ef3ddc635382a51b9bf3654e004e8",
+      "size": 1479,
+      "executable": false
+    },
+    {
+      "path": "references/early-prevention.md",
+      "hash": "6561bfe972468f64f0a7c9251851c8bbf8ba2873a3abb54985d38d1ab4cd0400",
+      "size": 6650,
+      "executable": false
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "hash": "6827fdd3505844e41347d6c3393652ef8a1d167cf2c48e24c4db0f975c9f2a74",
+      "size": 30242,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "hash": "2421f569c3d5ca5ab68fa85227ca948e2282069417c985fdf27d4fe629dc43f3",
+      "size": 12547,
+      "executable": false
+    },
+    {
+      "path": "references/local-creator-versions.md",
+      "hash": "2557c5cd165168eb2259849f798b00fbc7f69c4ae8ce05f0b3f77b53bea1da90",
+      "size": 4768,
+      "executable": false
+    },
+    {
+      "path": "scripts/browser_env.py",
+      "hash": "09bbdd441792896f3c330b0cb494e6cedd301eb3838da0b600c92217f8854eb4",
+      "size": 9108,
+      "executable": false
+    },
+    {
+      "path": "scripts/cdp_browser.mjs",
+      "hash": "34650ec70c22e9ad1e1645be77a2bd78478b6dda347924a269e7128ac93be0df",
+      "size": 22862,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "hash": "21fda56bc9ed0cd548c5cd8be4190294cbcb45888a9ad38f3a27b9367d365321",
+      "size": 7959,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_machine.py",
+      "hash": "0a8717f7f82bb47420c9e39e93dc34ec873ab4ed99e6fd89286863573765a402",
+      "size": 7985,
+      "executable": false
+    },
+    {
+      "path": "scripts/chinese_audit.py",
+      "hash": "edab5cfb54d72946924896ff5b749e19e56dac1d237ae92de7a342d3ef7cecde",
+      "size": 99151,
+      "executable": false
+    },
+    {
+      "path": "scripts/find_creator.py",
+      "hash": "b9b251d24daf379de0ec1a762977227e85673f50e68e34ccbdaec59b6c0f2cc0",
+      "size": 15961,
+      "executable": false
+    },
+    {
+      "path": "scripts/fit_english_labels.py",
+      "hash": "a6544b4fe6425c4aafb7ce9bfc319f015ba48d3a3cf90ad90cef4a439f40fab1",
+      "size": 25259,
+      "executable": false
+    },
+    {
+      "path": "scripts/fix_web_entry_3x.py",
+      "hash": "25db43d136f17f2ea0872e13d9f906cbcd04556d48b5187337320f6f9f7f5b71",
+      "size": 8620,
+      "executable": false
+    },
+    {
+      "path": "scripts/ocr_vision.swift",
+      "hash": "0e9e8100c5338c6c77fe6c142be1745402786fa00eb238c629d6b447740d0850",
+      "size": 2854,
+      "executable": false
+    },
+    {
+      "path": "scripts/ocr_windows.ps1",
+      "hash": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
+      "size": 4615,
+      "executable": false
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "76809c446f09b0f0d0f2958278cf4eb072c49eee2186ebbac563ad187b8fea65",
+      "size": 10718,
+      "executable": false
+    },
+    {
+      "path": "scripts/stage_timer.py",
+      "hash": "68b000b1d17ff77d3eb6edd97f2fea2a1338a9cf432dca2021f2858555cca6b4",
+      "size": 34882,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_check_export_images.py",
+      "hash": "b1bcaf2de070c1c4d6782d0cd39c5fa350d6632f95674d9d77adf3b8c09dda4d",
+      "size": 5626,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_chinese_audit.py",
+      "hash": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
+      "size": 31960,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "hash": "73cd9e38c35d332182b6d86ec341ff742d3d15e7223458f5b4b833371a8cb299",
+      "size": 63372,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_fit_english_labels.py",
+      "hash": "e3e23c39b9d422afbbbaf41d99f8177f910a9ce7c95bb6dc66d8623e7af5fc5e",
+      "size": 13871,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_portable_tools.py",
+      "hash": "e811ab2bf9d9b2e308c91b72872b34428cc9ff923afe12b097940a2f29358c96",
+      "size": 15714,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_serve_preview_gate.py",
+      "hash": "9800597d7f8564cc4000a1b45216fb82ce9cbe783d7b1d4bb5b3213f28b71808",
+      "size": 16585,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_stage_timer.py",
+      "hash": "c06fcdc8a89cf9f2dbe373ffca67f07d5c86e28d296577e559d7a5b99a5cddc0",
+      "size": 17834,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_unpack_source.py",
+      "hash": "5122a1bfd703635757dcacb4886c9e7867b5f3db427a3cfa4c3a934aa07073e3",
+      "size": 4187,
+      "executable": false
+    },
+    {
+      "path": "scripts/unpack_source.py",
+      "hash": "6585dd78c924d2c8e228ff5ba13534cacacacf633f209f93f424c41997426b8d",
+      "size": 6860,
+      "executable": false
+    },
+    {
+      "path": "版本历史.md",
+      "hash": "264ca2d91d6753be9bd1f33ac3b80a6e0053822b5e557e6c91ef667c400080c6",
+      "size": 8467,
+      "executable": false
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-05T14:02:30.544Z",
-  "treeHash": "b56eb8321e86491b8e7ef8cbc721c82ff869c0b4e3ef4fa544ae6bcc88351583",
+  "createdAt": "2026-11-05T14:03:05.628Z",
+  "treeHash": "047f0afa0a786033b531ea4cd22d04216176acc57ea7505e2bb958ddc5c31517",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2805,20 +2805,20 @@
     },
     {
       "name": "grok-image-review",
-      "treeHash": "e45db91c109fc1ddea9a88f50ac253540fe5208878f7dd3423cc13a094a62b50",
-      "fileCount": 4,
-      "bytes": 13431,
+      "treeHash": "779e2757d55c1808c32e4b3024610bfb865a06c3a0f979e5c8317fbf1fba3ad6",
+      "fileCount": 5,
+      "bytes": 24518,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "eecc89f1c36b69970bc32e697248afb8571fa4e0fbb3b436602411a12834f1f8",
-          "size": 772,
+          "hash": "c4daf6c2df8d03404bfc076189f499ecb550677dc07b1d59875f814bbf49c059",
+          "size": 938,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "4a54592a303c91244a966e9f24981ef3c387907491659952f8a193c488bb9034",
-          "size": 629,
+          "hash": "5c8d788633aba85b215f86af447f423aa9bf9a82b562966bdb6ee55b587ca025",
+          "size": 1427,
           "executable": false
         },
         {
@@ -2829,8 +2829,14 @@
         },
         {
           "path": "scripts/review.py",
-          "hash": "35cb96a32d3f8b8985628578244c6639be3c1ba227c1873490177b9595ed7d9e",
-          "size": 11682,
+          "hash": "a39a3ced9c97601e95cdf86d27b8f248cf1dd1ff78e9fd80a4b096caec863b5d",
+          "size": 16218,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_review_fallback.py",
+          "hash": "b5657ca34a0e1c8d0047fc578ca28297e7b9bd2cdb90ef960a2cf89889c80c01",
+          "size": 5587,
           "executable": false
         }
       ]

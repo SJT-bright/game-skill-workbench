@@ -1,24 +1,29 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-04.english-simple.11.14",
+  "revision": "2026-11-05.english-simple.11.15",
   "skill": "grok-image-review",
-  "previous_provenance_sha256": "56e5aaa56a7d417839a5ced251edfc087f2613649aedd343a1819e3819d7d393",
+  "previous_provenance_sha256": "eecc89f1c36b69970bc32e697248afb8571fa4e0fbb3b436602411a12834f1f8",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "874300dc60ce2fc79aa1c84dd10b71fb54cd91cb384a8e9585c408cf065d89a8",
-      "bytes": 7055
+      "sha256": "5c8d788633aba85b215f86af447f423aa9bf9a82b562966bdb6ee55b587ca025",
+      "bytes": 1427
     },
     {
       "path": "agents/openai.yaml",
-      "sha256": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
-      "bytes": 353
+      "sha256": "f87ff8ea6dba7afe8c77227efb805c3520a6a8d381044388d3c0d6df66b183d3",
+      "bytes": 348
     },
     {
       "path": "scripts/review.py",
-      "sha256": "35cb96a32d3f8b8985628578244c6639be3c1ba227c1873490177b9595ed7d9e",
-      "bytes": 11682
+      "sha256": "a39a3ced9c97601e95cdf86d27b8f248cf1dd1ff78e9fd80a4b096caec863b5d",
+      "bytes": 16218
+    },
+    {
+      "path": "scripts/test_review_fallback.py",
+      "sha256": "b5657ca34a0e1c8d0047fc578ca28297e7b9bd2cdb90ef960a2cf89889c80c01",
+      "bytes": 5587
     }
   ]
 }

@@ -1,0 +1,51 @@
+{
+  "schema": "check-status.v1",
+  "about": "The one list of report statuses (总表 P19 ③, 2026-11-04 问题普查 checker_input_rejected 29 条: the receiver refused 'Invalid report status' because the prompt that produced the report never named the allowed values). Producers (check_guard.not_run, runtime_regression, check_package, grok-image-review's prompt) and receivers (check_package.regression_record, grok-image-review parse_report) read this file through check_guard.status_values(); none of them writes its own list.",
+  "check": {
+    "values": ["passed", "failed", "not_run", "not_applicable", "environment_incomplete"],
+    "passing": ["passed", "not_applicable"],
+    "meaning": {
+      "passed": "检查真的跑了，至少查了 1 项，全部通过",
+      "failed": "检查跑了，包不通过",
+      "not_run": "未执行：检查要的输入缺失或为空（写明缺什么），或实际检查 0 项；不算通过",
+      "not_applicable": "包里没有这项功能（例如没有激励广告），这项检查不适用；写明原因",
+      "environment_incomplete": "环境不完整：没有浏览器、包缺触摸件、ZIP 没有出包回执；不算通过"
+    },
+    "exit_codes": {"passed": 0, "not_applicable": 0, "failed": 1, "not_run": 2, "environment_incomplete": 2}
+  },
+  "package_cli": {
+    "about": "R4H 批 (Round4 #21): the top-level status of the check_package.py command line. An official run has no status field (read verdict); these two are the only top-level values. Not check values: a regression record or report using them is still refused.",
+    "values": ["unofficial_not_deliverable", "refuse"],
+    "meaning": {
+      "unofficial_not_deliverable": "只读预检，不可交付：ZIP 不是正式出包入口写的（没有对得上的出包回执）；不算通过",
+      "refuse": "检查没法做：输入不是可读的 ZIP 或目录、文件坏了；写明原因，不算通过"
+    },
+    "exit_codes": {"unofficial_not_deliverable": 3, "refuse": 1}
+  },
+  "runtime_requirement": {
+    "about": "R4H 批: status of one row of check_package result.runtime_requirements (for example webp_decode_capability).",
+    "values": ["requires_runtime_evidence"],
+    "meaning": {
+      "requires_runtime_evidence": "静态检查管不了这一项，要真机或运行时证据（cases 写了要跑哪些）；不算通过也不算失败"
+    }
+  },
+  "tool_identity": {
+    "about": "R4H 批: status of check_package result.tool_identity (tool_identity.py) and of tools_in_use().",
+    "values": ["clean", "modified", "dev_tree", "unknown", "error"],
+    "meaning": {
+      "clean": "用的检查工具和 Skill 发版记录一致",
+      "modified": "用的是改过的工具：只警告，写反馈草稿，不拒绝",
+      "dev_tree": "在开发树里跑，不和安装版对照",
+      "unknown": "找不到发版记录，没法对照",
+      "error": "对照工具本身出错（写在 error）；只报告，不影响结论"
+    }
+  },
+  "image_review": {
+    "values": ["pass", "issue", "uncertain"],
+    "meaning": {
+      "pass": "看清了，没有疑点",
+      "issue": "有要报告的问题（写在 issues）",
+      "uncertain": "看不清或要人判断（写在 uncertainties）"
+    }
+  }
+}

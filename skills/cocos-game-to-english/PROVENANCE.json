@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-04.english-simple.11.13",
+  "revision": "2026-11-04.english-simple.11.14",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "606af5d32cca55398028215ecfca599f89176fdadf5c3becf90da3157af3cbd8",
-      "bytes": 70098
+      "sha256": "66ab32cfab7b0d1529816ef982d0e5522de6cf8eef0f0243f69c353285f4655b",
+      "bytes": 76105
     },
     {
       "path": "agents/openai.yaml",
@@ -41,8 +41,8 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "6827fdd3505844e41347d6c3393652ef8a1d167cf2c48e24c4db0f975c9f2a74",
-      "bytes": 30242
+      "sha256": "23502ab6ea8f58d76b326cbe9c858f27a4cf64acd38de3939a0540a275cd7ba7",
+      "bytes": 30598
     },
     {
       "path": "references/fixed-entries.md",
@@ -56,8 +56,8 @@
     },
     {
       "path": "scripts/browser_env.py",
-      "sha256": "09bbdd441792896f3c330b0cb494e6cedd301eb3838da0b600c92217f8854eb4",
-      "bytes": 9108
+      "sha256": "8ee262ca720c44797ad5cb1c10af5b585d18624b048bc24e5855b37937a25898",
+      "bytes": 21653
     },
     {
       "path": "scripts/cdp_browser.mjs",
@@ -81,13 +81,13 @@
     },
     {
       "path": "scripts/find_creator.py",
-      "sha256": "b9b251d24daf379de0ec1a762977227e85673f50e68e34ccbdaec59b6c0f2cc0",
-      "bytes": 15961
+      "sha256": "b292f18f203be785322fcbed58089f140d1b5c095490eb1db9d860c71a3a0eac",
+      "bytes": 19667
     },
     {
       "path": "scripts/fit_english_labels.py",
-      "sha256": "df4750a90a7db4d080eea488c73c9b8da92a5e24870f2e942c204c9176aea323",
-      "bytes": 24850
+      "sha256": "a6544b4fe6425c4aafb7ce9bfc319f015ba48d3a3cf90ad90cef4a439f40fab1",
+      "bytes": 25259
     },
     {
       "path": "scripts/fix_web_entry_3x.py",
@@ -106,8 +106,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "ac05b4fe03ec72509864018f609873c657fc9cc544b9954de765b71085351bc1",
-      "bytes": 10511
+      "sha256": "76809c446f09b0f0d0f2958278cf4eb072c49eee2186ebbac563ad187b8fea65",
+      "bytes": 10718
     },
     {
       "path": "scripts/stage_timer.py",
@@ -135,14 +135,19 @@
       "bytes": 13871
     },
     {
+      "path": "scripts/test_p21_browser_env.py",
+      "sha256": "630f845921ca6ef4c1bec4f788fdaf29c45eecf12f3ec2e10cd46e3817b320df",
+      "bytes": 19589
+    },
+    {
       "path": "scripts/test_portable_tools.py",
       "sha256": "e811ab2bf9d9b2e308c91b72872b34428cc9ff923afe12b097940a2f29358c96",
       "bytes": 15714
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "ebcfd31465817cb7503155330ee7d2f9121a041e9071df5d1fc6cd0dc55fc5cd",
-      "bytes": 15213
+      "sha256": "9800597d7f8564cc4000a1b45216fb82ce9cbe783d7b1d4bb5b3213f28b71808",
+      "bytes": 16585
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -161,9 +166,9 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "dc76df8bd365b9431491b7e372cfc0a289ded2f533adde2b55ca4c07ea8209dc",
-      "bytes": 8026
+      "sha256": "bdfd146bfd64af67c7a794f382c7287fdc0ac1836e69b09a52d49266179ba8c5",
+      "bytes": 8418
     }
   ],
-  "previous_provenance_sha256": "80d36fb0dfb380d9e96e819978f485b3ea920f96b90ea29798b6ed46e16019be"
+  "previous_provenance_sha256": "fa406db2b985c3ece8a08e80e5fb210ab367427736547ead9e89ab453b13c67c"
 }

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-05T10:50:43.841Z",
-  "treeHash": "bc6a2bf8a2c0e014a71d18a5e82eb7dfd99b740a4553ba1727e2a301ec3fd85f",
+  "createdAt": "2026-11-05T10:51:33.664Z",
+  "treeHash": "d9f8b93bcffc6638c5eaf6a9515f9125043bb108f60ee8875e133d2ccc5fadd4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -1873,20 +1873,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "c5b3e25ce93ea1b150e1123f44891431ca788988a712930500cf6173f74a960b",
-      "fileCount": 34,
-      "bytes": 576182,
+      "treeHash": "13eedf47929fb455af31e50915de30ee86b9a6c203daf556eeb99e9403df3681",
+      "fileCount": 35,
+      "bytes": 616885,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "fa406db2b985c3ece8a08e80e5fb210ab367427736547ead9e89ab453b13c67c",
-          "size": 5574,
+          "hash": "73407899b680cab72481a0783a559a01d595addced16c3eaa8d2a5026eed07bd",
+          "size": 5742,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "c2ae117094f951f3b8aa3b8a2e1f7bcf2ff6f200a1299506df6663eb4521b17b",
-          "size": 72726,
+          "hash": "0d8aaa02b135a6bb2cfc92586a48d66b7d121024dc86fd9d1977d7fadf2b4bcb",
+          "size": 77114,
           "executable": false
         },
         {
@@ -1933,8 +1933,8 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "6827fdd3505844e41347d6c3393652ef8a1d167cf2c48e24c4db0f975c9f2a74",
-          "size": 30242,
+          "hash": "23502ab6ea8f58d76b326cbe9c858f27a4cf64acd38de3939a0540a275cd7ba7",
+          "size": 30598,
           "executable": false
         },
         {
@@ -1951,8 +1951,8 @@
         },
         {
           "path": "scripts/browser_env.py",
-          "hash": "09bbdd441792896f3c330b0cb494e6cedd301eb3838da0b600c92217f8854eb4",
-          "size": 9108,
+          "hash": "8ee262ca720c44797ad5cb1c10af5b585d18624b048bc24e5855b37937a25898",
+          "size": 21653,
           "executable": false
         },
         {
@@ -1981,8 +1981,8 @@
         },
         {
           "path": "scripts/find_creator.py",
-          "hash": "b9b251d24daf379de0ec1a762977227e85673f50e68e34ccbdaec59b6c0f2cc0",
-          "size": 15961,
+          "hash": "b292f18f203be785322fcbed58089f140d1b5c095490eb1db9d860c71a3a0eac",
+          "size": 19667,
           "executable": false
         },
         {
@@ -2046,6 +2046,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_p21_browser_env.py",
+          "hash": "630f845921ca6ef4c1bec4f788fdaf29c45eecf12f3ec2e10cd46e3817b320df",
+          "size": 19589,
+          "executable": false
+        },
+        {
           "path": "scripts/test_portable_tools.py",
           "hash": "e811ab2bf9d9b2e308c91b72872b34428cc9ff923afe12b097940a2f29358c96",
           "size": 15714,
@@ -2077,8 +2083,8 @@
         },
         {
           "path": "版本历史.md",
-          "hash": "264ca2d91d6753be9bd1f33ac3b80a6e0053822b5e557e6c91ef667c400080c6",
-          "size": 8467,
+          "hash": "bdfd146bfd64af67c7a794f382c7287fdc0ac1836e69b09a52d49266179ba8c5",
+          "size": 8418,
           "executable": false
         }
       ]

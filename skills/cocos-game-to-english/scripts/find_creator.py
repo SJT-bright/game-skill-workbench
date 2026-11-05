@@ -17,8 +17,12 @@ marked as a substitute; never across 2.x / 3.x. Nothing suitable: says which ver
   python3 find_creator.py --project <Cocos project>      the editor and the web-mobile / TikTok build commands
   python3 find_creator.py --list                         every Creator found on this computer
   python3 find_creator.py --busy                         is a Creator build running now? (one build at a time)
+  python3 find_creator.py --preflight                    right before a build: can this terminal start Creator at all?
   add --json for machine-readable output. Windows: python instead of python3.
-Exit 0 found (exact or substitute), 1 not installed, 2 bad input.
+生成时预防 P21 ④: the printed build commands always end with --no-sandbox --disable-gpu-sandbox --disable-gpu; when the
+terminal is sandboxed (agent sandbox variables, home folder not writable, no local port) --project and --preflight say so
+and exit 3: Creator would crash or hang there every time, so the build is not started and not retried.
+Exit 0 found (exact or substitute), 1 not installed, 2 bad input, 3 this terminal is sandboxed (do not retry).
 """
 import argparse
 import json
@@ -179,10 +183,44 @@ def choose(target, editors):
     return {'status': 'missing', 'editor': None, 'same_minor': []}
 
 
+# 生成时预防 P21 ④: always on the build command (Electron/GPU sandbox made command-line builds hang at asset import or
+# crash; 普查 env_creator_stuck). Chromium switches, accepted by Creator on macOS, Windows and Linux.
+SANDBOX_FLAGS = ['--no-sandbox', '--disable-gpu-sandbox', '--disable-gpu']
+SANDBOX_MARKS = ('CODEX_SANDBOX', 'CODEX_SANDBOX_NETWORK_DISABLED', 'APP_SANDBOX_CONTAINER_ID')
+SANDBOX_EXIT = 3
+
+
 def build_argv(editor, project, major, platform_name):
     debug = 'true' if platform_name == 'web-mobile' else 'false'
     flag = '--path' if major == 2 else '--project'
-    return [editor['exe'], flag, str(Path(project).resolve()), '--build', 'platform=%s;debug=%s' % (platform_name, debug)]
+    return [editor['exe'], flag, str(Path(project).resolve()), '--build', 'platform=%s;debug=%s' % (platform_name, debug)] \
+        + SANDBOX_FLAGS
+
+
+def sandbox_problem(env=None, home=None, probe=True):
+    """Why Creator cannot start from this terminal (a sandbox around the agent), or None. Checked before a build: in a
+    sandbox Creator crashes or hangs every time, so the build is refused at once instead of retried (普查: Creator
+    闪退弹崩溃框反复重试). Signs: the agent sandbox's own environment variables; no write access to the home folder
+    (Creator keeps its settings there); no local port (Creator's build talks to itself over localhost)."""
+    env = os.environ if env is None else env
+    found = ['环境变量 %s=%s' % (k, env.get(k)) for k in SANDBOX_MARKS if env.get(k)]
+    if probe:
+        import socket
+        try:
+            with socket.socket() as s:
+                s.bind(('127.0.0.1', 0))
+                s.listen(1)
+        except OSError as error:
+            found.append('不能在本机开端口（%s）' % error)
+        base = Path(home if home is not None else Path.home())
+        target = base / '.CocosCreator' if (base / '.CocosCreator').is_dir() else base
+        test = target / ('.find_creator_write_test_%d' % os.getpid())
+        try:
+            test.write_text('ok', encoding='utf-8')
+            test.unlink()
+        except OSError as error:
+            found.append('不能写用户文件夹 %s（%s）' % (target, error.__class__.__name__))
+    return '；'.join(found) or None
 
 
 def quote(argv, platform):
@@ -199,13 +237,13 @@ def quote(argv, platform):
 def hints(version, os_name):
     v = parse_version(version)
     out = []
-    if os_name == 'darwin':
-        out.append('macOS 上构建卡在导入资源不动时，在命令后面加 --no-sandbox --disable-gpu-sandbox --disable-gpu（Saul 的 Mac 上要加）。')
+    out.append('构建命令已经带上 --no-sandbox --disable-gpu-sandbox --disable-gpu（以前构建卡在导入资源不动、闪退，就是少了它们），不要删。')
     if v and v[0] == 3:
         out.append('3.x 构建成功的退出码也可能是 36（32 参数错，34 构建失败）：以导出目录里有没有 index.html 和这次的图为准。')
     if v == (2, 4, 3):
         out.append('2.4.3 构建报 Device._initCaps 或 WebGL 错时：把本包 cocos-game-to-english/assets/build-worker-canvas-compat/ '
-                   '复制到工程副本的 packages/ 下，命令最前面加 --use-gl=desktop（Saul 的 Mac 上要这样）。')
+                   '复制到工程副本的 packages/ 下，命令最前面加 --use-gl=desktop（Saul 的 Mac 上要这样）；'
+                   '加了 --use-gl=desktop 还报 WebGL 错，就把命令末尾的 --disable-gpu 去掉再构建一次（只这一个版本）。')
     if v == (2, 4, 4):
         out.append('2.4.4 在 Saul 的 Mac 上一次都没构建成功（WebGL 初始化错误）：构建失败就换同一小版本里装了的另一个（例如 2.4.5），'
                    '在 docs/english/engine.txt 写一行「原工程 2.4.4，用 2.4.5 构建」。')
@@ -247,13 +285,19 @@ def busy(platform=None):
     return rows
 
 
-def report(project, platform=None, env=None, home=None):
+def sandbox_text(problem):
+    return ('现在不能构建：这个终端受沙箱限制（%s）。Creator 在这里每次都会闪退或卡住，重试没有用，不要重试；'
+            '换一个不受沙箱限制的终端再跑构建命令（在 Codex 里，请求不受沙箱限制地运行这条命令）。等的时候接着改源码。' % problem)
+
+
+def report(project, platform=None, env=None, home=None, sandbox_probe=True):
     platform = sys.platform if platform is None else platform
     version, major = project_version(project)
     editors = installed_editors(platform, home, env)
     pick = choose(version, editors)
     r = {'project': str(Path(project).resolve()), 'version': version, 'major': major, 'installed': editors, **pick,
-         'hints': hints(version, platform)}
+         'hints': hints(version, platform),
+         'sandbox': {'flags': list(SANDBOX_FLAGS), 'problem': sandbox_problem(env, home, probe=sandbox_probe)}}
     if pick['editor']:
         for name in ('web-mobile', 'bytedance-mini-game'):
             argv = build_argv(pick['editor'], project, major, name)
@@ -263,6 +307,8 @@ def report(project, platform=None, env=None, home=None):
 
 def say(r):
     lines = ['工程：%s（Cocos %s）' % (r['project'], r['version'])]
+    if (r.get('sandbox') or {}).get('problem'):
+        lines.insert(0, sandbox_text(r['sandbox']['problem']))
     lines.append('这台电脑装了：' + ('、'.join(e['version'] for e in r['installed']) or '没找到任何 Cocos Creator'))
     if r['status'] == 'exact':
         lines.append('用 %s（和工程版本一样）：%s' % (r['editor']['version'], r['editor']['exe']))
@@ -289,8 +335,16 @@ def main(argv=None):
     ap.add_argument('--project', type=Path)
     ap.add_argument('--list', action='store_true')
     ap.add_argument('--busy', action='store_true')
+    ap.add_argument('--preflight', action='store_true', help='构建前一刻：这个终端能不能启动 Creator（沙箱受限退出 3，不要重试）')
     ap.add_argument('--json', action='store_true')
     a = ap.parse_args(argv)
+    if a.preflight:
+        problem = sandbox_problem()
+        if a.json:
+            print(json.dumps({'sandbox_problem': problem, 'flags': SANDBOX_FLAGS}, ensure_ascii=False))
+        else:
+            print(sandbox_text(problem) if problem else '这个终端可以启动 Creator（构建命令带 %s）。' % ' '.join(SANDBOX_FLAGS))
+        return SANDBOX_EXIT if problem else 0
     if a.busy:
         rows = busy()
         if a.json:
@@ -314,6 +368,8 @@ def main(argv=None):
         print('输入有问题：%s' % error)
         return 2
     print(json.dumps(r, ensure_ascii=False, indent=2) if a.json else say(r))
+    if r['sandbox']['problem']:
+        return SANDBOX_EXIT
     return 0 if r['editor'] else 1
 
 

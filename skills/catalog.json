@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-05T04:35:11.811Z",
-  "treeHash": "d8b8ae8f9b404d944637cd680ba85153305f68cb27df51b16f7d7e68c78e0b4e",
+  "createdAt": "2026-11-05T04:36:09.472Z",
+  "treeHash": "6e6ec1fcf8c3e2077b6125be3ce541d29cf38c341c39b18da752fafb518877af",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2773,26 +2773,50 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "89ed277127b8bb6215473a93e67d5253cc59ae39b1214b3244adae7b50680cb7",
-      "fileCount": 42,
-      "bytes": 1153690,
+      "treeHash": "9144a121d69d4e08e735f12b22207a4ec37c15b75fb415da1bce54d05c4c64e7",
+      "fileCount": 51,
+      "bytes": 1246888,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7732a2eb4d234327e8fce33cd85b43c9c0b608f209697dc2bdf136a92a02a4d2",
-          "size": 6730,
+          "hash": "c3e1997c126fabfbc4e41957ba60ad23eec5f6f9b696678afcc2dcb4eaa1a865",
+          "size": 8717,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "7314e954075ea109cd5eca2b1260c7ac352c609e3e1261c9d77863b08dd0792d",
-          "size": 16714,
+          "hash": "68645b3d263a5be399800defbb99e4d9837b311ee982d870c81a80c5eb9201d1",
+          "size": 18831,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
           "hash": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
           "size": 353,
+          "executable": false
+        },
+        {
+          "path": "examples/fixed-caption/base.png",
+          "hash": "f5d81f5323e3d5441e333107ce31b63c2a7e7c6bc8d4b17e72cf4df48f335317",
+          "size": 7917,
+          "executable": false
+        },
+        {
+          "path": "examples/fixed-caption/claim.png",
+          "hash": "aa4ccea4099f36c2a6e42f87b46b2dba47100dad842c54867f6227c6cdf280f8",
+          "size": 26681,
+          "executable": false
+        },
+        {
+          "path": "examples/fixed-caption/recipe.json",
+          "hash": "3e21afa591d546dddd8491bf4436d71efb9f488b1fc0e61b0f0089e6f6f67433",
+          "size": 548,
+          "executable": false
+        },
+        {
+          "path": "examples/fixed-caption/video.png",
+          "hash": "456f783b4aaf6c327152cb1ffe6ae635696f414c51d747887b2f2f642e47b860",
+          "size": 412,
           "executable": false
         },
         {
@@ -2821,8 +2845,8 @@
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "6571f06b2cbf4ecbae0809fd7fc4919b35ab8012fd9f0ec4a714f79af000f7a4",
-          "size": 12751,
+          "hash": "0acc5255ee7cdbdae9100cdcee9fc9c07125373fea1088008fa13cea9fc02b52",
+          "size": 14566,
           "executable": false
         },
         {
@@ -2868,6 +2892,12 @@
           "executable": false
         },
         {
+          "path": "references/fixed-caption-button.md",
+          "hash": "3100b05e6886cf384196441f4144035d77c1ed7233769951b5dd1ddc1fda863e",
+          "size": 2670,
+          "executable": false
+        },
+        {
           "path": "references/full-visual-review.md",
           "hash": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
           "size": 11847,
@@ -2887,8 +2917,8 @@
         },
         {
           "path": "references/local-ui-contract.md",
-          "hash": "b6c569e4c14e0b11937e5dbf2134f0ebae4be8640a78903534b03696bc3f24ad",
-          "size": 6750,
+          "hash": "5151801bdaa71a3ca9038ff86ffbe6b1cc73ef8800665a1d527421ccb00ae62e",
+          "size": 8621,
           "executable": false
         },
         {
@@ -2899,8 +2929,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "746519d642ea92c9d20f3d11f1ff8da19c50a127dd271b9c31a1baac77bfb647",
-          "size": 93685,
+          "hash": "cb6d24681c3c108406d8fb5a74f0cfa98138003bff9af98fda85a2175013a617",
+          "size": 94075,
           "executable": false
         },
         {
@@ -2917,8 +2947,8 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "4cba82b2cce30fa1875e04fd9c0d5c34c38fdd2b9605f7a35d2aedc2da522fc8",
-          "size": 20132,
+          "hash": "2f9654c8614fd99654b686227df5620efe2de3a31b0288097f836d0ae694f002",
+          "size": 25579,
           "executable": false
         },
         {
@@ -2952,6 +2982,12 @@
           "executable": false
         },
         {
+          "path": "references/text-fit-and-coverage.md",
+          "hash": "3044cd6eb835011c4c5751d6293211acbbcc13e6a88f6f07c79ffb2f2d55122e",
+          "size": 8653,
+          "executable": false
+        },
+        {
           "path": "references/theme-readability.md",
           "hash": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
           "size": 2118,
@@ -2961,6 +2997,12 @@
           "path": "references/ui-style-and-samples.md",
           "hash": "d874898651cbfd579343b60aa3500f7041ba93f0c7cf63be3811aa56ce492e33",
           "size": 16498,
+          "executable": false
+        },
+        {
+          "path": "scripts/bind_art.py",
+          "hash": "c429362fec7600d3907ab8151b065c70fbac088148a9ee25ba9c6633a2aa5573",
+          "size": 17660,
           "executable": false
         },
         {
@@ -2994,9 +3036,15 @@
           "executable": false
         },
         {
+          "path": "scripts/compose_fixed_button.py",
+          "hash": "c01f435eb1012f09132f168e5f161afd12b0ff16213f221c7a00ac5db0df486d",
+          "size": 3920,
+          "executable": false
+        },
+        {
           "path": "scripts/cut_sheet_frame.py",
-          "hash": "db7525042a2c83c4dc92266ec3286c5663bbd985a93754e7d910441f209212e4",
-          "size": 3187,
+          "hash": "370aab40de58e7110d45e94a1006dee3a2d2c1f502bcc1bf2a525999ad7b1048",
+          "size": 4863,
           "executable": false
         },
         {
@@ -3006,9 +3054,15 @@
           "executable": false
         },
         {
+          "path": "scripts/test_bind_art.py",
+          "hash": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
+          "size": 8821,
+          "executable": false
+        },
+        {
           "path": "scripts/test_cut_sheet_frame.py",
-          "hash": "85d20a7f947299526bb9e471ea4455a489b93f82135bcc0b0cd5cfd0960c50ad",
-          "size": 1471,
+          "hash": "38d07b8ef653eb1507800fcb93a2431b9e339536194d33d356427726601420c7",
+          "size": 2084,
           "executable": false
         },
         {

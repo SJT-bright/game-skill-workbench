@@ -183,6 +183,7 @@
    - 大块深色、纯黑/纯色底、大白板和大块纯色（`audit_dark_area.py`，只查负向，没有亮度下限）；
    - 布局（`extract_ui_layout.py` 和 `audit_ui_coverage.py`）：玩法区≥80%、弹窗≤60%、内容不压边框、首页设置在上角、功能按钮按中部两侧和PLAY下方最多五个分区；货币只在最上方（`audit_top_bar.py` 的 `currency_only_at_top`）；
    - 文字放得下（`audit_copy_quality.py --require-runtime`）；
+   - 页面全覆盖（`audit_page_coverage.py`：页面表从工程预制体来，有字或按钮的页面、弹窗都要两种尺寸 dump 过）和真字宽（`audit_text_fit.py`：用游戏自己的字体量字，出底板/按钮、压图标、出屏、出图里画好的色条、带字图被盖），见[排版预算与页面全覆盖](text-fit-and-coverage.md)（Saul 2026-11-04）；
    - 开发用文字和占位图（`audit_dev_text.py --final`）；
   - 清晰度（ART-04，两个板块、第一轮起必须通过）：dump 里**运行时真正画出来的图**（代码里动态设置的图集格、角色帧也算）有效像素≥节点显示尺寸 2 倍，背景和全屏图≥1.5 倍（`low_res`），加上场景/预制体里的图（`audit_image_clarity.py`）；英化原游戏没改的原图写进 `docs/art/clarity-exempt.json`（`{"frames":[{"frame":"<名字或通配>","why":"原游戏原图，未改"}]}`），新做/重做的图不能豁免；唯一可忽略的引擎遮罩是精确路径 `Canvas/UI/MenuLayer/bgshade` 上、透明度≤0.30 的 `default_sprite_splash`，它只是半透明触控遮罩；其他默认贴图仍按实际画面尺寸检查。
    - 最后生成总览图。

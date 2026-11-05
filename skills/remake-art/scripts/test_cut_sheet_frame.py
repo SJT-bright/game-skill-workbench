@@ -1,6 +1,6 @@
 import unittest
 from PIL import Image, ImageDraw
-from cut_sheet_frame import extract
+from cut_sheet_frame import extract, fixed_frame
 
 class Cuts(unittest.TestCase):
     def test_uneven_rows_and_detached_mark(self):
@@ -32,3 +32,14 @@ class Cuts(unittest.TestCase):
         ImageDraw.Draw(sheet).rectangle((0,10,48,52),fill='white')
         with self.assertRaisesRegex(ValueError,'touches boundary'):
             extract(sheet,1,1,1,1)
+
+    def test_fixed_rect_uses_ownership_not_total_ink(self):
+        im = Image.new('RGBA', (60, 30))
+        pen = ImageDraw.Draw(im)
+        pen.rectangle((8, 10, 27, 19), fill='yellow')
+        pen.rectangle((34, 10, 53, 19), fill='white')
+        owner = (0, 0, 31, 30)
+        # Equal amounts of missing and foreign ink would pass a total-area comparison.
+        with self.assertRaisesRegex(ValueError, 'loses 50 subject pixels and includes 50 foreign pixels'):
+            fixed_frame(im, owner, (13, 0, 39, 30))
+        self.assertEqual(fixed_frame(im, owner, (3, 1, 32, 26)).size, (29, 25))

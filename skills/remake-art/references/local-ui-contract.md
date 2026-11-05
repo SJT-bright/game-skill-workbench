@@ -34,3 +34,13 @@ python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --ui-contrac
 ### 已知风险槽的小区域检查
 
 在已审核的状态槽上可声明非空 `pixel_regions` 数组。例：`{"id":"badge-visible-height","region":[0,0,1,1],"rgb_min":[150,0,0],"rgb_max":[255,95,120],"metric":"height","range":[0.45,1]}`。region 为相对已声明槽的左、上、右、下，截图换算遵循 viewport；颜色、范围和通过区间由本游戏的正常资产和问题样本校准，只对声明状态生效。metric 选 fill（像素面积占比）、width 或 height（匹配像素包围范围）；invert=true 可反选稳定背景色。检查图标占用不足、保留空隙被文字侵入、活动角标只露细边。背景变化、相同颜色来自多层或粒子混入时改用静态参考图/分层采集。不能凭区域报警指定是哪一层，不能把没有声明的状态当成已检查。每个已知故障至少跑一次原问题图和一个正常对照，缺少同状态采集不得作为交付通过依据。
+
+### 普通 art_check 也读取项目声明的高风险控件
+
+在 `docs/art/visual-slots.json` 定义非空 cases。每项用 id、screen（采集状态）、viewport_width（CSS 宽）、expected_width/expected_height（实际截图像素）、owner（实际完整节点路径）绑定同次截图与节点。用 inside:[left,top,right,bottom] 定义 owner 内的相对安全区，children 列出应完整容纳的文字或图标节点路径；也可用上文 pixel_regions 查禁入区域。相同页面要用不同视口分别登记。检查会拒绝缺状态、缺图、同名歧义、截断的 dump、错误像素尺寸及空规则。稳定无字背景的装饰、已认可的故意出框角标要在定义内区时区分。普通截图看不到的状态不能写通过。项目未声明时不会自动推断所有控件的设计意图；制作方须依受影响页面和历史缺陷补齐声明。
+
+## 按钮内框验收
+
+分层按钮在同一 case 声明 inside、children，以及可选的 horizontal_gap，例如 `{"left":"panel/btn/video","right":"panel/btn/title","min_css_px":3}`。左右路径按实际顺序填写，值是项目设计要求的 CSS 像素。检查读取未裁切的两个节点框，负值表示横向相交。节点框含透明边、字体外伸或按钮整体成图时，还要看最终截图。
+
+同一款固定按钮用同一组相对区域在原问题图和已看过的正常图上回放。分别查图标与首字之间、词尾与斜边之间的空隙，再查图标和整词确实可见，避免空按钮也过。可用 pixel_regions 核稳定字色，对同色边框或背景需换区域或做分层对照。检查结果区分模板、实例、视口及状态。登记缺失、样本不配对、截图无法分辨时记未验证。原图回放单列，最终以本次两种手机尺寸的同帧截图及实际页面裁切为准。

@@ -5,6 +5,7 @@ A failing or ambiguous separator produces no cut. Output is a lossless master.
 """
 import argparse
 import hashlib
+import io
 import itertools
 import json
 from pathlib import Path
@@ -53,21 +54,50 @@ def extract(sheet, rows, cols, row, col):
     bounds = (left+x1-2, top+y1-2, left+x2+2, top+y2+2)
     return im.crop(bounds), cell, bounds
 
+def fixed_frame(image, owner, rect):
+    """Compare the declared consumer rectangle to the cell found from transparent seams."""
+    left, top, right, bottom = rect
+    if not (0 <= left < right <= image.width and 0 <= top < bottom <= image.height):
+        raise ValueError('fixed rectangle exceeds sheet or has no area')
+    mask = image.getchannel('A').point(lambda a: 255 if a > 8 else 0)
+    overlap = (max(left, owner[0]), max(top, owner[1]),
+               min(right, owner[2]), min(bottom, owner[3]))
+    def count(box):
+        return mask.crop(box).histogram()[255]
+    shared = count(overlap) if overlap[0] < overlap[2] and overlap[1] < overlap[3] else 0
+    missing = count(owner) - shared
+    foreign = count(rect) - shared
+    if missing or foreign:
+        raise ValueError(f'fixed rectangle loses {missing} subject pixels and includes {foreign} foreign pixels')
+    return image.crop(rect)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('sheet',type=Path)
     parser.add_argument('--grid',type=int,nargs=2,required=True,metavar=('ROWS','COLS'))
     parser.add_argument('--cell',type=int,nargs=2,required=True,metavar=('ROW','COL'))
     parser.add_argument('--out',type=Path,required=True,help='new PNG master, never the original')
+    parser.add_argument('--fixed-rect', type=int, nargs=4, metavar=('L','T','R','B'),
+                        help='use an unrotated integer source rectangle mandated by the importer')
+    parser.add_argument('--source-sha256', help='expected hash of the visually approved source sheet')
     args=parser.parse_args()
     receipt=args.out.with_suffix('.crop.json')
     if args.out.exists() or receipt.exists() or args.out.suffix.lower()!='.png':
         parser.error('supply a new .png path with no previous receipt')
     try:
-        with Image.open(args.sheet) as im:
-            master,cell,bounds=extract(im,*args.grid,*args.cell)
+        data = args.sheet.read_bytes()
+        sheet_hash = hashlib.sha256(data).hexdigest()
+        if args.source_sha256 and args.source_sha256.lower() != sheet_hash:
+            raise ValueError('source differs from approved sheet')
+        with Image.open(io.BytesIO(data)) as im:
+            rgba = im.convert('RGBA')
+            master,cell,bounds=extract(rgba,*args.grid,*args.cell)
+            if args.fixed_rect:
+                bounds = tuple(args.fixed_rect)
+                master = fixed_frame(rgba, cell, bounds)
     except (OSError, ValueError) as exc:
         parser.exit(2,f'crop refused: {exc}\n')
     master.save(args.out)
-    receipt.write_text(json.dumps(dict(sheet_sha256=digest(args.sheet),grid=args.grid,cell=args.cell,cell_rect=cell,crop_rect=bounds,master_sha256=digest(args.out)),indent=2))
+    receipt.write_text(json.dumps(dict(sheet_sha256=sheet_hash,mode=("fixed_rect" if args.fixed_rect else "tight_master"),grid=args.grid,cell=args.cell,cell_rect=cell,crop_rect=bounds,master_sha256=digest(args.out)),indent=2))
 if __name__=='__main__':main()

@@ -1,19 +1,39 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-04.english-simple.11.4",
+  "revision": "2026-11-04.english-simple.11.13",
   "skill": "remake-art",
-  "previous_provenance_sha256": "713c91ab3365b8e720a63e4e9fafa7c837c93a860b9d8f9b8624605ee81b18c3",
+  "previous_provenance_sha256": "d3e21dbec72f54e8d761318599d28972028a0ea9e639aa4c88017b5b266bbe08",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "59262f4e69dd0d42ce22536818ca34657ae735fedf95290d0d615bece55646ca",
-      "bytes": 15740
+      "sha256": "68645b3d263a5be399800defbb99e4d9837b311ee982d870c81a80c5eb9201d1",
+      "bytes": 18831
     },
     {
       "path": "agents/openai.yaml",
       "sha256": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
       "bytes": 353
+    },
+    {
+      "path": "examples/fixed-caption/base.png",
+      "sha256": "f5d81f5323e3d5441e333107ce31b63c2a7e7c6bc8d4b17e72cf4df48f335317",
+      "bytes": 7917
+    },
+    {
+      "path": "examples/fixed-caption/claim.png",
+      "sha256": "aa4ccea4099f36c2a6e42f87b46b2dba47100dad842c54867f6227c6cdf280f8",
+      "bytes": 26681
+    },
+    {
+      "path": "examples/fixed-caption/recipe.json",
+      "sha256": "3e21afa591d546dddd8491bf4436d71efb9f488b1fc0e61b0f0089e6f6f67433",
+      "bytes": 548
+    },
+    {
+      "path": "examples/fixed-caption/video.png",
+      "sha256": "456f783b4aaf6c327152cb1ffe6ae635696f414c51d747887b2f2f642e47b860",
+      "bytes": 412
     },
     {
       "path": "examples/weekly-league-typed-text-counterexample-v042.png",
@@ -37,8 +57,8 @@
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "4e4c64944809de253326d85467a29660e0c22186790b22c2de11c4c1a7060c82",
-      "bytes": 11167
+      "sha256": "0acc5255ee7cdbdae9100cdcee9fc9c07125373fea1088008fa13cea9fc02b52",
+      "bytes": 14566
     },
     {
       "path": "references/button-group-review.md",
@@ -76,6 +96,11 @@
       "bytes": 4354
     },
     {
+      "path": "references/fixed-caption-button.md",
+      "sha256": "3100b05e6886cf384196441f4144035d77c1ed7233769951b5dd1ddc1fda863e",
+      "bytes": 2670
+    },
+    {
       "path": "references/full-visual-review.md",
       "sha256": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
       "bytes": 11847
@@ -92,8 +117,8 @@
     },
     {
       "path": "references/local-ui-contract.md",
-      "sha256": "05f28ab19cd56b0fb1c8fbdd91d0e6c6a10de953f313f1f39825143032a84716",
-      "bytes": 4041
+      "sha256": "5151801bdaa71a3ca9038ff86ffbe6b1cc73ef8800665a1d527421ccb00ae62e",
+      "bytes": 8621
     },
     {
       "path": "references/mobile-button-size-and-home-layout.md",
@@ -102,8 +127,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "746519d642ea92c9d20f3d11f1ff8da19c50a127dd271b9c31a1baac77bfb647",
-      "bytes": 93685
+      "sha256": "cb6d24681c3c108406d8fb5a74f0cfa98138003bff9af98fda85a2175013a617",
+      "bytes": 94075
     },
     {
       "path": "references/panel-composite-review.md",
@@ -116,9 +141,14 @@
       "bytes": 2724
     },
     {
+      "path": "references/production-prevention.md",
+      "sha256": "2f9654c8614fd99654b686227df5620efe2de3a31b0288097f836d0ae694f002",
+      "bytes": 25579
+    },
+    {
       "path": "references/saul-art-rules.md",
-      "sha256": "f285acb5eb1d0ae6f118e80c3f4135bc8fbe37d9365a83b029252c896c160842",
-      "bytes": 49342
+      "sha256": "e1fb3c4097bef119feae94b69bffde9233f1a13f129f099ce667b183a34fec2c",
+      "bytes": 49520
     },
     {
       "path": "references/standalone-alpha-review.md",
@@ -141,6 +171,11 @@
       "bytes": 3811
     },
     {
+      "path": "references/text-fit-and-coverage.md",
+      "sha256": "3044cd6eb835011c4c5751d6293211acbbcc13e6a88f6f07c79ffb2f2d55122e",
+      "bytes": 8653
+    },
+    {
       "path": "references/theme-readability.md",
       "sha256": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
       "bytes": 2118
@@ -149,6 +184,11 @@
       "path": "references/ui-style-and-samples.md",
       "sha256": "d874898651cbfd579343b60aa3500f7041ba93f0c7cf63be3811aa56ce492e33",
       "bytes": 16498
+    },
+    {
+      "path": "scripts/bind_art.py",
+      "sha256": "c429362fec7600d3907ab8151b065c70fbac088148a9ee25ba9c6633a2aa5573",
+      "bytes": 17660
     },
     {
       "path": "scripts/check_button_group.py",
@@ -167,8 +207,8 @@
     },
     {
       "path": "scripts/check_native_sprite_sources.py",
-      "sha256": "3abf01524f3893e340a78838289f6eb1aae22ddfc35871bd96b45342d1777077",
-      "bytes": 9544
+      "sha256": "883985feea39cbc3006bd612f5725cc04918de195f9bf0e212cfb0ded7876403",
+      "bytes": 10422
     },
     {
       "path": "scripts/check_phone_boundary.py",
@@ -176,9 +216,29 @@
       "bytes": 3800
     },
     {
+      "path": "scripts/compose_fixed_button.py",
+      "sha256": "c01f435eb1012f09132f168e5f161afd12b0ff16213f221c7a00ac5db0df486d",
+      "bytes": 3920
+    },
+    {
+      "path": "scripts/cut_sheet_frame.py",
+      "sha256": "370aab40de58e7110d45e94a1006dee3a2d2c1f502bcc1bf2a525999ad7b1048",
+      "bytes": 4863
+    },
+    {
       "path": "scripts/make_greybox_reference.py",
       "sha256": "2a6360eb4a2156ea342a962a9d8116a436b2e4f51fda4d2c11d207eb77f382c7",
       "bytes": 9354
+    },
+    {
+      "path": "scripts/test_bind_art.py",
+      "sha256": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
+      "bytes": 8821
+    },
+    {
+      "path": "scripts/test_cut_sheet_frame.py",
+      "sha256": "38d07b8ef653eb1507800fcb93a2431b9e339536194d33d356427726601420c7",
+      "bytes": 2084
     },
     {
       "path": "scripts/test_greybox_reference.py",

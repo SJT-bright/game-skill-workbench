@@ -1,0 +1,12 @@
+{
+  "name": "save_restart",
+  "about": "v7.9 手机才出的五类问题 3: with TikTok phone storage (a key never written reads false, a stored 0 / 1 reads back false / true; both hosts), the steps in adapter.save_restart (real actions) earn something, then the game is closed and reopened (storage kept) and every value must still be there. v7.9 手机检查补全: every step has a kind (level / buy / claim / other) and a new game must have a step of each kind its home shows (level: a PLAY button; buy: a shop / skins button; claim: a reward / platform entry) or say why not in save_restart.none (new game blocks, legacy warns; adapter.save_restart {\"n/a\": reason} passes without a browser)",
+  "applies": ["tiktok"],
+  "needs_new": ["save_restart"],
+  "na_field": "save_restart",
+  "fields": ["home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 900,
+  "owner": "v7.9 手机才出的五类问题 / 手机检查补全",
+  "proof": "补丁_手机检查补全_基于简化11.7/测试记录.md (SorensRivet r21 refused, r22 passes; 人鱼 v18 keeps level 2; a 甜点消消乐 R48 copy that does not read its progress refused; R48 itself refused: a new player's save reads back false; a step without kind and a home with a shop but no buy step refused)"
+}

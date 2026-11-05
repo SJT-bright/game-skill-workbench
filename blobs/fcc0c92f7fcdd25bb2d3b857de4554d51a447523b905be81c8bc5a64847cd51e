@@ -1,0 +1,11 @@
+{
+  "name": "image_stall",
+  "about": "v7.9 手机才出的五类问题 4 (射击高手 v81): the own pictures of the add-to-desktop and profile-revisit entries (and PLAY with image_stall.play) never arrive (host imghang, 2.x also accesshang, every attempt; pictures other home nodes draw too are left alone); every entry must stay on screen, drawn (picture or text fallback) and react to a real tap (new game blocks, legacy warns; adapter.image_stall {\"n/a\": reason} passes without a browser; v7.9 手机检查补全: Cocos 3.x too, a legacy 3.x game only warns 「未覆盖」)",
+  "applies": ["tiktok"],
+  "na_field": "image_stall",
+  "fields": ["image_stall", "play", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 600,
+  "owner": "v7.9 手机才出的五类问题 / 手机检查补全",
+  "proof": "补丁_手机检查补全_基于简化11.7/测试记录.md (射击高手2048 v81 with the kit touch part refused; Holly's Hay Hop v6 and a new game pass; v86 refused by the same rule: no text fallback)"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "dda3afc6-4680-4e3c-b293-02d7a0dae512",
+  "skillId": "s-8a4323773719ef381f6d",
+  "directory": "grok-image-review",
+  "name": "grok-image-review",
+  "version": "v7",
+  "createdAt": "2026-11-05T14:03:50.210Z",
+  "summary": "文件变更：新增 1，修改 3，移除 0。",
+  "changes": {
+    "added": 1,
+    "modified": 3,
+    "deleted": 0
+  },
+  "treeHash": "779e2757d55c1808c32e4b3024610bfb865a06c3a0f979e5c8317fbf1fba3ad6",
+  "bytes": 24518,
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "c4daf6c2df8d03404bfc076189f499ecb550677dc07b1d59875f814bbf49c059",
+      "size": 938,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "5c8d788633aba85b215f86af447f423aa9bf9a82b562966bdb6ee55b587ca025",
+      "size": 1427,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "f87ff8ea6dba7afe8c77227efb805c3520a6a8d381044388d3c0d6df66b183d3",
+      "size": 348,
+      "executable": false
+    },
+    {
+      "path": "scripts/review.py",
+      "hash": "a39a3ced9c97601e95cdf86d27b8f248cf1dd1ff78e9fd80a4b096caec863b5d",
+      "size": 16218,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_review_fallback.py",
+      "hash": "b5657ca34a0e1c8d0047fc578ca28297e7b9bd2cdb90ef960a2cf89889c80c01",
+      "size": 5587,
+      "executable": false
+    }
+  ]
+}

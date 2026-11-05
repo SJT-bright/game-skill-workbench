@@ -1,11 +1,11 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-04",
- "release_label": "v7.9-en11.5",
- "selftest_report_sha256": "59c9fc27ff9d67837e2f67bc437268315c82150cb218005286e072048adace44",
+ "release_label": "v7.9-en11.13",
+ "selftest_report_sha256": "9243c68faa808202abf3d48fe26b70432a6f581ba7ed087d13f42d995ef4c1b5",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
-  "remake-core/scripts/package_gates/__init__.py": "dcdae8c69f63caade86e63d4df8397127d4f6cb74dfab0b29a3d3b1f71224d17",
+  "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
   "remake-core/scripts/package_gates/adapter_fix.py": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19",
   "remake-core/scripts/package_gates/ads_static.py": "b9899ddb19396c1b740a438c85e93a7ef12298b343ab0b34eaa7c98668b7c71b",
   "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
@@ -14,13 +14,14 @@
   "remake-core/scripts/package_gates/mission.py": "65b1ab8cebd4cf0a95ab9230bf66a9c8e57e9a45a77086dd28f4472fa8ac2c54",
   "remake-core/scripts/package_gates/network.py": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
   "remake-core/scripts/package_gates/portrait.py": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
+  "remake-core/scripts/package_gates/secrets.py": "c7998974bfbd2f4971e2ce9a737660ba4f799ace9e3b40532de42433f0600b7c",
   "remake-core/scripts/package_gates/sound.py": "12c34267f17d582ef2f6ee214dd5e74b466837bdadadd158e023de970d6b6d29",
   "remake-core/scripts/package_gates/startup.py": "1cf45b50c1dd0c471d0aadbee033d134a1f9b2aacf69f9276059a762a91dd356",
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
   "remake-core/scripts/verify_native_zip.py": "1840141073fba39f15a377c403a40cc10e1c364d7772f68cdd367337b3ee2390",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
-  "remake-core/scripts/tiktok_finalize.py": "e1e1c920422a5c7d2982f8501cb5b9cb4721bc0dc4d707650a48cd602a316f7b",
+  "remake-core/scripts/tiktok_finalize.py": "eddfcc491733461f35424296c147dfde0a6e55b5036876eccdbbd2ef2ef7e27a",
   "remake-core/scripts/tiktok_finalize_steps/__init__.py": "00e0c6129866f90138d5f541ed9b0b6477470545c98212a2df755d1c89c64202",
   "remake-core/scripts/tiktok_finalize_steps/adapter.py": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7",
   "remake-core/scripts/tiktok_finalize_steps/appid.py": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76",
@@ -112,11 +113,12 @@
    "game": "狐狸回窝",
    "role": "good",
    "check": "gates",
-   "item": "B18；简化.11.3 平台包",
+   "item": "B18；简化.11.3 平台包；手机问题源头约束触摸件",
    "expect": {
     "blocks": [
      "A1_audio_loudness",
      "A2_fail_sound_length",
+     "K1_kit_bytes",
      "K6_kit_module_old"
     ]
    },
@@ -654,7 +656,7 @@
   }
  ],
  "test_inventory": {
-  "files": 250,
+  "files": 292,
   "failing_known": [
    "chrome-mobile-testing/tests/test_ego_route.py",
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
@@ -668,7 +670,8 @@
    "remake-core/scripts/test_official_loading.py",
    "remake-core/scripts/test_ui_layout_and_copy.py",
    "remake-core/scripts/test_workflow_tools.py",
-   "remake-core/scripts/test_writer_refusal.py"
+   "remake-core/scripts/test_writer_refusal.py",
+   "ad-boost/scripts/tests/test_paths_remake_core.py"
   ],
   "new_failures": 0
  }

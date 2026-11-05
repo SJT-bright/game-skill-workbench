@@ -32,4 +32,4 @@ python3 scripts/prepare_delivery.py --zip /stable/delivery/Game_TikTok_test_vN.z
   --startup-contract /project/evidence/startup-vN.json --loading-recovery-runtime /project/evidence/recovery-vN.json
 ```
 
-内部回执留工程，不装进上传 ZIP。发送后若移动、替换或重建文件，重新执行并使用新回执；不能复用旧 SHA。若要同时交源码，用独立链接明确标识，主测试包链接仍指已验证的 Native ZIP。此步骤不自动授权平台上传或给别人发消息。
+内部回执留工程，不装进上传 ZIP。发送后若移动、替换或重建文件，重新执行并使用新回执；不能复用旧 SHA。若要同时交源码，用 `remake-core/scripts/make_source_zip.py` 出源码 ZIP（不带 `.git` / `.svn` / `.idea`，带账号密码就拒绝；简化.11.6），用独立链接明确标识，主测试包链接仍指已验证的 Native ZIP。此步骤不自动授权平台上传或给别人发消息。

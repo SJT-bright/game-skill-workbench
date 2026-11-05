@@ -1,12 +1,13 @@
 {
   "name": "resume_play",
-  "about": "v7.9 手机才出的五类问题 1 (甜点消消乐 R39-R47): in a level that plays, the phone takes the game away and gives it back: onHide/onShow, a finger left on the glass without touchend, the pause popup open, a rewarded ad playing as on a phone (onHide at start, onShow + onClose at the end, both orders). After each: the pause popup closes with one tap, the clock moves, one real probe changes state (new game blocks, legacy warns; adapter.resume_play {\"n/a\": reason} passes without a browser)",
+  "about": "v7.9 手机才出的五类问题 1 (甜点消消乐 R39-R47): in a level that plays, the phone takes the game away and gives it back: onHide/onShow, a finger left on the glass without touchend (same id and new id), the pause popup open, a rewarded ad playing as on a phone (onHide at start, onShow + onClose at the end, both orders). After each: the pause popup closes with one tap, the clock moves, one real probe changes state. v7.9 手机检查补全: the pause control is found in the level when resume_play.pause_button is not written, the in-level ad comes from button_sweep's real taps when resume_play.ad is not written; neither found nor declared {\"none\": reason} refuses a new game (legacy warns; adapter.resume_play {\"n/a\": reason} passes without a browser)",
   "applies": ["tiktok"],
   "needs_new": ["resume_play"],
   "na_field": "resume_play",
   "fields": ["home_scene", "after_home_js"],
+  "after": ["button_sweep"],
   "engines": ["2.x", "3.x"],
   "timeout_s": 1200,
-  "owner": "v7.9 手机才出的五类问题",
-  "proof": "补丁_手机才出的五类问题_给v7.9/测试记录.md (甜点消消乐 R47 refused, R48 passes)"
+  "owner": "v7.9 手机才出的五类问题 / 手机检查补全",
+  "proof": "补丁_手机检查补全_基于简化11.7/测试记录.md (甜点消消乐 R47 refused, finger_held included; R48 passes with the pause control found in the level; 香肠 R17 pause found from its popup; 割草 v015 / 人鱼 v18 refused: no pause control; 猴子快跑 v12 on Cocos 3.x)"
 }

@@ -9,7 +9,15 @@ that came with them, without a browser (fake ego-browser of test_runtime_regress
 - the host server must serve THIS package: a port where another server answers is skipped (_start_host);
 - every suite page runs without the HTTP cache (lib.mjs open(), ad_regression/cases.mjs);
 - both hosts have adhide=1 (a rewarded video sends the game to the background), the 3.x host __simHide / __simShow.
-The browser half is proven on real packages (补丁_手机才出的五类问题_给v7.9/测试记录.md: 甜点消消乐 R47 refused / R48
+v7.9 手机检查补全 (Saul 11-04「全部补上，老游戏先不管」):
+- a sidecar's "after" orders the run and hands the suite the evidence of those suites (CFG.prior) and the package facts
+  (CFG.facts.rewarded_ads); ad_outcome applies to every package with rewarded ads and runs after button_sweep and
+  resume_play;
+- the finger that never lifts is a real mouse press without release (2.x) / the 3.x host's holdTouch; both hosts log
+  lifecycle and ad-result rows the same way, switch the ad result at run time (__setAdPolicy), stall / fail pictures
+  (imghang / imgfail) and read storage like a phone (missing / numbool);
+- the suites look for what the adapter left out (pause control, in-level ad, ad entries), legacy games do not.
+Browser half: 补丁_手机检查补全_基于简化11.7/测试记录.md. Before that, the browser half is proven on real packages (补丁_手机才出的五类问题_给v7.9/测试记录.md: 甜点消消乐 R47 refused / R48
 passes resume_play and ad_outcome, SorensRivet r21 refused / r22 passes save_restart, Holly's Hay Hop v6 passes and
 射击高手 v86 shows empty platform entries in image_stall).
 Run: python3 -B test_phone_suites.py
@@ -17,7 +25,9 @@ Run: python3 -B test_phone_suites.py
 import functools
 import http.server
 import shutil
+import stat
 import subprocess
+import sys
 import threading
 import unittest
 from pathlib import Path
@@ -41,11 +51,15 @@ class Sidecars(unittest.TestCase):
         self.assertEqual(cat['resume_play']['needs_new'], ['resume_play'])
         self.assertEqual(cat['save_restart']['needs_new'], ['save_restart'])
         self.assertEqual(cat['image_stall']['needs_new'], [])          # optional block: the entries are found on screen
-        self.assertIn('3.x', cat['image_stall']['uncovered'])
+        self.assertEqual(cat['image_stall']['uncovered'], {})          # v7.9 手机检查补全: 3.x runs (legacy 3.x warns in the suite)
+        # v7.9 手机检查补全: every package with rewarded ads, entries from ad_entries / resume_play.ad / button_sweep
         ao = cat['ad_outcome']
-        self.assertEqual((ao['applies'], ao['needs'], ao['needs_new']), (['adapter:ad_entries'], ['ad_entries'], ['ad_outcome']))
+        self.assertEqual((ao['applies'], ao['needs'], ao['needs_new'], ao['na_field'], ao['after']),
+                         (['rewarded_ads', 'adapter:ad_entries'], [], [], 'ad_outcome', ['button_sweep', 'resume_play']))
         self.assertNotIn('ad_outcome', rr.required_suites({'game.js': b'x'}, {}, cat))
         self.assertIn('ad_outcome', rr.required_suites({'game.js': b'x'}, {'ad_entries': []}, cat))
+        self.assertIn('ad_outcome', rr.required_suites({'game.js': b'x', 'main.js': b'tt.createRewardedVideoAd({})'}, {}, cat))
+        self.assertEqual(cat['resume_play']['after'], ['button_sweep'])
         keys = rr.adapter_keys(cat)
         for name in NEW:
             self.assertIn(name, keys)
@@ -65,6 +79,125 @@ class Sidecars(unittest.TestCase):
                              if not l.lstrip().startswith('//'))
             for word in ('GameView', 'pauseParent', 'downMenu', 'homeDisplay', 'diamondCounter', 'ResourcePanel', 'Canvas/Screen'):
                 self.assertNotIn(word, code, (name, word))
+
+
+FAKE_PRIOR = '''
+import json, sys
+from urllib.parse import unquote, urlparse
+code = sys.argv[sys.argv.index('-e') + 1]
+entry = unquote(urlparse(json.loads(code[len('await import('):-1])).path)
+cfg = json.loads(open(entry, encoding='utf-8').read().split('\\n', 1)[0][len('globalThis.CFG = '):-1])
+ev = {'suite': cfg['suite'], 'prior': cfg.get('prior'), 'facts': cfg.get('facts')}
+open(cfg['resultFile'], 'w').write(json.dumps({'suite': cfg['suite'], 'passed': True, 'cases': [{'id': 'ok', 'passed': True, 'detail': None}],
+                                               'warnings': [], 'evidence': ev, 'fatal': None}))
+'''
+
+
+class AfterPrior(Base):
+    """v7.9 手机检查补全: a sidecar's "after" runs it after those suites and hands it their evidence (CFG.prior), plus
+    what the package bytes say (CFG.facts): resume_play / ad_outcome use the ad entries and popups button_sweep found."""
+    def fake_prior(self):
+        browser = self.root / 'ego-browser'
+        browser.write_text('#!%s\n%s' % (sys.executable, FAKE_PRIOR))
+        browser.chmod(browser.stat().st_mode | stat.S_IEXEC)
+        (self.suites / 'fake.json').unlink()
+        (self.suites / 'fake.mjs').unlink()
+        base = {'about': 'x', 'applies': ['tiktok'], 'needs': [], 'engines': ['2.x', '3.x'], 'timeout_s': 60}
+        self.sidecar('aa_late', {**base, 'name': 'aa_late', 'after': ['zz_first']})
+        self.sidecar('zz_first', {**base, 'name': 'zz_first'})
+
+    def test_order_and_prior(self):
+        self.fake_prior()
+        summary = self.run_fake({'home': 'return true'}, suites=['aa_late', 'zz_first'])
+        self.assertEqual([r['suite'] for r in summary['suites']], ['zz_first', 'aa_late'])
+        first, late = summary['suites'][0]['evidence'], summary['suites'][1]['evidence']
+        self.assertEqual(first['prior'], {})
+        self.assertEqual(late['prior']['zz_first']['suite'], 'zz_first')
+        self.assertEqual(late['facts'], {'rewarded_ads': False})
+        (self.package / 'main.js').write_text('tt.createRewardedVideoAd({adUnitId: "x"})')
+        self.assertEqual(self.run_fake({'home': 'return true'}, suites=['aa_late'])['suites'][0]['evidence'],
+                         {'suite': 'aa_late', 'prior': {}, 'facts': {'rewarded_ads': True}})
+
+    def test_ordered_keeps_the_order_and_survives_a_cycle(self):
+        self.assertEqual(rr.ordered(['a', 'b'], {'a': {'after': ['b']}, 'b': {}}), ['b', 'a'])
+        self.assertEqual(rr.ordered(['c', 'a', 'b'], {'a': {'after': ['b']}, 'b': {'after': ['a']}, 'c': {}}), ['c', 'a', 'b'])
+        self.assertEqual(rr.ordered(['a', 'x'], {'a': {'after': ['zz']}, 'x': {}}), ['a', 'x'])   # not in the run: ignored
+        cat = rr.load_suites()
+        names = rr.ordered(sorted(cat), cat)
+        self.assertLess(names.index('button_sweep'), names.index('resume_play'))
+        self.assertLess(names.index('resume_play'), names.index('ad_outcome'))
+
+    def test_after_must_name_other_suites(self):
+        self.sidecar('fake', {**SIDECAR, 'after': ['fake']})
+        with self.assertRaisesRegex(rr.RuntimeRefused, '"after" must be a list of other suite names'):
+            rr.load_suites(self.suites)
+
+
+class AdRoles(Base):
+    """v7.9 手机问题源头约束: a new game lists its result-page x2 (role double) and revive (role revive) in ad_entries;
+    refused before any browser opens. Legacy games, ad_outcome {"n/a"} and ad_outcome.none.<role> pass."""
+    ENTRY = {'id': 'x', 'button': 'Canvas/b', 'states': [{'name': 's'}]}
+
+    def test_rule(self):
+        self.assertEqual(len(rr.ad_roles_problems({})), 1)
+        self.assertIn('role "double"', rr.ad_roles_problems({})[0])
+        self.assertIn('role "revive"', rr.ad_roles_problems({})[0])
+        both = {'ad_entries': [dict(self.ENTRY, role='double'), dict(self.ENTRY, id='y', role='revive')]}
+        self.assertEqual(rr.ad_roles_problems(both), [])
+        one = {'ad_entries': [dict(self.ENTRY, role='revive')]}
+        self.assertIn('ad_outcome.none.double', rr.ad_roles_problems(one)[0])
+        self.assertEqual(rr.ad_roles_problems(dict(one, ad_outcome={'none': {'double': 'no level end: an endless runner'}})), [])
+        self.assertEqual(rr.ad_roles_problems({'ad_outcome': {'n/a': 'no rewarded ad a player can start'}}), [])
+        self.assertIn('ad_outcome.none must map', rr.ad_roles_problems(dict(one, ad_outcome={'none': {'double': ' '}}))[0])
+        self.assertIn('ad_outcome.none must map', rr.ad_roles_problems(dict(one, ad_outcome={'none': {'shop': 'x'}}))[0])
+
+    def test_refused_before_the_browser_for_a_new_game_only(self):
+        (self.suites / 'fake.json').unlink()
+        (self.suites / 'fake.mjs').unlink()
+        self.sidecar('ad_outcome', {**SIDECAR, 'name': 'ad_outcome', 'needs': [], 'na_field': 'ad_outcome',
+                                    'fields': ['fake_mode', 'ad_entries']})
+        with self.assertRaisesRegex(rr.RuntimeRefused, 'before the browser.*ad_outcome: adapter.ad_entries lists no'):
+            self.run_fake({'home': 'return true'}, policy='new')
+        self.assertTrue(self.run_fake({'home': 'return true'}, policy='legacy')['passed'])
+        good = {'home': 'return true', 'ad_entries': [dict(self.ENTRY, role='double'), dict(self.ENTRY, id='y', role='revive')]}
+        self.assertTrue(self.run_fake(good, policy='new')['passed'])
+
+
+class PhoneParts(unittest.TestCase):
+    """v7.9 手机检查补全: the pieces the browser half stands on, as text (the browser half: 测试记录.md)."""
+    def test_finger_that_never_lifts(self):
+        p = (RT / 'phone.mjs').read_text(encoding='utf-8')
+        body = p[p.index('export async function fingerHold'):p.index('// The pause popup the game may show')]
+        self.assertIn("type: 'mousePressed'", body)          # 2.x host: a real press, the host's touch id 0
+        self.assertNotIn('mouseReleased', body)               # ... that never lifts
+        self.assertIn('window.__H.holdTouch', p)              # 3.x host hook
+        h3 = (RT / 'host3x' / 'host.js').read_text(encoding='utf-8')
+        self.assertIn('X.holdTouch = (x, y, id) =>', h3)
+
+    def test_hosts_speak_the_same_way(self):
+        h2 = (HERE / 'ad_regression' / 'host.js').read_text(encoding='utf-8')
+        h3 = (RT / 'host3x' / 'host.js').read_text(encoding='utf-8')
+        self.assertIn("matches('imgfail', v)", h2)
+        for s in ("hit('imghang')", "hit('imgfail')", 'window.__setAdPolicy = (p) =>', "else if (k === 'lifecycle') beacon('lifecycle', s);",
+                  "beacon('ad-result', { unit, result: mode === 'complete' ? 'complete' : 'cancel' })", "const m = Q.get('missing');",
+                  "nb === 'all' || r === 0 || r === 1"):
+            self.assertIn(s, h3)
+        self.assertIn('window.__setAdPolicy = function (p)', h2)
+
+    def test_suites_find_what_the_adapter_left_out(self):
+        rp = (RT / 'suites' / 'resume_play.mjs').read_text(encoding='utf-8')
+        for s in ('P.findPause(page)', 'P.priorAdEntries()', "{ warnSkip: 'no pause_button given", 'const LEGACY = POLICY === \'legacy\''):
+            self.assertIn(s, rp)
+        ao = (RT / 'suites' / 'ad_outcome.mjs').read_text(encoding='utf-8')
+        for s in ("from: 'button_sweep'", "id: 'resume_play.ad'", "await adTap(page, en, 'cancel')", "await adTap(page, en, 'complete')",
+                  "if (POLICY === 'legacy') return { list: A.ad_outcome ? list : []"):
+            self.assertIn(s, ao)
+        sr = (RT / 'suites' / 'save_restart.mjs').read_text(encoding='utf-8')
+        self.assertIn("const KINDS = ['level', 'buy', 'claim', 'other'];", sr)
+        bs = (RT / 'suites' / 'button_sweep.mjs').read_text(encoding='utf-8')
+        self.assertIn('all: p.buttons.map((n) => ({ path: n.path, sig: (n.sig ||', bs)
+        im = (RT / 'suites' / 'image_stall.mjs').read_text(encoding='utf-8')
+        self.assertIn('e.shared = e.files.filter', im)
 
 
 class AnyNaField(Base):

@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-04.english-simple.11.5",
+  "revision": "2026-11-04.english-simple.11.13",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "14ab83ed65380ab40bdd1cce4b046fb12cef91770ad7b22fda9d3aac706974d7",
-      "bytes": 14996
+      "sha256": "14586ab0ad66ee602c8a91fa86c24a54a5ec9d95c54004bbd9b7f5870b45ab23",
+      "bytes": 16416
     },
     {
       "path": "agents/openai.yaml",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "6f8d2beff19be492291405167d902b1951fd985bc0efe0077dff40d17a68090a",
-      "bytes": 17188
+      "sha256": "a3023fe95fe7f7beeaedbd493b2af122d811cb0198bcf912d46bc6064354e5a1",
+      "bytes": 17419
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -196,13 +196,13 @@
     },
     {
       "path": "package-check/references/root-entry-and-delivery.md",
-      "sha256": "b381179d0c5a37a76bb8327a945336c0b95f7af24e741c73b0a918acfc36aed5",
-      "bytes": 3828
+      "sha256": "9d47237620493b81376cd2f895eacdb1f273031ab0e04b5dd168116920429c2d",
+      "bytes": 3968
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "d1163542d5c8c4ab725d55d7d962758d434e3635d273e1c7fcfe2f52d6e8c59b",
-      "bytes": 52072
+      "sha256": "ac83a07471dbef589d8f9b019466293c96052f51a85402aa743832497bb0a33e",
+      "bytes": 66314
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -216,8 +216,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
-      "sha256": "f99e155fe1cf79765416d06919a127ed74687eeba9adfcf21ab849472b02a6d5",
-      "bytes": 55602
+      "sha256": "8d5deb0708ee8e9049fbc5058e0c36817e87c1d1162c379c0215baca9dc28606",
+      "bytes": 55902
     },
     {
       "path": "package-check/scripts/ad_regression/play.html",
@@ -266,8 +266,8 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "c34751f69c83afc52d1ea54a5a813b04128469ac2554925fcc6cf758e634f3bd",
-      "bytes": 10004
+      "sha256": "18a5c3e497045783439db71402081dd6fcc7210fcdc3d3f43101f69b11302771",
+      "bytes": 10751
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -291,8 +291,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/host.js",
-      "sha256": "65c0ac18e7af86972fc1013cfc03a4db9f619f8f56949698bd1fc867567f16a9",
-      "bytes": 36413
+      "sha256": "115412c54e978cd15a3d02dbbdd60bffec1c1f3adc90d0767ebf4be489676134",
+      "bytes": 39311
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/play.html",
@@ -306,8 +306,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/layout_rules.mjs",
-      "sha256": "1c269d9dba393a333568284235e4a980a46ce3c1ef971831b97e756bcb99e93a",
-      "bytes": 20861
+      "sha256": "0813cb48b28dd96200fd57e3009c2abc16a63694a620c0dd06bae99a9d894b2c",
+      "bytes": 21367
     },
     {
       "path": "package-check/scripts/runtime_regression/lib.mjs",
@@ -321,8 +321,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/phone.mjs",
-      "sha256": "5e2fd27376ea0ff4c6d9d02c8c8b24dd07b9718296b862354241fb0cd4882907",
-      "bytes": 9276
+      "sha256": "15a2f6efcf8f2a3e75a6b611b643832e0dc87f3f330e7e60e82c2b33abb183f3",
+      "bytes": 20421
     },
     {
       "path": "package-check/scripts/runtime_regression/popin_watch.mjs",
@@ -341,13 +341,13 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/ad_outcome.json",
-      "sha256": "615c32fa29a598e58537c76a33ff47539c2b64c27e3ab1176a8663f3bd7cfb93",
-      "bytes": 944
+      "sha256": "f93aaa08ef78464f6ed6d836b0680a4a3901112fb207c22459d822c3f0ab43c5",
+      "bytes": 1441
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/ad_outcome.mjs",
-      "sha256": "d1035186832778c9ca26384cbc0b313eeb6b294e678d79a98199398f52f2946c",
-      "bytes": 9849
+      "sha256": "cd1fcb66494fb8fd33245b187c69fe0657417f6ca189e9ff28772aac856dc0bb",
+      "bytes": 24193
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/button_sweep.json",
@@ -356,8 +356,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/button_sweep.mjs",
-      "sha256": "802a8315bf7e660994745aa610c883d1cd6b2066eaaf9a59e83d85730a7a70f8",
-      "bytes": 24505
+      "sha256": "99846ad7fc6ac6d3bf4a4273c2178bf94350d1b47817a93bb6f5d683d14fde0f",
+      "bytes": 24829
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/dead_shell.json",
@@ -381,13 +381,13 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/image_stall.json",
-      "sha256": "1954bceb66bbe5ac4bff7872f482979601b96b970c6ccdee434dd64e48a9a3e8",
-      "bytes": 901
+      "sha256": "fcc0c92f7fcdd25bb2d3b857de4554d51a447523b905be81c8bc5a64847cd51e",
+      "bytes": 1040
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/image_stall.mjs",
-      "sha256": "e770fcb53d2680dbd1d5fd6557f3f1b5aa401e814cdf64c336b39a0fcb07febc",
-      "bytes": 8951
+      "sha256": "83b4daa88d52f8a5987a2a1ef6a5ae4c9676fe8bbb9d0da991bd34a5c7acc2db",
+      "bytes": 13047
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/layout_state.json",
@@ -421,23 +421,23 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/resume_play.json",
-      "sha256": "c2b57b08003236fbd2d0e07b171307f3770f588a98cc1687d2a475ac150fcd32",
-      "bytes": 889
+      "sha256": "f2af5dac16c2e81192c43e7bd4e9e7a75bce646b3e1542da4ce22aca71c3ae18",
+      "bytes": 1394
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/resume_play.mjs",
-      "sha256": "294634ca67de8fb4599ef79e8df9c5bd40c852f9cd3c2448077534382ade240b",
-      "bytes": 11546
+      "sha256": "122bbaa2ffaec82f09a6f5cd5fbd54d647c2d4a603df466ab31629e73219f424",
+      "bytes": 18231
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/save_restart.json",
-      "sha256": "2c4cf6ba6fa9da58a49098b40948b249abf70bf227585177a723a84a25b43533",
-      "bytes": 803
+      "sha256": "c30fd35d594f3a1fb26f2634b58860ffb153f3295bf1605f84deecf730c1b76a",
+      "bytes": 1282
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/save_restart.mjs",
-      "sha256": "62e7461d1c5cbf43b7c403b1d969082bf807f274dfd29bc896779f89d2cdf4bb",
-      "bytes": 7148
+      "sha256": "22876a5015ed801ed369afad6a4b70210b8b0ac31701c0146b360eb07f7fccfc",
+      "bytes": 11191
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/startup.json",
@@ -471,8 +471,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression.py",
-      "sha256": "05615cd534fe580cc368c334729af966141b288b001484bb935e1ecef02318e3",
-      "bytes": 49764
+      "sha256": "68dd29827d400b42386ee00641a69dafe9d91d500daa06927a0b0f9260ef9ecc",
+      "bytes": 53412
     },
     {
       "path": "package-check/scripts/test_ad_regression.py",
@@ -486,8 +486,8 @@
     },
     {
       "path": "package-check/scripts/test_check_speedups.py",
-      "sha256": "99677bfae6a11b4e57dc4ab556a9c6393570412d61c1abd9eb3dc86b9aecb86a",
-      "bytes": 24639
+      "sha256": "bf6e0a16054775e0743ca7bfc9c68b853f53ef39e0119953a101f134f78c1925",
+      "bytes": 24847
     },
     {
       "path": "package-check/scripts/test_dead_shell.py",
@@ -556,8 +556,8 @@
     },
     {
       "path": "package-check/scripts/test_phone_suites.py",
-      "sha256": "284f41efb77123278f2deb8eccb596ca9156bb410ec281f09ad78132daa8bdec",
-      "bytes": 7807
+      "sha256": "931e33d778a83734898229845d3c013886194cb493f9628f68577f85ec86774e",
+      "bytes": 17013
     },
     {
       "path": "package-check/scripts/test_popin_gate.py",
@@ -611,8 +611,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "10d9232f2666b4003285b7d873cdd0ba5870c0c9eb7591d382d1591e2a918730",
-      "bytes": 102711
+      "sha256": "f3a1c070f2695ebb21ddc06e7cc63f9d46005336db3a7b6b69186bf722f7896c",
+      "bytes": 109931
     },
     {
       "path": "review/README.md",
@@ -750,5 +750,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "9e0513a49fa8b0583ff2f4d81465194752e8414909167ee6224ca28b86d277e4"
+  "previous_provenance_sha256": "54201664907d8974f448a9072d4781365dbcf0af3068229ada74d000278c47d8"
 }

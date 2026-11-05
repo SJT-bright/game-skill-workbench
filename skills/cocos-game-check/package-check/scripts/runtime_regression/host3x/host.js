@@ -52,6 +52,9 @@ function log(k, v) {
   const s = v === undefined ? '' : (typeof v === 'string' ? v : JSON.stringify(v)).slice(0, 400);
   X.log.push([now(), k, s]);
   if (KIND[k]) beacon(KIND[k], /^net-/.test(KIND[k]) ? { url: s } : s);
+  // v7.9 (手机检查补全): lifecycle rows reach window.__hostLog as on the 2.x host (kind 'lifecycle', data 'hide' / 'show');
+  // resume_play / ad_outcome read them there
+  else if (k === 'lifecycle') beacon('lifecycle', s);
   else if (k === 'mark' || /^(sub\.|img\.webp_refused|img\.onload_property_ignored|modal\.|ad\.show|tt\.missing|audio\.error)/.test(k)) beacon(k, s);
 }
 function mark(k) { if (!(k in X.marks)) { X.marks[k] = now(); log('mark', k); } }
@@ -184,6 +187,11 @@ class TTImage extends HTMLImageElement {
     // fault webp_slow: WebP data URIs decode 800 ms late (decoder works, just slower than the engine's 500 ms check)
     if (F.has('webp_slow') && /^data:image\/webp/.test(raw)) { log('img.webp_slow', raw.slice(0, 40)); setTimeout(() => { super.src = u; }, 800); return; }
     if (/\.webp($|\?)/.test(raw)) { const t0 = now(); log('img.webp', raw.slice(-24)); this.addEventListener('load', () => log('img.webp_loaded', raw.slice(-24) + ' ' + (now() - t0) + 'ms ' + this.width + 'x' + this.height)); }
+    // v7.9 (手机检查补全 ④, same names as the 2.x host): imghang=SUBSTR[|SUBSTR] the picture never fires load / error;
+    // imgfail=SUBSTR[|SUBSTR] it fires error (a picture the phone cannot decode). Every attempt.
+    const hit = (k) => (Q.get(k) || '').split('|').some((s) => s && raw.indexOf(s) >= 0);
+    if (hit('imghang')) { log('fault-imghang', raw.slice(-80)); return; }
+    if (hit('imgfail')) { log('fault-imgfail', raw.slice(-80)); setTimeout(() => { try { this.dispatchEvent(new Event('error')); } catch (e) {} }, 30); return; }
     super.src = u;
   }
   get src() { return super.src; }
@@ -220,8 +228,24 @@ let fontN = 0;
 
 // ---------- storage ----------
 if (F.has('firstrun') || Q.get('fresh') === '1' || Q.get('reset') === '1') Object.keys(localStorage).filter(k => k.startsWith(STORE)).forEach(k => localStorage.removeItem(k));
+// v7.9 (手机检查补全 ③, same switches as the 2.x host): missing=true|false|undefined|null|throw = what getStorageSync
+// returns for a key never written (a real phone can return false / true); numbool=01|all = a stored number reads back
+// as a Boolean (0 / 1 only, or every number). save_restart runs with missing=false&numbool=01.
+const missingValue = (k) => {
+  const m = Q.get('missing');
+  if (m === null) return '';
+  log('fault-missing', k);
+  if (m === 'throw') throw new Error('getStorageSync:fail data not found');
+  return m === 'true' ? true : m === 'false' ? false : m === 'null' ? null : undefined;
+};
 const storage = {
-  get(k) { const v = localStorage.getItem(STORE + k); if (v == null) return ''; try { return JSON.parse(v).v; } catch (e) { return ''; } },
+  get(k) {
+    const v = localStorage.getItem(STORE + k); if (v == null) return missingValue(k);
+    let r; try { r = JSON.parse(v).v; } catch (e) { return ''; }
+    const nb = Q.get('numbool');
+    if (nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { log('fault-numbool', k + '=' + r); return r !== 0; }
+    return r;
+  },
   set(k, v) { if (F.has('storage_throw')) throw new Error('setStorageSync:fail exceeded'); localStorage.setItem(STORE + k, JSON.stringify({ v })); },
   keys() { return Object.keys(localStorage).filter(k => k.startsWith(STORE)).map(k => k.slice(STORE.length)); },
 };
@@ -238,6 +262,15 @@ function emitTouch(kind, e) {
   X.touches = (X.touches || 0) + 1; if (kind !== 'Move') log('touch.' + kind, Math.round(t.clientX) + ',' + Math.round(t.clientY));
   touchCbs[kind].slice().forEach(f => { try { f(ev); } catch (err) { log('touch.cb_err', String(err && err.stack || err)); } });
 }
+// v7.9 (手机检查补全 ④): a finger that lands and never lifts (the phone takes the game away before touchend / touchcancel).
+// (x, y) = CSS point of the page; id 1 = the mouse pointer id, the id the next real tap reuses.
+X.holdTouch = (x, y, id) => {
+  const r = main.getBoundingClientRect();
+  const t = { identifier: id, clientX: x - r.left, clientY: y - r.top, pageX: x - r.left, pageY: y - r.top, force: 1 };
+  active.set(id, t); log('touch.hold', id + ' ' + Math.round(t.clientX) + ',' + Math.round(t.clientY));
+  touchCbs.Start.slice().forEach(f => { try { f({ touches: [...active.values()], changedTouches: [t], timeStamp: performance.now() }); } catch (err) { log('touch.cb_err', String(err && err.stack || err)); } });
+  return true;
+};
 main.addEventListener('pointerdown', e => { main.setPointerCapture(e.pointerId); emitTouch('Start', e); });
 main.addEventListener('pointermove', e => emitTouch('Move', e));
 main.addEventListener('pointerup', e => emitTouch('End', e));
@@ -305,13 +338,14 @@ function createRewardedVideoAd(opt) {
       X.ads.push({ id, unit, mode, t: now() }); log('ad.show', id + ' ' + mode + ' ' + unit);
       AD.shown++; gateLog('ad-show', unit); beacon('ad-show', { unit, policy: mode });
       if (mode === 'reject') { AD.errors++; return Promise.reject({ errMsg: 'show:fail no ad', errCode: 1004 }); }
-      if (mode === 'error') { AD.errors++; setTimeout(() => fire('error', { errMsg: 'ad load error', errCode: 1004 }), 300); return Promise.resolve(); }
+      if (mode === 'error') { AD.errors++; setTimeout(() => { beacon('ad-result', { unit, result: 'error' }); fire('error', { errMsg: 'ad load error', errCode: 1004 }); }, 300); return Promise.resolve(); }
       if (mode === 'hang') return Promise.resolve();
       const el = document.getElementById('ad'); el.style.display = 'flex'; el.textContent = 'Rewarded video (' + mode + ')';
       // v7.9 adhide=1 (same switch as the 2.x host): the video sends the game to the background, its close brings it back
       // (adhideorder=show-first: onShow, 50 ms later onClose; close-first: the reverse)
       const hid = ADHIDE; if (hid) setTimeout(X.hide, 30);
-      const closeNow = () => { log('ad.close', id + ' ended=' + (mode === 'complete')); AD[mode === 'complete' ? 'closedEnded' : 'closedEarly']++; fire('close', { isEnded: mode === 'complete' }); };
+      // v7.9 (手机检查补全): 'ad-result' in window.__hostLog as on the 2.x host (the suites wait for it)
+      const closeNow = () => { log('ad.close', id + ' ended=' + (mode === 'complete')); beacon('ad-result', { unit, result: mode === 'complete' ? 'complete' : 'cancel' }); AD[mode === 'complete' ? 'closedEnded' : 'closedEarly']++; fire('close', { isEnded: mode === 'complete' }); };
       setTimeout(() => {
         el.style.display = 'none';
         if (!hid) closeNow();
@@ -352,7 +386,7 @@ const tt = {
   getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, v),
   removeStorageSync: k => localStorage.removeItem(STORE + k), clearStorageSync: () => storage.keys().forEach(k => localStorage.removeItem(STORE + k)),
   getStorageInfoSync: () => ({ keys: storage.keys(), currentSize: 1, limitSize: 10240 }),
-  getStorage(o) { cb(o, true, { data: storage.get(o.key) }); }, setStorage(o) { try { storage.set(o.key, o.data); cb(o, true, {}); } catch (e) { cb(o, false, { errMsg: String(e) }); } },
+  getStorage(o) { let d; try { d = storage.get(o.key); } catch (e) { cb(o, false, { errMsg: String(e) }); return; } cb(o, true, { data: d }); }, setStorage(o) { try { storage.set(o.key, o.data); cb(o, true, {}); } catch (e) { cb(o, false, { errMsg: String(e) }); } },
   onTouchStart: f => touchCbs.Start.push(f), onTouchMove: f => touchCbs.Move.push(f), onTouchEnd: f => touchCbs.End.push(f), onTouchCancel: f => touchCbs.Cancel.push(f),
   offTouchStart() {}, offTouchMove() {}, offTouchEnd() {}, offTouchCancel() {},
   onAccelerometerChange() {}, offAccelerometerChange() {}, startAccelerometer(o) { o && cb(o, true, {}); }, stopAccelerometer(o) { o && cb(o, true, {}); },
@@ -388,6 +422,8 @@ X.hide = () => { log('lifecycle', 'hide'); hideCbs.slice().forEach(f => f({})); 
 X.show = () => { log('lifecycle', 'show'); showCbs.slice().forEach(f => f({ scene: '011004', query: {} })); };
 // v7.9: the same names as the 2.x host, so a suite drives the lifecycle the same way on both engines
 window.__simHide = X.hide; window.__simShow = X.show;
+// v7.9 (手机检查补全): the next ads end this way (same name as the 2.x host): complete | cancel | error | reject | hang
+window.__setAdPolicy = (p) => { ADS.length = 0; ADS.push(String(p)); };
 
 // ---------- inspection (read-only, game-generic) ----------
 let ccNS = null;

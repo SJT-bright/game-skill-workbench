@@ -40,6 +40,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 位图字只用于数字和符号；句子用真字体；字母大小写不串（禁止 HelP/TaP 这类） | 必查 | 必查 | `remake-core/scripts/audit_bitmap_letter_fonts.py`（美术关 `art_check.py` 已接入） |
 | TikTok 触摸坐标：Cocos 2.x 包装好平台包 `touch-coordinates.js`，Cocos 3.x 包在引擎加载前给 `tt.onTouch*` 装好坐标修正，只给 screenX/screenY 也能点到原位（浏览器模拟测不出）；探针结果为空即失败 | 必查 | 必查 | `remake-core/scripts/audit_upload_startup.py`（触摸坐标探针：2.x `probe_cocos2_touch_coordinates.cjs`，3.x `probe_cocos3_touch_coordinates.cjs`）、平台包 `remake-core/assets/platform-kit/build-templates/bytedance/` |
 | 设置里音效/BGM 两个音量分开可调且保存；有声音控件就必须真有音频文件、播放调用和引擎音频模块（「这轮没改声音」、老游戏、英化都不免查；review 不算通过；不适用只认 `docs/audio/silent_design.md` 且没有声音控件） | 必查 | 必查 | `package-check/scripts/audit_sound_settings.py`；源码阶段 `remake-core/scripts/audit_sound_settings_static.py`（`preflight.py` 的「声音设置」行，最终阶段 review 是需处理）；成品 `remake-core/scripts/package_gates/sound.py`（三个写包/检查入口都跑，S1–S4，见 [固定适配 10](references/tiktok-fixed-adaptation.md)） |
+| 源码和上传包不带 `.git` / `.svn` / `.idea` 和账号密码（Saul 2026-11-04，91 SLS11 的 `.git` 里有开发者账号密码）：英化开工用 `unpack_source.py` 放源码，交源码用 `make_source_zip.py` | 必查 | 必查 | `remake-core/scripts/source_hygiene.py`；出包门禁 `package_gates/secrets.py`（H1/H2，三个入口都跑）；`prepare_delivery.py --source` |
 | 删除分享、更多游戏、排行榜。把 `WxGameBox` 这类旧类换成空实现时，空实现的 `init(nodes)` 要把传进来的节点设成 `active = false`，不能什么都不做（v7.8，Holly's Hay Hop v1：旧类原本负责隐藏挂件，换成空类后局内一直显示「Try It」框） | 必查 | 必查 | `remake-core/scripts/audit_no_social_features.py`、[前置规则](../remake-core/references/no-social-features.md)；`preflight.py` 的「分享/排行榜」「互推」「分享换奖励」（`audit_share_entries.py`）行，`--stage final` 时「跳过」也算需处理；还显示着的退役槽位由写包入口必跑的运行时套件 `dead_shell`（VIS_DEAD_SHELL，[运行时回归](package-check/references/runtime-regression.md)）拦 |
 | 个人主页回访、添加桌面入口 | 必查 | 必查 | `remake-core/scripts/audit_platform_markers.py` |
 | 结算页 Watch Ad x2 与 Retry；广告取消/失败不发奖、只用激励视频、无广告跳关 | 必查 | 必查 | `remake-core/scripts/audit_ad_binding.py`、`audit_no_ad_skip.py`、`audit_no_ad_simulator.py` |
@@ -60,6 +61,10 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 模拟功能验收必须先按实际画面盘点，再逐个实点并验证业务结果；只有 Sprite、没有点击绑定的按钮样式区域也须纳入。完整验收覆盖实际存在的页面与条件状态，局部修复覆盖受影响页面和状态；同版有效证据可复用。漏测、受限、无响应不得写“所有按钮通过”。执行时必读[逐按钮覆盖规则](test/references/button-interaction-coverage.md)，报告应测、实点、复用、失败和未测数量；button_sweep 的 passed 不能代替此项验收。
 
 英化复合控件有历史漏检时，制作方提供目标槽、状态、正常参考和原问题图；统一检查按[局部 UI 契约](../remake-art/references/local-ui-contract.md)调用 art_check 的局部入口，使用 pixel_reference 或 pixel_regions 校准按钮占用、文字分区和角标可见性；素材切片另走源图检查。记录具体声明和跑到的状态。
+
+凡新增或改动图标＋文字按钮、海报说明条、长正文和奖励计数，按[图文内区检查](../remake-art/references/local-ui-contract.md)登记受影响状态。试玩前普通 art_check 读取 docs/art/visual-slots.json；逐项核对实际截图，原料切对、语义绑定和运行布局分别验。
+
+有按钮文字穿框反馈时，为当前模板的每个可见实例分别记录词尾留白、图标间距和内容可见性。执行[按钮内框验收](../remake-art/references/local-ui-contract.md#按钮内框验收)，原问题图能报错、正常按钮能通过后，再核本次构建的实际画面。
 
 ## 规则
 

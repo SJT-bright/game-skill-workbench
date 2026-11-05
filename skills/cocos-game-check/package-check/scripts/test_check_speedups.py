@@ -44,7 +44,9 @@ GAME = {'game.js': b"tt.createRewardedVideoAd({adUnitId: 'x'});", 'main.js': b'1
 PARTIAL = {'request': 'window.__ad()', 'home': 'return true'}                     # no play, frame_rate, popin
 COMPLETE = dict(PARTIAL, play='return {x: 1, y: 1}', frame_rate={'n/a': 'nothing moves on its own'},
                 popin={'n/a': 'no scrolling obstacles'},
-                resume_play={'n/a': 'v7.9: fixture without levels'}, save_restart={'n/a': 'v7.9: fixture without saves'})
+                resume_play={'n/a': 'v7.9: fixture without levels'}, save_restart={'n/a': 'v7.9: fixture without saves'},
+                # v7.9 手机问题源头约束: a new game with rewarded ads lists its x2 and revive buttons, or says why not
+                ad_outcome={'n/a': 'v7.9: fixture: no button a player can tap'})
 
 
 def write(path, data):

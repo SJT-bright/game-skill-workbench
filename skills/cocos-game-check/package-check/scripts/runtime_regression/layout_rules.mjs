@@ -265,6 +265,9 @@ export function adEntriesProblems(entries) {
     if (typeof e.id !== 'string' || !e.id) out.push('ad_entries[' + i + '].id must be a string');
     else if (ids.has(e.id)) out.push('ad_entries id ' + e.id + ' twice'); else ids.add(e.id);
     if (typeof e.button !== 'string' || !e.button) out.push('ad_entries[' + i + '].button must be a node path');
+    // v7.9 (手机问题源头约束): what the entry is; a new game must list role "double" (result-page Watch Ad x2) and
+    // "revive" (runtime_regression.ad_roles_problems). Other entries: any lower-case word (home_gift, checkin, spin ...)
+    if ('role' in e && !(typeof e.role === 'string' && /^[a-z][a-z0-9_]{1,30}$/.test(e.role))) out.push('ad_entries[' + i + '].role must be a lower-case word: "double" (result-page Watch Ad x2), "revive", or what the entry is (home_gift, checkin, spin ...)');
     if (!Array.isArray(e.states) || !e.states.length) out.push('ad_entries[' + i + '].states must be a nonempty list');
     else e.states.forEach((s, j) => {
       if (!s || typeof s.name !== 'string' || !s.name) out.push('ad_entries[' + i + '].states[' + j + '].name must be a string');

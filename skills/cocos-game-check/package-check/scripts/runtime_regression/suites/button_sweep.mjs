@@ -254,7 +254,9 @@ await L.suite(async ({ out, page }) => {
   async function sweepPopups(st) {
     let tested = 0;
     for (const p of st.popupsTodo) {
-      const pr = { opener: p.opener, where: st.name, buttons: [] };
+      // v7.9 (手机检查补全): `all` = every button the opener made appear, swept or not; resume_play finds the level's
+      // pause control by its popup (a continue / resume button), whatever its name (香肠 R17: resetBtn「重置」)
+      const pr = { opener: p.opener, where: st.name, buttons: [], all: p.buttons.map((n) => ({ path: n.path, sig: (n.sig || '').slice(0, 60) })) };
       st.popups.push(pr);
       for (const n of p.buttons) {
         if (tested >= st.maxPopup || Date.now() > st.deadline) { warn('popup sweep capped: ' + p.opener + ' -> ' + n.path + ' and later not swept'); return; }

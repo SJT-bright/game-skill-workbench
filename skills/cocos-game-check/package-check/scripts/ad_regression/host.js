@@ -522,6 +522,8 @@
           v = String(v);
           var hq = Q.get('imghang_n') !== null ? +Q.get('imghang_n') : +(Q.get('imgtimes') || 1);
           if ((matches('imghang', v) || matches('hangimg', v)) && FAULT.imghang < hq) { FAULT.imghang++; hit('imghang', v); return; }
+          // v7.9 (手机检查补全, same name in the 3.x host): imgfail=SUBSTR the picture fires error (cannot be decoded), every attempt
+          if (matches('imgfail', v)) { hit('imgfail', v); setTimeout(function () { try { i.dispatchEvent(new Event('error')); } catch (_) {} }, 30); return; }
           var du = Q.get('datauri');
           if (/^data:/.test(v) && (du === 'error' || du === 'hang')) {
             hit('datauri', du);

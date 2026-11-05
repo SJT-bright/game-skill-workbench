@@ -19,7 +19,7 @@
 1. **广告计时 = v7.4 规则**（Saul 10-29 03:18）：请求到 `show()` 成功最多 15 秒，只算前台；`show()` 之后不计时，只在 `onClose(res)` 且 `res.isEnded === true` 时发一次奖；开播 30 秒没有回调出 X，按 X 不发奖；超时、按 X、取消之后才开播或才看完的视频**不补发**；不留收尾锁，下一次广告马上能发。详见 `remake-ads/references/ad-timeout-and-regression.md`。
 2. **英化游戏一律加看广告复活**，没有失败状态的游戏也加（Saul 10-29）。一局结束先出复活页（只有看广告复活 + 免费 NO THANKS），放弃或已用过复活后再进结算页（只有看广告 x2，RESTART/HOME 在下面）；**同一屏只放一个看广告按钮**。
 3. **英化分享奖励**：核心玩法里的分享奖励（复活、礼物、双倍）改成激励视频；其他分享入口（成就分享、升级分享、邀请好友等）连同触发它的礼物球、弹窗删干净，不留“本平台不可用”的死按钮。
-4. **加桌面、主页回访的一次性奖励**：每项都等于一次首页礼盒的基础奖励 **5B**，换算成这款游戏自己的货币；没有首页礼盒的游戏也按 5B 算（Saul 10-29 09:11）。以前 20～150 各不相同的，下次出包统一改。平台包取值见第一部分第 7 条。
+4. **加桌面、主页回访的一次性奖励**：每项都等于一次首页礼盒的基础奖励 **5B**，换算成这款游戏自己的货币；没有首页礼盒的游戏也按 5B 算（Saul 10-29 09:11）。以前 20～150 各不相同的，下次出包统一改。平台包取值见第一部分第 7 条。原游戏没有金币的（Saul 2026-11-04）：有体力的各发体力 +3；金币和体力都没有的，英化时先加一种金币和皮肤花处，再发 5B；见[经济规则](../../remake-economy/references/economy-rules.md)第三节末尾。
 5. **新游戏必须用平台包标准件**，不手写、不“照抄平台包”另存一份；**旧游戏**（在冻结的遗留名单上的）不自动替换，只给警告，由各自的游戏会话处理。哪些算旧游戏见下一节「新游戏和旧游戏」。
 6. **交付回复写“标准件待真机复测”**：v7.7 的标准件（平台包 `main.js` v1.6、`storage-guard.js`、`tiktok-touch-3x.js`、`HomeGrowthEntries.js`、3.x 插件版、WebP 探针）都只在 Node 和模拟宿主里测过，没有扫码确认。第一款 v7.7 新游戏扫码通过之前，每个交付回复都写这一句。v7.8 的三个可选件（`parts/CapsuleLayout.js`、`parts/CourseLane.js`、`parts/PhysicsClock.js`）也一样，用了它们的游戏照样写这一句。
 7. **美术回执进写包入口，出包不重跑美术检查**（Saul 10-30 同意；10-24「打包时不再全面重测美术」不变）：美术关跑过 `art_check.py`、留下回执，之后图没变就能出包；改过图就要重跑美术检查。见「出包时怎么装」的「美术回执和美术记录」。
@@ -85,7 +85,7 @@
 
 | 件名 | 引擎 / 段 | 文件 | 修什么 | 新游戏 | 旧游戏 |
 |---|---|---|---|---|---|
-| `touch24` | 2.4 / 产物 | `touch-coordinates.js` | TikTok 触点只给 screenX/screenY，引擎算出 (0,0)，按钮点不动 | 装上；自写的同类件换掉 | 没有任何触摸修正时才补 |
+| `touch24` | 2.4 / 产物 | `touch-coordinates.js` | TikTok 触点只给 screenX/screenY，引擎算出 (0,0)，按钮点不动；v7.9 起切后台时还按着的手指在回来前被取消（回来后第一下不丢） | 装上；自写的同类件换掉 | 没有任何触摸修正时才补 |
 | `startup24` | 2.4 / 产物 | `main.js` v1.6，包根同时放 `webp-decode-probe.js` | 扫码转圈：单文件 10 秒重发、30 秒判失败、后台不计、Retry；重发算进度，有文件还在自己的 30 秒里时 10 秒总看守不出 Retry；同时加载 storage-guard、发一次静默登录（不等结果）、WebP 例外时运行探针 | 换成平台包 `main.js`（只在清单 `engine_versions` 列出的引擎版本上换：2.4.4、2.4.6、2.4.13、2.4.15；其他 2.4.x 保留编辑器 `main.js`，触摸和存档各插一行，警告 `K_W_startup_engine`）。`main.js` 里 require 了探针，所以包根总放 `webp-decode-probe.js`（只放脚本，不放探针图、不插开关行，不走 WebP 例外时它不执行）。自写启动件的加载行能整句拿掉的就拿掉并移走文件；拿不掉的、或包里还有别的文件 require 它的，保留并警告 `K_W_own_startup_kept`（`required_by` 写明是谁） | 不换，警告 `K_W_own_startup` |
 | `storage24` | 2.4 / 产物 | `storage-guard.js` | 没存过的键读到 false / ''，数字读回 true | 装上；射击高手 pkg83/84、pkg85 的旧版存档层换成新版 | 不装 |
 | `webp_probe24` | 2.4 / 产物 | `webp-decode-probe.js` + `loading/webp-probe.webp` | canvas 导不出 WebP 时引擎误判不支持，报 3121 | 只在 WebP 例外时装探针图 `loading/webp-probe.webp` 和开关行（需要平台包 `main.js`）；脚本本身随 `startup24` 每次都放 | 不装；保留 WebP 的旧游戏仍由 G4 查探针 |
@@ -94,7 +94,7 @@
 | `home_entries` | 2.4 / 源码 | `HomeGrowthEntries.js` | 首页两个入口：不支持时提示、图片失败时有文字、奖励读 `growthReward()` | 同上（挂到首页节点由模型做） | 只报差异 |
 | `savestore` | 2.4 / 源码 | `SaveStore.js` | 整档一个键、写后读回、读档后登录 | 同上 | 只报差异 |
 | `platform_config` | 2.4 / 源码 | `PlatformConfig.js` | 每款唯一可改的文件：gameId、appId、广告位、`normalLevelCoins` | 没有才放，改过的值保留 | 只报差异 |
-| `touch3x` | 3.x / 产物 | `tiktok-touch-3x.js` | 同 `touch24`，插在 `require('./web-adapter')` 之前 | 装上；自写的同类件换掉 | 没有任何触摸修正时才补 |
+| `touch3x` | 3.x / 产物 | `tiktok-touch-3x.js` | 同 `touch24`（v7.9 起也取消切后台时还按着的手指），插在 `require('./web-adapter')` 之前 | 装上；自写的同类件换掉 | 没有任何触摸修正时才补 |
 | `storage3x` | 3.x / 产物 | `storage-guard.js` | 同 `storage24`，插在 `require('./web-adapter')` 之后（`window.localStorage` 由 web-adapter 创建） | 装上 | 不装 |
 | `platformconfig3x`、`rewarded3x`、`missions3x`、`missionflow3x`、`savestore3x` | 3.x / 源码 | `assets/tiktok-platform/*.plugin.js` | 2.4 模块外面包一层插件脚本，游戏里用 `globalThis.TikTokKit.*`；核心逐字节相同（`make_plugin_scripts.py --check`） | 装上，`.meta` 勾导入为插件；`PlatformConfig.plugin.js` 每款只改 BEGIN..END 里的 `gameId`、`appId`、`placementMap`、`normalLevelCoins`，改过的值保留（`growthReward()` 固定 5B，不改） | 只报差异 |
 
@@ -147,10 +147,11 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 1. 触摸坐标（19 款：新 15、老 4）
 - **规则**：TikTok 触点只给 screenX/screenY，Cocos 2.4 和 3.x 都读 clientX/clientY，会算出 (0,0)。每个 TikTok 包都必须在引擎之前装好坐标修正，并确认**构建产物里真的加载了**（Nanas 复制了模板但 game.js 没加载它），包里只能有一层修正。
+- **回来先清掉没抬起的手指（v7.9 手机问题源头约束）**：手指按在屏幕上时游戏被切走（拉控制中心、来电话、看激励视频），手机可能不再补发 touchend，引擎就一直记着这个手指。2.4 的下一个手指拿到同一个 id 时这次按下被丢掉（引擎 5 秒后才忘掉旧的）；3.x 引擎的触点表里多一个手指，「两个手指同时按不算」的游戏回来后每一下都不算。结果都是回来后第一下（或每一下）点不动：甜点消消乐 R47 继续键要点两下，割草 v015、猴子快跑 v12 也是。两个触摸件现在都管这件事，游戏不用自己写：2.4 的 `touch-coordinates.js` 在 `cc.game` 的 EVENT_HIDE / EVENT_SHOW 时给引擎还记着的触点发 TOUCH_CANCEL、清掉触摸状态（甜点消消乐 R48 手机验收过的写法）；3.x 的 `tiktok-touch-3x.js` 记下交给引擎还没结束的触点，`tt.onHide` / `tt.onShow` 时交给引擎的 touchcancel。新游戏出包时 `touch` 步自动换成新版（旧版算 `kit_old`，新游戏 K1 拦）；旧游戏不动。
 - **标准件**：2.4 用平台包 `build-templates/bytedance/touch-coordinates.js`（件名 `touch24`）。3.x 用平台包 `build-templates/bytedance-mini-game/tiktok-touch-3x.js`（件名 `touch3x`，以 Marlows R6 `marlow-touch.js` 为底改成通用件，SDK 查找 TTMinis.game → tt），在 web-adapter 克隆 `tt.onTouch*` 之前装。哈希以 `KIT_MANIFEST.json` 为准。**哈希更正**：平台包件 `1aeb690c…` 就是 StarPop v50 那份（交付包包根和源码 `build-templates/bytedance/` 逐字节相同）；v7.6 总表写的 `0369875d…` 是另一份代码，是躲雨小鸭（RainyDuck）v20 和射击高手（MergeShot）pkg85 用的，清单把它记为自写件（新游戏换掉，旧游戏保留）。两份都没有扫码确认。
 - **出包时怎么装**：产物段 `touch` 步。2.4 的产物 `main.js` 是平台包 `main.js` 时由它加载触摸件，不再插行；不是时（引擎版本不在清单 `startup24` 的 `engine_versions` 里、旧游戏）把 `touch-coordinates.js` 放到包根，在 `game.js` 的 `__globalAdapter.adaptEngine()` 之后插一行。3.x 在 `require('./web-adapter')` 之前插一行。新游戏的自写触摸件移走、加载行注释掉；旧游戏有自写的就不动，没有才补。
 - **现在怎么拦**：`K1_kit_bytes`、`K2_kit_wiring`、`K3_single_layer`（`touch24` / `touch3x`）。2.x、3.x 包都必跑触摸探针（`remake-core/scripts/audit_upload_startup.py` 调 `probe_cocos2_touch_coordinates.cjs` / `probe_cocos3_touch_coordinates.cjs`），探针结果为空也算失败。v7.8（总表 A6 补）：运行时回归、广告回归开跑前先用同一个触摸探针查触摸件（探针跑不了时看平台包 `touch-coordinates.js` / `tiktok-touch-3x.js` 有没有装进 game.js）；命令行对 ZIP 跑时再查写包回执。不完整就报「环境不完整：……」（写明要装哪个件）、退出码 2，不跑用例，不报成「包不通过」（企鹅雪道 v4 对没收尾的构建跑广告回归，X 点不进游戏，看起来像广告逻辑坏了）。写包入口调用时只查触摸件、不查回执（回执还没写）。
-- **验收包**：射击高手 v81、Marlows r4、小熊拳击 R27 只给 screenX/screenY 时点不动（拒），装上标准件后能点中；Ingrids r9 只有一层包装。
+- **验收包**：射击高手 v81、Marlows r4、小熊拳击 R27 只给 screenX/screenY 时点不动（拒），装上标准件后能点中；Ingrids r9 只有一层包装。v7.9：`resume_play` 的 `finger_held`：割草 v015 带旧触摸件拒、换上新件过；甜点消消乐 R47 拒、只加新触摸件过；猴子快跑 v12（3.x）的 `finger_held_new_id` 带旧件拒、换上新件过；香肠 R17、人鱼 v18 换上新件照样过（平台包测试 `touch-lifecycle-24.test.js`、`touch-3x.test.js`，含反例）。
 
 ### 2. 启动和加载（30 款，最多的一类）
 - **规则**：一次写对反复出现的 8 个错误：按“多少秒没有新字节”判卡住，不按固定总时长；下载分包接上 `onFileProgress` 显示进度；后台时间不计入超时；每次加载有代次，旧回调作废，Retry 不复用旧队列；每一步失败或卡住都出现最上层、点得中的 Retry，点了重启真正卡住的那一步；首页按钮画出来才算启动完成；首帧前只下首页必需的资源；平台接口缺一个不能拦住启动。
@@ -163,7 +164,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 - **规则**：按上面“已定口径”第 1 条。锁必须在超时、取消、按 X 时一起清掉“正在播放”并解绑 onClose/onError；`onError` 不能是空回调；切到后台不能取消或结束正在播的广告（TikTok 播全屏广告时游戏会切后台）；广告期间暂停 BGM 和音效，各种结局后恢复。
 - **标准件**：平台包 `assets/tiktok-platform/RewardedService.js`（件名 `rewarded`，与 v7.4 逐字节相同），单测 `tests/rewarded-timing.test.js`；3.x 用 `RewardedService.plugin.js`（`rewarded3x`，游戏里调 `globalThis.TikTokKit.RewardedService`），同一套计时用例。游戏只调它，不再自写广告服务。
 - **出包时怎么装**：源码段 `kit_sources` 让工程里的平台包广告服务和清单逐字节相同（新游戏缺了补上、改过恢复；旧游戏只报差异）。游戏的发奖函数接到哪里，脚本不改，由模型接、由 10 个广告用例验。
-- **现在怎么拦**：v7.9 起模拟宿主有 `adhide=1`（激励视频一开播游戏就被切后台、播完回来，和手机一样），`resume_play`、`ad_outcome` 两个套件用它真点按钮看广告。`check_package --ad-regression <qa/ad-regression.json>` 的 10 个广告用例必跑，有激励广告却没有适配文件或任一用例失败就出不了包（`build_checked_zip.py`、`prepare_delivery.py` 同样接收）。`A2_hide_kills_ad`：重塑拦、其他板块警告。`A1_rewarded_outside_kit`（平台包以外直接调 `createRewardedVideoAd`）：新游戏拦，旧游戏警告。BGM/音效暂停只进警告。v7.8：
+- **现在怎么拦**：v7.9 起模拟宿主有 `adhide=1`（激励视频一开播游戏就被切后台、播完回来，和手机一样），`resume_play`、`ad_outcome` 两个套件用它真点按钮看广告；v7.9 手机检查补全起这两个套件不靠 adapter 写全：关内广告、各个看广告入口没写就用 button_sweep 这次真点出广告的按钮，新游戏一个都找不到又没写明原因就拒。`check_package --ad-regression <qa/ad-regression.json>` 的 10 个广告用例必跑，有激励广告却没有适配文件或任一用例失败就出不了包（`build_checked_zip.py`、`prepare_delivery.py` 同样接收）。`A2_hide_kills_ad`：重塑拦、其他板块警告。`A1_rewarded_outside_kit`（平台包以外直接调 `createRewardedVideoAd`）：新游戏拦，旧游戏警告。BGM/音效暂停只进警告。v7.8：
   - 3.x 相机（总表 A13 补）：广告回归点 X、运行时回归找字和定位，3.x 改用节点所在 Canvas 的相机（`cameraComponent`），找不到才退回第一个相机；三处换算是同一段 `cam-point` 块（`test_tap_point.py` 会运行它）。企鹅雪道 v7 的 X 以前被算到 (818, -918) 误报 5 条，现在点到 (354, 78) 通过；2.x 不变。
   - 看广告入口真点（总表 A12、B30 B，运行时套件 `ad_entries`）：适配文件写了 `ad_entries` 就跑，5 个看广告入口加复活，状态里写真实操作；真点后 2 秒内要有广告调用、提示或文字变化，哑按钮、没有复活页都拦（新游戏拦、老游戏警告）。复活状态要等主角自己失败，`setup_js` 强制失败又没写 `wait_node` 的适配文件直接拒。和广告回归分工：广告回归测 SDK 回调，`ad_entries` 证明玩家真点的按钮能走到那条流程。
   - 领奖窗看广告双倍（Saul 2026-10-31）：适配文件写了 `double_claim` 就多跑 double_watch（勾着看完 2 倍）、double_quit（中途关 0，同窗取消勾选 1 倍）、double_free（不勾不播广告 1 倍）。
@@ -174,7 +175,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 - **规则**：TikTok 存储和浏览器不一样：没存过的键读到 `false` 或 `''`，用数字写进去的值读回 `true`。写入只写文字（数字、布尔先转）；读到 `null`、`undefined`、`''`、`false`、`true`、`0` 时用 key 列表（`getStorageInfoSync().keys`）判断键在不在，不在就是新玩家；读出对象直接用，不再 `JSON.parse` 一次。所有游戏（含英化原版存档代码）都走同一层。
 - **标准件**：重塑用平台包 `assets/tiktok-platform/SaveStore.js`（v7.5 已按 key 列表判断）。所有新游戏（重塑和英化）再加一层平台包 `parts/storage-guard.js`（件名 `storage24` / `storage3x`；以射击高手 pkg85 的 `storage-guard.js` 为底，加 TobinsGem / Tansys 的 key 列表判断；SaveStore 的键原样读，和 SaveStore 一起跑有测试）。射击高手 pkg85（`40aee1a4…`）和 pkg83/84（`0e090a0f…`）的存档层被清单认作旧版本。
 - **出包时怎么装**：产物段 `storage` 步。2.4 平台包 `main.js` 在加载游戏脚本前装它；不是平台包 `main.js` 时，包根放 `storage-guard.js`，在 `game.js` 的 `__globalAdapter.adaptEngine()` 之后插一行；3.x 插在 `require('./web-adapter')` 之后。新游戏一律装，旧版本换成新版；旧游戏不装（Q6：旧英化游戏只在 `adopt` 以后装；“盘点出数字写入时也装”还没做成脚本，要装就先 `adopt`）。
-- **现在怎么拦**：`K1_kit_bytes`、`K2_kit_wiring`、`K3_single_layer`（`storage24` / `storage3x`）；旧游戏带旧版本存档层时报警告。`SaveStore.js`、`storage-guard.js` 单测（`tests/kit.test.js`、`tests/storage-guard.test.js`）；启动套件有“没存过的键”用例。写入类型记录、宿主默认“数字读回 true”、重开保存检查（过一关、领奖、买东西、重开都在）：仍是文档规则，保存检查现在只能手动跑。
+- **现在怎么拦**：`K1_kit_bytes`、`K2_kit_wiring`、`K3_single_layer`（`storage24` / `storage3x`）；旧游戏带旧版本存档层时报警告。`SaveStore.js`、`storage-guard.js` 单测（`tests/kit.test.js`、`tests/storage-guard.test.js`）；启动套件有“没存过的键”用例。写入类型记录：仍是文档规则。重开保存检查 v7.9 做成运行时套件 `save_restart`（两个宿主都按手机的读法：没存过的键读到 false、存的 0/1 读回 false/true），手机检查补全起每一步写 `kind`，新游戏首页有 PLAY、商店、领奖入口就各要有一步（见第二部分第 1 条）。新游戏存档层由出包入口自动装上，这一层装上后甜点消消乐 R48 那种「新玩家第一次打开读到 false、判存档坏了」不会发生；遗留名单上的旧游戏不装（R48、猴子快跑 v12 就是这样被 `save_restart` 查出来的，只警告）。
 - **验收包**：射击高手 v84 必须被拦，v85 通过；SorensRivet R21 在“没存过的键读到 false”时必须被拦，R22 通过；DoubleJumpDuo 的空字符串情况通过。
 
 ### 5. 适配层三处旧写法（12 款）
@@ -238,13 +239,13 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 ### 1. 存档写入和事务（15 款）
 - **规则**：写失败要提示，不能继续扣东西；写后读回确认；奖励和“已领取”在一次写入里完成，写失败给 Retry Save，不让玩家重看广告；坏档先备份原文再用默认档，不直接覆盖；`JSON.parse` 外面有 try；新加字段进默认值和校验，读档不丢。
 - **标准件**：重塑用平台包 `SaveStore.js`（整档一个键）；英化把原版多键存储包进第一部分第 4 条那一层。
-- **现在怎么拦**：`logic_check.py` 的 `L-DAILY-DATE`（每日奖励只比几号，fail）、`--stage final` 时回归用例缺失算失败；`L-SAVE-PARSE` 只提示。重开保存检查 v7.9 做成运行时套件 `save_restart`（出包必跑，新游戏拦、老游戏警告）：TikTok 手机存储下（没存过的键读到 false，存的 0/1 读回 false/true）按 adapter `save_restart.steps` 真实操作过一关、领一次奖、买一件，关掉再打开，每个值都要还在；某一步在手机存储下赚不到、浏览器存储下赚得到，也拒（SorensRivet r21 拒、r22 过）。见 [运行时回归](../package-check/references/runtime-regression.md)「手机才出的五类问题」。
+- **现在怎么拦**：`logic_check.py` 的 `L-DAILY-DATE`（每日奖励只比几号，fail）、`--stage final` 时回归用例缺失算失败；`L-SAVE-PARSE` 只提示。重开保存检查 v7.9 做成运行时套件 `save_restart`（出包必跑，新游戏拦、老游戏警告）：TikTok 手机存储下（没存过的键读到 false，存的 0/1 读回 false/true）按 adapter `save_restart.steps` 真实操作过一关、领一次奖、买一件，关掉再打开，每个值都要还在；某一步在手机存储下赚不到、浏览器存储下赚得到，也拒（SorensRivet r21 拒、r22 过）。v7.9 手机检查补全：每一步写 `kind`（`level` 过关 / 解锁 / 最高分、`buy` 商店或皮肤页买一件、`claim` 领一次奖、`other`），新游戏首页有 PLAY、商店 / 皮肤键、奖励 / 平台入口，就要各有一步，真没有的写 `save_restart.none`（以前三款新游戏都只写了一步平台奖励，丢关卡、丢买到的东西从没试过）；3.x 宿主也按手机的读法读存档。见 [运行时回归](../package-check/references/runtime-regression.md)「手机才出的五类问题」。
 - **验收包**：方块冲冲 BUGFIX4 失败，BUGFIX5 和 `方块冲冲tk.zip` 通过；射击高手 v84 重开后进度丢失（拒）、v85 通过；CindersDragon v3.1 拒、v3.2 过。
 
 ### 2. 看广告复活、结算 x2（14 款）
 - **规则**：按“已定口径”第 2 条：先复活页、再结算页，每屏一个看广告按钮；复活每局一次，Retry 后不能凭空没了；看完回到这一局继续，分数金币保留，复活前看得见的局内按钮（BACK、暂停）复活后照样看得见点得动；结算 x2 看完正好多发一份且只一次，失败结算不显示 x2；没有货币的游戏 x2 翻倍本局捡到的道具。英化一律加复活。
 - **标准件**：复活和 x2 都走平台包 `RewardedService.js`；流程规则见 `remake-ads/references/end-flow-one-video.md`和英化 `cocos-game-to-english/references/fixed-entries.md`（英化包内）。
-- **现在怎么拦**：`audit_page_richness.py` 的 `two_video_buttons`（同一屏两个看广告按钮）；签到 / 转盘结果 / 礼包领奖窗由 `audit_claim_double.py` 拦两个广告入口、必须看广告才能领、默认不勾；10 例广告回归（有勾选框时另加 3 例）。复活和 x2 的运行时用例 v7.9 做成套件 `ad_outcome`（adapter 有 `ad_entries` 就跑，新游戏还必须写 `ad_outcome`）：每个入口真点、广告像手机一样播（开播切后台、播完回来），看完奖励要到账、能接着玩、复活前看得见的按钮还在；中途关掉不发奖、同一个按钮再点还有反应。
+- **现在怎么拦**：`audit_page_richness.py` 的 `two_video_buttons`（同一屏两个看广告按钮）；签到 / 转盘结果 / 礼包领奖窗由 `audit_claim_double.py` 拦两个广告入口、必须看广告才能领、默认不勾；10 例广告回归（有勾选框时另加 3 例）。复活和 x2 的运行时用例 v7.9 做成套件 `ad_outcome`：每个入口真点、广告像手机一样播（开播切后台、播完回来），先中途关掉：不发奖、同一个按钮再点要再开广告；这第二次看完：奖励到账、能接着玩、复活前看得见的按钮还在。手机问题源头约束起，新游戏的适配文件必须在 `ad_entries` 里写结算 x2（`"role": "double"`）和复活（`"role": "revive"`）这两个按钮和进到它们的真实操作（复活让主角自己失败），没有的写 `ad_outcome.none` 说明，不然开浏览器之前就拒：这两个按钮只在一局结束后出现，button_sweep 点不到（人鱼 v18 一个看广告入口都没测到）。v7.9 手机检查补全起包里有激励广告就跑（以前要 adapter 写了 `ad_entries` 才跑，三款新游戏都没写，一次没跑过）：入口来自 `ad_entries`、`resume_play.ad` 和 button_sweep 真点出广告的按钮；没写 `reward_js` 时看屏幕上有没有变化（数字、弹窗、棋盘）；新游戏一个入口都找不到又没写 `ad_entries` 就拒（复活、过关双倍这类 button_sweep 点不到的要写进 `ad_entries`）。
 - **验收包**：方块迷阵 v6（复活和 x2 同一弹窗）失败、v6.1 通过；MusicSlice 原包找不到 x2 失败、v30 通过；方块冲冲 BUGFIX5（没有复活）失败、BUGFIX6 通过；拇指弹球 v5 复活后 BACK 不见失败、v6 通过。
 
 ### 3. 弹窗布局、空位、提示挡操作区（17 款）
@@ -261,6 +262,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 - **验收包**：Basil fix1、fix2 配 0.4.0 源码被拦；Marlows R6 配 R6 源码通过；方块冲冲原包配现在的源码被拒、`方块冲冲tk.zip` 通过。
 
 ### 5. 英化固定清理：分享、更多游戏、排行、跳转、国内统计（10 款 + 统计 2 款）
+- **源码不带 .git 和账号密码（简化.11.6，Saul 2026-11-04「提醒做 91 的对话交源码前删掉 .git」「同类问题要让它直接出不了包」）**：91_SLS11海洋逃脱 卖家 ZIP 的 `.git` 提交里有 `app_desc.txt`（开发者账号和密码），工作区里已经删了，历史里还在。开工用 `cocos-game-to-english/scripts/unpack_source.py` 放源码（不拷 `.git` `.svn` `.hg` `.bzr` `CVS` `.idea` `.vscode` `.vs` `.history` `.fleet` `__MACOSX`，不拷 `app_desc.txt`、`.env`、`*.keystore` `*.jks` `*.p12` `*.pfx` `*.pem` `*.mobileprovision`）；交源码用 `remake-core/scripts/make_source_zip.py`（同样不带，文本里有 密码 / 账号 / password / appSecret 这类「标签 = 值」就拒绝，值为空、true、false、null 不算）；`prepare_delivery.py --source` 先查源码再查包；上传包由出包门禁 `package_gates/secrets.py` 拦（`H1_vcs_ide_in_package`、`H2_credentials_in_package`，新老游戏、两个板块都拦）。校准：369 个真上传包 0 条；455 个工程和源码 ZIP 里 51 个带 `.git` / `.idea`，13 个有凭据（`settings/project.json` 的微信 `appSecret` 8 个、签名证书和私钥、一份 openssl 样例配置）。只认文件名和文本里的写法，代码和图片里的密钥查不到。
 - **规则**：按“已定口径”第 3 条处理分享；更多游戏、联网/好友排行榜（含开放数据域）、跳转其他小程序的入口和调用删干净（局内对本地机器人的名次可以留，Saul 10-31），删后重排；国内统计上报（腾讯 MTA 等）删掉。组件被预制体引用时保留同名字段、清空行为，不直接删类。
   把 WxGameBox 这类旧类换成空实现时，`init(nodes)` 要把传进来的节点设成 `active = false`，不能让节点一直显示（Holly v1 局内的「Try It」框就是方块冲冲的微信互推挂件，代码删了、节点还在）。
 - **现在怎么拦**：`H14_cross_promo`（真调到跳转/更多游戏，拦；空壳目前也拦）、`H13_analytics_domain`（统计域名，拦）、运行时网络套件（清单外请求，警告）、`audit_share_entries.py`、`audit_no_social_features.py`（一键预检）。v7.8：
@@ -275,7 +277,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 7. 图片卡住后界面元素消失（7 款）
 - **规则**：首页必需的图放主包或第一个分包；PLAY、加桌面、主页回访在图卡住或失败时仍看得见、点得动（平台入口带文字备用显示）。
-- **现在怎么拦**：静态 `G7_file_load_guard`。图片卡住的运行时用例 v7.9 做成套件 `image_stall`（出包必跑，2.x；新游戏拦、老游戏警告）：加桌面、主页回访两个入口自己的图一直不回时，入口还在屏幕上、有字（平台包 HomeGrowthEntries 2 秒后换成文字）、点得动；`image_stall.play: true` 连 PLAY 一起测。
+- **现在怎么拦**：静态 `G7_file_load_guard`。图片卡住的运行时用例 v7.9 做成套件 `image_stall`（出包必跑；新游戏拦、老游戏警告）：加桌面、主页回访两个入口自己的图一直不回时，入口还在屏幕上、有字（平台包 HomeGrowthEntries 2 秒后换成文字）、点得动；`image_stall.play: true` 连 PLAY 一起测。v7.9 手机检查补全：只卡入口自己的图（首页别的节点也在画的图集、背景不卡）；3.x 也跑（老游戏的 3.x 包照旧只警告）。射击高手 v81 加上平台包触摸件后在模拟里拒（两个入口变空位，和手机上一样）；v82～v86 修的是加载器，没有文字替补，图一直不回时照样空位，也算问题（老游戏只警告）。
 - **验收包**：`accesshang=f96eaa92|5cce308a|01b4d089|5261f8dc` 下射击高手 v81 两个入口没图被拦，v82 以后通过。
 
 ### 8. 玩法状态（11 款，22 条）
@@ -286,11 +288,12 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
   - **难度曲线 `wave-tiers.v2`**（总表 P17，Saul 10-29）：第 1、2 关教学，第 3 关固定是难关（`first-hard`），第 4 关起进不规则波浪（不连着两个难关，第 3 关起每个普通关都比第 1、2 关难），每个限定关是高难考核，奖励关位置和 v1 相同。`make_level_plan.py` 默认出 v2，`--policy wave-v1` 还能出 v1（逐字节相同）；`audit_level_plan.py` 按 `level_plan.json` 的 `difficulty_policy` 选规则，已开工、按 v1 排好的表照 v1 查，不返工。难关看广告提示的默认位置跟着改成第 3 关（v1 表仍是第 4 关）。
   - **完整换皮 `mode=reskin`**（总表 P18，Saul 10-30）：照搬底子的关卡、难度、玩法代码，`level_plan.json` 写 `remake_mode: "reskin"`、`reskin.approval`（Saul 的原话和日期）、`reskin.copied`（每个照搬文件的底子路径、工程路径、sha256），`make_level_plan.py --reskin … --approved-by Saul --approved-date … --approved-quote …` 生成；`audit_level_plan.py` 逐个和底子比 sha256，都对上才不受 60 关下限，没有点头记录或有文件改过就不过。新做关卡时先出 3～5 个样关给 Saul 定难度（样板先行，`docs/samples/samples.json`，`design_check.py` 只提示）。
   - 划线、切割类（总表 T7）：`plan_level_tests.py --input cut|slice|draw|line|swipe|stroke` 固定加三条触摸用例（画外松手、起点在目标内 8 px、终点在目标内 8 px），每个抽测关列设计解（必须过）和偏移、斜切两种错误解（必须不过）；Skill 没有通用关卡运行器，游戏自己的运行器照 `remake-levels/references/level-rules.md` 跑，现在没有自动门禁。
-- **现在怎么拦**：`logic_check.py` 的 `L-MODAL-PAUSE` 只提示。玩法状态运行器：仍是文档规则，计划做成出包硬拦截。v7.9：「暂停、切后台、看广告回来后还能玩」做成运行时套件 `resume_play`（出包必跑，新游戏拦、老游戏警告；甜点消消乐 R47 拒、R48 过），只管这一件，其他玩法状态照旧。v7.8：
+- **现在怎么拦**：`logic_check.py` 的 `L-MODAL-PAUSE` 只提示。玩法状态运行器：仍是文档规则，计划做成出包硬拦截。v7.9：「暂停、切后台、看广告回来后还能玩」做成运行时套件 `resume_play`（出包必跑，新游戏拦、老游戏警告；甜点消消乐 R47 拒、R48 过），只管这一件，其他玩法状态照旧。v7.9 手机检查补全：暂停键、继续键、关内广告不写也测（暂停键找 button_sweep 点开过、弹窗里有继续 / Resume 的那个键，再找名字叫 pause / 暂停、设置、menu 的；关内广告用 button_sweep 在关里点出广告的入口），新游戏找不到又没写 `{"none": "原因"}` 就拒（规则：关卡内要有暂停或设置键，`test/references/logic-rules.md`；手机问题源头约束起英化把它列为固定入口第 9 项，割草 v015、人鱼 v18 就是缺了它）；手指按着切后台改用真鼠标按下不松开，才复现出 R47 回来后第一下点击丢了。修法见下面「回来后第一下没反应」。v7.8：
   - 运行时套件 `popin`（出包必跑，2.4）：四种屏幕（390×844、375×667、768×1024、1115×791，新存档），主角无敌飞 18 秒、调一次复活再看 4 秒，每一帧查带碰撞体、画得出东西的节点：`appeared_on_screen`、`vanished_on_screen`（被销毁也算）、`jumped_on_screen`（一帧挪 40 以上，按帧时间放大）；允许淡入淡出，整屏不透明遮罩下面发生的不算。适配文件要有 `popin` 块（必填 `player`、`invincible_js`、`revive_js`、`game_node`，可选 `start`、`fly_s`、`ignore`、`ignore_groups` 等；主角自己射出去的钩子、子弹带碰撞体又不在主角节点下的写进 `ignore`），没有滚动障碍的游戏写 `{"n/a": "原因"}`。一个障碍都没看到算适配写错；页面低于 20 帧本次无效、重跑。新游戏拦（缺 `popin` 也拒）、老游戏警告不跑；3.x 只警告「未覆盖」。
   - 运行时套件 `frame_rate`（出包必跑，2.4，P16 的最终裁判）：把页面时钟换成 60 Hz 和 120 Hz 各跑一次同一段操作，从跟踪节点开始动的那一刻对齐，往后 1 秒起每 0.25 秒比一次位移，差超过 5% 不过；节点没动够 20 个世界单位算适配写错，时钟没跑到目标帧率本次无效、一律拒。适配文件要有 `frame_rate` 块（必填 `track`、`drive_js`，可选 `start`、`prepare_js`、`steps`、`run_s` 等），没有物理、没有自己会动的东西写 `{"n/a": "原因"}`。新游戏拦（缺 `frame_rate` 也拒）、老游戏警告不跑；3.x 只警告「未覆盖」。
   - `logic_check.py`（只静态，总表 P16 第 2 步）：`L-FPS-ACCUM`（开了 2.4 物理、整个工程没有 `enabledAccumulator = true`）、`L-FPS-SCHEDULE`（`schedule(cb, x)` 的 x 小于 1/60 秒且回调不用 dt）、`L-FPS-DT`（每帧回调里施力、冲量、改速度或给位置加步长却不乘 dt）；新游戏需处理、名单上的老游戏只提示。装了 `PhysicsClock` 后 `L-FPS-ACCUM` 不报，`L-FPS-DT` 照报。只查 2.4 的 2D 物理。细则见 `/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/发给Skill制作_沉淀方块冲冲与横向12款玩法状态问题_复制这段话.txt`。
 - **验收包**：方块冲冲原包被拒、`方块冲冲tk.zip` 通过；回家快跑现有源码在监听注销和体力上失败。v7.8：BreezyBalloon v2.1 四种屏幕都被 `popin` 拒，v2.2 和 v2.1 运行时换用 CourseLane 后四种都过，底子潜艇冲冲 V32 也被拦（复活瞬移是底子原有的）；全民飞车漂移 v3.1 被 `frame_rate` 拒（起步 1 秒 60/120 帧差 19.9%），开 accumulator、推力乘 dt 后 1.05%、只装 PhysicsClock 后 1.39% 通过；BreezyBalloon v2.2 120 帧快一倍（49.9%）被拒，装 PhysicsClock 后 1.08%；飞车英化工程 `logic_check` 报 `L-FPS-ACCUM` `RunUI.ts:145`、`L-FPS-SCHEDULE` / `L-FPS-DT` `pysTouchEvent.ts:91`。
+- **回来后第一下没反应（v7.9，`resume_play` 的 `finger_held` / `finger_held_new_id` 不过）**：手指按在屏幕上时游戏被切走（拉控制中心、来电话），手机可能不再补发 touchend，引擎就一直记着那个手指没抬起；2.4 下一个同 id 的手指按下被丢掉，3.x「两个手指同时按不算」的游戏回来后每一下都不算。**新游戏不用自己修**：平台包的两个触摸件（`touch24` / `touch3x`）从手机问题源头约束起自带「回来先清掉没抬起的手指」，出包时自动换上（见第一部分第 1 条）。旧游戏、或者游戏自己另做了一层触摸转发的，照 2.4 的写法在 `cc.game` 的 EVENT_HIDE / EVENT_SHOW 时取消引擎还记着的触点（平台包 `build-templates/bytedance/touch-coordinates.js` 里的 `cancelStale`，就是甜点消消乐 R48 手机验收过的 `touch-lifecycle-reset.js`）。只在模拟宿主里证明过（手机会不会补发 touchcancel 没有实测），交付时照样写「待真机复测」。
 
 ## 第三部分：不写死的单款问题
 

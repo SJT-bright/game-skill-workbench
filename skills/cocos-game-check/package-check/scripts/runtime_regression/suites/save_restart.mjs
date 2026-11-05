@@ -6,6 +6,14 @@
 // fresh load (empty save) -> home -> every step: read_js before, the real actions, read_js after (a step that changes
 // nothing proves nothing: adapter error) -> cold restart (the same host page reloaded WITHOUT reset=1, storage kept) ->
 // home -> every read_js again must equal its value after the step. New game: refuses; legacy game: warnings.
+// v7.9 手机检查补全 (Saul 11-04「全部补上」): 割草 v015, 人鱼 v14, 香肠 R17 each wrote ONE step (a platform or video
+// reward); a lost level or a lost purchase was never tried. Every step now says what it earns, "kind":
+//   level   progress from playing: a level won / unlocked, a best score       (every game with a PLAY button)
+//   buy     an item bought or unlocked in a shop / skins page                  (when the home shows one)
+//   claim   a reward claimed: platform entry, daily gift, video coins          (when the home shows one)
+//   other   anything else worth keeping
+// and a new game must have a step of each kind its home shows, or say why not: save_restart.none = {"buy": "why"}.
+// Legacy game (「老游戏先不管」): kind is optional and nothing is required, as before.
 const L = await import(globalThis.CFG.lib);
 const G = await import(new URL('gates.mjs', globalThis.CFG.lib).href);
 const P = await import(new URL('phone.mjs', globalThis.CFG.lib).href);
@@ -16,18 +24,41 @@ const B = A.save_restart || {};
 // a key never written reads false; a stored 0 / 1 reads back false / true (host numbool=01; numbool=all, every number
 // read back as a Boolean, is a diagnosis switch: it also breaks games whose phone build works)
 const PHONE = 'missing=false&numbool=01';
+const KINDS = ['level', 'buy', 'claim', 'other'];
+// what the home shows: the button's path tail, or whole words of its picture / label names (layout_rules.sweepButtons
+// sig; whole words so a decoration named "SkinArtwork" is not a skins page)
+const SHOP = [/shop|store|商店|商城|mall|skin|皮肤|wardrobe|衣橱|outfit|装扮/i, /\b(shop|store|skins?|mall|wardrobe|outfits?)\b|商店|商城|皮肤|衣橱|装扮/i];
+const CLAIM = [/gift|reward|daily|bonus|sign.?in|签到|奖励|礼包|福利|addcoin|add.?(to.?)?home|shortcut|profile|revisit|侧边栏|桌面/i,
+  /\b(gift|rewards?|daily|bonus|free|sign.?in|shortcut|profile)\b|\badd.?(to.?)?home\b|签到|奖励|礼包|福利/i];
 
 function problems(b) {
   const out = [];
   if (!b || typeof b !== 'object') return ['save_restart must be an object'];
-  for (const k of Object.keys(b)) if (!['steps', 'query', 'note'].includes(k)) out.push('save_restart has unknown key ' + JSON.stringify(k));
+  for (const k of Object.keys(b)) if (!['steps', 'query', 'note', 'none'].includes(k)) out.push('save_restart has unknown key ' + JSON.stringify(k));
   if (!Array.isArray(b.steps) || !b.steps.length) out.push('save_restart.steps must list what the player earns: win a level, claim a reward, buy an item');
   (b.steps || []).forEach((s, i) => {
     if (!s || typeof s.name !== 'string' || !s.name) out.push('save_restart.steps[' + i + '].name must be a string');
     if (!s || !Array.isArray(s.actions) || !s.actions.length) out.push('save_restart.steps[' + i + '].actions must be the real steps');
     if (!s || typeof s.read_js !== 'string' || !s.read_js.trim()) out.push('save_restart.steps[' + i + '].read_js must return what the player sees (level reached, coins, owned item ...)');
+    if (s && 'kind' in s ? !KINDS.includes(s.kind) : POLICY === 'new') out.push('save_restart.steps[' + i + '].kind must be ' + KINDS.join(' / ') + ' (what the step earns)');
   });
+  if ('none' in b && !(b.none && typeof b.none === 'object' && !Array.isArray(b.none) && Object.entries(b.none).every(([k, v]) => KINDS.includes(k) && typeof v === 'string' && v.trim())))
+    out.push('save_restart.none must map a kind (' + KINDS.join(' / ') + ') to why the game has nothing of that kind');
   return out;
+}
+
+// The kinds a new game must keep, from what its home shows: [{kind, why}]
+function needed(homeButtons) {
+  const none = B.none || {};
+  const has = new Set((B.steps || []).map((s) => s.kind));
+  const hit = ([onPath, onSig]) => homeButtons.find((n) => onPath.test(String(n.path).replace(/#\d+$/, '').split('/').slice(-1)[0]) || onSig.test(n.sig || ''));
+  const out = [];
+  if (A.play || A.resume_play) out.push({ kind: 'level', why: 'the game has a level (adapter play / resume_play): win one, or reach a best score, and keep it' });
+  const shop = hit(SHOP);
+  if (shop) out.push({ kind: 'buy', why: 'the home shows ' + String(shop.path).replace(/#\d+$/, '') + ' (a shop / skins page): buy or unlock one item' });
+  const claim = hit(CLAIM);
+  if (claim) out.push({ kind: 'claim', why: 'the home shows ' + String(claim.path).replace(/#\d+$/, '') + ' (a reward entry): claim it once' });
+  return out.filter((x) => !has.has(x.kind) && !none[x.kind]);
 }
 
 async function home(page) {
@@ -44,15 +75,28 @@ await L.suite(async ({ out, page }) => {
   const q = 'capsule=pt&ad=complete&adms=600&' + PHONE + (B.query ? '&' + B.query : '');
   await G.openGame(page, 'iphone14', q);
   let fail = await home(page);
+  // v7.9 手机检查补全: the kinds this home asks for (new game)
+  if (!fail && POLICY === 'new') {
+    const miss = needed(P.buttonsOf(await P.snap(page)));
+    rep.kinds = { steps: (B.steps || []).map((s) => s.kind), none: B.none || null, missing: miss };
+    if (miss.length) {
+      out.add('kinds', false, 'save_restart.steps has no step of kind ' + miss.map((m) => '"' + m.kind + '" (' + m.why + ')').join(', ') + '. Write the step (real actions, read_js) or save_restart.none.' + miss[0].kind + ' = "why the game has none"');
+      out.evidence.report = L.evidence('save_restart.json', rep);
+      return;
+    }
+  }
   const done = [];
   for (const s of B.steps) {
     if (fail) break;
-    const row = { name: s.name, why: s.why || null };
+    const row = { name: s.name, kind: s.kind || null, why: s.why || null };
     rep.steps.push(row);
     row.before = await P.js(page, s.read_js);
     const r = await P.steps(page, s.actions);
     row.log = r.log.slice(-6);
-    if (!r.ok) { fail = 'untestable: step ' + s.name + ': ' + r.why; break; }
+    // v7.9 手机检查补全: a step that cannot even run under phone storage gets the same browser-storage comparison as a
+    // step that earns nothing (甜点消消乐 R48 on a fresh install: the never-written save key read back false, the save
+    // was judged damaged and the sign-in popup never opened)
+    if (!r.ok) { fail = 'untestable: step ' + s.name + ': ' + r.why; row.stuck = true; row.why = r.why; break; }
     await P.sleep(s.settle_ms || 1200);
     row.after = await P.js(page, s.read_js);
     if (row.after && row.after.adapterError) { fail = 'untestable: step ' + s.name + ': read_js threw: ' + row.after.adapterError; break; }
@@ -74,7 +118,7 @@ await L.suite(async ({ out, page }) => {
       const after = await P.js(page, s.read_js);
       if (s.name === stuck.name) { earned = !P.same(before, after); stuck.browser_storage = [before, after]; break; }
     }
-    if (earned) fail = 'with TikTok phone storage (a key never written reads false, 0/1 read back as false/true) step ' + stuck.name + ' earns nothing (' + JSON.stringify(stuck.after) + '); with browser storage the same steps give ' + JSON.stringify(stuck.browser_storage[0]) + ' -> ' + JSON.stringify(stuck.browser_storage[1]) + ': the game breaks on a phone';
+    if (earned) fail = 'with TikTok phone storage (a key never written reads false, 0/1 read back as false/true) step ' + stuck.name + (stuck.why ? ' cannot run (' + stuck.why + ')' : ' earns nothing (' + JSON.stringify(stuck.after) + ')') + '; with browser storage the same steps give ' + JSON.stringify(stuck.browser_storage[0]) + ' -> ' + JSON.stringify(stuck.browser_storage[1]) + ': the game breaks on a phone';
   }
   if (!fail) {
     rep.before_png = await G.shot(page, path.join(C.evidenceDir, 'save-before-restart.png'));
@@ -100,6 +144,6 @@ await L.suite(async ({ out, page }) => {
   rep.result = fail ? 'fail' : 'pass';
   const blocks = !!fail && (POLICY === 'new' || /^invalid run/.test(fail));
   if (fail && !blocks) out.warn('save_restart: ' + fail + ' [legacy game: warning]');
-  out.add('restart', !blocks, fail || ('kept after a restart: ' + done.map((r) => r.name + ' = ' + JSON.stringify(r.after)).join(', ')));
+  out.add('restart', !blocks, fail || ('kept after a restart: ' + done.map((r) => r.name + (r.kind ? ' (' + r.kind + ')' : '') + ' = ' + JSON.stringify(r.after)).join(', ')));
   out.evidence.report = L.evidence('save_restart.json', rep);
 }, { w: 390, h: 844 });

@@ -89,6 +89,14 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
         raise ValueError('delivery record must be outside Native and distinct from ZIP')
     if record.exists() or record.is_symlink():
         raise ValueError('delivery record already exists; choose a new record path')
+    # 简化.11.6 (Saul 2026-11-04, 91 SLS11): a delivered source never carries .git / .svn / .idea or credential files
+    hygiene = None
+    if source is not None:
+        from source_hygiene import audit as audit_source_hygiene
+        hygiene = audit_source_hygiene(source)
+        if not hygiene['passed']:
+            raise ValueError('delivered source is not clean (source_hygiene.py): ' + '; '.join(hygiene['problems'][:8]) +
+                             ' - make the source ZIP with remake-core/scripts/make_source_zip.py; no delivery record written')
     before = hashlib.sha256(archive.read_bytes()).hexdigest()
     # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
     # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
@@ -127,6 +135,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'regression_reuse': result.get('regression_reuse'),     # v7.9: reused from the writer receipt, or why not
                'final_startup_runtime': startup_runtime,
                'package_obligations': obligations,
+               'source_hygiene': ({'source': hygiene['source'], 'passed': True} if hygiene else None),
                'entry': result['entry'], 'receipt': result.get('receipt'),
                'finalize': writer_finalize(result.get('receipt')),
                'kit_parts_status': KIT_PARTS_PHONE_RETEST,
@@ -154,7 +163,7 @@ def main():
     parser.add_argument('--resource-manifest', type=Path, required=True)
     parser.add_argument('--ad-regression', type=Path, help='adapter JSON for the rewarded-ad and runtime regressions (default $TIKTOK_AD_REGRESSION_ADAPTER); every package with game.js is refused without it')
     parser.add_argument('--logic-report', type=Path, help='logic_check.py report; its current_source_sha256 must equal the delivered --source')
-    parser.add_argument('--source', type=Path, help='delivered source project folder or source ZIP (with --logic-report)')
+    parser.add_argument('--source', type=Path, help='delivered source project folder or source ZIP: checked by source_hygiene.py (no .git/.svn/.idea, no credential files); also needed with --logic-report')
     args = parser.parse_args()
     try:
         print(json.dumps(prepare(args.zip, args.native, args.expected_app_id, args.record, args.project, args.startup_contract, args.loading_recovery_runtime, args.resource_manifest, args.ad_regression, args.logic_report, args.source), ensure_ascii=False))

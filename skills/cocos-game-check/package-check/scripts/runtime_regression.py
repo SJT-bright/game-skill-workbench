@@ -72,8 +72,10 @@ PREDICATES = ('tiktok', 'rewarded_ads', 'missions', 'remake_home', 'trial_url')
 # v7.8 (总表 P2 补, popin): "needs_new" = adapter fields a new game must have (missing: new game refused, legacy game
 # warned and the suite not run); "na_field" = a field whose value {"n/a": "reason"} passes the suite without a browser
 # (a game without scrolling obstacles); "uncovered" = {engine: why}: on that engine the suite only warns 「未覆盖」.
+# v7.9 (手机检查补全): "after" = suites that must run before this one when both are in the run; the suite then gets
+# their evidence as CFG.prior[<suite>] (ad_outcome / resume_play use the ad entries button_sweep found with real taps).
 SIDECAR_KEYS = {'name', 'about', 'applies', 'needs', 'fields', 'engines', 'timeout_s', 'owner', 'proof', 'host',
-                'needs_new', 'na_field', 'uncovered'}
+                'needs_new', 'na_field', 'uncovered', 'after'}
 BOARDS = ('remake', 'localize')
 POPIN_REQUIRED = ('player', 'invincible_js', 'revive_js', 'game_node')
 POPIN_OPTIONAL = {'start': list, 'first_touch': bool, 'fly_s': (int, float), 'settle_ms': int, 'after_start_js': str,
@@ -324,6 +326,9 @@ def load_suites(folder=None):
         if not isinstance(uncovered, dict) or not set(uncovered) <= {'2.x', '3.x'} or not all(
                 isinstance(v, str) and v.strip() for v in uncovered.values()):
             problems.append('"uncovered" must map "2.x" / "3.x" to a reason')
+        after = meta.get('after', [])
+        if not isinstance(after, list) or not all(isinstance(x, str) and x and x != name for x in after):
+            problems.append('"after" must be a list of other suite names')
         if not (folder / (name + '.mjs')).is_file():
             problems.append('missing script ' + name + '.mjs')
         if problems:
@@ -336,6 +341,7 @@ def load_suites(folder=None):
         meta['engines'] = engines
         meta.setdefault('timeout_s', 300)
         meta.setdefault('host', 'package')
+        meta.setdefault('after', [])
         meta['script'] = folder / (name + '.mjs')
         suites[name] = meta
     return suites
@@ -552,8 +558,22 @@ def tool_digest(suites):
     return h.hexdigest()
 
 
+def ordered(names, catalog):
+    """v7.9: names in run order: a suite comes after the suites its sidecar names in "after" (when they are in this run),
+    otherwise the given order is kept. A cycle keeps the remaining suites in the given order."""
+    out, pending = [], list(names)
+    while pending:
+        ready = [n for n in pending if not [d for d in catalog.get(n, {}).get('after', []) if d in pending and d != n]]
+        if not ready:
+            out.extend(pending)
+            break
+        out.append(ready[0])
+        pending.remove(ready[0])
+    return out
+
+
 def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, work, timeout=None, policy=None,
-              policy_reason=None, board=None, trial_url=None):
+              policy_reason=None, board=None, trial_url=None, prior=None, facts=None):
     serves = meta.get('host', 'package') != 'none'
     host = HOST3 if engine == '3.x' else HOST2
     if serves and not (host / 'server.py').is_file():
@@ -579,7 +599,8 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
                'bootTimeoutMs': int(adapter.get('boot_timeout_s', 60) * 1000), 'logFile': str(log),
                'resultFile': str(result_file), 'evidenceDir': str(folder), 'lib': (TOOL / 'lib.mjs').as_uri(),
                'progressFile': str(progress_file),
-               'policy': policy, 'policyReason': policy_reason, 'board': board, 'trialUrl': trial_url}
+               'policy': policy, 'policyReason': policy_reason, 'board': board, 'trialUrl': trial_url,
+               'prior': prior or {}, 'facts': facts or {}}
         entry = folder / 'entry.mjs'
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (
             json.dumps(cfg, ensure_ascii=False), json.dumps(meta['script'].as_uri())), encoding='utf-8')
@@ -666,7 +687,38 @@ def config_problems(names, catalog, adapter, engine, policy):
         missing = [k for k in meta['needs'] if k not in adapter]
         if missing:
             problems.append('runtime suite %s needs adapter field(s) %s' % (name, ', '.join(missing)))
+        if name == 'ad_outcome' and policy != 'legacy':
+            problems.extend(ad_roles_problems(adapter))
     return problems, rows
+
+
+# v7.9 (手机问题源头约束): every new game has a result-page Watch Ad x2 and a revive button (英化固定入口第 6、7 项,
+# remake-ads); both appear only after a level ends, where button_sweep never gets, so a game that does not list them
+# in ad_entries never has them tapped (人鱼 v18: ad_outcome found no entry at all). A game without one says why.
+AD_ROLES_REQUIRED = ('double', 'revive')
+
+
+def ad_roles_problems(adapter):
+    """New game, ad_outcome in the run (the package shows rewarded ads): adapter.ad_entries must hold an entry with
+    role "double" and one with role "revive", unless ad_outcome is {"n/a": reason} or ad_outcome.none.<role> says why."""
+    outcome = adapter.get('ad_outcome')
+    if is_na(outcome):
+        return []
+    none = outcome.get('none') if isinstance(outcome, dict) else None
+    if none is not None and not (isinstance(none, dict) and all(
+            r in AD_ROLES_REQUIRED and isinstance(v, str) and v.strip() for r, v in none.items())):
+        return ['ad_outcome.none must map "double" / "revive" to why the game has no such button']
+    none = none or {}
+    entries = adapter.get('ad_entries') if isinstance(adapter.get('ad_entries'), list) else []
+    roles = {e.get('role') for e in entries if isinstance(e, dict)}
+    missing = [r for r in AD_ROLES_REQUIRED if r not in roles and r not in none]
+    if not missing:
+        return []
+    what = {'double': 'result-page Watch Ad x2 (role "double": win a level, then the button)',
+            'revive': 'revive button (role "revive": let the hero fail by itself, wait_node on the button)'}
+    return ['ad_outcome: adapter.ad_entries lists no %s. A new game lists these buttons with the real steps that show them '
+            '(button_sweep never reaches a level end); a game without one writes ad_outcome.none.%s = "why" '
+            '(英化固定入口第 6、7 项; remake-ads)' % (' and no '.join(what[r] for r in missing), missing[0])]
 
 
 def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_dir=None, policy=None, board=None,
@@ -715,7 +767,10 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
     work = Path(work or tempfile.mkdtemp(prefix='tiktok-runtime-regression-')).resolve()
     work.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    rows, problems = [], []
+    rows, problems, evidence = [], [], {}
+    names = ordered(names, catalog)
+    # v7.9: what the package bytes say, for suites that decide what to require (CFG.facts)
+    facts = {'rewarded_ads': predicate('rewarded_ads', files, adapter)}
     try:
         for name in names:
             meta = catalog[name]
@@ -726,10 +781,13 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
                 rows.append(row)
                 problems.extend(row['problems'])
                 continue
+            prior = {d: evidence[d] for d in meta.get('after', []) if d in evidence}
             row = run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, work, timeout, policy,
-                            policy_reason, board, trial_url)
+                            policy_reason, board, trial_url, prior, facts)
             rows.append(row)
             problems.extend(row['problems'])
+            if isinstance(row.get('evidence'), dict):
+                evidence[name] = row['evidence']
     finally:
         if owned:
             shutil.rmtree(work, ignore_errors=True)

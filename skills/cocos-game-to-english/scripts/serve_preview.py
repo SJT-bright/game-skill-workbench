@@ -13,10 +13,16 @@ a person will play -- --open, --keep or --idle-minutes 0 -- now starts only when
   3. the copy the shared server makes is byte-for-byte the export that was checked (a build still running fails here).
 Every such link is written to <project>/docs/english/chinese-audit/trial-links.json (export, snapshot, check result).
 Internal QA servers (none of the three flags, or --raw) start as before.
-  --chinese-original  the stage-1 Chinese original: no Chinese check (it is the Chinese game on purpose)
+  --chinese-original  the stage-1 Chinese original: no Chinese check (it is the Chinese game on purpose); with
+                      --project the link time is recorded once as `stage_timer.py mark 中文原版链接`
   --draft             Saul asked to see an unfinished English build: the link starts although the check fails; the
                       open problems are printed for the reply, and the link is never called "checked"
   --project <工程>     the English project; not needed when the export is <工程>/build/<platform>
+简化.11.9 (用时汇报): every English trial link for a person is also recorded as `stage_timer.py link <N>` and the
+previous round's timing it prints is shown for the reply. N counts the different exports handed out (trial-links.json,
+export_manifest_sha256): serving the same export again (server stopped, Saul looks once more) is not a new round, and
+stage_timer does not record a round number twice, so a manual `T link N` is not doubled. A timing problem is only a
+warning; the link starts anyway.
 Refused (exit 1, no server): check not passed without --draft, no --snapshot, English project not found, the export
 changed between the check and the copy.
 """
@@ -28,10 +34,31 @@ import sys
 HERE = Path(__file__).resolve().parent
 WRAPPER_ONLY = ('--chinese-original', '--draft')
 HELP = ('英化入口自己的参数（其余见下面共用服务的参数）：\n'
-        '  --chinese-original  第 1 阶段的中文原版链接，不做中文专项检查\n'
+        '  --chinese-original  第 1 阶段的中文原版链接，不做中文专项检查；带 --project 时记下用时「中文原版链接」\n'
         '  --draft             Saul 要先看没做完的英文版：中文专项检查没过也起，列出没处理的问题，不能叫「检查过」\n'
         '  --project <工程>     英化工程（导出在 <工程>/build/web-mobile 时可以不写）\n'
-        '给人试玩的链接（--open、--keep 或 --idle-minutes 0）必须带 --snapshot，并先过 chinese_audit.py check。\n')
+        '给人试玩的链接（--open、--keep 或 --idle-minutes 0）必须带 --snapshot，并先过 chinese_audit.py check。\n'
+        '英文试玩链接自动记用时（stage_timer.py link <第几轮>），打印的上一轮用时贴在新链接那条回复最后。\n')
+
+
+def timing(project, *args):
+    """stage_timer.py <args> for this project; a problem is a warning line, never a refusal (用时汇报不挡流程)."""
+    try:
+        sys.path.insert(0, str(HERE))
+        import stage_timer
+        return stage_timer.call(project, *args)
+    except Exception as exc:  # noqa: BLE001
+        return '用时没记上（%s）：%r' % (' '.join(map(str, args)), exc)
+
+
+def round_number(rows):
+    """rows of trial-links.json -> the round of the last row: different exports handed out, in order."""
+    n, last = 0, None
+    for row in rows:
+        sha = row.get('export_manifest_sha256') if isinstance(row, dict) else None
+        if sha != last:
+            n, last = n + 1, sha
+    return n
 
 
 def option(argv, name):
@@ -77,6 +104,13 @@ def gate(argv, say=print):
     argv = [a for a in argv if a not in WRAPPER_ONLY]
     if original:
         say('中文原版链接：不做中文专项检查（这是中文原版，不是英化结果）。')
+        given = option(argv, '--project')
+        if given and for_a_person(argv):
+            project = Path(given).expanduser().resolve()
+            if project.is_dir():
+                say(timing(project, 'mark', '中文原版链接', '--once'))
+            else:
+                say('用时没记上：--project 不是文件夹（%s），中文原版链接照样起。' % project)
         return argv, None
     if not for_a_person(argv):
         return argv, None
@@ -90,6 +124,11 @@ def gate(argv, say=print):
     if project is None:
         refuse('找不到英化工程：加 --project <英化工程>（导出在 <工程>/build/web-mobile 时可以不写）。'
                '第 1 阶段的中文原版链接加 --chinese-original')
+    sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
+    import art_receipt
+    art = art_receipt.check(project, board='localize')
+    if art['level'] != 'ok':
+        refuse(art['message'])
     sys.path.insert(0, str(HERE))
     import chinese_audit as CA
     out = CA.resolve_out(project, None)
@@ -125,11 +164,16 @@ def gate(argv, say=print):
         log = out / 'trial-links.json'
         rows = CA.read_json(log, [])
         rows = rows if isinstance(rows, list) else []
+        same_export = bool(rows) and isinstance(rows[-1], dict) and rows[-1].get('export_manifest_sha256') == expected
         rows.append({'time': CA.now(), 'name': name, 'export': str(export), 'export_manifest_sha256': expected,
                      'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'check_result_sha256': checked,
                      'passed': not problems, 'draft': bool(problems), 'open_problems': len(problems)})
         CA.write_json(log, rows)
         say('试玩快照和查过的导出一字不差，记在 %s。' % log)
+        if same_export:
+            say('（和上一个链接是同一份导出，不算新一轮试玩，用时不另记）')
+        else:
+            say(timing(project, 'link', round_number(rows)))
     return argv, verify
 
 

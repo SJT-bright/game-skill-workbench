@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-04.english-simple.11.4",
+  "revision": "2026-11-04.english-simple.11.13",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "504f1ed7814e9f3f3feabbd19c69642f6571a24cfb8b10b72f23059ecb99ecfd",
-      "bytes": 60302
+      "sha256": "606af5d32cca55398028215ecfca599f89176fdadf5c3becf90da3157af3cbd8",
+      "bytes": 70098
     },
     {
       "path": "agents/openai.yaml",
@@ -41,13 +41,13 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "559ba99616c85bcc94a25c9a728011103a10af8c5ef52427d9c04eed3b728eb3",
-      "bytes": 24655
+      "sha256": "6827fdd3505844e41347d6c3393652ef8a1d167cf2c48e24c4db0f975c9f2a74",
+      "bytes": 30242
     },
     {
       "path": "references/fixed-entries.md",
-      "sha256": "d0f448cedc9880196396c3aae67d9bd4f0d61c0261f610d08c8de3ef204103a2",
-      "bytes": 9768
+      "sha256": "2421f569c3d5ca5ab68fa85227ca948e2282069417c985fdf27d4fe629dc43f3",
+      "bytes": 12547
     },
     {
       "path": "references/local-creator-versions.md",
@@ -85,6 +85,11 @@
       "bytes": 15961
     },
     {
+      "path": "scripts/fit_english_labels.py",
+      "sha256": "df4750a90a7db4d080eea488c73c9b8da92a5e24870f2e942c204c9176aea323",
+      "bytes": 24850
+    },
+    {
       "path": "scripts/fix_web_entry_3x.py",
       "sha256": "25db43d136f17f2ea0872e13d9f906cbcd04556d48b5187337320f6f9f7f5b71",
       "bytes": 8620
@@ -101,13 +106,13 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "8b6a07dd1bae5856fad042390a753817fb46b5a51a8bd346255f917ea177b9f0",
-      "bytes": 8255
+      "sha256": "ac05b4fe03ec72509864018f609873c657fc9cc544b9954de765b71085351bc1",
+      "bytes": 10511
     },
     {
       "path": "scripts/stage_timer.py",
-      "sha256": "b644164a830b4de9305c9f97378038f381a6f69d2693bde6955c5daab8faa564",
-      "bytes": 32922
+      "sha256": "68b000b1d17ff77d3eb6edd97f2fea2a1338a9cf432dca2021f2858555cca6b4",
+      "bytes": 34882
     },
     {
       "path": "scripts/test_check_export_images.py",
@@ -121,8 +126,13 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "a8cc55efb8203d35b09698576a64643be5991adae7b7a40f21f7d3950399c1e1",
-      "bytes": 62184
+      "sha256": "73cd9e38c35d332182b6d86ec341ff742d3d15e7223458f5b4b833371a8cb299",
+      "bytes": 63372
+    },
+    {
+      "path": "scripts/test_fit_english_labels.py",
+      "sha256": "e3e23c39b9d422afbbbaf41d99f8177f910a9ce7c95bb6dc66d8623e7af5fc5e",
+      "bytes": 13871
     },
     {
       "path": "scripts/test_portable_tools.py",
@@ -131,19 +141,29 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "287618def7ced660117ec544a5b68d1858848e7f1acd4bd14ade2607b2f9a217",
-      "bytes": 11876
+      "sha256": "ebcfd31465817cb7503155330ee7d2f9121a041e9071df5d1fc6cd0dc55fc5cd",
+      "bytes": 15213
     },
     {
       "path": "scripts/test_stage_timer.py",
-      "sha256": "05be4c10e8aae6ef1923a038c713776701bee43c23c566aa89b0180d1e54cab2",
-      "bytes": 16311
+      "sha256": "c06fcdc8a89cf9f2dbe373ffca67f07d5c86e28d296577e559d7a5b99a5cddc0",
+      "bytes": 17834
+    },
+    {
+      "path": "scripts/test_unpack_source.py",
+      "sha256": "5122a1bfd703635757dcacb4886c9e7867b5f3db427a3cfa4c3a934aa07073e3",
+      "bytes": 4187
+    },
+    {
+      "path": "scripts/unpack_source.py",
+      "sha256": "6585dd78c924d2c8e228ff5ba13534cacacacf633f209f93f424c41997426b8d",
+      "bytes": 6860
     },
     {
       "path": "版本历史.md",
-      "sha256": "2cff394207eb1cc7c6921c0c5c0bc5c9517fb6fea78639d1326e902141a291d5",
-      "bytes": 4005
+      "sha256": "dc76df8bd365b9431491b7e372cfc0a289ded2f533adde2b55ca4c07ea8209dc",
+      "bytes": 8026
     }
   ],
-  "previous_provenance_sha256": "bd2b7aeeaccbdb5f53e6de86e1ef4d757dda5274ed58df646dfd946cc74ac6db"
+  "previous_provenance_sha256": "80d36fb0dfb380d9e96e819978f485b3ea920f96b90ea29798b6ed46e16019be"
 }

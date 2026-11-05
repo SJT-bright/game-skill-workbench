@@ -171,14 +171,41 @@ class ForgottenSteps(Base):
 
 class Reminders(Base):
     def test_a_stage_over_its_reference_is_pointed_out_once(self):
-        self.T(0, 'stage', '3')
-        self.T(0, 'begin', '三项确认')
-        out = self.T(25, 'end', '三项确认')
-        self.assertIn('提醒：第 3 阶段「英文试玩链接」已经 25 分，超过参考的 20 分', out)
+        self.T(0, 'stage', '1')
+        self.T(0, 'begin', '盘点清单')
+        out = self.T(35, 'end', '盘点清单')
+        self.assertIn('提醒：第 1 阶段「盘点」已经 35 分，超过参考的 30 分', out)
         self.assertIn('不为了赶时间少做一步', out)
-        self.T(26, 'begin', '导出核对')
-        self.assertNotIn('提醒', self.T(27, 'end', '导出核对'))
-        self.assertIn('比参考用时 20 分多了 7 分', self.T(27, 'done'))
+        self.T(36, 'begin', '查电脑')
+        self.assertNotIn('提醒', self.T(37, 'end', '查电脑'))
+        self.assertIn('比参考用时 30 分多了 7 分', self.T(37, 'done'))
+
+    def test_stage_3_has_no_reference_until_real_data(self):
+        # 简化.11.9: 20 minutes was set when stage 3 was three confirmations; the Chinese check (11) and the full art
+        # check (11.3.1) came later, so every game was "late". No reminder until a game sets the number.
+        self.assertNotIn(3, ST.REF_MIN)
+        self.T(0, 'stage', '3')
+        self.T(0, 'begin', '完整美工检查')
+        self.assertNotIn('提醒', self.T(90, 'end', '完整美工检查'))
+        self.assertNotIn('参考用时', self.T(91, 'done'))
+
+    def test_the_same_round_is_not_recorded_twice(self):
+        self.T(0, 'stage', '3')
+        self.T(5, 'link', '1')
+        out = self.T(6, 'link', '1')                     # serve_preview.py recorded it, the session runs T link 1 too
+        self.assertIn('已经记过', out)
+        self.assertEqual(sum('"link"' in l for l in self.log()), 1)
+
+    def test_mark_once(self):
+        self.T(0, 'mark', '中文原版链接', '--once')
+        self.assertIn('已经记过', self.T(3, 'mark', '中文原版链接', '--once'))
+        self.assertEqual(sum('中文原版链接' in l for l in self.log()), 1)
+        self.T(4, 'mark', '改要求：换按钮')
+        self.T(5, 'mark', '改要求：换按钮')                  # without --once every mark counts
+        self.assertEqual(sum('改要求' in l for l in self.log()), 2)
+
+    def test_call_never_raises(self):
+        self.assertIn('没记上', ST.call(Path(self.td.name) / 'missing', 'link', 1))
 
     def test_a_slow_trial_round_is_pointed_out(self):
         self.T(0, 'stage', '4')
@@ -282,7 +309,7 @@ class Robustness(Base):
         tree = ast.parse(src)
         names = {a.name.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         names |= {n.module.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
-        self.assertLessEqual(names, {'argparse', 'json', 'os', 'sys', 'time', 'datetime', 'pathlib'})
+        self.assertLessEqual(names, {'argparse', 'json', 'os', 'sys', 'time', 'datetime', 'pathlib', 'contextlib', 'io'})   # 11.9 call()
         for gone in ('fcntl', '/usr/bin/python3', 'pgrep', 'cp -c', 'open -R'):
             self.assertNotIn(gone, src.split('"""', 2)[2], gone)
 

@@ -16,6 +16,15 @@
 - 音量为 0 时等同静音；原有的单个“声音开关”可保留，但不能替代这两个控件。
 - 用原游戏已有的声音管理代码接这两个控件；原游戏没有合格的，就写一个最小的：两路音量各自存本地、启动时读回、广告前后暂停和恢复。`GameAudioManager` 模板在重塑包的 game-audio-library 里，英化包不带（本机装了重塑包时可以照它写）。检查按 AUDIO-01。
 
+## 关内：暂停键（v7.9 手机问题源头约束，英化第 9 项）
+
+- 每个模式的关里都要有暂停键或设置键，点开是暂停窗，有 **Continue**（继续，点一下就关、回到刚才）、**Restart**（重来本关）、**Home**（回首页）。规则早就有（`cocos-game-check/test/references/logic-rules.md`「关卡内（HUD）：暂停或设置键 → 能 Continue、Restart、Home」，美术规则「每个模式都有暂停或设置」），但以前不在英化要做的清单里，割草 v015、人鱼 v18 英化后关里只有返回键 / 回首页键（割草的返回键打开的窗只有 close 和一个绿色按钮），出包检查 `resume_play` 拒了（2026-11-04）。
+- 原游戏关里已有暂停或设置窗的：保留原样，缺 Continue、Restart、Home 哪个补哪个。只有返回键、回首页键的：加一个暂停键（原返回键可以保留），不改玩法。
+- 暂停窗开着时局内计时、物理、生成、倒计时都停（`L-MODAL-PAUSE`）；点 Continue 一下就关，关后接着玩；切后台再回来时暂停窗还在、点一下就关（`resume_play` 的 `pause_background` 查）。
+- 节点名：暂停键 `BtnPause`（图片帧 `btn_pause*`），暂停窗的继续键 `BtnContinue`（或 Resume）。出包检查按名字找暂停键和继续键，也认 button_sweep 在关里点开、弹窗里有 Continue / Resume 的键；名字对不上时在 `qa/ad-regression.json` 的 `resume_play.pause_button`、`continue_button` 写路径。
+- 样子照原游戏画风，第一轮美工一起生成（暂停键、暂停窗和三个按钮）；放在顶栏，避开右上角胶囊。
+- 确实不能暂停的关（极少，例如一局只有几秒的点击游戏）：`resume_play.pause_button` 写 `{"none": "原因"}`，交付时告诉 Saul；没有关卡的游戏 `resume_play` 写 `{"n/a": "原因"}`。
+
 ## 删除：分享、更多游戏、排行榜
 
 - 删除按钮、入口、弹窗和调用平台分享/跳转/排行榜接口的代码；删后重新排好所在页面，不留空位、不留无效点击区。
@@ -35,6 +44,7 @@
 - 这些广告行为按 [广告机制](../../remake-ads/references/ad-mechanism.md) 和 [超时规则与广告回归](../../remake-ads/references/ad-timeout-and-regression.md) 查；x2 数额按 [经济规则·货币和结算×2](../../remake-economy/references/economy-rules.md#二货币和结算2)：没有货币的游戏 x2 翻倍本局捡到的道具，本局没捡到东西时不放 x2、改一行文字。
 - 结算页有 **Retry**（重玩本关），以及原游戏已有的 Home/Next 等按钮保持原样，只是不能比 x2 大。
 - 只用激励视频；不加插屏、横幅，不做看广告跳关。
+- **写进 `qa/ad-regression.json`（v7.9 手机问题源头约束）**：`ad_entries` 里写这个按钮，`"role": "double"`，`states` 写真实操作：进关、过关、等到结算页上这个按钮出现（`wait_node`）。button_sweep 只点首页和关里，到不了结算页，不写就从来没人真点过它；新游戏没写出包被拒（`ad_outcome`）。真没有结算 x2 的（本局没捡到东西时不放），写 `ad_outcome.none.double` 说明。
 
 ## 签到、转盘结果、礼包领奖窗：看广告双倍勾选框（Saul 2026-10-31）
 
@@ -56,4 +66,5 @@ Saul 2026-10-28 在 MusicSlice 上要求加；**2026-10-29 已定：英化游戏
 - 复活和结算 x2 走同一个平台包 `RewardedService.js`；复活弹窗打开时局内物理、计时、生成都停（`L-MODAL-PAUSE`）。
 - 实施和检查按 [复活审查](../../remake-ads/references/rewarded-revive-and-help-layout.md)（英化一律加，不再审要不要加；页尾的小型教程英化不做）和 [一局结束：每屏一个视频按钮](../../remake-ads/references/end-flow-one-video.md)。
 - 复活弹窗有 Home（回首页，清理和结算页一样），看广告加载中不能点。
+- **写进 `qa/ad-regression.json`（v7.9 手机问题源头约束）**：`ad_entries` 里写 Watch Ad to Revive，`"role": "revive"`，`states` 让主角自己失败（`wait_node` 等复活按钮出现，不在 `setup_js` 里强制失败）。新游戏没写出包被拒（`ad_outcome`）；出包时会真点它：中途关掉不复活、同一个按钮再点能再开广告，看完复活后还能接着玩。
 

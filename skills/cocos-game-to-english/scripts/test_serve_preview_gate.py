@@ -40,6 +40,12 @@ def make_game(td, colour=(200, 120, 40, 255)):
     (web / 'assets').mkdir(parents=True)
     (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas></html>', encoding='utf-8')
     shutil.copy2(str(root / 'assets' / 'tex' / 'btn.png'), str(web / 'assets' / 'btn.png'))
+    # This suite isolates the Chinese gate; provide a valid synthetic art receipt first.
+    sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
+    import art_receipt as AR
+    import audit_value_presentation as VP
+    AR.write(root, 'pass', {'value_presentation': {'revision': VP.REVISION, 'mode': 'runtime', 'passed': True,
+             'pages': 2, 'source_sha256': VP.source_fingerprint(root)}})
     return root, web
 
 
@@ -68,6 +74,17 @@ def quiet():
 
 class GateDecisions(unittest.TestCase):
     """The gate itself, in this process."""
+
+    def test_missing_art_blocks_every_person_mode_and_draft(self):
+        for flags in (['--open'], ['--keep'], ['--idle-minutes', '0'], ['--open', '--draft']):
+            with tempfile.TemporaryDirectory() as td:
+                root, web = make_game(td)
+                (root / '.tiktok-kit/art-receipt.json').unlink()
+                err = io.StringIO()
+                with self.assertRaises(SystemExit) as cm, _stderr(err):
+                    GATE.gate(['--directory', str(web), '--project', str(root), '--snapshot'] + flags, say=quiet()[1])
+                self.assertEqual(cm.exception.code, 1)
+                self.assertIn('重跑 art_check', err.getvalue())
 
     def test_internal_qa_server_is_not_checked(self):
         argv = ['--directory', '/nowhere', '--snapshot', '--name', 'qa']
@@ -122,6 +139,10 @@ class GateDecisions(unittest.TestCase):
             chinese = pixels_sha(web / 'assets' / 'btn.png')
             from PIL import Image
             Image.new('RGBA', (48, 32), (30, 160, 90, 255)).save(str(root / 'assets' / 'tex' / 'btn.png'))   # redrawn
+            import art_receipt as AR
+            import audit_value_presentation as VP
+            AR.write(root, 'pass', {'value_presentation': {'revision': VP.REVISION, 'mode': 'runtime', 'passed': True,
+                     'pages': 2, 'source_sha256': VP.source_fingerprint(root)}})
             os.utime(str(web / 'assets' / 'btn.png'), (1, 1))                                            # older export
             scan(root, web, env_for(td, {chinese: '高波来袭！'}))
             lines, say = quiet()
@@ -173,6 +194,63 @@ class GateDecisions(unittest.TestCase):
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual((log[0]['passed'], log[0]['draft']), (False, True))
             self.assertGreater(log[0]['open_problems'], 0)
+
+
+def timing_events(root):
+    log = root / 'docs' / 'timing' / 'stage-timing.jsonl'
+    return [json.loads(l) for l in log.read_text(encoding='utf-8').splitlines() if l.strip()] if log.is_file() else []
+
+
+class TrialLinkTiming(unittest.TestCase):
+    """简化.11.9 (割草 蛋壳特工队: the second trial link was never recorded, so a 6-hour "round 1" hid Saul's second
+    playtest): serve_preview.py records `stage_timer.py link <N>` itself, N = different exports handed out."""
+
+    def link(self, root, web, td, say):
+        argv, verify = GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--project', str(root)], say=say)
+        snap = Path(tempfile.mkdtemp(prefix='snap-', dir=td))
+        shutil.rmtree(str(snap))
+        shutil.copytree(str(web), str(snap))
+        verify(snap)
+
+    def test_new_export_is_a_round_same_export_is_not_and_numbers_do_not_double(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            scan(root, web, env_for(td))
+            lines, say = quiet()
+            self.link(root, web, td, say)
+            links = [e for e in timing_events(root) if e['ev'] == 'link']
+            self.assertEqual([e['n'] for e in links], [1])
+            self.assertIn('第 1 轮', ''.join(lines))
+            self.link(root, web, td, say)                                  # the same export served again
+            self.assertEqual([e['n'] for e in timing_events(root) if e['ev'] == 'link'], [1])
+            self.assertIn('同一份导出', ''.join(lines))
+            sys.path.insert(0, str(HERE))
+            import stage_timer
+            stage_timer.call(root, 'link', 2)                              # the session also ran T link 2 by hand
+            (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas><!-- round 2 --></html>', encoding='utf-8')
+            scan(root, web, env_for(td))
+            self.link(root, web, td, say)                                  # a new export: round 2, already recorded
+            self.assertEqual([e['n'] for e in timing_events(root) if e['ev'] == 'link'], [1, 2])
+
+    def test_timing_that_cannot_be_written_does_not_stop_the_link(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            scan(root, web, env_for(td))
+            (root / 'docs' / 'timing').write_text('not a folder', encoding='utf-8')
+            lines, say = quiet()
+            self.link(root, web, td, say)                                  # no SystemExit
+            log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
+            self.assertEqual(len(log), 1)
+
+    def test_chinese_original_with_project_is_marked_once(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            for _ in range(2):
+                lines, say = quiet()
+                GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--chinese-original', '--project', str(root)], say=say)
+            marks = [e for e in timing_events(root) if e['ev'] == 'mark']
+            self.assertEqual([e['name'] for e in marks], ['中文原版链接'])
+            GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--chinese-original'], say=quiet()[1])   # no --project: fine
 
 
 class _stderr(object):

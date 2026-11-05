@@ -343,7 +343,7 @@ class AdBoostAndRedesign(unittest.TestCase):
         self.assertIn('英化游戏默认由英化入口跑 ad-boost', section)
         self.assertNotIn('英化游戏只在 Saul 说广告太少', section)
         self.assertIn('原首页按钮不动', section)
-        self.assertIn('20 个板块', section)                      # ad-boost v1.2.0 (v7.9); 15 until 10.2.10
+        self.assertIn('21 个板块', section)                      # ad-boost v1.2.11 battle-pass (11.8); 20 from v1.2.0, 15 until 10.2.10
         self.assertNotIn('15 个板块', section)
 
     def test_redesign_keeps_the_original_art_style(self):
@@ -507,7 +507,8 @@ class AdBoostBundled(unittest.TestCase):
         readme = README.read_text(encoding='utf-8')
         skills = readme.split('本包的 Skill：', 1)[1].split('\n\n', 1)[0]
         self.assertIn('- ad-boost：', skills)
-        self.assertIn('（上面 8 项）', readme)
+        # v7.9 手机问题源头约束: 9 items (item 9 in-level pause key); ad-boost stays item 8
+        self.assertIn('（上面 9 项）', readme)
         if CODEX_TEXT.is_file():
             self.assertIn('ad-boost', CODEX_TEXT.read_text(encoding='utf-8'))
 
@@ -654,6 +655,13 @@ class StructureAndReadingMap(unittest.TestCase):
         self.assertIsNotNone(version, rev[0])
         self.assertGreaterEqual(tuple(int(x) for x in version.group(1).split('.')), (10, 2, 12))
         self.assertIn('](版本历史.md)', rev[0])
+        # 简化.11.9: sessions read this line to tell whether their install is current; 11.4-11.8 still said 11.3.2.
+        # In the release tree and the ZIP the pack README title carries the version (installs have no README: skipped).
+        if README.is_file():
+            title = README.read_text(encoding='utf-8').splitlines()[0]
+            pack = re.search(r'english-simple\.(\d+(?:\.\d+)*)', title)
+            self.assertIsNotNone(pack, title)
+            self.assertEqual(version.group(1), pack.group(1), 'SKILL.md 修订行 %s，README 标题 %s' % (version.group(1), pack.group(1)))
         for old in ('10.2.10：', '10.2.8：', '10.2.7：', '10.2.5：', '10.1：', '上一版 `2026-10-28.english-simple.1`'):
             self.assertNotIn(old, rev[0], old)
         history = (ENTRY / '版本历史.md').read_text(encoding='utf-8')
@@ -806,6 +814,13 @@ class TimingReport(unittest.TestCase):
         for n, minutes in st.REF_MIN.items():
             self.assertIn('第 %d 阶段 %s' % (n, st.fmt(minutes * 60)), part, n)
         self.assertIn('从 Saul 回复到新链接 %s' % st.fmt(st.ROUND_REF_MIN * 60), part)
+        # 简化.11.9: the other way round too -- a stage the tool no longer reminds about is not listed with a time
+        listed = part.split('参考用时是', 1)[1].split('（等 Saul', 1)[0]
+        for n in st.STAGES:
+            if n not in st.REF_MIN and n != 4:
+                self.assertNotRegex(listed, r'第 %d 阶段 \d' % n, n)
+        self.assertIn('第 3 阶段先不设', part)
+        self.assertIn('由 `serve_preview.py` 自动记', part)
         table = part.split('| 阶段 | 步骤名', 1)[1].split('\n\n', 1)[0]
         rows = {}
         for line in table.splitlines()[2:]:

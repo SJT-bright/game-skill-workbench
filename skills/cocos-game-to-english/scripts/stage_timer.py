@@ -14,10 +14,11 @@ Saul 2026-11-01：「能不能在skill放一个阶段用时的汇报，就是自
   T done                              结束当前阶段，打印这一阶段的用时汇报
   T begin <步骤> [--who 美术子进程]      开始一步（步骤名见下面 STEPS，也可以用别的大白话名字）
   T end <步骤> [--count 图=26]          这一步做完；同一步做几次就记几次，汇报写次数和总时间
-  T link <N>                          发了第 N 轮英文试玩链接，开始等用户试玩；有上一轮时打印上一轮的用时
+  T link <N>                          发了第 N 轮英文试玩链接，开始等用户试玩；有上一轮时打印上一轮的用时。
+                                      简化.11.9 起英文试玩链接由 serve_preview.py 自动记；同一轮号已经记过就不再记
   T ask <事情>                         问了用户一件要他回答才能往下做的事，开始等他
   T back                              用户回复了（没在等时跑也没关系）
-  T mark <事情>                        记一个时间点：中文原版链接、改要求：<几个字>、交付
+  T mark <事情> [--once]               记一个时间点：中文原版链接、改要求：<几个字>、交付；--once 已经记过同名的就不再记
   T status                            现在开着的阶段和步骤、在不在等用户（压缩或重开以后先跑这个）
   T report [--all]                    当前阶段到现在的用时；--all 打印全程总表并写 docs/timing/timing-report.md
 
@@ -33,7 +34,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 STAGES = {1: '盘点', 2: '修改', 3: '英文试玩链接', 4: '试玩改进', 5: '全量检查和出包'}
-REF_MIN = {1: 30, 2: 90, 3: 20, 5: 90}      # 参考用时（分钟）：超过了提醒一次，不是硬限制
+# 参考用时（分钟）：超过了提醒一次，不是硬限制。简化.11.9：第 3 阶段先不提醒（10.2.12 定的 20 分只算三项确认，11 起加了中文专项检查、
+# 11.3.1 起加了完整美工检查；等第一款按新规矩走完第 3 阶段，用它的实际用时再定，Cocos游戏技能对比分析 11-04 按割草蛋壳特工队查出）
+REF_MIN = {1: 30, 2: 90, 5: 90}
 ROUND_REF_MIN = 45                           # 第 4 阶段每一轮：从用户回复到下一个链接
 STEPS = (                                     # 英化入口「用时汇报」表里的步骤名；汇报按开始先后排，同时开始的按这个顺序
     (1, ('查电脑', '找Cocos', '中文原版导出', '盘点清单')),
@@ -575,6 +578,7 @@ def parser():
     sub.add_parser('back', parents=[common], help='用户回复了')
     s = sub.add_parser('mark', parents=[common], help='记一个时间点')
     s.add_argument('name')
+    s.add_argument('--once', action='store_true', help='已经记过同名的时间点就不再记（serve_preview.py 自动记中文原版链接用）')
     sub.add_parser('status', parents=[common], help='现在开着的阶段和步骤')
     s = sub.add_parser('report', parents=[common], help='打印用时；--all 打印全程总表并写 timing-report.md')
     s.add_argument('--all', action='store_true')
@@ -648,6 +652,10 @@ def main(argv=None):
             out.append('没找到「%s」的开始，这一条没算进用时。下次做这一步前先跑 begin。' % a.step)
         remind()
     elif a.cmd == 'link':
+        if any(l['n'] == a.n for l in tl.links):
+            # 简化.11.9: serve_preview.py records links by itself; a manual T link N for the same round is not a second one
+            print('第 %d 轮英文试玩链接已经记过（%s），不再记。' % (a.n, clock(next(l['t'] for l in tl.links if l['n'] == a.n))))
+            return 0
         record('link', n=a.n)
         r = next((r for r in tl.rounds() if r['next'] == now), None)
         if r:
@@ -664,6 +672,9 @@ def main(argv=None):
         else:
             out.append('（没在等回复，不用记）')
     elif a.cmd == 'mark':
+        if a.once and any(e.get('ev') == 'mark' and e.get('name') == a.name for e in events):
+            print('「%s」已经记过，不再记。' % a.name)
+            return 0
         record('mark', name=a.name)
         out.append('记下：%s %s（开工后 %s）' % (clock(now), a.name, fmt(now - tl.start)))
         remind()
@@ -681,6 +692,23 @@ def main(argv=None):
             out.append('还没有用时记录。开工先跑 stage 1。')
     print('\n'.join(out))
     return 0
+
+
+def call(project, *args):
+    """For other tools (serve_preview.py): run one command, return what it printed. Never raises: a timing problem is a
+    warning line, the caller goes on (用时汇报不挡流程)."""
+    import contextlib
+    import io
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            main(['--project', str(project)] + [str(a) for a in args])
+    except SystemExit as exc:
+        if exc.code not in (0, None):
+            return '用时没记上（%s）：%s' % (' '.join(map(str, args)), buf.getvalue().strip()[-300:])
+    except Exception as exc:  # noqa: BLE001 - timing never stops the link
+        return '用时没记上（%s）：%r' % (' '.join(map(str, args)), exc)
+    return buf.getvalue().strip()
 
 
 if __name__ == '__main__':

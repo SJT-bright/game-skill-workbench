@@ -22,6 +22,10 @@ Usage:
   python make_level_plan.py --levels 60 --coins 40 [--intro 23:wind] [--limited-skin hero_limited] [--limited-skin-mode final|every_10] [--seed N]
       [--currency Pearls] --out assets/resources/config/level_plan.json
   python make_level_plan.py --endless --why "one run, score keeps growing" --out assets/resources/config/level_plan.json
+  add --project <Cocos project> [--scene NAME ...] to any of these (P04): it also writes the build scene whitelist
+  docs/startup/build-scenes.json (start scene + scenes a script loads by name + --scene + scenes inside bundles) and,
+  for Cocos 2.4, adds every other scene to settings/builder.json excludeScenes, so unused scenes are not built into
+  the main package (喂小动物 kept 61). first_screen.py reads the whitelist.
 """
 import argparse
 import json
@@ -230,6 +234,39 @@ def write_reskin(a, ap):
     return 0
 
 
+def write_build_scenes(project, extra=()):
+    """P04: whitelist of the scenes the build needs; the rest go to builder.json excludeScenes (Cocos 2.4)."""
+    import first_screen as fs
+    project = Path(project)
+    pr = fs.Project(project)
+    boot = fs.start_scene(pr, None)
+    names = set(extra)
+    for s in pr.scripts:
+        names.update(fs.LOAD_SCENE.findall(s.read_text(encoding='utf-8', errors='ignore')))
+    keep = [sc for sc in pr.scenes if sc == boot or sc.stem in names or pr.bundle_of(sc) is not None]
+    drop = [sc for sc in pr.scenes if sc not in keep]
+    missing = sorted(n for n in extra if not pr.scene_named(n))
+    if missing:
+        raise SystemExit('--scene %s: no such scene in assets/' % ', '.join(missing))
+    out = project.joinpath(*fs.WHITELIST)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({'schema': 'build_scenes.v1', 'tool': 'make_level_plan',
+                               'scenes': sorted(sc.stem for sc in keep),
+                               'excluded': sorted(pr.rel[sc] for sc in drop)}, ensure_ascii=False, indent=1) + '\n',
+                   encoding='utf-8')
+    builder = project / 'settings' / 'builder.json'
+    written = False
+    if drop and builder.is_file() and fs.estimate.engine_major(project)[1] == '2':
+        data = json.loads(builder.read_text(encoding='utf-8-sig'))
+        old = list(data.get('excludeScenes') or [])
+        add = [u for sc in drop for u in sorted(fs.estimate.asset_uuids(sc)) if u not in old]
+        if add:
+            data['excludeScenes'] = old + add
+            builder.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+            written = True
+    return {'build_scenes': str(out), 'kept': len(keep), 'excluded': len(drop), 'builder_excludeScenes': written}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--levels', type=int, default=MIN_LEVELS, help='60 or more for new designs (Saul 2026-10-29)')
@@ -260,8 +297,14 @@ def main():
     rs.add_argument('--approved-by', default='', help='who approved the reskin (Saul)')
     rs.add_argument('--approved-date', default='', help='YYYY-MM-DD')
     rs.add_argument('--approved-quote', default='', help='his words, e.g. 照搬原游戏的关卡')
+    ap.add_argument('--scene', action='append', default=[], metavar='NAME',
+                    help='with --project: a scene the build needs that no script loads by a literal name (P04)')
     ap.add_argument('--out', type=Path, required=True)
     a = ap.parse_args()
+    if a.project and (a.project / 'assets').is_dir():
+        print(json.dumps(write_build_scenes(a.project, a.scene), ensure_ascii=False))
+    elif a.scene:
+        ap.error('--scene needs --project <Cocos project>')
     if a.reskin:
         return write_reskin(a, ap)
     if bool(a.base_game) != bool(a.base_mode):

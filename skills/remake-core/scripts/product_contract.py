@@ -1013,7 +1013,7 @@ def _econ_added_by(rule, offenders, systems_origin):
     return next((x.get('origin') for x in offenders or () if x.get('origin') in ECON_ORIGINS[1:]), None)
 
 
-def economy_audit(snapshot, kind=None):
+def economy_audit(snapshot, kind=None, capabilities=None):
     """Check an economy_snapshot.v1 against ECON-xx. Returns economy_audit.v1 with one row per rule:
     status pass | error | suggest | label (broken; severity by kind) | skip (not applicable) | unknown (snapshot lacks data)
     | info (ECON-PACING numbers). Optional snapshot extensions read when present: inflow.day / inflow.by_day (check-in day;
@@ -1046,7 +1046,13 @@ def economy_audit(snapshot, kind=None):
     checked by ECON-DEAD; a revive sink is a place to spend. One row per rule: a rule with both kinds of miss lists them
     all under the reported severity. ECON-MIDRUN / ECON-NOODDS need no B and are judged without it when their rows exist.
     Misses of numbers Saul has not decided (decided_by_saul=false) are at most suggest. Unknown field names go to
-    schema_warnings; with meta.source = auto_scan, 'system not found' skips go to confirm_by_hand."""
+    schema_warnings; with meta.source = auto_scan, 'system not found' skips go to confirm_by_hand.
+    P20 第 3 点 (能力先判, 2026-11-04): capabilities = game_capabilities.load(project) (wallet / items / skins / energy
+    from docs/economy/economy_capabilities.json). Given, the record decides instead of the snapshot's guess: wallet false
+    -> no coin (ECON-B / ECON-X2 skip with the record as the reason), items / skins / energy fill systems.* the snapshot
+    left out; a record that disagrees with the snapshot is a schema warning and the record wins. Given but with no
+    wallet recorded while the snapshot cannot tell either: ECON-B is not_run (names the file to write), not an error.
+    None (default): judged as before."""
     snap = snapshot if isinstance(snapshot, dict) else {}
     game = snap.get('game') if isinstance(snap.get('game'), dict) else {}
     kind = kind or game.get('kind') or 'unknown'
@@ -1069,6 +1075,27 @@ def economy_audit(snapshot, kind=None):
     sys_origin = _econ_systems_origin(snap.get('systems_origin'))
     warnings = _econ_schema_warnings(snap)
     rows = []
+    cap_why, cap_not_run = None, None
+    if capabilities is not None:   # P20 第 3 点: the record written while the game was made decides, not the snapshot
+        cap_src = (capabilities.get('source') or {})
+        w = capabilities.get('wallet')
+        if w is False:
+            if not no_coin and isinstance(snap.get('currencies'), list):
+                warnings.append('capability record says wallet=false (%s) but the snapshot lists a coin: judged as no coin'
+                                % cap_src.get('wallet'))
+            no_coin, cap_why = True, 'capability record wallet=false (%s)' % cap_src.get('wallet')
+        elif w is True:
+            if no_coin:
+                warnings.append('capability record says wallet=true (%s) but the snapshot lists no coin: judged as having '
+                                'coins' % cap_src.get('wallet'))
+            no_coin = False
+        elif not isinstance(snap.get('currencies'), list):
+            cap_not_run = ('not run: neither the capability record nor the snapshot says whether the game has coins; '
+                           'write docs/economy/economy_capabilities.json (make_economy_config.py, no coins: --no-wallet)')
+        systems = dict(systems)
+        for k in ('items', 'skins', 'energy'):
+            if isinstance(capabilities.get(k), bool) and k not in systems:
+                systems[k] = capabilities[k]
 
     def add(rule, broken=None, ok=None, skip=None, unknown=None, info=None, soft=None, offenders=None, found=False, weak=None):
         """broken: misses (severity by kind); soft: misses of numbers Saul has not decided (at most suggest);
@@ -1155,7 +1182,7 @@ def economy_audit(snapshot, kind=None):
         """ECON-X2 / ECON-NOCUR. Without coins (v3.3, as economy_plan.js) the result double is ECON-NOCUR: x2 of the items
         picked up this round, once a round; a game with nothing to pick up shows no x2 (rule text 本局没捡到不放 ×2)."""
         if no_coin:
-            add('ECON-X2', skip=['no coin currency: the result double is ECON-NOCUR'], found=True)
+            add('ECON-X2', skip=['no coin currency: the result double is ECON-NOCUR'] + ([cap_why] if cap_why else []), found=True)
             if systems.get('result_x2') is True:
                 add('ECON-NOCUR', ok=['no coin currency: result watch-ad x2 doubles the items picked up this round'])
             elif systems.get('items') is True:
@@ -1531,7 +1558,11 @@ def economy_audit(snapshot, kind=None):
 
     # ECON-B (v3.3: a game without coins has no B to find; see ECON-NOCUR)
     if no_coin and B is None:
-        add('ECON-B', skip=['no coin currency (energy is not a coin): no B to find; see ECON-NOCUR'], found=True)
+        add('ECON-B', skip=['no coin currency (energy is not a coin): no B to find; see ECON-NOCUR'] + ([cap_why] if cap_why else []),
+            found=True)
+    elif cap_not_run and B is None:
+        rows.append({'id': 'ECON-B', 'title': ECON_RULE_TITLES['ECON-B'], 'status': 'not_run',
+                     'english_default': 'ECON-B' in ECON_ENGLISH_DEFAULT, 'details': [cap_not_run]})
     elif B is None or b.get('how') in (None, 'unknown'):
         add('ECON-B', broken=['B is unknown; find normalLevelCoins, the median of the first 10 ordinary levels, or cheapest item / 10'])
     else:
@@ -2140,24 +2171,37 @@ def _econ_report(snap, kind, B, rows, warnings=None):
     return {'schema': ECON_AUDIT_SCHEMA, 'rules_revision': ECON_RULES_REVISION, 'game': game.get('name'), 'kind': kind, 'B': B,
             'source': meta.get('source', 'hand'), 'schema_errors': errors, 'schema_warnings': list(warnings or []),
             'confirm_by_hand': [r['id'] for r in rows if r.get('confirm_by_hand')],
-            'counts': dict(sorted(count.items())), 'ok': not errors and count.get('error', 0) == 0, 'results': rows}
+            'counts': dict(sorted(count.items())), 'ok': not errors and count.get('error', 0) == 0 and not count.get('not_run'),
+            'not_run': [r['id'] for r in rows if r['status'] == 'not_run'], 'results': rows}
 
 
 def _economy_audit_main(argv):
-    import argparse, json, sys
+    import argparse, json, os, sys
     ap = argparse.ArgumentParser(prog='product_contract.py economy-audit',
                                  description='Check economy_snapshot.v1 against ECON-xx (remake-economy economy-rules.md).')
     ap.add_argument('--snapshot', required=True, help='economy_snapshot.json')
     ap.add_argument('--kind', choices=['remake', 'english', 'finished', 'unknown'], help='override snapshot game.kind')
     ap.add_argument('--out', help='write the report here as well as stdout')
+    ap.add_argument('--project', help='P20 第 3 点: read the capability record of this game (docs/economy/'
+                    'economy_capabilities.json, game_capabilities.py) and judge by it; missing -> ECON-B not_run (exit 2)')
     a = ap.parse_args(argv)
+    caps = None
+    if a.project:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import game_capabilities
+        caps = game_capabilities.load(a.project)
     with open(a.snapshot, encoding='utf-8') as f:
-        report = economy_audit(json.load(f), a.kind)
+        report = economy_audit(json.load(f), a.kind, caps)
+    if caps is not None:
+        report['capabilities'] = {k: caps.get(k) for k in ('wallet', 'items', 'skins', 'energy')}
+        report['capability_problems'] = caps['problems']
     text = json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + '\n'
     if a.out:
         with open(a.out, 'w', encoding='utf-8') as f:
             f.write(text)
     sys.stdout.write(text)
+    if not report['ok'] and report.get('not_run') and not report['counts'].get('error'):
+        return 2
     return 0 if report['ok'] else 1
 
 

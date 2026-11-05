@@ -19,6 +19,10 @@ grok-image-review may transcribe the text on an image; the verdict in the record
 API for the package entries (board localize):  check(files, record_path) -> {"passed": bool, "problems": [...], ...}
   files: a dict {name: bytes}, an iterable of (name, bytes) pairs, or an iterable of file paths.
 CLI:  python3 audit_image_review_record.py --zip <upload.zip> --record <image-review.json> [--out report.json]
+      python3 audit_image_review_record.py write --zip <upload.zip> --out docs/english/image-review.json [--ocr auto]
+                                         [--verdict <sha256>=yes|no ... --by "<who>"]
+P16 (2026-11-04): the record is written ONLY by `write` (OCR of every image and slice in the package, sealed with
+generated_by.entries_sha256); a hand-filled or hand-edited record is refused.
 Exit 0 pass, 1 refused, 2 bad input.
 """
 import argparse
@@ -40,6 +44,72 @@ def _items(files):
         else:
             p = Path(item)
             yield str(p), p.read_bytes()
+
+
+WRITER = 'audit_image_review_record.py write'
+
+
+def entries_seal(entries):
+    """SHA-256 over the entries exactly as the writer made them. A hand edit (P16, 2026-11-04) no longer matches."""
+    return hashlib.sha256(json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+
+
+def write(files, ocr='auto', verdicts=None, by=None):
+    """Build the record from the package itself (P16, 2026-11-04: image-review.json is written only by this script).
+
+    Every distinct package image and every slice/frame inside it is read by the local recognizer (via
+    audit_new_english_images.scan_chinese -> chinese_audit). chinese = yes if the picture or any of its slices has Chinese;
+    no if the picture and all slices were read clean. Anything the recognizer could not settle (or every image, on a
+    computer with no recognizer) stays "pending" until a person gives a verdict: verdicts {sha256: 'yes'|'no'} with by=<who>.
+    """
+    import tempfile
+    import shutil
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import audit_new_english_images as ani
+    verdicts = {k.lower(): v for k, v in (verdicts or {}).items()}
+    tmp = Path(tempfile.mkdtemp(prefix='image-review-'))
+    try:
+        by_sha, root = {}, tmp / 'assets'
+        for name, data in _items(files):
+            if callable(getattr(data, 'read', None)):
+                data = data.read()
+            if name.lower().endswith(IMAGE_SUFFIXES + ('.plist', '.atlas', '.json', '.fnt')):
+                target = root / name.lstrip('/').replace('..', '_')
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+                if name.lower().endswith(IMAGE_SUFFIXES):
+                    by_sha.setdefault(hashlib.sha256(data).hexdigest(), name)
+        root.mkdir(exist_ok=True)
+        scan = ani.scan_chinese(tmp, ocr)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    per_file = {}
+    for item, verdict, text, _ in scan.get('items') or []:
+        f = item.get('file')
+        if f:
+            per_file.setdefault('assets/' + f if not f.startswith('assets/') else f, []).append((item['kind'], verdict, text))
+    entries = []
+    for digest, name in sorted(by_sha.items(), key=lambda kv: kv[1]):
+        got = per_file.get('assets/' + name.lstrip('/')) or []
+        slices = [g for g in got if g[0] == 'slice']
+        verdicts_here = {g[1] for g in got}
+        e = {'sha256': digest, 'file': name, 'atlas': bool(slices), 'slices': len(slices),
+             'recognizer': (scan.get('recognizer') or {}).get('name')}
+        if got and 'chinese' in verdicts_here:
+            e.update(status='done', chinese='yes', reviewer=WRITER, slices_reviewed=True)
+        elif got and verdicts_here == {'clean'}:
+            e.update(status='done', chinese='no', reviewer=WRITER, slices_reviewed=True)
+        else:
+            e.update(status='pending', chinese='unknown', slices_reviewed=False,
+                     why=scan.get('note') or 'recognizer could not settle this picture or one of its slices')
+        v = verdicts.get(digest)
+        if v in ('yes', 'no') and e['status'] == 'pending':
+            if not str(by or '').strip():
+                raise ValueError('--verdict needs --by <who looked>')
+            e.update(status='done', chinese=v, reviewer=str(by), slices_reviewed=True, verdict_source='person')
+        entries.append(e)
+    return {'schema': 'image_review.v1', 'generated_by': {'tool': WRITER, 'scan': scan.get('status'),
+                                                          'entries_sha256': entries_seal(entries)}, 'images': entries}
 
 
 def check(files, record_path):
@@ -66,6 +136,12 @@ def check(files, record_path):
         report['problems'].append('image review record missing or unreadable (%s): review every distinct image in the upload '
                                   'package and write docs/english/image-review.json' % exc)
         return report
+    gen = record.get('generated_by') if isinstance(record.get('generated_by'), dict) else {}
+    if gen.get('tool') != WRITER or gen.get('entries_sha256') != entries_seal(entries):
+        report['problems'].append('image-review.json was not written by %s (or was edited by hand afterwards): a hand-filled '
+                                  'record does not count (P16, 2026-11-04). Run: python3 audit_image_review_record.py write '
+                                  '--zip <upload.zip> --out docs/english/image-review.json' % WRITER)
+        return report
     by_sha = {}
     for e in entries:
         if isinstance(e, dict) and isinstance(e.get('sha256'), str):
@@ -91,12 +167,44 @@ def check(files, record_path):
     return report
 
 
-def main():
+def main_write(argv):
+    ap = argparse.ArgumentParser(prog='audit_image_review_record.py write', description=write.__doc__)
+    ap.add_argument('--zip', type=Path, required=True, help='upload package ZIP')
+    ap.add_argument('--out', type=Path, required=True, help='docs/english/image-review.json')
+    ap.add_argument('--ocr', default='auto', choices=['auto', 'vision', 'tesseract', 'windows', 'none', 'fake'])
+    ap.add_argument('--verdict', action='append', default=[], metavar='SHA256=yes|no',
+                    help='a person\'s verdict for a picture the recognizer left pending (needs --by)')
+    ap.add_argument('--by', help='who looked at the pictures given in --verdict')
+    a = ap.parse_args(argv)
+    verdicts = {}
+    for v in a.verdict:
+        sha, _, val = v.partition('=')
+        if val not in ('yes', 'no'):
+            ap.error('--verdict must be SHA256=yes or SHA256=no: %r' % v)
+        verdicts[sha.strip()] = val
+    try:
+        with zipfile.ZipFile(a.zip) as zf:
+            doc = write(((n, zf.read(n)) for n in zf.namelist() if not n.endswith('/')), a.ocr, verdicts, a.by)
+    except (OSError, ValueError, zipfile.BadZipFile) as exc:
+        print(json.dumps({'written': False, 'error': str(exc)})); return 2
+    a.out.parent.mkdir(parents=True, exist_ok=True)
+    a.out.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    pending = [e['file'] for e in doc['images'] if e['status'] != 'done']
+    still = [e['file'] for e in doc['images'] if e.get('chinese') == 'yes']
+    print(json.dumps({'written': str(a.out), 'images': len(doc['images']), 'pending': pending[:20], 'chinese_still_in_package': still[:20]},
+                     ensure_ascii=False))
+    return 0 if not pending and not still else 1
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ['write']:
+        return main_write(argv[1:])
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--zip', type=Path, required=True, help='upload package ZIP')
     ap.add_argument('--record', type=Path, required=True)
     ap.add_argument('--out', type=Path)
-    a = ap.parse_args()
+    a = ap.parse_args(argv)
     try:
         with zipfile.ZipFile(a.zip) as zf:
             r = check(((n, zf.read(n)) for n in zf.namelist() if not n.endswith('/')), a.record)

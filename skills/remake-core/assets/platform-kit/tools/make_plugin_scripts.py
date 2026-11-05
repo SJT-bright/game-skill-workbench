@@ -40,7 +40,12 @@ MODULES = [
 # v7.7.4: MissionFlow's preview text 'LOCAL PREVIEW: ...' -> 'Available in TikTok.' (audit_dev_text refused it).
 # v7.9 (手机问题源头约束): tiktok-touch-3x.js 7027f538 = kit 2.0 until v7.9 (coordinates only); the current file also
 # gives the engine a touchcancel for touches still down on tt.onHide / tt.onShow (猴子快跑 v12).
+# D2 (2026-11-04): RewardedService.plugin.js 16880d5b = 简化.11.5～11.12 (RewardedService 7a446726, no pass-through
+# mark for parts/rewarded-guard.js).
+# 简化.11.13 P10 (I1): SaveStore.plugin.js c6d7b35f = the plugin of the SaveStore.js before grant() / best().
 PREVIOUS = {'missionflow3x': ['9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2'],
+            'rewarded3x': ['16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a'],
+            'savestore3x': ['c6d7b35f87ec51d5c768a33636354506c238bd86f92ab5c5847687499cd31eb1'],
             'touch3x': ['7027f5388161bffe7dcf52231b5b8de27cbfc62e1fb8e519b3b8027788478b86']}
 TOUCH_SRC = 'build-templates/bytedance-mini-game/tiktok-touch-3x.js'
 STORAGE_SRC = 'parts/storage-guard.js'

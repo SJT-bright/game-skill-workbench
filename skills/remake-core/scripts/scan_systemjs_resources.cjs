@@ -1,9 +1,11 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'scan_systemjs_resources.cjs',usage:'Usage: run by its Python check script; reads the SystemJS module JSON payload on stdin.'});
 // General SystemJS resource inventory is performed independently from actual
 // cc setters by scan_runtime_resources. Private finite domains require an exact
 // program AND JSON-data binding selected by the Python host.
 const fs=require('fs'),cp=require('child_process'),path=require('path'),acorn=require('./vendor/acorn.cjs');
-const input=JSON.parse(fs.readFileSync(0,'utf8'));
+const input=JSON.parse((__cg&&require.main===module?__cg.stdinText('scan_systemjs_resources.cjs'):fs.readFileSync(0,'utf8')));
 function walk(n,fn,parents=[]){if(!n?.type)return;fn(n,parents);for(const [key,v]of Object.entries(n)){if(key==='loc')continue;if(Array.isArray(v))v.forEach(c=>walk(c,fn,[...parents,n]));else if(v?.type)walk(v,fn,[...parents,n])}}
 function staticAlias(n,ast,parents=[]){
  if(n?.type!=='Identifier')return n;

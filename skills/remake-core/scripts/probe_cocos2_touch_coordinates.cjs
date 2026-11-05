@@ -1,4 +1,6 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'probe_cocos2_touch_coordinates.cjs',usage:'Usage: python3 audit_upload_startup.py runs this probe; it reads {"files": {name: text}} JSON on stdin (the package\'s cocos2d-js and adapter) and runs the engine\'s own touch converter.'});
 // Executes the package's actual legacy Cocos converter, not a reimplementation.
 const vm=require('vm'),fs=require('fs');
 // Engine converter source: minified release build or the non-minified debug build (MergeShot2048 v82).
@@ -134,5 +136,5 @@ function probe(files){
  const rows=cases.map(([id,t,x,y])=>{const a=adapterDispatch?adapterDispatch({changedTouches:[t],touches:[t]}):manager.getTouchesByEvent(adapterNormalize?adapterNormalize({changedTouches:[t],touches:[t]},'onTouchStart'):{changedTouches:[t],touches:[t]},{});return{id,expected:{x,y,id:0},passed:a.length===1&&a[0].x===x&&a[0].y===y&&a[0].id===0,observed:a.map(t=>({x:t.x,y:t.y,id:t.id}))};});
  return{schema:'cocos2_touch_coordinates.v1',passed:rows.every(r=>r.passed),rows,boundary:'actual converter with controlled SDK payloads; not renderer/device acceptance'};
 }
-if(require.main===module){try{const payload=JSON.parse(fs.readFileSync(0,'utf8'));const r=probe(payload.files);console.log(JSON.stringify(r));process.exitCode=r.passed?0:1;}catch(e){console.log(JSON.stringify({passed:false,error:e.message}));process.exitCode=1;}}
+if(require.main===module){try{const payload=JSON.parse((__cg&&require.main===module?__cg.stdinText('probe_cocos2_touch_coordinates.cjs'):fs.readFileSync(0,'utf8')));const r=probe(payload.files);console.log(JSON.stringify(r));process.exitCode=r.passed?0:1;}catch(e){console.log(JSON.stringify({passed:false,error:e.message}));process.exitCode=1;}}
 module.exports={probe};

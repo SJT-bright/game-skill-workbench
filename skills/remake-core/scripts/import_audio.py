@@ -24,6 +24,10 @@ usage/ record is written in the same run. Per file:
   4. the file is written to <dest>/<name>, the credits.csv row added (other rows and columns kept; a row for the same
      output replaced), then the usage record <library>/usage/<sha256(project|import_audio)>.json updated
      (skipped with --no-usage, e.g. on a trial copy). If any file of the run is refused, nothing is written.
+  5. (P04) each file is added to the size ledger docs/startup/budget.json (startup_budget.py) with its bytes, as
+     "deferred" (AudioService loads sound after the first frame). A file that would push the first download (main
+     package + subpackages requested before the home page) over 10 MiB is refused before anything is written; a
+     sound that lands in the first download is a warning (put the audio folder in a ByteDance subpackage bundle).
 The library is --library, else $GAME_AUDIO_LIB, else ~/.game-audio-library/library.json, else ~/GameAudioLibrary (the
 gate's lookup; no machine path is written here). Prints one JSON line. Exit: 0 imported, 1 refused, 2 bad input.
 """
@@ -49,6 +53,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 import audit_audio_sources as gate  # noqa: E402  same library lookup, licence rules, game identity as AUDIO-02
 from package_gates import audio as pkg_audio  # noqa: E402  fail-sound words and the 2 s rule
+import startup_budget as budget  # noqa: E402  P04 size ledger docs/startup/budget.json
 
 CUT_SECONDS = pkg_audio.FAIL_TARGET_SECONDS
 FADE_SECONDS = pkg_audio.FAIL_FADE_SECONDS
@@ -285,6 +290,12 @@ def main(argv=None) -> int:
     names = [p['name'] for p in plans]
     if len(set(names)) != len(names):
         problems.append('two files would get the same name in %s' % a.dest)
+    budget_items = [(dest / p['name'], p['src'].stat().st_size, 'deferred') for p in plans]
+    if not problems:
+        try:   # P04: the size ledger; sound is never a home-page need (AudioService loads it after the first frame)
+            budget.record_many(project, budget_items, PART, dry_run=True)
+        except budget.BudgetError as error:
+            problems.append(str(error))
     if problems:
         print(json.dumps({'status': 'refused', 'problems': problems, 'written': []}, ensure_ascii=False))
         return 1
@@ -326,9 +337,18 @@ def main(argv=None) -> int:
         print(json.dumps({'status': 'error', 'error': str(error)}, ensure_ascii=False))
         return 2
     usage = None if a.no_usage else str(register_usage(lib.root, project, entries))
+    try:
+        ledger = budget.record_many(project, [(e['out'], None, 'deferred') for e in entries], PART)
+        budget_warnings = ledger['warnings']
+        first_mib = round(ledger['summary']['first_download_bytes'] / 1048576.0, 2)
+    except budget.BudgetError as error:   # cut files are smaller than the dry run's sources: not expected
+        budget_warnings = [str(error)]
+        first_mib = None
     print(json.dumps({'status': 'imported', 'files': [{'file': e['rel'], 'sha256': e['sha256'], 'kind': e['kind'],
                                                         'notes': e['notes']} for e in entries],
                       'credits': rel(project, credits), 'usage': usage or 'not registered (--no-usage)',
+                      'budget': 'docs/startup/budget.json', 'first_download_mib': first_mib,
+                      'budget_warnings': budget_warnings,
                       'warnings': warnings}, ensure_ascii=False))
     return 0
 

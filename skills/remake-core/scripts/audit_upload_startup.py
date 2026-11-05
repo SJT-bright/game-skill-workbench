@@ -22,6 +22,11 @@ def parser_fingerprint():
 
 def parse_package_source(source, node, signature):
     key = (node, signature, hashlib.sha256(source).hexdigest())
+    if not source.strip():
+        # 简化.11.14: an empty JavaScript file (a custom subpackage's placeholder game.js) has no requires; the parser
+        # (生成时预防 J1 批) answers empty stdin with not_run, which is for a person running it with no input.
+        return 0, '', {'dependencies': [], 'dynamic': [], 'bundle_internal_requires': 0, 'parser': 'acorn@8.15.0',
+                        'native_entry_protocols': []}, False
     if key in _PARSE_CACHE:
         result = _PARSE_CACHE.pop(key)
         _PARSE_CACHE[key] = result

@@ -71,7 +71,10 @@ class KitModuleVersions(unittest.TestCase):
 
     def test_edited_copy_unknown_and_other_engines(self):
         text = self.cur['RewardedService']
-        for word in sorted(set(x[2:] for x in K.load()['modules']['RewardedService']['current_only'] if x.startswith('p:')))[:9]:
+        # D2 2026-11-04: rename ONE current-only name. The current RewardedService only adds marks to 7a446726
+        # (its previous entry lists no names of its own), so a copy with every current-only name gone IS 7a446726
+        # (K6_kit_module_old); an edited copy keeps some of them.
+        for word in sorted(set(x[2:] for x in K.load()['modules']['RewardedService']['current_only'] if x.startswith('p:')))[:1]:
             text = text.replace(word, word + 'Zz')
         got = K.verify(bundle(('RewardedService', text)), self.man, 'new', 2)
         self.assertEqual([(f['id'], f['level']) for f in got], [('K6_kit_module_unknown', 'warn')])

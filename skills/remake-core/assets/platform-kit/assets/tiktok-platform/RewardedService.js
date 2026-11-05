@@ -1,5 +1,7 @@
 'use strict';
 var config = require('./PlatformConfig');
+// D2 2026-11-04 (ships with parts/rewarded-guard.js): this service's own createRewardedVideoAd call carries
+// root.__tiktokKitRewardedDirect, so the guard hands back the native ad and only this service times the 15 s.
 // Rewarded-ad timeout rule (Basil rule, remake-ads/references/ad-timeout-and-regression.md):
 // - request phase (until show() resolves) may time out: requestTimeoutMs, default 15 s;
 //   time spent in the background does not count.
@@ -36,6 +38,24 @@ function rootSDK(method) {
 function current(o) { try { return !o.isCurrent || o.isCurrent() === true; } catch (_) { return false; } }
 function errorCode(e) { return e && (typeof e.errorCode === 'number' || typeof e.errorCode === 'string') ? e.errorCode : null; }
 function safely(fn) { try { fn(); } catch (_) {} }
+// Same root object as parts/rewarded-guard.js reads (globalThis first, then window). The mark is set only for
+// the create call and put back as it was afterwards, so ad code outside this service still goes through the guard.
+function kitRoot() {
+  if (typeof globalThis !== 'undefined') return globalThis;
+  if (typeof window !== 'undefined') return window;
+  return typeof global !== 'undefined' ? global : null;
+}
+function createDirect(sdk, adUnitId) {
+  var root = kitRoot(), had = false, before;
+  if (root) {
+    had = Object.prototype.hasOwnProperty.call(root, '__tiktokKitRewardedDirect');
+    before = root.__tiktokKitRewardedDirect;
+    safely(function () { root.__tiktokKitRewardedDirect = true; });
+  }
+  try { return sdk.createRewardedVideoAd({adUnitId: adUnitId}); } finally {
+    if (root) safely(function () { if (had) root.__tiktokKitRewardedDirect = before; else delete root.__tiktokKitRewardedDirect; });
+  }
+}
 function makeResult(status, session, error, reason) {
   return {status: status, rewarded: status === 'completed', message: messages[status],
     phase: session ? session.phase : 'request', requestId: session ? session.id : null,
@@ -144,7 +164,7 @@ RewardedService.prototype.request = function (options) {
     try {
       if (typeof sdk.onHide === 'function') sdk.onHide(onHide);
       if (typeof sdk.onShow === 'function') sdk.onShow(onShow);
-      s.ad = sdk.createRewardedVideoAd({adUnitId: adUnitId});
+      s.ad = createDirect(sdk, adUnitId);
       if (!s.ad || typeof s.ad.onClose !== 'function' || typeof s.ad.onError !== 'function' || typeof s.ad.show !== 'function') {
         s.finish('unsupported'); return;
       }

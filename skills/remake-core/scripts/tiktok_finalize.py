@@ -10,6 +10,10 @@
     tiktok_finalize.py native  --native N --project P --board B [--app-id ID]
                                                                          native phase on the build folder (in place)
     tiktok_finalize.py inventory --project P                             list the original's platform code (English)
+                               生成时预防 P01/P14/P10: also rewire_todo, delete_list, kit_copies (tiktok_rewire.py)
+    tiktok_finalize.py rewire-ads --project P                            stage 2: rewire the original's rewarded ads
+                               to RewardedService (generated AdBridge.js) and hard-coded growth rewards to
+                               growthReward(); what it cannot recognise stays in rewire_todo (tiktok_rewire.py)
     tiktok_finalize.py sync    --project P --board B [--native N]       生成时预防 P02: before EVERY build (and on the
                                bytedance build folder after it, --native): put the standard parts back to the kit
                                bytes (kit_sources, build_templates; with --native also startup, touch, storage) and
@@ -406,7 +410,9 @@ def inventory(project):
             n = len(r.findall(text))
             if n:
                 out[key].append({'file': p.relative_to(project).as_posix(), 'hits': n})
-    return {'project': str(project), 'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'categories': out}
+    import tiktok_rewire      # 生成时预防 P01/P14/P10: rewire_todo, delete_list, kit_copies
+    return dict({'project': str(project), 'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'categories': out},
+                **tiktok_rewire.plan(project))
 
 
 # ---------------------------------------------------------------- sync (生成时预防 P02: parts from the first build on)
@@ -414,7 +420,7 @@ def inventory(project):
 # it ran on code without them (射击高手 v81 / 小熊拳击 R27 without the touch fix, 指尖麻将 v55 lost a patch on rebuild,
 # 拇指弹球 kept an old RewardedService.js). `sync` is the fast part of `source`: hash check, put the kit bytes back.
 SYNC_RECORD = Path('.tiktok-kit') / 'sync.json'
-SYNC_SOURCE_STEPS = ('kit_sources', 'build_templates')
+SYNC_SOURCE_STEPS = ('kit_sources', 'build_templates', 'frame_scan')   # frame_scan: 生成时预防 P18-3 (read only, ~1 s)
 SYNC_NATIVE_STEPS = ('startup', 'touch', 'storage')      # same order as NATIVE_STEPS: startup decides main.js first
 UI_KIT_KEY = 'parts/GameUIKit.js'                         # P05: the shared popup / button part (Cocos 2.4)
 
@@ -505,7 +511,7 @@ def _print(record):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     sub = ap.add_subparsers(dest='cmd', required=True)
-    for name in ('init', 'adopt', 'decide', 'source', 'native', 'inventory', 'sync'):
+    for name in ('init', 'adopt', 'decide', 'source', 'native', 'inventory', 'sync', 'rewire-ads'):
         p = sub.add_parser(name)
         p.add_argument('--project')
         p.add_argument('--board', choices=('remake', 'localize'))
@@ -536,6 +542,14 @@ def main(argv=None):
             if note:
                 print(note)
         return 0
+    if args.cmd == 'rewire-ads':          # 生成时预防 P01/P14: logic in tiktok_rewire.py
+        import tiktok_rewire
+        if not args.project:
+            ap.error('--project is required')
+        record = tiktok_rewire.rewire(args.project)
+        args.cmd = 'inventory'            # rewrite docs/english/platform-inventory.json from the new code
+        print('rewire-ads: %d rewired, %d left in rewire_todo, %d in delete_list' % (
+            len(record['rewired']), len(record['rewire_todo']), len(record['delete_list'])))
     if args.cmd == 'inventory':
         result = inventory(args.project)
         path = Path(args.project) / 'docs' / 'english' / 'platform-inventory.json'

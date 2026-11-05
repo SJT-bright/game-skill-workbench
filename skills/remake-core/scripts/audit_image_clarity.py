@@ -17,7 +17,11 @@ Images "below 2x" are reported for fixing but do not change the exit code.
 """
 import argparse
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'cocos-game-check' / 'package-check' / 'scripts'))
+from check_guard import engine_of, zero_items  # P20 shared guard
 
 SKIP_DIRS = {'library', 'temp', 'local', 'build', 'node_modules', '.git', 'profiles'}
 
@@ -138,11 +142,20 @@ def main():
     report = {'tool': 'audit_image_clarity', 'checked': checked, 'upscaled': upscaled,
               'below_2x': len(findings) - upscaled, 'findings': findings,
               'note': 'Static scene/prefab sprites only; sliced/tiled skipped; code-assigned sprites need screenshot review.'}
+    # P20 (问题普查 T20): 0 sprites checked (for example a Cocos 3.x project, whose sprite frames this static reader
+    # does not resolve) used to print exit 0 like a pass. It is "not_run" now, with the engine, exit 2.
+    report['engine'] = engine_of(a.project)
+    report['passed'] = not upscaled
+    zero_items(report, what='场景和预制体里没有能对上图片尺寸的 Sprite（Cocos %s）' % (report['engine']['version'] or report['engine']['major']),
+               need='运行时 dump 的 low_res 检查（art_check 已做）', engine=report['engine'])
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     print(json.dumps({'checked': checked, 'upscaled': upscaled, 'below_2x': len(findings) - upscaled,
-                      'worst': findings[:8]}, ensure_ascii=False))
+                      'worst': findings[:8], 'status': report.get('status', 'checked'),
+                      **({'reason': report['reason']} if report.get('status') == 'not_run' else {})}, ensure_ascii=False))
+    if report.get('status') == 'not_run':
+        return 2
     return 1 if upscaled else 0
 
 

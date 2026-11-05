@@ -206,7 +206,11 @@ class H8Writer(Tmp):
         p = project(self.d / 'p')
         AR.record_base(p, b)
         png(p / 'assets' / 'a.png', 30)
-        R.write(p, 'pass', {'status': 'pass'})
+        # 简化.11.14 (score-reward-1): an English receipt also carries the runtime score / reward page proof; with it the
+        # localize board still ignores the base sound below (English games keep the original audio)
+        import audit_value_presentation as V
+        proof = {'revision': V.REVISION, 'mode': 'runtime', 'passed': True, 'pages': 1, 'source_sha256': V.source_fingerprint(p)}
+        R.write(p, 'pass', {'status': 'pass', 'value_presentation': proof})
         self.assertEqual(R.check(p, policy='new')['level'], 'ok')
         (p / 'assets' / 'bgm.mp3').write_bytes((b / 'assets/audio/bgm.mp3').read_bytes())
         out = R.check(p, policy='new')

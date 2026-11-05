@@ -14,7 +14,11 @@ The lock is a folder in the user's home directory, so it works across Codex sess
 
   python heavy_lock.py run --project <game> --name "web build" -- <command> [args...]
   python heavy_lock.py run --project <game> --name "web build" --no-wait -- <command>   # busy -> exit 75 at once
+  python heavy_lock.py run --project <game> --name "web build" --run-timeout 20 -- <command>  # 20 min from the lock
   python heavy_lock.py status [--project <game>]
+生成时预防 P21 ③: a job's time limit starts when it holds the lock (--run-timeout; the command also gets
+HEAVY_LOCK_ACQUIRED_TS / HEAVY_LOCK_WAITED_S). Do not put an outer time limit around the whole heavy_lock call: the
+queue would eat into the job's own budget, and a build that waited was killed as "stuck".
   python heavy_lock.py release --force [--project <game>]   # only if a holder is known to be gone
 
 When it does queue it prints at once who holds the game, then one line per minute (the script waits, the model does
@@ -42,6 +46,10 @@ BROWSER_TESTS = ('chrome_touch.py', 'serve_preview.py', 'prepare_preview.py', 'b
                  'input_observer.js', 'checkin_harness.mjs', 'league_harness.mjs', 'modules_harness.mjs', 'ego-browser', 'ego-browser.exe')
 TEST_PREFIXES = ('audit_', 'check_', 'test_', 'plan_level_tests')
 TEST_WORDS = ('playwright', 'chrome_touch', 'ego-browser')   # whole word or inside a script name
+try:
+    POLL_S = max(0.05, float(os.environ.get('HEAVY_LOCK_POLL_S') or 3))   # tests use a fraction of a second
+except ValueError:
+    POLL_S = 3.0
 
 
 def is_test(cmd):
@@ -129,6 +137,29 @@ def release(expected=None):
     return True
 
 
+def run_timed(cmd, limit_s, queued_at):
+    """生成时预防 P21 ③: the clock starts when the lock is held, never while queueing. The command gets
+    HEAVY_LOCK_ACQUIRED_TS (epoch seconds) and HEAVY_LOCK_WAITED_S, so its own timers can start from the lock too;
+    limit_s > 0 stops the command that long after the lock was taken (exit 124)."""
+    acquired = time.time()
+    waited = max(0.0, acquired - queued_at)
+    env = dict(os.environ, HEAVY_LOCK_ACQUIRED_TS='%.3f' % acquired, HEAVY_LOCK_WAITED_S='%.1f' % waited)
+    print(json.dumps({'status': 'lock_held', 'waited_s': round(waited, 1), 'run_limit_s': limit_s or None,
+                      'clock': 'starts now; queue time is not counted'}, ensure_ascii=False), flush=True)
+    proc = subprocess.Popen(cmd, env=env)
+    try:
+        return proc.wait(timeout=limit_s if limit_s > 0 else None)
+    except subprocess.TimeoutExpired:
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+        print(json.dumps({'status': 'run_timeout', 'run_limit_s': limit_s, 'waited_s': round(waited, 1)}), flush=True)
+        return 124
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='action', required=True)
@@ -140,6 +171,9 @@ def main():
     r.add_argument('--no-wait', action='store_true', help='if the same game is busy, exit 75 at once instead of queueing')
     r.add_argument('--timeout', type=float, default=45, help='minutes to wait for the lock')
     r.add_argument('--stale', type=float, default=3, help='diagnostic age threshold in hours; never displaces a live or unknown owner')
+    r.add_argument('--run-timeout', type=float, default=0,
+                   help='minutes the command itself may run, counted from the moment the lock is held (queue time never '
+                        'counts); exceeded -> the command is stopped, exit 124. 0 = no limit')
     r.add_argument('command', nargs=argparse.REMAINDER)
     st = sub.add_parser('status')
     st.add_argument('--project')
@@ -176,7 +210,8 @@ def main():
     if not getattr(a, 'project', None):
         print('没写 --project：不排队、直接运行（全机锁已取消，用户 2026-10-23：不同游戏、不同会话从不互相等）', flush=True)
         return subprocess.run(cmd).returncode
-    deadline = time.time() + a.timeout * 60
+    queued_at = time.time()
+    deadline = queued_at + a.timeout * 60
     last_note = 0
     while not try_acquire(a.name, a.stale):
         h = holder() or {}
@@ -198,9 +233,9 @@ def main():
                                  ensure_ascii=False), flush=True)
             print(f"⏳ 同一个游戏正在写文件：「{h.get('name', '?')}」（开始于 {h.get('started', '?')}）；本命令自己排队，模型继续干别的", flush=True)
             last_note = time.time()
-        time.sleep(3)
+        time.sleep(POLL_S)
     try:
-        return subprocess.run(cmd).returncode
+        return run_timed(cmd, a.run_timeout * 60, queued_at)
     finally:
         h = holder()
         if h and h.get('pid') == os.getpid():

@@ -422,5 +422,115 @@ class MakeEconomyConfig(unittest.TestCase):
         self.assertEqual([(r['id'], r['details']) for r in rep['results'] if r['status'] == 'error'], [])
 
 
+# ---- P17 (生成时预防, 2026-11-04): capabilities first, no-wallet replacements, hard-coded reward scan ----
+# OLD_SCRIPTS=<11.12 remake-core/scripts> runs these against the old generator (expected: they fail).
+P17_DIR = Path(__import__('os').environ.get('OLD_SCRIPTS') or HERE)
+P17_SCRIPT = P17_DIR / 'make_economy_config.py'
+B_KEYS = ('level_reward', 'home_gift', 'checkin', 'wheel', 'chest', 'ad_coin', 'shop_free', 'upgrade', 'quests', 'items', 'skins')
+
+
+def run17(args, out):
+    return subprocess.run([sys.executable, str(P17_SCRIPT)] + args + ['--out-dir', str(out)], capture_output=True, text=True)
+
+
+class CapabilitiesAndNoWallet(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix='p17_econ_'))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def read(self, out, name):
+        return json.loads((out / name).read_text(encoding='utf-8'))
+
+    def test_capabilities_written_first_for_wallet_game(self):
+        out = self.tmp / 'w'
+        p = run17(CASES['B10'], out)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertTrue((out / 'economy_capabilities.json').is_file(), 'no capability record')
+        cap = self.read(out, 'economy_capabilities.json')
+        self.assertEqual({k: cap[k] for k in ('schema', 'wallet', 'items', 'skins', 'energy', 'wallet_plan')},
+                         {'schema': 'economy_capabilities.v1', 'wallet': True, 'items': True, 'skins': True, 'energy': True,
+                          'wallet_plan': 'keep'})
+        sys.path.insert(0, str(P17_DIR))
+        import economy_capabilities as ec
+        self.assertEqual(ec.validate(cap), [])
+        schema = json.loads((RULES_PATH.parent / 'economy_capabilities.schema.json').read_text(encoding='utf-8'))
+        self.assertEqual(set(schema['required']) - set(cap), set())
+        self.assertEqual(set(cap) - set(schema['properties']), set())
+
+    def test_no_wallet_with_energy_and_items_gets_replacements_not_B(self):
+        out = self.tmp / 'nw'
+        p = run17(['--no-wallet', '--mode', 'endless', '--kind', 'english', '--systems', 'items,energy,shortcut,revisit'], out)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        cfg, snap, cap = (self.read(out, f) for f in ('economy_config.json', 'economy_snapshot.json', 'economy_capabilities.json'))
+        self.assertEqual((cap['wallet'], cap['energy'], cap['wallet_plan']), (False, True, 'none'))
+        self.assertIsNone(cfg['B'])
+        self.assertEqual([k for k in B_KEYS if k in cfg], [], 'B-based amounts written for a game without a wallet')
+        nc = R['ECON-SHORTCUT']['no_coin_with_energy']
+        for s in ('shortcut', 'revisit'):
+            self.assertEqual((cfg[s]['currency'], cfg[s]['amount']), (nc['currency'], nc['amount']))
+        self.assertEqual((cfg['result_x2']['rule'], cfg['result_x2']['doubles'], cfg['result_x2']['never']),
+                         ('ECON-NOCUR', 'items_picked_up_this_round', 'score'))
+        rep = pc.economy_audit(snap, 'english')
+        st = {r['id']: r['status'] for r in rep['results']}
+        self.assertEqual([r['id'] for r in rep['results'] if r['status'] == 'error'], [])
+        self.assertEqual((st['ECON-B'], st['ECON-X2'], st['ECON-NOCUR'], st['ECON-SHORTCUT']), ('skip', 'skip', 'pass', 'pass'))
+
+    def test_no_wallet_no_energy_says_add_a_coin_and_skins(self):
+        out = self.tmp / 'nwne'
+        p = run17(['--no-wallet', '--mode', 'endless', '--kind', 'english', '--systems', 'shortcut,revisit'], out)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        cfg, cap = self.read(out, 'economy_config.json'), self.read(out, 'economy_capabilities.json')
+        self.assertEqual(cap['wallet_plan'], R['ECON-SHORTCUT']['no_coin_no_energy'])
+        self.assertEqual(cfg['shortcut']['action'], 'add_main_currency_and_skins')
+        self.assertIsNone(cfg['result_x2']['doubles'])               # nothing picked up: no x2 button, never the score
+        self.assertNotIn('amount', cfg['shortcut'])
+        self.assertIn('add a coin currency and skins', p.stdout)
+
+    def test_no_wallet_refuses_B_and_coin_systems(self):
+        for extra in (['--B', '10', '--systems', 'shortcut'], ['--systems', 'shortcut,checkin'], ['--systems', 'home_gift']):
+            with self.subTest(extra):
+                out = self.tmp / ('r%d' % abs(hash(tuple(extra))))
+                p = run17(['--no-wallet'] + extra, out)
+                self.assertEqual(p.returncode, 2, p.stdout + p.stderr)
+                self.assertIn('refused, nothing written', p.stderr)
+                self.assertFalse(out.exists())
+
+
+class HardcodedRewardScan(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix='p17_scan_'))
+        s = self.tmp / 'game' / 'assets' / 'scripts'
+        s.mkdir(parents=True)
+        (s / 'OnlineGift.ts').write_text('export class OnlineGift {\n  claim() {\n    this.save.coins += 30;\n  }\n}\n')
+        (s / 'KeyChest.js').write_text('function open(){\n  addCoins(50);\n  gold = gold + 20;\n}\n')
+        (s / 'Good.ts').write_text('const cfg = economy.home_gift;\nthis.save.coins += cfg.amount;\nscore += 10;\n'
+                                   'this.coins += 1; // economy-ok: refund of the 1 coin taken above\n// coins += 99 in a comment\n')
+        kit = self.tmp / 'game' / 'assets' / 'scripts' / 'platform-kit'
+        kit.mkdir()
+        (kit / 'RewardedService.js').write_text('coins += 5;\n')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_scan_reports_written_in_numbers_only(self):
+        out = self.tmp / 'o'
+        p = run17(['--B', '10', '--systems', 'checkin,shortcut,revisit', '--scan-project', str(self.tmp / 'game')], out)
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        got = json.loads(p.stdout.strip().splitlines()[-1])['hardcoded_rewards']
+        self.assertEqual(sorted((h['file'].rsplit('/', 1)[-1], h['line'], h['number']) for h in got),
+                         [('KeyChest.js', 2, '50'), ('KeyChest.js', 3, '20'), ('OnlineGift.ts', 3, '30')])
+
+    def test_scan_clean_project_exit_0_and_fast(self):
+        import time
+        (self.tmp / 'game' / 'assets' / 'scripts' / 'OnlineGift.ts').unlink()
+        (self.tmp / 'game' / 'assets' / 'scripts' / 'KeyChest.js').unlink()
+        t = time.time()
+        p = run17(['--B', '10', '--systems', 'checkin,shortcut,revisit', '--scan-project', str(self.tmp / 'game')], self.tmp / 'o')
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        self.assertLess(time.time() - t, 5)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

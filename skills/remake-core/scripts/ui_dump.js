@@ -410,5 +410,7 @@
     page: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio || 1 },
     canvas_css: [cr.x, cr.y, cr.width, cr.height], canvases, cameras: cams.length, truncated: nodes.length >= maxNodes, errors, nodes,
     settle,
+    // 总表 P19 ①: pages the dev build recorded (remake-core/assets/page-registry/PageRegistry.js); page_registry.py merge-dumps
+    pages: (() => { try { const r = window.__pageRegistry; return r && typeof r.list === 'function' ? r.list() : undefined; } catch (_) { return undefined; } })(),
   };
 }

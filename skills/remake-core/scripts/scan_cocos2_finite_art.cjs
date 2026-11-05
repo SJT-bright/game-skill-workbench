@@ -1,6 +1,8 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'scan_cocos2_finite_art.cjs',usage:'Usage: run by its Python check script; reads the art-registry JSON payload on stdin.'});
 // Reviewed, hash-pinned CommonJS art-registry profile. Never reads a caller manifest as a domain.
-const fs=require('fs'),acorn=require('./vendor/acorn.cjs'),input=JSON.parse(fs.readFileSync(0,'utf8'));
+const fs=require('fs'),acorn=require('./vendor/acorn.cjs'),input=JSON.parse((__cg&&require.main===module?__cg.stdinText('scan_cocos2_finite_art.cjs'):fs.readFileSync(0,'utf8')));
 const file=input.profile.business_file,source=input.files[file],ast=acorn.parse(source,{ecmaVersion:'latest'}),nodes=[],parents=new WeakMap();
 function walk(n,p){if(!n||!n.type)return;nodes.push(n);parents.set(n,p);for(const [k,v]of Object.entries(n))if(k!=='loc'){if(Array.isArray(v))v.forEach(x=>walk(x,n));else if(v&&v.type)walk(v,n)}}walk(ast,null);
 const text=n=>source.slice(n.start,n.end),key=n=>n?.key?.name??n?.key?.value;

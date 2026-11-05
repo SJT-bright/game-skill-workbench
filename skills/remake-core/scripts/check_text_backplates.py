@@ -3,6 +3,16 @@
 import argparse, json, hashlib
 from collections import deque
 from pathlib import Path
+# P20 (问题普查 T20): without Pillow this script ended in a Traceback, even for --help. The shared guard in
+# cocos-game-check/package-check/scripts/check_guard.py turns that into a "not_run" line (exit 2) and keeps --help.
+if __name__ == '__main__':
+    import importlib.util as _ilu
+    _cg = Path(__file__).resolve().parents[2] / 'cocos-game-check' / 'package-check' / 'scripts' / 'check_guard.py'
+    if _cg.is_file():
+        _spec = _ilu.spec_from_file_location('check_guard', _cg)
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        _mod.need_modules('PIL')
 from PIL import Image
 
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()

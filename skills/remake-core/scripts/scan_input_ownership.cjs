@@ -1,4 +1,6 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'scan_input_ownership.cjs',usage:'Usage: run by input_owner_inventory.py; reads {"files": ...} JSON on stdin.'});
 // Tokenize JS/TS source without executing it. Strings are event names only at
 // actual registration sites; comments, regexes and documentation are not code.
 const fs = require('fs');
@@ -208,5 +210,5 @@ try {
 }
 
 }
-const payload = JSON.parse(fs.readFileSync(0, 'utf8'));
+const payload = JSON.parse((__cg&&require.main===module?__cg.stdinText('scan_input_ownership.cjs'):fs.readFileSync(0,'utf8')));
 process.stdout.write(JSON.stringify(Array.isArray(payload.sources) ? payload.sources.map(analyze) : analyze(payload)));

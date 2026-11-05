@@ -1,4 +1,6 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'probe_cocos3_touch_coordinates.cjs',usage:'Usage: python3 audit_upload_startup.py runs this probe; it reads {"files": {...}, "engine": "<cocos-js text>"} JSON on stdin and records the coordinates the Cocos 3.x touch manager receives.'});
 // Cocos 3.x TikTok touch probe. TikTok touch points carry only identifier/screenX/screenY/force, while the
 // Cocos 3.8 minigame TouchInputSource reads clientX/clientY. This runs the package's actual game.js prefix
 // (web-adapter.js and every root module it requires before the SystemJS loader), then the engine's own SDK
@@ -236,7 +238,7 @@ function probe(files, engine) {
 
 if (require.main === module) {
   try {
-    const payload = JSON.parse(fs.readFileSync(0, 'utf8'));
+    const payload = JSON.parse((__cg&&require.main===module?__cg.stdinText('probe_cocos3_touch_coordinates.cjs'):fs.readFileSync(0,'utf8')));
     const result = probe(payload.files || {}, payload.engine);
     console.log(JSON.stringify(result));
     process.exitCode = result.passed ? 0 : 1;

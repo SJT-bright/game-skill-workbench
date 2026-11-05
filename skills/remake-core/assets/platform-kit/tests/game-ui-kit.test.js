@@ -1,5 +1,6 @@
 'use strict';
-// node tests/game-ui-kit.test.js   (生成时预防 P05: parts/GameUIKit.js, Cocos 2.4)
+// node tests/game-ui-kit.test.js   (生成时预防 P05: parts/GameUIKit.js, Cocos 2.4, and parts-3x/GameUIKit.ts, Cocos 3.x)
+// A2 批: every case runs on both engines (GAMEUI_KINDS=24 or 3x picks one); the hand-written copies are the same.
 // Each case runs the kit AND a "hand-written the old way" copy taken from the census (问题普查 20261104): the kit must
 // pass, the hand-written copy must show the bug. Taps go through env.tapAt (topmost active touch node, like 2.4).
 var assert = require('assert');
@@ -7,7 +8,9 @@ var S = require('./engine-stub-ui');
 
 var cases = [];
 function test(name, fn) { cases.push({name: name, fn: fn}); }
-function fresh() { var env = S.loadKit('24'); env.Kit._reset(); return env; }
+var KINDS = (process.env.GAMEUI_KINDS || '24,3x').split(',');
+var KIND = KINDS[0];
+function fresh() { var env = S.loadKit(KIND); env.Kit._reset(); return env; }
 function node(env, name, w, h, x, y, parent) {
   var n = new env.cc.Node(name); (parent || env.canvas).addChild(n);
   n.setContentSize(w, h); n.setPosition(x || 0, y || 0); return n;
@@ -208,8 +211,11 @@ test('10 wrapExisting: an original cc.Button runs once, SCALE becomes COLOR (add
 });
 
 var failed = 0;
-cases.forEach(function (c) {
-  try { c.fn(); console.log('PASS ' + c.name); } catch (e) { failed++; console.log('FAIL ' + c.name + '\n     ' + (e && e.message)); }
+KINDS.forEach(function (k) {
+  KIND = k;
+  cases.forEach(function (c) {
+    try { c.fn(); console.log('PASS [' + k + '] ' + c.name); } catch (e) { failed++; console.log('FAIL [' + k + '] ' + c.name + '\n     ' + (e && e.message)); }
+  });
 });
-console.log(failed ? '\n' + failed + ' failed' : '\nall ' + cases.length + ' passed (GameUIKit 2.4, Node stand-in; 待真机复测)');
+console.log(failed ? '\n' + failed + ' failed' : '\nall ' + cases.length * KINDS.length + ' passed (GameUIKit ' + KINDS.join(' + ') + ', Node stand-in; 待真机复测)');
 if (failed) process.exitCode = 1;

@@ -15,15 +15,20 @@ API:  check(images, pre_english, display=None) -> {"passed": bool, "problems": [
   {"images": {sha: name}} / [sha, ...], or (v7.8) the original recorded by `art_records.py base`
   (docs/art/base-assets.json); display: optional {name or sha: (width, height)}.
 CLI:  python3 audit_new_english_images.py --zip <upload.zip> --pre-english <list.json> [--out report.json]
-      python3 audit_new_english_images.py --make-list <Chinese original project dir> --out <list.json>
+      python3 audit_new_english_images.py --make-list <Chinese original project dir> --out <list.json> [--ocr auto|none]
+      P16 (2026-11-04): --make-list also cuts every atlas slice / animation frame, reads each with the local OCR and
+      writes art-replace-round1.json next to --out: "replace" = pictures/slices with Chinese (first art round), "manual_review"
+      = unreadable or no recognizer (no recognizer: everything is listed, nothing is called clean).
 Exit 0 pass, 1 refused, 2 bad input.
 """
 import argparse
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import struct
 import sys
+import tempfile
 import zipfile
 
 IMAGE_SUFFIXES = ('.png', '.jpg', '.jpeg', '.webp')
@@ -94,26 +99,133 @@ def check(images, pre_english, display=None):
             'problems': problems, 'passed': not problems}
 
 
-def make_list(project):
+def _chinese_audit():
+    """cocos-game-to-english/scripts/chinese_audit.py (English pack). None when this remake-core has no English skill next to it."""
+    d = Path(__file__).resolve().parent.parent.parent / 'cocos-game-to-english' / 'scripts'
+    if not (d / 'chinese_audit.py').is_file():
+        return None
+    if str(d) not in sys.path:
+        sys.path.insert(0, str(d))
+    import chinese_audit
+    return chinese_audit
+
+
+def _row(item, ocr_text=None, reasons=None):
+    r = {k: item.get(k) for k in ('kind', 'file', 'slice', 'atlas_file', 'atlas_format', 'pixels_sha256', 'file_sha256', 'size')
+         if item.get(k) is not None}
+    if ocr_text is not None:
+        r['ocr_text'] = ocr_text[:20]
+    if reasons:
+        r['reasons'] = reasons
+    return r
+
+
+def scan_chinese(project, ocr='auto'):
+    """P16 (生成时预防, 2026-11-04): at the START of English work, cut every atlas slice and animation frame (Cocos .plist,
+    Spine/libGDX .atlas, DragonBones *_tex.json, BMFont pages, via chinese_audit.current_state) and read each whole
+    picture and slice with the local recognizer (Vision on macOS, Windows.Media.Ocr via ocr_windows.ps1, tesseract).
+    Pictures/slices with Chinese go straight onto the first-round art replacement list; ones the recognizer could not
+    settle go to manual_review. No recognizer (or no Pillow, or no English skill next to remake-core): nothing is
+    called clean, every picture and slice goes to manual_review, and the reason is written down."""
+    C = _chinese_audit()
+    base = {'schema': 'art_replace_round1.v1', 'tool': 'audit_new_english_images --make-list', 'replace': [],
+            'manual_review': [], 'clean': 0, 'pictures': 0, 'slices': 0}
+    if C is None:
+        return dict(base, status='unavailable', recognizer=None,
+                    note='chinese_audit.py not found next to remake-core: open every picture and atlas slice yourself')
+    try:
+        rec, notes = C.pick_recognizer(ocr)
+        use = not isinstance(rec, C.NoRecognizer)
+        tasks, tmp = {}, tempfile.mkdtemp(prefix='english-make-list-')
+
+        def on_pixels(item, img):
+            if not use:
+                return
+            both = item.get('rotate', 0) in (90, 270)
+            key = C.receipt_key(item['pixels_sha256'], both, rec.name, rec.version)
+            item['ocr_key'] = key
+            if key in tasks:
+                return
+            prep, info = C.prepare_ocr_input(img, both)
+            p = Path(tmp) / (key + '.png')
+            prep.save(str(p), format='PNG')
+            tasks[key] = {'key': key, 'path': str(p), 'pixels_sha256': item['pixels_sha256'], 'size': list(img.size),
+                          'both': both, 'prepared': info}
+        try:
+            state = C.current_state(project, None, None, on_pixels)
+            results = rec.run(list(tasks.values())) if tasks else {}
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    except Exception as exc:  # no Pillow, unreadable project ...: fall back to "look at everything"
+        return dict(base, status='unavailable', recognizer=None, note='scan could not run (%s): open every picture and '
+                    'atlas slice yourself' % exc)
+    out = dict(base, status='ok' if use else 'no_recognizer',
+               recognizer={'name': rec.name, 'version': rec.version, 'note': rec.note, 'notes': notes})
+    if not use:
+        out['note'] = rec.note or 'no recognizer that reads Chinese: every picture and slice is listed for manual review'
+    out['items'] = []   # (item, verdict 'chinese' | 'clean' | 'manual', ocr text, reasons); dropped before writing
+    for item in state['items']:
+        k = item['kind']
+        if k not in ('image', 'slice', 'atlas_error'):
+            continue
+        if k == 'atlas_error' or item.get('error'):
+            out['items'].append((item, 'manual', None, [item.get('error') or 'unreadable']))
+            continue
+        out['pictures' if k == 'image' else 'slices'] += 1
+        if not use:
+            out['items'].append((item, 'manual', None, ['not read by a recognizer']))
+            continue
+        r = results.get(item.get('ocr_key')) or {'ok': False, 'error': 'recognizer returned nothing', 'items': []}
+        receipt = {'status': 'ok' if r.get('ok') else 'failed', 'error': r.get('error'), 'results': r.get('items') or []}
+        st, reasons, hits = C.classify(receipt)
+        text = [x.get('text') for x in receipt['results']]
+        out['items'].append((item, 'chinese' if hits else 'manual' if st == 'needs_review' else 'clean', text, reasons))
+    for item, verdict, text, reasons in out['items']:
+        if verdict == 'chinese':
+            out['replace'].append(_row(item, text, reasons))
+        elif verdict == 'manual':
+            out['manual_review'].append(_row(item, text, reasons))
+        else:
+            out['clean'] += 1
+    return out
+
+
+def make_list(project, ocr='auto', scan=True):
     out = {}
     for p in sorted(Path(project).rglob('*')):
         if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES and not {'library', 'temp', 'build'} & set(p.parts):
             out[hashlib.sha256(p.read_bytes()).hexdigest()] = p.relative_to(project).as_posix()
-    return {'source': str(Path(project).resolve()), 'images': out}
+    doc = {'source': str(Path(project).resolve()), 'images': out}
+    if scan:
+        scan = scan_chinese(project, ocr)
+        scan.pop('items', None)
+        doc['chinese_scan'] = scan
+    return doc
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--zip', type=Path)
     ap.add_argument('--pre-english', type=Path)
     ap.add_argument('--make-list', type=Path, help='Chinese original project: write its image SHA list to --out')
     ap.add_argument('--out', type=Path)
-    a = ap.parse_args()
+    ap.add_argument('--ocr', default='auto', choices=['auto', 'vision', 'tesseract', 'windows', 'none', 'fake'],
+                    help='--make-list: recognizer for the Chinese scan of every picture and atlas slice (default auto)')
+    ap.add_argument('--replace-out', type=Path, help='--make-list: first-round art replacement list '
+                    '(default: art-replace-round1.json next to --out)')
+    a = ap.parse_args(argv)
     try:
         if a.make_list:
             if not a.out:
                 ap.error('--make-list needs --out')
-            a.out.write_text(json.dumps(make_list(a.make_list), ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+            doc = make_list(a.make_list, a.ocr)
+            a.out.parent.mkdir(parents=True, exist_ok=True)
+            a.out.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+            scan = doc['chinese_scan']
+            rp = a.replace_out or a.out.parent / 'art-replace-round1.json'
+            rp.write_text(json.dumps(scan, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+            print(json.dumps({'images': len(doc['images']), 'scan': scan['status'], 'replace': len(scan['replace']),
+                              'manual_review': len(scan['manual_review']), 'replace_list': str(rp)}, ensure_ascii=False))
             return 0
         if not (a.zip and a.pre_english):
             ap.error('--zip and --pre-english are required')

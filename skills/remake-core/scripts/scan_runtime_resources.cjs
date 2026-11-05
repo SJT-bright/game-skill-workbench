@@ -1,10 +1,13 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'scan_runtime_resources.cjs',usage:'Usage: run by audit_runtime_resources.py; reads the script JSON payload on stdin.'});
 // Finite Cocos resource domains only. Unknown expressions stay unresolved.
 const acorn = require('./vendor/acorn.cjs');
 let input = '';
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => input += chunk);
 process.stdin.on('end', () => {
+  if (__cg && !input.trim()) __cg.notRun('scan_runtime_resources.cjs', 'no payload on stdin: run by its Python check script');
   try {
     const payload = JSON.parse(input), sites = [], escapes = [], settingsJs = {}, settingsWrites = [];
     const U = null, limit = 10000;

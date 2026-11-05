@@ -1,10 +1,13 @@
 'use strict';
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'parse_package_requires.cjs',usage:'Usage: run by its Python check script; reads one JavaScript source on stdin and prints its literal requires.'});
 // acorn 8.15.0, MIT; parses code without executing any game/SDK module.
 const acorn = require('./vendor/acorn.cjs');
 let source = '';
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => { source += chunk; });
 process.stdin.on('end', () => {
+  if (__cg && !source.trim()) __cg.notRun('parse_package_requires.cjs', 'no payload on stdin: run by its Python check script');
   try {
     let ast;
     const options = {ecmaVersion:'latest', allowHashBang:true, allowReturnOutsideFunction:true, locations:true};

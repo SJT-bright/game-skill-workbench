@@ -41,7 +41,20 @@ var variants = [
   {name: 'login_never_sent', file: 'SaveStore.js',
     before: 'this._loginOnce();\n  return result;', after: 'return result;'},
   {name: 'login_awaited_inside_load', file: 'SaveStore.js',
-    before: "try { if (typeof setTimeout === 'function') setTimeout(send, 0); else send(); } catch (_) {}", after: 'send();'}
+    before: "try { if (typeof setTimeout === 'function') setTimeout(send, 0); else send(); } catch (_) {}", after: 'send();'},
+  // 简化.11.13 P10: grant / best
+  {name: 'grant_calls_ui_even_when_save_failed', file: 'SaveStore.js',
+    before: "if (!r.ok) { if (problem) r.error = problem; return r; }", after: "if (!r.ok) { if (problem) r.error = problem; if (typeof onDone === 'function') onDone(r); return r; }"},
+  {name: 'grant_claim_id_not_checked', file: 'SaveStore.js',
+    before: "var same = this._result(true); same.already = true; return same;", after: ''},
+  {name: 'grant_claim_id_not_written', file: 'SaveStore.js',
+    before: "draft.meta.grants[id] = (draft.meta.grantSeq", after: "draft.meta.grantsLost = (draft.meta.grantSeq"},
+  {name: 'best_overwrites_with_lower', file: 'SaveStore.js',
+    before: "if (current !== null && score <= current) {", after: "if (current !== null && score === current) {"},
+  {name: 'best_skips_first_record', file: 'SaveStore.js',
+    before: "if (current !== null && score <= current) {", after: "if (current === null || score <= current) {"},
+  {name: 'grant_numeric_text_not_accepted', file: 'SaveStore.js',
+    before: "if (typeof value === 'string' && value.trim() !== '' && isFinite(Number(value))) return Number(value);", after: ''}
 ];
 var results = variants.map(function (v) {
   var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-neg-'));

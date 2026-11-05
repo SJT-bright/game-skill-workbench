@@ -233,7 +233,8 @@ class WriterRegressions(unittest.TestCase):
         self.assertTrue(self.out.is_file())
         warned = [w for w in report['warnings'] if '[legacy game: warning]' in w]
         self.assertTrue(any('runtime regression required' in w for w in warned), report['warnings'])
-        self.assertEqual(report['runtime_regression']['status'], 'failed')
+        # 总表 P19 ② (L2 批): no adapter is 「未执行」 (not_run), not failed; still a warning on a legacy game
+        self.assertEqual(report['runtime_regression']['status'], 'not_run')
         self.assertEqual(report['regressions']['policy'], 'legacy')
 
     def test_legacy_game_failed_suite_warned(self):

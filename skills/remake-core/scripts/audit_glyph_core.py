@@ -513,20 +513,8 @@ def english_game(project, board=None):
     "original" also counts as English (art_records.applies)."""
     root = Path(project) if project is not None else None
     if not board and root is not None:
-        for rel in (('.tiktok-kit', 'finalize-source.json'), ('.tiktok-kit', 'policy.json')):
-            try:
-                data = json.loads(root.joinpath(*rel).read_text(encoding='utf-8-sig'))
-            except (OSError, ValueError):
-                continue
-            if isinstance(data, dict) and data.get('board') in ('localize', 'remake'):
-                board = data['board']
-                break
-        if not board:
-            try:
-                text = (root / 'docs' / 'board.txt').read_text(encoding='utf-8-sig').strip().lower()
-            except OSError:
-                text = ''
-            board = text if text in ('localize', 'remake') else None
+        import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parent)); import feature_policy  # P20: the one board reader (same order as before: finalize-source, policy, board.txt)
+        board = feature_policy.board_of(root)[0]
     if board == 'localize':
         return True
     if root is None:
@@ -548,7 +536,17 @@ def project_of(dump_file):
 
 def main(argv=None):
     import argparse
-    from PIL import Image
+    try:  # P20: a missing Pillow is a not_run line (exit 2), --help still prints help
+        from PIL import Image
+    except ImportError:
+        import importlib.util as _ilu
+        _cg = Path(__file__).resolve().parents[2] / 'cocos-game-check' / 'package-check' / 'scripts' / 'check_guard.py'
+        if not _cg.is_file():
+            raise
+        _spec = _ilu.spec_from_file_location('check_guard', _cg)
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        _mod.need_modules('PIL', doc=__doc__)
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--project', help='Cocos project root (static digit_glyph_padding)')
     ap.add_argument('dumps', nargs='*', help='folders holding *ui-dump-*.json (runtime small_glyph_core)')

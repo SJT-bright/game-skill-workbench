@@ -394,6 +394,179 @@ function setup(options) {
     assert.strictEqual(t.view().message, MissionFlow.TEXT.claimed);
   });
 
+  // ---------- 简化.11.13 P10: SaveStore.grant / SaveStore.best ----------
+  // Each check takes a way of paying a reward (or of keeping a best score) and returns what went wrong.
+  // The kit's grant/best must pass every check; the old writings from the 2026-11-04 census must be caught.
+  function rewardEnv(coins, storage) {
+    var st = storage || memoryStorage();
+    var store = new SaveStore({coins: coins || 0}, {storage: st, key: 'p10', login: false}); store.load();
+    return {storage: st, store: store, game: {coins: store.get().coins}, ui: [], defaults: {coins: coins || 0}};
+  }
+  function reload(env) { var s = new SaveStore(env.defaults || {coins: 0}, {storage: env.storage, key: 'p10', login: false}); s.load(); return s.get(); }
+  var claimWays = {
+    kit_grant: function (env, id, amount) {
+      return env.store.grant({id: id, add: {coins: amount}}, function (r) { env.game.coins = r.data.coins; env.ui.push('coins:' + r.data.coins, 'leave'); });
+    },
+    // 方块冲冲 (02:163, 10-21): inventory changed in memory first, then saved; a failed save could not be retried.
+    old_blockdash_memory_first: function (env, id, amount) {
+      env.game.coins += amount; env.ui.push('coins:' + env.game.coins);
+      return env.store.update(function (d) { d.coins = env.game.coins; });
+    },
+    // 水杯传奇 HappyCup (03:398, 10-23): saved the base coins, then left the win page whatever the save answered.
+    old_happycup_leave_anyway: function (env, id, amount) {
+      var r = env.store.update(function (d) { d.coins += amount; });
+      env.game.coins = env.store.get().coins; env.ui.push('coins:' + env.game.coins, 'leave');
+      return r;
+    }
+  };
+  function claimWriteFails(way) {
+    var env = rewardEnv(10), bad = [];
+    env.storage.failWrite = true;
+    var r = way(env, 'win:3', 40);
+    if (r && r.ok) bad.push('reported ok');
+    if (env.store.get().coins !== 10) bad.push('saved coins changed');
+    if (env.game.coins !== 10) bad.push('wallet in memory changed to ' + env.game.coins);
+    if (env.ui.length) bad.push('UI ran: ' + env.ui.join(','));
+    env.storage.failWrite = false;
+    if (reload(env).coins !== 10) bad.push('storage changed');
+    return bad;
+  }
+  function claimReadbackFails(way) {
+    var env = rewardEnv(10), bad = [];
+    way(env, 'win:1', 50);
+    var committed = env.store.get().coins, ui = env.ui.length;
+    env.storage.transform = function (v) { return v.replace('"coins":90', '"coins":0'); };
+    var r = way(env, 'win:2', 30);
+    env.storage.transform = null;
+    if (committed !== 60) bad.push('first reward not committed: ' + committed);
+    if (r && r.ok) bad.push('reported ok');
+    if (env.store.get().coins !== committed) bad.push('saved coins became ' + env.store.get().coins);
+    if (reload(env).coins !== committed) bad.push('storage lost the committed ' + committed + ': ' + reload(env).coins);
+    if (env.game.coins !== committed) bad.push('wallet in memory became ' + env.game.coins);
+    if (env.ui.length !== ui) bad.push('UI ran after the failed read-back');
+    return bad;
+  }
+  function claimTwice(way) {
+    var env = rewardEnv(0), bad = [];
+    way(env, 'run:7:x2', 20); way(env, 'run:7:x2', 20);
+    if (env.store.get().coins !== 20) bad.push('paid ' + env.store.get().coins + ' for one claim id');
+    if (reload(env).coins !== 20) bad.push('storage has ' + reload(env).coins);
+    if (env.game.coins !== 20) bad.push('wallet shows ' + env.game.coins);
+    return bad;
+  }
+  function bestEnv(prefill) {
+    var st = memoryStorage();
+    if (prefill !== undefined) st.raw.p10 = JSON.stringify({coins: 0, bestScore: prefill, platformClaims: {shortcut: false, profile: false}, meta: {}});
+    var store = new SaveStore({coins: 0}, {storage: st, key: 'p10', login: false}); store.load();
+    return {storage: st, store: store, ui: []};
+  }
+  var bestWays = {
+    kit_best: function (env, score) { var r = env.store.best('bestScore', score); env.ui.push('best:' + r.best); return r; },
+    // 旋律动物园 MelodyZoo (学习卡 87): MAX_SCORE was read but never put on bestScoreLabel, so the compare starts at the
+    // scene's "0" and every score above 0 overwrites the saved best.
+    old_melodyzoo_label_zero: function (env, score) {
+      var saved = env.store.get().bestScore, label = 0; void saved;
+      if (score > label) env.store.update(function (d) { d.bestScore = score; });
+    },
+    // 海洋逃脱 OceanEscape (学习卡 91, game_over() 373-385): compares only when a record exists; with none it writes 0.
+    old_oceanescape_first_skipped: function (env, score) {
+      var rec = env.store.get().bestScore;
+      if (rec !== undefined && rec !== null) { if (score > rec) env.store.update(function (d) { d.bestScore = score; }); }
+      else env.store.update(function (d) { d.bestScore = 0; });
+    }
+  };
+  function bestFirstRun(way) {
+    var env = bestEnv(), bad = [];
+    way(env, 300);
+    if (env.store.get().bestScore !== 300) bad.push('first score saved as ' + env.store.get().bestScore);
+    return bad;
+  }
+  function bestLowerKept(way) {
+    var env = bestEnv(500), bad = [];
+    way(env, 120);
+    if (env.store.get().bestScore !== 500) bad.push('lower score overwrote the best: ' + env.store.get().bestScore);
+    way(env, 800);
+    if (env.store.get().bestScore !== 800) bad.push('higher score not saved: ' + env.store.get().bestScore);
+    return bad;
+  }
+
+  await test('grant_write_failure_changes_neither_wallet_nor_ui', function () {
+    assert.deepStrictEqual(claimWriteFails(claimWays.kit_grant), []);
+    var env = rewardEnv(10); env.storage.failWrite = true;
+    var r = env.store.grant({id: 'win:3', add: {coins: 40}}, function () { throw new Error('onDone must not run'); });
+    assert.strictEqual(r.ok, false); assert.strictEqual(r.error, 'write_failed');
+    env.storage.failWrite = false;
+    assert(env.store.grant({id: 'win:3', add: {coins: 40}}).ok, 'the same reward can be retried after a failed save');
+    assert.strictEqual(env.store.get().coins, 50);
+  });
+  await test('grant_readback_failure_keeps_committed_value', function () {
+    assert.deepStrictEqual(claimReadbackFails(claimWays.kit_grant), []);
+  });
+  await test('grant_same_id_twice_pays_once', function () {
+    assert.deepStrictEqual(claimTwice(claimWays.kit_grant), []);
+    var env = rewardEnv(0), calls = 0;
+    env.store.grant({id: 'level:4:first', add: {coins: 5}}, function () { calls++; });
+    var again = env.store.grant({id: 'level:4:first', add: {coins: 5}}, function () { calls++; });
+    assert.strictEqual(again.ok, true); assert.strictEqual(again.already, true); assert.strictEqual(calls, 1);
+    var s2 = new SaveStore({coins: 0}, {storage: env.storage, key: 'p10', login: false}); s2.load();
+    assert.strictEqual(s2.grant({id: 'level:4:first', add: {coins: 5}}).already, true, 'claim mark survives a restart');
+  });
+  await test('grant_coins_and_extra_change_in_one_write_and_spending_checked', function () {
+    var env = rewardEnv(30), w = env.storage.writes;
+    var r = env.store.grant({id: 'buy:skin_cat', add: {coins: -20}, apply: function (d) { d.skins = ['cat']; }});
+    assert(r.ok); assert.strictEqual(env.storage.writes, w + 1, 'coins + owned skin + claim mark in one write');
+    assert.deepStrictEqual(reload(env).skins, ['cat']); assert.strictEqual(reload(env).coins, 10);
+    assert.strictEqual(env.store.grant({add: {coins: -11}}).error, 'not_enough');
+    assert.strictEqual(env.store.grant({add: {cions: 5}}).error, 'unknown_key', 'a typo in the wallet key is refused');
+    assert.strictEqual(env.store.grant({add: {coins: 'x'}}).error, 'invalid_amount');
+    assert.strictEqual(env.store.get().coins, 10);
+  });
+  await test('grant_and_best_accept_old_numeric_text_like_storage_guard', function () {
+    var st = memoryStorage();
+    st.raw.p10 = JSON.stringify({coins: '120', bestScore: '500', lives: true, platformClaims: {shortcut: false, profile: false}, meta: {}});
+    var s = new SaveStore({coins: 0, lives: 3}, {storage: st, key: 'p10', login: false}); s.load();
+    assert(s.grant({add: {coins: 5, lives: 1}}).ok);
+    assert.strictEqual(s.get().coins, 125); assert.strictEqual(s.get().lives, 4, 'unreadable true counts as the default 3');
+    var b = s.best('bestScore', 120);
+    assert.strictEqual(b.ok, true); assert.strictEqual(b.best, 500); assert.strictEqual(b.isNew, false);
+  });
+  await test('grant_run_ids_keep_only_last_50', function () {
+    var env = rewardEnv(0);
+    env.store.grant({id: 'level:1:first', add: {coins: 1}});
+    for (var i = 0; i < 60; i++) env.store.grant({id: 'run:' + i + ':x2', add: {coins: 1}});
+    var g = env.store.get().meta.grants;
+    assert.strictEqual(Object.keys(g).filter(function (k) { return k.indexOf('run:') === 0; }).length, 50);
+    assert(g['level:1:first'], 'one-time ids are never dropped');
+    assert(!g['run:0:x2'] && g['run:59:x2']);
+  });
+  await test('best_first_write_and_lower_never_overwrites', function () {
+    assert.deepStrictEqual(bestFirstRun(bestWays.kit_best), []);
+    assert.deepStrictEqual(bestLowerKept(bestWays.kit_best), []);
+    var env = bestEnv(500), w = env.storage.writes;
+    var r = env.store.best('bestScore', 500);
+    assert.strictEqual(r.isNew, false); assert.strictEqual(env.storage.writes, w, 'equal score writes nothing');
+    env.storage.failWrite = true;
+    r = env.store.best('bestScore', 900);
+    assert.strictEqual(r.ok, false); assert.strictEqual(r.best, 500); assert.strictEqual(env.store.get().bestScore, 500);
+    assert.strictEqual(env.store.best('bestScore', NaN).error, 'invalid_value');
+  });
+  await test('p10_old_census_writings_are_caught', function () {
+    var caught = {
+      old_blockdash_memory_first: [claimWriteFails, claimReadbackFails, claimTwice],
+      old_happycup_leave_anyway: [claimWriteFails, claimTwice],
+      old_melodyzoo_label_zero: [bestLowerKept],
+      old_oceanescape_first_skipped: [bestFirstRun]
+    };
+    Object.keys(caught).forEach(function (name) {
+      var way = claimWays[name] || bestWays[name];
+      caught[name].forEach(function (check) {
+        var found = check(way);
+        if (process.env.P10_SHOW) console.error(name + ' / ' + check.name + ': ' + JSON.stringify(found));
+        assert(found.length > 0, name + ' must be caught by ' + check.name);
+      });
+    });
+  });
+
   // ---------- v7.7: SaveStore + parts/storage-guard.js on the same storage ----------
   await test('savestore_with_storage_guard_behaves_the_same', function () {
     var install = require(process.env.STORAGE_GUARD || path.join(__dirname, '..', 'parts', 'storage-guard.js'));

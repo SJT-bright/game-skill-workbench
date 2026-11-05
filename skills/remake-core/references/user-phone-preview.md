@@ -27,3 +27,7 @@ python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep
 手机比例（B7）：默认链接就是固定的竖屏手机（390×844，窗口小只等比缩小，不放大）；`--raw` 是检查用的整窗页面，不能给用户。
 
 普通试玩使用原适配器。用户要体验广告结果时，另按[用户可操作广告模拟](../../remake-ads/references/manual-ad-simulation.md)启动同版本的独立链接并标明“广告模拟试玩”。
+
+**给链接前自动截首页图（生成时预防 P21 ⑤ 后半）**：给人用的链接（`--keep`、`--open`、`--idle-minutes 0`）读回核对以后，`serve_preview.py` 自己用无头 Chrome/Edge（`browser_env.find_browser`，`CDP_BROWSER` 可指定）截一张游戏页的图，并读页面探针。全黑、只有一种颜色、12 秒后还停在加载页、页面报错（未捕获异常、未处理的 Promise、console.error、资源加载失败）就**不给链接**，退出码 1。没有浏览器、截图超时、浏览器没写出图时打印「没截图」，照样给链接，不算通过。Cocos 3.x 导出还没校准，有问题只警告。截图路径打在输出里，交链接前自己看一眼。不要另外手写截图或 sleep 等待来代替它。
+
+**手机外壳里鼠标就是手指（P13 ④）**：外壳里的游戏页由服务自动加上 `assets/preview-touch-bridge.js`，只改服务给出的 HTTP 内容，不改导出。在画布上按下、拖动、松开鼠标，会变成 touchstart、touchmove、touchend；窗口失焦时变成 touchcancel。字段有 identifier、clientX/clientY、screenX/screenY（等于游戏页坐标，和 TikTok 一样）、pageX/pageY 和 force，平台包 touch24、tiktok-touch-3x 和 TouchOwner 都能直接读。转换过的那次鼠标事件不再往下传，引擎不会收到两次。点在画布以外（模拟广告面板、vConsole）的照旧按鼠标处理。`--raw` 内部 QA 页面不加这个脚本。只认触摸的游戏在预览里也能拖动，不要在游戏里另写鼠标兼容代码。

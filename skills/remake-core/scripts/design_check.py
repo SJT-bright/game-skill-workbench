@@ -66,7 +66,8 @@ def samples_status(proj, board, reskin=False):
     1 home picture, a 20-second playtest, BGM 1 of 3, 3-5 sample levels. Only a reminder (None) or pass (True):
     a game that started before v7.8 never has to go back or stops shipping because of it. English games skip it.
     -> (status None|True|'skip', detail)."""
-    if board == 'localize':
+    import feature_policy
+    if board == 'localize' and feature_policy.applies('samples_first', board) == 'not_applicable':
         return 'skip', '英化游戏不用样板（Saul 2026-10-30）'
     path = Path(proj) / SAMPLES
     try:
@@ -109,9 +110,10 @@ def main():
     proj = a.project.resolve()
     if not (proj / 'assets').is_dir():
         ap.error('%s is not a Cocos project (no assets folder)' % proj)
-    board_file = proj / 'docs' / 'board.txt'
-    recorded = board_file.read_text(encoding='utf-8').strip().lower() if board_file.is_file() else ''
-    board = a.board or (recorded if recorded in ('localize', 'remake') else None)
+    # P20: the board comes from feature_policy.board_of (same order as art_check / audit_glyph_core), and the
+    # sub-audits get it as --board so none of them falls back to its own reading of docs/board.txt
+    import feature_policy
+    board, board_source = feature_policy.board_of(proj, a.board)
     out = (a.out or proj.parent / (proj.name + '-designcheck') / dt.datetime.now().strftime('%Y%m%d-%H%M%S')).resolve()
     if out.is_relative_to(proj):
         ap.error('output must be outside the project')
@@ -174,7 +176,7 @@ def main():
         add('样板先行（只提示）', state, detail)          # never 需处理: started games do not go back for it
 
     blocking = [r for r in rows if r['status'] == '需处理']
-    report = {'tool': 'design_check', 'schema': 1, 'board': board, 'checked': len(rows), 'failed': len(blocking),
+    report = {'tool': 'design_check', 'schema': 1, 'board': board, 'board_source': board_source, 'checked': len(rows), 'failed': len(blocking),
               'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows,
               'gate_ids': ['LEVEL-01', 'MOD-01', 'ECON-01', 'RANK-01', 'FEAT-00'],
               'time': dt.datetime.now().isoformat(timespec='seconds')}

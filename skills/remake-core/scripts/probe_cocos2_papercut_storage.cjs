@@ -1,3 +1,5 @@
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'probe_cocos2_papercut_storage.cjs',usage:'Usage: node probe_cocos2_papercut_storage.cjs [native-build-folder] [out.json]'});
 const load=require('./papercut_production_loader.cjs'),path=require('path'),assert=require('assert'),fs=require('fs');
 const root=process.argv[2]||path.resolve(__dirname,'../build/native');let checks=[];
 function test(name,fn){try{fn();checks.push({name,pass:true})}catch(e){checks.push({name,pass:false,error:e.message})}}

@@ -215,6 +215,8 @@ def main():
                 f"检查{j.get('checked', 0)}张；放大使用{j.get('upscaled', 0)}张，不到2倍{j.get('below_2x', 0)}张" + (f"。最严重：{worst}" if worst else '')
                 + ('。英化只要求新做的英文图达标，原游戏没改的图不追究' if soft_art and bad else ''),
                 'clarity.json')
+        elif code == 2 and j.get('status') == 'not_run':   # P20: 0 items checked is "跳过" (final stage: 需处理), not a pass
+            add('清晰度', '跳过', j.get('reason', '实际检查 0 项'), 'clarity.json')
         else:
             add('清晰度', '出错', text.strip()[-300:], 'logs/audit_image_clarity.log')
 
@@ -261,6 +263,9 @@ def main():
             + (f"；{j['review']}处待 GPT 看（中式英语、叫法、大小写、可能被截断）" if j.get('review') else '')
             + ('' if j.get('runtime_strings') else '；还没读到运行中游戏的文字：测试时用 chrome_touch 的 dump_ui 把每个页面读一遍')
             + '。审查单 copy-review.md', 'copy_quality.json')
+    elif code == 2 and j.get('status') == 'not_run':   # P20: no text at all = not run; final stage turns 跳过 into 需处理
+        add('英文文案', '跳过', j.get('reason', '实际检查 0 条文字') +
+            '；测试时用 chrome_touch 的 dump_ui 把每个页面读一遍', 'copy_quality.json')
     else:
         add('英文文案', '出错', text.strip()[-300:], 'logs/audit_copy_quality.log')
 

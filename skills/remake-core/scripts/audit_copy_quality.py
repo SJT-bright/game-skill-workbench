@@ -34,6 +34,8 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[1] / 'cocos-game-check' / 'package-check' / 'scripts'))
+from check_guard import NodeIndex, zero_items  # P20 shared guard (identity lookups, 0 items is not a pass)
 WORDS = HERE.parent / 'assets' / 'english-words.txt.gz'
 TRADEMARKS = HERE.parent / 'assets' / 'trademark-words.json'   # v7.8 E8: car and character names (Ferrari 458 ...)
 SKIP_DIRS = {'library', 'temp', 'local', 'build', 'node_modules', '.git', 'profiles'}
@@ -209,21 +211,20 @@ def runtime_strings(dump_inputs):
         if not isinstance(d, dict) or d.get('tool') != 'ui_dump' or d.get('error'):
             continue
         nodes = [n for n in d.get('nodes', []) if n.get('opacity', 1) >= 0.05]
-        buttons = [n['path'] for n in nodes if 'button' in n.get('comps', {})]
+        # P20 (问题普查 T20, 这也太牛了 11-04: 178 false overflow blocks): dump paths are built from names, so a text
+        # under one of several same-name siblings matched every sibling's path and took the wrong plate as its
+        # container. Ancestors are now matched by node identity (ui_dump id + ancestor_ids); old dumps fall back.
+        index = NodeIndex(nodes)
         for n in nodes:
             c = n.get('comps', {})
             lab = c.get('label') or c.get('richtext')
             if not lab or not str(lab.get('string', '')).strip():
                 continue
             text = clean(str(lab['string']))
-            owner = next((b for b in sorted(buttons, key=len, reverse=True) if under(n['path'], b)), None)
+            owner_node = index.nearest_ancestor(n, lambda x: 'button' in x.get('comps', {}), include_self=True)
+            owner = owner_node['path'] if owner_node else None
             # the box the text must fit in: its button, else the nearest ancestor with a sprite (plaque/frame)
-            container = None
-            if owner:
-                container = next(x for x in nodes if x['path'] == owner)
-            else:
-                anc = [x for x in nodes if 'sprite' in x.get('comps', {}) and x['path'] != n['path'] and under(n['path'], x['path'])]
-                container = max(anc, key=lambda x: x['path'].count('/')) if anc else None
+            container = owner_node or index.nearest_ancestor(n, lambda x: 'sprite' in x.get('comps', {}))
             out.append({'text': text, 'source': 'runtime', 'path': n['path'], 'where': '%s:%s' % (d.get('screen', f.stem), n['path']),
                         'screen': d.get('screen', f.stem), 'button': bool(owner), 'rect': n.get('rect'),
                         'container': container.get('rect') if container else None,
@@ -467,6 +468,8 @@ def main():
               'note': 'Automatic checks only. Natural wording, tone and meaning are judged by GPT from the review sheet (COPY-01).'}
     if binding is not None:
         report['binding'] = binding
+    # P20: no runtime text and no source text means nothing was checked; that is "not_run", never a pass
+    zero_items(report, what='没有运行时文字，也没有源码里的文字', need='chrome_touch.py dump_ui 读每个页面，或工程 assets 里的文字')
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
@@ -475,7 +478,11 @@ def main():
         sheet(dict(r, blocking=blocking), a.sheet)
     print(json.dumps({'checked': r['unique'], 'runtime_strings': r['runtime'], 'blocking': len(blocking), 'review': len(r['review']),
                       'found': [{k: x[k] for k in ('where', 'text', 'message')} for x in blocking[:8]],
-                      'look_at': [{k: x[k] for k in ('where', 'text', 'message')} for x in r['review'][:6]]}, ensure_ascii=False))
+                      'look_at': [{k: x[k] for k in ('where', 'text', 'message')} for x in r['review'][:6]],
+                      **({'status': 'not_run', 'reason': report['reason']} if report.get('status') == 'not_run' else {})},
+                     ensure_ascii=False))
+    if report.get('status') == 'not_run':
+        return 2
     return 1 if blocking else 0
 
 

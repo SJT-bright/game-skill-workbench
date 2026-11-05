@@ -1,3 +1,5 @@
+const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','cocos-game-check','package-check','scripts','check_guard.cjs'))}catch(e){return null}})();// P20: --help / no input never reaches JSON.parse
+if(__cg&&require.main===module)__cg.cli({tool:'probe_cocos2_reward_storage.cjs',usage:'Usage: node probe_cocos2_reward_storage.cjs <native-build-folder> <web-mobile-folder> [out.json]',minArgs:2});
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const NATIVE=path.resolve(process.argv[2]),WEB=path.resolve(process.argv[3]);
 function loadLedger(bundle,missing,typed=false){

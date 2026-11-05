@@ -1,4 +1,4 @@
-// GameUIKit 1.0.0 (Cocos Creator 2.4) - platform-kit standard part, 生成时预防 P05.
+// GameUIKit 1.1.1 (Cocos Creator 2.4) - platform-kit standard part, 生成时预防 P05 / P06.
 // Every NEW or CHANGED popup, button, toast and bitmap number goes through this file; do not hand-write them.
 // Copy unchanged to assets/tiktok-platform/GameUIKit.js (tiktok_finalize.py sync does it for new games):
 //   var UI = require('GameUIKit');
@@ -6,16 +6,23 @@
 //   UI.button(node, this.onRevive.bind(this), {name: 'Revive'});                   // throws when the handler is missing
 //   UI.wrapExisting(originalButtonNode, handler);                                   // English games: original buttons
 //   setTimeout(p.guard(function () { ... }), 800);                                 // dropped once p closes / reopens
+//   UI.valueLabel(musicPctNode, {longest: '100%'});                                // one line, SHRINK, width of the longest value
+//   UI.pausePage(canvas, {session, initRun, onHome});   UI.revivePage(...);   UI.resultPage(...)   // page templates (1.1.0)
+//   var release = UI.adoptPopup({isOpen: fn, setCovered: fn(covered)});  // 1.1.1: AdBoostKit popups join the stack
+// Cocos 3.x: parts-3x/GameUIKit.ts, the same interface, generated from this file by tools/make_gameuikit_3x.py.
 // Made from AdBoostKit 1.2.0 (ad-boost/ui-kit/src/kit-core.js + adapter-24.js): same popup, toast, digits, strips and
 // fitTrim; without the ad parts (adButton, doubleCheckbox, runAd stay in AdBoostKit). New here: button, wrapExisting,
-// popup.guard, close() always ends with the popup inactive, press feedback darkens instead of scaling.
+// popup.guard, close() always ends with the popup inactive, press feedback darkens instead of scaling; 1.1.0: valueLabel,
+// pause / revive / result pages with fixed button slots, setup({audio}) and setup({onPageOpen}); 1.1.1: adoptPopup
+// (another kit's popup joins the same popup stack: only the top layer is dimmed and shows its X).
 'use strict';
 
 
+// ==== GameUIKit core BEGIN (tools/make_gameuikit_3x.py copies this block into parts-3x/GameUIKit.ts) ====
 // Core: engine-neutral (taken from AdBoostKit kit-core.js 1.2.0). E is the engine adapter at the end of this
 // file. Every node draws at most one render component: pictures and text always sit on their own child nodes.
 function createGameUIKit(E) {
-  var Kit = {version: '1.0.0', kit: 'GameUIKit'};
+  var Kit = {version: '1.1.1', kit: 'GameUIKit'};
   var cfg = {
     tapGuardMs: 500,          // repeated taps inside this window are ignored
     closeMinSize: 104,        // close button hit area is at least this many design pixels
@@ -35,7 +42,10 @@ function createGameUIKit(E) {
     sfx: null,                // optional function (eventId): the game's sound player (ui_popup_open, ui_popup_close, ui_button_tap)
     digitFrames: null,        // optional {light: {...}, dark: {...}} glyph maps for Kit.digits({tone})
     stackPopups: true,        // a popup opened over another one hides the lower mask and close button
-    disabledText: 'Not available yet'   // toast for a tap on a disabled UI.button (opts.disabledText overrides)
+    disabledText: 'Not available yet',  // toast for a tap on a disabled UI.button (opts.disabledText overrides)
+    audio: null,              // optional AudioService (parts/AudioService.js): used for the sounds when sfx is not set
+    onPageOpen: null          // optional function (info): called on every popup() / open() and page template open()
+                              // (page registry, docs/logic/pages.json; info = {kind, page, name, buttons, slots, close, ads, opening})
   };
   var OFF_TINT = [110, 110, 110];
   var WHITE = [255, 255, 255];
@@ -53,11 +63,21 @@ function createGameUIKit(E) {
     return undefined;
   }
   // Sound hook: does nothing without Kit.setup({sfx}); a throwing player never breaks the UI.
+  // 1.1.0: without sfx, an AudioService given as setup({audio}) plays it (its own sound switch and throttle apply).
   function sfx(id) {
-    if (typeof cfg.sfx !== 'function') return;
-    try { cfg.sfx(id); } catch (e) { E.warn('GameUIKit sfx "' + id + '" failed: ' + (e && e.message)); }
+    var a = cfg.audio;
+    var play = typeof cfg.sfx === 'function' ? cfg.sfx
+      : (a && typeof a.playSfx === 'function' ? function (x) { return a.playSfx(x); } : null);
+    if (!play) return;
+    try { play(id); } catch (e) { E.warn('GameUIKit sfx "' + id + '" failed: ' + (e && e.message)); }
   }
   Kit._sfx = sfx;
+  // Page registry hook (setup({onPageOpen})): one call per popup() / open() and per page template open().
+  function pageHook(info) {
+    if (typeof cfg.onPageOpen !== 'function') return;
+    try { cfg.onPageOpen(info); } catch (e) { E.warn('GameUIKit onPageOpen failed: ' + (e && e.message)); }
+  }
+  Kit._pageHook = pageHook;
   function isThenable(v) { return !!v && typeof v.then === 'function'; }
   // Returns a wrapper that drops calls arriving within ms of the last accepted one.
   function guard(ms, fn) {
@@ -248,17 +268,29 @@ function createGameUIKit(E) {
         playIn();
         stack(handle, o);
         fitTrimSoon(root);
+        openings++;
+        if (o.pageHook !== false) pageHook(popupInfo());
         return true;
-      }
+      },
+      openings: function () { return openings; }
     };
+    var openings = 1;
+    // what the page registry gets (L2 批 pages.json); page templates send their own, richer record (pageHook:false here)
+    function popupInfo() {
+      return {kind: 'popup', page: o.page || null, name: o.name || 'GameUIPopup', buttons: (o.buttons || []).slice(),
+        slots: [], close: closeNode ? 'Close' : null, ads: (o.ads || []).slice(), opening: openings};
+    }
     playIn();
     stack(handle, o);
     fitTrimSoon(root);   // after the panel has built its content, before the first frame shows it
+    if (o.pageHook !== false) pageHook(popupInfo());
     return handle;
   };
 
   // Popup over popup: only the top one shows its dim layer and close button (two masks look much
   // darker, and a lower X stays visible but cannot be tapped). Only what the stack hid is restored.
+  // 1.1.1: popups of other kits (AdBoostKit) join the same stack through Kit.adoptPopup, so a GameUIKit page under
+  // an AdBoostKit popup (or the other way round) dims once and only the top X shows.
   var popupStack = [];
   function stack(h, o) {
     if (!cfg.stackPopups || o.stack === false) return;
@@ -271,10 +303,26 @@ function createGameUIKit(E) {
     popupStack.splice(i, 1);
     restack();
   }
+  function alive(h) {
+    if (!h.adopted) return h.isOpen();
+    try { return !!h.spec.isOpen(); } catch (e) { E.warn('GameUIKit adoptPopup isOpen failed: ' + (e && e.message)); return false; }
+  }
+  // an adopted popup is told only when its state changes; it leaves the stack uncovered (its own mask and X back)
+  function cover(h, covered) {
+    if (h.covered === covered) return;
+    h.covered = covered;
+    try { h.spec.setCovered(covered); } catch (e) { E.warn('GameUIKit adoptPopup setCovered failed: ' + (e && e.message)); }
+  }
   function restack() {
-    popupStack = popupStack.filter(function (h) { return h.isOpen(); });
+    var live = [];
+    for (var d = 0; d < popupStack.length; d++) {
+      if (alive(popupStack[d])) live.push(popupStack[d]);
+      else if (popupStack[d].adopted) cover(popupStack[d], false);
+    }
+    popupStack = live;
     for (var i = 0; i < popupStack.length; i++) {
       var h = popupStack[i], top = i === popupStack.length - 1;
+      if (h.adopted) { cover(h, !top); continue; }
       [['mask', h.mask], ['close', h.closeNode]].forEach(function (pair) {
         var n = pair[1], key = '__uiStackHid_' + pair[0];
         if (!n || !E.isValid(n)) return;
@@ -284,6 +332,35 @@ function createGameUIKit(E) {
     }
   }
   Kit.openPopups = function () { restack(); return popupStack.slice(); };
+  // 1.1.1 (生成时预防 A3 批): var release = UI.adoptPopup({isOpen: fn, setCovered: fn(covered)})
+  // A popup GameUIKit did not build (AdBoostKit.popup) joins the stack on top. When another popup opens over it,
+  // setCovered(true): its owner hides its own mask and X; when it is the top again, setCovered(false). Call
+  // release() when it closes (twice is harmless); a popup whose isOpen() turned false is dropped at the next
+  // restack all the same. Adopting the same isOpen function again replaces the old entry (a reopen). Leaving the
+  // stack while covered gives one setCovered(false), so a keep:true popup reopens with its mask and X.
+  Kit.adoptPopup = function (spec) {
+    if (!spec || typeof spec.isOpen !== 'function' || typeof spec.setCovered !== 'function')
+      throw new Error('GameUIKit adoptPopup: needs {isOpen: function, setCovered: function}');
+    var noop = function () { return false; };
+    if (!cfg.stackPopups || spec.stack === false) return noop;
+    for (var j = popupStack.length - 1; j >= 0; j--) {
+      var old = popupStack[j];
+      if (old.adopted && old.spec.isOpen === spec.isOpen) { popupStack.splice(j, 1); cover(old, false); old.released = true; }
+    }
+    var h = {adopted: true, kit: 'external', spec: spec, covered: false, released: false,
+      isOpen: function () { return !h.released && alive(h); }};
+    popupStack.push(h);
+    restack();
+    return function release() {
+      if (h.released) return false;
+      h.released = true;
+      var i = popupStack.indexOf(h);
+      if (i >= 0) popupStack.splice(i, 1);
+      cover(h, false);
+      restack();
+      return true;
+    };
+  };
 
   // ---------------------------------------------------------------- strips, atlases, bitmap fonts
   // Real-engine traps handled here (all seen in trials):
@@ -571,9 +648,329 @@ function createGameUIKit(E) {
     h.oldClickEvents = old;
     return h;
   };
+  // ---------------------------------------------------------------- value labels (P06 point 2, 1.1.0)
+  // UI.valueLabel(node, {longest: '100%'}) for any Label that shows a changing value (volume %, coins, score, timer):
+  // one line, overflow SHRINK, width = the LONGEST value it will ever show (not the value it shows now), so "100%" never
+  // wraps to two lines and "999999" never runs out of its box. opts: longest (required: '100%', '999999', '00:00:00'),
+  // value, maxWidth (the free space: a longer measure shrinks the text instead), pad (default 8), height, fontSize, color.
+  // (设置页 MUSIC 100%: the box was made for "50%" with wrapping on; at 100% the text took two lines over the slider)
+  // Returns {node, label, width, height, set(v)}.
+  Kit.valueLabel = function (node, o) {
+    o = o || {};
+    if (!node || !E.isValid(node)) throw new Error('GameUIKit.valueLabel: no valid node');
+    if (o.longest === undefined || o.longest === null || String(o.longest) === '') {
+      throw new Error('GameUIKit.valueLabel: give opts.longest, the longest value "' + E.nameOf(node) +
+        '" will show (e.g. "100%", "999999", "00:00:00")');
+    }
+    var label = E.labelOf(node) || E.label(node, o.fontSize || 30, o.color || WHITE, o.outline || null);
+    if (o.fontSize) label.fontSize = o.fontSize;
+    var longest = String(o.longest);
+    var fs0 = label.fontSize || 30;
+    var w = E.textWidth(node, label, longest);
+    if (!(w > 0)) w = longest.length * fs0 * 0.6;
+    w = Math.ceil(w + (typeof o.pad === 'number' ? o.pad : 8));
+    if (o.maxWidth && w > o.maxWidth) w = o.maxWidth;
+    var h = o.height || label.lineHeight || Math.round(fs0 * 1.25);
+    E.fixLabel(node, label, w, h);
+    var handle = {node: node, label: label, width: w, height: h, longest: longest,
+      set: function (v) { label.string = String(v); return handle; }};
+    handle.set(o.value === undefined ? (label.string || '') : o.value);
+    return handle;
+  };
+
+  // ---------------------------------------------------------------- page templates (P05 point 4, 1.1.0)
+  // UI.pausePage / UI.revivePage / UI.resultPage: the three pages every game needs, built from Kit.popup and Kit.button
+  // with FIXED button slots. A new button only goes into an empty slot (page.addButton(slot, spec, handler)); an unknown
+  // or taken slot throws, so nobody guesses coordinates (大西瓜 result: the added Claim sat on top of Next).
+  //  - pause by reason: with opts.session (parts/RunSession.js) each opening holds session.pause('popup') and gives it back
+  //    exactly once when the page closes; an ad holds session.pause('ad') until its result. Nothing is restored from a saved
+  //    boolean (甜点消消乐 / 密室消除: closing the pause popup put back a stale "paused" value, Resume froze the board).
+  //  - Restart rebuilds the WHOLE run: with a session, opts.initRun is required and Restart runs session.newRun(initRun)
+  //    (割草: Retry reset the score but kept the revives, the combo and the timers).
+  //  - rewards: opts.store.grant (SaveStore.grant, 生成时预防 I1) when the save has it, else store.update, else
+  //    opts.onReward. A failed save keeps the page open with a toast; a second tap never pays twice.
+  //  - ads: opts.ads = the platform RewardedService instance (request), or opts.runAd = AdBoostKit.runAd (same
+  //    arguments). Reward only on rewarded === true; one ad button per page (复活页和结算 x2 分两屏).
+  //  - sounds through setup({sfx}) or setup({audio}) (AudioService); setup({onPageOpen}) gets one record per opening.
+  // Slot positions are fractions of the panel size (x, y from the centre, y up); sizes are design pixels.
+  var PAGE_SLOTS = {
+    pause: [
+      {name: 'resume', x: 0, y: 0.14, text: 'RESUME', need: true},
+      {name: 'restart', x: 0, y: -0.02, text: 'RESTART', need: true},
+      {name: 'home', x: 0, y: -0.18, text: 'HOME', need: true},
+      {name: 'extra', x: 0, y: -0.34, text: ''}],
+    revive: [
+      {name: 'watchAd', x: 0, y: 0.02, text: 'REVIVE', ad: true, need: true},
+      {name: 'noThanks', x: 0, y: -0.15, text: 'NO THANKS', need: true},
+      {name: 'extra', x: 0, y: -0.32, text: ''}],
+    result: [
+      {name: 'double', x: 0, y: 0.06, text: 'x2 CLAIM', ad: true},
+      {name: 'claim', x: 0, y: -0.10, text: 'CLAIM', need: true},
+      {name: 'home', x: -0.24, y: -0.26, text: 'HOME', half: true, need: true},
+      {name: 'next', x: 0.24, y: -0.26, text: 'NEXT', half: true, need: true},
+      {name: 'extra', x: 0, y: -0.41, text: ''}]
+  };
+  Kit.pageSlots = function (kind) {
+    return (PAGE_SLOTS[kind] || []).map(function (s) { return s.name; });
+  };
+  function boxesMeet(a, b) {
+    return Math.abs(a.x - b.x) * 2 < a.w + b.w && Math.abs(a.y - b.y) * 2 < a.h + b.h;
+  }
+  function makePage(kind, parent, o) {
+    o = o || {};
+    var defs = PAGE_SLOTS[kind];
+    var session = o.session || null;
+    if (session && (typeof session.pause !== 'function' || typeof session.newRun !== 'function')) {
+      throw new Error('GameUIKit.' + kind + 'Page: opts.session must be a RunSession (parts/RunSession.js)');
+    }
+    var popupOpts = {name: o.name || ('GameUI' + kind.charAt(0).toUpperCase() + kind.slice(1) + 'Page'), keep: true,
+      panelFrame: o.panelFrame, panelSliced: o.panelSliced, panelInsets: o.panelInsets, titleFrame: o.titleFrame,
+      width: o.width || 560, height: o.height || 900, maskColor: o.maskColor, maskOpacity: o.maskOpacity,
+      closeFrame: kind === 'result' ? (o.closeFrame || false) : o.closeFrame, closeSize: o.closeSize, pageHook: false};
+    var popup = Kit.popup(parent, popupOpts);
+    var ps = E.getSize(popup.panel);
+    var info = E.node('Info', popup.body);         // the game puts score, reward digits, a countdown here
+    E.size(info, ps.width * 0.86, ps.height * 0.2);
+    E.pos(info, 0, ps.height * 0.27);
+    var slotW = o.slotWidth || Math.min(380, Math.round(ps.width * 0.7));
+    var slotH = o.slotHeight || 110;
+    var slots = {}, order = [];
+    defs.forEach(function (d) {
+      var w = d.half ? Math.min(slotW, Math.round(ps.width * 0.42)) : slotW;
+      var s = {name: d.name, def: d, x: Math.round(d.x * ps.width), y: Math.round(d.y * ps.height), w: w, h: slotH,
+        handle: null, ad: false, placementKey: null};
+      order.forEach(function (other) {
+        if (boxesMeet(s, other)) throw new Error('GameUIKit.' + kind + 'Page: slots ' + other.name + ' and ' + s.name + ' overlap; make the panel taller');
+      });
+      slots[d.name] = s; order.push(s);
+    });
+    var page = {kind: kind, popup: popup, root: popup.root, body: popup.body, panel: popup.panel, info: info,
+      grantMode: null, state: {claimed: false, busy: false}};
+    var release = null;            // session.pause('popup') of the current opening
+    var opening = 0;
+    function hold() {
+      if (session && !release) release = session.pause('popup');
+    }
+    function letGo() { if (release) { var r = release; release = null; r(); } }
+    function adCount() { return order.filter(function (s) { return s.ad && s.handle; }).length; }
+    function hasAds() { return !!((o.ads && typeof o.ads.request === 'function') || typeof o.runAd === 'function'); }
+    function fill(slotName, spec, handler) {
+      var s = slots[slotName];
+      if (!s) throw new Error('GameUIKit.' + kind + 'Page: no slot "' + slotName + '"; slots are ' + Kit.pageSlots(kind).join(', '));
+      if (s.handle) throw new Error('GameUIKit.' + kind + 'Page: slot "' + slotName + '" is taken; use an empty slot (' +
+        order.filter(function (x) { return !x.handle; }).map(function (x) { return x.name; }).join(', ') + ')');
+      spec = spec || {};
+      if (spec.ad) {
+        if (adCount() > 0) throw new Error('GameUIKit.' + kind + 'Page: one ad button per page (revive and result x2 are two screens)');
+        if (!hasAds()) throw new Error('GameUIKit.' + kind + 'Page: slot "' + slotName + '" is an ad button: pass opts.ads (the platform RewardedService instance) or opts.runAd');
+      }
+      var n = E.node(slotName, popup.body);
+      E.size(n, s.w, s.h);
+      E.pos(n, s.x, s.y);
+      var art = null;
+      if (spec.frame) art = pictureChild(n, 'Art', spec.frame, s.w, s.h);
+      var text = spec.text !== undefined ? spec.text : s.def.text;
+      if (text) {
+        var tn = E.node('Text', n);
+        var tl = E.label(tn, spec.fontSize || 34, spec.textColor || WHITE, spec.outline || null);
+        E.setLabel(tn, tl, String(text), s.w - 24);
+      }
+      s.ad = !!spec.ad;
+      s.placementKey = spec.placementKey || null;
+      s.handle = Kit.button(n, handler, {name: kind + '.' + slotName, art: art, width: s.w, height: s.h, close: false});
+      return s.handle;
+    }
+    function record() {
+      return {kind: 'page', page: kind, name: popupOpts.name, opening: opening,
+        buttons: order.filter(function (s) { return s.handle; }).map(function (s) { return s.name; }),
+        slots: order.map(function (s) { return s.name; }),
+        close: popup.closeNode ? 'Close' : null,
+        ads: order.filter(function (s) { return s.ad && s.handle; }).map(function (s) { return {slot: s.name, placementKey: s.placementKey}; })};
+    }
+    page.addButton = function (slotName, spec, handler) {
+      if (typeof spec === 'function' && handler === undefined) { handler = spec; spec = {}; }
+      var h = fill(slotName, spec, handler);
+      return h;
+    };
+    page.button = function (slotName) { var s = slots[slotName]; return s ? s.handle : null; };
+    page.slot = function (slotName) { var s = slots[slotName]; return s ? {name: s.name, x: s.x, y: s.y, width: s.w, height: s.h, taken: !!s.handle} : null; };
+    page.isOpen = function () { return popup.isOpen(); };
+    page.isHolding = function () { return !!release; };
+    page.close = function () {
+      letGo();
+      return popup.close();
+    };
+    page.open = function () {
+      if (!popup.open()) return false;
+      opening++;
+      page.state = {claimed: false, busy: false};
+      hold();
+      pageHook(record());
+      return true;
+    };
+    page.guard = function (cb) { return popup.guard(cb); };
+    page.record = record;
+    // the X of pause / revive does what the page's own "back" button does (never a silent close that keeps the pause)
+    popup.close(function () { if (typeof page._back === 'function') page._back(); else page.close(); });
+
+    // rewarded ad for one slot: pause('ad') until the result; a late result after the page closed pays nothing
+    page._runAd = function (slotName, onRewarded) {
+      if (page.state.busy) return null;
+      var st = page.state;
+      st.busy = true;
+      var s = slots[slotName];
+      var adRelease = session ? session.pause('ad') : null;
+      var req = {placementKey: s.placementKey || o.placementKey, ownerId: o.ownerId || ('gameui-' + kind),
+        isCurrent: function () { return popup.isOpen() && page.state === st; }};
+      var settled = false;
+      function finish(r) {
+        if (settled) return; settled = true;
+        st.busy = false;
+        if (adRelease) { adRelease(); adRelease = null; }
+        if (!popup.isOpen() || page.state !== st) return;          // closed or reopened meanwhile: no reward here
+        if (r && r.rewarded === true) { onRewarded(r); return; }
+        if (o.toast !== false && !(typeof o.runAd === 'function')) Kit.toast((r && r.message) || 'No reward was claimed.');
+      }
+      try {
+        if (typeof o.runAd === 'function') o.runAd(o.ads, {placementKey: req.placementKey, ownerId: req.ownerId, isCurrent: req.isCurrent}, finish);
+        else Promise.resolve(o.ads.request(req)).then(finish, function (e) {
+          E.warn('GameUIKit.' + kind + 'Page: ad request failed ' + (e && e.message));
+          finish({status: 'error', rewarded: false, message: 'The video could not open. Please try again.'});
+        });
+      } catch (e) {
+        finish({status: 'error', rewarded: false, message: 'The video could not open. Please try again.'});
+      }
+      return true;
+    };
+    // reward through the save: grant (one write, by id) > update > onReward
+    var key = o.currency || 'coins';
+    if (kind === 'result') {
+      if (o.store && typeof o.store.grant === 'function') page.grantMode = 'grant';
+      else if (o.store && typeof o.store.update === 'function') page.grantMode = 'update';
+      else page.grantMode = 'callback';
+    }
+    page._pay = function (amount, doubled) {
+      if (page.state.claimed) return true;
+      var add = {}; add[key] = amount;
+      var res;
+      if (page.grantMode === 'grant') {
+        var id = typeof o.grantId === 'function' ? o.grantId(session) : (o.grantId || (session ? 'run:' + session.run + ':result' : null));
+        res = o.store.grant({id: id, add: add, apply: o.applyReward}, function () {});
+      } else if (page.grantMode === 'update') {
+        res = o.store.update(function (d) {
+          var v = Number(d[key]);
+          d[key] = (isFinite(v) ? v : 0) + amount;
+          if (typeof o.applyReward === 'function') o.applyReward(d);
+        });
+      } else {
+        try { res = o.onReward(amount, doubled); } catch (e) { res = {ok: false, error: e && e.message}; }
+        if (res === undefined || res === true) res = {ok: true};
+      }
+      if (!res || res.ok !== true) {
+        Kit.toast(o.saveFailText || 'Could not save. Please try again.');
+        return false;
+      }
+      page.state.claimed = true;
+      safeCall(o.onClaimed, {amount: amount, doubled: !!doubled, already: !!res.already, currency: key});
+      return true;
+    };
+    page._fill = fill;
+    page._slots = slots;
+    page._open = function () { opening = 1; hold(); pageHook(record()); };
+    return page;
+  }
+  function need(o, k, kind) {
+    if (typeof o[k] !== 'function') throw new Error('GameUIKit.' + kind + 'Page: opts.' + k + ' must be a function (it is ' + typeof o[k] + ')');
+  }
+  function specFor(o, slot) { return (o.buttons && o.buttons[slot]) || {}; }
+  // checked before anything is built, so a wrong call leaves no half page on screen
+  function needAds(o, kind) {
+    if (!((o.ads && typeof o.ads.request === 'function') || typeof o.runAd === 'function')) {
+      throw new Error('GameUIKit.' + kind + 'Page: pass opts.ads (the platform RewardedService instance) or opts.runAd (AdBoostKit.runAd)');
+    }
+  }
+  // Pause page: Resume / Restart / Home (+ one empty slot). X = Resume.
+  //   opts: session (RunSession) + initRun (required with a session), onResume, onRestart(state), onHome (required)
+  Kit.pausePage = function (parent, o) {
+    o = o || {};
+    if (o.session && typeof o.initRun !== 'function') {
+      throw new Error('GameUIKit.pausePage: with a session, pass opts.initRun - Restart must rebuild the whole run (session.newRun(initRun))');
+    }
+    if (!o.session) { need(o, 'onRestart', 'pause'); E.warn('GameUIKit.pausePage without a RunSession: the game must pause and reset itself'); }
+    need(o, 'onHome', 'pause');
+    var page = makePage('pause', parent, o);
+    function resume() { page.close(); safeCall(o.onResume); }
+    page._back = resume;
+    page._fill('resume', specFor(o, 'resume'), resume);
+    page._fill('restart', specFor(o, 'restart'), function () {
+      page.close();
+      if (o.session) o.session.newRun(o.initRun);
+      safeCall(o.onRestart, o.session ? o.session.state : undefined);
+    });
+    page._fill('home', specFor(o, 'home'), function () {
+      page.close();
+      if (o.session && typeof o.session.resumeAll === 'function') o.session.resumeAll();
+      safeCall(o.onHome);
+    });
+    page._open();
+    return page;
+  };
+  // Revive page: WATCH AD revive + free NO THANKS (+ one empty slot). X = NO THANKS.
+  //   opts: ads | runAd, placementKey, onRevive (required), onGiveUp (required), session
+  Kit.revivePage = function (parent, o) {
+    o = o || {};
+    need(o, 'onRevive', 'revive'); need(o, 'onGiveUp', 'revive'); needAds(o, 'revive');
+    var page = makePage('revive', parent, o);
+    function giveUp() { page.close(); safeCall(o.onGiveUp); }
+    page._back = giveUp;
+    var ws = specFor(o, 'watchAd'); ws.ad = true; ws.placementKey = ws.placementKey || o.placementKey;
+    page._fill('watchAd', ws, function () {
+      page._runAd('watchAd', function (r) { page.close(); safeCall(o.onRevive, r); });
+    });
+    page._fill('noThanks', specFor(o, 'noThanks'), function () { if (!page.state.busy) giveUp(); });
+    page._open();
+    return page;
+  };
+  // Result page (x2): x2 CLAIM (ad, pays amount x 2) / CLAIM (free, right under it) / HOME / NEXT (+ one empty slot).
+  // HOME and NEXT pay the free amount first when nothing was claimed, so the reward is never lost.
+  //   opts: amount, currency ('coins'), store (SaveStore) | onReward, grantId, applyReward(draft), ads | runAd,
+  //         placementKey, double (false: no x2 slot), onClaimed(info), onNext, onHome (both required), session
+  Kit.resultPage = function (parent, o) {
+    o = o || {};
+    need(o, 'onNext', 'result'); need(o, 'onHome', 'result');
+    if (o.double !== false) needAds(o, 'result');
+    if (!(o.store && (typeof o.store.grant === 'function' || typeof o.store.update === 'function')) && typeof o.onReward !== 'function') {
+      throw new Error('GameUIKit.resultPage: pass opts.store (the SaveStore) or opts.onReward, so the reward is saved');
+    }
+    var page = makePage('result', parent, o);
+    var amount = Math.max(0, Math.round(Number(o.amount) || 0));
+    page._back = null;
+    if (o.double !== false) {
+      var ds = specFor(o, 'double'); ds.ad = true; ds.placementKey = ds.placementKey || o.placementKey;
+      page._fill('double', ds, function () {
+        if (page.state.claimed) return;
+        page._runAd('double', function () { page._pay(amount * 2, true); });
+      });
+    }
+    page._fill('claim', specFor(o, 'claim'), function () { if (!page.state.busy) page._pay(amount, false); });
+    function leave(fn) {
+      return function () {
+        if (page.state.busy) return;
+        if (!page._pay(amount, false)) return;       // save failed: stay, the toast says so
+        page.close();
+        safeCall(fn);
+      };
+    }
+    page._fill('home', specFor(o, 'home'), leave(o.onHome));
+    page._fill('next', specFor(o, 'next'), leave(o.onNext));
+    page._open();
+    return page;
+  };
+
   Kit._reset = function () { popupStack = []; toastState = {node: null, bg: null, label: null, timer: null, text: ''}; };
   return Kit;
 }
+// ==== GameUIKit core END ====
 
 // Engine adapter for Cocos Creator 2.4 (global cc). One render component per node.
 function makeGameUIAdapter24(cc) {
@@ -695,6 +1092,21 @@ function makeGameUIAdapter24(cc) {
       }
       if (!s.width) s = {width: Math.min(maxW, text.length * label.fontSize * 0.55), height: label.lineHeight};
       return s;
+    },
+    // GameUIKit.valueLabel: the label on the node, the one-line width of a text, and the fixed one-line SHRINK box
+    labelOf: function (n) { return (n && n.getComponent && n.getComponent(cc.Label)) || null; },
+    textWidth: function (n, label, text) {
+      var keep = {string: label.string, overflow: label.overflow, w: n.width, h: n.height};
+      label.overflow = cc.Label.Overflow.NONE;
+      label.string = text;
+      var s = measure(n, label);
+      label.string = keep.string; label.overflow = keep.overflow; n.setContentSize(keep.w, keep.h);
+      return s.width;
+    },
+    fixLabel: function (n, label, w, h) {
+      label.enableWrapText = false;
+      label.overflow = cc.Label.Overflow.SHRINK;
+      n.setContentSize(w, h);
     },
     rect: function (n, w, h, color, alpha) {
       var g = n.getComponent(cc.Graphics) || n.addComponent(cc.Graphics);

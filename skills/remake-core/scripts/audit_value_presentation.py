@@ -11,10 +11,11 @@ import json
 from pathlib import Path
 import re
 
-REVISION = 'score-reward-1'
-VALUE_WORD = re.compile(r'^(?:score|best(?: score)?|high ?score|rewards?|coins?|gems?|diamonds?|gold|points?|level|stage|energy|lives?|price|cost|balance)\s*[:：]?$', re.I)
+REVISION = 'value-words-symbols-2'
+VALUE_WORD = re.compile(r'^(?:score|best(?: score)?|high ?score|rewards?|coins?|gems?|diamonds?|gold|points?|level|lv[l]?\.?|stage|goal|target|wave|round|energy|lives?|price|cost|balance)\s*[:：]?$', re.I)
 VALUE_PATH = re.compile(r'(?:score|reward|coin|gem|diamond|currency|balance|energy|level|stage|price|cost|lives)', re.I)
 NUMERIC = re.compile(r'^[\s\d.,:/x×+%−-]*\d[\s\d.,:/x×+%−-]*$')
+VALUE_SYMBOL = re.compile(r'^[\s/⁄∕:：%％+＋−–—×÷=·•-]+$')
 SUFFIXES = {'.ts', '.js', '.json', '.fire', '.scene', '.prefab', '.fnt', '.ttf', '.otf', '.meta'}
 SKIP = {'node_modules', 'library', 'temp', 'build', '.git'}
 
@@ -36,7 +37,7 @@ def plain(value):
 def value_text(text, path=''):
     from audit_page_richness import value_label
     text = plain(text)
-    return bool(VALUE_WORD.fullmatch(text) or value_label(text) or (NUMERIC.fullmatch(text) and VALUE_PATH.search(path)))
+    return bool(VALUE_WORD.fullmatch(text) or VALUE_SYMBOL.fullmatch(text) or value_label(text) or (NUMERIC.fullmatch(text) and VALUE_PATH.search(path)))
 
 
 def scene_findings(project):
@@ -86,7 +87,7 @@ def scene_findings(project):
                 if not bitmap or re.search(r'[A-Za-z]', text.replace('x', '')):
                     findings.append({'kind': 'source_value_font', 'file': p.relative_to(root).as_posix(),
                                      'path': path, 'text': text, 'font': font,
-                                     'message': '固定词用整词图片；实时数量用生成的位图数字，不能用 TTF/系统字或整行普通字'})
+                                     'message': '固定词用整词图片；实时数量及独立分隔符用同套生成字形，不能用 TTF/系统字补齐'})
         except (OSError, ValueError, TypeError, AttributeError) as exc:
             findings.append({'kind': 'source_unreadable', 'file': p.relative_to(root).as_posix(), 'message': str(exc)})
     return findings
@@ -116,7 +117,7 @@ def runtime_findings(project, dumps):
             if not bitmap or re.search(r'[A-Za-z]', text.replace('x', '')):
                 findings.append({'kind': 'runtime_value_font', 'file': d.get('_file'), 'page': d.get('screen'),
                                  'path': n.get('path'), 'text': text,
-                                 'message': '分数/奖励固定词或数量仍是普通字体；运行时文字登记不豁免'})
+                                 'message': '数值固定词、数量或独立分隔符仍是普通字体；运行时文字登记不豁免'})
         # Reward overlays can exist in a dump marked gameplay: the generic fit checker intentionally skips world text.
         # Check only semantic HUD/reward value rows here, using its same measured glyph bodies.
         if d.get('kind') == 'gameplay':
@@ -133,6 +134,26 @@ def runtime_findings(project, dumps):
                     if ox >= 3 and oy >= .35 * min(left.body.h, right.body.h):
                         findings.append({'kind': 'text_on_text', 'page': d.get('screen'), 'path': left.path,
                                          'other': right.path, 'message': '分数/奖励文字与数量重叠（实际字宽）'})
+        # Whole-word sprites are text too. Check their actual painted frame against live digit bodies.
+        texts, pics, _ = T.collect(proj, d)
+        for n in d['nodes']:
+            sp = (n.get('comps') or {}).get('sprite') or {}
+            frame = str(sp.get('frame') or '')
+            if not VALUE_WORD.fullmatch(re.sub(r'^(?:txt_|word_)', '', frame)):
+                continue
+            box = T.node_box(n, *T.canvas_size(d))
+            if box is None:
+                continue
+            for t in texts:
+                if t.kind != 'label' or t.path.rsplit('/', 1)[0] != n['path'].rsplit('/', 1)[0]:
+                    continue
+                if not value_text(t.text, t.path):
+                    continue
+                ox, oy = box.overlap(t.body)
+                if ox >= 3 and oy >= .35 * min(box.h, t.body.h):
+                    findings.append({'kind': 'value_word_on_digits', 'file': d.get('_file'), 'page': d.get('screen'),
+                                     'path': n['path'], 'other': t.path, 'text': frame,
+                                     'message': '分数/奖励整词图片与实时数字重叠（实际 SpriteFrame 与字宽）'})
     # Same true glyph width checker used by art_check; no box-only shortcut and no declaration can waive it.
     fit = T.audit(project, dumps)
     blocking = {'text_on_text', 'text_over_words', 'text_on_icon', 'text_cut', 'text_off_screen',

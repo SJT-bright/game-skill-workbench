@@ -106,6 +106,16 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 `python scripts/audit_startup_loading.py --plan docs/test/startup-plan.json --runs <chrome_touch 输出文件夹...> --binding <review.json> --out <报告.json>`：读计时运行的报告（Ego Lite 里跑，`timing`/`record`/`network`/`cache`），逐次核预算、加载动画是否卡住、首页前的大文件、覆盖次数和四种加载故障。规则见 `cocos-game-check/startup/references/startup-loading-timing.md`，计划模板 `assets/startup-plan-template.json`。
 
+## 首页资源清单和体积账本（开工就分包，P04）
+
+开工第一步就跑，不等出包：`python3 -B scripts/first_screen.py --project <工程>`（英化在原版工程上跑，加 `--board localize`）。几秒跑完，写 `docs/startup/first-screen.json`（首页要的图、字体、脚本标 `home_needs`，其余标 `deferred`；模板字段照抄 `assets/startup-plan-template.json`，`home_assets_allowed` 自动填好）和 `docs/startup/budget.json`（开局下载的账本）。这几种当场报错：首页开局下载估计超过 10 MiB（主包＋首页前请求的分包＋引擎）、首页前请求了首页不用的分包、加载页或首页 onLoad/start 里加载声音、没有脚本加载也不在白名单里的场景留在主包。英化游戏后三种只提示，超 10 MiB 照样报错。
+
+- 生成时必须用这些，别手写：往工程里放文件的步骤都要记账（`startup_budget.record(...)`，命令行 `scripts/startup_budget.py --project <工程> add --file <文件>`），超 10 MiB 当场拒绝、什么都不写。`import_audio.py` 已自动记账；声音一律算 deferred，由 `AudioService` 在首页第一帧画出来之后才加载（H 批零件）。
+- `make_res_keys.py` 读到 first-screen.json 时，资源表多出 `ResKeys.HOME`（先预取）和 `ResKeys.DEFERRED`（首页之后用 ResLoader 加载）。
+- 资源和声音的加载调用只在生成的 `ResKeys` 表里（每条一个写死分包、路径、类型的 `request`），出包资源检查就从这张表列全路径。游戏代码必须写 `Res.request(ResKeys.x)`、`audio.register({click: {file: 'audio/click'}})`（文件要在表里，不在就不加载），别手写 `cc.resources.load(...)`、别写 `Res.load(...)`（检查把任何 `.load(` 当成列不出路径的加载，报在游戏代码上；`--strict` 也拦）。加了图或声音就重跑 `make_res_keys.py`。
+- `make_level_plan.py --project <工程> [--scene 名字]` 同时写构建场景白名单 `docs/startup/build-scenes.json`，Cocos 2.4 还把其余场景写进 `settings/builder.json` 的 `excludeScenes`，没用的场景不进构建。
+- 估算借用 `audit_package_estimate.py` 的算法（引擎余量、场景按 0.15 计），只算账本，不构建；最后的体积关还是出包时的 Native ZIP 检查。
+
 ## 截图总览图（给 GPT 一次看完）
 
 `python scripts/make_contact_sheet.py <截图文件夹或文件...> --out <总览图文件夹> --binding <review.json>`：把一轮测试的截图拼成编号总览图（默认每张 8 个、4 列、缩略图宽 300 像素），并写 `contact-sheets.json`（编号→原图路径和 SHA）。测试执行做完截图后跑一次，录屏证据图另拼一组；GPT 一次看完总览图，只打开可疑编号的原图，然后在 review 里写 `visual_verdict`。输出文件夹必须是空的；需要 Pillow。
@@ -114,7 +124,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 - **被占就开新的，绝不等待**（用户 2026-10-23）：浏览器测试（`chrome_touch.py`）、录屏、批量跑关、预览服务都不排队；每次在 Ego 里新开独立测试窗口，后台运行，可以多开；包在锁里也会直接放行。
 - `python scripts/browser_slots.py sweep [--close]`：新开窗口前查以前开的测试窗口、Ego 空间、预览服务，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；旧空间与心跳超时先核用途，别人还在用的不动（`chrome_touch.py`、`serve_preview.py` 启动时自动跑）；`register --kind ego_space --space-id <ID> --name ...` 登记手动新建的 TaskSpace，测试用完马上 `close --name "<线名>"`（或 `--id <slot>`；`release` 同义）：核进程退出；Ego 由拥有者先结束已绑定任务，脚本读回空间消失后才注销，退出码 2 时由拥有者核当前控制权并结束已绑定的自有空间，读回消失后重跑 close；不盲用历史 ID；`check --name "<线名>"` 退出码 1 表示这条线还有没关的，汇报"测试完成"前必须是 0（用户 2026-10-23，所有环节）；`ego-list` 列出 Ego 全部空间、`ego-finish --space-id <ID> ...` 只核对已由当前拥有者结束的空间消失，不凭"需要你处理"标签关闭空间（Ego 只给 AI 测试；`--keep` 只允许给用户的本地预览，Ego 空间登记 `--keep` 会被拒绝）；`snapshot --from <Web 导出>` 复制一份私有构建副本。
-- `python scripts/heavy_lock.py run --project <工程> --name "<线名+做什么>" -- <命令>`：只给同一个游戏写文件的活（构建、音频流水线），放后台跑；`--no-wait` 被占就立刻返回 75；`status --project <工程>` 看谁在占用。不写 `--project` 不排队。
+- `python scripts/heavy_lock.py run --project <工程> --name "<线名+做什么>" -- <命令>`：只给同一个游戏写文件的活（构建、音频流水线），放后台跑；`--no-wait` 被占就立刻返回 75；时间上限写在 `--run-timeout` 里（拿到锁才开始计时），别在 heavy_lock 外面再套总时间限制；`status --project <工程>` 看谁在占用。不写 `--project` 不排队。
 - `python scripts/cleanup_machine.py [--close]`：先跑一次 sweep；登记已完成且当前进程身份匹配的自有资源自动清理，未登记的历史/孤儿进程只列待核候选；父进程已不在不是独立关闭依据，别的会话还在跑的不关；不碰用户自己的 Chrome、Cocos 编辑器、Codex 和正在锁里运行的任务。
 - `serve_preview.py` 默认 20 分钟没人访问自动关闭（`--idle-minutes`）；每条测试线自己开（默认新端口），`--snapshot` 用私有副本，构建同时进行也不影响测试；给用户的试玩链接加 `--keep`，链接写在 Codex 回复里，不在 Ego 里打开交给用户。详见 `remake-core/references/machine-load.md`。
 

@@ -487,11 +487,12 @@ def main():
     proj = a.project.resolve()
     if not (proj / 'assets').is_dir():
         ap.error('%s is not a Cocos project (no assets folder)' % proj)
-    board_file = proj / 'docs' / 'board.txt'
-    recorded = board_file.read_text(encoding='utf-8').strip().lower() if board_file.is_file() else ''
-    board = a.board or (recorded if recorded in ('localize', 'remake') else 'remake')
-    style_file = proj / 'docs' / 'art-style.txt'
-    remake_art = board == 'remake' or (style_file.is_file() and style_file.read_text(encoding='utf-8').strip().lower() == 'remake')
+    # P20: board and rule applicability come from feature_policy.py only (was: docs/board.txt here, .tiktok-kit
+    # records in audit_glyph_core, so one run judged an English game as remake here and as English there)
+    import feature_policy
+    board, board_source = feature_policy.board_of(proj, a.board)
+    board = board or 'remake'
+    remake_art = feature_policy.applies('remake_art_style', board, proj) == 'block'
     dumps = (a.dumps or proj / 'docs' / 'test').resolve()
     out = (a.out or proj.parent / (proj.name + '-artcheck') / dt.datetime.now().strftime('%Y%m%d-%H%M%S')).resolve()
     if out.is_relative_to(proj):
@@ -837,7 +838,9 @@ def main():
     clear_ok = dark_ok and not low and not static
     add('清晰度（ART-04：运行时的图≥节点2倍、背景≥1.5倍）', clear_ok,
         '；'.join(low[:5] + static_txt)[:900] if (low or static) else
-        ('通过：运行时 dump 里的图和场景里的图都够清晰（已豁免 %d 条原图）' % len(exempt) if dark_ok else '没有页面报告：先 dump 全部页面（含游戏中）'),
+        (('通过：运行时 dump 里的图和场景里的图都够清晰（已豁免 %d 条原图）' % len(exempt) if cj.get('status') != 'not_run' else
+          '运行时 dump 里的图够清晰；场景/预制体静态检查没执行（%s），只靠运行时 dump' % cj.get('reason', '0 项'))
+         if dark_ok else '没有页面报告：先 dump 全部页面（含游戏中）'),
         'clarity.json')
 
     # 用户 2026-10-22：体力/货币/关卡进度放在最上方，货币贴合题材；有关卡就有地图（显示总关数），无尽游戏没有地图
@@ -870,7 +873,7 @@ def main():
         code, text = run('make_contact_sheet.py', [*shots, '--out', out / 'sheets', *binding], logs)
         add('总览图（给 Codex 看）', None if code == 0 else False, str(out / 'sheets') if code == 0 else text.strip()[-200:])
     blocking = [r for r in rows if r['status'] == '需处理']
-    report = {'tool': 'art_check', 'schema': 1, 'board': board, 'art_style': 'remake' if remake_art else 'original',
+    report = {'tool': 'art_check', 'schema': 1, 'board': board, 'board_source': board_source, 'art_style': 'remake' if remake_art else 'original',
               'assets_fingerprint': tree_fingerprint(proj), 'checked': len(rows), 'failed': len(blocking),
               'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows, 'look_list': LOOK,
               'base_generated': static_summary, 'time': dt.datetime.now().isoformat(timespec='seconds')}

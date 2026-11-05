@@ -29,12 +29,18 @@ def sha(b):
 OLD, NEW, BG = png(10, 10, 1), png(10, 10, 2), png(20, 20)
 
 
+def sealed(entries):
+    """P16 (2026-11-04): only a record written by audit_image_review_record.py write counts; tests seal theirs the same way."""
+    return {'schema': 'image_review.v1', 'images': entries,
+            'generated_by': {'tool': review.WRITER, 'entries_sha256': review.entries_seal(entries)}}
+
+
 class ReviewRecord(unittest.TestCase):
     def run_check(self, files, entries):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / 'image-review.json'
             if entries is not None:
-                p.write_text(json.dumps({'schema': 'image_review.v1', 'images': entries}))
+                p.write_text(json.dumps(sealed(entries)))
             return review.check(files, p)
 
     def entry(self, b, chinese='no', **kw):
@@ -98,7 +104,7 @@ class PackageEntryWiring(unittest.TestCase):
     def write(self, review_entries, pre):
         docs = self.project / 'docs' / 'english'
         docs.mkdir(parents=True, exist_ok=True)
-        (docs / 'image-review.json').write_text(json.dumps({'schema': 'image_review.v1', 'images': review_entries}))
+        (docs / 'image-review.json').write_text(json.dumps(sealed(review_entries)))
         (docs / 'pre-english-images.json').write_text(json.dumps(pre))
 
     def entry(self, b):

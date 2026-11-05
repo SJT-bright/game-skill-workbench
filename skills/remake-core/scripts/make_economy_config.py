@@ -31,6 +31,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import product_contract as pc  # noqa: E402
+import economy_capabilities as caps  # noqa: E402  (P17, 2026-11-04)
 
 SCHEMA = 'economy_config.v1'
 TOOL = 'make_economy_config.py'
@@ -89,8 +90,92 @@ def in_range(name, value, lo, hi):
         raise Refused('%s = %s is outside the rule range %s..%s' % (name, value, lo, hi))
 
 
+def parse_systems(a):
+    have, errors = set(), []
+    for s in parse_list(a.systems):
+        s = s.replace('-', '_')
+        if s not in SYSTEMS:
+            errors.append('unknown system %r; known: %s' % (s, ', '.join(SYSTEMS)))
+        have.add(s)
+    return have, errors
+
+
+def capabilities(a, table):
+    """P17 (2026-11-04): what the game HAS, written before any number (economy_capabilities.v1)."""
+    have, _ = parse_systems(a)
+    wallet = not a.no_wallet
+    ev = {'wallet': '--no-wallet on the command line' if a.no_wallet else '--B %s / --currency %s' % (a.B, a.currency),
+          'items': '--systems items/item_pack/ad_item' if have & {'items', 'item_pack', 'ad_item'} else
+          ('--no-items' if a.no_items else 'no item system in --systems'),
+          'skins': '--systems skins' if have & {'skins', 'skin_trial'} else 'no skins in --systems',
+          'energy': '--systems energy' if 'energy' in have else 'no energy in --systems'}
+    return caps.make(wallet, bool(have & {'items', 'item_pack', 'ad_item'}), bool(have & {'skins', 'skin_trial'}),
+                     'energy' in have, kind=a.kind, wallet_currency=a.currency if wallet else None, evidence=ev,
+                     rules_revision=table['revision'], written_by=TOOL)
+
+
+# Systems that pay or price in the main coin: a game without a wallet cannot have them (they need B).
+NO_WALLET_OK = {'items', 'ad_item', 'energy', 'shortcut', 'revisit'}
+
+
+def build_no_wallet(a, table, rules, cap):
+    """No out-of-round wallet: no B, so nothing is k x B. The B-based rewards get the rules-table replacements
+    (ECON-NOCUR result x2, ECON-SHORTCUT / ECON-REVISIT no-coin params); see economy_capabilities.no_wallet_substitutes."""
+    have, errors = parse_systems(a)
+    if a.B is not None:
+        errors.append('--no-wallet: there is no B (energy and score are not coins); drop --B')
+    coin = sorted(have - NO_WALLET_OK)
+    if coin:
+        errors.append('--no-wallet: %s pay or price in coins and need a wallet (Saul 2026-11-04: with no coin and no energy, '
+                      'add a coin and skins while localizing, then rerun with --B)' % ', '.join(coin))
+    if errors:
+        raise Refused('\n'.join(errors))
+    sub = caps.no_wallet_substitutes(cap, rules)
+    cfg = {'schema': SCHEMA, 'generated_by': TOOL, 'rules_revision': table['revision'], 'B': None, 'mode': a.mode,
+           'currency': None, 'wallet': False, 'no_wallet': sub,
+           'result_x2': dict(sub['result_x2'], note='no coin: never doubles the score (ECON-X2 v3.4 note)')}
+    inflows, currencies = [], []
+    if cap['energy']:
+        currencies.append({'id': 'energy', 'label': 'Energy', 'role': 'energy', 'evidence': 'economy_config.json#/energy',
+                           'origin': 'new'})
+        p = rules['ECON-ENERGY']
+        cfg['energy'] = {'ad_refill': p['ad_refill'], 'skip_if_no_room': p['skip_if_no_room']}
+        inflows.append({'id': 'energy_ad', 'rule': 'ECON-ENERGY', 'origin': 'new', 'currency': 'energy', 'amount': p['ad_refill'],
+                        'per': 'ad', 'needs_ad': True, 'x2': 'none', 'window': 'energy_ad',
+                        'evidence': 'economy_config.json#/energy/ad_refill'})
+    for s in ('shortcut', 'revisit'):
+        if s not in have:
+            continue
+        cfg[s] = sub[s]
+        if 'amount' in sub[s]:
+            inflows.append({'id': s, 'rule': sub[s]['rule'], 'origin': 'new', 'currency': sub[s]['currency'],
+                            'amount': sub[s]['amount'], 'per': 'once', 'needs_ad': False, 'x2': 'none',
+                            'evidence': 'economy_config.json#/%s/amount' % s})
+    if 'ad_item' in have:
+        cfg['ad_item'] = {'per_ad': rules['ECON-ADITEM']['per_ad']}
+    systems = {k: False for k in ('shop', 'skins', 'items', 'checkin', 'wheel', 'gift_home', 'shortcut', 'revisit', 'energy',
+                                  'ad_coin', 'ad_item')}
+    for s in have:
+        systems[SYSTEMS[s]] = True
+    systems['items'] = cap['items']
+    systems['result_x2'] = cap['items']   # ECON-NOCUR: x2 only when there are items to pick up this round
+    snap = {'schema': pc.ECON_SNAPSHOT_SCHEMA,
+            'game': {'name': a.name, 'kind': a.kind, 'mode': a.mode, 'economy_policy': rules['ECON-TIER']['policy']},
+            'meta': {'source': 'hand', 'tool': TOOL, 'generated_by': TOOL},
+            'B': {'value': None, 'how': 'no_wallet', 'evidence': 'economy_capabilities.json#/wallet'},
+            'currencies': currencies, 'inflows': inflows, 'sinks': [], 'systems': systems, 'configs': {},
+            'unknowns': []}
+    warnings = []
+    if not cap['energy']:
+        warnings.append('no coin and no energy: add a coin currency and skins to spend it on (English: while localizing), '
+                        'then rerun with --B (Saul 2026-11-04; capabilities wallet_plan add_main_currency_and_skins)')
+    return cfg, snap, warnings
+
+
 def build(a, table, rules):
     errors = []
+    if a.B is None:
+        raise Refused('--B is required (a game without an out-of-round coin wallet: use --no-wallet instead)')
     if not pc._num(a.B) or a.B <= 0:
         raise Refused('B must be a positive number')
     have = set()
@@ -482,7 +567,11 @@ def dumps(obj):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--B', type=float, required=True, help='one ordinary level base coins; may be fractional (72.5)')
+    ap.add_argument('--B', type=float, help='one ordinary level base coins; may be fractional (72.5); required unless --no-wallet')
+    ap.add_argument('--no-wallet', action='store_true', help='P17: the game has no out-of-round coin wallet (energy/score are '
+                    'not coins): no B; x2 / add-to-desktop / revisit get the rules-table replacements')
+    ap.add_argument('--scan-project', type=Path, help='P17: game project to scan for reward numbers written in code '
+                    '(coins += 30); found -> exit 1 (files are still written)')
     ap.add_argument('--systems', required=True, help='comma list: ' + ','.join(SYSTEMS))
     ap.add_argument('--out-dir', required=True, type=Path)
     ap.add_argument('--rules', type=Path, default=DEFAULT_RULES, help='economy_rules_table.json (default: %(default)s)')
@@ -511,18 +600,29 @@ def main(argv=None):
         a.B = int(a.B)  # B = 10, not 10.0, in the files the game reads
     try:
         table, rules = load_rules(a.rules)
-        cfg, snap, warnings = build(a, table, rules)
+        try:
+            cap = capabilities(a, table)        # P17: capabilities first, every number after
+        except ValueError as exc:
+            raise Refused('capability record: %s' % exc)
+        cfg, snap, warnings = (build_no_wallet if a.no_wallet else build)(a, table, rules, *([cap] if a.no_wallet else []))
     except Refused as exc:
         print('refused, nothing written:\n%s' % exc, file=sys.stderr)
         return 2
     a.out_dir.mkdir(parents=True, exist_ok=True)
+    (a.out_dir / caps_file()).write_text(dumps(cap), encoding='utf-8')
     (a.out_dir / 'economy_config.json').write_text(dumps(cfg), encoding='utf-8')
     (a.out_dir / 'economy_snapshot.json').write_text(dumps(snap), encoding='utf-8')
     report = pc.economy_audit(json.loads(dumps(snap)), a.kind)
-    print(json.dumps({'out_dir': str(a.out_dir), 'files': ['economy_config.json', 'economy_snapshot.json'], 'warnings': warnings,
-                      'audit_ok': report['ok'], 'audit_counts': report['counts'],
-                      'audit_errors': [r['id'] for r in report['results'] if r['status'] == 'error']}, ensure_ascii=False))
-    return 0
+    hits = caps.scan_hardcoded(a.scan_project) if a.scan_project else []
+    print(json.dumps({'out_dir': str(a.out_dir), 'files': [caps_file(), 'economy_config.json', 'economy_snapshot.json'],
+                      'warnings': warnings, 'audit_ok': report['ok'], 'audit_counts': report['counts'],
+                      'audit_errors': [r['id'] for r in report['results'] if r['status'] == 'error'],
+                      **({'hardcoded_rewards': hits} if a.scan_project else {})}, ensure_ascii=False))
+    return 1 if hits else 0
+
+
+def caps_file():
+    return 'economy_capabilities.json'
 
 
 if __name__ == '__main__':

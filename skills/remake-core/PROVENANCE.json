@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-04.english-simple.11.13",
+  "revision": "2026-11-04.english-simple.11.14",
   "skill": "remake-core",
-  "previous_provenance_sha256": "fe7d8a3a87f4c54cf924c15f2ff8960c911571b3a5170c8cfe2fd910d0cfbf3c",
+  "previous_provenance_sha256": "d5133803bafdf4cb55204baac8893ddb43f08818313b69aabe1e703b8860eeee",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -67,14 +67,19 @@
       "bytes": 8049
     },
     {
+      "path": "assets/page-registry/PageRegistry.js",
+      "sha256": "96d25e7e6684f5ea3853314dea6e379252e210bbb13c9369ce877adf7c546a85",
+      "bytes": 2741
+    },
+    {
       "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-      "sha256": "6d7108e77f05831497d8905f919a15198534fce67d8ee7d0a34c46ed7fb7a152",
-      "bytes": 9963
+      "sha256": "09abb66fd76eeb62c0056764b7fa0e08310d2856873d9a48ef12685c19b32b31",
+      "bytes": 10276
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "d4fc2e2037ef0bdc04d62b6bf96048f68ec340a436086c26513b1dfcc0e6a166",
-      "bytes": 28621
+      "sha256": "0ff6d170c68316d050b904c8fcda10b23112b8abb628a2baa16318c5ac975558",
+      "bytes": 39420
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -83,13 +88,13 @@
     },
     {
       "path": "assets/platform-kit/README_接入说明.md",
-      "sha256": "ed0c948037b585c067a1f165fe2e93638a02b2b6e90d27fb64c982045f68ced7",
-      "bytes": 54550
+      "sha256": "ac3fe474609f21aec721335f1328016b782d3d5cc53833f329e67246341b6ef3",
+      "bytes": 63955
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
-      "sha256": "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122",
-      "bytes": 10854
+      "sha256": "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc",
+      "bytes": 23796
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
@@ -103,13 +108,13 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/RewardedService.js",
-      "sha256": "7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52",
-      "bytes": 8666
+      "sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+      "bytes": 9797
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/SaveStore.js",
-      "sha256": "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf",
-      "bytes": 9135
+      "sha256": "9fca45e213abf061ffec93f6380e56c12977e26bdbe5a8a1b059807abc46428b",
+      "bytes": 14040
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
@@ -132,6 +137,16 @@
       "bytes": 5603
     },
     {
+      "path": "assets/platform-kit/parts/AudioService.js",
+      "sha256": "bc4a63061bebeab7ac0ff8087e63aeed8d619c68181e0ad97350001e3598925f",
+      "bytes": 15669
+    },
+    {
+      "path": "assets/platform-kit/parts/CapsuleAuto.js",
+      "sha256": "88aaf42b77f47ebe3df239c624ad0fff6b2902c1225e6e1303992943fa933f9d",
+      "bytes": 6325
+    },
+    {
       "path": "assets/platform-kit/parts/CapsuleLayout.js",
       "sha256": "ba5ba44835b8584a98c8780aa019e00f90b298df6e87a4224f3c666d6988dc50",
       "bytes": 7762
@@ -148,8 +163,8 @@
     },
     {
       "path": "assets/platform-kit/parts/GameUIKit.js",
-      "sha256": "77db8dc8d9fe1fd268bd7c99e5c693fe152fe16944bf2658e2e88494eaf624f5",
-      "bytes": 40225
+      "sha256": "98aecc9de698812e9fa796d01d4eda1a99992d3a046c1db13a27bcf0b5984842",
+      "bytes": 64211
     },
     {
       "path": "assets/platform-kit/parts/PhysicsClock.js",
@@ -157,9 +172,24 @@
       "bytes": 4301
     },
     {
+      "path": "assets/platform-kit/parts/ResLoader.js",
+      "sha256": "b0df7e382818201aefac6912d0b9b59b7b68f37fd388336a4bec7a15ff700de8",
+      "bytes": 13444
+    },
+    {
       "path": "assets/platform-kit/parts/RunSession.js",
       "sha256": "ed8ea69028d3168c167b377955dec84332c6b0affeef15c6325c0860c4e4f580",
       "bytes": 12904
+    },
+    {
+      "path": "assets/platform-kit/parts/ScreenFit.js",
+      "sha256": "d3051a65b97276abd795c3bca590b200bb98f306cad88b918e10e0f5d21b8643",
+      "bytes": 15770
+    },
+    {
+      "path": "assets/platform-kit/parts/TouchOwner.js",
+      "sha256": "8124f3cb710f11399ef28f5364ade18765c5b9afcc82ffbb87768d07e68e9971",
+      "bytes": 11812
     },
     {
       "path": "assets/platform-kit/parts/host-shim.js",
@@ -167,14 +197,29 @@
       "bytes": 6707
     },
     {
+      "path": "assets/platform-kit/parts/rewarded-guard.js",
+      "sha256": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f",
+      "bytes": 11591
+    },
+    {
       "path": "assets/platform-kit/parts/storage-guard.js",
       "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
       "bytes": 4483
     },
     {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
+      "sha256": "009a4ba5bcc6ff0de70d0e2bcf80ba88dd06ad5324cdd5331e554804e6be6dd4",
+      "bytes": 11139
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
+      "sha256": "0a83834a94fafd575c6f1a925a586cc7c232d9afa83519e7d30f6068c24ca356",
+      "bytes": 62581
+    },
+    {
       "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "a781709ef0967c7d9018bb3dbac5ebfa9fdbeb05b283985778122da1e886b82e",
-      "bytes": 7398
+      "sha256": "04071b69eb0a71ba6972d04ef3b7453747e6f5c34133b4273ccbd50d4cc02a05",
+      "bytes": 7570
     },
     {
       "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
@@ -193,13 +238,13 @@
     },
     {
       "path": "assets/platform-kit/plugins-3x/RewardedService.plugin.js",
-      "sha256": "16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a",
-      "bytes": 10886
+      "sha256": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
+      "bytes": 12017
     },
     {
       "path": "assets/platform-kit/plugins-3x/SaveStore.plugin.js",
-      "sha256": "c6d7b35f87ec51d5c768a33636354506c238bd86f92ab5c5847687499cd31eb1",
-      "bytes": 11319
+      "sha256": "dcf16d37f6032f97e799624f2da01ccf972686bc93305cd778f4f0a207f38a59",
+      "bytes": 16224
     },
     {
       "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
@@ -210,6 +255,11 @@
       "path": "assets/platform-kit/settings/bytedance.json",
       "sha256": "ece6d0a62eb9d7c54bd282065c1d76fd6c4c141ea3df0becf7a34a4fb82ddd49",
       "bytes": 156
+    },
+    {
+      "path": "assets/platform-kit/tests/audio-service.test.js",
+      "sha256": "bf357859fb6cee7d9052ae09856f2434fd681ec75628191a12365791ef5df31a",
+      "bytes": 15353
     },
     {
       "path": "assets/platform-kit/tests/boot-3x.test.js",
@@ -225,6 +275,11 @@
       "path": "assets/platform-kit/tests/boot.test.js",
       "sha256": "2dc73bf0fb5a59c77e1e1edcb14c8e91b397db2e3f4bfa75aaa818c29350a870",
       "bytes": 36150
+    },
+    {
+      "path": "assets/platform-kit/tests/capsule-auto.test.js",
+      "sha256": "8df1390bff664d12819028de7299777a4539c3b4221c22aba21cf233da35d68a",
+      "bytes": 6613
     },
     {
       "path": "assets/platform-kit/tests/capsule-layout.test.js",
@@ -243,8 +298,8 @@
     },
     {
       "path": "assets/platform-kit/tests/engine-stub-ui.js",
-      "sha256": "e199602aad6aa7c8da52e8e50ee30131611c1cc0e36ec2968a86f9dcd29c3c5c",
-      "bytes": 17361
+      "sha256": "8e591ea27e71e4bd7ffeafa97c17685fd7e21e44f175dadd331ba27e481af535",
+      "bytes": 19643
     },
     {
       "path": "assets/platform-kit/tests/fx-pool.test.js",
@@ -252,14 +307,34 @@
       "bytes": 10639
     },
     {
+      "path": "assets/platform-kit/tests/game-ui-adopt.test.js",
+      "sha256": "8e21c0f6782a31c717f4f9fc47576393540de27b85ae17abf995a050c39760e6",
+      "bytes": 8099
+    },
+    {
       "path": "assets/platform-kit/tests/game-ui-kit.test.js",
-      "sha256": "6f2b37ab836fd8dd675826248ae6a50199ef41f50dc004333f653292ff006156",
-      "bytes": 11448
+      "sha256": "20dff89399c16136595997ab03b18c413dbfc4c0b8556b985a566856005cbfb3",
+      "bytes": 11797
+    },
+    {
+      "path": "assets/platform-kit/tests/game-ui-pages.test.js",
+      "sha256": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8",
+      "bytes": 17055
     },
     {
       "path": "assets/platform-kit/tests/home-entries-negative-controls.js",
       "sha256": "ae56da710dfdd1bd2cdbf3f37bc13ee90f4e876937fc9cce5fe1c7a072b918de",
       "bytes": 3406
+    },
+    {
+      "path": "assets/platform-kit/tests/home-entries-slot.test.js",
+      "sha256": "5fa06b7053a22e33c960d4e3f8abbc51d821e5c106e9c84e60367378cd76752b",
+      "bytes": 11900
+    },
+    {
+      "path": "assets/platform-kit/tests/home-entries-touch.test.js",
+      "sha256": "c1f79d44180066a4ccc60795eb5bb1ad7a375262199a6120ccb5bc955822da75",
+      "bytes": 14117
     },
     {
       "path": "assets/platform-kit/tests/home-entries.test.js",
@@ -278,13 +353,13 @@
     },
     {
       "path": "assets/platform-kit/tests/kit-negative-controls.js",
-      "sha256": "097634ad7070a3dd55efd8c8629aeaee2e14d04b487f7efe54b653fb52f9400a",
-      "bytes": 4559
+      "sha256": "549a4dc04e354468662e04908bb89a5b4089425ed19db4c728989347cec994e9",
+      "bytes": 5725
     },
     {
       "path": "assets/platform-kit/tests/kit.test.js",
-      "sha256": "63a081fa9f41c24dffec09cd857ea8198cf11a756163aca91a40acc3abac8c1a",
-      "bytes": 26702
+      "sha256": "6982419dc8f6f43e7671f30d0277cd94d9f917335eed489a59b374550b81cdd3",
+      "bytes": 37000
     },
     {
       "path": "assets/platform-kit/tests/physics-clock.test.js",
@@ -297,19 +372,39 @@
       "bytes": 16129
     },
     {
+      "path": "assets/platform-kit/tests/res-loader-fixtures/ResMgr_dessert_v11.js",
+      "sha256": "a36f3dcefc79d548292ce9cdf610bfbc4230c0a5fd26dd86dc0120e8c6d0a95c",
+      "bytes": 2236
+    },
+    {
+      "path": "assets/platform-kit/tests/res-loader.test.js",
+      "sha256": "2fce0fb28ed073cbc8db3388439151027a0105aaf94b1ad1bea655e8c1dbf154",
+      "bytes": 11477
+    },
+    {
+      "path": "assets/platform-kit/tests/rewarded-guard.test.js",
+      "sha256": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b",
+      "bytes": 31270
+    },
+    {
       "path": "assets/platform-kit/tests/rewarded-timing.test.js",
       "sha256": "be02343b6f8f9d3913db6749acfdc8b90d0d46a471de6ab211b8d1249534517a",
       "bytes": 14248
     },
     {
       "path": "assets/platform-kit/tests/run-all.js",
-      "sha256": "036c8b90d4c2ba1a20e166d61c14cd0dd3678050c02acd3d07b90bccdfd891ce",
-      "bytes": 3936
+      "sha256": "64fda3a0b7bd0481799aa729ad0705dfbc764d70eb5801f1c0eb69f850b75317",
+      "bytes": 6273
     },
     {
       "path": "assets/platform-kit/tests/run-session.test.js",
       "sha256": "11205510dcd9d2bb752e3f79aa10663a1950bd69fb130cb7da3c1095f2096232",
       "bytes": 13654
+    },
+    {
+      "path": "assets/platform-kit/tests/screen-fit.test.js",
+      "sha256": "e482f1ccee3d92ef322ae7dc23b00994e1a7db1780bdbb68de1fc46edc420a27",
+      "bytes": 15152
     },
     {
       "path": "assets/platform-kit/tests/snake-regression/PlatformConfig.snake.js",
@@ -357,6 +452,11 @@
       "bytes": 7464
     },
     {
+      "path": "assets/platform-kit/tests/touch-owner.test.js",
+      "sha256": "925e43897c40a8db0bb07643d5ad442be0fa06ae3acae133091de3d8b27f3bf4",
+      "bytes": 13125
+    },
+    {
       "path": "assets/platform-kit/tools/build_kit_fingerprints.py",
       "sha256": "9946bee5b34d8c9881c741b9c99b649b449b11aaaea7898b1e0f702bb7981938",
       "bytes": 1781
@@ -370,6 +470,16 @@
       "path": "assets/platform-kit/tools/home_free_slot.js",
       "sha256": "d3419bf00946f40fdc5a7a899b3c8275dd151527a5384d428fece2dffd279c8e",
       "bytes": 10611
+    },
+    {
+      "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122.txt",
+      "sha256": "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122",
+      "bytes": 10854
+    },
+    {
+      "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c.txt",
+      "sha256": "632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c",
+      "bytes": 21495
     },
     {
       "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474.txt",
@@ -407,6 +517,11 @@
       "bytes": 5805
     },
     {
+      "path": "assets/platform-kit/tools/kit_versions/RewardedService/7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52.txt",
+      "sha256": "7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52",
+      "bytes": 8666
+    },
+    {
       "path": "assets/platform-kit/tools/kit_versions/RewardedService/d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1.txt",
       "sha256": "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1",
       "bytes": 8121
@@ -417,14 +532,24 @@
       "bytes": 5391
     },
     {
+      "path": "assets/platform-kit/tools/kit_versions/SaveStore/ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf.txt",
+      "sha256": "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf",
+      "bytes": 9135
+    },
+    {
       "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4.txt",
       "sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
       "bytes": 5288
     },
     {
+      "path": "assets/platform-kit/tools/make_gameuikit_3x.py",
+      "sha256": "2d2f3b9ac23737c61b7e4d20dc3c0e5a55e79cca512e1229779f70739a477e70",
+      "bytes": 3043
+    },
+    {
       "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-      "sha256": "a80c60fc2dfef4628d5551552ed097f4e9d1fb4c0fa40b2948b7aeb6403f0034",
-      "bytes": 12943
+      "sha256": "956be9340318a347b336a6fdf0cce1fc396786e199b3824c5f249f35c32d7161",
+      "bytes": 13404
     },
     {
       "path": "assets/platform-kit/webp-probe/cocos2.4/loading/webp-probe.webp",
@@ -450,6 +575,11 @@
       "path": "assets/platform-kit/webp-probe/cocos3.x-reference/webp-probe.js",
       "sha256": "2b5c06d66c9b93fa8c8271961b3666267777450b6cf43bf7fba0407ac278ef8a",
       "bytes": 4077
+    },
+    {
+      "path": "assets/preview-touch-bridge.js",
+      "sha256": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
+      "bytes": 3977
     },
     {
       "path": "assets/production-task-template.md",
@@ -602,6 +732,11 @@
       "bytes": 9493
     },
     {
+      "path": "references/game_capabilities.schema.json",
+      "sha256": "47c6facba8f3183f156e16aa73162e6e42b8faaefadea22a9a92052454b9982d",
+      "bytes": 2491
+    },
+    {
       "path": "references/host-adaptation.md",
       "sha256": "4a80c6216f470d064f380f904fb4f818c151ec9c40dff614a83da849fd0fc349",
       "bytes": 3412
@@ -628,8 +763,8 @@
     },
     {
       "path": "references/machine-load.md",
-      "sha256": "ea442a1f57a6001c32edd48d13511b3ee5cec80ef60a2a4b11049e77a0e8e5ad",
-      "bytes": 14115
+      "sha256": "daf88f3a3548f494f473fac5ced6f5cf313403f91e11efabadac4845d1187b4c",
+      "bytes": 14251
     },
     {
       "path": "references/method-provenance.md",
@@ -645,6 +780,11 @@
       "path": "references/optional-grok.md",
       "sha256": "b51f2e00174edbdee49e383631cceb6e43cde5587d64df4a1697cc928fb0dc18",
       "bytes": 3869
+    },
+    {
+      "path": "references/page-registry.md",
+      "sha256": "221bfeab560a25b8d92ea642fb8aee550b69e457b7182cb0b1c39a585b7e2402",
+      "bytes": 4000
     },
     {
       "path": "references/process-gates.md",
@@ -672,14 +812,19 @@
       "bytes": 470
     },
     {
+      "path": "references/rewire-ads.md",
+      "sha256": "333433ef6b3d117e11ff9c4a512563a0cc2a006f3dc9544208103960b89eccdf",
+      "bytes": 4015
+    },
+    {
       "path": "references/session-relay.md",
       "sha256": "890615ad7d657c5ca4ca0f2a47635f95cce5ffa7c819650b3d00683bd142a55a",
       "bytes": 3555
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "423a02ac95fdd17e9a75f015e86f819ae0a631d25f8aa59673e086d99a13c54d",
-      "bytes": 42243
+      "sha256": "b18031b90d72413b43ea85a6f49e13b43facaef6fa51912507b571ef00812128",
+      "bytes": 43757
     },
     {
       "path": "references/tiktok-home-growth.md",
@@ -698,8 +843,8 @@
     },
     {
       "path": "references/user-phone-preview.md",
-      "sha256": "05d1feb2c8dd8f861a1c416b13f2b734311fd176a739438874da34a0bec57477",
-      "bytes": 5659
+      "sha256": "e8dc2bf3ee0f4ecd6539e4b2778f9101f734831ee80ccdda8a0ae2baaa2ee839",
+      "bytes": 7244
     },
     {
       "path": "references/workflow-detail.md",
@@ -708,18 +853,18 @@
     },
     {
       "path": "references/workflow-tools.md",
-      "sha256": "621ccd0e195454f48d5fe0e7533561ab87c70f4bf7ec284a7a82a879cfe9ae0d",
-      "bytes": 19513
+      "sha256": "cb3fc8b07c32343fae954660063d69d31b4b92a265c6f4e471059d9bbdb03d70",
+      "bytes": 21967
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "87dc9c1da37d0b60ba09c0539344bfd9364c3b13c3dfb8ada1fbf08d7c6c2adb",
-      "bytes": 69896
+      "sha256": "a21ffdd419cb8d04c795963c44ab95b082bd4e66d3d85c723a16d0f9f88c2de8",
+      "bytes": 70752
     },
     {
       "path": "scripts/art_receipt.py",
-      "sha256": "efd23c7a7a05d9d206ebfc336659e5c80ab1f0db9f60f30f17807e5b9c765ba5",
-      "bytes": 19139
+      "sha256": "7b0bfd32a0f238b9e94429862df2fd9a64dac97b86e5f3d555cabe32f3e0a834",
+      "bytes": 20214
     },
     {
       "path": "scripts/art_records.py",
@@ -753,8 +898,8 @@
     },
     {
       "path": "scripts/audit_atlas_slices.py",
-      "sha256": "e988c914d1086701e158b8ece7b5bfb02ee35d641ed8358a1fcc7b55fba5f340",
-      "bytes": 17165
+      "sha256": "cfe4df6725c32d55b54c6df9f564b72e7a075892906271e48009b75d1e68f29a",
+      "bytes": 17773
     },
     {
       "path": "scripts/audit_audio_sources.py",
@@ -783,8 +928,8 @@
     },
     {
       "path": "scripts/audit_copy_quality.py",
-      "sha256": "caa74f216a86ba25b4611394897f237fa0ac59333643b1d8484d2dfd317f3571",
-      "bytes": 27456
+      "sha256": "29f11154ae0ffea19542d381d8646e6c3ce17bf853027d657722f3b6a02cc30e",
+      "bytes": 28240
     },
     {
       "path": "scripts/audit_dark_area.py",
@@ -823,18 +968,18 @@
     },
     {
       "path": "scripts/audit_glyph_core.py",
-      "sha256": "047976695c70c523614c76d125d98e636ff0edd298bee27eb8bc47fe7520a739",
-      "bytes": 28956
+      "sha256": "fc2bbc701f7be41f9f29fe5d8d2b3ea9f695a95ee7a4f54eb8b0f88cb842c14f",
+      "bytes": 29042
     },
     {
       "path": "scripts/audit_image_clarity.py",
-      "sha256": "65660f03effe1dfec30b2c3016df928c7ba5b664b60ee964e7fc351b6b5f59b2",
-      "bytes": 7326
+      "sha256": "e2c10321021f2bc95c54435e8985499fd25a14b6ce47d201bb0e2612b992f619",
+      "bytes": 8293
     },
     {
       "path": "scripts/audit_image_review_record.py",
-      "sha256": "3ee960daf2b5b4c29d2d5fc42b7068f0efdcc8d707401b96e0c9a49dcc09e7eb",
-      "bytes": 5687
+      "sha256": "64d73ce4f98fc0018e66f547a43f0bd15ccc39e9868f4b9f163ed389914d8f63",
+      "bytes": 12207
     },
     {
       "path": "scripts/audit_league.py",
@@ -878,8 +1023,8 @@
     },
     {
       "path": "scripts/audit_new_english_images.py",
-      "sha256": "7d29cddfccbeba6bcf03f29fbac166a767d63dc010a2a73327417cb054bbaf5f",
-      "bytes": 6464
+      "sha256": "d5261707b111b5b1e320dcdb1122058777ede1563df63821b3adef5d3de0f0e8",
+      "bytes": 12863
     },
     {
       "path": "scripts/audit_no_ad_simulator.py",
@@ -1003,8 +1148,13 @@
     },
     {
       "path": "scripts/audit_upload_startup.py",
-      "sha256": "025856760f82d4403ae4308e28638dbeb0fcf466232b517eefe5e7b1cd5200cd",
-      "bytes": 22901
+      "sha256": "1c4b6d6d309b94b4147645b024fcd159072d0e139570de6cd4a5e6f37adb76e4",
+      "bytes": 23342
+    },
+    {
+      "path": "scripts/audit_value_presentation.py",
+      "sha256": "b3eccdd5a44125597aaad378c52a79ba353b0bcc1165a099543c01ba2c5c2619",
+      "bytes": 10529
     },
     {
       "path": "scripts/browser_slots.py",
@@ -1043,8 +1193,8 @@
     },
     {
       "path": "scripts/check_text_backplates.py",
-      "sha256": "a7c4b2de331f8dbb218a8cab5283829c47e3ae1b3a0d8c28da083f443d1d199a",
-      "bytes": 5058
+      "sha256": "7ff7c2a0b13d0543ace22aab5b9bbb5d5c0639df480d930cfb8ed7a56c0b10c1",
+      "bytes": 5666
     },
     {
       "path": "scripts/checkin_harness.mjs",
@@ -1088,8 +1238,8 @@
     },
     {
       "path": "scripts/design_check.py",
-      "sha256": "cd4d31cd59a9466afd3d5a7a9b2102569ad748623912a90b648322b03de0e1cc",
-      "bytes": 12054
+      "sha256": "9c46d596e9865c65b4e571693587189190dc7f71b48257f4ccbf411c2d4d61f2",
+      "bytes": 12252
     },
     {
       "path": "scripts/dessert_cocos24_startup_contract.py",
@@ -1107,14 +1257,19 @@
       "bytes": 12119
     },
     {
+      "path": "scripts/economy_capabilities.py",
+      "sha256": "27cbe16eb7dba559069b5cbbb3971d6e9b65ab72d9c61e14912ce46c09be7af6",
+      "bytes": 9324
+    },
+    {
       "path": "scripts/extract_ui_layout.py",
       "sha256": "76fe7c9dcc0716cf698d835b279dcf4d6f04707064ffec0dfe10edcc9412ef4b",
       "bytes": 22003
     },
     {
       "path": "scripts/feature_policy.py",
-      "sha256": "e2f372f312b6d912f8e1137239510dfaaaaeabc00ab9772b44abb674ae29b738",
-      "bytes": 2640
+      "sha256": "95eac38241ec66c0234241850e2354be169c83310ee3391d8690b5e2839d2e8b",
+      "bytes": 8474
     },
     {
       "path": "scripts/finalize_images_compare.py",
@@ -1122,19 +1277,49 @@
       "bytes": 11978
     },
     {
+      "path": "scripts/first_screen.py",
+      "sha256": "1c82fe9797fb6a0c34bd5bd9eef401f493f1de867049faa5f31e956455f505ec",
+      "bytes": 24960
+    },
+    {
+      "path": "scripts/fixtures_rewire/dqiao/TTSdk.js",
+      "sha256": "727b5d93cb4afe794a9e14293627cb031094d115df82ce947101b7856c3cf6e4",
+      "bytes": 10487
+    },
+    {
+      "path": "scripts/fixtures_rewire/dqiao/sdk.ts",
+      "sha256": "656214819519fabfe5cfdc8c95862547177f5a708fb4508c2386969236316e6a",
+      "bytes": 2479
+    },
+    {
+      "path": "scripts/fixtures_rewire/egypt/HexPlatform.js",
+      "sha256": "bb23e075dcf007bf99dda46ce3e980d66d9844a0795ada7b6c038e9e2861ae5a",
+      "bytes": 5648
+    },
+    {
+      "path": "scripts/fixtures_rewire/fruitslice/HomeUI.js",
+      "sha256": "ac80d2105af011e5319a8eb2ff14b9e13de82a6914f0d7fb468b8d89f54c8569",
+      "bytes": 9289
+    },
+    {
       "path": "scripts/flat_atlas_adapter.py",
       "sha256": "06e7c92404040d91220b95a8ac816046c6e5c0589896e17da9d4f9cdaf6d5d6a",
       "bytes": 1593
     },
     {
+      "path": "scripts/game_capabilities.py",
+      "sha256": "43c4945577a8b0c6d445cc7dfa5fef84134ad9d4f0f805393788307d41d24ba9",
+      "bytes": 15880
+    },
+    {
       "path": "scripts/heavy_lock.py",
-      "sha256": "721a2d267ff9939a47895c868d330477a8afe34b67eac6af85a750d0bbfa8f8b",
-      "bytes": 10547
+      "sha256": "e14585b2f264c9a77b0b56e9519770f1c2ee5a13800fd4e695238398d9e06c9e",
+      "bytes": 12652
     },
     {
       "path": "scripts/import_audio.py",
-      "sha256": "f7fe9dfe067faca88fcf3ad5043b8e6b823302ba0b046ddddd037fa74ea76b07",
-      "bytes": 17714
+      "sha256": "5ac7775072f9fec2079601e55c97a4c38b3df35e76b3d74fc13fdf555f6cf97e",
+      "bytes": 19203
     },
     {
       "path": "scripts/input_owner_inventory.py",
@@ -1173,8 +1358,8 @@
     },
     {
       "path": "scripts/make_economy_config.py",
-      "sha256": "95579b628579efd8ebccf35eb05d9323e4977661c893dde3bada2c7a55033d7b",
-      "bytes": 34826
+      "sha256": "07c8ff9f67b14e0775cd2274d5df0c3218a79c88cbf746cf60aedb373231f540",
+      "bytes": 40946
     },
     {
       "path": "scripts/make_legacy_list.py",
@@ -1183,8 +1368,13 @@
     },
     {
       "path": "scripts/make_level_plan.py",
-      "sha256": "5340f24773bc3d861569c554a76942669e3b79310046a3cf289e4b0ad9fa4a88",
-      "bytes": 19462
+      "sha256": "7ddeefb9e2b77f9e8458bd03c0503a68468d5f2c0de09e9cbc444f917fa8851f",
+      "bytes": 22120
+    },
+    {
+      "path": "scripts/make_res_keys.py",
+      "sha256": "3e50b49e9b1fe234b88fa3f15de87caa25be35d54e91dd76fbce6839a0dff522",
+      "bytes": 17669
     },
     {
       "path": "scripts/make_skin_table.py",
@@ -1302,14 +1492,19 @@
       "bytes": 2451
     },
     {
+      "path": "scripts/page_registry.py",
+      "sha256": "6e83d60aa4c04f75d2b27a3c1e3b615c4ede3d9769fba202ea434007d115b30e",
+      "bytes": 18063
+    },
+    {
       "path": "scripts/papercut_production_loader.cjs",
       "sha256": "29f5b5865aa08b9fdb7b87eeaf677d1c0845b2e248dddd064498fd50852e045c",
       "bytes": 2926
     },
     {
       "path": "scripts/parse_package_requires.cjs",
-      "sha256": "e33e90f246f2e28d031c2f9bfba47f4df415d06007de17ac1678de79008f14f4",
-      "bytes": 8276
+      "sha256": "4affdb022b2b291a7a8785c0f1c1103b78454426248679e8889cf8aff7d7503b",
+      "bytes": 8818
     },
     {
       "path": "scripts/plan_level_tests.py",
@@ -1323,8 +1518,8 @@
     },
     {
       "path": "scripts/preflight.py",
-      "sha256": "a6c113c7454ef1739bbf09280d030cbf8c634b7425df9277b119111478d96504",
-      "bytes": 47288
+      "sha256": "649aef90fee671e9f15efdbc5ef4d480fe574e534765a01b1a25b708145dc7f0",
+      "bytes": 47827
     },
     {
       "path": "scripts/preview_chrome.py",
@@ -1332,24 +1527,29 @@
       "bytes": 2618
     },
     {
+      "path": "scripts/preview_touch_fakedom.cjs",
+      "sha256": "15e5911fe7b2158492772141b21938f42c0b24cbaeda344ef07612d57b91a4b5",
+      "bytes": 3480
+    },
+    {
       "path": "scripts/probe_cocos2_papercut_storage.cjs",
-      "sha256": "3343c430dce215941d0fed5e5e315859b12c3fc5b3095fe09b40650ae821930f",
-      "bytes": 3185
+      "sha256": "88bc5a6d15cd7d0643062c9163c702e71bb9c7bad2a37679839fe6fd275b6388",
+      "bytes": 3576
     },
     {
       "path": "scripts/probe_cocos2_reward_storage.cjs",
-      "sha256": "6ba0af967683fea2804610bfb0c9f2350b9a41e4efa3944f3d399b79deaae96a",
-      "bytes": 4070
+      "sha256": "980c080e4a296b651bafb9c280eb0a937b0f2b2e21ddb6ed9b25e1c562494824",
+      "bytes": 4487
     },
     {
       "path": "scripts/probe_cocos2_touch_coordinates.cjs",
-      "sha256": "59057aabd2dbcc38e6d96a4b5abc884e41e9df70a9768c3a2a1cddc27d19f118",
-      "bytes": 11610
+      "sha256": "76e70e3cbf8e97b8768392293e92f987edfbe8bf305040e44bb67ed48e5439e0",
+      "bytes": 12193
     },
     {
       "path": "scripts/probe_cocos3_touch_coordinates.cjs",
-      "sha256": "38e776cef42eb029faaf986ae215caa74d86334ef31d94262db63fc5288e3e37",
-      "bytes": 17125
+      "sha256": "7d99d82bc4699cb20a0b7e8c4e2826f9f69b02f03b9cb604f54e6187225eacf0",
+      "bytes": 17711
     },
     {
       "path": "scripts/probe_host.py",
@@ -1358,18 +1558,18 @@
     },
     {
       "path": "scripts/probe_native_bootstrap.cjs",
-      "sha256": "084565a81b2a666ef871629dad81f1cfa9f785d3fcce5582ffa991d770467550",
-      "bytes": 3524
+      "sha256": "8f8d109f32322a2f4bc9c83fa9cd3559864604b6b16b15758011ea164444aa21",
+      "bytes": 4029
     },
     {
       "path": "scripts/probe_native_host_boundary.cjs",
-      "sha256": "ebaeadefc8ea1fcbf73a0524753032f1319e57ad0cfa3acaf3273f42ee697c18",
-      "bytes": 5434
+      "sha256": "e724efc6ca12dcd5749522a22e5b8dec10d8941cf97b26015ae56bb674b889dc",
+      "bytes": 5951
     },
     {
       "path": "scripts/product_contract.py",
-      "sha256": "aeba891e918c328e13a82a2cf68863a90fe75f310b40fd05396a055f53eb7802",
-      "bytes": 145300
+      "sha256": "b6cc959b7c01440d5b334765ff7a0fe7e2738d6b95f1a1eb2ff5d8cdfad82289",
+      "bytes": 148483
     },
     {
       "path": "scripts/production_accounting.py",
@@ -1403,33 +1603,33 @@
     },
     {
       "path": "scripts/scan_cocos2_finite_art.cjs",
-      "sha256": "f5c71397e632a1d96ffaa3c6094a0eb7cb943aa9dad1fc9e46ca3117363eea44",
-      "bytes": 9106
+      "sha256": "9e6a31a299829570f2b96b8628fa7328eafe9922f582c01a6da5f6b8f3bb0253",
+      "bytes": 9571
     },
     {
       "path": "scripts/scan_input_ownership.cjs",
-      "sha256": "e05e442effa8b4df3cfa4bed568c53d25c3f7a58ca192e6e21c9bc88d90bb89f",
-      "bytes": 11727
+      "sha256": "ef412a6aa5a361710b37a3c1f6638d9e7670dec1b419bc099d4a6bc47a39962b",
+      "bytes": 12178
     },
     {
       "path": "scripts/scan_native_file_requests.cjs",
-      "sha256": "05a9730bc73a0e72c9821a82d1fad36afd9afcf7fb512566e1dda2e819a3df86",
-      "bytes": 1551
+      "sha256": "18176fb0d7076139652a42a83afaacc8a5817da69a809264bc3555cfcd38df21",
+      "bytes": 2021
     },
     {
       "path": "scripts/scan_runtime_resources.cjs",
-      "sha256": "49a4cb53e3156802edb563f236197d59ac1e5e7b294132f9a358483b5cfea15b",
-      "bytes": 29508
+      "sha256": "3fe1721dff941ec7ec71acc4e29db782adaeb6baec4b12ed932124ca0e101623",
+      "bytes": 30022
     },
     {
       "path": "scripts/scan_systemjs_finite_art.cjs",
-      "sha256": "f2b9d87c2ebd4d4b3010761c5cb43c3785e4fd661fb52f55a41e93ccc9059021",
-      "bytes": 10736
+      "sha256": "9e90346f68522b335f53c826a6fead7a3dd456b90464e366ab129b98eb804642",
+      "bytes": 11208
     },
     {
       "path": "scripts/scan_systemjs_resources.cjs",
-      "sha256": "af3c3231fec7f79c146f212de3698fdc2f2b9b3c99af82d685e30f2f70d615a5",
-      "bytes": 9814
+      "sha256": "c433879d24bbda91b40b24c7961786918347b01f899d7b89aa591612a2c4e68d",
+      "bytes": 10284
     },
     {
       "path": "scripts/selftest_native_startup_renderer.py",
@@ -1438,13 +1638,18 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "8ef5503647d2ddae3892a0846f98d38dba3afc7cc15dc802d2d2f85cdd969bb5",
-      "bytes": 19243
+      "sha256": "dc8a38c104edb9cad277d6a15b2a18db63699e03ae594bee9b49b679a5769c8c",
+      "bytes": 37809
     },
     {
       "path": "scripts/source_hygiene.py",
       "sha256": "c2cd95d2bf0323f0ec2203d5672c4d9ca7b97fe711149d9e70760dea76f6df81",
       "bytes": 7982
+    },
+    {
+      "path": "scripts/startup_budget.py",
+      "sha256": "03b7cbd0369246fac7e4a7843af50763e4cf3aef9c43f5259e671e4bf0fc2535",
+      "bytes": 11596
     },
     {
       "path": "scripts/startup_business_contract.py",
@@ -1498,13 +1703,13 @@
     },
     {
       "path": "scripts/test_art_receipt.py",
-      "sha256": "e03355e44ca08f6ca10c9b01675e279416b570cf968adb195408a87011598549",
-      "bytes": 24627
+      "sha256": "4ec29b31d2dff1d80b1052ef93b25c433af40240c22272a6cb04223feb159c45",
+      "bytes": 24649
     },
     {
       "path": "scripts/test_art_records_v78.py",
-      "sha256": "9f60c05c06dd41a43787f44e9724ca7e783e7c2e6c48ed6ec45f6a1fa7790131",
-      "bytes": 22660
+      "sha256": "a96226ab84ae6340df313ad071b319174b8c13d27b58d37054f21d3875aff544",
+      "bytes": 23088
     },
     {
       "path": "scripts/test_art_shipped_v78.py",
@@ -1552,6 +1757,11 @@
       "bytes": 5804
     },
     {
+      "path": "scripts/test_bg_cover.py",
+      "sha256": "06c4796292615a8d459015b9c49f1c3fd2d206aaf35396365b27ac5fa129ebf8",
+      "bytes": 8036
+    },
+    {
       "path": "scripts/test_bitmap_letter_fonts.py",
       "sha256": "65ad4c96d2c65bbd622b6878b6f00ab3f8654b76667fbd8efff8ff7586b2df1f",
       "bytes": 2745
@@ -1570,6 +1780,11 @@
       "path": "scripts/test_button_state_check.py",
       "sha256": "4ee8162c50e2b7ef4a8181f4d5dd1085878671a32de64b69fe9c0202383df59b",
       "bytes": 12458
+    },
+    {
+      "path": "scripts/test_capsule_auto.py",
+      "sha256": "f0b7f9e51fad195f41828177dfaac54ca480da22c03ceb065e0d532dccc9fcf9",
+      "bytes": 6761
     },
     {
       "path": "scripts/test_check_runner.py",
@@ -1603,8 +1818,13 @@
     },
     {
       "path": "scripts/test_english_image_gates.py",
-      "sha256": "ae141e2a20c212da66617a1b477f7fc8218e10ff954806ca15cf68bb240f9105",
-      "bytes": 5613
+      "sha256": "78af507dc5e7d75fb8f0ab4fc08e86998d40ba107d2fbbbd3a9fb23873fc2304",
+      "bytes": 5859
+    },
+    {
+      "path": "scripts/test_english_scan_at_start.py",
+      "sha256": "966aa67b92b3fca8679819904fdf1dadbb3d11ad6da2152d5f30ac771ef5fcd0",
+      "bytes": 8954
     },
     {
       "path": "scripts/test_extract_ui_layout_viewports.py",
@@ -1637,9 +1857,19 @@
       "bytes": 8590
     },
     {
+      "path": "scripts/test_first_screen_budget.py",
+      "sha256": "90c6ec4cab1ec9a6f0b5067400e5ba7fb67a6669b2295b3d86520ae6cc226ad2",
+      "bytes": 15120
+    },
+    {
       "path": "scripts/test_flat_atlas_adapter.py",
       "sha256": "0d8e61587c10ff1d45c2276ce4c351437c6c15f06e4bd2734d9a42230bcff414",
       "bytes": 1166
+    },
+    {
+      "path": "scripts/test_frame_scan.py",
+      "sha256": "1e20fadf20d204f4eb7d54c89818c7128cd2cf30fb02d318b20a5169ad860298",
+      "bytes": 6649
     },
     {
       "path": "scripts/test_fused_cleanup.py",
@@ -1650,6 +1880,11 @@
       "path": "scripts/test_fusion_policy.py",
       "sha256": "565f132063ca5dde247cbcb8f2e598ddda4cdfe2f5c23acb09c29af764cf5ffe",
       "bytes": 3844
+    },
+    {
+      "path": "scripts/test_game_capabilities.py",
+      "sha256": "ae160af7d20bd1ecf9a87579767bf4c2ededd4b709a0ff3594227225bc7ae71f",
+      "bytes": 10228
     },
     {
       "path": "scripts/test_game_modules.py",
@@ -1698,13 +1933,18 @@
     },
     {
       "path": "scripts/test_kit_module_versions.py",
-      "sha256": "b06d619c7762af11c38737241fdd5f7f3cf3c06f1a2fec7d1e46f035216620a4",
-      "bytes": 5063
+      "sha256": "0ddd4f512564382f706007a0d1d5ceb06c6010eeb13109c75c8fa72a5c721a7f",
+      "bytes": 5354
     },
     {
       "path": "scripts/test_kit_parts.py",
       "sha256": "3bbbc9551240fd28837d9a1b6a0bb68b3edf8790b15af29b889beaab7f1d2657",
       "bytes": 7685
+    },
+    {
+      "path": "scripts/test_kit_parts_resources.py",
+      "sha256": "3826e23dff1692e0783e71220ac8c92e1189921cdd6cd83be36c9e3cc1f740d2",
+      "bytes": 7048
     },
     {
       "path": "scripts/test_kit_passes_own_checks.py",
@@ -1763,8 +2003,8 @@
     },
     {
       "path": "scripts/test_make_economy_config.py",
-      "sha256": "26dcec0782ad9a8c1230159f40d279784b70ec94573f7dbb97d545a1096d5d14",
-      "bytes": 27376
+      "sha256": "4a5bc48910842d37253554930c295b59f7726e9000d456ca3e09783375874f95",
+      "bytes": 33972
     },
     {
       "path": "scripts/test_make_legacy_list.py",
@@ -1820,6 +2060,11 @@
       "path": "scripts/test_optional_features.py",
       "sha256": "d5fd2253bb86b728f570c1f506298836ea9d8fb353f862838413ab9745d898e1",
       "bytes": 10131
+    },
+    {
+      "path": "scripts/test_p21b_p13_preview.py",
+      "sha256": "d2e9903cf04c281ceae22ba5cc188e0974347dabe9442bfedc91e1bc7a5f5542",
+      "bytes": 15880
     },
     {
       "path": "scripts/test_package_gates_audio.py",
@@ -1942,6 +2187,11 @@
       "bytes": 10997
     },
     {
+      "path": "scripts/test_res_keys.py",
+      "sha256": "28e2ac6584c0e5d9a01e8009aa28c16216a0fb4910d683d85164844bcb1ea6e6",
+      "bytes": 7516
+    },
+    {
       "path": "scripts/test_resource_adaptation.py",
       "sha256": "32705049c7ed280d8c1512ee219f89e01331cfd3f3e1f7853c5ff6ee9dbb2dcd",
       "bytes": 22608
@@ -2022,6 +2272,11 @@
       "bytes": 23382
     },
     {
+      "path": "scripts/test_tiktok_rewire.py",
+      "sha256": "d2b0212387a8ef046c4ac819c7a35ec800376db5413437a7bb0cdb28c2d0bfb0",
+      "bytes": 21723
+    },
+    {
       "path": "scripts/test_tiktok_touch_coordinates.py",
       "sha256": "7bad296f4285450a99ec46db19e89776516ed4a7105e8c0119f7597cf5b6c2b8",
       "bytes": 26750
@@ -2077,6 +2332,11 @@
       "bytes": 8653
     },
     {
+      "path": "scripts/test_value_presentation.py",
+      "sha256": "d88c2629a04fadb561ee66428eec68f0aa506a71518ca66252e693175bd47051",
+      "bytes": 8355
+    },
+    {
       "path": "scripts/test_visual_maintenance_scope.py",
       "sha256": "62e3fe9acd57e75d56903fbd52048cbe77d3daa7fd2cc72d9021133e60976dc6",
       "bytes": 13048
@@ -2103,18 +2363,18 @@
     },
     {
       "path": "scripts/test_writer_regressions.py",
-      "sha256": "47556b18e19ae43cd47f70c6442f11fb815675d9b241def483fa78160fe42eed",
-      "bytes": 14245
+      "sha256": "e6783864e71b27f1d584bba4aa362033de338e2a65854e7862e454d812251edd",
+      "bytes": 14367
     },
     {
       "path": "scripts/tiktok_finalize.py",
-      "sha256": "eddfcc491733461f35424296c147dfde0a6e55b5036876eccdbbd2ef2ef7e27a",
-      "bytes": 32064
+      "sha256": "5c45c6282021b0f60d77d3238980e04b9071d5e0cde38512aa0d21ad3eda2796",
+      "bytes": 33293
     },
     {
       "path": "scripts/tiktok_finalize_steps/__init__.py",
-      "sha256": "00e0c6129866f90138d5f541ed9b0b6477470545c98212a2df755d1c89c64202",
-      "bytes": 29615
+      "sha256": "5fa64240b84ad6a54b2a6299ecf8bbbce75663b31b37ac011b9316efb9b7e727",
+      "bytes": 29765
     },
     {
       "path": "scripts/tiktok_finalize_steps/adapter.py",
@@ -2132,9 +2392,24 @@
       "bytes": 22884
     },
     {
+      "path": "scripts/tiktok_finalize_steps/bg_cover.py",
+      "sha256": "02bc3f062a31e73daae5663d2d628a49c03ed50593b41b9557a96a16ad545628",
+      "bytes": 10016
+    },
+    {
       "path": "scripts/tiktok_finalize_steps/build_templates.py",
       "sha256": "d690f00b2d05eb9001cf671583191396a5157abba7be7aea2b4fbf9f10dffc55",
       "bytes": 5002
+    },
+    {
+      "path": "scripts/tiktok_finalize_steps/capsule_auto.py",
+      "sha256": "7f6c64cd0ef079a8304751595e7a90616fd20f56ffaeed08c4036233c2717a9f",
+      "bytes": 10618
+    },
+    {
+      "path": "scripts/tiktok_finalize_steps/frame_scan.py",
+      "sha256": "d405006cccfc6508debaa4d25d01217fbdfadbb73d1b084e45107d97eb88ad2d",
+      "bytes": 9897
     },
     {
       "path": "scripts/tiktok_finalize_steps/images.py",
@@ -2197,9 +2472,14 @@
       "bytes": 1190
     },
     {
+      "path": "scripts/tiktok_rewire.py",
+      "sha256": "6c0d907294ac8dd7e14cee05ab8121fc9a21fe5d11dd0b55dae38a6c73a73fde",
+      "bytes": 41484
+    },
+    {
       "path": "scripts/ui_dump.js",
-      "sha256": "dece7f7a036de0053a4ab8eb270e25f03471abc081e69bda25513531dbeca3ea",
-      "bytes": 29532
+      "sha256": "dac804ccd0a8f1f291b2b04b84f4473853d1522c1ef11d837b37fcf7b334366a",
+      "bytes": 29829
     },
     {
       "path": "scripts/ui_region_probe.py",

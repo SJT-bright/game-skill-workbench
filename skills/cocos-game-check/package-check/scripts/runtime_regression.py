@@ -54,11 +54,16 @@ HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 import watched_run  # noqa: E402 - v7.9 (出包检查提速 S7): a stuck suite is stopped after 240 s without progress
+import check_guard  # noqa: E402 - J1 批 / 总表 P19 ②: one not_run shape for empty or missing inputs
 TOOL = HERE / 'runtime_regression'
 SUITES_DIR = TOOL / 'suites'
 HOST2 = HERE / 'ad_regression'          # Cocos 2.x strict host (host.js, play.html, server.py)
 HOST3 = TOOL / 'host3x'                 # Cocos 3.x strict host (host.js, play.html, server.py)
 ENV_ADAPTER = 'TIKTOK_AD_REGRESSION_ADAPTER'   # one adapter file serves ad + runtime regression
+# P20 第 3 点 (能力先判): the game folder whose capability record (remake-core game_capabilities.py) the adapter
+# check reads; also --capabilities. Unset: judged from the adapter alone, as before.
+ENV_CAPABILITIES = 'TIKTOK_GAME_CAPABILITIES'
+CAPS_SCRIPTS = Path(__file__).resolve().parents[3] / 'remake-core' / 'scripts'
 ENV_BROWSER = 'EGO_BROWSER'
 ENV_SPACE = 'RUNTIME_REGRESSION_SPACE'   # optional Ego task-space name; default is unique per run (taskSpace(name) resumes a same-name space)
 _which = shutil.which  # patch point for tests
@@ -667,7 +672,7 @@ def precheck(name, meta, adapter, engine, policy):
                 ['%s/adapter: %s (new game: write the field, see references/runtime-regression.md)' % (name, text)])
 
 
-def config_problems(names, catalog, adapter, engine, policy):
+def config_problems(names, catalog, adapter, engine, policy, caps=None):
     """v7.9 (出包检查提速 S3, 总表 19 ②): what the adapter lacks for the suites of this run, for all of them at once and
     before any suite opens a browser: a suite that does not support the engine, the fields a suite needs, and the
     precheck (needs_new / na_field; a legacy game only warns, as before). Until v7.8 these turned up one suite at a time
@@ -688,7 +693,7 @@ def config_problems(names, catalog, adapter, engine, policy):
         if missing:
             problems.append('runtime suite %s needs adapter field(s) %s' % (name, ', '.join(missing)))
         if name == 'ad_outcome' and policy != 'legacy':
-            problems.extend(ad_roles_problems(adapter))
+            problems.extend(ad_roles_problems(adapter, caps))
     return problems, rows
 
 
@@ -698,9 +703,24 @@ def config_problems(names, catalog, adapter, engine, policy):
 AD_ROLES_REQUIRED = ('double', 'revive')
 
 
-def ad_roles_problems(adapter):
+def load_capabilities(project):
+    """game_capabilities.load(project), or None when no project is given / remake-core is not next to this skill."""
+    if not project:
+        return None
+    if str(CAPS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(CAPS_SCRIPTS))
+    try:
+        import game_capabilities
+    except ImportError:
+        return None
+    return game_capabilities.load(project)
+
+
+def ad_roles_problems(adapter, caps=None):
     """New game, ad_outcome in the run (the package shows rewarded ads): adapter.ad_entries must hold an entry with
-    role "double" and one with role "revive", unless ad_outcome is {"n/a": reason} or ad_outcome.none.<role> says why."""
+    role "double" and one with role "revive", unless ad_outcome is {"n/a": reason} or ad_outcome.none.<role> says why.
+    P20 第 3 点: with the capability record (caps), a role the record says the game does not have (no_ad_roles, or
+    double on a game with no coin and no items, ECON-NOCUR) is not asked for; the reason is the record's."""
     outcome = adapter.get('ad_outcome')
     if is_na(outcome):
         return []
@@ -712,6 +732,9 @@ def ad_roles_problems(adapter):
     entries = adapter.get('ad_entries') if isinstance(adapter.get('ad_entries'), list) else []
     roles = {e.get('role') for e in entries if isinstance(e, dict)}
     missing = [r for r in AD_ROLES_REQUIRED if r not in roles and r not in none]
+    if missing and caps is not None:
+        import game_capabilities
+        missing = [r for r in missing if game_capabilities.verdict(caps, 'ad_role:' + r)[0] != 'no']
     if not missing:
         return []
     what = {'double': 'result-page Watch Ad x2 (role "double": win a level, then the button)',
@@ -721,8 +744,47 @@ def ad_roles_problems(adapter):
             '(英化固定入口第 6、7 项; remake-ads)' % (' and no '.join(what[r] for r in missing), missing[0])]
 
 
+class InputsNotRun(RuntimeRefused):
+    """总表 P19 ②: an input the run needs is absent or empty. 「未执行」 (status not_run, exit 2), never a pass or a
+    silent skip. Raised before the touch / browser checks: it does not depend on this machine."""
+
+
+INPUT_FIX = ('remake-core/scripts/page_registry.py make --project <game> 从 docs/logic/pages.json 生成这些字段'
+             '（不要手写）；没有这样的按钮就在 pages.json 写 {"none": "原因"}')
+
+
+def input_report(files, adapter, names, catalog, policy, caps=None, full_run=True):
+    """The one input check of a run (check_guard.inputs_not_run): every list a suite of this run needs that is
+    present but empty (割草: ad_entries []), resume_play.pause_button written empty (美人鱼), and, in a full run (no
+    --suites), a new game that shows rewarded ads with no ad_entries list at all while neither ad_outcome {"n/a"} nor
+    the capability record (M 批, ad_entries none) says why. Objects and strings of the wrong shape are left to the
+    shape checks (precheck), which name the problem better. -> the not_run report, or None."""
+    inputs = {}
+    for name in names:
+        meta = catalog.get(name) or {}
+        for field in list(meta.get('needs', [])) + list(meta.get('needs_new', [])):
+            if isinstance(adapter.get(field), list):
+                inputs.setdefault('adapter.' + field, adapter[field])
+    rp = adapter.get('resume_play')
+    if isinstance(rp, dict) and 'pause_button' in rp and isinstance(rp['pause_button'], str):
+        inputs['adapter.resume_play.pause_button'] = rp['pause_button']
+    if 'ad_entries' in adapter:
+        if isinstance(adapter['ad_entries'], list):
+            inputs['adapter.ad_entries'] = adapter['ad_entries']
+    elif full_run and policy != 'legacy' and predicate('rewarded_ads', files, adapter) and \
+            not is_na(adapter.get('ad_outcome')):
+        said_none = False
+        if caps is not None:
+            import game_capabilities
+            said_none = game_capabilities.verdict(caps, 'ad_entries')[0] == 'no'
+        if not said_none:
+            inputs['adapter.ad_entries（看广告入口清单）'] = None
+    report = check_guard.inputs_not_run('runtime_regression', inputs, INPUT_FIX)
+    return report
+
+
 def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_dir=None, policy=None, board=None,
-        trial_url=None):
+        trial_url=None, capabilities=None):
     """Run suites (default: required_suites) against an unzipped package. Raises RuntimeRefused unless all pass.
     policy: 'new' | 'legacy' for suites that warn on a legacy game (dead_shell); None = judged from the package bytes.
     v7.8 (总表 A6 补): a Cocos package without a touch part raises EnvironmentIncomplete before any suite runs.
@@ -751,14 +813,30 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
         raise RuntimeRefused('runtime regression: no suite applies (the startup suite applies to every TikTok package)')
     # v7.9 (出包检查提速 S3, 总表 19 ②): what the adapter lacks for any suite of this run refuses before the first suite
     # opens a browser, every problem at once (config_problems). The verdict and the texts are the ones the suites gave.
-    early, early_rows = config_problems(names, catalog, adapter, engine, policy)
+    caps = load_capabilities(capabilities if capabilities is not None else os.environ.get(ENV_CAPABILITIES))
+    early, early_rows = config_problems(names, catalog, adapter, engine, policy, caps)
+    # 总表 P19 ②: an input that is there but empty, or a new rewarded game's missing ad-entry list, is 「未执行」 (new
+    # game; a legacy game only warns). With other adapter problems it is listed with them, all at once.
+    gap = input_report(files, adapter, [n for n in names if n in catalog], catalog, policy, caps,
+                       full_run=not suites)
+    input_warnings = []
+    if gap and policy == 'legacy':
+        input_warnings.append('%s [legacy game: warning]' % gap['reason'])
+    elif gap and early:
+        early = early + ['未执行：' + gap['reason']]
+    elif gap:
+        error = InputsNotRun('runtime regression not run (未执行, before the browser): ' + gap['reason'])
+        error.summary = dict(gap, id='runtime_regression', engine=engine, required=names, not_run=skipped,
+                             policy=policy, policy_reason=policy_reason, board=board, problems=[gap['reason']],
+                             warnings=[], stopped_before_browser=True)
+        raise error
     if early:
         error = RuntimeRefused('runtime regression failed before the browser (adapter check, 总表 19 ②): '
                                + ' | '.join(early))
         error.summary = {'id': 'runtime_regression', 'passed': False, 'engine': engine,
                          'suites': list(early_rows.values()), 'required': names, 'not_run': skipped, 'board': board,
                          'problems': early, 'policy': policy, 'policy_reason': policy_reason, 'startup_measured': None,
-                         'warnings': [w for r in early_rows.values() for w in r['warnings']],
+                         'warnings': input_warnings + [w for r in early_rows.values() for w in r['warnings']],
                          'tool_sha256': tool_digest(catalog),
                          'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
                          'seconds': 0.0, 'stopped_before_browser': True}
@@ -794,7 +872,7 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
     summary = {'id': 'runtime_regression', 'passed': not problems, 'engine': engine, 'suites': rows,
                'required': names, 'not_run': skipped, 'board': board, 'problems': problems, 'policy': policy,
                'policy_reason': policy_reason, 'startup_measured': _startup_measured(rows),
-               'warnings': [w for r in rows for w in r['warnings']],
+               'warnings': input_warnings + [w for r in rows for w in r['warnings']],
                'tool_sha256': tool_digest(catalog),
                'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
                'seconds': round(time.monotonic() - started, 1)}
@@ -869,6 +947,9 @@ def main(argv=None):
     r.add_argument('--board', choices=list(BOARDS), help='layout_state home rules: remake (settings top-left, bottom row = '
                    'two platform entries) or localize (only the two platform entries). Default: not checked (warning)')
     r.add_argument('--trial', help='a local trial link: adds the trial_link suite')
+    r.add_argument('--capabilities', default=os.environ.get(ENV_CAPABILITIES) or None,
+                   help='P20 第 3 点: the game folder; its capability record (game_capabilities.py) decides which ad '
+                        'roles the game has (env %s)' % ENV_CAPABILITIES)
     q = sub.add_parser('required')
     q.add_argument('--package', required=True, type=Path)
     q.add_argument('--adapter', type=Path, default=os.environ.get(ENV_ADAPTER) or None)
@@ -909,7 +990,8 @@ def main(argv=None):
         if problem:
             raise EnvironmentIncomplete(problem)
         summary = _with_package(args.package, lambda d: run(d, args.adapter, suites, args.work, policy=args.policy,
-                                                            board=args.board, trial_url=args.trial))
+                                                            board=args.board, trial_url=args.trial,
+                                                            capabilities=args.capabilities))
         code = 0
     except RuntimeRefused as error:
         summary = getattr(error, 'summary', {'id': 'runtime_regression', 'passed': False})
@@ -918,6 +1000,9 @@ def main(argv=None):
         if isinstance(error, EnvironmentIncomplete):
             summary.update(status='environment_incomplete', environment=str(error))
             code = 2
+        elif isinstance(error, InputsNotRun):       # 总表 P19 ②: 「未执行」, exit 2 like every not_run
+            summary.update(status='not_run', environment='未执行：' + str(summary.get('reason', error)))
+            code = check_guard.NOT_RUN_EXIT
     summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200]}[code]
     # v7.8 (总表 B32 d): a copied / changed runtime tool says so (企鹅雪道 ran its own edited copy) and leaves a draft
     try:

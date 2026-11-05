@@ -25,6 +25,7 @@
    - 后续包：其他地图、皮肤、商店、声音面板等页面的美术，用到时再加载；当前装备的资源可以提前预取；
    - **声音单独一个包**：声音加载失败不能挡首页和 PLAY，之后再试；不清音量设置和存档。
    - 不靠删声音、降画质、丢存档来"变快"。
+   - **开工就分好**（P04）：开工先跑 `remake-core/scripts/first_screen.py`，按它写的 `docs/startup/first-screen.json` 分首页组和延后组，往工程放文件都记进 `docs/startup/budget.json`（`startup_budget.record`），超 10 MiB 当场拒绝；用法见 [工作流工具](../../../remake-core/references/workflow-tools.md) 的「首页资源清单和体积账本」。别等出包时才发现太大。
 9. **后续页面加载失败**：只影响那个页面，给出提示，重新打开时再试；不影响正常玩。
 
 ## 二、怎么测（在 Ego Lite 里用当前生产代码，不改写被测的加载器）

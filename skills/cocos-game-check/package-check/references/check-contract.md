@@ -79,3 +79,9 @@ JS依赖检查使用随工具固定的Acorn 8.15.0（MIT，scripts/vendor/ACORN-
 ## 编译包中的资源封装（2026-10-26）
 
 同名 `this.load()` 先确认实际所属组件与方法体，不能直接当引擎资源调用，也不能只按名称豁免；原方法体仍须被独立清点。动态图片域从生产登记表、配置ID和关卡数据展开，只有源码明确的存在性判断才允许裁掉可选分支，不抄整个catalog作需求。版本相关适配绑定完整JS源集合；未知代码变更恢复拒绝。正式采用前用删首页必需资源、删数据推导的末项资源及新增未知动态调用校准，再验当前产物。
+
+## 状态词与检查输入（总表 P19，2026-11-04）
+
+- 状态词只有一份：[check-status.json](check-status.json)（检查报告 passed / failed / not_run / not_applicable / environment_incomplete；看图回执 pass / issue / uncertain）。生成端和接收端都经 `check_guard.status_values()` 读它，不各写一份。grok-image-review 的提示词会写明只能用哪几个词（火锅大逃亡等 29 份回执因模型写了 ok 被拒）。
+- 检查要的输入为空或缺项一律 `not_run`（退出 2），写明缺什么：`check_guard.inputs_not_run`。check_package 没有适配文件时两项回归记 `not_run`，runtime_regression 的 `input_report` 在开浏览器前判。不判通过，不静默跳过。
+- 这些输入做游戏时由 `remake-core/scripts/page_registry.py make` 从 `docs/logic/pages.json` 生成，别手写，见 `remake-core/references/page-registry.md`。

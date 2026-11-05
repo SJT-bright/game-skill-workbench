@@ -201,6 +201,22 @@ def tool_digest():
     return h.hexdigest()
 
 
+def _space_name(package_dir):
+    """Ego space for this run (生成时预防 P21). browser_env.space_name when the English pack's browser_env.py is next to
+    this skill; otherwise the same format here (the remake tree ships no browser_env.py)."""
+    prefix = os.environ.get('AD_REGRESSION_SPACE')
+    try:
+        scripts = HERE.parents[2] / 'cocos-game-to-english' / 'scripts'
+        if str(scripts) not in sys.path and (scripts / 'browser_env.py').is_file():
+            sys.path.append(str(scripts))
+        import browser_env
+        name = browser_env.space_name('ad-regression', game=Path(package_dir).name)
+    except Exception:  # noqa: BLE001 - never fail a regression over a name
+        name = 'tiktok-ad-regression-%s-%d-%s' % (re.sub(r'[^A-Za-z0-9]+', '-', Path(package_dir).name)[:24],
+                                                  os.getpid(), secrets.token_hex(3))
+    return '%s-%s' % (prefix, name) if prefix else name
+
+
 def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
     """Run the regression against an unzipped package directory. Raises RegressionRefused unless all pass."""
     package_dir = Path(package_dir).resolve()
@@ -231,7 +247,9 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         _wait_port(port, server)
         boot_ms = int(adapter.get('boot_timeout_s', 60) * 1000)
         # Unique space per run: Ego taskSpace(name) RESUMES a same-name space, so two runs would drive one page.
-        space = os.environ.get('AD_REGRESSION_SPACE') or 'tiktok-ad-regression-%d-%s' % (os.getpid(), secrets.token_hex(3))
+        # 生成时预防 P21: the name comes from browser_env.space_name (<game>-<pid>-ad-regression-<random>); a set
+        # AD_REGRESSION_SPACE is only a prefix now, so two sessions that both set it still get different spaces.
+        space = _space_name(package_dir)
         cfg = {'space': space, 'url': 'http://127.0.0.1:%d/__host/play.html?mouse=1&ad=manual' % port,
                'adapter': adapter, 'cases': cases, 'bootTimeoutMs': boot_ms, 'resultFile': str(result_file),
                'progressFile': str(work / 'progress.txt')}

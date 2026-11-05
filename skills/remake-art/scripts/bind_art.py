@@ -13,6 +13,11 @@ The rules below are the same for both.
 bind.json: {"bindings": [{"prefab": "assets/prefabs/Result.prefab", "node": "Result/panel/btn_claim",
                           "image": "assets/resources/ui/btn_claim.png"}, ...]}
   "node"   names from the prefab root (scene: from the first node under the scene), joined by "/".
+           3.x nested prefab instance: name the node through the instance ("Canvas/PlayBtn/icon", the instance
+           named as in the scene). The binding is written as cc.PrefabInstance.propertyOverrides in this file
+           (UITransform _contentSize, Sprite _spriteFrame/_sizeMode/_isTrimmedMode; localID = [component fileId],
+           deeper levels [nested PrefabInstance fileId, ..., component fileId]); the nested .prefab is not changed.
+           --check also reads the overrides, so a frame swapped only in the scene's overrides is reported.
   "image"  a PNG inside the project that Cocos has imported (it has a .meta). Instead of "image", "name"
            takes the picture from --gen-log (ad-boost postprocess.py: post.copied_to, else post.final).
   "by"     "rect" (default): the visible part fills the node; "original": the node stands for the whole PNG
@@ -216,8 +221,50 @@ def flat_png(png):
 
 
 # ---------------------------------------------------------------- prefab / scene graph
+OVERRIDE_TYPE = 'CCPropertyOverrideInfo'   # as Creator 3.x writes it (no "cc." prefix)
+
+
+class Resolver:
+    """3.x nested prefab instances: a scene/prefab keeps only the instance root node and a cc.PrefabInstance whose
+    propertyOverrides (targetInfo.localID + propertyPath + value) change the nested prefab's nodes/components.
+    The children live in the nested .prefab (found by PrefabInfo.asset uuid). A view is a fresh copy of that prefab
+    with the overrides applied, so sizes and frames read from it are what the game shows."""
+
+    def __init__(self, project):
+        self.project = pathlib.Path(project).resolve() if project else None
+        self._assets = None
+
+    def asset_path(self, u):
+        if self.project is None or not u:
+            return None
+        if self._assets is None:
+            self._assets = {}
+            for meta in (self.project / 'assets').rglob('*.prefab.meta'):
+                try:
+                    m = read_json(meta)
+                except (ValueError, OSError):
+                    continue
+                if isinstance(m, dict) and m.get('uuid'):
+                    self._assets[m['uuid']] = meta.with_suffix('')
+        return self._assets.get(u)
+
+    def view(self, doc, i, depth=0):
+        inst, pi = doc.instance(i), doc.prefab_info(i)
+        u = ((pi or {}).get('asset') or {}).get('__uuid__')
+        p = self.asset_path(u)
+        if inst is None or p is None or depth > 8:
+            return None
+        inner = Doc(p, self)
+        own = [(lid, path, v) for lid, path, v, _ in doc.overrides(inst)]
+        fid = inst.get('fileId')
+        outer = [(lid[1:], path, v) for lid, path, v in doc.pending if len(lid) > 1 and lid[0] == fid]
+        inner.apply_overrides(own + outer)   # outer levels win, as in the engine
+        inner.depth = depth + 1
+        return inner
+
+
 class Doc:
-    def __init__(self, path):
+    def __init__(self, path, resolver=None):
         self.path = pathlib.Path(path)
         self.data = read_json(path)
         if not isinstance(self.data, list):
@@ -226,6 +273,119 @@ class Doc:
         # 3.x: sizes live on cc.UITransform, nodes carry _lpos/_lscale; 2.4: _contentSize on the node
         self.v3 = any(isinstance(o, dict) and (o.get('__type__') == 'cc.UITransform' or '_lscale' in o)
                       for o in self.data)
+        self.resolver = resolver
+        self.pending = []      # overrides for deeper nested instances (localID longer than 1)
+        self.touched = set()   # id() of objects changed by an override (nested views only)
+        self.depth = 0
+        self._names = {}
+
+    # ---- 3.x nested prefab instances
+    def prefab_info(self, i):
+        o = self.obj(self.data[i].get('_prefab'))
+        return o if isinstance(o, dict) else None
+
+    def instance(self, i):
+        pi = self.prefab_info(i)
+        o = self.obj(pi.get('instance')) if pi else None
+        return o if isinstance(o, dict) and o.get('__type__') == 'cc.PrefabInstance' else None
+
+    def overrides(self, inst):
+        out = []
+        for ref in inst.get('propertyOverrides') or []:
+            o = self.obj(ref)
+            if not isinstance(o, dict):
+                continue
+            t = self.obj(o.get('targetInfo')) or {}
+            out.append((list(t.get('localID') or []), list(o.get('propertyPath') or []), o.get('value'), o))
+        return out
+
+    def file_ids(self):
+        """fileId -> object: nodes by PrefabInfo.fileId, components by CompPrefabInfo (__prefab) fileId."""
+        out = {}
+        for o in self.data:
+            if not isinstance(o, dict):
+                continue
+            if o.get('__type__') == 'cc.Node':
+                pi = self.obj(o.get('_prefab'))
+                if isinstance(pi, dict) and pi.get('fileId'):
+                    out.setdefault(pi['fileId'], o)
+            elif isinstance(o.get('__prefab'), dict):
+                cp = self.obj(o['__prefab'])
+                if isinstance(cp, dict) and cp.get('fileId'):
+                    out.setdefault(cp['fileId'], o)
+        return out
+
+    def apply_overrides(self, ovs):
+        fids = self.file_ids()
+        for lid, path, v in ovs:
+            if not lid or not path:
+                continue
+            if len(lid) > 1:
+                self.pending.append((lid, path, v))
+                continue
+            o = fids.get(lid[0])
+            if o is None:
+                continue
+            for k in path[:-1]:
+                o = o.setdefault(k, {})
+            o[path[-1]] = json.loads(json.dumps(v))
+            self.touched.add(id(fids[lid[0]]))
+
+    def root(self):
+        top = self.data[0] if self.data else {}
+        r = self.obj(top.get('data')) if isinstance(top, dict) else None
+        if isinstance(r, dict):
+            return self.data.index(r)
+        return next((i for i in self.nodes if self.parent(i) is None), self.nodes[0] if self.nodes else None)
+
+    def node_name(self, i):
+        if i in self._names:
+            return self._names[i]
+        n, name = self.data[i], self.data[i].get('_name', '')
+        if self.instance(i) is not None and self.resolver is not None:
+            v = self.resolver.view(self, i, self.depth)
+            if v is not None and v.root() is not None:
+                name = v.data[v.root()].get('_name', '') or name
+        self._names[i] = name
+        return name
+
+    def comp_file_id(self, comp, what):
+        cp = self.obj(comp.get('__prefab')) if isinstance(comp.get('__prefab'), dict) else None
+        if not isinstance(cp, dict) or not cp.get('fileId'):
+            raise BindError('%s: the %s in the nested prefab has no __prefab fileId, so no override can point at it; '
+                            'bind the node in %s itself' % (self.path.name, what, self.path.name))
+        return cp['fileId']
+
+    def resolve(self, path, prefix=(), scale=(1.0, 1.0), outer=None):
+        """-> (doc, node index, nest). nest is None for a node stored in this file, else
+        {'doc': file being bound, 'instance': its cc.PrefabInstance, 'local_id': localID prefix, 'scale': ...}."""
+        hits = [i for i in self.nodes if self.path_of(i) == path]
+        if len(hits) > 1:
+            raise BindError('%s: node "%s" is ambiguous (%d nodes); rename them first' % (self.path.name, path, len(hits)))
+        if hits:
+            nest = None if outer is None else dict(outer, local_id=list(prefix), scale=scale, asset=self.path)
+            return self, hits[0], nest
+        for r in self.nodes:
+            inst = self.instance(r)
+            if inst is None:
+                continue
+            rp = self.path_of(r)
+            if not path.startswith(rp + '/'):
+                continue
+            view = self.resolver.view(self, r, self.depth) if self.resolver else None
+            if view is None:
+                raise BindError('%s: node "%s" is inside the nested prefab instance "%s" whose .prefab was not found '
+                                'in the project' % (self.path.name, path, rp))
+            par = self.parent(r)
+            sx, sy = self.scale(par) if par is not None else (1.0, 1.0)
+            pre = list(prefix) + ([inst.get('fileId')] if outer is not None else [])
+            nxt = outer or {'doc': self, 'instance': inst}
+            return view.resolve(view.path_of(view.root()) + path[len(rp):], pre, (scale[0] * sx, scale[1] * sy), nxt)
+        hint = ''
+        if self.v3 and any(isinstance(o, dict) and o.get('__type__') == 'cc.PrefabInstance' for o in self.data):
+            hint = ('; this 3.x file has nested prefab instances whose children are not stored here: name the node '
+                    'through the instance (e.g. "Root/<instance>/<child>") or bind it in that prefab\'s own .prefab')
+        raise BindError('%s: node "%s" not found%s' % (self.path.name, path, hint))
 
     def transform(self, i):
         t = self.comps(i, 'cc.UITransform')
@@ -241,21 +401,15 @@ class Doc:
     def path_of(self, i):
         names = []
         while i is not None and self.data[i].get('__type__') == 'cc.Node':
-            names.append(self.data[i].get('_name', ''))
+            names.append(self.node_name(i))
             i = self.parent(i)
         return '/'.join(reversed(names))
 
     def find(self, path):
-        hits = [i for i in self.nodes if self.path_of(i) == path]
-        if not hits:
-            hint = ''
-            if self.v3 and any(isinstance(o, dict) and o.get('__type__') == 'cc.PrefabInstance' for o in self.data):
-                hint = ('; this 3.x file has nested prefab instances whose children are not stored here: bind the '
-                        'node in that prefab\'s own .prefab file')
-            raise BindError('%s: node "%s" not found%s' % (self.path.name, path, hint))
-        if len(hits) > 1:
-            raise BindError('%s: node "%s" is ambiguous (%d nodes); rename them first' % (self.path.name, path, len(hits)))
-        return hits[0]
+        d, i, nest = self.resolve(path)
+        if nest is not None:
+            raise BindError('%s: node "%s" is inside a nested prefab instance' % (self.path.name, path))
+        return i
 
     def comps(self, i, kind=None):
         out = []
@@ -357,8 +511,59 @@ def cover_old_text(doc, i, frames):
 
 
 # ---------------------------------------------------------------- bind
+SPRITE_OVERRIDE_KEYS = ('_spriteFrame', '_sizeMode', '_isTrimmedMode', '_atlas')
+
+
+def set_override(doc, inst, lid, path, value):
+    """Write one propertyOverride on a 3.x cc.PrefabInstance (replace the value when the same target/path exists)."""
+    for _lid, _path, _v, o in doc.overrides(inst):
+        if _lid == lid and _path == path:
+            o['value'] = value
+            return
+    if not isinstance(inst.get('propertyOverrides'), list):
+        inst['propertyOverrides'] = []
+    oid = len(doc.data)
+    doc.data.append({'__type__': OVERRIDE_TYPE, 'targetInfo': {'__id__': oid + 1}, 'propertyPath': list(path),
+                     'value': value})
+    doc.data.append({'__type__': 'cc.TargetInfo', 'localID': list(lid)})
+    inst['propertyOverrides'].append({'__id__': oid})
+
+
 def bind_one(doc, b, frames, by_png, project, meta_fixes=None):
-    i = doc.find(b['node'])
+    outer_doc = doc
+    doc, i, nest = outer_doc.resolve(b['node'])
+    if nest is not None:
+        return bind_nested(outer_doc, doc, i, nest, b, frames, by_png, project, meta_fixes)
+    return bind_local(doc, i, b, frames, by_png, project, meta_fixes)
+
+
+def bind_nested(outer_doc, view, i, nest, b, frames, by_png, project, meta_fixes):
+    """3.x node inside a nested prefab instance: bind on the effective copy of the nested prefab, then write what
+    changed as propertyOverrides on the instance in the bound file (the nested .prefab is not touched)."""
+    sprites = view.comps(i, 'cc.Sprite')
+    tr = view.transform(i) if view.v3 else None
+    before_sp = json.loads(json.dumps({k: sprites[0].get(k) for k in SPRITE_OVERRIDE_KEYS})) if sprites else {}
+    before_sz = json.loads(json.dumps((tr or {}).get('_contentSize')))
+    rec = bind_local(view, i, b, frames, by_png, project, meta_fixes, scale_mul=nest['scale'])
+    sp = sprites[0]
+    pre, inst = nest['local_id'], nest['instance']
+    changes = []
+    if tr is not None and tr.get('_contentSize') != before_sz:
+        changes.append((pre + [view.comp_file_id(tr, 'cc.UITransform')], ['_contentSize'], tr['_contentSize']))
+    sp_id = None
+    for k in SPRITE_OVERRIDE_KEYS:
+        if sp.get(k) != before_sp.get(k):
+            sp_id = sp_id or view.comp_file_id(sp, 'cc.Sprite')
+            changes.append((pre + [sp_id], [k], sp.get(k)))
+    for lid, path, v in changes:
+        set_override(outer_doc, inst, lid, path, json.loads(json.dumps(v)))
+    rec['prefab'] = outer_doc.path.relative_to(project).as_posix()
+    rec['nested'] = {'prefab': pathlib.Path(nest['asset']).resolve().relative_to(project).as_posix(),
+                     'overrides': [{'localID': lid, 'propertyPath': path} for lid, path, _ in changes]}
+    return rec
+
+
+def bind_local(doc, i, b, frames, by_png, project, meta_fixes=None, scale_mul=(1.0, 1.0)):
     if doc.comps(i, 'cc.Label') or doc.comps(i, 'cc.RichText'):
         raise BindError('%s: node has a Label; Cocos 2.4/3.x draw one render component per node, put the picture on a '
                         'child Sprite node' % b['node'])
@@ -405,6 +610,7 @@ def bind_one(doc, b, frames, by_png, project, meta_fixes=None):
         new = list(contain(src[0] / float(src[1]), old[0], old[1]))
         trim = by == 'rect'
     sx, sy = doc.scale(i)
+    sx, sy = sx * scale_mul[0], sy * scale_mul[1]
     src = geo['rect'] if trim else geo['raw']
     up = max(new[0] * sx / src[0], new[1] * sy / src[1])
     rec.update({'new_size': new, 'trim': trim, 'size_mode': 'CUSTOM', 'upscale': round(up, 2)})
@@ -451,10 +657,11 @@ def run_bind(project, map_path, gen_log, dry):
     frames, by_png = index_frames(project)
     bindings = resolve_bindings(read_json(map_path), gen_log, project)
     docs, records, meta_fixes = {}, [], {}
+    resolver = Resolver(project)
     for b in bindings:
         p = (project / b['prefab']).resolve()
         if p not in docs:
-            docs[p] = Doc(p)
+            docs[p] = Doc(p, resolver)
         records.append(bind_one(docs[p], b, frames, by_png, project, meta_fixes))
     if not dry:
         for fix in meta_fixes.values():
@@ -477,33 +684,55 @@ def run_check(project, files):
     if not files:
         files = [p for ext in ('*.prefab', '*.fire', '*.scene') for p in (project / 'assets').rglob(ext)]
     bad = []
+    resolver = Resolver(project)
+
+    def walk(doc, prefix=''):
+        """the file's own nodes, then nested 3.x instances seen through their overrides (only what an override
+        changed is checked there: the nested .prefab's own values are checked when that file is checked)."""
+        yield doc, prefix
+        for r in doc.nodes:
+            if doc.instance(r) is None:
+                continue
+            v = resolver.view(doc, r, doc.depth)
+            if v is not None:
+                par = doc.parent(r)
+                yield from walk(v, prefix + (doc.path_of(par) + '/' if par is not None and doc.path_of(par) else ''))
+
     for f in files:
         try:
-            doc = Doc(f)
+            top = Doc(f, resolver)
         except (BindError, ValueError):
             continue
-        for i in doc.nodes:
-            for sp in doc.comps(i, 'cc.Sprite'):
-                u = frame_uuid(sp)
-                if sp.get('_type', SIMPLE) != SIMPLE or u not in frames or u in BUILTIN_FLAT:
-                    continue
-                if sp.get('_sizeMode', CUSTOM) != CUSTOM:
-                    continue  # TRIMMED / RAW: the engine sizes the node from the frame itself
-                try:
-                    node_size = doc.size(i)
-                except BindError:
-                    continue  # 3.x sprite node without cc.UITransform: nothing to measure
-                geo = picture_geometry(frames[u]['png'], frames[u]['meta'])
-                r = drawn_ratio(node_size, sp.get('_isTrimmedMode', True), geo)
-                if r is None:
-                    continue
-                want = geo['rect'][0] / float(geo['rect'][1])
-                diff = abs(r / want - 1)
-                if diff > RATIO_TOL:
-                    bad.append({'file': pathlib.Path(f).resolve().relative_to(project).as_posix(), 'node': doc.path_of(i),
-                                'image': frames[u]['rel'], 'node_size': node_size, 'picture_rect': geo['rect'],
-                                'ratio_diff': round(diff, 3)})
+        for doc, prefix in walk(top):
+            check_doc(doc, prefix, top, project, frames, bad)
     return bad
+
+
+def check_doc(doc, prefix, top, project, frames, bad):
+    nested = doc is not top
+    for i in doc.nodes:
+        for sp in doc.comps(i, 'cc.Sprite'):
+            if nested and id(sp) not in doc.touched and id(doc.transform(i) or {}) not in doc.touched:
+                continue
+            u = frame_uuid(sp)
+            if sp.get('_type', SIMPLE) != SIMPLE or u not in frames or u in BUILTIN_FLAT:
+                continue
+            if sp.get('_sizeMode', CUSTOM) != CUSTOM:
+                continue  # TRIMMED / RAW: the engine sizes the node from the frame itself
+            try:
+                node_size = doc.size(i)
+            except BindError:
+                continue  # 3.x sprite node without cc.UITransform: nothing to measure
+            geo = picture_geometry(frames[u]['png'], frames[u]['meta'])
+            r = drawn_ratio(node_size, sp.get('_isTrimmedMode', True), geo)
+            if r is None:
+                continue
+            want = geo['rect'][0] / float(geo['rect'][1])
+            diff = abs(r / want - 1)
+            if diff > RATIO_TOL:
+                bad.append({'file': top.path.resolve().relative_to(project).as_posix(), 'node': prefix + doc.path_of(i),
+                            'image': frames[u]['rel'], 'node_size': node_size, 'picture_rect': geo['rect'],
+                            'ratio_diff': round(diff, 3)})
 
 
 def main():

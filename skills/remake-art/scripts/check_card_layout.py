@@ -50,6 +50,9 @@ def inspect(data,verify=True):
   if pr['x']<-1 or pr['y']<-1 or pr['x']+pr['width']>vp['width']+1 or pr['y']+pr['height']>vp['height']+1:errors.append({'slot':slot,'code':'card_outside_viewport'})
  return {'passed':not errors,'errors':errors,'metrics':metrics}
 if __name__=='__main__':
+ if len(sys.argv)<2 or sys.argv[1] in ('-h','--help'):  # R4I1: --help prints usage (exit 0); no argument is a usage error
+  print('usage: check_card_layout.py CARD_LAYOUT.json  (prints {"passed", "errors", "metrics"}; exit 0 pass, 1 fail)')
+  sys.exit(0 if len(sys.argv)>=2 else 2)
  try:
   data=json.loads(Path(sys.argv[1]).read_text());result=inspect(data)
  except (OSError,ValueError,TypeError,KeyError,IndexError) as exc:

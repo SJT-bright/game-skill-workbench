@@ -315,5 +315,163 @@ class ImportType(Base):
         self.assertEqual(meta_p.read_bytes(), before_m)
 
 
+BTN_UUID = 'b7000000-0000-4000-8000-0000000000b7'
+PANEL_UUID = 'a7000000-0000-4000-8000-0000000000a7'
+
+
+class NestedPrefab3x(Base):
+    """R4C / census squashed_image (3.x games): a button prefab placed in a scene as a nested instance. The scene
+    stores only the instance root and cc.PrefabInstance.propertyOverrides; the old bind_art said "node not found"
+    and the picture got swapped by hand (frame override, size untouched) -> squashed in the scene only."""
+
+    def add(self, data, obj):
+        data.append(obj)
+        return len(data) - 1
+
+    def button_prefab(self, inner=None):
+        """Button.prefab: Btn (UITransform 300x300) / icon (UITransform 200x200, Sprite old)."""
+        d = [{'__type__': 'cc.Prefab', '_name': 'Button', 'data': {'__id__': 1}}]
+        root = self.add(d, n3('Btn', None, []))
+        icon = self.add(d, n3('icon', {'__id__': root}, []))
+        d[root]['_children'] = [{'__id__': icon}]
+        for nid, fid in ((root, 'rootF'), (icon, 'iconF')):
+            pi = self.add(d, {'__type__': 'cc.PrefabInfo', 'root': {'__id__': root}, 'asset': {'__id__': 0},
+                              'fileId': fid, 'instance': None})
+            d[nid]['_prefab'] = {'__id__': pi}
+        for nid, comp, fid in ((root, ut(root, 300, 300), 'rootUT'), (icon, ut(icon, 200, 200), 'iconUT'),
+                               (icon, sp3(icon, self.old), 'iconSP')):
+            cp = self.add(d, {'__type__': 'cc.CompPrefabInfo', 'fileId': fid})
+            comp['__prefab'] = {'__id__': cp}
+            d[nid]['_components'].append({'__id__': self.add(d, comp)})
+        p = self.root / 'assets' / 'Button.prefab'
+        p.write_text(json.dumps(d, indent=2))
+        (self.root / 'assets' / 'Button.prefab.meta').write_text(json.dumps(
+            {'ver': '1.1.50', 'importer': 'prefab', 'imported': True, 'uuid': BTN_UUID, 'files': ['.json'],
+             'subMetas': {}, 'userData': {'syncNodeName': 'Btn'}}))
+        return p
+
+    def instance(self, d, parent, asset, name, inst_fid, root_fid='rootF', overrides=()):
+        """A nested instance as Creator 3.8 writes it: a bare cc.Node + PrefabInfo + PrefabInstance + overrides."""
+        node = self.add(d, {'__type__': 'cc.Node', '_objFlags': 0, '_parent': {'__id__': parent},
+                            '_prefab': None, '__editorExtras__': {}})
+        d[parent].setdefault('_children', []).append({'__id__': node})
+        inst = self.add(d, {'__type__': 'cc.PrefabInstance', 'fileId': inst_fid, 'prefabRootNode': None,
+                            'mountedChildren': [], 'mountedComponents': [], 'propertyOverrides': [],
+                            'removedComponents': []})
+        pi = self.add(d, {'__type__': 'cc.PrefabInfo', 'root': {'__id__': node},
+                          'asset': {'__uuid__': asset, '__expectedType__': 'cc.Prefab'}, 'fileId': root_fid,
+                          'instance': {'__id__': inst}, 'targetOverrides': None})
+        d[node]['_prefab'] = {'__id__': pi}
+        for lid, path, v in [([root_fid], ['_name'], name)] + list(overrides):
+            o = self.add(d, {'__type__': 'CCPropertyOverrideInfo', 'targetInfo': None, 'propertyPath': path,
+                             'value': v})
+            d[o]['targetInfo'] = {'__id__': self.add(d, {'__type__': 'cc.TargetInfo', 'localID': lid})}
+            d[inst]['propertyOverrides'].append({'__id__': o})
+        return node, inst
+
+    def home_scene(self, overrides=(), panel=False):
+        d = [{'__type__': 'cc.SceneAsset', '_name': 'home', 'scene': {'__id__': 1}},
+             {'__type__': 'cc.Scene', '_name': 'home', '_parent': None, '_children': [], '_components': [],
+              '_prefab': None}]
+        canvas = self.add(d, n3('Canvas', {'__id__': 1}, []))
+        d[1]['_children'].append({'__id__': canvas})
+        d[canvas]['_components'].append({'__id__': self.add(d, ut(canvas, 720, 1280))})
+        if panel:
+            self.instance(d, canvas, PANEL_UUID, 'Panel', 'outerInst', root_fid='panelRootF', overrides=overrides)
+        else:
+            self.instance(d, canvas, BTN_UUID, 'PlayBtn', 'instF', overrides=overrides)
+        p = self.root / 'assets' / 'home.scene'
+        p.write_text(json.dumps(d, indent=2))
+        return p
+
+    def panel_prefab(self):
+        """Panel.prefab holds a nested Button instance (instance fileId innerInst) named PlayBtn."""
+        d = [{'__type__': 'cc.Prefab', '_name': 'Panel', 'data': {'__id__': 1}}]
+        root = self.add(d, n3('Panel', None, []))
+        pi = self.add(d, {'__type__': 'cc.PrefabInfo', 'root': {'__id__': root}, 'asset': {'__id__': 0},
+                          'fileId': 'panelRootF', 'instance': None})
+        d[root]['_prefab'] = {'__id__': pi}
+        self.instance(d, root, BTN_UUID, 'PlayBtn', 'innerInst')
+        (self.root / 'assets' / 'Panel.prefab').write_text(json.dumps(d, indent=2))
+        (self.root / 'assets' / 'Panel.prefab.meta').write_text(json.dumps(
+            {'ver': '1.1.50', 'importer': 'prefab', 'uuid': PANEL_UUID, 'subMetas': {}, 'userData': {}}))
+
+    def overrides(self, d):
+        out = {}
+        for o in d:
+            if o.get('__type__') == 'CCPropertyOverrideInfo':
+                out.setdefault((tuple(d[o['targetInfo']['__id__']]['localID']), tuple(o['propertyPath'])), []).append(
+                    o['value'])
+        return out
+
+    def test_old_way_frame_override_only_is_reported_in_scene(self):
+        tall = self.png3('diver_skin', (80, 206), (0, 0, 80, 206))
+        btn = self.button_prefab()
+        self.home_scene(overrides=[(['iconSP'], ['_spriteFrame'],
+                                    {'__uuid__': tall, '__expectedType__': 'cc.SpriteFrame'})])
+        bad = tool.run_check(self.root, [])
+        self.assertEqual([(b['file'], b['node']) for b in bad], [('assets/home.scene', 'Canvas/PlayBtn/icon')])
+        self.assertGreater(bad[0]['ratio_diff'], 0.10)
+        self.assertEqual(tool.run_check(self.root, [btn]), [])   # the button prefab itself is fine
+
+    def test_bind_writes_property_overrides_not_the_nested_prefab(self):
+        self.png3('diver_skin', (80, 206), (0, 0, 80, 206))
+        btn = self.button_prefab()
+        before = btn.read_bytes()
+        self.home_scene()
+        rec = self.bind('diver_skin', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')[0]
+        self.assertEqual(btn.read_bytes(), before)               # nested .prefab untouched
+        ov = self.overrides(self.doc('home.scene'))
+        size = ov[(('iconUT',), ('_contentSize',))][0]
+        self.assertAlmostEqual(size['height'], 200, delta=0.1)
+        self.assertAlmostEqual(size['width'], 77.7, delta=0.2)
+        self.assertEqual(ov[(('iconSP',), ('_spriteFrame',))][0],
+                         {'__uuid__': rec['frame_uuid'], '__expectedType__': 'cc.SpriteFrame'})
+        self.assertEqual(rec['nested']['prefab'], 'assets/Button.prefab')
+        self.assertEqual(rec['prefab'], 'assets/home.scene')
+        self.assertEqual(tool.run_check(self.root, []), [])
+        # bind again with another picture: the same overrides are replaced, not duplicated
+        self.png3('wide', (300, 100), (0, 0, 300, 100))
+        self.bind('wide', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')
+        ov = self.overrides(self.doc('home.scene'))
+        self.assertEqual(len(ov[(('iconUT',), ('_contentSize',))]), 1)
+        self.assertEqual(len(ov[(('iconSP',), ('_spriteFrame',))]), 1)
+        self.assertEqual(tool.run_check(self.root, []), [])
+
+    def test_existing_size_override_is_the_old_box(self):
+        self.png3('diver_skin', (80, 206), (0, 0, 80, 206))
+        self.button_prefab()
+        self.home_scene(overrides=[(['iconUT'], ['_contentSize'], {'__type__': 'cc.Size', 'width': 100, 'height': 100})])
+        rec = self.bind('diver_skin', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')[0]
+        self.assertEqual(rec['old_size'], [100.0, 100.0])
+        self.assertAlmostEqual(rec['new_size'][1], 100.0, delta=0.1)
+
+    def test_instance_root_scale_override_counts_for_upscale(self):
+        self.png3('mid', (120, 120), (0, 0, 120, 120))
+        self.button_prefab()
+        p = self.home_scene(overrides=[(['rootF'], ['_lscale'], {'__type__': 'cc.Vec3', 'x': 1.5, 'y': 1.5, 'z': 1})])
+        before = p.read_bytes()
+        with self.assertRaisesRegex(tool.BindError, 'upscale'):
+            self.bind('mid', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')
+        self.assertEqual(p.read_bytes(), before)
+
+    def test_two_levels_local_id_path(self):
+        self.png3('diver_skin', (80, 206), (0, 0, 80, 206))
+        self.button_prefab()
+        self.panel_prefab()
+        self.home_scene(panel=True)
+        self.bind('diver_skin', prefab='assets/home.scene', node='Canvas/Panel/PlayBtn/icon')
+        ov = self.overrides(self.doc('home.scene'))
+        self.assertIn((('innerInst', 'iconUT'), ('_contentSize',)), ov)
+        self.assertIn((('innerInst', 'iconSP'), ('_spriteFrame',)), ov)
+        self.assertEqual(tool.run_check(self.root, []), [])
+
+    def test_missing_nested_asset_named(self):
+        self.png3('diver_skin', (80, 206), (0, 0, 80, 206))
+        self.home_scene()   # Button.prefab not in the project
+        with self.assertRaisesRegex(tool.BindError, 'nested prefab'):
+            self.bind('diver_skin', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-04.english-simple.11.14",
+  "revision": "2026-11-05.english-simple.11.15",
   "skill": "remake-art",
-  "previous_provenance_sha256": "c3e1997c126fabfbc4e41957ba60ad23eec5f6f9b696678afcc2dcb4eaa1a865",
+  "previous_provenance_sha256": "73b17a946b6f6d35c0bfebc86e7b1556a92c6d28d75462e8876442198eaf5506",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "e6fd9ec5a817eeb0f37f3e29c5dd90c79cfed7c062758ea0070caca5dc3336b9",
-      "bytes": 19275
+      "sha256": "48204bfb1744c5baf51b0bb2186cb53cc52bb2ecdb5c768dfd1fe0180bf8536d",
+      "bytes": 20126
     },
     {
       "path": "agents/openai.yaml",
@@ -57,8 +57,8 @@
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "0acc5255ee7cdbdae9100cdcee9fc9c07125373fea1088008fa13cea9fc02b52",
-      "bytes": 14566
+      "sha256": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+      "bytes": 15248
     },
     {
       "path": "references/button-group-review.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "references/production-prevention.md",
-      "sha256": "178f4d91b0ab0158759b82dc3cf7960e0b324e7fd514a81c408cea548f9e320e",
-      "bytes": 27962
+      "sha256": "2857b68d5915523250fd3f88764bbc3728587b3e3f594499ecfd815a59e8d278",
+      "bytes": 29527
     },
     {
       "path": "references/saul-art-rules.md",
@@ -187,8 +187,8 @@
     },
     {
       "path": "scripts/bind_art.py",
-      "sha256": "5d68a36e4443381d0630d82d9b73cac2d1846bd1dcc9322d7e6ebe277efd9030",
-      "bytes": 26142
+      "sha256": "874d303c6472905a32e8b0363d0ce4299ab7ae99facaa3eab2684e482bc9d651",
+      "bytes": 37167
     },
     {
       "path": "scripts/check_button_group.py",
@@ -197,8 +197,8 @@
     },
     {
       "path": "scripts/check_card_layout.py",
-      "sha256": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
-      "bytes": 4910
+      "sha256": "590f674319d922c2c631c809f8b347c6338e350d0fe8c5dfa9756c2cc3b00eea",
+      "bytes": 5193
     },
     {
       "path": "scripts/check_collection_preview.py",
@@ -237,8 +237,8 @@
     },
     {
       "path": "scripts/test_bind_art_3x.py",
-      "sha256": "92d0966f9d848e403e31f9e9e23b1c8c79da55ba09c1f71844be0e1d3d4d007c",
-      "bytes": 18625
+      "sha256": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
+      "bytes": 27976
     },
     {
       "path": "scripts/test_cut_sheet_frame.py",

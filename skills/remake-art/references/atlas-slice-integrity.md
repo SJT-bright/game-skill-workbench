@@ -79,6 +79,8 @@ cd <skills>/remake-core/scripts && python3 -m unittest test_plist_atlas
 
 从生成拼图取按钮、图标、标题时，先看原图确认行列和完整主体（含描边、阴影、分开的字母/图标）。同页行距常不均匀，不能直接用图宽÷列数、图高÷行数切，也不能删掉最大连通块之外的所有像素。优先单独生图。透明且按行列排列的现成拼图，使用 `python3 <skills>/remake-art/scripts/cut_sheet_frame.py sheet.png --grid 行数 列数 --cell 行号 列号 --out 新母图.png`（从 1 数起）。脚本先沿整行找清晰分隔带，再在该行找列间隔，判界使用 alpha>8，保留主体外两像素及框内原始透明值。没有唯一分隔、触边、空格就停在该帧，不硬切。连通的原画、深阴影、偏排或不透明拼图改用已核实的作者帧框或单图。保存裁切收据及母图；行列语义仍须按原图核对。拿母图和引擎实际使用的切片等比并排看四边；母图完好但游戏仍露旧字/角标时查同位置子节点和旧底图。两个独立合法元素重叠不能靠裁掉其中一个修复。
 
+**新美术从源头少切（R4C，普查 sprite_crop_fragment 17 款）**：新生成的美术一张图只放一个主体（按钮、图标、标题、角色各自出图）。条状图和拼图只用脚本切：行列拼图用上面的 `cut_sheet_frame.py`，字宽不等的数字/字母条用 `ad-boost/scripts/art/cut_strip.py --png <条.png> --chars "<字符>" --out rects.json`；不按图宽÷格数手算框，不在图片软件里手裁。切好的图接进节点时用 `bind_art.py`，不手改宽高（见[出图和接图的两条固定做法](production-prevention.md#出图和接图的两条固定做法r4c普查-squashed_image-32-款sprite_crop_fragment-17-款)）。
+
 验收读取实际被使用的帧。Creator 3 源工程以 package.json 的 creator.version 识别，通过 image .meta 的 sprite-frame 子项 displayName 映射独立 PNG。同名不唯一须按 UUID/路径复核。独立图检查零项或缺帧记未覆盖，不能拿 OCR 已过或图集不适用代替。已有孤立碎片标记只要求复核，不自动擦除合法多部件。背景、运行时动态图集和叠层仍需同版本实际截图。
 
 ## 生成拼图前先选取框方式

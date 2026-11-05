@@ -40,7 +40,9 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 
 **所有本轮美工制作先做源头预防（Saul 2026-11-03）**：先读[美工制作预防](references/production-prevention.md)，把美术总表 T01–T14 中与本轮资产有关的要求落成具体提示词、尺寸/状态方案与接图要求；广告板块新增资产也执行。不能只在制作前泛读禁止项、等检查报错再返工。英化保持原画风，按下面的英文空间规则细化。
 
-**英化生图前与接图时先预防（Saul 2026-11-03）**：按[生成前先定尺寸与分区](../cocos-game-to-english/references/english-ui-rebuild.md#生成前先定尺寸与分区制作时消除问题saul-2026-11-03)执行：先按英文定稿规划可读内区和各元素空间，把目标比例、完整文字、留白写进提示词；接图保持比例、处理重复旧层，代表样先在真实页面确认再批量做。每批发现共性问题即修生成模板或共享组件，完整美工检查继续在每轮试玩前完成。
+**英化生图前与接图时先预防（Saul 2026-11-03）**：按[生成前先定尺寸与分区](../cocos-game-to-english/references/english-ui-rebuild.md#生成前先定尺寸与分区制作时消除问题saul-2026-11-03)执行：先按英文定稿规划可读内区和各元素空间，把目标比例、完整文字、留白写进提示词；接图保持比例、处理重复旧层，代表样先在真实页面确认再批量做。每批发现共性问题即修生成模板或共享组件，完整美工检查继续在每轮试玩前完成。英化第一轮换哪些图，照 `docs/english/art-replace-round1.json` 的 `replace`、`manual_review`、`regenerate` 三组做（[英化换图第 0 步](../cocos-game-to-english/references/english-ui-rebuild.md#英化只换带中文字的图画风跟原游戏一致)）。
+
+**接图用 `bind_art.py`、一张图一个主体（R4C）**：接图一律用 `remake-art/scripts/bind_art.py`（3.x 嵌套预制体实例也支持），不手改节点宽高，接完跑 `--check`（英化游戏只改这一轮换过图的节点，原游戏的图照原样）；新美术一张图只放一个主体，条状图只用 `cut_sheet_frame.py` / `ad-boost/scripts/art/cut_strip.py` 切。见[出图和接图的两条固定做法](references/production-prevention.md#出图和接图的两条固定做法r4c普查-squashed_image-32-款sprite_crop_fragment-17-款)。
 
 **先量后做（Saul 2026-11-04，蛋壳特工队六张图）**：按[排版预算与页面全覆盖](references/text-fit-and-coverage.md)做。开工就用 `audit_page_coverage.py` 从工程预制体拿到全部有字或按钮的页面和弹窗，当作本轮的工作和采集清单；带字的按钮、标题、底板、数量槽，先把 Label 换成定稿英文、两种尺寸 `dump_ui`，跑 `audit_text_fit.py --plan`，按「底板至少要」的宽度生图，数字按 `docs/art/longest-text.json` 的最长值留槽；每接好一页马上再跑一次 `audit_text_fit.py`，零发现再做下一页。
 

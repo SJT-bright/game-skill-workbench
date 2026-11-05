@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-05T13:55:12.856Z",
-  "treeHash": "7d0b38a59271ada9d7012080126d48df76713bc331e3a5ae0b55b88d9de79601",
+  "createdAt": "2026-11-05T14:00:50.889Z",
+  "treeHash": "771aab1edff4242c521663fa6c10fa0825a41644dcee556088b4e4594c1f0033",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2869,20 +2869,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "d2ba76e851feb1640e7c46711c13ef71f94a722e889722f3b2ca74174c001990",
+      "treeHash": "fd0775ae125ac220d661348b3a6d62fe22258422f5c176457f05a99c4460b419",
       "fileCount": 52,
-      "bytes": 1279918,
+      "bytes": 1303675,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "73b17a946b6f6d35c0bfebc86e7b1556a92c6d28d75462e8876442198eaf5506",
+          "hash": "53b501181d29a45348db6c912ef67c03049e1535284dd56e4fb639d491be70af",
           "size": 8880,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "e6fd9ec5a817eeb0f37f3e29c5dd90c79cfed7c062758ea0070caca5dc3336b9",
-          "size": 19275,
+          "hash": "48204bfb1744c5baf51b0bb2186cb53cc52bb2ecdb5c768dfd1fe0180bf8536d",
+          "size": 20126,
           "executable": false
         },
         {
@@ -2941,8 +2941,8 @@
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "0acc5255ee7cdbdae9100cdcee9fc9c07125373fea1088008fa13cea9fc02b52",
-          "size": 14566,
+          "hash": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+          "size": 15248,
           "executable": false
         },
         {
@@ -3043,8 +3043,8 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "178f4d91b0ab0158759b82dc3cf7960e0b324e7fd514a81c408cea548f9e320e",
-          "size": 27962,
+          "hash": "2857b68d5915523250fd3f88764bbc3728587b3e3f594499ecfd815a59e8d278",
+          "size": 29527,
           "executable": false
         },
         {
@@ -3097,8 +3097,8 @@
         },
         {
           "path": "scripts/bind_art.py",
-          "hash": "5d68a36e4443381d0630d82d9b73cac2d1846bd1dcc9322d7e6ebe277efd9030",
-          "size": 26142,
+          "hash": "874d303c6472905a32e8b0363d0ce4299ab7ae99facaa3eab2684e482bc9d651",
+          "size": 37167,
           "executable": false
         },
         {
@@ -3109,8 +3109,8 @@
         },
         {
           "path": "scripts/check_card_layout.py",
-          "hash": "68550b82aae8e125d2c1ddd66a7b058326e8d6c991d65a107677e6cccf15b29a",
-          "size": 4910,
+          "hash": "590f674319d922c2c631c809f8b347c6338e350d0fe8c5dfa9756c2cc3b00eea",
+          "size": 5193,
           "executable": false
         },
         {
@@ -3157,8 +3157,8 @@
         },
         {
           "path": "scripts/test_bind_art_3x.py",
-          "hash": "92d0966f9d848e403e31f9e9e23b1c8c79da55ba09c1f71844be0e1d3d4d007c",
-          "size": 18625,
+          "hash": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
+          "size": 27976,
           "executable": false
         },
         {

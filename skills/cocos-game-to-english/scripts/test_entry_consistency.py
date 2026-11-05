@@ -48,6 +48,9 @@
    summary, the stage lead, stages 2-5 and the art copy say so, stage 1 marks its link --chinese-original, the English
    serve_preview.py offers --chinese-original / --draft, and the 10.2.4 "only three start checks" wording is replaced
    by "the Chinese check, then three start checks" (the gate itself is tested in test_serve_preview_gate.py).
+15. (简化.11.15, Saul 2026-11-04 "出包后的返工修改，就只检查修改涉及的那些部分") Rework after a test package: stage 5 says to run
+   rework_scope.py against the last delivered package, check by hand only what it lists, and let the writers rerun only
+   the browser checks the change can affect (the reuse rules themselves are tested in test_rework_scope.py).
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 """
 import json
@@ -603,7 +606,7 @@ class FasterFirstLink(unittest.TestCase):
 
 UPDATES = PACK / '更新记录.txt'
 AD_SECTION = '\n## 看广告：固定几项按广告板块做，第 8 项默认加 ad-boost 板块'
-OLD_VERSION_NOTES = ('11.1', '11', '10.2.12', '10.2.11', '10.2.10', '10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1',
+OLD_VERSION_NOTES = ('11.14.1', '11.14', '11.13', '11.12', '11.1', '11', '10.2.12', '10.2.11', '10.2.10', '10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1',
                      '10.2', '10.1', '10')
 # (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
 PRE_TRIAL_NOTES = (
@@ -933,6 +936,47 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
         for name in ('chinese_audit.py', 'ocr_vision.swift', 'ocr_windows.ps1', 'test_chinese_audit.py',
                      'test_serve_preview_gate.py'):
             self.assertTrue((HERE / name).is_file(), name)
+
+
+class ReworkAfterDelivery(unittest.TestCase):
+    """简化.11.15 (Saul 2026-11-04「出包后的返工修改，就只检查修改涉及的那些部分」): after a test package went out, a rework
+    checks only what it changed; the entry says how, the shared tool exists and both writers take the old package."""
+    CHECK = PACK / 'cocos-game-check' / 'package-check'
+
+    def text(self):
+        return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+
+    def test_stage5_says_how_to_rework(self):
+        part = self.text().split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
+        stage5 = part.split('\n5. **', 1)[1]
+        self.assertEqual(stage5.count('**出包后返工（简化.11.15'), 1)
+        rework = stage5.split('**出包后返工（简化.11.15', 1)[1]
+        for phrase in ('比如我修改了贴图，之后出包甚至又要检查一遍音频', 'rework_scope.py --old <出包文件夹> --native',
+                       '先在构建的副本上装平台件、压 PNG', '出完包写包入口自己再记一份',
+                       '`<工程>/docs/checks/rework-<时间>.json`', '「你（AI）自己要查的」', '不再听声音',
+                       '不重测存档、广告流程', '改了代码：就地验证改的那个功能', '`--rework-of` 默认 `auto`',
+                       '静态检查和 ZIP 核对每次都跑', '「返工范围」', '`--rework-of none`',
+                       '](../cocos-game-check/package-check/references/runtime-regression.md#出包后返工只查改动简化1115saul-2026-11-04)'):
+            self.assertIn(phrase, rework, phrase)
+        summary = self.text().split('\n## 一屏看懂', 1)[1].split('\n## ', 1)[0]
+        self.assertIn('见第 5 阶段「出包后返工」', [l for l in summary.splitlines() if l.startswith('- ⑤')][0])
+
+    def test_tool_and_writers(self):
+        tool = self.CHECK / 'scripts' / 'rework_scope.py'
+        self.assertTrue(tool.is_file())
+        self.assertTrue((self.CHECK / 'scripts' / 'test_rework_scope.py').is_file())
+        r = subprocess.run([sys.executable, '-B', str(tool), '--help'], capture_output=True, text=True,
+                           env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONIOENCODING='utf-8'))
+        self.assertEqual(r.returncode, 0, r.stderr[-300:])
+        for writer in (self.CHECK / 'scripts' / 'build_checked_zip.py', PACK / 'remake-core' / 'scripts' / 'make_tiktok_zip.py'):
+            self.assertIn("'--rework-of', default='auto'", writer.read_text(encoding='utf-8'), writer.name)
+        doc = (self.CHECK / 'references' / 'runtime-regression.md').read_text(encoding='utf-8')
+        self.assertEqual(doc.count('\n### 出包后返工只查改动（简化.11.15'), 1)
+
+    def test_readme_names_the_tool(self):
+        if not README.is_file():
+            self.skipTest('installed copies have no pack README; the release tree and ZIP do')
+        self.assertIn('rework_scope.py', README.read_text(encoding='utf-8'))
 
 
 class OriginalTrialServer(unittest.TestCase):

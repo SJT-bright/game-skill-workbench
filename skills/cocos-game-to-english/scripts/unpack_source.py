@@ -8,10 +8,15 @@
   - 拷了但要处理：文本里像账号密码的行（例如 settings/project.json 的 appSecret），列在结果里，交源码前把值清空，
     不然 make_source_zip.py 和 prepare_delivery.py 会拒绝；
   - 原 ZIP / 原文件夹一个字节不动；结果写进 <工作目录>/docs/source-intake.json。
+  - 简化.11.14（R4D，火柴人密室逃脱清理旧版时删了中文原包）：解压前先把原 ZIP / 原文件夹原样复制进
+    `<游戏文件夹>/_原始输入/`（默认 --out 的上一层），登记哈希、设成只读（remake-core/scripts/raw_inputs.py）。
+    清理旧版本只用 remake-core/scripts/clean_old_versions.py，它跳过 `_原始输入/`；AI 不删原始输入。
+  - 同时核对已装 Skill（remake-core/scripts/installed_skill_check.py）：已装文件被直接改过就提示
+    「已装 Skill 被改过，请走补丁」并列出文件，只提示、不还原，不影响退出码。
 
-  python3 unpack_source.py --source <中文源码.zip 或文件夹> --out <新的工作目录>
+  python3 unpack_source.py --source <中文源码.zip 或文件夹> --out <新的工作目录> [--game-folder <游戏文件夹>]
   （ZIP 里只有一个顶层文件夹时，工作目录就是它里面那一层）
-退出码：0 干净；1 拷好了，但有要处理的凭据行；2 参数错误（--out 已存在、不是 ZIP 也不是文件夹）。
+退出码：0 干净；1 拷好了，但有要处理的凭据行；2 参数错误（--out 已存在、不是 ZIP 也不是文件夹、原始输入复制失败）。
 """
 import argparse
 import json
@@ -24,6 +29,7 @@ from pathlib import Path, PurePosixPath
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / 'remake-core' / 'scripts'))
 import source_hygiene as H  # noqa: E402
+import raw_inputs  # noqa: E402
 
 JUNK = {'.ds_store', 'thumbs.db', 'desktop.ini'}
 
@@ -52,12 +58,18 @@ def strip_top(names):
     return ''
 
 
-def unpack(source, out):
+def unpack(source, out, game_folder=None):
     source, out = Path(source).resolve(), Path(out).resolve()
     if out.exists():
         raise ValueError('--out already exists: %s (choose a new folder; nothing is overwritten)' % out)
     if source.is_dir() and out.is_relative_to(source):
         raise ValueError('--out must be outside the source folder')
+    if not source.is_dir() and not zipfile.is_zipfile(source):
+        raise ValueError('--source is not a ZIP or a folder: %s' % source)
+    game_folder = Path(game_folder).resolve() if game_folder else out.parent
+    if source.is_dir() and game_folder.is_relative_to(source):
+        raise ValueError('--game-folder must be outside the source folder (the raw copy goes into it)')
+    raw = raw_inputs.keep(source, game_folder)      # before anything else: the original survives any later cleanup
     rows = {'copied': 0, 'skipped_vcs_ide': set(), 'skipped_secrets': [], 'skipped_junk': 0}
     tmp = out.with_name(out.name + '.partial')
     if tmp.exists():
@@ -114,6 +126,9 @@ def unpack(source, out):
               'left_out_vcs_ide': sorted(rows['skipped_vcs_ide']), 'left_out_credential_files': rows['skipped_secrets'],
               'left_out_junk_files': rows['skipped_junk'],
               'credential_lines_to_clean': left['secrets'],
+              'raw_input': dict(raw, rule='只读保留；清理旧版本只用 remake-core/scripts/clean_old_versions.py，它跳过 %s/'
+                                % raw_inputs.RAW_DIR),
+              'installed_skills': installed_skills_hint(),
               'status': 'clean' if not left['secrets'] and not left['vcs_ide'] else 'clean_before_delivery',
               'next': ('nothing to do' if not left['secrets'] else
                        'blank these values (or remove the files) before any source ZIP; make_source_zip.py and '
@@ -124,16 +139,29 @@ def unpack(source, out):
     return record
 
 
+def installed_skills_hint():
+    """开工核对已装 Skill（只提示）。核对本身出错不挡开工。"""
+    try:
+        import installed_skill_check
+        return installed_skill_check.check()
+    except Exception as exc:  # noqa: BLE001 - a hint only
+        return {'status': 'check_error', 'error': repr(exc)[:200]}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--source', type=Path, required=True)
     ap.add_argument('--out', type=Path, required=True)
+    ap.add_argument('--game-folder', type=Path, help='where _原始输入/ goes (default: the folder that holds --out)')
     a = ap.parse_args()
     try:
-        r = unpack(a.source, a.out)
+        r = unpack(a.source, a.out, a.game_folder)
     except (ValueError, OSError, zipfile.BadZipFile) as exc:
         print(json.dumps({'status': 'error', 'error': str(exc)}, ensure_ascii=False)); return 2
     print(json.dumps(r, ensure_ascii=False, indent=1))
+    hint = r.get('installed_skills') or {}
+    if hint.get('status') == 'modified':
+        print(hint.get('line', ''), file=sys.stderr)
     return 0 if r['status'] == 'clean' else 1
 
 

@@ -2,7 +2,7 @@
 """fit_english_labels.py (生成时预防 P06 1/5): a 2.4 settings prefab whose "MUSIC 100%" overflows its 120-wide box
 the old way (audit_text_fit.py reports text_cut) and fits after the tool; a label that fits stays byte-for-byte the
 same; a three-line description goes on the to-fix list; same-name siblings get a suffix unless a script names them;
-a 3.x prefab; a countdown measured as 00:00:00; a BMFont; an unreadable TTF still measured (no fontTools needed).
+a 3.x prefab; a countdown measured in its own format (mm:ss stays mm:ss, R4C); a NONE label wider than its parent plate is marked; a BMFont; an unreadable TTF still measured (no fontTools needed).
 Run: python3 -m unittest test_fit_english_labels   (a few seconds, no browser, no Creator)"""
 import contextlib
 import copy
@@ -119,11 +119,45 @@ class FitCase(unittest.TestCase):
         self.assertEqual(self.objs()[7]['_N$overflow'], 1, 'multi-line is not rewritten, only listed')
         self.assertFalse(rec['passed'])
 
-    def test_countdown_is_measured_as_00_00_00(self):
-        rec = F.run(self.root)
-        t = self.by(rec, 'todo', 'timer')
-        self.assertEqual(t['longest'], '00:00:00')
+    def test_countdown_keeps_its_mm_ss_format(self):
+        # R4C: RunHome / SquareRush gameInfoView "05:30" (mm:ss) was measured as 00:00:00 and rewritten to SHRINK; the
+        # old way here put the 60-wide timer on the to-fix list (needs 8 characters' room for a 5-character timer)
+        rec = F.run(self.root, dry_run=True)
+        self.assertNotIn('timer', [r['where'].rsplit('/', 1)[-1] for r in rec['todo']], 'mm:ss timer reported as too long')
+        t = next(r for part in ('changed', 'todo') for r in rec[part] if r['where'].endswith('/timer'))
+        self.assertRegex(t['longest'], r'^\d\d:\d\d$')
+        self.assertGreaterEqual(t['ratio'], 0.95)
+        self.assertEqual(F.longest_value('1:02:03', 'a:b', [])[0].count(':'), 2, 'h:mm:ss stays h:mm:ss')
+        self.assertEqual(F.longest_value('Next in 5:00', 'a:b', [], '0')[0], 'Next in 0:00')
+
+    def test_long_countdown_still_listed(self):
+        p = copy.deepcopy(settings_prefab())
+        p[13].update({'_N$string': '23:59:59', '_string': '23:59:59'})
+        self.prefab.write_text(json.dumps(p), encoding='utf-8')
+        t = self.by(F.run(self.root, dry_run=True), 'todo', 'timer')
         self.assertLess(t['ratio'], F.MIN_SHRINK, 'shrinking below 70 % is not allowed: listed instead')
+
+    def test_none_label_marks_a_wider_than_parent_plate_without_rewriting(self):
+        # R4C: DriftRacer3D MenuBottom/icon/shop "SHOP" (NONE) on its icon; Coins +50% next to a coin icon. NONE stays
+        # NONE (fitting it to the parent made false to-fix rows on finished games); the row says it is wider.
+        p = copy.deepcopy(settings_prefab())
+        p[4]['_components'] = [{'__id__': 5}, {'__id__': len(p)}]
+        p.append({'__type__': 'cc.Sprite', 'node': {'__id__': 4}, '_spriteFrame': None})
+        p[4]['_children'] = [{'__id__': len(p)}]
+        p.append(node24('shopLabel', {'__id__': 4}, (60, 38), comps=[len(p) + 1]))
+        p.append(label24(len(p) - 1, 'SHOP NOW', 50, overflow=0))
+        p[5].update({'_N$string': 'GO', '_string': 'GO'})
+        self.prefab.write_text(json.dumps(p), encoding='utf-8')
+        raw = self.prefab.read_text(encoding='utf-8')
+        rec = F.run(self.root, dry_run=True)
+        g = self.by(rec, 'grows', 'shopLabel')
+        self.assertEqual(g['parent_plate'], 200)
+        self.assertTrue(g['wider_than_parent_plate'], g)
+        self.assertEqual(self.prefab.read_text(encoding='utf-8'), raw)
+
+    def test_system_font_digits_measured_as_wide_as_sf(self):
+        self.assertAlmostEqual(F.system_width('100', 100), 3 * F.SYSTEM_DIGIT / 10.0)
+        self.assertEqual(F.system_width('PLAY', 30), F.table_width('PLAY', 30))
 
     def test_same_name_siblings_get_a_suffix_unless_a_script_names_them(self):
         rec = F.run(self.root)
@@ -234,6 +268,68 @@ class FitCase(unittest.TestCase):
         self.assertNotIn('text_outside_plate', {f['kind'] for f in new['findings']})
 
 
+def result_prefab():
+    """R4H 补查第 5 组 (子午-SLS03: score drawn as cc.Label + ui.ttf): 0 Prefab, 1 root, 2 scoreLabel "1250",
+    3 its label (system font), 4 scoreTitle, 5 its label "SCORE" (system font)."""
+    o = [{'__type__': 'cc.Prefab', 'data': {'__id__': 1}}]
+    o.append(node24('ResultPanel', None, (600, 900), children=[{'__id__': 2}, {'__id__': 4}]))
+    o.append(node24('scoreLabel', {'__id__': 1}, (240, 70), comps=[3]))
+    o.append(label24(2, '1250', 48, overflow=2))
+    o.append(node24('scoreTitle', {'__id__': 1}, (240, 60), comps=[5]))
+    o.append(label24(4, 'SCORE', 40, overflow=2))
+    return o
+
+
+class ValueTextToBitmap(unittest.TestCase):
+    """R4H 补查第 5 组: score / result / title text in a TTF or the system font. Old: the tool fitted it and left it a
+    font Label (the score-reward gate failed it later, after the trial link). New: digits go to the project's
+    bitmap digit font while writing English; a value WORD is listed as a whole-word picture to make. The gate
+    (audit_value_presentation, value-words-symbols-2) is unchanged: it still fails what is left."""
+
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp(prefix='fitvalue_'))
+        (self.root / 'assets/ui').mkdir(parents=True)
+        self.prefab = self.root / 'assets/ui/ResultPanel.prefab'
+        self.prefab.write_text(json.dumps(result_prefab(), indent=2), encoding='utf-8')
+
+    def tearDown(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def fnt(self, chars='0123456789'):
+        f = self.root / 'assets/font/score_digits.fnt'
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text('info face="d" size=50\ncommon lineHeight=50\n' +
+                     '\n'.join('char id=%d xadvance=36' % ord(c) for c in chars), encoding='utf-8')
+        (self.root / 'assets/font/score_digits.fnt.meta').write_text(json.dumps({'uuid': 'digits-fnt'}), encoding='utf-8')
+
+    def gate(self):
+        sys.path.insert(0, str(AUDIT_DIR))
+        import audit_value_presentation
+        return {f['path'].split('/')[-1] for f in audit_value_presentation.audit(self.root)['findings']
+                if f['kind'] == 'source_value_font'}
+
+    def test_score_digits_switch_to_the_bitmap_font_and_words_are_listed(self):
+        self.fnt()
+        self.assertEqual(self.gate(), {'scoreLabel', 'scoreTitle'})            # the gate sees both before
+        rec = F.run(self.root)
+        lab = json.loads(self.prefab.read_text(encoding='utf-8'))[3]
+        self.assertEqual((lab.get('_N$file') or {}).get('__uuid__'), 'digits-fnt', 'OLD WAY BUG: score stays a font Label')
+        self.assertFalse(lab['_isSystemFontUsed'])
+        self.assertEqual([r['where'].split('/')[-1] for r in rec['to_bitmap']], ['scoreLabel'])
+        need = {r['where'].split('/')[-1]: r['kind'] for r in rec['bitmap_needed']}
+        self.assertEqual(need, {'scoreTitle': 'word_image'})
+        self.assertEqual(self.gate(), {'scoreTitle'}, 'gate unchanged: the word is still refused until it is a picture')
+
+    def test_no_bitmap_font_is_listed_not_guessed(self):
+        self.fnt('0123')                                                       # does not cover 1250's "5"
+        rec = F.run(self.root)
+        lab = json.loads(self.prefab.read_text(encoding='utf-8'))[3]
+        self.assertTrue(lab['_isSystemFontUsed'])
+        self.assertEqual({r['where'].split('/')[-1]: r['kind'] for r in rec['bitmap_needed']},
+                         {'scoreLabel': 'no_bitmap_font', 'scoreTitle': 'word_image'})
+        self.assertEqual(self.gate(), {'scoreLabel', 'scoreTitle'})
+
+
 class CommandLine(unittest.TestCase):
     def test_exit_codes(self):
         root = Path(tempfile.mkdtemp(prefix='fitcli_'))
@@ -243,7 +339,7 @@ class CommandLine(unittest.TestCase):
             self.assertEqual(F.main(['--project', str(root)]), 2)
             (root / 'assets').mkdir()
             (root / 'assets/a.prefab').write_text(json.dumps(settings_prefab()), encoding='utf-8')
-            self.assertEqual(F.main(['--project', str(root)]), 1)          # desc + timer are on the to-fix list
+            self.assertEqual(F.main(['--project', str(root)]), 1)          # desc is on the to-fix list
             rec = json.loads((root / 'docs/english/fit-labels.json').read_text(encoding='utf-8'))
             self.assertEqual(rec['tool'], 'fit_english_labels')
         finally:

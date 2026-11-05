@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-04.english-simple.11.14",
+  "revision": "2026-11-05.english-simple.11.15",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "66ab32cfab7b0d1529816ef982d0e5522de6cf8eef0f0243f69c353285f4655b",
-      "bytes": 76105
+      "sha256": "b57e3ab038220a73db3c3976fefdf5435463de9c5e9117f5443536ea6885b3cd",
+      "bytes": 81745
     },
     {
       "path": "agents/openai.yaml",
@@ -41,8 +41,8 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "23502ab6ea8f58d76b326cbe9c858f27a4cf64acd38de3939a0540a275cd7ba7",
-      "bytes": 30598
+      "sha256": "01f9beaec2f1ac8cb093bbd8306a2e4c961b6f4e023f5862459a1e3d9c3f41e3",
+      "bytes": 31491
     },
     {
       "path": "references/fixed-entries.md",
@@ -81,13 +81,13 @@
     },
     {
       "path": "scripts/find_creator.py",
-      "sha256": "b292f18f203be785322fcbed58089f140d1b5c095490eb1db9d860c71a3a0eac",
-      "bytes": 19667
+      "sha256": "092102a80554bc483a11ae724a6ec2830abfd6a661b55d7ffbc746eb7cb91357",
+      "bytes": 28279
     },
     {
       "path": "scripts/fit_english_labels.py",
-      "sha256": "a6544b4fe6425c4aafb7ce9bfc319f015ba48d3a3cf90ad90cef4a439f40fab1",
-      "bytes": 25259
+      "sha256": "a3adc2cd2580446b563d68a752fa2cd8515891b1ac86412c825539fcfba335db",
+      "bytes": 32365
     },
     {
       "path": "scripts/fix_web_entry_3x.py",
@@ -126,13 +126,13 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "73cd9e38c35d332182b6d86ec341ff742d3d15e7223458f5b4b833371a8cb299",
-      "bytes": 63372
+      "sha256": "15d974c778c8fcc1d41edb44082b6ead6e652517b9730c837bd4abf702fd34e9",
+      "bytes": 66773
     },
     {
       "path": "scripts/test_fit_english_labels.py",
-      "sha256": "e3e23c39b9d422afbbbaf41d99f8177f910a9ce7c95bb6dc66d8623e7af5fc5e",
-      "bytes": 13871
+      "sha256": "2a10adc1985fc3dab69a7437a813532a8397eafa7f53f92eabcb9ed7868beb85",
+      "bytes": 19914
     },
     {
       "path": "scripts/test_p21_browser_env.py",
@@ -141,8 +141,23 @@
     },
     {
       "path": "scripts/test_portable_tools.py",
-      "sha256": "e811ab2bf9d9b2e308c91b72872b34428cc9ff923afe12b097940a2f29358c96",
-      "bytes": 15714
+      "sha256": "2e7f475a724be70678b3d284d0aedb267d7f29f9e279f3ef658792dd69f3e771",
+      "bytes": 15924
+    },
+    {
+      "path": "scripts/test_r4d_raw_input_intake.py",
+      "sha256": "cee4e16005b0f39d42767adeb230650cea45e0fdc93ba0ab3d91d79e84fe631c",
+      "bytes": 3639
+    },
+    {
+      "path": "scripts/test_r4f1_build_sync.py",
+      "sha256": "3386c5910582dd13189fc14221ccd7278c0ec6fb1b4bd9cce517880c9bb685f0",
+      "bytes": 4333
+    },
+    {
+      "path": "scripts/test_r4j4_native_sync.py",
+      "sha256": "684f879847a4e34f0edb0deb03bdba8392096120566ae468301bf5e5ee08f855",
+      "bytes": 10834
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
@@ -161,14 +176,14 @@
     },
     {
       "path": "scripts/unpack_source.py",
-      "sha256": "6585dd78c924d2c8e228ff5ba13534cacacacf633f209f93f424c41997426b8d",
-      "bytes": 6860
+      "sha256": "7cd7c86a874c8e5a6503411919f6badc31462c7201a1ad0aa48fb1f85f286745",
+      "bytes": 8962
     },
     {
       "path": "版本历史.md",
-      "sha256": "bdfd146bfd64af67c7a794f382c7287fdc0ac1836e69b09a52d49266179ba8c5",
-      "bytes": 8418
+      "sha256": "fbdc3eafcfd4d2a0833e59de8c25402cd17910878f0af42bfd226c00b770087d",
+      "bytes": 9295
     }
   ],
-  "previous_provenance_sha256": "fa406db2b985c3ece8a08e80e5fb210ab367427736547ead9e89ab453b13c67c"
+  "previous_provenance_sha256": "e87019f404a22912f3941f3e0f4fb2d3f97922100c9cc6ca8128ddd7d05ccd68"
 }

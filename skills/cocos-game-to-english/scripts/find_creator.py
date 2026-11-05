@@ -191,6 +191,11 @@ SANDBOX_EXIT = 3
 
 
 def build_argv(editor, project, major, platform_name):
+    # 简化.11.15: Cocos Creator 2.x names the TikTok (ByteDance) mini-game platform 'bytedance' (build/bytedance);
+    # only 3.x calls it 'bytedance-mini-game'. 2.4.15 given the 3.x name stops with "Cannot read property 'isNative' of
+    # undefined" and then hangs (found 11-05 on a copy of 割草小能手; the delivered builds all used platform=bytedance).
+    if platform_name == 'bytedance-mini-game' and major == 2:
+        platform_name = 'bytedance'
     debug = 'true' if platform_name == 'web-mobile' else 'false'
     flag = '--path' if major == 2 else '--project'
     return [editor['exe'], flag, str(Path(project).resolve()), '--build', 'platform=%s;debug=%s' % (platform_name, debug)] \
@@ -290,7 +295,110 @@ def sandbox_text(problem):
             '换一个不受沙箱限制的终端再跑构建命令（在 Codex 里，请求不受沙箱限制地运行这条命令）。等的时候接着改源码。' % problem)
 
 
-def report(project, platform=None, env=None, home=None, sandbox_probe=True):
+# 生成时预防 R4F1 (#11, P02-3): every printed build command starts with `tiktok_finalize.py sync` (about 1 s: the
+# platform-kit files put back to their KIT_MANIFEST bytes, GameUIKit / RunSession / FxPool for new games, squashed
+# pictures reported) so a build never runs on parts that drifted; before, only SKILL.md said "run sync before every
+# build" (普查 startup_stuck 34 款, touch_coord_missing 28 款). A sync that exits 1 stops the build (&&).
+FINALIZE = Path(__file__).resolve().parents[2] / 'remake-core' / 'scripts' / 'tiktok_finalize.py'
+BOARDS = ('remake', 'localize')
+
+
+def board_of(project):
+    """The board in the project's new-game marker (.tiktok-kit/policy.json); English pack default localize."""
+    try:
+        board = json.loads((Path(project) / '.tiktok-kit' / 'policy.json').read_text(encoding='utf-8')).get('board')
+    except (OSError, ValueError, AttributeError):
+        board = None
+    return board if board in BOARDS else 'localize'
+
+
+def sync_argv(project, board, finalize=None, python=None):
+    """[python, tiktok_finalize.py, sync, --project P, --board B], or None when remake-core is not installed."""
+    finalize = Path(finalize) if finalize else FINALIZE
+    if not finalize.is_file():
+        return None
+    return [python or sys.executable or 'python3', str(finalize), 'sync', '--project', str(Path(project).resolve()),
+            '--board', board]
+
+
+def chain(first, second, platform):
+    """Copy-paste text that runs `second` only when `first` exits 0."""
+    if platform == 'win32':
+        return '%s; if ($LASTEXITCODE -eq 0) { %s }' % (quote(first, platform), quote(second, platform))
+    return '%s && %s' % (quote(first, platform), quote(second, platform))
+
+
+# 生成时预防 R4J4 (P02-3, after R4F1): the TikTok build command also ends with `tiktok_finalize.py sync --native <the
+# build folder>`, so the startup parts, touch fix, storage layer, host-shim and guards go into the build that was just
+# made (普查 startup_stuck 34/42 款, touch_coord_missing 28/34 款: English builds packaged without that step). The folder
+# comes from the build argv: buildPath (2.4 default `build`, also read from the Build panel's saved buildPath; 3.x
+# default `project://build`) + the platform name (2.4 `bytedance`; 3.x outputName, default `bytedance-mini-game`).
+# configPath or anything it cannot read: no --native step, and the output says to run it by hand.
+BUILD_OK = {2: (0,), 3: (0, 36)}     # Creator 3.x command-line builds that succeed may exit 36
+
+
+def build_options(argv):
+    """{'platform': ..., 'buildPath': ...} from the `--build "k=v;k=v"` argument; {} when there is none."""
+    if '--build' not in argv or argv.index('--build') + 1 >= len(argv):
+        return {}
+    out = {}
+    for item in argv[argv.index('--build') + 1].split(';'):
+        key, eq, value = item.partition('=')
+        if eq and key.strip():
+            out[key.strip()] = value.strip()
+    return out
+
+
+def native_dir(argv, project, major):
+    """(build folder, None) for a TikTok build argv, or (None, why) when it cannot be worked out from the arguments."""
+    opts, project = build_options(argv), Path(project).resolve()
+    platform_name = opts.get('platform')
+    if platform_name not in ('bytedance', 'bytedance-mini-game'):
+        return None, '不是 TikTok 构建（platform=%s）' % platform_name
+    if opts.get('configPath'):
+        return None, '构建参数用了 configPath，构建目录写在那个配置文件里'
+    base = opts.get('buildPath')
+    if base is None and major == 2:     # 2.4: with no buildPath on the command line Creator uses the Build panel's one
+        for saved in (project / 'local' / 'builder.json', project / 'settings' / 'builder.json'):
+            try:
+                value = json.loads(saved.read_text(encoding='utf-8-sig')).get('buildPath')
+            except (OSError, ValueError, AttributeError):
+                continue
+            if value is not None:
+                if not isinstance(value, str) or not value.strip():
+                    return None, '%s 里的 buildPath 看不懂（%r）' % (saved.name, value)
+                base = value
+                break
+    base = (base or 'build').strip()
+    if base.startswith('project://'):
+        base = base[len('project://'):]
+    if '://' in base:
+        return None, 'buildPath=%s 不是普通路径' % base
+    folder = Path(base) if Path(base).is_absolute() else project / base
+    name = opts.get('outputName') if major == 3 else None
+    return folder / (name or platform_name), None
+
+
+def native_sync_argv(sync, folder):
+    """The `sync` argv with `--native <build folder>` added (same project and board)."""
+    return list(sync) + ['--native', str(folder)]
+
+
+def chain_native(sync, build, native, platform, major):
+    """sync, then the build, then `sync --native` when the build exit code means success (2.4: 0; 3.x: 0 or 36)."""
+    ok = BUILD_OK.get(major, (0,))
+    if platform == 'win32':
+        test = ' -or '.join('$LASTEXITCODE -eq %d' % c for c in ok)
+        return '%s; if ($LASTEXITCODE -eq 0) { %s; if (%s) { %s } }' % (
+            quote(sync, platform), quote(build, platform), test, quote(native, platform))
+    if ok == (0,):
+        return '%s && %s && %s' % (quote(sync, platform), quote(build, platform), quote(native, platform))
+    test = ' || '.join('[ "$rc" -eq %d ]' % c for c in ok)
+    return '%s && { %s; rc=$?; %s; } && %s' % (quote(sync, platform), quote(build, platform), test,
+                                                quote(native, platform))
+
+
+def report(project, platform=None, env=None, home=None, sandbox_probe=True, board=None, finalize=None):
     platform = sys.platform if platform is None else platform
     version, major = project_version(project)
     editors = installed_editors(platform, home, env)
@@ -298,10 +406,28 @@ def report(project, platform=None, env=None, home=None, sandbox_probe=True):
     r = {'project': str(Path(project).resolve()), 'version': version, 'major': major, 'installed': editors, **pick,
          'hints': hints(version, platform),
          'sandbox': {'flags': list(SANDBOX_FLAGS), 'problem': sandbox_problem(env, home, probe=sandbox_probe)}}
+    board = board or board_of(project)
+    sync = sync_argv(project, board, finalize)
+    r['sync'] = {'board': board, 'argv': sync}
+    if sync is None:
+        r['hints'].append('没找到 remake-core/scripts/tiktok_finalize.py（remake-core 没装全）：构建命令前面没带 sync，'
+                          '先把整个英化包装好再构建')
     if pick['editor']:
         for name in ('web-mobile', 'bytedance-mini-game'):
             argv = build_argv(pick['editor'], project, major, name)
-            r.setdefault('commands', {})[name] = {'argv': argv, 'text': quote(argv, platform)}
+            r.setdefault('commands', {})[name] = {
+                'argv': argv, 'sync_argv': sync, 'steps': [a for a in (sync, argv) if a],
+                'text': chain(sync, argv, platform) if sync else quote(argv, platform)}
+        tt = r['commands']['bytedance-mini-game']    # R4J4: after the TikTok build, sync --native <build folder>
+        folder, why = native_dir(tt['argv'], project, major)
+        tt['native_dir'], tt['build_ok_exit'] = (str(folder) if folder else None), list(BUILD_OK.get(major, (0,)))
+        if sync and folder:
+            tt['native_sync_argv'] = native_sync_argv(sync, folder)
+            tt['steps'].append(tt['native_sync_argv'])
+            tt['text'] = chain_native(sync, tt['argv'], tt['native_sync_argv'], platform, major)
+        elif sync:
+            r['hints'].append('TikTok 构建命令后面没接 sync --native（%s）：构建完成后手跑 tiktok_finalize.py sync '
+                              '--project <工程> --board %s --native <构建日志里的产物目录>' % (why, board))
     return r
 
 
@@ -324,8 +450,18 @@ def say(r):
     for name, label in (('web-mobile', '导出试玩用的 Web'), ('bytedance-mini-game', '出 TikTok 小游戏包')):
         if r.get('commands', {}).get(name):
             lines.append('%s：%s' % (label, r['commands'][name]['text']))
+    if r.get('commands') and (r.get('sync') or {}).get('argv'):
+        lines.append('每条构建命令前面都带 tiktok_finalize.py sync（板块 %s，约 1 秒：平台包文件按哈希换回，新游戏装 GameUIKit、'
+                     'RunSession、FxPool，报压扁的图）；sync 没过就不构建，先改它报的问题。用脚本跑时按 --json 里的 '
+                     'steps 依次跑。' % r['sync']['board'])
+    if (r.get('commands', {}).get('bytedance-mini-game') or {}).get('native_sync_argv'):
+        tt = r['commands']['bytedance-mini-game']
+        lines.append('TikTok 构建成功后（退出码 %s）自动再跑 sync --native %s，把启动件、触摸修正、存档层、host-shim、guard 装进构建；'
+                     '它没过就先改它报的问题，别拿这个构建出包。用脚本跑时 steps 第 3 条只在构建退出码是 build_ok_exit 里的数时跑。'
+                     % ('/'.join(str(c) for c in tt['build_ok_exit']), tt['native_dir']))
     if r.get('commands') and r['commands']['web-mobile']['text'].startswith('& '):
-        lines.append('（上面是 PowerShell 写法；在 cmd 里去掉开头的「& 」。用脚本跑时用 --json 里的 argv，不经过命令行。）')
+        lines.append('（上面是 PowerShell 写法；在 cmd 里去掉开头的「& 」，把「; if ($LASTEXITCODE -eq 0) { … }」写成「&& …」。'
+                     '用脚本跑时用 --json 里的 steps，不经过命令行。）')
     lines += ['注意：' + h for h in r['hints']]
     return '\n'.join(lines)
 
@@ -337,6 +473,7 @@ def main(argv=None):
     ap.add_argument('--busy', action='store_true')
     ap.add_argument('--preflight', action='store_true', help='构建前一刻：这个终端能不能启动 Creator（沙箱受限退出 3，不要重试）')
     ap.add_argument('--json', action='store_true')
+    ap.add_argument('--board', choices=BOARDS, help='sync 用的板块（默认读工程 .tiktok-kit/policy.json，没有就是 localize）')
     a = ap.parse_args(argv)
     if a.preflight:
         problem = sandbox_problem()
@@ -363,7 +500,7 @@ def main(argv=None):
     if not a.project:
         ap.error('要 --project、--list 或 --busy')
     try:
-        r = report(a.project)
+        r = report(a.project, board=a.board)
     except (OSError, ValueError) as error:
         print('输入有问题：%s' % error)
         return 2

@@ -44,6 +44,8 @@ from pathlib import Path
 SKIP_DIRS = {'library', 'temp', 'local', 'build', 'node_modules', '.git', 'profiles', '.tiktok-kit', 'settings'}
 UI_EXT = {'.prefab', '.fire', '.scene'}
 MIN_SHRINK = 0.70            # SHRINK may not go below 70 % of the font size (P06)
+NONE_PLATE_FILL = 0.90       # R4C: a NONE row is marked wider_than_parent_plate past 90 % of its parent Sprite/Button
+SYSTEM_DIGIT = 578           # R4C: system-font digits per 1000 (iOS SF 578, Arial/Helvetica 556, Roboto ~562)
 CJK = re.compile(r'[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff]')
 LETTER_OR_DIGIT = re.compile(r'[A-Za-z0-9]')
 PERCENT = re.compile(r'\d+(?:\.\d+)?(?=\s*%)')
@@ -71,6 +73,13 @@ def table_width(text, size):
     return sum(_W.get(ch, 1000 if CJK.match(ch) else 600) for ch in text) * size / 1000.0
 
 
+def system_width(text, size):
+    """System font (the phone draws SF / Roboto / PingFang): the Arial table matched Arial and Helvetica within 0.1 %
+    and HelveticaNeue within 1.5 % on 14 English UI strings; SF letters are about 7 % narrower but SF digits are 4 %
+    wider (R4C calibration, 2026-11-05), so digits use SYSTEM_DIGIT."""
+    return table_width(text, size) + sum(1 for ch in text if '0' <= ch <= '9') * (SYSTEM_DIGIT - 556) * size / 1000.0
+
+
 # ------------------------------------------------------------------------------------------------------------- fonts
 
 class Fonts:
@@ -96,7 +105,7 @@ class Fonts:
         """(fn(text, size) -> width, method name)."""
         path = self.by_uuid.get(uuid) if uuid else None
         if path is None:
-            return (lambda t, s: table_width(t, s)), 'system-table' if not uuid else 'font-not-found-table'
+            return (lambda t, s: system_width(t, s)), 'system-table' if not uuid else 'font-not-found-table'
         if path in self._cache:
             return self._cache[path]
         if path.suffix.lower() == '.fnt':
@@ -249,7 +258,12 @@ def label_props(doc, lab):
     font = None
     if not lab.get('_isSystemFontUsed', False):
         font = ref_uuid(lab.get('_N$file')) or ref_uuid(lab.get('_font'))
-    return {'node': node, 'string': str(lab.get(k_str) or lab.get('_string') or ''), 'k_string': k_str,
+    # R4C: the box a NONE label sits on (its parent with a Sprite or Button: a button plate, a panel)
+    par = doc.parent(node)
+    plate_w = 0.0
+    if par is not None and any(c.get('__type__') in ('cc.Sprite', 'cc.Button') for c in doc.components(par)):
+        plate_w = doc.size_of(par)[0]
+    return {'node': node, 'plate_w': plate_w, 'scale_x': node_scale_x(node), 'string': str(lab.get(k_str) or lab.get('_string') or ''), 'k_string': k_str,
             'k_overflow': key(lab, '_N$overflow', '_overflow'), 'overflow': int(lab.get(key(lab, '_N$overflow', '_overflow')) or 0),
             'wrap': bool(lab.get('_enableWrapText', True)), 'w': w, 'h': h, 'size': size, 'line_h': line_h,
             'bold': bold, 'outline': outline, 'font': font}
@@ -257,6 +271,21 @@ def label_props(doc, lab):
 
 def ref_uuid(v):
     return v.get('__uuid__') if isinstance(v, dict) else None
+
+
+def node_scale_x(node):
+    """|scale x| of the label node itself (2.4 _trs array[7] or _scaleX / _scale, 3.x _lscale)."""
+    try:
+        if isinstance(node.get('_lscale'), dict):
+            return abs(float(node['_lscale'].get('x', 1))) or 1.0
+        trs = node.get('_trs')
+        if isinstance(trs, dict) and isinstance(trs.get('array'), list) and len(trs['array']) >= 8:
+            return abs(float(trs['array'][7])) or 1.0
+        if isinstance(node.get('_scale'), dict):
+            return abs(float(node['_scale'].get('x', 1))) or 1.0
+        return abs(float(node.get('_scaleX', 1))) or 1.0
+    except (TypeError, ValueError):
+        return 1.0
 
 
 # ------------------------------------------------------------------------------------------------------- the values
@@ -288,7 +317,8 @@ def find_row(where, rows):
 
 
 def longest_value(text, where, rows, widest_digit='8'):
-    """(longest text the label will show, note or None). Countdown -> 00:00:00, percentage -> 100%, a plain number
+    """(longest text the label will show, note or None). Countdown -> its own format with the widest digit (mm:ss stays
+    mm:ss; a label that will show hours needs a `longest` row), percentage -> 100%, a plain number
     -> max_value from the values file, else the same number of digits all the widest digit (note max_value_missing)."""
     r = find_row(where, rows)
     if r and (r.get('longest') or r.get('text')):
@@ -300,7 +330,9 @@ def longest_value(text, where, rows, widest_digit='8'):
 
     def rep(m):
         if m.group(1):
-            return '00:00:00'
+            # R4C: a countdown keeps its own format (05:30 stays mm:ss; 1:02:03 stays h:mm:ss), each digit the widest
+            # one. The old "always 00:00:00" made every mm:ss timer look 60 % longer (RunHome / SquareRush 05:30).
+            return re.sub(r'\d', widest_digit, m.group(1))
         if m.group(2):
             return '100' + m.group(3)
         note.append(1)
@@ -434,13 +466,75 @@ def ui_files(root):
             yield p
 
 
+# ------------------------------------------------------------------- R4H: value text goes to bitmap glyphs, not a TTF
+
+def _value_text():
+    """audit_value_presentation.value_text: the same rule as the score-reward gate (value-words-symbols-2), so this
+    tool never decides differently from the gate and never relaxes it."""
+    here = str(Path(__file__).resolve().parents[2] / 'remake-core' / 'scripts')
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        import audit_value_presentation
+        return audit_value_presentation.value_text
+    except Exception:  # noqa: BLE001 - no remake-core next to this Skill: nothing is switched
+        return None
+
+
+def bitmap_fonts(fonts):
+    """[(uuid, path, glyph codes)] of the project's .fnt files, main uuid of each file, sorted by path."""
+    out, seen = [], set()
+    for u, path in fonts.by_uuid.items():
+        if path.suffix.lower() != '.fnt' or path in seen:
+            continue
+        seen.add(path)
+        try:
+            cfg = parse_fnt(path.read_text(encoding='utf-8', errors='replace'))
+        except OSError:
+            cfg = None
+        if cfg:
+            out.append((u, path, set(cfg['adv'])))
+    return sorted(out, key=lambda r: r[1].as_posix())
+
+
+def to_bitmap(lab, p, longest, fonts, bms):
+    """补查第 5 组 (问题普查 T11:system_font 4 次 / 4 款, 子午-SLS03 「分数的文字还是没有被美化」): a score / reward /
+    level / price label in a TTF or the system font. -> ('switched', uuid, path) when a project .fnt has every glyph
+    the longest value needs (the label is rewritten to it), ('word_image', None, None) for a value WORD (needs a
+    whole-word picture), ('no_bitmap_font', None, None) when no .fnt covers the digits (make the glyph set, or
+    UI.digits for runtime numbers)."""
+    cur = fonts.by_uuid.get(p['font']) if p['font'] else None
+    if cur is not None and cur.suffix.lower() == '.fnt':
+        return 'bitmap', None, None
+    if re.search(r'[A-Za-z]', longest.replace('x', '')):
+        return 'word_image', None, None
+    need = {ord(c) for c in longest + p['string'] if not c.isspace()}
+    if any(c.isdigit() for c in longest + p['string']):
+        need |= {ord(c) for c in '0123456789'}          # a live value shows every digit sooner or later
+    for u, path, glyphs in bms:
+        if need <= glyphs:
+            k = '_N$file' if ('_N$file' in lab or '_N$string' in lab) else '_font'
+            lab[k] = {'__uuid__': u}
+            for sys_key in ('_isSystemFontUsed', '_isSystemFont'):
+                if sys_key in lab or sys_key == '_isSystemFontUsed':
+                    lab[sys_key] = False
+            return 'switched', u, path
+    return 'no_bitmap_font', None, None
+
+
+BITMAP_FIX = {'word_image': '固定词（SCORE / BEST / LEVEL / COINS…）换成整词图片：弹窗标题用 UI.popup({titleFrame})，按钮字画进按钮图，'
+                            '别用 cc.Label + 字体',
+              'no_bitmap_font': '数字用同套生成的位图数字（.fnt，或运行时 UI.digits）；工程里没有包含这些字符的 .fnt'}
+
+
 def run(root, files=None, values=None, dry_run=False):
     root = Path(root)
     fonts, rows = Fonts(root), load_values(root, values)
     protected = script_names(root)
     record = {'tool': 'fit_english_labels', 'schema': 1, 'project': root.name, 'dry_run': dry_run, 'min_shrink': MIN_SHRINK,
               'changed': [], 'todo': [], 'grows': [], 'fits': 0, 'skipped_chinese': [], 'same_name': [], 'notes': [],
-              'measured_with': {}, 'files_written': []}
+              'measured_with': {}, 'files_written': [], 'to_bitmap': [], 'bitmap_needed': []}
+    is_value, bms = _value_text(), bitmap_fonts(fonts)
     for f in [Path(x) for x in files] if files else ui_files(root):
         try:
             doc = Doc(f)
@@ -465,10 +559,31 @@ def run(root, files=None, values=None, dry_run=False):
             fn, method = fonts.width_fn(p['font'])
             record['measured_with'][method] = record['measured_with'].get(method, 0) + 1
             text, note = longest_value(p['string'], where, rows, widest(fn, p['size']))
+            if is_value and is_value(p['string'], doc.path_of(p['node'])):
+                # R4H 补查第 5 组: score / result / title / button value text never stays a TTF or system-font Label
+                how, u, fpath = to_bitmap(lab, p, text, fonts, bms)
+                if how == 'switched':
+                    record['to_bitmap'].append({'where': where, 'text': p['string'], 'font': fpath.relative_to(root).as_posix()
+                                                if fpath.is_relative_to(root) else str(fpath)})
+                    p['font'] = u
+                    fn, method = fonts.width_fn(u)
+                    dirty = True
+                elif how != 'bitmap':
+                    # still fitted below (the trial build must not cut it), but fitting is not the fix: the row says
+                    # what to make, and the value_presentation gate keeps failing it until it is bitmap / a picture
+                    record['bitmap_needed'].append({'where': where, 'text': p['string'], 'kind': how, 'fix': BITMAP_FIX[how]})
             row = find_row(where, rows)
             if row and row.get('room'):
                 p['room'] = float(row['room'])
             verdict, info = fit_one(p, text, fn)
+            if verdict == 'grows' and p['plate_w'] > 0 and '\n' not in text:
+                # R4C: NONE stays NONE (not frozen, not fitted to the parent: on 5 finished games that gave 5 new
+                # to-fix rows and 14 rewrites, e.g. "Coins +50%" next to a 38 px coin icon). The parent's width is
+                # written down so the row says when the grown text is wider than the Sprite/Button it sits on.
+                limit = p['plate_w'] * NONE_PLATE_FILL / p['scale_x']
+                info['parent_plate'] = round(p['plate_w'], 1)
+                if info['need'] > limit:
+                    info['wider_than_parent_plate'] = True
             base = {'where': where, 'text': p['string'], 'longest': text, 'font_size': p['size'], 'box': [p['w'], p['h']],
                     'overflow_before': OVERFLOW.get(p['overflow'], p['overflow']), 'measured_with': method}
             if note:
@@ -529,6 +644,7 @@ def main(argv=None):
     print(json.dumps({'tool': 'fit_english_labels', 'passed': rec['passed'], 'fits': rec['fits'],
                       'set_to_shrink': len(rec['changed']), 'grows_with_text': len(rec['grows']), 'todo': [t['where'] + ' -- ' + t.get('why', '') for t in rec['todo']][:40],
                       'same_name': len(rec['same_name']), 'still_chinese': len(rec['skipped_chinese']),
+                      'to_bitmap': len(rec['to_bitmap']), 'bitmap_needed': [b['where'] + ' -- ' + b['fix'] for b in rec['bitmap_needed']][:40],
                       'value_findings': values['findings'][:40], 'files_written': rec['files_written'], 'record': str(out)}, ensure_ascii=False, indent=2))
     return 0 if rec['passed'] else 1
 

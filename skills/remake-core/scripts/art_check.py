@@ -28,6 +28,9 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
   大块深色    audit_dark_area.py       每张截图：大块深色、纯黑/纯色底、大白板、大块纯色（只查负向，不设亮度下限，用户 2026-10-28）
   布局        extract_ui_layout.py + audit_ui_coverage.py   玩法区≥80%、弹窗≤60%、内容不压边框、首页设置在上角/功能按钮紧凑放在下方
   文字放得下  audit_copy_quality.py --require-runtime        字超出按钮/底图、被截断、中文残留、拼写
+  页面全覆盖  audit_page_coverage.py   页面表从工程预制体来：有字或按钮的页面/弹窗都要在两种尺寸 dump 过（Saul 2026-11-04）
+  真字宽      audit_text_fit.py        用游戏自己的字体量字宽：出底板/按钮、压图标、出屏、出图里画好的色条、带字图被盖；
+                                       另写 text-plan.md 排版预算（每段字要多宽、底板至少多宽）
   开发用字    audit_dev_text.py --final                      PROTOTYPE/LOCAL PREVIEW、占位图
   清晰度      dump 里运行时的图（low_res）+ audit_image_clarity.py   两个板块、第一轮起就必须通过（用户 2026-10-23：
                                        最终验收 ART-04 才发现 22 张图不到节点 2 倍、背景 1.47 倍，那时美术已经给用户确认过）；
@@ -84,6 +87,8 @@ STYLE_KINDS = {'mixed_caption_style', 'off_style_button', 'flat_button', 'text_a
 # Saul 2026-10-31 (香肠太难了): "不要这种深色背景，的按钮，也不要图案后面还跟着这个背景"
 BUTTON_COLOUR_KINDS = {'dark_button', 'icon_plate', 'dark_button_state', 'button_colour_unavailable'}
 BUTTON_COLOUR_TITLE = '按钮底色不深、物品图标不另垫底板（Saul 2026-10-31，香肠太难了）'
+PAGE_COVERAGE_TITLE = '有字或按钮的页面、弹窗都在两种尺寸采集过（页面表从工程预制体来，Saul 2026-11-04）'
+TEXT_FIT_TITLE = '字按真字宽放得下：不出底板/按钮、不压图标、不出屏、不出图里画好的色条，带字的图不被盖（Saul 2026-11-04）'
 OVERLAP_KINDS = {'overlap_text_picture', 'overlap_text', 'overlap_buttons', 'clip_out', 'text_outside', 'action_caption',
                  # user 2026-10-23 Daily Rewards: "100" printed as "10" over "100", day-7 car out of its card, checkerboard
                  'glyph_overlap', 'double_number', 'negative_spacing', 'font_advance', 'font_advance_rendered', 'checker_fill', 'checker_unavailable',
@@ -536,6 +541,45 @@ def main():
     add('读到的页面',True,'%d 个dump、%d张同帧截图；输入矩阵齐全，不代表美术通过'%(len(dump_files),len(shots)))
     binding=['--binding',a.binding] if a.binding else []
 
+    slot_config = proj / 'docs/art/visual-slots.json'
+    if slot_config.is_file():
+        import audit_art_slots
+        try:
+            slot_result = audit_art_slots.run(slot_config, dump_files, shots)
+        except (KeyError, ValueError, TypeError, OSError) as exc:
+            slot_result = {'passed': False, 'error': str(exc)}
+        (out / 'visual-slots-result.json').write_text(json.dumps(slot_result, ensure_ascii=False, indent=2))
+        add('已声明的图文内区、独立图层与留白', slot_result['passed'],
+            '按本轮页面和尺寸从实际截图与节点框重算；缺状态或证据不完整时需处理', 'visual-slots-result.json')
+
+    # Saul 2026-11-04 (蛋壳特工队 six screenshots): 5 of them were on popups no dump had ever opened, and the capture
+    # gate passed because docs/art/screens.json listed 8 pages. The page list comes from the project's prefabs.
+    import audit_page_coverage
+    cover = audit_page_coverage.audit(proj, [dumps])
+    (out / 'page-coverage.json').write_text(json.dumps({k: v for k, v in cover.items() if k != 'pages_list'},
+                                                       ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    add(PAGE_COVERAGE_TITLE, False if cover.get('error') else cover['passed'],
+        cover.get('error') or audit_page_coverage.summary(cover), 'page-coverage.json')
+    # ... and every text is measured with the game's own font against what it sits on (no declarations needed)
+    import audit_text_fit
+    fit = audit_text_fit.audit(proj, [dumps])
+    (out / 'text-fit.json').write_text(json.dumps(fit, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (out / 'text-plan.md').write_text(audit_text_fit.plan_markdown(fit), encoding='utf-8')
+    fit_found = ['%s：%s' % (f['page'], f['message']) for f in fit['findings']]
+    fit_hints = ['%s：%s' % (h['page'], h['message']) for h in fit['hints']]
+    add(TEXT_FIT_TITLE, not fit_found,
+        '；'.join(fit_found[:6])[:900] if fit_found else (
+            '通过（%d 页）' % fit['pages'] + ('；提示：' + '；'.join(fit_hints[:4]) if fit_hints else '')),
+        'text-fit.json')
+
+    value_result = None
+    if board == 'localize':
+        import audit_value_presentation
+        value_result = audit_value_presentation.audit(proj, [dumps])
+        (out / 'value-presentation.json').write_text(json.dumps(value_result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        add('分数与奖励：图片词、位图数字、实际字宽和最长值', value_result['passed'],
+            '；'.join(f['message'] for f in value_result['findings'][:6]) or '实际页面检查通过', 'value-presentation.json')
+
     # Rectangle-in-texture checks miss neighbour fragments and clipped silhouettes.
     code, text = run('audit_atlas_slices.py', ['--project', proj, '--dumps', dumps, '--out', out / 'atlas_slices'], logs)
     try:
@@ -830,6 +874,8 @@ def main():
               'assets_fingerprint': tree_fingerprint(proj), 'checked': len(rows), 'failed': len(blocking),
               'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows, 'look_list': LOOK,
               'base_generated': static_summary, 'time': dt.datetime.now().isoformat(timespec='seconds')}
+    if value_result is not None:
+        report['value_presentation'] = value_result
     if a.binding:
         try:
             b = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')

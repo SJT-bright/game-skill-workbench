@@ -114,8 +114,10 @@
         "src": "build-templates/bytedance-mini-game/tiktok-touch-3x.js",
         "dest": "tiktok-touch-3x.js",
         "template": "build-templates/bytedance-mini-game/tiktok-touch-3x.js",
-        "sha256": "7027f5388161bffe7dcf52231b5b8de27cbfc62e1fb8e519b3b8027788478b86",
-        "previous_sha256": []
+        "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
+        "previous_sha256": [
+          "7027f5388161bffe7dcf52231b5b8de27cbfc62e1fb8e519b3b8027788478b86"
+        ]
       },
       "wiring": [
         {

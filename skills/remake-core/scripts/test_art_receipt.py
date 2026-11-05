@@ -100,8 +100,8 @@ class Receipt(Tmp):
         self.assertEqual((out['state'], out['level']), ('missing', 'block'))
         self.assertIn('重跑 art_check', out['message'])
         self.assertEqual(R.check(p, policy='legacy')['level'], 'warn')
-        self.assertEqual(R.check(p, board='localize')['level'], 'warn')
-        self.assertIn('英化游戏只警告', R.check(p, board='localize')['message'])
+        self.assertEqual(R.check(p, board='localize')['level'], 'block')
+        self.assertIn('英化游戏，不出包、不起试玩', R.check(p, board='localize')['message'])
 
     def test_project_without_images_has_nothing_to_check(self):
         p = project24(self.d / 'p')
@@ -232,10 +232,10 @@ class Writers(W.KitInSync):
         self.assertEqual(len(problems), 1, problems)
         self.assertIn('assets/ui/btn_play.png', problems[0])
 
-    def test_english_game_only_warns(self):
+    def test_english_game_receipt_blocks(self):
         p, b = self.art_project(), self.native()
         _, _, problems = M.finalize_for_writer(b, p, 'localize', APP)
-        self.assertFalse(any('ART_receipt' in x for x in problems), problems)
+        self.assertTrue(any('ART_receipt' in x for x in problems), problems)
 
     def test_both_writer_entries_refuse(self):
         p, b = self.art_project(), self.native()

@@ -29,6 +29,27 @@
 
 没有真实功能的、点了没反应的、上表里的，一律 `keep: false` 并在代码和场景里删掉（不是隐藏）。重塑只审查启动包源码里带来的按钮。
 
+## 一局的状态、定时、特效、移动：写玩法时就用零件（生成时预防 P11、P18，2026-11-04）
+
+问题普查里「重开或切关后状态没清」23 款、「Resume 后卡住」「弹窗关不掉」一类很多、「卡顿」30 次。原因都是同几种写法：本局数据散在各处、重开只清一部分（割草分数、Pinecone 复活次数）；旧关的回调改了新关（大西瓜 `IsHit`）；一个 `paused` 布尔被弹窗和广告共用（甜点消消乐）；`setInterval` 每进一次场景开一个；特效播完不删（方块迷阵 120 次合并剩 86 个）；移动按帧走、不乘 `dt`（60/120 帧差一倍）。平台包两个零件把对的写法变成最省事的写法，**新游戏（自制、重塑）写玩法时必须这样写**：
+
+| 要做的事 | 只这样写 | 不要这样写 |
+|---|---|---|
+| 本局数据（分数、复活次数、关卡状态、是否已撞） | 只放在 `session.state` 里；开局、Retry、下一关都调 `session.newRun(init)`，`init` 每次返回一个新对象 | 写在组件字段、全局变量、`globalData` 里，Retry 时逐个清 |
+| 碰撞、动画结束、加载、广告结果、网络回包等异步回调 | 用 `session.guard(fn)` 包起来（换局后自动作废、拥有它的节点销毁后作废）；只能生效一次的（发奖、过关）用 `session.once(fn)` | 直接传函数，回调里再判断「是不是还在这一关」 |
+| 定时 | `session.after(ms, fn)`、`session.every(ms, fn)`，暂停时不走、换局和切场景自动清 | `setInterval`、`setTimeout`、`this.schedule`、`scheduleOnce` |
+| 暂停 | `var release = session.pause('popup')`，关窗时 `release()`；原因用 `'popup'`、`'ad'`、`'revive'`、`'settings'` 等；切后台由零件自动 `pause('hide')`；`isPaused()` 要等全部原因释放才是 false | 一个 `paused` 布尔；关窗时恢复「打开前的暂停状态」快照 |
+| 每帧更新 | `update(dt) { var d = session.tick(dt); if (!d) return; ... }`，后面所有移动和计时都用 `d` | 每帧里自己判断各种暂停标志 |
+| 移动、旋转、滚动 | `session.move(node, vx, vy, d)`（单位：每秒），其他量用 `RunSession.step(v, 每秒变化, d)`；物理推力用 `PhysicsClock.force(v, dt)` | `node.x += 5`（按帧固定步长） |
+| 特效、子弹、飘字 | `FxPool.create(cc, {parent, make, reset, max, life})`，`pool.spawn(x, y)`，`update` 里 `pool.tick(d)`，换局 `pool.releaseAll()` | 每次 `new cc.Node` 或 `cc.instantiate`、播完不删；`update` 里造节点 |
+| 广告暂停 | ad-boost：`Kit.setup(session.adHooks())`（原因 `'ad'`，每次 `pauseGame` 对应一次 `resumeGame`） | 广告回调里直接改暂停布尔 |
+
+- 零件文件：`remake-core/assets/platform-kit/parts/RunSession.js`、`parts/FxPool.js`，2.4 和 3.x 同一份（2.4 放进 `assets/tiktok-platform/` 用 `require('RunSession')`，3.x 当插件脚本，全局名 `TikTokRunSession`、`TikTokFxPool`）。接口说明在文件头注释里。
+- 场景主组件：`onLoad` 里 `session = RunSession.create(cc, {owner: this.node})`，`onDestroy` 里 `session.dispose()`、`pool.destroy()`。开发版可在 `onLoad` 里调一次 `FxPool.devWatch(cc)`：`update` 里造节点、场景节点数一直涨时打警告，正式版自动不生效。
+- 暂停页、复活页、结算页（P05 模板）打开时 `session.pause(...)`，关掉时调它返回的 `release()`。「回首页」才用 `session.resumeAll()`。
+- **英化游戏不改原版玩法代码**：原版的状态、定时器、特效写法照旧，只在 AI 新加的暂停、复活、广告入口用 `RunSession`（例如新加的复活页 `pause('revive')`、ad-boost 的 `adHooks()`）。
+- 证据：`tests/run-session.test.js`（单个布尔暂停、Retry 只清一部分、旧碰撞回调、`setInterval`、每帧 `+= 5` 五个旧写法反例都判错）、`tests/fx-pool.test.js`（120 次发射节点数不涨；方块迷阵写法涨到 120）。都只是 Node 模拟，待真机复测。
+
 ## 各板块正文在哪里（2026-10-27 拆分）
 
 原来写在本页的二到六节已经搬到各自的板块 Skill，规则只在那里维护。本页保留"先删"清单和总记录/门禁表。

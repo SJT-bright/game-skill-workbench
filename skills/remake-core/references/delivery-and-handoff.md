@@ -15,6 +15,8 @@
 
 交付时本地服务必须开着：记录 URL、端口、实际 Web 目录和重启命令（普通内部服务空闲20分钟关闭；用户试玩加 `--keep` 保留，结束或替代后由 Agent 关闭自有窗口与服务），不能只给文件路径或已停的链接。浏览器能玩不代表手机、真实广告或平台审核通过。
 
+**源码 ZIP 只用 `make_source_zip.py` 出（简化.11.6，Saul 2026-11-04，91 SLS11）**：不带 `.git` / `.svn` / `.idea` 等版本库和编辑器文件夹、Cocos 缓存；工程里有 `app_desc.txt`、签名证书或「密码 / 账号 / appSecret = 值」就拒绝，清掉再出。`prepare_delivery.py --source` 按同一规则拦。
+
 **交付文件夹只留一个包（v7.8，总表 B32 b）**：两个写包入口出包后，同一输出文件夹里同款游戏的旧包（App ID 相同，游戏自己的文件至少三成相同）连同它的 `.receipt.json`、`.report.json` 挪进「旧包/」，再写「最新.txt」：上传用哪个包（完整路径）、sha256、大小、时间、这次挪了哪些。源码 ZIP、试玩文件夹、别的游戏的包和其他文件一律不动；「旧包/」里重名的加「 (2)」，不覆盖、不删除；不是写包入口写的「最新.txt」不改。回复照「最新.txt」写明「上传 TikTok 用这个」和完整路径，源码包标「不能上传」。写包拒收测试（`test_writer_refusal.py`）的检查 ZIP 不要写进交付文件夹，或给写包入口加 `--keep-old-packages`。
 
 **两个写包入口都跑运行时回归（v7.8 W97）**：`make_tiktok_zip.py` 也在写 ZIP 前对要发出去的字节跑激励广告回归和运行时套件，命令带 `--ad-regression <工程>/qa/ad-regression.json`（或设 `$TIKTOK_AD_REGRESSION_ADAPTER`）。新游戏（工程标记 new 的英化游戏也算）没跑通就不写 ZIP、列出全部原因；名单上的老游戏照样出包，原因写进报告 `warnings`，交付说明照实写。`test_writer_refusal.py` 的写包命令也要带同一个 `--ad-regression`，否则它的 normal 用例会被拒。

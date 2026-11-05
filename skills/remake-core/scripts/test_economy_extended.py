@@ -1,6 +1,6 @@
 """Extended economy rules (remake-economy economy-rules.md 第五节起, Saul 2026-10-31 / 2026-11-01) and the economy-audit command.
 
-Constants must agree with remake-economy/references/economy_rules_table.json (revision 2026-11-01.v3.2, 31 rules); the
+Constants must agree with remake-economy/references/economy_rules_table.json (revision 2026-11-04.v3.4, 36 rules); the
 ad-unlock path is tested in test_ad_unlock.py. Samples live in remake-core/examples/economy-snapshot/.
 ECON-TIER / ECON-ADUNLOCK belong to W1b (skin_tiers_B / ad_unlock_views); while those names are missing the two rules are
 left out of the comparisons here (W1B_READY)."""
@@ -59,12 +59,12 @@ class RulesTableAgreesWithConstants(unittest.TestCase):
     def test_header_and_rule_ids(self):
         self.assertEqual(self.t['schema'], pc.ECON_RULES_SCHEMA)
         self.assertEqual(self.t['revision'], pc.ECON_RULES_REVISION)
-        self.assertEqual(pc.ECON_RULES_REVISION, '2026-11-01.v3.2')
+        self.assertEqual(pc.ECON_RULES_REVISION, '2026-11-04.v3.4')
         sev = {k: v for k, v in self.t['severity_by_kind'].items() if not k.startswith('_')}
         self.assertEqual(sev.pop('undecided_max'), pc.ECON_UNDECIDED_MAX)   # v3: undecided numbers at most suggest
         self.assertEqual(sev, pc.ECON_SEVERITY_BY_KIND)
         self.assertEqual((tuple(self.t['origin']['values']), self.t['origin']['default']), (pc.ECON_ORIGINS, pc.ECON_ORIGIN_DEFAULT))
-        self.assertEqual(len(self.r), 31)                                   # round 2: + TIMERCHEST; v3.1: + ONLINE, KEYCHEST
+        self.assertEqual(len(self.r), 36)   # round 2: + TIMERCHEST; v3.1: + ONLINE, KEYCHEST; v3.4: + 5
         self.assertEqual(list(self.r), list(pc.ECON_RULE_TITLES))            # same rules, same order
         self.assertEqual({k for k, v in self.r.items() if v['english_default']}, set(pc.ECON_ENGLISH_DEFAULT))
 
@@ -174,10 +174,12 @@ class RulesTableAgreesWithConstants(unittest.TestCase):
 
     def test_v31_rules(self):
         # Saul 2026-11-01 「默认数值就这样」: every number of ADCOIN / SHOPFREE / TIMERCHEST / ONLINE / KEYCHEST is decided
-        for rule in ('ECON-ADCOIN', 'ECON-SHOPFREE', 'ECON-TIMERCHEST', 'ECON-ONLINE', 'ECON-KEYCHEST'):
+        # (v3.4 added the coin jar's numbers to ECON-ONLINE, not decided by Saul: test_v34_numbers)
+        for rule in ('ECON-ADCOIN', 'ECON-SHOPFREE', 'ECON-TIMERCHEST', 'ECON-KEYCHEST'):
             self.assertTrue(all(self.p(rule)['decided_by_saul'].values()), rule)
         o = self.p('ECON-ONLINE')
-        self.assertEqual((tuple(o['tiers_min']), o['per_tier_min_B'], o['per_tier_max_B'], o['day_total_max_B'], o['decided_by_saul']),
+        v31 = {k: v for k, v in o['decided_by_saul'].items() if not k.startswith('jar_')}
+        self.assertEqual((tuple(o['tiers_min']), o['per_tier_min_B'], o['per_tier_max_B'], o['day_total_max_B'], v31),
                          (pc.ONLINE_TIERS_MIN, pc.ONLINE_TIER_MIN_B, pc.ONLINE_TIER_MAX_B, pc.ONLINE_DAY_TOTAL_MAX_B, pc.ONLINE_DECIDED))
         k = self.p('ECON-KEYCHEST')
         self.assertEqual((k['cells'], k['total_B'], k['cell_max_B'], k['decided_by_saul']),
@@ -189,6 +191,55 @@ class RulesTableAgreesWithConstants(unittest.TestCase):
         self.assertTrue({'online_gift', 'key_chest'} <= set(pc.CLAIM_DOUBLE_WINDOWS))
         self.assertIn('key_chest_ad_keys', pc.CLAIM_DOUBLE_EXCLUDED)
         self.assertEqual(len(pc.ECON_WINDOWS), len(set(pc.ECON_WINDOWS)))   # no window listed twice
+
+    def test_v33_no_coin_platform_rewards(self):
+        # Saul 2026-11-04: without coins, add-to-desktop / home revisit pay +3 energy; no energy either -> add a coin and skins
+        for rule in ('ECON-SHORTCUT', 'ECON-REVISIT'):
+            p = self.p(rule)
+            self.assertEqual(p['no_coin_with_energy'], {'currency': 'energy', 'amount': pc.NO_COIN_PLATFORM_ENERGY}, rule)
+            self.assertEqual(p['no_coin_no_energy'], pc.NO_COIN_NO_ENERGY, rule)
+            self.assertEqual(set(p['decided_by_saul']), {'no_coin_with_energy', 'no_coin_no_energy'}, rule)
+            self.assertTrue(all(p['decided_by_saul'].values()), rule)
+            self.assertEqual((p['reward_B'], p['currency']), (pc.SHORTCUT_REWARD_B, 'main'), rule)   # coin games unchanged
+
+    def test_v34_numbers(self):
+        # rules table v3.4 (2026-11-04, ad-boost round six): the constants are the table's numbers and Saul decided none of
+        # them (decided_by_saul false: a miss is at most a suggestion), as test_economy_plan.js「v3.4 新编号都在规则表里」
+        bp = self.p('ECON-BATTLEPASS')
+        self.assertEqual({k: bp[k] for k in pc.BATTLE_PASS_PERIOD}, pc.BATTLE_PASS_PERIOD)
+        self.assertEqual((tuple(bp['points_per_endless_round']), bp['free_cell_B'], tuple(bp['ad_cells_B']),
+                          bp['season_max_B_without_x2']),
+                         (pc.BATTLE_PASS_ENDLESS_POINTS, pc.BATTLE_PASS_FREE_CELL_B, pc.BATTLE_PASS_AD_CELLS_B,
+                          pc.BATTLE_PASS_SEASON_MAX_B))
+        self.assertEqual(len(pc.BATTLE_PASS_AD_CELLS_B), pc.BATTLE_PASS_PERIOD['tiers'])
+        rp, ru = self.p('ECON-REVIVEPAY'), self.p('ECON-RUNPAY')
+        self.assertEqual((rp['price_B'], rp['per_round_with_ad_revive']), (pc.REVIVE_PAY_PRICE_B, pc.REVIVE_PAY_PER_ROUND))
+        self.assertEqual((ru['normal_round_B'], ru['round_max_B'], ru['min_coins_if_score']),
+                         (pc.RUN_PAY_NORMAL_B, pc.RUN_PAY_MAX_B, pc.RUN_PAY_MIN_COINS))
+        self.assertEqual({k: v for k, v in self.p('ECON-MIDRUN').items() if k != 'decided_by_saul'}, pc.MID_RUN)
+        self.assertEqual(self.p('ECON-NOODDS'), {})
+        self.assertEqual(self.p('ECON-WHEEL')['no_replacement'], pc.WHEEL_NO_REPLACEMENT)
+        self.assertEqual(self.p('ECON-CHEST')['score_chest'], pc.SCORE_CHEST)
+        o = self.p('ECON-ONLINE')
+        self.assertEqual((o['jar_fill_B_per_min'], o['jar_cap_B']), (pc.ONLINE_JAR_FILL_B_PER_MIN, pc.ONLINE_JAR_CAP_B))
+        self.assertEqual(self.p('ECON-UPGRADE')['lose_free_upgrade_per_round'], pc.UPGRADE_LOSE_FREE_PER_ROUND)
+        self.assertEqual(tuple(self.p('ECON-ADUNLOCK')['gate_every_levels']), pc.AD_UNLOCK_GATE_EVERY_LEVELS)
+        undecided = {'ECON-BATTLEPASS': None, 'ECON-REVIVEPAY': None, 'ECON-RUNPAY': None, 'ECON-MIDRUN': None,
+                     'ECON-UPGRADE': ('lose_free_upgrade_per_round',), 'ECON-WHEEL': ('no_replacement',),
+                     'ECON-CHEST': ('score_chest',), 'ECON-ONLINE': ('jar_fill_B_per_min', 'jar_cap_B', 'jar_claims_per_day'),
+                     'ECON-ADUNLOCK': ('gate_every_levels',)}
+        for rule, keys in undecided.items():
+            p = self.p(rule)
+            for k in keys or [k for k in p if k != 'decided_by_saul']:
+                self.assertIs(p['decided_by_saul'][k], False, '%s.%s' % (rule, k))
+        for rule in ('ECON-BATTLEPASS', 'ECON-REVIVEPAY', 'ECON-RUNPAY', 'ECON-MIDRUN', 'ECON-NOODDS'):
+            self.assertFalse(self.r[rule]['english_default'], rule)
+        d = self.p('ECON-CLAIMX2')
+        self.assertTrue({'battle_pass', 'score_chest', 'online_jar'} <= set(d['windows']))
+        self.assertTrue({'battle_pass_ad', 'mid_boost', 'lose_upgrade'} <= set(d['excluded']))
+        self.assertEqual(tuple(d['english_required_windows']), ('checkin', 'wheel_result', 'gift_window'))
+        self.assertEqual([pc.ECON_RULE_SYSTEM[k] for k in ('ECON-BATTLEPASS', 'ECON-REVIVEPAY', 'ECON-RUNPAY', 'ECON-MIDRUN')],
+                         ['battle_pass', 'revive_pay', 'run_pay', 'mid_boost'])
 
 
 class NewRulePureFunctions(unittest.TestCase):
@@ -333,7 +384,7 @@ class EconomyAudit(unittest.TestCase):
             self.assertEqual([x['id'] for x in r['results']], list(pc.ECON_RULE_TITLES))   # every rule, table order
             self.assertEqual((r['schema_warnings'], r['confirm_by_hand']), ([], []))
         self.assertEqual(status(pc.economy_audit(load('good.json')), 'ECON-PACING'), 'info')
-        self.assertEqual(len(pc.ECON_RULE_TITLES), 31)
+        self.assertEqual(len(pc.ECON_RULE_TITLES), 36)
 
     def test_bad_snapshot_blocked_for_remake(self):
         # v3: bad.json = good.json + 5 faults (was: 3 faults on its own older base). Added ④ ad-boost check-in day 7 = 5B
@@ -404,7 +455,7 @@ class EconomyAudit(unittest.TestCase):
         r = pc.economy_audit({'schema': 'economy_snapshot.v1', 'B': {'value': None, 'how': 'unknown'}}, 'remake')
         self.assertEqual(status(r, 'ECON-B'), 'error')
         self.assertTrue(all(x['status'] == 'unknown' for x in r['results'] if x['id'] != 'ECON-B'))
-        self.assertEqual(len(r['results']), 31)
+        self.assertEqual(len(r['results']), 36)
 
     def test_idle_game_skips_fixed_upgrade_line(self):
         s = load('good.json'); s['game']['mode'] = 'idle'; s['configs']['upgrade_lines'] = [[10, 100, 1000]]
@@ -1032,6 +1083,456 @@ class SchemaWarningsAndAutoScanV3(unittest.TestCase):
         r = pc.economy_audit(s)
         self.assertEqual(r['confirm_by_hand'], [])
         self.assertNotIn(pc.ECON_AUTO_SCAN_SKIP_NOTE, row(r, 'ECON-WHEEL')['details'])
+
+
+def no_coin_snapshot(kind='english', energy='power', amount=3, energy_system=False, items=False, result_x2=False):
+    """good.json turned into a game without coins (rules table v3.3): B unknown, the currencies list holds only an energy
+    currency (or nothing), add-to-desktop / home revisit pay `amount` of `energy` (a score when there is no energy)."""
+    s = load('good.json')
+    s['game']['kind'] = kind
+    s['B'] = {'value': None, 'how': 'unknown', 'evidence': ''}
+    s['currencies'] = [{'id': energy, 'label': energy, 'role': 'energy', 'evidence': 'x:1'}] if energy else []
+    s['systems'].update(energy=bool(energy_system), items=items, result_x2=result_x2)
+    for i in ('shortcut', 'revisit'):
+        inflow(s, i).update(currency=energy or 'score', amount=amount)
+    return s
+
+
+class NoCoinV33(unittest.TestCase):
+    """Rules table v3.3 (Saul 2026-11-04 「游戏里有体力的，各发 +3 体力；没有体力的，英化时加一种金币，再加皮肤给它当花处」), judged as
+    the learning library's economy_plan.js platformNoCoin() and its test 「没有金币的游戏（Saul 2026-11-04）」."""
+    RULES = ('ECON-SHORTCUT', 'ECON-REVISIT')
+
+    def test_energy_only_pays_three_energy(self):
+        r = pc.economy_audit(no_coin_snapshot())          # no B needed
+        for rule in self.RULES:
+            self.assertEqual(status(r, rule), 'pass', row(r, rule))
+        self.assertTrue(r['ok'])
+
+    def test_energy_only_paying_five_is_an_error_in_english_games(self):
+        r = pc.economy_audit(no_coin_snapshot(amount=5))  # 5B worked out as 5 energy: wrong
+        for rule in self.RULES:
+            self.assertEqual(status(r, rule), 'error', rule)
+            self.assertIn('+3 energy', ' '.join(row(r, rule)['details']))
+        self.assertFalse(r['ok'])
+
+    def test_energy_in_systems_only_accepts_an_energy_named_reward(self):
+        s = no_coin_snapshot(energy=None, energy_system=True)
+        for i in ('shortcut', 'revisit'):
+            inflow(s, i).update(currency='Tili', amount=3)
+        r = pc.economy_audit(s)
+        for rule in self.RULES:
+            self.assertEqual(status(r, rule), 'pass', row(r, rule))
+        inflow(s, 'shortcut').update(currency='gems')
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-SHORTCUT'), 'error')
+
+    def test_no_coin_no_energy_asks_for_a_coin_and_skins(self):
+        r = pc.economy_audit(no_coin_snapshot(energy=None, amount=50))   # a score as the reward
+        for rule in self.RULES:
+            self.assertEqual(status(r, rule), 'error', rule)
+            self.assertIn('add a coin currency and skins', ' '.join(row(r, rule)['details']))
+        r = pc.economy_audit(no_coin_snapshot(energy=None, amount=50, kind='remake'))
+        self.assertEqual(status(r, 'ECON-SHORTCUT'), 'error')
+
+    def test_no_coin_skips_b_and_x2_and_nocur_without_items(self):
+        r = pc.economy_audit(no_coin_snapshot())
+        self.assertEqual((status(r, 'ECON-B'), status(r, 'ECON-X2'), status(r, 'ECON-NOCUR')), ('skip', 'skip', 'skip'))
+        s = no_coin_snapshot(); s['meta'] = {'source': 'auto_scan'}
+        r = pc.economy_audit(s)
+        for rule in ('ECON-B', 'ECON-X2', 'ECON-NOCUR'):         # findings, not 'system not found'
+            self.assertNotIn(rule, r['confirm_by_hand'])
+        s['systems'].pop('items')                                  # items not reported: still skip, but confirm by hand
+        r = pc.economy_audit(s)
+        self.assertEqual(status(r, 'ECON-NOCUR'), 'skip')
+        self.assertIn('ECON-NOCUR', r['confirm_by_hand'])
+
+    def test_no_coin_with_items_needs_the_result_double(self):
+        self.assertEqual(status(pc.economy_audit(no_coin_snapshot(items=True)), 'ECON-NOCUR'), 'error')
+        self.assertEqual(status(pc.economy_audit(no_coin_snapshot(items=True, result_x2=True)), 'ECON-NOCUR'), 'pass')
+        self.assertEqual(status(pc.economy_audit(no_coin_snapshot(items=True, result_x2=True)), 'ECON-X2'), 'skip')
+
+    def test_other_rules_unknown_without_b(self):
+        r = pc.economy_audit(no_coin_snapshot())
+        judged = {'ECON-B', 'ECON-X2', 'ECON-NOCUR', 'ECON-SHORTCUT', 'ECON-REVISIT'}
+        self.assertEqual(len(r['results']), len(pc.ECON_RULE_TITLES))
+        for x in r['results']:
+            if x['id'] not in judged:
+                self.assertEqual((x['status'], x['details']), ('unknown', ['no coin currency, so no B: not checked']), x['id'])
+
+    def test_no_coin_with_b_written_uses_the_energy_rule_too(self):
+        s = no_coin_snapshot(); s['B'] = {'value': 10, 'how': 'config_normalLevelCoins', 'evidence': 'x:1'}
+        r = pc.economy_audit(s)
+        for rule in self.RULES:
+            self.assertEqual(status(r, rule), 'pass', row(r, rule))
+        self.assertEqual(status(r, 'ECON-X2'), 'skip')
+        inflow(s, 'revisit').update(per='day')
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-REVISIT'), 'error')
+
+    def test_finished_games_only_label(self):
+        r = pc.economy_audit(no_coin_snapshot(energy=None, amount=50, kind='finished'))
+        self.assertTrue(r['ok'])
+        self.assertEqual(status(r, 'ECON-SHORTCUT'), 'label')
+
+    def test_coin_games_and_snapshots_without_a_currency_list_unchanged(self):
+        self.assertEqual(status(pc.economy_audit(load('good.json')), 'ECON-SHORTCUT'), 'pass')
+        s = load('good.json'); inflow(s, 'shortcut').update(amount=40)
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-SHORTCUT'), 'error')
+        s = load('good.json'); inflow(s, 'shortcut').update(currency='energy', amount=3)   # has coins: 5B coins, not energy
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-SHORTCUT'), 'error')
+        r = pc.economy_audit({'schema': 'economy_snapshot.v1', 'B': {'value': None, 'how': 'unknown'}}, 'remake')
+        self.assertEqual(status(r, 'ECON-B'), 'error')             # no currencies list: not assumed to have no coins
+
+
+# The v3.4 rows of the learning library's template (配置模板/economy.config.json, enabled:false there), as snapshot rows.
+V34_ROWS = {
+    'battle_pass_free': ('inflows', {'id': 'battle_pass_free', 'rule': 'ECON-BATTLEPASS', 'window': 'battle_pass', 'currency': 'coins',
+                                     'amounts': [10] * 10, 'per': 'season', 'needs_ad': False, 'x2': 'checkbox_default_on',
+                                     'days_per_season': 7, 'tiers': 10, 'points_per_tier': 30, 'points_per_level': 10}),
+    'battle_pass_ad': ('inflows', {'id': 'battle_pass_ad', 'rule': 'ECON-BATTLEPASS', 'window': 'battle_pass_ad', 'currency': 'coins',
+                                   'amounts': [5, 5, 5, 5, 10, 10, 10, 15, 15, 20], 'per': 'season', 'needs_ad': True, 'x2': 'none'}),
+    'score_chest_1': ('inflows', {'id': 'score_chest_1', 'rule': 'ECON-CHEST', 'window': 'score_chest', 'tier': 1, 'currency': 'coins',
+                                  'amount': 20, 'per': 'claim', 'needs_ad': False, 'x2': 'checkbox_default_on'}),
+    'online_jar': ('inflows', {'id': 'online_jar', 'rule': 'ECON-ONLINE', 'window': 'online_jar', 'currency': 'coins', 'amount': None,
+                               'jar_fill_per_min': 3, 'jar_cap': 30, 'day_fill_max': 100, 'per': 'claim', 'needs_ad': False,
+                               'x2': 'checkbox_default_on'}),
+    'mid_boost': ('inflows', {'id': 'mid_boost', 'rule': 'ECON-MIDRUN', 'window': 'mid_boost', 'per': 'attempt', 'needs_ad': True,
+                              'x2': 'none', 'extra_steps': 5, 'per_attempt': 1, 'bought_steps_pay': False}),
+    'lose_upgrade': ('inflows', {'id': 'lose_upgrade', 'rule': 'ECON-UPGRADE', 'window': 'lose_upgrade', 'per': 'round', 'needs_ad': True,
+                                 'x2': 'none', 'upgrade_levels': 1, 'per_round_max': 1}),
+    'run_pay': ('inflows', {'id': 'run_pay', 'rule': 'ECON-RUNPAY', 'currency': 'coins', 'amount': 10, 'amount_max': 30, 'amount_min': 1,
+                            'per': 'round', 'needs_ad': False, 'x2': 'ad_button'}),
+    'revive_pay': ('sinks', {'id': 'revive_pay', 'rule': 'ECON-REVIVEPAY', 'kind': 'revive', 'currency': 'coins', 'price': 30,
+                             'per_round_max': 1}),
+}
+V34_ALL = ('battle_pass_free', 'battle_pass_ad', 'score_chest_1', 'online_jar', 'mid_boost', 'lose_upgrade', 'revive_pay')
+BATTLE_PASS = ('battle_pass_free', 'battle_pass_ad')
+
+
+def v34_snapshot(ids=(), kind=None):
+    """good.json plus the v3.4 template rows named in ids."""
+    s = load('good.json')
+    for i in ids:
+        where, x = V34_ROWS[i]
+        s[where].append(copy.deepcopy(x))
+    if kind:
+        s['game']['kind'] = kind
+    return s
+
+
+class V34NewBoards(unittest.TestCase):
+    """Rules table v3.4 (2026-11-04, ad-boost round six), judged as the learning library's economy_plan.js and its tests
+    「v3.4 ...」. Saul decided none of the new numbers: a miss is a capped suggestion even in a remake game; a wrong x2, a
+    hidden ad-revive button or an ad that buys odds is reported by kind as usual. economy_plan.js writes a broken and a soft
+    finding as two rows; the audit keeps one row per rule, listing both under the reported severity. A boost row whose
+    numbers were not read is unknown here (economy_plan.js: skip with confirm)."""
+
+    def audit(self, s, rule, kind=None):
+        return row(pc.economy_audit(s, kind), rule)
+
+    def soft(self, s, rule, kind=None):
+        """Assert the rule's row is a capped suggestion that blocks nothing; return its details joined."""
+        r = pc.economy_audit(s, kind)
+        x = row(r, rule)
+        self.assertEqual((x['status'], x.get('capped_by')), ('suggest', 'decided_by_saul=false'), x)
+        self.assertIn(pc.ECON_V34_UNDECIDED_NOTE, x['details'])
+        self.assertTrue(r['ok'] or W1B_RULES, with_status(r, 'error'))
+        return ' | '.join(x['details'])
+
+    def test_all_new_boards_clean(self):
+        r = pc.economy_audit(v34_snapshot(V34_ALL))
+        self.assertEqual(with_status(r, 'error', 'suggest', 'label', 'unknown'), set())
+        self.assertEqual(r['schema_warnings'], [])
+        self.assertTrue(r['ok'] or W1B_RULES)
+        for rule in ('ECON-BATTLEPASS', 'ECON-REVIVEPAY', 'ECON-MIDRUN', 'ECON-CHEST', 'ECON-ONLINE', 'ECON-UPGRADE', 'ECON-CLAIMX2'):
+            self.assertEqual(status(r, rule), 'pass', rule)
+        self.assertIn('battle_pass, score_chest, online_jar', row(r, 'ECON-CLAIMX2')['details'][0])
+        r = pc.economy_audit(load('good.json'))
+        for rule in ('ECON-BATTLEPASS', 'ECON-REVIVEPAY', 'ECON-RUNPAY', 'ECON-MIDRUN', 'ECON-NOODDS'):
+            self.assertEqual(status(r, rule), 'skip', rule)
+        for key, rule in (('battle_pass', 'ECON-BATTLEPASS'), ('revive_pay', 'ECON-REVIVEPAY'), ('run_pay', 'ECON-RUNPAY'),
+                          ('mid_boost', 'ECON-MIDRUN')):
+            s = load('good.json'); s['systems'][key] = True                  # reported present, no numbers: not guessed
+            self.assertEqual(status(pc.economy_audit(s), rule), 'unknown', rule)
+
+    def test_battle_pass(self):
+        s = v34_snapshot(BATTLE_PASS); inflow(s, 'battle_pass_free')['amounts'] = [20] * 10
+        d = self.soft(s, 'ECON-BATTLEPASS')
+        self.assertIn('battle_pass_free tier 1 gives 20; 1B = 10 expected', d)
+        self.assertIn('a battle-pass season adds up to 300 (30.00B) without x2; at most 20B', d)
+        s = v34_snapshot(BATTLE_PASS); inflow(s, 'battle_pass_ad')['amounts'] = [10] * 10
+        self.assertIn('battle_pass_ad tier 1 gives 10; 0.5B = 5 expected', self.soft(s, 'ECON-BATTLEPASS'))
+        s = v34_snapshot(BATTLE_PASS); inflow(s, 'battle_pass_free').update(tiers=8, points_per_endless_round=30)
+        d = self.soft(s, 'ECON-BATTLEPASS')
+        self.assertIn('battle pass tiers = 8; 10 expected', d)
+        self.assertIn('30 points for an endless round; 10..20 expected', d)
+        s = v34_snapshot(BATTLE_PASS); inflow(s, 'battle_pass_ad')['x2'] = 'checkbox_default_on'     # an ad cell is never doubled
+        x = self.audit(s, 'ECON-BATTLEPASS')
+        self.assertEqual(x['status'], 'error')
+        self.assertIn('never doubled', x['details'][0])
+        s = v34_snapshot(BATTLE_PASS); inflow(s, 'battle_pass_free')['x2'] = 'none'                 # the free cells' claim window
+        x = self.audit(s, 'ECON-CLAIMX2')
+        self.assertEqual(x['status'], 'error')
+        self.assertTrue(any(m.startswith('battle_pass:') for m in x['details']), x)
+        # no window written: the needs_ad row is the ad cell (economy_plan.js windowOf), so its x2 none is right
+        s = v34_snapshot(BATTLE_PASS)
+        for i in BATTLE_PASS:
+            del inflow(s, i)['window']
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-BATTLEPASS'), status(r, 'ECON-CLAIMX2'), r['schema_warnings']), ('pass', 'pass', []))
+        inflow(s, 'battle_pass_ad')['x2'] = 'checkbox_default_on'
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-BATTLEPASS'), 'error')
+
+    def test_battle_pass_points_are_not_a_currency(self):
+        s = v34_snapshot(BATTLE_PASS)
+        s['currencies'].insert(0, {'id': 'bp_points', 'label': 'Points', 'role': 'points', 'evidence': 'x:1'})
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-DEAD'), status(r, 'ECON-BATTLEPASS')), ('pass', 'pass'))   # never spent: not dead
+        # no main role written: the coins are the main currency, not the points (economy_plan.js: first non-points)
+        s['currencies'][1]['role'] = 'second'
+        inflow(s, 'battle_pass_free')['amounts'] = [20] * 10
+        s['inflows'].append({'id': 'battle_pass_points', 'rule': 'ECON-BATTLEPASS', 'currency': 'bp_points', 'amount': 999})
+        d = ' | '.join(self.audit(s, 'ECON-BATTLEPASS')['details'])
+        self.assertIn('battle_pass_free tier 1 gives 20', d)
+        self.assertNotIn('999', d)
+        s = no_coin_snapshot()                                           # energy and points only: still no coins (v3.3)
+        s['currencies'].append({'id': 'bp_points', 'label': 'Points', 'role': 'points', 'evidence': 'x:1'})
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-B'), status(r, 'ECON-SHORTCUT')), ('skip', 'pass'))
+
+    def test_revive_pay(self):
+        self.assertEqual(status(pc.economy_audit(v34_snapshot(['revive_pay'])), 'ECON-REVIVEPAY'), 'pass')
+        s = v34_snapshot(['revive_pay']); sink(s, 'revive_pay').update(price=50, per_round_max=2)
+        d = self.soft(s, 'ECON-REVIVEPAY')
+        self.assertIn('a revive costs 50 (5.00B); 3B = 30 expected', d)
+        self.assertIn('2 revives a round; together with the ad revive at most 1', d)
+        s = v34_snapshot(['revive_pay']); sink(s, 'revive_pay')['hides_ad_revive'] = True
+        x = self.audit(s, 'ECON-REVIVEPAY')
+        self.assertEqual(x['status'], 'error')
+        self.assertIn('hides the watch-ad revive button', x['details'][0])
+        s = v34_snapshot(['revive_pay']); s['systems']['revive'] = False
+        x = self.audit(s, 'ECON-REVIVEPAY')
+        self.assertEqual(x['status'], 'error')
+        self.assertIn('the ad revive button must be offered too', x['details'][0])
+
+    def test_revive_is_a_place_to_spend_not_a_shop_item(self):
+        s = v34_snapshot(['revive_pay'])
+        s['currencies'].append({'id': 'gems', 'label': 'Gems', 'role': 'second', 'evidence': 'x:1'})   # gems only revive
+        s['sinks'].append({'id': 'revive_gems', 'kind': 'revive', 'currency': 'gems', 'price': 5, 'per_round_max': 1})
+        r = pc.economy_audit(s)
+        self.assertEqual(status(r, 'ECON-DEAD'), 'pass', row(r, 'ECON-DEAD'))
+        s['sinks'] = [x for x in s['sinks'] if x['id'] != 'revive_gems']
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-DEAD'), 'error')
+        s = v34_snapshot(['revive_pay']); sink(s, 'revive_pay')['price'] = 20        # cheaper than any skin: not counted
+        self.assertEqual(row(pc.economy_audit(s), 'ECON-PACING')['details'], row(pc.economy_audit(load('good.json')), 'ECON-PACING')['details'])
+
+    def run_game(self, **change):
+        """An endless game whose round pays nothing itself: the result turns the score into coins (ECON-RUNPAY)."""
+        s = v34_snapshot(['run_pay'])
+        s['game']['mode'] = 'endless'
+        s['inflows'] = [x for x in s['inflows'] if x['id'] != 'level_clear']
+        s['systems']['result_x2'] = False
+        s['systems']['skin_trial'].update(trial='ad_minutes', trial_minutes=30)
+        inflow(s, 'run_pay').update(change)
+        return s
+
+    def test_run_pay(self):
+        r = pc.economy_audit(self.run_game())
+        self.assertEqual((status(r, 'ECON-RUNPAY'), status(r, 'ECON-X2')), ('pass', 'pass'))   # its x2 is the result double
+        self.assertTrue(r['ok'] or W1B_RULES)
+        d = self.soft(self.run_game(amount=20, amount_max=50, amount_min=0), 'ECON-RUNPAY')
+        for want in ('a normal round gives 20 (2.00B); 1B = 10 expected', 'up to 50 (5.00B); at most 3B before x2',
+                     'at least 0 coins; at least 1'):
+            self.assertIn(want, d)
+        r = pc.economy_audit(self.run_game(x2='none'))
+        self.assertEqual((status(r, 'ECON-RUNPAY'), status(r, 'ECON-X2')), ('pass', 'error'))
+
+    def test_mid_run(self):
+        self.assertEqual(status(pc.economy_audit(v34_snapshot(['mid_boost'])), 'ECON-MIDRUN'), 'pass')
+        s = v34_snapshot(['mid_boost'])
+        inflow(s, 'mid_boost').update(extra_steps=10, extra_sec=30, per_attempt=3, bought_steps_pay=True, refresh_free_per_round=5,
+                                      refresh_ad_per_level=2, pick_all_ticket_every_levels=1)
+        d = self.soft(s, 'ECON-MIDRUN')
+        for want in ('+10 steps; +5 steps expected', '+30 s; +15 s expected', '3 times an attempt; at most 1',
+                     'bought steps / time count in the round reward', '5 free refreshes a round; at most 2',
+                     '2 ad refreshes a level; at most 1', 'a pick-all ticket every 1 levels; one every 3 levels'):
+            self.assertIn(want, d)
+        s = v34_snapshot(['mid_boost']); inflow(s, 'mid_boost')['x2'] = 'checkbox_default_on'
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-MIDRUN'), status(r, 'ECON-CLAIMX2')), ('error', 'pass'))   # mid_boost: excluded window
+        self.assertIn('no x2', row(r, 'ECON-MIDRUN')['details'][0])
+        s = load('good.json'); s['inflows'].append({'id': 'extra_steps_ad', 'needs_ad': True})   # found by id, numbers not read
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-MIDRUN'), r['schema_warnings']), ('unknown', []))
+
+    def test_no_odds(self):
+        s = load('good.json')
+        s['inflows'].append({'id': 'claw_luck_ad', 'currency': 'coins', 'amount': 0, 'needs_ad': True, 'ad_buys_odds': True})
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-NOODDS'), r['schema_warnings']), ('error', []))
+        self.assertIn('claw_luck_ad', row(r, 'ECON-NOODDS')['details'][0])
+        self.assertEqual(status(pc.economy_audit(s, 'english'), 'ECON-NOODDS'), 'suggest')    # the original game's own
+        inflow(s, 'claw_luck_ad')['origin'] = 'ad-boost'
+        self.assertEqual(status(pc.economy_audit(s, 'english'), 'ECON-NOODDS'), 'error')      # added by us
+        self.assertEqual(status(pc.economy_audit(load('good.json')), 'ECON-NOODDS'), 'skip')
+
+    def test_lose_upgrade(self):
+        self.assertEqual(status(pc.economy_audit(v34_snapshot(['lose_upgrade'])), 'ECON-UPGRADE'), 'pass')
+        s = v34_snapshot(['lose_upgrade'])
+        inflow(s, 'lose_upgrade').update(amount=50, currency='coins', per_round_max=2, upgrade_levels=2)
+        d = self.soft(s, 'ECON-UPGRADE')
+        for want in ('gives 50 coins; a free upgrade after a loss gives no coins', '2 a round; at most 1',
+                     'upgrades 2 levels; +1 level expected'):
+            self.assertIn(want, d)
+        s['configs']['upgrade_lines'] = [[500, 1000, 2000]]          # a decided miss too: one row, error, both listed
+        x = self.audit(s, 'ECON-UPGRADE')
+        self.assertEqual(x['status'], 'error')
+        self.assertTrue(any(m.startswith('line 1:') for m in x['details']) and any('gives no coins' in m for m in x['details']), x)
+        s = v34_snapshot(['lose_upgrade']); inflow(s, 'lose_upgrade')['x2'] = 'checkbox_default_on'
+        r = pc.economy_audit(s)
+        self.assertEqual((status(r, 'ECON-UPGRADE'), status(r, 'ECON-CLAIMX2')), ('error', 'pass'))
+        s = v34_snapshot(['lose_upgrade']); del s['configs']['upgrade_lines']; s['systems']['upgrade'] = False
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-UPGRADE'), 'pass')    # the free upgrade alone, no upgrade line
+
+    def nr_wheel(self, **grand):
+        """good.json's wheel replaced by an ad-boost no-replacement wheel, one row as in the learning library's template."""
+        s = load('good.json')
+        s['inflows'] = [x for x in s['inflows'] if x['rule'] != 'ECON-WHEEL']
+        cells = [{'amount': a, 'weight': 1} for a in (50, 10, 10, 10, 20, 20, 20, 20, 20)]
+        cells.append(dict({'grand': True, 'item': 'skin_lim', 'owned_fallback': 50, 'weight': 1}, **grand))
+        s['inflows'].append({'id': 'wheel', 'rule': 'ECON-WHEEL', 'window': 'wheel_result', 'currency': 'coins', 'amount': None,
+                             'per': 'spin', 'needs_ad': False, 'x2': 'checkbox_default_on', 'free_per_day': 1, 'ad_per_day': 2,
+                             'count_per_day': 3, 'no_replacement': True, 'cells': cells, 'origin': 'ad-boost'})
+        return s
+
+    def test_no_replacement_wheel(self):
+        r = pc.economy_audit(self.nr_wheel())
+        self.assertEqual((status(r, 'ECON-WHEEL'), status(r, 'ECON-CLAIMX2'), r['schema_warnings']), ('pass', 'pass', []))
+        self.assertIn('no-replacement wheel', row(r, 'ECON-WHEEL')['details'][0])
+        s = self.nr_wheel()
+        inflow(s, 'wheel')['cells'][1]['amount'] = 30
+        inflow(s, 'wheel')['cells'][2]['amount'] = 30                 # 22B a round, 2.2B a spin
+        d = self.soft(s, 'ECON-WHEEL')
+        self.assertIn('add up to 220 (22.00B); at most 18B a round', d)
+        self.assertNotIn('one spin is worth', d)                       # averaged over the round, not per spin
+        d = self.soft(self.nr_wheel(item='skin_r2', owned_fallback=60), 'ECON-WHEEL')
+        for want in ('skin_r2 is in the ad-unlock table', 'skin_r2 must count as limited', 'gives 60 (6.00B) instead; at most 5B'):
+            self.assertIn(want, d)
+        x = self.audit(self.nr_wheel(x2='checkbox_default_on'), 'ECON-WHEEL')
+        self.assertEqual(x['status'], 'error')
+        self.assertIn('grand-prize cell is not doubled', x['details'][0])
+        s = self.nr_wheel(); inflow(s, 'wheel')['cells'].pop()
+        self.assertIn('has 9 cells; 10 expected', self.soft(s, 'ECON-WHEEL'))
+        s = self.nr_wheel(); inflow(s, 'wheel')['cells'][1]['amount'] = 60     # one cell is still at most 5B
+        x = self.audit(s, 'ECON-WHEEL')
+        self.assertEqual(x['status'], 'error')
+        self.assertIn('largest wheel cell 60', x['details'][0])
+        s = self.nr_wheel(); inflow(s, 'wheel')['free_per_day'] = 2              # the daily spins are read off the row
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-WHEEL'), 'error')
+
+    def test_score_chest(self):
+        r = pc.economy_audit(v34_snapshot(['score_chest_1']))
+        self.assertEqual((status(r, 'ECON-CHEST'), status(r, 'ECON-CLAIMX2')), ('pass', 'pass'))
+        s = v34_snapshot(['score_chest_1'])
+        inflow(s, 'score_chest_1').update(amount=30, reclaim_by_ad=True)
+        for t in (2, 3, 4):                      # no window: told apart from the every-5-levels chest by id
+            s['inflows'].append({'id': 'score_chest_%d' % t, 'rule': 'ECON-CHEST', 'tier': t, 'currency': 'coins', 'amount': 20,
+                                 'x2': 'checkbox_default_on'})
+        d = self.soft(s, 'ECON-CHEST')
+        for want in ('4 tiers; at most 3', 'free 30 (3.00B); a score-chest tier gives at most 2B', 'with the ad 60 (6.00B)',
+                     'claimed again with an ad; each tier is claimed once'):
+            self.assertIn(want, d)
+        s = v34_snapshot(['score_chest_1']); inflow(s, 'score_chest_1')['x2'] = 'none'
+        x = self.audit(s, 'ECON-CLAIMX2')
+        self.assertEqual(x['status'], 'error')
+        self.assertTrue(any(m.startswith('score_chest:') for m in x['details']), x)
+        s = v34_snapshot(['score_chest_1'])
+        s['inflows'] = [x for x in s['inflows'] if x['id'] != 'chest_5']; s['systems']['chest'] = False
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-CHEST'), 'pass')         # a score chest alone
+        s = v34_snapshot(['score_chest_1']); inflow(s, 'chest_5')['amount'] = 30; inflow(s, 'score_chest_1')['amount'] = 30
+        x = self.audit(s, 'ECON-CHEST')          # a decided chest miss and an undecided score-chest miss: one row, error
+        self.assertEqual(x['status'], 'error')
+        self.assertTrue('free chest gives 30 (3.00B); at most 2B' in x['details'] and any(m.startswith('score_chest_1') for m in x['details']), x)
+
+    def test_coin_jar(self):
+        r = pc.economy_audit(v34_snapshot(['online_jar']))
+        self.assertEqual((status(r, 'ECON-ONLINE'), status(r, 'ECON-CLAIMX2')), ('pass', 'pass'))
+        s = v34_snapshot(['online_jar']); inflow(s, 'online_jar').update(jar_fill_per_min=5, jar_cap=50)
+        del inflow(s, 'online_jar')['day_fill_max']
+        d = self.soft(s, 'ECON-ONLINE')
+        for want in ('fills 5 (0.50B) a minute; at most 0.25B', 'a full jar holds 50 (5.00B); at most 3B', 'day_fill_max not written'):
+            self.assertIn(want, d)
+        s = v34_snapshot(['online_jar']); inflow(s, 'online_jar')['day_fill_max'] = 30; s['systems']['online_gift'] = True
+        s['inflows'] += [{'id': 'online_gift_%d' % (i + 1), 'rule': 'ECON-ONLINE', 'currency': 'coins', 'amount': a,
+                          'x2': 'checkbox_default_on'} for i, a in enumerate((10, 20, 20, 20, 20))]   # cards 9B + jar 3B a day
+        self.assertIn('add up to 120 (12.00B); at most 10B', self.soft(s, 'ECON-ONLINE'))
+        s = v34_snapshot(['online_jar']); inflow(s, 'online_jar')['x2'] = 'none'
+        x = self.audit(s, 'ECON-CLAIMX2')
+        self.assertEqual(x['status'], 'error')
+        self.assertTrue(any(m.startswith('online_jar:') for m in x['details']), x)
+        s = v34_snapshot(['online_jar'])
+        s['inflows'].append({'id': 'online_jar_ad', 'window': 'online_jar', 'currency': 'coins', 'needs_ad': True,
+                             'x2': 'checkbox_default_on', 'day_fill_max': 0})
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-ONLINE'), 'error')        # the watch-ad jar row is the ad itself
+
+    @unittest.skipUnless(W1B_READY, 'W1b names not in product_contract.py yet')
+    def test_ad_unlock_level_gates(self):
+        def gates(**g):
+            s = load('good.json')
+            for i, level in g.items():
+                sink(s, i)['gate_level'] = level
+            return s
+        x = self.audit(gates(skin_c2=3, skin_r2=7), 'ECON-ADUNLOCK')
+        self.assertEqual(x['status'], 'pass')
+        self.assertIn('one every 3..5 levels', x['details'][0])
+        d = self.soft(gates(skin_c2=10, skin_r2=3), 'ECON-ADUNLOCK')
+        self.assertIn('7 levels apart; one every 3..5 levels', d)
+        self.assertIn('skin_c2 (50) is cheaper than skin_r2 (100) but opens later', d)
+        x = self.audit(gates(skin_c2=3), 'ECON-ADUNLOCK')
+        self.assertEqual(x['status'], 'pass')
+        self.assertIn('without a gate: confirm by hand', x['details'][0])
+        self.assertEqual(self.audit(load('good.json'), 'ECON-ADUNLOCK')['details'], [])   # no gate written: nothing added
+        s = gates(skin_c2=10, skin_r2=3); sink(s, 'skin_r2')['ad_unlock_views'] = 9        # a decided miss too: error
+        x = self.audit(s, 'ECON-ADUNLOCK')
+        self.assertEqual(x['status'], 'error')
+        self.assertTrue(any('levels apart' in m for m in x['details']) and any('9 views' in m for m in x['details']), x)
+
+    def test_english_and_added_by_ad_boost(self):
+        s = v34_snapshot(BATTLE_PASS, 'english'); inflow(s, 'battle_pass_free')['amounts'][0] = 50
+        self.assertIn('tier 1 gives 50', self.soft(s, 'ECON-BATTLEPASS'))   # the original game's own: suggest
+        s['systems_origin']['battle_pass'] = 'ad-boost'
+        self.soft(s, 'ECON-BATTLEPASS')                                       # added by ad-boost: still at most suggest
+        inflow(s, 'battle_pass_ad')['x2'] = 'checkbox_default_on'
+        x = self.audit(s, 'ECON-BATTLEPASS')                                  # its doubled ad cell is judged as remake
+        self.assertEqual((x['status'], x.get('judged_as')), ('error', 'remake'))
+        self.assertTrue(any('never doubled' in m for m in x['details']) and any('tier 1 gives 50' in m for m in x['details']), x)
+        del s['systems_origin']['battle_pass']
+        self.assertEqual(status(pc.economy_audit(s), 'ECON-BATTLEPASS'), 'suggest')       # the original game's ad cell
+        self.assertEqual(status(pc.economy_audit(s, 'finished'), 'ECON-BATTLEPASS'), 'label')
+
+    def test_b_unknown_still_judges_mid_run_and_odds(self):
+        s = v34_snapshot(['mid_boost', 'battle_pass_free']); s['B'] = {'value': None, 'how': 'unknown'}
+        inflow(s, 'mid_boost')['x2'] = 'checkbox_default_on'
+        s['inflows'].append({'id': 'claw_luck_ad', 'currency': 'coins', 'amount': 0, 'needs_ad': True, 'ad_buys_odds': True})
+        r = pc.economy_audit(s)
+        self.assertEqual([status(r, k) for k in ('ECON-B', 'ECON-MIDRUN', 'ECON-NOODDS', 'ECON-BATTLEPASS')],
+                         ['error', 'error', 'error', 'unknown'])
+        self.assertEqual([x['id'] for x in r['results']], list(pc.ECON_RULE_TITLES))
+
+    def test_auto_scan_unread_numbers_are_confirmed_not_guessed(self):
+        def snap(source):
+            s = v34_snapshot(['run_pay', 'revive_pay', 'lose_upgrade', 'online_jar'])
+            s['meta']['source'] = source
+            for i, k in (('run_pay', 'amount_max'), ('lose_upgrade', 'per_round_max'), ('online_jar', 'day_fill_max')):
+                del inflow(s, i)[k]
+            del sink(s, 'revive_pay')['per_round_max']
+            return s
+        rules = ('ECON-RUNPAY', 'ECON-REVIVEPAY', 'ECON-UPGRADE', 'ECON-ONLINE')
+        r = pc.economy_audit(snap('auto_scan'))
+        for rule in rules:
+            self.assertEqual(status(r, rule), 'pass', rule)
+            self.assertIn('confirm by hand', row(r, rule)['details'][-1], rule)
+        r = pc.economy_audit(snap('hand'))                    # written by hand: a missing number is a capped suggestion
+        self.assertEqual([status(r, rule) for rule in rules], ['suggest'] * 4)
 
 
 def fractional_b_snapshot(newB=72.5):

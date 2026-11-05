@@ -37,6 +37,14 @@ function fakeSdk(opts) {
     var event = {touches: phase === 'End' || phase === 'Cancel' ? [] : [point], changedTouches: [point], timeStamp: 7};
     sdk.listeners[phase].slice().forEach(function (fn) { fn.call(sdk, event); });
   };
+  // v7.9 (手机问题源头约束): tt.onHide / tt.onShow, the phone taking the game away and giving it back
+  sdk.lifecycle = {hide: [], show: []};
+  if (!opts.noLifecycle) {
+    sdk.onHide = function (fn) { sdk.lifecycle.hide.push(fn); };
+    sdk.onShow = function (fn) { sdk.lifecycle.show.push(fn); };
+  }
+  sdk.hide = function () { sdk.lifecycle.hide.slice().forEach(function (fn) { fn({}); }); };
+  sdk.show = function () { sdk.lifecycle.show.slice().forEach(function (fn) { fn({scene: '011004'}); }); };
   return sdk;
 }
 function screenPoint(x, y) { return {identifier: 3, screenX: x, screenY: y, force: 1}; }
@@ -181,6 +189,63 @@ test('non_function_listener_passed_through', function () {
   sdk.onTouchStart(null);
   assert.strictEqual(sdk.listeners.Start[0], null);
 });
+// v7.9 (手机问题源头约束, 猴子快跑 v12): a finger down when the phone takes the game away never gets touchend
+test('held_touch_gets_touchcancel_on_hide_once', function () {
+  var sdk = fakeSdk(), m = fresh();
+  m.install(sdk);
+  var cancels = record(sdk, 'Cancel');
+  record(sdk, 'Start');
+  sdk.fire('Start', screenPoint(195, 470));
+  sdk.hide();
+  assert.strictEqual(cancels.length, 1, 'the engine got one touchcancel');
+  assert.strictEqual(cancels[0].changedTouches.length, 1);
+  assert.strictEqual(cancels[0].changedTouches[0].identifier, 3);
+  assert.strictEqual(cancels[0].changedTouches[0].clientX, 195, 'the cancelled point has client coordinates');
+  assert.strictEqual(cancels[0].touches.length, 0);
+  sdk.show();
+  assert.strictEqual(cancels.length, 1, 'not cancelled twice');
+});
+test('ended_touch_not_cancelled', function () {
+  var sdk = fakeSdk(), m = fresh();
+  m.install(sdk);
+  var cancels = record(sdk, 'Cancel');
+  record(sdk, 'Start'); record(sdk, 'End');
+  sdk.fire('Start', screenPoint(10, 500)); sdk.fire('End', screenPoint(10, 500));
+  sdk.hide(); sdk.show();
+  assert.strictEqual(cancels.length, 0);
+  sdk.fire('Start', screenPoint(10, 500)); sdk.fire('Cancel', screenPoint(10, 500));
+  sdk.hide();
+  assert.strictEqual(cancels.length, 1, 'only the platform cancel itself');
+});
+test('touch_started_while_away_cancelled_on_show', function () {
+  var sdk = fakeSdk(), m = fresh();
+  m.install(sdk);
+  var cancels = record(sdk, 'Cancel');
+  record(sdk, 'Start');
+  sdk.hide();
+  sdk.fire('Start', screenPoint(50, 600));
+  sdk.show();
+  assert.strictEqual(cancels.length, 1);
+  assert.strictEqual(cancels[0].changedTouches[0].clientY, 600);
+});
+test('removed_cancel_listener_not_called', function () {
+  var sdk = fakeSdk(), m = fresh();
+  m.install(sdk);
+  var calls = 0, fn = function () { calls++; };
+  sdk.onTouchCancel(fn);
+  record(sdk, 'Start');
+  sdk.offTouchCancel(fn);
+  sdk.fire('Start', screenPoint(5, 400));
+  sdk.hide();
+  assert.strictEqual(calls, 0);
+});
+test('sdk_without_lifecycle_still_converts', function () {
+  var sdk = fakeSdk({noLifecycle: true}), m = fresh();
+  assert.strictEqual(m.install(sdk), 1);
+  var got = record(sdk, 'Start');
+  sdk.fire('Start', screenPoint(4, 5));
+  assert.strictEqual(got[0].changedTouches[0].clientX, 4);
+});
 test('version_and_marker_comment', function () {
   var m = fresh(), text = fs.readFileSync(target, 'utf8');
   assert.strictEqual(m.version, '2.0');
@@ -201,7 +266,12 @@ if (!process.env.TOUCH3X) {
     {name: 'off_not_mapped', before: 'listeners.get(listener) || listener', after: 'listener'},
     {name: 'new_wrapper_per_registration', before: 'var w = listeners.get(listener);', after: 'var w = null;'},
     {name: 'only_start_phase', before: "var PHASES = ['Start', 'Move', 'End', 'Cancel'];", after: "var PHASES = ['Start'];"},
-    {name: 'marker_enumerable', before: 'enumerable: false', after: 'enumerable: true'}
+    {name: 'marker_enumerable', before: 'enumerable: false', after: 'enumerable: true'},
+    // v7.9 (手机问题源头约束)
+    {name: 'no_release_on_hide_show', before: "['onHide', 'onShow'].forEach(function (name) {", after: "[].forEach(function (name) {"},
+    {name: 'end_does_not_forget_the_touch', before: "      else delete down[id];\n", after: "\n"},
+    {name: 'released_twice', before: "    down = {};\n", after: "\n"},
+    {name: 'start_not_remembered', before: "if (suffix === 'Start') down[id] = t;", after: "if (suffix === 'Start') {}"}
   ];
   report.negative_controls = variants.map(function (v) {
     var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'touch3x-neg-'));

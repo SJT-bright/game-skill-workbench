@@ -10,6 +10,12 @@
     tiktok_finalize.py native  --native N --project P --board B [--app-id ID]
                                                                          native phase on the build folder (in place)
     tiktok_finalize.py inventory --project P                             list the original's platform code (English)
+    tiktok_finalize.py sync    --project P --board B [--native N]       生成时预防 P02: before EVERY build (and on the
+                               bytedance build folder after it, --native): put the standard parts back to the kit
+                               bytes (kit_sources, build_templates; with --native also startup, touch, storage) and
+                               install parts/GameUIKit.js. No images / PNG / settings / art steps, about 1 s.
+                               Legacy games: report only, nothing written. Record: <project>/.tiktok-kit/sync.json
+                               (it is not the source record: the writers still need `source`).
     --policy new|legacy on source/native/decide is for tests and calibration only; the package writers never pass it.
 
 Library (the two package writers call these; package_gates.kit_parts reuses the checks):
@@ -403,6 +409,94 @@ def inventory(project):
     return {'project': str(project), 'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'categories': out}
 
 
+# ---------------------------------------------------------------- sync (生成时预防 P02: parts from the first build on)
+# The standard parts used to arrive only at `source` (just before packaging), so every trial build and self-test before
+# it ran on code without them (射击高手 v81 / 小熊拳击 R27 without the touch fix, 指尖麻将 v55 lost a patch on rebuild,
+# 拇指弹球 kept an old RewardedService.js). `sync` is the fast part of `source`: hash check, put the kit bytes back.
+SYNC_RECORD = Path('.tiktok-kit') / 'sync.json'
+SYNC_SOURCE_STEPS = ('kit_sources', 'build_templates')
+SYNC_NATIVE_STEPS = ('startup', 'touch', 'storage')      # same order as NATIVE_STEPS: startup decides main.js first
+UI_KIT_KEY = 'parts/GameUIKit.js'                         # P05: the shared popup / button part (Cocos 2.4)
+
+
+def _detect_only(ctx, names):
+    """Legacy games: what sync WOULD change, nothing written (same rule as `source`: old games keep their own)."""
+    out = []
+    for name in names:
+        try:
+            state = _step(name).detect(ctx)
+        except Exception as error:  # noqa: BLE001 - a report never refuses
+            state = 'error: %r' % (error,)
+        out.append({'step': name, 'state': state, 'changed': [], 'blocks': [], 'warnings': [], 'info': ['report only']})
+    return out
+
+
+def sync_ui_kit(ctx):
+    """Install / restore parts/GameUIKit.js at its project_path for new Cocos 2.4 games (P05). -> step result."""
+    r = T.Result('ui_kit')
+    spec = ctx.manifest.files.get(UI_KIT_KEY)
+    if not isinstance(spec, dict) or ctx.engine != 2:
+        r.state = 'n/a'
+        return r.as_dict()
+    dest = spec.get('project_path') or 'assets/tiktok-platform/GameUIKit.js'
+    src = ctx.manifest.kit_dir / UI_KIT_KEY
+    kit = src.read_bytes() if src.is_file() else None
+    if kit is None or T.sha256(kit) != spec.get('sha256'):
+        r.block('K_kit_unusable', 'kit file %s missing or differs from KIT_MANIFEST' % UI_KIT_KEY)
+        return r.as_dict()
+    have = ctx.read(dest)
+    r.state = 'absent' if have is None else ('kit_current' if have == kit else
+                                             ('kit_old' if T.sha256(have) in set(spec.get('previous_sha256') or [])
+                                              else 'own'))
+    if r.state == 'kit_current':
+        return r.as_dict()
+    if ctx.policy == 'legacy':
+        r.info.append('%s %s (legacy game: report only)' % (dest, r.state))
+        return r.as_dict()
+    if have is not None:
+        r.info.append('moved %s to %s' % (dest, ctx.move_away(dest)))
+    ctx.write(dest, kit)
+    r.change(dest, have, kit, 'GameUIKit %s' % ('added' if have is None else 'restored (%s)' % r.state))
+    return r.as_dict()
+
+
+def finalize_sync(project, board, native=None, policy=None, manifest=None, legacy=None, write_record=True):
+    """`sync`: kit_sources + build_templates (+ ui_kit) on the project, startup + touch + storage on --native.
+    New games: kit bytes put back. Legacy games: detect only. -> record (also <project>/.tiktok-kit/sync.json)."""
+    started = time.time()
+    project = Path(project)
+    manifest = manifest or T.load_manifest()
+    engine = P.engine_of_project(project)
+    decision = decide_policy(project=project, override=policy, legacy=legacy, board=board)
+    ctx = T.Ctx('source', project, project=project, board=board, engine=engine, policy=decision['policy'],
+                manifest=manifest)
+    if decision['policy'] == 'legacy':
+        results = _detect_only(ctx, SYNC_SOURCE_STEPS)
+    else:
+        results = _run_steps(ctx, SYNC_SOURCE_STEPS)
+    results.append(sync_ui_kit(ctx))
+    if native:
+        native = Path(native)
+        names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
+        nctx = T.Ctx('native', native, project=project, board=board, engine=P.engine_of_names(names),
+                     policy=decision['policy'], manifest=manifest)
+        results += _detect_only(nctx, SYNC_NATIVE_STEPS) if decision['policy'] == 'legacy' else \
+            _run_steps(nctx, SYNC_NATIVE_STEPS)
+    blocks, warnings = _collect(results)
+    if engine not in (2, 3):
+        blocks.append(T.finding('K_engine_unknown', 'block', 'Cocos version of the project not readable'))
+    record = {'kind': 'finalize-sync', 'kit_version': manifest.version, 'policy': decision['policy'],
+              'decision': _trim_decision(decision), 'board': board, 'engine': engine, 'native': str(native or ''),
+              'steps': results, 'blocks': blocks, 'warnings': warnings,
+              'changed': [c['file'] for r in results for c in r['changed']],
+              'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'seconds': round(time.time() - started, 3)}
+    if write_record:
+        path = project / SYNC_RECORD
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(record, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+    return record
+
+
 def _print(record):
     print(json.dumps({k: record[k] for k in ('policy', 'engine', 'blocks', 'warnings') if k in record} |
                      {'decision': record.get('decision', {}).get('reason')}, ensure_ascii=False, indent=1))
@@ -411,7 +505,7 @@ def _print(record):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     sub = ap.add_subparsers(dest='cmd', required=True)
-    for name in ('init', 'adopt', 'decide', 'source', 'native', 'inventory'):
+    for name in ('init', 'adopt', 'decide', 'source', 'native', 'inventory', 'sync'):
         p = sub.add_parser(name)
         p.add_argument('--project')
         p.add_argument('--board', choices=('remake', 'localize'))
@@ -460,6 +554,14 @@ def main(argv=None):
         return 0
     if not args.board:
         ap.error('--board is required')
+    if args.cmd == 'sync':
+        if not args.project:
+            ap.error('--project is required')
+        record = finalize_sync(args.project, args.board, native=args.native, policy=args.policy)
+        print('sync: %s, %d file(s) put back, %.2f s%s' % (record['policy'], len(record['changed']), record['seconds'],
+                                                           ''.join('\n  ' + c for c in record['changed'])))
+        _print(record)
+        return 1 if record['blocks'] else 0
     if args.cmd == 'source':
         record = finalize_source(args.project, args.board, policy=args.policy, app_id=args.app_id, options=options)
     else:

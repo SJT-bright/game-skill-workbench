@@ -25,11 +25,17 @@ v1.1（2026-10-27）：卡住判定 20 秒 → 10 秒（skill 规定 10 秒无�
 | `assets/tiktok-platform/MissionFlow.js` | 主页两个按钮的完整流程（不画界面）；v7.5：判断是不是真机用和 `TikTokMissionService.js` 一样的顺序（TTMinis.game / tt / wx），只有 tt 的环境不再显示 LOCAL PREVIEW；2.0：不给 `reward` 时自己按 `growthReward()`（5B）加到 `coins`，文案 `+N Coins` | 平台包新写 | Node 测试通过，**待第一次扫码** |
 | `assets/tiktok-platform/HomeGrowthEntries.js` | 2.0 新增：首页底排两个固定入口（Add to Home / Profile Revisit）。奖励只读 `growthReward()`，没有改数额的参数；没有 TikTok 运行环境时点按提示 "Available in TikTok"，入口不隐藏；图标缺失或 2 秒没加载出来就显示文字；请求中的连点合并成一次 | 平台包新写 | Node 测试通过，**待真机复测** |
 | `build-templates/bytedance/main.js` | 启动：每一步失败或卡住都在 20 秒内出可见 Retry，10 秒没进度就提示；v7.5：包内每个文件 10 秒没结果再请求一次（先到的结果为准），30 秒算失败，切后台不计时、每帧最多计 1 秒；启动异常会被接住并显示，不会停在 \"Starting...\"；v1.3（2.0）：触摸修正之后装 `storage-guard.js`（出错不挡启动），启动时发一次静默登录（不等结果），只有包里设了 `__TIKTOK_KIT_WEBP_PROBE__ = true` 才加载 `webp-decode-probe.js`；v1.4：图片解码（小游戏里图片在解析这一步才真正解码，`downloader.downloadDomImage`，引擎没有超时）也按同一规则 10 秒重发、30 秒算失败；v1.2～v1.3 找的 `parser._parsers` 在所有 2.4 引擎里都不存在，这一半以前没生效；场景已经出来后点到迟到的 Retry，只关掉加载提示，不再盖一个一直不消失的 "Loading 95%"；v1.5：10 秒重发、30 秒失败、后台不计时这几个数字不变，单个文件重发算进度，而且有文件还在自己的 30 秒里时，10 秒总看守等它（它 10 秒重发、30 秒失败，失败会经这一步的出错回调出 Retry）：卡一个文件只在它真失败时出 Retry，重发后进了首页不会压着 "Load failed"（v1.4 两个 10 秒同时到期，宿主每秒约 1 帧时 Retry 先弹出）；v1.6：启动场景的 JSON 已经反序列化、它用的图片超时导致场景失败时，引擎把这份已被改写的 JSON 留在文件缓存（`cc.assetManager._files`）里，场景又不进解析缓存，下一次加载就拿它再反序列化一次，马上失败（调试版引擎报 \"Can not deserialize the same JSON data again\"，去掉这条调试检查的正式版报 `TypeError: Cannot read properties of undefined (reading '0')`），所以以前第一次 Retry 一定失败、第二次才进得去；Retry 重新加载场景前先从缓存里删掉这一项（2.4.4 / 2.4.6 / 2.4.13 / 2.4.15 引擎这段代码相同），计时数字不变。`main.js` 第 33 行在开关里 require `./webp-decode-probe`，静态启动依赖检查不看 `if`，所以 finalize 装平台包 `main.js` 时总是把 `webp-decode-probe.js` 一起放进包根（`KIT_MANIFEST` 的 `startup24.extra_files`，K1 查它的哈希） | MetalMaster r5 + 1 行触摸修正，v7.5 按射击高手2048 v82 的加载守卫改写 | Node 测试通过，**待真机复测** |
-| `build-templates/bytedance/touch-coordinates.js` | TikTok 触点只有 screenX/screenY、Cocos 2.4 读 clientX/clientY：不装就按钮点不动（必装，探针校验） | StarPop v50，逐字节相同（交付包根目录和源码 `build-templates/bytedance/` 都是 `1aeb690c…`）。注意：躲雨小鸭 v20、射击高手 pkg85 用的 `0369875d…` 是另一份代码，不是这个文件 | StarPop v50 没有找到扫码确认记录，**待真机复测** |
+| `build-templates/bytedance/touch-coordinates.js` | TikTok 触点只有 screenX/screenY、Cocos 2.4 读 clientX/clientY：不装就按钮点不动（必装，探针校验）；v7.9 起切后台时还按着的手指在 EVENT_HIDE / EVENT_SHOW 时取消，回来后第一下不丢 | 坐标部分是 StarPop v50（`1aeb690c…`，逐字节相同，现在记为旧版本）；取消手指的部分是甜点消消乐 R48 的 `touch-lifecycle-reset.js`。注意：躲雨小鸭 v20、射击高手 pkg85 用的 `0369875d…` 是另一份代码，不是这个文件 | 坐标部分：StarPop v50 没有找到扫码确认记录，**待真机复测**；取消手指：R48 Saul 手机验收过，模拟宿主里割草 v015 从拒到过 |
 | `parts/storage-guard.js` | 2.0 新增存档层：写入一律存文字（数字、布尔转成字符串）；读到 null/undefined/''/false/true 时用 `getStorageInfoSync().keys` 判断键在不在，不在就当新玩家（返回 null）；读出对象原样给；SaveStore 的键原样读（SaveStore 自己判断坏档）。工程里放在 `build-templates/bytedance/storage-guard.js`（`KIT_MANIFEST.json` 的 `project_path`），由 `main.js` 在游戏脚本之前装上 | 射击高手2048 v85 的 `storage-guard.js` + TobinsGem/Tansys 的键列表判断 | Node 测试通过，**待真机复测** |
 | `parts/PhysicsClock.js` | v7.8 新增：Cocos 2.4 物理按真实时间走（`enabledAccumulator = true`），给推力按时间缩放的 `Clock.force(v, dt)` / `Clock.scale(dt)`。用了 2.4 物理的**新游戏**由 `tiktok_finalize.py source` 自动装到 `assets/tiktok-platform/PhysicsClock.js`，老游戏不装（见第十节） | 平台包新写（全民飞车漂移 v3.1 在 120 帧屏幕上起步 1 秒多跑 19.9%） | Node 测试通过（`tests/physics-clock.test.js`），**待真机复测** |
 | `parts/CourseLane.js` | v7.8 新增、**按需用**：滚动障碍的出生位置、回收时机、要几组、复活怎么清障，全按引擎真实可见范围算（宽屏、上下黑边都对）。2.4 和 3.x 同一个文件（见第九节） | 平台包新写（BreezyBalloon v2.1 按设计宽度回收柱子，宽屏上柱子在屏幕中间凭空出现） | Node 测试通过（`tests/course-lane.test.js`），**待真机复测** |
 | `parts/CapsuleLayout.js` | v7.8 新增、**按需用**：读 `tt.getMenuButtonBoundingClientRect()`，自己判断返回的是点还是像素（Saul 的 iPhone 14 返回的是像素），换算成界面世界坐标（含上下黑边），给顶栏、设置钮这些贴着胶囊的节点用。2.4 和 3.x 同一个文件（见第八节） | 平台包新写（全民飞车漂移 v2、SpiderSwing、Hollys、FoxDenDash 都是拿原始值摆顶栏，按像素返回时顶栏掉下去） | Node 测试通过（`tests/capsule-layout.test.js`），**待真机复测** |
+| `parts/GameUIKit.js` | 生成时预防 P05 新增（Cocos 2.4）：所有新做或改动的弹窗、按钮、提示条、位图数字都用它，不手写。`tiktok_finalize.py sync` 给新游戏装到 `assets/tiktok-platform/GameUIKit.js`（见第十一节） | 由 ad-boost `AdBoostKit` 1.2.0 去掉广告部分而来，加了 `UI.button`、`UI.wrapExisting`、`popup.guard` | Node 测试通过（`tests/game-ui-kit.test.js`，10 条，每条带照旧手写的反例），**待真机复测** |
+| `parts/RunSession.js` | 生成时预防 G 批新增、**新游戏写玩法必用**：一局的状态只放 `session.state`，开局/Retry/下一关 `newRun`；回调用 `guard`/`once`；定时用 `after`/`every`；暂停按原因 `pause(reason)` 返回 `release()`；切后台自动暂停；移动用 `move(node, vx, vy, dt)`；`adHooks()` 接 ad-boost。2.4 和 3.x 同一个文件（见第十二节） | 平台包新写（割草分数、Pinecone 复活次数、大西瓜旧回调和 setInterval、甜点消消乐暂停布尔） | Node 测试通过（`tests/run-session.test.js`），**待真机复测** |
+| `parts/FxPool.js` | 生成时预防 G 批新增、**新游戏必用**：特效、子弹、飘字从池里取，播完自动回池，节点数有上限；开发版 `FxPool.devWatch(cc)` 在 update 里造节点、场景节点一直涨时警告。2.4 和 3.x 同一个文件（见第十二节） | 平台包新写（方块迷阵 120 次合并剩 86 个空特效） | Node 测试通过（`tests/fx-pool.test.js`），**待真机复测** |
+| `parts/host-shim.js` | 生成时预防 B 批新增、宿主接口兜底（2.4 和 3.x 同一份）：`getSystemInfoSync` 缺失或抛错时兜底、补 `SDKVersion`、`canIUse`、`getOpenDataContext`，只补缺的、不覆盖已有的；新代码读版本号用 `parseVersion` / `sdkVersion`。**简化.11.13 只随包带，出包时还不会自动装**（见第十四节） | 平台包新写（躲雨小鸭 v16、射击高手2048 的写法） | Node 测试通过（`tests/host-shim.test.js`），**待真机复测** |
+| `parts-3x/boot-guard-3x.js` | 生成时预防 B 批新增、Cocos 3.x 启动看守，规则和 2.4 `main.js` v1.6 一样（单个文件 10 秒重发、30 秒失败、只算前台、Retry 发新请求）。**简化.11.13 只随包带，出包时还不会自动装**（见第十四节） | 平台包新写（TrashPanda、恢复线场、美女快跑的固定 15 秒总期限） | Node 测试通过（`tests/boot-3x.test.js`），**待真机复测** |
+| `tools/home_free_slot.js` | 生成时预防 E 批：首页找空位。按首页现有按钮的包围盒找两个平台入口不重叠的位置，放不下就报错；英化游戏原按钮不动 | 平台包新写 | Node 测试通过（`tests/home-free-slot.test.js`） |
 | `KIT_FINGERPRINTS.json`、`tools/build_kit_fingerprints.py`、`tools/kit_versions/` | v7.8 新增：认出包里脚本合并文件中旧版平台包模块（门禁 K6_kit_module_old）用的特征；改了 `assets/tiktok-platform/*.js` 就重跑 `build_kit_fingerprints.py`，旧版原文按 `<模块>/<sha256>.txt` 留在 `tools/kit_versions/` | 全民飞车门禁原型 C | `remake-core/scripts/test_kit_module_versions.py` |
 | `settings/bytedance.json` | 字节构建设置模板：数字 App ID（7683427172773644296 是多款游戏共用的测试组 ID，相同是正常的）、首场景分包关、REMOTE_SERVER_ROOT 空。没有它命令行出包会是 `testappId` | 细菌2048 build2 起验证过的写法 | 检查脚本强制 |
 | `webp-probe/cocos2.4/` | 老游戏保留 WebP 时用的标准探针：`webp-decode-probe.js` + `loading/webp-probe.webp`（放主包），用 TikTok 的 createImage 真解码这张图，解出宽高才开 WebP，5 秒没回应算不开、显示 Retry、点了重新检测 | Mabel's Meadow r8，逐字节相同 | `test_webp_decode_probe.cjs` 通过，**待真机复测** |
@@ -37,7 +43,7 @@ v1.1（2026-10-27）：卡住判定 20 秒 → 10 秒（skill 规定 10 秒无�
 | `tools/check_kit_project.py` | 一条命令检查工程（2.0：还查 storage-guard.js、HomeGrowthEntries.js、`growthReward()` 固定 5B、`normalLevelCoins` 已填） | 平台包新写 | — |
 | `tests/` | 全部测试 | Snake 原测试 + 平台包新测试 | 全部通过 |
 | `KIT_MANIFEST.json` | `files`：每个文件的 SHA256 和旧版本哈希；`parts`：每个标准件放在包里哪、加载行插在哪、怎么认自写件、新旧游戏各怎么处理；`includes` 引入 3.x 的 `parts-3x/KIT_PARTS_3X.json` | — | 检查脚本、`tiktok_finalize`、`kit_parts` 门禁都只读它 |
-| `build-templates/bytedance-mini-game/tiktok-touch-3x.js`、`plugins-3x/`、`parts-3x/`、`tools/make_plugin_scripts.py` | 3.x 用的触摸修正和插件版平台包（第七节） | Marlows R6 `marlow-touch.js` 改通用名；插件版由 2.4 模块生成 | Node 测试通过，**待真机复测** |
+| `build-templates/bytedance-mini-game/tiktok-touch-3x.js`、`plugins-3x/`、`parts-3x/`、`tools/make_plugin_scripts.py` | 3.x 用的触摸修正（v7.9 起也在 `tt.onHide` / `tt.onShow` 时取消还按着的手指）和插件版平台包（第七节） | Marlows R6 `marlow-touch.js` 改通用名；插件版由 2.4 模块生成 | Node 测试通过；取消手指在模拟宿主里猴子快跑 v12 从拒到过；**待真机复测** |
 
 ---
 
@@ -161,6 +167,10 @@ cc.game.on(cc.game.EVENT_SHOW, function () { flow.onShow(); });   // 从 TikTok 
 
 弹窗的美术（面板、插图、按钮图）还是每个游戏按 skill 的美术规则自己做，`MissionFlow` 只给文字和状态。
 
+### 第 6 步：弹窗和按钮（生成时预防 P05）
+
+新做或改动的弹窗、按钮一律用 `parts/GameUIKit.js`（`var UI = require('GameUIKit')`），别手写遮罩、淡出、点击和防连点；英化时动过的原版按钮用 `UI.wrapExisting`。写法见第十一节。
+
 ---
 
 ## 四、检查和测试
@@ -183,6 +193,7 @@ node tests/run-all.js
 - **存档层**（`storage-guard.test.js`）：16 项（读到 null/undefined/''/false/0/true、数字和布尔写入转文字、键列表判新玩家、读出对象原样、装两次只一层、SaveStore 键原样读）。
 - **首页双入口**（`home-entries.test.js`）：7 项（不支持时提示、图标失败显示文字、奖励等于 `growthReward()`、连点只发一次）。
 - **3.x**：`touch-3x.test.js` 15 项、`plugins-3x.test.js` 21 项（第七节）。
+- **生成时预防（简化.11.13）**：`game-ui-kit.test.js`、`run-session.test.js`、`fx-pool.test.js`、`host-shim.test.js`、`boot-3x.test.js`、`home-free-slot.test.js`，每个都带照旧写法的反例，都进了 `run-all.js`。
 - **反例**：存档/流程 14 个、启动 32 个（v1.4 加 4 个：图片解码不包、照旧读 `_parsers`、改成包 `parser.parse` 入口、迟到 Retry 又显示加载；v1.5 加 3 个：总看守不等等待中的文件、等待计数不减、重发不算进度；v1.6 加 3 个：失败的场景不清缓存、按错的 id 清、被取代的那次失败不记）、存档层 8 个、首页入口 6 个故意改坏的版本，测试都会变红（另有 Snake 4 个、3.x 触摸 8 个）。证明测试能抓错，不是摆设。
 
 ---
@@ -298,3 +309,57 @@ node tests/run-all.js
   accumulator + 按时间推 60/120 帧相同，飞车 v3.1 的写法差 57%、只开 accumulator 不改推力差 50%，两个反例都必须被抓到）。运行时：全民飞车漂移 v3.1
   在运行时打开 accumulator、把 `run_time` 里的推力和扭矩乘 dt×60（和 `Clock.force` 同一个算法）后 `frame_rate` 过（最大差 1.05%），原包拒（19.9%）
   （`briefs/out/W92/RESULT.md`）。**待真机复测**。
+
+## 十一、开工就装、每次构建前同步（P02）和弹窗按钮零件 `parts/GameUIKit.js`（P05，生成时预防 2026-11-04）
+
+为什么要有：问题普查（2026-11-04，`ranking.json`）里，标准件只在出包前的 `source` 才装，试玩和自测一直跑在没有它们的代码上：触摸没修正 28 款、卡在加载页 34 款、Retry 没用 26 款，射击高手 v81、小熊拳击 R27 漏装触摸修正，指尖麻将 v55 重建丢了补丁。弹窗和按钮每款手写：按钮被挡 14 款、弹窗关不掉 10 款、连点两次 14 款、闪屏 18 款、没绑回调 11 款、点按区不对 13 款（花园守卫者淡出后还吃点击，最强推球关闭键 32×32，割草复活键绑了不存在的函数，挪车冲冲冲动画帧撑大点按区）。
+
+**同步（`tiktok_finalize.py sync`）**
+
+- 开工：`init` → `source` → `sync`；以后**每次构建前**跑 `sync --project <工程> --board <remake|localize>`。英化工程构建出 TikTok 小游戏包后再跑 `sync ... --native <构建目录>`。
+- 它做什么：`kit_sources`、`build_templates`（英化不动原版 build-templates）按 `KIT_MANIFEST.json` 哈希换回平台包原文件，旧文件挪进 `.tiktok-kit/removed/`；给新的 2.4 游戏装 `GameUIKit.js`；带 `--native` 时再跑 `startup`、`touch`、`storage`。不跑图片、PNG、设置、美术步骤，夹具上不到 0.2 秒。
+- 旧游戏（遗留名单）只报告，一个文件都不写。记录在 `<工程>/.tiktok-kit/sync.json`；它不是源码段记录，出包前照样要跑 `source`（K5 不变）。
+- 测试：`python3 ../../scripts/test_finalize_sync.py`（删掉触摸件、换成旧版 `RewardedService.js`、删掉 `main.js` 里 storage-guard 那一行，`sync` 后三处都回到清单哈希；英化构建目录装上启动件、触摸、存档层；旧游戏前后一字节不变；耗时 < 3 秒）。
+
+**弹窗和按钮（`GameUIKit`，Cocos 2.4）**
+
+- 装在哪：`sync` 复制到 `assets/tiktok-platform/GameUIKit.js`。清单里登记为 `reference: true, optional: true`，`check_kit_project.py`、K1/K2 都不要求它，不会因此拦旧游戏。
+- 写法：
+
+```js
+var UI = require('GameUIKit');
+UI.setup({closeFrame: this.closeFrame, maskColor: [40, 30, 50], sfx: function (id) { Sound.play(id); }});
+var p = UI.popup(canvas, {panelFrame: this.panel, titleFrame: this.title, keep: true}); // 遮罩吞点击；关闭键点按区 ≥104
+UI.button(p.body.getChildByName('Revive'), this.onRevive.bind(this), {name: 'Revive'}); // 函数不存在当场报错
+UI.wrapExisting(this.shopBtn, this.openShop.bind(this));     // 原版 cc.Button：去掉旧点击事件，SCALE 改 COLOR
+this.scheduleOnce(p.guard(function () { this.showReward(); }.bind(this)), 0.8);       // 弹窗关了或重开后丢弃
+p.close();       // 淡出 160ms 后一定 active=false（keep 的下次 p.open() 复用同一批节点，不重建）
+UI.toast('Come back tomorrow');
+```
+
+- 已经管好的事：弹窗开着时下层点不到；关掉后一定不再挡点击；500ms 内连点只算一次；`handler` 不是函数在搭页面时就报错；按下只变暗不缩放，按钮节点上的动画帧不改点按区；禁用的按钮点了有提示；`popup.guard` 包住的迟到回调不执行。
+- 和 AdBoostKit 的关系：`GameUIKit` 是 AdBoostKit 1.2.0 去掉 `adButton`、`doubleCheckbox`、`runAd` 后的同一套弹窗、提示条、数字、切条和 `fitTrim`。看广告的按钮和勾选框仍用 ad-boost 的 `AdBoostKit`。两份叠弹窗的记录是分开的：同一页上两种弹窗叠开时，下层的遮罩不会被自动藏起来。
+- 测试：`node tests/game-ui-kit.test.js`（10 条：遮罩吞点击、关掉后 inactive、防连点、没绑函数报错、keep 复用、关闭键 ≥104、按下不变点按区、迟到回调丢弃、禁用有提示、原版按钮只跑一次；每条都带一个照旧手写的反例，反例必须出 bug）。用 `GAMEUI_KIT_FILE=<另一份文件>` 可以拿同一组用例测别的写法。**待真机复测**。
+- 还没做：3.x 版、暂停 / 复活 / 结算 x2 三个页面模板、`source` 对「手搭弹窗没用 GameUIKit」的警告、ad-boost 改成依赖它（广告 skill）。
+
+## 十二、一局状态 `parts/RunSession.js` 和特效池 `parts/FxPool.js`（生成时预防 P11、P18）
+
+- 2.4：复制到 `assets/tiktok-platform/`，`var RunSession = require('RunSession'); var FxPool = require('FxPool');`。3.x：放进 `assets/` 并勾「导入为插件」，用全局 `TikTokRunSession`、`TikTokFxPool`。
+- 场景主组件 `onLoad`：`this.session = RunSession.create(cc, {owner: this.node}); this.session.newRun(initState);`；`update(dt)`：`var d = this.session.tick(dt); if (!d) return;` 后面的移动、计时、`pool.tick(d)` 都用 `d`；`onDestroy`：`this.session.dispose(); this.pool.destroy();`。
+- Retry、下一关：只调 `session.newRun(initState)`（`initState` 每次返回新对象），特效池 `releaseAll()`。
+- 弹窗：打开时 `var release = session.pause('popup')`，关掉时 `release()`；复活页 `'revive'`；ad-boost：`Kit.runAd(ads, {..., pauseGame: h.pauseGame, resumeGame: h.resumeGame})`，`h = session.adHooks()`。
+- 写法表和反例见 `remake-core/references/game-modules.md`「一局的状态、定时、特效、移动」一节。英化游戏只在 AI 新加的暂停/复活/广告入口用。
+- `tiktok_finalize` 不自动装这两个件（和 `CourseLane` 一样按需复制），`check_kit_project.py`、K1/K2 不要求它们。
+
+## 十三、音效库的声音导入即登记 `import_audio.py`（生成时预防 P15）
+
+- 从音效库选用的声音一律用 `python3 ../../scripts/import_audio.py --project <工程> --file <音效库里的文件>` 导进工程：复制文件、写 `docs/audio/credits.csv`（来源、授权、作者、两份 SHA-256）和音效库的使用记录，失败音、结算音超过 2 秒的截到 2.0 秒并淡出；授权不能用、不在音效库里、被 2 款以上游戏用过的直接拒，什么都不写。判定和出包时的 `audit_audio_sources.py` 是同一套。测试：`python3 ../../scripts/test_import_audio.py`。
+- 英化游戏原版的声音代码和声音文件不动；AI 新加的声音按上面导入。
+- 同一批的声音零件 `AudioService.js` 没进简化.11.13：它按路径加载音频，平台包自检的资源扫描（发版自检 C4）报出 5 处没法列出路径的加载，用了它的游戏出包时会被资源检查拦下，要先改到能过资源扫描。
+
+## 十四、宿主接口兜底 `parts/host-shim.js` 和 3.x 启动看守 `parts-3x/boot-guard-3x.js`（生成时预防 P03）
+
+- **简化.11.13 只随包带零件和测试，出包时还不会自动装**：`tiktok_finalize` 现在只按固定几步（启动件、触摸、存档层、登录）装件，还没有装这两个件的步骤；只在清单里登记成标准件的话，它们会被复制进 build-templates，却没人在 `game.js` 里加那一行。接进 finalize 留给下一批。
+- 现在要用就手动加一行：2.4 在 `game.js` 里适配层 `require('./adapter-min.js')` 之前加 `try { require('./host-shim.js').install(globalThis.TTMinis&&TTMinis.game||globalThis.tt); } catch (e) { console.error('host shim', e); }`；3.x 同一行加在 `require('./web-adapter')` 之前，新 3.x 游戏再在 `System.warmup(` 之前加 `require('./boot-guard-3x.js').install(null, globalThis.TTMinis&&TTMinis.game||globalThis.tt);`。文件放在 `build-templates/bytedance/`（2.4）或 `build-templates/bytedance-mini-game/`（3.x）。自己有 `boot-loading.js` / `native-recovery.js` 启动页的 3.x 游戏（例如 LunasJade）不加启动看守。
+- 新代码读版本号用 `parseVersion` / `sdkVersion`，不要读 `SDKVersion[0]`，也不要按 `getOpenDataContext` 在不在判主域。新 3.x 游戏不要再自己写「15 秒没进首页就弹失败」这类总期限。
+- 测试：`node tests/boot-3x.test.js`（15 项、11 个反例）、`node tests/host-shim.test.js`（10 项、8 个反例）。只在 Node 里测过，**待真机复测**。

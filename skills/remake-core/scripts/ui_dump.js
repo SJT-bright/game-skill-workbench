@@ -76,7 +76,7 @@
   const is3 = !!cc.UITransform;
   const T = {};
   for (const k of ['Canvas', 'Button', 'Toggle', 'Label', 'RichText', 'Sprite', 'Graphics', 'ProgressBar', 'BlockInputEvents',
-                   'ScrollView', 'UIOpacity', 'EditBox', 'Mask', 'Widget', 'LabelOutline', 'LabelShadow', 'Camera']) T[k] = cc[k] || null;
+                   'ScrollView', 'UIOpacity', 'EditBox', 'Mask', 'Widget', 'LabelOutline', 'LabelShadow', 'Camera', 'Layout']) T[k] = cc[k] || null;
   const errors = [];
   const get = (node, ctor) => { if (!ctor) return null; try { return node.getComponent(ctor); } catch (e) { return null; } };
   const sizeOf = (node) => {
@@ -142,6 +142,97 @@
   };
   const rawCanvasRect=canvasEl.getBoundingClientRect();const cr={x:rawCanvasRect.x??rawCanvasRect.left??0,y:rawCanvasRect.y??rawCanvasRect.top??0,width:rawCanvasRect.width,height:rawCanvasRect.height};
   const SLICED = T.Sprite && T.Sprite.Type ? T.Sprite.Type.SLICED : 1;
+  // Saul 2026-11-04 (蛋壳特工队 VIP「Watch 1 times to reach VIP2」): a dump read right after a popup opened had the
+  // labels where the prefab put them, before cc.Layout lined them up; the screenshot a moment later showed Watch on
+  // the VIP badge and the dump did not. Let labels, layouts and always-on widgets finish first, as the next frame
+  // will, and say how many nodes that moved (settle.moved > 0: an older dump of this page was not trustworthy).
+  const settle = { labels: 0, layouts: 0, widgets: 0, moved: 0, errors: 0 };
+  if (opts.settle !== false) {
+    try {
+      const labs = [], lays = [], wids = [];
+      const gather = (n, depth) => {
+        if (!n || (n !== scene && n.active === false)) return;
+        const l = get(n, T.Label); if (l && l.enabled !== false) labs.push(l);
+        const ly = get(n, T.Layout); if (ly && ly.enabled !== false) lays.push([depth, ly]);
+        const w = get(n, T.Widget); if (w && w.enabled !== false) wids.push(w);
+        (n.children || []).forEach((c) => gather(c, depth + 1));
+      };
+      gather(scene, 0);
+      const where = (l) => { try { const s = sizeOf(l.node); if (!s) return null;
+        const p = toWorld(l.node, s, 0, 0); return [p[0], p[1], s.w, s.h]; } catch (e) { return null; } };
+      const before = labs.map(where);
+      for (const l of labs) {
+        try {
+          if (is3 && typeof l.updateRenderData === 'function') l.updateRenderData(true);
+          else if (typeof l._forceUpdateRenderData === 'function') l._forceUpdateRenderData();
+          settle.labels += 1;
+        } catch (e) { settle.errors += 1; }
+      }
+      lays.sort((a, b) => b[0] - a[0]);            // inner rows first, then the rows that hold them
+      for (let pass = 0; pass < 2; pass++) {
+        for (const [, ly] of lays) {
+          try { if (typeof ly.updateLayout === 'function') { ly.updateLayout(true); if (!pass) settle.layouts += 1; } }
+          catch (e) { settle.errors += 1; }
+        }
+      }
+      // Only ALWAYS widgets: they re-align every frame anyway. A ONCE widget may have been moved on purpose since.
+      const ALWAYS = T.Widget && T.Widget.AlignMode && typeof T.Widget.AlignMode.ALWAYS === 'number' ? T.Widget.AlignMode.ALWAYS : 2;
+      for (const w of wids) {
+        try { if (w.alignMode === ALWAYS && typeof w.updateAlignment === 'function') { w.updateAlignment(); settle.widgets += 1; } }
+        catch (e) { settle.errors += 1; }
+      }
+      labs.forEach((l, i) => { const a = before[i], b = where(l);
+        if (a && b && a.some((v, k) => Math.abs(v - b[k]) > 0.5)) settle.moved += 1; });
+    } catch (e) { settle.errors += 1; }
+  }
+  // Width of the text as the engine draws it, in the label's own units (TTF / system fonts: the canvas measureText
+  // Cocos itself uses; bitmap fonts: the .fnt advances), so audit_text_fit.py knows where the letters end inside a
+  // SHRINK / CLAMP / wrapped box instead of guessing from the box (邮件 10000 out of the coin card, 11-04).
+  let measureCtx = null;
+  const measureLabel = (lab, rec, boxW) => {
+    try {
+      const text = String(lab.string == null ? '' : lab.string);
+      const size = rec.actualFontSize || rec.fontSize || 0;
+      if (!text.trim() || !size) return null;
+      const spacing = rec.spacingX || 0;
+      let widthOf = null, how = '';
+      if (rec.font_kind === 'bitmap') {
+        const cfg = lab.font && (lab.font.fntConfig || lab.font._fntConfig);
+        const dict = cfg && (cfg.fontDefDictionary || cfg._fontDefDictionary);
+        if (!dict) return null;
+        const scale = size / (cfg.fontSize || size);
+        widthOf = (line) => { let w = 0; for (const ch of line) { const d = dict[ch.charCodeAt(0)];
+          w += (d ? (d.xAdvance || (d.rect && d.rect.width) || 0) : (cfg.fontSize || size) * 0.5) * scale; }
+          return w + spacing * Math.max(0, line.length - 1); };
+        how = 'fnt';
+      } else {
+        if (!measureCtx) { const c = document.createElement('canvas'); measureCtx = c.getContext('2d'); }
+        if (!measureCtx) return null;
+        const f = lab.font;
+        const family = (f && (f._fontFamily || f.fontFamily)) || lab.fontFamily || 'Arial';
+        const bold = lab.isBold === true || lab.enableBold === true, italic = lab.isItalic === true || lab.enableItalic === true;
+        measureCtx.font = (italic ? 'italic ' : '') + (bold ? 'bold ' : '') + size + 'px "' + String(family).replace(/"/g, '') + '"';
+        widthOf = (line) => measureCtx.measureText(line).width;
+        how = 'measureText';
+      }
+      let lines = text.split('\n');
+      if (rec.wrap && rec.overflow !== 0 && boxW > 0) {
+        const out = [];
+        for (const line of lines) {
+          let cur = '';
+          for (const word of line.split(' ')) {
+            const next = cur ? cur + ' ' + word : word;
+            if (cur && widthOf(next) > boxW) { out.push(cur); cur = word; } else cur = next;
+          }
+          out.push(cur);
+        }
+        lines = out;
+      }
+      const outline = rec.outline && rec.outline.width ? rec.outline.width : 0;
+      const w = Math.max(...lines.map(widthOf)) + 2 * outline;
+      return isFinite(w) ? { w: Math.round(w * 10) / 10, lines: lines.length, how } : null;
+    } catch (e) { return null; }
+  };
   const maxNodes = opts.maxNodes || 4000;
   const nodes = [];
   let order = 0, canvases = 0;
@@ -224,6 +315,14 @@
             }
             const sh = T.LabelShadow ? get(node, T.LabelShadow) : null;
             if ((sh && sh.enabled !== false) || lab.enableShadow === true) rec.comps.label.shadow = true;
+            // where the letters sit in the box (0 left / 1 centre / 2 right; 0 top / 1 centre / 2 bottom) and how wide
+            const L = rec.comps.label;
+            if (typeof lab.horizontalAlign === 'number') L.h_align = lab.horizontalAlign;
+            if (typeof lab.verticalAlign === 'number') L.v_align = lab.verticalAlign;
+            if (typeof lab.enableWrapText === 'boolean') L.wrap = lab.enableWrapText;
+            if (typeof lab.lineHeight === 'number') L.line_height = lab.lineHeight;
+            const tm = measureLabel(lab, L, s.w);
+            if (tm) { L.text_w = tm.w; L.lines = tm.lines; L.text_metric = tm.how; }
           }
           const rich = get(node, T.RichText);
           if (rich && rich.enabled !== false) rec.comps.richtext = { string: String(rich.string || '').slice(0, 500), fontSize: rich.fontSize };
@@ -310,5 +409,6 @@
     tool: 'ui_dump', schema: 1, engine: cc.ENGINE_VERSION || '', api: is3 ? '3.x' : '2.x', scene: scene.name || '',
     page: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio || 1 },
     canvas_css: [cr.x, cr.y, cr.width, cr.height], canvases, cameras: cams.length, truncated: nodes.length >= maxNodes, errors, nodes,
+    settle,
   };
 }

@@ -1,5 +1,6 @@
 """Shared product data rules, independent of project paths and renderer state."""
 import random
+import re
 import statistics
 import math
 
@@ -419,14 +420,43 @@ def ad_unlock_table(unlock_table, groups=AD_UNLOCK_GROUPS, policy=AD_UNLOCK_POLI
 # remake-economy/references/economy_rules_table.json (economy_rules.v1); test_economy_extended.py checks they agree.
 # Everything above this line is unchanged; these are additions only. Amounts are in B unless the name says otherwise.
 ECON_RULES_SCHEMA = 'economy_rules.v1'
-ECON_RULES_REVISION = '2026-11-01.v3.2'   # v3.1: Saul 11-01 decided ADCOIN / SHOPFREE / TIMERCHEST numbers; + ONLINE, KEYCHEST
+ECON_RULES_REVISION = '2026-11-04.v3.4'   # v3.1: Saul 11-01 decided ADCOIN / SHOPFREE / TIMERCHEST numbers; + ONLINE, KEYCHEST
 #                                           v3.2: CLAIMX2 windows + online_gift, key_chest; excluded + key_chest_ad_keys
+#                                           v3.3: SHORTCUT / REVISIT no_coin_with_energy, no_coin_no_energy (Saul 11-04)
+#                                           v3.4: + BATTLEPASS, REVIVEPAY, RUNPAY, MIDRUN, NOODDS; WHEEL no_replacement,
+#                                                 CHEST score_chest, ONLINE online jar, UPGRADE lose_free_upgrade_per_round,
+#                                                 ADUNLOCK gate_every_levels; all new numbers decided_by_saul=false
 ECON_SEVERITY_BY_KIND = {'remake': 'error', 'english': 'suggest', 'finished': 'label'}
 ECON_UNDECIDED_MAX = 'suggest'   # a number Saul has not decided yet (params decided_by_saul=false) never blocks a package
 ECON_ORIGINS, ECON_ORIGIN_DEFAULT = ('original', 'ad-boost', 'new'), 'original'
 ECON_ENGLISH_DEFAULT = ('ECON-B', 'ECON-X2', 'ECON-NOCUR', 'ECON-SHORTCUT', 'ECON-REVISIT', 'ECON-CLAIMX2')
 LEVEL_WINDOW, LEVEL_WINDOW_SUM_B = 10, 10
 GIFT_REWARD_B = AD_COIN_REWARD_B = SHORTCUT_REWARD_B = REVISIT_REWARD_B = 5
+# A game without coins (rules table v3.3, Saul 2026-11-04 「游戏里有体力的，各发 +3 体力；没有体力的，英化时加一种金币，再加皮肤给它
+# 当花处」): energy is not a coin and a score is never a reward. With energy, add-to-desktop and home revisit each pay +3
+# energy once; with neither coins nor energy, a coin currency and skins to spend it on are added first, then 5B is paid.
+NO_COIN_PLATFORM_ENERGY = 3                       # ECON-SHORTCUT / ECON-REVISIT params no_coin_with_energy.amount
+NO_COIN_NO_ENERGY = 'add_main_currency_and_skins'  # ECON-SHORTCUT / ECON-REVISIT params no_coin_no_energy
+ENERGY_NAME_WORDS = ('energy', 'stamina', 'strength', 'power', 'tili', '体力')   # as economy_plan.js platformNoCoin()
+# Rules table v3.4 (2026-11-04, ad-boost round six; the currency session set the numbers, Saul has not decided any of them:
+# decided_by_saul=false, so a miss is at most suggest; a wrong x2, a hidden ad-revive button or an ad that buys odds is
+# reported as usual). Judged the same way as the learning library's economy_plan.js.
+BATTLE_PASS_PERIOD = {'days_per_season': 7, 'tiers': 10, 'points_per_tier': 30, 'points_per_level': 10}
+BATTLE_PASS_ENDLESS_POINTS = (10, 20)          # points for one endless round
+BATTLE_PASS_FREE_CELL_B = 1                    # every tier's free cell (claim window battle_pass, default-on x2)
+BATTLE_PASS_AD_CELLS_B = (0.5, 0.5, 0.5, 0.5, 1, 1, 1, 1.5, 1.5, 2)   # the ad cells (battle_pass_ad, never doubled)
+BATTLE_PASS_SEASON_MAX_B = 20                  # a season without x2
+REVIVE_PAY_PRICE_B, REVIVE_PAY_PER_ROUND = 3, 1   # revive with coins; together with the ad revive once a round
+RUN_PAY_NORMAL_B, RUN_PAY_MAX_B, RUN_PAY_MIN_COINS = 1, 3, 1   # min is coins, not B
+MID_RUN = {'extra_steps': 5, 'extra_sec': 15, 'per_attempt': 1, 'bought_steps_pay': False, 'refresh_free_per_round': 2,
+           'refresh_ad_per_level': 1, 'pick_all_ticket_every_levels': 3}
+WHEEL_NO_REPLACEMENT = {'cells': 10, 'normal_cells': 9, 'round_total_max_B': 18, 'cell_max_B': 5, 'grand': 'limited_skin',
+                        'grand_not_in_ad_table': True, 'grand_owned_fallback_max_B': 5, 'expectation': 'per_round_average'}
+SCORE_CHEST = {'tiers': 3, 'free_max_B': 2, 'double_max_B': 4, 'claim_once_per_tier': True}
+ONLINE_JAR_FILL_B_PER_MIN, ONLINE_JAR_CAP_B = 0.25, 3
+UPGRADE_LOSE_FREE_PER_ROUND = 1
+AD_UNLOCK_GATE_EVERY_LEVELS = (3, 5)           # ad-unlock skins open one every 3..5 levels, cheapest first
+ECON_V34_UNDECIDED_NOTE = '(Saul has not decided this number yet: default value, at most a suggestion)'
 AD_COIN_PER_DAY, AD_COIN_COOLDOWN_SEC = 3, 0
 AD_COIN_DECIDED = {'reward_B': True, 'per_day': True, 'cooldown_sec': True}         # Saul 2026-11-01: 3 a day, no cooldown
 SHOP_FREE_ITEM_PER_CLAIM, SHOP_FREE_COINS_B_PER_CLAIM, SHOP_FREE_PER_SLOT_PER_DAY = 1, 5, 3
@@ -437,11 +467,13 @@ CHECKIN_SKIN_FALLBACK_B = {6: 3, 7: 5}
 CHECKIN_ALLOWED_DAY_COINS_B = {1: (1,), 2: (0, 1), 3: (2,), 4: (0, 1), 5: (3,), 6: (0, 3), 7: (6, 11)}
 CHECKIN_ROUND_COINS_B = 12
 CLAIM_DOUBLE_WINDOWS = ('checkin', 'wheel_result', 'gift_window', 'chest', 'float_gift', 'quest_claim', 'offline', 'bonus_level',
-                        'timer_chest', 'online_gift', 'key_chest')   # key_chest: the summary window after leaving the board
+                        'timer_chest', 'online_gift', 'key_chest',   # key_chest: the summary window after leaving the board
+                        'battle_pass', 'score_chest', 'online_jar')  # v3.4: battle-pass free cells, score chest, home coin jar
 CLAIM_DOUBLE_ACCEPTED_MARKS = {'default': ('checkbox_default_on',), 'offline': ('checkbox_default_on', 'ad_button'),
                                'bonus_level': ('checkbox_default_on', 'ad_button')}
 # key_chest_ad_keys: cells opened with the +3 KEYS a watched ad gives are never doubled (rules table v3.2)
-CLAIM_DOUBLE_EXCLUDED = ('home_gift', 'skin', 'revive', 'ad_coin', 'ad_item', 'energy_ad', 'shop_free', 'key_chest_ad_keys')
+CLAIM_DOUBLE_EXCLUDED = ('home_gift', 'skin', 'revive', 'ad_coin', 'ad_item', 'energy_ad', 'shop_free', 'key_chest_ad_keys',
+                         'battle_pass_ad', 'mid_boost', 'lose_upgrade')   # v3.4: watched-ad rewards, never doubled
 # English games (lead 2026-11-01): these windows of the original game, and any window we added (origin ad-boost/new), must
 # have the default-on double (error); the original game's other windows (quests, offline, chest, bonus level) only suggest.
 CLAIM_DOUBLE_ENGLISH_REQUIRED_WINDOWS = ('checkin', 'wheel_result', 'gift_window')
@@ -496,11 +528,18 @@ ECON_RULE_WINDOW = {'ECON-CHECKIN': 'checkin', 'ECON-WHEEL': 'wheel_result', 'EC
                     'ECON-FLOAT': 'float_gift', 'ECON-QUEST': 'quest_claim', 'ECON-OFFLINE': 'offline', 'ECON-BONUS': 'bonus_level',
                     'ECON-GIFT': 'home_gift', 'ECON-ADCOIN': 'ad_coin', 'ECON-SHOPFREE': 'shop_free', 'ECON-ADITEM': 'ad_item',
                     'ECON-ENERGY': 'energy_ad', 'ECON-X2': 'result', 'ECON-TIMERCHEST': 'timer_chest',
-                    'ECON-ONLINE': 'online_gift', 'ECON-KEYCHEST': 'key_chest'}
+                    'ECON-ONLINE': 'online_gift', 'ECON-KEYCHEST': 'key_chest',
+                    'ECON-BATTLEPASS': 'battle_pass', 'ECON-MIDRUN': 'mid_boost', 'ECON-UPGRADE': 'lose_upgrade'}
+# v3.4 (same as economy_plan.js windowOf): windows split off a rule by row id (score chest under ECON-CHEST, coin jar under
+# ECON-ONLINE) are read before the rule's window; the v3.4 windows are also recognised by id when no rule is written.
+ECON_SUB_WINDOW_OF_ID = ((r'^score_?chest', 'score_chest'), (r'^(online_?|coin_?|gold_?)?jar', 'online_jar'))
+ECON_V34_WINDOW_OF_ID = ((r'^battle_?pass_?ad|^season_?pass_?ad', 'battle_pass_ad'), (r'^battle_?pass|^season_?pass', 'battle_pass'),
+                         (r'^mid_?(run|boost)|^extra_?(steps?|time|sec)', 'mid_boost'), (r'^lose_?upgrade', 'lose_upgrade'))
 ECON_WINDOWS = CLAIM_DOUBLE_WINDOWS + CLAIM_DOUBLE_EXCLUDED + ('result',)   # 'result' = one round's result (ECON-X2)
 ECON_WINDOW_SYSTEM = {'checkin': 'checkin', 'wheel_result': 'wheel', 'gift_window': 'gift_window', 'chest': 'chest',
                       'float_gift': 'float_gift', 'quest_claim': 'quests', 'offline': 'offline', 'bonus_level': 'bonus_level',
-                      'timer_chest': 'timer_chest', 'online_gift': 'online_gift', 'key_chest': 'key_chest'}
+                      'timer_chest': 'timer_chest', 'online_gift': 'online_gift', 'key_chest': 'key_chest',
+                      'battle_pass': 'battle_pass', 'score_chest': 'score_chest', 'online_jar': 'online_jar'}
 # snapshot.systems key a rule belongs to (systems_origin {<system>: 'ad-boost'|'new'} -> that rule is judged as remake).
 ECON_RULE_SYSTEM = {'ECON-TIER': 'skins', 'ECON-ADUNLOCK': 'skins', 'ECON-SKINTRIAL': 'skin_trial', 'ECON-X2': 'result_x2',
                     'ECON-GIFT': 'gift_home', 'ECON-ADCOIN': 'ad_coin', 'ECON-SHOPFREE': 'shop_free', 'ECON-SHORTCUT': 'shortcut',
@@ -508,11 +547,12 @@ ECON_RULE_SYSTEM = {'ECON-TIER': 'skins', 'ECON-ADUNLOCK': 'skins', 'ECON-SKINTR
                     'ECON-BONUS': 'bonus_level', 'ECON-ITEM': 'items', 'ECON-PACK': 'items', 'ECON-ADITEM': 'ad_item',
                     'ECON-WHEEL': 'wheel', 'ECON-OFFLINE': 'offline', 'ECON-UPGRADE': 'upgrade', 'ECON-QUEST': 'quests',
                     'ECON-ENERGY': 'energy', 'ECON-TIMERCHEST': 'timer_chest', 'ECON-ONLINE': 'online_gift',
-                    'ECON-KEYCHEST': 'key_chest'}
+                    'ECON-KEYCHEST': 'key_chest', 'ECON-BATTLEPASS': 'battle_pass', 'ECON-REVIVEPAY': 'revive_pay',
+                    'ECON-RUNPAY': 'run_pay', 'ECON-MIDRUN': 'mid_boost'}
 # ad-boost module names also accepted as systems_origin keys ('-' and '_' both fine).
 ECON_SYSTEM_ALIASES = {'coin_ad': ('ad_coin',), 'quest_x2': ('quests',), 'gift': ('gift_window', 'chest', 'float_gift'),
-                       'skin_ad': ('skins', 'skin_trial'), 'hint': ('ad_item',), 'booster_refill': ('ad_item',),
-                       'online_ladder': ('online_gift',)}
+                       'skin_ad': ('skins', 'skin_trial'), 'hint': ('ad_item',), 'booster_refill': ('ad_item', 'mid_boost'),
+                       'online_ladder': ('online_gift',), 'base_check': ('revive_pay',), 'prestart_boost': ('mid_boost',)}
 # Field names economy_snapshot.v1 knows; anything else (keys starting with '_' aside) -> report schema_warnings.
 ECON_SNAPSHOT_FIELDS = {
     'top': ('schema', 'game', 'meta', 'B', 'currencies', 'inflows', 'sinks', 'systems', 'systems_origin', 'configs', 'unknowns'),
@@ -523,12 +563,21 @@ ECON_SNAPSHOT_FIELDS = {
     'inflow': ('id', 'rule', 'window', 'origin', 'currency', 'amount', 'amounts', 'day', 'by_day', 'day_evidence', 'rows_total',
                'per', 'needs_ad', 'x2', 'x2_evidence', 'count_per_day', 'per_round_max', 'every_levels', 'weight', 'cooldown_ms',
                'cooldown_sec', 'item', 'placement', 'unlimited_minutes', 'wait_sec', 'ad_cut_sec', 'ad_cuts_per_round',
-               'rounds_per_day', 'tier_min', 'evidence', 'note'),
+               'rounds_per_day', 'tier_min', 'evidence', 'note',
+               # v3.4 (economy_plan.js KNOWN.inflow): battle pass, score chest, coin jar, no-replacement wheel (one row:
+               # cells, free_per_day, ad_per_day), lose-upgrade, run pay, mid-run boosts, ad_buys_odds
+               'amount_min', 'amount_max', 'amount_x2', 'cells', 'free_per_day', 'ad_per_day',
+               'days_per_season', 'tiers', 'points_per_tier', 'points_per_level',
+               'points_per_endless_round', 'tier', 'reclaim_by_ad', 'jar_fill_per_min', 'jar_cap', 'day_fill_max',
+               'no_replacement', 'upgrade_levels', 'ad_buys_odds', 'extra_steps', 'extra_sec', 'per_attempt', 'bought_steps_pay',
+               'refresh_free_per_round', 'refresh_ad_per_level', 'pick_all_ticket_every_levels'),
     'sink': ('id', 'rule', 'origin', 'kind', 'currency', 'price', 'gives', 'gives_currency', 'pack_size', 'item', 'ad_unlock_views',
-             'unlock_mode', 'rarity', 'group', 'unlock', 'source', 'line', 'level', 'evidence', 'note'),
+             'unlock_mode', 'rarity', 'group', 'unlock', 'source', 'line', 'level', 'evidence', 'note',
+             'limited', 'per_round_max', 'hides_ad_revive', 'ad_buys_odds', 'gate_level'),   # v3.4
     'systems': ('shop', 'skins', 'items', 'checkin', 'wheel', 'gift_home', 'gift_window', 'offline', 'upgrade', 'quests', 'energy',
                 'shortcut', 'revisit', 'revive', 'result_x2', 'skin_trial', 'chest', 'float_gift', 'bonus_level', 'shop_free',
-                'ad_coin', 'ad_item', 'timer_chest', 'online_gift', 'key_chest'),
+                'ad_coin', 'ad_item', 'timer_chest', 'online_gift', 'key_chest',
+                'battle_pass', 'score_chest', 'online_jar', 'revive_pay', 'run_pay', 'mid_boost'),   # v3.4
     'skin_trial': ('present', 'no_popup_levels', 'every_levels', 'endless_every_rounds', 'endless_no_popup_rounds', 'trial',
                    'trial_minutes', 'claim_double', 'evidence', 'note'),
     'configs': ('wheel', 'offline', 'upgrade_lines', 'quests', 'energy'),
@@ -559,6 +608,11 @@ def _b_low(k, B):
     """Lowest whole amount that still counts as 'at least kB' (k*B rounded down when fractional)."""
     w = k * B
     return math.floor(w) if _b_fraction(w) else w
+
+
+def _b_want(k, B):
+    """k*B written for a message ('0.5B = 5'; fractional amounts as they are, e.g. 36.25)."""
+    return '%g' % (k * B)
 
 
 def _b_high(k, B):
@@ -607,8 +661,9 @@ def wheel_expected(cells):
     return sum(w * a for w, a in pairs) / total if total > 0 else 0.0
 
 
-def wheel_config_errors(cfg, B):
-    """cfg = {free_per_day, ad_per_day, cells:[{amount, weight}], result_double:{enabled, default_checked}} (ECON-WHEEL)."""
+def wheel_config_errors(cfg, B, per_spin=True):
+    """cfg = {free_per_day, ad_per_day, cells:[{amount, weight}], result_double:{enabled, default_checked}} (ECON-WHEEL).
+    per_spin=False (v3.4 no-replacement wheel): the value is an average over a whole round, checked by the caller."""
     if not isinstance(cfg, dict) or not _num(B) or B <= 0:
         return ['wheel config and positive B required']
     errors = []
@@ -623,7 +678,7 @@ def wheel_config_errors(cfg, B):
         if top > _b_high(WHEEL_MAX_CELL_B, B):
             errors.append('largest wheel cell %s is %.2fB; at most %dB' % (top, top / B, WHEEL_MAX_CELL_B))
         exp = wheel_expected(cells)
-        if exp > _b_high(WHEEL_EXPECTED_MAX_B, B) + 1e-9:
+        if per_spin and exp > _b_high(WHEEL_EXPECTED_MAX_B, B) + 1e-9:
             errors.append('one spin is worth %.2fB on average; at most %dB' % (exp / B, WHEEL_EXPECTED_MAX_B))
     rd = cfg.get('result_double') or {}
     if not (rd.get('enabled') and rd.get('default_checked')):
@@ -913,22 +968,28 @@ ECON_RULE_TITLES = {  # same order as economy_rules_table.json; report rows come
     'ECON-TIER': 'skin coin price by rarity 5/10/20/40/80B', 'ECON-ADUNLOCK': '60% ad unlocks, views = ceil(price / 2B), one unlock method',
     'ECON-SKINTRIAL': 'skins -> watch-ad skin trial, not levels 1-2, then every 3 levels / 3 rounds; endless 30 min, no x2',
     'ECON-X2': 'result watch-ad x2', 'ECON-NOCUR': 'no-currency game doubles picked-up items',
+    'ECON-REVIVEPAY': 'revive with coins 3B, with the ad revive at most once a round, ad button always shown',
+    'ECON-RUNPAY': 'a round that pays nothing itself: score to coins, normal round 1B, at most 3B, score > 0 gives >= 1 coin',
     'ECON-GIFT': 'home gift 5B, 30 min, no checkbox', 'ECON-ADCOIN': 'watch-ad coins 5B, at most 3 a day',
     'ECON-SHOPFREE': 'shop free claim 1 item or 5B, at most 3 a slot a day, no x2',
-    'ECON-SHORTCUT': 'add-to-desktop 5B once', 'ECON-REVISIT': 'home revisit 5B once',
+    'ECON-SHORTCUT': 'add-to-desktop 5B once (no coins: +3 energy, or add a coin and skins)',
+    'ECON-REVISIT': 'home revisit 5B once (no coins: +3 energy, or add a coin and skins)',
     'ECON-CHECKIN': 'seven-day check-in 1B/2B/3B/6B, fallbacks 1B/3B/+5B, same-day rows added',
     'ECON-CLAIMX2': 'every claim window: double checkbox checked by default',
     'ECON-CHEST': 'every-5-levels chest: free <= 2B, watch-ad <= 4B',
     'ECON-TIMERCHEST': 'timer chest on the level map: free open 3B (<= 5B), 20 min, ad -5 min x2, 4 rounds, claim double',
     'ECON-ONLINE': 'online-time gift 5/10/15/20/30 min, 1B..3B a tier, <= 10B a day',
     'ECON-KEYCHEST': 'key chest nine cells about 15B, a cell <= 5B',
+    'ECON-BATTLEPASS': 'battle pass 7 days, 10 tiers: free cell 1B (claim double), ad cells by table (no x2), <= 20B a season',
     'ECON-FLOAT': 'floating gift <= 0.5B, at most 5 a round',
     'ECON-BONUS': 'bonus level 3B, ad to 6B',
     'ECON-ITEM': 'single item 3B..5B', 'ECON-PACK': 'pack discount <= 10%', 'ECON-ADITEM': 'one item per ad',
+    'ECON-MIDRUN': 'in-run +5 steps / +15 s once an attempt, bought steps pay nothing, refresh and pick-all caps, no x2',
     'ECON-WHEEL': 'wheel 1 free + 2 ad, cell <= 5B, spin <= 2B', 'ECON-OFFLINE': 'offline 5 min .. 2 h, ad x2',
     'ECON-UPGRADE': 'upgrade line 10 levels 3B..25B, ~108B', 'ECON-QUEST': 'daily ~1B, achievements 1B..5B, no skins',
     'ECON-ENERGY': 'energy only if original, ad +3, no unlimited energy',
     'ECON-SECOND': 'no second currency from levels; 5 = 1 ad; kept: exchange <= 10% off, ad capped per day',
+    'ECON-NOODDS': 'an ad never buys odds (a higher win / catch chance), only fixed rewards',
     'ECON-DEAD': 'every currency can be spent', 'ECON-PACING': 'shop pacing numbers (report only)'}
 
 
@@ -967,6 +1028,23 @@ def economy_audit(snapshot, kind=None):
     unread count_per_day is unknown, not a miss. v3.2: online_gift / key_chest are ECON-CLAIMX2 windows too
     (key_chest_ad_keys is excluded); timer chest wait_sec / ad_cut_sec / ad_cuts_per_round / rounds_per_day on a row or in
     a systems.timer_chest object; inflow.tier_min (online-time tier minutes) is read but not judged.
+    v3.3 (Saul 2026-11-04, same as the learning library's economy_plan.js): energy is not a coin. When the currencies list
+    has no coin (empty, or energy only), ECON-B and ECON-X2 skip, ECON-NOCUR is judged on systems.result_x2 / items (no
+    items: skip), and ECON-SHORTCUT / ECON-REVISIT need +3 energy once (energy currency, or systems.energy), or, with no
+    energy either, fail with 'add a coin currency and skins'; all four without B. The other rules stay unknown without B.
+    v3.4 (rules table 2026-11-04.v3.4, ad-boost round six, as economy_plan.js; Saul decided none of its numbers, so their
+    misses are at most suggest): ECON-BATTLEPASS (inflow window battle_pass / battle_pass_ad, amounts per tier, season
+    numbers), ECON-REVIVEPAY (sink kind revive: price, per_round_max, hides_ad_revive), ECON-RUNPAY (amount, amount_max,
+    amount_min; its x2 counts for ECON-X2), ECON-MIDRUN (window mid_boost: extra_steps, extra_sec, per_attempt,
+    bought_steps_pay, refresh_free_per_round, refresh_ad_per_level, pick_all_ticket_every_levels), ECON-NOODDS
+    (ad_buys_odds: true); inside older rules the score chest (window score_chest: tier, amount_x2, reclaim_by_ad;
+    ECON-CHEST), the coin jar (window online_jar: jar_fill_per_min, jar_cap, day_fill_max; ECON-ONLINE), the
+    no-replacement wheel (one ECON-WHEEL row: no_replacement, cells with one {grand, item, owned_fallback} cell,
+    free_per_day, ad_per_day), the free upgrade after a loss (window lose_upgrade: upgrade_levels, per_round_max;
+    ECON-UPGRADE) and ad-unlock level gates (sink.gate_level; ECON-ADUNLOCK). A wrong x2, a hidden ad-revive button and an
+    ad that buys odds are reported by kind as usual. Currency role points (battle-pass points) is not a coin and not
+    checked by ECON-DEAD; a revive sink is a place to spend. One row per rule: a rule with both kinds of miss lists them
+    all under the reported severity. ECON-MIDRUN / ECON-NOODDS need no B and are judged without it when their rows exist.
     Misses of numbers Saul has not decided (decided_by_saul=false) are at most suggest. Unknown field names go to
     schema_warnings; with meta.source = auto_scan, 'system not found' skips go to confirm_by_hand."""
     snap = snapshot if isinstance(snapshot, dict) else {}
@@ -977,6 +1055,11 @@ def economy_audit(snapshot, kind=None):
     currencies = [c for c in snap.get('currencies') or [] if isinstance(c, dict)]
     roles = {c.get('id'): c.get('role') for c in currencies}
     main_ids = {c.get('id') for c in currencies if c.get('role') == 'main'}
+    # v3.3 (Saul 2026-11-04, as economy_plan.js): energy is not a coin. no_coin = the snapshot lists its currencies and
+    # none of them is a coin (empty, or energy only); a snapshot without a currencies list is judged as before.
+    # v3.4: battle-pass points (role points) only go up and are never spent: not a coin, not a currency to check either.
+    energy_cur_ids = {c.get('id') for c in currencies if c.get('role') == 'energy'}
+    no_coin = isinstance(snap.get('currencies'), list) and not [c for c in currencies if c.get('role') not in ('energy', 'points')]
     inflows = [x for x in snap.get('inflows') or [] if isinstance(x, dict)]
     sinks = [x for x in snap.get('sinks') or [] if isinstance(x, dict)]
     systems = snap.get('systems') if isinstance(snap.get('systems'), dict) else {}
@@ -1028,15 +1111,29 @@ def economy_audit(snapshot, kind=None):
     def window_of(x):
         if x.get('window'):
             return x['window']
-        if str(x.get('id', '')).startswith('gift_window'):
+        rid = str(x.get('id', ''))
+        if rid.startswith('gift_window'):
             return 'gift_window'
-        return ECON_RULE_WINDOW.get(x.get('rule'))
+        # v3.4 (as economy_plan.js windowOf): a battle-pass row with needs_ad is an ad cell (never doubled); score chest
+        # and coin jar rows are told apart from the chest / online-gift rows by id; v3.4 windows by id when no rule
+        if x.get('rule') == 'ECON-BATTLEPASS':
+            return 'battle_pass_ad' if x.get('needs_ad') else 'battle_pass'
+        for pat, w in ECON_SUB_WINDOW_OF_ID:
+            if re.match(pat, rid, re.I):
+                return w
+        if x.get('rule') in ECON_RULE_WINDOW:
+            return ECON_RULE_WINDOW[x['rule']]
+        if not x.get('rule'):
+            for pat, w in ECON_V34_WINDOW_OF_ID:
+                if re.match(pat, rid, re.I):
+                    return w
+        return None
 
     def in_window(w):
         return [x for x in inflows if window_of(x) == w]
 
     def is_main(cur):
-        return cur in main_ids if main_ids else cur in roles
+        return cur in main_ids if main_ids else (cur in roles and roles[cur] != 'points')   # v3.4: points are never main
 
     def doubled(x):
         return x.get('x2') not in (None, '', 'none')
@@ -1054,15 +1151,404 @@ def economy_audit(snapshot, kind=None):
     def in_B(x):
         return '%s (%.2fB)' % (x, x / B) if B else str(x)
 
-    # ECON-B
-    if B is None or b.get('how') in (None, 'unknown'):
+    def x2_and_nocur():
+        """ECON-X2 / ECON-NOCUR. Without coins (v3.3, as economy_plan.js) the result double is ECON-NOCUR: x2 of the items
+        picked up this round, once a round; a game with nothing to pick up shows no x2 (rule text 本局没捡到不放 ×2)."""
+        if no_coin:
+            add('ECON-X2', skip=['no coin currency: the result double is ECON-NOCUR'], found=True)
+            if systems.get('result_x2') is True:
+                add('ECON-NOCUR', ok=['no coin currency: result watch-ad x2 doubles the items picked up this round'])
+            elif systems.get('items') is True:
+                add('ECON-NOCUR', broken=['no-coin game still needs x2 of picked-up items, once a round'])
+            else:
+                add('ECON-NOCUR', skip=['no coin currency and no items to pick up this round: no x2'],
+                    found=systems.get('items') is False)
+            return
+        # v3.4 (as economy_plan.js hasX2): a round that pays nothing itself (ECON-RUNPAY) doubles on the score-to-coins row
+        run_x2 = any(doubled(x) for x in inflows if x.get('rule') == 'ECON-RUNPAY')
+        if systems.get('result_x2') is True or run_x2:
+            add('ECON-X2', ok=['result watch-ad x2 present' + (' (on the score-to-coins row)' if run_x2 else '')])
+        elif systems.get('result_x2') is False:
+            add('ECON-X2', broken=['no result watch-ad x2'])
+        else:
+            add('ECON-X2', unknown=['systems.result_x2 not reported'])
+        if currencies:
+            add('ECON-NOCUR', skip=['game has a currency'], found=True)
+        else:   # no currencies list in the snapshot: judged as before v3.3
+            add('ECON-NOCUR', broken=None if systems.get('result_x2') else ['no-currency game still needs x2 of picked-up items'])
+
+    def is_energy(cur):
+        """A no-coin platform reward pays energy: one of the energy currencies or, when energy is only in systems, a row
+        without a currency or named like energy (same test as economy_plan.js platformNoCoin)."""
+        if energy_cur_ids:
+            return cur in energy_cur_ids
+        return not cur or any(w in str(cur).lower() for w in ENERGY_NAME_WORDS)
+
+    def shortcut_and_revisit():
+        """ECON-SHORTCUT / ECON-REVISIT: 5B of the main currency once. Without coins (v3.3, Saul 2026-11-04, as
+        economy_plan.js platformNoCoin; needs no B): +3 energy once when the game has energy; with neither coins nor
+        energy, a coin currency and skins to spend it on are added first (English: while localizing), then 5B is paid."""
+        has_energy = bool(energy_cur_ids) or systems.get('energy') is True
+        for rule, key, label in (('ECON-SHORTCUT', 'shortcut', 'add-to-desktop'), ('ECON-REVISIT', 'revisit', 'home revisit')):
+            rows_ = by_rule(rule)
+            if no_coin and not has_energy:
+                add(rule, broken=['no coins and no energy: add a coin currency and skins to spend it on (English: while '
+                                  'localizing), then pay %dB once; a score is not a reward (Saul 2026-11-04)' % SHORTCUT_REWARD_B])
+            elif systems.get(key) is False and not rows_:
+                add(rule, broken=['no %s entry (all games, Saul 2026-10-29)' % label])
+            elif not rows_:
+                add(rule, unknown=['%s reward not found%s' % (label, ' (no coins: +%d energy once)' % NO_COIN_PLATFORM_ENERGY
+                                                               if no_coin else '')])
+            else:
+                def sc_check(x, label=label):
+                    m = []
+                    if no_coin:
+                        if not is_energy(x.get('currency')) or x.get('amount') != NO_COIN_PLATFORM_ENERGY:
+                            m.append('%s: a game without coins pays +%d energy, found %s %s (Saul 2026-11-04)'
+                                     % (label, NO_COIN_PLATFORM_ENERGY, x.get('amount'), x.get('currency') or ''))
+                    elif not _b_amount_ok(x.get('amount') or 0, SHORTCUT_REWARD_B, B):
+                        m.append('%s gives %s; %dB expected' % (label, in_B(x.get('amount') or 0), SHORTCUT_REWARD_B))
+                    if x.get('per') not in (None, 'once'):
+                        m.append('%s must pay once, not per %s' % (label, x.get('per')))
+                    if not no_coin and main_ids and x.get('currency') not in main_ids:
+                        m.append('%s must pay the main currency, not %s' % (label, x.get('currency')))
+                    return m
+                bad, offs = each(rows_, sc_check)
+                add(rule, broken=bad, offenders=offs,
+                    ok=['+%d energy once (no coins, Saul 2026-11-04)' % NO_COIN_PLATFORM_ENERGY] if no_coin else None)
+
+    # ---- v3.4 (rules table 2026-11-04.v3.4, judged as economy_plan.js). Every new number is decided_by_saul=false: a
+    # miss goes to soft (at most suggest); a wrong x2, a hidden ad-revive button or an ad that buys odds is broken. ----
+    def v34_soft(msgs):
+        return list(msgs) + [ECON_V34_UNDECIDED_NOTE] if msgs else None
+
+    def confirm_note(conf, what='some numbers were not read'):
+        return ' (%s: confirm by hand)' % what if conf else ''
+
+    def battle_pass():
+        """ECON-BATTLEPASS: free cells (window battle_pass; its default-on x2 is ECON-CLAIMX2's) 1B a tier, ad cells
+        (battle_pass_ad) by the table and never doubled, a season <= 20B without x2; season / tier / point numbers
+        when written. Points (currency role points) only count up and are not a currency."""
+        rule = 'ECON-BATTLEPASS'
+        bps = [x for x in inflows if window_of(x) in ('battle_pass', 'battle_pass_ad')]
+        if not bps:
+            add(rule, unknown=['battle pass amounts not found']) if systems.get('battle_pass') else add(rule, skip=['no battle pass'])
+            return
+        bad, boffs, soft, conf, tiers = [], [], [], False, BATTLE_PASS_PERIOD['tiers']
+        bsys = systems.get('battle_pass') if isinstance(systems.get('battle_pass'), dict) else {}
+        lo, hi = BATTLE_PASS_ENDLESS_POINTS
+        for o in [bsys] + bps:
+            for k, want in BATTLE_PASS_PERIOD.items():
+                if _num(o.get(k)) and o[k] != want:
+                    soft.append('battle pass %s = %s; %s expected' % (k, o[k], want))
+            v = o.get('points_per_endless_round')
+            vs = [q for q in v if _num(q)] if isinstance(v, list) else ([v] if _num(v) else [])
+            if any(q < lo or q > hi for q in vs):
+                soft.append('battle pass gives %s points for an endless round; %d..%d expected' % (v, lo, hi))
+        total, total_known = 0, True
+        for x in bps:
+            ad = window_of(x) == 'battle_pass_ad'
+            if ad and doubled(x):
+                bad.append('%s: an ad cell is a watched ad itself; paid at once, never doubled' % x.get('id'))
+                boffs.append(x)
+            if x.get('currency') is not None and not is_main(x.get('currency')):
+                total_known = False
+                continue
+            am = x.get('amounts') if isinstance(x.get('amounts'), list) else None
+            if am is None and not _num(x.get('amount')):
+                total_known, conf = False, True
+                continue
+            if am is not None:
+                if len(am) != tiers:
+                    soft.append('%s: %d tiers written; %d expected' % (x.get('id'), len(am), tiers))
+                for i, a in enumerate(am):
+                    k = (BATTLE_PASS_AD_CELLS_B[i] if i < len(BATTLE_PASS_AD_CELLS_B) else None) if ad else BATTLE_PASS_FREE_CELL_B
+                    if k is not None and _num(a) and not _b_amount_ok(a, k, B):
+                        soft.append('%s tier %d gives %s; %gB = %s expected' % (x.get('id'), i + 1, a, k, _b_want(k, B)))
+                total += sum(a for a in am if _num(a))
+            elif ad:   # one number for ad cells that differ by tier: write amounts
+                total_known, conf = False, True
+            else:
+                if not _b_amount_ok(x['amount'], BATTLE_PASS_FREE_CELL_B, B):
+                    soft.append('%s gives %s a tier; %gB = %s expected' % (x.get('id'), x['amount'], BATTLE_PASS_FREE_CELL_B,
+                                                                           _b_want(BATTLE_PASS_FREE_CELL_B, B)))
+                total += x['amount'] * tiers
+        if total_known and {window_of(x) for x in bps} >= {'battle_pass', 'battle_pass_ad'} \
+                and total > _b_high(BATTLE_PASS_SEASON_MAX_B, B):
+            soft.append('a battle-pass season adds up to %s without x2; at most %dB' % (in_B(total), BATTLE_PASS_SEASON_MAX_B))
+        add(rule, broken=bad, offenders=boffs, soft=v34_soft(soft),
+            ok=['battle pass %d days, %d tiers: free cell %gB a tier, ad cells by the table, a season <= %dB%s' % (
+                BATTLE_PASS_PERIOD['days_per_season'], tiers, BATTLE_PASS_FREE_CELL_B, BATTLE_PASS_SEASON_MAX_B,
+                confirm_note(conf, 'some cell amounts were not read'))])
+
+    def revive_pay():
+        """ECON-REVIVEPAY: a revive with coins costs 3B, together with the ad revive at most once a round, and the ad
+        revive button is always offered (never hidden when the coins are enough). A revive sink is a place to spend."""
+        rule = 'ECON-REVIVEPAY'
+        rps = [s for s in sinks if s.get('kind') == 'revive' or s.get('rule') == rule]
+        if not rps:
+            add(rule, unknown=['revive with coins: price not found']) if systems.get('revive_pay') else add(rule, skip=['no revive with coins'])
+            return
+        bad, boffs, soft, conf = [], [], [], False
+        for s in rps:
+            n0 = len(bad)
+            if s.get('hides_ad_revive') is True:
+                bad.append('%s: hides the watch-ad revive button when the coins are enough; both buttons must show' % s.get('id'))
+            price = s.get('price')
+            if is_main(s.get('currency')):
+                if _num(price) and price > 0 and not _b_amount_ok(price, REVIVE_PAY_PRICE_B, B):
+                    soft.append('%s: a revive costs %s; %dB = %s expected' % (s.get('id'), in_B(price), REVIVE_PAY_PRICE_B,
+                                                                            _b_want(REVIVE_PAY_PRICE_B, B)))
+            else:
+                conf = True   # another currency (gems): not in B
+            prm = s.get('per_round_max')
+            if _num(prm):
+                if prm > REVIVE_PAY_PER_ROUND:
+                    soft.append('%s: %s revives a round; together with the ad revive at most %d' % (s.get('id'), prm, REVIVE_PAY_PER_ROUND))
+            elif auto_scan:
+                conf = True
+            else:
+                soft.append('%s: per_round_max not written; together with the ad revive at most %d a round' % (s.get('id'), REVIVE_PAY_PER_ROUND))
+            if len(bad) > n0:
+                boffs.append(s)
+        if systems.get('revive') is False:
+            bad.append('revive with coins but no watch-ad revive; the ad revive button must be offered too')
+            boffs += rps
+        elif systems.get('revive') is not True:
+            conf = True
+        add(rule, broken=bad, offenders=boffs, soft=v34_soft(soft),
+            ok=['revive with coins %dB, together with the ad revive at most %d a round, both buttons shown%s' % (
+                REVIVE_PAY_PRICE_B, REVIVE_PAY_PER_ROUND, confirm_note(conf, 'a price or the ad revive was not read'))])
+
+    def run_pay():
+        """ECON-RUNPAY: a game whose round pays nothing itself turns the score into coins: a normal round 1B, at most 3B
+        (before x2), a score above 0 gives at least 1 coin (a coin count, not B). Its x2 is ECON-X2's."""
+        rule = 'ECON-RUNPAY'
+        rus = [x for x in inflows if x.get('rule') == rule or (not x.get('rule') and re.match(r'^run_?pay|^score_?(coin|pay)', str(x.get('id', '')), re.I))]
+        if not rus:
+            add(rule, unknown=['score-to-coins amounts not found']) if systems.get('run_pay') else add(rule, skip=['no score-to-coins result'])
+            return
+        soft, conf = [], False
+        for x in rus:
+            if not is_main(x.get('currency')):
+                continue
+            i, a, amax, amin = x.get('id'), x.get('amount'), x.get('amount_max'), x.get('amount_min')
+            if _num(a):
+                if not _b_amount_ok(a, RUN_PAY_NORMAL_B, B):
+                    soft.append('%s: a normal round gives %s; %dB = %s expected' % (i, in_B(a), RUN_PAY_NORMAL_B, _b_want(RUN_PAY_NORMAL_B, B)))
+            else:
+                conf = True
+            if _num(amax):
+                if amax > _b_high(RUN_PAY_MAX_B, B):
+                    soft.append('%s: a round gives up to %s; at most %dB before x2' % (i, in_B(amax), RUN_PAY_MAX_B))
+            elif auto_scan:
+                conf = True
+            else:
+                soft.append('%s: amount_max not written; a round gives at most %dB before x2' % (i, RUN_PAY_MAX_B))
+            if _num(amin):
+                if amin < RUN_PAY_MIN_COINS:
+                    soft.append('%s: a score above 0 gives at least %s coins; at least %d' % (i, amin, RUN_PAY_MIN_COINS))
+            elif auto_scan:
+                conf = True
+            else:
+                soft.append('%s: amount_min not written; a score above 0 gives at least %d coin' % (i, RUN_PAY_MIN_COINS))
+        add(rule, soft=v34_soft(soft),
+            ok=['score to coins: a normal round %dB, at most %dB, a score above 0 at least %d coin (x2: ECON-X2)%s' % (
+                RUN_PAY_NORMAL_B, RUN_PAY_MAX_B, RUN_PAY_MIN_COINS, confirm_note(conf))])
+
+    def mid_run():
+        """ECON-MIDRUN: in-run +5 steps / +15 s at most once an attempt, bought steps and time pay nothing, refresh free
+        <= 2 a round and ad <= 1 a level, a pick-all ticket at most every 3 levels; never doubled (excluded mid_boost).
+        A boost row whose numbers were not read is unknown (economy_plan.js: skip, confirm by hand)."""
+        rule = 'ECON-MIDRUN'
+        mrs = [x for x in inflows if x.get('rule') == rule or window_of(x) == 'mid_boost']
+        if not mrs:
+            add(rule, unknown=['in-run boost numbers not found']) if systems.get('mid_boost') else add(rule, skip=['no in-run boost'])
+            return
+        bad, boffs, soft, read = [], [], [], False
+        m = MID_RUN
+        for x in mrs:
+            i = x.get('id')
+            for k, unit in (('extra_steps', 'steps'), ('extra_sec', 's')):
+                if _num(x.get(k)):
+                    read = True
+                    if x[k] != m[k]:
+                        soft.append('%s: +%s %s; +%d %s expected' % (i, x[k], unit, m[k], unit))
+            for k, label in (('per_attempt', 'times an attempt'), ('refresh_free_per_round', 'free refreshes a round'),
+                             ('refresh_ad_per_level', 'ad refreshes a level')):
+                if _num(x.get(k)):
+                    read = True
+                    if x[k] > m[k]:
+                        soft.append('%s: %s %s; at most %d' % (i, x[k], label, m[k]))
+            if isinstance(x.get('bought_steps_pay'), bool):
+                read = True
+                if x['bought_steps_pay'] != m['bought_steps_pay']:
+                    soft.append('%s: bought steps / time count in the round reward; they must not' % i)
+            if _num(x.get('pick_all_ticket_every_levels')):
+                read = True
+                if x['pick_all_ticket_every_levels'] < m['pick_all_ticket_every_levels']:
+                    soft.append('%s: a pick-all ticket every %s levels; one every %d levels' % (i, x['pick_all_ticket_every_levels'],
+                                                                                             m['pick_all_ticket_every_levels']))
+            if doubled(x):
+                bad.append('%s: a watched ad itself; no x2' % i)
+                boffs.append(x)
+        if bad or soft or read:
+            add(rule, broken=bad, offenders=boffs, soft=v34_soft(soft),
+                ok=['in-run boost by the table (+%d steps / +%d s, at most %d an attempt, bought ones pay nothing), never doubled' % (
+                    m['extra_steps'], m['extra_sec'], m['per_attempt'])])
+        else:
+            add(rule, unknown=['in-run boost present, its numbers were not read'])
+
+    def no_odds():
+        """ECON-NOODDS: an ad gives only something certain (a fixed amount, one sure item), never a better chance to win
+        or catch; a row with ad_buys_odds: true is reported."""
+        odds = [x for x in inflows + sinks if x.get('ad_buys_odds') is True]
+        if odds:
+            add('ECON-NOODDS', broken=['the ad buys odds (%s); an ad may only give something certain (a fixed amount, one sure '
+                                       'item)' % ', '.join(str(x.get('id')) for x in odds)], offenders=odds)
+        else:
+            add('ECON-NOODDS', skip=['no row marks ad_buys_odds'], found=True)
+
+    def score_chest():
+        """ECON-CHEST v3.4 score chest (window score_chest, opened by the best score): at most 3 tiers, a tier free <= 2B,
+        with the ad <= 4B, each tier claimed once (no second ad). None when there is none."""
+        scs = in_window('score_chest')
+        if not scs:
+            return None
+        sc, soft = SCORE_CHEST, []
+        if len({x.get('tier') if _num(x.get('tier')) else x.get('id') for x in scs}) > sc['tiers']:
+            soft.append('score chest has %d tiers; at most %d' % (len({x.get('tier') if _num(x.get('tier')) else x.get('id') for x in scs}), sc['tiers']))
+        for x in scs:
+            i, a = x.get('id'), x.get('amount')
+            coin = x.get('currency') is None or is_main(x.get('currency'))
+            if coin and _num(a) and not x.get('needs_ad') and a > _b_high(sc['free_max_B'], B):
+                soft.append('%s: free %s; a score-chest tier gives at most %dB' % (i, in_B(a), sc['free_max_B']))
+            dbl = (a if _num(a) else None) if x.get('needs_ad') else (
+                x['amount_x2'] if _num(x.get('amount_x2')) else (a * 2 if _num(a) and x.get('x2') != 'none' else None))
+            if coin and dbl is not None and dbl > _b_high(sc['double_max_B'], B):
+                soft.append('%s: with the ad %s; a score-chest tier gives at most %dB' % (i, in_B(dbl), sc['double_max_B']))
+            if sc['claim_once_per_tier'] and x.get('reclaim_by_ad') is True:
+                soft.append('%s: can be claimed again with an ad; each tier is claimed once' % i)
+        return soft
+
+    def online_jar():
+        """ECON-ONLINE v3.4 home coin jar (window online_jar): fills at most 0.25B a minute, full at most 3B, its daily
+        fill (day_fill_max) counts in the 10B a day with the tier cards; the watch-ad jar row has no x2 on top.
+        (rows, broken, offenders, soft, confirm, day fill) or None."""
+        jars = in_window('online_jar')
+        if not jars:
+            return None
+        bad, boffs, soft, conf, day = [], [], [], False, 0
+        for x in jars:
+            if x.get('currency') is not None and not is_main(x.get('currency')):
+                conf = True   # a jar of another currency is not in B
+                continue
+            i = x.get('id')
+            if _num(x.get('jar_fill_per_min')) and x['jar_fill_per_min'] > _b_high(ONLINE_JAR_FILL_B_PER_MIN, B):
+                soft.append('%s: fills %s a minute; at most %gB' % (i, in_B(x['jar_fill_per_min']), ONLINE_JAR_FILL_B_PER_MIN))
+            if _num(x.get('jar_cap')) and x['jar_cap'] > _b_high(ONLINE_JAR_CAP_B, B):
+                soft.append('%s: a full jar holds %s; at most %dB' % (i, in_B(x['jar_cap']), ONLINE_JAR_CAP_B))
+            if _num(x.get('day_fill_max')):
+                day += x['day_fill_max']
+            elif auto_scan:
+                conf = True
+            else:
+                soft.append('%s: day_fill_max not written (the most the jar fills in a day); with the tier cards at most %dB a day'
+                            % (i, ONLINE_DAY_TOTAL_MAX_B))
+            if x.get('needs_ad') and doubled(x):
+                bad.append('%s: the watch-ad jar row is the ad itself; no x2 on top' % i)
+                boffs.append(x)
+        return jars, bad, boffs, soft, conf, day
+
+    def lose_upgrade():
+        """ECON-UPGRADE v3.4 free upgrade after a loss (window lose_upgrade, watch an ad): +1 level, no coins, at most
+        once a round, never doubled. (broken, offenders, soft, confirm) or None."""
+        lus = [x for x in inflows if window_of(x) == 'lose_upgrade']
+        if not lus:
+            return None
+        bad, boffs, soft, conf = [], [], [], False
+        for x in lus:
+            i = x.get('id')
+            if _num(x.get('upgrade_levels')) and x['upgrade_levels'] != 1:
+                soft.append('%s: upgrades %s levels; +1 level expected' % (i, x['upgrade_levels']))
+            if _num(x.get('amount')) and x['amount'] > 0:
+                soft.append('%s: gives %s %s; a free upgrade after a loss gives no coins' % (i, x['amount'], x.get('currency') or ''))
+            prm = x.get('per_round_max')
+            if _num(prm):
+                if prm > UPGRADE_LOSE_FREE_PER_ROUND:
+                    soft.append('%s: %s a round; at most %d' % (i, prm, UPGRADE_LOSE_FREE_PER_ROUND))
+            elif auto_scan:
+                conf = True
+            else:
+                soft.append('%s: per_round_max not written; at most %d a round' % (i, UPGRADE_LOSE_FREE_PER_ROUND))
+            if doubled(x):
+                bad.append('%s: a watched ad itself; no x2' % i)
+                boffs.append(x)
+        return bad, boffs, soft, conf
+
+    def wheel_no_replacement(rows_):
+        """ECON-WHEEL v3.4 no-replacement wheel (row no_replacement + cells): 10 cells, 9 ordinary ones add up to at most
+        18B (the value is an average over the whole round, not per spin), the grand prize is a limited skin outside the
+        ad-unlock table, an owned grand prize gives at most 5B, the grand cell has no x2. (broken, soft, confirm)."""
+        nr, bad, soft, conf = WHEEL_NO_REPLACEMENT, [], [], False
+        for x in rows_:
+            cells = x.get('cells')
+            if not isinstance(cells, list):
+                conf = True
+                continue
+            i = x.get('id')
+            grand = [c for c in cells if isinstance(c, dict) and c.get('grand') is True]
+            normal = [c for c in cells if not (isinstance(c, dict) and c.get('grand') is True)]
+            if len(cells) != nr['cells']:
+                soft.append('%s: a no-replacement wheel has %d cells; %d expected' % (i, len(cells), nr['cells']))
+            if len(grand) != 1:
+                soft.append('%s: %d grand-prize cells; 1 expected (sure on spin %d)' % (i, len(grand), nr['cells']))
+            elif len(normal) != nr['normal_cells']:
+                soft.append('%s: %d ordinary cells; %d expected' % (i, len(normal), nr['normal_cells']))
+            coins = [c for c in normal if isinstance(c, dict) and _num(c.get('amount')) and c['amount'] > 0 and not c.get('item')
+                     and (c.get('currency') is None or is_main(c.get('currency')))]
+            tot = sum(c['amount'] for c in coins)
+            if coins and tot > _b_high(nr['round_total_max_B'], B):
+                soft.append('%s: the ordinary cells add up to %s; at most %dB a round (%.2gB a spin on average)' % (
+                    i, in_B(tot), nr['round_total_max_B'], nr['round_total_max_B'] / nr['normal_cells']))
+            for g in grand:
+                item = g.get('item')
+                if nr['grand'] == 'limited_skin' and not item:
+                    soft.append('%s: the grand prize must be a limited skin (write item), found %s' % (
+                        i, '%s coins' % g['amount'] if _num(g.get('amount')) else 'nothing'))
+                if item:
+                    sk = [s for s in sinks if s.get('id') == item or s.get('item') == item]
+                    if nr['grand_not_in_ad_table'] and any((s.get('ad_unlock_views') or 0) > 0 for s in sk):
+                        soft.append('%s: grand-prize skin %s is in the ad-unlock table; as a limited skin it is not' % (i, item))
+                    if any(s.get('rarity') and s.get('rarity') != 'limited' and not s.get('limited') for s in sk):
+                        soft.append('%s: grand-prize skin %s must count as limited (rarity limited)' % (i, item))
+                if _num(g.get('owned_fallback')) and g['owned_fallback'] > _b_high(nr['grand_owned_fallback_max_B'], B):
+                    soft.append('%s: an owned grand prize gives %s instead; at most %dB' % (i, in_B(g['owned_fallback']),
+                                                                                     nr['grand_owned_fallback_max_B']))
+                if g.get('x2') not in (None, '', 'none'):
+                    bad.append('%s: the grand-prize cell is not doubled (no x2)' % i)
+        return bad, soft, conf
+
+    # ECON-B (v3.3: a game without coins has no B to find; see ECON-NOCUR)
+    if no_coin and B is None:
+        add('ECON-B', skip=['no coin currency (energy is not a coin): no B to find; see ECON-NOCUR'], found=True)
+    elif B is None or b.get('how') in (None, 'unknown'):
         add('ECON-B', broken=['B is unknown; find normalLevelCoins, the median of the first 10 ordinary levels, or cheapest item / 10'])
     else:
         add('ECON-B', ok=['B = %s via %s' % (B, b.get('how'))])
     if B is None:  # every other numeric rule needs B
+        if no_coin:   # v3.3: these are judged without B
+            x2_and_nocur()
+            shortcut_and_revisit()
+        # v3.4: these two need no B; judged here only when their rows are there (otherwise unknown like the rest)
+        if any(x.get('rule') == 'ECON-MIDRUN' or window_of(x) == 'mid_boost' for x in inflows):
+            mid_run()
+        if any(x.get('ad_buys_odds') is True for x in inflows + sinks):
+            no_odds()
+        done = {r['id'] for r in rows}
         for rule in ECON_RULE_TITLES:
-            if rule != 'ECON-B':
-                add(rule, unknown=['B unknown'])
+            if rule not in done:
+                add(rule, unknown=['no coin currency, so no B: not checked' if no_coin else 'B unknown'])
         return _econ_report(snap, kind, B, rows, warnings)
 
     # ECON-LEVEL10
@@ -1101,11 +1587,11 @@ def economy_audit(snapshot, kind=None):
         tiers = skin_tiers_B(tier_policy)
         tier_text = '/'.join(str(v) for v in tiers.values()) + 'B'
 
-        def verdict(rule, bad, skip):
+        def verdict(rule, bad, skip, soft=None, ok=None):
             if bad and tier_legacy:
                 add(rule, info=['frozen %s table, reported only: %s' % (tier_policy, m) for m in bad])
             else:
-                add(rule, broken=bad, skip=skip)
+                add(rule, broken=bad, skip=skip, soft=soft, ok=ok)
 
         def cost(s):  # coin price, or the rarity's tier price for an ad-only row
             return s.get('price') or (tiers.get(s.get('rarity')) or 0) * B
@@ -1162,7 +1648,27 @@ def economy_audit(snapshot, kind=None):
             if coin_ids and ad_ids:
                 ad_bad.append('%s: sold for coins (%s) and unlocked by ads (%s); one unlock method per skin'
                               % (item, ', '.join(coin_ids), ', '.join(ad_ids)))
-        verdict('ECON-ADUNLOCK', ad_bad, None if priced else ['no priced skins/backgrounds'])
+        # v3.4 level gates (sink.gate_level, as economy_plan.js): the ad-unlock skins open cheapest first, one every 3..5
+        # levels; a gate does not change the views. Not written: not checked. Frozen old tables: not checked.
+        gate_soft, gate_ok = [], None
+        ad_sk = [s for s in perm if (s.get('ad_unlock_views') or 0) > 0]
+        gated = [s for s in ad_sk if _num(s.get('gate_level'))]
+        if gated and not tier_legacy:
+            g_lo, g_hi = AD_UNLOCK_GATE_EVERY_LEVELS
+            gs = sorted(gated, key=lambda s: (s['gate_level'], s.get('price') or 0))
+            for a, b in zip(gs, gs[1:]):
+                gap = b['gate_level'] - a['gate_level']
+                if gap < g_lo or gap > g_hi:
+                    gate_soft.append('%s (level %s) to %s (level %s): %s levels apart; one every %d..%d levels' % (
+                        a.get('id'), a['gate_level'], b.get('id'), b['gate_level'], gap, g_lo, g_hi))
+                if (b.get('price') or 0) > 0 and (a.get('price') or 0) > b['price']:
+                    gate_soft.append('%s (%s) is cheaper than %s (%s) but opens later; open them cheapest first' % (
+                        b.get('id'), b['price'], a.get('id'), a['price']))
+            note = confirm_note(len(gated) < len(ad_sk), '%d ad skins without a gate' % (len(ad_sk) - len(gated)))
+            gate_ok = ['%d ad skins open cheapest first, one every %d..%d levels%s' % (len(gated), g_lo, g_hi, note)]
+            if gate_soft and note:
+                gate_soft.append(note.strip())
+        verdict('ECON-ADUNLOCK', ad_bad, None if priced else ['no priced skins/backgrounds'], soft=v34_soft(gate_soft), ok=gate_ok)
 
     # ECON-SKINTRIAL (Saul 2026-11-01: with skins, a watch-ad skin trial popup every 3 levels, none in levels 1-2)
     has_skins = bool(systems.get('skins')) or any(s.get('kind') == 'skin' for s in sinks)
@@ -1178,16 +1684,7 @@ def economy_audit(snapshot, kind=None):
             ok=['skin trial: levels %s free, then every %s levels' % (trial.get('no_popup_levels'), trial.get('every_levels'))])
 
     # ECON-X2 / ECON-NOCUR
-    if systems.get('result_x2') is True:
-        add('ECON-X2', ok=['result watch-ad x2 present'])
-    elif systems.get('result_x2') is False:
-        add('ECON-X2', broken=['no result watch-ad x2'])
-    else:
-        add('ECON-X2', unknown=['systems.result_x2 not reported'])
-    if currencies:
-        add('ECON-NOCUR', skip=['game has a currency'], found=True)
-    else:
-        add('ECON-NOCUR', broken=None if systems.get('result_x2') else ['no-currency game still needs x2 of picked-up items'])
+    x2_and_nocur()
 
     # ECON-GIFT
     gift = by_rule('ECON-GIFT')
@@ -1249,24 +1746,7 @@ def economy_audit(snapshot, kind=None):
             unknown=[u for x in sf for u in capped_daily(x, SHOP_FREE_PER_SLOT_PER_DAY)[1]])
 
     # ECON-SHORTCUT / ECON-REVISIT
-    for rule, key, label in (('ECON-SHORTCUT', 'shortcut', 'add-to-desktop'), ('ECON-REVISIT', 'revisit', 'home revisit')):
-        rows_ = by_rule(rule)
-        if systems.get(key) is False and not rows_:
-            add(rule, broken=['no %s entry (all games, Saul 2026-10-29)' % label])
-        elif not rows_:
-            add(rule, unknown=['%s reward not found' % label])
-        else:
-            def sc_check(x, label=label):
-                m = []
-                if not _b_amount_ok(x.get('amount') or 0, SHORTCUT_REWARD_B, B):
-                    m.append('%s gives %s; %dB expected' % (label, in_B(x.get('amount') or 0), SHORTCUT_REWARD_B))
-                if x.get('per') not in (None, 'once'):
-                    m.append('%s must pay once, not per %s' % (label, x.get('per')))
-                if main_ids and x.get('currency') not in main_ids:
-                    m.append('%s must pay the main currency, not %s' % (label, x.get('currency')))
-                return m
-            bad, offs = each(rows_, sc_check)
-            add(rule, broken=bad, offenders=offs)
+    shortcut_and_revisit()
 
     # ECON-CHECKIN (rows of the same day are added up; by_day {"1": n, ...} rows count too; fallbacks per the rules table)
     ck = in_window('checkin')
@@ -1350,15 +1830,22 @@ def economy_audit(snapshot, kind=None):
         add('ECON-CLAIMX2', broken=cbad, weak=cweak, unknown=cunk, offenders=coffs, ok=['double checkbox on: %s' % ', '.join(present)])
 
     # ECON-CHEST / ECON-FLOAT / ECON-BONUS (ad-boost gift-pack and bonus-level amounts; main-currency rows are checked)
+    sc_soft = score_chest()   # v3.4 score chest: its own window, judged inside ECON-CHEST (None = no score chest)
+    sc_ok = ['score chest: at most %d tiers, a tier free <= %dB, with the ad <= %dB, claimed once' % (
+        SCORE_CHEST['tiers'], SCORE_CHEST['free_max_B'], SCORE_CHEST['double_max_B'])] if sc_soft is not None else []
     for rule, w, label in (('ECON-CHEST', 'chest', 'every-5-levels chest'), ('ECON-FLOAT', 'float_gift', 'floating gift'),
                            ('ECON-BONUS', 'bonus_level', 'bonus level')):
         wr = in_window(w)
         coin = [x for x in wr if x.get('currency') is None or is_main(x.get('currency'))]
+        extra_soft = v34_soft(sc_soft) if rule == 'ECON-CHEST' else None
         if not wr and not systems.get(ECON_WINDOW_SYSTEM[w]):
-            add(rule, skip=['no %s' % label])
+            if rule == 'ECON-CHEST' and sc_soft is not None:   # only a score chest
+                add(rule, soft=extra_soft, ok=sc_ok)
+            else:
+                add(rule, skip=['no %s' % label])
             continue
         if not wr:
-            add(rule, unknown=['%s amounts not found' % label])
+            add(rule, unknown=['%s amounts not found' % label], soft=extra_soft)
             continue
         unk = ['%s: amount not read' % x.get('id') for x in coin if not _num(x.get('amount'))]
         coin = [x for x in coin if _num(x.get('amount'))]
@@ -1372,8 +1859,9 @@ def economy_audit(snapshot, kind=None):
             bad, offs = each(wr, lambda x: float_gift_errors(x['amount'] if x in coin else 0, B, cap_of(x)))
             if all(x.get('per_round_max') is None for x in wr):
                 unk.append('floating gifts per round not reported (per_round_max); at most %d' % FLOAT_PER_ROUND_MAX)
-        add(rule, broken=bad, offenders=offs, unknown=unk,
-            ok=['%s: %s' % (label, ', '.join(in_B(x['amount']) for x in coin) or 'no main-currency amounts')])
+        add(rule, broken=bad, offenders=offs, unknown=unk, soft=extra_soft,
+            ok=['%s: %s' % (label, ', '.join(in_B(x['amount']) for x in coin) or 'no main-currency amounts')] +
+            (sc_ok if rule == 'ECON-CHEST' else []))
 
     # ECON-TIMERCHEST (Saul 2026-11-01 decided: on the level-map page, not home; a free open gives 3B and at most 5B); the
     # claim double is ECON-CLAIMX2 timer_chest.
@@ -1412,13 +1900,22 @@ def economy_audit(snapshot, kind=None):
     # ECON-ONLINE / ECON-KEYCHEST (Saul 2026-11-01 「默认数值就这样」; ad-boost online-ladder / key-chest; main-currency
     # rows): an online-time tier pays 1B..3B and a day's tiers add up to at most 10B; a key-chest cell gives at most 5B and
     # a board of nine coin cells adds up to about 15B (each cell's rounding allowed: off by less than the number of cells).
+    jar = online_jar()   # v3.4 home coin jar, judged inside ECON-ONLINE (None = no jar)
+    jar_ok = ['coin jar: at most %gB a minute, full at most %dB%s' % (
+        ONLINE_JAR_FILL_B_PER_MIN, ONLINE_JAR_CAP_B, confirm_note(jar[4], 'a daily fill or the currency was not read'))] if jar else []
     for rule, w, label in (('ECON-ONLINE', 'online_gift', 'online-time gift'), ('ECON-KEYCHEST', 'key_chest', 'key chest')):
         wr = in_window(w)
+        jbad, joffs, jsoft = (jar[1], jar[2], list(jar[3])) if jar and rule == 'ECON-ONLINE' else ([], [], [])
         if not wr and not systems.get(w):
-            add(rule, skip=['no %s' % label])
+            if jbad or jsoft or (jar and rule == 'ECON-ONLINE'):   # only a coin jar: its day fill is the whole day
+                if jar[5] > _b_high(ONLINE_DAY_TOTAL_MAX_B, B):
+                    jsoft.append('the coin jar fills up to %s a day; with the tier cards at most %dB' % (in_B(jar[5]), ONLINE_DAY_TOTAL_MAX_B))
+                add(rule, broken=jbad, offenders=joffs, soft=v34_soft(jsoft), ok=jar_ok)
+            else:
+                add(rule, skip=['no %s' % label])
             continue
         if not wr:
-            add(rule, unknown=['%s amounts not found' % label])
+            add(rule, unknown=['%s amounts not found' % label], broken=jbad, offenders=joffs, soft=v34_soft(jsoft))
             continue
         coin = [x for x in wr if x.get('currency') is None or is_main(x.get('currency'))]
         unk = ['%s: amount not read' % x.get('id') for x in coin if not _num(x.get('amount'))]
@@ -1431,14 +1928,19 @@ def economy_audit(snapshot, kind=None):
             if total > _b_high(ONLINE_DAY_TOTAL_MAX_B, B):
                 bad.append('online-time tiers add up to %s a day; at most %dB' % (in_B(total), ONLINE_DAY_TOTAL_MAX_B))
                 offs = coin
+            if jar and jar[5] and coin and total + jar[5] > _b_high(ONLINE_DAY_TOTAL_MAX_B, B):
+                jsoft.append('online-time tiers %s plus the coin jar %s a day add up to %s; at most %dB' % (
+                    in_B(total), in_B(jar[5]), in_B(total + jar[5]), ONLINE_DAY_TOTAL_MAX_B))
+            bad, offs = bad + jbad, offs + joffs
         else:
             bad, offs = each(coin, lambda x: ['%s: a key-chest cell gives %s; at most %dB' % (x.get('id'), in_B(x['amount']), KEY_CHEST_CELL_MAX_B)]
                              if x['amount'] > _b_high(KEY_CHEST_CELL_MAX_B, B) else [])
             if len(coin) == len(wr) == KEY_CHEST_CELLS and abs(total - KEY_CHEST_TOTAL_B * B) >= KEY_CHEST_CELLS:
                 bad.append('the %d key-chest cells add up to %s; about %dB' % (KEY_CHEST_CELLS, in_B(total), KEY_CHEST_TOTAL_B))
                 offs = coin
-        add(rule, broken=bad, offenders=offs, unknown=unk,
-            ok=['%s: %s (total %s)' % (label, ', '.join(in_B(x['amount']) for x in coin) or 'no main-currency amounts', in_B(total))])
+        add(rule, broken=bad, offenders=offs, unknown=unk, soft=v34_soft(jsoft),
+            ok=['%s: %s (total %s)' % (label, ', '.join(in_B(x['amount']) for x in coin) or 'no main-currency amounts', in_B(total))]
+            + (jar_ok if rule == 'ECON-ONLINE' else []))
 
     # ECON-ITEM / ECON-PACK / ECON-ADITEM
     items = [s for s in sinks if s.get('kind') == 'item' and (not main_ids or s.get('currency') in main_ids) and (s.get('price') or 0) > 0]
@@ -1462,20 +1964,36 @@ def economy_audit(snapshot, kind=None):
     # ECON-WHEEL
     wcfg = configs.get('wheel')
     wrows = by_rule('ECON-WHEEL')
+    # v3.4 no-replacement wheel: one row with no_replacement + cells. Its ordinary cells stand in for the cells below (one
+    # cell still <= 5B); the value is a round's average, checked in wheel_no_replacement(), so no per-spin check here.
+    nr_rows = [x for x in wrows if x.get('no_replacement')]
+    nr_bad, nr_soft, nr_conf = wheel_no_replacement(nr_rows) if nr_rows else ([], [], False)
     if not systems.get('wheel') and not wrows and not wcfg:
         add('ECON-WHEEL', skip=['no wheel'])
     else:
+        plain = [x for x in wrows if not x.get('no_replacement')]
         if not isinstance(wcfg, dict) and wrows:
-            free = [x.get('count_per_day') for x in wrows if not x.get('needs_ad') and x.get('count_per_day') is not None]
-            paid = [x.get('count_per_day') for x in wrows if x.get('needs_ad') and x.get('count_per_day') is not None]
+            # a plain row is one cell and count_per_day is that row's own daily count; a no-replacement wheel is one row
+            # (as the learning library's template) whose daily spins are free_per_day / ad_per_day
+            free = [x.get('count_per_day') for x in plain if not x.get('needs_ad') and x.get('count_per_day') is not None] \
+                + [x['free_per_day'] for x in nr_rows if _num(x.get('free_per_day'))]
+            paid = [x.get('count_per_day') for x in plain if x.get('needs_ad') and x.get('count_per_day') is not None] \
+                + [x['ad_per_day'] for x in nr_rows if _num(x.get('ad_per_day'))]
             marks = {x.get('x2') for x in wrows}
-            wcfg = {'free_per_day': max(free) if free else None, 'ad_per_day': max(paid) if paid else None,
-                    'cells': [{'amount': x.get('amount') or 0, 'weight': x.get('weight', 1)} for x in wrows],
+            cells = [{'amount': x.get('amount') or 0, 'weight': x.get('weight', 1)} for x in plain]
+            for x in nr_rows:
+                cells += [{'amount': c.get('amount') or 0, 'weight': 1} for c in x.get('cells') or []
+                          if isinstance(c, dict) and c.get('grand') is not True]
+            wcfg = {'free_per_day': max(free) if free else None, 'ad_per_day': max(paid) if paid else None, 'cells': cells,
                     'result_double': {'enabled': marks == {'checkbox_default_on'}, 'default_checked': marks == {'checkbox_default_on'}}}
+        nr_ok = ['no-replacement wheel: %d cells, %d ordinary ones <= %dB a round, the grand prize a limited skin outside the '
+                 'ad table%s' % (WHEEL_NO_REPLACEMENT['cells'], WHEEL_NO_REPLACEMENT['normal_cells'],
+                                 WHEEL_NO_REPLACEMENT['round_total_max_B'], confirm_note(nr_conf, 'cells not all read'))] if nr_rows else []
         if isinstance(wcfg, dict):
-            add('ECON-WHEEL', broken=wheel_config_errors(wcfg, B))
+            add('ECON-WHEEL', broken=wheel_config_errors(wcfg, B, per_spin=not nr_rows or bool(plain)) + nr_bad,
+                soft=v34_soft(nr_soft), ok=nr_ok or None)
         else:
-            add('ECON-WHEEL', unknown=['wheel numbers not found'])
+            add('ECON-WHEEL', unknown=['wheel numbers not found'], broken=nr_bad, soft=v34_soft(nr_soft))
 
     # ECON-OFFLINE
     ocfg = configs.get('offline')
@@ -1493,14 +2011,23 @@ def economy_audit(snapshot, kind=None):
         for s in ups:
             grouped.setdefault(s.get('line', 'line'), []).append(s)
         lines = [[s.get('price') or 0 for s in sorted(g, key=lambda s: s.get('level', 0))] for _, g in sorted(grouped.items())]
+    lu = lose_upgrade()   # v3.4 free upgrade after a loss, judged inside ECON-UPGRADE (None = none)
+    lbad, loffs, lsoft = (lu[0], lu[1] or None, v34_soft(lu[2])) if lu else ([], None, None)
+    lu_ok = ['free upgrade after a loss: +1 level, no coins, at most %d a round, no x2%s' % (
+        UPGRADE_LOSE_FREE_PER_ROUND, confirm_note(lu[3], 'per_round_max was not read'))] if lu else []
     if not systems.get('upgrade') and not lines:
-        add('ECON-UPGRADE', skip=['no upgrade line'])
+        if lu:
+            add('ECON-UPGRADE', broken=lbad, offenders=loffs, soft=lsoft, ok=lu_ok)
+        else:
+            add('ECON-UPGRADE', skip=['no upgrade line'])
     elif game.get('mode') == 'idle':
-        add('ECON-UPGRADE', skip=['idle/merge game: price = output per second x minutes, capped by offline limit'], found=True)
+        add('ECON-UPGRADE', skip=['idle/merge game: price = output per second x minutes, capped by offline limit'], found=True,
+            broken=lbad, offenders=loffs, soft=lsoft)
     elif not lines:
-        add('ECON-UPGRADE', unknown=['upgrade prices not found'])
+        add('ECON-UPGRADE', unknown=['upgrade prices not found'], broken=lbad, offenders=loffs, soft=lsoft)
     else:
-        add('ECON-UPGRADE', broken=['line %d: %s' % (i + 1, e) for i, line in enumerate(lines) for e in upgrade_errors(line, B)])
+        add('ECON-UPGRADE', broken=['line %d: %s' % (i + 1, e) for i, line in enumerate(lines) for e in upgrade_errors(line, B)] + lbad,
+            offenders=loffs, soft=lsoft, ok=lu_ok or None)
 
     # ECON-QUEST
     qcfg = configs.get('quests')
@@ -1570,7 +2097,14 @@ def economy_audit(snapshot, kind=None):
         sbad, soffs = sbad + b2, soffs + o2
     add('ECON-SECOND', skip=None if second else ['one currency only'], broken=sbad, offenders=soffs)
 
-    # ECON-DEAD
+    # ECON-BATTLEPASS / ECON-REVIVEPAY / ECON-RUNPAY / ECON-MIDRUN / ECON-NOODDS (rules table v3.4)
+    battle_pass()
+    revive_pay()
+    run_pay()
+    mid_run()
+    no_odds()
+
+    # ECON-DEAD (v3.4: battle-pass points, role points, are not a currency; a revive with coins is a place to spend)
     spend = {s.get('currency') for s in sinks}
     dead = [c for c, r in roles.items() if r in ('main', 'second', 'ticket') and c not in spend]
     add('ECON-DEAD', skip=None if roles else ['no currency'], broken=['currency %s has nowhere to spend' % c for c in dead])

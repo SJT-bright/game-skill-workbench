@@ -34,7 +34,7 @@ Who checks it (check())
   make_tiktok_zip.finalize_for_writer (both writers: make_tiktok_zip.py and build_checked_zip.py) and
   serve_preview.py --keep. A NEW remake game (board remake, policy new) with no receipt, a receipt that is not a pass,
   or images that differ from the receipt is refused: "美术改过（或没跑美术检查），重跑 art_check" plus the changed
-  images. Legacy games (policy legacy) and English games (board localize) get the same text as a warning. A project
+  images. Legacy remake games get a warning; English games now block and require current value-presentation runtime evidence (score-reward-1). A project
   without any image under assets/ has no art to check (state no_images, passes; real games never hit this).
 """
 import datetime as dt
@@ -140,6 +140,8 @@ def write(project, status, report=None, report_path=None, note=None):
         'art_check_images_sha256': images_digest(images), 'images': images, 'carried': []}
     if isinstance(report.get('base_generated'), dict):
         receipt['base_generated'] = report['base_generated']      # v7.8 H8 / H10 summary (art_records.summary)
+    if isinstance(report.get('value_presentation'), dict):
+        receipt['value_presentation'] = report['value_presentation']
     if note:
         receipt['note'] = note
     _write_json(receipt_path(project), receipt)
@@ -246,6 +248,14 @@ def check(project, board=None, policy=None):
     return out
 
 
+def _value_receipt_current(project, receipt):
+    from audit_value_presentation import REVISION, source_fingerprint
+    proof = receipt.get('value_presentation') or {}
+    return (proof.get('revision') == REVISION and proof.get('mode') == 'runtime'
+            and proof.get('passed') is True and isinstance(proof.get('pages'), int) and proof['pages'] > 0
+            and proof.get('source_sha256') == source_fingerprint(project))
+
+
 def _check_images(project, board=None, policy=None):
     project = Path(project).resolve()
     strict, board, policy = strictness(project, board, policy)
@@ -258,8 +268,11 @@ def _check_images(project, board=None, policy=None):
         out['engine'] = engine(project)
     except Exception:  # noqa: BLE001
         out['engine'] = None
-    fix = '运行 `art_check.py --project %s`，全部通过后自动写回执' % project
-    if not current:
+    fix = '运行 `art_check.py --project %s --board %s`，全部通过后自动写回执' % (project, board)
+    if board == 'localize':
+        strict = True  # Receipt only; original-audio policy remains unchanged.
+        out['receipt_strict'] = True
+    if not current and board != 'localize':
         out.update(state='no_images', level='ok', message='工程 assets/ 下没有图片，没有美术要核对')
         return out
     if receipt is None:
@@ -276,6 +289,9 @@ def _check_images(project, board=None, policy=None):
                     parts.append('%s %d 张：%s' % (label, len(out[key]), _list(out[key])))
             out['state'] = 'changed'
             why = '回执（%s，%s）之后图片变了，%s' % (status, receipt.get('created'), '；'.join(parts))
+        elif board == 'localize' and not _value_receipt_current(project, receipt):
+            out['state'] = 'value_evidence_stale'
+            why = '缺分数/奖励实际页面验收，或文字代码、字体、坐标、绑定已变；旧图片回执不能放行'
         elif status == 'pass':
             out.update(state='match_pass', level='ok',
                        message='美术回执对得上：art_check 通过（%s），%d 张图未改' % (receipt.get('created'), len(current)))
@@ -299,7 +315,7 @@ def _check_images(project, board=None, policy=None):
             if extra:
                 why += '，其中 ' + '、'.join(extra)
     out['level'] = 'block' if strict else 'warn'
-    scope = '重塑新游戏，不出包、不起试玩' if strict else ('旧游戏只警告' if policy == 'legacy' else '英化游戏只警告')
+    scope = ('英化游戏，不出包、不起试玩' if board == 'localize' else '重塑新游戏，不出包、不起试玩') if strict else '旧游戏只警告'
     out['message'] = '%s（%s）：%s；%s' % (RERUN, scope, why, fix)
     return out
 

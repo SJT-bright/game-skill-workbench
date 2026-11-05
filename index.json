@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "2440830e-363b-48ff-8f8e-1e4feefdc553",
+      "skillId": "s-bedd22bb6c578608dd49",
+      "directory": "grok-delegate",
+      "name": "grok-delegate",
+      "version": "v6",
+      "createdAt": "2026-11-05T14:03:21.823Z",
+      "summary": "文件变更：新增 1，修改 3，移除 0。",
+      "changes": {
+        "added": 1,
+        "modified": 3,
+        "deleted": 0
+      },
+      "treeHash": "6582a7758b36dcdc7243925ea842bf91ad6fcd83d9a16a4ace4b0eff4f3260d8",
+      "bytes": 59151,
+      "fileCount": 12
+    },
+    {
       "id": "65d9e2d5-e424-4ff6-a0ef-96ba95063220",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

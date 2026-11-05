@@ -1,0 +1,64 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-11-05.english-simple.11.15",
+  "skill": "grok-delegate",
+  "previous_provenance_sha256": "4f72a3ca650bdf9c19903e4d042b81ba8d89d802813c23481a3a5f01ffaed0c7",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "8b6732f9c6ab793b6d79e64778e5e73575e26b0a1df3b6a9812310b7994d8e47",
+      "bytes": 6528
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "4bfee9738f966b249d6a942250ff1f18d2432705fe31129cbf481f5c39e77dea",
+      "bytes": 218
+    },
+    {
+      "path": "references/concepts.md",
+      "sha256": "3d3c37e936c1ebeb3f0bf84f70f21a27b90921cfcaeb9d84a21866ca2830c30f",
+      "bytes": 1492
+    },
+    {
+      "path": "references/index.md",
+      "sha256": "87bac4e949009e45df0f1062b4dcb9ebf4f263950f9fc519708bfe3fe7f6c096",
+      "bytes": 1085
+    },
+    {
+      "path": "references/literal-protocol.md",
+      "sha256": "2fa0b4162c6ab1b6ccbdfe1dbe61ab269f2dc850057babdb059fa7d4c38352cc",
+      "bytes": 3184
+    },
+    {
+      "path": "references/log.md",
+      "sha256": "7d4bfb8b38cb538198d6e8709170d500b91c8edb9d28c7c2c444db2d0d60bc1c",
+      "bytes": 3352
+    },
+    {
+      "path": "references/quality-boundaries.md",
+      "sha256": "cdcb3a10d42f0d6288cc35567132936a12cd7ab9edcbecdd30e122553a5cf10c",
+      "bytes": 8392
+    },
+    {
+      "path": "references/sources.md",
+      "sha256": "22376e5ab8505e428c64c872361972ad9dc39a2af6c6ce8e0f61e6992867e955",
+      "bytes": 5946
+    },
+    {
+      "path": "references/task-matrix.md",
+      "sha256": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
+      "bytes": 4946
+    },
+    {
+      "path": "scripts/delegate.py",
+      "sha256": "7c4dfebbf48fc3a6d427187aed9a0bf514e413577d66193587a4aa0d813857ed",
+      "bytes": 17043
+    },
+    {
+      "path": "scripts/test_delegate_fallback.py",
+      "sha256": "fb9c27fd491e679340000974d18ac0077a523de6a9a41be764a191368ecdce73",
+      "bytes": 5713
+    }
+  ]
+}

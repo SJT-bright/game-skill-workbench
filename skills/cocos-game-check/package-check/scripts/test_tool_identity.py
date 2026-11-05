@@ -80,7 +80,12 @@ class Identity(unittest.TestCase):
         lone.mkdir()
         (lone / 'check_package.py').write_text('x\n')
         self.assertEqual(T.identity(lone, [])['status'], 'unknown')
-        self.assertEqual(T.identity(T.HERE)['status'], 'dev_tree')     # this work tree itself
+        # R4O5: this used to assert T.identity(T.HERE) == dev_tree, true only when the test itself runs inside
+        # …/_内部/maintenance/; in an unpacked release ZIP it is clean or modified. A work tree with the installs found on
+        # this machine (default roots) is still dev_tree, and the same files outside it are not:
+        self.assertEqual(T.identity(dev)['status'], 'dev_tree')
+        outside = write_skills(self.root / 'unpacked zip')
+        self.assertEqual(T.identity(outside, self.roots)['status'], 'clean')
 
     def test_draft_written_once_never_overwritten(self):
         copy = write_skills(self.root / 'Game' / 'qa' / 'skill copy')
@@ -117,7 +122,10 @@ class Wiring(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             archive = Path(tmp) / 'Game.zip'
             check_package.write_archive(archive, fixture())
-            with runtime_patch():
+            # R4O5: the real tools_in_use() runs; the folder these tools sit in counts as a work tree wherever the test
+            # runs (the maintenance tree, an unpacked release ZIP or an install), so `plain` does not depend on it.
+            here_mark = Path(check_package.__file__).resolve().parent.as_posix() + '/'
+            with runtime_patch(), patch.object(T, 'DEV_MARK', here_mark):
                 plain = check_package.check(archive, APP)
                 with patch('check_package.tools_in_use', return_value=modified):
                     changed = check_package.check(archive, APP)

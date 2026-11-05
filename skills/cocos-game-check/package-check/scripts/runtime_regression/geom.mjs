@@ -14,14 +14,18 @@
 //   frameCss()             the game canvas in page CSS px {left, top, w, h}
 //   hideNode(n)            make one node and its children invisible; returns restore()
 //   hasTouch(n), ownTouchEnd(n), coverOf(n), glContext(), readFrame(gl, W, H), meshRenderers()
+//   ENGINE_READY, ENGINE_REASON  R4O4: engine_adapter.mjs adapt(window); while the engine is not up ENGINE_READY is
+//                          false, ENGINE_REASON says 引擎还没起来：… and walkScene finds nothing (no cc.director throw)
 // Keep this text free of backquotes and dollar-brace: it is pasted into template strings.
-export const GEOM_JS = `
-  var cc = window.cc;
-  var V3 = !!cc.UITransform;
+import { INSTALL as ENGINE_INSTALL } from './engine_adapter.mjs';
+export const GEOM_JS = ENGINE_INSTALL + `
+  var ENGINE = window.__ccAdapt(window), ENGINE_READY = ENGINE.ready === true, ENGINE_REASON = ENGINE.reason || null;
+  var cc = ENGINE.cc || window.cc;
+  var V3 = ENGINE_READY ? ENGINE.api === '3.x' : !!(cc && cc.UITransform);
   function pathOf(n) { var p = []; while (n && n.parent) { p.unshift(n.name); n = n.parent; } return p.join('/'); }
   // 3.x: walk the scene's children, not the Scene itself (Scene.activeInHierarchy logs an engine error, lib.mjs)
   function walkScene(fn) {
-    var s = cc.director.getScene(); if (!s) return;
+    var s = ENGINE_READY ? ENGINE.scene : null; if (!s) return;
     if (!V3) { s.walk(fn); return; }
     (s.children || []).forEach(function (c) { c.walk(fn); });
   }

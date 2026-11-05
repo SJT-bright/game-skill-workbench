@@ -37,7 +37,7 @@ const isCloser = (n) => R.CLOSE.test(n.path) || R.CLOSE.test(n.sig || '');
 
 async function snap(page) {
   const v = await G.visibleNodes(page);
-  const sc = await page.evaluate(() => { const s = window.cc.director.getScene(); return { name: s.name, id: s.uuid || s._id }; });
+  const sc = await L.evReady(page, () => { const E = window.__ccAdapt(window); const s = E.ready ? E.scene : null; return s ? { name: s.name, id: s.uuid || s._id } : { notReady: E.reason }; });   // R4O4 engine_adapter: 引擎还没起来 -> asked again
   const m = {};
   for (const n of v.nodes) m[n.path] = n;
   return { scene: sc.name, sceneId: sc.id, m };

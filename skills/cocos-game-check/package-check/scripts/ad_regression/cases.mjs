@@ -91,13 +91,45 @@ try {
   save(); console.log('AD_REGRESSION_DONE'); throw e;
 }
 const ev = (fn, a) => (a === undefined ? page.evaluate(fn) : page.evaluate(fn, a));
+// R4O4 (R4N3 没做完的): the page probes read the engine through adapt(win), a byte copy of
+// remake-core/scripts/engine_adapter.js (test_r4o4_probe_adapter.py checks it). In the page it is window.__ccAdapt(window):
+// {ready:false, retry:true, reason:'引擎还没起来：…'} until a scene exists; 3.x points go through UITransform.
+  // ENGINE-ADAPTER-BEGIN
+  const adapt = (win) => {
+    const cc = (win && (win.cc || win.__tiktokKitCc)) || (typeof globalThis !== 'undefined' && globalThis.cc) || null;
+    const notReady = (why) => ({ ready: false, retry: true, reason: '引擎还没起来：' + why });
+    if (!cc) return notReady('页面里还没有 cc' + (win && win.System && win.System.import ? '（3.x 要先 System.import(\'cc\')）' : ''));
+    if (!cc.director || typeof cc.director.getScene !== 'function') return notReady('cc.director 还没有');
+    let scene = null;
+    try { scene = cc.director.getScene(); } catch (e) { return notReady('getScene() 出错 ' + e); }
+    if (!scene) return notReady('还没有场景');
+    const v3 = String(cc.ENGINE_VERSION || '').charAt(0) === '3';
+    const api = (cc.UITransform || v3) ? '3.x' : '2.x';
+    const transformOf = (node) => { try { return cc.UITransform && node.getComponent ? node.getComponent(cc.UITransform) : null; } catch (e) { return null; } };
+    const size = (node) => {
+      const ut = transformOf(node);
+      if (ut) return { w: ut.contentSize.width, h: ut.contentSize.height, ax: ut.anchorPoint.x, ay: ut.anchorPoint.y, ut };
+      if (api === '3.x') return null;
+      return { w: node.width, h: node.height, ax: node.anchorX, ay: node.anchorY };
+    };
+    const toWorld = (node, x, y) => {
+      const ut = transformOf(node);
+      if (ut && ut.convertToWorldSpaceAR) { const v = ut.convertToWorldSpaceAR(cc.Vec3 ? new cc.Vec3(x, y, 0) : { x, y, z: 0 }); return [v.x, v.y]; }
+      if (typeof node.convertToWorldSpaceAR === 'function') { const v = node.convertToWorldSpaceAR(cc.v2 ? cc.v2(x, y) : { x, y }); return [v.x, v.y]; }
+      return null;
+    };
+    return { ready: true, cc, api, scene, size, toWorld, engine: cc.ENGINE_VERSION || '' };
+  };
+  // ENGINE-ADAPTER-END
+const ADAPT_INSTALL = 'window.__ccAdapt=(' + adapt.toString() + ');';
+const evE = (fn, a) => ev('(function(){' + ADAPT_INSTALL + 'return (' + fn.toString() + ')(' + (a === undefined ? '' : JSON.stringify(a)) + ');})()');
 
-const install = () => ev((A) => {
+const install = () => evE((A) => {
   if (!window.__adq) {
     window.__adq = { grants: 0 };
     window.__adq.req = new Function('grant', A.request);
     window.__adq.st = A.state ? new Function(A.state) : null;
-    window.__adq.ready = A.ready ? new Function(A.ready) : function () { return !!(window.cc && cc.director && cc.director.getScene && cc.director.getScene()); };
+    window.__adq.ready = A.ready ? new Function(A.ready) : function () { return window.__ccAdapt(window).ready === true; };   // R4O4 engine_adapter
   }
   try { return !!window.__adq.ready(); } catch (e) { return false; }
 }, A);
@@ -136,11 +168,14 @@ const step = (code) => ev((code) => {
 // calling game code. Default: an active cc.Label whose text matches exit_label. A game that
 // draws its X without a label names it with adapter.exit: page JavaScript returning a cc.Node,
 // or {node, x, y} (a point in that node's anchor space), or null while no X is shown.
-const findExit = () => ev((A) => {
+const findExit = () => evE((A) => {
+  const E = window.__ccAdapt(window);
+  if (!E.ready) return [{ error: E.reason, notReady: true }];   // R4O4: 引擎还没起来 -> no X yet, the case polls again
+  const cc = E.cc;
   const canvas = cc.game && cc.game.canvas, rect = canvas.getBoundingClientRect();
   const v2api = !!(cc.Camera && cc.Camera.findCamera); // Cocos Creator 2.x; otherwise 3.x
-  const toWorld = (n, x, y) => v2api ? n.convertToWorldSpaceAR(cc.v2(x, y))
-    : (n.getComponent(cc.UITransform) || n.getComponent('cc.UITransform')).convertToWorldSpaceAR(new cc.Vec3(x, y, 0));
+  // R4O4: the world point through engine_adapter (3.x UITransform; a 3.x node without one -> error, not a throw)
+  const toWorld = (n, x, y) => { const t = E.toWorld(n, x, y); if (!t) throw new Error('no UITransform on ' + n.name); return v2api ? cc.v2(t[0], t[1]) : new cc.Vec3(t[0], t[1], 0); };
   const toCss = (n, w) => {
     let p;
     // cam-point:begin (v7.8, 总表 A13 补) world point -> camera screen point; identical in ad_regression/cases.mjs and runtime_regression/lib.mjs.
@@ -177,7 +212,7 @@ const findExit = () => ev((A) => {
       if (l && typeof l.string === 'string' && rx.test(l.string)) targets.push([n, 0, 0]);
       (n.children || []).forEach(walk);
     };
-    walk(cc.director.getScene());
+    walk(E.scene);
   }
   return targets.map(([n, x, y]) => { try { return toCss(n, toWorld(n, x, y)); } catch (e) { return { error: String(e.message || e) }; } });
 }, A);
@@ -255,7 +290,10 @@ try {
   }
   const errs = await ev(() => (window.__hostLog || []).filter(r => /^(error|rejection|boot-throw)$/.test(r.kind)).slice(0, 5));
   out.boot = { ready, ms: Date.now() - t0, errors: errs };
-  if (!ready) throw new Error('game did not become ready for ad requests within ' + (C.bootTimeoutMs || 60000) + ' ms');
+  // R4O4: say when the engine itself never came up (引擎还没起来：…), not only that the game was not ready
+  const why = ready ? null : await evE(() => { const E = window.__ccAdapt(window); return E.ready ? null : E.reason; }).catch(() => null);
+  if (why) out.boot.notReady = why;
+  if (!ready) throw new Error('game did not become ready for ad requests within ' + (C.bootTimeoutMs || 60000) + ' ms' + (why ? ' (' + why + ')' : ''));
   await sleep(C.settleMs || 2000);
 
   for (const k of (C.cases || Object.keys(PLAN))) {
@@ -301,7 +339,8 @@ try {
       if (TERMINAL.has(s) && aDuring && !aLate) aLate = await audioSnap();
       if (s === 'wait') { await sleep(1500); continue; }
       if (s === 'x') {
-        const xs = await findExit();
+        let xs = await findExit();
+        for (let i = 0; i < 2 && xs.length && xs.every(p => p && p.notReady); i++) { await sleep(1000); xs = await findExit(); }   // R4O4
         row.exitTargets = xs.slice(0, 3);
         row.exitShown = xs.some(p => p && typeof p.x === 'number');
         if (row.exitShown) { const p = xs.find(p => typeof p.x === 'number'); await tap(p.x, p.y); }

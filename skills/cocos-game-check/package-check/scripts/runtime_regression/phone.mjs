@@ -4,6 +4,7 @@
 // finger that was on the glass when that happened never sends touchend / touchcancel. Import with:
 //   const P = await import(new URL('phone.mjs', globalThis.CFG.lib).href);
 const G = await import(new URL('gates.mjs', globalThis.CFG.lib).href);
+const LIB = await import(globalThis.CFG.lib);   // R4O4: evE (engine_adapter) for snap()
 export const sleep = G.sleep;
 
 // Value of an adapter JS body (function body with `return`; gates HELPERS available: findNode, screenOf, comp, req ...).
@@ -154,7 +155,7 @@ export const CONTINUE = /continue|resume|继续|go ?on|keep ?playing|back ?to ?g
 // {scene, sceneId, m: {path: visible node}} like button_sweep (layout_rules.snapDiff compares two of them)
 export async function snap(page) {
   const v = await G.visibleNodes(page).catch(() => ({ nodes: [] }));
-  const sc = await page.evaluate(() => { const s = window.cc && cc.director.getScene(); return s ? { name: s.name, id: s.uuid || s._id } : {}; }).catch(() => ({}));
+  const sc = await LIB.evE(page, () => { const E = window.__ccAdapt(window); const s = E.ready ? E.scene : null; return s ? { name: s.name, id: s.uuid || s._id } : { notReady: E.reason }; }).catch(() => ({}));   // R4O4 engine_adapter
   const m = {};
   for (const n of v.nodes || []) m[n.path] = n;
   return { scene: sc.name, sceneId: sc.id, m };

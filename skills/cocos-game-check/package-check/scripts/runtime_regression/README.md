@@ -97,6 +97,10 @@ await L.suite(async ({ out, page }) => {
 `suite(body)`（开页、存结果、关页）。一次只开一个 Ego 页面；每次 `page.evaluate` 要短（Ego 单次上限 15 秒），等待放在 Node 侧。
 v7.5 新增（旧调用不变）：`touchTap(page, x, y)`（真实触摸）、`keepFrames(page)`（低画质截屏流，防止窗口被挡时降到
 1 帧/秒）、`fps(page, ms)`（页面 rAF 帧率）、`MIN_FPS`（30；计时类 case 低于它判本次无效）。
+R4O4：页面探针读场景、换算节点坐标必须用 `engine_adapter.mjs`（`remake-core/scripts/engine_adapter.js` 的 adapt() 逐字拷贝），别手写
+`cc.director.getScene()` / `node.convertToWorldSpaceAR`：`evE(page, fn, a)` 先装 `window.__ccAdapt`，fn 里 `const E = window.__ccAdapt(window)`，
+引擎没起来就返回 `{notReady: E.reason}`（「引擎还没起来：…」）；`evReady` 再问 3 次、隔 1 秒；`GEOM_JS` 带 `ENGINE_READY`/`ENGINE_REASON`。
+测试 `../test_r4o4_probe_adapter.py`。
 
 ## 宿主参数（URL query，2.x 宿主 host.js）
 

@@ -27,8 +27,11 @@ const FIX = 'set the node inactive (active = false); when a WxGameBox-like class
   'init(nodes) must set the nodes it is given inactive';
 
 // In the page (2.x): every node under the scene; hits + slot nodes that were not hits (and why), for evidence.
-const scan = (page) => L.ev(page, ([src, weakSrc]) => {
-  if (!(window.cc && cc.director && cc.director.getScene())) return { error: 'no scene' };
+// R4O4: the scene through engine_adapter (window.__ccAdapt); engine not up -> asked again, then {error: 引擎还没起来：…}.
+const scan = (page) => L.evReady(page, ([src, weakSrc]) => {
+  const E = window.__ccAdapt(window);
+  if (!E.ready) return { notReady: E.reason, error: E.reason };
+  const cc = E.cc;
   const SLOT = new RegExp(src, 'i'), WEAK = new RegExp(weakSrc, 'i');
   const vs = cc.view.getVisibleSize(), vo = cc.view.getVisibleOrigin();
   const hits = [], hidden = [];
@@ -60,8 +63,8 @@ const scan = (page) => L.ev(page, ([src, weakSrc]) => {
     }
     (n.children || []).forEach(c => walk(c, slotAncestor || (SLOT.test(n.name) || SLOT.test(frame) ? slot : null), seen && n.opacity !== 0));
   };
-  (cc.director.getScene().children || []).forEach(c => walk(c, null, true)); // not the Scene itself (engine error)
-  return { hits, hidden, nodes, scene: cc.director.getScene().name };
+  (E.scene.children || []).forEach(c => walk(c, null, true)); // not the Scene itself (engine error)
+  return { hits, hidden, nodes, scene: E.scene.name };
 }, [SLOT, WEAK]);
 
 const isHome = async (page) => (await L.adapterCall(page, A.home).catch(() => false)) === true;

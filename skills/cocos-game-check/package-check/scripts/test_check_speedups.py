@@ -323,10 +323,18 @@ def script(path, body):
     return path
 
 
+# Window for the tests that check a MOVING step is NOT stopped (R4O5). With 1.5 s, a busy machine that paused the
+# fake step for ~2 s (python start-up, a scheduling gap) was judged stuck: 11.15 release C5 failed once, 6 reruns passed
+# (run_suite polls every 1 s, so whether a 2 s gap trips a 1.5 s window depends on where the polls fall).
+# 8 s survives such a pause with room to spare. The tests that check a stuck step IS stopped keep their short window:
+# a busy machine only makes them wait a little longer, never pass wrongly.
+ALIVE_STALL_S = 8.0
+
+
 class StuckStep(Tmp):
     def test_output_keeps_a_step_alive(self):
         cmd = [sys.executable, '-c', 'import time\nfor i in range(6):\n    print(i, flush=True); time.sleep(0.3)']
-        done = watched_run.run(cmd, 30, [], stall=1.5, poll=0.1)
+        done = watched_run.run(cmd, 30, [], stall=ALIVE_STALL_S, poll=0.1)
         self.assertEqual(done.returncode, 0)
         self.assertIn('5', done.stdout)
 
@@ -335,7 +343,7 @@ class StuckStep(Tmp):
         folder.mkdir()
         cmd = [sys.executable, '-c', 'import time, pathlib\nfor i in range(8):\n'
                '    pathlib.Path(%r).write_text(str(i)); time.sleep(0.4)' % str(folder / 'progress.txt')]
-        self.assertEqual(watched_run.run(cmd, 30, [folder], stall=1.5, poll=0.1).returncode, 0)
+        self.assertEqual(watched_run.run(cmd, 30, [folder], stall=ALIVE_STALL_S, poll=0.1).returncode, 0)
 
     def test_silent_step_and_its_children_are_stopped(self):
         pid_file = self.root / 'child.pid'
@@ -381,21 +389,33 @@ class StuckStep(Tmp):
         self.assertIn('runtime suite startup stopped: no progress', str(caught.exception))
         self.assertLess(time.monotonic() - started, 20)
 
-    def test_runtime_suite_with_progress_is_not_stopped(self):
+    def progress_browser(self, pause_after=None, pause_s=0.0):
         # A fake browser that, like lib.mjs, touches progress.txt (CFG.progressFile) while it works, then saves a result.
-        browser = script(self.root / 'ego-browser', '''
+        # pause_after/pause_s: after that many writes it stops for pause_s seconds (a busy machine's scheduling gap).
+        return script(self.root / 'ego-browser', '''
             import json, pathlib, re, sys, time
             from urllib.parse import unquote
             entry = pathlib.Path(unquote(re.search(r'file://([^"]+)', sys.argv[3]).group(1)))
             cfg = json.loads(entry.read_text().split('globalThis.CFG = ', 1)[1].split(';\\n', 1)[0])
             for i in range(8):
                 pathlib.Path(cfg['progressFile']).write_text(str(i)); time.sleep(0.4)
+                if i == %r: time.sleep(%r)
             pathlib.Path(cfg['resultFile']).write_text(json.dumps({'suite': cfg['suite'], 'passed': True, 'fatal': None,
                 'cases': [{'id': 'ok', 'passed': True}], 'warnings': [], 'evidence': {}}))
-            ''')
-        with mock.patch.dict(os.environ, {watched_run.ENV_STALL: '1.5'}):
-            row = runtime_regression.run_suite('startup', self.suite_meta(), None, {}, None, '2.x', str(browser),
-                                               self.root / 'work')
+            ''' % (pause_after, pause_s))
+
+    def run_progress_suite(self, browser):
+        with mock.patch.dict(os.environ, {watched_run.ENV_STALL: str(ALIVE_STALL_S)}):
+            return runtime_regression.run_suite('startup', self.suite_meta(), None, {}, None, '2.x', str(browser),
+                                                self.root / 'work')
+
+    def test_runtime_suite_with_progress_is_not_stopped(self):
+        row = self.run_progress_suite(self.progress_browser())
+        self.assertEqual(row['suite'], 'startup')
+
+    def test_runtime_suite_survives_a_3s_scheduling_pause(self):
+        # R4O5: the old 1.5 s window judged this stuck (RuntimeRefused 'no progress'); a moving step must not be.
+        row = self.run_progress_suite(self.progress_browser(pause_after=2, pause_s=3.0))
         self.assertEqual(row['suite'], 'startup')
 
     def test_both_runners_use_the_watch_and_count_it_in_their_tool_digest(self):

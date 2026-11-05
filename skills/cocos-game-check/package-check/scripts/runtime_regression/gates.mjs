@@ -49,8 +49,8 @@ export async function waitHome(page, { homeScene = null, adapterHome = null, tim
   const t0 = Date.now();
   let last = null, stableSince = 0, st = null;
   while (Date.now() - t0 < timeout) {
-    st = await pe(page, () => {
-      const cc = window.cc, s = cc && cc.director && cc.director.getScene && cc.director.getScene();
+    st = await pe(page, L.ENGINE.inPage(() => {   // R4O4: engine_adapter; engine not up -> s = null, polled again
+      const E = window.__ccAdapt(window), cc = E.cc, s = E.ready ? E.scene : null;
       const log = window.__hostLog || [];
       let lastLoad = 0;
       const lastBy = {};
@@ -66,8 +66,9 @@ export async function waitHome(page, { homeScene = null, adapterHome = null, tim
       const touchy = (n) => { try { return (v3 || !!n._touchListener) && !notTap.some((K) => n.getComponent(K)) && (n.hasEventListener(TE) || n.hasEventListener(TS)); } catch (_) { return false; } };
       try { if (s) (v3 ? (s.children || []) : [s]).forEach((c) => c.walk((n) => { if (n.activeInHierarchy && (n.getComponent(cc.Button) || touchy(n))) buttons++; })); } catch (_) {}
       const hostNow = window.__hostState ? window.__hostState().t : 0;
-      return { scene: s ? s.name : null, frames: cc && cc.director ? cc.director.getTotalFrames() : 0, sinceLoad: hostNow - lastLoad, inflight, buttons };
-    }).catch((e) => ({ scene: null, frames: 0, err: String(e) }));
+      return { scene: s ? s.name : null, frames: cc && cc.director ? cc.director.getTotalFrames() : 0, sinceLoad: hostNow - lastLoad, inflight, buttons,
+        notReady: E.ready ? null : E.reason };
+    })).catch((e) => ({ scene: null, frames: 0, err: String(e) }));
     const key = st.scene;
     if (key && key === last) { if (!stableSince) stableSince = Date.now(); } else { stableSince = 0; last = key; }
     let okScene = homeScene ? st.scene === homeScene : !!st.scene && !st.inflight && st.buttons > 0;
@@ -76,7 +77,7 @@ export async function waitHome(page, { homeScene = null, adapterHome = null, tim
     if (okScene && st.frames > 60 && st.sinceLoad >= quietMs && stableSince && Date.now() - stableSince >= quietMs) {
       const f1 = st.frames;
       await sleep(500);
-      const f2 = await pe(page, () => window.cc.director.getTotalFrames()).catch(() => f1);
+      const f2 = await pe(page, L.ENGINE.inPage(() => { const E = window.__ccAdapt(window); return E.ready ? E.cc.director.getTotalFrames() : -1; })).catch(() => f1);
       if (f2 > f1) return { ok: true, ms: Date.now() - t0, scene: st.scene, frames: f2 };
     }
     await sleep(500);
@@ -428,7 +429,7 @@ export async function runActions(page, actions) {
       continue;
     }
     if (a.wait_scene) {
-      const ms = await poll(() => pe(page, (s) => { const sc = window.cc && cc.director.getScene(); return !!(sc && (sc.name === s)); }, a.wait_scene), a.timeout || 30000);
+      const ms = await poll(() => pe(page, L.ENGINE.inPage((s) => { const E = window.__ccAdapt(window), sc = E.ready ? E.scene : null; return !!(sc && (sc.name === s)); }, a.wait_scene)), a.timeout || 30000);   // R4O4
       log.push({ wait_scene: a.wait_scene, ms });
       if (ms < 0) return { ok: false, log, why: 'scene ' + a.wait_scene + ' not reached' };
       await sleep(a.after || 1000);

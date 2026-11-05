@@ -62,28 +62,44 @@ export function track(p) {
   return p.then((v) => { progress(); return v; }, (e) => { progress(); throw e; });
 }
 export const ev = (page, fn, a) => track(a === undefined ? page.evaluate(fn) : page.evaluate(fn, a));
+// R4O4: page probes read the engine through engine_adapter.mjs (a byte copy of remake-core/scripts/engine_adapter.js).
+// evE runs fn in the page after installing window.__ccAdapt; fn reads `const E = window.__ccAdapt(window)` and returns
+// {notReady: E.reason} while the engine is not up (引擎还没起来), never throws on a missing cc.director.
+export const ENGINE = await import(new URL('engine_adapter.mjs', import.meta.url).href);
+export const evE = (page, fn, a) => ev(page, ENGINE.inPage(fn, a));
+// evE again while the page answers {notReady} (tries x everyMs); the last answer is returned as is.
+export async function evReady(page, fn, a, tries = 3, everyMs = 1000) {
+  let v = null;
+  for (let i = 0; i < tries; i++) {
+    v = await evE(page, fn, a);
+    if (!(v && typeof v === 'object' && !Array.isArray(v) && v.notReady)) return v;
+    if (i < tries - 1) await sleep(everyMs);
+  }
+  return v;
+}
 
 // Run an adapter JavaScript string (function body) in the page; returns its value or {adapterError}.
-export const adapterCall = (page, code) => ev(page, (code) => {
-  try { return new Function(code)(); } catch (e) { return { adapterError: String(e && e.message || e).slice(0, 300) }; }
-}, code);
+// The body may use window.__ccAdapt(window) (installed first).
+export const adapterCall = (page, code) => ev(page, ENGINE.bodyInPage(code));
 
 export async function viewport(page, w = 390, h = 844, dpr = 2, touch = false) {
   await page.cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dpr, mobile: true });
   await page.cdp('Emulation.setTouchEmulationEnabled', touch ? { enabled: true, maxTouchPoints: 5 } : { enabled: false });
 }
 
-// Default readiness: an engine scene exists (2.x / 3.x); adapter.ready overrides.
-const READY = "return !!(window.cc && cc.director && cc.director.getScene && cc.director.getScene());";
+// Default readiness: an engine scene exists (2.x / 3.x, engine_adapter.mjs); adapter.ready overrides.
+export const READY = ENGINE.READY;
 export async function waitFor(page, code, timeoutMs, everyMs = 500) {
   const t0 = Date.now();
+  let notReady = null;
   while (Date.now() - t0 < timeoutMs) {
     let v = null;
     try { v = await adapterCall(page, code); } catch (_) { v = null; }
     if (v === true || (v && typeof v === 'object' && !v.adapterError && v.ok === true)) return { ok: true, ms: Date.now() - t0 };
+    if (v && typeof v === 'object' && v.notReady) notReady = v.notReady;
     await sleep(everyMs);
   }
-  return { ok: false, ms: Date.now() - t0 };
+  return notReady ? { ok: false, ms: Date.now() - t0, notReady } : { ok: false, ms: Date.now() - t0 };
 }
 
 // Load the host with extra query (fault parameters) and wait until `until` (default adapter.home,
@@ -92,7 +108,9 @@ export async function boot(page, query, opt = {}) {
   await track(page.goto(url(query)));
   const until = opt.until || A.home || A.ready || READY;
   const w = await waitFor(page, until, opt.timeoutMs || C.bootTimeoutMs || 60000);
-  return { ok: w.ok, ms: w.ms, errors: await errors(page) };
+  const r = { ok: w.ok, ms: w.ms, errors: await errors(page) };
+  if (w.notReady) r.notReady = w.notReady;   // R4O4: the engine never came up (引擎还没起来), not a missing button
+  return r;
 }
 
 export const hostLog = (page) => ev(page, () => (window.__hostLog || []).slice(-2000));
@@ -101,8 +119,11 @@ export const errors = (page) => ev(page, () => (window.__hostLog || [])
 export const hostState = (page) => ev(page, () => window.__hostState && window.__hostState());
 
 // Screen (CSS px) points of active nodes whose cc.Label text matches `pattern` (2.x and 3.x).
-export const findLabels = (page, pattern) => ev(page, (pattern) => {
-  if (!(window.cc && cc.director && cc.director.getScene())) return [];
+// R4O4: engine not up -> asked again (evReady: 3 x 1 s), then [] as before.
+export const findLabels = async (page, pattern) => { const r = await evReady(page, (pattern) => {
+  const E = window.__ccAdapt(window);
+  if (!E.ready) return { notReady: E.reason };
+  const cc = E.cc;
   const rx = new RegExp(pattern, 'i');
   const canvas = cc.game.canvas, rect = canvas.getBoundingClientRect();
   const v2api = !!(cc.Camera && cc.Camera.findCamera);
@@ -120,7 +141,9 @@ export const findLabels = (page, pattern) => ev(page, (pattern) => {
     if (l && typeof l.string === 'string' && rx.test(l.string)) {
       try {
         let p;
-        const w = v2api ? n.convertToWorldSpaceAR(cc.v2(0, 0)) : n.getComponent(cc.UITransform).convertToWorldSpaceAR(new cc.Vec3(0, 0, 0));
+        const tw = E.toWorld(n, 0, 0);   // R4O4: engine_adapter (3.x through UITransform)
+        if (!tw) throw new Error('no UITransform on ' + n.name);
+        const w = v2api ? cc.v2(tw[0], tw[1]) : new cc.Vec3(tw[0], tw[1], 0);
         // cam-point:begin (v7.8, 总表 A13 补) world point -> camera screen point; identical in ad_regression/cases.mjs and runtime_regression/lib.mjs.
         // 2.x: the node's own camera. 3.x: the cameraComponent of the Canvas the node sits under (walk up the parents);
         // only when there is none, the first camera of the scene. cams[0] alone is the 3D world camera in a 3D game
@@ -141,9 +164,9 @@ export const findLabels = (page, pattern) => ev(page, (pattern) => {
     }
     (n.children || []).forEach(walk);
   };
-  (cc.director.getScene().children || []).forEach(walk); // not the Scene itself: Scene.activeInHierarchy logs an engine error
+  (E.scene.children || []).forEach(walk); // not the Scene itself: Scene.activeInHierarchy logs an engine error
   return hits;
-}, pattern);
+}, pattern); return Array.isArray(r) ? r : []; };
 
 // Real pointer tap at CSS (x, y); the host turns mouse into a TikTok touch (mouse=1).
 export async function tap(page, x, y) {
@@ -164,7 +187,10 @@ export async function touchTap(page, x, y) {
 // Locate a control: adapter JS (returns {x,y} CSS point, or a cc.Node -> its centre) or a label regexp.
 export async function locate(page, code, labelPattern) {
   if (code) {
-    const p = await ev(page, (code) => {
+    const p = await evReady(page, (code) => {
+      const E = window.__ccAdapt(window);
+      if (!E.ready) return { notReady: E.reason };
+      const cc = E.cc;
       let r; try { r = new Function(code)(); } catch (e) { return { error: String(e.message || e) }; }
       if (!r) return null;
       const n = r.node || r, canvas = cc.game.canvas, rect = canvas.getBoundingClientRect();
@@ -182,7 +208,9 @@ export async function locate(page, code, labelPattern) {
       };
       try {
         let p;
-        const w = v2api ? n.convertToWorldSpaceAR(cc.v2(0, 0)) : n.getComponent(cc.UITransform).convertToWorldSpaceAR(new cc.Vec3(0, 0, 0));
+        const tw = E.toWorld(n, 0, 0);   // R4O4: engine_adapter (3.x through UITransform)
+        if (!tw) throw new Error('no UITransform on ' + n.name);
+        const w = v2api ? cc.v2(tw[0], tw[1]) : new cc.Vec3(tw[0], tw[1], 0);
         // cam-point:begin (v7.8, 总表 A13 补) world point -> camera screen point; identical in ad_regression/cases.mjs and runtime_regression/lib.mjs.
         // 2.x: the node's own camera. 3.x: the cameraComponent of the Canvas the node sits under (walk up the parents);
         // only when there is none, the first camera of the scene. cams[0] alone is the 3D world camera in a 3D game

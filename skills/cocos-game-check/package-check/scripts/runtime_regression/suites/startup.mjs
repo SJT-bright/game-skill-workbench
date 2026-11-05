@@ -94,7 +94,7 @@ async function runLife(page, out, [id, fault, query, maxRetries]) {
   let how = null, home = false, left = false, struck = null, retries = 0;
   if (fault) {
     // Strike while the game is really loading: a scene runs, a package image is in flight, no home yet.
-    const loading = () => L.ev(page, () => !!(window.cc && cc.director && cc.director.getScene && cc.director.getScene()) &&
+    const loading = () => L.evE(page, () => window.__ccAdapt(window).ready === true &&   // R4O4 engine_adapter
       !!(window.__hostPending && window.__hostPending().images > 0)).catch(() => false);
     while (Date.now() - t0 < 30000) {
       if (await loading()) break;

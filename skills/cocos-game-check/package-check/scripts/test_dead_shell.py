@@ -44,6 +44,9 @@ const scene = { name: 'Main', active: true, children: [build(T)] }; scene.childr
 globalThis.cc = { director: { getScene: () => scene }, Sprite: { __n: 'Sprite' }, Label: { __n: 'Label' },
   view: { getVisibleSize: () => ({ width: 720, height: 1560 }), getVisibleOrigin: () => ({ x: 0, y: 0 }) } };
 export const ev = async (page, fn, a) => fn(a);
+// R4O4: dead_shell's scan reads the scene through the engine adapter (lib.mjs evReady installs window.__ccAdapt)
+const ENGINE = await import(process.env.ENGINE_ADAPTER);
+export const evReady = async (page, fn, a) => { (0, eval)(ENGINE.INSTALL); return fn(a); };
 export const adapterCall = async (page, code) => { try { return new Function(code)(); } catch (e) { return { adapterError: String(e.message || e) }; } };
 export async function boot() { window.__state = 'home'; return { ok: true, ms: 5, errors: [] }; }
 export async function locate(page, code) { const r = new Function(code)(); return r ? Object.assign({ onCanvas: true }, r) : null; }
@@ -92,7 +95,7 @@ class DeadShell(unittest.TestCase):
                'evidenceDir': str(self.root), 'lib': (self.root / 'lib.mjs').as_uri(), 'logFile': None}
         entry = self.root / 'entry.mjs'
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (json.dumps(cfg), json.dumps(SUITE.as_uri())))
-        env = dict(os.environ, TREE=json.dumps(t))
+        env = dict(os.environ, TREE=json.dumps(t), ENGINE_ADAPTER=(HERE / 'runtime_regression' / 'engine_adapter.mjs').as_uri())
         if play_sticks:
             env['DEAD_PLAY'] = '1'
         r = subprocess.run(['node', str(entry)], capture_output=True, text=True, timeout=60, env=env)

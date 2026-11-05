@@ -57,7 +57,7 @@ const filesOf = (page, p) => G.evalJs(page, TEX + 'var n = findNode(' + JSON.str
 // outside the entries draws too (an atlas, the home background) is not stalled: stalling it stalls half the home page,
 // which is not what this check is about (射击高手 v86: PLAY's shared picture stalled the whole home).
 const fileMap = (page) => G.evalJs(page, TEX + 'var out = {}; (function walk(x){ if (!x.activeInHierarchy) return;' +
-  ' if (shownChain(x)) { var f = picOf(x); if (f) (out[f] = out[f] || []).push(pathOf(x)); } x.children.forEach(walk); })(cc.director.getScene()); return out;').catch(() => ({}));
+  ' if (shownChain(x)) { var f = picOf(x); if (f) (out[f] = out[f] || []).push(pathOf(x)); } x.children.forEach(walk); })(ENGINE.scene); return out;').catch(() => ({}));   // R4O4: GEOM_JS ENGINE (engine_adapter)
 
 // drawn: a sprite whose texture loaded, or a visible label with text, inside the entry
 const drawn = (page, p) => G.evalJs(page, 'var n = findNode(' + JSON.stringify(p) + '); if (!n || !n.activeInHierarchy) return { on: false };' +

@@ -4,6 +4,26 @@ import os
 import argparse, hashlib, json, shutil, subprocess, uuid
 from pathlib import Path
 
+# 总表 P19 ③ (问题普查 20261104 checker_input_rejected: 29 receipts said "Invalid report status"; the prompt never named
+# the allowed values and the model answered "ok"). The prompt and parse_report read the same list: the shared
+# cocos-game-check/package-check/references/check-status.json when this Skill sits next to it, else this copy
+# (test_check_inputs.py keeps the two equal).
+STATUS_FILE = Path(__file__).resolve().parents[2] / 'cocos-game-check' / 'package-check' / 'references' / 'check-status.json'
+FALLBACK_STATUSES = ('pass', 'issue', 'uncertain')
+
+
+def report_statuses():
+    try:
+        return tuple(json.loads(STATUS_FILE.read_text(encoding='utf-8'))['image_review']['values'])
+    except (OSError, ValueError, KeyError, TypeError):
+        return FALLBACK_STATUSES
+
+
+def status_rule():
+    """The sentence the prompt carries: the only allowed status words, in the receiver's own list."""
+    values = report_statuses()
+    return 'status 只能是 %s 之一（小写英文原样；不要写 ok、passed、success 等其他词）。' % '、'.join(values)
+
 
 def strict_json_loads(text):
     def unique_pairs(pairs):
@@ -31,8 +51,8 @@ def parse_report(value, annotation_audit=False):
     expected_fields = base_fields | (annotation_fields if annotation_audit else set())
     if not isinstance(result, dict) or set(result) != expected_fields:
         raise ValueError('Missing or unexpected report fields')
-    if result['status'] not in ('pass', 'issue', 'uncertain'):
-        raise ValueError('Invalid report status')
+    if result['status'] not in report_statuses():
+        raise ValueError('Invalid report status %r (allowed: %s)' % (result['status'], ', '.join(report_statuses())))
     if not isinstance(result['observations'], (str, list)) or not isinstance(result['issues'], list) or not isinstance(result['uncertainties'], list):
         raise ValueError('Invalid report field types')
     if annotation_audit:
@@ -109,13 +129,13 @@ def main():
                   'issues 只列实际残留的手写或光标及其位置/外观。若无法判断某个痕迹是否手写或光标，写入 uncertainties，并设 unresolved_mark_uncertainty=true。'
                   '仅当整张图确认没有手写/光标且没有性质不明的痕迹时，handwriting_residual=false、cursor_residual=false、unresolved_mark_uncertainty=false、issues=[]、uncertainties=[]、status=pass，并在 observations 明确写“未见手写笔记、批注或光标”。'
                   '发现任一手写/光标残留时，按对应布尔字段设 true、status=issue；仍无法判定时 status=uncertain。status 只表示此零残留检查，不评价整体美观。'
-                  '只返回合法 JSON，字段必须且只能为 status、observations、issues、uncertainties、handwriting_residual、cursor_residual、unresolved_mark_uncertainty。\n'+question)
+                  '只返回合法 JSON，字段必须且只能为 status、observations、issues、uncertainties、handwriting_residual、cursor_residual、unresolved_mark_uncertainty。' + status_rule() + '\n'+question)
     else:
         prompt = (prompt_prefix +
                   '仅逐字转录指定区域的清晰印刷文字、标签或简单独立单元格，保留原标点、单位与数字。'
                   '不摘要、翻译、补词或修正，不做图表分析、技术解释、空间推理、审美或合格判定。'
                   '遇到模糊、手写、公式、复杂结构或需要判断的内容返回 uncertain，交由主 Agent 处理。'
-                  'status 只反映转录疑点，不代表页面验收。只返回一个合法 JSON 对象，包含 status、observations、issues、uncertainties。\n'+question)
+                  'status 只反映转录疑点，不代表页面验收。只返回一个合法 JSON 对象，包含 status、observations、issues、uncertainties。' + status_rule() + '\n'+question)
     (out/'request.txt').write_text(prompt)
     record = {'image_path':str(image), 'image_sha256':image_sha256, 'session_id':session, 'cli':cli,
               'status':'started', 'model_override':False, 'purpose':'annotation_cleanup_audit' if a.annotation_cleanup_audit else 'literal_transcription'}

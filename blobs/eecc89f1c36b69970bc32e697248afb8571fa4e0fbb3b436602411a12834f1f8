@@ -1,0 +1,24 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-11-04.english-simple.11.14",
+  "skill": "grok-image-review",
+  "previous_provenance_sha256": "56e5aaa56a7d417839a5ced251edfc087f2613649aedd343a1819e3819d7d393",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "874300dc60ce2fc79aa1c84dd10b71fb54cd91cb384a8e9585c408cf065d89a8",
+      "bytes": 7055
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "f9337e4205b11cb131111f492befe989d9bd2ff357d8f01806e447b7b841c0d6",
+      "bytes": 353
+    },
+    {
+      "path": "scripts/review.py",
+      "sha256": "35cb96a32d3f8b8985628578244c6639be3c1ba227c1873490177b9595ed7d9e",
+      "bytes": 11682
+    }
+  ]
+}

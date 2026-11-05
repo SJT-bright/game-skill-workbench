@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "64205b5a-9f65-4455-a0c0-7ba108cf4c14",
+      "skillId": "s-8a4323773719ef381f6d",
+      "directory": "grok-image-review",
+      "name": "grok-image-review",
+      "version": "v6",
+      "createdAt": "2026-11-05T10:52:43.548Z",
+      "summary": "文件变更：新增 0，修改 2，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 2,
+        "deleted": 0
+      },
+      "treeHash": "e45db91c109fc1ddea9a88f50ac253540fe5208878f7dd3423cc13a094a62b50",
+      "bytes": 13431,
+      "fileCount": 4
+    },
+    {
       "id": "23d8e5c0-0675-4093-a280-e34ea5cd0d6b",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

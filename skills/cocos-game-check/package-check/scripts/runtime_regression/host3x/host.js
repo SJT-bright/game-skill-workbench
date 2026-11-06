@@ -320,6 +320,23 @@ function showModal(o) {
   const b = document.getElementById('ovb'); b.textContent = o.confirmText || 'OK'; ov.style.display = 'flex';
   b.onclick = () => { ov.style.display = 'none'; log('modal.confirm', o.title); if (F.has('modal_nocb')) { log('modal.no_callback', o.title); return; } cb(o, true, { confirm: true, cancel: false }); };
 }
+// 音乐消消乐复盘 (MusicSlice v32): tt.showLoading drew nothing, so a loading box left up after start was invisible to the
+// checks; on the phone mask:true covers the game and takes every touch. Same model as the 2.x host.
+X.loading = null;
+function drawLoading(title, mask) {
+  const old = document.getElementById('__hostLoading'); if (old) old.remove();
+  X.loading = title === null ? null : { title, mask: mask === true, t: now() };
+  if (title === null) return;
+  gateLog('loading', title + (mask ? ' (mask)' : ''));
+  const box = document.createElement('div'); box.id = '__hostLoading';
+  box.style.cssText = 'position:absolute;z-index:7;display:flex;align-items:center;justify-content:center;font:15px -apple-system,Helvetica,sans-serif;' +
+    (mask ? 'left:0;top:0;width:' + W + 'px;height:' + H + 'px;background:rgba(0,0,0,0)' : 'left:50%;top:45%;transform:translate(-50%,-50%);pointer-events:none');
+  box.innerHTML = '<div style="background:rgba(17,17,17,.78);color:#fff;border-radius:10px;min-width:120px;padding:14px 18px;text-align:center"></div>';
+  box.firstChild.textContent = title || 'Loading';
+  if (mask) ['touchstart', 'touchmove', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'].forEach((t) =>
+    box.addEventListener(t, (e) => { e.stopPropagation(); if (e.cancelable) e.preventDefault(); }, { passive: false }));
+  document.body.appendChild(box);
+}
 let adSeq = 0;
 function createRewardedVideoAd(opt) {
   const id = ++adSeq; const unit = opt && opt.adUnitId; log('ad.create', id + ' ' + unit);
@@ -396,7 +413,7 @@ const tt = {
   downloadFile(o) { log('net.download', o && o.url); cb(o, false, { errMsg: 'downloadFile:fail offline in simulator' }); return { onProgressUpdate() {}, abort() {} }; },
   connectSocket() { return { onOpen() {}, onClose() {}, onError() {}, onMessage() {}, send() {}, close() {} }; },
   getUpdateManager: () => ({ onCheckForUpdate() {}, onUpdateReady() {}, onUpdateFailed() {}, applyUpdate() {} }),
-  showModal, showToast(o) { log('toast', o && o.title); gateLog('toast', o && o.title); beacon('toast', o && o.title); o && cb(o, true, {}); }, hideToast() {}, showLoading(o) { log('showLoading', o && o.title); }, hideLoading() {},
+  showModal, showToast(o) { log('toast', o && o.title); gateLog('toast', o && o.title); beacon('toast', o && o.title); o && cb(o, true, {}); }, hideToast() {}, showLoading(o) { log('showLoading', o && o.title); drawLoading(String((o && o.title) || ''), !!(o && o.mask === true)); o && o.success && setTimeout(() => cb(o, true, {})); }, hideLoading(o) { drawLoading(null); o && setTimeout(() => cb(o, true, {})); },
   vibrateShort(o) { log('vibrate', 'short'); beacon('vibrate', 'short'); o && cb(o, true, {}); }, vibrateLong(o) { beacon('vibrate', 'long'); o && cb(o, true, {}); },
   createRewardedVideoAd,
   addShortcut(o) { log('growth.addShortcut'); beacon('mission', 'addShortcut'); cb(o, true, {}); }, getShortcutMissionReward(o) { beacon('mission', 'getShortcutMissionReward'); cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
@@ -442,7 +459,8 @@ X.sprites = () => { const s = ccNS && ccNS.director.getScene(); if (!s) return n
   const walk = m => { if (!m.activeInHierarchy) return; const sp = m.getComponent(ccNS.Sprite); if (sp) { n++; const t = sp.spriteFrame && sp.spriteFrame.texture; if (t && t.width > 2) ok++; } m.children.forEach(walk); };
   walk(s); return { total: n, textured: ok }; };
 X.summary = () => ({ t: now(), scene: X.scene(), webp: X.webp(), marks: X.marks, firstErr: X.firstErr, modals: X.modals.length,
-  ads: X.ads.map(a => a.mode), missing: Object.keys(X.missing), fps: X.fps(), sub: Object.assign({}, attempts) });
+  ads: X.ads.map(a => a.mode), missing: Object.keys(X.missing), fps: X.fps(), sub: Object.assign({}, attempts),
+  loading: X.loading ? X.loading.title : null, loadingMask: !!(X.loading && X.loading.mask) });
 window.__hostState = X.summary;
 
 // rAF health: record gaps > 100 ms so a throttled browser tab is visible in the results

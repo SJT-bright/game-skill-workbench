@@ -40,6 +40,8 @@ python <skills>/remake-core/scripts/make_tiktok_zip.py \
 
 ## 交付
 
+每次发包前先做[本次最终 ZIP 的分包体积复查](../package-check/references/fresh-upload-size.md)。现成包、旧包、同版重发与仅改名也重跑；不因“无改动”复用旧体积结论。失败不交包。
+
 writer成功后按[最终交付核对](../package-check/README.md)对实际ZIP生成新回执，不重新手跑相同文件检查。最终回复主动给当前稳定ZIP可点击链接和同版本已启动的可点击试玩入口，默认不堆报告。原始材料、旧包、用户存档保持；本地结果不冒称设备/真实广告/平台通过。
 
 同期广告模拟、制作统计、Credits和评价等规则按[当前合同](../../remake-core/references/current-contracts.md)选择相关正文，不复制事故全文。

@@ -25,6 +25,7 @@ const FLY_S = +P.fly_s || 18, AFTER_S = 4;
 const KINDS = ['appeared_on_screen', 'vanished_on_screen', 'jumped_on_screen'];
 
 const { WATCH_JS } = await import(new URL('popin_watch.mjs', globalThis.CFG.lib).href);
+const EA = await import(new URL('engine_adapter.mjs', globalThis.CFG.lib).href);   // R4P3
 
 const SNAP = '(function(){var W=window.__popin;if(!W)return null;return {visible:W.V,camera:W.camera,frames:W.frames,watched:W.watched,counts:W.counts,covered:W.covered,hitches:W.hitches,seconds:(performance.now()-W.t0)/1000,examples:W.ev.slice(0,6),events:W.ev.length}})()';
 
@@ -61,9 +62,10 @@ async function oneScreen(page, w, h, rep) {
   const inv = await L.adapterCall(page, P.invincible_js).catch((e) => ({ adapterError: String(e) }));
   if (!inv || (inv && inv.adapterError)) return fail('invincible', 'popin.invincible_js did not return true: ' + JSON.stringify(inv).slice(0, 200));
   row.watch = await page.evaluate(WATCH_JS + '(' + JSON.stringify({ player: P.player, ignore: P.ignore || null, ignore_groups: P.ignore_groups || [] }) + ')');
+  if (row.watch && (row.watch.notReady || row.watch.notCovered)) return fail('watch', 'the frame watcher did not start: ' + (row.watch.notReady || row.watch.notCovered));
   if (!row.watch || !row.watch.player) rep.warnings.push(key + ': player node ' + P.player + ' not found when the watch started (its children are not left out)');
   if (P.first_touch !== false) {
-    const c = await page.evaluate(() => { const r = window.cc.game.canvas.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+    const c = await page.evaluate(EA.inPage(function () { const E = window.__ccAdapt(window); const cv = (E.ready && E.cc.game && E.cc.game.canvas) || document.querySelector('canvas'); const r = cv.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }));
     await page.cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x: c.x, y: c.y, button: 'left', buttons: 0 });
     await page.cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x: c.x, y: c.y, button: 'left', buttons: 1, clickCount: 1 });
     for (let i = 1; i <= 6; i++) { await page.cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x: c.x, y: c.y - i * 4, button: 'left', buttons: 1 }); await G.sleep(30); }
@@ -77,7 +79,7 @@ async function oneScreen(page, w, h, rep) {
   row.revive = rv;
   await G.sleep(AFTER_S * 1000);
   const s = await page.evaluate(SNAP);
-  await page.evaluate(() => { const W = window.__popin; if (W && W.fn) window.cc.director.off(window.cc.Director.EVENT_AFTER_DRAW, W.fn); }).catch(() => {});
+  await page.evaluate(() => { const W = window.__popin, cc = window.cc || window.__tiktokKitCc; if (W && W.fn && cc) cc.director.off(cc.Director.EVENT_AFTER_DRAW, W.fn); }).catch(() => {});
   Object.assign(row, s || {});
   row.fps = s && s.seconds ? Math.round(s.frames / s.seconds) : null;
   row.png = await G.shot(page, path.join(C.evidenceDir, 'popin-' + key + '.png')).catch(() => null);

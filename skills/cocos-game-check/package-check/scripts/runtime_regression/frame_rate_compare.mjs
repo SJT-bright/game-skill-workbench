@@ -18,15 +18,21 @@ next=performance.now()+iv;setTimeout(tick,iv)})();`;
 
 // Runs once in the page at t0: the operation (drive_js), timed steps (steps[].at_s, real time), and a 10 ms real-time
 // sampler of the tracked node's world position. Read window.__fps after run_s.
+// R4P3: cc (frame counter, v3) and the 2.x world point come from engine_adapter.mjs adapt() (window.__ccAdapt), so a
+// 3.x page with cc only in a module does not throw on the global cc; engine not up = W.err '引擎还没起来：…'.
+import { INSTALL } from './engine_adapter.mjs';
 export const SAMPLER_JS = `(function(cfg){
-var W=window.__fps={t0:performance.now(),s:[],err:null,done:false,
-  f0:(window.cc&&cc.director&&cc.director.getTotalFrames)?cc.director.getTotalFrames():null,k0:window.__fr?window.__fr.ticks:null};
+${INSTALL}
+var CC=function(){return window.cc||window.__tiktokKitCc||null},E0=window.__ccAdapt(window),C0=CC();
+var W=window.__fps={t0:performance.now(),s:[],err:E0.ready?null:E0.reason,done:false,
+  f0:(C0&&C0.director&&C0.director.getTotalFrames)?C0.director.getTotalFrames():null,k0:window.__fr?window.__fr.ticks:null};
 var track=new Function(cfg.track);
 function pos(){var r=track();if(!r)return null;
   if(typeof r.x==='number'&&typeof r.y==='number'&&!r.getComponent&&!r.convertToWorldSpaceAR)return [r.x,r.y,+r.z||0];
-  var n=r.node||r,w;
-  if(n.is3DNode&&n.getWorldPosition){w=n.getWorldPosition(cc.v3());return [w.x,w.y,w.z]}
-  if(n.convertToWorldSpaceAR){w=n.convertToWorldSpaceAR(cc.v2(0,0));return [w.x,w.y,+w.z||0]}
+  var n=r.node||r,w,cc=CC(),E;
+  if(n.is3DNode&&n.getWorldPosition&&cc){w=n.getWorldPosition(cc.v3());return [w.x,w.y,w.z]}
+  if(n.convertToWorldSpaceAR){E=window.__ccAdapt(window);w=E.ready?E.toWorld(n,0,0):null;if(w)return [w[0],w[1],0];
+    w=n.convertToWorldSpaceAR(cc&&cc.v2?cc.v2(0,0):{x:0,y:0});return [w.x,w.y,+w.z||0]}
   if(n.worldPosition){w=n.worldPosition;return [w.x,w.y,w.z]}
   return null}
 function sample(){try{var p=pos();W.s.push([Math.round((performance.now()-W.t0)*10)/10].concat(p||[null,null,null]))}
@@ -36,7 +42,7 @@ catch(e){W.err='drive_js threw: '+String(e&&e.message||e).slice(0,200)}
 (cfg.steps||[]).forEach(function(s){setTimeout(function(){try{(new Function(s.js))()}catch(e){if(!W.err)W.err='step at '+s.at_s+' s threw: '+String(e&&e.message||e).slice(0,200)}},s.at_s*1000)});
 sample();W.iv=setInterval(sample,10);
 setTimeout(function(){clearInterval(W.iv);sample();W.done=true;W.t1=performance.now()-W.t0;
-  W.f1=(window.cc&&cc.director&&cc.director.getTotalFrames)?cc.director.getTotalFrames():null;W.k1=window.__fr?window.__fr.ticks:null},cfg.run_s*1000);
+  var C1=CC();W.f1=(C1&&C1.director&&C1.director.getTotalFrames)?C1.director.getTotalFrames():null;W.k1=window.__fr?window.__fr.ticks:null},cfg.run_s*1000);
 return true})`;
 
 export const TOLERANCE = 0.05;      // P16: position differs by more than 5 % at the same real time -> not passed

@@ -89,6 +89,19 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
         raise ValueError('delivery record must be outside Native and distinct from ZIP')
     if record.exists() or record.is_symlink():
         raise ValueError('delivery record already exists; choose a new record path')
+    # Every delivery (even identical bytes / renamed or imported ZIPs) gets a fresh,
+    # independent size receipt BEFORE startup/gameplay checks can fail or reuse CI.
+    from upload_size_gate import inspect_zip
+    size_record = Path(str(record) + '.size.json')
+    if size_record.exists() or size_record.is_symlink():
+        raise ValueError('size receipt already exists; choose a fresh delivery record path')
+    size_check = inspect_zip(archive, 'tiktok')
+    size_record.parent.mkdir(parents=True, exist_ok=True)
+    with size_record.open('x', encoding='utf-8') as stream:
+        json.dump(size_check, stream, ensure_ascii=False, indent=2)
+        stream.write('\n')
+    if not size_check['passed']:
+        raise ValueError('fresh delivery size check failed: ' + '; '.join(size_check['errors']))
     # 简化.11.6 (Saul 2026-11-04, 91 SLS11): a delivered source never carries .git / .svn / .idea or credential files
     hygiene = None
     if source is not None:
@@ -98,6 +111,8 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
             raise ValueError('delivered source is not clean (source_hygiene.py): ' + '; '.join(hygiene['problems'][:8]) +
                              ' - make the source ZIP with remake-core/scripts/make_source_zip.py; no delivery record written')
     before = hashlib.sha256(archive.read_bytes()).hexdigest()
+    if before != size_check['sha256']:
+        raise ValueError('ZIP changed after the fresh size check; retry with a new delivery record')
     # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
     # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
     result = check(archive, app_id, native, ad_regression, reuse_writer_regressions=True)
@@ -133,6 +148,9 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'markdown_link': '[' + archive.name + '](<' + str(archive) + '>)',
                'runtime_execution': result['runtime_execution'],
                'regression_reuse': result.get('regression_reuse'),     # v7.9: reused from the writer receipt, or why not
+               'fresh_size_check': {'report': str(size_record), 'run_id': size_check['run_id'],
+                                    'sha256': size_check['sha256'], 'main_bytes': size_check['main_bytes'],
+                                    'total_bytes': size_check['total_bytes'], 'reused': False},
                'final_startup_runtime': startup_runtime,
                'package_obligations': obligations,
                'source_hygiene': ({'source': hygiene['source'], 'passed': True} if hygiene else None),

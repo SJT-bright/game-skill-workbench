@@ -373,7 +373,9 @@ def load_adapter(path, suites=None):
         raise RuntimeRefused('runtime regression adapter unreadable: %s' % error)
     if not isinstance(adapter, dict):
         raise RuntimeRefused('runtime regression adapter must be a JSON object')
-    unknown = set(adapter) - adapter_keys(load_suites() if suites is None else suites)
+    # 11.17 R4Q7: keys starting with "_" are comments (e.g. "_scope", SLS16-3) and are never unknown.
+    unknown = {k for k in set(adapter) - adapter_keys(load_suites() if suites is None else suites)
+               if not str(k).startswith('_')}
     if unknown:
         raise RuntimeRefused('runtime regression adapter has unknown keys: ' + ', '.join(sorted(unknown)))
     for key in ('home', 'retry', 'retry_label', 'enter_level', 'host_query', 'ready', 'state'):

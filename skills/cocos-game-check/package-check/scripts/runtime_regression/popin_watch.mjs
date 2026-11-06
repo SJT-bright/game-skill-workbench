@@ -2,8 +2,15 @@
 // it in Node on a fake engine. Use: page.evaluate(WATCH_JS + '(' + JSON.stringify(opts) + ')'), opts {player, ignore,
 // ignore_groups}; results in window.__popin {V, ev, counts, frames, watched, covered, hitches, phase}.
 // Keep this text free of backquotes and dollar-brace (pasted into a template string).
+// R4P3: cc and the scene come from engine_adapter.mjs adapt() (window.__ccAdapt): a 3.x page with cc only in a module
+// returns {notReady} / {notCovered} instead of throwing on window.cc; the EVENT_AFTER_DRAW hook stays as it was.
+import { INSTALL } from './engine_adapter.mjs';
 export const WATCH_JS = `(function (P) {
-  var cc = window.cc;
+  ${INSTALL}
+  var E0 = window.__ccAdapt(window);
+  if (!E0.ready) return { notReady: E0.reason, player: false };
+  if (E0.api === '3.x') return { notCovered: 'Cocos 3.x: popin watch covers 2.x only', player: false };
+  var cc = E0.cc;
   var PL = String(P.player || ''), IG = P.ignore ? new RegExp(P.ignore) : null, GR = P.ignore_groups || [];
   var plTail = '/' + PL.replace(/^[*][/]/, ''), plName = PL.split('/').pop();
   function pathOf(n) { var p = []; while (n && n.parent) { p.unshift(n.name); n = n.parent; } return p.join('/'); }
@@ -34,7 +41,9 @@ export const WATCH_JS = `(function (P) {
     if (dt > 50) W.hitches++;
     var thr = 40 * Math.max(1, dt / 16.7), all = [], cur = new Map(), playerRoot = null;
     var walk = function (n) { all.push(n); if (!playerRoot && isPlayer(n)) playerRoot = n; n.children.forEach(walk); };
-    walk(cc.director.getScene());
+    var Ef = window.__ccAdapt(window);
+    if (!Ef.ready) { W.notReadyFrames = (W.notReadyFrames || 0) + 1; return; }   // scene switch: no scene this frame
+    walk(Ef.scene);
     var idx = new Map(); all.forEach(function (n, i) { idx.set(n, i); });
     var under = function (n, p) { for (; n; n = n.parent) if (n === p) return true; return false; };
     var coverIdx;   // lazily: drawing index of the first full-screen opaque cover (-1 = none)
@@ -81,6 +90,6 @@ export const WATCH_JS = `(function (P) {
     prev = cur;
   };
   cc.director.on(cc.Director.EVENT_AFTER_DRAW, W.fn);
-  var found = false; cc.director.getScene().walk(function (n) { if (!found && isPlayer(n)) found = true; });
+  var found = false; E0.scene.walk(function (n) { if (!found && isPlayer(n)) found = true; });
   return { V: V, camera: CAM, player: found };
 })`;

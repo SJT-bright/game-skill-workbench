@@ -121,7 +121,8 @@ def load_adapter(path):
     if not isinstance(adapter, dict) or not isinstance(adapter.get('request'), str) or not adapter['request'].strip():
         raise RegressionRefused('ad regression adapter needs a nonempty "request" (page JavaScript that starts one '
                                 'rewarded request and calls grant() when the game pays)')
-    unknown = set(adapter) - allowed_adapter_keys()
+    # 11.17 R4Q7: keys starting with "_" are comments (e.g. "_scope", SLS16-3) and are never unknown.
+    unknown = {k for k in set(adapter) - allowed_adapter_keys() if not str(k).startswith('_')}
     if unknown:
         raise RegressionRefused('ad regression adapter has unknown keys: ' + ', '.join(sorted(unknown)))
     for key in ('state', 'ready', 'exit', 'exit_label'):

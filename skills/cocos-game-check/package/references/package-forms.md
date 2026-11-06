@@ -2,6 +2,8 @@
 
 所有叫法（打包、出包、上传测试包、检测包、压缩包、TikTok 平台包、正式包）都只交**一种**包。下面是它的样子、以前真实出过的错包，以及被 `make_tiktok_zip.py` / `verify_native_zip.py` 拒绝时怎么改。
 
+每次实际交文件或链接前都执行[分包体积新检查](../../package-check/references/fresh-upload-size.md)，对最终 ZIP 生成新回执；旧报告、外来包和仅重发不豁免。平台已拒绝的同字节包不因本地分包算术通过而放行。
+
 ## 正确的包长这样（SquareRush UPLOADFIX）
 
 ```

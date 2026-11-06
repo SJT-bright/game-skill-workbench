@@ -85,14 +85,25 @@ const LIFE = [
   ['clock_jump_12s_loading', 'jump', '', 0],
   ['background_60s_loading', 'background', '', 0],
   ['image_hang_once', null, 'imghang=native&imghang_n=1', 1],
+  // 音乐消消乐复盘 (MusicSlice v32, Android "stuck at 99%" 11-03): the game is up, the player leaves and comes back.
+  // v32's own main.js answered every onShow with showLoading('Loading 99%', mask: true) after the start had finished
+  // and its watchdog was gone, so the box stayed over the game. All cases above strike only WHILE loading.
+  ['background_after_home', 'after_home', '', 0],
 ];
+
+// A loading box left up (tt.showLoading without hideLoading). mask:true covers the game and takes every touch on the
+// phone; the hosts now draw it too (window.__hostState().loading / .loadingMask).
+async function loadingLeft(page) {
+  const st = await L.hostState(page).catch(() => null);
+  return st && st.loading !== null && st.loading !== undefined ? { title: st.loading, mask: !!st.loadingMask } : null;
+}
 async function runLife(page, out, [id, fault, query, maxRetries]) {
   if (!A.play) { out.add(id, false, { problems: ['adapter.play is missing: a locator for the home PLAY button (return CSS {x, y} on Cocos 2.4)'] }); return; }
   lastTapHost = -1;
   await page.goto(L.url(['reset=1', query].filter(Boolean).join('&')));
   const t0 = Date.now(), problems = [];
-  let how = null, home = false, left = false, struck = null, retries = 0;
-  if (fault) {
+  let how = null, home = false, left = false, struck = null, retries = 0, loading = null;
+  if (fault && fault !== 'after_home') {
     // Strike while the game is really loading: a scene runs, a package image is in flight, no home yet.
     const loading = () => L.evE(page, () => window.__ccAdapt(window).ready === true &&   // R4O4 engine_adapter
       !!(window.__hostPending && window.__hostPending().images > 0)).catch(() => false);
@@ -126,6 +137,16 @@ async function runLife(page, out, [id, fault, query, maxRetries]) {
   if (!home && !problems.length) problems.push('home not reached within 90 s');
   if (home) {
     await sleep(1500);
+    if (fault === 'after_home') {
+      struck = 'after-home';
+      await L.ev(page, () => { window.__simHide(); window.__warp(3000); }); await sleep(300);
+      await L.ev(page, () => window.__simShow()); await sleep(1500);
+      how = 'home shown, onHide + 3 s + onShow';
+    }
+    loading = await loadingLeft(page);
+    if (loading) problems.push(`a loading box "${loading.title}"${loading.mask ? ' (mask: true, it takes every touch)' : ''} is still up on the home page` +
+      (fault === 'after_home' ? ' after the game came back from the background' : '') +
+      ': tt.showLoading without hideLoading; on the phone this looks like loading stuck at that number');
     const p = await L.locate(page, A.play);
     if (!p) problems.push('adapter.play found no PLAY button on the home page');
     else if (p.onCanvas === false) problems.push(`adapter.play points outside the game canvas (${Math.round(p.x)}, ${Math.round(p.y)}): a locate error in the adapter or the tool, not a home lock`);
@@ -140,7 +161,7 @@ async function runLife(page, out, [id, fault, query, maxRetries]) {
   }
   let shot = null;
   try { shot = path.join(C.evidenceDir, `startup-${id}.png`); await page.screenshot({ path: shot }); } catch (_) { shot = null; }
-  out.add(id, problems.length === 0, { fault, how, struck, home, left, retries, problems, ms: Date.now() - t0,
+  out.add(id, problems.length === 0, { fault, how, struck, home, left, retries, loading, problems, ms: Date.now() - t0,
     domHidden: await L.ev(page, () => window.__domHidden || []).catch(() => []),
     errors: (await L.errors(page).catch(() => [])).slice(0, 4), screenshot: shot });
 }
@@ -187,6 +208,11 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
   const errs = await L.errors(page).catch(() => []);
   const warns = await L.ev(page, () => (window.__hostLog || []).filter(r => /^console\.(warn|error)$/.test(r.kind) && /saved value is unavailable|unavailable|JSON|parse/i.test(String(r.data))).slice(0, 6).map(r => String(r.data).slice(0, 200))).catch(() => []);
   if (!home && !problems.length) problems.push(`home not reached within ${Math.round(limitMs / 1000)} s` + (retries ? ` (after ${retries} Retry tap)` : ''));
+  if (home) {
+    await sleep(1500);
+    const left = await loadingLeft(page);
+    if (left) problems.push(`home reached but a loading box "${left.title}"${left.mask ? ' (mask: true)' : ''} is still up: tt.showLoading without hideLoading`);
+  }
   if (id === 'storage_missing_true') {
     const bad = warns.filter(w => /saved value is unavailable/i.test(w));
     if (bad.length) problems.push('missing key read as unavailable: ' + bad[0]);

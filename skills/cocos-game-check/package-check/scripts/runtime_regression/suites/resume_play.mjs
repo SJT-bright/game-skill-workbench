@@ -163,6 +163,11 @@ await L.suite(async ({ out, page }) => {
   async function back(c, cs) {
     await P.sleep(1500);
     c.back_png = await G.shot(page, path.join(C.evidenceDir, 'resume-' + safe(cs.id) + '-back.png'));
+    // 音乐消消乐复盘 (MusicSlice v32): its onShow put up showLoading('Loading 99%', mask: true) and never hid it
+    const st = await page.evaluate(() => window.__hostState ? window.__hostState() : null).catch(() => null);
+    if (st && st.loading !== null && st.loading !== undefined)
+      return 'after ' + cs.id + ': a loading box "' + st.loading + '"' + (st.loadingMask ? ' (mask: true, it takes every touch)' : '') +
+        ' is up after the game came back (tt.showLoading without hideLoading; on the phone the game looks stuck loading)';
     const k = await P.tapContinue(page, disc.cont, 2);
     c.continue_taps = k.taps;
     if (k.still) return 'after ' + cs.id + ': the pause popup did not close with 2 real taps on ' + disc.cont;

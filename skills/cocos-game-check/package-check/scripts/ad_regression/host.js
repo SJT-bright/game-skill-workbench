@@ -46,7 +46,7 @@
       return nAddListener.apply(this, arguments);
     };
     var domHidden = window.__domHidden = [];
-    var hostNode = function (el) { return el.tagName === 'CANVAS' || /^(SCRIPT|STYLE|LINK|META)$/.test(el.tagName) || (el.closest && el.closest('#__hostModal,#__adOverlay')); };
+    var hostNode = function (el) { return el.tagName === 'CANVAS' || /^(SCRIPT|STYLE|LINK|META)$/.test(el.tagName) || (el.closest && el.closest('#__hostModal,#__adOverlay,#__hostLoading')); };
     new MutationObserver(function (records) {
       records.forEach(function (r) {
         Array.prototype.forEach.call(r.addedNodes, function (el) {
@@ -508,6 +508,28 @@
   }
   // NBODY.querySelector: once the game runs, NDOC.getElementById no longer finds the buttons hung on NBODY (W-D3)
   window.__modalRect = function (which) { var b = NBODY.querySelector(which === 'cancel' ? '#__modalCancel' : '#__modalOk'); if (!b) return null; var r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }; };
+  // 音乐消消乐复盘 (MusicSlice v32, Android 11-03 "stuck at 99%"): tt.showLoading drew nothing here, so a loading box the
+  // game never hid was invisible to every check while on the phone it covered the game. On the phone mask:true also
+  // swallows every touch. Now the host draws it like the phone: mask:true is a full-screen layer that takes the
+  // touches, mask:false a small box touches go through. __hostState().loading / .loadingMask say what is up.
+  var loadingMask = false;
+  function drawLoading(title, mask) {
+    var old = NBODY.querySelector('#__hostLoading');
+    if (old) old.remove();
+    loadingMask = title !== null && mask === true;
+    if (title === null) return;
+    gateLog('loading', title + (mask ? ' (mask)' : ''));
+    var box = nCreate('div');
+    box.id = '__hostLoading';
+    box.style.cssText = 'position:fixed;z-index:99997;display:flex;align-items:center;justify-content:center;font:15px -apple-system,Helvetica,sans-serif;' +
+      (mask ? 'inset:0;background:rgba(0,0,0,0)' : 'left:50%;top:45%;transform:translate(-50%,-50%);pointer-events:none');
+    box.innerHTML = '<div style="background:rgba(17,17,17,.78);color:#fff;border-radius:10px;min-width:120px;padding:14px 18px;text-align:center"></div>';
+    box.firstChild.textContent = title || 'Loading';
+    if (mask) ['touchstart', 'touchmove', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'].forEach(function (t) {
+      box.addEventListener(t, function (e) { e.stopPropagation(); if (e.cancelable) e.preventDefault(); }, { passive: false });
+    });
+    NBODY.appendChild(box);
+  }
 
   // ---------- tt ----------
   var IMG_PENDING = 0;
@@ -661,8 +683,8 @@
     showModal: showModal,
     showToast: function (o) { o = o || {}; gateLog('toast', o.title); toasts.push({ title: o.title, t: now() }); beacon('toast', o.title); if (o.success) setTimeout(function () { cb(o, true, {}); }); },
     hideToast: function (o) { o && setTimeout(function () { cb(o, true, {}); }); },
-    showLoading: function (o) { o = o || {}; loadingTitle = String(o.title || ''); loadingShown = true; o.success && setTimeout(function () { cb(o, true, {}); }); },
-    hideLoading: function (o) { loadingShown = false; o && setTimeout(function () { cb(o, true, {}); }); }
+    showLoading: function (o) { o = o || {}; loadingTitle = String(o.title || ''); loadingShown = true; drawLoading(loadingTitle, o.mask === true); o.success && setTimeout(function () { cb(o, true, {}); }); },
+    hideLoading: function (o) { loadingShown = false; drawLoading(null); o && setTimeout(function () { cb(o, true, {}); }); }
   };
   // opendata=missing: no getOpenDataContext (MusicSlice adapter case; 2.4 adapter-min reads it at load).
   if (Q.get('opendata') === 'missing') delete tt.getOpenDataContext;
@@ -689,7 +711,7 @@
   window.__hostState = function () {
     return { t: now(), touches: touchCount, touchListeners: { start: H_.touchstart.size(), move: H_.touchmove.size(), end: H_.touchend.size() }, showListeners: H_.show.size(), hideListeners: H_.hide.size(), ads: adStats, audioLive: audioLive, audioCleared: audioCleared, storageWrites: storageWrites, storageKeys: sKeys(), modules: Object.keys(cache).length, hidden: hidden,
       faults: { hits: FAULT.hits.length, accessCalls: FAULT.accessCalls || 0, pkg: FAULT.pkg }, missions: missionCalls, missionMode: missionMode, login: loginCalls,
-      modal: window.__modalOpen, toasts: toasts.slice(-5), loading: loadingShown ? loadingTitle : null, net: NET.length };
+      modal: window.__modalOpen, toasts: toasts.slice(-5), loading: loadingShown ? loadingTitle : null, loadingMask: loadingShown && loadingMask, net: NET.length };
   };
   // v7.8 (总表 B30 / S8 补): scene-loading / scene-launch beacons as soon as the game has created cc.director, so the
   // layout_state suite can cut the startup download at EVENT_BEFORE_SCENE_LOADING of the home scene (host3x does the same).

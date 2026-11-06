@@ -15,6 +15,7 @@
 const L = await import(globalThis.CFG.lib);
 const G = await import(new URL('gates.mjs', globalThis.CFG.lib).href);
 const R = await import(new URL('layout_rules.mjs', globalThis.CFG.lib).href);
+const EA = await import(new URL('engine_adapter.mjs', globalThis.CFG.lib).href);   // R4P3
 const fs = await import('node:fs/promises');
 const path = await import('node:path');
 const C = L.C, A = L.A;
@@ -44,8 +45,11 @@ async function startupSize(pkgDir, names) {
 }
 const kitEntries = (page) => G.evalJs(page, `var out = []; walkScene(function (n) { var c = n.getComponent('HomeGrowthEntries');
   if (c) { if (c.shortcutNode) out.push(pathOf(c.shortcutNode)); if (c.profileNode) out.push(pathOf(c.profileNode)); } }); return out;`).catch(() => []);
-const hookScenes = (page) => page.evaluate(() => {
-  const cc = window.cc;
+// R4P3: cc through engine_adapter.mjs (INSTALL starts System.import('cc') on a 3.x page without a global cc); the
+// scene-event hooks stay. Before the scene exists adapt() is not ready yet, so cc is window.cc or window.__tiktokKitCc.
+const hookScenes = (page) => page.evaluate(EA.inPage(function () {
+  window.__ccAdapt(window);
+  const cc = window.cc || window.__tiktokKitCc;
   if (!cc || !cc.director || !cc.Director || !window.__hostState) return false;
   if (!window.__sceneLog) {
     window.__sceneLog = [];
@@ -53,7 +57,14 @@ const hookScenes = (page) => page.evaluate(() => {
     cc.director.on(cc.Director.EVENT_AFTER_SCENE_LAUNCH, (s) => window.__sceneLog.push({ launched: s && s.name, t: window.__hostState().t }));
   }
   return true;
-}).catch(() => false);
+})).catch(() => false);
+// R4P3: pause / resume the director through the adapter: {notReady: '引擎还没起来：…'} instead of a throw on window.cc
+const director = (page, m) => page.evaluate(EA.inPage(function (m) {
+  const E = window.__ccAdapt(window);
+  if (!E.ready) return { notReady: E.reason };
+  E.cc.director[m]();
+  return true;
+}, m));
 
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'layout_state', engine: ENGINE, policy: POLICY, board: BOARD, passes: [], findings: [], startup: null, homeRules: null };
@@ -104,7 +115,8 @@ await L.suite(async ({ out, page }) => {
     const b = await G.visibleNodes(page);
     const prev = Object.fromEntries(a.nodes.map((n) => [n.path, n.box]));
     const moving = new Set(b.nodes.filter((n) => { const q = prev[n.path]; return !q || Math.abs(q.x0 - n.box.x0) > 1 || Math.abs(q.y0 - n.box.y0) > 1; }).map((n) => n.path));
-    await page.evaluate(() => window.cc.director.pause());
+    const paused = await director(page, 'pause');
+    if (paused !== true) { add({ code: 'state', msg: key + ': director not paused: ' + ((paused && paused.notReady) || JSON.stringify(paused)) }, key); continue; }
     await G.sleep(150);
     const snap = await G.visibleNodes(page);
     const nodes = snap.nodes.map((n) => Object.assign({}, n, { moving: moving.has(n.path) }));
@@ -116,7 +128,7 @@ await L.suite(async ({ out, page }) => {
     for (const x of G.coveredOf(occ)) add({ code: 'covered_3d', path: x.path, msg: key + ': ' + x.kind + ' ' + x.path + ' is ' + (x.covered * 100).toFixed(0) + ' % painted over by 3D content (visible ' + x.visible + ', ' + x.footprint + ' px)' }, key);
     if (occ.error) out.warn('layout_state ' + key + ': 3D occlusion not measured: ' + occ.error);
     pass.png = await G.shot(page, path.join(C.evidenceDir, 'layout-' + dev + '-' + st.name + '-' + unit + '.png'));
-    await page.evaluate(() => window.cc.director.resume()).catch(() => {});
+    await director(page, 'resume').catch(() => {});
     if (dev === devices[0] && st === states[0] && unit === 'pt') {
       if (BOARD === 'remake' || BOARD === 'localize') {
         const hr = R.homeRules(nodes, d, BOARD, { settings: A.settings, platform: A.platform_entries, kitEntries: await kitEntries(page) });

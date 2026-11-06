@@ -15,13 +15,22 @@ const C = L.C, A = L.A;
 const URL0 = C.trialUrl;
 const T = (A && A.trial) || {};
 
-// the game window: top, or an iframe holding window.cc
-const GW = `(function(){ if (window.cc && window.cc.director) return { w: window, f: null }; var fs = document.querySelectorAll('iframe');
-  for (var i = 0; i < fs.length; i++) { try { var w = fs[i].contentWindow; if (w && w.cc && w.cc.director) return { w: w, f: fs[i] }; } catch (e) {} } return null; })()`;
+// the game window: top, or an iframe holding the engine. R4P3: found through engine_adapter.mjs adapt(w) (2.x window.cc,
+// 3.x cc only in a module: System.import('cc') is started in that window, the next call sees w.__tiktokKitCc). Returns
+// { w, f, cc, E } (E = adapt(w), E.scene the running scene) or null; the reason is in window.__gwWhy ('引擎还没起来：…').
+const EA = await import(new URL('engine_adapter.mjs', globalThis.CFG.lib).href);
+const GW = `(function(){ ${EA.INSTALL} var A = window.__ccAdapt, why = null;
+  var tryW = function (w, f) { var E = A(w); if (E.ready) return { w: w, f: f, cc: E.cc, E: E }; why = why || E.reason;
+    if (w !== window && !w.cc && !w.__tiktokKitCc && !w.__ccImporting && w.System && typeof w.System.import === 'function') {
+      w.__ccImporting = 1; Promise.resolve().then(function () { return w.System.import('cc'); }).then(function (m) { w.__tiktokKitCc = m; }, function () { w.__ccImporting = 0; }); }
+    return null; };
+  var g = tryW(window, null); if (g) return g; var fs = document.querySelectorAll('iframe');
+  for (var i = 0; i < fs.length; i++) { try { var w = fs[i].contentWindow; if (w) { g = tryW(w, fs[i]); if (g) return g; } } catch (e) {} }
+  window.__gwWhy = why || '引擎还没起来：页面和 iframe 里都没有 cc'; return null; })()`;
 // page point of a node centre (2.x through cc.view's viewport, 3.x through the camera of the node's Canvas)
-const where = (page, p) => page.evaluate(`(function(path){ var g = ${GW}; if (!g) return null; var w = g.w, cc = w.cc, n = cc.find(path);
+const where = (page, p) => page.evaluate(`(function(path){ var g = ${GW}; if (!g) return null; var w = g.w, cc = g.cc, n = cc.find(path);
   var roots = function (s) { return cc.UITransform ? (s.children || []) : [s]; };
-  if (!n) { var tail = '/' + path.replace(/^[*][/]/, ''); roots(cc.director.getScene()).forEach(function (r0) { r0.walk(function (x) { if (n || !x.activeInHierarchy) return; var p = [], y = x; while (y && y.parent) { p.unshift(y.name); y = y.parent; } if (('/' + p.join('/')).slice(-tail.length) === tail) n = x; }); }); }
+  if (!n) { var tail = '/' + path.replace(/^[*][/]/, ''); roots(g.E.scene).forEach(function (r0) { r0.walk(function (x) { if (n || !x.activeInHierarchy) return; var p = [], y = x; while (y && y.parent) { p.unshift(y.name); y = y.parent; } if (('/' + p.join('/')).slice(-tail.length) === tail) n = x; }); }); }
   if (!n || !n.activeInHierarchy) return null;
   var cv = Document.prototype.querySelector.call(w.document, 'canvas'), cr = Element.prototype.getBoundingClientRect.call(cv), fr = g.f ? g.f.getBoundingClientRect() : { left: 0, top: 0 };
   var sc = g.f ? (fr.width / (g.f.offsetWidth || fr.width)) : 1;
@@ -59,11 +68,11 @@ const where = (page, p) => page.evaluate(`(function(path){ var g = ${GW}; if (!g
   if (vp && vp.width > 0 && v.getScaleX && v.getScaleX() > 0)
     return { x: fr.left + (cr.left + (vp.x + (bb.x + bb.width / 2) * v.getScaleX()) / mx) * sc, y: fr.top + (cr.top + cr.height - (vp.y + (bb.y + bb.height / 2) * v.getScaleY()) / my) * sc };
   return { x: fr.left + (cr.left + (bb.x + bb.width / 2 - o.x) * cr.width / vs.width) * sc, y: fr.top + (cr.top + cr.height - (bb.y + bb.height / 2 - o.y) * cr.height / vs.height) * sc }; })(${JSON.stringify(p)})`);
-const texts = (page) => page.evaluate(`(function(){ var g = ${GW}; if (!g) return null; var cc = g.w.cc, s = cc.director.getScene(), out = [];
+const texts = (page) => page.evaluate(`(function(){ var g = ${GW}; if (!g) return null; var cc = g.cc, s = g.E.scene, out = [];
   (cc.UITransform ? (s.children || []) : [s]).forEach(function (r0) { r0.walk(function (n) { if (!n.activeInHierarchy) return; var l = n.getComponent(cc.Label); if (l && l.string) out.push(n.name + '=' + l.string); }); });
   return out.join('|'); })()`);
 // home buttons that read like an ad entry, top to bottom (texts, sprite frame names, node names of the button subtree)
-const adCandidates = (page) => page.evaluate(`(function(rx){ var g = ${GW}; if (!g) return []; var cc = g.w.cc, s = cc.director.getScene(), out = [], re = new RegExp(rx, 'i');
+const adCandidates = (page) => page.evaluate(`(function(rx){ var g = ${GW}; if (!g) return []; var cc = g.cc, s = g.E.scene, out = [], re = new RegExp(rx, 'i');
   var path = function (n) { var p = []; while (n && n.parent) { p.unshift(n.name); n = n.parent; } return p.join('/'); };
   (cc.UITransform ? (s.children || []) : [s]).forEach(function (r0) { r0.walk(function (n) { if (!n.activeInHierarchy || !n.getComponent(cc.Button)) return;
     var b = n.getComponent(cc.Button); if (!b.enabled || b.interactable === false) return; var bits = [n.name];
@@ -72,7 +81,7 @@ const adCandidates = (page) => page.evaluate(`(function(rx){ var g = ${GW}; if (
   return out.slice(0, 6); })(${JSON.stringify(R.AD_WORDS.source)})`).catch(() => []);
 // what the player sees after the tap: an element over the game's centre (top document, and the game document when the
 // game is in an iframe), its 看完 / complete button (light DOM or shadow root), ad / toast counters in the game window
-const SEEN = `(function(){ var g = ${GW}; if (!g) return { err: 'no game window' }; var docs = [document]; if (g.f) docs.push(g.w.document);
+const SEEN = `(function(){ var g = ${GW}; if (!g) return { err: 'no game window: ' + window.__gwWhy }; var docs = [document]; if (g.f) docs.push(g.w.document);
   var cv = Document.prototype.querySelector.call(g.w.document, 'canvas'), cr = Element.prototype.getBoundingClientRect.call(cv);
   var fr = g.f ? g.f.getBoundingClientRect() : { left: 0, top: 0, width: 0 }, sc = g.f ? (fr.width / (g.f.offsetWidth || fr.width)) : 1;
   var tt0 = g.w.tt || (g.w.__H && g.w.__H.G && g.w.__H.G.tt);
@@ -127,7 +136,7 @@ await L.suite(async ({ out, page }) => {
   await L.keepFrames(page);
   let last = null, since = 0; const t0 = Date.now();
   while (Date.now() - t0 < 60000) {
-    const s = await page.evaluate(`(function(){ var g = ${GW}; if (!g) return null; var sc = g.w.cc.director.getScene(); return sc ? sc.name : null; })()`).catch(() => null);
+    const s = await page.evaluate(`(function(){ var g = ${GW}; if (!g) return null; var sc = g.E.scene; return sc ? sc.name : null; })()`).catch(() => null);
     if (s && s === last) { if (Date.now() - since > 3000) break; } else { last = s; since = Date.now(); }
     await L.sleep(500);
   }

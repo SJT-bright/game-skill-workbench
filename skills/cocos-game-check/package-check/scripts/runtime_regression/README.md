@@ -101,6 +101,9 @@ R4O4：页面探针读场景、换算节点坐标必须用 `engine_adapter.mjs`�
 `cc.director.getScene()` / `node.convertToWorldSpaceAR`：`evE(page, fn, a)` 先装 `window.__ccAdapt`，fn 里 `const E = window.__ccAdapt(window)`，
 引擎没起来就返回 `{notReady: E.reason}`（「引擎还没起来：…」）；`evReady` 再问 3 次、隔 1 秒；`GEOM_JS` 带 `ENGINE_READY`/`ENGINE_REASON`。
 测试 `../test_r4o4_probe_adapter.py`。
+R4P3：trial_link 的 `GW`（顶层或 iframe 里的游戏窗口，返回 `{w, f, cc, E}`，找不到写 `window.__gwWhy`）、`popin_watch.mjs`、
+`frame_rate_compare.mjs` 的 `SAMPLER_JS`、layout_state 的 `hookScenes`/`director()` 也走 `engine_adapter.mjs`；挂帧事件、场景事件照旧。
+别再写 `window.cc.director…`。测试 `../test_r4p3_probe_adapter.py`。
 
 ## 宿主参数（URL query，2.x 宿主 host.js）
 

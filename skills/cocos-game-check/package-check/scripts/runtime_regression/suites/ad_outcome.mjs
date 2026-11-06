@@ -81,7 +81,13 @@ async function entries() {
   return { list, skipped, prior };
 }
 
-const baseQuery = String(A.ad_entries_query || '').split('&').filter((x) => x && !/^(ad|ads|adhide|adhideorder|adms)=/.test(x)).join('&');
+const queryParts = String(A.ad_entries_query || '').split('&').filter((x) => x && !/^(ad|ads|adhide|adhideorder|adms)=/.test(x));
+// 音乐消消乐复盘 (MusicSlice v30, phone video 10-27: DAILY > CLAIM started no ad). On a fresh phone save a key never
+// written can read back as false / true (MergeShot2048 v81); v30's save guard took that for a broken save and stopped
+// before the ad. The host's default ('' for a missing key) is the friendliest phone, so its complete case passed while
+// the phone failed. Every entry now runs on the phone-like fresh save (missing=false) unless the adapter names one.
+if (!queryParts.some((x) => /^missing=/.test(x))) queryParts.push('missing=false');
+const baseQuery = queryParts.join('&');
 
 async function reach(page, en) {
   const home = await G.waitHome(page, { homeScene: A.home_scene || null, adapterHome: A.home || null });

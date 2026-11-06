@@ -36,6 +36,17 @@ function makeGameUIAdapter3x(cc) {
     },
     size: function (n, w, h) { ui(n).setContentSize(w, h); },
     getSize: function (n) { var s = ui(n).contentSize; return {width: s.width, height: s.height}; },
+    // Measure the art rectangle in host units, including child/nested scale and rotation.
+    artSizeIn: function (host, art, w, h) {
+      var at = ui(art), ht = ui(host), minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (var i = 0; i < 4; i++) {
+        var world = at.convertToWorldSpaceAR(new cc.Vec3(i & 1 ? w : 0, i & 2 ? h : 0, 0));
+        var p = ht.convertToNodeSpaceAR(world);
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      }
+      return {width: maxX - minX, height: maxY - minY};
+    },
     pos: function (n, x, y) { n.setPosition(x, y, 0); },
     getPos: function (n) { return {x: n.position.x, y: n.position.y}; },
     // SpriteFrame geometry (3.x API). makeFrame always sets offset and originalSize.

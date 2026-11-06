@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T21:50:40.524Z",
-  "treeHash": "638f16cd021845de547ec59bd75b92ae8f5db66897f21f337c355e215c18897f",
+  "createdAt": "2026-11-06T21:54:36.260Z",
+  "treeHash": "5b40d6f9cc3f36706eb53096e738aa24f131f4e1f8bc94331206ff5aa878a01c",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3417,20 +3417,20 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "dab9a26bc191f00b6caf9a778f9739df76917098691774de7de1ec39d9a0bf81",
-      "fileCount": 607,
-      "bytes": 12045150,
+      "treeHash": "fbbf26ed0a6c4bc3844825fd333c69c26145e37211768eca81858cf23cee0970",
+      "fileCount": 615,
+      "bytes": 12144756,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "41cec729e3a97807bcbe3606fdab10b0ab0616a74d7d795dd7934e4f1c5e017e",
-          "size": 105201,
+          "hash": "420e8a179a559e0afe2c6fdb4223cd91b928387a07c15b0286ef0b47cebf201d",
+          "size": 107467,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "caf2ad424b0273ee34f8c6d2c60edd4c0bda0dd783d2f86c5032e13fab0a1fa0",
-          "size": 11404,
+          "hash": "9f7da28c1b4e5af49b8dab0f65f3da06d375f9319b8772c0507d05478af314d7",
+          "size": 12017,
           "executable": false
         },
         {
@@ -3513,8 +3513,8 @@
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "e3b64ef9f31134ec4f15f6d6da1d426afd504847975e0253a2392ab1280b00f0",
-          "size": 56873,
+          "hash": "d31a6965da9e307157f1c291c8a54bb350797d3cc87ced93d8caaba1bbac1c20",
+          "size": 57884,
           "executable": false
         },
         {
@@ -3525,8 +3525,8 @@
         },
         {
           "path": "assets/platform-kit/README_接入说明.md",
-          "hash": "4b84c3017b909a5474f27fab198f494a953fb51f3320613f9b04dbde1396da03",
-          "size": 84217,
+          "hash": "682c0b46707acf005dc6aa21976e6112dc60ca3d5b060b79e2fdaeac5ae6f61e",
+          "size": 86016,
           "executable": false
         },
         {
@@ -3615,8 +3615,8 @@
         },
         {
           "path": "assets/platform-kit/parts/GameUIKit.js",
-          "hash": "e805429017088a91e838187e071fcb7fcc3d0666fd353aad62556c89503e89c8",
-          "size": 89619,
+          "hash": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+          "size": 90698,
           "executable": false
         },
         {
@@ -3681,14 +3681,14 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-          "hash": "fdc2dece94a5e2bce1dcb10b22421c506d926b1c101ea690ef99fc5184e3dd24",
-          "size": 13584,
+          "hash": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+          "size": 14203,
           "executable": false
         },
         {
           "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-          "hash": "a756e93229b5b14c5617ef3a9030f49492cb78b589664e32cd72aed5f24c81fd",
-          "size": 87074,
+          "hash": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+          "size": 88164,
           "executable": false
         },
         {
@@ -3849,8 +3849,8 @@
         },
         {
           "path": "assets/platform-kit/tests/game-ui-kit.test.js",
-          "hash": "6501f945f89543de040a446ef26264fe8cff59c6f56466b8c9ea183b9e997ee7",
-          "size": 17189,
+          "hash": "68f0c326e7272f4291455684b522c09d01038de7f6e09cccbc3182ac6ccbf085",
+          "size": 21282,
           "executable": false
         },
         {
@@ -4352,6 +4352,12 @@
           "executable": false
         },
         {
+          "path": "references/browser-testing-policy.md",
+          "hash": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71",
+          "size": 1879,
+          "executable": false
+        },
+        {
           "path": "references/check-stages.md",
           "hash": "5c7703205df674e8ec46bae79944fe66823dad4242dd2a376157f993181344f6",
           "size": 7549,
@@ -4545,8 +4551,8 @@
         },
         {
           "path": "references/user-phone-preview.md",
-          "hash": "e8dc2bf3ee0f4ecd6539e4b2778f9101f734831ee80ccdda8a0ae2baaa2ee839",
-          "size": 7244,
+          "hash": "06d98b34cbff26dfef47fd032d6f9d34737e9dccf5deb156ea201592e3760fde",
+          "size": 7856,
           "executable": false
         },
         {
@@ -4587,26 +4593,32 @@
         },
         {
           "path": "scripts/art_check.py",
-          "hash": "086b182429718f5f72157210073a55b9625fb1821869a633fa943267aba00dd0",
-          "size": 85734,
+          "hash": "fe421ba7af1c40f9f8bedd10667144962b7b8edaf92b8c00b89378a93517b1a7",
+          "size": 86448,
+          "executable": false
+        },
+        {
+          "path": "scripts/art_input_check.py",
+          "hash": "ba6a916ed90b3d0206840119520c5132ff124a45fcf893f42c65927a862d4836",
+          "size": 4398,
           "executable": false
         },
         {
           "path": "scripts/art_preflight.py",
-          "hash": "c1a9ea8922c8ccb6582f8fea7beb0faa43462c8023480d5b0e73775b0facfa65",
-          "size": 3394,
+          "hash": "5df7f956c10990b4d93f24a984878b630a519eed9799af612ec5dd90e4ef4007",
+          "size": 8721,
           "executable": false
         },
         {
           "path": "scripts/art_production.py",
-          "hash": "507833e33eedf45221ae1bad9a15e84db92e9e055dd48e201b6ecb77ab75a4de",
-          "size": 26108,
+          "hash": "f412477610d224be2df3f4da63e67837f71cf566c9a6fd20ed7c31680e05e590",
+          "size": 26426,
           "executable": false
         },
         {
           "path": "scripts/art_receipt.py",
-          "hash": "5f4d941819c984a5518e13adc239681dc1ea504be0457616d691761237a233f1",
-          "size": 38398,
+          "hash": "469d41baf00ab6e5c04fa77bb4d4801f5f2b93940c5fa73dfa3ba616e885a25b",
+          "size": 38532,
           "executable": false
         },
         {
@@ -4653,8 +4665,8 @@
         },
         {
           "path": "scripts/audit_art_slots.py",
-          "hash": "519ef848cb9500438a2210e1e182732cbe24428b05355cc0e6789701e7c979cb",
-          "size": 4159,
+          "hash": "c6fe18188478e08124d3de6822761f9f564c42900464bd6e2d4987618b5b2d9f",
+          "size": 8947,
           "executable": false
         },
         {
@@ -4881,8 +4893,8 @@
         },
         {
           "path": "scripts/audit_page_richness.py",
-          "hash": "d00661b5f5219d94d6953ab9efdf8a7bd13167b0f78b5678f7b561af219c6070",
-          "size": 201848,
+          "hash": "dabba73b21075674276693100c3b0db37d46b0318b432efc3f2854878e08b183",
+          "size": 202601,
           "executable": false
         },
         {
@@ -5229,8 +5241,14 @@
         },
         {
           "path": "scripts/locked_art_maintenance.py",
-          "hash": "45df90ed22696c6719ad5783fa1744d6ea126d5cf11c726b3e0999182e1e292b",
-          "size": 14236,
+          "hash": "f9d710e23684150b78101c4533eb4435e643591c04cb6c6c991cf3e42fea6f05",
+          "size": 14697,
+          "executable": false
+        },
+        {
+          "path": "scripts/locked_art_successor.py",
+          "hash": "61cf7d7a0868f206b2da9b6f8d1c0542f33b6c36d6101ed6283d235cceabd3f9",
+          "size": 11196,
           "executable": false
         },
         {
@@ -5427,8 +5445,8 @@
         },
         {
           "path": "scripts/package_issue_gate.py",
-          "hash": "259fbfe4f7627a7778fd522db8b2346ae1d7d6b61ebe8d0cb0513a58ac8f902f",
-          "size": 42211,
+          "hash": "7cfe6e7b11473877e506aba6a335591c48c7987850c7d55944ef9d3e125735c6",
+          "size": 43389,
           "executable": false
         },
         {
@@ -5459,6 +5477,12 @@
           "path": "scripts/plan_level_tests.py",
           "hash": "4b98fff5f1dfb9ea120861f4338e319d1229ff815b0873816d0f3d8ee5e1ec88",
           "size": 13703,
+          "executable": false
+        },
+        {
+          "path": "scripts/play_issue_successor.py",
+          "hash": "6a86df41402ea4c74daf0e8663bdb42380c41baa6c56f5aa807f820f72a9d497",
+          "size": 6205,
           "executable": false
         },
         {
@@ -5625,8 +5649,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "af8a0b6f272ec96a7a2660894e2c74173c8a895f3ea82a2919ec44355e564edb",
-          "size": 41785,
+          "hash": "a374d8fba5377fea2cef1bfb31c9816b0e485973109ab58ae1485e9d0de2f632",
+          "size": 42512,
           "executable": false
         },
         {
@@ -5645,6 +5669,12 @@
           "path": "scripts/startup_business_contract.py",
           "hash": "c8600b73ea380b841e5d7d9065b4053a35c76a7dff8bf1ac8f6b9d42173ee007",
           "size": 2093,
+          "executable": false
+        },
+        {
+          "path": "scripts/startup_play_successor.py",
+          "hash": "789ed0dedb5bc59f0a8e8a809df5f8c7e04f6fcce5196ed278a8849fbb11bd76",
+          "size": 20371,
           "executable": false
         },
         {
@@ -5720,6 +5750,18 @@
           "executable": false
         },
         {
+          "path": "scripts/test_art_display_budget.py",
+          "hash": "397ce7dca801c9dac04c9a1da68eb0e05a22cbcfa44d04acba02222657bb380b",
+          "size": 8876,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_art_input_preflight.py",
+          "hash": "e6451f493dfb5e16b487818c7686e79798d84836f3f5e692f5eb07c2532afd90",
+          "size": 6708,
+          "executable": false
+        },
+        {
           "path": "scripts/test_art_overlap_v78.py",
           "hash": "c9c656558f4d1798bfbdcd1c4877bb4bbf39ab2973fbe31bd24cd0482f4efd7c",
           "size": 16319,
@@ -5729,6 +5771,12 @@
           "path": "scripts/test_art_pre_v78.py",
           "hash": "383eea1aa5c89db37021c6cb099f5b73fb3580627b4aa2016684f538d18b418e",
           "size": 6226,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_art_preflight.py",
+          "hash": "d5adc7368a60228402e8d147813d2c73b8b38b8927ba1c7231ea707cbf0b9704",
+          "size": 8399,
           "executable": false
         },
         {
@@ -6753,8 +6801,8 @@
         },
         {
           "path": "scripts/test_ui_layout_and_copy.py",
-          "hash": "deb8aa460268e9ca8edee6a5abb4d5b1016b75065cf1df8884f141970631ba98",
-          "size": 80856,
+          "hash": "1f74682e52375a4496b0db86dcb4dc18d78ad4b3fce6c7b5e54c62de34a4945e",
+          "size": 84848,
           "executable": false
         },
         {

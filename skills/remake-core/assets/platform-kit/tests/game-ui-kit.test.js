@@ -202,12 +202,74 @@ test('10 wrapExisting: an original cc.Button runs once, SCALE becomes COLOR (add
   assert.strictEqual(now, 1); assert.strictEqual(old, 0, 'old click events are off');
   assert.strictEqual(h.oldClickEvents.length, 1, 'kept for the record');
   assert.strictEqual(btn.transition, env.cc.Button.Transition.COLOR);
-  assert.ok(n.width >= 260 && n.height >= 110, 'hit area grew to the visible picture');
+  assert.deepStrictEqual([n.width, n.height], [220, 90], 'keep the laid-out size; frame pixels are not screen units');
   var env2 = fresh(), m = node(env2, 'HandShop', 220, 90, 0, -100), paid = 0;
   engineButton(env2, m, [function () { paid++; }], true);
   m.on('touch-end', function () { paid++; });
   env2.tapAt(0, -100);
   assert.strictEqual(paid, 2, 'OLD WAY BUG: original click event plus the new listener');
+});
+
+// 1.1.8: real BallMaster R14 FREE GEMS was 136x122 in its prefab, 1136x1149 in its PNG.
+// These cases must fail against 1.1.7: wrapExisting used max(node size, frame pixels).
+test('wrap size: Ball FREE GEMS high-resolution frame keeps the 136x122 slot and does not steal adjacent taps', function () {
+  var env = fresh(), n = node(env, 'FreeDiamondBtn', 136, 122), taps = 0;
+  n.addComponent(env.cc.Sprite).spriteFrame = env.frame(1136, 1149);
+  env.Kit.wrapExisting(n, function () { taps++; });
+  assert.deepStrictEqual([n.width, n.height], [136, 122]);
+  assert.strictEqual(env.tapAt(150, 0), null, 'outside the slot must not hit FREE GEMS');
+  env.tapAt(0, 0); assert.strictEqual(taps, 1);
+  assert.strictEqual(n.getComponent(env.cc.Sprite).sizeMode, env.cc.Sprite.SizeMode.CUSTOM);
+});
+test('wrap size: explicit dimensions and a single explicit axis keep precedence', function () {
+  var env = fresh(), n = node(env, 'Explicit', 136, 122);
+  n.addComponent(env.cc.Sprite).spriteFrame = env.frame(1136, 1149);
+  env.Kit.wrapExisting(n, function () {}, {width: 200, height: 80});
+  assert.deepStrictEqual([n.width, n.height], [200, 80]);
+  var m = node(env, 'PartialExplicit', 136, 122);
+  m.addComponent(env.cc.Sprite).spriteFrame = env.frame(1136, 1149);
+  env.Kit.wrapExisting(m, function () {}, {width: 160});
+  assert.deepStrictEqual([m.width, m.height], [160, 122]);
+});
+test('wrap size: a zero-size host uses child display size including nested scales, not texture pixels', function () {
+  var env = fresh(), n = node(env, 'ZeroHost', 0, 0), group = node(env, 'ArtGroup', 0, 0, 0, 0, n);
+  group.setScale(0.5);
+  var art = node(env, 'Art', 200, 72, 0, 0, group); art.setScale(0.5);
+  art.addComponent(env.cc.Sprite).spriteFrame = env.frame(800, 288);
+  env.Kit.wrapExisting(n, function () {}, {art: art});
+  assert.deepStrictEqual([n.width, n.height], [50, 18]);
+  assert.deepStrictEqual([art.width, art.height, art.scale, group.scale], [200, 72, 0.5, 0.5]);
+});
+test('wrap size: button() shares the child-display fallback with wrapExisting()', function () {
+  var env = fresh(), n = node(env, 'ZeroHost', 0, 0), art = node(env, 'Art', 200, 72, 0, 0, n);
+  art.setScale(0.5); art.addComponent(env.cc.Sprite).spriteFrame = env.frame(800, 288);
+  env.Kit.button(n, function () {}, {art: art});
+  assert.deepStrictEqual([n.width, n.height], [100, 36]);
+});
+test('wrap size: missing axes fall back independently without overwriting a valid node axis', function () {
+  var env = fresh(), n = node(env, 'PartialHost', 136, 0), art = node(env, 'Art', 200, 72, 0, 0, n);
+  art.setScale(0.5); art.addComponent(env.cc.Sprite).spriteFrame = env.frame(800, 288);
+  env.Kit.wrapExisting(n, function () {}, {art: art});
+  assert.deepStrictEqual([n.width, n.height], [136, 36]);
+});
+test('wrap size: frame metadata is a last resort for zero dimensions, including child scale', function () {
+  var env = fresh(), n = node(env, 'ZeroFrameHost', 0, 0);
+  n.addComponent(env.cc.Sprite).spriteFrame = env.frame(170, 172);
+  env.Kit.wrapExisting(n, function () {});
+  assert.deepStrictEqual([n.width, n.height], [170, 172]);
+  var m = node(env, 'ZeroChildHost', 0, 0), art = node(env, 'Art', 0, 0, 0, 0, m);
+  art.setScale(0.25); art.addComponent(env.cc.Sprite).spriteFrame = env.frame(800, 288);
+  env.Kit.wrapExisting(m, function () {}, {art: art});
+  assert.deepStrictEqual([m.width, m.height], [200, 72]);
+});
+test('wrap size: close minimum remains 104 while an independent 78x78 child X stays 78x78', function () {
+  var env = fresh(), n = node(env, 'CloseHit', 78, 78), art = node(env, 'CloseArt', 78, 78, 0, 0, n), taps = 0;
+  art.addComponent(env.cc.Sprite).spriteFrame = env.frame(170, 172);
+  var h = env.Kit.wrapExisting(n, function () { taps++; }, {close: true, art: art});
+  assert.deepStrictEqual([n.width, n.height], [104, 104]);
+  assert.deepStrictEqual([art.width, art.height], [78, 78]);
+  h.setEnabled(false); env.tapAt(0, 0); assert.strictEqual(taps, 0);
+  h.setEnabled(true); env.clock.advance(600); env.tapAt(0, 0); assert.strictEqual(taps, 1);
 });
 
 // R4H 批 (Round4 #20, 问题普查 checker_gap 31/84, check_inputs_missing 19/20): pages.json seen_at_runtime was typed in by

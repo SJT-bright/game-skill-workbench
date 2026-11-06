@@ -355,9 +355,12 @@ p.close();       // 淡出 160ms 后一定 active=false（keep 的下次 p.open(
 UI.toast('Come back tomorrow');
 ```
 
+- **美工首件尺寸（GameUIKit 1.1.8）**：制作前分别记录「PNG 像素 / trim 后 frame」「设计显示槽位」「点击区」，不能把高清图片像素当成按钮显示宽高。`button` / `wrapExisting` 每个轴优先用显式 `width/height`，再用节点已有正尺寸；只有缺失的轴才取 `art` 在按钮坐标中的显示包围盒（含中间父节点缩放），最后才退到 frame 尺寸。弹球 FREE GEMS 的设计槽位为 136×122，R14 frame 为 1136×1149，不能因为换高清图把按钮扩成 1136×1149。布局/Widget 尚未算出尺寸、art 偏移或锚点不同、希望热区大于画面时，制作阶段显式定义槽位并对齐子图，不靠回退猜布局；本接口不自动改锚点、重排或重建原节点。按钮根节点仍按既有契约保持 scale=1，缩放效果放在子图上。
+- **关闭 X 首件分层**：新做按钮用无 Sprite 的 `CloseHit` 承担点按区，图片放在居中子节点 `CloseArt`；例如先定 `CloseArt` 78×78，再 `UI.wrapExisting(CloseHit, onClose, {close:true, width:104, height:104, art:CloseArt})`。点击区为 104×104，X 仍为 78×78。不要把 X 图片放在同一个节点，再以放大图片的方式扩大热区；已有用户节点不由工具自动拆分。`close:true` 原有 ≥104 规则继续生效；热区与相邻关闭键、标题/按钮的关系在首次接页检查。
+- **首件记录和验收**：接入前记录上述三种尺寸及节点/子图；第一次到达实际页核对最终 display_size 与预定槽位、整图是否压住标题、相邻控件能否正常点到。同类按钮复用这个尺寸契约再批量生成。Node 回放只能证明默认尺寸和交互规则，不能替代实际页首次截图；已有合格截图复用仍受版本与依赖身份门禁约束。
 - 已经管好的事：弹窗开着时下层点不到；关掉后一定不再挡点击；500ms 内连点只算一次；`handler` 不是函数在搭页面时就报错；按下只变暗不缩放，按钮节点上的动画帧不改点按区；禁用的按钮点了有提示；`popup.guard` 包住的迟到回调不执行。
 - 和 AdBoostKit 的关系：`GameUIKit` 是 AdBoostKit 1.2.0 去掉 `adButton`、`doubleCheckbox`、`runAd` 后的同一套弹窗、提示条、数字、切条和 `fitTrim`。看广告的按钮和勾选框仍用 ad-boost 的 `AdBoostKit`。两份叠弹窗的记录是分开的：同一页上两种弹窗叠开时，下层的遮罩不会被自动藏起来。
-- 测试：`node tests/game-ui-kit.test.js`（10 条：遮罩吞点击、关掉后 inactive、防连点、没绑函数报错、keep 复用、关闭键 ≥104、按下不变点按区、迟到回调丢弃、禁用有提示、原版按钮只跑一次；每条都带一个照旧手写的反例，反例必须出 bug）。用 `GAMEUI_KIT_FILE=<另一份文件>` 可以拿同一组用例测别的写法。**待真机复测**。
+- 测试：`node tests/game-ui-kit.test.js`（19 条 × 2 引擎：原有弹窗/按钮/PageRegistry 契约，加高清图不扩槽、显式尺寸优先、缩放子图、缺失轴、frame 最后回退和 X 分层。1.1.8 回归在 1.1.7 上有 14 条失败，在候选版 38 条通过）。用 `GAMEUI_KIT_FILE=<另一份文件>` 可以拿同一组用例测别的写法。**待真机复测**。
 - 3.x（生成时预防 R4B 起）：`tiktok_finalize.py sync` 给新 3.x 游戏装 `assets/tiktok-platform/GameUIKit.ts`（`parts-3x/GameUIKit.ts` 原样，旧游戏只报告），别手拷；`import GameUIKit from '../tiktok-platform/GameUIKit'`，接口和 2.4 一样。页面模板：暂停 `UI.pausePage(canvas, {session, initRun, onResume, onRestart, onHome})`；复活 `UI.revivePage(canvas, {session, ads, placementKey:'revive', onRevive, onGiveUp})`；结算 `UI.resultPage(canvas, {session, store, amount, ads, placementKey:'result_x2', onNext, onHome})`。新加的按钮只能 `page.addButton('extra', {frame, text}, fn)`；分数、奖励数字放 `page.info`。会变的数值文字一律用 `UI.valueLabel(node, {longest:'100%'})`。
 - 别的 Kit 的弹窗（AdBoostKit.popup）用 `var release = UI.adoptPopup({isOpen, setCovered})` 进同一个叠弹窗记录，关掉时调 `release()`；只有最上面一层暗、有 X。
 - 别的 Kit 自己搭的弹窗打开时调 `UI.recordPage({id: 'ad-boost:wheel', name, kind: 'popup', close: 'Close'}, node, closeNode)`（GameUIKit 1.1.3，R4J2）记进页面登记表，和 popup() 记的一样；`ad-boost:` 开头、pages.json 里还没有的页，merge-dumps 先只警告。

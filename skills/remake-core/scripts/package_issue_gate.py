@@ -183,7 +183,7 @@ def issue_state(events):
 # v7.9 adds the v7.8 file (f15395aa...): it only adds phone-report checks, which validate_proof re-runs on the saved raw
 # observations at every check, so closed local issues of any game stay closed after the Skill update.
 # Prior proofs are re-evaluated against their raw observations below.
-SAME_PROOF_RULES = frozenset({'3abba91ebf5ab492bba1f6e0c96ee1c085eb340f7cf617f4b4438dd8af4331f8',
+SAME_PROOF_RULES = frozenset({'259fbfe4f7627a7778fd522db8b2346ae1d7d6b61ebe8d0cb0513a58ac8f902f', '3abba91ebf5ab492bba1f6e0c96ee1c085eb340f7cf617f4b4438dd8af4331f8',
                               'edaad58253327c1794e55b8b13154f9ce26b0d422d5c3b45d276bdd8c087ad2f',
                               'f15395aa873bb3b8763b12befad6f1b8190a6b31cdbfc80b3d0c651da711a0be'})
 SUPERSEDE_FIELDS = ('id', 'by', 'user_quote', 'date', 'reason')
@@ -615,6 +615,7 @@ def audit(project, native):
     events, binding = load(project)
     issues = issue_state(events)
     checked = []
+    play_successor_context = None
     deferred = []
     superseded = []
     devices = []
@@ -643,15 +644,29 @@ def audit(project, native):
                                  'words with defer-external (external_requirement device_not_reproduced)'
                                  % (issue_id, state['contract']['device']['symptom'], state['contract']['device']['zip_name']))
             raise ValueError('reported issue has no passed retest: '+issue_id)
+        dependency_successor = None
         try:
             proof = validate_proof(state['contract'], state['proof'], native)
         except (ValueError, KeyError, TypeError, OSError) as error:
-            raise ValueError('reported issue %s blocks packaging: %s' % (issue_id, error)) from error
+            # Known original PLAY-repair dependencies can reuse their actual old
+            # execution only through the reviewed semantic delta + current local
+            # recovery proof. Unknown/invalid issues keep the ordinary refusal.
+            try:
+                from play_issue_successor import validate as validate_play_successor
+                proof, dependency_successor, play_successor_context = validate_play_successor(
+                    project, state['contract'], state['proof'], native, validate_proof, play_successor_context)
+            except (ValueError, KeyError, TypeError, OSError, ImportError) as successor_error:
+                raise ValueError('reported issue %s blocks packaging: %s; exact PLAY successor: %s'
+                                 % (issue_id, error, successor_error)) from error
         executed_root = proof['executed_native_roots']['current']
         current_root = str(Path(native).resolve())
         checked.append({'id': issue_id, 'proof': state['proof'], 'target_sha256': proof['target_sha256'],
                         'executed_native_root': executed_root, 'current_native_root': current_root,
                         'dependency_bytes_reused': executed_root != current_root})
+        if dependency_successor is not None:
+            checked[-1].update(dependency_bytes_reused=False, semantic_dependency_reused=True,
+                               current_target_sha256=dependency_successor['current_target_sha256'],
+                               dependency_successor=dependency_successor)
         device = state['contract'].get('device')
         if device:
             devices.append({'id': issue_id, 'symptom': device['symptom'], 'line': device_line(issue_id, device, 'closed'),

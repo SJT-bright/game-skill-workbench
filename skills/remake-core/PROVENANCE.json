@@ -1,15 +1,15 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.3",
+  "revision": "2026-11-06.english-simple.11.17.4",
   "skill": "remake-core",
-  "previous_provenance_sha256": "58919550298304f27f95a9069e1bddb08dcb0448edfb209f9d9a4e164f093c3d",
+  "previous_provenance_sha256": "25214400dcd29b5806b54bf49ee48fdbc074255fe8093fb4cd5ea99e37958dec",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "caf2ad424b0273ee34f8c6d2c60edd4c0bda0dd783d2f86c5032e13fab0a1fa0",
-      "bytes": 11404
+      "sha256": "9f7da28c1b4e5af49b8dab0f65f3da06d375f9319b8772c0507d05478af314d7",
+      "bytes": 12017
     },
     {
       "path": "agents/openai.yaml",
@@ -78,8 +78,8 @@
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "e3b64ef9f31134ec4f15f6d6da1d426afd504847975e0253a2392ab1280b00f0",
-      "bytes": 56873
+      "sha256": "d31a6965da9e307157f1c291c8a54bb350797d3cc87ced93d8caaba1bbac1c20",
+      "bytes": 57884
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -88,8 +88,8 @@
     },
     {
       "path": "assets/platform-kit/README_接入说明.md",
-      "sha256": "4b84c3017b909a5474f27fab198f494a953fb51f3320613f9b04dbde1396da03",
-      "bytes": 84217
+      "sha256": "682c0b46707acf005dc6aa21976e6112dc60ca3d5b060b79e2fdaeac5ae6f61e",
+      "bytes": 86016
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
@@ -163,8 +163,8 @@
     },
     {
       "path": "assets/platform-kit/parts/GameUIKit.js",
-      "sha256": "e805429017088a91e838187e071fcb7fcc3d0666fd353aad62556c89503e89c8",
-      "bytes": 89619
+      "sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+      "bytes": 90698
     },
     {
       "path": "assets/platform-kit/parts/HomeEntrySlots.js",
@@ -218,13 +218,13 @@
     },
     {
       "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-      "sha256": "fdc2dece94a5e2bce1dcb10b22421c506d926b1c101ea690ef99fc5184e3dd24",
-      "bytes": 13584
+      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "bytes": 14203
     },
     {
       "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "a756e93229b5b14c5617ef3a9030f49492cb78b589664e32cd72aed5f24c81fd",
-      "bytes": 87074
+      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+      "bytes": 88164
     },
     {
       "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
@@ -358,8 +358,8 @@
     },
     {
       "path": "assets/platform-kit/tests/game-ui-kit.test.js",
-      "sha256": "6501f945f89543de040a446ef26264fe8cff59c6f56466b8c9ea183b9e997ee7",
-      "bytes": 17189
+      "sha256": "68f0c326e7272f4291455684b522c09d01038de7f6e09cccbc3182ac6ccbf085",
+      "bytes": 21282
     },
     {
       "path": "assets/platform-kit/tests/game-ui-pages.test.js",
@@ -938,8 +938,8 @@
     },
     {
       "path": "references/user-phone-preview.md",
-      "sha256": "e8dc2bf3ee0f4ecd6539e4b2778f9101f734831ee80ccdda8a0ae2baaa2ee839",
-      "bytes": 7244
+      "sha256": "06d98b34cbff26dfef47fd032d6f9d34737e9dccf5deb156ea201592e3760fde",
+      "bytes": 7856
     },
     {
       "path": "references/workflow-detail.md",
@@ -968,18 +968,23 @@
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "af6e3c9c88b001a1e185b9a3cabcf434a6b50a0fac474bf3dd6e00c505c15aee",
-      "bytes": 84049
+      "sha256": "88facb725f57f061235f4d5d8f786e73ee6da344581a5359999e4b82fb7fca28",
+      "bytes": 84666
+    },
+    {
+      "path": "scripts/art_input_check.py",
+      "sha256": "ba6a916ed90b3d0206840119520c5132ff124a45fcf893f42c65927a862d4836",
+      "bytes": 4398
     },
     {
       "path": "scripts/art_preflight.py",
-      "sha256": "c1a9ea8922c8ccb6582f8fea7beb0faa43462c8023480d5b0e73775b0facfa65",
-      "bytes": 3394
+      "sha256": "5df7f956c10990b4d93f24a984878b630a519eed9799af612ec5dd90e4ef4007",
+      "bytes": 8721
     },
     {
       "path": "scripts/art_production.py",
-      "sha256": "507833e33eedf45221ae1bad9a15e84db92e9e055dd48e201b6ecb77ab75a4de",
-      "bytes": 26108
+      "sha256": "f412477610d224be2df3f4da63e67837f71cf566c9a6fd20ed7c31680e05e590",
+      "bytes": 26426
     },
     {
       "path": "scripts/art_receipt.py",
@@ -1023,8 +1028,8 @@
     },
     {
       "path": "scripts/audit_art_slots.py",
-      "sha256": "519ef848cb9500438a2210e1e182732cbe24428b05355cc0e6789701e7c979cb",
-      "bytes": 4159
+      "sha256": "c6fe18188478e08124d3de6822761f9f564c42900464bd6e2d4987618b5b2d9f",
+      "bytes": 8947
     },
     {
       "path": "scripts/audit_async_contracts.py",
@@ -1213,8 +1218,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "823c74a57e483c926549cdc24518c29fa73e71d6256addb93c8209135d8c835a",
-      "bytes": 193758
+      "sha256": "dabba73b21075674276693100c3b0db37d46b0318b432efc3f2854878e08b183",
+      "bytes": 202601
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1823,8 +1828,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "af8a0b6f272ec96a7a2660894e2c74173c8a895f3ea82a2919ec44355e564edb",
-      "bytes": 41785
+      "sha256": "a374d8fba5377fea2cef1bfb31c9816b0e485973109ab58ae1485e9d0de2f632",
+      "bytes": 42512
     },
     {
       "path": "scripts/source_hygiene.py",
@@ -1902,6 +1907,16 @@
       "bytes": 5085
     },
     {
+      "path": "scripts/test_art_display_budget.py",
+      "sha256": "397ce7dca801c9dac04c9a1da68eb0e05a22cbcfa44d04acba02222657bb380b",
+      "bytes": 8876
+    },
+    {
+      "path": "scripts/test_art_input_preflight.py",
+      "sha256": "e6451f493dfb5e16b487818c7686e79798d84836f3f5e692f5eb07c2532afd90",
+      "bytes": 6708
+    },
+    {
       "path": "scripts/test_art_overlap_v78.py",
       "sha256": "c9c656558f4d1798bfbdcd1c4877bb4bbf39ab2973fbe31bd24cd0482f4efd7c",
       "bytes": 16319
@@ -1910,6 +1925,11 @@
       "path": "scripts/test_art_pre_v78.py",
       "sha256": "383eea1aa5c89db37021c6cb099f5b73fb3580627b4aa2016684f538d18b418e",
       "bytes": 6226
+    },
+    {
+      "path": "scripts/test_art_preflight.py",
+      "sha256": "d5adc7368a60228402e8d147813d2c73b8b38b8927ba1c7231ea707cbf0b9704",
+      "bytes": 8399
     },
     {
       "path": "scripts/test_art_production.py",
@@ -2763,8 +2783,8 @@
     },
     {
       "path": "scripts/test_ui_layout_and_copy.py",
-      "sha256": "b1c0221f11927c7d9cf0d77bd8b73b0c66c6b393716f349182ea80da6e804f3c",
-      "bytes": 80503
+      "sha256": "f3c9835549a1b21aeecaef43d61be66ec7f5dec4c23fc12411fe7696b550e76d",
+      "bytes": 84495
     },
     {
       "path": "scripts/test_unofficial_entry_cli.py",
@@ -3015,8 +3035,48 @@
       "path": "scripts/which_package.py",
       "sha256": "0bfe71161931c8dff8a4b033257dba32a54dd287f06df731b96cfed829d208bb",
       "bytes": 10306
+    },
+    {
+      "path": "references/browser-testing-policy.md",
+      "sha256": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71",
+      "bytes": 1879
     }
   ],
   "source_bundle_sha256": "5b1d8a07c8be7cfbe01b9a79d56bf466cfeccd5f440659c7938f7669755c7f14",
-  "parent_release_sha256": "0dffc1f86bc770211d9d39cc379e958eadafda1f62e3839bd8443262a42a4b32"
+  "parent_release_sha256": "0dffc1f86bc770211d9d39cc379e958eadafda1f62e3839bd8443262a42a4b32",
+  "local_patches": [
+    {
+      "id": "ego-only-tests-20261106-geometry",
+      "authority": "User requires all Agent browser tests in Ego; actual viewport and native-host screenshots use official Ego Page CDP.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "9f7da28c1b4e5af49b8dab0f65f3da06d375f9319b8772c0507d05478af314d7"
+        },
+        {
+          "path": "references/browser-testing-policy.md",
+          "sha256": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71"
+        },
+        {
+          "path": "references/user-phone-preview.md",
+          "sha256": "06d98b34cbff26dfef47fd032d6f9d34737e9dccf5deb156ea201592e3760fde"
+        },
+        {
+          "path": "scripts/serve_preview.py",
+          "sha256": "a374d8fba5377fea2cef1bfb31c9816b0e485973109ab58ae1485e9d0de2f632"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    },
+    {
+      "id": "20261106-visible-sound-controls-and-existing-ad-roles",
+      "files": [
+        {
+          "path": "scripts/audit_page_richness.py",
+          "sha256": "dabba73b21075674276693100c3b0db37d46b0318b432efc3f2854878e08b183"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_声音端点与广告角色读取_20261106/receipt.json"
+    }
+  ]
 }

@@ -12,14 +12,90 @@ def box(rect):
     if w<=0 or h<=0: raise ValueError('empty capture rectangle')
     return x,y,w,h
 
-def lookup(nodes,path):
+def lookup_node(nodes,path):
     if not isinstance(path,str) or not path:raise ValueError('exact node path required')
+    if not isinstance(nodes,list) or any(not isinstance(n,dict) for n in nodes):raise ValueError('invalid node collection')
     matches=[n for n in nodes if n.get('path')==path]
     if len(matches)!=1:raise ValueError('absent or ambiguous node: '+path)
-    node=matches[0]
-    return box(node.get('unclipped_screen',node['screen']))
+    return matches[0]
 
-def inspect(im,nodes,case):
+def lookup(nodes,path):
+    node=lookup_node(nodes,path)
+    return box(node.get('unclipped_screen',node.get('screen')))
+
+def number(value, name, positive=False):
+    if type(value) not in (int,float) or not isfinite(value) or (positive and value<=0):
+        raise ValueError('invalid '+name)
+    return value
+
+def validate_display_budget(case):
+    """Validate an optional, independent design budget; never derive it from live owner size."""
+    if 'display_budget' not in case:return None
+    budget=case['display_budget']
+    if not isinstance(budget,dict) or budget.get('unit')!='css_px':
+        raise ValueError('display budget requires css_px unit')
+    for key in ('viewport_width','viewport_height'):
+        number(case.get(key),key,positive=True)
+    entries=budget.get('nodes')
+    if not isinstance(entries,list) or not entries:raise ValueError('display budget nodes missing')
+    paths=set()
+    for entry in entries:
+        if not isinstance(entry,dict):raise ValueError('invalid display budget node')
+        path=entry.get('path');frame=entry.get('frame');size=entry.get('expected_css')
+        if not isinstance(path,str) or not path.strip() or path in paths:
+            raise ValueError('display budget requires unique exact node paths')
+        paths.add(path)
+        if not isinstance(frame,str) or not frame.strip():raise ValueError('display budget frame identity missing')
+        if not isinstance(size,(list,tuple)) or len(size)!=2:raise ValueError('display budget needs both CSS axes')
+        for value in size:number(value,'expected CSS size',positive=True)
+        px=number(entry.get('tolerance_css_px',1),'CSS tolerance')
+        ratio=number(entry.get('tolerance_ratio',0),'ratio tolerance')
+        if not 0<=px<=2 or not 0<=ratio<1:raise ValueError('display budget tolerance out of bounds')
+        if any(max(px,value*ratio)>2 for value in size):
+            raise ValueError('effective display tolerance exceeds 2 CSS px')
+        if any(max(px,value*ratio)>=value for value in size):
+            raise ValueError('display tolerance must be smaller than each expected axis')
+    return entries
+
+def display_checks(nodes,case,doc):
+    entries=validate_display_budget(case)
+    if entries is None:return []
+    if not isinstance(doc,dict):raise ValueError('display budget needs capture metadata')
+    for key in ('viewport','page'):
+        meta=doc.get(key)
+        if not isinstance(meta,dict):raise ValueError('display budget missing '+key)
+        for axis in ('width','height'):
+            if number(meta.get(axis),key+' '+axis,positive=True)!=case['viewport_'+axis]:
+                raise ValueError('display budget '+key+' differs from declared viewport')
+    _,_,cw,ch=box(doc.get('canvas_css'))
+    # The dump's normalized node coordinates are relative to canvas, not page or PNG pixels.
+    # A clipped visible fragment must not conceal the larger original node.
+    rows=[]
+    for entry in entries:
+        node=lookup_node(nodes,entry['path'])
+        comps=node.get('comps')
+        sprite=comps.get('sprite') if isinstance(comps,dict) else None
+        if not isinstance(sprite,dict) or sprite.get('frame')!=entry['frame']:
+            raise ValueError('display budget sprite frame mismatch: '+entry['path'])
+        frame_size=sprite.get('frame_size')
+        if not isinstance(frame_size,(list,tuple)) or len(frame_size)!=2:
+            raise ValueError('display budget loaded frame geometry missing: '+entry['path'])
+        for value in frame_size:number(value,'frame dimension',positive=True)
+        opacity=number(node.get('opacity'),'effective node opacity',positive=True)
+        if opacity>1 or node.get('visible') is False or node.get('active') is False:
+            raise ValueError('display budget node not visible: '+entry['path'])
+        alpha=number(sprite.get('alpha',255),'sprite alpha',positive=True)
+        if alpha>255:raise ValueError('invalid sprite alpha')
+        _,_,w,h=lookup(nodes,entry['path'])
+        actual=[w*cw,h*ch];expected=entry['expected_css']
+        tolerance=[max(entry.get('tolerance_css_px',1),v*entry.get('tolerance_ratio',0)) for v in expected]
+        rows.append(dict(id=entry['path'],rule='display_budget',frame=entry['frame'],
+                         actual_css=[round(v,6) for v in actual],expected_css=list(expected),
+                         tolerance_css=tolerance,
+                         passed=all(abs(a-e)<=t+1e-6 for a,e,t in zip(actual,expected,tolerance))))
+    return rows
+
+def inspect(im,nodes,case,doc=None):
     x,y,w,h=lookup(nodes,case['owner'])
     if im.width!=case['expected_width'] or im.height!=case['expected_height']:
         raise ValueError('unexpected capture dimensions')
@@ -51,6 +127,7 @@ def inspect(im,nodes,case):
 
     if 'pixel_regions' in case:
         rows.extend(measure(im,(x*im.width,y*im.height,w*im.width,h*im.height),case['pixel_regions']))
+    rows.extend(display_checks(nodes,case,doc))
     if not rows:raise ValueError('empty slot check')
     return rows
 
@@ -69,11 +146,13 @@ def run(config,dump_files,shots):
     for case in cases:
         row={'id':case['id'],'passed':False}
         try:
-            matches=[d for d in docs if d.get('screen')==case['screen'] and d.get('viewport',{}).get('width')==case['viewport_width']]
+            validate_display_budget(case)
+            matches=[d for d in docs if d.get('screen')==case['screen'] and d.get('viewport',{}).get('width')==case['viewport_width']
+                     and ('display_budget' not in case or d.get('viewport',{}).get('height')==case['viewport_height'])]
             if len(matches)!=1:raise ValueError('required state absent or ambiguous')
             doc=matches[0]; path=doc['_slot_shot']
             if path not in allowed or doc.get('truncated') or doc.get('errors'):raise ValueError('incomplete or unpaired capture')
-            with Image.open(path) as im:row['checks']=inspect(im,doc['nodes'],case)
+            with Image.open(path) as im:row['checks']=inspect(im,doc['nodes'],case,doc)
             row['passed']=all(r['passed'] for r in row['checks'])
         except (ValueError,TypeError,KeyError,OSError,IndexError) as err:row['error']=str(err)
         results.append(row)

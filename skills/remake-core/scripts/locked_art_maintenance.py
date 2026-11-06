@@ -195,6 +195,12 @@ def validate(project, receipt=None, manifest=None):
     import audit_ui_contract as U
     import package_issue_gate as I
     project = Path(project).resolve()
+    # A successor preserves the original manifest/receipt instead of overwriting
+    # or rebinding them. It must prove its exact semantic delta and current local
+    # recovery observations; unknown projects keep the original contract below.
+    if manifest is None and (project/'docs/art/locked-maintenance-successor.json').is_file():
+        from locked_art_successor import validate as validate_successor
+        return validate_successor(project, receipt)
     location = Path(manifest).resolve() if manifest else project/MANIFEST
     doc = read(location)
     if doc.get('schema') != SCHEMA or doc.get('project') != str(project):

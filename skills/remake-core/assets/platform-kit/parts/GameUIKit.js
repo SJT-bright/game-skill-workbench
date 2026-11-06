@@ -1,4 +1,4 @@
-// GameUIKit 1.1.4 (Cocos Creator 2.4) - platform-kit standard part, 生成时预防 P05 / P06.
+// GameUIKit 1.1.8 (Cocos Creator 2.4) - platform-kit standard part, 生成时预防 P05 / P06.
 // Every NEW or CHANGED popup, button, toast and bitmap number goes through this file; do not hand-write them.
 // Copy unchanged to assets/tiktok-platform/GameUIKit.js (tiktok_finalize.py sync does it for new games):
 //   var UI = require('GameUIKit');
@@ -28,7 +28,7 @@
 // Core: engine-neutral (taken from AdBoostKit kit-core.js 1.2.0). E is the engine adapter at the end of this
 // file. Every node draws at most one render component: pictures and text always sit on their own child nodes.
 function createGameUIKit(E) {
-  var Kit = {version: '1.1.7', kit: 'GameUIKit'};
+  var Kit = {version: '1.1.8', kit: 'GameUIKit'};
   var cfg = {
     tapGuardMs: 500,          // repeated taps inside this window are ignored
     closeMinSize: 104,        // close button hit area is at least this many design pixels
@@ -754,10 +754,17 @@ function createGameUIKit(E) {
   function boxOf(node, art) {
     var s = E.getSize(node);
     if (s.width > 0 && s.height > 0) return s;
-    var a = art || node;
-    var f = E.spriteFrameOf(a);
-    if (f) { var fs = E.frameSize(f); if (fs.width > 0 && fs.height > 0) return fs; }
-    return E.getSize(a);
+    // 1.1.8: laid-out design units are authoritative. A 1136x1149 frame can legitimately be drawn in a
+    // 136x122 slot (BallMaster FREE GEMS); texture resolution must never enlarge a valid slot.
+    var a = art || node, visual = E.getSize(a);
+    if (!(visual.width > 0) || !(visual.height > 0)) {
+      var f = E.spriteFrameOf(a), fs = f ? E.frameSize(f) : {width: 0, height: 0};
+      visual = {width: visual.width > 0 ? visual.width : fs.width, height: visual.height > 0 ? visual.height : fs.height};
+    }
+    // A separate art child may be scaled (including through intermediate parents). Measure its display box
+    // in the host's coordinates. This only supplies missing dimensions; it does not reanchor/reposition art.
+    if (a !== node) visual = E.artSizeIn(node, a, visual.width, visual.height);
+    return {width: s.width > 0 ? s.width : visual.width, height: s.height > 0 ? s.height : visual.height};
   }
   function pressTint(target) {
     if (!target || !E.isValid(target)) return;
@@ -813,7 +820,7 @@ function createGameUIKit(E) {
   };
   // UI.wrapExisting(node, handler, opts): the same guarantees for a button that came with the original game (a prefab
   // or scene node with cc.Button). Its old click events are taken off (stored on handle.oldClickEvents) so the tap runs
-  // exactly once, a SCALE transition becomes COLOR, and the hit area becomes at least the visible picture. The
+  // exactly once, a SCALE transition becomes COLOR, and the laid-out hit area is kept (same fallback as button()). The
   // prefab is not rebuilt. English games: every original button the AI touches goes through this.
   Kit.wrapExisting = function (node, handler, o) {
     o = o || {};
@@ -824,13 +831,6 @@ function createGameUIKit(E) {
     var old = E.takeButton(node);
     var opts = {};
     for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) opts[k] = o[k];
-    if (!opts.width && !opts.height) {
-      var own = E.getSize(node);
-      var f = E.spriteFrameOf(opts.art || node);
-      var fs = f ? E.frameSize(f) : {width: 0, height: 0};
-      opts.width = Math.max(own.width, fs.width);
-      opts.height = Math.max(own.height, fs.height);
-    }
     var h = Kit.button(node, handler, opts);
     h.oldClickEvents = old;
     return h;
@@ -1351,6 +1351,17 @@ function makeGameUIAdapter24(cc) {
     node: function (name, parent) { var n = new cc.Node(name); if (parent) parent.addChild(n); return n; },
     size: function (n, w, h) { n.setContentSize(w, h); },
     getSize: function (n) { return {width: n.width, height: n.height}; },
+    // Four corners, not frame pixels or world AABB: preserve child/nested scale and rotation in host units.
+    artSizeIn: function (host, art, w, h) {
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (var i = 0; i < 4; i++) {
+        var world = art.convertToWorldSpaceAR(new cc.Vec2(i & 1 ? w : 0, i & 2 ? h : 0));
+        var p = host.convertToNodeSpaceAR(world);
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      }
+      return {width: maxX - minX, height: maxY - minY};
+    },
     pos: function (n, x, y) { n.setPosition(x, y); },
     getPos: function (n) { return {x: n.x, y: n.y}; },
     // SpriteFrame geometry (2.4 API). makeFrame always passes offset and originalSize.

@@ -986,7 +986,7 @@ class PageRichnessTests(unittest.TestCase):
 class ArtCheckTests(unittest.TestCase):
     """art_check.py: the art line's own check right after each art round (user 2026-10-21)."""
     def run_check(self, scenes, flat=(), bar=False, extra_screens=(), board=None, runtime_verified=True, screen_alias=False,
-                  flash_frame=None):
+                  flash_frame=None, capture_identity=False):
         helper = PageRichnessTests()
         helper.addCleanup = self.addCleanup
         root = helper.project(scenes, league_add=False, flat=flat)
@@ -1065,8 +1065,76 @@ class ArtCheckTests(unittest.TestCase):
             still.save(recorded / ('%05d_%07dms.jpg' % (i, i * 40)), quality=90)
         out = Path(tempfile.mkdtemp(prefix='artcheck-out-')) / 'r'
         self.addCleanup(shutil.rmtree, out.parent, True)
-        code, text = py('art_check.py', '--project', root, '--out', out, *(['--board', board] if board else []))
+        capture_args = []
+        if capture_identity:
+            # A unit fixture, never a game's runtime evidence. Exercise the actual
+            # capture writer + verifier instead of mocking the production provenance gate.
+            capture_build = self.synthetic_capture_round(root)
+            capture_args = ['--capture-build', capture_build]
+        code, text = py('art_check.py', '--project', root, '--out', out, *capture_args,
+                        *(['--board', board] if board else []))
         return code, json.loads((out / 'art-check.json').read_text()), text
+
+    def synthetic_capture_round(self, root):
+        from art_round_check import run as capture_round
+        dumps = root / 'docs/test'
+        build = root / 'synthetic-unit-web'
+        build.mkdir()
+        (build / 'index.html').write_text('<html><head></head><body>synthetic unit fixture only</body></html>')
+        rows, cases = [], []
+        for i, file in enumerate(sorted(dumps.glob('*-ui-dump-*.json'))):
+            data = json.loads(file.read_text())
+            state = dict(id='synthetic-%03d' % i, screen=data['screen'], kind=data['kind'],
+                         purpose=data['purpose'], width=data['viewport']['width'],
+                         height=data['viewport']['height'], dpr=1, stable=False,
+                         recipe='synthetic unit fixture; not game acceptance',
+                         environment='unit-test CDP stand-in',
+                         witness=[dict(path=data['nodes'][0]['path'])])
+            cases.append(state)
+            rows.append(dict(id=state['id'], file=str(file), dump=data,
+                             png=str(dumps / data['screenshot'])))
+        (root / 'docs/art/capture-plan.json').write_text(json.dumps(dict(cases=cases)))
+        started = capture_round('start', root, build)
+        self.assertIn('id', started, started)
+        # Real collector functions run with a deterministic CDP stand-in. No copied
+        # historical evidence, fabricated ART receipt, or exemption from verification.
+        script = r'''
+        import fs from 'node:fs';
+        import {openCapture} from MODULE;
+        const [project,build,out,rows] = INPUT;
+        const collector=await openCapture({project,build,out});
+        let current,origin,token;
+        const page={
+          async goto(url){ origin=new URL(url).origin;
+            const html=await (await fetch(url)).text();
+            token=html.match(/name="art-capture-session" content="([^"]+)"/)[1]; },
+          async cdp(method,args){
+            if(method==='Page.captureScreenshot')return {data:fs.readFileSync(current.png).toString('base64')};
+            if(method!=='Runtime.evaluate')return {};
+            const expression=args.expression;
+            let value;
+            if(expression.includes('art-capture-session'))value={origin,token,t:1234,
+              w:current.dump.viewport.width,h:current.dump.viewport.height,dpr:1,sw:false,
+              ua:'synthetic-unit-fixture',lang:'en',tz:'UTC'};
+            else if(expression.includes('indexedDB.databases'))value={local:[],session:[],cookie:'',supported:true};
+            else value=current.dump;
+            return {result:{value}};
+          }
+        };
+        try {
+          await collector.navigate(page);
+          for(const row of rows){current=row;await collector.capture(page,row.id);}
+        } finally {await collector.close();}
+        // Keep only capture-writer output in the fixture's current dump matrix.
+        for(const row of rows){fs.unlinkSync(row.file);fs.unlinkSync(row.png);}
+        '''.replace('MODULE', json.dumps((HERE / 'art_capture_round.mjs').as_uri())).replace(
+            'INPUT', json.dumps([str(root), str(build), str(dumps), rows]))
+        made = subprocess.run([NODE, '--input-type=module', '-e', script], capture_output=True, text=True)
+        self.assertEqual(made.returncode, 0, made.stderr)
+        verified = capture_round('verify', root, build, dumps)
+        self.assertTrue(verified.get('ready'), verified)
+        self.assertTrue(all(c['action'] == 'fresh' for c in verified['cases']))
+        return build
 
     def test_recorded_flash_fails_the_flicker_row(self):
         scenes = [('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
@@ -1202,7 +1270,7 @@ class ArtCheckTests(unittest.TestCase):
         # user 2026-10-23: the final review's ART-04 (runtime frames < 2x node size, background < 1.5x) is the same check as
         # the art self-check after every art round - also the first localize round in the original style
         scenes = [('blurry', 'gameplay'), ('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
-        code, r, text = self.run_check(scenes, bar=True, board='localize')
+        code, r, text = self.run_check(scenes, bar=True, board='localize', capture_identity=True)
         self.assertEqual(r['art_style'], 'original')
         self.assertEqual(code, 1)
         row = next(x for x in r['rows'] if x['check'].startswith('清晰度（ART-04'))

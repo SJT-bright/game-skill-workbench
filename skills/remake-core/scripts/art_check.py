@@ -607,14 +607,23 @@ def main():
     ap.add_argument('--maintenance-scope', type=Path)
     ap.add_argument('--maintenance-visual-policy', type=Path)
     ap.add_argument('--english-visual-scope', type=Path)
+    ap.add_argument('--capture-build', type=Path, help='actual Web export used for screenshot provenance when --build is Native')
     ap.add_argument('--out', type=Path)
     ap.add_argument('--production-only', action='store_true', help='first integration: production and declared visual checks, never a trial receipt')
+    ap.add_argument('--inputs-only', action='store_true', help='read-only capture inventory and Web provenance preflight; no pixels or ART receipt')
     a = ap.parse_args()
     if a.maintenance_scope or a.maintenance_visual_policy:
         if not a.maintenance_scope or not a.maintenance_visual_policy or not a.binding:
             ap.error('maintenance scope, visual policy and binding are required together')
-        if a.loading_only or a.ui_contract or a.production_only:
+        if a.loading_only or a.ui_contract or a.production_only or a.inputs_only:
             ap.error('maintenance mapping requires the full evidence-set mode')
+    if a.inputs_only:
+        if a.production_only or a.loading_only or a.ui_contract or a.ui_native or a.ui_runner or a.ui_calibrate or a.maintenance_scope or a.maintenance_visual_policy or a.english_visual_scope:
+            ap.error('--inputs-only cannot combine with other scoped modes')
+        if not a.dumps or not a.out:
+            ap.error('--inputs-only requires explicit --dumps and --out outside project')
+        from art_input_check import run as input_preflight
+        return input_preflight(a.project, a.dumps, a.build, a.out, a.board, a.capture_build)
     if a.production_only:
         if a.loading_only or a.ui_contract or a.ui_native or a.ui_runner or a.ui_calibrate or a.english_visual_scope:
             ap.error('--production-only cannot combine with loading/UI modes')
@@ -673,12 +682,10 @@ def main():
             '重新核对真实素材与制作约束；页面显示仍由本轮实际采集判断', 'production-assets.json')
 
     inventory = capture_inventory(proj, dumps)
-    capture_round = None
-    if board == 'localize' and (a.build and (a.build/'index.html').is_file() or
-                                (proj/'docs/art/capture-plan.json').is_file() or
-                                (proj/'.tiktok-kit/art-rounds/current.json').is_file()):
-        from art_round_check import run as capture_check, origin_hash
-        capture_round = capture_check('verify', proj, a.build, dumps)
+    from art_input_check import verify_capture
+    capture_round = verify_capture(proj, dumps, a.build, board, inventory, a.capture_build)
+    if capture_round is not None:
+        from art_round_check import origin_hash
         if capture_round.get('ready') and 'error' not in capture_round:
             capture_round.update(dumps=str(dumps), origin_hash=origin_hash(capture_round))
         (out/'capture-round.json').write_text(json.dumps(capture_round, ensure_ascii=False, indent=2))
@@ -1148,7 +1155,7 @@ def main():
 
 
 if __name__ == '__main__':
-    _python = numpy_python()
+    _python = None if '--inputs-only' in sys.argv else numpy_python()
     if _python:      # v7.8: no numpy here -> re-run with one that has it (the checker tools inherit sys.executable)
         import os
         print('art_check: %s 没有 numpy，改用 %s 运行' % (sys.executable, _python), file=sys.stderr)

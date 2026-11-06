@@ -494,7 +494,7 @@ def _check_images(project, board=None, policy=None, capture_build=None):
                        locked_art_maintenance_error=str(exc),
                        message='已锁定美术的局部维护证据无效：' + str(exc))
         else:
-            out.update(state='user_locked_art_maintenance', level='ok',
+            out.update(state=locked['state'], level='ok',
                        locked_art_maintenance=locked,
                        message='用户已批准原画面；本轮实际改动、数值、启动及已登记问题证据一致。旧完整美术结果保持原样，不宣称全游戏 ART 通过。')
         return out
@@ -604,6 +604,7 @@ def finding(result):
 ROW = {'no_images': '没有图片，不用核对', 'match_pass': '对得上（art_check 通过）', 'match_3x': '3.x 未覆盖（不是通过）',
        'approved_local_ui_scope': '原美术未变，已批准局部UI与数值证据合并通过（非新全游戏ART-06）',
        'user_locked_art_maintenance': '用户批准的美术已锁定；局部维护证据有效（非全游戏ART通过）',
+       'user_locked_art_maintenance_successor': '已锁定美术精确局部返工证据有效；旧执行身份保留（非全游戏ART通过）',
        'user_locked_art_maintenance_invalid': '已锁定美术的局部维护证据无效',
        'missing': '没有回执', 'unreadable': '回执读不了', 'not_pass': '回执不是通过', 'changed': '图片改过',
        'display_changed': '文字、字体或布局改过',   # display_changed: 生成时预防 R4M2

@@ -256,7 +256,7 @@ def find_shot_browser():
 def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, browser=None, timeout=90, wait=12,
                    run=None):
     """生成时预防 P21 ⑤ (后半; 普查「进不去游戏」96 款 203 次, 试玩链接打不开 14 次): before a link a person opens is
-    printed, a headless Chrome/Edge takes one screenshot of the game page (the same page the phone frame shows).
+    printed, an actual Ego Page takes one screenshot of the game page (the same page the phone frame shows).
     Returns (level, message, info). 'block' (no link): the picture is black or one flat colour, the page is still on
     the loading page (Cocos splash shown or no scene running), or the page reported an error. 'warn': no screenshot
     (no browser on this computer, browser failed or timed out, export without scripts) - the message says 没截图, it
@@ -270,30 +270,42 @@ def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, bro
         entry = b''
     if not re.search(br'<script\b', entry, re.I):
         return 'warn', '首页截图没截：导出的 index.html 里没有脚本，不像能跑的 Cocos 导出（没截图，不算通过）', info
-    browser = browser or find_shot_browser()
-    if not browser:
-        return 'warn', ('首页截图没截：这台电脑找不到 Chrome、Edge 或 Chromium（可用 CDP_BROWSER=<浏览器程序完整路径> 指定）。'
-                        '没截图，首页能不能进没核对，不算通过'), info
-    info['browser'] = browser
-    out_png = Path(out_png)
-    try:
-        out_png.unlink()
-    except OSError:
-        pass
+    # EGO_ONLY_TEST_POLICY: the link's automatic check is a test; Chrome is the user's window only.
+    import shutil
+    import secrets
+    ego = shutil.which('ego-browser')
+    if not ego:
+        return 'warn', '首页截图未执行：找不到官方 Ego CLI；不能用 Chrome 补测，未核对不算通过', info
+    info['browser'] = ego
+    info['browser_route'] = 'ego_taskspace'
+    out_png = Path(out_png).resolve()
+    try: out_png.unlink()
+    except OSError: pass
     width, height = phone_size
-    with tempfile.TemporaryDirectory(prefix='serve_preview_shot_') as profile:
-        command = [str(browser), '--headless=new', '--no-sandbox', '--disable-gpu-sandbox', '--use-angle=swiftshader',
-                   '--enable-unsafe-swiftshader', '--no-first-run', '--no-default-browser-check', '--mute-audio',
-                   '--hide-scrollbars', '--disable-extensions', '--user-data-dir=' + profile,
-                   '--window-size=%d,%d' % (width, height), '--virtual-time-budget=%d' % int(wait * 1000),
-                   '--screenshot=' + str(out_png), shot_url]
-        try:
-            done = (run or subprocess.run)(command, stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
-            tail = (done.stderr or b'')[-300:].decode('utf-8', 'replace').strip()
-        except subprocess.TimeoutExpired:
-            return 'warn', '首页截图没截成：无头浏览器 %g 秒没出图（页面卡死或浏览器起不来）。没截图，不算通过' % timeout, info
-        except OSError as error:
-            return 'warn', '首页截图没截成：浏览器起不来（%s）。没截图，不算通过' % error, info
+    name = 'preview-home-%s-%s' % (os.getpid(), secrets.token_hex(4))
+    info['space_name'] = name
+    script = """const fs=await import('node:fs/promises');
+const t=await taskSpace(%s),p=t.page('p1');
+let finished=false;
+try {
+ await p.cdp('Network.enable',{});await p.cdp('Network.setCacheDisabled',{cacheDisabled:true});
+ async function size(){await p.cdp('Emulation.setDeviceMetricsOverride',{width:%d,height:%d,deviceScaleFactor:1,mobile:true});await p.cdp('Emulation.setVisibleSize',{width:%d,height:%d});await p.cdp('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});}
+ await size();await p.goto(%s);await size();
+ const until=Date.now()+%d;while(Date.now()<until)await new Promise(r=>setTimeout(r,250));
+ const image=await p.cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await fs.writeFile(%s,Buffer.from(image.data,'base64'));
+ console.log(JSON.stringify({browser_route:'ego_taskspace',session_id:t.spaceId,space_name:%s,screenshot:%s}));
+ await t.finish({keep:[]});finished=true;
+}catch(e){console.error(String(e));throw e;}
+""" % (json.dumps(name),width,height,width,height,json.dumps(shot_url),int(wait*1000),json.dumps(str(out_png)),json.dumps(name),json.dumps(str(out_png)))
+    try:
+        done=(run or subprocess.run)([ego,'nodejs','-e',script],stdin=subprocess.DEVNULL,capture_output=True,timeout=timeout)
+        tail=(done.stderr or b'')[-300:].decode('utf-8','replace').strip()
+    except subprocess.TimeoutExpired:
+        return 'warn', '首页 Ego 截图超时；保留未测，不回退 Chrome', info
+    except OSError as error:
+        return 'warn', '首页 Ego 截图未执行：%s；不回退 Chrome' % error, info
+    if done.returncode:
+        return 'warn', '首页 Ego 截图或空间收尾未完成（%s）；保留未测，不回退 Chrome' % tail, info
     if not out_png.is_file():
         return 'warn', '首页截图没截成：浏览器退出码 %s，没写出图（%s）。没截图，不算通过' % (done.returncode, tail or '无输出'), info
     info['screenshot'] = str(out_png)

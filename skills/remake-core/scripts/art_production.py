@@ -376,6 +376,17 @@ def commit(project, record):
             'expected_cases': record['expected_cases'], 'manifest': MANIFEST.as_posix()}
 
 
+def has_visual_rule(case):
+    if not isinstance(case,dict):return False
+    if 'display_budget' in case:
+        # Reuse the runtime schema: malformed size declarations cannot become a
+        # valid production binding merely because an older containment rule exists.
+        from audit_art_slots import validate_display_budget
+        validate_display_budget(case)
+        return True
+    return bool((case.get('inside') and case.get('children')) or case.get('horizontal_gap') or case.get('pixel_regions'))
+
+
 def audit(project, require_cases=True):
     project = Path(project).resolve()
     result = {'schema': 'art_production.v1', 'declared': False, 'passed': True, 'assets': [], 'runtime_verified': False}
@@ -401,7 +412,7 @@ def audit(project, require_cases=True):
                 if require_cases:
                     for name in expected:
                         case = case_map.get(name)
-                        if not case or not ((case.get('inside') and case.get('children')) or case.get('horizontal_gap') or case.get('pixel_regions')):
+                        if not has_visual_rule(case):
                             raise ValueError('runtime case missing or has no visual rule: ' + name)
                 row['passed'] = True
             except (OSError, ValueError, KeyError, TypeError, IndexError, ImportError) as exc:
@@ -451,7 +462,7 @@ def fingerprint(project):
                 raise ValueError('missing or duplicate expected runtime cases')
             for name in expected:
                 case = cases.get(name)
-                if not case or not ((case.get('inside') and case.get('children')) or case.get('horizontal_gap') or case.get('pixel_regions')):
+                if not has_visual_rule(case):
                     raise ValueError('runtime case missing or has no visual rule: ' + name)
             inputs = record['inputs']
             if not isinstance(inputs, list) or not inputs:

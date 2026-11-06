@@ -1,3 +1,7 @@
+## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
+
+所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+
 # 用户本地试玩：生成链接前落实手机视口（2026-10-25）
 
 触发于用户亲自体验 Cocos 游戏的任何入口：预览、试玩、游玩、打开游戏、本地看一下、恢复旧试玩链接，以及重塑/美化/英化过程中和随测试包附带的本地链接。仅试玩时走本页的轻量交接，不启动全量测试、美术重审、关卡或奖励矩阵。
@@ -10,7 +14,7 @@
 - 恢复旧链接也先检查外壳；可在原端口重启当前服务以保留 origin/存档。外壳在服务层生成，不改已验证的 Web/Native 导出或 ZIP，不清存档，不凭此重新打包。
 - 手机外壳必须以 `Permissions-Policy: fullscreen=()` 和 iframe `allow="fullscreen 'none'"` 禁止游戏自动全屏；真实触摸 PLAY 后再次核 iframe 内部尺寸及外框，防止首页合格、开局却铺满窗口。外壳策略不改 Web/Native 产物。
 - 发链接前只做相称检查：桌面宽窗口下读回 iframe 内390×844（或明确尺寸）、外框未放大且留白；小窗口整体缩放不溢出；确认真实游戏首页与 PLAY/开始可用。HTTP200、标题正确或设置手机 UA 单独都不够。
-- 本次修复仅测显示容器和一次开始操作，不重跑已通过的全游戏CI。验证完成后关闭自有 QA 页面；保留正在交给用户的 Chrome 窗口与试玩服务。用户结束或被新版替代后，通过受支持接口关闭准确 URL 对应的自有页面，再关闭服务并核实；不退出整个 Chrome、不清登录/存档，不关闭用户其他页面。
+- Agent 对显示容器和一次开始操作的检查在 Ego 内完成；用户 Chrome 窗口只作试玩交接，不在其中运行验收。验证完成后关闭自有 QA 页面；保留正在交给用户的 Chrome 窗口与试玩服务。用户结束或被新版替代后，通过受支持接口关闭准确 URL 对应的自有页面，再关闭服务并核实；不退出整个 Chrome、不清登录/存档，不关闭用户其他页面。
 
 ```sh
 python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep --project <工程> --name "游戏 用户试玩"
@@ -28,6 +32,6 @@ python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep
 
 普通试玩使用原适配器。用户要体验广告结果时，另按[用户可操作广告模拟](../../remake-ads/references/manual-ad-simulation.md)启动同版本的独立链接并标明“广告模拟试玩”。
 
-**给链接前自动截首页图（生成时预防 P21 ⑤ 后半）**：给人用的链接（`--keep`、`--open`、`--idle-minutes 0`）读回核对以后，`serve_preview.py` 自己用无头 Chrome/Edge（`browser_env.find_browser`，`CDP_BROWSER` 可指定）截一张游戏页的图，并读页面探针。全黑、只有一种颜色、12 秒后还停在加载页、页面报错（未捕获异常、未处理的 Promise、console.error、资源加载失败）就**不给链接**，退出码 1。没有浏览器、截图超时、浏览器没写出图时打印「没截图」，照样给链接，不算通过。Cocos 3.x 导出还没校准，有问题只警告。截图路径打在输出里，交链接前自己看一眼。不要另外手写截图或 sleep 等待来代替它。
+**给链接前自动截首页图（生成时预防 P21 ⑤ 后半）**：给人用的链接（`--keep`、`--open`、`--idle-minutes 0`）读回核对以后，`serve_preview.py` 自己通过 Ego 官方 Page 接口截一张游戏页的图，并读页面探针。全黑、只有一种颜色、12 秒后还停在加载页、页面报错（未捕获异常、未处理的 Promise、console.error、资源加载失败）就**不给链接**，退出码 1。没有浏览器、截图超时、浏览器没写出图时打印「没截图」，照样给链接，不算通过。Cocos 3.x 导出还没校准，有问题只警告。截图路径打在输出里，交链接前自己看一眼。不要另外手写截图或 sleep 等待来代替它。
 
 **手机外壳里鼠标就是手指（P13 ④）**：外壳里的游戏页由服务自动加上 `assets/preview-touch-bridge.js`，只改服务给出的 HTTP 内容，不改导出。在画布上按下、拖动、松开鼠标，会变成 touchstart、touchmove、touchend；窗口失焦时变成 touchcancel。字段有 identifier、clientX/clientY、screenX/screenY（等于游戏页坐标，和 TikTok 一样）、pageX/pageY 和 force，平台包 touch24、tiktok-touch-3x 和 TouchOwner 都能直接读。转换过的那次鼠标事件不再往下传，引擎不会收到两次。点在画布以外（模拟广告面板、vConsole）的照旧按鼠标处理。`--raw` 内部 QA 页面不加这个脚本。只认触摸的游戏在预览里也能拖动，不要在游戏里另写鼠标兼容代码。

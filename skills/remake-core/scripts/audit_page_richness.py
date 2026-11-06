@@ -2710,6 +2710,22 @@ def video_button_problems(purpose, content, nodes):
     return []
 
 
+def visible_sound_buttons(nodes):
+    """A greyed endpoint remains a visible control; a disabled component or hidden node does not."""
+    return [n for n in nodes if n.get('active', True) is not False and n.get('opacity', 1) > 0.05
+            and 'button' in n.get('comps', {}) and n['comps']['button'].get('enabled', True) is not False]
+
+
+def requires_result_double(project):
+    from feature_policy import capability
+    return capability('ad_double_entry', project)[0] != 'not_applicable'
+
+
+def requires_home_gift(project):
+    from feature_policy import applies
+    return applies('gift_box', BOARD, project) != 'not_applicable'
+
+
 def check(d, image_module=None, project=None, binding=None, original_rules=(), retained_pattern_frames=()):
     from official_loading import audit as audit_official_loading
     if 'original_loading_spinner' in original_rules:
@@ -2912,7 +2928,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         if cov < 0.25 and 'result_original_density' not in original_rules: need.append('>= 25%% of the screen used, found %.0f%%' % (cov * 100))
         if need:
             problems.append('result_page: ' + '; '.join(need))
-        if (purpose == 'result_win' or MODE == 'endless') and 'result_original_multiplier' not in MAINTENANCE_RULES:
+        if (purpose == 'result_win' or MODE == 'endless') and 'result_original_multiplier' not in MAINTENANCE_RULES and requires_result_double(project):
             sub_names = lambda b: ' '.join([b['name'], str((b['comps'].get('sprite') or {}).get('frame', ''))] +
                                            [n['name'] + ' ' + str((n['comps'].get('sprite') or {}).get('frame', '')) + ' ' + text(n)
                                             for n in nodes if node_under(n, b)])
@@ -2961,7 +2977,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
                                                     % (cover_share * 100))
         if not any(area(b['rect']) > 0.03 for b in plated): need.append('a big PLAY button with a plate')
         if len(icons) < 2: need.append('>= 2 icon buttons, found %d' % len(icons))
-        if 'home_original_composition' not in MAINTENANCE_RULES and not any(
+        if 'home_original_composition' not in MAINTENANCE_RULES and requires_home_gift(project) and not any(
                 GIFT_NAME.search(n['name'] + ' ' + str((n['comps'].get('sprite') or {}).get('frame', ''))) for n in content):
             need.append('the gift box (a 10-frame animated gift in the game style, tap -> ad -> coins; user 2026-10-23), '
                         'node/frame named gift')
@@ -3111,7 +3127,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         need = []
         if not re.search(r'music', texts, re.I): need.append('a "Music" section')
         if not re.search(r'sound|sfx|effects', texts, re.I): need.append('a "Sound Effects" section')
-        if len(buttons) < 6: need.append('>= 6 buttons (two switches, minus/plus for each), found %d' % len(buttons))
+        if len(visible_sound_buttons(nodes)) < 6: need.append('>= 6 visible controls (including greyed volume limits), found %d' % len(visible_sound_buttons(nodes)))
         if len(re.findall(r'\d+\s*%', texts+' '+' '.join(value for n,value in numeric_pictures))) < 2: need.append('two percentages (e.g. 70%)')
         if need:
             problems.append('settings_sound: ' + '; '.join(need))

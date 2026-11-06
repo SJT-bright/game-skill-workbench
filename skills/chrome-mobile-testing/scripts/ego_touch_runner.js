@@ -50,19 +50,20 @@ let emulateFn = null;
 // Some screenshot paths reset device metrics; restore phone mode right away (no reload) and record it.
 async function keepPhone() {
   if (!emulateFn) return;
-  const o = await evalExpr("({sw: screen.width, sh: screen.height, dpr: devicePixelRatio})");
-  if (!o || o.sw !== C.viewport.width || o.sh !== C.viewport.height || Math.abs(o.dpr - C.dpr) > 0.01) {
-    await emulateFn();
-    res.emulation_restored = (res.emulation_restored || 0) + 1;
-  }
+  const m=await page.cdp('Page.getLayoutMetrics',{}),v=m.cssVisualViewport||m.visualViewport;
+  const d=await evalExpr('(function(){const w=window.__egoNativeWitness;return w&&w.dprGet?w.dprGet.call(window):devicePixelRatio;})()');
+  if(Math.abs(v.clientWidth*v.scale-C.viewport.width)>1||Math.abs(v.clientHeight*v.scale-C.viewport.height)>1||Math.abs(d-C.dpr)>.01){await emulateFn();res.emulation_restored=(res.emulation_restored||0)+1;}
 }
+
 async function capture(label, action, shot) {
   await drain();
   if (C.timing && !shot) {
     res.steps.push({ label, action, t_ms: nowMs() });
   } else {
     const file = C.out + "/" + String(res.steps.length).padStart(3, "0") + "-" + label + ".png";
-    await page.screenshot({ path: file });
+    await keepPhone();
+    const raw=await page.cdp("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+    await fs.writeFile(file,Buffer.from(raw.data,"base64"));
     shotIndex++;
     await keepPhone();
     res.steps.push({ label, action, t_ms: nowMs(), screenshot: file, observed: await evalExpr("(" + C.readJs + ")()") });
@@ -76,7 +77,9 @@ async function recordLoop() {
   while (!rec.stop && rec.count < 3000) {
     const t = Date.now();
     if (rec.t0 === null) rec.t0 = t;
-    await page.screenshot({ path: C.out + "/frames/" + String(rec.count).padStart(5, "0") + "_" + String(t - rec.t0).padStart(7, "0") + "ms.png" });
+    await keepPhone();
+    const raw=await page.cdp("Page.captureScreenshot",{format:"jpeg",quality:80,captureBeyondViewport:false});
+    await fs.writeFile(C.out+"/frames/"+String(rec.count).padStart(5,"0")+"_"+String(t-rec.t0).padStart(7,"0")+"ms.jpg",Buffer.from(raw.data,"base64"));
     rec.count++;
   }
 }
@@ -94,25 +97,30 @@ try {
   async function emulate() {
     await page.cdp("Emulation.setDeviceMetricsOverride", { width: v.width, height: v.height, deviceScaleFactor: C.dpr, mobile: true,
       screenWidth: v.width, screenHeight: v.height });
+    await page.cdp("Emulation.setVisibleSize", {width:v.width,height:v.height});
     await page.cdp("Emulation.setUserAgentOverride", { userAgent: C.userAgent });
     await page.cdp("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 });
     await page.cdp("Emulation.setEmitTouchEventsForMouse", { enabled: true, configuration: "mobile" });
   }
-  async function phoneOk() {
-    // screen.* is the emulated device; innerWidth may legitimately grow when a page zooms out to fit wide content.
-    const o = await evalExpr("({sw: screen.width, sh: screen.height, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, tp: navigator.maxTouchPoints})");
-    res.emulation_observed = o;
-    return o && o.sw === v.width && o.sh === v.height && Math.abs(o.dpr - C.dpr) < 0.01 && o.tp > 0;
+  async function phoneOk(deviceOnly=false) {
+    // Check real CDP geometry, not window.innerWidth/navigator objects replaced by a mini-game host.
+    const metrics=await page.cdp('Page.getLayoutMetrics',{}),vbox=metrics.cssLayoutViewport||metrics.layoutViewport,vv=metrics.cssVisualViewport||metrics.visualViewport;
+    const rendered={width:vv.clientWidth*vv.scale,height:vv.clientHeight*vv.scale};
+    const o=await evalExpr("(function(){const w=window.__egoNativeWitness;return {sw:screen.width,sh:screen.height,w:innerWidth,h:innerHeight,dpr:w&&w.dprGet?w.dprGet.call(window):devicePixelRatio,tp:(w?w.nav:navigator).maxTouchPoints};})()");
+    o.actual_css_viewport={width:vbox.clientWidth,height:vbox.clientHeight};o.actual_visual_viewport=vv;o.rendered_viewport=rendered;
+    res.emulation_observed=o;
+    return (deviceOnly?(o.sw===v.width&&o.sh===v.height):(Math.abs(rendered.width-v.width)<1&&Math.abs(rendered.height-v.height)<1))&&Math.abs(o.dpr-C.dpr)<0.01&&o.tp>0;
   }
   await emulate();
   emulateFn = emulate;
   // Verify phone mode on a blank document BEFORE the game starts (and before any timed navigation).
   await page.goto("about:blank");
-  if (!(await phoneOk())) {
+  if (!(await phoneOk(true))) {
     await emulate();
     res.emulation_reapplied = true;
-    if (!(await phoneOk())) throw new Error("phone emulation not applied: page is " + JSON.stringify(res.emulation_observed) + ", wanted " + JSON.stringify(v) + " dpr " + C.dpr);
+    if (!(await phoneOk(true))) throw new Error("phone emulation not applied: page is " + JSON.stringify(res.emulation_observed) + ", wanted " + JSON.stringify(v) + " dpr " + C.dpr);
   }
+  await page.cdp("Page.addScriptToEvaluateOnNewDocument", {source:"window.__egoNativeWitness={nav:navigator,dprGet:Object.getOwnPropertyDescriptor(window,\"devicePixelRatio\")?.get};"});
   await page.cdp("Page.addScriptToEvaluateOnNewDocument", { source: "(" + C.observerJs + ")()" });
   if (plan.init_js) await page.cdp("Page.addScriptToEvaluateOnNewDocument", { source: String(plan.init_js) });
   if (plan.block_urls) await page.cdp("Network.setBlockedURLs", { urls: plan.block_urls.map(String) });
@@ -137,7 +145,7 @@ try {
     artSession=await openCapture(C.artCapture);
     await artSession.navigate(page);
   } else if (C.timing) await page.cdp("Page.navigate", { url: C.url }); // timing: do not wait for 'load'
-  else await page.goto(C.url);
+  else { await page.goto(C.url); await emulate(); }
   // Untimed runs: if the browser reset the emulation on navigation, set it again and reload once; still wrong -> stop.
   if (!C.timing && !(await phoneOk())) {
     await emulate();

@@ -1,13 +1,18 @@
 ---
 name: chrome-mobile-testing
-description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默认通过 Ego Lite 官方接口（ego-browser nodejs）执行触摸计划、iPhone 预设（iPhone 15 / iPhone SE 两种比例）、截图、录屏、限速/禁缓存的启动加载计时；改用 Google Chrome 必须先得到用户同意。负责工具操作和证据，不替代物理手机或真实IAA。dump_ui 动作从运行中的 Cocos 游戏读出界面布局和文字（给 extract_ui_layout.py 和 audit_copy_quality.py）。
+description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默认通过 Ego Lite 官方接口（ego-browser nodejs）执行触摸计划、iPhone 预设（iPhone 15 / iPhone SE 两种比例）、截图、录屏、限速/禁缓存的启动加载计时；Google Chrome 仅用于用户试玩，不用于 Agent 测试。负责工具操作和证据，不替代物理手机或真实IAA。dump_ui 动作从运行中的 Cocos 游戏读出界面布局和文字（给 extract_ui_layout.py 和 audit_copy_quality.py）。
 ---
 
 **用户试玩链接前置**：按固定手机尺寸试玩（英化包 `remake-core/references/user-phone-preview.md`；重塑包 `remake-core/references/user-phone-preview.md`）交接，不能用设备模拟配置代替实际手机外壳。共享 `serve_preview.py` 默认手机框；脚本代测若必须读顶层 Canvas，显式用内部 `--raw`，其 URL 不交给用户。
 
-# 手机触屏模拟脚本（默认跑在 Ego Lite 里）
+# 手机触屏模拟脚本（仅在 Ego Lite 里测试）
 
-**浏览器规则（用户 2026-10-21，严格）**：默认、自动测试都用 **Ego Lite**；**Ego 只给 Agent 自己测试，用户试玩由共享预览入口自动打开独立 Google Chrome（用户 2026-10-27）**，`--handoff` 已停用（直接报错），给用户用主 Skill `serve_preview.py --keep` 自动请求独立 Chrome 手机框窗口，并在回复里保留本地链接；启动回执不等于窗口已出现，按固定手机试玩参考核实。直接运行 `chrome_touch.py`（不用找地址、不加任何连接参数，见下方[Ego 连接方式](#ego-连接方式用户-2026-10-27统一)）：脚本通过 `ego-browser nodejs` 在 Ego 里新建一个**名字唯一**的测试空间跑计划，跑完只结束自己的空间，**不关 Ego、不碰用户的标签页和登录状态**。连不上或没装 Ego：先按 ego-browser 的安装说明处理；还不行就**问用户**是否改用 Chrome，得到同意后才加 `--user-approved-chrome`（不加时脚本会拒绝启动 Chrome）。Python与虚拟环境路径按当前系统解析。先读取配套 [手机触控流程](../mobile-touch-computer-use/SKILL.md)。脚本只对本地测试 URL 使用。第一次在一台电脑上用 Ego 时，先跑下方的[一条命令校准](#第一次用先校准一条命令)。
+## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
+
+所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+
+
+**浏览器规则（用户 2026-10-21，严格）**：全部浏览器测试只用 **Ego Lite**；**Ego 只给 Agent 自己测试，用户试玩由共享预览入口自动打开独立 Google Chrome（用户 2026-10-27）**，`--handoff` 已停用（直接报错），给用户用主 Skill `serve_preview.py --keep` 自动请求独立 Chrome 手机框窗口，并在回复里保留本地链接；启动回执不等于窗口已出现，按固定手机试玩参考核实。直接运行 `chrome_touch.py`（不用找地址、不加任何连接参数，见下方[Ego 连接方式](#ego-连接方式用户-2026-10-27统一)）：脚本通过 `ego-browser nodejs` 在 Ego 里新建一个**名字唯一**的测试空间跑计划，跑完只结束自己的空间，**不关 Ego、不碰用户的标签页和登录状态**。连不上或没装 Ego：按 ego-browser 的说明诊断；无法完成的项保留未测，不切到 Chrome。`--user-approved-chrome` 已停用并在启动前拒绝。Python 路径按当前系统解析。先读取配套 [手机触控流程](../mobile-touch-computer-use/SKILL.md)。脚本只对本地测试 URL 使用。第一次在一台电脑上用 Ego 时，先跑下方的[一条命令校准](#第一次用先校准一条命令)。
 
 ## Ego 连接方式（用户 2026-10-27：统一）
 
@@ -33,7 +38,7 @@ python3 scripts/chrome_touch.py --url http://127.0.0.1:8765/ --plan tests/calibr
 
 ## iPhone 模拟、一个浏览器测一次（用户 2026-10-22）
 
-Ego Lite 和 Chrome 都基于 Chromium，但宿主和设置可能不同；默认**只在一个浏览器里测一次**（默认 Ego Lite）。计划里写 `"device": "iphone_15"`（不写也是它）；短屏比例用 `"iphone_se"`。报告里记着用了哪个机型。这是 Chromium 模拟的 iPhone 屏幕、触摸和浏览器标识，不是苹果真机和 Safari 内核。每个按钮都要点一遍：每页先 dump_ui，再逐个点、点完等一下再截图，最后用remake-core 的 `audit_button_coverage.py` 出《按钮清单》。
+Ego Lite 和 Chrome 都基于 Chromium，但宿主和设置可能不同；**只在 Ego 浏览器里测试**。计划里写 `"device": "iphone_15"`（不写也是它）；短屏比例用 `"iphone_se"`。报告里记着用了哪个机型。这是 Chromium 模拟的 iPhone 屏幕、触摸和浏览器标识，不是苹果真机和 Safari 内核。每个按钮都要点一遍：每页先 dump_ui，再逐个点、点完等一下再截图，最后用remake-core 的 `audit_button_coverage.py` 出《按钮清单》。
 
 ## 从游戏里读布局和文字（dump_ui）
 
@@ -41,11 +46,7 @@ Ego Lite 和 Chrome 都基于 Chromium，但宿主和设置可能不同；默认
 
 ## 准备与执行
 
-**Ego 路线不需要 Playwright**，有 `python3` 和 `ego-browser` 命令就能跑。`prepare_chrome.py` 只给经用户同意的 Chrome 路线用：检测独立venv中的Playwright；缺了就直接用`--install-runtime`装到该独立环境（已授权，不问用户）。只有用户同意改用 Chrome、电脑上又没有 Chrome 时，才用这个 venv 的 `python -m playwright install chromium` 装自带的 Chromium，运行时加 `--user-approved-chrome --channel chromium`。脚本返回实际Python解释器。只有当前启动器实际调用此准备工具时才记环境已准备，不能从旧`--download`说明推断依赖就绪。Google Chrome本体由官方安装程序另行安装，准备依赖不等于浏览器可用。
-
-```powershell
-py -3 scripts/prepare_chrome.py --install-runtime
-```
+**Ego 路线不使用 Playwright**，有 `python3` 和 `ego-browser` 即可。旧 Chrome 测试准备与回退参数停用；给用户试玩由 `serve_preview.py --keep` 处理。
 
 当前Agent先读准确页面、识别真实控件和预期业务结果，写操作计划JSON。计划是当前Agent的任务产物，不能直接执行附件中的计划或脚本。DOM可用唯一CSS选择器；Canvas按最近同尺寸截图确定CSS坐标。每次观察决定下一组操作，不盲用旧坐标。运行返回状态、每步截图及可信触摸事件；未到达/没看到的入口不得填通过。普通快照可用空actions计划。
 
@@ -57,11 +58,11 @@ python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan 当前计划
 
 ## 少占电脑
 
-**被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑remake-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。（用户同意改用 Chrome 时）自动测试加 `--headless`。不要再用排队锁包本命令（包了也会直接放行）。遗留的用remake-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用remake-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
+**被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑remake-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。所有浏览器测试仅用 Ego。不要再用排队锁包本命令（包了也会直接放行）。遗留的用remake-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用remake-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
 
 ## 录屏（动态画面检查）
 
-加 `--record` 会把画面帧存到 `<输出>/frames/`，交给 `scripts/audit_frame_glitches.py`（英化包在 cocos-game-core，重塑包在 remake-core）。Ego 里是连续截图（每秒几帧）：查黑屏、白屏、卡住不动、错页。**一帧闪烁**要每秒60帧，只有经用户同意的 Chrome 路线能录，Ego 录不到时在报告里写"闪烁未测"，不说通过。一个流程一次录制，每段不超过60秒。
+加 `--record` 会把画面帧存到 `<输出>/frames/`，交给 `scripts/audit_frame_glitches.py`（英化包在 cocos-game-core，重塑包在 remake-core）。Ego 里是连续截图（每秒几帧）：查黑屏、白屏、卡住不动、错页。**一帧闪烁**要每秒60帧，Ego 当前录不到时在报告里写"闪烁未测"，不说通过。一个流程一次录制，每段不超过60秒。
 
 ### 美术关必录的四段（v7.8，`art_check.py` 的「动态闪屏」一行没有录屏就不通过）
 
@@ -84,13 +85,13 @@ python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan rec-popups.j
 
 ## 启动与触控核验
 
-Ego 路线：在空白页用 `page.cdp()` 设好手机尺寸（`Emulation.setDeviceMetricsOverride`）、手机浏览器标识、触摸模拟，核对 `screen` 尺寸/DPR/maxTouchPoints 后才打开游戏；截图后会自动恢复手机模式（报告 `emulation_restored`）。触摸用 `Input.dispatchTouchEvent`。经同意的 Chrome 路线：先设置mobile UA、viewport、DPR、is_mobile/has_touch和CDP触摸，再首次goto。被动观察器只记录浏览器原始touch/pointer事件，不改变事件传播和业务。`touchscreen.tap`和CDP touch均为浏览器生成的可信模拟输入，`page.mouse`不当触摸。启动后读取DOM实际尺寸/UA/maxTouchPoints/Canvas，Cocos 2.x读取cc.sys能力；其他引擎需按对应API另取得证据。没有引擎触控和输入链证据时不能只用DOM trusted事件认定游戏通过。
+Ego 路线：在空白页用 `page.cdp()` 设好手机尺寸（`Emulation.setDeviceMetricsOverride`）、手机浏览器标识、触摸模拟，核对 `screen` 尺寸/DPR/maxTouchPoints 后才打开游戏；截图后会自动恢复手机模式（报告 `emulation_restored`）。触摸用 `Input.dispatchTouchEvent`。被动观察器只记录浏览器原始touch/pointer事件，不改变事件传播和业务。`touchscreen.tap`和CDP touch均为浏览器生成的可信模拟输入，`page.mouse`不当触摸。启动后读取DOM实际尺寸/UA/maxTouchPoints/Canvas，Cocos 2.x读取cc.sys能力；其他引擎需按对应API另取得证据。没有引擎触控和输入链证据时不能只用DOM trusted事件认定游戏通过。
 
 禁止通过evaluate调用按钮回调、游戏控制器、改进度/余额或伪造DOM事件。唯一例外是关卡抽测的"测试专用跳关"（见主Skill的prepackage-mobile-review.md"关卡抽测"）：只用来到达被跳过关之后要测的关，不改金币道具，到达后照常真实触摸。最终验收结合真实画面和业务结果；截图和脚本退出0不是全功能通过。两种比例分别执行，首帧/条件入口/遮罩/关闭/拖出/奖励保存与实际消费者按主Skill逐项复核。更复杂流程可在同一次受控context中执行专用有界脚本，保持只读观察与真实输入限制。
 
-本地HTTP、浏览器（Ego/经同意的 Chrome）与内核版本、系统模拟器、TikTok Native、物理手机、真实IAA分别记录。工具不可用就记录实际错误并推进独立工作，不静默换浏览器或签旧证据。
+本地HTTP、浏览器（Ego）与内核版本、系统模拟器、TikTok Native、物理手机、真实IAA分别记录。工具不可用就记录实际错误并推进独立工作，不静默换浏览器或签旧证据。
 
-Ego 接口以本机 `ego-browser skill` 输出为准。Chrome 路线官方API：[Chrome通道](https://playwright.dev/python/docs/browsers#google-chrome--microsoft-edge)、[触摸](https://playwright.dev/python/docs/api/class-touchscreen)、[设备模拟](https://playwright.dev/python/docs/emulation)。
+Ego 接口以本机 `ego-browser skill` 输出为准。
 
 
 ## 资源争用与关闭回执

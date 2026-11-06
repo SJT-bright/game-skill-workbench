@@ -280,221 +280,8 @@ def validate(plan):
 
 
 def run(args):
-    from playwright.sync_api import sync_playwright
-    parsed=urlsplit(args.url)
-    if parsed.scheme not in {'http','https'} or parsed.hostname not in {'127.0.0.1','localhost','::1'}:
-        raise ValueError('This helper only accepts an authorized local test origin')
-    if parsed.username or parsed.password:raise ValueError('Credentials in URL are not accepted')
-    plan=json.loads(args.plan.read_text(encoding='utf-8-sig'))
-    viewport,dpr,actions=validate(plan)
-    args.out.mkdir(parents=True,exist_ok=False)
-    report={'platform':platform.platform(),'started_at':datetime.now(timezone.utc).isoformat(),
-            'browser_channel':'ego (cdp)' if args.cdp_url else args.channel,'input_transport':'playwright_cdp_touch',
-            'headless':args.headless and not args.cdp_url,
-            'viewport_requested':viewport,'dpr_requested':dpr,'device':plan.get('device'),'steps':[],'status':'running',
-            'boundary':'Browser simulation; no physical phone, Native or live IAA acceptance.'}
-    report_path=args.out/'report.json'
-    def save():report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    slots=load_slots();slot_id=None
-    if slots is not None:
-        try:
-            swept=slots.sweep(close=True)          # close only free old windows; running ones of others stay
-            report['sweep_before_open']={'freed':len(swept.get('freed',[])),'active_windows':swept.get('active_windows'),
-                                         'soft_cap_windows':swept.get('soft_cap_windows'),'free_ram_mb':swept.get('free_ram_mb')}
-            slot_id=slots.register('touch_run',name=args.name or args.out.name,pid=os.getpid(),project=args.project,
-                                   url=args.url)
-            report['browser_slot']=slot_id
-        except Exception as error:
-            report['browser_slot_error']=str(error)
-    def on_term():
-        report.update(status='terminated_cleanup_pending',cleanup_pending=True,
-                      error='Helper interrupted; original browser context closure must be verified');save()
-        if slot_id:slots.heartbeat(slot_id,state='cleanup_pending',cleanup_pending=True)
-    ON_TERM[0]=on_term
-    def beat():
-        if slot_id:
-            try:slots.heartbeat(slot_id)
-            except Exception:pass
-    save()
-    with sync_playwright() as pw:
-        browser=None;context=None
-        try:
-            if args.cdp_url:
-                # Ego Lite (or another browser the user named). Never wait: a failed connection is retried once at
-                # once on a fresh connection; the run then gets its own new window (context) below.
-                try:browser=pw.chromium.connect_over_cdp(args.cdp_url,timeout=20000)
-                except Exception as first:
-                    report['cdp_retry']=str(first)[:300];save()
-                    browser=pw.chromium.connect_over_cdp(args.cdp_url,timeout=20000)
-            else:
-                if not args.user_approved_chrome:
-                    raise ValueError('Default browser is Ego Lite: pass --cdp-url <Ego endpoint>. Launching Chrome needs the '
-                                     "user's explicit consent; add --user-approved-chrome only after the user agreed.")
-                browser=pw.chromium.launch(channel=None if args.channel=='chromium' else args.channel,headless=args.headless)
-            report['browser_version']=browser.version
-            ua=plan.get('user_agent',f'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{browser.version} Mobile Safari/537.36')
-            context=browser.new_context(viewport=viewport,device_scale_factor=dpr,is_mobile=True,has_touch=True,user_agent=ua)
-            context.add_init_script('(' + OBSERVER + ')()')
-            if plan.get('init_js'):
-                context.add_init_script(str(plan['init_js']))
-            page=context.new_page();page.set_default_timeout(10000)
-            cdp=context.new_cdp_session(page)
-            recording={'on':bool(args.record or plan.get('record')),'count':0,'t0':None,'dropped':0}
-            if recording['on']:
-                frame_dir=args.out/'frames';frame_dir.mkdir()
-                def on_frame(params):
-                    ts=params['metadata']['timestamp']
-                    if recording['t0'] is None:recording['t0']=ts
-                    if recording['count']<MAX_FRAMES:
-                        name=f"{recording['count']:05d}_{int((ts-recording['t0'])*1000):07d}ms.jpg"
-                        (frame_dir/name).write_bytes(base64.b64decode(params['data']));recording['count']+=1
-                    else:recording['dropped']+=1
-                    cdp.send('Page.screencastFrameAck',{'sessionId':params['sessionId']})
-                cdp.on('Page.screencastFrame',on_frame)
-                cdp.send('Page.startScreencast',{'format':'jpeg','quality':70,'maxWidth':720,'maxHeight':1600,'everyNthFrame':1})
-            timing=bool(plan.get('timing'))
-            report.update(timing=timing,cache_mode=plan.get('cache','cold'),profile=plan.get('profile'),fault=plan.get('fault'),
-                          startup_plan_sha256=plan.get('startup_plan_sha256'),marks={},requests=[],background=[])
-            cdp.send('Network.enable')
-            reqs={}
-            def on_resp(e):
-                r=e.get('response',{});reqs[e['requestId']]={'url':r.get('url','')[:300],'status':r.get('status'),'mime':r.get('mimeType')}
-            def on_done(e):
-                item=reqs.pop(e['requestId'],None)
-                if item is not None and len(report['requests'])<5000 and report.get('entry_epoch'):
-                    item.update(bytes=int(e.get('encodedDataLength',0)),t_ms=round((time.time()-report['entry_epoch'])*1000))
-                    report['requests'].append(item)
-            def on_fail(e):
-                if len(report['requests'])<5000 and report.get('entry_epoch'):
-                    report['requests'].append({'url':'(failed) '+e.get('errorText',''),'failed':True,'blocked':e.get('blockedReason'),
-                                               't_ms':round((time.time()-report['entry_epoch'])*1000)})
-            cdp.on('Network.responseReceived',on_resp);cdp.on('Network.loadingFinished',on_done);cdp.on('Network.loadingFailed',on_fail)
-            if plan.get('block_urls'):
-                cdp.send('Network.setBlockedURLs',{'urls':[str(u) for u in plan['block_urls']]})
-            report['init_js_sha256']=hashlib.sha256(str(plan['init_js']).encode()).hexdigest() if plan.get('init_js') else None
-            hang={'on':bool(plan.get('hang_urls')),'held':[]}
-            if hang['on']:
-                import fnmatch
-                pats=[str(u) for u in plan['hang_urls']]
-                def on_paused(e):
-                    url=e['request']['url']
-                    if hang['on'] and any(fnmatch.fnmatch(url,pt) for pt in pats):
-                        hang['held'].append(url[:200])            # never answered: a lost callback
-                    else:
-                        try:cdp.send('Fetch.continueRequest',{'requestId':e['requestId']})
-                        except Exception:pass
-                cdp.on('Fetch.requestPaused',on_paused)
-                cdp.send('Fetch.enable',{'patterns':[{'urlPattern':'*'}]})
-            net=plan.get('network')
-            if net:
-                cdp.send('Network.emulateNetworkConditions',{'offline':False,'latency':net['latency_ms'],
-                         'downloadThroughput':net['download_kbps']*1000/8,'uploadThroughput':net['upload_kbps']*1000/8})
-            report['network_applied']=net or None
-            if plan.get('cache','cold')=='warm':
-                cdp.send('Network.setCacheDisabled',{'cacheDisabled':False})
-                page.goto(args.url,wait_until='commit',timeout=60000)
-                if plan.get('warmup_js'):page.wait_for_function(plan['warmup_js'],timeout=120000,polling=100)
-                else:page.wait_for_load_state('load',timeout=60000)
-                report['warmup_done']=True
-            else:
-                cdp.send('Network.setCacheDisabled',{'cacheDisabled':True})
-            report['cache_disabled']=plan.get('cache','cold')=='cold'
-            cdp.send('Emulation.setTouchEmulationEnabled',{'enabled':True,'maxTouchPoints':5})
-            cdp.send('Emulation.setEmitTouchEventsForMouse',{'enabled':True,'configuration':'mobile'})
-            errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
-            report['entry_epoch']=time.time()
-            response=page.goto(args.url,wait_until='commit' if timing else 'load',timeout=60000)
-            report['http_status']=response.status if response else None
-            def now_ms():return round((time.time()-report['entry_epoch'])*1000)
-            def capture(label,action,shot=True):
-                if timing and not shot:
-                    report['steps'].append({'label':label,'action':action,'t_ms':now_ms()})
-                else:
-                    page.screenshot(path=str(args.out/f'{len(report["steps"]):03d}-{label}.png'))
-                    report['steps'].append({'label':label,'action':action,'t_ms':now_ms(),'observed':page.evaluate(READ)})
-                report['page_errors']=list(errors);save();beat()
-            if not timing:capture('initial',{'type':'navigate'})
-            for action in actions:
-                kind=action['type']
-                if kind=='tap':
-                    if 'selector' in action:
-                        locator=page.locator(action['selector'])
-                        if locator.count()!=1:raise ValueError('Tap target must be unique')
-                        locator.tap()
-                    else:page.touchscreen.tap(action['x'],action['y'])
-                elif kind in {'drag','cancel'}:
-                    points=action['points']
-                    def touch(name,point):
-                        cdp.send('Input.dispatchTouchEvent',{'type':name,'touchPoints':[] if point is None else [{'x':point[0],'y':point[1],'id':0}]})
-                    touch('touchStart',points[0])
-                    for point in points[1:]:touch('touchMove',point)
-                    touch('touchCancel' if kind=='cancel' else 'touchEnd',None)
-                elif kind=='wait':page.wait_for_timeout(action.get('ms',0))
-                elif kind=='assert_text':
-                    from playwright.sync_api import expect
-                    expect(page.locator(action['selector'])).to_have_text(action['equals'])
-                elif kind=='mark':
-                    deadline=time.time()+action.get('timeout_ms',30000)/1000
-                    while True:
-                        try:ok=bool(page.evaluate(action['wait_js']))
-                        except Exception:ok=False
-                        if ok:report['marks'][action['name']]=now_ms();break
-                        if time.time()>deadline:raise ValueError('mark %s not reached within %d ms'%(action['name'],action.get('timeout_ms',30000)))
-                        time.sleep(action.get('poll_ms',30)/1000)
-                elif kind=='background':
-                    other=context.new_page();other.bring_to_front();t_start=now_ms();method='tab_switch'
-                    other.wait_for_timeout(min(300,action['ms']))
-                    state=page.evaluate('document.visibilityState')
-                    if state!='hidden':
-                        # Headless or some embedded browsers keep background tabs "visible": emulate the
-                        # visibility change the engine listens to (document.hidden + visibilitychange).
-                        page.evaluate(HIDE_JS);method='emulated_visibility'
-                        state=page.evaluate('document.visibilityState')
-                    other.wait_for_timeout(max(0,action['ms']-300))
-                    if method=='emulated_visibility':page.evaluate(SHOW_JS)
-                    other.close();page.bring_to_front()
-                    report['background'].append({'from_ms':t_start,'to_ms':now_ms(),'visibility_while_away':state,'method':method})
-                elif kind=='unblock':
-                    cdp.send('Network.setBlockedURLs',{'urls':[]})
-                elif kind=='dump_ui':
-                    dump,tried=dump_with_retry(lambda:page.evaluate(ui_dump_js(action),{'maxNodes':action.get('max_nodes',4000)}),action['screen'],
-                                               sleep=lambda s:page.wait_for_timeout(int(s*1000)))
-                    if tried>1:dump['dump_tries']=tried
-                    dump.update(screen=action['screen'],kind=action['kind'],purpose=action.get('purpose','other'),url=page.url,t_ms=now_ms(),
-                                producer='chrome_touch.dump_ui',viewport=viewport,plan_dpr=dpr)
-                    path=args.out/f'{len(report["steps"]):03d}-ui-dump-{action["screen"]}.json'
-                    dump['screenshot']=f'{len(report["steps"]):03d}-ui-{action["screen"]}.png'   # saved by capture() below
-                    path.write_text(json.dumps(dump,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
-                    report.setdefault('ui_dumps',[]).append({'screen':action['screen'],'kind':action['kind'],'path':path.name,
-                        'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'nodes':len(dump.get('nodes',[])),'errors':len(dump.get('errors',[]))})
-                elif kind=='unhang':
-                    hang['on']=False;report['held_requests']=list(hang['held'])
-                capture('ui-'+action['screen'] if kind=='dump_ui' else kind,action,shot=kind in ('snapshot','dump_ui') or not timing)
-            if recording['on']:
-                page.wait_for_timeout(300);cdp.send('Page.stopScreencast')
-                report['recording']={'frames':recording['count'],'first_frame_epoch':recording['t0'],'dropped_after_limit':recording['dropped'],'dir':str(args.out/'frames'),
-                                     'next':'python <cocos-game-core>/scripts/audit_frame_glitches.py <frames dir> --report <report.json>'}
-            report['status']='completed_pending_business_and_visual_review';save()
-        except Exception as error:
-            report['status']='failed';report['error']=str(error);save();raise
-        finally:
-            cleanup_errors=[]
-            if browser is not None:
-                if context is not None:
-                    try:context.close()         # only our isolated context; the user's Ego stays open
-                    except Exception as error:cleanup_errors.append('context: '+str(error))
-                try:browser.close()
-                except Exception as error:cleanup_errors.append('browser connection: '+str(error))
-            report['cleanup_pending']=bool(cleanup_errors)
-            report['cleanup_errors']=cleanup_errors
-            save()
-            if slot_id:
-                try:
-                    if cleanup_errors:slots.heartbeat(slot_id,state='cleanup_pending',cleanup_pending=True)
-                    else:slots.release(slot_id) # only unregister after successful owned-context cleanup
-                except Exception:pass
-            if cleanup_errors:raise RuntimeError('Browser cleanup pending; registry retained: '+'; '.join(cleanup_errors))
-    return report_path
+    """Retired Chrome test route. Kept as an explicit refusal for old import callers."""
+    raise ValueError('EGO_ONLY_TEST_POLICY: Agent browser tests must use run_ego; Chrome is user trial only.')
 
 
 def run_ego(args):
@@ -512,7 +299,7 @@ def run_ego(args):
     exe=shutil.which('ego-browser')
     if not exe:
         raise ValueError('ego-browser not found: install/upgrade Ego Lite per the ego-browser Skill (references/install.md), '
-                         'then run `ego-browser skill`. Do not switch to Chrome without the user\'s consent.')
+                         'then run `ego-browser skill`. Browser tests must stay in Ego; Chrome is user trial only.')
     art_config = None
     if plan.get('art_capture'):
         if not args.project or plan.get('cache')=='warm' or plan.get('timing'):
@@ -625,10 +412,13 @@ if __name__=='__main__':
     p.add_argument('--record',action='store_true',help='save every rendered frame for dynamic glitch analysis')
     p.add_argument('--cdp-url',help='removed 2026-10-27: Ego has no DevTools endpoint; runs go through ego-browser nodejs')
     p.add_argument('--channel',default='chrome',help='only with --user-approved-chrome: chrome, or chromium = bundled Playwright browser')
-    p.add_argument('--user-approved-chrome',action='store_true',help='the user explicitly agreed to use Chrome instead of Ego this time')
+    p.add_argument('--user-approved-chrome',action='store_true',help='retired: all Agent browser tests require Ego; Chrome is user trial only')
     p.add_argument('--name',help='short label shown to other sessions in browser_slots.py list, e.g. "测试线 音量复核"')
     p.add_argument('--project',help='game folder (only a label for the slot list; runs never queue)')
     args=p.parse_args()
+    # EGO_ONLY_TEST_POLICY: user 2026-11-06; Chrome is only the user's trial window.
+    if args.user_approved_chrome:
+        raise SystemExit('测试只允许 Ego（用户 2026-11-06）；--user-approved-chrome 已停用。Chrome 仅供用户试玩链接。')
     if args.handoff:
         raise SystemExit('Not allowed (user 2026-10-23): Ego / test windows are only for the agent\'s own tests and are '
                          'never handed to the user. Give the user the local preview link in Codex instead: '
@@ -645,6 +435,6 @@ if __name__=='__main__':
     if args.cdp_url:
         raise SystemExit('--cdp-url was removed (2026-10-27): Ego Lite exposes no DevTools endpoint and its guide forbids '
                          'attaching Playwright. Drop --cdp-url: the plan runs through `ego-browser nodejs` automatically.')
-    try:print(json.dumps({'report':str(run(args) if args.user_approved_chrome else run_ego(args))},ensure_ascii=False))
+    try:print(json.dumps({'report':str(run_ego(args))},ensure_ascii=False))
     except Exception as error:
         print(json.dumps({'status':'failed','error':str(error)},ensure_ascii=False),file=sys.stderr);raise SystemExit(2)

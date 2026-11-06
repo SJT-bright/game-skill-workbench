@@ -1,36 +1,36 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T21:56:23.930Z",
-  "treeHash": "e8747a28d8bc99fbc43b98ba4c1af38b87afb85969ce5684be5ddeaf7aa7622e",
+  "createdAt": "2026-11-06T21:56:57.819Z",
+  "treeHash": "0bf6572513b0fa2bf2eafc1dd29fc8cf474f30731bb4e7079d87a648b7c060c4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
-      "treeHash": "bb36003d11ec15352a1bfe9d1525fad520d88dd29cb4a5987d9748f791c4a504",
+      "treeHash": "a1afff98808b1c44859356a057b6ddbdba8fcc139dc23d00c1ead116ac3f4bd3",
       "fileCount": 13,
-      "bytes": 96561,
+      "bytes": 84077,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "8becca80059d31972de5a724edee2e9bbe6bc40025b5acbc64cac70511d62916",
-          "size": 2341,
+          "hash": "37b8a04b665862e28f9e40d39512980f4c3124f6c4469034d55ebb09b1c33e7e",
+          "size": 3948,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "0c545a21ac0197aa0fb9ef6c1eb254779da946aa3ab5a8cada2a77e920491577",
-          "size": 17086,
+          "hash": "f1ca47fbc860c08a4d508c1bd5defabb3c588422fcb8a1e529e579848912c40f",
+          "size": 16535,
           "executable": false
         },
         {
           "path": "scripts/chrome_touch.py",
-          "hash": "547e4582f4af287b858430e76538d40df0529213e8f888704a94c33a3f04b7c6",
-          "size": 45399,
+          "hash": "ea12d3ac9e99e194e8b70852308e013782f721b523a4d00f181b824d9dbabcea",
+          "size": 30590,
           "executable": false
         },
         {
           "path": "scripts/ego_touch_runner.js",
-          "hash": "dfa070869171d6a21894f3329041ba5122e4db437416f9d358ed72b1ae75dfe7",
-          "size": 14683,
+          "hash": "409317030c574826283b251264d075afe446e32a1c97aba8befd34745fdcd1e1",
+          "size": 15952,
           "executable": false
         },
         {

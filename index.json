@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "06469d2a-7bee-47df-9f33-0ac63c1d9d86",
+      "skillId": "s-16601c48e7f1b99915ae",
+      "directory": "mobile-touch-computer-use",
+      "name": "mobile-touch-computer-use",
+      "version": "v11",
+      "createdAt": "2026-11-06T21:57:09.163Z",
+      "summary": "文件变更：新增 0，修改 3，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 3,
+        "deleted": 0
+      },
+      "treeHash": "69c8c6ecd295d75b946c9bf954f2499f6b611fdaf0e4aa8d48bd05bdb0007993",
+      "bytes": 47713,
+      "fileCount": 8
+    },
+    {
       "id": "9a1d6b50-992f-4f8b-96d7-c5c10b5717d6",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

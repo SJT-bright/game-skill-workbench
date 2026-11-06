@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-05.english-simple.11.17",
+  "revision": "2026-11-06.english-simple.11.17.3",
   "skill": "remake-art",
-  "previous_provenance_sha256": "026a0f089a7997749b9ee24c1097501b2e55e6372542f00c26d166a6bc0765b3",
+  "previous_provenance_sha256": "f1e242e2c0a960c7f59686753d5c1c4fc9629cdfe845f9aeabfb1ad8d5bf7d15",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "c74fde0bf812461655379a2fba03d18e4220b8acb24c0f62904ed636710073c8",
-      "bytes": 20525
+      "sha256": "ac8b2482886363f1def0653bd76b6294274b3e297f4621bf72e2d761eab37466",
+      "bytes": 21310
     },
     {
       "path": "agents/openai.yaml",
@@ -69,6 +69,11 @@
       "path": "references/capsule-content-fit.md",
       "sha256": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
       "bytes": 1278
+    },
+    {
+      "path": "references/capture-rounds.md",
+      "sha256": "84e62b0d36779aac5b9b33758a71f5eeddf3f2b2a8f787ca133e2c0b7ea60dae",
+      "bytes": 8196
     },
     {
       "path": "references/card-ornament-layout-review.md",
@@ -141,9 +146,14 @@
       "bytes": 2724
     },
     {
+      "path": "references/production-check-link.md",
+      "sha256": "71a4a1fb82b346c1cd4e4adf863f5a82af8c40ac6c2cd0642d3b68652d549c59",
+      "bytes": 10428
+    },
+    {
       "path": "references/production-prevention.md",
-      "sha256": "d057b24cf82c98452d394ec97f71e9162cf7da46b4a41ffb8379f68adc7145da",
-      "bytes": 30725
+      "sha256": "62b1eccdc6516864757fd4a76f2cf62e2a59ce8ccda0fbf6b80023cd1068a657",
+      "bytes": 31630
     },
     {
       "path": "references/saul-art-rules.md",
@@ -222,13 +232,13 @@
     },
     {
       "path": "scripts/compose_fixed_button.py",
-      "sha256": "387a5f72d3f9a152cf07d0869ff6b06619b23172dacf3b4345ae6f827f8e78d1",
-      "bytes": 4751
+      "sha256": "f8432ba542e7842dd607d9568c8aefd8bd5b1b65dfe8b6ec412e03920e4f7477",
+      "bytes": 5647
     },
     {
       "path": "scripts/cut_sheet_frame.py",
-      "sha256": "93da29d8474a71b82f1e06c016eeb4c73f6ddbe37817ec3ba711f25836c3263e",
-      "bytes": 5471
+      "sha256": "bed307143f1f9ae4eb3afb4e662c6700d9f8d9c96ff06804a95d44711fdac35d",
+      "bytes": 6255
     },
     {
       "path": "scripts/make_greybox_reference.py",

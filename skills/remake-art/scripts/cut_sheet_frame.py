@@ -83,6 +83,9 @@ def fixed_frame(image, owner, rect):
 
 
 def main():
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'remake-core' / 'scripts'))
+    import art_production
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('sheet',type=Path)
     parser.add_argument('--grid',type=int,nargs=2,required=True,metavar=('ROWS','COLS'))
@@ -91,11 +94,17 @@ def main():
     parser.add_argument('--fixed-rect', type=int, nargs=4, metavar=('L','T','R','B'),
                         help='use an unrotated integer source rectangle mandated by the importer')
     parser.add_argument('--source-sha256', help='expected hash of the visually approved source sheet')
+    art_production.add_arguments(parser)
     args=parser.parse_args()
+    linked = art_production.requested(args, parser)
     receipt=args.out.with_suffix('.crop.json')
-    if args.out.exists() or receipt.exists() or args.out.suffix.lower()!='.png':
+    if (not linked and (args.out.exists() or receipt.exists())) or args.out.suffix.lower()!='.png':
         parser.error('supply a new .png path with no previous receipt')
     try:
+        record = None
+        if linked:
+            record = art_production.prepare(args.project, args.asset_id, args.cases, 'sheet_frame', args.out.resolve(),
+                sheet=args.sheet.resolve(), parameters={'grid': args.grid, 'cell': args.cell, 'fixed_rect': args.fixed_rect}, final_size=args.final_size, usage_budget=args.usage_budget)
         data = args.sheet.read_bytes()
         sheet_hash = hashlib.sha256(data).hexdigest()
         if args.source_sha256 and args.source_sha256.lower() != sheet_hash:
@@ -108,6 +117,10 @@ def main():
                 master = fixed_frame(rgba, cell, bounds)
     except (OSError, ValueError) as exc:
         parser.exit(2,f'crop refused: {exc}\n')
+    if record is not None:
+        master = art_production.apply_derivations(master, record)
     master.save(args.out)
     receipt.write_text(json.dumps(dict(sheet_sha256=sheet_hash,mode=("fixed_rect" if args.fixed_rect else "tight_master"),grid=args.grid,cell=args.cell,cell_rect=cell,crop_rect=bounds,master_sha256=digest(args.out)),indent=2))
+    if record is not None:
+        print(json.dumps(art_production.commit(args.project, record)))
 if __name__=='__main__':main()

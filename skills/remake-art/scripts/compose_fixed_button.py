@@ -95,16 +95,29 @@ def compose(spec, root):
 
 
 def main():
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'remake-core' / 'scripts'))
+    import art_production
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('spec', type=Path)
     parser.add_argument('output', type=Path)
+    art_production.add_arguments(parser)
     args = parser.parse_args()
+    linked = art_production.requested(args, parser)
     spec = json.loads(args.spec.read_text())
     output = args.output.resolve()
     inputs = [args.spec, *(args.spec.parent / spec[key]['file'] for key in ('base','word','icon') if key in spec)]
     if output.suffix.lower() != '.png' or output in [p.resolve() for p in inputs]:
         parser.error('output must be a separate PNG')
+    record = None
+    if linked:
+        record = art_production.prepare(args.project, args.asset_id, args.cases,
+                                        'fixed_button', output, spec=args.spec.resolve(), final_size=args.final_size, usage_budget=args.usage_budget)
     image, boxes = compose(spec, args.spec.parent)
+    if record is not None:
+        original_size = image.size
+        image = art_production.apply_derivations(image, record)
+        sx, sy = image.width / original_size[0], image.height / original_size[1]
+        boxes = {name: [b[0]*sx, b[1]*sy, b[2]*sx, b[3]*sy] for name, b in boxes.items()}
     with NamedTemporaryFile(dir=output.parent, delete=False) as temp:
         path = Path(temp.name)
     try:
@@ -112,7 +125,10 @@ def main():
         os.replace(path, output)
     finally:
         path.unlink(missing_ok=True)
-    print(json.dumps(dict(caption=spec['caption'], size=image.size, boxes=boxes)))
+    result = dict(caption=spec['caption'], size=image.size, boxes=boxes)
+    if record is not None:
+        result['production'] = art_production.commit(args.project, record)
+    print(json.dumps(result))
 
 
 if __name__ == '__main__':

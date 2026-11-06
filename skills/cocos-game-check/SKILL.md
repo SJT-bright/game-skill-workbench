@@ -5,6 +5,11 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 # 统一检查（英化与重塑共用）
 
+## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
+
+所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+
+
 修订：`2026-10-28.check-unified.4`。英化包和重塑包内这个 Skill 字节相同。检查规则以重塑包 v7.1 的检查板块为准（`startup/`、`test/`、`package/`、`package-check/`），评审沿用原评审入口（`review/`）。检查脚本与规则库用同包的共享库 [remake-core](../remake-core/SKILL.md)，美术检查用同包的 [remake-art](../remake-art/SKILL.md)；本 Skill 不再自带它们的副本（v7.3.2 去重）。
 
 **必须遵循（Saul 2026-10-29）**：TikTok 固定适配（触摸、启动加载、激励广告、存档读值、适配层、图片、加桌面/回访、登录/App ID、胶囊/首页底排/不要 Credits）和跨游戏通用流程一律按 [TikTok 固定适配](references/tiktok-fixed-adaptation.md) 做（英化和重塑都适用，本页每条写了现在由哪个门禁拦、哪些仍是文档规则）；新游戏只用平台包标准件，不手写；旧游戏只给警告，由各自会话处理。

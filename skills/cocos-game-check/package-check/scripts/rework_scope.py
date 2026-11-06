@@ -366,6 +366,14 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
             gm = importlib.util.module_from_spec(gs); gs.loader.exec_module(gm)
             optional_art_delta = gm.validate(old_zip, new_files, _adapter_path(adapter))
             out['optional_art_delta'] = optional_art_delta
+        browser_policy_equivalence = None
+        if optional_art_delta and (old_ad.get('tool_sha256') != ad.tool_digest() or old_rt.get('tool_sha256') != rr.tool_digest(rr.load_suites())):
+            ep = Path(__file__).with_name('browser_policy_tool_equivalence.py')
+            es = importlib.util.spec_from_file_location('_browser_policy_equivalence', ep)
+            em = importlib.util.module_from_spec(es); es.loader.exec_module(em)
+            project = json.loads(Path(optional_art_delta['scope']['path']).read_text())['project']
+            browser_policy_equivalence = em.validate(project, old_ad.get('tool_sha256'), old_rt.get('tool_sha256'))
+            out['browser_policy_tool_equivalence'] = browser_policy_equivalence
         blocking = [] if optional_art_delta else [k for k in changes['kinds'] if k not in RESOURCE_KINDS]
         if blocking:
             first = changes['kinds'][blocking[0]][:3]
@@ -379,7 +387,7 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
                 return no('the old package had no rewarded-ad regression; this one needs it')
             if adapter_sha is None or (old_ad.get('adapter_sha256') != adapter_sha and not optional_art_delta):
                 return no('adapter differs from the one the old package passed with (rewarded-ad regression)')
-            if old_ad.get('tool_sha256') != ad.tool_digest():
+            if old_ad.get('tool_sha256') != ad.tool_digest() and not browser_policy_equivalence:
                 return no('rewarded-ad regression tool differs from the one the old package passed with')
         elif old_ad.get('status') != 'not_applicable':
             return no('old rewarded-ad record does not fit this package')
@@ -392,7 +400,7 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
         out['required'] = list(names)
         if adapter_sha is None or (old_rt.get('adapter_sha256') != adapter_sha and not optional_art_delta):
             return no('adapter differs from the one the old package passed with (runtime regression)')
-        if old_rt.get('tool_sha256') != rr.tool_digest(catalog):
+        if old_rt.get('tool_sha256') != rr.tool_digest(catalog) and not browser_policy_equivalence:
             return no('runtime regression tools differ from the ones the old package passed with')
         if sorted(old_rt.get('required') or []) != sorted(names):
             return no('the runtime suites this package needs differ from the ones the old package ran')
@@ -492,7 +500,8 @@ def merge_runtime(p, summary, names):
             'seconds': (summary or {}).get('seconds', 0.0),
             'rework': {'reran': [n for n in names if n not in reused], 'reused': reused, 'reused_from': receipt,
                        'old_zip': p['old'].get('name'), 'changed': kinds_text(p),
-                       **({'optional_art_delta': p['optional_art_delta']} if p.get('optional_art_delta') else {})}}
+                       **({'optional_art_delta': p['optional_art_delta']} if p.get('optional_art_delta') else {}),
+                       **({'browser_policy_tool_equivalence':p['browser_policy_tool_equivalence']} if p.get('browser_policy_tool_equivalence') else {})}}
 
 
 # ---------------------------------------------------------------- plain words

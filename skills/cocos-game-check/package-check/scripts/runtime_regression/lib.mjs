@@ -1,3 +1,4 @@
+import {wrapEgoPage} from '../ego_test_page.mjs';
 // Shared helpers for runtime_regression suites (run under `ego-browser nodejs`).
 // Contract: runtime_regression/README.md. Import with:  const L = await import(globalThis.CFG.lib);
 // Timing lives in Node: every page.evaluate call stays short (Ego caps one call at 15 s).
@@ -31,7 +32,7 @@ export function evidence(name, data) {
 // ---------- browser ----------
 export async function open(name) {
   const task = await taskSpace(C.space || ('tiktok-runtime-' + C.suite));
-  const page = task.page(name || 'p1');
+  const page = wrapEgoPage(task.page(name || 'p1'));
   // v7.9: no HTTP cache. Ego is one browser for every session; a trial server another session ran earlier on the same
   // 127.0.0.1 port (python http.server sends no Cache-Control, so files are kept by heuristic freshness) left its
   // main.js in the cache, and a later run here booted that other game's code (2026-11-01, 甜点消消乐 R48: "home not

@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-06.english-simple.11.17.3",
+  "revision": "2026-11-06.english-simple.11.17.4",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "14586ab0ad66ee602c8a91fa86c24a54a5ec9d95c54004bbd9b7f5870b45ab23",
-      "bytes": 16416
+      "sha256": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d",
+      "bytes": 18507
     },
     {
       "path": "agents/openai.yaml",
@@ -151,7 +151,7 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "341c9ea93fab5b0d19b5dbfb1f716df02dd4785a70c15c4450dbfeef53590899",
+      "sha256": "f625b4be2def78824644ac95851b90d184ad25ac41eacfff2f29b970218fea07",
       "bytes": 19059
     },
     {
@@ -216,8 +216,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression/cases.mjs",
-      "sha256": "0cfc836970d9bf6f9b18c605bf7bc2088a8ee2d25d2a29fe58c05f5257a4363f",
-      "bytes": 24045
+      "sha256": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
+      "bytes": 24108
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
@@ -236,8 +236,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression.py",
-      "sha256": "cce89b866e64f75fe3995a0179c793e246c0ec53dedfee58d1ec5495ed7cb7b6",
-      "bytes": 19807
+      "sha256": "73c49de29dece28367ec4344574fc5af0e32b605493f2e99ed3c0ba38fd71407",
+      "bytes": 20067
     },
     {
       "path": "package-check/scripts/audit_interaction_audio.py",
@@ -336,8 +336,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/lib.mjs",
-      "sha256": "1659eb4e4e579a41274e291cfbfb388b06ca8198fe7e29ed586263ce9722d2b8",
-      "bytes": 15179
+      "sha256": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+      "bytes": 15242
     },
     {
       "path": "package-check/scripts/runtime_regression/network-allowlist.json",
@@ -496,8 +496,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression.py",
-      "sha256": "9bd97f630f76189c60ba673386526a2bf82fc04375dd38f0b10ffa994dae4858",
-      "bytes": 60841
+      "sha256": "578ffc5ef1808e83a6113ecc9847755de30388e440e8493ef87567ab995457cf",
+      "bytes": 61645
     },
     {
       "path": "package-check/scripts/test_ad_host_mouse_touch.py",
@@ -818,7 +818,45 @@
       "path": "test/references/testing-scope-and-stop.md",
       "sha256": "e9d30d038c1c7e52632d4501d46c945527a33f46d07d8c7b55689d4a249b1209",
       "bytes": 13894
+    },
+    {
+      "path": "package-check/scripts/ego_test_page.mjs",
+      "sha256": "fb806eacecb06ac5d785283b086ef66bf915b82070085601d34d07b1549e0645",
+      "bytes": 1729
     }
   ],
-  "previous_provenance_sha256": "1a1c5d470e9b1c02d867b53ca8c859a5ffde2e47ccdae5153cb9216729747fad"
+  "previous_provenance_sha256": "32242c4f24b7efe159e79b271ff8b6d6c9479b9bd85e8a32ecc5d37b4cc121ca",
+  "local_patches": [
+    {
+      "id": "ego-only-tests-20261106-geometry",
+      "authority": "User requires all Agent browser tests in Ego; actual viewport and native-host screenshots use official Ego Page CDP.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d"
+        },
+        {
+          "path": "package-check/scripts/ad_regression.py",
+          "sha256": "73c49de29dece28367ec4344574fc5af0e32b605493f2e99ed3c0ba38fd71407"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression.py",
+          "sha256": "578ffc5ef1808e83a6113ecc9847755de30388e440e8493ef87567ab995457cf"
+        },
+        {
+          "path": "package-check/scripts/ego_test_page.mjs",
+          "sha256": "fb806eacecb06ac5d785283b086ef66bf915b82070085601d34d07b1549e0645"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/lib.mjs",
+          "sha256": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211"
+        },
+        {
+          "path": "package-check/scripts/ad_regression/cases.mjs",
+          "sha256": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    }
+  ]
 }

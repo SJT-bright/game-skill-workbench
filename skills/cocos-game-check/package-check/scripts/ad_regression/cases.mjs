@@ -1,3 +1,4 @@
+import {wrapEgoPage} from '../ego_test_page.mjs';
 // Rewarded-ad regression cases, run by ad_regression.py under `ego-browser nodejs`.
 // Engine-generic: the only game-specific input is the adapter (CFG.adapter), a few lines of
 // page JavaScript that start ONE rewarded request through the game's real reward path.
@@ -82,7 +83,7 @@ async function runDouble(name, io) {
 let task, page;
 try {
   task = await taskSpace(C.space || 'tiktok-ad-regression');
-  page = task.page('p1');
+  page = wrapEgoPage(task.page('p1'));
   // v7.9: no HTTP cache (runtime_regression/lib.mjs open(): another session's trial server on the same port left its
   // files in the shared Ego cache, and a run booted that other game's main.js)
   try { await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true }); } catch (_) {}

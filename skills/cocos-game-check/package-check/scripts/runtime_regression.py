@@ -484,10 +484,13 @@ def package_files(package_dir):
 # ---------------------------------------------------------------- run
 
 def find_browser():
-    browser = os.environ.get(ENV_BROWSER) or _which('ego-browser')
+    """EGO_ONLY_TEST_POLICY: the official Ego CLI, never a Chrome transport override."""
+    browser = _which('ego-browser')
+    requested = os.environ.get(ENV_BROWSER)
+    if requested and (not browser or Path(requested).resolve() != Path(browser).resolve()):
+        raise RuntimeRefused('测试只允许官方 Ego CLI（用户 2026-11-06）；EGO_BROWSER 不能指向 Chrome/Playwright 替身。')
     if not browser or not Path(browser).exists():
-        raise RuntimeRefused('runtime regression needs the Ego browser (ego-browser CLI not found); '
-                             'package refused instead of skipping the runtime regression')
+        raise RuntimeRefused('Ego CLI 不可用；本项未执行，不能回退 Chrome 或跳过浏览器验收。')
     return browser
 
 

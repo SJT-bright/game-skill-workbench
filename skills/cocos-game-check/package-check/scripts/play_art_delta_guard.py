@@ -15,7 +15,9 @@ OLD_RECEIPT_SHA = '2bfc696b34dee3125bcca90a8d350b4b77f29d3445ff4f6ba295ea546d120
 SOURCE_DIFF_SHA = 'fc724a6fc89cb98652ae9a2bc00278c7c9e53f4cdf7b692df84af04134829576'
 PREFAB = 'assets/res/layer/MainLayer.prefab'
 SCRIPT = 'assets/scripts/english/EnglishUI.ts'
+HOME = 'assets/scripts/game/compoment/layer/HomeLayer.ts'
 INSERT = "        const fallback = node.getChildByName('ArtLoadFallback');\n        if (fallback) fallback.active = false;\n"
+ASYNC_INSERT = "    const fallback = node.getChildByName('ArtLoadFallback');\n    if (fallback) bundle.load('btnres/ui_yellow/spriteFrame', SpriteFrame, (error, frame) => {\n        if (error || !fallback.isValid) return;\n        fallback.getComponent(Sprite).spriteFrame = frame;\n    });\n"
 BLANK = '8e0aad79-556b-4a79-bed9-81abd32bb286@f9941'
 TERSER = '/Applications/Cocos/Creator/3.8.8/CocosCreator.app/Contents/Resources/resources/3d/engine/node_modules/terser'
 def sha(b): return hashlib.sha256(b).hexdigest()
@@ -34,12 +36,17 @@ def source_delta(project, originals):
     inventory = json.loads(raw)['current_assets']
     actual = {str(p.relative_to(project)): sha(p.read_bytes()) for p in (project/'assets').rglob('*') if p.is_file()}
     changed = sorted(k for k in set(inventory)|set(actual) if inventory.get(k) != actual.get(k))
-    need(sorted(k for k in changed if k != 'assets/.DS_Store') == sorted([PREFAB, SCRIPT]), 'source changes exceed exact MainLayer prefab + EnglishUI repair: '+repr(changed))
+    need(sorted(k for k in changed if k != 'assets/.DS_Store') == sorted([PREFAB, SCRIPT, HOME]), 'source changes exceed exact MainLayer prefab + EnglishUI repair: '+repr(changed))
     before = {}
-    for key,name in ((PREFAB,'MainLayer.prefab.r17-original'),(SCRIPT,'EnglishUI.ts.r17-original')):
+    for key,name in ((PREFAB,'MainLayer.prefab.r17-original'),(SCRIPT,'EnglishUI.ts.r17-original'),(HOME,'HomeLayer.ts.r17-original')):
         p = originals/name; b = p.read_bytes(); need(sha(b)==inventory[key], 'before source not R17: '+key); before[key] = b
+    oldhome=before[HOME].decode();newhome=(project/HOME).read_text()
+    oldguard='if (!this.node.isValid || version !== this.pageVersion) return;'
+    newguard='if (!this.node || !this.node.isValid || version !== this.pageVersion) return;'
+    need(oldhome.count(oldguard)==1 and newhome.count(newguard)==1 and newhome.replace(newguard,oldguard,1)==oldhome,'HomeLayer differs beyond exact late-callback null guard')
     oldts = before[SCRIPT].decode(); newts = (project/SCRIPT).read_text()
-    need(newts.count(INSERT)==1 and newts.replace(INSERT,'',1)==oldts, 'EnglishUI differs beyond exact successful-load fallback hide')
+    need(newts.count(INSERT)==1 and newts.count(ASYNC_INSERT)==1 and newts.replace(INSERT,'',1).replace(ASYNC_INSERT,'',1)==oldts, 'EnglishUI differs beyond exact asynchronous original fallback load and successful-load hide')
+    need(ASYNC_INSERT+"    const path = 'english/' + key + '/spriteFrame';" in newts,'fallback original plate load must precede existing optional action image lookup')
     need('sprite.spriteFrame = frame;\n'+INSERT in newts, 'fallback hide must follow successful frame assignment')
     # Name must not acquire another consumer or producer anywhere in production.
     hits=[]
@@ -51,9 +58,9 @@ def source_delta(project, originals):
     ids=[i for i,o in enumerate(a) if o.get('__type__')=='cc.Node' and o.get('_name')=='btnGo']
     need(len(ids)==1,'ambiguous btnGo'); ni=ids[0]; node=a[ni]
     comps=[(x['__id__'],a[x['__id__']])for x in node['_components']]
-    si=next(i for i,o in comps if o['__type__']=='cc.Sprite'); button=next(o for i,o in comps if o['__type__']=='cc.Button')
+    si=next(i for i,o in comps if o['__type__']=='cc.Sprite'); bi=next(i for i,o in comps if o['__type__']=='cc.Button');button=a[bi]
     plate=button['_normalSprite'];need(plate['__uuid__']==BLANK,'button original plate differs')
-    expected=copy.deepcopy(a);expected[si]['_spriteFrame']=plate;expected[si]['_enabled']=False
+    expected=copy.deepcopy(a);expected[si]['_spriteFrame']=None;expected[si]['_enabled']=False;expected[bi]['_normalSprite']=None
     expected[ni]['_children'].append({'__id__':len(a)})
     n,t,sp,caption,ct,l=copy.deepcopy(b[-6:]);base=len(a)
     def node_expected(name,parent,children,components):
@@ -69,13 +76,13 @@ def source_delta(project, originals):
         return {'__type__':'cc.UITransform','_name':'','_objFlags':0,'node':{'__id__':owner},'_enabled':True,'__prefab':None,'_contentSize':{'__type__':'cc.Size','width':w,'height':h},'_anchorPoint':{'__type__':'cc.Vec2','x':0.5,'y':0.5},'_id':''}
     need(t==ui_expected(base,width,height),'fallback plate must equal original PLAY visible image ratio')
     need(ct==ui_expected(base+3,width-40,height-12),'caption must remain inside fallback plate')
-    expected_sprite=copy.deepcopy(a[si]);expected_sprite.update(node={'__id__':base},_enabled=True,__prefab=None,_spriteFrame=plate,_id='')
+    expected_sprite=copy.deepcopy(a[si]);expected_sprite.update(node={'__id__':base},_enabled=True,__prefab=None,_spriteFrame=None,_id='')
     need(sp==expected_sprite,'fallback Sprite differs from original same blank plate')
     # Exact reviewed text-only component: no assets, click listeners or custom material.
     expected_label={'__type__':'cc.Label','_name':'','_objFlags':0,'node':{'__id__':base+3},'_enabled':True,'__prefab':None,'_customMaterial':None,'_srcBlendFactor':2,'_dstBlendFactor':4,'_color':{'__type__':'cc.Color','r':255,'g':255,'b':255,'a':255},'_string':'PLAY','_horizontalAlign':1,'_verticalAlign':1,'_actualFontSize':42,'_fontSize':42,'_fontFamily':'Arial','_lineHeight':48,'_overflow':2,'_enableWrapText':False,'_font':None,'_isSystemFontUsed':True,'_spacingX':0,'_isItalic':True,'_isBold':True,'_isUnderline':False,'_underlineHeight':2,'_cacheMode':0,'_id':'','_enableOutline':True,'_outlineWidth':3,'_outlineColor':{'__type__':'cc.Color','r':0,'g':0,'b':0,'a':255}}
     need(l==expected_label,'fallback Label differs from reviewed readable system text')
     expected += [n,t,sp,caption,ct,l];need(expected==b,'prefab changed outside exact dependency + fallback subtree')
-    return {'fallback_visible_size':{'width':width,'height':height,'derived_from_play_png':[iw,ih]},'inventory':ref(invpath),'changed':changed,'semantic_changed':sorted([PREFAB,SCRIPT]),'nonrendering_metadata':{k:{'before':inventory.get(k),'after':actual.get(k)}for k in changed if k=='assets/.DS_Store'},'before':{k:sha(v)for k,v in before.items()},'after':{k:actual[k]for k in changed}}
+    return {'fallback_visible_size':{'width':width,'height':height,'derived_from_play_png':[iw,ih]},'inventory':ref(invpath),'changed':changed,'semantic_changed':sorted([PREFAB,SCRIPT,HOME]),'nonrendering_metadata':{k:{'before':inventory.get(k),'after':actual.get(k)}for k in changed if k=='assets/.DS_Store'},'before':{k:sha(v)for k,v in before.items()},'after':{k:actual[k]for k in changed}}
 
 def canonical(root):
     """Identity-preserving sorted traversal, handles cyclic Cocos instance graphs."""
@@ -162,11 +169,11 @@ def find_nodes(root,name):
 def config_semantics(raw,ignored_uuid=None):
     d=json.loads(raw);u=d.pop('uuids');need(len(set(u))==len(u),'duplicate bundle UUID')
     def uid(i):return u[i]if isinstance(i,int)else i
-    d['uuid_set']=sorted(x for x in u if x!=ignored_uuid)
+    d['uuid_set']=sorted(x for x in u if x not in (ignored_uuid or set()))
     d['paths']={uid(int(i)):v for i,v in d['paths'].items()}
     d['packs']={k:[uid(i)for i in v]for k,v in d['packs'].items()}
     d['scenes']={k:uid(v)for k,v in d['scenes'].items()}
-    r=d['redirect'];d['redirect']=sorted([[uid(r[i]),r[i+1]]for i in range(0,len(r),2)if uid(r[i])!=ignored_uuid])
+    r=d['redirect'];d['redirect']=sorted([[uid(r[i]),r[i+1]]for i in range(0,len(r),2)if uid(r[i])not in (ignored_uuid or set())])
     d['extensionMap']={k:sorted(uid(i)for i in v)for k,v in d['extensionMap'].items()}
     for typ,arr in d['versions'].items():need(not arr,'versioned bundle unsupported by this narrow guard')
     need(not d.get('dependencyRelationships'),'dependencyRelationships unsupported')
@@ -176,16 +183,40 @@ def javascript_delta(old,new):
     marker='System.register("chunks:///_virtual/EnglishUI.ts"'
     def split(b):
         s=b.decode();need(s.count(marker)==1,'EnglishUI module ambiguous');a=s.index(marker);n=s.find('\n\nSystem.register',a);need(n>=0,'EnglishUI module boundary absent');return s[:a],s[a:n],s[n:]
-    ap,ac,az=split(old);bp,bc,bz=split(new);need(ap==bp and az==bz,'another compiled JS module changed')
+    ap,ac,az=split(old);bp,bc,bz=split(new)
+    home_marker='System.register("chunks:///_virtual/HomeLayer.ts"'
+    def home_split(s):
+        need(s.count(home_marker)==1,'HomeLayer module ambiguous');a=s.index(home_marker);n=s.find('\n\nSystem.register',a);need(n>=0,'HomeLayer module boundary absent');return s[:a],s[a:n],s[n:]
+    # HomeLayer sorts after EnglishUI in this bundle, so compare the untouched
+    # prefix/suffix after replacing the two specifically reviewed modules.
+    ahp,ah,ahz=home_split(az);bhp,bh,bhz=home_split(bz)
+    need(ap==bp and ahp==bhp and ahz==bhz,'another compiled JS module changed')
+    hpattern=r'([A-Za-z_$][\w$]*)\.node&&\1\.node\.isValid&&([A-Za-z_$][\w$]*)===\1\.pageVersion'
+    matches=list(re.finditer(hpattern,bh));need(len(matches)==1,'compiled HomeLayer must add only the exact late-callback node existence test')
+    h=matches[0];old_condition=h.group(1)+'.node.isValid&&'+h.group(2)+'==='+h.group(1)+'.pageVersion'
+    reverted_home=bh[:h.start()]+old_condition+bh[h.end():]
+    helper=Path(__file__).with_name('play-art-js-equivalence.cjs')
+    home_result=subprocess.run(['node',str(helper),TERSER,'home'],input=json.dumps([ah,reverted_home]),capture_output=True,text=True)
+    need(home_result.returncode==0 and json.loads(home_result.stdout).get('equal')is True,'HomeLayer compiled remainder changed beyond exact null guard')
     # Remove only the exact minifier form of the reviewed two source statements.
     pattern=r'var ([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\.getChildByName\("ArtLoadFallback"\);if\(\1&&\(\1\.active=!1\),'
     hits=list(re.finditer(pattern,bc));need(len(hits)==1,'compiled fallback hide differs from exact var + guarded active=false')
     hit=hits[0];need(hit.group(2)=='e','fallback receiver is not applyArt node')
     stripped=bc[:hit.start()]+'if('+bc[hit.end():]
+    # Precise emitted form of the only new optional yellow-plate load branch.
+    load_pattern=(r'var ([A-Za-z_$][\w$]*)=e\.getChildByName\("ArtLoadFallback"\);'
+                  r'\1&&([A-Za-z_$][\w$]*)\.load\("btnres/ui_yellow/spriteFrame",([A-Za-z_$][\w$]*),'
+                  r'\(function\(([A-Za-z_$][\w$]*),([A-Za-z_$][\w$]*)\)\{!\4&&\1\.isValid&&'
+                  r'\(\1\.getComponent\(([A-Za-z_$][\w$]*)\)\.spriteFrame=\5\)\}\)\);')
+    loads=list(re.finditer(load_pattern,stripped));need(len(loads)==1,'compiled asynchronous original plate branch differs from exact guarded load')
+    load=loads[0]
+    need(load.group(2)=='s'and load.group(3)=='i'and load.group(6)=='a','compiled plate load does not use original bundle/SpriteFrame/Sprite aliases')
+    stripped=stripped[:load.start()]+stripped[load.end():]
     helper=Path(__file__).with_name('play-art-js-equivalence.cjs')
     result=subprocess.run(['node',str(helper),TERSER],input=json.dumps([ac,stripped]),capture_output=True,text=True)
     need(result.returncode==0,'compiled EnglishUI remainder is not equivalent: '+result.stderr[-1200:])
-    detail=json.loads(result.stdout);need(detail.get('equal')is True,'compiled EnglishUI changed beyond hide statement')
+    detail=json.loads(result.stdout);need(detail.get('equal')is True,'compiled EnglishUI changed beyond exact asynchronous fallback/hide statements')
+    detail['home_layer']=json.loads(home_result.stdout)
     return detail
 
 def native_delta(old,new):
@@ -216,12 +247,16 @@ def native_delta(old,new):
     oldbtn=find_nodes(a,'btnGo')[0]
     sprite=next(c for c in btn['_components']if c['__type__']=='cc.Sprite');oldsprite=next(c for c in oldbtn['_components']if c['__type__']=='cc.Sprite')
     button=next(c for c in btn['_components']if c['__type__']=='cc.Button')
-    need(sprite['_spriteFrame']==button['_normalSprite'] and sp['_spriteFrame']==button['_normalSprite'],'compiled Sprite does not use original button plate')
+    need(sprite.get('_spriteFrame')is None and button.get('_normalSprite')is None and sp.get('_spriteFrame')is None,'static fallback/PLAY image dependency was not removed from all three fields')
     need(sprite.get('_enabled')is False,'compiled legacy root Sprite must be disabled')
     del sprite['_enabled']
-    removed=oldsprite['_spriteFrame']['$asset'];sprite['_spriteFrame']=copy.deepcopy(oldsprite['_spriteFrame'])
+    oldbutton=next(c for c in oldbtn['_components']if c['__type__']=='cc.Button')
+    removed=oldsprite['_spriteFrame']['$asset'];oldplate=oldbutton['_normalSprite']['$asset']
+    sprite['_spriteFrame']=copy.deepcopy(oldsprite['_spriteFrame']);button['_normalSprite']=copy.deepcopy(oldbutton['_normalSprite'])
     need(canonical(a)==canonical(b),'other compiled prefab fields or packed prefab changed')
-    need(config_semantics(old[expected[1]],removed)==config_semantics(new[expected[1]],removed),'bundle configuration changed beyond removed PLAY dependency and index relocation')
+    ou=set(json.loads(old[expected[1]])['uuids']);nu=set(json.loads(new[expected[1]])['uuids']);removed_uuids=ou-nu
+    need(not nu-ou and removed in removed_uuids and removed_uuids<={removed,oldplate},'bundle UUID changes exceed removed static PLAY/plate references')
+    need(config_semantics(old[expected[1]],removed_uuids)==config_semantics(new[expected[1]],removed_uuids),'bundle configuration changed beyond exactly removed optional image references and index relocation')
     return {'old_native_tree_sha256':tree_sha(old),'native_tree_sha256':tree_sha(new),'changed':changed,'files':{k:{'before':sha(old[k]),'after':sha(new[k])}for k in changed},'javascript':js,'compiled_prefab':'identity-preserving graph equality after exact repair reversal','config':'UUID-resolved equality minus removed PLAY dependency'}
 
 def validate(old_zip,new_files,adapter,scope=None):

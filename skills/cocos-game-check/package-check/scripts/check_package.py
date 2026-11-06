@@ -228,6 +228,7 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
     # A successor writer can preserve the old rewarded-ad adapter identity only
     # when the recorded, independently replayed exact PLAY-only proof holds.
     adapter_equivalence = False
+    tool_equivalence = False
     play_proof = (rt.get('rework') or {}).get('optional_art_delta')
     if isinstance(play_proof, dict):
         try:
@@ -241,12 +242,27 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             adapter_equivalence = (ad.get('adapter_sha256') == checked['old_adapter']['sha256'])
         except Exception as error:
             return no('PLAY scope proof invalid: %s' % error)
+    browser_proof = (rt.get('rework') or {}).get('browser_policy_tool_equivalence')
+    if isinstance(browser_proof, dict):
+        if not adapter_equivalence:
+            return no('browser policy reuse requires the validated exact PLAY source delta')
+        try:
+            ep = Path(__file__).with_name('browser_policy_tool_equivalence.py')
+            es = importlib.util.spec_from_file_location('_delivery_browser_policy', ep)
+            em = importlib.util.module_from_spec(es); es.loader.exec_module(em)
+            project = json.loads(Path(play_proof['scope']['path']).read_text())['project']
+            verified_policy = em.validate(project, browser_proof['original_tool_sha256']['rewarded_ad_regression'], browser_proof['original_tool_sha256']['runtime_regression'])
+            if verified_policy != browser_proof:
+                return no('browser policy byte/AST equivalence proof changed on readback')
+            tool_equivalence = ad.get('tool_sha256') == verified_policy['original_tool_sha256']['rewarded_ad_regression']
+        except Exception as error:
+            return no('browser policy equivalence refused: %s' % error)
     if ad_regression_gate.needs_regression(files):
         if ad.get('status') != 'passed':
             return no('the writer did not run the rewarded-ad regression on a package that needs it')
         if adapter_sha is None or (ad.get('adapter_sha256') != adapter_sha and not adapter_equivalence):
             return no('adapter differs from the one the writer ran (rewarded-ad regression)')
-        if ad.get('tool_sha256') != ad_regression_gate.tool_digest():
+        if ad.get('tool_sha256') != ad_regression_gate.tool_digest() and not tool_equivalence:
             return no('rewarded-ad regression tool differs from the one the writer ran')
     elif ad.get('status') != 'not_applicable':
         return no('rewarded-ad record does not fit this package')

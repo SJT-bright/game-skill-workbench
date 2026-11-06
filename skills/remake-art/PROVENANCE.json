@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.3",
+  "revision": "2026-11-06.english-simple.11.17.4",
   "skill": "remake-art",
-  "previous_provenance_sha256": "f1e242e2c0a960c7f59686753d5c1c4fc9629cdfe845f9aeabfb1ad8d5bf7d15",
+  "previous_provenance_sha256": "ac28b4d3e9a9e89fe4ab4d7fd98b87e4c5b56f132b28b6007e9901d2ddb80b70",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "ac8b2482886363f1def0653bd76b6294274b3e297f4621bf72e2d761eab37466",
-      "bytes": 21310
+      "sha256": "c597344db5a62dc16fae41f3782bb7f1db28b20ad6a5e93fa350f7765b3e2231",
+      "bytes": 22274
     },
     {
       "path": "agents/openai.yaml",
@@ -72,8 +72,8 @@
     },
     {
       "path": "references/capture-rounds.md",
-      "sha256": "84e62b0d36779aac5b9b33758a71f5eeddf3f2b2a8f787ca133e2c0b7ea60dae",
-      "bytes": 8196
+      "sha256": "a7e41d9d11d357aa6fd3e45577294d475110dd452d4ebce6b8ff014ef16bfef9",
+      "bytes": 9843
     },
     {
       "path": "references/card-ornament-layout-review.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "references/local-ui-contract.md",
-      "sha256": "5151801bdaa71a3ca9038ff86ffbe6b1cc73ef8800665a1d527421ccb00ae62e",
-      "bytes": 8621
+      "sha256": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
+      "bytes": 12503
     },
     {
       "path": "references/mobile-button-size-and-home-layout.md",
@@ -147,8 +147,8 @@
     },
     {
       "path": "references/production-check-link.md",
-      "sha256": "71a4a1fb82b346c1cd4e4adf863f5a82af8c40ac6c2cd0642d3b68652d549c59",
-      "bytes": 10428
+      "sha256": "141d920d68ee379bbbe76597ffa26ba305535c1ebf35fa92130d8b37cb22aba0",
+      "bytes": 13126
     },
     {
       "path": "references/production-prevention.md",

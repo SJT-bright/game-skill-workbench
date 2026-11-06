@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T21:54:36.260Z",
-  "treeHash": "5b40d6f9cc3f36706eb53096e738aa24f131f4e1f8bc94331206ff5aa878a01c",
+  "createdAt": "2026-11-06T21:55:17.046Z",
+  "treeHash": "394c3954ebb5f3b52bf4861efa87badaa6102f14c58f1b184219f232494e1cb9",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3031,20 +3031,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "f2925d3a544951078bca90b57d220a1547503f8d90a90f559f8b6902ad817947",
+      "treeHash": "1e812a1071237ea38cb272e7373b130698f4312929f5099e32faa11ba1c31fca",
       "fileCount": 63,
-      "bytes": 1417320,
+      "bytes": 1426512,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a41c9edb685068e89ade4b2ec400e46067f68ed2a2472740219cb29465f49df5",
-          "size": 10697,
+          "hash": "2efe22456919f9b945289e763374d5174dfbc2ab247058bf6bb4f38ac29a35c2",
+          "size": 10698,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "ac8b2482886363f1def0653bd76b6294274b3e297f4621bf72e2d761eab37466",
-          "size": 21310,
+          "hash": "c597344db5a62dc16fae41f3782bb7f1db28b20ad6a5e93fa350f7765b3e2231",
+          "size": 22274,
           "executable": false
         },
         {
@@ -3121,8 +3121,8 @@
         },
         {
           "path": "references/capture-rounds.md",
-          "hash": "84e62b0d36779aac5b9b33758a71f5eeddf3f2b2a8f787ca133e2c0b7ea60dae",
-          "size": 8196,
+          "hash": "a7e41d9d11d357aa6fd3e45577294d475110dd452d4ebce6b8ff014ef16bfef9",
+          "size": 9843,
           "executable": false
         },
         {
@@ -3181,8 +3181,8 @@
         },
         {
           "path": "references/local-ui-contract.md",
-          "hash": "5151801bdaa71a3ca9038ff86ffbe6b1cc73ef8800665a1d527421ccb00ae62e",
-          "size": 8621,
+          "hash": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
+          "size": 12503,
           "executable": false
         },
         {
@@ -3211,8 +3211,8 @@
         },
         {
           "path": "references/production-check-link.md",
-          "hash": "71a4a1fb82b346c1cd4e4adf863f5a82af8c40ac6c2cd0642d3b68652d549c59",
-          "size": 10428,
+          "hash": "141d920d68ee379bbbe76597ffa26ba305535c1ebf35fa92130d8b37cb22aba0",
+          "size": 13126,
           "executable": false
         },
         {

@@ -126,7 +126,7 @@ def gate(argv, say=print):
                '第 1 阶段的中文原版链接加 --chinese-original')
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
     import art_receipt
-    art = art_receipt.check(project, board='localize')
+    art = art_receipt.check(project, board='localize', capture_build=export)
     if art['level'] != 'ok':
         refuse(art['message'])
     sys.path.insert(0, str(HERE))

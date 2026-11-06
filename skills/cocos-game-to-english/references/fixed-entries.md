@@ -68,3 +68,7 @@ Saul 2026-10-28 在 MusicSlice 上要求加；**2026-10-29 已定：英化游戏
 - 复活弹窗有 Home（回首页，清理和结算页一样），看广告加载中不能点。
 - **写进 `qa/ad-regression.json`（v7.9 手机问题源头约束）**：`ad_entries` 里写 Watch Ad to Revive，`"role": "revive"`，`states` 让主角自己失败（`wait_node` 等复活按钮出现，不在 `setup_js` 里强制失败）。新游戏没写出包被拒（`ad_outcome`）；出包时会真点它：中途关掉不复活、同一个按钮再点能再开广告，看完复活后还能接着玩。
 
+
+复活接入时先写清本局标识、复活收益、暂停释放顺序及必须恢复的游戏画面。复活回调和弹窗关闭无论谁先发生，都应在条件满足后恢复同一局，保留仍有效的其他暂停原因。出包时按[广告复活后的实测规则](../../cocos-game-check/test/references/button-interaction-coverage.md)核对恢复帧，再操作帧上看得见的目标，分别记录业务变化与看图结论。
+
+实现与验收时使用[激励广告复活的跨游戏状态契约](../../cocos-game-check/test/references/revive-state-contract.md)，先确定原局标识、兑现规则、回调顺序、运行和画面恢复条件，再填写当前游戏的观察器。

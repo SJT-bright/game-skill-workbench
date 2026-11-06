@@ -40,13 +40,46 @@ def make_game(td, colour=(200, 120, 40, 255)):
     (web / 'assets').mkdir(parents=True)
     (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas></html>', encoding='utf-8')
     shutil.copy2(str(root / 'assets' / 'tex' / 'btn.png'), str(web / 'assets' / 'btn.png'))
-    # This suite isolates the Chinese gate; provide a valid synthetic art receipt first.
+    # This suite isolates the Chinese gate. Supply a scoped synthetic art receipt; live capture is tested separately.
+    matrix = {'cases':[dict(id='fixture', screen='home', kind='home', width=393, height=852, dpr=1,
+                            recipe='test', environment='test', stable=False, witness=[{'path':'fixture'}])]}
+    (root/'docs/art').mkdir(exist_ok=True)
+    (root/'docs/art/capture-plan.json').write_text(json.dumps(matrix))
+    synthetic_art_review(root, web)
+    return root, web
+
+
+def synthetic_art_review(root, web):
+    """Chinese gate tests use a test-only art receipt; real rendering is covered by capture replay."""
+    capture = Path(__file__).resolve().parents[2]/'remake-core/scripts/art_capture_round.mjs'
+    started = json.loads(subprocess.check_output(['node',str(capture),'start',str(root),str(web)], text=True))
+    import hashlib
+    import uuid
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
+    from art_round_check import run, origin_hash, artifact_hash
+    store = root/'.tiktok-kit/art-rounds/proofs'
+    store.mkdir(exist_ok=True)
+    dumps = root/'docs/test/captured'
+    dumps.mkdir(parents=True, exist_ok=True)
+    proof_id = str(uuid.uuid4())
+    serial = lambda obj: json.dumps(obj, separators=(',', ':'), ensure_ascii=False).encode()
+    sha = lambda data: hashlib.sha256(data).hexdigest()
+    case = json.loads((root/'docs/art/capture-plan.json').read_text())['cases'][0]
+    png = (web/'assets/btn.png').read_bytes()
+    dump = serial(dict(art_capture_id=proof_id, screen='home',kind='home',viewport={'width':393,'height':852},
+                       screenshot='fixture.png'))
+    (dumps/'fixture.png').write_bytes(png)
+    (dumps/'capture-ui-dump-fixture.json').write_bytes(dump)
+    fields = dict(id=proof_id, caseHash=sha(serial(case)), case='fixture', version=started['version'], round=started['id'],
+                  dump=sha(dump), png=sha(png), reads=['assets/btn.png'], env='unit')
+    (store/(proof_id+'.json')).write_bytes(serial(dict(fields,seal=sha(serial(fields)))))
+    verified = run('verify', root, web, dumps)
+    assert verified.get('ready'), verified
+    proof = dict(round=started['id'], version=started['version'], dumps=str(dumps), origin_hash=origin_hash(verified), artifact_hash=artifact_hash(root, dumps), ready=True)
     import art_receipt as AR
     import audit_value_presentation as VP
-    AR.write(root, 'pass', {'value_presentation': {'revision': VP.REVISION, 'mode': 'runtime', 'passed': True,
+    AR.write(root, 'pass', {'capture_round':proof, 'value_presentation': {'revision': VP.REVISION, 'mode': 'runtime', 'passed': True,
              'pages': 2, 'source_sha256': VP.source_fingerprint(root)}})
-    return root, web
 
 
 def pixels_sha(path):
@@ -139,10 +172,10 @@ class GateDecisions(unittest.TestCase):
             chinese = pixels_sha(web / 'assets' / 'btn.png')
             from PIL import Image
             Image.new('RGBA', (48, 32), (30, 160, 90, 255)).save(str(root / 'assets' / 'tex' / 'btn.png'))   # redrawn
-            import art_receipt as AR
-            import audit_value_presentation as VP
-            AR.write(root, 'pass', {'value_presentation': {'revision': VP.REVISION, 'mode': 'runtime', 'passed': True,
-                     'pages': 2, 'source_sha256': VP.source_fingerprint(root)}})
+            # The export still contains the old image but represents a new build of the test page.
+            with (web/'index.html').open('a') as f:
+                f.write('<!-- refreshed test export -->')
+            synthetic_art_review(root, web)
             os.utime(str(web / 'assets' / 'btn.png'), (1, 1))                                            # older export
             scan(root, web, env_for(td, {chinese: '高波来袭！'}))
             lines, say = quiet()
@@ -229,7 +262,11 @@ class TrialLinkTiming(unittest.TestCase):
             stage_timer.call(root, 'link', 2)                              # the session also ran T link 2 by hand
             (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas><!-- round 2 --></html>', encoding='utf-8')
             scan(root, web, env_for(td))
-            self.link(root, web, td, say)                                  # a new export: round 2, already recorded
+            with self.assertRaises(SystemExit), _stderr(io.StringIO()):
+                self.link(root, web, td, say)  # A new export must not inherit the previous art check.
+            synthetic_art_review(root, web)
+            self.link(root, web, td, say)
+
             self.assertEqual([e['n'] for e in timing_events(root) if e['ev'] == 'link'], [1, 2])
 
     def test_timing_that_cannot_be_written_does_not_stop_the_link(self):

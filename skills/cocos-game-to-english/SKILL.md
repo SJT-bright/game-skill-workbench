@@ -7,7 +7,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 # 英化（独立流程）
 
-修订：`2026-11-05.english-simple.11.17`（简化.11.17：开工先用 which_package 认包，有两条以上版本线先问 Saul；glossary 的 game_name 一定要写，11-05 起开工的英化游戏有游戏名就拦，报了直接跑 fix_game_name.py；盘点 reward_todo、调试和别家残留；保留原画风写 keep_original_style.json，不再问；按钮整图用 bind_art 按槽接；字图裁边加 --word 去光晕；位图数字字符集含 K/M/B 单位；GameUIKit 1.1.7 用 UI.iconValue、UI.newButton、UI.setup。以前各版见[版本历史](版本历史.md)）
+修订：`2026-11-06.english-simple.11.17.1`（英文美工按状态和视口决定重拍，同页多状态分别检查，旧截图保留原始来源。历次改动见[版本历史](版本历史.md)。）
 
 共用功能验收与故障复验按[实际触发与玩家结果](../cocos-game-check/test/README.md)选测。
 
@@ -142,6 +142,8 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
    ① `scan --project <工程> --export <这轮的 Web 导出>`：列出全部资源；脚本、场景、预制体、配置里的字按字符串、注释、字段分开（注释、开发日志、节点名、编辑器路径自动放过，会显示的要结论）；每张图和每个图集切片（Spine `.atlas`、`.plist`、BMFont、龙骨）逐个识字；导出里对不上源图的图单独识。第一轮几分钟，以后每轮只识新加和改过的。
    ② 有要复核的：`sheet --project <工程> --pending` 拼出复核图（每格都看得清），你打开逐项看，每项写结论：`review --project <工程> --id <编号> --verdict <结论> --by "<你>" --evidence <复核图或切片图>`。确有中文写 `chinese`，然后把图改成英文、重新导出、回到 ①；识字认错了（特效、花纹、数字被认成字）写 `false_positive`，图一个像素都不改；会显示的文字确实不显示写 `not_displayed --reason "<理由>"`。识字出错、这台电脑没有识字工具的，也要这样逐个看过，不能当成没有字。隔离渲染的截图证据写 `--evidence-kind isolated_render`，它只证明资源显示对了，不算自然玩到、也不算真机。
    ③ `check --project <工程> --export <这轮的 Web 导出>`：通过才往下。过没过由它重算（清单、切片、识字回执、复核证据都要对得上现在的文件），手写的记录不算。它报「导出不是这版源码」时，用现在的源码重新导出，再 `scan --export`、`check`，不能拿旧导出凑通过。
+   **改图后的重拍清单**：在第一张图开工时登记状态、共享资源、视口和可复查的数据条件；按[按状态补拍](../remake-art/references/capture-rounds.md)建立本轮来源记录。重拍有变化的状态，合并可沿用的原图，再用本轮真实 Web 导出跑完整美工检查。
+
    **完整美工检查（每轮给链接前必做）**：按 [美工验收清单](../remake-art/SKILL.md#验收清单)、[美术禁区与必做项](../remake-art/references/saul-art-rules.md)、[全量视觉巡检](../remake-art/references/full-visual-review.md)和[动态画面检查](../remake-art/references/dynamic-visual-review.md)执行。第一轮覆盖这轮导出中实际可见的全部页面、弹窗和条件状态（含加载中、加载失败/重试、首页、设置、暂停、复活、结算及已有广告面板），不只查首页；原图仍会显示的页面也要查，尚未替换的计划如实说明。iPhone 15、iPhone SE 两种尺寸截图并 `dump_ui`，Codex 自己逐页看图，检查中文、字形、超框、重叠、遮挡、压扁拉伸、清晰度、按钮/图标风格、数字图片字及版本号/Credits；图片显示宽高比与原图差不超过 10%。真实点击各页面按钮与弹窗开关，按动态画面规则录屏查闪屏。运行 `python3 <skills>/remake-core/scripts/art_check.py --project <工程> --dumps <这轮采集目录> --board localize --build <这轮的 Web 导出>`，按适用项通过并保留报告、截图和看图结论；发现问题直接修，重新导出后核对并复查受影响范围，未通过不给英文试玩链接。检查证据必须对应实际交给 Saul 的这轮导出；检查后再改图、布局或导出，受影响证据失效。后续轮次查改动影响的整页、共享组件和新页面（含新增广告面板），未变化且已通过的证据可沿用，不重复重评已认可的画风。这里验证广告面板的画面与按钮可达性；新接功能的局部奖励/保存验证已随实现完成，完整广告奖励行为回归仍放第 5 阶段。
    起链接：`python3 <skills>/cocos-game-to-english/scripts/serve_preview.py --directory <这轮的 Web 导出> --project <工程> --snapshot --open --idle-minutes 0 --ad-simulator --name "<游戏> 英文 第1轮"`。英化入口的 `serve_preview.py` 起英文链接前自己再查一遍：没过不起；它拿给 Saul 的快照和查过的导出一字不差才给链接，记在 `docs/english/chinese-audit/trial-links.json`（构建还在跑、查完导出又变了，会被拒，重新 ①③ 再起）。Saul 明说要先看没做完的英文版时才加 `--draft`：没过也起，回复里照它打印的列出没处理的问题，不能说检查过。 试玩链接由 serve_preview 自动截首页图核对（全黑、停在加载页、报错就不给链接），看它打出的截图，不要自己另外截图或 sleep 等待；它说没截图就是没核对。
    顶栏不手算胶囊位置：新游戏 source 自动装 CapsuleAuto。页面背景一律用 `ScreenFit.cover(cc, bg, {watch:true})`，别按设计尺寸铺，source 会查首页、局内、结算的背景（新游戏拦，英化警告）。update 里移动一律乘 dt（或 RunSession.move），节点在 onLoad 建好或从 FxPool 取，别在 update 里 new；sync 每次构建前会扫（新游戏拦，英化只提示）。

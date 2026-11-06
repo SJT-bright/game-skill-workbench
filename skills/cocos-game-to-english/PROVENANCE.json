@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-05.english-simple.11.17",
+  "revision": "2026-11-06.english-simple.11.17.1",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "7407c7743086305fa026ed22cf9b1d946440efc0e1066f3c92a1610123bb2c34",
-      "bytes": 92682
+      "sha256": "8444b6b67d4ae14f74169a9ef290f03332d4d2748c0bf839f7e0d288122215f8",
+      "bytes": 92627
     },
     {
       "path": "agents/openai.yaml",
@@ -116,8 +116,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "76809c446f09b0f0d0f2958278cf4eb072c49eee2186ebbac563ad187b8fea65",
-      "bytes": 10718
+      "sha256": "472b6a41b010c1db81215bd47c8a014b47a5766d1584c1501419feea3ddced8b",
+      "bytes": 10740
     },
     {
       "path": "scripts/stage_timer.py",
@@ -196,8 +196,8 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "9800597d7f8564cc4000a1b45216fb82ce9cbe783d7b1d4bb5b3213f28b71808",
-      "bytes": 16585
+      "sha256": "c3471a2c98e4d34ec309e9a83496a8ff27ea9fcb049b617d0de7540748752421",
+      "bytes": 18855
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -226,9 +226,9 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "58710078310adec20514cd99917f6926dfa598ed0f32c02af88493f92b92f3b9",
-      "bytes": 10438
+      "sha256": "35acfdc253610627258e269ec10de6abd1526b09605e8bc42cada03523b04fbe",
+      "bytes": 11023
     }
   ],
-  "previous_provenance_sha256": "1582b0387b16b9331ad71ac753a8a6e9e506a67d47bbfe6ec20b17408ec1d332"
+  "previous_provenance_sha256": "ee4cc2ea45879976fb6db0bdf19c70793e11646963dbd37edfd7b68156e05839"
 }

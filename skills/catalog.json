@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T21:56:57.819Z",
-  "treeHash": "0bf6572513b0fa2bf2eafc1dd29fc8cf474f30731bb4e7079d87a648b7c060c4",
+  "createdAt": "2026-11-06T21:57:26.602Z",
+  "treeHash": "b79de35e2a4e19fd335072c014552d993d131c630927236f1caed2a2b9c10984",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2539,20 +2539,20 @@
     },
     {
       "name": "ego-browser",
-      "treeHash": "aa4323f0468028c59aa75d15a00fac27f587e277fbd4908d60ef31c05fe1a5dc",
+      "treeHash": "088b33fdafec08789ce971f9d4cefdf9af2f24b099dc43014823a4c0d2799179",
       "fileCount": 8,
-      "bytes": 30466,
+      "bytes": 32067,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "dc80661576f097b566fe4768ab98df55850f0719aad8d84e9e66b6f7881b9254",
-          "size": 1382,
+          "hash": "e3715ca603bb8610d2caf5a1c79e7108bc460750099e51174ed26e039482ad87",
+          "size": 2370,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
-          "size": 1594,
+          "hash": "d6a82ebf835e9ed93db36568af9571cac70dbb750edd73e46dacc13cc8368d2a",
+          "size": 2207,
           "executable": false
         },
         {

@@ -224,6 +224,22 @@ def ui_dump_js(action):
     raise ValueError('ui_dump.js not found in cocos-game-core; install the full skill package')
 
 
+# R4O4 (R4N3 没做完的): ui_dump.js answers {error: 引擎还没起来…, retry: true} while the engine is not up (3.x before
+# System.import('cc'), a scene still loading). dump_ui then waits and dumps again instead of failing the run at once.
+DUMP_TRIES=3
+DUMP_RETRY_WAIT_S=1.0
+def dump_with_retry(grab,screen,tries=DUMP_TRIES,wait_s=DUMP_RETRY_WAIT_S,sleep=time.sleep):
+    """grab() -> the ui_dump result. retry:true -> sleep(wait_s) and grab again, up to `tries` dumps; ValueError with
+    the last reason (and how many dumps were tried) when it never becomes a dump. Returns (dump, dumps_tried)."""
+    for n in range(1,tries+1):
+        dump=grab()
+        if isinstance(dump,dict) and not dump.get('error'):return dump,n
+        if not(isinstance(dump,dict) and dump.get('retry')) or n==tries:break
+        sleep(wait_s)
+    why=(dump or {}).get('error','no result') if isinstance(dump,dict) or dump is None else 'no result'
+    more=' (tried %d times, %.0f s apart)'%(n,wait_s) if isinstance(dump,dict) and dump.get('retry') else ''
+    raise ValueError('dump_ui %s failed: %s%s'%(screen,why,more))
+
 def validate(plan):
     device=plan.get('device','iphone_15' if 'viewport' not in plan else None)
     if device is not None and device not in DEVICES:raise ValueError('device must be one of '+', '.join(sorted(DEVICES)))
@@ -441,9 +457,9 @@ def run(args):
                 elif kind=='unblock':
                     cdp.send('Network.setBlockedURLs',{'urls':[]})
                 elif kind=='dump_ui':
-                    dump=page.evaluate(ui_dump_js(action),{'maxNodes':action.get('max_nodes',4000)})
-                    if not isinstance(dump,dict) or dump.get('error'):
-                        raise ValueError('dump_ui %s failed: %s'%(action['screen'],(dump or {}).get('error','no result')))
+                    dump,tried=dump_with_retry(lambda:page.evaluate(ui_dump_js(action),{'maxNodes':action.get('max_nodes',4000)}),action['screen'],
+                                               sleep=lambda s:page.wait_for_timeout(int(s*1000)))
+                    if tried>1:dump['dump_tries']=tried
                     dump.update(screen=action['screen'],kind=action['kind'],purpose=action.get('purpose','other'),url=page.url,t_ms=now_ms(),
                                 producer='chrome_touch.dump_ui',viewport=viewport,plan_dpr=dpr)
                     path=args.out/f'{len(report["steps"]):03d}-ui-dump-{action["screen"]}.json'

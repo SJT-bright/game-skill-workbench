@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-30.remake-v7.8",
+  "revision": "2026-11-05.english-simple.11.16",
   "skill": "chrome-mobile-testing",
-  "previous_provenance_sha256": "a89ee70efeb63e96479b9f6e8515ed25a0bcd67f05b21bc354065b4bd8e3ea3a",
+  "previous_provenance_sha256": "6cbd5c678114a0d124b0f9bf9198fe5de92d70aaed9fa3515c4c9d97844ada4e",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
@@ -12,13 +12,13 @@
     },
     {
       "path": "scripts/chrome_touch.py",
-      "sha256": "d458cdbb6fd40a11e6b7ebff5a36062e1d79c06db015346a95663f28512d2992",
-      "bytes": 42774
+      "sha256": "69ef29a4d3abb8b5090f6a7ea452806eb538453a35c2e53c25b5356326d6d5c0",
+      "bytes": 43893
     },
     {
       "path": "scripts/ego_touch_runner.js",
-      "sha256": "15f562ba045a54b6ef1c4e4c89d2246dc8a604cdec97112b1467dc6399a0dc25",
-      "bytes": 13600
+      "sha256": "1950ea3fe439c2e6d469bb9e032d275f695844e6bcfcf14642b693e6a6d647ef",
+      "bytes": 14077
     },
     {
       "path": "scripts/prepare_chrome.py",
@@ -49,6 +49,11 @@
       "path": "tests/test_ego_route.py",
       "sha256": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
       "bytes": 4925
+    },
+    {
+      "path": "tests/test_r4o4_dump_retry.py",
+      "sha256": "23b8acda2a783a600787401ea66dac57a2dd17f6cda9e2f3fd10aad8675a9231",
+      "bytes": 2893
     },
     {
       "path": "tests/test_timing_fps.py",

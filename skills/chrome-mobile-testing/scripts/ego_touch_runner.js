@@ -192,8 +192,16 @@ try {
     } else if (kind === "unblock") {
       await page.cdp("Network.setBlockedURLs", { urls: [] });
     } else if (kind === "dump_ui") {
-      const dump = await evalExpr("(" + C.uiDumpJs + ")(" + JSON.stringify({ maxNodes: action.max_nodes || 4000 }) + ")");
-      if (!dump || typeof dump !== "object" || dump.error) throw new Error("dump_ui " + action.screen + " failed: " + ((dump && dump.error) || "no result"));
+      // R4O4: {error: 引擎还没起来…, retry: true} -> wait 1 s and dump again, 3 dumps at most (chrome_touch.dump_with_retry)
+      let dump = null, tries = 0;
+      for (;;) {
+        tries++;
+        dump = await evalExpr("(" + C.uiDumpJs + ")(" + JSON.stringify({ maxNodes: action.max_nodes || 4000 }) + ")");
+        if (!(dump && typeof dump === "object" && dump.error && dump.retry) || tries >= 3) break;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      if (!dump || typeof dump !== "object" || dump.error) throw new Error("dump_ui " + action.screen + " failed: " + ((dump && dump.error) || "no result") + (dump && dump.retry ? " (tried " + tries + " times, 1 s apart)" : ""));
+      if (tries > 1) dump.dump_tries = tries;
       const idx = String(res.steps.length).padStart(3, "0");
       Object.assign(dump, { screen: action.screen, kind: action.kind, purpose: action.purpose || "other", url: await page.url(), t_ms: nowMs(),
         producer: "chrome_touch.dump_ui", viewport: C.viewport, plan_dpr: C.dpr, screenshot: idx + "-ui-" + action.screen + ".png" });

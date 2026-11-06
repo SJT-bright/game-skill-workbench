@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "a97167e8-ea8c-43c9-a4ca-269e2b4173e1",
+      "skillId": "s-a5a5d4cc5c2308178580",
+      "directory": "chrome-mobile-testing",
+      "name": "chrome-mobile-testing",
+      "version": "v11",
+      "createdAt": "2026-11-06T12:35:47.451Z",
+      "summary": "文件变更：新增 0，修改 3，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 3,
+        "deleted": 0
+      },
+      "treeHash": "bb36003d11ec15352a1bfe9d1525fad520d88dd29cb4a5987d9748f791c4a504",
+      "bytes": 96561,
+      "fileCount": 13
+    },
+    {
       "id": "fbcc4eed-f102-487f-9ad9-ae5ba3978169",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

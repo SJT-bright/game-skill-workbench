@@ -132,6 +132,7 @@ export async function playable(page, B) {
   if (probe.tap || probe.tap_js) {
     const p = await point(page, probe);
     if (!p) return Object.assign(out, { ok: false, why: 'probe target not on screen (' + (probe.tap || 'tap_js') + ')', state: [s0, s0] });
+    out.tap = {x: p.x, y: p.y};
     await G.click(page, p.x, p.y); r = { ok: true };
   } else r = await steps(page, [probe]);
   if (!r.ok) return Object.assign(out, { ok: false, why: 'probe could not run: ' + r.why, state: [s0, s0] });

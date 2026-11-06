@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-05.english-simple.11.17",
+  "revision": "2026-11-06.english-simple.11.17.3",
   "files": [
     {
       "path": "SKILL.md",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "b42cbac946b426d465eede1608393d4beb94d09c5b396c987f0ca1909186fcf2",
-      "bytes": 19154
+      "sha256": "341c9ea93fab5b0d19b5dbfb1f716df02dd4785a70c15c4450dbfeef53590899",
+      "bytes": 19059
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -811,8 +811,8 @@
     },
     {
       "path": "test/references/review-execution-plan.md",
-      "sha256": "b5ba8c4ff66456e729cab0cb0e99ac7ab3676ac60f08a117a63c280f78cb8516",
-      "bytes": 8794
+      "sha256": "c57431ac272f008b7e59724cbaac74fe098257f1fbc87d647095bd20ea0bc541",
+      "bytes": 9274
     },
     {
       "path": "test/references/testing-scope-and-stop.md",
@@ -820,5 +820,5 @@
       "bytes": 13894
     }
   ],
-  "previous_provenance_sha256": "04ec182fc71db9e55a59ea0eb77f7789cc9a86fab3b8f7b1c957f05f5ef92491"
+  "previous_provenance_sha256": "1a1c5d470e9b1c02d867b53ca8c859a5ffde2e47ccdae5153cb9216729747fad"
 }

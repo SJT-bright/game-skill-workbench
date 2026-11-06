@@ -678,6 +678,9 @@ def precheck(name, meta, adapter, engine, policy):
     warning; a needs_new field missing or a malformed na_field refuses a new game and warns on a legacy game."""
     field = meta.get('na_field')
     if field and is_na(adapter.get(field)):
+        if name == 'ad_outcome' and any(isinstance(e, dict) and e.get('role') == 'revive' for e in (adapter.get('ad_entries') or [])):
+            why = 'a declared revive entry must run ad_outcome; remove the contradictory n/a'
+            return _row(name, [{'id': 'adapter', 'passed': False, 'detail': why}], problems=[why])
         return _row(name, [{'id': 'n_a', 'passed': True, 'detail': adapter[field]['n/a']}])
     why = (meta.get('uncovered') or {}).get(engine)
     if why:
@@ -689,7 +692,9 @@ def precheck(name, meta, adapter, engine, policy):
     if not problems:
         return None
     text = '; '.join(problems)
-    if policy == 'legacy':
+    declared_revive = name == 'ad_outcome' and any(isinstance(e, dict) and e.get('role') == 'revive'
+                                                for e in (adapter.get('ad_entries') or []))
+    if policy == 'legacy' and not declared_revive:
         return _row(name, [{'id': 'adapter', 'passed': True, 'detail': 'legacy game: warning'}],
                     ['%s not run: %s [legacy game: warning]' % (name, text)])
     return _row(name, [{'id': 'adapter', 'passed': False, 'detail': text}], (),

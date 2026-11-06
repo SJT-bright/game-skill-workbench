@@ -336,7 +336,10 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
     out = {'schema': SCHEMA, 'reuse': False, 'why': None, 'old': {'zip': str(old_zip)}, 'changes': None,
            'required': None, 'rerun': None, 'reused': [], 'ad': 'run', 'records': None}
 
+    scoped = bool(os.environ.get('PLAY_ART_DELTA_SCOPE'))
     def no(why):
+        if scoped:
+            raise ValueError('scoped PLAY reuse refused: '+why)
         out['why'] = why
         return out
     try:
@@ -355,7 +358,15 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
         record = receipt['regressions']
         old_ad, old_rt = record['rewarded_ad_regression'], record['runtime_regression']
         out['records'] = {'rewarded_ad_regression': old_ad, 'runtime_regression': old_rt}
-        blocking = [k for k in changes['kinds'] if k not in RESOURCE_KINDS]
+        optional_art_delta = None
+        if scoped:
+            import importlib.util
+            gp = Path(__file__).with_name('play_art_delta_guard.py')
+            gs = importlib.util.spec_from_file_location('_play_art_delta_guard', gp)
+            gm = importlib.util.module_from_spec(gs); gs.loader.exec_module(gm)
+            optional_art_delta = gm.validate(old_zip, new_files, _adapter_path(adapter))
+            out['optional_art_delta'] = optional_art_delta
+        blocking = [] if optional_art_delta else [k for k in changes['kinds'] if k not in RESOURCE_KINDS]
         if blocking:
             first = changes['kinds'][blocking[0]][:3]
             return no('changed %s (%s): every browser check runs' % (
@@ -366,7 +377,7 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
         if needs_ad:
             if old_ad.get('status') != 'passed':
                 return no('the old package had no rewarded-ad regression; this one needs it')
-            if adapter_sha is None or old_ad.get('adapter_sha256') != adapter_sha:
+            if adapter_sha is None or (old_ad.get('adapter_sha256') != adapter_sha and not optional_art_delta):
                 return no('adapter differs from the one the old package passed with (rewarded-ad regression)')
             if old_ad.get('tool_sha256') != ad.tool_digest():
                 return no('rewarded-ad regression tool differs from the one the old package passed with')
@@ -379,7 +390,7 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
         catalog = rr.load_suites()
         names = rr.required_suites(new_files, adapter, catalog)
         out['required'] = list(names)
-        if adapter_sha is None or old_rt.get('adapter_sha256') != adapter_sha:
+        if adapter_sha is None or (old_rt.get('adapter_sha256') != adapter_sha and not optional_art_delta):
             return no('adapter differs from the one the old package passed with (runtime regression)')
         if old_rt.get('tool_sha256') != rr.tool_digest(catalog):
             return no('runtime regression tools differ from the ones the old package passed with')
@@ -390,7 +401,8 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
             return no('the old package was checked as a %s game; this one is judged %s' % (old_rt.get('policy'), judged))
         if (old_rt.get('board') or None) != ((board if board in rr.BOARDS else None)):
             return no('board differs from the old package (%s / %s)' % (old_rt.get('board'), board))
-        engine = rr.detect_engine(new_files, rr.load_adapter(adapter, catalog))
+        adapter_data = rr.load_adapter(adapter, catalog)
+        engine = rr.detect_engine(new_files, adapter_data)
         if old_rt.get('engine') and old_rt.get('engine') != engine:
             return no('engine differs from the old package')
         passed = {r.get('suite') for r in old_rt.get('suites') or [] if isinstance(r, dict) and r.get('passed') is True}
@@ -398,9 +410,13 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
             return no('the old record does not show every required suite passed')
         measured = old_rt.get('startup_measured') if isinstance(old_rt.get('startup_measured'), dict) else None
         before = set(measured.get('beforeHome') or []) | set(ALWAYS_BEFORE_HOME) if measured else None
-        rerun = set()
-        for kind in changes['kinds']:
-            rerun |= set(RERUN[kind])
+        rerun = set(optional_art_delta['rerun']) if optional_art_delta else set()
+        if not optional_art_delta:
+            for kind in changes['kinds']:
+                rerun |= set(RERUN[kind])
+        if set(changes['kinds']) & {'image', 'font'} and any(
+                isinstance(entry, dict) and entry.get('role') == 'revive' for entry in (adapter_data.get('ad_entries') or [])):
+            rerun.add('ad_outcome')
         startup_hit = [b for b in changes['bundles'] if before is None or b in before]
         if startup_hit:
             rerun |= set(STARTUP)
@@ -409,7 +425,9 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
                    reused=[n for n in names if n not in rerun], ad='reuse' if needs_ad else 'not_applicable',
                    before_home=sorted(before) if before is not None else None, startup_hit=startup_hit)
         return out
-    except Exception as error:  # noqa: BLE001 - a planning problem only means every check runs, never a refusal
+    except Exception as error:  # noqa: BLE001
+        if scoped:
+            raise ValueError('scoped PLAY reuse refused (%s: %s)' % (type(error).__name__, error)) from error
         return no('rework plan failed (%s: %s): every check runs' % (type(error).__name__, error))
 
 
@@ -473,7 +491,8 @@ def merge_runtime(p, summary, names):
             'adapter_sha256': (summary or {}).get('adapter_sha256') or old.get('adapter_sha256'),
             'seconds': (summary or {}).get('seconds', 0.0),
             'rework': {'reran': [n for n in names if n not in reused], 'reused': reused, 'reused_from': receipt,
-                       'old_zip': p['old'].get('name'), 'changed': kinds_text(p)}}
+                       'old_zip': p['old'].get('name'), 'changed': kinds_text(p),
+                       **({'optional_art_delta': p['optional_art_delta']} if p.get('optional_art_delta') else {})}}
 
 
 # ---------------------------------------------------------------- plain words

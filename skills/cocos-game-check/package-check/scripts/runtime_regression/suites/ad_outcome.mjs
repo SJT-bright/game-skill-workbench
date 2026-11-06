@@ -15,7 +15,7 @@
 //   <entry>/complete   that second ad is watched to the end: the reward arrives (reward_js changes; without reward_js
 //                      something on screen must change: a counter, a popup, the board), after_js / after_visible when
 //                      written, and the game still answers: the resume_play level still plays (clock_js, probe,
-//                      state_js), any other entry reacts to the next tap or is gone / greyed out
+//                      state_js), declared revives require same-run recovery, visible gameplay and real input; other entries may disappear
 // adapter.ad_outcome is optional: {continue_button, entries: {<ad_entries id | "resume_play.ad" | node path>: {reward_js,
 // after_js, after_visible, continue_button}}}, or {"n/a": "why no player can start a rewarded ad"}.
 // No entry known while button_sweep ran: a new game is refused (write ad_entries). New game: refuses. Legacy game
@@ -27,10 +27,11 @@ const P = await import(new URL('phone.mjs', globalThis.CFG.lib).href);
 const path = await import('node:path');
 const C = L.C, A = L.A;
 const POLICY = C.policy === 'legacy' ? 'legacy' : 'new';
+const { reviveContractProblem, checkReviveReturn } = await import(new URL('revive_return.mjs', globalThis.CFG.lib).href);
 const O = A.ad_outcome || {};
 const FACTS = C.facts || {};
 const RP = A.resume_play && typeof A.resume_play === 'object' && !Array.isArray(A.resume_play) && !('n/a' in A.resume_play) ? A.resume_play : null;
-const ENTRY_KEYS = new Set(['reward_js', 'after_js', 'after_visible', 'continue_button', 'note']);
+const ENTRY_KEYS = new Set(['reward_js', 'after_js', 'after_visible', 'continue_button', 'note', 'run_id_js', 'cancel_js', 'revive_probe']);
 const MAX_ENTRIES = 10;
 const isNone = (v) => !!v && typeof v === 'object' && !Array.isArray(v) && typeof v.none === 'string' && !!v.none.trim();
 const strip = (p) => String(p).replace(/#\d+$/, '');
@@ -61,7 +62,7 @@ function problems() {
 async function entries() {
   const list = [], skipped = [];
   for (const e of A.ad_entries || []) for (const s of e.states) list.push({ id: e.id + '/' + s.name, key: e.id, button: e.button, state: s, from: 'ad_entries', role: e.role || null });
-  if (POLICY === 'legacy') return { list: A.ad_outcome ? list : [], skipped, prior: null };   // as before: ad_entries + ad_outcome
+  if (POLICY === 'legacy') return { list: A.ad_outcome ? list : list.filter(e => e.role === 'revive'), skipped, prior: null };   // as before: ad_entries + ad_outcome
   if (RP && RP.ad && !isNone(RP.ad) && Array.isArray(RP.start))
     list.push({ id: 'resume_play.ad', key: 'resume_play.ad', button: RP.ad.tap || null, tap_js: RP.ad.tap_js || null, level: true, from: 'resume_play.ad',
       state: { name: 'level', actions: RP.start.concat(RP.ad.actions || []), settle_ms: RP.settle_ms || 1500 } });
@@ -180,7 +181,8 @@ const safe = (s) => String(s).replace(/[^\w.-]+/g, '_').slice(0, 60);
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'ad_outcome', policy: POLICY, cases: [] };
   const bad = problems();
-  if (bad.length) { out.add('adapter', POLICY === 'legacy', bad.join('; ')); if (POLICY === 'legacy') out.warn('ad_outcome adapter: ' + bad.join('; ') + ' [legacy game: warning]'); return; }
+  const hasRevive = Array.isArray(A.ad_entries) && A.ad_entries.some(e => e?.role === 'revive');
+  if (bad.length) { out.add('adapter', POLICY === 'legacy' && !hasRevive, bad.join('; ')); if (POLICY === 'legacy' && !hasRevive) out.warn('ad_outcome adapter: ' + bad.join('; ') + ' [legacy game: warning]'); return; }
   const { list, skipped, prior } = await entries();
   const disc = ((C.prior || {}).resume_play || {}).discovery || {};
   rep.entries = list.map((e) => ({ id: e.id, from: e.from, role: e.role || null, button: e.button || 'tap_js', sig: e.sig || null, taps: e.taps || null }));
@@ -203,12 +205,21 @@ await L.suite(async ({ out, page }) => {
     out.add('entries', !block, why);
     return done();
   }
-  if (list.length > MAX_ENTRIES) out.warn('ad_outcome: ' + (list.length - MAX_ENTRIES) + ' more ad entries not run (at most ' + MAX_ENTRIES + ' per run): ' + list.slice(MAX_ENTRIES).map((e) => e.id).join('; '));
-  for (const en of list.slice(0, MAX_ENTRIES)) {
+  const required = list.filter(e => e.role === 'revive');
+  const other = list.filter(e => e.role !== 'revive');
+  const room = Math.max(0, MAX_ENTRIES - required.length);
+  if (other.length > room) out.warn('ad_outcome: omitted entries: ' + other.slice(room).map(e => e.id).join(', '));
+  for (const en of [...required, ...other.slice(0, room)]) {
     const spec = (O.entries || {})[en.key] || (O.entries || {})[en.id] || {};
     const cont = spec.continue_button || O.continue_button || (RP && RP.continue_button) || disc.continue || null;
     const c = { id: en.id, from: en.from, button: en.button || 'tap_js' };
     rep.cases.push(c);
+    const revive = en.role === 'revive';
+    const reviveProbe = spec.revive_probe ?? RP;
+    if (revive) {
+      const problem = reviveContractProblem(spec, reviveProbe);
+      if (problem) { c.result = 'incomplete'; out.add(en.id, false, problem); continue; }
+    }
     const res = { cancel: null, complete: null }, note = { cancel: '', complete: '' };
     let soft = null;                                   // a found entry that did not start an ad this time: warning
     const reward = async () => (spec.reward_js ? P.js(page, spec.reward_js) : undefined);
@@ -220,6 +231,7 @@ await L.suite(async ({ out, page }) => {
       // ---- cancel ----
       c.reward0 = base = await reward();
       if (base && base.adapterError) { res.cancel = res.complete = 'untestable: reward_js threw: ' + base.adapterError; break run; }
+      const cancelRun = revive ? await P.js(page, spec.run_id_js) : null;
       const t1 = await adTap(page, en, 'cancel');
       c.cancel = { ad: t1.ad || null, reaction: t1.reaction || null, prompts: t1.prompts || [] };
       if (t1.gone) { res.cancel = res.complete = 'missing_entry: ' + c.button + ' not on screen once the state is reached'; break run; }
@@ -241,6 +253,11 @@ await L.suite(async ({ out, page }) => {
         if (!P.same(c.reward1, base)) res.cancel = 'cancel: the ad was closed early but the reward was given anyway (reward_js ' + J(base) + ' -> ' + J(c.reward1) + ')';
       }
       // ---- complete: the same button again ----
+      if (revive) {
+        c.cancel.run = [cancelRun, await P.js(page, spec.run_id_js)];
+        if (await P.js(page, spec.cancel_js) !== true) res.cancel = 'cancel: unexpected game state or entitlement';
+      }
+      let beforeRun = revive ? await P.js(page, spec.run_id_js) : null;
       let t2 = await adTap(page, en, 'complete');
       c.second = { gone: !!t2.gone, ad: t2.ad || null, reaction: t2.reaction || null, prompts: t2.prompts || [] };
       if (t2.gone || t2.noAd) {
@@ -251,6 +268,7 @@ await L.suite(async ({ out, page }) => {
         const f1 = await fresh();
         if (f1) { res.complete = f1; break run; }
         c.reward0b = base = await reward();
+        if (revive) beforeRun = await P.js(page, spec.run_id_js);
         t2 = await adTap(page, en, 'complete');
         c.second.fresh = true;
         if (t2.gone) { res.complete = 'missing_entry: ' + c.button + ' not on screen once the state is reached'; break run; }
@@ -269,6 +287,7 @@ await L.suite(async ({ out, page }) => {
         let now = await reward(); const t0 = Date.now();
         while (P.same(now, base) && Date.now() - t0 < 3000) { await P.sleep(300); now = await reward(); }
         c.reward2 = now;
+        if (revive && (base == null || now == null || base.adapterError || now.adapterError)) { res.complete = 'complete: invalid revive reward reading'; break run; }
         if (P.same(now, base)) { res.complete = 'complete: the ad was watched to the end but the reward did not arrive (reward_js stays ' + J(now) + ')'; break run; }
       } else {
         const after = await P.snap(page);
@@ -292,7 +311,18 @@ await L.suite(async ({ out, page }) => {
       for (const p of spec.after_visible || []) {
         if (!(await G.nodeCentre(page, p).catch(() => null))) { res.complete = 'complete: after the ad ' + p + ' is not on screen any more (拇指弹球 v5: BACK gone after a revive)'; break run; }
       }
-      if (en.level && RP) {
+      if (revive) {
+        c.revive_return = await checkReviveReturn(spec, beforeRun, {
+          runId: () => P.js(page, spec.run_id_js),
+          restored: () => P.js(page, spec.after_js),
+          visible: p => G.evalJs(page, 'var n=findNode(' + JSON.stringify(p) + '), q=n&&screenOf(n);return !!q && q.x>=0 && q.x<innerWidth && q.y>=0 && q.y<innerHeight && !coverOf(n);'),
+          shot: label => G.shot(page, path.join(C.evidenceDir, 'revive-' + safe(en.id) + '-' + label + '.png')),
+          play: () => P.playable(page, reviveProbe)
+        });
+        if (!c.revive_return.ok) { res.complete = c.revive_return.why; break run; }
+        out.warn(en.id + ': automated observations passed; visual review of restored and next-action frames is pending');
+        note.complete = 'same run, visible controls and gameplay input verified; inspect restored and next-action frames';
+      } else if (en.level && RP) {
         const pl = await P.playable(page, RP);
         c.playable = pl;
         if (!pl.ok) { res.complete = 'complete: after the ad the level does not play: ' + pl.why; break run; }
@@ -309,7 +339,7 @@ await L.suite(async ({ out, page }) => {
     if (soft) { c.result = 'warn'; out.warn('ad_outcome ' + soft); out.add(en.id, true, soft); continue; }
     for (const kind of ['cancel', 'complete']) {
       const fail = res[kind];
-      const blocks = !!fail && (POLICY === 'new' || /^invalid run/.test(fail));
+      const blocks = !!fail && (revive || POLICY === 'new' || /^invalid run/.test(fail));
       c[kind + '_result'] = fail ? 'fail' : 'pass';
       if (fail && !blocks) out.warn('ad_outcome ' + en.id + '/' + kind + ': ' + fail + ' [legacy game: warning]');
       out.add(en.id + '/' + kind, !blocks, fail || (kind === 'cancel'

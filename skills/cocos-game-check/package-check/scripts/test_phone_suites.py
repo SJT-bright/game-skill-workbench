@@ -190,7 +190,7 @@ class PhoneParts(unittest.TestCase):
             self.assertIn(s, rp)
         ao = (RT / 'suites' / 'ad_outcome.mjs').read_text(encoding='utf-8')
         for s in ("from: 'button_sweep'", "id: 'resume_play.ad'", "await adTap(page, en, 'cancel')", "await adTap(page, en, 'complete')",
-                  "if (POLICY === 'legacy') return { list: A.ad_outcome ? list : []"):
+                  "if (POLICY === 'legacy') return { list: A.ad_outcome ? list : list.filter(e => e.role === 'revive')"):
             self.assertIn(s, ao)
         sr = (RT / 'suites' / 'save_restart.mjs').read_text(encoding='utf-8')
         self.assertIn("const KINDS = ['level', 'buy', 'claim', 'other'];", sr)

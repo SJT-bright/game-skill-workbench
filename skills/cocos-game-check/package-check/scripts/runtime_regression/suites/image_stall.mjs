@@ -68,6 +68,21 @@ const drawn = (page, p) => G.evalJs(page, 'var n = findNode(' + JSON.stringify(p
 
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'image_stall', policy: POLICY, entries: [] };
+  // Optional real navigation only; use the same trusted action runner as ad_entries.
+  async function prepare(phase) {
+    if (B.actions === undefined) return true;
+    let r;
+    try { r = await G.runActions(page, B.actions); }
+    catch (error) { r = { ok: false, log: [], why: String(error && error.message || error) }; }
+    (rep.preparations || (rep.preparations = [])).push({ phase, result: r });
+    if (r && r.ok === true) return true;
+    out.add('prepare/' + phase, false, 'image_stall preparation failed: ' + (r && r.why || 'action runner returned no successful result'));
+    out.evidence.report = L.evidence('image_stall.json', rep);
+    return false;
+  }
+  if (B.actions !== undefined && !(Array.isArray(B.actions) && B.actions.length && B.actions.every((a) => a && typeof a === 'object' && !Array.isArray(a)))) {
+    out.add('adapter', false, 'image_stall.actions must be a non-empty array of action objects'); return;
+  }
   // legacy game on Cocos 3.x (「老游戏先不管」): as before 手机检查补全, not covered, a warning
   if (C.engine === '3.x' && POLICY === 'legacy') { out.warn('image_stall: Cocos 3.x 未覆盖（只警告）：legacy game, the 3.x picture stall runs for new games only'); out.add('uncovered', true, 'legacy game on Cocos 3.x'); return; }
   if (B.entries && !(Array.isArray(B.entries) && B.entries.every((x) => typeof x === 'string'))) { out.add('adapter', POLICY === 'legacy', 'image_stall.entries must be a list of node paths'); return; }
@@ -76,6 +91,7 @@ await L.suite(async ({ out, page }) => {
   let h = await G.waitHome(page, { homeScene: A.home_scene || null, adapterHome: A.home || null });
   if (!h.ok) { const inv = h.fps != null && h.fps < G.MIN_FPS; out.add('home', !inv && POLICY === 'legacy', inv ? 'invalid run: the page ran at ' + h.fps + ' fps' : 'untestable: home not reached on a normal load'); return; }
   if (A.after_home_js) { await G.evalJs(page, A.after_home_js).catch(() => null); await P.sleep(400); }
+  if (!await prepare('normal')) return;
   const entries = await entryPaths(page);
   if (!entries.length) { out.add('entries', POLICY === 'legacy', 'no PLAY / add-to-desktop / profile-revisit entry found on the home page (write image_stall.entries)'); return; }
   if (!entries.some((e) => e.kind === 'platform')) out.warn('image_stall: no add-to-desktop / profile-revisit entry found on the home page');
@@ -104,6 +120,7 @@ await L.suite(async ({ out, page }) => {
   h = await G.waitHome(page, { homeScene: A.home_scene || null, adapterHome: A.home || null, timeout: 60000 });
   rep.home2 = h.ok;
   if (A.after_home_js) { await G.evalJs(page, A.after_home_js).catch(() => null); await P.sleep(400); }
+  if (!await prepare('stalled')) return;
   // the platform kit HomeGrowthEntries switches to its text 2 s after init when the icon did not load: wait for it
   await P.sleep(B.settle_ms || 4000);
   rep.png = await G.shot(page, path.join(C.evidenceDir, 'image-stall-home.png'));
@@ -131,6 +148,7 @@ await L.suite(async ({ out, page }) => {
       await G.openGame(page, 'iphone14', q + '&imghang=' + encodeURIComponent(list) + '&imghang_n=999&accesshang=' + encodeURIComponent(list));
       await G.waitHome(page, { homeScene: A.home_scene || null, adapterHome: A.home || null, timeout: 60000 });
       if (A.after_home_js) { await G.evalJs(page, A.after_home_js).catch(() => null); await P.sleep(400); }
+      if (!await prepare('reload/' + e.path)) { e.result = 'preparation failed'; return; }
       await P.sleep(B.settle_ms || 4000);
     }
     e.result = fail ? 'fail' : 'pass';

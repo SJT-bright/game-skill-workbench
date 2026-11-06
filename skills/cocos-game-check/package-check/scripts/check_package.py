@@ -225,10 +225,26 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             adapter_sha = hashlib.sha256(Path(adapter).read_bytes()).hexdigest()
         except OSError as error:
             return no('adapter unreadable: %s' % error)
+    # A successor writer can preserve the old rewarded-ad adapter identity only
+    # when the recorded, independently replayed exact PLAY-only proof holds.
+    adapter_equivalence = False
+    play_proof = (rt.get('rework') or {}).get('optional_art_delta')
+    if isinstance(play_proof, dict):
+        try:
+            import importlib.util
+            gp = Path(__file__).with_name('play_art_delta_guard.py')
+            gs = importlib.util.spec_from_file_location('_delivery_play_delta', gp)
+            gm = importlib.util.module_from_spec(gs); gs.loader.exec_module(gm)
+            checked = gm.validate(play_proof['old_zip']['path'], files, adapter, play_proof['scope']['path'])
+            if checked != play_proof:
+                return no('PLAY scope proof differs on delivery readback')
+            adapter_equivalence = (ad.get('adapter_sha256') == checked['old_adapter']['sha256'])
+        except Exception as error:
+            return no('PLAY scope proof invalid: %s' % error)
     if ad_regression_gate.needs_regression(files):
         if ad.get('status') != 'passed':
             return no('the writer did not run the rewarded-ad regression on a package that needs it')
-        if adapter_sha is None or ad.get('adapter_sha256') != adapter_sha:
+        if adapter_sha is None or (ad.get('adapter_sha256') != adapter_sha and not adapter_equivalence):
             return no('adapter differs from the one the writer ran (rewarded-ad regression)')
         if ad.get('tool_sha256') != ad_regression_gate.tool_digest():
             return no('rewarded-ad regression tool differs from the one the writer ran')

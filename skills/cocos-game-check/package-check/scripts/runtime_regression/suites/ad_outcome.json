@@ -1,12 +1,28 @@
 {
   "name": "ad_outcome",
-  "about": "v7.9 手机才出的五类问题 2 / 手机检查补全: every rewarded-ad entry tapped for real while the ad plays like on a phone (onHide at start, onShow + onClose at the end). Entries: adapter.ad_entries, resume_play.ad, and the ad entries button_sweep found with real taps this run. One load each: cancel -> no reward, the pause popup closes with one tap, the SAME button starts the ad again (no lock); complete -> the reward arrives (reward_js, else something on screen changes), the game still answers (resume_play level plays / the entry reacts again). Runs for every package with rewarded ads; no entry known while button_sweep ran refuses a new game (write ad_entries, or ad_outcome {\"n/a\": reason}); legacy games: only ad_entries + ad_outcome, warnings",
-  "applies": ["rewarded_ads", "adapter:ad_entries"],
+  "about": "Drive each rewarded-ad entry through cancel and completion using real UI taps and phone-like lifecycle. Declared revive entries additionally require reward, cancellation entitlement, same-run restoration, visible gameplay and a real next action. Both saved frames require visual review. Declared revives block even under legacy policy.",
+  "applies": [
+    "rewarded_ads",
+    "adapter:ad_entries"
+  ],
   "needs": [],
   "na_field": "ad_outcome",
-  "fields": ["ad_entries", "ad_entries_query", "home_scene", "after_home_js", "play", "in_level"],
-  "after": ["button_sweep", "resume_play"],
-  "engines": ["2.x", "3.x"],
+  "fields": [
+    "ad_entries",
+    "ad_entries_query",
+    "home_scene",
+    "after_home_js",
+    "play",
+    "in_level"
+  ],
+  "after": [
+    "button_sweep",
+    "resume_play"
+  ],
+  "engines": [
+    "2.x",
+    "3.x"
+  ],
   "timeout_s": 1800,
   "owner": "v7.9 手机才出的五类问题 / 手机检查补全",
   "proof": "补丁_手机检查补全_基于简化11.7/测试记录.md (甜点消消乐 R48 passes, 4 entries; R47 and two faults injected into R48 refused; 香肠 R17 passes and a fault copy refused; 猴子快跑 v12 on Cocos 3.x passes; 人鱼 v18 refused: no entry known)"

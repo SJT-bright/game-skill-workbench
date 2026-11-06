@@ -32,7 +32,10 @@ const CFGFILE = mainConfig();
 const CASES = [
   ['cold', '', 60000, 0, null],
   ['pkg_slow_progress', PKG && `pkgprog=1&pkgms=40000`, 90000, 0, PKG ? null : 'no subpackage'],
-  ['pkg_stall_40pct', PKG && `pkgprog=1&stallpkg=0.4&pkgms=20000`, 110000, 1, PKG ? null : 'no subpackage'],
+  // The SDK host stalls the first attempt of EACH package, not just PKG.
+  // Permit one real Retry per distinct injected package; the per-fault deadline
+  // and total HOME deadline stay unchanged. An unexplained Retry still fails.
+  ['pkg_stall_40pct', PKG && `pkgprog=1&stallpkg=0.4&pkgms=20000`, 110000, new Set(PKGS).size, PKG ? null : 'no subpackage'],
   ['pkg_fail_once', PKG && `failpkg=${PKG}`, 60000, 1, PKG ? null : 'no subpackage'],
   ['pkg_2nd_fail', PKG && `nthpkg=${PKG}:2&nthmode=fail`, 60000, 1, PKG ? null : 'no subpackage'],
   ['pkg_2nd_hang', PKG && `nthpkg=${PKG}:2&nthmode=hang`, 70000, 1, PKG ? null : 'no subpackage'],
@@ -190,6 +193,11 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
       timeline.push({ ms: Date.now() - t0, k: 'retry-visible', how: r.how, text: r.text, hostMs, faultMs: firstFault });
       if (firstFault !== null && hostMs !== null && hostMs - firstFault > RETRY_WITHIN_MS + 1500) problems.push(`Retry appeared ${Math.round((hostMs - firstFault) / 1000)} s after the fault (limit 20 s)`);
       retries++;
+      if (id === 'pkg_stall_40pct') {
+        const stalled = await L.ev(page, () => new Set((window.__faults.hits || [])
+          .filter(f => f.kind === 'pkgstall').map(f => f.what.split('#')[0])).size);
+        if (retries > stalled) { problems.push(`Retry ${retries} has no new stalled package (observed ${stalled})`); break; }
+      }
       if (retries > maxRetries) { problems.push(`Retry needed ${retries} times (allowed ${maxRetries})`); break; }
       await sleep(600);
       await L.touchTap(page, r.x, r.y);

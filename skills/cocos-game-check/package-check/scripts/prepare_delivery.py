@@ -23,6 +23,25 @@ import package_obligations
 KIT_PARTS_PHONE_RETEST = '标准件待真机复测'
 
 
+def writer_board(archive, app_id, project=None):
+    """Retain the board of the byte-verified official writer, never a CLI waiver."""
+    from verify_native_zip import verify
+    verified = verify(archive, expected_app_id=app_id)
+    if verified.get('entry') != 'official':
+        raise ValueError('delivery requires a byte-matching official writer receipt')
+    receipt = json.loads(Path(verified['receipt']).read_text(encoding='utf-8'))
+    board = receipt.get('board')
+    if board not in ('localize', 'remake'):
+        return None  # Old / unknown receipts keep the strict unknown-board rules.
+    if receipt.get('finalize', {}).get('board') != board:
+        raise ValueError('writer board differs from its finalize record')
+    if project is not None:
+        declared = Path(project) / 'docs' / 'board.txt'
+        if declared.is_file() and declared.read_text(encoding='utf-8').strip() != board:
+            raise ValueError('writer board differs from the project board')
+    return board
+
+
 def writer_finalize(receipt_file):
     """policy and parts table from the writer receipt (official entries always carry it since v7.7)."""
     try:
@@ -115,7 +134,8 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
         raise ValueError('ZIP changed after the fresh size check; retry with a new delivery record')
     # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
     # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
-    result = check(archive, app_id, native, ad_regression, reuse_writer_regressions=True)
+    board = writer_board(archive, app_id, project)
+    result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True)
     files = native_files(native)
     obligations = package_obligations.verify(files, native, project, resource_manifest)
     startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, replay=False)

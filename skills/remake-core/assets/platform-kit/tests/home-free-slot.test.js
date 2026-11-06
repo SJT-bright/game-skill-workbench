@@ -136,6 +136,33 @@ test('cli_exit_codes', function () {
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
 
+// 生成时预防 R4G1 (#2): ui_dump.js now writes comps.touch for nodes with a touch listener put on by code (ad-boost
+// home entries: WheelPanel.entry() does new cc.Node + n.on(TOUCH_END); many Chinese originals do the same). The dump
+// reader must keep the entries off them WITHOUT --obstacle. Before R4G1 it read only comps.button and put both
+// entries straight onto the wheel and check-in entries. Full-screen touch backgrounds and BlockInputEvents masks are
+// not obstacles (same rule as HomeGrowthEntries.collectButtons).
+test('dump_touch_listener_nodes_are_obstacles_without_obstacle_flag', function () {
+  function rectOf(b) { return [(b.x - b.w / 2) / SCREEN.w + 0.5, 0.5 - (b.y + b.h / 2) / SCREEN.h, b.w / SCREEN.w, b.h / SCREEN.h]; }
+  var buttonOnly = S.findFreeSlots({screen: SCREEN, buttons: HOME, entry: ENTRY});
+  assert.ok(buttonOnly.ok);
+  var ad = [{name: 'WheelEntry', x: buttonOnly.slots[0].x, y: buttonOnly.slots[0].y, w: 120, h: 120},
+    {name: 'CheckinEntry', x: buttonOnly.slots[1].x, y: buttonOnly.slots[1].y, w: 120, h: 120}];
+  var nodes = HOME.map(function (b) { return {name: b.name, opacity: 1, comps: {button: {interactable: true}}, rect: rectOf(b)}; })
+    .concat(ad.map(function (b) { return {name: b.name, opacity: 1, comps: {sprite: {}, touch: true}, rect: rectOf(b)}; }))
+    .concat([{name: 'bgTap', opacity: 1, comps: {sprite: {}, touch: true}, rect: [0, 0, 1, 1]},
+      {name: 'maskSmall', opacity: 1, comps: {touch: true, block_input: true}, rect: [0.1, 0.1, 0.3, 0.3]},
+      {name: 'hiddenTap', opacity: 0, comps: {touch: true}, rect: [0.4, 0.4, 0.1, 0.1]}]);
+  var boxes = S.boxesFromDump({nodes: nodes}, SCREEN);
+  var names = boxes.map(function (b) { return b.name; });
+  assert.ok(names.indexOf('WheelEntry') >= 0 && names.indexOf('CheckinEntry') >= 0, 'touch entries are read: ' + names);
+  ['bgTap', 'maskSmall', 'hiddenTap'].forEach(function (n) { assert.ok(names.indexOf(n) < 0, n + ' is not an obstacle'); });
+  var r = S.findFreeSlots({screen: SCREEN, buttons: boxes, entry: ENTRY});
+  assert.ok(r.ok, r.error);
+  r.slots.forEach(function (s) {
+    HOME.concat(ad).forEach(function (b) { assert.ok(!S.intersects(s, b), 'slot ' + JSON.stringify(s) + ' on ' + b.name); });
+  });
+});
+
 var failed = results.filter(function (r) { return r.status !== 'passed'; }).length;
 console.log(JSON.stringify({suite: 'home-free-slot', passed: results.length - failed, failed: failed, results: results}, null, 2));
 if (failed) process.exitCode = 1;

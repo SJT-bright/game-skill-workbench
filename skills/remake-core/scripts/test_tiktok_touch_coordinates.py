@@ -346,6 +346,44 @@ class Cocos37TikTokTouchCoordinates(unittest.TestCase):
         self.assertTrue(any('location shape' in e for e in errors), errors)
 
 
+EARLY_ENGINE3 = (
+    b'var rt={},Ua;Ua=rt,Ha=tt,Object.keys(Ha).forEach((function(t){"function"!=typeof Ha[t]?Ua[t]=Ha[t]:Ua[t]=Ha[t].bind(Ha)}));'
+    b'!function(t){t.TOUCH_START="touch-start",t.TOUCH_MOVE="touch-move",t.TOUCH_END="touch-end",t.TOUCH_CANCEL="touch-cancel"}'
+    b'(WA||(WA=t("SystemEventType",{})));'
+    b'var touch=function(){var e=t.prototype;return e._registerEvent=function(){rt.onTouchStart(this._createCallback(WA.TOUCH_START)),'
+    b'rt.onTouchMove(this._createCallback(WA.TOUCH_MOVE)),rt.onTouchEnd(this._createCallback(WA.TOUCH_END)),'
+    b'rt.onTouchCancel(this._createCallback(WA.TOUCH_CANCEL))},e._createCallback=function(t){var e=this;return function(i){'
+    b'for(var n=rt.getSystemInfoSync(),r=[],a=i.changedTouches.length,o=0;o<a;++o){var s=i.changedTouches[o],c=e._getLocation(s),'
+    b'l={identifier:s.identifier,x:c.x,y:n.windowHeight-c.y,force:s.force};r.push(l)}'
+    b'var u={type:t,changedTouches:r,timestamp:performance.now()};e._eventTarget.emit(t,u)}},'
+    b'e._getLocation=function(t){return new Pn(t.clientX,t.clientY)},e.onStart=function(t){this._eventTarget.on(WA.TOUCH_START,t)}}();')
+
+
+class EarlyCocos3TouchCoordinates(unittest.TestCase):
+    def files(self, fixed=True):
+        f=package3(before=b"require('./touch-fix.js')(tt);" if fixed else b'')
+        f['cocos-js/cc.js']=EARLY_ENGINE3
+        return f
+
+    def test_actual_early_input_source_shape_and_sdk_alias(self):
+        r=audit_files(self.files())
+        self.assertTrue(r['passed'],r['errors'])
+        p=r['touch_coordinates']
+        self.assertEqual(p['profile'],'cocos3-early-css-input')
+        self.assertTrue(all(row['passed'] for row in p['rows']))
+        self.assertEqual(p['screen'],{'width':390,'height':844})
+
+    def test_missing_fix_rejected_at_actual_callback(self):
+        r=audit_files(self.files(False))
+        self.assertFalse(r['passed'])
+        self.assertFalse(r['touch_coordinates']['passed'])
+
+    def test_wrong_enum_still_refused(self):
+        f=self.files();f['cocos-js/cc.js']=EARLY_ENGINE3.replace(b'TOUCH_START="touch-start"',b'TOUCH_START="wrong"')
+        r=audit_files(f)
+        self.assertFalse(r['passed'])
+
+
 class NullTouchProbeIsNotAPass(unittest.TestCase):
     def test_unrecognised_cocos3_engine_fails_with_reason(self):
         files = package3(before=b"require('./touch-fix')(tt);")

@@ -7,6 +7,14 @@
 //     this.getComponent('HomeGrowthEntries').init(saveStore, {onGranted: function (kind, data) { ...top bar... }});
 // The reward is ALWAYS PlatformConfig.growthReward() (5B in this game's currency, Saul 2026-10-29);
 // there is no option to change it. MissionFlow does the platform calls (TTMinis.game -> tt -> wx).
+// R4O3 (补查2 第 5 组, SLS07; Saul 2026-11-04 ECON-SHORTCUT / ECON-REVISIT): a game with NO coins keeps
+// normalLevelCoins 0 and passes its no-coin replacement, same option names as MissionFlow:
+//     init(saveStore, {reward: function (kind, draft) { draft.energy = (Number(draft.energy) || 0) + 3; },
+//                      rewardText: '+3 Energy', onGranted: ...});
+// (economy_capabilities no_wallet_substitutes says what to pay). Only used while growthReward() has no coin amount;
+// a game with coins always pays 5B. Neither coins nor a reward option: the entries still open TikTok, pay nothing,
+// never show a save error, and say why in a [TikTokKit] line and controller.rewardIssue (check_kit_project.py
+// reports such a project before packaging: K_home_entries_no_reward).
 // Rules taken from earlier games:
 //  - the entries are always shown, also in a browser (ThumbPinball / GimblesGem hid them, nobody saw them);
 //  - without the TikTok runtime a tap shows "Available in TikTok" (never a fake success, TovesTulip/AdasAmber);
@@ -26,6 +34,31 @@ var TEXT = {
   collected: 'Collected'
 };
 var ICON_WAIT_MS = 2000;
+var SAVE_FAILED = 'Could not save your reward. Please try again.';   // MissionFlow TEXT.saveFailed
+var NO_REWARD_DONE = 'Thanks for visiting!';
+
+// R4O3: who pays the two entries. Coins (growthReward() > 0) -> MissionFlow's own 5B, a reward option is ignored.
+// No coins + options.reward -> the game's replacement. Neither -> nothing is paid, the claim is still saved once.
+function pickReward(config, options) {
+  var coins = 0;
+  try { coins = Number(config.growthReward()) || 0; } catch (_) { coins = 0; }
+  var given = typeof options.reward === 'function';
+  if (coins > 0) {
+    return {source: 'coins', issue: given ? 'reward option ignored: this game has coins, growthReward() = ' + coins +
+      ' (5B, Saul 2026-10-29)' : ''};
+  }
+  if (options.reward != null && !given) throw new Error('HomeGrowthEntries reward must be function (kind, draft)');
+  if (given) {
+    var t = options.rewardText;
+    if (typeof t === 'string' || t === undefined) t = {shortcut: t || '', profile: t || ''};
+    return {source: 'game', reward: options.reward, rewardText: {shortcut: t.shortcut || '', profile: t.profile || ''}};
+  }
+  // false = MissionFlow writes nothing (not even the claim), so a build that later sets B or a reward still pays once
+  return {source: 'none', reward: function () { return false; }, rewardText: {shortcut: '', profile: ''},
+    issue: 'no reward: PlatformConfig.normalLevelCoins is 0 and init() got no reward option; the two entries pay ' +
+      'nothing. A game without coins passes {reward, rewardText} (economy_capabilities no_wallet_substitutes, ' +
+      'ECON-SHORTCUT / ECON-REVISIT: +3 energy, or add a coin and pay 5B)'};
+}
 
 function Controller(options) {
   options = options || {};
@@ -36,12 +69,19 @@ function Controller(options) {
   this.renderState = typeof options.render === 'function' ? options.render : function () {};
   this.iconFallback = {shortcut: false, profile: false};
   this.lastView = null;
-  this.flow = new MissionFlow({
+  var pick = pickReward(this.config, options);
+  this.rewardSource = pick.source;               // 'coins' | 'game' | 'none' (R4O3)
+  this.rewardIssue = pick.issue || '';
+  this.gameRewardText = pick.rewardText || null;
+  var flowOptions = {
     store: options.store, config: this.config, missions: options.missions, native: options.native,
     missionTimeoutMs: options.missionTimeoutMs,
     render: function (view) { self.lastView = view; self._render(); },
     onGranted: options.onGranted
-  });
+  };
+  if (pick.reward) { flowOptions.reward = pick.reward; flowOptions.rewardText = pick.rewardText; }
+  this.flow = new MissionFlow(flowOptions);
+  if (pick.issue) log('HomeGrowthEntries: ' + pick.issue);
   logPlatformCalls(this.flow.missions);
   log('runtime ' + describeRuntime() + ', native ' + this.flow.native);
   this._render();
@@ -108,17 +148,25 @@ Controller.prototype.rewardAmount = function () {
 
 Controller.prototype.state = function () {
   var flow = this.flow, amount = this.rewardAmount(), self = this, view = this.lastView;
+  function rewardLabel(kind) {
+    if (self.rewardSource === 'game') return self.gameRewardText[kind] || '';
+    return amount > 0 ? '+' + amount : '';
+  }
   function entry(kind) {
-    var claimed = flow.isClaimed(kind);
+    var claimed = flow.isClaimed(kind), label = rewardLabel(kind);
     return {
       kind: kind, title: TEXT[kind], claimed: claimed,
-      reward: claimed ? TEXT.collected : (amount > 0 ? '+' + amount : ''),
+      reward: claimed ? TEXT.collected : label,
       busy: !!(view && view.kind === kind && view.busy),
       iconFallback: self.iconFallback[kind],
-      text: self.iconFallback[kind] ? TEXT[kind] + (claimed ? '\n' + TEXT.collected : (amount > 0 ? '\n+' + amount : '')) : ''
+      text: self.iconFallback[kind] ? TEXT[kind] + (claimed ? '\n' + TEXT.collected : (label ? '\n' + label : '')) : ''
     };
   }
-  return {shortcut: entry('shortcut'), profile: entry('profile'), message: view ? view.message : '', native: flow.native};
+  var message = view ? view.message : '';
+  // R4O3: no reward to pay is not a save error (the old code showed "Could not save" after every visit)
+  if (this.rewardSource === 'none' && message === SAVE_FAILED) message = NO_REWARD_DONE;
+  return {shortcut: entry('shortcut'), profile: entry('profile'), message: message, native: flow.native,
+    rewardSource: this.rewardSource, rewardIssue: this.rewardIssue};
 };
 
 Controller.prototype._render = function () { try { this.renderState(this.state()); } catch (_) {} };
@@ -153,6 +201,56 @@ function platformToast(text) {
     try { sdk.showToast({title: text, icon: 'none', duration: 2000}); return true; } catch (_) {}
   }
   return false;
+}
+
+// R4Q6 (补查3 第 6 组, 火箭三消: "Available in TikTok" hung in the middle of the screen with no backing, stayed on the
+// next page, and two of them stacked; 奔跑吧巨人: notices stacked up). Every notice of the entries ("Available in
+// TikTok", "Opening...", save / reward messages) goes through ONE notice: the GameUIKit toast when the game has the kit
+// (single node, backing, timed, cleared on the next page), else TikTok's own showToast, else messageLabel shown for
+// NOTICE_MS and then hidden, else only a [TikTokKit] line. Never a text that stays. clear() runs when the home is left
+// (component onDisable). makeNotice({ui, platform(text) -> bool, label: {set(text), hide()}, later(ms, fn) -> cancel}).
+var NOTICE_MS = 2200;
+function findKitUI() {
+  var g = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
+  var ui = g && g.TikTokGameUIKit;
+  return ui && typeof ui.toast === 'function' ? ui : null;
+}
+function makeNotice(o) {
+  o = o || {};
+  var ui = o.ui && typeof o.ui.toast === 'function' ? o.ui : null;
+  var cancel = null, current = '', via = '';
+  function stop() { if (cancel) { try { cancel(); } catch (_) {} cancel = null; } }
+  var notice = {
+    text: function () { return via === 'GameUIKit' && typeof ui.toastText === 'function' ? ui.toastText() : current; },
+    via: function () { return via; },
+    show: function (text) {
+      text = text === undefined || text === null ? '' : String(text);
+      if (!text) return '';
+      stop();
+      if (via === 'label' && o.label) o.label.hide();
+      current = text;
+      if (ui) { via = 'GameUIKit'; ui.toast(text, {ms: NOTICE_MS}); return via; }
+      if (typeof o.platform === 'function' && o.platform(text)) { via = 'platform'; return via; }
+      if (o.label && typeof o.later === 'function') {
+        via = 'label';
+        o.label.set(text);
+        cancel = o.later(NOTICE_MS, function () { cancel = null; current = ''; o.label.hide(); });
+        return via;
+      }
+      via = 'log';
+      log('HomeGrowthEntries: ' + text);
+      current = '';
+      return via;
+    },
+    clear: function () {
+      stop();
+      if (via === 'GameUIKit' && typeof ui.clearToast === 'function' && typeof ui.toastText === 'function' &&
+          ui.toastText() === current) ui.clearToast();
+      if (via === 'label' && o.label) o.label.hide();
+      current = '';
+    }
+  };
+  return notice;
 }
 
 function textureLoaded(sprite) {
@@ -300,13 +398,16 @@ function blocksInput(cc, node) {
 // Visible cc.Button nodes and visible touch-listening nodes under root, minus the skipped nodes and everything
 // inside them. opts: {screen?: {w, h}, ignore?: [node]} -> boxes {name, x, y, w, h, by: 'button' | 'touch'};
 // opts.backdrops (array) gets the touch nodes left out as background / mask.
+// R4Q6 (补查3 第 6 组, 奔跑吧巨人): opts.searchRoot = the home panel. Only buttons inside it are obstacles (boxes are
+// still in root space); the settings / shop popups and other pages kept under the Canvas are not.
 function collectButtons(cc, root, skip, opts) {
   opts = opts || {};
   var out = [], Btn = cc && cc.Button, types = touchTypes(cc), ignore = opts.ignore || [];
   var area = opts.screen ? opts.screen.w * opts.screen.h : 0;
+  var start = opts.searchRoot || root;
   (function walk(node) {
     if (!shown(node) || (skip || []).indexOf(node) >= 0) return;
-    if (node !== root && ignore.indexOf(node) < 0) {
+    if (node !== root && node !== start && ignore.indexOf(node) < 0) {
       var isBtn = !!(Btn && node.getComponent && node.getComponent(Btn));
       var isTouch = !isBtn && listensTouch(cc, node, types);
       if (isBtn || isTouch) {
@@ -320,7 +421,7 @@ function collectButtons(cc, root, skip, opts) {
       }
     }
     (node.children || []).forEach(walk);
-  })(root);
+  })(start);
   return out;
 }
 
@@ -334,7 +435,7 @@ function placeEntries(cc, opts) {
   var rootBox = boxIn(cc, root, root);
   var screen = opts.screen || (rootBox ? {w: rootBox.w, h: rootBox.h} : null);
   var backdrops = [];
-  var buttons = collectButtons(cc, root, entries, {screen: screen, ignore: opts.ignore, backdrops: backdrops}).concat((opts.obstacles || []).map(function (n) { return boxIn(cc, n, root); }).filter(Boolean));
+  var buttons = collectButtons(cc, root, entries, {screen: screen, ignore: opts.ignore, backdrops: backdrops, searchRoot: opts.searchRoot}).concat((opts.obstacles || []).map(function (n) { return boxIn(cc, n, root); }).filter(Boolean));
   var boxes = entries.map(function (n) { return boxIn(cc, n, root); });
   if (!boxes[0] || !boxes[1]) return {ok: false, error: 'entry node has no size'};
   var gap = opts.gap === undefined ? SLOT.gap : opts.gap;
@@ -362,11 +463,57 @@ function placeEntries(cc, opts) {
   return r;
 }
 
+// R4Q6 (补查3 第 6 组, 奔跑吧巨人: the entries were placed from boxes taken while the home was still laying out).
+// Place only after the home has settled: at least SETTLE.minFrames frames, and the same layout signature (every
+// obstacle box and both entry boxes, rounded) on two frames in a row. Still moving after maxFrames: placed on the last
+// frame with a [TikTokKit] line. settleGate({signature, place}).tick() once per frame -> null until placed, then the
+// placeEntries result (+ frames, settled).
+var SETTLE = {minFrames: 3, maxFrames: 90};
+function layoutSignature(cc, opts) {
+  opts = opts || {};
+  var root = opts.root, entries = (opts.entries || []).filter(Boolean);
+  if (!root) return '';
+  var list = collectButtons(cc, root, entries, {searchRoot: opts.searchRoot, ignore: opts.ignore})
+    .concat(entries.map(function (n) { return boxIn(cc, n, root); }).filter(Boolean));
+  return list.map(function (b) {
+    return b.name + ':' + Math.round(b.x) + ',' + Math.round(b.y) + ',' + Math.round(b.w) + ',' + Math.round(b.h);
+  }).join('|');
+}
+function settleGate(o) {
+  o = o || {};
+  var minF = o.minFrames || SETTLE.minFrames, maxF = o.maxFrames || SETTLE.maxFrames;
+  var frame = 0, last = null, gate = {result: null, done: false};
+  gate.frames = function () { return frame; };
+  gate.tick = function () {
+    if (gate.done) return gate.result;
+    frame++;
+    var sig = null;
+    try { sig = String(o.signature()); } catch (_) { sig = null; }
+    var steady = sig !== null && sig === last;
+    last = sig;
+    if (!(frame >= minF && steady) && frame < maxF) return null;
+    gate.done = true;
+    if (!steady) log('HomeGrowthEntries: home layout still moving after ' + frame + ' frames; entries placed on this frame');
+    var r = null;
+    try { r = o.place(); } catch (e) { r = {ok: false, error: 'place failed: ' + (e && e.message)}; }
+    r = r || {ok: false, error: 'place returned nothing'};
+    r.frames = frame; r.settled = steady;
+    gate.result = r;
+    return r;
+  };
+  return gate;
+}
+
 Controller.findFreeSlots = findFreeSlots;
 Controller.placeEntries = placeEntries;
 
+Controller.settleGate = settleGate;
+Controller.layoutSignature = layoutSignature;
+Controller.makeNotice = makeNotice;
+
 var exported = {Controller: Controller, TEXT: TEXT, findFreeSlots: findFreeSlots, placeEntries: placeEntries,
-  collectButtons: collectButtons};
+  collectButtons: collectButtons, settleGate: settleGate, layoutSignature: layoutSignature, makeNotice: makeNotice,
+  SETTLE: SETTLE, NOTICE_MS: NOTICE_MS};
 if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
   exported = cc.Class({
     extends: cc.Component,
@@ -375,14 +522,16 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
       profileNode: {default: null, type: cc.Node},
       messageLabel: {default: null, type: cc.Label}
     },
-    statics: {Controller: Controller, TEXT: TEXT, findFreeSlots: findFreeSlots, placeEntries: placeEntries},
+    statics: {Controller: Controller, TEXT: TEXT, findFreeSlots: findFreeSlots, placeEntries: placeEntries,
+      settleGate: settleGate, layoutSignature: layoutSignature, makeNotice: makeNotice},
     init: function (store, options) {
       options = options || {};
       var self = this;
       if (this.controller) this.controller.dispose();
       this.controller = new Controller({
         store: store, onGranted: options.onGranted, missions: options.missions, native: options.native,
-        toast: function (text) { if (!platformToast(text)) self._message(text); },
+        reward: options.reward, rewardText: options.rewardText,
+        toast: function (text) { self._message(text); },
         render: function (state) { self._paint(state); }
       });
       ['shortcut', 'profile'].forEach(function (kind) {
@@ -400,22 +549,43 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
         this._onShow = function () { if (self.controller) self.controller.onShow(); };
         cc.game.on(cc.game.EVENT_SHOW, this._onShow);
       }
-      // next frame, after the home's Widgets ran: keep or move the entries clear of every home button
+      // R4Q6: one notice for every message (GameUIKit toast > TikTok showToast > messageLabel for NOTICE_MS)
+      this._lastMessage = '';
+      this._notice = makeNotice({ui: options.ui || findKitUI(), platform: platformToast,
+        label: this.messageLabel ? {set: function (t) { self.messageLabel.string = t; self.messageLabel.node.active = true; },
+          hide: function () { if (cc.isValid(self.messageLabel.node)) self.messageLabel.node.active = false; }} : null,
+        later: function (ms, fn) { self.scheduleOnce(fn, ms / 1000); return function () { self.unschedule(fn); }; }});
+      if (this.messageLabel) this.messageLabel.node.active = false;
+      // R4Q6: keep or move the entries clear of every home button once the home has settled (>= 3 frames, the same
+      // layout on two frames in a row, update() ticks it); obstacles only inside the home panel
       if (options.place !== false) {
         this._placeOptions = options;
-        this.scheduleOnce(function () { self.placeEntries(); }, 0);
+        this._settle = settleGate({signature: function () { return layoutSignature(cc, self._placeSpec()); },
+          place: function () { return self.placeEntries(); }});
       }
       this.controller._render();
       return this.controller;
     },
     // Also callable again after the home layout changed. -> result of placeEntries (kept / moved / error).
-    placeEntries: function () {
+    // R4Q6: root = coordinate frame (homeRoot or the Canvas); searchRoot = where obstacles are looked for:
+    // init({homePanel}), else homeRoot, else the nearest parent of this component named like "home" (homePanel,
+    // HomeView, ...), else the Canvas (and a [TikTokKit] line, because then popups under the Canvas count too).
+    _placeSpec: function () {
       var o = this._placeOptions || {};
       var root = o.homeRoot || (cc.Canvas && cc.Canvas.instance && cc.Canvas.instance.node) || cc.find('Canvas') || this.node.parent;
+      var panel = o.homePanel || o.homeRoot || null;
+      for (var n = this.node; !panel && n && n !== root; n = n.parent) if (/home/i.test(n.name || '')) panel = n;
+      if (!panel && !this._warnedPanel) {
+        this._warnedPanel = true;
+        log('HomeGrowthEntries: no home panel found (init({homePanel}) or a parent named like "home"); obstacles are taken from the whole Canvas');
+      }
       var size = cc.view && typeof cc.view.getVisibleSize === 'function' ? cc.view.getVisibleSize() : null;
-      this.placement = placeEntries(cc, {root: root, entries: [this.shortcutNode, this.profileNode],
+      return {root: root, searchRoot: panel || root, entries: [this.shortcutNode, this.profileNode],
         screen: size ? {w: size.width, h: size.height} : undefined, obstacles: o.obstacles, ignore: o.ignore, safe: o.safe,
-        gap: o.gap, topReserve: o.topReserve});
+        gap: o.gap, topReserve: o.topReserve};
+    },
+    placeEntries: function () {
+      this.placement = placeEntries(cc, this._placeSpec());
       if (this.controller) this.controller.placement = this.placement;
       return this.placement;
     },
@@ -445,13 +615,26 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
         var button = node.getComponent(cc.Button);
         if (button) button.interactable = !e.busy;
       });
-      if (state.message) this._message(state.message);
+      // a message is shown once when it changes (render runs on every flow step; the same text never stacks)
+      if (state.message !== this._lastMessage) {
+        this._lastMessage = state.message || '';
+        if (state.message) this._message(state.message);
+      }
     },
     _message: function (text) {
-      if (this.messageLabel) { this.messageLabel.string = text; this.messageLabel.node.active = true; }
+      if (this._notice) this._notice.show(text);
     },
-    update: function () { if (this.controller) this.controller.tick(); },
+    update: function () {
+      if (this._settle && !this._settle.done) this._settle.tick();
+      if (this.controller) this.controller.tick();
+    },
+    // leaving the home (another page / panel switched on, the home node hidden): no notice stays behind
+    onDisable: function () {
+      if (this._notice) this._notice.clear();
+      this._lastMessage = '';
+    },
     onDestroy: function () {
+      if (this._notice) this._notice.clear();
       if (this._onShow) cc.game.off(cc.game.EVENT_SHOW, this._onShow);
       if (this.controller) this.controller.dispose();
       this.controller = null;

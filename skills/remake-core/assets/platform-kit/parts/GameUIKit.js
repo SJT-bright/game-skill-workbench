@@ -1,4 +1,4 @@
-// GameUIKit 1.1.1 (Cocos Creator 2.4) - platform-kit standard part, 生成时预防 P05 / P06.
+// GameUIKit 1.1.4 (Cocos Creator 2.4) - platform-kit standard part, 生成时预防 P05 / P06.
 // Every NEW or CHANGED popup, button, toast and bitmap number goes through this file; do not hand-write them.
 // Copy unchanged to assets/tiktok-platform/GameUIKit.js (tiktok_finalize.py sync does it for new games):
 //   var UI = require('GameUIKit');
@@ -7,6 +7,8 @@
 //   UI.wrapExisting(originalButtonNode, handler);                                   // English games: original buttons
 //   setTimeout(p.guard(function () { ... }), 800);                                 // dropped once p closes / reopens
 //   UI.valueLabel(musicPctNode, {longest: '100%'});                                // one line, SHRINK, width of the longest value
+//   UI.text(panel.body, {w: 480, h: 200, text: rules, overflow: 'shrink'});         // 1.1.4: every NEW body-text Label
+//   var g = UI.guide(cellNode, {frame: handFrame}); ... g.close();                 // 1.1.4: tutorial hand follows the layout
 //   UI.pausePage(canvas, {session, initRun, onHome});   UI.revivePage(...);   UI.resultPage(...)   // page templates (1.1.0)
 //   var release = UI.adoptPopup({isOpen: fn, setCovered: fn(covered)});  // 1.1.1: AdBoostKit popups join the stack
 // Cocos 3.x: parts-3x/GameUIKit.ts, the same interface, generated from this file by tools/make_gameuikit_3x.py.
@@ -14,7 +16,11 @@
 // fitTrim; without the ad parts (adButton, doubleCheckbox, runAd stay in AdBoostKit). New here: button, wrapExisting,
 // popup.guard, close() always ends with the popup inactive, press feedback darkens instead of scaling; 1.1.0: valueLabel,
 // pause / revive / result pages with fixed button slots, setup({audio}) and setup({onPageOpen}); 1.1.1: adoptPopup
-// (another kit's popup joins the same popup stack: only the top layer is dimmed and shows its X).
+// (another kit's popup joins the same popup stack: only the top layer is dimmed and shows its X); 1.1.2: every
+// popup() / open() and page template open() is recorded in PageRegistry in a dev build (pages.json seen_at_runtime);
+// 1.1.3: UI.recordPage(info, node, closeNode), the public name of that record (AdBoostKit popups); 1.1.4 (R4N4): UI.text
+// (body text: box, overflow and wrap set before the font and the text), UI.guide (tutorial hand that follows its target
+// after every layout), titleSize forwarded by the page templates.
 'use strict';
 
 
@@ -22,7 +28,7 @@
 // Core: engine-neutral (taken from AdBoostKit kit-core.js 1.2.0). E is the engine adapter at the end of this
 // file. Every node draws at most one render component: pictures and text always sit on their own child nodes.
 function createGameUIKit(E) {
-  var Kit = {version: '1.1.1', kit: 'GameUIKit'};
+  var Kit = {version: '1.1.7', kit: 'GameUIKit'};
   var cfg = {
     tapGuardMs: 500,          // repeated taps inside this window are ignored
     closeMinSize: 104,        // close button hit area is at least this many design pixels
@@ -44,18 +50,80 @@ function createGameUIKit(E) {
     stackPopups: true,        // a popup opened over another one hides the lower mask and close button
     disabledText: 'Not available yet',  // toast for a tap on a disabled UI.button (opts.disabledText overrides)
     audio: null,              // optional AudioService (parts/AudioService.js): used for the sounds when sfx is not set
-    onPageOpen: null          // optional function (info): called on every popup() / open() and page template open()
-                              // (page registry, docs/logic/pages.json; info = {kind, page, name, buttons, slots, close, ads, opening})
+    onPageOpen: null,         // optional function (info): called on every popup() / open() and page template open()
+                              // (page registry, docs/logic/pages.json; info = {kind, id, page, name, buttons, slots, close, ads, opening})
+    pageRegistry: 'auto'      // 1.1.2: every opening is also written to PageRegistry (window.__pageRegistry) in a dev build;
+                              // true = always (QA harness), false = never
   };
   var OFF_TINT = [110, 110, 110];
   var WHITE = [255, 255, 255];
+
+  // 1.1.7 (R4R4, 补读第 8 组补充, 火箭三消 "先开设置/音量，之后复活变空壳"): the pictures in the shared config
+  // (closeFrame, toastFrame, digitFrames) are held with addRef() while the config points at them and given back with
+  // decRef(false) when replaced (only when the engine has the two methods; never releases anything itself). A page
+  // that swaps config().closeFrame for a picture of its own prefab and is then released no longer leaves a destroyed
+  // frame behind: every use checks the picture first (E.frameUsable: cc.isValid(frame, true) and its texture still
+  // there) and, when it is gone, falls back - close picture: the first close picture the game set (kept), then the
+  // kit's own drawn X - and logs one warning (Kit.frameIssues()). Nothing throws, the popup is built whole.
+  var FRAME_KEYS = {closeFrame: 1, toastFrame: 1, digitFrames: 1};
+  var frameStore = {closeFrame: null, toastFrame: null, digitFrames: null};
+  var bootClose = null;
+  var frameIssues = [];
+  function eachFrame(v, fn) {
+    if (!v || typeof v !== 'object') return;
+    if (typeof v.getRect === 'function' || 'rect' in v || 'texture' in v || '_texture' in v) { fn(v); return; }
+    for (var k in v) if (Object.prototype.hasOwnProperty.call(v, k)) eachFrame(v[k], fn);
+  }
+  function holdFrame(f) { try { if (f && typeof f.addRef === 'function') f.addRef(); } catch (e) { /* engine without refs */ } }
+  function dropFrame(f) { try { if (f && typeof f.decRef === 'function') f.decRef(false); } catch (e) { /* engine without refs */ } }
+  function usable(f) {
+    if (!f) return false;
+    if (typeof E.frameUsable === 'function') { try { return !!E.frameUsable(f); } catch (e) { return false; } }
+    return true;
+  }
+  function frameIssue(where, f) {
+    for (var i = 0; i < frameIssues.length; i++) if (frameIssues[i].frame === f && frameIssues[i].where === where) return;   // once per picture
+    var name = (f && (f.name || f._name)) || 'frame';
+    var m = 'GameUIKit: ' + where + ' picture "' + name + '" was released (a page changed config() and its prefab was freed); using the fallback';
+    frameIssues.push({where: where, name: name, frame: f});
+    E.warn(m);
+  }
+  Object.keys(FRAME_KEYS).forEach(function (k) {
+    Object.defineProperty(cfg, k, {enumerable: true, configurable: true,
+      get: function () { return frameStore[k]; },
+      set: function (v) {
+        var old = frameStore[k];
+        if (old === v) return;
+        eachFrame(v, holdFrame);
+        frameStore[k] = v;
+        eachFrame(old, dropFrame);
+        if (k === 'closeFrame' && !bootClose && usable(v)) { bootClose = v; holdFrame(v); }   // the start-up picture, kept
+      }});
+  });
+  // Close picture for a popup: o.closeFrame (false = none) -> config closeFrame -> first close picture set -> null
+  // (null with fallback = draw the kit's own X). Returns {frame, drawn}.
+  function closePicture(o) {
+    if (o.closeFrame === false) return {frame: null, drawn: false};
+    var want = o.closeFrame || cfg.closeFrame;
+    if (!want) return {frame: null, drawn: false};
+    if (usable(want)) return {frame: want, drawn: false};
+    frameIssue('close', want);
+    var back = bootClose && bootClose !== want && usable(bootClose) ? bootClose : null;
+    // the config falls back too, so the next popup neither meets the dead frame nor logs it again
+    if (want === cfg.closeFrame && back) { holdFrame(back); frameStore.closeFrame = back; }
+    if (back) return {frame: back, drawn: false};
+    return {frame: null, drawn: true};
+  }
+  Kit.frameIssues = function () { return frameIssues.map(function (x) { return {where: x.where, name: x.name}; }); };
 
   Kit.setup = function (o) {
     o = o || {};
     for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) cfg[k] = o[k];
     return Kit;
   };
-  Kit.config = function () { return cfg; };
+  // config() returns the live settings; assigning a picture to it (config().closeFrame = f) goes through the same
+  // hold / give-back as setup(). config(o) is setup(o).
+  Kit.config = function (o) { if (o && typeof o === 'object') Kit.setup(o); return cfg; };
 
   function safeCall(fn, a, b) {
     if (typeof fn !== 'function') return undefined;
@@ -73,11 +141,65 @@ function createGameUIKit(E) {
   }
   Kit._sfx = sfx;
   // Page registry hook (setup({onPageOpen})): one call per popup() / open() and per page template open().
-  function pageHook(info) {
+  // 1.1.2 (R4H 批, Round4 #20): the same call also goes to PageRegistry.record (window.__pageRegistry, the list
+  // ui_dump.js returns as "pages"), so page_registry.py merge-dumps marks docs/logic/pages.json seen_at_runtime from
+  // what the dev build really opened - nobody types it in. Give each popup / page the pages.json id: popup({pageId}),
+  // pausePage({pageId}) (default: o.page, then the popup name; the page templates default to pause / revive / result).
+  function pageHook(info, node, closeNode) {
+    Kit.clearToast({page: true});      // 1.1.6 (R4Q6): a new page never shows the last page's toast
+    recordPage(info, node, closeNode);
     if (typeof cfg.onPageOpen !== 'function') return;
     try { cfg.onPageOpen(info); } catch (e) { E.warn('GameUIKit onPageOpen failed: ' + (e && e.message)); }
   }
+  function nodePath(node) {
+    var names = [];
+    try { for (var n = node; n && n.parent; n = n.parent) names.unshift(n.name); } catch (e) { return ''; }
+    return names.join('/');
+  }
+  // remake-core/assets/page-registry/PageRegistry.js when the game loaded it (it decides when to record: CC_DEBUG or
+  // window.__QA_PAGES); otherwise the same record() / list() made here, only in a dev build (CC_DEBUG), with
+  // window.__QA_PAGES or setup({pageRegistry: true}). setup({pageRegistry: false}) turns it off. Release: nothing.
+  function pageStore() {
+    if (cfg.pageRegistry === false) return null;
+    var g = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
+    if (!g) return null;
+    var r = g.__pageRegistry;
+    if (r && typeof r.record === 'function') return r;
+    var on = cfg.pageRegistry === true || !!g.__QA_PAGES;
+    try { if (typeof CC_DEBUG !== 'undefined' && CC_DEBUG) on = true; } catch (e) { /* not a Cocos build */ }
+    if (!on) return null;
+    var store = {}, order = [];
+    r = g.__pageRegistry = {kit: 'GameUIKit', pathOf: nodePath,
+      list: function () { return order.map(function (id) { return store[id]; }); },
+      reset: function () { store = {}; order = []; },
+      record: function (i) {
+        var id = String((i && (i.id || i.name || i.node)) || '').trim();
+        if (!id) return null;
+        var row = store[id];
+        if (!row) { row = store[id] = {id: id, name: i.name || id, kind: i.kind || 'popup', node: i.node || '', close: i.close || null, buttons: [], ad: [], opened: 0}; order.push(id); }
+        row.opened += 1;
+        ['buttons', 'ad'].forEach(function (k) { (i[k] || []).forEach(function (p) { if (p && row[k].indexOf(p) < 0) row[k].push(p); }); });
+        if (i.close) row.close = i.close;
+        return row;
+      }};
+    return r;
+  }
+  function recordPage(info, node, closeNode) {
+    try {
+      var reg = info && pageStore();
+      if (!reg) return;
+      var path = node ? nodePath(node) : '';
+      reg.record({id: info.id || info.page || info.name, name: info.name, kind: info.kind, node: path,
+        close: closeNode ? nodePath(closeNode) : (info.close && path ? path + '/' + info.close : info.close || null),
+        buttons: (info.buttons || []).map(String),
+        ad: (info.ads || []).map(function (a) { return typeof a === 'string' ? a : (a && (a.slot || a.placementKey)) || ''; })});
+    } catch (e) { E.warn('GameUIKit page record failed: ' + (e && e.message)); }   // a broken record never breaks a popup
+  }
   Kit._pageHook = pageHook;
+  // 1.1.3 (R4J2): the public name of the same call, for popups another kit builds (ad-boost AdBoostKit:
+  // UI.recordPage({id: 'ad-boost:wheel', name: 'Wheel', kind: 'popup', close: 'Close'}, node, closeNode)).
+  // Same record and onPageOpen as popup() / open(); never throws.
+  Kit.recordPage = function (info, node, closeNode) { pageHook(info, node, closeNode); };
   function isThenable(v) { return !!v && typeof v.then === 'function'; }
   // Returns a wrapper that drops calls arriving within ms of the last accepted one.
   function guard(ms, fn) {
@@ -118,6 +240,7 @@ function createGameUIKit(E) {
   // Picture on its own child node. Returns the child. When both w and h are given and the picture
   // has another shape, it is fitted inside w x h keeping its own ratio (never squashed).
   function pictureChild(parent, name, frame, w, h) {
+    if (frame && !usable(frame)) { frameIssue(name, frame); frame = null; }   // 1.1.7: never hand a released picture to a Sprite
     var n = E.node(name, parent);
     var s = frameSize(frame, w, h);
     if (frame && w && h && !cfg.allowStretch) {
@@ -131,13 +254,43 @@ function createGameUIKit(E) {
     E.size(n, s.width, s.height);
     return n;
   }
+  // 1.1.7: the kit's own close mark (no picture file to lose): a round plate and an X of two bars, each on its own node.
+  function drawnClose(closeNode, size) {
+    var icon = E.node('Icon', closeNode);
+    E.size(icon, size, size);
+    var plate = E.node('Plate', icon);
+    E.roundRect(plate, size, size, size / 2, [70, 52, 40], 235);
+    for (var i = 0; i < 2; i++) {
+      var bar = E.node('Bar' + i, icon);
+      E.roundRect(bar, Math.round(size * 0.56), Math.max(6, Math.round(size * 0.13)), Math.max(3, Math.round(size * 0.065)), [255, 255, 255], 255);
+      if (typeof E.setAngle === 'function') E.setAngle(bar, i ? -45 : 45);
+    }
+    return icon;
+  }
   // GameUIKit: press feedback darkens the picture for 90 ms and never scales, so the hit area under the finger
   // stays the same (AdBoostKit scales to 0.94).
   function pressFeedback(target) { pressTint(target); }
 
+  // 1.1.4 (R4N4): the title box of a popup / page template. opts.titleSize {width, height} or [w, h] (one side may be 0:
+  // the other follows the picture's ratio), else titleWidth / titleHeight. The picture is fitted inside it, never squashed.
+  function titleSizeOf(o) {
+    var t = o.titleSize;
+    if (Array.isArray(t)) return {width: t[0] || 0, height: t[1] || 0};
+    if (t && typeof t === 'object') return {width: t.width || 0, height: t.height || 0};
+    return {width: o.titleWidth || 0, height: o.titleHeight || 0};
+  }
+
   // ---------------------------------------------------------------- popup
   Kit.popup = function (parent, o) {
     o = o || {};
+    if ((o.panelFrame && !usable(o.panelFrame)) || (o.titleFrame && !usable(o.titleFrame))) {
+      // 1.1.7: a released panel / title picture is dropped (logged), the popup is still built (copy: caller's object untouched)
+      var o2 = {};
+      for (var ok in o) if (Object.prototype.hasOwnProperty.call(o, ok)) o2[ok] = o[ok];
+      if (o2.panelFrame && !usable(o2.panelFrame)) { frameIssue('panel', o2.panelFrame); o2.panelFrame = null; }
+      if (o2.titleFrame && !usable(o2.titleFrame)) { frameIssue('title', o2.titleFrame); o2.titleFrame = null; }
+      o = o2;
+    }
     parent = parent || E.sceneRoot();
     var win = E.winSize();
     var state = 'open';
@@ -173,9 +326,11 @@ function createGameUIKit(E) {
     var body = E.node('Body', panel);
     E.size(body, ps.width, ps.height);
     var titleNode = null;
-    var closeFrameT = o.closeFrame === false ? null : (o.closeFrame || cfg.closeFrame);
+    var closePic = closePicture(o);   // 1.1.7: checked once, a released picture falls back here
+    var closeFrameT = closePic.frame;
     if (o.titleFrame) {
-      var tw0 = o.titleWidth, th0 = o.titleHeight;
+      var tsz = titleSizeOf(o);
+      var tw0 = tsz.width, th0 = tsz.height;
       if (!tw0 && !th0 && closeFrameT && o.titleFit !== false) {
         // keep the title clear of the close button's hit area on both sides (was titleFit() in every panel)
         var tfs = E.frameSize(o.titleFrame), cfs = E.frameSize(closeFrameT);
@@ -190,13 +345,14 @@ function createGameUIKit(E) {
       E.pos(titleNode, 0, ps.height / 2 - ts.height / 2 - inset + (o.titleOffsetY || 0));
     }
     var closeNode = null;
-    var closeFrame = o.closeFrame === false ? null : (o.closeFrame || cfg.closeFrame);
-    if (closeFrame) {
-      var cs = frameSize(closeFrame, o.closeSize, o.closeSize);
+    var closeFrame = closePic.frame;
+    if (closeFrame || closePic.drawn) {
+      var cs = closeFrame ? frameSize(closeFrame, o.closeSize, o.closeSize) : {width: o.closeSize || 72, height: o.closeSize || 72};
       var hit = Math.max(cfg.closeMinSize, cs.width, cs.height);
       closeNode = E.node('Close', panel);
       E.size(closeNode, hit, hit);
-      pictureChild(closeNode, 'Icon', closeFrame, cs.width, cs.height);
+      if (closeFrame) pictureChild(closeNode, 'Icon', closeFrame, cs.width, cs.height);
+      else drawnClose(closeNode, cs.width);
       var ci = typeof o.closeInset === 'number' ? o.closeInset : 6;
       E.pos(closeNode, ps.width / 2 - hit / 2 - ci, ps.height / 2 - hit / 2 - ci);
       E.onTap(closeNode, guard(cfg.tapGuardMs, function () {
@@ -269,7 +425,8 @@ function createGameUIKit(E) {
         stack(handle, o);
         fitTrimSoon(root);
         openings++;
-        if (o.pageHook !== false) pageHook(popupInfo());
+        if (o.pageHook !== false) pageHook(popupInfo(), root, closeNode);
+        refreshFrom(o, handle);
         return true;
       },
       openings: function () { return openings; }
@@ -277,15 +434,27 @@ function createGameUIKit(E) {
     var openings = 1;
     // what the page registry gets (L2 批 pages.json); page templates send their own, richer record (pageHook:false here)
     function popupInfo() {
-      return {kind: 'popup', page: o.page || null, name: o.name || 'GameUIPopup', buttons: (o.buttons || []).slice(),
+      return {kind: 'popup', id: o.pageId || o.page || o.name || 'GameUIPopup', page: o.page || null, name: o.name || 'GameUIPopup', buttons: (o.buttons || []).slice(),
         slots: [], close: closeNode ? 'Close' : null, ads: (o.ads || []).slice(), opening: openings};
     }
     playIn();
     stack(handle, o);
     fitTrimSoon(root);   // after the panel has built its content, before the first frame shows it
-    if (o.pageHook !== false) pageHook(popupInfo());
+    if (o.pageHook !== false) pageHook(popupInfo(), root, closeNode);
+    refreshFrom(o, handle);
     return handle;
   };
+  // 1.1.6 (R4Q6, 补查3 第 8 组, 奔跑吧巨人: a cached page showed the coins of its first opening). popup({refresh,
+  // store}) / pausePage / revivePage / resultPage({refresh, store}): refresh(saved, handle) runs on EVERY opening
+  // (the first one and each open() of a keep:true page), with store.get() read at that moment. Put every value the
+  // page shows from the save (coins, best, level, owned skins) in refresh, not in the code that builds the page.
+  function refreshFrom(o, handle) {
+    if (typeof o.refresh !== 'function') return;
+    var saved = null;
+    try { saved = o.store && typeof o.store.get === 'function' ? o.store.get() : null; } catch (e) { saved = null; }
+    try { o.refresh(saved, handle); } catch (e) { E.warn('GameUIKit refresh of "' + (o.name || o.pageId || 'page') + '" failed: ' + (e && e.message)); }
+  }
+  Kit._refreshFrom = refreshFrom;
 
   // Popup over popup: only the top one shows its dim layer and close button (two masks look much
   // darker, and a lower X stays visible but cannot be tapped). Only what the stack hid is restored.
@@ -454,6 +623,7 @@ function createGameUIKit(E) {
     var root = E.sceneRoot();
     t.node = E.node('GameUIToast', root);
     t.bg = E.node('Bg', t.node);
+    if (cfg.toastFrame && !usable(cfg.toastFrame)) { frameIssue('toast', cfg.toastFrame); frameStore.toastFrame = null; }
     if (cfg.toastFrame) E.sprite(t.bg, cfg.toastFrame, true);
     t.labelNode = E.node('Text', t.node);
     t.label = E.label(t.labelNode, cfg.toastFontSize, cfg.toastTextColor, cfg.toastOutlineColor);
@@ -474,13 +644,14 @@ function createGameUIKit(E) {
     var sz = E.setLabel(t.labelNode, t.label, text, maxW);
     var bw = sz.width + 56, bh = sz.height + 30;
     E.size(t.node, bw, bh);
-    if (cfg.toastFrame) E.size(t.bg, bw, bh);
+    if (cfg.toastFrame && E.spriteFrameOf(t.bg)) E.size(t.bg, bw, bh);
     else E.roundRect(t.bg, bw, bh, Math.min(bh / 2, 28), cfg.toastBgColor, cfg.toastBgOpacity);
     E.pos(t.node, 0, win.height * (0.5 - cfg.toastTop));
     if (t.timer) t.timer();
     E.setOpacity(t.node, 0);
     E.tweenOpacity(t.node, 255, 120);
     t.text = text;
+    t.keepOnPage = !!o.keepOnPage;
     var ms = typeof o.ms === 'number' ? o.ms : cfg.toastMs;
     t.timer = E.later(ms, function () {
       t.timer = null;
@@ -490,6 +661,18 @@ function createGameUIKit(E) {
     return t.node;
   };
   Kit.toastText = function () { return toastState.node && E.isValid(toastState.node) ? toastState.text : ''; };
+  // 1.1.6 (R4Q6, 补查3 第 6 组, 火箭三消: "Available in TikTok" stayed on the next page). clearToast() hides the toast
+  // now and stops its timer. Every popup() / open() / page template opening calls it (a toast shown with
+  // {keepOnPage: true} survives that), and so does a page the game switches itself: call UI.clearToast() there.
+  Kit.clearToast = function (o) {
+    var t = toastState;
+    if (!t.node || !E.isValid(t.node) || !t.text) return false;
+    if (o && o.page && t.keepOnPage) return false;
+    if (t.timer) { t.timer(); t.timer = null; }
+    E.setActive(t.node, false);
+    t.text = '';
+    return true;
+  };
 
   // ---------------------------------------------------------------- bitmap digits
   Kit.digits = function (parent, o) {
@@ -512,6 +695,7 @@ function createGameUIKit(E) {
       var x = 0, used = 0, maxH = 0, placed = [];
       for (var i = 0; i < value.length; i++) {
         var f = frameFor(value.charAt(i));
+        if (f && !usable(f)) { frameIssue('digit', f); f = null; }   // 1.1.7
         if (!f) { E.warn('GameUIKit.digits: no picture for "' + value.charAt(i) + '"'); continue; }
         var g = glyphs[used];
         if (!g) { g = E.node('G' + used, n); E.sprite(g, f); glyphs.push(g); }
@@ -587,6 +771,9 @@ function createGameUIKit(E) {
       throw new Error('GameUIKit.button: handler of "' + (o.name || E.nameOf(node)) + '" is ' + (handler === null ? 'null' : typeof handler) +
         ' - pass the function itself (this.onRevive.bind(this)), not a name or an undefined method');
     }
+    // 1.1.6 (R4Q6, 补查3 第 8 组, 奔跑吧巨人: the pause key showed on the first frame of the home): opts.active is set
+    // here, before the first frame, not later in start() / a timer
+    if (typeof o.active === 'boolean') E.setActive(node, o.active);
     var art = o.art || null;
     var box = {width: o.width || 0, height: o.height || 0};
     if (!box.width || !box.height) { var b0 = boxOf(node, art); box.width = box.width || b0.width; box.height = box.height || b0.height; }
@@ -647,6 +834,69 @@ function createGameUIKit(E) {
     var h = Kit.button(node, handler, opts);
     h.oldClickEvents = old;
     return h;
+  };
+  // 1.1.6 (R4Q6): UI.newButton(parent, handler, {name, w, h, x, y, frame, active}) makes the node AND the button in one
+  // call. opts.active is required: a button that shows only in some states (pause key during a run, Continue with a
+  // save) is made hidden and shown by the game when that state starts; it never flashes on the first frame.
+  Kit.newButton = function (parent, handler, o) {
+    o = o || {};
+    if (typeof o.active !== 'boolean') {
+      throw new Error('GameUIKit.newButton "' + (o.name || 'Button') + '": give opts.active (true, or false for a button ' +
+        'shown later, like the pause key before the run starts)');
+    }
+    if (!(o.w > 0) || !(o.h > 0)) throw new Error('GameUIKit.newButton "' + (o.name || 'Button') + '": give opts.w and opts.h');
+    var n = E.node(o.name || 'Button', parent || E.sceneRoot());
+    E.setActive(n, o.active);
+    E.size(n, o.w, o.h);
+    E.pos(n, o.x || 0, o.y || 0);
+    var art = o.frame ? pictureChild(n, 'Art', o.frame, o.w, o.h) : null;
+    var opts = {};
+    for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) opts[k] = o[k];
+    opts.art = art; opts.width = o.w; opts.height = o.h;
+    return Kit.button(n, handler, opts);
+  };
+  // ---------------------------------------------------------------- icon + number row (1.1.6, R4Q6 补查3 第 7 组)
+  // UI.iconValue(parent, {w, h, icon, iconW, value, longest, gap, ...}) for every "icon + amount" cell: check-in days,
+  // HUD coins / gems / stamina, shop prices, reward lines. The icon sits in its own fixed-width box on the left; the
+  // number is centred in the space right of it by its REAL width (bitmap digits from setup({digitFrames}) or a Label),
+  // and shrinks to that space, so "200" never loses digits under the icon and a long amount never runs into the next
+  // element (方块收割者: the check-in cell 200 read as 00; the HUD coins ran into LEVEL).
+  // opts: w, h (required, the cell), icon (SpriteFrame; none = an empty Icon box of the same size),
+  // iconW (default h), iconH (default iconW), gap (8), value, digits (true when setup has digitFrames; false = Label),
+  // tone, fontSize, color, outline, name, x, y. Returns {node, icon, number, numberBox: {x, w}, set(v), value()}.
+  Kit.iconValue = function (parent, o) {
+    o = o || {};
+    if (!(o.w > 0) || !(o.h > 0)) throw new Error('GameUIKit.iconValue: give opts.w and opts.h, the size of the cell');
+    var row = E.node(o.name || 'IconValue', parent || E.sceneRoot());
+    E.size(row, o.w, o.h);
+    if (o.x || o.y) E.pos(row, o.x || 0, o.y || 0);
+    var iw = o.iconW || o.h, ih = o.iconH || iw, gap = typeof o.gap === 'number' ? o.gap : 8;
+    var free = o.w - iw - gap;
+    if (!(free > 0)) throw new Error('GameUIKit.iconValue: no room for the number (w ' + o.w + ', iconW ' + iw + ', gap ' + gap + ')');
+    var icon = o.icon ? pictureChild(row, 'Icon', o.icon, iw, ih) : E.node('Icon', row);
+    if (!o.icon) E.size(icon, iw, ih);
+    E.pos(icon, -o.w / 2 + iw / 2, 0);
+    var numberX = -o.w / 2 + iw + gap + free / 2;
+    var sets = cfg.digitFrames || {};
+    var useDigits = o.digits !== undefined ? !!o.digits : !!(sets.light || sets.dark || o.atlasFrames);
+    var number, value = '';
+    if (useDigits) {
+      number = Kit.digits(row, {name: 'Number', tone: o.tone, atlasFrames: o.atlasFrames, height: o.digitHeight || Math.round(o.h * 0.7),
+        maxWidth: free, align: 'center', value: o.value === undefined ? 0 : o.value});
+      E.pos(number.node, numberX, 0);
+    } else {
+      var ln = E.node('Number', row);
+      E.size(ln, free, o.h);
+      E.pos(ln, numberX, 0);
+      var lab = E.textLabel(ln, {overflow: 'SHRINK', wrap: false, align: 'CENTER', fontSize: o.fontSize || Math.round(o.h * 0.6),
+        lineHeight: o.h, font: o.font || null, color: o.color || WHITE, outline: o.outline || null, text: ''});
+      number = {node: ln, label: lab, set: function (v) { lab.string = String(v); }};
+    }
+    var handle = {node: row, icon: icon, number: number, numberBox: {x: numberX, w: free},
+      value: function () { return value; },
+      set: function (v) { value = String(v === undefined || v === null ? '' : v); number.set(value); return handle; }};
+    handle.set(o.value === undefined ? 0 : o.value);
+    return handle;
   };
   // ---------------------------------------------------------------- value labels (P06 point 2, 1.1.0)
   // UI.valueLabel(node, {longest: '100%'}) for any Label that shows a changing value (volume %, coins, score, timer):
@@ -725,6 +975,9 @@ function createGameUIKit(E) {
     }
     var popupOpts = {name: o.name || ('GameUI' + kind.charAt(0).toUpperCase() + kind.slice(1) + 'Page'), keep: true,
       panelFrame: o.panelFrame, panelSliced: o.panelSliced, panelInsets: o.panelInsets, titleFrame: o.titleFrame,
+      // 1.1.4 (R4N4, 合成进化恐龙): the title box options reach the popup (they were dropped, the title kept its own size)
+      titleSize: o.titleSize, titleWidth: o.titleWidth, titleHeight: o.titleHeight, titleInset: o.titleInset,
+      titleOffsetY: o.titleOffsetY, titleFit: o.titleFit,
       width: o.width || 560, height: o.height || 900, maskColor: o.maskColor, maskOpacity: o.maskOpacity,
       closeFrame: kind === 'result' ? (o.closeFrame || false) : o.closeFrame, closeSize: o.closeSize, pageHook: false};
     var popup = Kit.popup(parent, popupOpts);
@@ -770,6 +1023,15 @@ function createGameUIKit(E) {
       var art = null;
       if (spec.frame) art = pictureChild(n, 'Art', spec.frame, s.w, s.h);
       var text = spec.text !== undefined ? spec.text : s.def.text;
+      // 1.1.2 (R4H 补查第 5 组): the button word is a picture - spec.textFrame (whole-word image, fitted on its own
+      // child), or a spec.frame with the word drawn on it and text: ''. Font text still works (old pages) but warns.
+      if (spec.textFrame) {
+        pictureChild(n, 'Text', spec.textFrame, s.w - 24, s.h - 16);
+        text = '';
+      } else if (text) {
+        E.warn('GameUIKit.' + kind + 'Page: button "' + slotName + '" word drawn with a font; pass buttons.' + slotName +
+          '.textFrame (whole-word picture) or a frame with the word on it and text: ""');
+      }
       if (text) {
         var tn = E.node('Text', n);
         var tl = E.label(tn, spec.fontSize || 34, spec.textColor || WHITE, spec.outline || null);
@@ -781,7 +1043,7 @@ function createGameUIKit(E) {
       return s.handle;
     }
     function record() {
-      return {kind: 'page', page: kind, name: popupOpts.name, opening: opening,
+      return {kind: 'page', id: o.pageId || kind, page: kind, name: popupOpts.name, opening: opening,
         buttons: order.filter(function (s) { return s.handle; }).map(function (s) { return s.name; }),
         slots: order.map(function (s) { return s.name; }),
         close: popup.closeNode ? 'Close' : null,
@@ -805,7 +1067,8 @@ function createGameUIKit(E) {
       opening++;
       page.state = {claimed: false, busy: false};
       hold();
-      pageHook(record());
+      pageHook(record(), popup.root, popup.closeNode);
+      refreshFrom(o, page);
       return true;
     };
     page.guard = function (cb) { return popup.guard(cb); };
@@ -829,7 +1092,8 @@ function createGameUIKit(E) {
         if (adRelease) { adRelease(); adRelease = null; }
         if (!popup.isOpen() || page.state !== st) return;          // closed or reopened meanwhile: no reward here
         if (r && r.rewarded === true) { onRewarded(r); return; }
-        if (o.toast !== false && !(typeof o.runAd === 'function')) Kit.toast((r && r.message) || 'No reward was claimed.');
+        // runAd (AdBoostKit) shows its own reason; toast here only when it says it did not (feedbackShown === false, 1.1.5)
+        if (o.toast !== false && (typeof o.runAd !== 'function' || (r && r.feedbackShown === false))) Kit.toast((r && r.message) || 'No reward was claimed.');
       }
       try {
         if (typeof o.runAd === 'function') o.runAd(o.ads, {placementKey: req.placementKey, ownerId: req.ownerId, isCurrent: req.isCurrent}, finish);
@@ -876,7 +1140,7 @@ function createGameUIKit(E) {
     };
     page._fill = fill;
     page._slots = slots;
-    page._open = function () { opening = 1; hold(); pageHook(record()); };
+    page._open = function () { opening = 1; hold(); pageHook(record(), popup.root, popup.closeNode); refreshFrom(o, page); };
     return page;
   }
   function need(o, k, kind) {
@@ -965,6 +1229,78 @@ function createGameUIKit(E) {
     page._fill('next', specFor(o, 'next'), leave(o.onNext));
     page._open();
     return page;
+  };
+
+  // ---------------------------------------------------------------- body text (1.1.4, R4N4 补查2 第 3 组)
+  // UI.text(parent, {w, h, text, overflow, wrap, ...}) for every NEW Label of body text (rules, shop descriptions,
+  // tips, quest lines): the box, overflow and wrapping are set FIRST, the font and the text after them. A Label made
+  // the old way (addComponent(Label), then .string and the font, then CLAMP) gets its text while overflow is still
+  // NONE, and the engine sizes the node to the text (SLS35: the settings rules text grew to about 1.5 screens wide).
+  // opts: w (required), h (required unless overflow 'resize'), text, overflow 'shrink' (default) | 'clamp' |
+  // 'resize' (RESIZE_HEIGHT: fixed width, the height follows the lines) - NONE is refused; wrap (default true),
+  // align 'left' | 'center' | 'right', fontSize (28), lineHeight, font, color, outline, name, x, y.
+  // Returns {node, label, width, set(text)}; set() keeps the box. Changing numbers: UI.valueLabel / UI.digits.
+  var TEXT_OVERFLOW = {shrink: 'SHRINK', clamp: 'CLAMP', resize: 'RESIZE_HEIGHT'};
+  Kit.text = function (parent, o) {
+    o = o || {};
+    var ov = TEXT_OVERFLOW[String(o.overflow || 'shrink').toLowerCase()];
+    if (!ov) throw new Error('GameUIKit.text: overflow must be shrink, clamp or resize (got ' + o.overflow + '): with NONE the text resizes the node');
+    if (!(o.w > 0)) throw new Error('GameUIKit.text: give opts.w, the width of the text box (the slot, not the text)');
+    if (ov !== 'RESIZE_HEIGHT' && !(o.h > 0)) throw new Error('GameUIKit.text: give opts.h, or overflow: "resize" for a box that grows downwards');
+    var fs0 = o.fontSize || 28;
+    var lh = o.lineHeight || Math.round(fs0 * 1.25);
+    var n = E.node(o.name || 'Text', parent || E.sceneRoot());
+    E.size(n, o.w, o.h || lh);                         // 1. the box
+    if (o.x || o.y) E.pos(n, o.x || 0, o.y || 0);
+    var label = E.textLabel(n, {overflow: ov, wrap: o.wrap !== false, align: String(o.align || 'center').toUpperCase(),
+      fontSize: fs0, lineHeight: lh, font: o.font || null, color: o.color || WHITE, outline: o.outline || null,
+      text: o.text === undefined || o.text === null ? '' : String(o.text)});   // 2. overflow + wrap, 3. font, 4. text
+    var handle = {node: n, label: label, width: o.w,
+      set: function (t) { label.string = t === undefined || t === null ? '' : String(t); return handle; }};
+    return handle;
+  };
+
+  // ---------------------------------------------------------------- tutorial guide (1.1.4, R4N4 补查2 第 9 组)
+  // UI.guide(target, {frame, w, h, offsetX, offsetY, parent, name, blockInput}) shows a hand / ring / highlight over a
+  // node of the page and FOLLOWS it: it is placed from the target's world position right before each frame is drawn
+  // (after the Widgets have aligned the page) and on every screen-size change. The target is never moved to another
+  // parent. (火箭三消: the tutorial element was moved to an overlay once, at the world position of that moment; the
+  // Widget then aligned the page for the phone's height and the element stayed 93.75 design units off.)
+  // The guide sits on top of parent (default: the Canvas) and takes no touches unless opts.blockInput.
+  // Returns {node, art, relayout(), close(), isOpen()}; it closes itself once the target is destroyed.
+  Kit.guide = function (target, o) {
+    o = o || {};
+    if (!target || !E.isValid(target)) throw new Error('GameUIKit.guide: no valid target node');
+    var parent = o.parent || E.sceneRoot();
+    var root = E.node(o.name || 'GameUIGuide', parent);
+    E.toTop(root);
+    var art = o.frame ? pictureChild(root, 'Art', o.frame, o.w, o.h) : null;
+    if (o.blockInput) E.blockInput(root);
+    var open = true, stop = null;
+    function relayout() {
+      if (!open) return false;
+      if (!E.isValid(target) || !E.isValid(root)) { handle.close(); return false; }
+      var c = E.worldCenter(target);
+      var p = E.toLocal(parent, c.x, c.y);
+      E.pos(root, p.x + (o.offsetX || 0), p.y + (o.offsetY || 0));
+      var s = E.getSize(target);
+      E.size(root, s.width, s.height);
+      var show = E.isActiveInHierarchy(target);
+      if (E.isActive(root) !== show) E.setActive(root, show);
+      return true;
+    }
+    var handle = {node: root, art: art, relayout: relayout,
+      isOpen: function () { return open && E.isValid(root); },
+      close: function () {
+        if (!open) return false;
+        open = false;
+        if (stop) { stop(); stop = null; }
+        if (E.isValid(root)) E.destroy(root);
+        return true;
+      }};
+    stop = E.eachLayout(relayout);
+    relayout();
+    return handle;
   };
 
   Kit._reset = function () { popupStack = []; toastState = {node: null, bg: null, label: null, timer: null, text: ''}; };
@@ -1108,6 +1444,35 @@ function makeGameUIAdapter24(cc) {
       label.overflow = cc.Label.Overflow.SHRINK;
       n.setContentSize(w, h);
     },
+    // 1.1.4 GameUIKit.text: the node already has its box; overflow and wrap, then the font, then the text (this order)
+    textLabel: function (n, o) {
+      var l = n.addComponent(cc.Label), HA = cc.Label.HorizontalAlign;
+      l.overflow = cc.Label.Overflow[o.overflow];
+      l.enableWrapText = !!o.wrap;
+      l.horizontalAlign = HA[o.align] !== undefined ? HA[o.align] : HA.CENTER;
+      l.verticalAlign = cc.Label.VerticalAlign.CENTER;
+      if (o.font) l.font = o.font;
+      l.fontSize = o.fontSize; l.lineHeight = o.lineHeight;
+      n.color = rgb(o.color);
+      if (o.outline) { var ol = n.addComponent(cc.LabelOutline); ol.color = rgb(o.outline); ol.width = 3; }
+      l.string = o.text;
+      return l;
+    },
+    // 1.1.4 GameUIKit.guide: the centre of a node in world space, a world point in a node's space, and a hook that runs
+    // fn right before every frame is drawn (2.4 mainLoop: update, Widget alignment at EVENT_AFTER_UPDATE, then
+    // EVENT_BEFORE_DRAW) and on every canvas resize. Returns stop().
+    worldCenter: function (n) {
+      var ax = typeof n.anchorX === 'number' ? n.anchorX : 0.5, ay = typeof n.anchorY === 'number' ? n.anchorY : 0.5;
+      var p = n.convertToWorldSpaceAR(new cc.Vec2((0.5 - ax) * n.width, (0.5 - ay) * n.height));
+      return {x: p.x, y: p.y};
+    },
+    toLocal: function (parent, x, y) { var p = parent.convertToNodeSpaceAR(new cc.Vec2(x, y)); return {x: p.x, y: p.y}; },
+    eachLayout: function (fn) {
+      var d = cc.director, ev = cc.Director && cc.Director.EVENT_BEFORE_DRAW, v = cc.view, offs = [];
+      if (d && ev && typeof d.on === 'function') { d.on(ev, fn); offs.push(function () { d.off(ev, fn); }); }
+      if (v && typeof v.on === 'function') { v.on('canvas-resize', fn); offs.push(function () { v.off('canvas-resize', fn); }); }
+      return function () { for (var i = 0; i < offs.length; i++) { try { offs[i](); } catch (_) {} } };
+    },
     rect: function (n, w, h, color, alpha) {
       var g = n.getComponent(cc.Graphics) || n.addComponent(cc.Graphics);
       g.clear(); g.fillColor = rgb(color, alpha); g.rect(-w / 2, -h / 2, w, h); g.fill();
@@ -1137,6 +1502,14 @@ function makeGameUIAdapter24(cc) {
     tint: function (n, c) { walk(n, function (x) { if (x.name !== 'Spinner') x.color = rgb(c); }); },
     setActive: function (n, b) { n.active = !!b; },
     isValid: function (n) { return !!n && cc.isValid(n); },
+    // 1.1.7: a SpriteFrame that can still be drawn - not destroyed (released with its prefab) and its texture still there.
+    frameUsable: function (f) {
+      if (!f || !cc.isValid(f, true)) return false;
+      var t = typeof f.getTexture === 'function' ? f.getTexture() : f._texture;
+      if (t === null) return false;
+      return !(t && typeof t === 'object' && !cc.isValid(t, true));
+    },
+    setAngle: function (n, a) { n.angle = a; },
     // GameUIKit button helpers
     nameOf: function (n) { return (n && n.name) || 'node'; },
     isActiveInHierarchy: function (n) {
@@ -1179,4 +1552,6 @@ function makeGameUIAdapter24(cc) {
 
 
 var GameUIKit = createGameUIKit(makeGameUIAdapter24(cc));
+// 1.1.6 (R4Q6): same global name as the 3.x file, so platform parts (HomeGrowthEntries) find the kit toast without a require
+(function (g) { if (g && !g.TikTokGameUIKit) g.TikTokGameUIKit = GameUIKit; })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null));
 module.exports = GameUIKit;

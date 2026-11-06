@@ -16,6 +16,11 @@
  *   - an ad (wrapRewarded(service).request(...) or adBegin()/adEnd()) silences both channels and restores the
  *     player's own volumes afterwards; nothing here turns a channel on except setMusicOn(true) / setSfxOn(true);
  *   - the same sound effect is not replayed within its throttle_ms (default 80 ms).
+ *   - 1.2 (R4E, Saul: 没声音 15 款 — the game never called bindFirstFrame, so ready stayed false and nothing ever
+ *     played): the first playMusic() / playSfx() made before the first frame arms a 5 s fallback; if neither
+ *     bindFirstFrame's draw event nor firstFrameDrawn() came by then, the service starts as if the frame were drawn
+ *     and logs one console.warn. Still nothing is loaded before that first call or before the 5 s. Options:
+ *     firstFrameFallbackMs (default 5000; a negative number turns it off), setTimer / clearTimer (tests).
  *
  *   var audio = AudioService.create({store: saveStore, backend: AudioService.backend24(cc)});      // 2.4
  *   var audio = AudioService.create({store: saveStore, backend: AudioService.backend3x(ccModule, node)}); // 3.x
@@ -42,10 +47,11 @@
   if (root) root.TikTokAudioService = api;
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this), function (root) {
   'use strict';
-  var VERSION = '1.1';
+  var VERSION = '1.2';
   var DEFAULTS = {music: {on: true, volume: 0.7}, sfx: {on: true, volume: 1}};
   var SAVE_KEY = 'audio';
   var THROTTLE_MS = 80;
+  var FIRST_FRAME_FALLBACK_MS = 5000;   // R4E: no bindFirstFrame -> start 5 s after the home asked for sound
   var LATE_SFX_MS = 800;   // a sound effect whose load took longer than this is dropped, not played late
 
   function isKey(k) {
@@ -73,6 +79,13 @@
     this.now = options.now || Date.now;
     this.defaultThrottle = options.throttleMs >= 0 ? options.throttleMs : THROTTLE_MS;
     this.lateSfxMs = options.lateSfxMs >= 0 ? options.lateSfxMs : LATE_SFX_MS;
+    this.fallbackMs = typeof options.firstFrameFallbackMs === 'number' ? options.firstFrameFallbackMs : FIRST_FRAME_FALLBACK_MS;
+    this.setTimer = typeof options.setTimer === 'function' ? options.setTimer
+      : (typeof setTimeout === 'function' ? function (fn, ms) { var t = setTimeout(fn, ms); if (t && typeof t.unref === 'function') t.unref(); return t; } : null);
+    this.clearTimer = typeof options.clearTimer === 'function' ? options.clearTimer
+      : (typeof clearTimeout === 'function' ? function (t) { clearTimeout(t); } : null);
+    this.fallbackTimer = null;
+    this.startedBy = null;    // 'first_frame' | 'fallback'
     var d = options.defaults || DEFAULTS;
     var saved = this.store ? safely(function () { return options.store.get(); }) : null;
     var a = saved && saved[SAVE_KEY];
@@ -163,7 +176,29 @@
   AudioService.prototype.firstFrameDrawn = function () {
     if (this.ready) return;
     this.ready = true;
+    if (!this.startedBy) this.startedBy = 'first_frame';
+    if (this.fallbackTimer !== null && this.clearTimer) { var t = this.fallbackTimer; var c = this.clearTimer; safely(function () { c(t); }); }
+    this.fallbackTimer = null;
     this._syncMusic();
+  };
+
+  // R4E: armed by the first playMusic() / playSfx() before the first frame. Fires once, only if still not ready.
+  AudioService.prototype._armFallback = function () {
+    var self = this;
+    if (this.ready || this.fallbackTimer !== null || !(this.fallbackMs >= 0) || !this.setTimer) return;
+    this.fallbackTimer = safely(function () {
+      return self.setTimer(function () {
+        self.fallbackTimer = null;
+        if (self.ready) return;
+        self.startedBy = 'fallback';
+        if (typeof console !== 'undefined' && console.warn) {
+          safely(function () { console.warn('[AudioService] bindFirstFrame() / firstFrameDrawn() was not called within ' +
+            self.fallbackMs + ' ms of the first play: sound started by the fallback. Call audio.bindFirstFrame(cc.director, cc.Director) in the home scene start().'); });
+        }
+        self.firstFrameDrawn();
+      }, self.fallbackMs);
+    });
+    if (this.fallbackTimer === undefined) this.fallbackTimer = null;
   };
 
   // director.once(Director.EVENT_AFTER_DRAW): 2.4 cc.director / cc.Director, 3.x director / Director.
@@ -177,6 +212,7 @@
   AudioService.prototype.playMusic = function (id) {
     if (!this.entries[id]) return 'unknown';
     this.wantedMusic = id;
+    this._armFallback();
     this._syncMusic();
     if (!this.music.on) return 'off';
     return this.ready ? 'ok' : 'after_first_frame';
@@ -193,7 +229,7 @@
     if (!e) return 'unknown';
     if (!this.sfx.on) return 'off';             // checked before any load or play
     if (this.adDepth > 0) return 'ad';
-    if (!this.ready) return 'not_ready';        // no download before the home screen is drawn
+    if (!this.ready) { this._armFallback(); return 'not_ready'; }   // no download before the home screen is drawn
     var t = this.now();
     if (this.lastPlay[id] !== undefined && t - this.lastPlay[id] < e.throttle) return 'throttled';
     this.lastPlay[id] = t;
@@ -227,7 +263,7 @@
   // Read-only copy for the settings page. Opening a panel never changes a channel.
   AudioService.prototype.settings = function () {
     return {music: {on: this.music.on, volume: this.music.volume}, sfx: {on: this.sfx.on, volume: this.sfx.volume},
-      ad: this.adDepth > 0, ready: this.ready};
+      ad: this.adDepth > 0, ready: this.ready, startedBy: this.startedBy};
   };
 
   AudioService.prototype.adBegin = function () {

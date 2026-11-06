@@ -318,6 +318,25 @@ test('started_only_when_home_scene_launched', function () {
   r.clock.advance(60000);
   assert.strictEqual(r.sdk.modal.length, before, 'no Retry after start');
 });
+// R4Q5 (补查3 第 5 组 奔跑吧巨人): stats off when the home scene is up, whatever a save turned on during loading.
+test('stats_off_at_home_even_after_save_switch_turned_them_on', function () {
+  var r = start({file: function (c, clock) { clock.setTimeout(function () { c.done(null, {}); }, 100); }});
+  var shown = [], hidden = 0;
+  r.engine.cc.setDisplayStats = function (on) { shown.push(on); };
+  r.engine.cc.profiler = {hideStats: function () { hidden++; }, showStats: function () {}};
+  r.engine.cc.setDisplayStats(true);            // the game read debug=true from an old save while loading
+  r.clock.advance(5000);
+  assert.strictEqual(r.guard.status().started, true);
+  assert.ok(hidden >= 2, 'profiler.hideStats at home and one tick later');
+  assert.strictEqual(shown[shown.length - 1], false, 'stats end up off');
+});
+test('stats_api_missing_does_not_break_start', function () {
+  var r = start({file: function (c, clock) { clock.setTimeout(function () { c.done(null, {}); }, 100); }});
+  r.engine.cc.profiler = {hideStats: function () { throw new Error('no profiler'); }};
+  r.clock.advance(5000);
+  assert.strictEqual(r.guard.status().started, true);
+  assert.strictEqual(r.engine.frozen, false);
+});
 test('install_twice_one_guard_and_version_marker', function () {
   var clock = new Clock(), sdk = fakeSdk(), engine = makeEngine(clock, {}), m = fresh();
   var a = m.install(engine.cc, sdk, {clock: bind(clock), root: {}});
@@ -344,6 +363,7 @@ function finish() {
       {name: 'retry_does_not_reissue', before: 'S.ops.slice().forEach(function (op) { if (!op.done) issue(op); });', after: ''},
       {name: 'failed_scene_not_released', before: "if (S.failedScene === sceneName) { S.failedScene = ''; releaseFailedScene(sceneName); }", after: ''},
       {name: 'file_guard_not_reapplied_after_engine_adapter', before: "    installFileGuard();\n    var op = {", after: "    var op = {"},
+      {name: 'stats_not_turned_off', before: '    hideStats();\n    clock.setTimeout(hideStats, 0);', after: ''},
       {name: 'started_before_home_scene', before: "step('bundle ' + name, function (settle) {", after: "launched(); step('bundle ' + name, function (settle) {"}
     ];
     report.negative_controls = variants.map(function (v) {

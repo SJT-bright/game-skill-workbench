@@ -30,6 +30,8 @@ def make_project(root):
     shutil.copytree(KIT / 'build-templates', proj / 'build-templates')
     # kit 2.0 (W-A1): the storage layer is a kit part the install step copies into build-templates/bytedance/
     shutil.copy(KIT / 'parts' / 'storage-guard.js', proj / 'build-templates' / 'bytedance' / 'storage-guard.js')
+    # 简化.11.14 (生成时预防 D 批): main.js v1.7 loads rewarded-guard.js, which sits next to main.js (KIT_MANIFEST project_path)
+    shutil.copy(KIT / 'parts' / 'rewarded-guard.js', proj / 'build-templates' / 'bytedance' / 'rewarded-guard.js')
     (proj / 'settings').mkdir()
     # v7.5 (D7 item 6): the install step copies the kit's settings/bytedance.json (numeric App ID, no start-scene bundle).
     shutil.copy(KIT / 'settings' / 'bytedance.json', proj / 'settings' / 'bytedance.json')

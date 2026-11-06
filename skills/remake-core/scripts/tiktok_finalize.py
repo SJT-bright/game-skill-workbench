@@ -17,7 +17,8 @@
     tiktok_finalize.py sync    --project P --board B [--native N]       生成时预防 P02: before EVERY build (and on the
                                bytedance build folder after it, --native): put the standard parts back to the kit
                                bytes (kit_sources, build_templates; with --native also startup, touch, storage) and
-                               install parts/GameUIKit.js. No images / PNG / settings / art steps, about 1 s.
+                               install parts/GameUIKit.js (3.x: parts-3x/GameUIKit.ts, R4B); R4B: host-shim and
+                               the 3.x boot guard lines (startup step). No images / PNG / settings / art steps, ~1 s.
                                Legacy games: report only, nothing written. Record: <project>/.tiktok-kit/sync.json
                                (it is not the source record: the writers still need `source`).
     --policy new|legacy on source/native/decide is for tests and calibration only; the package writers never pass it.
@@ -53,7 +54,7 @@ SOURCE_TREES = ('assets', 'build-templates', 'settings')
 SKIP = {'library', 'temp', 'build', 'local', 'node_modules', '.git', '.tiktok-kit', '__MACOSX'}
 SOURCE_STEPS = T.SOURCE_STEPS        # images, kit_sources, build_templates, settings, orientation, art_static
 # startup runs before touch/storage: whether main.js is the kit main.js decides where their load lines go.
-NATIVE_STEPS = ('adapter', 'startup', 'touch', 'storage', 'login', 'appid', 'png', 'structure')
+NATIVE_STEPS = ('adapter', 'startup', 'touch', 'storage', 'rewarded', 'login', 'appid', 'png', 'structure')  # rewarded: R4F1
 JUNK = ('.DS_Store', 'Thumbs.db')
 
 
@@ -415,14 +416,43 @@ def inventory(project):
                 **tiktok_rewire.plan(project))
 
 
+_inventory_before_audio = inventory   # 生成时预防 R4O6 (补查2 第 12 组): + audio_todo / audio_summary, read only
+
+
+def inventory(project):  # noqa: F811 - R4O6 wraps the inventory above
+    import audio_inventory
+    return dict(_inventory_before_audio(project), **audio_inventory.plan(project))
+
+
+_inventory_before_reward = inventory   # 生成时预防 R4Q4 (补查3 第 4 组): + reward_todo / reward_summary, read only
+
+
+def inventory(project):  # noqa: F811 - R4Q4 wraps the inventory above
+    import reward_inventory
+    return dict(_inventory_before_reward(project), **reward_inventory.plan(project))
+
+
 # ---------------------------------------------------------------- sync (生成时预防 P02: parts from the first build on)
 # The standard parts used to arrive only at `source` (just before packaging), so every trial build and self-test before
 # it ran on code without them (射击高手 v81 / 小熊拳击 R27 without the touch fix, 指尖麻将 v55 lost a patch on rebuild,
 # 拇指弹球 kept an old RewardedService.js). `sync` is the fast part of `source`: hash check, put the kit bytes back.
 SYNC_RECORD = Path('.tiktok-kit') / 'sync.json'
-SYNC_SOURCE_STEPS = ('kit_sources', 'build_templates', 'frame_scan')   # frame_scan: 生成时预防 P18-3 (read only, ~1 s)
+SYNC_SOURCE_STEPS = ('kit_sources', 'build_templates', 'startup',   # startup: 生成时预防 R4B (3.x template game.js)
+                     'frame_scan')   # frame_scan: 生成时预防 P18-3 (read only, ~1 s)
 SYNC_NATIVE_STEPS = ('startup', 'touch', 'storage')      # same order as NATIVE_STEPS: startup decides main.js first
 UI_KIT_KEY = 'parts/GameUIKit.js'                         # P05: the shared popup / button part (Cocos 2.4)
+UI_KIT_KEYS = {2: UI_KIT_KEY, 3: 'parts-3x/GameUIKit.ts'}   # 生成时预防 R4B (P05 3.x): sync installs GameUIKit.ts too
+UI_KIT_DEFAULT_DEST = {2: 'assets/tiktok-platform/GameUIKit.js', 3: 'assets/tiktok-platform/GameUIKit.ts'}
+SYNC_SOURCE_STEPS += ('art_static',)   # 生成时预防 R4F1 (#17, P08-3): squashed pictures reported before the build, read only
+SYNC_NATIVE_STEPS += ('rewarded',)     # 生成时预防 R4F1: rewarded-guard for a 2.4 package that keeps its own main.js
+SYNC_SOURCE_STEPS += ('home_entry_scan',)  # 生成时预防 R4M2 (R4L1 leftover): 3.x hand-placed home entries at every build, read only (<0.1 s)
+SYNC_SOURCE_STEPS += ('game_name_scan',)  # 生成时预防 R4O1 (Saul 11-05): game-name text before every build, read only
+SYNC_SOURCE_STEPS += ('skin_preview_scan',)  # 生成时预防 R4P4 (R4O2 leftover): skin previews before every build, read only, only with a skin table
+SYNC_SOURCE_STEPS += ('slot_overlap_scan',)  # 生成时预防 R4Q1 (补查3 group 1): old label over a whole button picture, two layout owners, read only
+SYNC_SOURCE_STEPS += ('reward_order_scan',)  # 生成时预防 R4Q4 (补查3 第 4 组): the game's own rewards paid in animation callbacks / without rollback / x2 rounded two ways, read only
+SYNC_SOURCE_STEPS += ('debug_leftover_scan',)  # 生成时预防 R4Q5 (补查3 第 5 组): stats code, active debug nodes, launch-scene splash before every build, read only
+SYNC_SOURCE_STEPS += ('ui_kit_scan',)  # 生成时预防 R4J2 (R4F3 leftover): hand-built popups, mask values, dev text before every build, read only
+SYNC_END_STEPS = ('save_read_scan', 'plugin3x_scan')   # 生成时预防 R4N6, after sync_run_parts (read only): save reads that lose 0 / false, split ad receipts, level cap vs level files; 3.x plugin imported by path, plugin .meta flags
 
 
 def _detect_only(ctx, names):
@@ -438,17 +468,19 @@ def _detect_only(ctx, names):
 
 
 def sync_ui_kit(ctx):
-    """Install / restore parts/GameUIKit.js at its project_path for new Cocos 2.4 games (P05). -> step result."""
+    """Install / restore the GameUIKit part at its project_path for new games (P05): Cocos 2.4 parts/GameUIKit.js,
+    Cocos 3.x parts-3x/GameUIKit.ts (生成时预防 R4B; before it 3.x games copied the .ts by hand). -> step result."""
     r = T.Result('ui_kit')
-    spec = ctx.manifest.files.get(UI_KIT_KEY)
-    if not isinstance(spec, dict) or ctx.engine != 2:
+    key = UI_KIT_KEYS.get(ctx.engine)
+    spec = ctx.manifest.files.get(key) if key else None
+    if not isinstance(spec, dict):
         r.state = 'n/a'
         return r.as_dict()
-    dest = spec.get('project_path') or 'assets/tiktok-platform/GameUIKit.js'
-    src = ctx.manifest.kit_dir / UI_KIT_KEY
+    dest = spec.get('project_path') or UI_KIT_DEFAULT_DEST[ctx.engine]
+    src = ctx.manifest.kit_dir / key
     kit = src.read_bytes() if src.is_file() else None
     if kit is None or T.sha256(kit) != spec.get('sha256'):
-        r.block('K_kit_unusable', 'kit file %s missing or differs from KIT_MANIFEST' % UI_KIT_KEY)
+        r.block('K_kit_unusable', 'kit file %s missing or differs from KIT_MANIFEST' % key)
         return r.as_dict()
     have = ctx.read(dest)
     r.state = 'absent' if have is None else ('kit_current' if have == kit else
@@ -463,6 +495,65 @@ def sync_ui_kit(ctx):
         r.info.append('moved %s to %s' % (dest, ctx.move_away(dest)))
     ctx.write(dest, kit)
     r.change(dest, have, kit, 'GameUIKit %s' % ('added' if have is None else 'restored (%s)' % r.state))
+    return r.as_dict()
+
+
+def sync_run_parts(ctx):
+    """生成时预防 R4F1 (#28, P11 / P18; Saul 11-05 agreed): new remake / self-made games get parts/RunSession.js and
+    parts/FxPool.js from sync (KIT_MANIFEST files entries with "sync_install"), before they were copied by hand when
+    needed. Cocos 2.4: the file at its project_path (require('RunSession')); 3.x: the same file plus a .meta that
+    imports it as a plugin (globals TikTokRunSession / TikTokFxPool). English (localize) and legacy games: not
+    installed (the English pack keeps the original gameplay code). -> step result."""
+    from tiktok_finalize_steps import kit_sources
+    r = T.Result('run_parts')
+    specs = [(k, s) for k, s in sorted(ctx.manifest.files.items())
+             if isinstance(s, dict) and isinstance(s.get('sync_install'), dict)]
+    rule = lambda s: s['sync_install']
+    if ctx.engine not in (2, 3) or not specs:
+        r.state = 'n/a'
+        return r.as_dict()
+    if ctx.policy != 'new' or ctx.board not in rule(specs[0][1]).get('board', ['remake']):
+        r.state = 'n/a'
+        r.info.append('%s not installed (%s)' % (' / '.join(Path(s['project_path']).stem for _, s in specs),   # R4M2: names from KIT_MANIFEST (ShopTx too)
+                                                 'legacy game' if ctx.policy != 'new' else
+                                                 'board %s keeps the original gameplay' % ctx.board))
+        return r.as_dict()
+    states = []
+    for key, spec in specs:
+        dest = spec['project_path']
+        src = ctx.manifest.kit_dir / key
+        kit = src.read_bytes() if src.is_file() else None
+        if kit is None or T.sha256(kit) != spec.get('sha256'):
+            r.block('K_kit_unusable', 'kit file %s missing or differs from KIT_MANIFEST' % key)
+            continue
+        name = Path(dest).name
+        clash = [p.relative_to(ctx.root).as_posix() for p in (ctx.root / 'assets').rglob(name)
+                 if p.is_file() and p.relative_to(ctx.root).as_posix() != dest
+                 and not ({'library', 'temp', 'build'} & set(p.relative_to(ctx.root).parts))] \
+            if (ctx.root / 'assets').is_dir() else []
+        if clash:
+            r.warn('K_W_kit_module_duplicate', 'game script %s has the kit module name %s; %s not installed (two '
+                   'scripts with one module name stop the Cocos build), rename the game script' % (clash[0], name, key),
+                   {'file': clash[0], 'kit_file': dest})
+            states.append('own')
+            continue
+        have = ctx.read(dest)
+        state = 'absent' if have is None else ('kit_current' if have == kit else
+                                               ('kit_old' if T.sha256(have) in set(spec.get('previous_sha256') or [])
+                                                else 'own'))
+        states.append(state)
+        if state != 'kit_current':
+            if have is not None:
+                r.info.append('moved %s to %s' % (dest, ctx.move_away(dest)))
+            ctx.write(dest, kit)
+            r.change(dest, have, kit, '%s %s' % (name, 'added' if have is None else 'restored (%s)' % state))
+        if ctx.engine == 3 and rule(spec).get('plugin_3x'):
+            old = ctx.read(dest + '.meta')
+            new = kit_sources.plugin_meta(old, dest)
+            if new != old:
+                ctx.write(dest + '.meta', new)
+                r.change(dest + '.meta', old, new, 'import as plugin (3.x)')
+    r.state = next((s for s in ('own', 'kit_old', 'absent') if s in states), 'kit_current')
     return r.as_dict()
 
 
@@ -481,6 +572,8 @@ def finalize_sync(project, board, native=None, policy=None, manifest=None, legac
     else:
         results = _run_steps(ctx, SYNC_SOURCE_STEPS)
     results.append(sync_ui_kit(ctx))
+    results.append(sync_run_parts(ctx))   # 生成时预防 R4F1 (#28): RunSession.js + FxPool.js for new remake games
+    results += _detect_only(ctx, SYNC_END_STEPS) if decision['policy'] == 'legacy' else _run_steps(ctx, SYNC_END_STEPS)   # R4N6
     if native:
         native = Path(native)
         names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
@@ -506,6 +599,24 @@ def finalize_sync(project, board, native=None, policy=None, manifest=None, legac
 def _print(record):
     print(json.dumps({k: record[k] for k in ('policy', 'engine', 'blocks', 'warnings') if k in record} |
                      {'decision': record.get('decision', {}).get('reason')}, ensure_ascii=False, indent=1))
+
+
+def ensure_first_screen(project, board):
+    """R4F2 #7 (普查 size_over_limit 39 款): `source` on a project without docs/startup/first-screen.json runs
+    first_screen.py first, so the home-page list, the size ledger and the font check exist before any package is
+    written. Never stops the source phase; first_screen's problems are printed and the writers check them again."""
+    import first_screen
+    project = Path(project)
+    if project.joinpath(*first_screen.OUT).is_file() or not (project / 'assets').is_dir():
+        return None
+    try:
+        report = first_screen.analyze(project, 'localize' if board == 'localize' else 'new')
+        first_screen.write(project, report)
+    except Exception as error:  # noqa: BLE001 - a missing list is reported, the source steps still run
+        return 'first-screen.json 没生成（%s）：AI 补跑 first_screen.py --project' % repr(error)[:160]
+    return 'first-screen.json 已生成：%s，问题 %d 条%s' % (
+        '/'.join(first_screen.OUT), len(report['problems']),
+        ''.join('\n  ' + p[:200] for p in report['problems'][:5]))
 
 
 def main(argv=None):
@@ -577,6 +688,9 @@ def main(argv=None):
         _print(record)
         return 1 if record['blocks'] else 0
     if args.cmd == 'source':
+        note = ensure_first_screen(args.project, args.board)    # R4F2 #7
+        if note:
+            print(note)
         record = finalize_source(args.project, args.board, policy=args.policy, app_id=args.app_id, options=options)
     else:
         if not args.native:

@@ -41,6 +41,8 @@ def package(main=KIT_MAIN, settings=SETTINGS):
         'touch-coordinates.js': (KIT / 'build-templates/bytedance/touch-coordinates.js').read_bytes(),
         'storage-guard.js': (KIT / 'parts/storage-guard.js').read_bytes(),
         'webp-decode-probe.js': (KIT / 'webp-probe/cocos2.4/webp-decode-probe.js').read_bytes(),
+        # 简化.11.14: main.js v1.7 requires ./rewarded-guard, shipped next to it (startup24.extra_files)
+        'rewarded-guard.js': (KIT / 'parts/rewarded-guard.js').read_bytes(),
         'assets/main/config.json': json.dumps({'name': 'main', 'types': ['cc.SpriteFrame'],
                                                'paths': {'0': ['icons/a', 0], '1': ['icons/b', 0]}}).encode(),
         'assets/main/index.js': b"cc.assetManager.getBundle('main').load('icons/a', cc.SpriteFrame, function () {});\n",
@@ -78,10 +80,11 @@ class KitMainScripts(unittest.TestCase):
         try:
             identity = resources.kit_main_identity()
             self.assertIn('webp-decode-probe.js', identity['extra_files'])
+            self.assertIn('rewarded-guard.js', identity['extra_files'])
             if sha(KIT_MAIN) not in identity['hashes']:
                 self.skipTest('kit main.js template and KIT_MANIFEST differ right now (main.js being edited)')
             resources._CACHE.clear()
-            self.assertEqual(len(resources.generate(package())['script_files']), 3)
+            self.assertEqual(len(resources.generate(package())['script_files']), 4)
         finally:
             self.kit_manifest.start()
 
@@ -90,22 +93,22 @@ class KitMainScripts(unittest.TestCase):
         manifest = resources.generate(files)
         self.assertEqual(manifest['resources'], [{'bundle': 'main', 'path': 'icons/a', 'type': 'cc.SpriteFrame'}])
         listed = {r['path']: r['sha256'] for r in manifest['script_files']}
-        self.assertEqual(listed, {p: sha(files[p]) for p in ('src/assets/plugin-a.js', 'src/plugin-b.js', 'webp-decode-probe.js')})
+        self.assertEqual(listed, {p: sha(files[p]) for p in ('src/assets/plugin-a.js', 'src/plugin-b.js', 'webp-decode-probe.js', 'rewarded-guard.js')})
         result = resources.audit(files, manifest)
         self.assertTrue(result['passed'])
-        self.assertEqual(len(result['kit_script_files']), 3)
+        self.assertEqual(len(result['kit_script_files']), 4)
         self.assertNotIn('main.js', {s['source'] for s in result['resource_call_sites']})
 
     def test_empty_jslist_still_requires_the_probe(self):
         files = package(settings=SETTINGS.replace(b'["assets/plugin-a.js", "plugin-b.js"]', b'[]'))
         manifest = resources.generate(files)
-        self.assertEqual([r['path'] for r in manifest['script_files']], ['webp-decode-probe.js'])
+        self.assertEqual([r['path'] for r in manifest['script_files']], ['rewarded-guard.js', 'webp-decode-probe.js'])
         no_list = package(settings=SETTINGS.replace(b',\n    jsList: ["assets/plugin-a.js", "plugin-b.js"]', b''))
         resources._CACHE.clear()
-        self.assertEqual([r['path'] for r in resources.generate(no_list)['script_files']], ['webp-decode-probe.js'])
+        self.assertEqual([r['path'] for r in resources.generate(no_list)['script_files']], ['rewarded-guard.js', 'webp-decode-probe.js'])
 
     def test_deleted_or_empty_script_is_refused(self):
-        for name in ('src/assets/plugin-a.js', 'src/plugin-b.js', 'webp-decode-probe.js'):
+        for name in ('src/assets/plugin-a.js', 'src/plugin-b.js', 'webp-decode-probe.js', 'rewarded-guard.js'):
             with self.subTest(name=name):
                 files = package(); del files[name]
                 with self.assertRaisesRegex(ValueError, 'kit main.js script file missing or empty: ' + name):
@@ -171,7 +174,7 @@ class KitMainScripts(unittest.TestCase):
                     spec['sha256'] = 'f' * 64
                 path.write_text(json.dumps(moved))
                 resources._CACHE.clear()
-                self.assertEqual(len(resources.generate(package())['script_files']), 3)
+                self.assertEqual(len(resources.generate(package())['script_files']), 4)
                 # hash no longer listed anywhere: the call is unsupported again
                 gone = copy.deepcopy(moved)
                 for spec in (gone['files']['build-templates/bytedance/main.js'], gone['parts']['startup24']['file']):
@@ -211,7 +214,7 @@ class KitMainScripts(unittest.TestCase):
         # reading jsList is not a write
         files = package(); files['game.js'] = b"console.log(window._CCSettings.jsList.length);\n" + files['game.js']
         resources._CACHE.clear()
-        self.assertEqual(len(resources.generate(files)['script_files']), 3)
+        self.assertEqual(len(resources.generate(files)['script_files']), 4)
 
     def test_two_settings_scripts_are_not_guessed(self):
         files = package(); files['src/settings.0a1b2.js'] = SETTINGS

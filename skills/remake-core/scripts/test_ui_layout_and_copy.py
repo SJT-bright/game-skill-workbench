@@ -390,13 +390,15 @@ class PageRichnessTests(unittest.TestCase):
         self.assertEqual(sorted(flat), ['other', 'result_fail', 'result_win'])
 
     def test_buttons_over_40_percent_and_small_title_fail(self):
-        # user 2026-10-21: the home page needs a big title and cover art; function buttons <= 40% of the screen (2026-10-23)
+        # user 2026-10-21: the home page needs a big top picture and cover art; function buttons <= 40% of the screen (2026-10-23)
         scenes = [('button_home', 'home')] + self.FULL[1:]
         code, r = self.run_audit(self.project(scenes, league_add=True))
         self.assertEqual(code, 1)
         home = self.problems(r, 'home')
         self.assertIn('buttons_too_big', home)
-        self.assertIn('big title', home)
+        # Saul 2026-11-05: no game name in the game; the top half holds a hero / pattern picture
+        self.assertIn('one big picture in the top half', home)
+        self.assertIn('without the game name', home)
         self.assertIn('cover art', home)
         good = next(p for p in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] if p['purpose'] == 'home')
         self.assertLess(good['stats']['button_share'], 0.40)
@@ -1075,7 +1077,7 @@ class ArtCheckTests(unittest.TestCase):
         self.assertEqual(rows['穿模审查图（给 Codex 看）'], '提示')            # zoomed crops of buttons/capsules/numbers made
         self.assertIn('穿模审查图', text)
         self.assertEqual(rows['顶部资源栏'], '提示')          # "goes up after a win" is checked in the test stage
-        self.assertEqual(rows['文字一次成图（标题logo、整张按钮、图片数字）'], '通过')
+        self.assertEqual(rows['文字一次成图（整张按钮、图片数字）'], '通过')
         self.assertEqual(rows['同组按钮同一种风格（按钮和下面的字做法、底板、颜色一致）'], '通过')
 
     def test_mixed_button_captions_block_the_art_round(self):
@@ -1100,7 +1102,7 @@ class ArtCheckTests(unittest.TestCase):
         self.assertEqual(code, 1)
         row = next(x for x in r['rows'] if x['check'] == '页面内容与背景')
         self.assertEqual(row['status'], '需处理')
-        one = next(x for x in r['rows'] if x['check'] == '文字一次成图（标题logo、整张按钮、图片数字）')
+        one = next(x for x in r['rows'] if x['check'] == '文字一次成图（整张按钮、图片数字）')
         self.assertEqual(one['status'], '需处理')                  # PLAY typed on its plate (user 2026-10-23)
         self.assertIn('spliced_button', one['detail'] if 'detail' in one else json.dumps(one, ensure_ascii=False))
 
@@ -1112,7 +1114,7 @@ class ArtCheckTests(unittest.TestCase):
         rows = {x['check']: x for x in r['rows']}
         self.assertEqual(rows['字不压扁拉伸、字色有变化']['status'], '需处理')
         self.assertIn('squashed_text', rows['字不压扁拉伸、字色有变化']['detail'])
-        self.assertIn('canvas_text', rows['文字一次成图（标题logo、整张按钮、图片数字）']['detail'])
+        self.assertIn('canvas_text', rows['文字一次成图（整张按钮、图片数字）']['detail'])
         missing_code, missing_report, _ = self.run_check(scenes,bar=True,extra_screens=('progress_popup',))
         self.assertEqual(missing_code,1)
         self.assertEqual(missing_report['rows'][0]['status'],'缺采集')

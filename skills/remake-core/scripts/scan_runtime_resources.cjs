@@ -270,6 +270,139 @@ process.stdin.on('end', () => {
         const sdk=origin.callee.object;
         return sdk.type==='Identifier'&&['tt','wx','TTMinis'].includes(sdk.name)&&!declared.has(resolvedKey(sdk.name,sdk))&&!dirty.has(resolvedKey(sdk.name,sdk));
       }
+      // R4K1: an instance of a platform-kit module (SaveStore) is not a Cocos loader. payload.kit_modules = the kit
+      // modules (KIT_MANIFEST / KIT_PARTS_3X) whose own source makes no Cocos loader call; their bodies stay in this
+      // inventory. Proved only: `new M(...)`, M = TikTokKit.X / globalThis.TikTokKit.X / <kit root>.X (a variable,
+      // or a getter/method every definition of which returns the kit) / require('X') (2.4 also the bundle wrapper's
+      // require parameter), reached through a variable or a property whose every write in this file is such an
+      // instance, null/undefined or a method returning one. Static M.load(), parameters, unknown values stay unknown.
+      const kitModules=new Set(Array.isArray(payload.kit_modules)?payload.kit_modules:[]);
+      const keyName=k=>!k?null:k.type==='Identifier'?k.name:k.type==='Literal'?String(k.value):null;
+      const staticProp=m=>m?.type!=='MemberExpression'?null:m.computed?(m.property.type==='Literal'?String(m.property.value):null):m.property.name;
+      const unwrap=e=>{for(;;){if(e?.type==='SequenceExpression')e=e.expressions[e.expressions.length-1];else if(e?.type==='AssignmentExpression'&&e.operator==='=')e=e.right;else if(e?.type==='ChainExpression'||e?.type==='ParenthesizedExpression')e=e.expression;else return e}};
+      const nullish=e=>!e||(e.type==='Literal'&&e.value===null)||(e.type==='UnaryExpression'&&e.operator==='void')||(e.type==='Identifier'&&e.name==='undefined'&&!declared.has(resolvedKey('undefined',e)));
+      const paramKeys=new Set();
+      for(const n of nodes)if(/Function/.test(n.type))for(const p of n.params)if(p.type==='Identifier')paramKeys.add(scopeId.get(n)+':'+p.name);
+      const kitWriteTarget=n=>n.type==='AssignmentExpression'?n.left:n.type==='UpdateExpression'?n.argument:(n.type==='UnaryExpression'&&n.operator==='delete')?n.argument:null;
+      // A file that writes TikTokKit, TikTokKit.<anything> or <anything>.<kit module name> proves no kit root.
+      let kitPoisoned=false;
+      for(const n of nodes){
+        const t=kitWriteTarget(n);
+        if(t?.type==='Identifier'&&t.name==='TikTokKit')kitPoisoned=true;
+        for(let x=t;x?.type==='MemberExpression';x=x.object)if(staticProp(x)==='TikTokKit'||kitModules.has(staticProp(x))||x.object.name==='TikTokKit')kitPoisoned=true;
+        if(n.type==='CallExpression'&&n.callee.type==='MemberExpression'&&n.callee.object.name==='Object'&&['assign','defineProperty','defineProperties'].includes(staticProp(n.callee)))
+          for(let x=n.arguments[0];x;x=x.type==='MemberExpression'?x.object:null)if(x.name==='TikTokKit'||staticProp(x)==='TikTokKit')kitPoisoned=true;
+      }
+      function returnedValues(fn){
+        if(!/Function/.test(fn?.type||''))return null;
+        if(fn.body.type!=='BlockStatement')return [fn.body];
+        const out=[];let ok=true;
+        children(fn.body,n=>{if(n.type==='ReturnStatement'&&scopeOf(n)===fn){if(n.argument)out.push(n.argument);else ok=false}});
+        return ok&&out.length?out:null;
+      }
+      const namedFunctionsCache=new Map();
+      function namedFunctions(name){ // every definition this file gives `name`; null when one is not a plain function
+        if(namedFunctionsCache.has(name))return namedFunctionsCache.get(name);
+        const fns=[];let ok=true;
+        for(const n of nodes){
+          if(['Property','MethodDefinition','PropertyDefinition'].includes(n.type)&&!n.computed&&keyName(n.key)===name&&parents.get(n)?.type!=='ObjectPattern'){if(/Function/.test(n.value?.type||''))fns.push(n.value);else ok=false}
+          else if(n.type==='AssignmentExpression'&&staticProp(n.left)===name){if(n.operator==='='&&/Function/.test(n.right.type))fns.push(n.right);else ok=false}
+          else if(n.type==='FunctionDeclaration'&&n.id?.name===name)fns.push(n);
+          else if(n.type==='ObjectExpression'){ // compiled class accessor descriptor {key:"name",get:function(){...}}
+            const key=n.properties.find(p=>p.type==='Property'&&keyName(p.key)==='key');
+            if(key?.value.type==='Literal'&&key.value.value===name)for(const p of n.properties)if(p!==key&&p.type==='Property'&&['get','value','set'].includes(keyName(p.key))){if(keyName(p.key)!=='set'&&/Function/.test(p.value.type))fns.push(p.value);else ok=false}
+          }
+        }
+        const result=ok&&fns.length?fns:null;namedFunctionsCache.set(name,result);return result;
+      }
+      function kitRoot(expr,seen=new Set()){
+        expr=unwrap(expr);if(!expr||seen.has(expr)||kitPoisoned)return false;seen.add(expr);
+        if(expr.type==='LogicalExpression'&&['||','??'].includes(expr.operator)&&expr.right.type==='ObjectExpression'&&!expr.right.properties.length)return kitRoot(expr.left,seen);
+        if(expr.type==='Identifier'){
+          const key=resolvedKey(expr.name,expr);
+          if(dirty.has(key)||paramKeys.has(key))return false;
+          if(!declared.has(key))return expr.name==='TikTokKit';
+          const defs=variableDefinitions.get(key)||[];return defs.length===1&&!!defs[0].init&&kitRoot(defs[0].init,seen);
+        }
+        if(expr.type==='MemberExpression'&&staticProp(expr)==='TikTokKit')return value(expr.object)?.symbol==='global';
+        const accessor=expr.type==='MemberExpression'?staticProp(expr):expr.type==='CallExpression'&&!expr.arguments.length?staticProp(expr.callee):null;
+        if(!accessor)return false;
+        const fns=namedFunctions(accessor);
+        return !!fns&&fns.every(f=>{const r=returnedValues(f);return !!r&&r.every(x=>kitRoot(x,seen))});
+      }
+      function requireFunction(id){
+        const key=resolvedKey(id.name,id);if(dirty.has(key))return false;
+        if(!declared.has(key))return id.name==='require';
+        // Cocos 2.4 bundle {Name:[function(require,module,exports){...},{deps}]}: the wrapper's first parameter.
+        for(let s=scopeOf(id);s&&s!==ast;s=scopeOf(parents.get(s))){
+          if(scopeId.get(s)+':'+id.name!==key)continue;
+          const p=parents.get(s);
+          return s.params[0]?.type==='Identifier'&&s.params[0].name===id.name&&p?.type==='ArrayExpression'&&p.elements[0]===s&&parents.get(p)?.type==='Property'&&!(variableDefinitions.get(key)||[]).length;
+        }
+        return false;
+      }
+      function kitModule(expr,seen=new Set()){
+        expr=unwrap(expr);if(!expr||seen.has(expr))return false;seen.add(expr);
+        if(expr.type==='MemberExpression')return kitModules.has(staticProp(expr))&&kitRoot(expr.object);
+        if(expr.type==='CallExpression'&&expr.callee.type==='Identifier'&&expr.arguments.length===1&&expr.arguments[0].type==='Literal'&&kitModules.has(expr.arguments[0].value))return requireFunction(expr.callee);
+        if(expr.type==='Identifier'){
+          const key=resolvedKey(expr.name,expr);if(dirty.has(key)||paramKeys.has(key)||!declared.has(key))return false;
+          const defs=variableDefinitions.get(key)||[];return defs.length===1&&!!defs[0].init&&kitModule(defs[0].init,seen);
+        }
+        return false;
+      }
+      const memberWriteCache=new Map();
+      function memberWritesOf(name){ // every value this file stores under property `name` (false = not a plain store)
+        if(memberWriteCache.has(name))return memberWriteCache.get(name);
+        const out=[];
+        for(const n of nodes){
+          const t=kitWriteTarget(n);
+          if(t?.type==='MemberExpression'&&staticProp(t)===name)out.push(n.type==='AssignmentExpression'&&n.operator==='='?n.right:false);
+          else if((n.type==='Property'||n.type==='PropertyDefinition')&&!n.computed&&keyName(n.key)===name&&parents.get(n)?.type!=='ObjectPattern')out.push(n.value);
+          else if(n.type==='MethodDefinition'&&!n.computed&&keyName(n.key)===name)out.push(false);
+        }
+        memberWriteCache.set(name,out);return out;
+      }
+      // 2 = proved kit instance, 1 = only through a cycle already being proved, 0 = not proved.
+      function kitInstance(expr,assumed=new Set()){
+        expr=unwrap(expr);if(!expr)return 0;
+        if(expr.type==='NewExpression')return kitModule(expr.callee)?2:0;
+        let group=null,values=null;
+        if(expr.type==='Identifier'){
+          const key=resolvedKey(expr.name,expr);if(!declared.has(key)||paramKeys.has(key))return 0;
+          group='var:'+key;
+          values=()=>[...(variableDefinitions.get(key)||[]).map(d=>d.init||null),
+            ...nodes.filter(n=>{const t=kitWriteTarget(n);return t?.type==='Identifier'&&resolvedKey(t.name,t)===key}).map(n=>n.type==='AssignmentExpression'&&n.operator==='='?n.right:false)];
+        } else if(expr.type==='MemberExpression'){
+          const name=staticProp(expr);if(!name)return 0;
+          group='prop:'+name;values=()=>memberWritesOf(name);
+        } else if(expr.type==='CallExpression'){
+          const name=staticProp(expr.callee),fns=name&&namedFunctions(name);if(!fns)return 0;
+          const all=fns.map(returnedValues);if(all.some(v=>!v))return 0;
+          let best=0;for(const v of all.flat()){const r=kitInstance(v,assumed);if(!r)return 0;best=Math.max(best,r)}
+          return best;
+        } else return 0;
+        if(assumed.has(group))return 1;
+        if(!assumed.size&&kitGroupCache.has(group))return kitGroupCache.get(group);
+        const inner=new Set(assumed);inner.add(group);let best=0;
+        const result=(()=>{for(const v of values()){if(v===false)return 0;if(nullish(v))continue;const r=kitInstance(v,inner);if(!r)return 0;best=Math.max(best,r)}return best===2?2:best===1&&assumed.size?1:0})();
+        if(!assumed.size)kitGroupCache.set(group,result);
+        return result;
+      }
+      const kitGroupCache=new Map();
+      function provedKitMethod(member){
+        const name=prop(member);if(!kitModules.size||typeof name!=='string'||kitInstance(member.object)!==2)return false;
+        if(kitMethodCache.has(name))return kitMethodCache.get(name);
+        kitMethodCache.set(name,false);
+        // The method itself must not be replaced on any instance: only Kit.prototype.<name> = function may write it.
+        for(const n of nodes){
+          const t=kitWriteTarget(n);
+          if(t?.type==='MemberExpression'&&(staticProp(t)===name||(t.computed&&staticProp(t)===null))&&!(staticProp(t)===name&&staticProp(t.object)==='prototype')&&kitInstance(t.object))return false;
+          if(n.type==='CallExpression'&&n.callee.type==='MemberExpression'&&n.callee.object.name==='Object'&&['assign','defineProperty','defineProperties','setPrototypeOf'].includes(staticProp(n.callee))&&n.arguments[0]&&kitInstance(n.arguments[0]))return false;
+        }
+        kitMethodCache.set(name,true);return true;
+      }
+      const kitMethodCache=new Map();
       // Conservative finite binding propagation. Mutation invalidates a domain.
       const dirty=new Set();
       const loaderAliases=new Set();
@@ -339,7 +472,7 @@ process.stdin.on('end', () => {
         if (c?.symbol==='cc.resources.loadDir'||c?.symbol==='cc.loader.loadResDir') return {bundles:['resources'],kind:'loadDir'};
         if (c?.bundle && ['load','loadDir'].includes(c.method)) return {bundles:c.bundle,kind:c.method};
         if (c?.symbol && /^cc\.(resources|loader|assetManager)\.(load|preload)/.test(c.symbol) && c.symbol!=='cc.assetManager.loadBundle') return {bundles:null,kind:'unsupported',unknown_receiver:true};
-        if(callee.type==='MemberExpression'&&['load','loadDir','loadRes','loadResArray','loadResDir','preload','preloadDir','loadAny','loadRemote'].includes(name)&&(provedLocalMethod(callee)||provedAdMethod(callee)))return null;
+        if(callee.type==='MemberExpression'&&['load','loadDir','loadRes','loadResArray','loadResDir','preload','preloadDir','loadAny','loadRemote'].includes(name)&&(provedLocalMethod(callee)||provedAdMethod(callee)||provedKitMethod(callee)))return null;
         if(callee.type==='MemberExpression'&&prop(callee)===null&&value(callee.object)?.symbol?.match(/^cc\.(resources|loader|assetManager)$/))return {bundles:null,kind:'dynamic_method',unknown_receiver:true};
         if (['load','loadDir','loadRes','loadResArray','loadResDir','preload','preloadDir','loadAny','loadRemote'].includes(name)) return {bundles:null,kind:name,unknown_receiver:true};
         if (c?.bundle && c.method===null) return {bundles:c.bundle,kind:'unknown',unknown_receiver:true};

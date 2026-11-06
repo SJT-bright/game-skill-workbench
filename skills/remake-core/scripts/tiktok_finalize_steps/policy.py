@@ -386,6 +386,10 @@ def write_marker(project, board, kit_version, reason='init'):
     old = read_marker(project)
     data = {'policy': 'new', 'kit_version': kit_version, 'board': board,
             'created': (old or {}).get('created') or time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'by': reason}
+    # 生成时预防 R4L1: a project begun by `init` with this kit has GameUIKit from its first line (ui_kit_scan then
+    # blocks hand-built popups); kept from the first marker, never added to an older one.
+    if (old or {}).get('ui_kit_at_start') is True or (old is None and reason == 'init'):
+        data['ui_kit_at_start'] = True
     p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     return data
 

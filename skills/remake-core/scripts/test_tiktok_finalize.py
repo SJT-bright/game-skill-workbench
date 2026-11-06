@@ -234,7 +234,13 @@ class Policies(unittest.TestCase):
         for step in (startup, touch, storage):
             r = step.apply(ctx(b, 2, m=m))
             self.assertEqual(r['blocks'], [], r)
-        self.assertEqual((b / 'game.js').read_text(), GAME24)
+        game = (b / 'game.js').read_text()
+        if 'hostshim24' in m.parts:
+            # 生成时预防 R4B: the only game.js line with a kit main.js is the host shim, right before the adapter
+            shim = [l for l in game.split('\n') if 'tiktok-kit:hostshim24:' in l]
+            self.assertEqual(len(shim), 1, game)
+            game = game.replace(shim[0] + '\n', '', 1)
+        self.assertEqual(game, GAME24)
         self.assertTrue((b / 'touch-coordinates.js').is_file() and (b / 'storage-guard.js').is_file())
 
     def test_webp_exception_installs_kit_probe(self):

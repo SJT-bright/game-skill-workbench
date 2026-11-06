@@ -1,0 +1,282 @@
+'use strict';
+// TikTok Platform Kit v1 - one save per game, one JSON string under one key. Copy unchanged.
+//
+// Why a string: TikTok/ByteDance storage can hand back an object whose key order differs from what
+// was written, so comparing objects (JSON.stringify(readBack) === JSON.stringify(written)) fails at
+// random. Here the game data is serialized ONCE to a string, that exact string is stored and the
+// read-back is compared as a string.
+//
+// Rules this file enforces:
+//  - update() works on a copy. Memory only changes after the write is read back identical.
+//  - A failed write never reports success; the caller shows "Could not save" and keeps its state.
+//  - A corrupt save is backed up and replaced by defaults with meta.recoveredFromCorrupt set, so
+//    one-time rewards (platform claims) are treated as already claimed instead of paid twice.
+//  - Everything that must change together (coins + "reward claimed" flag) goes in ONE update().
+var config = require('./PlatformConfig');
+
+function clone(value) { return JSON.parse(JSON.stringify(value)); }
+function isRecord(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+function defaultStorage() {
+  return typeof cc !== 'undefined' && cc.sys && cc.sys.localStorage ? cc.sys.localStorage : null;
+}
+// getStorageInfoSync().keys from the platform SDK (same lookup order as TikTokMissionService.js).
+// Returns an array of keys, or null when the runtime cannot tell which keys exist.
+function defaultStorageKeys() {
+  var candidates = [
+    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
+    typeof tt !== 'undefined' && tt,
+    typeof wx !== 'undefined' && wx
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    var c = candidates[i];
+    if (!c || typeof c.getStorageInfoSync !== 'function') continue;
+    try {
+      var info = c.getStorageInfoSync();
+      if (info && Array.isArray(info.keys)) return info.keys;
+    } catch (_) {}
+  }
+  return null;
+}
+function isUnreadable(raw) { return raw === undefined || raw === true || raw === false; }
+
+// v1.2 (Mabel's Meadow r8, D4 problem 6): TikTok's publish scan asks for the Login API. The kit sends ONE
+// login after the save has loaded and never waits for it: no flow, reward or save depends on the answer,
+// and a missing API, a throw, fail or a rejected Promise are all ignored.
+var loginSent = false;
+function noop() {}
+function defaultLogin() {
+  if (loginSent) return false;
+  var candidates = [
+    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
+    typeof tt !== 'undefined' && tt,
+    typeof wx !== 'undefined' && wx
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    var c = candidates[i];
+    if (!c || typeof c.login !== 'function') continue;
+    loginSent = true;
+    try {
+      var r = c.login({success: noop, fail: noop, complete: noop});
+      if (r && typeof r.then === 'function') r.then(noop, noop);
+    } catch (_) {}
+    return true;
+  }
+  return false;
+}
+
+function SaveStore(defaults, options) {
+  options = options || {};
+  this.key = options.key || config.saveKey();
+  this.storage = options.storage || defaultStorage();
+  this.storageKeys = options.storageKeys || defaultStorageKeys;
+  // login: false turns the fire-and-forget login off (tests); a function replaces the platform call.
+  this.login = options.login === false ? noop : (typeof options.login === 'function' ? options.login : defaultLogin);
+  this.loginTried = false;
+  this.now = options.now || Date.now;
+  this.defaults = clone(isRecord(defaults) ? defaults : {});
+  if (!isRecord(this.defaults.platformClaims)) this.defaults.platformClaims = {shortcut: false, profile: false};
+  if (!isRecord(this.defaults.meta)) this.defaults.meta = {};
+  this.data = null;
+  this.status = 'unloaded';
+}
+
+SaveStore.prototype._fill = function (data) {
+  var self = this;
+  Object.keys(this.defaults).forEach(function (k) {
+    if (data[k] === undefined) data[k] = clone(self.defaults[k]);
+  });
+  if (!isRecord(data.platformClaims)) data.platformClaims = {shortcut: false, profile: false};
+  if (!isRecord(data.meta)) data.meta = {};
+  return data;
+};
+
+// Returns {ok, status: 'new'|'loaded'|'recovered'|'unavailable', data}.
+// v1.2 (MergeShot2048 v81-v85 on a real iPhone): TikTok storage can read back true/false/undefined, or throw,
+// for a key. Such a read is never treated as a save. getStorageInfoSync().keys decides whether the key exists:
+// missing key = no save yet, defaults are written once; existing key with an unreadable value = corrupt save
+// (backed up, defaults written once, one-time rewards treated as claimed). Nothing is logged per read.
+SaveStore.prototype.load = function () {
+  var result = this._load();
+  this._loginOnce();
+  return result;
+};
+
+// After the first load only; deferred so a slow or throwing SDK can never delay or break the load.
+SaveStore.prototype._loginOnce = function () {
+  if (this.loginTried) return;
+  this.loginTried = true;
+  var login = this.login;
+  function send() { try { login(); } catch (_) {} }
+  try { if (typeof setTimeout === 'function') setTimeout(send, 0); else send(); } catch (_) {}
+};
+
+SaveStore.prototype._load = function () {
+  if (!this.storage) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'storage_unavailable'); }
+  var raw = null, threw = false;
+  try { raw = this.storage.getItem(this.key); }
+  catch (_) { threw = true; }
+  if (threw || isUnreadable(raw)) {
+    var keys = null;
+    try { keys = this.storageKeys(); } catch (_) { keys = null; }
+    var known = Array.isArray(keys);
+    if (known && keys.indexOf(this.key) < 0) return this._fresh();
+    if (threw) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'read_failed'); }
+    if (raw === undefined && !known) { this.data = clone(this.defaults); this.status = 'new'; return this._result(true); }
+    return this._recover(raw);
+  }
+  if (raw === null || raw === '') {
+    this.data = clone(this.defaults); this.status = 'new'; return this._result(true);
+  }
+  var parsed = null;
+  try { parsed = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) { parsed = null; }
+  if (!isRecord(parsed)) return this._recover(raw);
+  this.data = this._fill(parsed);
+  this.status = 'loaded';
+  return this._result(true);
+};
+
+// No save under this key: start from defaults and write them once, so the next read returns a string.
+SaveStore.prototype._fresh = function () {
+  this.data = clone(this.defaults);
+  this.status = 'new';
+  var written = this._write(this.data);
+  return this._result(true, written);
+};
+
+SaveStore.prototype._recover = function (raw) {
+  try { this.storage.setItem(this.key + ':corrupt-backup', typeof raw === 'string' ? raw : String(raw)); } catch (_) {}
+  var fresh = clone(this.defaults);
+  fresh.meta.recoveredFromCorrupt = this.now();
+  this.data = fresh;
+  this.status = 'recovered';
+  var written = this._write(fresh);
+  return this._result(written === null, written);
+};
+
+SaveStore.prototype._write = function (draft) {
+  var text;
+  try { text = JSON.stringify(draft); } catch (_) { return 'serialize_failed'; }
+  var previous = null;
+  try { previous = this.storage.getItem(this.key); } catch (_) {}
+  try { this.storage.setItem(this.key, text); } catch (_) { return 'write_failed'; }
+  var back;
+  try { back = this.storage.getItem(this.key); } catch (_) { back = null; }
+  if (back === text) return null;
+  // Read-back differs: put the previous text back so memory and storage still agree.
+  try { if (typeof previous === 'string') this.storage.setItem(this.key, previous); } catch (_) {}
+  return 'readback_mismatch';
+};
+
+SaveStore.prototype._result = function (ok, error) {
+  return {ok: ok, status: this.status, error: error || null, data: this.data ? clone(this.data) : null};
+};
+
+// A copy of the current save. Change the save only through update().
+SaveStore.prototype.get = function () {
+  if (this.status === 'unloaded') this.load();
+  return clone(this.data);
+};
+
+// mutator(draft) edits the copy; return false to cancel. Returns {ok, error, data}.
+SaveStore.prototype.update = function (mutator) {
+  if (this.status === 'unloaded') this.load();
+  if (!this.storage) return this._result(false, 'storage_unavailable');
+  var draft = clone(this.data);
+  var answer;
+  try { answer = mutator(draft); } catch (_) { return this._result(false, 'mutator_threw'); }
+  if (answer === false) return this._result(false, 'cancelled');
+  if (!isRecord(draft)) return this._result(false, 'invalid_draft');
+  var error = this._write(draft);
+  if (error) return this._result(false, error);
+  this.data = draft;
+  if (this.status === 'new' || this.status === 'unavailable') this.status = 'loaded';
+  return this._result(true);
+};
+
+// ---- 简化.11.13 P10: grant() and best(). Every reward and every best score goes through these two. ----
+// Census 2026-11-04 (save_write_lost / save_fail / double_trigger): games changed coins in memory before saving
+// (方块冲冲), left the result page although the save failed (水杯传奇), let a lower score overwrite the best one
+// (旋律动物园) and never wrote the first score because they only compared when a record existed (海洋逃脱).
+// Type rule (same as storage-guard.js): a number, or a numeric text written by an older build, is that number;
+// null / undefined / '' / true / false is "no value" and counts as the default (grant) or as no record (best).
+var RUN_GRANT_KEEP = 50;
+function numberOf(value) {
+  if (typeof value === 'number') return isFinite(value) ? value : null;
+  if (typeof value === 'string' && value.trim() !== '' && isFinite(Number(value))) return Number(value);
+  return null;
+}
+
+// grant({id, add: {coins: 50, gems: -1}, apply: function (draft) {}}, onDone) -> {ok, error, already, data}
+//  - add: top-level number fields of the save (the wallet); the key must exist in the defaults or in the save.
+//    A result below 0 is refused (error 'not_enough'), so a purchase is grant({id, add: {coins: -price}, apply}).
+//  - apply(draft): optional, other changes that belong to the same reward (owned skin, level unlocked); return
+//    false to cancel. It runs in the SAME update() as the coins and the claim mark.
+//  - id: optional claim id. The same id never pays twice: the second call returns {ok: true, already: true},
+//    writes nothing and does not call onDone. Ids starting with 'run:' (one run's result / x2) keep only the
+//    last 50; every other id is kept for good (first clear of a level, a one-time gift).
+//  - onDone(result) is called only after the write was read back identical; update the wallet label and leave
+//    the page there. On failure nothing changed (memory, storage, UI): show "Could not save" and allow a retry.
+SaveStore.prototype.grant = function (delta, onDone) {
+  delta = delta || {};
+  var add = isRecord(delta.add) ? delta.add : {};
+  var id = delta.id === undefined || delta.id === null || delta.id === '' ? null : String(delta.id);
+  var apply = typeof delta.apply === 'function' ? delta.apply : null;
+  if (this.status === 'unloaded') this.load();
+  if (id !== null && this.data && isRecord(this.data.meta) && isRecord(this.data.meta.grants) &&
+      Object.prototype.hasOwnProperty.call(this.data.meta.grants, id)) {
+    var same = this._result(true); same.already = true; return same;
+  }
+  var defaults = this.defaults, problem = null;
+  var r = this.update(function (draft) {
+    var keys = Object.keys(add);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i], step = numberOf(add[k]);
+      if (step === null) { problem = 'invalid_amount'; return false; }
+      if (!(k in draft) && !(k in defaults)) { problem = 'unknown_key'; return false; }
+      var now = numberOf(draft[k]);
+      if (now === null) now = numberOf(defaults[k]) || 0;
+      if (now + step < 0) { problem = 'not_enough'; return false; }
+      draft[k] = now + step;
+    }
+    if (apply && apply(draft) === false) { problem = 'cancelled'; return false; }
+    if (id !== null) {
+      if (!isRecord(draft.meta.grants)) draft.meta.grants = {};
+      draft.meta.grants[id] = (draft.meta.grantSeq = (numberOf(draft.meta.grantSeq) || 0) + 1);
+      if (id.indexOf('run:') === 0) {
+        var runs = Object.keys(draft.meta.grants).filter(function (g) { return g.indexOf('run:') === 0; });
+        runs.sort(function (a, b) { return draft.meta.grants[a] - draft.meta.grants[b]; });
+        while (runs.length > RUN_GRANT_KEEP) delete draft.meta.grants[runs.shift()];
+      }
+    }
+  });
+  if (!r.ok) { if (problem) r.error = problem; return r; }
+  r.already = false;
+  if (typeof onDone === 'function') {
+    try { onDone(r); } catch (e) { r.callbackError = String(e && e.message || e); if (typeof console !== 'undefined') console.error('[SaveStore] grant onDone', e); }
+  }
+  return r;
+};
+
+// best(key, value) -> {ok, error, best, isNew}. Writes only when there is no record yet (first run) or value is
+// higher. A lower or equal score writes nothing and returns ok with the kept best. Show result.best on the page.
+SaveStore.prototype.best = function (key, value) {
+  var score = numberOf(value);
+  if (this.status === 'unloaded') this.load();
+  if (score === null || !key) { var bad = this._result(false, 'invalid_value'); bad.best = this.data ? numberOf(this.data[key]) : null; bad.isNew = false; return bad; }
+  var current = numberOf(this.data[key]);
+  if (current !== null && score <= current) { var kept = this._result(true); kept.best = current; kept.isNew = false; return kept; }
+  var r = this.update(function (draft) { draft[key] = score; });
+  r.best = r.ok ? score : current;
+  r.isNew = r.ok;
+  return r;
+};
+
+SaveStore.prototype.isClaimed = function (kind) {
+  if (this.status === 'unloaded') this.load();
+  if (this.data.meta && this.data.meta.recoveredFromCorrupt) return true;
+  return this.data.platformClaims[kind] === true;
+};
+
+// Test hook only: lets a test send the one-per-process login again.
+SaveStore._resetLoginForTests = function () { loginSent = false; };
+module.exports = SaveStore;

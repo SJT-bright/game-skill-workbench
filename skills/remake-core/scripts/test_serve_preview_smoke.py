@@ -88,7 +88,8 @@ class TrialSmokeGate(unittest.TestCase):
     def test_main_runs_it_before_printing_the_link_only_for_keep(self):
         text = (HERE / 'serve_preview.py').read_text(encoding='utf-8')
         main = text[text.index('def main('):]
-        self.assertLess(main.index('trial_smoke_gate(url, directory, args.adapter, ad_simulator=args.ad_simulator)'), main.index("print(f'{entry_kind}"))
+        # #40: the smoke runs on the check port (check_url), not on the printed link (test_preview_fresh_save.py)
+        self.assertLess(main.index('trial_smoke_gate(check_url, directory, args.adapter, ad_simulator=args.ad_simulator)'), main.index("print(f'{entry_kind}"))
         self.assertIn('if args.keep:\n        # v7.8 (总表 B21 / B30 F)', main)
         self.assertTrue((serve_preview.CHECK_SCRIPTS / 'runtime_regression.py').is_file())
 

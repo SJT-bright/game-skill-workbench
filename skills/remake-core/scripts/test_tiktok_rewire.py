@@ -329,7 +329,8 @@ class Rewire(unittest.TestCase):
         self.assertEqual((root / 'assets/scripts/Items.js').read_text(encoding='utf-8'), src['Items.js'])
 
     def test_11_cocos3_by_hand(self):
-        """Cocos 3.x has no require('AdBridge'): the same manager is listed, nothing is written."""
+        """R4N2: Cocos 3.x ad managers are rewired to the generated AdBridge3x.ts (ES import, TikTokKit
+        .RewardedService); growth rewards stay by hand; no 2.4 AdBridge.js is written."""
         src = ("export class A { request(reward: () => void, fail: (reason: string) => void) {\n"
                "  const ad = tt.createRewardedVideoAd({adUnitId: 'x'}); ad.onClose(r => { if (r.isEnded) reward();"
                " else fail('no'); }); ad.show(); } }\n")
@@ -338,11 +339,166 @@ class Rewire(unittest.TestCase):
         (root / 'project.json').unlink()
         (root / 'package.json').write_text('{"creator": {"version": "3.8.6"}}')
         rows = [r for r in R.plan(root)['rewire_todo'] if r['kind'] in ('ad', 'growth')]
-        self.assertEqual(sorted((r['kind'], r['auto'], r['why'][:8]) for r in rows),
-                         [('ad', False, 'Cocos 3.'), ('growth', False, 'Cocos 3.')])
+        self.assertEqual(sorted((r['kind'], r['auto']) for r in rows), [('ad', True), ('growth', False)])
         rec = R.rewire(root)
-        self.assertEqual(rec['changed'], [])
+        self.assertEqual(sorted(rec['changed']), sorted(['assets/scripts/Water.ts', R.BRIDGE3X_PATH]))
         self.assertFalse((root / R.BRIDGE_PATH).exists())
+        water = (root / 'assets/scripts/Water.ts').read_text(encoding='utf-8')
+        self.assertIn("import { B as __TikTokAdBridge3x } from '../tiktok-platform/AdBridge3x';", water)
+        self.assertNotIn('createRewardedVideoAd', water)
+
+    # ------------------------------------------------------------ R4N2 (补查2 第 4 组): 3.x original ad entries
+    DINO_SDK = ("import { sys, loader, Prefab } from 'cc';\nimport { Wechat } from './Platform/wechat/wechat';\n"
+                "export class SdkMgr {\n    private channel: Channel = Channel.DEFAULT;\n"
+                "    /**观看广告 */\n"
+                "    public showRewardAd(des: any, callback: Function, cancel?: Function, fail?: Function) {\n"
+                "        let cb = () => {\n            loader.loadRes('Alert', Prefab, (err, prefab: Prefab) => {})\n"
+                "            callback();\n        }\n        console.log(\"观看广告\", des);\n"
+                "        switch (this.channel) {\n            case Channel.DEFAULT: {\n                cb();\n"
+                "                break;\n            }\n            case Channel.TT: {\n                break;\n"
+                "            }\n            case Channel.WECHAT: {\n"
+                "                Wechat.showRewardVideoAd().then((isSuc) => {\n"
+                "                    if (isSuc) { cb(); } else if (cancel) { cancel(); }\n"
+                "                }, (res?) => { if (fail) { fail(); } })\n                break;\n            }\n"
+                "        }\n    }\n}\n")
+    # 合成进化恐龙 preMain.onClickDino after the first English pass: this.node written into the cancel slot
+    DINO_CALL = ("export class preMain {\n  onClickDino() {\n"
+                 "    SdkMgr.ins.showRewardAd(\"观看激励视频-获取恐龙\", () => { GD.addSavedDino(1); }, this.node);\n"
+                 "  }\n  onEgg() { SdkMgr.ins.showRewardAd(\"龙蛋\", () => { this.speed(); }); }\n}\n")
+    GIANT = ("export class GameLogic {\n    public static pay (shareId: number, callback: Function) {\n"
+             "        AudioManager.instance.pauseAll();\n        this.isWatchVideoAd = true;\n"
+             "        if ((this.platform === 'ios' || this.platform === 'wx') && window.bondSDK) {\n"
+             "            window.bondSDK.pay({\n                shareId: shareId,\n"
+             "                success: ()=>{ this.isWatchVideoAd = false; callback(null); },\n"
+             "                fail: (err)=>{ this.isWatchVideoAd = false; callback('fail', err); }\n            });\n"
+             "        } else if (this.platform === 'cocosPlay') {\n            // jkwSDK.showRewardedVideoAd\n"
+             "        } else {\n            this.isWatchVideoAd = false;\n            AudioManager.instance.resumeAll();\n"
+             "            callback && callback(null);\n        }\n    }\n}\n")
+    PIN_FIRE = ('[{"__type__": "cc.Button", "clickEvents": [{"__id__": 3}]},\n {\n    "__type__": "cc.ClickEvent",\n'
+                '    "target": {\n      "__id__": 2\n    },\n    "component": "BallGameHall",\n'
+                '    "_componentId": "",\n    "handler": "showVideoCallBack",\n    "customEventData": ""\n  },\n'
+                ' {\n    "__type__": "cc.ClickEvent",\n    "target": {\n      "__id__": 2\n    },\n'
+                '    "component": "BallGameHall",\n    "_componentId": "",\n    "handler": "onStartGame",\n'
+                '    "customEventData": ""\n  }]\n')
+    PIN_JS = ("cc.Class({\n    extends: cc.Component,\n    onStartGame: function () { cc.director.loadScene('g'); },\n"
+              "    showVideoTip: function () {}\n});\n")
+
+    def _v3(self, files):
+        root = project(self.tmp / 'v3', {k: v.encode() for k, v in files.items()})
+        (root / 'project.json').unlink()
+        (root / 'package.json').write_text('{"creator": {"version": "3.5.0"}}')
+        return root
+
+    def test_12_dino_browser_grant_rewired(self):
+        """合成进化恐龙: SdkMgr.showRewardAd grants in Channel.DEFAULT (browser) -> rewired to AdBridge3x; the
+        bridge grants only in the success callback; the ownerNode call is listed."""
+        root = self._v3({'assets/Script/tyq3.x/SdkMgr.ts': self.DINO_SDK, 'assets/pack1/src/preMain.ts': self.DINO_CALL})
+        todo = R.plan(root)['rewire_todo']
+        ad = [r for r in todo if r['kind'] == 'ad']
+        self.assertEqual([(r['function'], r['auto'], r.get('nonplatform_grant')) for r in ad],
+                         [('showRewardAd', True, True)])
+        calls = [r for r in todo if r['kind'] == 'ad_call']
+        self.assertEqual([(r['file'].rsplit('/', 1)[-1], r['line']) for r in calls], [('preMain.ts', 3)])
+        self.assertIn('callback slot 3', calls[0]['why'])
+        R.rewire(root)
+        sdk = (root / 'assets/Script/tyq3.x/SdkMgr.ts').read_text(encoding='utf-8')
+        self.assertIn("import { B as __TikTokAdBridge3x } from '../../tiktok-platform/AdBridge3x';", sdk)
+        self.assertNotIn('Channel.DEFAULT: {', sdk)
+        self.assertIn('return __TikTokAdBridge3x["SdkMgr.showRewardAd"].call(this, des, callback, cancel, fail);', sdk)
+        bridge = (root / R.BRIDGE3X_PATH).read_text(encoding='utf-8')
+        self.assertIn("run(key(des, 'double_coins'), function () { call(callback, []); }, function (r) { if (r && "
+                      "r.status === 'cancelled' && typeof cancel === 'function') call(cancel, []); else "
+                      "call(fail, [r.message]); }, false);", bridge)
+        self.assertIn('globalThis as any).TikTokKit', bridge)
+
+    def test_13_giant_web_branch_rewired(self):
+        """奔跑吧巨人: GameLogic.pay's last else grants callback(null) with no ad -> rewired, err-first kept."""
+        root = self._v3({'assets/script/framework/gameLogic.ts': self.GIANT})
+        ad = [r for r in R.plan(root)['rewire_todo'] if r['kind'] == 'ad']
+        self.assertEqual([(r['function'], r['auto'], r['grant_line']) for r in ad], [('pay', True, 13)])
+        R.rewire(root)
+        gl = (root / 'assets/script/framework/gameLogic.ts').read_text(encoding='utf-8')
+        self.assertNotIn('callback && callback(null)', gl)
+        bridge = (root / R.BRIDGE3X_PATH).read_text(encoding='utf-8')
+        self.assertIn("function () { call(callback, [null]); }, function (r) { call(callback, ['fail', r]); }", bridge)
+
+    def test_14_pinball_missing_handler(self):
+        """弹球传奇: the home button names BallGameHall.showVideoCallBack, which does not exist -> ad_handler row;
+        an existing handler is not listed; old code had no such row."""
+        root = project(self.tmp / 'pin', {'assets/BallMaster/BallScene/BallGameHall.fire': self.PIN_FIRE.encode(),
+                                          'assets/BallMaster/BallScript/BallGameHall.js': self.PIN_JS.encode()})
+        rows = [r for r in R.plan(root)['rewire_todo'] if r['kind'] == 'ad_handler']
+        self.assertEqual([(r['component'], r['function']) for r in rows], [('BallGameHall', 'showVideoCallBack')])
+        (root / 'assets/BallMaster/BallScript/BallGameHall.js').write_text(
+            self.PIN_JS.replace('showVideoTip', 'showVideoCallBack'))
+        self.assertEqual([r for r in R.plan(root)['rewire_todo'] if r['kind'] == 'ad_handler'], [])
+
+    def test_15_overlay_canvas(self):
+        """X goes to the visible Canvas whose camera has the highest priority (合成进化恐龙: 4 Canvas, CanvasBg is
+        first and lowest), not the first one found; inactive canvases and disabled cameras are skipped."""
+        js = R.BRIDGE3X_HEAD.split('// BEGIN pickOverlayCanvas', 1)[1].split('// END pickOverlayCanvas', 1)[0]
+        js = js.split('\n', 1)[1].replace('export function', 'function')
+        probe = js + r"""
+function cv(name, prio, opts) { opts = opts || {}; return {name: name, enabled: true, node: {activeInHierarchy: opts.active !== false},
+  cameraComponent: {priority: prio, enabled: opts.cam !== false, node: {activeInHierarchy: true}}}; }
+var four = [cv('CanvasBg', 0), cv('Canvas', 1), cv('CanvasUI', 3), cv('CanvasTop', 5, {active: false})];
+var out = [pickOverlayCanvas(four).name, pickOverlayCanvas([cv('A', 2), cv('B', 2)]).name,
+  pickOverlayCanvas([cv('A', 4, {cam: false}), cv('B', 1)]).name, String(pickOverlayCanvas([]))];
+console.log(JSON.stringify(out));
+"""
+        r = subprocess.run(['node', '-e', probe], capture_output=True, text=True, timeout=20)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout), ['CanvasUI', 'B', 'B', 'null'])
+
+    # ------------------------------------------------------------ R4P2: conditional / logical branches (terser)
+    TERN24 = ("var SdkMgr = cc.Class({ extends: cc.Component,\n"
+              "    showRewardVideo: function (key, cb) {\n"
+              "        cc.sys.isBrowser ? (this.log('web'), cb && cb(true))\n"
+              "            : tt.createRewardedVideoAd({adUnitId: key}).onClose(function (r) { cb(r && r.isEnded); });\n"
+              "    }\n});\nmodule.exports = SdkMgr;\n")
+    OR3X = ("export class Ads {\n    public static showVideoAd(cb: Function) {\n"
+            "        if (sys.platform === sys.Platform.BYTEDANCE_MINI_GAME) {\n"
+            "            return void tt.createRewardedVideoAd({adUnitId: 'x'}).show();\n        }\n"
+            "        sys.isNative || (this.busy = false, cb(null));\n    }\n}\n")
+    GOOD = ("var A = cc.Class({ extends: cc.Component,\n"
+            "    showRewardAd: function (key, ok) {\n"
+            "        window.tt ? (this.ad = tt.createRewardedVideoAd({adUnitId: key}),\n"
+            "            this.ad.onClose(function (r) { r && r.isEnded ? ok && ok(true) : ok && ok(false); }),\n"
+            "            this.ad.show()) : ok && ok(false);\n"
+            "    },\n    showVideo: function (cb) { cc.sys.isBrowser && cb && cb(!1, 'no ad'); }\n});\n")
+
+    def _grant_line(self, text, name):
+        masked = R.mask(text)
+        f = [g for g in R.functions(text, masked) if g['name'] == name][0]
+        return R.direct_grant(text, masked, f)
+
+    def test_16_terser_branches(self):
+        """R4P2: `p ? (x, cb(true)) : ad()` (2.4) and `p || (x, cb(null))` (3.x) are non-platform grants; the same
+        minified as terser writes them too. Old code read if/else/switch only and missed all four."""
+        self.assertEqual(self._grant_line(self.TERN24, 'showRewardVideo'), 3)
+        self.assertEqual(self._grant_line(self.OR3X, 'showVideoAd'), 6)
+        mini24 = ('var o=cc.Class({showRewardAd:function(t,e,i,n){1===this.channel?tt.createRewardedVideoAd?'
+                  'this.ttShow(e,i,n):n&&n():e&&e()}});')
+        mini3 = ('class G{static pay(s,c){AudioManager.instance.pauseAll(),"ios"!==this.platform||!window.bondSDK?'
+                 '"cocosPlay"===this.platform||(this.isWatchVideoAd=!1,c&&c(null)):window.bondSDK.pay({shareId:s,'
+                 'success:()=>{c(null)},fail:e=>{c("fail",e)}})}}')
+        self.assertIsNotNone(self._grant_line(mini24, 'showRewardAd'))
+        self.assertIsNotNone(self._grant_line(mini3, 'pay'))
+        root = project(self.tmp / 't24', {'assets/scripts/SdkMgr.js': self.TERN24.encode()})
+        rows = [r for r in R.plan(root)['rewire_todo'] if r['kind'] == 'ad' and r.get('nonplatform_grant')]
+        self.assertEqual([(r['function'], r.get('nonplatform_grant'), r.get('grant_line')) for r in rows],
+                         [('showRewardVideo', True, 3)])
+        root = self._v3({'assets/scripts/Ads.ts': self.OR3X})
+        rows = [r for r in R.plan(root)['rewire_todo'] if r['kind'] == 'ad' and r.get('nonplatform_grant')]
+        self.assertEqual([(r['function'], r.get('nonplatform_grant')) for r in rows], [('showVideoAd', True)])
+
+    def test_17_terser_good_shapes(self):
+        """R4P2: the reward only in the watched callback of the platform branch, failure calls on the other side
+        (`ok(false)`, `cb(!1, 'no ad')`), a result test `r.isEnded ? ...` -> no non-platform grant."""
+        self.assertIsNone(self._grant_line(self.GOOD, 'showRewardAd'))
+        self.assertIsNone(self._grant_line(self.GOOD, 'showVideo'))
+        root = project(self.tmp / 'good', {'assets/scripts/A.js': self.GOOD.encode()})
+        self.assertEqual([r for r in R.plan(root)['rewire_todo'] if r.get('nonplatform_grant')], [])
 
     def test_9_speed(self):
         files = {'assets/scripts/a/TTSdk.js': fixture('dqiao/TTSdk.js'), 'assets/scripts/a/sdk.ts': fixture('dqiao/sdk.ts'),

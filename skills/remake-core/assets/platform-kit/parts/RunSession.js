@@ -49,9 +49,22 @@
  *   session.resumeAll()          drop every reason except 'hide' (only for "quit to home")
  *   session.adHooks()            {pauseGame, resumeGame} for ad-boost AdBoostKit.setup / runAd: reason 'ad', each
  *                                pauseGame is matched by one resumeGame
+ *   session.after(ms, fn, node) / every(ms, fn, node)   timer bound to an entity node: session.recycle(node) cancels it
+ *   session.recycle(node, {destroy})   hide / take back an obstacle, enemy or bullet (生成时预防 R4L2, 回家快跑 snail):
+ *                                every collider and physics body on the node and its children off, their tweens, actions,
+ *                                component schedules and the session timers bound to them stopped, node.active = false;
+ *                                {destroy: true} then destroys it. Call it on the entity's ROOT node, never hide or
+ *                                destroy only its picture node. Returns the number of bodies turned off.
+ *   session.reuse(node)          take a recycled entity out again: active, the colliders recycle turned off back on
+ *   RunSession.retire(cc, node) / RunSession.revive(cc, node)   the same without a session (FxPool uses the same code)
  *   session.move(node, vx, vy, dt)   node position += (vx, vy) * dt (units per SECOND), 2.4 and 3.x
  *   RunSession.step(value, perSecond, dt)   value + perSecond * dt  (for angles, scales, scroll offsets)
  *   session.dispose()            drop everything, stop listening (onDestroy of the scene's main component)
+ *   session.track(node)          (1.2, R4N4) register a node whose tweens / actions belong to the run (board, pieces, hero);
+ *                                newRun and session.stopTracked() stop the tweens and actions of the registered nodes ONLY.
+ *                                Never Tween.stopAll / cc.Tween.stopAll / the root node's stopAllActions on Retry or Home:
+ *                                that also kills the popup's closing tween (SLS35). opts.tweenTargets: the same at create.
+ *                                session.untrack(node), session.tracked()
  *
  * English (英化) games keep the original gameplay code; use this only in the pause / revive / ad entries the AI adds.
  * Proof: tests/run-session.test.js (with a single-boolean pause, a stale-callback and a setInterval negative control).
@@ -63,13 +76,77 @@
   if (root) root.TikTokRunSession = api;
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this), function () {
   'use strict';
-  var VERSION = '1.0', MAX_DT = 0.1, HIDE = 'hide';
+  var VERSION = '1.2', MAX_DT = 0.1, HIDE = 'hide';
 
   function isValid(cc, node) {
     if (!node) return true;
     if (cc && typeof cc.isValid === 'function') return cc.isValid(node, true);
     return node.isValid !== false;
   }
+  // BEGIN entity-retire (byte-identical in parts/FxPool.js and parts/RunSession.js; tests/entity-retire.test.js compares)
+  // 回家快跑: the snail's picture went away after 5 s but its collider kept blocking the runner (an invisible enemy).
+  // retire(cc, node): every collider and physics body on the node AND its children off (2.4 cc.Collider /
+  // cc.PhysicsCollider / cc.RigidBody, 3.x Collider2D / RigidBody2D and the 3D Collider / RigidBody), their tweens,
+  // actions and component schedules stopped, then node.active = false. revive(cc, node): node.active = true and only
+  // the bodies retire() turned off are turned back on. Timers and tweens are not restarted: start them again in
+  // reset / onEnable. Returns the number of bodies turned off / on.
+  var RETIRED = '__tiktokRetired', BODY_TYPES = ['Collider', 'PhysicsCollider', 'RigidBody', 'Collider2D', 'RigidBody2D'];
+  function bodyTypes(cc) {
+    var out = [];
+    for (var i = 0; i < BODY_TYPES.length; i++) {
+      var T = cc && cc[BODY_TYPES[i]];
+      if (typeof T === 'function' && out.indexOf(T) < 0) out.push(T);
+    }
+    return out;
+  }
+  function eachNode(node, fn) {
+    if (!node) return;
+    fn(node);
+    var kids = node.children || [];
+    for (var i = 0; i < kids.length; i++) eachNode(kids[i], fn);
+  }
+  function compsOf(node, T) {
+    try { return (T && typeof node.getComponents === 'function' && node.getComponents(T)) || []; } catch (e) { return []; }
+  }
+  function stopOn(cc, target) {
+    try { if (cc && cc.Tween && typeof cc.Tween.stopAllByTarget === 'function') cc.Tween.stopAllByTarget(target); } catch (e) { /* ok */ }
+  }
+  function retire(cc, node) {
+    if (!node) return 0;
+    var off = node[RETIRED] || [], types = bodyTypes(cc), Comp = cc && cc.Component;
+    eachNode(node, function (n) {
+      for (var t = 0; t < types.length; t++) {
+        var bodies = compsOf(n, types[t]);
+        for (var k = 0; k < bodies.length; k++) {
+          var b = bodies[k];
+          if (b && b.enabled && off.indexOf(b) < 0) { try { b.enabled = false; off.push(b); } catch (e) { /* ok */ } }
+        }
+      }
+      stopOn(cc, n);
+      try { if (typeof n.stopAllActions === 'function') n.stopAllActions(); } catch (e) { /* ok */ }
+      var comps = compsOf(n, Comp);
+      for (var j = 0; j < comps.length; j++) {
+        stopOn(cc, comps[j]);
+        try { if (typeof comps[j].unscheduleAllCallbacks === 'function') comps[j].unscheduleAllCallbacks(); } catch (e) { /* ok */ }
+      }
+    });
+    node[RETIRED] = off;
+    if (node.active !== false) node.active = false;
+    return off.length;
+  }
+  function revive(cc, node) {
+    if (!node) return 0;
+    var off = node[RETIRED] || [], on = 0;
+    node[RETIRED] = null;
+    node.active = true;
+    for (var i = 0; i < off.length; i++) {
+      var b = off[i];
+      if (!b || b.isValid === false) continue;
+      try { b.enabled = true; on += 1; } catch (e) { /* ok */ }
+    }
+    return on;
+  }
+  // END entity-retire
   function hideEvents(cc) {
     var g = cc && cc.game, G = cc && cc.Game;
     return {
@@ -104,8 +181,32 @@
     // epoch changes on newRun, dispose and a scene launch: everything bound to the old epoch is dropped.
     function bump() { epoch += 1; dropTimers(); }
 
+    // 1.2 (R4N4, SLS35: Retry / Home called the global Tween.stopAll and also killed the closing tween of the popup):
+    // the run's tween targets are registered, and newRun / stopTracked stop the tweens and actions of THOSE nodes only.
+    var tracked = Array.isArray(opts.tweenTargets) ? opts.tweenTargets.slice() : [];
+    s.track = function (target) {
+      if (target && tracked.indexOf(target) < 0) tracked.push(target);
+      return target;
+    };
+    s.untrack = function (target) { var i = tracked.indexOf(target); if (i >= 0) tracked.splice(i, 1); };
+    s.tracked = function () { return tracked.slice(); };
+    s.stopTracked = function () {
+      var n = 0, keep = [];
+      for (var i = 0; i < tracked.length; i++) {
+        var t = tracked[i];
+        if (!t || t.isValid === false || (cc && typeof cc.isValid === 'function' && !cc.isValid(t, true))) continue;
+        keep.push(t);
+        stopOn(cc, t);
+        try { if (typeof t.stopAllActions === 'function') t.stopAllActions(); } catch (e) { /* ok */ }
+        n += 1;
+      }
+      tracked = keep;
+      return n;
+    };
+
     s.newRun = function (init) {
       if (!alive) { warn('newRun after dispose'); return null; }
+      s.stopTracked();
       bump();
       s.run += 1;
       var fresh = { run: s.run };
@@ -130,16 +231,27 @@
       };
     };
 
-    s.timer = function (fn, ms, repeat) {
+    s.timer = function (fn, ms, repeat, node) {
       if (typeof fn !== 'function') throw new Error('RunSession.timer: fn is not a function');
       var sec = Math.max(0, (Number(ms) || 0) / 1000);
       if (repeat && sec <= 0) throw new Error('RunSession.every: interval must be > 0 ms');
-      var t = { id: nextTimerId++, fn: fn, left: sec, every: repeat ? sec : 0, dead: !alive };
+      var t = { id: nextTimerId++, fn: fn, left: sec, every: repeat ? sec : 0, dead: !alive, node: node || null };
       if (alive) timers.push(t);
       return { cancel: function () { t.dead = true; } };
     };
-    s.after = function (ms, fn) { return s.timer(fn, ms, false); };
-    s.every = function (ms, fn) { return s.timer(fn, ms, true); };
+    s.after = function (ms, fn, node) { return s.timer(fn, ms, false, node); };
+    s.every = function (ms, fn, node) { return s.timer(fn, ms, true, node); };
+
+    // entities (obstacles, enemies, bullets): hide / take back ONE root node, never only its picture
+    function inside(child, root) { for (var n = child; n; n = n.parent) if (n === root) return true; return false; }
+    s.recycle = function (node, o) {
+      if (!node) return 0;
+      for (var i = 0; i < timers.length; i++) if (timers[i].node && inside(timers[i].node, node)) timers[i].dead = true;
+      var off = retire(cc, node);
+      if (o && o.destroy && typeof node.destroy === 'function') { try { node.destroy(); } catch (e) { /* ok */ } }
+      return off;
+    };
+    s.reuse = function (node) { return revive(cc, node); };
 
     s.tick = function (dt) {
       if (!alive) return 0;
@@ -238,5 +350,5 @@
     return (Number(value) || 0) + (Number(perSecond) || 0) * d;
   }
 
-  return { VERSION: VERSION, MAX_DT: MAX_DT, create: create, step: step };
+  return { VERSION: VERSION, MAX_DT: MAX_DT, create: create, step: step, retire: retire, revive: revive };
 });

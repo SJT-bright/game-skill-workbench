@@ -32,6 +32,14 @@
 //  that failed after it was deserialized (an image timed out) stayed in the engine's file cache, so the first Retry
 //  deserialized it again and failed at once; Retry now drops that cache entry before loading the scene again.
 //  Timer numbers unchanged.
+// v1.7 (生成时预防 P01-2, 简化.11.14 R4A; Node-tested, 待真机复测): installs ./rewarded-guard.js right after storage-guard,
+//  before any game script, so ad code the localisation did not rewire follows the 15 s foreground / no late reward rule
+//  (RewardedService's own ads pass through with __tiktokKitRewardedDirect). An error never blocks startup. The package
+//  checks recognise the unchanged guard by its KIT_MANIFEST hash and do not count it as a game ad caller.
+//  Timer numbers unchanged.
+// v1.8 (生成时预防 R4Q5, 补查3 第 5 组 奔跑吧巨人: an old save with debug=true turned the Profiler on and the FPS
+//  stats covered the bottom buttons): the engine starts with showFPS false, and the stats are turned off again when
+//  the launch scene is up and one frame later, whatever settings.debug or a save says. Timer numbers unchanged.
 window.boot = function () {
   var settings = window._CCSettings;
   window._CCSettings = undefined;
@@ -39,6 +47,7 @@ window.boot = function () {
   var platform = typeof TTMinis !== 'undefined' && TTMinis.game
     ? TTMinis.game : typeof tt !== 'undefined' ? tt : null;
   try { require('./storage-guard')(cc, platform); } catch (storageError) { console.error('storage guard', storageError); }
+  try { require('./rewarded-guard')(cc, platform); } catch (rewardedError) { console.error('rewarded guard', rewardedError); }
   var webpProbe = null;
   if (window.__TIKTOK_KIT_WEBP_PROBE__ === true) {
     try { webpProbe = require('./webp-decode-probe'); } catch (probeError) { console.error('webp probe', probeError); }
@@ -238,7 +247,7 @@ window.boot = function () {
     option = {
       id: 'GameCanvas',
       debugMode: settings.debug ? cc.debug.DebugMode.INFO : cc.debug.DebugMode.ERROR,
-      showFPS: !__globalAdapter.isSubContext && settings.debug,
+      showFPS: false,  // v1.8: never from settings.debug
       frameRate: 60,
       groupList: settings.groupList,
       collisionMatrix: settings.collisionMatrix
@@ -249,10 +258,18 @@ window.boot = function () {
     }
   }
 
+  // v1.8: the FPS / draw-call stats are never shown in a TikTok package (a save or a debug switch cannot turn them on
+  // at startup); called unconditionally, an error is ignored.
+  function hideStats() {
+    try { if (cc.debug && typeof cc.debug.setDisplayStats === 'function') cc.debug.setDisplayStats(false); } catch (statsError) {}
+  }
+
   function launched() {
     if (sceneUp) return;
     sceneUp = true;
     clearAttempt();
+    hideStats();
+    setTimeout(hideStats, 0);  // after the launch scene's start() of the first frame
     safeCall('hideLoading', {});
     console.log('Success to load scene: ' + settings.launchScene);
   }

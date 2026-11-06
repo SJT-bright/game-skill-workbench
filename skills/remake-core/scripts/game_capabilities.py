@@ -19,6 +19,8 @@ record's reason, no record -> not_run naming the missing field. Never a guess.
 CLI
   python3 game_capabilities.py write --project <game> (--pause-button <node path> | --no-pause-button "why")
           (--ad-entry role=<node path> ... | --no-ad-entries "why") [--no-ad-role double="why"] [--evidence k=v]
+  python3 game_capabilities.py write --project <game> --merge --ad-entry spin=<path> [--ad-entry-json '{...states}']
+          R4J2: adds to the record on disk entry by entry (states, a second button of a role and the pause key kept)
   python3 game_capabilities.py show --project <game>          exit 0, 2 when a record is invalid
   python3 game_capabilities.py adapter --project <game> --adapter in.json --out out.json [--policy new|legacy]
           fills the runtime adapter from the record (resume_play.pause_button, ad_outcome.none), exit 2 = not_run
@@ -34,7 +36,14 @@ RECORD = Path('docs') / 'game_capabilities.json'
 ECONOMY_RECORD = Path('docs') / 'economy' / 'economy_capabilities.json'
 ECONOMY_KEYS = ('wallet', 'items', 'skins', 'energy')
 ROLE = re.compile(r'^[a-z][a-z0-9_]{1,30}$')     # same as runtime_regression adEntriesProblems
-FIELDS = {'schema', 'pause_button', 'ad_entries', 'no_ad_roles', 'evidence', 'written_by'}
+FIELDS = {'schema', 'pause_button', 'ad_entries', 'no_ad_roles', 'level_count', 'evidence', 'written_by'}
+# R4J2: the home gift box role is home_gift (economy window, page_registry, schema, layout_rules all say so);
+# runtime-regression.md used to say home_reward, so an old record or adapter with that word still counts as home_gift
+ROLE_ALIASES = {'home_reward': 'home_gift'}
+
+
+def canonical_role(role):
+    return ROLE_ALIASES.get(role, role)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -70,6 +79,9 @@ def validate(doc):
     if 'no_ad_roles' in doc and not (isinstance(nr, dict) and all(
             ROLE.match(k) and isinstance(v, str) and v.strip() for k, v in nr.items())):
         errs.append('no_ad_roles must map a role (double, revive) to why the game has no such button')
+    lc = doc.get('level_count')   # R4N1: the game's real number of levels (English games keep the original count)
+    if 'level_count' in doc and not ((isinstance(lc, int) and not isinstance(lc, bool) and lc >= 1) or _none(lc)):
+        errs.append('level_count must be the real number of levels (>= 1) or {"none": "why: endless / no levels"}')
     return errs
 
 
@@ -85,7 +97,7 @@ def _read(path):
 def load(project=None, record=None, economy=None):
     """{field: value or None, 'source': {field: file}, 'problems': [...]} from the two records.
     project: game folder; record / economy: explicit files (tests, a runner given --capabilities)."""
-    caps = {k: None for k in ECONOMY_KEYS + ('pause_button', 'ad_entries', 'no_ad_roles')}
+    caps = {k: None for k in ECONOMY_KEYS + ('pause_button', 'ad_entries', 'no_ad_roles', 'level_count')}
     caps.update({'source': {}, 'problems': [], 'project': str(project) if project else None})
     root = Path(project) if project else None
     eco_path = Path(economy) if economy else (root / ECONOMY_RECORD if root else None)
@@ -115,11 +127,20 @@ def load(project=None, record=None, economy=None):
             if bad:
                 caps['problems'].append('%s: %s' % (rec_path, '; '.join(bad)))
             else:
-                for k in ('pause_button', 'ad_entries', 'no_ad_roles'):
+                for k in ('pause_button', 'ad_entries', 'no_ad_roles', 'level_count'):
                     if k in doc:
-                        caps[k] = doc[k]
+                        caps[k] = _canonical(k, doc[k])
                         caps['source'][k] = str(rec_path)
     return caps
+
+
+def _canonical(field, value):
+    """R4J2: role aliases (home_reward) read as the one word (home_gift)."""
+    if field == 'ad_entries' and isinstance(value, list):
+        return [dict(e, role=canonical_role(e['role'])) if isinstance(e, dict) and 'role' in e else e for e in value]
+    if field == 'no_ad_roles' and isinstance(value, dict):
+        return {canonical_role(k): v for k, v in value.items()}
+    return value
 
 
 def _missing(field):
@@ -136,7 +157,7 @@ def ad_roles(caps):
     ae = caps.get('ad_entries')
     if ae is None:
         return None
-    return set() if _none(ae) else {e['role'] for e in ae}
+    return set() if _none(ae) else {canonical_role(e['role']) for e in ae}
 
 
 def verdict(caps, need):
@@ -166,8 +187,8 @@ def verdict(caps, need):
             return 'no', 'ad_entries none: %s (%s)' % (caps['ad_entries']['none'], src.get('ad_entries'))
         return 'yes', 'ad_entries %s (%s)' % (', '.join(sorted(roles)), src.get('ad_entries'))
     if need.startswith('ad_role:'):
-        role = need[8:]
-        none = caps.get('no_ad_roles') or {}
+        role = canonical_role(need[8:])
+        none = _canonical('no_ad_roles', caps.get('no_ad_roles') or {})
         if role in none:
             return 'no', 'no_ad_roles.%s: %s (%s)' % (role, none[role], src.get('no_ad_roles'))
         if role == 'double' and caps.get('wallet') is False and caps.get('items') is False:
@@ -182,14 +203,17 @@ def verdict(caps, need):
     raise KeyError(need)
 
 
-def make(pause_button=None, ad_entries=None, no_ad_roles=None, evidence=None, written_by='game_capabilities.py write'):
+def make(pause_button=None, ad_entries=None, no_ad_roles=None, evidence=None, written_by='game_capabilities.py write',
+         level_count=None):
     doc = {'schema': SCHEMA}
+    if level_count is not None:
+        doc['level_count'] = level_count
     if pause_button is not None:
         doc['pause_button'] = pause_button
     if ad_entries is not None:
-        doc['ad_entries'] = ad_entries
+        doc['ad_entries'] = _canonical('ad_entries', ad_entries)   # R4J2: home_reward written as home_gift
     if no_ad_roles:
-        doc['no_ad_roles'] = dict(no_ad_roles)
+        doc['no_ad_roles'] = _canonical('no_ad_roles', dict(no_ad_roles))
     doc['evidence'] = dict(evidence or {})
     doc['written_by'] = written_by
     errs = validate(doc)
@@ -248,19 +272,155 @@ def _kv(items, what):
     return out
 
 
+OWNED = ('pause_button', 'ad_entries', 'no_ad_roles', 'level_count')
+
+
+def _cli_entries(args):
+    """--ad-entry / --ad-entry-json / --no-ad-entries -> ad_entries (None = not given). R4J2: a list, not a dict, so
+    `--ad-entry spin=A --ad-entry spin=B` keeps both buttons (the old dict kept only B)."""
+    if args.no_ad_entries:
+        return {'none': args.no_ad_entries}
+    out = []
+    for s in args.ad_entry or []:
+        if '=' not in s:
+            raise SystemExit('--ad-entry must be key=value: %s' % s)
+        k, v = s.split('=', 1)
+        out.append({'role': k.strip(), 'button': v.strip()})
+    for s in args.ad_entry_json or []:
+        try:
+            e = json.loads(s)
+        except ValueError as exc:
+            raise ValueError('--ad-entry-json is not JSON: %s' % exc)
+        if not isinstance(e, dict):
+            raise ValueError('--ad-entry-json must be one {role, button, states} object')
+        out.append(e)
+    seen, uniq = set(), []
+    for e in out:
+        key = (e.get('role'), e.get('button'))
+        if key in seen:
+            uniq[[(x.get('role'), x.get('button')) for x in uniq].index(key)].update(e)
+        else:
+            seen.add(key)
+            uniq.append(e)
+    return uniq or None
+
+
+def _short(v):
+    return json.dumps(v, ensure_ascii=False)[:120]
+
+
+def merge(old, new):
+    """R4H 批 (Round4 #21): `write` and page_registry.py `make` both write docs/game_capabilities.json; the later one used
+    to replace the whole file, so a field only the first writer knew (no_ad_roles, a hand-given pause key, evidence) was
+    lost without a word. -> (merged record, notes). A field the new writer gives replaces the old one (noted when it
+    differs); a field it does not give is kept (noted); evidence is joined; written_by lists both writers."""
+    if not isinstance(old, dict):
+        return new, []
+    if validate(old):
+        return new, ['%s 原来的内容不合格（%s），整份换成 %s 写的' % (RECORD.as_posix(), '; '.join(validate(old)),
+                                                                new.get('written_by'))]
+    out, notes = dict(old), []
+    for k in OWNED:
+        if k == 'ad_entries' and isinstance(old.get(k), list) and isinstance(new.get(k), list):
+            out[k], more = union_entries(old[k], new[k], old.get('written_by') or '?', new.get('written_by'))
+            notes += more
+            continue
+        if k in new:
+            if k in old and old[k] != new[k]:
+                notes.append('%s：%s 先写的 %s 换成 %s 写的 %s' % (k, old.get('written_by') or '?', _short(old[k]),
+                                                              new.get('written_by'), _short(new[k])))
+            out[k] = new[k]
+        elif k in old:
+            notes.append('%s：保留 %s 先写的 %s（%s 这次没写这一项）' % (k, old.get('written_by') or '?', _short(old[k]),
+                                                                new.get('written_by')))
+    out['evidence'] = dict(old.get('evidence') or {}, **(new.get('evidence') or {}))
+    writers = [w for w in str(old.get('written_by') or '').split(' + ') if w]
+    if new.get('written_by') and new['written_by'] not in writers:
+        writers.append(new['written_by'])
+    out['written_by'] = ' + '.join(writers) or new.get('written_by', '')
+    out['schema'] = SCHEMA
+    return out, notes
+
+
+def union_entries(old, new, old_by='?', new_by=None):
+    """R4J2 (lead decision 11-05): ad_entries of two writers are joined by (role, button). The same (role, button)
+    from the later writer replaces that one entry; every other entry of either writer stays. Before, merge() replaced
+    the whole field, so the board entries ad-boost record_ad_entries.py wrote were gone after the next
+    page_registry.py make. -> (entries, notes)."""
+    old, new = _canonical('ad_entries', old), _canonical('ad_entries', new)
+    key = lambda e: (e.get('role'), e.get('button'))  # noqa: E731
+    fresh = {key(e): e for e in new}
+    out, notes = [], []
+    for e in old:
+        if key(e) in fresh:
+            if fresh[key(e)] != e:
+                notes.append('ad_entries：%s=%s 用 %s 后写的换掉 %s 先写的' % (e.get('role'), e.get('button'), new_by, old_by))
+            out.append(fresh.pop(key(e)))
+        else:
+            out.append(e)
+            if not any(key(x) == key(e) for x in new):
+                notes.append('ad_entries：保留 %s 先写的 %s=%s（%s 这次没写这一条）' % (old_by, e.get('role'),
+                                                                          e.get('button'), new_by))
+    seen = {key(e) for e in out}
+    for e in new:
+        if key(e) not in seen:
+            out.append(e)
+            seen.add(key(e))
+    return out, notes
+
+
+def merge_into(project, new):
+    """merge(the record on disk, new) -> (record to write, notes)."""
+    old, _err = _read(Path(project) / RECORD)
+    return merge(old, new)
+
+
+def merge_entries(old, new):
+    """R4J2 (`write --merge`): on top of merge() (ad_entries joined by (role, button) via union_entries, pause key
+    kept when not given, evidence joined): no_ad_roles of both writers joined, and a role that now has an entry leaves
+    no_ad_roles. -> (new with ad_entries / no_ad_roles combined, notes)."""
+    if not isinstance(old, dict) or validate(old):
+        return new, []
+    out, notes = dict(new), []
+    old_ae, new_ae = _canonical('ad_entries', old.get('ad_entries')), new.get('ad_entries')
+    if isinstance(new_ae, list) and isinstance(old_ae, list):
+        out['ad_entries'], _n = union_entries(old_ae, new_ae)
+        for e in new_ae:
+            if not any((x.get('role'), x.get('button')) == (e['role'], e['button']) for x in old_ae):
+                notes.append('ad_entries：加上 %s=%s，原来的 %d 个入口照留' % (e['role'], e['button'], len(old_ae)))
+    roles = ad_roles({'ad_entries': out.get('ad_entries', old_ae)}) or set()
+    nr = dict(_canonical('no_ad_roles', old.get('no_ad_roles') or {}), **(new.get('no_ad_roles') or {}))
+    for r in sorted(set(nr) & roles):
+        notes.append('no_ad_roles.%s（%s）去掉：现在有这个入口了' % (r, nr.pop(r)))
+    if nr:
+        out['no_ad_roles'] = nr
+    elif old.get('no_ad_roles') or new.get('no_ad_roles'):
+        out['no_ad_roles'] = {}
+    return out, notes
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
     w = sub.add_parser('write', help='write docs/game_capabilities.json')
     w.add_argument('--project', type=Path, required=True)
-    g = w.add_mutually_exclusive_group(required=True)
+    g = w.add_mutually_exclusive_group()      # R4J2: required unless --merge (checked below)
     g.add_argument('--pause-button', help='node path of the in-level pause / settings key')
     g.add_argument('--no-pause-button', metavar='WHY')
-    h = w.add_mutually_exclusive_group(required=True)
-    h.add_argument('--ad-entry', action='append', metavar='ROLE=PATH', help='double=Canvas/Result/btn_x2 (repeat)')
+    h = w.add_mutually_exclusive_group()
+    h.add_argument('--ad-entry', action='append', metavar='ROLE=PATH', help='double=Canvas/Result/btn_x2 (repeat; '
+                   'the same role twice = two buttons)')
     h.add_argument('--no-ad-entries', metavar='WHY')
+    w.add_argument('--ad-entry-json', action='append', metavar='JSON', help='R4J2: one entry with states / id, '
+                   '{"role": "spin", "button": "Canvas/Home/btn_spin", "states": [...]} (repeat)')
     w.add_argument('--no-ad-role', action='append', metavar='ROLE=WHY')
+    lv = w.add_mutually_exclusive_group()      # R4N1: real level count, read by make_skin_table / make_economy_config
+    lv.add_argument('--level-count', type=int, metavar='N', help='the real number of levels (English: the original count)')
+    lv.add_argument('--no-levels', metavar='WHY', help='endless / no levels')
     w.add_argument('--evidence', action='append', metavar='KEY=FILE:LINE')
+    w.add_argument('--merge', action='store_true', help='R4J2: read the record on disk and add to it entry by entry '
+                   '(old entries keep their states, a second button of a role is kept, the pause key may be left out '
+                   'and stays as recorded); without it a given field replaces the recorded one')
     s = sub.add_parser('show')
     s.add_argument('--project', type=Path, required=True)
     a = sub.add_parser('adapter', help='fill a runtime adapter from the record')
@@ -273,18 +433,38 @@ def main(argv=None):
         print('not_run: not a directory: %s' % args.project, file=sys.stderr)
         return 2
     if args.cmd == 'write':
+        if args.no_ad_entries and args.ad_entry_json:
+            ap.error('--no-ad-entries and --ad-entry-json do not go together')
+        if not args.merge and not (args.pause_button or args.no_pause_button):
+            ap.error('one of --pause-button / --no-pause-button is required (or --merge to keep the recorded one)')
+        if not args.merge and not (args.ad_entry or args.no_ad_entries or args.ad_entry_json):
+            ap.error('one of --ad-entry / --ad-entry-json / --no-ad-entries is required (or --merge)')
         try:
-            entries = ({'none': args.no_ad_entries} if args.no_ad_entries else
-                       [{'role': k, 'button': v} for k, v in _kv(args.ad_entry, '--ad-entry').items()])
-            doc = make({'none': args.no_pause_button} if args.no_pause_button else args.pause_button, entries,
-                       _kv(args.no_ad_role, '--no-ad-role'), _kv(args.evidence, '--evidence'))
+            entries = _cli_entries(args)
+            pause = ({'none': args.no_pause_button} if args.no_pause_button else args.pause_button)
+            levels = {'none': args.no_levels} if args.no_levels else args.level_count
+            doc = make(pause, entries, _kv(args.no_ad_role, '--no-ad-role'), _kv(args.evidence, '--evidence'),
+                       level_count=levels)
         except ValueError as exc:
             print('refused: %s' % exc, file=sys.stderr)
             return 1
         path = args.project / RECORD
+        pre = []
+        if args.merge:
+            old, err = _read(path)
+            if err or (old is not None and validate(old)):
+                print('refused: --merge needs a readable, valid %s (%s)' % (path, err or '; '.join(validate(old))),
+                      file=sys.stderr)
+                return 1
+            doc, pre = merge_entries(old, doc)
+        doc, notes = merge_into(args.project, doc)      # R4H: merge with what page_registry.py make wrote
+        if args.merge:   # merge_entries already said what happened to these two fields
+            notes = pre + [n for n in notes if not n.startswith(('ad_entries：', 'no_ad_roles：'))]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        print(json.dumps({'out': str(path)}, ensure_ascii=False))
+        for n in notes:
+            print('合并: ' + n, file=sys.stderr)
+        print(json.dumps({'out': str(path), 'merged': notes}, ensure_ascii=False))
         return 0
     caps = load(args.project)
     if args.cmd == 'show':

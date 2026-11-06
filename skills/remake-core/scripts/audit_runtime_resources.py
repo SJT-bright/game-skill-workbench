@@ -26,6 +26,46 @@ OFFICIAL_ENGINE_MANIFEST = HERE / 'official_engine_sources.json'
 KIT_JSLIST_CALL = re.compile(r"cc\.assetManager\.loadScript\(\(settings\.jsList \|\| \[\]\)\.map\(function \(x\) \{\s*"
                              r"return 'src/' \+ x;\s*\}\)")
 
+# R4K1: a kit module whose own source names a Cocos loader (ResLoader, boot-guard) is never a "kit instance" for
+# the inventory; every other module KIT_MANIFEST / KIT_PARTS_3X lists (SaveStore, RewardedService, ...) is.
+KIT_LOADER_SOURCE = re.compile(rb'cc\.(?:resources|loader|assetManager)\b|\bassetManager\b|\bloadBundle\b|\bresources\s*\.')
+
+
+def kit_loader_free_modules():
+    """Names X of the platform-kit modules (2.4 require('X'), 3.x globalThis.TikTokKit.X) whose own source makes no
+    Cocos loader call, read from KIT_MANIFEST.json and its includes on every call. Their bodies stay inventoried."""
+    base = Path(KIT_MANIFEST).parent
+    try:
+        manifest = json.loads(Path(KIT_MANIFEST).read_bytes())
+    except (OSError, ValueError):
+        return []
+    entries = {}
+    for rel in manifest.get('files', {}):
+        path = PurePosixPath(rel)
+        if path.suffix == '.js' and path.parts[0] in ('assets', 'parts'):
+            entries.setdefault(path.stem, [])
+            entries[path.stem].append(base / rel)
+    for include in manifest.get('includes', []):
+        try:
+            parts = json.loads((base / include).read_bytes()).get('parts', {})
+        except (OSError, ValueError):
+            continue
+        for row in parts.values():
+            name = row.get('global') or ''
+            if name.startswith('globalThis.TikTokKit.') and isinstance(row.get('file'), dict) and row['file'].get('src'):
+                entries.setdefault(name.rsplit('.', 1)[1], [])
+                entries[name.rsplit('.', 1)[1]].append(base / row['file']['src'])
+    names = []
+    for name, paths in sorted(entries.items()):
+        try:
+            sources = [p.read_bytes() for p in paths]
+        except OSError:
+            continue
+        if not any(KIT_LOADER_SOURCE.search(s) for s in sources):
+            names.append(name)
+    return names
+
+
 def verified_official_engine_sources(sources):
     """Only reviewed exact official engine bytes are outside business inference.
 
@@ -360,8 +400,12 @@ def _validate_current_files(report, files, *, systemjs):
         if settings.get('assets', {}).get('server') or settings.get('assets', {}).get('remoteBundles'):
             raise ValueError('remote SystemJS resource domains need their own finite adapter')
         for script in settings.get('scripting', {}).get('scriptPackages', []):
-            if not script.startswith('project://') or script[len('project://'):] not in files:
-                raise ValueError('nonlocal/missing SystemJS script package: ' + script)
+            # R4K2: 3.6/3.7 exports write '../src/chunks/bundle.js'; SystemJS resolves it against
+            # the warmup base 'no-schema:/', i.e. the package root ('..' stops at the root).
+            local = script[len('project://'):] if isinstance(script, str) and script.startswith('project://') else (
+                posixpath.normpath('/' + script).lstrip('/') if isinstance(script, str) and script.startswith(('./', '../')) else None)
+            if not local or local not in files or (not script.startswith('project://') and not files[local]):
+                raise ValueError('nonlocal/missing SystemJS script package: ' + str(script))
     for resolution in report.get('reviewed_resolutions', []):
         if resolution.get('not_executed') or resolution.get('delegated_sdk'):
             continue
@@ -390,7 +434,8 @@ def discover(files):
     verified_engines, official_engine_manifest_bytes = verified_official_engine_sources(sources)
     payload = {'files': {n: b.decode('utf-8-sig') for n, b in sources.items() if n not in verified_engines}, 'json_domains': {},
                'verified_engine_sources': verified_engines,
-               'reviewed_data_sha256': _profile_data_hashes(files, source_hashes)}
+               'reviewed_data_sha256': _profile_data_hashes(files, source_hashes),
+               'kit_modules': kit_loader_free_modules()}
     system_profile_path = resource_profile_file('systemjs_finite_profiles.json')
     system_profile_bytes = system_profile_path.read_bytes() if system_profile_path.is_file() else b''
     if systemjs and system_profile_bytes:

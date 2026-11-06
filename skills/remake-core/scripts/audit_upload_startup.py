@@ -284,8 +284,10 @@ def audit_files(files):
     touch_coordinates = None
     adapter = files.get('adapter-min.js', b'').decode('utf-8', errors='replace')
     # Release builds ship cocos/cocos2d-js-min.js; debug builds (MergeShot2048 v82) ship cocos/cocos2d-js.js.
-    engine_name = next((n for n in ('cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js') if n in files
-                        and re.search(rb'getTouchesByEvent\s*:\s*function\b', files[n])), 'cocos/cocos2d-js-min.js')
+    engine_candidates = [n for n in files if re.search(r'(?:^|/)cocos/cocos2d-js(?:-min)?\.js$', n)
+                         and re.search(rb'getTouchesByEvent\s*:\s*function\b', files[n])]
+    engine_name = next((n for n in ('cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js') if n in engine_candidates),
+                       engine_candidates[0] if len(engine_candidates) == 1 else 'cocos/cocos2d-js-min.js')
     engine = files.get(engine_name, b'').decode('utf-8', errors='replace')
     touch_converter = re.search(r'getTouchesByEvent\s*:\s*function\b', engine) is not None
     # TikTok gives touches only screenX/screenY; Cocos 2.4 reads clientX/clientY, so every legacy-converter build

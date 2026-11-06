@@ -92,7 +92,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 美术自检
 
-`python scripts/art_check.py --project <工程> --dumps docs/test/art-round-N`：每轮美术做完立刻跑（ART-06），把画面相关的检查一次跑完：页面内容与背景（`audit_page_richness.py`，含空白卡片、占位方块、深色粗字、字超出按钮、大片空白、按钮≤40%、单调弹窗、首页大标题和封面、选关≥6关）、截图颜色（`audit_dark_area.py`）、布局（`extract_ui_layout.py`＋`audit_ui_coverage.py`）、文字放得下（`audit_copy_quality.py --require-runtime`）、开发用字和占位图（`audit_dev_text.py --final`）、清晰度（ART-04：dump 里运行时的图≥节点 2 倍、背景≥1.5 倍的 `low_res`＋`audit_image_clarity.py`，两个板块第一轮起就拦；英化未改的原图写 `docs/art/clarity-exempt.json`），首页礼盒 10 帧动画（`docs/modules.json` 的 `gift_box.frames_dir`），再生成总览图和看图清单。美术只在这里查，最终总检测不再查美术（用户 2026-10-24，[检查分阶段](check-stages.md)）。结果在工程外 `<工程名>-artcheck/<时间>/art-check.md`。缺页面、缺截图都是"需处理"。见[美术自检](../../remake-art/references/page-richness.md#五美术自检每轮美术做完立刻做两个板块art-06page-01)。
+`python scripts/art_check.py --project <工程> --dumps docs/test/art-round-N`：每轮美术做完立刻跑（ART-06），把画面相关的检查一次跑完：页面内容与背景（`audit_page_richness.py`，含空白卡片、占位方块、深色粗字、字超出按钮、大片空白、按钮≤40%、单调弹窗、首页上半屏大图和封面、选关≥6关）、截图颜色（`audit_dark_area.py`）、布局（`extract_ui_layout.py`＋`audit_ui_coverage.py`）、文字放得下（`audit_copy_quality.py --require-runtime`）、开发用字和占位图（`audit_dev_text.py --final`）、清晰度（ART-04：dump 里运行时的图≥节点 2 倍、背景≥1.5 倍的 `low_res`＋`audit_image_clarity.py`，两个板块第一轮起就拦；英化未改的原图写 `docs/art/clarity-exempt.json`），首页礼盒 10 帧动画（`docs/modules.json` 的 `gift_box.frames_dir`），再生成总览图和看图清单。美术只在这里查，最终总检测不再查美术（用户 2026-10-24，[检查分阶段](check-stages.md)）。结果在工程外 `<工程名>-artcheck/<时间>/art-check.md`。缺页面、缺截图都是"需处理"。见[美术自检](../../remake-art/references/page-richness.md#五美术自检每轮美术做完立刻做两个板块art-06page-01)。
 
 ## 动态画面录屏分析
 
@@ -114,6 +114,9 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 - `make_res_keys.py` 读到 first-screen.json 时，资源表多出 `ResKeys.HOME`（先预取）和 `ResKeys.DEFERRED`（首页之后用 ResLoader 加载）。
 - 资源和声音的加载调用只在生成的 `ResKeys` 表里（每条一个写死分包、路径、类型的 `request`），出包资源检查就从这张表列全路径。游戏代码必须写 `Res.request(ResKeys.x)`、`audio.register({click: {file: 'audio/click'}})`（文件要在表里，不在就不加载），别手写 `cc.resources.load(...)`、别写 `Res.load(...)`（检查把任何 `.load(` 当成列不出路径的加载，报在游戏代码上；`--strict` 也拦）。加了图或声音就重跑 `make_res_keys.py`。
 - `make_level_plan.py --project <工程> [--scene 名字]` 同时写构建场景白名单 `docs/startup/build-scenes.json`，Cocos 2.4 还把其余场景写进 `settings/builder.json` 的 `excludeScenes`，没用的场景不进构建。
+- Cocos 3.x 没有 `excludeScenes`，命令行不给场景表就构建全部场景：`make_level_plan.py --project` 在 3.x 上写 `docs/startup/build-config-3x.json`（Creator 命令行 `configPath` 格式，只列要的场景和 `startScene`；源码 ZIP 不带 `profiles/`，所以放 docs 里）。3.x 出包命令加 `configPath=docs/startup/build-config-3x.json`，别手写场景表。
+- 字体（R4F2）：首页开局下载里的 TTF/OTF 超过 200 KB、又不是 `subset_fonts.py` 做的子集，新游戏报 `font_not_subset`，英化只提示；`first-screen.json` 的 `fonts` 列出每个字体的字节。加字体后马上跑 `python3 -B scripts/subset_fonts.py --project <工程>`：字符从游戏自己的文字（场景/预制里的 Label、脚本字符串、assets 下 JSON、docs/english）收，外加可打印 ASCII，原文件备份到 `.tiktok-kit/font-backup/`，记录写 `docs/startup/font-subset.json`。运行时拼出来的字（玩家名、特殊符号）用 `--extra-chars` 补。本机没 fontTools 时这一步判「未执行」，不算通过：先 `python3 -m pip install fonttools`。
+- `tiktok_finalize.py source` 发现没有 `docs/startup/first-screen.json` 时先跑一遍 first_screen 生成它（R4F2），问题照常打印。
 - 估算借用 `audit_package_estimate.py` 的算法（引擎余量、场景按 0.15 计），只算账本，不构建；最后的体积关还是出包时的 Native ZIP 检查。
 
 ## 截图总览图（给 GPT 一次看完）

@@ -35,7 +35,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / 'cocos-game-check' / 'package-check' / 'scripts'))
-from check_guard import NodeIndex, zero_items  # P20 shared guard (identity lookups, 0 items is not a pass)
+from check_guard import NodeIndex, engine_of, zero_items  # P20 shared guard (identity lookups, 0 items is not a pass)
 WORDS = HERE.parent / 'assets' / 'english-words.txt.gz'
 TRADEMARKS = HERE.parent / 'assets' / 'trademark-words.json'   # v7.8 E8: car and character names (Ferrari 458 ...)
 SKIP_DIRS = {'library', 'temp', 'local', 'build', 'node_modules', '.git', 'profiles'}
@@ -468,6 +468,7 @@ def main():
               'note': 'Automatic checks only. Natural wording, tone and meaning are judged by GPT from the review sheet (COPY-01).'}
     if binding is not None:
         report['binding'] = binding
+    report['engine'] = engine_of(a.project)      # R4I1 (Round4 #4): every report names the engine it read
     # P20: no runtime text and no source text means nothing was checked; that is "not_run", never a pass
     zero_items(report, what='没有运行时文字，也没有源码里的文字', need='chrome_touch.py dump_ui 读每个页面，或工程 assets 里的文字')
     if a.out:
@@ -476,7 +477,7 @@ def main():
     if a.sheet:
         a.sheet.parent.mkdir(parents=True, exist_ok=True)
         sheet(dict(r, blocking=blocking), a.sheet)
-    print(json.dumps({'checked': r['unique'], 'runtime_strings': r['runtime'], 'blocking': len(blocking), 'review': len(r['review']),
+    print(json.dumps({'engine': report['engine'], 'checked': r['unique'], 'runtime_strings': r['runtime'], 'blocking': len(blocking), 'review': len(r['review']),
                       'found': [{k: x[k] for k in ('where', 'text', 'message')} for x in blocking[:8]],
                       'look_at': [{k: x[k] for k in ('where', 'text', 'message')} for x in r['review'][:6]],
                       **({'status': 'not_run', 'reason': report['reason']} if report.get('status') == 'not_run' else {})},

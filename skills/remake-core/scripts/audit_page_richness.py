@@ -13,7 +13,7 @@ Every dump, gameplay included (from its screenshot, same measure as audit_dark_a
                   (a painted city / plaza full of small things) that swallows the title and the buttons. Measured on the
                   screenshot outside every UI node (188 px wide, luminance steps > 20): more than 30% of the background
                   pixels are edges. Backgrounds are calm - big soft shapes, gradients, a few clouds or blurred scenery -
-                  so the title logo and the buttons stand out (masked popups are skipped)
+                  so the top picture and the buttons stand out (masked popups are skipped)
 Every non-gameplay dump:
   monotonous      fewer than 5 visible things, or they cover less than 25% of the screen
   plain_backdrop  no full-screen picture and no game scene behind (a flat colour / tinted default sprite)
@@ -45,8 +45,9 @@ LEVELS/SKINS/Add to Home/Revisit tiles, typed numbers 0/9 and 0):
   font_value_label  a level/score/currency value typed in one font label (Label or RichText) with its word: "LEVEL 1",
                   "Coins 120", "+10 PEARLS", "LEVEL 1 • +10 PEARLS" (user 2026-10-30): word = picture text, value = bitmap
                   digits, currency = icon. runtime-text.json does not waive it; sentences and fused names are not judged
-  typed_title     on home, the game title or subtitle typed with a font (a label in the top part >= 40% wide or >= 36 px), or
-                  picture text laid over the title plate: the title is ONE stylized logo picture generated in the game style
+  typed_title     on home, words typed with a font in the top part (a label >= 40% wide or >= 36 px), or picture text laid
+                  over the top picture: the game shows no game name (Saul 2026-11-05); the top half holds ONE big picture
+                  of the hero / pattern / scene without the name; page titles and button words stay generated word pictures
   dark_bold_text  PERMANENT BAN (user 2026-10-23, both boards, every page, gameplay HUD included): dark bold / heavy text
                   of ANY hue (teal, slate, navy, brown, grey, black, dark red ...): a label whose colour is darker than L* 50
                   and is bold, outlined, shadowed or >= 16 px on the phone (examples: dark-teal "COINS 785 / LEVEL 1" over
@@ -105,11 +106,12 @@ By purpose (dump_ui "purpose"):
   home / result              at most 2 buttons with text on the plate (others are icons)
   map (level select)        >= 6 level buttons on one screen, each with its number
   checkin (7-day reward)    7 day cards with day numbers, the day-7 card >= 2x the size of the others, a Claim button
-  home                      a BIG title picture in the top half (>= 55% of the screen width), cover art (characters/
+  home                      a BIG picture in the top half (>= 55% of the screen width: hero / pattern / scene, no game
+                            name, Saul 2026-11-05), cover art (characters/
                             scenery pictures that are not buttons, >= 15% of the screen), a PLAY button with a plate,
                             >= 2 icon buttons
   function pages            home, result, pause, settings, revive, trial: all buttons together <= 40% of the screen
-                            (titles, logo, cover art and panels are not buttons; user 2026-10-21, 30% -> 40% on 2026-10-23)
+                            (the top picture, cover art and panels are not buttons; user 2026-10-21, 30% -> 40% on 2026-10-23)
   popups (reward, add-to-home, revisit, pause, revive, trial, offer ... everything but settings/league/checkin/shop/
   skins/map, which have their own content rules)
     plain_popup             the panel holds only text and buttons: it needs a generated illustration (gift/chest,
@@ -133,6 +135,7 @@ import colorsys
 from collections import Counter
 import fnmatch
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -140,6 +143,35 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import audit_dark_area  # noqa: E402  same pixel measure as the screenshot audit
 from audit_dev_text import PAT as DEV_TEXT  # noqa: E402  "LOCAL PREVIEW", "PROTOTYPE" ... seen by the player
+
+_GLOB_MATCHERS = {}
+
+
+def glob_any(name, patterns, lower=False):
+    """Same answer as any(fnmatch.fnmatch(name, p) for p in patterns) (lower: both sides lowercased first, as the
+    callers did), with every pattern compiled once. fnmatch keeps only 256 compiled patterns, so a 750-frame
+    docs/art/clarity-exempt.json was compiled again for every sprite: 12.7 s of 27.7 s on 蛋壳特工队 (美工skill
+    2026-11-05). os.path.normcase on both sides, as fnmatch.fnmatch does (Windows: case and slashes). A broken
+    pattern raises only where fnmatch would have reached it."""
+    key = (tuple(patterns), lower)
+    found = _GLOB_MATCHERS.get(key)
+    if found is None:
+        found = _GLOB_MATCHERS[key] = []
+        for p in key[0]:
+            try:
+                found.append(re.compile(fnmatch.translate(os.path.normcase(p.lower() if lower else p))).match)
+            except Exception as exc:       # raised only where fnmatch would have reached this pattern
+                found.append(exc)
+    if not found:
+        return False
+    name = os.path.normcase(name.lower() if lower else name)
+    for match in found:
+        if isinstance(match, Exception):
+            raise match
+        if match(name):
+            return True
+    return False
+
 
 PLAIN_FRAMES = re.compile(r'^(default_sprite_splash|default_sprite|default_panel|default_btn_\w+|singlecolor|single_color|'
                           r'white|blank|pure|solid|rect|square|color|colour|1x1|px)(\b|_|$)', re.I)
@@ -466,10 +498,38 @@ def surface_background(img, surface_rect):
     y1 = int(min(1, surface_rect[1] + surface_rect[3]) * H)
     if x1 - x0 < 8 or y1 - y0 < 8:
         return None
-    pixels = list(img.crop((x0, y0, x1, y1)).getdata())
-    bins = Counter(tuple((v // 8) * 8 + 4 for v in p) for p in pixels)
-    bg, count = max(bins.items(), key=lambda item: item[1])
-    return bg if count >= max(8, 0.08 * len(pixels)) else None
+    crop = img.crop((x0, y0, x1, y1))
+    found = _dominant_bin(crop)
+    if found is None:          # no numpy: the same count pixel by pixel
+        pixels = list(crop.getdata())
+        bins = Counter(tuple((v // 8) * 8 + 4 for v in p) for p in pixels)
+        bg, count = max(bins.items(), key=lambda item: item[1])
+        total = len(pixels)
+    else:
+        bg, count, total = found
+    return bg if count >= max(8, 0.08 * total) else None
+
+
+def _dominant_bin(crop):
+    """(bin, count, pixels) of the most common 8-step colour bin of crop; a tie goes to the bin met first in reading
+    order, exactly what Counter + max returned. That loop took about 6 s of page_richness on 蛋壳特工队 (美工skill
+    2026-11-05). None without numpy, or for a one-band picture (the old loop is used then)."""
+    try:
+        import numpy as np
+    except ImportError:
+        return None
+    a = np.asarray(crop)
+    if a.ndim != 3 or not 1 <= a.shape[2] <= 4:
+        return None
+    q = (a.astype(np.uint16) // 8 * 8 + 4).reshape(-1, a.shape[2]).astype(np.uint64)
+    packed = np.zeros(len(q), np.uint64)
+    for k in range(q.shape[1]):
+        packed = (packed << np.uint64(8)) | q[:, k]
+    _, first, counts = np.unique(packed, return_index=True, return_counts=True)
+    best = int(counts.max())
+    v = int(packed[int(first[counts == best].min())])
+    bands = q.shape[1]
+    return tuple((v >> (8 * (bands - 1 - k))) & 255 for k in range(bands)), best, len(q)
 
 
 def picture_text_dark(img, r, surface_rect=None):
@@ -716,7 +776,7 @@ def baked(n):
     """Words baked into a one-piece button picture (frame btn_<words>, user 2026-10-23): btn_play -> "play"."""
     frame = str(n['comps'].get('sprite', {}).get('frame', '')) if 'sprite' in n['comps'] else ''
     if frame.lower().startswith('btn_'):return frame[4:].replace('_', ' ').strip()
-    if CAPTION_FRAMES and any(fnmatch.fnmatch(frame.lower(),pattern.lower()) for pattern in CAPTION_FRAMES):return frame.replace('_',' ').strip()
+    if CAPTION_FRAMES and glob_any(frame, CAPTION_FRAMES, lower=True):return frame.replace('_',' ').strip()
     return ''
 
 
@@ -882,7 +942,7 @@ def low_res_problems(nodes, full):
         if (n.get('name') == 'bgshade' and (n.get('path', '').endswith('/MenuLayer/bgshade') or n.get('path', '').endswith('/SettingLayer/bgshade')) and
                 frame.lower() == 'default_sprite_splash' and float(n.get('opacity', 1) or 0) <= 0.30):
             continue
-        if any(fnmatch.fnmatch(frame.lower(), g.lower()) for g in CLARITY_EXEMPT):
+        if glob_any(frame, CLARITY_EXEMPT, lower=True):
             continue
         bg = n in full or a >= MAX_STRETCH_AREA or bool(BACKGROUND_NAME.search(n['name'] + ' ' + frame))
         if not bg and STRETCH_OK.search(n['name'] + ' ' + frame):
@@ -2038,7 +2098,7 @@ DIGIT_HEIGHT = 1.0           # 字高 = the on-screen font size (Label fontSize 
 def hero_of(nodes, buttons):
     """(node, how) of the home hero: 1) docs/art/hero.json "home" globs (node path or sprite frame), 2) a picture whose
     node or frame is named hero / player / mascot / character / role (主角), the biggest one, 3) the biggest
-    character-like picture: not a button or in one, not the title logo, not a backdrop / panel / frame / plate / tiled.
+    character-like picture: not a button or in one, not the top picture, not a backdrop / panel / frame / plate / tiled.
     (None, reason) when none qualifies: reported as home_hero_unknown, never passed."""
     pics = [n for n in nodes if 'sprite' in n['comps'] and 0 < area(n.get('unclipped_rect') or n['rect']) < 0.85
             and not any(node_under(n, b) for b in buttons) and 'button' not in n['comps']
@@ -2449,7 +2509,7 @@ def busy_background(d, content):
     if share > MAX_BUSY:
         return ['busy_background: the background is too detailed (%.0f%% of it is edges, max %.0f%%; user 2026-10-23, the Metro '
                 'Switch home: a painted plaza full of small things, the dark title and plain buttons disappear in it): draw a calm '
-                'background - big soft shapes, gradients, a few clouds or blurred scenery - so the title logo and the buttons '
+                'background - big soft shapes, gradients, a few clouds or blurred scenery - so the top picture and the buttons '
                 'stand out' % (share * 100, MAX_BUSY * 100)], round(share, 3)
     return [], round(share, 3)
 
@@ -2736,13 +2796,13 @@ def check(d, image_module=None, project=None, binding=None):
     button_share = coverage([b['rect'] for b in buttons])
     problems += video_button_problems(purpose, content, nodes)
     if purpose in FUNCTION_PAGES and button_share > MAX_BUTTON_SHARE:
-        problems.append('buttons_too_big: function buttons cover %.0f%% of the screen (max 40%%; the title and cover art do not '
-                        'count): make the buttons smaller and give the space to the title and cover art' % (button_share * 100))
+        problems.append('buttons_too_big: function buttons cover %.0f%% of the screen (max 40%%; the top picture and cover art do '
+                        'not count): make the buttons smaller and give the space to the top picture and cover art' % (button_share * 100))
     if purpose == 'home' and 'home_original_composition' not in MAINTENANCE_RULES:
         in_button = lambda n: any(node_under(n, b) for b in buttons)
         logo = [n for n in pictures if not in_button(n) and n['rect'][1] + n['rect'][3] / 2 < 0.5 and n['rect'][2] >= MIN_TITLE_WIDTH
                 and area(n['rect']) >= 0.04 and n not in panels]
-        logo = sorted(logo, key=lambda n: n['rect'][1])[:1]          # the highest one is the title; the rest is cover art
+        logo = sorted(logo, key=lambda n: n['rect'][1])[:1]          # the highest one is the top picture; the rest is cover art
         cover = [n['rect'] for n in pictures if not in_button(n) and n not in logo and n not in panels and area(n['rect']) >= 0.01]
         cover_share = coverage(cover)
         plated = [b for b in buttons if any('sprite' in n['comps'] and area(n['rect']) >= 0.3 * area(b['rect'])
@@ -2757,15 +2817,18 @@ def check(d, image_module=None, project=None, binding=None):
             h_design = (lab or {}).get('height') or 0
             css = ((lab or {}).get('fontSize') or 0) * (r[3] * ch_ / h_design) if h_design else 0
             if lab and (r[2] >= 0.4 or css >= 36):
-                problems.append('typed_title: "%s" (%s) is a title/subtitle typed with a font: the game title is ONE stylized logo '
-                                'picture generated in the game style (a subtitle is part of that picture), never typed (user 2026-10-23)'
+                problems.append('typed_title: "%s" (%s) is a title/subtitle typed with a font at the top of home: the game shows no '
+                                'game name (Saul 2026-11-05); put one big picture of the hero / pattern / scene there instead, and '
+                                'make any page word a generated word picture, never typed (user 2026-10-23)'
                                 % (text(n)[:30], n['path']))
             elif not lab and logo and center_in(r, logo[0]['rect']) and n is not logo[0]:
-                problems.append('typed_title: "%s" (%s) is picture text laid over the title plate %s: generate the title as one '
-                                'logo picture with its words, not a plate plus letters (user 2026-10-23)'
+                problems.append('typed_title: "%s" (%s) is picture text laid over the top picture %s: the top of home shows no '
+                                'game name (Saul 2026-11-05); fill it with the hero / pattern / scene art, and a page word is one '
+                                'generated picture, not a plate plus letters (user 2026-10-23)'
                                 % (text(n)[:30], n['path'], logo[0]['path']))
         need = []
-        if not logo: need.append('a big title picture in the top half (>= 55% of the screen width)')
+        if not logo: need.append('one big picture in the top half (>= 55% of the screen width): hero / pattern / scene, '
+                                 'without the game name (Saul 2026-11-05)')
         if cover_share < MIN_COVER_ART: need.append('cover art: characters/scenery pictures (not buttons) >= 15%% of the screen, found %.0f%%'
                                                     % (cover_share * 100))
         if not any(area(b['rect']) > 0.03 for b in plated): need.append('a big PLAY button with a plate')

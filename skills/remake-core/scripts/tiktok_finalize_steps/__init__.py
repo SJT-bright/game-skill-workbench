@@ -19,10 +19,20 @@ KIT_DIR = HERE.parent.parent / 'assets' / 'platform-kit'
 MANIFEST = KIT_DIR / 'KIT_MANIFEST.json'
 
 SOURCE_STEPS = ('images', 'kit_sources', 'physics_clock',   # physics_clock: v7.8 P16 (new 2.4 physics games)
-                'build_templates', 'settings', 'orientation',   # orientation: v7.8 B31
+                'build_templates',
+                'startup',           # 生成时预防 R4B: host-shim / boot-guard lines in a 3.x build-templates game.js
+                'settings', 'orientation',   # orientation: v7.8 B31
                 'art_static',        # art_static: v7.8 U7（补）squashed sprites, invisible colliders (read only, after images)
                 'capsule_auto', 'bg_cover')   # 生成时预防 I3: P06-4 CapsuleAuto by default (new 2.4), P07-3 ScreenFit.cover on page backgrounds
-NATIVE_STEPS = ('adapter', 'touch', 'storage', 'startup', 'login', 'appid', 'png', 'structure')
+NATIVE_STEPS = ('adapter', 'touch', 'storage', 'startup', 'rewarded', 'login', 'appid', 'png', 'structure')  # rewarded: R4F1
+SOURCE_STEPS += ('frame_scan', 'ui_kit_scan')   # 生成时预防 R4F3: #43 frame_scan also refuses at source (K5); #36 + 补查4 hand-built popups, mask values, dev text
+SOURCE_STEPS += ('home_entry_scan',)   # 生成时预防 R4L1 (R4G1 leftover): 3.x home entries given coordinates by hand while HomeEntrySlots is installed (warning)
+SOURCE_STEPS += ('save_read_scan', 'plugin3x_scan')   # 生成时预防 R4N6: `x || default` save reads, split ad receipts, level cap vs level files (warning); 3.x kit plugin imported by path / plugin .meta flags
+SOURCE_STEPS += ('game_name_scan',)   # 生成时预防 R4O1 (Saul 11-05): the game's own name as text in scenes / copy table (new after 11-05 block, others warn, legacy skip)
+SOURCE_STEPS += ('skin_preview_scan',)   # 生成时预防 R4P4 (R4O2 leftover): own previewFrame per skin, no tinted preview node; only with a skin table (new block, English warn, legacy skip)
+SOURCE_STEPS += ('slot_overlap_scan',)   # 生成时预防 R4Q1 (补查3 group 1): whole button picture + old label still drawn, Widget + parent Layout on one node (English / new warn, legacy skip)
+SOURCE_STEPS += ('reward_order_scan',)   # 生成时预防 R4Q4 (补查3 第 4 组): rewards saved in animation callbacks, memory changed before a save with no rollback, x2 rounded two ways, run totals paid twice (English / new warn, legacy report)
+SOURCE_STEPS += ('debug_leftover_scan',)   # 生成时预防 R4Q5 (补查3 第 5 组): code that turns FPS stats on, active debug/cheat/test nodes, other-studio splash in the launch scene (new block, others warn, legacy skip)
 POLICIES = ('new', 'legacy')
 MARK = re.compile(r'//\s*tiktok-kit:([\w.-]+):([\w.-]+)')
 
@@ -300,7 +310,11 @@ class Ctx:
 # design's part names, so these aliases are accepted too. A wiring entry may carry "engine" (2 | 3).
 STEP_ALIASES = {'touch': ('touch24', 'touch3x'), 'storage': ('storage', 'storage24', 'storage3x'),
                 'startup': ('startup24',), 'login': ('login', 'login24', 'login3x'),
-                'webp_probe': ('webp_probe24', 'webp_probe3x')}
+                'webp_probe': ('webp_probe24', 'webp_probe3x'),
+                # 生成时预防 R4B: installed by the startup step (startup.py install_early), first lines of game.js
+                'hostshim': ('hostshim24', 'hostshim3x'), 'boot': ('boot3x',),
+                # 生成时预防 R4F1: rewarded-guard for a 2.4 package that keeps its own main.js (rewarded.py)
+                'rewarded': ('rewarded24',)}
 ENGINE_JS = re.compile(r'(^|/)(cocos2d-js(-min)?(\.[0-9a-f]{5,})?|physics(-min)?|cocos-js/.*|'
                        r'src/(system|polyfills)\.bundle)\.js$', re.I)
 ADAPTER_JS = re.compile(r'(^|/)(adapter(-min)?|web-adapter|engine-adapter|libs/.*adapter.*|jsb-adapter/.*)\.js$',

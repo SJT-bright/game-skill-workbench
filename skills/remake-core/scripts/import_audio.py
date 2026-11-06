@@ -17,10 +17,12 @@ usage/ record is written in the same run. Per file:
      audit_audio_sources.licence); NC / ND / SA / attribution / synthesized are refused.
   2. reuse, from <library>/usage/*.json, the gate's way (same file path or same audio_id, one game counted once):
      1 other game = warning printed; 2 or more = refused (the gate fails a new remake game on it) unless --allow-reuse.
-  3. a fail sound (name with fail / lose / gameover / timeout ..., the gate's list, or --fail) and a result / win sound
-     (win / victory / complete / clear / success / result ..., or --result) longer than 2.0 s is cut to 2.0 s with a
-     0.35 s fade-out (package_gates/audio.py FAIL_TARGET_SECONDS / FAIL_FADE_SECONDS). WAV is cut in Python; other
-     formats need ffmpeg (found like the package gate does). Other sounds are copied byte for byte.
+  3. only a fail sound (name with fail / lose / gameover / timeout ..., the gate's list, or --fail) longer than 2.0 s
+     is cut to 2.0 s with a 0.35 s fade-out (package_gates/audio.py FAIL_TARGET_SECONDS / FAIL_FADE_SECONDS). WAV is
+     cut in Python; other formats need ffmpeg (found like the package gate does). R4E (Saul): a result / reward / win
+     sound (end / reward / win / victory / complete / clear / success / result ..., or --result) is NOT cut: it is
+     recorded as a jingle and copied byte for byte like every other sound (11.13 cut it too, so a 3 s settle or reward
+     fanfare lost its ending). A name with a fail word is a fail sound even when it also has a result word.
   4. the file is written to <dest>/<name>, the credits.csv row added (other rows and columns kept; a row for the same
      output replaced), then the usage record <library>/usage/<sha256(project|import_audio)>.json updated
      (skipped with --no-usage, e.g. on a trial copy). If any file of the run is refused, nothing is written.
@@ -177,13 +179,13 @@ def plan_one(lib, project, own_key, args, src_text, name_override, ffmpeg):
         return None, '%s: use an English file name (letters, digits, _ - .) with --as' % name
     words = pkg_audio.tokens(name) | pkg_audio.tokens(src.name)
     fail = args.fail or bool(words & pkg_audio.FAIL_TOKENS)
-    result = args.result or bool(words & RESULT_TOKENS)
+    result = not fail and (args.result or bool(words & RESULT_TOKENS))
     seconds = length_of(src, ffmpeg)
     cut = False
-    if fail or result:
+    if fail:   # R4E: only fail sounds are cut; result / reward / win sounds keep their full length
         if seconds is None:
-            return None, '%s: a %s sound must be 2 s or less, and its length cannot be read here (ffmpeg missing?)' % (
-                src.name, 'fail' if fail else 'result')
+            return None, '%s: a fail sound must be 2 s or less, and its length cannot be read here (ffmpeg missing?)' % (
+                src.name)
         cut = seconds > CUT_SECONDS + 0.005
         if cut and src.suffix.lower() != '.wav' and not ffmpeg:
             return None, '%s: %.2f s, needs cutting to %.1f s and ffmpeg was not found' % (src.name, seconds, CUT_SECONDS)
@@ -255,7 +257,7 @@ def main(argv=None) -> int:
     ap.add_argument('--as', dest='as_name', default='', help='file name in the game (one --file only)')
     ap.add_argument('--kind', choices=('sfx', 'music', 'jingle'), help='credits.csv type (default sfx / jingle)')
     ap.add_argument('--fail', action='store_true', help='treat as a fail sound: cut to 2 s with a fade-out')
-    ap.add_argument('--result', action='store_true', help='treat as a result / win sound: cut to 2 s with a fade-out')
+    ap.add_argument('--result', action='store_true', help='treat as a result / reward / win sound: a jingle, not cut')
     ap.add_argument('--library', type=Path, help='audio library folder with index.csv (default: the gate lookup)')
     ap.add_argument('--no-usage', action='store_true', help='do not register usage (trial copy)')
     ap.add_argument('--allow-reuse', action='store_true', help='take a sound 2+ other games used (the gate will flag it)')
@@ -317,8 +319,7 @@ def main(argv=None) -> int:
                 after = length_of(tmp, ffmpeg)
                 if after is None or after > CUT_SECONDS + 0.05:
                     raise ValueError('%s still %s s after cutting' % (p['name'], after))
-                notes.append('%s sound cut %.2f s -> %.2f s, fade-out %.2f s' % ('fail' if p['fail'] else 'result',
-                                                                                  p['seconds'], after, FADE_SECONDS))
+                notes.append('fail sound cut %.2f s -> %.2f s, fade-out %.2f s' % (p['seconds'], after, FADE_SECONDS))
             else:
                 shutil.copyfile(p['src'], tmp)
             if p['others']:

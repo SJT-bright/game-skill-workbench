@@ -93,7 +93,11 @@ def build(manifest, kit_dir=KIT, versions=VERSIONS):
                 entry['previous_without_text'].append(h)
         allprev = set().union(*prev.values()) if prev else set()
         entry['current_only'] = sorted(cur - allprev)
-        entry['common'] = sorted(cur & allprev)[:60]
+        # R4E: names EVERY previous text shares with the current one (was: any previous text). With a newer previous
+        # text that adds names (SaveStore 9fca45e2 added grant / best), "any" let those names into common and an
+        # older copy (954b5649) no longer reached 60% of common: K6 called it unknown instead of old.
+        shared = set.intersection(*prev.values()) if prev else set()
+        entry['common'] = sorted(cur & shared)[:60]
         for h, ps in prev.items():
             entry['previous'][h] = sorted(ps - cur)
         fps['modules'][mod] = entry

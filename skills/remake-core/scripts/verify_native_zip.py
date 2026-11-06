@@ -280,6 +280,10 @@ def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max
             raise ValueError('project.config.json appid must be a string')
         if expected_app_id is not None and app_id != expected_app_id:
             raise ValueError('Root App ID does not match the requested target')
+        # Shared partition validation also rejects ignored case variants, empty,
+        # duplicate and nested roots. Do this before running any startup probe.
+        from upload_size_gate import enforce
+        enforce(sizes, game)
         subpackages = game.get('subpackages', [])
         if not isinstance(subpackages, list):
             raise ValueError('game.json subpackages must be an array')

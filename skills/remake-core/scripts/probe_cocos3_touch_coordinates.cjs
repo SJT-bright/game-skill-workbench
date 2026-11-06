@@ -77,24 +77,34 @@ function engineParts(engine) {
   if (!reg) throw Error('unsupported Cocos 3 minigame TouchInputSource; do not mark input verified');
   if (reg[1] !== clone[2]) throw Error('engine touch source does not read the cloned SDK object');
   const start = engine.indexOf('e._createCallback=function(t){', reg.index);
-  const end = engine.indexOf(',e.on=function(', start);
+  // Early 3.x emits CSS-coordinate changedTouches through onStart/onMove/...;
+  // later 3.x creates EventTouch through a touch manager. Run the actual shipped
+  // callback in either closed shape; unknown shapes still refuse.
+  const rawEnd = engine.indexOf(',e.onStart=function(', start);
+  const rawBody = start >= 0 && rawEnd > start ? engine.slice(start, rawEnd) : '';
+  const rawVec = /_getLocation=function\(([\w$]+)\)\{return new ([\w$]+)\(\1\.clientX,\1\.clientY\)\}$/.exec(rawBody);
+  const rawInput = rawVec && rawBody.includes(reg[1] + '.getSystemInfoSync()') &&
+    rawBody.includes('.changedTouches') && rawBody.includes('.windowHeight-') && rawBody.includes('changedTouches:');
+  const end = rawInput ? rawEnd : engine.indexOf(',e.on=function(', start);
   if (start < 0 || end < 0 || start - reg.index > 400) throw Error('unsupported Cocos 3 touch callback shape');
   const body = engine.slice(start, end);
   const screen = /=([\w$]+)\.windowSize,[\w$]+=\1\.devicePixelRatio/.exec(body);
   const manager = (profile === 'cocos3.8' ? /([\w$]+)\.getOrCreateTouch\(/ : /([\w$]+)\.getTouch\(/).exec(body);
   const event = /new ([\w$]+)\([\w$]+,!1,[\w$]+,/.exec(body);
   const vec = /_getLocation=function\([\w$]+,[\w$]+,[\w$]+\)\{[^}]*return new ([\w$]+)\([\w$]+,[\w$]+\)\}$/.exec(body);
-  if (!screen || !manager || !event || !vec || !body.includes('.clientX') || !body.includes('.clientY'))
+  if (!rawInput && (!screen || !manager || !event || !vec || !body.includes('.clientX') || !body.includes('.clientY')))
     throw Error('unsupported Cocos 3 touch location shape; do not mark input verified');
-  const parts = {profile, cloneLoop: clone[0].slice(clone[0].indexOf('Object.keys(')), sdkName: clone[3], targetName: clone[1],
-    body, names: {screen: screen[1], manager: manager[1], event: event[1], vec: vec[1]},
+  const parts = {profile, cloneLoop: clone[0].slice(clone[0].indexOf('Object.keys(')), sdkName: clone[3], targetName: clone[1], touchSdkName: reg[1],
+    body, rawInput: !!rawInput,
+    names: rawInput ? {vec: rawVec[2]} : {screen: screen[1], manager: manager[1], event: event[1], vec: vec[1]},
     managerMethod: profile === 'cocos3.8' ? 'getOrCreateTouch' : 'getTouch'};
   if (profile === 'cocos3.7') {
     // The phase enum is taken from its own definition in the same engine (`function(t){t.TOUCH_START="touch-start",...}(E||(E={}))`),
     // never filled in by the probe. Every phase must be defined exactly once with a string value, and the four
     // values must be distinct; the expected 3.7 values are checked so a remapped enum is refused.
     const esc = enumName.replace(/\$/g, '\\$');
-    const defs = [...engine.matchAll(new RegExp('function\\(([\\w$]+)\\)\\{((?:\\1\\.[A-Z_]+="[^"]*",?)+)\\}\\(' + esc + '\\|\\|\\(' + esc + '=\\{\\}\\)\\)', 'g'))];
+    const enumInit = rawInput ? '(?:\\{\\}|[\\w$]+\\("SystemEventType",\\{\\}\\))' : '\\{\\}';
+    const defs = [...engine.matchAll(new RegExp('function\\(([\\w$]+)\\)\\{((?:\\1\\.[A-Z_]+="[^"]*",?)+)\\}\\(' + esc + '\\|\\|\\(' + esc + '=' + enumInit + '\\)\\)', 'g'))];
     if (defs.length !== 1) throw Error('cocos3.7 touch phase enum ' + enumName + ' definition not found exactly once; do not mark input verified');
     const values = {};
     for (const m of defs[0][2].matchAll(/[\w$]+\.([A-Z_]+)="([^"]*)"/g)) {
@@ -118,6 +128,7 @@ function engineParts(engine) {
       parts.multiTouch = value[1] === '!0' || value[1] === 'true';
     }
   }
+  if (rawInput) parts.profile = 'cocos3-early-css-input';
   return parts;
 }
 
@@ -170,6 +181,7 @@ function probe(files, engine) {
   const scope = {};
   scope[parts.sdkName] = sdk;
   scope[parts.targetName] = {};
+  scope[parts.touchSdkName] = scope[parts.targetName];
   scope[parts.names.screen] = {windowSize: SCREEN, devicePixelRatio: INFO.pixelRatio};
   scope[parts.names.manager] = {
     [parts.managerMethod](id, x, y) { const touch = {id, x, y}; received.push(touch); return touch; },
@@ -183,7 +195,12 @@ function probe(files, engine) {
   scope.Object = Object;
   vm.createContext(scope);
   vm.runInContext(parts.cloneLoop, scope, {timeout: 1000});
-  const source = {_eventTarget: {emit(type, event) { emitted.push(type); }}};
+  const source = {_eventTarget: {emit(type, event) {
+    emitted.push(type);
+    if (parts.rawInput) for (const t of event.changedTouches || [])
+      received.push({id:t.identifier,x:t.x,y:t.y});
+  }}};
+  scope.performance = {now: () => 1};
   vm.runInContext('(function(e){' + parts.body + '})', scope, {timeout: 1000})(source);
   const engineSdk = scope[parts.targetName];
   const before = {};
@@ -208,16 +225,17 @@ function probe(files, engine) {
     return {observed: received.slice(count).map(t => ({id: t.id, x: show(t.x), y: show(t.y)})),
       raw: raw.slice(rawCount).map(t => ({x: show(t.x), y: show(t.y)}))};
   }
-  const inside = t => typeof t.x === 'number' && typeof t.y === 'number' && t.x >= 0 && t.x <= SCREEN.width && t.y >= 0 && t.y <= SCREEN.height;
+  const coordinateScreen = parts.rawInput ? {width:INFO.windowWidth,height:INFO.windowHeight} : SCREEN;
+  const inside = t => typeof t.x === 'number' && typeof t.y === 'number' && t.x >= 0 && t.x <= coordinateScreen.width && t.y >= 0 && t.y <= coordinateScreen.height;
   const sdkPoint = (x, y) => ({identifier: 0, screenX: x, screenY: y, force: 1});
   const rows = [];
-  const dpr = INFO.pixelRatio;
+  const dpr = parts.rawInput ? 1 : INFO.pixelRatio;
   // Expected engine location for a full-screen game: clientX/clientY equal screenX/screenY, then the engine's own
   // DPR scale and Y flip. Pass only when it is finite, inside the screen and at that point (1 px tolerance).
   function row(id, point, result) {
     const x = point.clientX !== undefined ? point.clientX : point.screenX;
     const y = point.clientY !== undefined ? point.clientY : point.screenY;
-    const expected = {x: x * dpr, y: SCREEN.height - y * dpr}, t = result.observed[0];
+    const expected = {x: x * dpr, y: coordinateScreen.height - y * dpr}, t = result.observed[0];
     const ok = result.observed.length === 1 && t.id === 0 && inside(t) &&
       Math.abs(t.x - expected.x) <= 1 && Math.abs(t.y - expected.y) <= 1;
     rows.push({id, passed: ok, sdk_touch: point, expected, observed: result.observed, raw_location: result.raw});
@@ -231,7 +249,7 @@ function probe(files, engine) {
   row('client_coordinates_preserved', client, fire('Start', client)); fire('End', client);
   return {schema: 'cocos3_touch_coordinates.v1', passed: rows.length > 0 && rows.every(r => r.passed), profile: parts.profile,
     engine_constants: parts.enumValues ? {phase_enum: parts.enumValues, ENABLE_MULTI_TOUCH: parts.multiTouch === undefined ? null : parts.multiTouch} : null,
-    screen: SCREEN,
+    screen: coordinateScreen, coordinates_space: parts.rawInput ? 'css-input-source' : 'device-touch-manager',
     sdk_fields: ['identifier', 'screenX', 'screenY', 'force'], prefix, emitted: [...new Set(emitted)], rows,
     boundary: "package game.js -> web-adapter.js prefix, engine's own SDK copy and TouchInputSource callbacks, controlled SDK payloads; not renderer/hit-test/device acceptance"};
 }

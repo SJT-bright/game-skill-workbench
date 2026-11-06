@@ -264,7 +264,54 @@ def write_build_scenes(project, extra=()):
             data['excludeScenes'] = old + add
             builder.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
             written = True
-    return {'build_scenes': str(out), 'kept': len(keep), 'excluded': len(drop), 'builder_excludeScenes': written}
+    config_3x = write_build_config_3x(project, pr, boot, keep) if drop and fs.estimate.engine_major(project)[1] == '3' \
+        else None
+    return {'build_scenes': str(out), 'kept': len(keep), 'excluded': len(drop), 'builder_excludeScenes': written,
+            'build_config_3x': config_3x}
+
+
+def write_build_config_3x(project, pr, boot, keep):
+    """R4F2 #7: Cocos 3.x has no excludeScenes; it builds every scene unless the --build configPath file lists
+    "scenes" (Creator 3.x command-line docs). Writes docs/startup/build-config-3x.json (source ZIPs drop profiles/,
+    so it lives in docs/); the build adds configPath=<that file>."""
+    import first_screen as fs
+
+    def uuid_of(sc):
+        meta = fs.read_json(Path(str(sc) + '.meta')) or {}
+        return meta.get('uuid')
+    path = Path(project).joinpath(*fs.BUILD_3X)
+    old = fs.read_json(path) or {}
+    data = dict(old) if isinstance(old, dict) else {}
+    data.update({'platform': 'bytedance-mini-game',
+                 'scenes': [{'url': 'db://' + pr.rel[sc], 'uuid': uuid_of(sc)} for sc in sorted(keep, key=pr.rel.get)
+                            if uuid_of(sc)]})
+    if boot is not None and uuid_of(boot):
+        data['startScene'] = uuid_of(boot)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    return str(path)
+
+
+LEVEL_RESOURCES = Path('docs') / 'levels' / 'level_resources.json'
+
+
+def record_level_files(project, pattern):
+    """R4N6: count the real level files once, so a level cap is taken from them (弹球传奇 _MapMax 1000 with maps
+    1..500). -> the record, also written to docs/levels/level_resources.json. count = files; max_index / gaps from
+    the first number in each file name."""
+    import re
+    project = Path(project)
+    files = sorted(p.relative_to(project).as_posix() for p in project.glob(pattern) if p.is_file()
+                   and not p.name.endswith('.meta'))
+    nums = sorted({int(m.group(0)) for f in files for m in [re.search(r'\d+', Path(f).stem)] if m})
+    gaps = [n for n in range(nums[0], nums[-1] + 1) if n not in set(nums)][:50] if nums else []
+    rec = {'schema': 'level_resources.v1', 'tool': 'make_level_plan --record-level-files', 'files': pattern,
+           'count': len(files), 'max_index': nums[-1] if nums else None, 'gaps': gaps, 'first': files[:3],
+           'last': files[-3:]}
+    out = project / LEVEL_RESOURCES
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(rec, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+    return rec
 
 
 def main():
@@ -299,8 +346,18 @@ def main():
     rs.add_argument('--approved-quote', default='', help='his words, e.g. 照搬原游戏的关卡')
     ap.add_argument('--scene', action='append', default=[], metavar='NAME',
                     help='with --project: a scene the build needs that no script loads by a literal name (P04)')
-    ap.add_argument('--out', type=Path, required=True)
+    ap.add_argument('--record-level-files', metavar='GLOB',
+                    help='R4N6: with --project, count the real level files (e.g. assets/resources/maps/*.json) into '
+                         'docs/levels/level_resources.json; tiktok_finalize source / sync compares level cap constants with it')
+    ap.add_argument('--out', type=Path)
     a = ap.parse_args()
+    if a.record_level_files:                       # R4N6 (补查2 第 9 组, 弹球传奇 _MapMax 1000 vs 500 level files)
+        if not a.project:
+            ap.error('--record-level-files needs --project')
+        print(json.dumps(record_level_files(a.project, a.record_level_files), ensure_ascii=False))
+        return 0
+    if not a.out:
+        ap.error('--out is required')
     if a.project and (a.project / 'assets').is_dir():
         print(json.dumps(write_build_scenes(a.project, a.scene), ensure_ascii=False))
     elif a.scene:

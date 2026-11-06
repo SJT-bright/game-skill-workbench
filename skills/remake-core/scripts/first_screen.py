@@ -28,6 +28,10 @@ package was written. Here they are found when work starts:
      warning for an English game. Scenes in settings/builder.json excludeScenes are not built and not counted.
   5. the first download (main package + subpackages requested before the home page + engine allowance + bytedance
      template, audit_package_estimate.py's numbers) over 10 MiB is an error on both boards.
+  6. (R4F2) a TTF/OTF font in the first download over subset_fonts.THRESHOLD_KB (200 KB) that subset_fonts.py did
+     not write is an error for a new game / warning for an English game; "fonts" in the report lists every font's
+     bytes. Without fontTools fonts.status is "not_run", never "ok". Cocos 3.x: scenes not in
+     docs/startup/build-config-3x.json (make_level_plan.py --project writes it) are not counted.
 The template remake-core/assets/startup-plan-template.json is copied into first-screen.json (timing profiles for
 audit_startup_loading.py) with home_assets_allowed filled from home_needs. budget.json is rebuilt from the same
 analysis; import_audio.py and the art step add each new file to it (startup_budget.record).
@@ -48,10 +52,12 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 import audit_package_estimate as estimate  # noqa: E402
 import startup_budget  # noqa: E402
+import subset_fonts  # noqa: E402  R4F2 #8
 
 SCHEMA = 'first_screen.v1'
 OUT = ('docs', 'startup', 'first-screen.json')
 WHITELIST = ('docs', 'startup', 'build-scenes.json')
+BUILD_3X = ('docs', 'startup', 'build-config-3x.json')   # R4F2 #7: 3.x --build configPath file (scenes list)
 TEMPLATE = HERE.parent / 'assets' / 'startup-plan-template.json'
 SCENE_EXT = ('.fire', '.scene')
 SCRIPT_EXT = ('.js', '.ts')
@@ -245,6 +251,11 @@ def excluded_scenes(pr: Project) -> set:
         for u in data.get('excludeScenes') or []:
             if u in pr.by_uuid:
                 out.add(pr.by_uuid[u])
+    # R4F2 (#7): Cocos 3.x builds every scene unless the build config lists them; make_level_plan.py writes that list
+    data = read_json(pr.root.joinpath(*BUILD_3X)) or {}
+    listed = {s.get('uuid') for s in data.get('scenes') or [] if isinstance(s, dict)}
+    if listed:
+        out |= {sc for sc in pr.scenes if not estimate.asset_uuids(sc) & listed}
     return out
 
 
@@ -386,6 +397,26 @@ def analyze(project, board: str = 'new', boot_name: str | None = None, home_name
                 'prehome_bundle_not_home: subpackage %s (%.2f MiB) is requested before the home page (%s) but the home '
                 'page uses nothing in it: load it after the home page with ResLoader' % (
                     b, sum(r['bytes'] for r in deferred if r['bundle'] == b) / 1048576.0, requested[b]))
+    # R4F2 (#8): whole TTF/OTF fonts in the first download (蛋壳特工队 main package 8.7 MB) -> subset_fonts.py
+    font_rows = [dict(r, need='home') for r in home_rows] + [r for r in deferred if r['in_first_download']]
+    font_rows = [r for r in font_rows if r['file'].lower().endswith(subset_fonts.FONT_EXT) and
+                 (r['bundle'] not in pr.sub or r['bundle'] in early_sub)]
+    big = [r for r in font_rows if r['bytes'] > subset_fonts.THRESHOLD_KB * 1024
+           and not subset_fonts.is_subset(project, r['file'])]
+    font_status = 'ok' if not big else 'needs_subset' if subset_fonts.fonttools_available() else 'not_run'
+    if big:
+        names = ', '.join('%s %d KB' % (r['file'], r['bytes'] // 1024) for r in big[:6])
+        (problems if strict else warnings).append(
+            'font_not_subset: %d font(s) over %d KB in the first download (%s): run subset_fonts.py --project (keeps '
+            'only the characters the game shows)%s' % (
+                len(big), subset_fonts.THRESHOLD_KB, names,
+                '' if font_status == 'needs_subset' else '; fontTools is not installed, so the subset step is '
+                'not_run (not passed): python3 -m pip install fonttools'))
+    font_report = {'status': font_status, 'threshold_kb': subset_fonts.THRESHOLD_KB,
+                   'first_download_font_bytes': sum(r['bytes'] for r in font_rows),
+                   'fonts': [{'file': r['file'], 'bytes': r['bytes'], 'subset': subset_fonts.is_subset(project, r['file'])}
+                             for r in font_rows],
+                   'over_threshold': [r['file'] for r in big]}
     groups = {'subpackage_bundles': pr.sub, 'main_bundles': sorted(b for b in pr.bundles if b not in pr.sub),
               'pre_home_bundles': early_sub}
     ledger = startup_budget.new_ledger(project, rows, groups)
@@ -418,7 +449,7 @@ def analyze(project, board: str = 'new', boot_name: str | None = None, home_name
               'pre_home_bundles': {b: requested[b] for b in early_sub}, 'groups': groups,
               'build_scenes': sorted(pr.rel[s] for s in built_scenes if s not in unused),
               'unused_scenes': sorted(pr.rel[s] for s in unused),
-              'estimate': summary, 'problems': problems, 'warnings': warnings, 'ok': not problems,
+              'estimate': summary, 'fonts': font_report, 'problems': problems, 'warnings': warnings, 'ok': not problems,
               'parsers': 'parse_package_requires.cjs + scan_runtime_resources.cjs' if node else 'regex (node not found)',
               '_ledger': ledger}
     return report
@@ -475,7 +506,8 @@ def main(argv=None) -> int:
         write(a.project, report)
     brief = {k: report[k] for k in ('ok', 'board', 'boot_scene', 'home_scene', 'pre_home_bundles', 'problems', 'warnings')}
     brief.update(home_needs=len(report['home_needs']['files']), deferred=len(report['deferred']),
-                 first_download_mib=round(report['estimate']['first_download_bytes'] / 1048576.0, 2), stale=stale)
+                 first_download_mib=round(report['estimate']['first_download_bytes'] / 1048576.0, 2), stale=stale,
+                 font_subset=report['fonts']['status'])
     print(json.dumps(report if a.json else brief, ensure_ascii=False, default=str))
     return 1 if report['problems'] or stale else 0
 

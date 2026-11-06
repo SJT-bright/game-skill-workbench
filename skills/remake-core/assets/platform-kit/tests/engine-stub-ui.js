@@ -76,7 +76,7 @@ function makeEngine(kind) {
   cc.Button.Transition = {NONE: 0, COLOR: 1, SPRITE: 2, SCALE: 3};
   cc.Sprite.SizeMode = {CUSTOM: 0, TRIMMED: 1, RAW: 2};
   cc.Sprite.Type = {SIMPLE: 0, SLICED: 1};
-  cc.Label.HorizontalAlign = {CENTER: 1};
+  cc.Label.HorizontalAlign = {LEFT: 0, CENTER: 1, RIGHT: 2};   // R4N4: LEFT / RIGHT for GameUIKit.text
   cc.Label.VerticalAlign = {CENTER: 1};
   cc.Label.Overflow = {NONE: 0, CLAMP: 1, SHRINK: 2, RESIZE_HEIGHT: 3};
   cc.Graphics.LineCap = {ROUND: 1};
@@ -119,6 +119,8 @@ function makeEngine(kind) {
     if (C.__name === 'UITransform') {
       var node = this;
       c.setContentSize = function (w, h) { node.setContentSize(w, h); };
+      c.convertToWorldSpaceAR = function (p) { return toWorld(node, p); };   // R4N4
+      c.convertToNodeSpaceAR = function (p) { return toNode(node, p); };
       Object.defineProperty(c, 'contentSize', {get: function () { return {width: node.width, height: node.height}; }});
       Object.defineProperty(c, 'width', {get: function () { return node.width; }, set: function (v) { node.width = v; }});
       Object.defineProperty(c, 'height', {get: function () { return node.height; }, set: function (v) { node.height = v; }});
@@ -147,6 +149,12 @@ function makeEngine(kind) {
     if (this.parent) this.parent.children.splice(this.parent.children.indexOf(this), 1);
   };
   Object.defineProperty(Node.prototype, 'position', {get: function () { return {x: this.x, y: this.y, z: 0}; }});
+  // R4N4 (GameUIKit.guide): 2.4 node space <-> world space (anchor 0.5, parent positions and scales, no rotation);
+  // 3.x has the same two on UITransform (below)
+  function toWorld(n, p) { var w = worldPos(n), k = worldScale(n); return {x: w.x + p.x * k, y: w.y + p.y * k}; }
+  function toNode(n, p) { var w = worldPos(n), k = worldScale(n) || 1; return {x: (p.x - w.x) / k, y: (p.y - w.y) / k}; }
+  Node.prototype.convertToWorldSpaceAR = function (p) { return toWorld(this, p); };
+  Node.prototype.convertToNodeSpaceAR = function (p) { return toNode(this, p); };
   cc.Node = Node;
   cc.isValid = function (n) { return !!n && n._valid !== false; };
   cc.warn = function (m) { cc.warnings.push(m); };
@@ -173,8 +181,12 @@ function makeEngine(kind) {
   var beforeDraw = [];
   cc.Director = {EVENT_BEFORE_DRAW: 'director_before_draw'};
   cc.director = {getScene: function () { return scene; },
-    once: function (ev, fn) { if (ev === cc.Director.EVENT_BEFORE_DRAW) beforeDraw.push(fn); }};
-  function draw() { var list = beforeDraw; beforeDraw = []; list.forEach(function (f) { f(); }); }
+    once: function (ev, fn) { if (ev === cc.Director.EVENT_BEFORE_DRAW) beforeDraw.push(fn); },
+    // R4N4 (GameUIKit.guide): listeners that stay, run on every env.draw() after the once ones
+    on: function (ev, fn) { if (ev === cc.Director.EVENT_BEFORE_DRAW) drawEvery.push(fn); },
+    off: function (ev, fn) { if (ev === cc.Director.EVENT_BEFORE_DRAW) drawEvery = drawEvery.filter(function (f) { return f !== fn; }); }};
+  var drawEvery = [];
+  function draw() { var list = beforeDraw; beforeDraw = []; list.forEach(function (f) { f(); }); drawEvery.slice().forEach(function (f) { f(); }); }
   cc.winSize = {width: 720, height: 1280};
   cc.view = {getVisibleSize: function () { return {width: 720, height: 1280}; }};
 
@@ -335,6 +347,7 @@ function loadKit(kind) {
     env.Kit = sandbox.TikTokGameUIKit;
   }
   env.clock = clock;
+  env.global = sandbox;   // R4H: the kit's globalThis (window.__pageRegistry lives here)
   // Resolves pending promise callbacks, then finishes tweens.
   env.settle = function () { return new Promise(function (r) { setImmediate(r); }).then(function () { env.flush(); }); };
   return env;

@@ -29,7 +29,9 @@ function requires(source,name){
  const m=re.exec(source);return m?m.index:-1;
 }
 function probe(files){
- const engine=files[ENGINES.find(n=>files[n]&&/getTouchesByEvent\s*:\s*function\b/.test(files[n]))||ENGINES[0]]||'';
+ const candidates=Object.keys(files).filter(n=>/(?:^|\/)cocos\/cocos2d-js(?:-min)?\.js$/.test(n)&&/getTouchesByEvent\s*:\s*function\b/.test(files[n]));
+ const engineName=ENGINES.find(n=>candidates.includes(n))||(candidates.length===1?candidates[0]:ENGINES[0]);
+ const engine=files[engineName]||'';
  const conv=converter(engine);
  class Touch{constructor(x,y,id){this.x=x;this.y=y;this.id=id;}getLocation(){return{x:this.x,y:this.y};}_setPrevPoint(){}}
  const manager={_glView:{convertToLocationInView(x,y){return{x:x*1,y:y*1};}},_preTouchPoint:{x:0,y:0},getPreTouch(){return{getLocation(){return{x:0,y:0};}};},setPreTouch(){}};

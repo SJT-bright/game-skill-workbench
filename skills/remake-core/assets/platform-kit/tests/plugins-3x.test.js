@@ -208,10 +208,12 @@ test('generation_is_stable', function () {
 });
 
 // ---- 4. KIT_PARTS_3X.json wiring ----
-var GAME_JS = "loadCC();\nfunction loadCC() {\n    require('./web-adapter');\n    require(\"src/polyfills.bundle.js\");\n}\n";
-test('parts_cover_touch_storage_and_plugins_only', function () {
+var GAME_JS = "loadCC();\nfunction loadCC() {\n    require('./web-adapter');\n    require(\"src/polyfills.bundle.js\");\n}\n" +
+  "System.warmup({ importMap: importMap });\n";
+test('parts_cover_touch_storage_startup_and_plugins_only', function () {
+  // 生成时预防 R4B: + boot3x, hostshim3x (installed by tiktok_finalize, step boot / hostshim)
   assert.deepStrictEqual(Object.keys(parts.parts).sort(),
-    ['missionflow3x', 'missions3x', 'platformconfig3x', 'rewarded3x', 'savestore3x', 'storage3x', 'touch3x']);
+    ['boot3x', 'capsuleauto3x', 'capsulelayout3x', 'homeslots3x', 'hostshim3x', 'missionflow3x', 'missions3x', 'platformconfig3x', 'rewarded3x', 'rewardguard3x', 'savestore3x', 'storage3x', 'touch3x']);   // R4G1: + homeslots3x; 生成时预防 R4G2: + capsule plugins (step capsule_auto), rewardguard3x (startup step)
   Object.keys(parts.parts).forEach(function (k) {
     var p = parts.parts[k];
     assert.strictEqual(p.engine, 3, k);
@@ -219,10 +221,23 @@ test('parts_cover_touch_storage_and_plugins_only', function () {
     var sha = require('crypto').createHash('sha256').update(fs.readFileSync(src)).digest('hex');
     assert.strictEqual(sha, p.file.sha256, k + ' sha256 is the kit file');
   });
-  assert.ok(/no Cocos 3\.x startup part/.test(parts.startup), 'Q5: no 3.x startup part');
+  // R4B: Q5 superseded -- new 3.x games get the startup guard boot3x; legacy games and own start pages report only
+  assert.ok(/^boot3x: parts-3x\/boot-guard-3x\.js/.test(parts.startup), 'startup part is boot3x');
+  assert.strictEqual(parts.parts.boot3x.policy.legacy, 'report');
+  assert.strictEqual(parts.parts.hostshim3x.policy.legacy, 'report');
+  assert.strictEqual(parts.parts.boot3x.step, 'boot');
+  assert.strictEqual(parts.parts.hostshim3x.step, 'hostshim');
+});
+test('boot3x_own_markers_hit_own_start_pages_only', function () {
+  var m = parts.parts.boot3x.own_markers.map(function (s) { return new RegExp(s); });
+  var hit = function (t) { return m.some(function (r) { return r.test(t); }); };
+  assert.ok(hit("require('./boot-loading');"), 'LunasJade game.js loads its own start page');
+  assert.ok(hit('// native-recovery.js still fails a request after 8 s'), 'native-recovery start page');
+  assert.ok(!hit(parts.parts.boot3x.wiring[0].line), 'kit wiring line is not an own start page');
+  assert.ok(!hit(fs.readFileSync(path.join(KIT, parts.parts.boot3x.file.src), 'utf8')), 'kit guard is not an own page');
 });
 test('wiring_lines_are_js_and_anchor_matches_once', function () {
-  ['touch3x', 'storage3x'].forEach(function (k) {
+  ['touch3x', 'storage3x', 'hostshim3x', 'boot3x'].forEach(function (k) {
     var w = parts.parts[k].wiring;
     assert.strictEqual(w.length, 1, k);
     assert.strictEqual(w[0]['in'], 'game.js');
@@ -234,6 +249,19 @@ test('wiring_lines_are_js_and_anchor_matches_once', function () {
   });
   assert.ok(parts.parts.touch3x.wiring[0].insert_before, 'touch goes BEFORE web-adapter');
   assert.ok(parts.parts.storage3x.wiring[0].insert_after, 'storage goes AFTER web-adapter');
+  assert.ok(parts.parts.hostshim3x.wiring[0].insert_before, 'host shim goes BEFORE web-adapter');
+  assert.ok(/warmup/.test(parts.parts.boot3x.wiring[0].insert_before), 'boot guard goes BEFORE System.warmup(');
+});
+test('rewardguard3x_same_file_as_24_guard_after_web_adapter', function () {   // 生成时预防 R4G2
+  var g = parts.parts.rewardguard3x, w = g.wiring[0];
+  var manifest = JSON.parse(fs.readFileSync(path.join(KIT, 'KIT_MANIFEST.json'), 'utf8'));
+  assert.strictEqual(g.file.sha256, manifest.files['parts/rewarded-guard.js'].sha256, 'same sha as the 2.4 guard');
+  assert.strictEqual(g.step, 'rewardguard');
+  assert.strictEqual(g.policy.legacy, 'none');
+  assert.strictEqual(w.insert_after, parts.parts.storage3x.wiring[0].insert_after, 'same place as storage3x');
+  new vm.Script(w.line, {filename: 'rewardguard3x-line'});
+  assert.ok(w.line.indexOf('// tiktok-kit:rewardguard3x:' + parts.version) > 0, 'marker');
+  assert.strictEqual((GAME_JS.match(new RegExp(w.insert_after, 'g')) || []).length, 1, 'anchor once');
 });
 test('touch_own_markers_hit_known_own_layers_not_kit_or_engine_shapes', function () {
   var m = parts.parts.touch3x.own_markers.map(function (s) { return new RegExp(s); });
@@ -243,6 +271,135 @@ test('touch_own_markers_hit_known_own_layers_not_kit_or_engine_shapes', function
   assert.ok(hit('tt.onTouchStart = function (fn) {};'), 'direct SDK assignment');
   assert.ok(!hit('e.onTouchStart=function(t){this._s.push(t)}'), 'engine-style member assignment is not an own layer');
   assert.ok(!hit(parts.parts.touch3x.wiring[0].line), 'kit wiring line is not an own layer');
+});
+
+// ---- 5. 生成时预防 R4G1: HomeEntrySlots (3.x home entries find their free place at runtime) ----
+// Until R4G1 a 3.x game got its two entry coordinates once, at generation time (tools/home_free_slot.js on the
+// buttons it knew). ad-boost entries (WheelPanel.entry(): new node + node.on(TOUCH_END), no cc.Button) and later
+// buttons then sat on them (element_overlap 64 款 / 99 次). Fixture: a 3.x node tree (UITransform, 'touch-end').
+var SLOTS_PLUGIN = path.join(PLUGINS, 'HomeEntrySlots.plugin.js');
+var FREE = require(path.join(KIT, 'tools', 'home_free_slot.js'));
+function slotsKit() { return runIn(bareContext(), ['HomeEntrySlots']).TikTokKit.HomeEntrySlots; }
+function engine3x() {
+  function UITransform() {} function Button() {} function BlockInputEvents() {}
+  var cc = {UITransform: UITransform, Button: Button, BlockInputEvents: BlockInputEvents,
+    Node: {EventType: {TOUCH_START: 'touch-start', TOUCH_END: 'touch-end'}}, NodeEventType: {TOUCH_START: 'touch-start', TOUCH_END: 'touch-end'},
+    v3: function (x, y, z) { return {x: x, y: y, z: z || 0}; }};
+  function world(n) { return n.parent ? {x: world(n.parent).x + n.position.x, y: world(n.parent).y + n.position.y} : {x: n.position.x, y: n.position.y}; }
+  cc.node = function (name, x, y, w, h, o) {
+    o = o || {};
+    var n = {name: name, position: {x: x, y: y, z: 0}, children: [], parent: null, active: true, activeInHierarchy: true, _ls: {}};
+    var t = Object.create(UITransform.prototype);
+    t.getBoundingBoxToWorld = function () { var p = world(n); return {x: p.x - w / 2, y: p.y - h / 2, width: w, height: h}; };
+    t.convertToNodeSpaceAR = function (v) { var p = world(n); return {x: v.x - p.x, y: v.y - p.y, z: 0}; };
+    t.convertToWorldSpaceAR = function (v) { var p = world(n); return {x: v.x + p.x, y: v.y + p.y, z: 0}; };
+    var comps = [t];
+    if (o.button) { var b = Object.create(Button.prototype); b.interactable = o.button !== 'disabled'; comps.push(b); }
+    if (o.block) comps.push(Object.create(BlockInputEvents.prototype));
+    n.getComponent = function (C) { return typeof C === 'function' ? comps.filter(function (c) { return c instanceof C; })[0] || null : null; };
+    n.on = function (type, cb) { (n._ls[type] = n._ls[type] || []).push(cb); };
+    n.hasEventListener = function (type) { return !!(n._ls[type] || []).length; };
+    n.setPosition = function (v) { n.position = {x: v.x, y: v.y, z: 0}; };
+    if (o.touch) n.on('touch-end', function () {});
+    return n;
+  };
+  cc.add = function (parent, child) { child.parent = parent; parent.children.push(child); return child; };
+  return cc;
+}
+var HOME3X = [
+  {name: 'btnStart', x: 0, y: -330, w: 360, h: 140}, {name: 'btnSetting', x: -290, y: 520, w: 100, h: 100},
+  {name: 'btnShop', x: -260, y: -560, w: 150, h: 130}, {name: 'btnSkin', x: 260, y: -560, w: 150, h: 130},
+  {name: 'btnSign', x: -290, y: 160, w: 110, h: 110}, {name: 'btnGift', x: 290, y: 160, w: 110, h: 110}];
+var SCREEN3X = {w: 720, h: 1280}, ENTRY3X = {w: 140, h: 140};
+// generation-time coordinates (the old way): home_free_slot on the buttons the generator knew
+var GEN = FREE.findFreeSlots({screen: SCREEN3X, buttons: HOME3X, entry: ENTRY3X});
+var AD3X = [{name: 'WheelEntry', x: GEN.slots[0].x, y: GEN.slots[0].y, w: 120, h: 120},
+  {name: 'CheckinEntry', x: GEN.slots[1].x, y: GEN.slots[1].y, w: 120, h: 120}];
+function home3x(cc, opts) {
+  opts = opts || {};
+  var canvas = cc.node('Canvas', 360, 640, 720, 1280);
+  var bg = cc.add(canvas, cc.node('bg', 0, 0, 720, 1280, {touch: true}));         // full-screen tap-anywhere background
+  HOME3X.forEach(function (b, i) {
+    cc.add(canvas, cc.node(b.name, b.x, b.y, b.w, b.h, {button: opts.disabled && i === 0 ? 'disabled' : true}));
+  });
+  var layer = cc.add(canvas, cc.node('AdBoostLayer', 0, 0, 0, 0));
+  AD3X.forEach(function (b) { cc.add(layer, cc.node(b.name, b.x, b.y, b.w, b.h, {touch: true})); });
+  (opts.more || []).forEach(function (b) { cc.add(canvas, cc.node(b.name, b.x, b.y, b.w, b.h, {button: true})); });
+  var row = cc.add(canvas, cc.node('PlatformRow', 0, 0, 0, 0));
+  var e1 = cc.add(row, cc.node('ProfileRevisit', GEN.slots[0].x, GEN.slots[0].y, 140, 140, {button: true}));
+  var e2 = cc.add(row, cc.node('AddToHome', GEN.slots[1].x, GEN.slots[1].y, 140, 140, {button: true}));
+  return {canvas: canvas, bg: bg, entries: [e1, e2]};
+}
+function boxOf(n) { return {x: n.position.x + (n.parent && n.parent.name !== 'Canvas' ? n.parent.position.x : 0),
+  y: n.position.y + (n.parent && n.parent.name !== 'Canvas' ? n.parent.position.y : 0), w: 140, h: 140}; }
+test('home_slots_plugin_runs_as_a_global_script', function () {
+  var S = slotsKit();
+  ['findFreeSlots', 'placeEntries', 'collectButtons', 'place', 'placeLater'].forEach(function (k) { assert.strictEqual(typeof S[k], 'function', k); });
+});
+test('home_slots_plugin_core_is_parts_HomeEntrySlots_and_the_24_slot_code', function () {
+  var plugin = fs.readFileSync(SLOTS_PLUGIN), src = fs.readFileSync(path.join(KIT, 'parts', 'HomeEntrySlots.js'));
+  var b = Buffer.from('// ---- BEGIN parts/HomeEntrySlots.js ----\n'), e = Buffer.from('// ---- END parts/HomeEntrySlots.js ----\n');
+  assert.ok(plugin.slice(plugin.indexOf(b) + b.length, plugin.indexOf(e)).equals(src), 'plugin core = parts/HomeEntrySlots.js');
+  var hge = fs.readFileSync(path.join(KIT, 'assets', 'tiktok-platform', 'HomeGrowthEntries.js'), 'utf8'), own = src.toString('utf8');
+  var cut = hge.slice(hge.indexOf('// ------------------------------------------------------------- free place for the entries'), hge.indexOf('Controller.findFreeSlots = findFreeSlots;\n'));
+  var B = '// ---- BEGIN slot code of assets/tiktok-platform/HomeGrowthEntries.js ----\n', E = '// ---- END slot code of assets/tiktok-platform/HomeGrowthEntries.js ----\n';
+  assert.strictEqual(own.slice(own.indexOf(B) + B.length, own.indexOf(E)), cut, 'same search as HomeGrowthEntries.placeEntries');
+});
+test('home_slots_3x_entries_clear_of_buttons_and_ad_boost_entries', function () {
+  var cc = engine3x(), h = home3x(cc), S = slotsKit();
+  // the old way: generation-time coordinates stay -> both entries sit on the ad-boost entries
+  var old = h.entries.map(boxOf);
+  assert.ok(old.some(function (s) { return AD3X.some(function (a) { return FREE.intersects(s, a); }); }), 'fixture: the old way overlaps');
+  var r = S.place(cc, {root: h.canvas, entries: h.entries});
+  assert.ok(r.ok && r.moved, JSON.stringify(r.error || r));
+  assert.ok(r.backdrops.indexOf('bg') >= 0, 'full-screen touch background is not an obstacle');
+  var now = h.entries.map(boxOf);
+  now.forEach(function (s) {
+    HOME3X.concat(AD3X).forEach(function (b) { assert.ok(!FREE.intersects(s, b), s.x + ',' + s.y + ' on ' + b.name); });
+    assert.ok(s.x - 70 >= -360 && s.x + 70 <= 360 && s.y - 70 >= -640 && s.y + 70 <= 640 - 1280 * 0.12, 'inside the screen, below the capsule band');
+  });
+  assert.ok(!FREE.intersects(now[0], now[1]), 'entries do not touch each other');
+  var again = S.place(cc, {root: h.canvas, entries: h.entries});
+  assert.ok(again.ok && again.kept, 'a second run keeps clear entries where they are');
+});
+test('home_slots_3x_disabled_visible_button_still_takes_its_place', function () {
+  var cc = engine3x(), h = home3x(cc, {disabled: true}), S = slotsKit();
+  var found = S.collectButtons(cc, h.canvas, h.entries, {screen: SCREEN3X}).map(function (b) { return b.name; });
+  assert.ok(found.indexOf('btnStart') >= 0, 'interactable false is still an obstacle');
+});
+test('home_slots_3x_no_room_reports_and_moves_nothing', function () {
+  var cc = engine3x(), wall = [];
+  for (var y = -600; y <= 480; y += 120) for (var x = -300; x <= 300; x += 120) wall.push({name: 'b' + x + '_' + y, x: x, y: y, w: 110, h: 110});
+  var h = home3x(cc, {more: wall}), S = slotsKit(), before = h.entries.map(function (n) { return [n.position.x, n.position.y]; });
+  var r = S.place(cc, {root: h.canvas, entries: h.entries});
+  assert.strictEqual(r.ok, false);
+  assert.ok(/no free place/.test(r.error), r.error);
+  assert.deepStrictEqual(h.entries.map(function (n) { return [n.position.x, n.position.y]; }), before, 'nothing moved');
+});
+// R4Q6: placeLater waits until the home settled (>= 3 frames, same layout signature twice), then unschedules itself
+test('home_slots_place_later_waits_until_settled', function () {
+  var cc = engine3x(), h = home3x(cc), S = slotsKit(), queued = [], removed = [];
+  var comp = {schedule: function (fn, d) { queued.push([fn, d]); }, unschedule: function (fn) { removed.push(fn); }};
+  var gate = S.placeLater(cc, comp, {root: h.canvas, entries: h.entries});
+  assert.ok(gate && typeof gate.tick === 'function'); assert.strictEqual(queued.length, 1); assert.strictEqual(queued[0][1], 0);
+  var start = h.entries[0].position.x + ',' + h.entries[0].position.y;
+  queued[0][0](); queued[0][0]();
+  assert.strictEqual(h.entries[0].position.x + ',' + h.entries[0].position.y, start, 'not moved before frame 3');
+  queued[0][0]();
+  assert.ok(gate.done && gate.result.settled === true && gate.result.frames === 3, JSON.stringify({done: gate.done, frames: gate.frames()}));
+  assert.ok(!AD3X.some(function (a) { return FREE.intersects(boxOf(h.entries[0]), a); }), 'moved once settled');
+  assert.strictEqual(removed.length, 1, 'the per-frame callback is unscheduled after placing');
+});
+test('home_slots_part_registered_and_check_catches_slot_code_drift', function () {
+  var p = parts.parts.homeslots3x;
+  assert.ok(p && p.engine === 3 && p.phase === 'source' && p.plugin === true && p.editable === false, 'homeslots3x part');
+  assert.strictEqual(p.file.dest, 'assets/tiktok-platform/HomeEntrySlots.plugin.js');
+  assert.strictEqual(p.file.from, 'parts/HomeEntrySlots.js');
+  assert.strictEqual(p.policy.new, 'replace'); assert.strictEqual(p.policy.legacy, 'report');
+  var dir = kitCopy('slot-drift');
+  edit(path.join(dir, 'assets', 'tiktok-platform', 'HomeGrowthEntries.js'), 'var SLOT = {gap: 16,', 'var SLOT = {gap: 12,');
+  var r = py([path.join(dir, 'tools', 'make_plugin_scripts.py'), '--check']);
+  assert.ok(r.status === 1 && /HomeEntrySlots\.js: slot code differs/.test(r.stdout), r.stdout.slice(0, 400));
 });
 
 var failed = results.filter(function (r) { return r.status !== 'passed'; });

@@ -100,7 +100,7 @@ function sandbox(opts) {
   }
   var cc = {
     view: {enableRetina: function () {}, resizeWithBrowserSize: function () {}},
-    debug: {DebugMode: {INFO: 1, ERROR: 2}},
+    debug: {DebugMode: {INFO: 1, ERROR: 2}, setDisplayStats: function (on) { log.stats = (log.stats || []).concat([on]); }},
     AssetManager: {BuiltinBundleName: {INTERNAL: 'internal', MAIN: 'main', RESOURCES: 'resources'}},
     assetManager: {
       downloader: opts.noDownloader ? undefined : downloader, parser: parser,
@@ -110,7 +110,7 @@ function sandbox(opts) {
       loadScript: function (list, cb) { log.scripts = (log.scripts || 0) + 1; if (opts.onScript) opts.onScript(); cb(opts.scriptError ? new Error('script') : null); },
       loadBundle: function (name, cb) { log.bundles.push(name); var e = opts.bundleError && opts.bundleError(name, log.bundles.length); cb(e || null); }
     },
-    game: {run: function (option, cb) { runCalls++; if (opts.runThrows && runCalls === 1) throw new Error('run'); log.run++; cb(); }},
+    game: {run: function (option, cb) { log.option = option; runCalls++; if (opts.runThrows && runCalls === 1) throw new Error('run'); log.run++; cb(); }},
     // 2.4.15 signature: loadScene(name, onLaunched, onUnloaded); onLaunched(error) on failure.
     // The engine fires EVENT_AFTER_SCENE_LAUNCH for a scene launched by any attempt, even a superseded one.
     Director: {EVENT_AFTER_SCENE_LAUNCH: 'director_after_scene_launch'},
@@ -142,14 +142,22 @@ function sandbox(opts) {
       if (p === './touch-coordinates') return require(touchPath);
       if (p === './storage-guard') { log.storageInstalls = (log.storageInstalls || 0) + 1; return opts.storageGuard || require(storagePath); }
       if (p === './webp-decode-probe') { if (opts.probe) return opts.probe; return require(probePath); }
+      // v1.7 (R4A): main.js requires the kit rewarded guard right after storage-guard
+      if (p === './rewarded-guard') {
+        log.rewardedInstalls = (log.rewardedInstalls || 0) + 1;
+        log.rewardedBeforeScripts = !log.scripts;
+        if (opts.rewardedGuard) return opts.rewardedGuard;
+        return function (ccArg, api) { log.rewardedArgs = {cc: ccArg === cc, api: api === platform}; return null; };
+      }
       throw new Error('unexpected require ' + p);
     }
   };
   ctx.window = ctx;
   if (opts.login) platform.login = opts.login;
+  if (opts.createAd) platform.createRewardedVideoAd = opts.createAd;
   if (opts.webpFlag) ctx.__TIKTOK_KIT_WEBP_PROBE__ = true;
   if (opts.loginSent) ctx.__tiktokKitLoginSent = true;
-  ctx.window._CCSettings = {subpackages: ['resources'], jsList: ['assets/a.js'], launchScene: 'db://assets/Home.fire', bundleVers: {}, debug: false, groupList: [], collisionMatrix: []};
+  ctx.window._CCSettings = {subpackages: ['resources'], jsList: ['assets/a.js'], launchScene: 'db://assets/Home.fire', bundleVers: {}, debug: !!opts.debugSettings, groupList: [], collisionMatrix: []};
   vm.createContext(ctx);
   vm.runInContext(mainSource, ctx);
   return {
@@ -534,6 +542,32 @@ test('v13_storage_guard_error_does_not_block_startup', function () {
   assert.strictEqual(s.log.storageInstalls, 1);
   assert.strictEqual(s.log.loadScene, 1); assert.strictEqual(s.log.modal.length, 0);
 });
+// v1.7 (生成时预防 P01-2, R4A): main.js installs the kit rewarded guard once, with (cc, platform), before game scripts.
+test('v17_rewarded_guard_installed_once_before_game_scripts', function () {
+  var s = sandbox({sub: function (o) { o.success(); }});
+  s.boot();
+  assert.strictEqual(s.log.rewardedInstalls, 1, 'main.js requires ./rewarded-guard once');
+  assert.strictEqual(s.log.rewardedBeforeScripts, true, 'before the game scripts load');
+  assert.deepStrictEqual(s.log.rewardedArgs, {cc: true, api: true});
+  assert.strictEqual(s.log.loadScene, 1);
+});
+test('v17_rewarded_guard_error_does_not_block_startup', function () {
+  var s = sandbox({sub: function (o) { o.success(); }, rewardedGuard: function () { throw new Error('boom'); }});
+  s.boot();
+  assert.strictEqual(s.log.rewardedInstalls, 1);
+  assert.strictEqual(s.log.loadScene, 1); assert.strictEqual(s.log.modal.length, 0);
+});
+test('v17_real_guard_wraps_the_platform_createRewardedVideoAd', function () {
+  var raw = {show: function () { return Promise.resolve(); }, onClose: function () {}, offClose: function () {}};
+  var native = function () { return raw; };
+  var s = sandbox({sub: function (o) { o.success(); }, createAd: native,
+    rewardedGuard: require(path.join(__dirname, '..', 'parts', 'rewarded-guard.js'))});
+  s.boot();
+  assert.notStrictEqual(s.platform.createRewardedVideoAd, native, 'createRewardedVideoAd is wrapped by the kit guard');
+  assert.strictEqual(typeof s.platform.createRewardedVideoAd.__tiktokKitRewardedGuard, 'object');
+  assert.strictEqual(s.platform.createRewardedVideoAd({adUnitId: 'x'}).__tiktokKitRewardedGuard, true, 'ad object is the guard proxy');
+  assert.strictEqual(s.log.loadScene, 1);
+});
 test('v13_one_silent_login_never_awaited', function () {
   var logins = [];
   var s = sandbox({sub: function (o) { o.success(); }, login: function (o) { logins.push(o); /* never answers */ }});
@@ -596,6 +630,31 @@ test('v13_real_webp_probe_module_decodes_through_createImage', function () {
   // the real probe reads root.TTMinis.game / root.cc: the sandbox window is the context itself
   s.boot(); s.advance(50);
   assert.strictEqual(made, 1); assert.strictEqual(caps.webp, true); assert.strictEqual(s.log.loadScene, 1);
+});
+
+// v1.8 (R4Q5, 补查3 第 5 组 奔跑吧巨人): stats off at startup whatever settings.debug or a save says.
+test('v18_stats_off_even_with_debug_settings_and_save_switch', function () {
+  // the game's own script reads an old save with debug=true and turns the Profiler on while it loads
+  var s = sandbox({debugSettings: true, sub: function (o) { o.success(); },
+    onScript: function () { s.ctx.cc.debug.setDisplayStats(true); }});
+  s.boot(); s.advance(50);
+  assert.strictEqual(s.log.loadScene, 1);
+  assert.strictEqual(s.log.option.showFPS, false, 'engine option showFPS must be false even when settings.debug is true');
+  assert(s.log.stats && s.log.stats.length >= 2, 'setDisplayStats(false) called at launch');
+  assert.strictEqual(s.log.stats[s.log.stats.length - 1], false, 'stats end up off');
+});
+test('v18_stats_off_again_after_first_frame', function () {
+  var s = sandbox({sub: function (o) { o.success(); }});
+  s.boot();
+  s.ctx.cc.debug.setDisplayStats(true);         // a component start() in the first frame turns them on
+  s.advance(50);
+  assert.strictEqual(s.log.stats[s.log.stats.length - 1], false, 'stats turned off again one tick after launch');
+});
+test('v18_missing_setDisplayStats_does_not_break_startup', function () {
+  var s = sandbox({sub: function (o) { o.success(); }});
+  delete s.ctx.cc.debug.setDisplayStats;
+  s.boot(); s.advance(50);
+  assert.strictEqual(s.log.loadScene, 1); assert.strictEqual(s.log.modal.length, 0);
 });
 
 var failed = results.filter(function (r) { return r.status !== 'passed'; });

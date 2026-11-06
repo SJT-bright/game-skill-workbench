@@ -39,6 +39,8 @@ def wanted(ctx):
     if ctx.engine == 3:
         for name, part in ctx.manifest.parts_for(3, 'source'):
             spec = part.get('file') or {}
+            if part.get('step'):          # 生成时预防 R4G2: a part with its own step (capsule_auto) is installed there
+                continue
             if spec.get('dest'):
                 out.append((spec['dest'], ctx.manifest.kit_bytes(name), bool(part.get('editable')), name,
                             bool(part.get('plugin'))))

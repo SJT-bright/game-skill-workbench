@@ -446,6 +446,69 @@ class Handler(SimpleHTTPRequestHandler):
         pass
 
 
+def start_check_server(handler):
+    """生成时预防 #40: a second loopback server with the same handler on a new port, for automated pages only (home
+    screenshot, trial smoke). A browser keys localStorage by origin (scheme, host, port), so what the game saves there
+    never shows up when a person opens the printed link. Returns (server, url)."""
+    check = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    threading.Thread(target=check.serve_forever, daemon=True).start()
+    return check, f'http://127.0.0.1:{check.server_port}/'
+
+
+def stop_check_server(check):
+    try:
+        check.shutdown()
+        check.server_close()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _can_write(folder):
+    """R4N3: True when a file can be created in `folder` (made if missing)."""
+    probe = Path(folder) / ('.write-probe-%d-%s' % (os.getpid(), secrets.token_hex(3)))
+    try:
+        Path(folder).mkdir(parents=True, exist_ok=True)
+        probe.write_bytes(b'')
+        probe.unlink()
+        return True
+    except OSError:
+        return False
+
+
+def _project_of(export_dir, project=None):
+    if project:
+        return Path(project).resolve()
+    for p in Path(export_dir).resolve().parents:
+        if (p / 'assets').is_dir() and ((p / 'project.json').is_file() or (p / 'package.json').is_file()):
+            return p
+    return Path(export_dir).resolve().parent
+
+
+def make_snapshot(directory, project=None, slots=None):
+    """R4N3 (补查2 第 1 组 1c, 蛋壳特工队 `~/.game-skill-locks/web-snapshots` Operation not permitted): the private copy
+    goes to the shared snapshot folder when it can be written, else to <project>/.tiktok-kit/snapshots/.
+    -> (copy, where, own): where = 'shared' | 'project'; own = True when this script deletes the copy itself."""
+    import shutil
+    import uuid
+    if slots is None:
+        import browser_slots as slots
+    src = Path(directory).resolve()
+    if not (src / 'index.html').is_file():
+        raise SystemExit('index.html not found in ' + str(src) + ' (give the finished web export folder)')
+    if _can_write(slots.SNAPSHOTS):
+        try:
+            return slots.snapshot(src), 'shared', False
+        except OSError:
+            pass
+    base = _project_of(src, project) / '.tiktok-kit' / 'snapshots'
+    if not _can_write(base):
+        raise SystemExit('快照目录都写不进：共享目录 %s 和工程里的 %s。换一个能写的工程副本再试，或去掉 --snapshot。'
+                         % (slots.SNAPSHOTS, base))
+    dest = base / (time.strftime('%m%d-%H%M%S') + '-' + src.name + '-' + uuid.uuid4().hex[:6])
+    shutil.copytree(src, dest)
+    return dest, 'project', True
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', required=True, type=Path)
@@ -504,7 +567,9 @@ def main():
     if args.snapshot:
         if browser_slots is None:
             raise SystemExit('--snapshot needs browser_slots.py next to this script')
-        directory = browser_slots.snapshot(directory)
+        directory, snap_where, snap_own = make_snapshot(directory, args.project, browser_slots)  # R4N3
+        print('快照目录：%s（%s）' % (directory, '共享目录' if snap_where == 'shared' else
+                                    '共享目录写不进，改用工程里的 .tiktok-kit/snapshots/'), flush=True)
     token = None if args.raw else secrets.token_hex(8)
     handler = partial(Handler, directory=str(directory), phone_size=None if args.raw else phone_size, preview_token=token,
                       ad_simulator=args.ad_simulator, ad_simulator_setup=args.ad_simulator_setup,
@@ -535,32 +600,42 @@ def main():
             raise SystemExit(1)
         print('试玩链接读回核对：入口 %d 个文件和现在的导出一字不差（%s）。' % (len(rows), '、'.join(r['file'] for r in rows)),
               flush=True)
+        # 生成时预防 #40 (普查 trial_link_dead 14、stale_preview 10): the screenshot and the trial smoke play the game
+        # and the game writes its save (localStorage) for the origin it runs on. They run on a second port of their
+        # own (another origin, its own localStorage), so the link a person opens starts from a fresh save.
+        check_server, check_url = start_check_server(handler)
         # 生成时预防 P21 ⑤ (后半): one headless screenshot of the game page before the link is printed
         import tempfile
-        shot_url = url + ('__preview/%s/' % token if token else '') + 'index.html?__phone_game=1&__home_shot=1'
-        server.home_probe = None
+        shot_url = check_url + ('__preview/%s/' % token if token else '') + 'index.html?__phone_game=1&__home_shot=1'
+        check_server.home_probe = None
         level, message, _ = home_shot_gate(
             shot_url, current_export, phone_size,
             Path(tempfile.gettempdir()) / ('serve_preview_home_%d.png' % server.server_port),
-            probe=lambda: getattr(server, 'home_probe', None), timeout=args.home_shot_timeout, wait=args.home_shot_wait)
+            probe=lambda: getattr(check_server, 'home_probe', None), timeout=args.home_shot_timeout, wait=args.home_shot_wait)
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
         if level == 'block':
+            stop_check_server(check_server)
             server.shutdown()
             server.server_close()
             if slot:
                 browser_slots.release(slot)
             raise SystemExit(1)
     if args.keep:
-        # v7.8 (总表 B21 / B30 F): the trial-link smoke runs on this very link before it is printed; a failure keeps the
-        # link from the user (the ad window behind the game looked like a frozen game in 全民飞车漂移 v1-v3)
-        level, message = trial_smoke_gate(url, directory, args.adapter, ad_simulator=args.ad_simulator)
+        # v7.8 (总表 B21 / B30 F): the trial-link smoke runs on the same pages before the link is printed; a failure keeps
+        # the link from the user (the ad window behind the game looked like a frozen game in 全民飞车漂移 v1-v3).
+        # #40: on the check port, so the reward it earns is not in the save the user opens.
+        level, message = trial_smoke_gate(check_url, directory, args.adapter, ad_simulator=args.ad_simulator)
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
         if level == 'block':
+            stop_check_server(check_server)
             server.shutdown()
             server.server_close()
             if slot:
                 browser_slots.release(slot)
             raise SystemExit(1)
+    if for_person:
+        stop_check_server(check_server)
+        print('自动截图和冒烟用的是单独的检查端口，试玩链接 %s 没被自动打开过，存档是新的。' % url, flush=True)
     lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
     entry_kind = '内部QA入口（禁止交给用户试玩）' if args.raw else f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
     print(f'{entry_kind}：{url}\n（用户试玩会自动请求独立 Google Chrome 窗口；同时在回复中保留此本地链接。须读回实际窗口，不能把启动请求当作已显示。）\n保持窗口打开；按 Control+C 结束。{lifetime}'
@@ -612,6 +687,9 @@ def main():
         server.server_close()
         if slot:
             browser_slots.release(slot)                   # also deletes the private snapshot copy
+        if args.snapshot and snap_own:                    # R4N3: a copy in the project's .tiktok-kit/snapshots/
+            import shutil
+            shutil.rmtree(directory, ignore_errors=True)
 
 
 if __name__ == '__main__':

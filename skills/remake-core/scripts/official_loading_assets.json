@@ -12,6 +12,12 @@
       "source": "CocosCreator.app/Contents/Resources/app.asar.unpacked/builtin/builder/static/logo/logo.png",
       "sha256": "9e6a5832c6bc9c5f2da97dc54d916fd257a6ab35e9ffd57dbe88c435bd535940",
       "size": [140, 200]
+    },
+    {
+      "creator_versions": ["3.5.0"],
+      "source": "CocosCreator.app/Contents/Resources/app.asar::builtin/builder/static/logo.png",
+      "sha256": "98a45cf849a6b660dc2039757cd334f9801774319c8a00abeedd8b33289d0608",
+      "size": [200, 234]
     }
   ]
 }

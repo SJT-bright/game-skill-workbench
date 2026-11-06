@@ -27,6 +27,8 @@
 //    After that the step wrappers pass straight through; the file guard stays (as in 2.4).
 //  - "Loading N%" (tt.showLoading) moves with each file that loads, and is hidden when the home scene is up.
 // Node-tested with a fake 3.x engine (tests/boot-3x.test.js); not yet run on a real 3.x package (待真机复测).
+// R4Q5 (补查3 第 5 组 奔跑吧巨人): when the home scene is up, and one tick later, the FPS / draw-call stats are turned off
+// unconditionally (cc.profiler.hideStats / cc.setDisplayStats(false)); a save or debug switch cannot leave them on.
 var VERSION = '1.0';
 var MARK = '__tiktokKitBoot3x';
 var FILE_EXTS = ['.png', '.jpg', '.jpeg', '.webp', '.json', '.ttf', '.txt', '.plist', '.fnt', '.atlas', '.bin', '.cconb',
@@ -209,11 +211,18 @@ function hook(cc, sdk, opts) {
     noteProgress();
     return {op: op, result: issue(op)};
   }
+  function hideStats() {
+    try { if (cc.profiler && typeof cc.profiler.hideStats === 'function') cc.profiler.hideStats(); } catch (e) {}
+    try { if (typeof cc.setDisplayStats === 'function') cc.setDisplayStats(false); } catch (e) {}
+    try { if (cc.debug && typeof cc.debug.setDisplayStats === 'function') cc.debug.setDisplayStats(false); } catch (e) {}
+  }
   function launched() {
     if (S.started) return;
     S.started = true;
     if (S.timer !== null) { clock.clearInterval(S.timer); S.timer = null; }
     removeRetryTouch();
+    hideStats();
+    clock.setTimeout(hideStats, 0);
     safeCall('hideLoading', {});
     // a step still held after a failure belongs to the running game now: give the engine its answer
     S.ops.slice().forEach(function (op) { if (op.failed) finishOp(op, new Error(op.name + ' failed before the home scene came up')); });

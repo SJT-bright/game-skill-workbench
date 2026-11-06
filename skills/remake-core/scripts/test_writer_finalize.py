@@ -456,7 +456,7 @@ class W_D4_Requests(KitInSync):
     def plugin_build(self):
         b = H.build3x(self.d / 'p3')
         dests = [d for _, d in kit_parts.kit_plugins(T.load_manifest())]
-        self.assertEqual(len(dests), 5)
+        self.assertEqual(len(dests), 6)   # 生成时预防 R4G1: + HomeEntrySlots.plugin.js
         (b / 'src').mkdir()
         (b / 'src' / 'settings.json').write_text(json.dumps({'plugins': {'jsList': dests}}))
         for dest in dests:

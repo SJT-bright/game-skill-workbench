@@ -49,9 +49,17 @@
     if (host || !document.body) return;
     host = document.createElement('div'); host.id = '__ad-simulator';
     host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
-    var shadow = host.attachShadow({mode:'open'});
-    shadow.innerHTML = '<style>*{box-sizing:border-box}button{font:14px sans-serif;padding:10px;border:1px solid #70839a;border-radius:8px;background:#fff;color:#132132;cursor:pointer}#badge{position:absolute;top:3px;left:3px;padding:4px 8px;font:11px sans-serif;background:#fff4c7;color:#292513;pointer-events:auto}#box{display:none;position:absolute;inset:0;background:#142235ed;color:white;pointer-events:auto;overflow:auto;padding:35px 20px;font:15px/1.5 sans-serif}h2{font-size:21px}#actions{display:grid;gap:10px}pre{font:12px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere}</style><button id="badge">广告模拟 · 查看记录</button><section id="box"></section>';
-    badge = shadow.getElementById('badge'); box = shadow.getElementById('box');
+    // 11.17 R4Q7 (SLS14-1 "host.attachShadow is not a function"): when the page's createElement does not give a real
+    // Element with attachShadow, draw into the div itself, with every style rule scoped to #__ad-simulator.
+    var shadow = null;
+    try { if (typeof host.attachShadow === 'function') shadow = host.attachShadow({mode:'open'}); } catch (e) { shadow = null; }
+    var scope = shadow ? '' : '#__ad-simulator ';
+    var css = '*{box-sizing:border-box}button{font:14px sans-serif;padding:10px;border:1px solid #70839a;border-radius:8px;background:#fff;color:#132132;cursor:pointer}#badge{position:absolute;top:3px;left:3px;padding:4px 8px;font:11px sans-serif;background:#fff4c7;color:#292513;pointer-events:auto}#box{display:none;position:absolute;inset:0;background:#142235ed;color:white;pointer-events:auto;overflow:auto;padding:35px 20px;font:15px/1.5 sans-serif}h2{font-size:21px}#actions{display:grid;gap:10px}pre{font:12px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere}';
+    if (scope) css = css.replace(/(^|\})([^{}]+)\{/g, function (m, end, sel) { return end + sel.split(',').map(function (s) { return scope + s.trim(); }).join(',') + '{'; });
+    var view = shadow || host;
+    view.innerHTML = '<style>' + css + '</style><button id="badge">广告模拟 · 查看记录</button><section id="box"></section>';
+    var pick = function (id) { return view.getElementById ? view.getElementById(id) : view.querySelector('#' + id); };
+    badge = pick('badge'); box = pick('box');
     badge.onclick = function () { if (!active) history(); };
     document.body.appendChild(host);
   }

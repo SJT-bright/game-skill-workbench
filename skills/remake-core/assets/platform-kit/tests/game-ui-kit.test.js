@@ -210,6 +210,70 @@ test('10 wrapExisting: an original cc.Button runs once, SCALE becomes COLOR (add
   assert.strictEqual(paid, 2, 'OLD WAY BUG: original click event plus the new listener');
 });
 
+// R4H 批 (Round4 #20, 问题普查 checker_gap 31/84, check_inputs_missing 19/20): pages.json seen_at_runtime was typed in by
+// hand because no popup() / open() called PageRegistry.record. Three pages opened through the kit -> ui_dump "pages" ->
+// page_registry.py merge-dumps -> all three seen_at_runtime. A hand-made popup records nothing (old way).
+function mergeDumps(pagesList, ids) {
+  var fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process');
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'r4h-pages-'));
+  fs.mkdirSync(path.join(dir, 'docs', 'logic'), {recursive: true});
+  fs.mkdirSync(path.join(dir, 'docs', 'test'), {recursive: true});
+  fs.writeFileSync(path.join(dir, 'docs', 'logic', 'pages.json'), JSON.stringify({schema: 'pages.v1', game: 'fixture',
+    pages: ids.map(function (id) { return {id: id, name: id, kind: id === 'pause' ? 'page' : 'popup', node: 'Canvas/' + id}; })}));
+  fs.writeFileSync(path.join(dir, 'docs', 'test', 'iphone14-ui-dump-1.json'), JSON.stringify({pages: pagesList}));
+  var py = path.join(__dirname, '..', '..', '..', 'scripts', 'page_registry.py');
+  var r = cp.spawnSync(process.env.PYTHON || 'python3', ['-B', py, 'merge-dumps', '--project', dir, '--dumps', path.join(dir, 'docs', 'test')], {encoding: 'utf8'});
+  var doc = JSON.parse(fs.readFileSync(path.join(dir, 'docs', 'logic', 'pages.json'), 'utf8'));
+  fs.rmSync(dir, {recursive: true, force: true});
+  return {report: r.stdout, seen: doc.pages.filter(function (p) { return p.seen_at_runtime === true; }).map(function (p) { return p.id; })};
+}
+test('11 popup() / open() / page templates record into PageRegistry: 3 pages opened -> 3 seen_at_runtime (hand popup: none)', function () {
+  var env = fresh();
+  var quiet = fresh();                                   // release build (no CC_DEBUG, no __QA_PAGES): nothing recorded
+  popup(quiet);
+  assert.strictEqual(quiet.global.__pageRegistry, undefined, 'release build must not record');
+  env.Kit.setup({pageRegistry: true});
+  var shop = env.Kit.popup(env.canvas, {pageId: 'shop', name: 'Shop', panelFrame: env.frame(500, 600), closeFrame: env.frame(64, 64), keep: true});
+  env.flush(); shop.close(); env.flush(); shop.open(); env.flush();
+  env.Kit.popup(env.canvas, {pageId: 'settings', name: 'Settings', panelFrame: env.frame(500, 600), closeFrame: env.frame(64, 64)});
+  env.flush();
+  var pause = env.Kit.pausePage(env.canvas, {closeFrame: env.frame(64, 64), onRestart: function () {}, onHome: function () {}});
+  env.flush(); void pause;
+  var list = JSON.parse(JSON.stringify(env.global.__pageRegistry.list()));   // out of the vm realm
+  assert.deepStrictEqual(list.map(function (r) { return [r.id, r.opened]; }), [['shop', 2], ['settings', 1], ['pause', 1]]);
+  assert.ok(/Close$/.test(list[0].close) && list[0].node, 'record has the node path and the real close path: ' + JSON.stringify(list[0]));
+  assert.deepStrictEqual(list[2].buttons, ['resume', 'restart', 'home']);
+  var m = mergeDumps(list, ['shop', 'settings', 'pause']);
+  assert.deepStrictEqual(m.seen, ['shop', 'settings', 'pause'], m.report);
+  env.Kit.setup({pageRegistry: 'auto'});
+  // old way: the same three pages built by hand (or by a kit without the hook) never reach the registry
+  var env2 = fresh(); env2.global.__QA_PAGES = true;
+  handPopup(env2, true); handPopup(env2, true); handPopup(env2, true);
+  var none = env2.global.__pageRegistry ? env2.global.__pageRegistry.list() : [];
+  assert.deepStrictEqual(mergeDumps(none, ['shop', 'settings', 'pause']).seen, [], 'OLD WAY BUG: hand popups leave seen_at_runtime to be typed in');
+});
+// R4J2 (lead decision 11-05): AdBoostKit builds its own popups, so they never passed popup() / open() and never reached
+// the registry. UI.recordPage is the public name of the same record (Kit._pageHook stays): an ad-boost board popup is
+// recorded with its id, the onPageOpen hook fires, and merge-dumps only warns for an unlisted "ad-boost:" id.
+test('12 UI.recordPage: an AdBoostKit popup is recorded like popup(); unlisted ad-boost: ids only warn in merge-dumps', function () {
+  var env = fresh(), opened = [];
+  assert.strictEqual(typeof env.Kit.recordPage, 'function', 'OLD WAY BUG: no public UI.recordPage, AdBoostKit popups go unrecorded');
+  env.Kit.setup({pageRegistry: true, onPageOpen: function (i) { opened.push(i.id); }});
+  var wheel = node(env, 'AdBoostWheel', 600, 700), close = node(env, 'Close', 104, 104, 250, 300, wheel);
+  env.Kit.recordPage({id: 'ad-boost:wheel', name: 'Wheel', kind: 'popup', ads: ['wheel_spin']}, wheel, close);
+  env.Kit.recordPage(null, wheel);                                         // a broken call never throws
+  var list = JSON.parse(JSON.stringify(env.global.__pageRegistry.list()));
+  assert.deepStrictEqual(list.map(function (r) { return [r.id, r.opened]; }), [['ad-boost:wheel', 1]]);
+  assert.ok(/AdBoostWheel\/Close$/.test(list[0].close), 'real close path: ' + JSON.stringify(list[0]));
+  assert.deepStrictEqual(list[0].ad, ['wheel_spin']);
+  assert.deepStrictEqual(opened.slice(0, 1), ['ad-boost:wheel']);
+  var m = mergeDumps(list.concat([{id: 'shop'}]), ['shop']);
+  var rep = JSON.parse(m.report);
+  assert.strictEqual(rep.status, 'passed', m.report);
+  assert.ok(rep.warnings && /record_ad_entries\.py/.test(rep.warnings[0]), m.report);
+  env.Kit.setup({pageRegistry: 'auto', onPageOpen: null});
+});
+
 var failed = 0;
 KINDS.forEach(function (k) {
   KIND = k;

@@ -22,6 +22,10 @@
  *   pool.releaseAll();                                        // on newRun / leaving the level
  *   pool.destroy();                                           // onDestroy: destroys the pooled nodes
  * A returned node stays a child of parent with active = false (no add/remove churn). Tweens on it are stopped.
+ * Obstacles, enemies and bullets go through the pool (or RunSession.recycle) as ONE root node: a return turns off
+ * every collider / physics body on the node and its children, stops their tweens, actions and component schedules;
+ * spawn turns those colliders back on (FxPool.retire / FxPool.revive, 生成时预防 R4L2). Never hide or destroy only
+ * the picture node of an enemy yourself (回家快跑: the snail's picture went, its collider kept blocking).
  * Particle systems: in reset call ps.resetSystem(); do not set autoRemoveOnFinish (that destroys a pooled node).
  * life: 0 = no auto return (bullets): release() yourself.
  *
@@ -40,16 +44,77 @@
   if (root) root.TikTokFxPool = api;
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this), function () {
   'use strict';
-  var VERSION = '1.0', DEFAULT_MAX = 32;
+  var VERSION = '1.1', DEFAULT_MAX = 32;
 
   function alive(cc, node) {
     if (!node) return false;
     if (cc && typeof cc.isValid === 'function') return cc.isValid(node, true);
     return node.isValid !== false;
   }
-  function stopTweens(cc, node) {
-    try { if (cc && cc.Tween && typeof cc.Tween.stopAllByTarget === 'function') cc.Tween.stopAllByTarget(node); } catch (e) { /* ok */ }
+  // BEGIN entity-retire (byte-identical in parts/FxPool.js and parts/RunSession.js; tests/entity-retire.test.js compares)
+  // 回家快跑: the snail's picture went away after 5 s but its collider kept blocking the runner (an invisible enemy).
+  // retire(cc, node): every collider and physics body on the node AND its children off (2.4 cc.Collider /
+  // cc.PhysicsCollider / cc.RigidBody, 3.x Collider2D / RigidBody2D and the 3D Collider / RigidBody), their tweens,
+  // actions and component schedules stopped, then node.active = false. revive(cc, node): node.active = true and only
+  // the bodies retire() turned off are turned back on. Timers and tweens are not restarted: start them again in
+  // reset / onEnable. Returns the number of bodies turned off / on.
+  var RETIRED = '__tiktokRetired', BODY_TYPES = ['Collider', 'PhysicsCollider', 'RigidBody', 'Collider2D', 'RigidBody2D'];
+  function bodyTypes(cc) {
+    var out = [];
+    for (var i = 0; i < BODY_TYPES.length; i++) {
+      var T = cc && cc[BODY_TYPES[i]];
+      if (typeof T === 'function' && out.indexOf(T) < 0) out.push(T);
+    }
+    return out;
   }
+  function eachNode(node, fn) {
+    if (!node) return;
+    fn(node);
+    var kids = node.children || [];
+    for (var i = 0; i < kids.length; i++) eachNode(kids[i], fn);
+  }
+  function compsOf(node, T) {
+    try { return (T && typeof node.getComponents === 'function' && node.getComponents(T)) || []; } catch (e) { return []; }
+  }
+  function stopOn(cc, target) {
+    try { if (cc && cc.Tween && typeof cc.Tween.stopAllByTarget === 'function') cc.Tween.stopAllByTarget(target); } catch (e) { /* ok */ }
+  }
+  function retire(cc, node) {
+    if (!node) return 0;
+    var off = node[RETIRED] || [], types = bodyTypes(cc), Comp = cc && cc.Component;
+    eachNode(node, function (n) {
+      for (var t = 0; t < types.length; t++) {
+        var bodies = compsOf(n, types[t]);
+        for (var k = 0; k < bodies.length; k++) {
+          var b = bodies[k];
+          if (b && b.enabled && off.indexOf(b) < 0) { try { b.enabled = false; off.push(b); } catch (e) { /* ok */ } }
+        }
+      }
+      stopOn(cc, n);
+      try { if (typeof n.stopAllActions === 'function') n.stopAllActions(); } catch (e) { /* ok */ }
+      var comps = compsOf(n, Comp);
+      for (var j = 0; j < comps.length; j++) {
+        stopOn(cc, comps[j]);
+        try { if (typeof comps[j].unscheduleAllCallbacks === 'function') comps[j].unscheduleAllCallbacks(); } catch (e) { /* ok */ }
+      }
+    });
+    node[RETIRED] = off;
+    if (node.active !== false) node.active = false;
+    return off.length;
+  }
+  function revive(cc, node) {
+    if (!node) return 0;
+    var off = node[RETIRED] || [], on = 0;
+    node[RETIRED] = null;
+    node.active = true;
+    for (var i = 0; i < off.length; i++) {
+      var b = off[i];
+      if (!b || b.isValid === false) continue;
+      try { b.enabled = true; on += 1; } catch (e) { /* ok */ }
+    }
+    return on;
+  }
+  // END entity-retire
   function place(node, x, y) {
     if (typeof x !== 'number' || typeof y !== 'number') return;
     if (typeof node.setPosition === 'function') node.setPosition(x, y);   // 3.x keeps z when only x, y are given
@@ -70,8 +135,7 @@
     function forget(node) { var i = all.indexOf(node); if (i >= 0) all.splice(i, 1); }
     function finish(index) {
       var e = busy.splice(index, 1)[0];
-      stopTweens(cc, e.node);
-      if (alive(cc, e.node)) { e.node.active = false; free.push(e.node); } else forget(e.node);
+      if (alive(cc, e.node)) { retire(cc, e.node); free.push(e.node); } else { stopOn(cc, e.node); forget(e.node); }
       if (typeof e.onDone === 'function') { try { e.onDone(e.node); } catch (err) { warn('onDone threw: ' + (err && err.message)); } }
     }
     function take() {
@@ -97,7 +161,7 @@
         if (node.parent !== opts.parent) opts.parent.addChild(node);
         if (typeof opts.reset === 'function') opts.reset(node);
         place(node, x, y);
-        node.active = true;
+        revive(cc, node);                              // active again; colliders retire() turned off are back on
         var life = typeof o.life === 'number' && o.life >= 0 ? o.life : defaultLife;
         busy.push({ node: node, left: life, onDone: o.onDone });
         return node;
@@ -196,5 +260,5 @@
     };
   }
 
-  return { VERSION: VERSION, DEFAULT_MAX: DEFAULT_MAX, create: create, devWatch: devWatch };
+  return { VERSION: VERSION, DEFAULT_MAX: DEFAULT_MAX, create: create, devWatch: devWatch, retire: retire, revive: revive };
 });

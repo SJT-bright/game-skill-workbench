@@ -17,6 +17,8 @@ the better fix is FxPool.js / RunSession.move.
 New games (board remake, policy new): blocks. English (localize): info only (the English pack does not change the
 original gameplay). Legacy games: warnings.
 Called by tiktok_finalize `sync` (SYNC_SOURCE_STEPS; the wiring line is in the I3 handoff, not in this file).
+生成时预防 R4F3 (#43): also in SOURCE_STEPS, so a new game's block goes into the source record and the writers refuse
+the package by K5 (before, a sync block never reached the record and the package went out).
 """
 import re
 import time

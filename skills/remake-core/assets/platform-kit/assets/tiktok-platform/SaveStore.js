@@ -76,9 +76,142 @@ function SaveStore(defaults, options) {
   this.defaults = clone(isRecord(defaults) ? defaults : {});
   if (!isRecord(this.defaults.platformClaims)) this.defaults.platformClaims = {shortcut: false, profile: false};
   if (!isRecord(this.defaults.meta)) this.defaults.meta = {};
+  // R4E: value ranges from a schema that remake-core/scripts/make_save_schema.py generates from the config tables
+  // (options.schema, else the global TikTokSaveSchema its generated SaveSchema.js sets; schema: false = none).
+  this.schema = options.schema === false ? null : (isRecord(options.schema) ? options.schema : globalSchema());
+  this.log = typeof options.log === 'function' ? options.log : defaultLog;
+  // R4J1: which dated claim ids grant() removes after grantKeepDays (see GRANT_DAY_PREFIXES below).
+  this.grantDayPrefixes = Array.isArray(options.grantDayPrefixes) ? options.grantDayPrefixes.map(String) : GRANT_DAY_PREFIXES;
+  this.grantKeepDays = typeof options.grantKeepDays === 'number' && options.grantKeepDays >= 1 ? options.grantKeepDays : GRANT_KEEP_DAYS;
+  this.repairs = [];
   this.data = null;
   this.status = 'unloaded';
 }
+
+// ---- R4E: read-time value check (问题普查补查 第四节 2, T07:save_value_unvalidated: 蛋壳特工队 wrote role level, map,
+// VIP and skin id as 999999; the next load threw on a missing table row or unlocked everything). Without a schema
+// nothing here runs. With one, every value a load reads is checked against its rule; a value of the wrong type, out
+// of range or not in its table falls back to the rule's default (else the defaults given to SaveStore) and one
+// console.warn line per value names it. Lists drop only the bad entries; in a map a bad value of a known key goes back
+// to that key's default (rule default, else of.default) and unknown keys are dropped. Missing keys are not touched
+// (defaults fill them as before). Nothing is written by the check: the next update() saves the repaired data.
+// Rules: {type: int | number | bool | string | id | list | map, min, max, enum, table, of: rule, keyTable,
+// default}; schema = {schema: 1, keys: {'path.to.key': rule}, tables: {name: [ids]}, defaults}.
+// R4J1 (广告skill ad-boost v1.2.17): schema 2 adds three rule fields make_save_schema.py writes. nullable: true = null
+// is a valid value too (checkin last_day, a wheel's pending; before, null went back to the default or was removed).
+// type object = any object, its contents belong to the part that owns it. in_defaults: false = not in new saves
+// (only the generator uses it; here such a key without a default is removed when bad, and its part rebuilds it).
+// make_save_schema.py looks for the next line before it writes a schema-2 file.
+var SUPPORTED_SCHEMA = 2;
+var MAX_REPAIR_LOG = 20;
+var TYPE_ID = 'id';
+function globalSchema() {
+  var root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
+  var s = root && root.TikTokSaveSchema;
+  return isRecord(s) && isRecord(s.keys) ? s : null;
+}
+function defaultLog(line) { if (typeof console !== 'undefined' && console.warn) console.warn(line); }
+function schemaNumber(value) {   // same type rule as numberOf() below (grant / best), kept separate so grant is unchanged
+  if (typeof value === 'number') return isFinite(value) ? value : null;
+  var n = typeof value === 'string' && value.trim().length > 0 ? Number(value) : NaN;
+  return isFinite(n) ? n : null;
+}
+function inTable(schema, name, value) {
+  var ids = schema.tables && schema.tables[name];
+  if (!Array.isArray(ids)) return false;
+  var text = String(value);
+  for (var i = 0; i < ids.length; i++) if (String(ids[i]) === text) return true;
+  return false;
+}
+// -> {ok: true, value} (value may be normalised: '12' -> 12, a list without its bad entries) or {ok: false, why}
+function checkValue(schema, rule, value, fallback) {
+  var t = rule.type, n;
+  if (value === null && rule.nullable === true) return {ok: true, value: null};
+  if (t === 'object') return isRecord(value) ? {ok: true, value: value} : {ok: false, why: 'not an object'};
+  if (Array.isArray(rule.enum) && t !== 'list' && t !== 'map' &&
+      !rule.enum.some(function (e) { return String(e) === String(value); })) return {ok: false, why: 'not one of ' + rule.enum.join(' or ')};
+  if (t === 'int' || t === 'number') {
+    n = schemaNumber(value);
+    if (n === null) return {ok: false, why: 'not a number'};
+    if (t === 'int' && Math.floor(n) !== n) return {ok: false, why: 'not a whole number'};
+    if (typeof rule.min === 'number' && n < rule.min) return {ok: false, why: 'below ' + rule.min};
+    if (typeof rule.max === 'number' && n > rule.max) return {ok: false, why: 'above ' + rule.max};
+    return {ok: true, value: n};
+  }
+  if (t === 'bool') return typeof value === 'boolean' ? {ok: true, value: value} : {ok: false, why: 'not true/false'};
+  if (t === 'string') {
+    if (typeof value !== 'string') return {ok: false, why: 'not text'};
+    if (typeof rule.maxLength === 'number' && value.length > rule.maxLength) return {ok: false, why: 'longer than ' + rule.maxLength};
+    return {ok: true, value: value};
+  }
+  if (t === TYPE_ID) {
+    if (value === null || typeof value === 'object' || typeof value === 'boolean') return {ok: false, why: 'not an id'};
+    return inTable(schema, rule.table, value) ? {ok: true, value: value} : {ok: false, why: 'not in table ' + rule.table};
+  }
+  if (t === 'list') {
+    if (!Array.isArray(value)) return {ok: false, why: 'not a list'};
+    var kept = [], dropped = 0;
+    value.forEach(function (v) {
+      var r = rule.of ? checkValue(schema, rule.of, v) : {ok: true, value: v};
+      if (r.ok) kept.push(r.value); else dropped++;
+    });
+    if (typeof rule.maxItems === 'number' && kept.length > rule.maxItems) { dropped += kept.length - rule.maxItems; kept.length = rule.maxItems; }
+    return {ok: true, value: kept, dropped: dropped};
+  }
+  if (t === 'map') {
+    if (!isRecord(value)) return {ok: false, why: 'not a map'};
+    var out = {}, bad = 0;
+    Object.keys(value).forEach(function (k) {
+      if (rule.keyTable && !inTable(schema, rule.keyTable, k)) { bad++; return; }
+      var r = rule.of ? checkValue(schema, rule.of, value[k]) : {ok: true, value: value[k]};
+      if (r.ok) { out[k] = r.value; return; }
+      bad++;
+      var back = isRecord(fallback) && fallback[k] !== undefined ? fallback[k] : (rule.of && rule.of['default']);
+      if (back !== undefined) out[k] = clone(back);
+    });
+    return {ok: true, value: out, dropped: bad};
+  }
+  return {ok: true, value: value};   // unknown type: left as it is (the generator refuses unknown types)
+}
+function short(value) {
+  var s; try { s = JSON.stringify(value); } catch (_) { s = String(value); }
+  s = s === undefined ? String(value) : s;
+  return s.length > 60 ? s.slice(0, 57) + '...' : s;
+}
+function pathGet(obj, parts) {
+  for (var i = 0; i < parts.length; i++) { if (!isRecord(obj) && !Array.isArray(obj)) return undefined; obj = obj[parts[i]]; }
+  return obj;
+}
+// Checks data in place; returns [{key, was, now, why}].
+function applySchema(schema, data, defaults) {
+  var repairs = [];
+  if (!schema || !isRecord(schema.keys) || !isRecord(data)) return repairs;
+  Object.keys(schema.keys).forEach(function (path) {
+    var rule = schema.keys[path];
+    if (!isRecord(rule)) return;
+    var parts = path.split(/\./), last = parts.pop(), parent = pathGet(data, parts);
+    if (!isRecord(parent) || parent[last] === undefined) return;
+    var fallback = rule['default'] !== undefined ? rule['default'] : pathGet(defaults, parts.concat([last]));
+    var was = parent[last], r = checkValue(schema, rule, was, fallback);
+    if (r.ok) {
+      parent[last] = r.value;
+      if (r.dropped) repairs.push({key: path, was: short(was), now: short(r.value), why: r.dropped + ' bad entries fixed'});
+      return;
+    }
+    if (fallback === undefined) delete parent[last]; else parent[last] = clone(fallback);
+    repairs.push({key: path, was: short(was), now: fallback === undefined ? '(removed)' : short(fallback), why: r.why});
+  });
+  return repairs;
+}
+
+SaveStore.prototype._applySchema = function () {
+  this.repairs = applySchema(this.schema, this.data, this.defaults);
+  var log = this.log, n = this.repairs.length;
+  this.repairs.slice(0, MAX_REPAIR_LOG).forEach(function (r) {
+    try { log('[SaveStore] schema: ' + r.key + ' = ' + r.was + ' (because: ' + r.why + ') -> ' + r.now); } catch (_) {}
+  });
+  if (n > MAX_REPAIR_LOG) { try { log('[SaveStore] schema: ' + (n - MAX_REPAIR_LOG) + ' more values repaired'); } catch (_) {} }
+};
 
 SaveStore.prototype._fill = function (data) {
   var self = this;
@@ -132,7 +265,11 @@ SaveStore.prototype._load = function () {
   if (!isRecord(parsed)) return this._recover(raw);
   this.data = this._fill(parsed);
   this.status = 'loaded';
-  return this._result(true);
+  if (!this.schema) return this._result(true);
+  this._applySchema();
+  var loaded = this._result(true);
+  if (this.repairs.length) loaded.repaired = clone(this.repairs);
+  return loaded;
 };
 
 // No save under this key: start from defaults and write them once, so the next read returns a string.
@@ -200,6 +337,40 @@ SaveStore.prototype.update = function (mutator) {
 // Type rule (same as storage-guard.js): a number, or a numeric text written by an older build, is that number;
 // null / undefined / '' / true / false is "no value" and counts as the default (grant) or as no record (best).
 var RUN_GRANT_KEEP = 50;
+// R4J1 (广告skill ad-boost v1.2.17): ids of daily rewards were kept for good (online gift 5 a day, timer chest 4 a
+// day, coin-ad, home gift every cycle): thousands a year, ~100 KB in one save. An id under one of these prefixes
+// that carries its day is removed GRANT_KEEP_DAYS after that day, in the same write as a new grant. Its day = the
+// first 'YYYY-MM-DD' part ('online-ladder:2026-11-05:2', 'coin-ad:2026-11-05:r7'), else the first part that is a
+// time in ms ('timer-chest:tchest:3:1793800000000', 'gift:home:1793800000000'). Such an id is only made again on
+// its own day (retry after a failed save, a late ad callback), so the claim stays once-only. Ids without a day
+// ('gift:chest:L6', 'gift:home:0', 'checkin:20397'), other prefixes and the game's own ids are kept as before.
+// options.grantDayPrefixes (list, replaces this one) / options.grantKeepDays change it; grantDayPrefixes: [] = off.
+var GRANT_DAY_PREFIXES = ['online-ladder:', 'timer-chest:', 'coin-ad:', 'gift:home:', 'offline:quick:', 'quest-x2:daily:',
+  'wheel:'];   // R4N6 (广告skill): the lucky wheel's daily spins ('wheel:2026-11-05:2'); not all of 'offline:', no 'shopfree:', checkin unchanged
+var GRANT_KEEP_DAYS = 7;
+var DAY_MS = 86400000;
+var MS_FROM = 1420070400000, MS_TO = 4102444800000;   // 2015-01-01 .. 2100-01-01: a 13-digit part in here is a time
+function grantDay(id) {
+  var parts = id.split(':');
+  for (var i = 1; i < parts.length; i++) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(parts[i]);
+    if (m) return Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3]) / DAY_MS);
+    if (/^\d{13}$/.test(parts[i])) { var ms = Number(parts[i]); if (ms >= MS_FROM && ms < MS_TO) return Math.floor(ms / DAY_MS); }
+  }
+  return null;
+}
+function pruneDatedGrants(grants, prefixes, keepDays, now) {
+  var today = Math.floor(now / DAY_MS), removed = 0;
+  Object.keys(grants).forEach(function (g) {
+    for (var i = 0; i < prefixes.length; i++) {
+      if (g.indexOf(prefixes[i]) !== 0) continue;
+      var day = grantDay(g);
+      if (day !== null && day < today - keepDays) { delete grants[g]; removed++; }
+      return;
+    }
+  });
+  return removed;
+}
 function numberOf(value) {
   if (typeof value === 'number') return isFinite(value) ? value : null;
   if (typeof value === 'string' && value.trim() !== '' && isFinite(Number(value))) return Number(value);
@@ -213,7 +384,8 @@ function numberOf(value) {
 //    false to cancel. It runs in the SAME update() as the coins and the claim mark.
 //  - id: optional claim id. The same id never pays twice: the second call returns {ok: true, already: true},
 //    writes nothing and does not call onDone. Ids starting with 'run:' (one run's result / x2) keep only the
-//    last 50; every other id is kept for good (first clear of a level, a one-time gift).
+//    last 50; a daily id with its day in it (GRANT_DAY_PREFIXES, R4J1) is kept 7 days after that day; every other
+//    id is kept for good (first clear of a level, a one-time gift). Put the day in a daily reward's id.
 //  - onDone(result) is called only after the write was read back identical; update the wallet label and leave
 //    the page there. On failure nothing changed (memory, storage, UI): show "Could not save" and allow a retry.
 SaveStore.prototype.grant = function (delta, onDone) {
@@ -226,7 +398,7 @@ SaveStore.prototype.grant = function (delta, onDone) {
       Object.prototype.hasOwnProperty.call(this.data.meta.grants, id)) {
     var same = this._result(true); same.already = true; return same;
   }
-  var defaults = this.defaults, problem = null;
+  var self = this, defaults = this.defaults, problem = null;
   var r = this.update(function (draft) {
     var keys = Object.keys(add);
     for (var i = 0; i < keys.length; i++) {
@@ -247,6 +419,9 @@ SaveStore.prototype.grant = function (delta, onDone) {
         runs.sort(function (a, b) { return draft.meta.grants[a] - draft.meta.grants[b]; });
         while (runs.length > RUN_GRANT_KEEP) delete draft.meta.grants[runs.shift()];
       }
+      var now = Number(self.now());
+      if (isFinite(now)) pruneDatedGrants(draft.meta.grants, self.grantDayPrefixes, self.grantKeepDays, now);
+      draft.meta.grants[id] = draft.meta.grantSeq;      // the new id itself is never removed in its own write
     }
   });
   if (!r.ok) { if (problem) r.error = problem; return r; }
@@ -279,4 +454,11 @@ SaveStore.prototype.isClaimed = function (kind) {
 
 // Test hook only: lets a test send the one-per-process login again.
 SaveStore._resetLoginForTests = function () { loginSent = false; };
+SaveStore.SUPPORTED_SCHEMA = SUPPORTED_SCHEMA;
+SaveStore.GRANT_DAY_PREFIXES = GRANT_DAY_PREFIXES.slice();
+// R4E: the read-time check alone (tests, make_save_schema.py --check). Works on a copy.
+SaveStore.checkWithSchema = function (schema, data, defaults) {
+  var copy = clone(data);
+  return {data: copy, repairs: applySchema(schema, copy, defaults || {})};
+};
 module.exports = SaveStore;

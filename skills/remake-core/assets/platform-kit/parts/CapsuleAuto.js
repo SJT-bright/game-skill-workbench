@@ -17,6 +17,12 @@
  *   a node whose name contains 'nocapsule' is never moved
  *   TikTokCapsuleAuto.pass(cc, root)  one pass by hand (tests, a page built by code) -> [{name, dy}]
  * Proof: tests/capsule-auto.test.js (fake 2.4 engine). 待真机复测.
+ * Cocos 3.x (生成时预防 R4G2, #29): the same file runs as the kit plugin script plugins-3x/CapsuleAuto.plugin.js
+ * (tools/make_plugin_scripts.py, part capsuleauto3x with CapsuleLayout.plugin.js; `tiktok_finalize.py source` step
+ * capsule_auto installs both for new 3.x games). Boxes come from the node's cc.UITransform, a node without one is
+ * skipped, a node without a top Widget moves with setWorldPosition. When the plugin runs before the engine
+ * namespace cc exists, it waits for it (every 100 ms, at most 10 s). Proof: tests/capsule-auto-3x.test.js (fake 3.x
+ * engine). 待真机复测 on 3.x.
  */
 (function (root, factory) {
   var api = factory();
@@ -35,8 +41,14 @@
     return g.TikTokCapsuleLayout || null;
   }
 
-  function box(node) {
-    var r = node.getBoundingBoxToWorld();
+  function box(node, cc) {
+    var r;
+    if (typeof node.getBoundingBoxToWorld === 'function') r = node.getBoundingBoxToWorld();
+    else {                                                      // Cocos 3.x: the box lives on cc.UITransform
+      var t = cc && cc.UITransform && node.getComponent ? node.getComponent(cc.UITransform) : null;
+      if (!t || typeof t.getBoundingBoxToWorld !== 'function') return null;
+      r = t.getBoundingBoxToWorld();
+    }
     return { left: r.x, right: r.x + r.width, bottom: r.y, top: r.y + r.height };
   }
 
@@ -53,7 +65,9 @@
       for (var i = 0; i < kids.length; i++) {
         var n = kids[i];
         if (!n.activeInHierarchy || /nocapsule/i.test(n.name || '')) continue;
-        var b = box(n), bar = b.top - b.bottom <= v.height * BAR_SHARE;   // a page root or background is not a bar
+        var b = box(n, cc);
+        if (!b) { if (depth < MAX_DEPTH) walk(n, depth + 1, depth === 0); continue; }   // 3.x node without UITransform
+        var bar = b.top - b.bottom <= v.height * BAR_SHARE;   // a page root or background is not a bar
         var byName = bar && NAME.test(n.name || '');
         var byPlace = bar && pageLevel && b.top > line;
         if (byName || byPlace) out.push(n);
@@ -76,6 +90,11 @@
       if (w.updateAlignment) w.updateAlignment();
       return dy;
     }
+    if (typeof node.convertToWorldSpaceAR !== 'function' && typeof node.setWorldPosition === 'function') {
+      var w3 = node.worldPosition;                              // Cocos 3.x
+      node.setWorldPosition(w3.x, w3.y - dy, w3.z);
+      return dy;
+    }
     var p = node.parent, wp = node.convertToWorldSpaceAR(cc.v2(0, 0));
     node.setPosition(p ? p.convertToNodeSpaceAR(cc.v2(wp.x, wp.y - dy)) : cc.v2(wp.x, wp.y - dy));
     return dy;
@@ -88,7 +107,7 @@
     var cap = Capsule.designRect(cc, sdk), safe = Capsule.safeTopY(cc, MARGIN, sdk), moved = [];
     var list = candidates(cc, canvas);
     for (var i = 0; i < list.length; i++) {
-      var b = box(list[i]);
+      var b = box(list[i], cc);
       if (b.right <= cap.left || b.left >= cap.right) continue;       // beside the capsule, not under it
       var dy = b.top - safe;
       if (!(dy > 0.5)) continue;
@@ -125,5 +144,17 @@
   }
   api.install = install;
   if (typeof cc !== 'undefined' && cc && cc.director) install(cc);
+  else if (typeof setTimeout === 'function') {
+    // Cocos 3.x plugin script loaded before the engine namespace: wait for it (at most 10 s, never keeps Node alive)
+    var tries = 0;
+    var wait = function () {
+      var g = typeof globalThis !== 'undefined' ? globalThis : {};
+      if (install.done) return;
+      if (g.cc && g.cc.director && g.cc.Director) { install(g.cc); return; }
+      if (++tries < 100) { var t = setTimeout(wait, 100); if (t && t.unref) t.unref(); }
+    };
+    var t0 = setTimeout(wait, 0);
+    if (t0 && t0.unref) t0.unref();
+  }
   return api;
 });

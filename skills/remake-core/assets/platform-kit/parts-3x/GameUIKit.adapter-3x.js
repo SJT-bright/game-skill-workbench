@@ -147,6 +147,14 @@ function makeGameUIAdapter3x(cc) {
     },
     setActive: function (n, b) { n.active = !!b; },
     isValid: function (n) { return !!n && cc.isValid(n, true); },
+    // 1.1.7: a SpriteFrame that can still be drawn - not destroyed (released with its prefab) and its texture still there.
+    frameUsable: function (f) {
+      if (!f || !cc.isValid(f, true)) return false;
+      var t = 'texture' in f ? f.texture : undefined;
+      if (t === null) return false;
+      return !(t && typeof t === 'object' && !cc.isValid(t, true));
+    },
+    setAngle: function (n, a) { n.angle = a; },
     destroy: function (n) { if (cc.isValid(n, true)) n.destroy(); },
     toTop: function (n) { if (n.parent) n.setSiblingIndex(n.parent.children.length - 1); },
     spin: function (n) {
@@ -194,6 +202,37 @@ function makeGameUIAdapter3x(cc) {
       label.enableWrapText = false;
       label.overflow = cc.Label.Overflow.SHRINK;
       ui(n).setContentSize(w, h);
+    },
+    // 1.1.4 GameUIKit.text: the node already has its box; overflow and wrap, then the font, then the text (this order)
+    textLabel: function (n, o) {
+      var l = n.addComponent(cc.Label), HA = cc.Label.HorizontalAlign;
+      l.overflow = cc.Label.Overflow[o.overflow];
+      l.enableWrapText = !!o.wrap;
+      l.horizontalAlign = HA[o.align] !== undefined ? HA[o.align] : HA.CENTER;
+      l.verticalAlign = cc.Label.VerticalAlign.CENTER;
+      if (o.font) l.font = o.font;
+      l.fontSize = o.fontSize; l.lineHeight = o.lineHeight;
+      l.color = rgb(o.color);
+      if (o.outline) {
+        if ('enableOutline' in l) { l.enableOutline = true; l.outlineColor = rgb(o.outline); l.outlineWidth = 3; }
+        else if (cc.LabelOutline) { var ol = n.addComponent(cc.LabelOutline); ol.color = rgb(o.outline); ol.width = 3; }
+      }
+      l.string = o.text;
+      return l;
+    },
+    // 1.1.4 GameUIKit.guide (same meaning as the 2.4 adapter): world centre, world point -> node space (UITransform),
+    // fn before every draw (after the Widget alignment of the frame) and on canvas resize. Returns stop().
+    worldCenter: function (n) {
+      var t = ui(n), ax = typeof t.anchorX === 'number' ? t.anchorX : 0.5, ay = typeof t.anchorY === 'number' ? t.anchorY : 0.5;
+      var p = t.convertToWorldSpaceAR(new cc.Vec3((0.5 - ax) * t.width, (0.5 - ay) * t.height, 0));
+      return {x: p.x, y: p.y};
+    },
+    toLocal: function (parent, x, y) { var p = ui(parent).convertToNodeSpaceAR(new cc.Vec3(x, y, 0)); return {x: p.x, y: p.y}; },
+    eachLayout: function (fn) {
+      var d = cc.director, ev = cc.Director && cc.Director.EVENT_BEFORE_DRAW, v = cc.view, offs = [];
+      if (d && ev && typeof d.on === 'function') { d.on(ev, fn); offs.push(function () { d.off(ev, fn); }); }
+      if (v && typeof v.on === 'function') { v.on('canvas-resize', fn); offs.push(function () { v.off('canvas-resize', fn); }); }
+      return function () { for (var i = 0; i < offs.length; i++) { try { offs[i](); } catch (_) {} } };
     },
     winSize: function () {
       var c = canvasNode();

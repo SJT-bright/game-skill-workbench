@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """import_audio.py (生成时预防方案 P15): a library sound lands in the game together with its credits.csv row and usage
-record; a 4.9 s fail sound is cut to <= 2 s with a fade-out; refused files write nothing. The negative control is the
+record; a 4.9 s fail sound is cut to <= 2 s with a fade-out, a 3 s win / reward / level-end sound is not (R4E);
+refused files write nothing. The negative control is the
 old way (copy the file by hand): the package gate audit_audio_sources.py fails it, and passes the same sound brought in
 by import_audio.py. Library, sounds (WAV made here with the wave module) and project are in a temp folder; nothing of
 the machine's own audio library is read. Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_import_audio.py"""
@@ -50,7 +51,9 @@ class ImportAudio(unittest.TestCase):
         self.rows = {}
         for i, (name, secs, lic) in enumerate([('click.wav', 0.2, 'CC0'), ('lose_long.wav', 4.9, 'CC0 1.0'),
                                                ('win_fanfare.wav', 3.0, 'Kenney CC0'), ('nc.wav', 0.3, 'CC BY-NC 4.0'),
-                                               ('by.wav', 0.3, 'CC-BY 4.0'), ('pop.wav', 0.25, 'CC0')]):
+                                               ('by.wav', 0.3, 'CC-BY 4.0'), ('pop.wav', 0.25, 'CC0'),
+                                               ('reward_get.wav', 3.0, 'CC0'), ('level_end.wav', 3.2, 'CC0'),
+                                               ('lose_reward.wav', 3.0, 'CC0')]):
             p = self.lib / 'raw/kenney/pack_a' / name
             make_wav(p, secs, freq=300 + 50 * i)
             self.rows[name] = {'path': str(p), 'source': 'kenney', 'pack': 'pack_a', 'name': p.stem, 'kind': 'sfx',
@@ -136,9 +139,9 @@ class ImportAudio(unittest.TestCase):
 
     def test_fail_sound_cut_to_two_seconds_with_fade(self):
         self.assertAlmostEqual(I.wav_seconds(Path(self.rows['lose_long.wav']['path'])), 4.9, places=2)
-        code, out = self.imp('--file', self.rows['lose_long.wav']['path'], '--file', self.rows['win_fanfare.wav']['path'])
+        code, out = self.imp('--file', self.rows['lose_long.wav']['path'], '--file', self.rows['lose_reward.wav']['path'])
         self.assertEqual(code, 0, out)
-        for name in ('lose_long.wav', 'win_fanfare.wav'):
+        for name in ('lose_long.wav', 'lose_reward.wav'):   # a fail word wins over a reward word
             f = self.project / 'assets/resources/audio' / name
             secs = I.wav_seconds(f)
             self.assertLessEqual(secs, 2.0 + 1e-6, name)
@@ -149,8 +152,25 @@ class ImportAudio(unittest.TestCase):
             self.assertLess(max(abs(x) for x in tail), 200, '%s does not fade out' % name)
             row = [r for r in self.credits() if r['outputs'].endswith(name)][0]
             self.assertEqual(row['output_sha256'], sha(f))
-            self.assertIn('cut 4.90 s -> 2.00 s' if name.startswith('lose') else 'result sound cut', row['notes'])
+            self.assertIn('fail sound cut %s s -> 2.00 s' % ('4.90' if name == 'lose_long.wav' else '3.00'), row['notes'])
             self.assertEqual(row['type'], 'jingle')
+        self.assertEqual(self.audit()[0], 0)
+
+    def test_result_reward_end_sounds_are_not_cut(self):
+        # R4E (Saul): only fail / lose sounds are cut to 2 s; win, reward and level-end sounds keep their length.
+        names = ('win_fanfare.wav', 'reward_get.wav', 'level_end.wav')
+        code, out = self.imp(*sum((['--file', self.rows[n]['path']] for n in names), []))
+        self.assertEqual(code, 0, out)
+        for name in names:
+            f = self.project / 'assets/resources/audio' / name
+            self.assertEqual(sha(f), sha(self.rows[name]['path']), '%s was changed (cut) on import' % name)
+            self.assertGreaterEqual(I.wav_seconds(f), 2.9, name)
+            row = [r for r in self.credits() if r['outputs'].endswith(name)][0]
+            self.assertEqual(row['type'], 'jingle', name)
+            self.assertNotIn('cut', row['notes'], name)
+        code, out = self.imp('--file', self.rows['pop.wav']['path'], '--as', 'tap_pop.wav', '--result')
+        self.assertEqual(code, 0, out)
+        self.assertEqual(sha(self.project / 'assets/resources/audio/tap_pop.wav'), sha(self.rows['pop.wav']['path']))
         self.assertEqual(self.audit()[0], 0)
 
     def test_refused_licences_write_nothing(self):

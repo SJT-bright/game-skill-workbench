@@ -49,8 +49,9 @@ class Coverage(unittest.TestCase):
 
     def dump(self, size, paths_texts):
         self.n += 1
-        nodes = [{'path': p, 'name': p.rsplit('/', 1)[-1], 'order': i, 'opacity': 1, 'rect': [0, 0, .1, .1],
-                  'comps': {'label': {'string': t}} if t else {}} for i, (p, t) in enumerate(paths_texts)]
+        nodes = [{'path': p, 'name': p.rsplit('/', 1)[-1], 'order': i, 'opacity': 1, 'rect': list(r[0]) if r else [0, 0, .1, .1],
+                  'comps': {'label': {'string': t}} if t else (dict(r[1]) if len(r) > 1 else {})}
+                 for i, (p, t, *r) in enumerate(paths_texts)]
         d = {'tool': 'ui_dump', 'schema': 1, 'screen': 's%d' % self.n, 'kind': 'popup', 'scene': 'Main',
              'viewport': {'width': size[0], 'height': size[1]}, 'canvas_css': [0, 0, size[0], size[1]], 'nodes': nodes}
         (self.root / 'docs/test' / ('%03d-ui-dump-s%d.json' % (self.n, self.n))).write_text(json.dumps(d), encoding='utf-8')
@@ -99,9 +100,27 @@ class Coverage(unittest.TestCase):
         self.write('ShopLayer', [('Draw1', 'cc.Button', None), ('Draw10', 'cc.Button', None), ('poster', 'cc.Label', 'Shop'),
                                  ('guarantee', 'cc.Label', 'DRAWS TO GUARANTEE')])
         for size in ((393, 852), (375, 667)):
-            self.dump(size, [('Canvas/layer1/VipLayer/title', ''), ('Canvas/layer1/PatrolFastLayer/Label', ''),
+            lab = ((0, 0, .1, .1), {'label': {}})       # R4N5: an empty Label still draws (a page root needs that)
+            self.dump(size, [('Canvas/layer1/VipLayer/title', '', *lab), ('Canvas/layer1/PatrolFastLayer/Label', '', *lab),
                              ('Canvas/layer1/shopPopup/Draw1', ''), ('Canvas/layer1/shopPopup/Draw10', ''),
                              ('Canvas/layer1/shopPopup/poster', 'Shop'), ('Canvas/layer1/shopPopup/guarantee', '')])
+        self.assertTrue(self.result()['passed'])
+
+    def test_one_pixel_shell_is_not_coverage(self):
+        """R4N5 (补查2 第 5 节, 火箭三消 11-05): the Loading root was a 1x1 leftover shell and counted at both sizes."""
+        self.write('LoadingLayer', [('tip', 'cc.Label', 'Loading...'), ('bar', 'cc.Sprite', None)])
+        shell = (0.5, 0.5, 1 / 390, 1 / 844)
+        for size in ((393, 852), (375, 667)):            # real RocketMatch dumps: an empty full-canvas root in every
+            self.dump(size, [('Canvas/layer1/VipLayer/title', 'VIP Perks'),    # dump, plus a 1x1 one with a sprite
+                             ('Canvas/layer1/PatrolFastLayer/Label', 'Claim 300 minutes of Patrol rewards now'),
+                             ('Canvas/--SystemModule/LoadingLayer', '', (0, 0, 1, 1)),
+                             ('Canvas/--SystemModule/LoadingLayer/LoadingLayer', '', shell, {'sprite': {}})])
+        r = self.result()
+        self.assertEqual([(m['root'], m['status']) for m in r['missing']], [('LoadingLayer', 'never')],
+                         'OLD WAY BUG: an empty / 1x1 shell counts as the loading page seen at two sizes')
+        for size in ((393, 852), (375, 667)):           # the real loading page: a picture drawn under the root
+            self.dump(size, [('Canvas/LoadingLayer', '', (0, 0, 1, 1)),
+                             ('Canvas/LoadingLayer/bg', '', (0, 0, 1, 1), {'sprite': {}})])
         self.assertTrue(self.result()['passed'])
 
     def test_state_never_opened_is_a_hint(self):

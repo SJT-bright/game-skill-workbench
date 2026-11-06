@@ -34,7 +34,7 @@ from pathlib import Path
 BRIDGE_PATH = 'assets/tiktok-platform/AdBridge.js'
 KIT_DIR = 'assets/tiktok-platform/'
 KIT_MODULES = ('RewardedService', 'PlatformConfig', 'TikTokMissionService', 'SaveStore', 'MissionFlow',
-               'HomeGrowthEntries', 'GameUIKit', 'AdBridge')
+               'HomeGrowthEntries', 'GameUIKit', 'AdBridge', 'AdBridge3x')
 SKIP = {'library', 'temp', 'build', 'local', 'node_modules', '.git', '.tiktok-kit', '__MACOSX'}
 RECORD = Path('.tiktok-kit') / 'rewire-ads.json'
 BACKUP = Path('.tiktok-kit') / 'rewire-backup'
@@ -56,7 +56,19 @@ FAIL_NAME = re.compile(r'fail|err|cancel|close|reject|lose|no$', re.I)
 START_NAME = re.compile(r'^(?:on)?(?:show|start|open|play|begin)\w*$', re.I)
 OK_NAME = re.compile(r'^(?:on)?(?:succ\w*|ok|reward\w*|done|complete\w*|finish\w*|cb|callback|success)$', re.I)
 FAIL_ONLY = re.compile(r'^(?:on)?(?:fail\w*|err\w*|cancel\w*|reject\w*)$', re.I)
-PLACE_NAME = re.compile(r'^(?:type|adType|place|placement|placementKey|pos|scene|key|name|reason|kind|from|tag)$')
+PLACE_NAME = re.compile(r'^(?:type|adType|place|placement|placementKey|pos|scene|key|name|reason|kind|from|tag|'
+                        r'des|desc)$')
+# R4N2 (补查2 第 4 组): an ad wrapper that never names createRewardedVideoAd itself (合成进化恐龙 SdkMgr.showRewardAd
+# calls Wechat.showRewardVideoAd; 奔跑吧巨人 GameLogic.pay calls bondSDK.pay) but grants the reward at once on a
+# branch that is not the platform (Channel.DEFAULT: cb(); else { callback(null) }). Found by name + that branch.
+WRAPPER_NAME = re.compile(r'^(?:show|play|watch|look|open|request)\w*(?:reward|video|ad)\w*$|^pay$|^\w*rewardAd\w*$|'
+                          r'^\w*videoAd\w*$', re.I)
+NONPLATFORM = re.compile(r'\bcase\s+[\w$.]*\bDEFAULT\s*:|\bdefault\s*:|\belse\b')
+AD_WORD = re.compile(r'(?:[Vv]ideo|[Rr]eward|Ad)[\w$]*\s*\(|\.\s*(?:show|pay)\s*\(|createRewardedVideoAd')
+CANCEL_NAME = re.compile(r'cancel', re.I)
+CLICK_HANDLER = re.compile(r'"__type__"\s*:\s*"cc\.ClickEvent".*?"component"\s*:\s*"([\w$.]+)".*?'
+                           r'"handler"\s*:\s*"([\w$]+)"', re.S)
+AD_HANDLER = re.compile(r'video|reward|(?<![a-z])ad(?![a-z])|Ad(?![a-z])|watch', re.I)
 KEY_HINT = (('revive', 'revive'), ('relive', 'revive'), ('fuhuo', 'revive'), ('hint', 'hint'), ('tip', 'hint'),
             ('skin', 'skin'), ('double', 'double_coins'), ('gift', 'gift'))
 
@@ -304,12 +316,22 @@ def classify_ad(text, masked, f):
         oks = [n for n in called if OK_NAME.match(n)]
         fails = [n for n in called if FAIL_ONLY.match(n)]
         others = [n for n in called if n not in oks and n not in fails and n not in start]
+        cancel = None
+        if len(fails) == 2 and sum(1 for n in fails if CANCEL_NAME.search(n)) == 1:     # R4N2: (cb, cancel?, fail?)
+            cancel = next(n for n in fails if CANCEL_NAME.search(n))
+            fails = [n for n in fails if n != cancel]
         if len(oks) != 1 or len(fails) > 1 or others or bools:
             return None, 'callbacks not clear (%s); rewire by hand' % ', '.join(called)
-        if any(a for a in args[oks[0]]):
+        firsts = args[oks[0]]
+        # R4N2: node-style callback(null) = success, callback('fail', err) = failure (奔跑吧巨人 GameLogic.pay)
+        strs = [a for a in firsts if re.fullmatch(r'(["\'])[\w ]*\1', a)]
+        if len(called) == 1 and 'null' in firsts and strs and all(a == 'null' or a in strs for a in firsts):
+            detail.update(ok=oks[0], bool=False, errfirst=True, fail=None, extra=start)
+            return 'callback', detail
+        if any(a for a in firsts):
             return None, 'success callback %s gets arguments (%s); rewire by hand' % (
-                oks[0], ', '.join(sorted(set(a for a in args[oks[0]] if a)))[:60])
-        detail.update(ok=oks[0], bool=False, fail=fails[0] if fails else None, extra=start)
+                oks[0], ', '.join(sorted(set(a for a in firsts if a)))[:60])
+        detail.update(ok=oks[0], bool=False, fail=fails[0] if fails else None, cancel=cancel, extra=start)
         return 'callback', detail
     emits = list(re.finditer(r'((?:this\s*\.\s*)?[\w$.]+\s*\.\s*(?:emit|dispatchEvent|dispatch|fire|trigger)\s*\('
                              r'\s*(["\'])([^"\']+)\2[^;\n]*\))', body))
@@ -352,6 +374,14 @@ def bridge_entry(ident, f, shape, detail):
             okc, failc, toast = 'call(%s, [true])' % ok, 'call(%s, [false, r.message])' % ok, 'false'
         elif detail['bool']:
             okc, failc, toast = 'call(%s, [true])' % ok, 'call(%s, [false])' % ok, 'true'
+        elif detail.get('errfirst'):
+            okc, failc, toast = 'call(%s, [null])' % ok, "call(%s, ['fail', r])" % ok, 'false'
+        elif detail.get('cancel'):
+            c, fl = detail['cancel'], detail.get('fail')
+            okc = 'call(%s, [])' % ok
+            failc = ("if (r && r.status === 'cancelled' && typeof %s === 'function') call(%s, []); else %s"
+                     % (c, c, 'call(%s, [r.message])' % fl if fl else 'call(%s, [])' % c))
+            toast = 'false'
         else:
             okc = 'call(%s, [])' % ok
             failc = 'call(%s, [r.message])' % detail['fail'] if detail.get('fail') else '/* no fail callback */'
@@ -370,14 +400,229 @@ def _body_call(ident, f, names):
         json.dumps(ident), ''.join(', ' + n for n in names))
 
 
+def _branch_text(masked, pos):
+    """Masked text of the branch that starts at pos (`case X.DEFAULT:`, `default:` or `else`): up to the next
+    break / case / closing brace of a switch, or the else block / statement."""
+    m = NONPLATFORM.match(masked, pos)
+    after = m.end()
+    if masked[pos:after].startswith('else'):
+        rest = masked[after:after + 20].lstrip()
+        if rest.startswith('if'):
+            return ''
+        k = masked.find('{', after, after + 40)
+        if k >= 0 and not masked[after:k].strip():
+            e = match_close(masked, k)
+            return masked[k + 1:e] if e > 0 else ''
+        e = masked.find(';', after)
+        return masked[after:e + 1] if e > 0 else ''
+    e = len(masked)
+    for rx in (r'\bbreak\b', r'\bcase\b', r'\bdefault\s*:', r'\breturn\b'):
+        mm = re.compile(rx).search(masked, after)
+        if mm:
+            e = min(e, mm.start() if rx != r'\breturn\b' else masked.find(';', mm.start()) + 1 or e)
+    seg = masked[after:e]
+    if seg.lstrip().startswith('{'):
+        k = after + seg.index('{')
+        c = match_close(masked, k)
+        seg = masked[k + 1:c] if c > 0 else seg
+    return seg
+
+
+PLATFORM_TEST = re.compile(r'platform|Platform|[Cc]hannel|isBrowser|isNative|isMobile|\btypeof\s+(?:tt|wx|TTMinis|qg)\b|'
+                           r'window\s*\.\s*(?:tt|wx|TTMinis|bondSDK|qg)\b|(?<![\w$.])(?:tt|wx|TTMinis)\s*(?:\)|&&|\|\|)|'
+                           r'\bcc\s*\.\s*sys\b|\bsys\s*\.')
+
+
+def _platform_branch(body, bm, m):
+    """True when the else / default at m belongs to a platform test (if / switch condition names the platform)."""
+    head = bm[:m.start()]
+    if bm[m.start():m.end()].startswith('else'):
+        ifs = list(re.finditer(r'\bif\s*\(', head))
+        if not ifs:
+            return False
+        o = ifs[-1].end() - 1
+        c = match_close(bm, o, '(', ')')
+        return c > 0 and bool(PLATFORM_TEST.search(body[o:c + 1]))
+    if PLATFORM_TEST.search(body[m.start():m.end()]):          # case Channel.DEFAULT:
+        return True
+    sw = list(re.finditer(r'\bswitch\s*\(', head))
+    if not sw:
+        return False
+    o = sw[-1].end() - 1
+    c = match_close(bm, o, '(', ')')
+    return c > 0 and bool(PLATFORM_TEST.search(body[o:c + 1]))
+
+
+def direct_grant(text, masked, f):
+    """Line of a non-platform branch of an ad wrapper that grants the reward without any ad, or None.
+    Grant = the branch calls a callback parameter, or a local function / arrow that calls one."""
+    names = param_names(f['params']) or []
+    bm = masked[f['body_start']:f['body_end']]
+    grant = set(n for n in names if _invoked(bm, n))
+    for m in re.finditer(r'\b(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:function\b|\([^)]*\)\s*=>|'
+                         r'[A-Za-z_$][\w$]*\s*=>)', bm):
+        k = bm.find('{', m.end() - 1)
+        e = match_close(bm, k) if k >= 0 else -1
+        if e > 0 and any(_invoked(bm[k:e], n) for n in grant):
+            grant.add(m.group(1))
+    if not grant:
+        return None
+    for m in NONPLATFORM.finditer(bm):
+        if not _platform_branch(text[f['body_start']:f['body_end']], bm, m):
+            continue                              # an else of a result test (if (!v) ... else ...), not a platform
+        seg = _branch_text(bm, m.start())
+        if not seg.strip() or AD_WORD.search(seg):
+            continue
+        if any(re.search(r'(?<![\w$.])%s\s*(?:&&\s*%s\s*)?\(' % (re.escape(n), re.escape(n)), seg) or
+               re.search(r'(?<![\w$.])%s\s*&&\s*%s\s*\(' % (re.escape(n), re.escape(n)), seg) for n in grant):
+            return line_of(text, f['body_start'] + m.start())
+    hit = _expr_grant(text[f['body_start']:f['body_end']], bm, grant)
+    return None if hit is None else line_of(text, f['body_start'] + hit)
+
+
+# R4P2: terser writes `if (p) ad() else cb()` as `p ? ad() : (x, cb(null))`, `p || (x, cb(null))` or `p && cb()`.
+# The non-platform side is the operand with no ad word while the platform test sits in the condition / left side.
+FAIL_ARG = re.compile(r'\s*(?:!\s*1|false|["\'`][^"\'`]*(?:fail|err|cancel)[^"\'`]*["\'`])\s*[,)]', re.I)
+
+
+def _is_ternary_q(bm, i):
+    nxt = bm[i + 1:i + 2]
+    return not (nxt == '?' or bm[i - 1:i] == '?' or (nxt == '.' and not bm[i + 2:i + 3].isdigit()))
+
+
+def _assign_at(bm, i):
+    return bm[i] == '=' and bm[i + 1:i + 2] not in ('=', '>') and bm[i - 1:i] not in ('=', '!', '<', '>')
+
+
+def _left_operand(bm, i, stop_or=False):
+    """Start of the operand ending just before bm[i] (a `?`, `||` or `&&`): back to a `, ; { } ( [ = ? :` at the
+    same depth (and `||` when the operator is `&&`)."""
+    depth, j = 0, i - 1
+    while j >= 0:
+        c = bm[j]
+        if c in ')]}':
+            if c == '}' and depth == 0:
+                break
+            depth += 1
+        elif c in '([{':
+            if depth == 0:
+                break
+            depth -= 1
+        elif depth == 0 and (c in ',;:' or _assign_at(bm, j) or (c == '?' and _is_ternary_q(bm, j)) or
+                             (c == '>' and bm[j - 1:j] == '=') or
+                             (stop_or and c == '|' and bm[j - 1:j] == '|')):
+            break
+        j -= 1
+    return j + 1
+
+
+def _right_operand(bm, i, stop_or=False, stop_colon=True):
+    """End of the operand starting at i: to a `, ;` or unclosed `) ] }` at the same depth, a `?`/`:` of an outer
+    conditional, and `||` / `??` when the operator is `&&`. Nested conditionals inside are kept whole."""
+    depth, q, j, n = 0, 0, i, len(bm)
+    while j < n:
+        c = bm[j]
+        if c in '([{':
+            depth += 1
+        elif c in ')]}':
+            if depth == 0:
+                break
+            depth -= 1
+        elif depth == 0:
+            if c in ',;':
+                break
+            if c == '?' and _is_ternary_q(bm, j):
+                if stop_or:
+                    break
+                q += 1
+            elif c == ':':
+                if q == 0:
+                    if stop_colon:
+                        break
+                else:
+                    q -= 1
+            elif stop_or and bm[j:j + 2] in ('||', '??'):
+                break
+        j += 1
+    return j
+
+
+def _grants(seg_text, seg_masked, grant):
+    """True when the segment calls a grant name with arguments that are not a failure (`c("fail", e)`, `c(!1)`)."""
+    for n in grant:
+        for m in re.finditer(r'(?<![\w$.])%s\s*(?:&&\s*%s\s*)?\(' % (re.escape(n), re.escape(n)), seg_masked):
+            if not FAIL_ARG.match(seg_text, m.end()):
+                return True
+    return False
+
+
+def _expr_grant(body, bm, grant):
+    """Offset (in body) of a conditional / logical operand that grants without an ad on the non-platform side."""
+    if not grant or not AD_WORD.search(bm):
+        return None
+    arms = []                                          # (condition, operand that grants, the other operand or None)
+    for i, c in enumerate(bm):
+        if c == '?' and _is_ternary_q(bm, i):
+            s = _left_operand(bm, i)
+            colon = _right_operand(bm, i + 1, stop_colon=True)
+            if bm[colon:colon + 1] != ':':
+                continue
+            e = _right_operand(bm, colon + 1, stop_colon=True)
+            arms.append(((s, i), (i + 1, colon), (colon + 1, e)))
+            arms.append(((s, i), (colon + 1, e), (i + 1, colon)))
+        elif bm[i:i + 2] in ('||', '&&') and bm[i - 1:i] not in ('|', '&'):
+            is_and = bm[i] == '&'
+            s = _left_operand(bm, i, stop_or=is_and)
+            e = _right_operand(bm, i + 2, stop_or=is_and)
+            arms.append(((s, i), (i + 2, e), None))
+    for (cs, ce), (gs, ge), other in arms:
+        if not PLATFORM_TEST.search(body[cs:ce]):
+            continue
+        seg = bm[gs:ge]
+        if not seg.strip() or AD_WORD.search(seg) or not _grants(body[gs:ge], seg, grant):
+            continue
+        if other is not None and not AD_WORD.search(bm[other[0]:other[1]]):
+            continue                                   # neither side shows an ad: not an ad / no-ad split
+        if other is None and not AD_WORD.search(bm[:gs] + bm[ge:]):
+            continue
+        return gs + len(seg) - len(seg.lstrip())
+    return None
+
+
+def _scan_wrappers(rel, text, masked, funcs, done):
+    """R4N2: ad wrappers (by name) with a branch that grants without an ad. auto when classify_ad knows the shape."""
+    rows = []
+    for f in funcs:
+        if not WRAPPER_NAME.match(f['name']) or f['body_start'] in done:
+            continue
+        if any(g is not f and g['body_start'] < f['body_start'] < g['body_end'] and WRAPPER_NAME.match(g['name'])
+               for g in funcs):
+            continue
+        hit = direct_grant(text, masked, f)
+        if hit is None:
+            continue
+        done.add(f['body_start'])
+        shape, detail = classify_ad(text, masked, f)
+        base = {'kind': 'ad', 'file': rel, 'line': line_of(text, f['start']), 'function': f['name'],
+                'grant_line': hit, 'nonplatform_grant': True}
+        if shape is None:
+            rows.append(dict(base, shape=None, auto=False,
+                             why='non-platform branch (line %d) grants the reward without an ad; %s' % (hit, detail)))
+            continue
+        ident = '%s.%s' % (rel.rsplit('/', 1)[-1].rsplit('.', 1)[0], f['name'])
+        rows.append(dict(base, shape=shape, auto=True, why=None, ident=ident, params=detail['params'],
+                         bridge=bridge_entry(ident, f, shape, detail),
+                         edit=(f['body_start'], f['body_end'], _body_call(ident, f, detail['params']))))
+    return rows
+
+
 def scan_ads(rel, text, masked=None, funcs=None):
     """-> list of {file, line, function, shape, auto, why, edit} for one script. edit = (start, end, new text)."""
     masked = masked if masked is not None else mask(text)
     funcs = funcs if funcs is not None else functions(text, masked)
     sites = [m.start() for m in CREATE.finditer(masked)]
-    if not sites:
-        return []
     rows, done = [], set()
+    rows += _scan_wrappers(rel, text, masked, funcs, done)
     for pos in sites:
         f = enclosing(funcs, pos)
         if f is None:
@@ -416,7 +661,7 @@ def scan_ads(rel, text, masked=None, funcs=None):
             done.add(g['body_start'])
             ident = '%s.%s' % (rel.rsplit('/', 1)[-1].rsplit('.', 1)[0], g['name'])
             rows.append({'kind': 'ad', 'file': rel, 'line': line_of(text, g['start']), 'function': g['name'],
-                         'shape': shape, 'auto': True, 'why': None, 'ident': ident,
+                         'shape': shape, 'auto': True, 'why': None, 'ident': ident, 'params': detail['params'],
                          'bridge': bridge_entry(ident, g, shape, detail),
                          'edit': (g['body_start'], g['body_end'], _body_call(ident, g, detail['params']))})
         if init_only and ('inert', f['body_start']) not in done:
@@ -598,6 +843,7 @@ def plan(project):
     """Read-only lists for inventory: rewire_todo, delete_list, kit_copies."""
     todo, delete, kit = [], [], []
     v3 = engine(project) == 3
+    texts, wrappers = [], {}
     for rel, p in game_files(project):
         text = p.read_text(encoding='utf-8', errors='replace')
         if is_kit_file(rel):
@@ -607,9 +853,12 @@ def plan(project):
             continue
         masked = mask(text)
         funcs = functions(text, masked)
+        texts.append((rel, text, masked))
         for row in scan_ads(rel, text, masked, funcs) + scan_growth(rel, text, masked, funcs):
-            row = {k: v for k, v in row.items() if k not in ('edit', 'edits', 'bridge', 'consts')}
-            if v3 and row['auto']:
+            if row['kind'] == 'ad' and row.get('auto') and row.get('params') is not None:
+                wrappers.setdefault(row['function'], row['params'])
+            row = {k: v for k, v in row.items() if k not in ('edit', 'edits', 'bridge', 'consts', 'params')}
+            if v3 and row['auto'] and row['kind'] != 'ad':      # R4N2: 3.x ad rows are rewired (AdBridge3x.ts)
                 row.update(auto=False, why=V3_WHY, fix=V3_FIX)
             row['fix'] = row.get('fix') or ('tiktok_finalize.py rewire-ads does it' if row['auto'] else
                                             'call RewardedService.request() through AdBridge.run(placementKey, onOk, '
@@ -617,6 +866,7 @@ def plan(project):
             todo.append(row)
         todo += scan_saves(rel, text, masked, funcs)
         delete += scan_delete(rel, text, masked, funcs)
+    todo += scan_call_arity(texts, wrappers) + scan_handlers(project)     # R4N2
     return {'rewire_todo': todo, 'delete_list': delete, 'kit_copies': kit}
 
 
@@ -711,6 +961,236 @@ def bridge_text(entries):
     return BRIDGE_HEAD % {'default': DEFAULT_KEY} + '\n' + '\n'.join(entries)
 
 
+# ---------------------------------------------------------------- Cocos 3.x (R4N2, 补查2 第 4 组)
+BRIDGE3X_PATH = 'assets/tiktok-platform/AdBridge3x.ts'
+BRIDGE3X_IMPORT = '__TikTokAdBridge3x'
+BRIDGE3X_HEAD = r"""// AdBridge3x.ts - GENERATED by `tiktok_finalize.py rewire-ads` (R4N2, Cocos 3.x). Do not edit by hand:
+// change the game code or the generator and run rewire-ads again.
+// Every rewarded video of the original game goes through globalThis.TikTokKit.RewardedService (plugin script
+// RewardedService.plugin.js; 15 s foreground request limit, no timer after playback starts, reward only for a
+// finished video, no late reward, one live session). The reward is granted ONLY in the success callback below;
+// there is no browser / non-platform branch that grants without an ad. Each B['<File>.<function>'] has the
+// parameters of the original function it replaces; RewardedService gets named options, never positions.
+// No callback 30 s after playback started: an X is drawn on the visible Canvas whose camera has the highest
+// priority (pickOverlayCanvas), never simply the first Canvas of the scene (合成进化恐龙 CanvasBg was covered).
+import { director, Canvas, Node, UITransform, Graphics, Color } from 'cc';
+
+const DEFAULT_KEY = '%(default)s';
+export const B: any = {};
+let service: any = null;
+
+function kit(): any { return ((globalThis as any).TikTokKit) || {}; }
+function svc(): any {
+  if (service) return service;
+  const K = kit();
+  if (typeof K.RewardedService !== 'function') {
+    throw new Error('TikTokKit.RewardedService is not loaded: add RewardedService.plugin.js (tiktok_finalize.py sync)');
+  }
+  return (service = new K.RewardedService());
+}
+function key(k: any, fallback: string): string {
+  const K = kit();
+  const map = (K.PlatformConfig && K.PlatformConfig.placementMap) || {};
+  if (typeof k === 'string' && map[k] !== undefined && map[k] !== null) return k;
+  return map[fallback] !== undefined ? fallback : DEFAULT_KEY;
+}
+function call(fn: any, args: any[]) {
+  if (typeof fn !== 'function') return;
+  try { fn.apply(null, args); } catch (e) { try { console.error('[AdBridge3x]', e); } catch (_) {} }
+}
+function toast(text: string) {
+  if (!text) return;
+  const g: any = globalThis as any;
+  const c = [g.TTMinis && g.TTMinis.game, g.tt, g.wx];
+  for (let i = 0; i < c.length; i++) {
+    if (c[i] && typeof c[i].showToast === 'function') {
+      try { c[i].showToast({title: text, icon: 'none', duration: 2000}); } catch (_) {}
+      return;
+    }
+  }
+}
+// BEGIN pickOverlayCanvas (plain JavaScript on purpose: test_tiktok_rewire.py runs it on a node-tree stand-in)
+export function pickOverlayCanvas(canvases) {
+  var best = null, bestP = -Infinity;
+  for (var i = 0; i < (canvases || []).length; i++) {
+    var c = canvases[i];
+    if (!c || !c.node || c.enabled === false || c.node.activeInHierarchy === false) continue;
+    var cam = c.cameraComponent || c.camera || null;
+    if (cam && (cam.enabled === false || (cam.node && cam.node.activeInHierarchy === false))) continue;
+    var p = cam && typeof cam.priority === 'number' ? cam.priority : -1e9;
+    if (p >= bestP) { best = c; bestP = p; }          // a tie: the later Canvas is drawn later
+  }
+  return best;
+}
+// END pickOverlayCanvas
+function showExitX(onTap: () => void): () => void {
+  const scene: any = director.getScene();
+  const all = scene && scene.getComponentsInChildren ? scene.getComponentsInChildren(Canvas) : [];
+  const top: any = pickOverlayCanvas(all);
+  if (!top) return function () {};
+  const host: any = top.node;
+  const size = host.getComponent(UITransform) ? host.getComponent(UITransform).contentSize : {width: 720, height: 1280};
+  const x: any = new Node('TikTokAdExitX');
+  x.layer = host.layer;                                 // same layer as the Canvas camera, or it is not drawn
+  const t = x.addComponent(UITransform);
+  t.setContentSize(120, 120);
+  const g = x.addComponent(Graphics);
+  g.fillColor = new Color(0, 0, 0, 170); g.circle(0, 0, 50); g.fill();
+  g.lineWidth = 10; g.strokeColor = new Color(255, 255, 255, 255);
+  g.moveTo(-20, -20); g.lineTo(20, 20); g.moveTo(-20, 20); g.lineTo(20, -20); g.stroke();
+  x.setPosition(size.width / 2 - 90, size.height / 2 - 170, 0);
+  host.addChild(x);
+  x.setSiblingIndex(host.children.length - 1);
+  let gone = false;
+  const tap = function () { if (gone) return; onTap(); };
+  x.on(Node.EventType.TOUCH_END, tap);
+  return function () { if (gone) return; gone = true; try { x.off(Node.EventType.TOUCH_END, tap); x.destroy(); } catch (_) {} };
+}
+// run(placementKey, onOk, onFail, showToast): exactly one of the two is called, once, never after a timeout or X.
+export function run(placement: string, onOk: any, onFail: any, showToast?: boolean): Promise<any> {
+  let settled = false;
+  let removeX: any = null;
+  function settle(r: any) {
+    if (settled) return;
+    settled = true;
+    if (removeX) { removeX(); removeX = null; }
+    r = r || {status: 'error', rewarded: false, message: 'The video could not open. Please try again.'};
+    if (r.rewarded === true) { call(onOk, [r]); return; }
+    if (showToast) toast(r.message);
+    call(onFail, [r]);
+  }
+  let p: Promise<any>;
+  try {
+    const s = svc();
+    p = s.request({placementKey: placement, onExitAvailable: function () {
+      if (!settled && !removeX) removeX = showExitX(function () { try { s.exit(); } catch (_) {} });
+    }});
+  } catch (e) {
+    p = Promise.resolve({status: 'error', rewarded: false, message: 'The video could not open. Please try again.'});
+  }
+  p.then(settle, function () { settle({status: 'error', rewarded: false}); });
+  return p;
+}
+function inertAd(..._args: any[]): any {
+  function no() { return Promise.reject({errCode: -1, errMsg: 'AdBridge3x: rewarded ads go through RewardedService'}); }
+  function noop() {}
+  return {show: no, load: no, destroy: noop, onLoad: noop, offLoad: noop, onClose: noop, offClose: noop,
+    onError: noop, offError: noop};
+}
+B.run = run;
+B.key = key;
+B.inertAd = inertAd;
+B.pickOverlayCanvas = pickOverlayCanvas;
+B.useService = function (s: any) { service = s; };   // tests only
+"""
+
+
+def bridge3x_text(entries):
+    return BRIDGE3X_HEAD % {'default': DEFAULT_KEY} + '\n' + '\n'.join(entries)
+
+
+def _import3x(rel, text):
+    """(pos, '', import line) adding `import { B as __TikTokAdBridge3x } from '<relative>/AdBridge3x';` after the
+    last top-level import (or at the top). None when the file already has it."""
+    if BRIDGE3X_IMPORT in text:
+        return None
+    here = Path(rel).parent
+    target = Path(BRIDGE3X_PATH).with_suffix('')
+    up = len(here.parts) - 1                     # both start with assets/
+    path = '../' * up + '/'.join(target.parts[1:]) if up else './' + '/'.join(target.parts[1:])
+    if not path.startswith('.'):
+        path = './' + path
+    line = "import { B as %s } from '%s';\n" % (BRIDGE3X_IMPORT, path)
+    last = None
+    for m in re.finditer(r'^import\b[^;]*;[^\n]*\n', text, re.M):
+        last = m
+    pos = last.end() if last else 0
+    return (pos, pos, line)
+
+
+def _body_call3x(ident, names):
+    return "\n    return %s[%s].call(this%s);\n" % (BRIDGE3X_IMPORT, json.dumps(ident), ''.join(', ' + n for n in names))
+
+
+def _rewrite3x_row(row):
+    """2.4 row -> 3.x edit: body calls the imported bridge; an inert init uses its inertAd."""
+    a, b, new = row['edit']
+    if row['shape'] == 'inert_init':
+        return (a, b, BRIDGE3X_IMPORT + '.inertAd')
+    names = row.get('params')
+    if names is None:
+        names = re.findall(r"\.call\(this((?:, [\w$]+)*)\)", new)
+        names = [n.strip() for n in names[0].split(',') if n.strip()] if names else []
+    return (a, b, _body_call3x(row['ident'], names))
+
+
+# ---------------------------------------------------------------- R4N2: ad buttons that name no method, call arity
+def scan_handlers(project):
+    """Scene / prefab click events whose ad-looking handler is not a method of the named component script
+    (弹球传奇 BallGameHall.fire -> showVideoCallBack, which BallGameHall.js does not define: a dead ad button)."""
+    project = Path(project)
+    scripts = {}
+    for rel, p in game_files(project):
+        scripts.setdefault(p.stem, []).append(p)
+    rows = []
+    base = project / 'assets'
+    if not base.is_dir():
+        return rows
+    for p in sorted(list(base.rglob('*.fire')) + list(base.rglob('*.scene')) + list(base.rglob('*.prefab'))):
+        rel = p.relative_to(project).as_posix()
+        if SKIP & set(p.relative_to(project).parts):
+            continue
+        try:
+            text = p.read_text(encoding='utf-8', errors='replace')
+        except OSError:
+            continue
+        seen = set()
+        for blk in re.finditer(r'\{[^{}]*"__type__"\s*:\s*"cc\.ClickEvent"[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text):
+            comp = re.search(r'"component"\s*:\s*"([\w$.]*)"', blk.group(0))
+            hand = re.search(r'"handler"\s*:\s*"([\w$]*)"', blk.group(0))
+            if not comp or not hand or not comp.group(1) or not hand.group(1) or not AD_HANDLER.search(hand.group(1)):
+                continue
+            name, method = comp.group(1).rsplit('.', 1)[-1], hand.group(1)
+            if (name, method) in seen or name not in scripts:
+                continue
+            seen.add((name, method))
+            body = ''.join(s.read_text(encoding='utf-8', errors='replace') for s in scripts[name])
+            if re.search(r'(?<![\w$.])%s\s*(?::\s*(?:async\s+)?function\b|=\s*(?:async\s*)?(?:function\b|\(|'
+                         r'[\w$]+\s*=>)|\([^)]*\)\s*(?::[^{;]+)?\{)' % re.escape(method), mask(body)):
+                continue
+            rows.append({'kind': 'ad_handler', 'file': rel, 'line': line_of(text, blk.start()), 'function': method,
+                         'component': name, 'shape': None, 'auto': False,
+                         'why': 'button click handler %s.%s() does not exist: the ad button does nothing' % (name, method),
+                         'fix': 'write %s() in %s: call the rewired ad function (RewardedService) and grant only in '
+                                'its success callback, or point the button at an existing method' % (method, name)})
+    return rows
+
+
+def scan_call_arity(files_text, wrappers):
+    """Calls of a rewired ad function with more arguments than it has parameters, or a node in a callback slot
+    (合成进化恐龙 preMain.onClickDino: ownerNode written into the cancel / fail slot)."""
+    rows = []
+    for name, params in wrappers.items():
+        cb_slots = [i for i, n in enumerate(params) if OK_NAME.match(n) or FAIL_ONLY.match(n) or CANCEL_NAME.search(n)]
+        for rel, text, masked in files_text:
+            for m in re.finditer(r'\.\s*%s\s*\(' % re.escape(name), masked):
+                close = match_close(masked, m.end() - 1, '(', ')')
+                if close < 0:
+                    continue
+                args = [a.strip() for a in split_top(text[m.end():close]) if a.strip()]
+                bad = len(args) > len(params)
+                node = [i for i in cb_slots if i < len(args) and re.search(r'(?:^|\.)node$|Node$', args[i])]
+                if bad or node:
+                    rows.append({'kind': 'ad_call', 'file': rel, 'line': line_of(text, m.start()), 'function': name,
+                                 'shape': None, 'auto': False,
+                                 'why': '%s(...) gets %d arguments for (%s)%s' % (
+                                     name, len(args), ', '.join(params),
+                                     '; a node in callback slot %d' % (node[0] + 1) if node else ''),
+                                 'fix': 'pass the arguments in the order (%s); a node is never a callback' %
+                                        ', '.join(params)})
+    return rows
+
+
 def existing_entries(text):
     """{'B["X.f"': entry text} of a generated AdBridge.js."""
     out = {}
@@ -736,7 +1216,7 @@ def rewire(project, write=True):
     entries, changed, rewired, todo = [], [], [], []
     v3 = engine(project) == 3
     for rel, p in game_files(project):
-        if is_kit_file(rel) or v3:            # 3.x: nothing rewritten, plan() lists every site as by hand
+        if is_kit_file(rel):
             continue
         try:
             text = p.read_bytes().decode('utf-8')        # bytes: keep CRLF and the rest of the file exactly
@@ -749,13 +1229,17 @@ def rewire(project, write=True):
         edits = []
         for row in scan_ads(rel, text, masked, funcs):
             if row['auto']:
-                edits.append(row['edit'])
+                edits.append(_rewrite3x_row(row) if v3 else row['edit'])
                 if row.get('bridge'):
                     entries.append(row['bridge'])
                 rewired.append({k: row[k] for k in ('kind', 'file', 'line', 'function', 'shape')})
             else:
                 todo.append(row)
-        for row in scan_growth(rel, text, masked, funcs):
+        if v3 and edits:                         # R4N2: ES import of the generated AdBridge3x.ts
+            imp = _import3x(rel, text)
+            if imp:
+                edits.append(imp)
+        for row in (scan_growth(rel, text, masked, funcs) if not v3 else []):   # 3.x growth: by hand (plan)
             if row['auto']:
                 edits += row['edits'] + _const_edits(text, masked, row['consts'], row['edits'])
                 rewired.append({k: row[k] for k in ('kind', 'file', 'line', 'function', 'shape')})
@@ -770,20 +1254,21 @@ def rewire(project, write=True):
                 if not backup.exists():
                     shutil.copy2(p, backup)
                 p.write_bytes(new.encode('utf-8'))
-    bridge = project / BRIDGE_PATH
+    bpath = BRIDGE3X_PATH if v3 else BRIDGE_PATH
+    bridge = project / bpath
     old = existing_entries(bridge.read_text(encoding='utf-8')) if bridge.is_file() else {}
     for entry in entries:                       # a second run keeps the functions rewired by the first one
         old[entry.split(']', 1)[0]] = entry
     entries = list(old.values())
     if entries or any(r['kind'] == 'growth' for r in rewired):
-        body = bridge_text(entries)
+        body = bridge3x_text(entries) if v3 else bridge_text(entries)
         if write and (not bridge.is_file() or bridge.read_text(encoding='utf-8') != body):
             bridge.parent.mkdir(parents=True, exist_ok=True)
             bridge.write_text(body, encoding='utf-8')
-            changed.append(BRIDGE_PATH)
+            changed.append(bpath)
     after = plan(project) if write else None
     record = {'kind': 'rewire-ads', 'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'rewired': rewired,
-              'changed': changed, 'bridge': BRIDGE_PATH if (project / BRIDGE_PATH).is_file() or entries else None,
+              'changed': changed, 'bridge': bpath if (project / bpath).is_file() or entries else None,
               'rewire_todo': (after or {}).get('rewire_todo', [{k: v for k, v in r.items() if k != 'edit'}
                                                                for r in todo]),
               'delete_list': (after or {}).get('delete_list', []),

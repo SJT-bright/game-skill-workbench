@@ -29,6 +29,8 @@ function project(bytedance, tweak) {
   copyDir(path.join(KIT, 'build-templates'), path.join(root, 'build-templates'));
   // kit 2.0: parts/storage-guard.js sits next to main.js in the project (KIT_MANIFEST project_path)
   fs.copyFileSync(path.join(KIT, 'parts', 'storage-guard.js'), path.join(root, 'build-templates', 'bytedance', 'storage-guard.js'));
+  // 简化.11.14 (生成时预防 D 批): main.js v1.7 loads rewarded-guard.js; it sits next to main.js too (KIT_MANIFEST project_path)
+  fs.copyFileSync(path.join(KIT, 'parts', 'rewarded-guard.js'), path.join(root, 'build-templates', 'bytedance', 'rewarded-guard.js'));
   if (bytedance !== null) {
     fs.mkdirSync(path.join(root, 'settings'));
     var text = bytedance === undefined ? fs.readFileSync(path.join(KIT, 'settings', 'bytedance.json'), 'utf8') : JSON.stringify(bytedance);
@@ -77,6 +79,7 @@ test('kit2_report_names_kit_version_2', function () {
 });
 [['storage_guard_missing', function (root) { fs.unlinkSync(path.join(root, 'build-templates', 'bytedance', 'storage-guard.js')); }, /storage-guard\.js/],
  ['storage_guard_changed', edit('build-templates/bytedance/storage-guard.js', 'SAVESTORE_KEY.test', 'false &&'), /storage-guard\.js was changed/],
+ ['rewarded_guard_missing', function (root) { fs.unlinkSync(path.join(root, 'build-templates', 'bytedance', 'rewarded-guard.js')); }, /rewarded-guard\.js/],
  ['home_entries_missing', function (root) { fs.unlinkSync(path.join(root, 'assets', 'tiktok-platform', 'HomeGrowthEntries.js')); }, /HomeGrowthEntries\.js/],
  ['home_entries_changed', edit('assets/tiktok-platform/HomeGrowthEntries.js', 'Available in TikTok', 'Done'), /HomeGrowthEntries\.js was changed/],
  ['growth_reward_amount_changed', edit(CFG, 'config.GROWTH_REWARD_B = 5;', 'config.GROWTH_REWARD_B = 10;'), /growthReward/],

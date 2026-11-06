@@ -136,6 +136,62 @@ class MakeList(Base):
         self.assertEqual(len(repl['manual_review']), 2 + 3)         # 2 whole pictures + 3 slices
 
 
+class FlatPanelsRegenerated(Base):
+    """R4C (census too_dark 11/12, plain_background 9/11): a plain one-colour panel of the Chinese original goes onto
+    art-replace-round1.json "regenerate"; a panel with a pattern, and small icons, do not."""
+    run_make_list = MakeList.run_make_list
+
+    def add_panels(self):
+        ui = self.project / 'assets' / 'resources' / 'ui'
+        ui.mkdir(parents=True)
+        # popup panel as the census games had it: one dark navy block with a thin lighter outline, rounded corners
+        flat = Image.new('RGBA', (400, 300), (0, 0, 0, 0))
+        from PIL import ImageDraw
+        d = ImageDraw.Draw(flat)
+        d.rounded_rectangle((0, 0, 399, 299), radius=24, fill=(30, 34, 52, 255), outline=(90, 100, 140, 255), width=4)
+        flat.save(str(ui / 'popup_bg.png'))
+        # same size, but with a stripe pattern and a lighter top band (designed panel)
+        pat = Image.new('RGBA', (400, 300), (0, 0, 0, 0))
+        d = ImageDraw.Draw(pat)
+        d.rounded_rectangle((0, 0, 399, 299), radius=24, fill=(250, 200, 120, 255), outline=(150, 90, 40, 255), width=6)
+        for x in range(-300, 400, 28):
+            d.line((x, 300, x + 300, 0), fill=(235, 170, 90, 255), width=8)
+        d.rectangle((20, 20, 380, 70), fill=(255, 235, 190, 255))
+        pat.save(str(ui / 'shop_panel.png'))
+        # a small flat icon: not a panel, not judged
+        Image.new('RGBA', (64, 64), (200, 40, 40, 255)).save(str(ui / 'dot.png'))
+        # a plain sky-blue full background (jpg)
+        Image.new('RGB', (720, 1280), (120, 190, 240)).save(str(ui / 'bg_plain.jpg'))
+
+    def test_flat_panel_listed_patterned_not(self):
+        # R4Q3 (补查3 第 3 组): English first round keeps the original art, so the plain panels are listed for Saul to
+        # pick ("style_choices"), and "regenerate" stays empty by default
+        self.add_panels()
+        doc, repl = self.run_make_list()
+        self.assertIn('style_choices', repl, 'no style_choices list in art-replace-round1.json (R4C put them on regenerate)')
+        self.assertEqual(repl.get('regenerate'), [])
+        files = sorted(r['file'] for r in repl['style_choices'])
+        self.assertEqual(files, ['assets/resources/ui/bg_plain.jpg', 'assets/resources/ui/popup_bg.png'])
+        dark = [r for r in repl['style_choices'] if r['file'].endswith('popup_bg.png')][0]
+        self.assertIn('dark', dark['reasons'][0])
+        # the Chinese part of the list is unchanged
+        self.assertEqual([(r['kind'], r.get('slice')) for r in repl['replace']], [('slice', 'wave_1.png')])
+
+    def test_flat_panels_listed_without_recognizer(self):
+        self.add_panels()
+        doc, repl = self.run_make_list('none')
+        self.assertEqual(repl.get('regenerate'), [])
+        self.assertEqual(len(repl['style_choices']), 2)
+
+    def test_flat_panels_regenerate_when_saul_names_art_skill(self):
+        # R4Q3: --flat-panels regenerate (Saul named the art skill for them) puts them back on regenerate
+        self.add_panels()
+        with self.env():
+            doc = ani.make_list(self.project, 'none', flat_mode='regenerate')
+        self.assertEqual(len(doc['chinese_scan']['regenerate']), 2)
+        self.assertNotIn('style_choices', doc['chinese_scan'])
+
+
 class ReviewRecordWriter(Base):
     def pkg(self, chinese_frame=True):
         files = {}

@@ -115,6 +115,26 @@ def read_ui_file(path, design):
             'node_names': names, 'array': arr}
 
 
+# R4N5 (问题普查 09 补查2 第 5 节, 火箭三消 11-05): the LoadingUIPanel root sat in every dump as an empty leftover shell
+# (no sprite, no label, nothing under it) and counted as the loading page seen at both sizes. A page root counts only
+# when a node at or under it in that dump draws something (a DRAWN component) and is not tiny: at least
+# MIN_VISIBLE_AREA of the canvas (ui_dump rects are canvas fractions; 0.001 is about 18x18 px on a 390x844 phone).
+# Nodes without a rect (old dumps) are not tiny. The renamed-instance fallback (most of its node names) is unchanged.
+MIN_VISIBLE_AREA = 0.001
+DRAWN = {'sprite', 'label', 'richtext', 'image_text', 'spine', 'dragonbones', 'graphics', 'particle', 'video', 'button',
+         'tiled_map', 'motion_streak', 'mesh', 'model'}
+
+
+def tiny(n):
+    r = n.get('screen') or n.get('rect')
+    if not isinstance(r, (list, tuple)) or len(r) < 4:
+        return False
+    try:
+        return max(0.0, float(r[2])) * max(0.0, float(r[3])) < MIN_VISIBLE_AREA
+    except (TypeError, ValueError):
+        return False
+
+
 def read_dumps(dumps):
     files = []
     for raw in dumps:
@@ -128,17 +148,22 @@ def read_dumps(dumps):
         vp = d.get('viewport') or {}
         c = d.get('canvas_css') or [0, 0, 0, 0]
         size = (int(vp.get('width') or round(c[2] if len(c) > 2 else 0)), int(vp.get('height') or round(c[3] if len(c) > 3 else 0)))
-        segs, texts = set(), []
+        segs, texts, drawn = set(), [], set()
         for n in d['nodes']:
             if (n.get('opacity', 1) or 0) < 0.05:
                 continue
+            if tiny(n):
+                continue      # R4N5: a 1x1 leftover shell does not make its page "seen"
             segs.update(str(n.get('path') or '').split('/'))
             comps = n.get('comps') or {}
+            if DRAWN & set(comps):
+                drawn.update(str(n.get('path') or '').split('/'))
             lab = comps.get('label') or comps.get('richtext') or comps.get('image_text') or {}
             s = lab.get('string') or lab.get('desired')
             if s:
                 texts.append(norm(s))
-        out.append({'file': str(f), 'size': size, 'scene': str(d.get('scene') or ''), 'segments': segs, 'texts': texts})
+        out.append({'file': str(f), 'size': size, 'scene': str(d.get('scene') or ''), 'segments': segs, 'texts': texts,
+                    'drawn': drawn})
     return out
 
 
@@ -187,7 +212,7 @@ def audit(project, dumps):
         if info['scene']:
             seen = {s['size'] for s in shots if s['scene'] and (s['scene'] == info['root'] or s['scene'] == Path(info['rel']).stem)}
         else:
-            seen = {s['size'] for s in shots if info['root'] in s['segments']}
+            seen = {s['size'] for s in shots if info['root'] in s['drawn']}   # R4N5: something under the root is drawn
             if not seen:                       # an instance renamed by code: most of its own node names show up
                 own = {n for n in info['node_names'] if n and n != info['root'] and not re.fullmatch(r'(New )?Node|Label|Sprite|bg|icon|text', n)}
                 if len(own) >= 3:

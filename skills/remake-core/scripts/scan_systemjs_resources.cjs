@@ -36,7 +36,7 @@ function unmodifiedGlobal(ast,parents,name){
  if(shadowed(ast,parents,name))return false;let modified=false;
  walk(ast,(n,ps)=>{if(!['AssignmentExpression','UpdateExpression'].includes(n.type))return;let root=n.left??n.argument;while(root?.type==='MemberExpression')root=root.object;if(root?.name===name&&!shadowed(ast,ps,name))modified=true});return !modified;
 }
-function exactHandler(fn){
+function exactHandler(fn,key){
  if(!/Function/.test(fn?.type??'')||fn.async||fn.generator||fn.params.length!==1||fn.params[0].type!=='Identifier'||fn.params[0].name==='require')return null;
  let call=fn.body;if(call.type==='BlockStatement'){if(call.body.length!==1||!['ReturnStatement','ExpressionStatement'].includes(call.body[0].type))return null;call=call.body[0].argument??call.body[0].expression}
  if(call?.type==='ConditionalExpression'){
@@ -44,6 +44,9 @@ function exactHandler(fn){
   const valid=t?.type==='BinaryExpression'&&t.operator==='==='&&t.left?.type==='UnaryExpression'&&t.left.operator==='typeof'&&t.left.argument?.name==='requirePlugin'&&t.right?.value==='function'&&yes?.type==='CallExpression'&&yes.callee?.name==='requirePlugin'&&yes.arguments.length===1&&yes.arguments[0]?.name===param&&no?.type==='CallExpression'&&no.callee?.name==='require'&&no.arguments.length===1&&no.arguments[0]?.name===param;
   if(!valid)return null;call=no;
  }
+ // R4K2: stock 3.6/3.7 mini-game template writes 'plugin:': u => { requirePlugin(u); } (same call the
+ // conditional form above makes whenever requirePlugin exists); accepted only under the 'plugin:' key.
+ if(key==='plugin:'&&call?.type==='CallExpression'&&call.callee?.type==='Identifier'&&call.callee.name==='requirePlugin'&&call.arguments.length===1&&call.arguments[0]?.type==='Identifier'&&call.arguments[0].name===fn.params[0].name)return call;
  if(call?.type!=='CallExpression'||call.callee.name!=='require'||call.arguments.length!==1)return null;
  const arg=call.arguments[0],param=fn.params[0].name;
  return arg?.type==='Identifier'&&arg.name===param||arg?.type==='BinaryExpression'&&arg.operator==='+'&&arg.left.value==='.'&&arg.right.name===param?call:null;
@@ -52,6 +55,27 @@ function importMapFromModule(name){
  const text=input.files[name];if(typeof text!=='string')throw Error('import-map module missing');const ast=acorn.parse(text,{ecmaVersion:'latest'});let value;
  walk(ast,n=>{if(n.type==='CallExpression'&&!(n.callee.type==='MemberExpression'&&n.callee.object.name==='Object'&&n.callee.property.name==='defineProperty'&&n.arguments[0]?.name==='exports'&&n.arguments[1]?.value==='__esModule'))throw Error('import-map module is not static');if(n.type==='AssignmentExpression'&&!(n.left.type==='MemberExpression'&&n.left.object.name==='exports'&&(n.left.property.name??n.left.property.value)==='default'))throw Error('import-map module is mutated');if(n.type==='AssignmentExpression'&&n.left.type==='MemberExpression'&&n.left.object.name==='exports'&&(n.left.property.name??n.left.property.value)==='default'&&n.right.type!=='UnaryExpression')value=n.right});
  return finite(value,ast);
+}
+// R4K2: chunks:/// names registered by literal System.register("chunks:///…", …) calls in package scripts.
+let chunkRegistry=null;
+function chunkFile(name){
+ if(!/^chunks:\/\/\/[A-Za-z0-9_.\/@+-]+$/.test(name)||name.split('/').slice(3).some(s=>s===''||s==='.'||s==='..'))throw Error('nonlocal SystemJS import target');
+ if(!chunkRegistry){
+  chunkRegistry=new Map();
+  for(const [file,text]of Object.entries(input.files)){
+   if(!text.includes('chunks:///'))continue;
+   let ast;try{ast=acorn.parse(text,{ecmaVersion:'latest',sourceType:'script',allowReturnOutsideFunction:true})}catch(_){ast=acorn.parse(text,{ecmaVersion:'latest',sourceType:'module'})}
+   walk(ast,(n,parents)=>{if(n.type!=='CallExpression'||n.callee.type!=='MemberExpression'||n.callee.computed||n.callee.object.name!=='System'||n.callee.property.name!=='register')return;
+    const id=n.arguments[0];if(id?.type!=='Literal'||typeof id.value!=='string'||!id.value.startsWith('chunks:///'))return;
+    if(!unmodifiedGlobal(ast,parents,'System'))throw Error('SystemJS register uses shadowed or modified System');
+    const files=chunkRegistry.get(id.value)??new Set();files.add(file);chunkRegistry.set(id.value,files);
+   });
+  }
+ }
+ const files=[...(chunkRegistry.get(name)??[])];
+ if(files.length===0)throw Error('SystemJS chunks:/// import target not registered by a package script: '+name);
+ if(files.length>1)throw Error('SystemJS chunks:/// import target registered by several package scripts: '+name);
+ return files[0];
 }
 try{
  if(input.systemjs_profile){
@@ -80,16 +104,19 @@ try{
     if(!data||typeof data.imports!=='object'||Array.isArray(data.imports))throw Error('SystemJS local import map missing');
     const targetFiles=[];
     for(const value of Object.values(data.imports)){
+     // R4K2: Cocos 3.6/3.7 exports map prerequisite imports to chunks:///_virtual/<bundle>, a module name
+     // registered by a script inside this package. Map it to that script; unregistered names still refuse.
+     if(typeof value==='string'&&value.startsWith('chunks:///')){targetFiles.push(chunkFile(value));continue}
      if(typeof value!=='string'||/^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(value))throw Error('nonlocal SystemJS import target');
      const rel=path.posix.normalize(path.posix.join(path.posix.dirname(importName),value));
      if(rel.startsWith('../')||path.posix.isAbsolute(rel))throw Error('SystemJS import target escapes package');targetFiles.push(rel);
     }
     // Only exact warmup namespace handlers are delegated. Arbitrary require,
     // eval and actual resource calls remain in the independent inventory.
-    const handlers=[get('defaultHandler')],table=get('handlers');
+    const handlers=[[get('defaultHandler'),null]],table=get('handlers');
     if(table&&table.type!=='ObjectExpression')throw Error('dynamic SystemJS namespace handlers');
-    if(table?.type==='ObjectExpression')for(const entry of table.properties){if(entry.type!=='Property'||entry.computed)throw Error('dynamic SystemJS namespace handler');handlers.push(entry.value)}
-    for(const handler of handlers){if(!handler)continue;const call=exactHandler(handler);if(!call)throw Error('unknown SystemJS namespace handler');escapes.push({id:source+':'+call.start,source,reason:'Exact System.warmup local import-map handler; original target files and scriptPackages validated each call'})}
+    if(table?.type==='ObjectExpression')for(const entry of table.properties){if(entry.type!=='Property'||entry.computed)throw Error('dynamic SystemJS namespace handler');handlers.push([entry.value,entry.key?.name??entry.key?.value])}
+    for(const [handler,key] of handlers){if(!handler)continue;const call=exactHandler(handler,key);if(!call)throw Error('unknown SystemJS namespace handler');escapes.push({id:source+':'+call.start,source,reason:'Exact System.warmup local import-map handler; original target files and scriptPackages validated each call'})}
     for(const rel of [importName,...targetFiles])files.push({id:source+':'+n.start,source,path:rel,reason:'SystemJS warmup local module target'});
    });
   }

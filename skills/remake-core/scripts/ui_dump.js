@@ -66,14 +66,40 @@
         canvas_css:[cr.x,cr.y,cr.width,cr.height],canvases:0,errors:failures,nodes};
     }
   }
-  const cc = window.cc;
-  const fail = (msg) => ({ tool: 'ui_dump', schema: 1, error: msg });
-  if (!cc || !cc.director || typeof cc.director.getScene !== 'function') {
-    return fail('cc.director not found: this page is not a running Cocos game yet (wait until the first scene is shown)');
-  }
-  const scene = cc.director.getScene();
-  if (!scene) return fail('no running scene yet');
-  const is3 = !!cc.UITransform;
+  // R4N3: same adapter as engine_adapter.js (copy checked by test_r4n3_engine_adapter.js); not ready -> retry, no throw
+  // ENGINE-ADAPTER-BEGIN
+  const adapt = (win) => {
+    const cc = (win && (win.cc || win.__tiktokKitCc)) || (typeof globalThis !== 'undefined' && globalThis.cc) || null;
+    const notReady = (why) => ({ ready: false, retry: true, reason: '引擎还没起来：' + why });
+    if (!cc) return notReady('页面里还没有 cc' + (win && win.System && win.System.import ? '（3.x 要先 System.import(\'cc\')）' : ''));
+    if (!cc.director || typeof cc.director.getScene !== 'function') return notReady('cc.director 还没有');
+    let scene = null;
+    try { scene = cc.director.getScene(); } catch (e) { return notReady('getScene() 出错 ' + e); }
+    if (!scene) return notReady('还没有场景');
+    const v3 = String(cc.ENGINE_VERSION || '').charAt(0) === '3';
+    const api = (cc.UITransform || v3) ? '3.x' : '2.x';
+    const transformOf = (node) => { try { return cc.UITransform && node.getComponent ? node.getComponent(cc.UITransform) : null; } catch (e) { return null; } };
+    const size = (node) => {
+      const ut = transformOf(node);
+      if (ut) return { w: ut.contentSize.width, h: ut.contentSize.height, ax: ut.anchorPoint.x, ay: ut.anchorPoint.y, ut };
+      if (api === '3.x') return null;
+      return { w: node.width, h: node.height, ax: node.anchorX, ay: node.anchorY };
+    };
+    const toWorld = (node, x, y) => {
+      const ut = transformOf(node);
+      if (ut && ut.convertToWorldSpaceAR) { const v = ut.convertToWorldSpaceAR(cc.Vec3 ? new cc.Vec3(x, y, 0) : { x, y, z: 0 }); return [v.x, v.y]; }
+      if (typeof node.convertToWorldSpaceAR === 'function') { const v = node.convertToWorldSpaceAR(cc.v2 ? cc.v2(x, y) : { x, y }); return [v.x, v.y]; }
+      return null;
+    };
+    return { ready: true, cc, api, scene, size, toWorld, engine: cc.ENGINE_VERSION || '' };
+  };
+  // ENGINE-ADAPTER-END
+  const fail = (msg, extra) => Object.assign({ tool: 'ui_dump', schema: 1, error: msg }, extra || {});
+  const eng = adapt(window);
+  if (!eng.ready) return fail(eng.reason + '（engine not ready: wait until the first scene is shown, then dump again）', { retry: true });
+  const cc = eng.cc;
+  const scene = eng.scene;
+  const is3 = eng.api === '3.x';
   const T = {};
   for (const k of ['Canvas', 'Button', 'Toggle', 'Label', 'RichText', 'Sprite', 'Graphics', 'ProgressBar', 'BlockInputEvents',
                    'ScrollView', 'UIOpacity', 'EditBox', 'Mask', 'Widget', 'LabelOutline', 'LabelShadow', 'Camera', 'Layout']) T[k] = cc[k] || null;
@@ -89,6 +115,7 @@
   };
   const toWorld = (node, s, x, y) => {
     if (is3) { const v = s.ut.convertToWorldSpaceAR(new cc.Vec3(x, y, 0)); return [v.x, v.y]; }
+    if (typeof node.convertToWorldSpaceAR !== 'function') return eng.toWorld(node, x, y) || [NaN, NaN];  // R4N3
     const v = node.convertToWorldSpaceAR(cc.v2(x, y)); return [v.x, v.y];
   };
   // World box of the node itself (children not included), optionally shrunk by local insets.
@@ -289,6 +316,8 @@
           if (progress && progress.enabled !== false) rec.loading_progress = { value: progress.progress };
           const btn = get(node, T.Button) || get(node, T.Toggle);
           if (btn) rec.comps.button = { interactable: btn.interactable !== false, enabled: btn.enabled !== false };
+          // 生成时预防 R4G1 (#2): a node with a touch listener put on by code (node.on(TOUCH_END), no cc.Button) is a tap target too; home_free_slot.js keeps entries off it
+          try { if ((typeof node.hasEventListener === 'function' && ['touchstart', 'touchend', 'touch-start', 'touch-end'].some(t => node.hasEventListener(t))) || node._touchListener) rec.comps.touch = true; } catch (_) {}
           const graphics = get(node, T.Graphics);
           if (graphics && graphics.enabled !== false) rec.comps.graphics = { lineWidth: typeof graphics.lineWidth === 'number' ? graphics.lineWidth : null, fillColor: graphics.fillColor ? [graphics.fillColor.r, graphics.fillColor.g, graphics.fillColor.b, graphics.fillColor.a] : null, strokeColor: graphics.strokeColor ? [graphics.strokeColor.r, graphics.strokeColor.g, graphics.strokeColor.b, graphics.strokeColor.a] : null };
           const lab = get(node, T.Label);

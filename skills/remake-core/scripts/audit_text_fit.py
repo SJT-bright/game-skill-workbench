@@ -914,7 +914,7 @@ def audit_dump(project, d, longest):
             region = w.body.inter(p.body)
             share = region.area / max(1.0, w.body.area)
             # the words sit in the middle of their picture: a cover over the centre, or over a third of it, hides
-            # some of them; a panel edge over the bottom rim of a big title does not
+            # some of them; a panel edge over the bottom rim of a big word picture does not
             if (p.body.contains(w.body.cx, w.body.cy) or share >= 0.35) and 0.15 <= share < 0.95 and \
                     opaque_share(project, p, region) >= 0.5:
                 add('words_covered', w, '图 %s 上画着 "%s"，被 %s 盖住 %.0f%%，没盖住的字露在外面：这里要用无字的底图' % (

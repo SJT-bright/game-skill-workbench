@@ -5,8 +5,8 @@
 
 用户 2026-10-21：第二轮美术还会做出空白关卡卡片、蓝色占位方块、深色粗字、字超出按钮、首页中间大片空白；
 用户 2026-10-23：深色粗字永久禁止（任何颜色、游戏中 HUD 和图片字也算），单独一行"深色粗字（永久禁止）"，不能标不适用；
-用户 2026-10-23：所有字都是生成的图片字、和画面一体（标题一张 logo、按钮连字一张图、数字用生成的位图字），单独一行
-"文字一次成图（标题logo、整张按钮、图片数字）"，两个板块都查；只有公告、玩法说明这类大段文字可以用细一点的字体；
+用户 2026-10-23：所有字都是生成的图片字、和画面一体（按钮连字一张图、数字用生成的位图字），单独一行
+"文字一次成图（整张按钮、图片数字）"，两个板块都查（Saul 2026-11-05：游戏里不放游戏名，原来的标题位置放主角/图案大图）；只有公告、玩法说明这类大段文字可以用细一点的字体；
 美术的检查要放在美术制作之后，最后的测试只查玩法和功能。所以美术线的"做完"= 本脚本全部通过 + Codex 看过总览图。
 
 先在浏览器里用 chrome_touch.py 的 dump_ui 读每个页面和弹窗（含游戏中，两种比例，写 purpose：home、result_win、
@@ -23,7 +23,7 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
 
 依次运行（缺输入就是"需处理"，不跳过）：
   页面内容    audit_page_richness.py   纯色背景、单调页面、只有字的按钮、系统字体、空白面板/卡片、占位图、纯色方块、
-                                       深色粗字、字超出按钮、大片空白、按钮超过40%、单调弹窗（只有字和按钮）、首页大标题和封面、选关≥6关、设置两个标签
+                                       深色粗字、字超出按钮、大片空白、按钮超过40%、单调弹窗（只有字和按钮）、首页上半屏主角/图案大图（不带游戏名）和封面、选关≥6关、设置两个标签
   领奖窗      audit_claim_double.py    签到/转盘结果/礼包领奖窗：一个广告入口、「看广告双倍」默认勾上、有免费 CLAIM（Saul 2026-10-31）
   大块深色    audit_dark_area.py       每张截图：大块深色、纯黑/纯色底、大白板、大块纯色（只查负向，不设亮度下限，用户 2026-10-28）
   布局        extract_ui_layout.py + audit_ui_coverage.py   玩法区≥80%、弹窗≤60%、内容不压边框、首页设置在上角/功能按钮紧凑放在下方
@@ -40,6 +40,8 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
   顶部资源栏  audit_top_bar.py         货币/体力/关卡进度在首页（和地图）最上方、货币贴合题材、体力是闪电；
                                        "过关后数字变大"留到测试阶段（这里只提示）
   关卡地图    audit_level_plan.py      有关卡的游戏有地图且显示总关数；无尽游戏没有地图（关卡表本身的问题这里只提示）
+              （简化.11.14.1：这两行查重塑板块的设计。英化游戏没用关卡、经济、皮肤板块、工程里没有这些板块的记录时
+               判不适用，不要求加金币顶栏、关卡表和地图；feature_policy.py 的 top_bar / level_map）
   礼盒10帧    docs/modules.json gift_box.frames_dir   首页礼盒是 10 帧动画：10 张、同尺寸、≥128px、至少 8 张不同
                                        （用户 2026-10-24：只在美术阶段查，不进最终总检测）
 最后生成总览图（make_contact_sheet.py）和一页 art-check.md：Codex 打开总览图，按里面的"看图清单"逐项看。
@@ -62,7 +64,9 @@ import datetime as dt
 import fnmatch
 import hashlib
 import json
+import os
 from pathlib import Path
+import re
 import subprocess
 import time
 import sys
@@ -100,12 +104,12 @@ LOOK = [
     '【永久禁止，用户 2026-10-23/28，只查负向】放大看每一段字（含游戏中 HUD 的金币/关卡数字、面板里的说明和状态字、图片字）：没有深色/近黑填充的字，尤其深色粗字——不管什么颜色（深青、深绿、藏青、深蓝灰、深棕、深灰、黑），深色只能出现在描边/阴影里；没有特别密集的字（字距/行距过小、一块区域塞满字）；没有特别细的字（细线字、发丝描边，手机上看不清）；字没有压在复杂底图上看不清；没有"HOME SCREEN OPEN""MISSIONS 2/3 RESOLVED"这类状态字',
     '普通游戏页面（含游戏中）都有画出来的背景，没有大片纯色/大白底；已核来源和实际帧的完整官方加载/重试页按 cocos-loading-screen.md 的中性官方样式检查，不套游戏主题图片字规则',
     '【用户 2026-10-28，画风只查负向】画风按启动包 ART_DIRECTION，不按明亮/Q版/糖果色/光泽/华丽与否评判，也不看亮度够不够；只看有没有禁止项：大面积深色、纯黑/纯色底、大白板、单色图标、刺眼的整屏高亮、无层次平涂、图片模糊、按钮/文字被遮挡或穿模',
-    '首页：有大标题和封面画面（主角/场景），按钮加起来不超过屏幕 40%，中间没有大片空白；货币在屏幕最上方（不在中间），设置在左上或右上角，主角中部左右各有真实功能入口；PLAY下方所有行合计最多5个，图标沿用固定两倍尺寸，不重复翻倍',
+    '首页：上半屏有一张主角/图案/场景大图（不放游戏名，Saul 2026-11-05）和封面画面，按钮加起来不超过屏幕 40%，中间没有大片空白；货币在屏幕最上方（不在中间），设置在左上或右上角，主角中部左右各有真实功能入口；PLAY下方所有行合计最多5个，图标沿用固定两倍尺寸，不重复翻倍',
     '没有空白卡片、蓝色/灰色占位方块、大块灰色锁定块；选关页一屏至少 6 关，每关有编号、星星和状态',
     '带字的按钮都有底板；没有纯色方块按钮、没有无层次平涂的扁平色块按钮、没有近黑/藏青/深灰的特粗字；字不超出按钮、不被遮挡',
     '【Saul 2026-10-31，香肠太难了】按钮底色和金币、钻石、爱心、体力图标的底板已由「按钮底色不深、物品图标不另垫底板」一行自动量过，这里只看它量不到的：列为接近深色的按钮、礼盒和道具图标后面有没有另垫底板、原来单独的功能图标有没有被垫上底；方向键的箭头和它的功能同一个方向；英化（包括要求重新设计的）：按钮、图标、金币的画法和原游戏是一套（把原游戏的按钮图放在旁边一起看）',
     '没有单色图标（黑色线框/剪影、整页只有黑白灰），图标下的小字不压图标',
-    '【重点，用户 2026-10-23】所有字都是生成的图片字、和画面一体（正例：THE COLLECTION 收藏页；反例：Scissors Master 首页）：游戏大标题是一张按画风一次生成的风格化 logo（不打字、不在底板上拼字母，副标题也在 logo 图里）；每个按钮连同上面的风格化文字一次生成成一整张图（PLAY、VIDEO +50、USE CLASSIC KIT、COMMON/RARE 标签都是整图），不是"生成的底板＋字体字/另一张字图"；金币、体力、关卡、价格、百分比等数字用按画风生成的数字图做成位图字体；页面文字、栏目名、物品名、任务名都是 GPT 图片字；只有公告、玩法说明这类大段文字可以用细一点的字体；没有深绿/深青色字',
+    '【重点，用户 2026-10-23】所有字都是生成的图片字、和画面一体（正例：THE COLLECTION 收藏页；反例：Scissors Master 首页）：游戏里不出现游戏名（Saul 2026-11-05）：首页原来放标题的地方用主角/图案/场景大图填，不打字、不在图上拼字母；每个按钮连同上面的风格化文字一次生成成一整张图（PLAY、VIDEO +50、USE CLASSIC KIT、COMMON/RARE 标签都是整图），不是"生成的底板＋字体字/另一张字图"；金币、体力、关卡、价格、百分比等数字用按画风生成的数字图做成位图字体；页面文字、栏目名、物品名、任务名都是 GPT 图片字；只有公告、玩法说明这类大段文字可以用细一点的字体；没有深绿/深青色字',
     '【用户 2026-10-23】放大看每个图片字：没有被压扁或拉长的字（反例：DETAILS 被压扁 2.89 倍、SKINS/DAILY 1.80 倍）——每个字单独裁到可见边缘、按原比例缩放，放不下就改按钮尺寸或重新生成；不是用 Canvas 字体画出来的字',
     '【用户 2026-10-23】一页的字不全是一个颜色：标题、按钮字、数字、标签不是全一个颜色（反例：Hazel\'s Shelf Scramble 首页标题、PLAY、数字全是青色；Your Progress 弹窗所有字都是同一种橙黄＋棕描边）；具体颜色和字形按启动包画风，不另加花体/装饰字要求',
     '【用户 2026-10-23】docs/art/screens.json 里每个能点开的页面和弹窗都看过、风格一致：没有大白板、没有空背景（灰底/纯色底）、没有和整体配色不搭的颜色',
@@ -141,6 +145,103 @@ def first_json(text):
         return json.JSONDecoder().raw_decode(text[start:])[0]
     except ValueError:
         return {}
+
+
+def distinct(items, limit=6, sep='：'):
+    """'page<sep>problem' strings -> at most limit of them, each different problem once. One node seen on several
+    pages and at both phone sizes repeated the same problem (蛋壳特工队: 1224 page problems were 317 different ones),
+    so six copies of one capsule could fill a row and hide everything else (美工skill 2026-11-05). Same problem =
+    the same complete message; '（另 N 处）' counts the copies."""
+    order, count = [], {}
+    for item in items:
+        item = str(item)
+        _, found_sep, body = item.partition(sep)
+        body = body if found_sep else item
+        key = body  # Collapse exact repeats only; different values or peers at the same path stay distinct.
+        if key not in count:
+            count[key] = 0
+            order.append((key, item))
+        count[key] += 1
+    return [item + ('（另 %d 处）' % (count[key] - 1) if count[key] > 1 else '') for key, item in order[:limit]]
+
+
+def _glob_matcher(patterns):
+    """match(name) with the answer of any(fnmatch.fnmatch(name, p) for p in patterns), every pattern compiled once
+    (fnmatch keeps only 256 compiled patterns; a 750-frame clarity-exempt.json was compiled again for each finding:
+    11 s on 蛋壳特工队, 美工skill 2026-11-05). A broken pattern raises only where fnmatch would have reached it."""
+    compiled = []
+    for p in patterns:
+        try:
+            compiled.append(re.compile(fnmatch.translate(os.path.normcase(p))).match)
+        except Exception as exc:
+            compiled.append(exc)
+
+    def match(name):
+        if not compiled:
+            return False
+        name = os.path.normcase(name)
+        for m in compiled:
+            if isinstance(m, Exception):
+                raise m
+            if m(name):
+                return True
+        return False
+    return match
+
+
+def _original_images(project, rows):
+    """Known original hashes per project-relative file. A same-name file elsewhere is not evidence."""
+    images = {}
+    def record(path, digest):
+        if isinstance(path, str) and isinstance(digest, str) and re.fullmatch('[a-fA-F0-9]{64}', digest):
+            images.setdefault(path.replace(chr(92), '/'), set()).add(digest.lower())
+
+    for row in rows:
+        for source in row.get('sources') or []:
+            if isinstance(source, dict):
+                record(source.get('file'), source.get('sha256'))
+    for rel in ('docs/art/base-assets.json', 'docs/english/pre-english-images.json'):
+        try:
+            data = json.loads((project / rel).read_text(encoding='utf-8-sig'))
+        except (OSError, ValueError):
+            continue
+        entries = data.get('images') if isinstance(data, dict) else None
+        if not isinstance(entries, dict):
+            continue
+        for key, value in entries.items():
+            if rel.endswith('base-assets.json'):
+                record(key, value)
+            else:
+                record(value, key)
+    return images
+
+
+def static_clarity_left(proj, findings, rows):
+    """An exempt frame must resolve to a known original file with the same bytes at the same path."""
+    proj = Path(proj).resolve()
+    match = _glob_matcher([str(row['frame']).lower() for row in rows])
+    originals = _original_images(proj, rows)
+    unchanged = {}
+    left = []
+    for finding in findings:
+        if not isinstance(finding, dict):
+            continue
+        image = str(finding.get('image', '')).lower()
+        filename, _, subframe = image.partition(':')
+        frame = subframe or os.path.splitext(filename)[0]
+        rel = finding.get('image_path')
+        if isinstance(rel, str) and rel in originals and (match(image) or match(frame)):
+            if rel not in unchanged:
+                path = proj / rel
+                try:
+                    unchanged[rel] = (path.resolve().is_relative_to(proj) and
+                                      hashlib.sha256(path.read_bytes()).hexdigest() in originals[rel])
+                except (OSError, RuntimeError):
+                    unchanged[rel] = False
+            if unchanged[rel]:
+                continue
+        left.append(finding)
+    return left
 
 
 def tree_fingerprint(root):
@@ -393,6 +494,43 @@ def overlap_sheets(dump_files, out):
     return made
 
 
+DESIGN_ROWS = {'top_bar': ('顶部资源栏', '顶部资源栏'), 'level_map': ('关卡地图', '关卡地图（')}   # rule -> (row title, LOOK prefix)
+
+
+def design_row_not_applicable(proj, board, rule):
+    """简化.11.14.1: detail text when a remake-board design row does not apply to this game (feature_policy decides),
+    else None. English games do not get a coin top bar, a level table or a map unless Saul asked for new gameplay that
+    used those boards (Codex 英化会话 2026-11-05: no coins, random levels, no home page, told to add all three)."""
+    import feature_policy
+    if feature_policy.applies(rule, board, proj) != 'not_applicable':
+        return None
+    return ('英化保留原玩法，不加%s（Saul 2026-10-28）：工程里没有关卡、经济、皮肤板块的记录（%s 等），这一项不适用。'
+            'Saul 要求创新玩法、用了这些板块时照查' % ('顶部资源栏' if rule == 'top_bar' else '关卡表和关卡地图',
+                                         'docs/top-bar.json、level_plan.json'))
+
+
+DARK_AREA_TITLE = '大块深色与纯色底（画风禁止项，不设亮度下限）'
+
+
+def dark_area_row(proj, board, code, j):
+    """R4Q3 (补查3 第 3 组): the 大块深色与纯色底 row from audit_dark_area's exit code / summary.
+    -> (row dict, original_style summary or None). An English game that keeps its art: when the screenshots fail but
+    every big dark / plain picture has the same SHA-256 as the Chinese original (original_style.py), the row is
+    「不适用」(not a blocker, not a receipt gap); a NEW dark / plain picture still blocks. Remake: as before."""
+    over = '；'.join('%s：%s' % (Path(x['path']).name, '、'.join(x['problems'])) for x in (j or {}).get('over', [])[:5])
+    if code == 0:
+        return {'check': DARK_AREA_TITLE, 'status': '通过', 'detail': over or '通过（%d 张截图）' % (j or {}).get('checked', 0),
+                'log': 'screens.json'}, None
+    import original_style
+    v = original_style.verdict(proj, board)
+    if v['state'] == 'kept_original':
+        return {'check': DARK_AREA_TITLE, 'status': '不适用', 'detail': (v['detail'] + '；截图：' + over)[:900],
+                'log': 'screens.json'}, original_style.summary(v)
+    extra = '' if v['state'] == 'remake' else '；' + v['detail']
+    return {'check': DARK_AREA_TITLE, 'status': '需处理', 'detail': (over + extra)[:900], 'log': 'screens.json'}, \
+        original_style.summary(v)
+
+
 def gift_box_row(proj):
     """(title, ok, detail): the 10-frame home gift box declared in docs/modules.json (user 2026-10-24: art stage only)."""
     title = '礼盒10帧动画（首页礼盒）'
@@ -502,6 +640,8 @@ def main():
     logs = out / 'logs'
     logs.mkdir(parents=True, exist_ok=True)
     rows = []
+
+    original_style_result = None   # R4Q3: set by dark_area_row()
 
     def add(title, ok, detail, log=''):
         rows.append({'check': title, 'status': '通过' if ok is True else ('提示' if ok is None else '需处理'), 'detail': detail, 'log': log})
@@ -626,7 +766,7 @@ def main():
         dark_ok = bool(rep.get('pages')) and not any(pg.get('stats', {}).get('official_loading') is False for pg in rep.get('pages', []))
     except (OSError, ValueError, AttributeError):
         dark_ok = False
-    add('深色粗字（永久禁止）', dark_ok and not dark, '；'.join(dark[:6])[:700] if dark else
+    add('深色粗字（永久禁止）', dark_ok and not dark, '；'.join(distinct(dark))[:700] if dark else
         ('通过：没有深色粗字/深色图片字/状态字' if dark_ok else '没有页面报告：先 dump 全部页面（含游戏中 HUD）'), 'page_richness.json')
     solid_text = []
     solid_unavailable = []
@@ -638,7 +778,7 @@ def main():
                 if prob.startswith(('no_screenshot:', 'checker_unavailable:')):
                     solid_unavailable.append(prob)
     add('文字与数字后深色实心底块（禁止）', dark_ok and not solid_text and not solid_unavailable,
-        '；'.join((solid_text + solid_unavailable)[:8])[:900] if solid_text or solid_unavailable else
+        '；'.join(distinct(solid_text + solid_unavailable, 8, ': '))[:900] if solid_text or solid_unavailable else
         ('通过：实际文字周围未检出深色实心 UI 填充；仍须检查生成贴图 Alpha 与合成图' if dark_ok else '缺实际页面截图与文字采集'), 'page_richness.json')
     # user 2026-10-29 (冲鸭小巴 "数据后面有纯色背景的在skill也要限制住", 坦克 blue box behind coins, 人鱼逃脱 blue strip behind
     # "LEVEL 1 • +10 PEARLS"): no flat colour box of ANY colour behind level/score/currency values
@@ -648,7 +788,7 @@ def main():
             for prob in pg.get('problems', []):
                 if prob.startswith('flat_value_plate:'):
                     flat_plate.append('%s: %s' % (pg.get('screen') or '?', prob[:120]))
-    add('数据后面的纯色底板（任何颜色都禁止）', dark_ok and not flat_plate, '；'.join(flat_plate[:6])[:700] if flat_plate else
+    add('数据后面的纯色底板（任何颜色都禁止）', dark_ok and not flat_plate, '；'.join(distinct(flat_plate, 6, ': '))[:700] if flat_plate else
         ('通过：等级、分数、货币数字后面没有纯色方块；底板都是生成的图' if dark_ok else '缺实际页面截图与文字采集'),
         'page_richness.json')
     one = []
@@ -663,8 +803,8 @@ def main():
         one += ['工程代码：%s' % p_[:90] for p_ in rep.get('setup', []) if p_.split(':', 1)[0] in ONE_PIECE_KINDS]
     except (NameError, AttributeError):
         pass
-    add('文字一次成图（标题logo、整张按钮、图片数字）', dark_ok and not one, '；'.join(one[:6])[:700] if one else
-        ('通过：标题是 logo 图、按钮字和按钮一张图、数字是生成的位图字、没有用 Canvas 字体画字' if dark_ok else '没有页面报告：先 dump 全部页面'),
+    add('文字一次成图（整张按钮、图片数字）', dark_ok and not one, '；'.join(distinct(one))[:700] if one else
+        ('通过：首页上方没有打出来的字、按钮字和按钮一张图、数字是生成的位图字、没有用 Canvas 字体画字' if dark_ok else '没有页面报告：先 dump 全部页面'),
         'page_richness.json')
     # user (Codex 美工调查 2026-10-30, A02/A11): flashes when tapping, paging, changing the volume or clearing tiles
     # ("这个问题必须沉淀进检查的skill，出现很多次了很多游戏都有") are invisible on still screenshots. Every art round
@@ -686,7 +826,7 @@ def main():
     text_detail = ('可见运行时文字 %d 项：动态白名单 %d 项、40 字以上说明 %d 项、固定短文字/数字违规 %d 项' %
                    (label_total, dynamic_total, long_copy_total, len(text_findings)))
     if text_findings:
-        text_detail += '；' + '；'.join(text_findings[:8])
+        text_detail += '；' + '；'.join(distinct(text_findings, 8, ': '))
     add('全屏可见文字清点（固定字成图、动态字有窄范围理由）',
         dark_ok and bool(dump_files) and not text_findings, text_detail if dark_ok else '没有可读页面报告，文字清点不能通过',
         'page_richness.json')
@@ -698,7 +838,7 @@ def main():
                     shape.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', prob[:90]))
     except (NameError, AttributeError):
         pass
-    add('字不压扁拉伸、字色有变化', dark_ok and not shape, '；'.join(shape[:6])[:700] if shape else
+    add('字不压扁拉伸、字色有变化', dark_ok and not shape, '；'.join(distinct(shape))[:700] if shape else
         ('通过：图片字按原比例缩放、标题/按钮/数字/标签颜色不全一样' if dark_ok else '没有页面报告：先 dump 全部页面'), 'page_richness.json')
     lap = []
     try:
@@ -709,7 +849,7 @@ def main():
         lap += ['工程字体：%s' % p_[:90] for p_ in rep.get('setup', []) if p_.split(':', 1)[0] in OVERLAP_KINDS]
     except (NameError, AttributeError):
         pass
-    add('位置穿模（字和图不互相压、数字不叠印、不伸出按钮/胶囊/卡片、主功能字在按钮上、没有假透明格子）', dark_ok and not lap, '；'.join(lap[:6])[:700] if lap else
+    add('位置穿模（字和图不互相压、数字不叠印、不伸出按钮/胶囊/卡片、主功能字在按钮上、没有假透明格子）', dark_ok and not lap, '；'.join(distinct(lap))[:700] if lap else
         ('通过：没有字压图、数字叠印、图伸出按钮/胶囊/卡片、按钮互相重叠、假透明格子，主功能字都在生成的按钮上' if dark_ok else '没有页面报告：先 dump 全部页面'),
         'page_richness.json')
     same = []
@@ -721,7 +861,7 @@ def main():
         same += ['%s' % p_[:110] for p_ in rep.get('setup', []) if p_.split(':', 1)[0] == 'button_set']
     except (NameError, AttributeError):
         pass
-    add('同组按钮同一种风格（按钮和下面的字做法、底板、颜色一致）', dark_ok and not same, '；'.join(same[:6])[:700] if same else
+    add('同组按钮同一种风格（按钮和下面的字做法、底板、颜色一致）', dark_ok and not same, '；'.join(distinct(same))[:700] if same else
         ('通过：每组按钮的字都是同一种做法、同一种底板和颜色，按钮全部来自同一套' if dark_ok else '没有页面报告：先 dump 全部页面'),
         'page_richness.json')
     # Saul 2026-10-31 (香肠太难了 Redesign v2): no dark button bodies, no plate behind coin / gem / heart / energy icons.
@@ -736,7 +876,7 @@ def main():
         colour_ += ['按钮状态：%s' % p_[:120] for p_ in rep.get('setup', []) if p_.split(':', 1)[0] in BUTTON_COLOUR_KINDS]
     except (NameError, AttributeError):
         pass
-    add(BUTTON_COLOUR_TITLE, dark_ok and not colour_, '；'.join(colour_[:6])[:700] if colour_ else (
+    add(BUTTON_COLOUR_TITLE, dark_ok and not colour_, '；'.join(distinct(colour_))[:700] if colour_ else (
         ('通过：每页按钮底色都不深（含游戏中的方向键、按下和禁用状态），金币、钻石、爱心、体力图标没有另垫底板' +
          ('；接近深色、请看图确认：' + '；'.join(sorted(set(hints_))[:4]) if hints_ else '')) if dark_ok
         else '没有页面报告：先 dump 全部页面'), 'page_richness.json')
@@ -759,7 +899,7 @@ def main():
         hero_pass += ('；英化游戏数值字号偏小只提示、不算不通过（small_value_font 只拦重塑，Saul 2026-10-31），请看图：'
                       + '；'.join(sorted(set(value_hints))[:4]))
     add('首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边（H11、H6）', dark_ok and not hero,
-        '；'.join(hero[:6])[:700] if hero else
+        '；'.join(distinct(hero))[:700] if hero else
         (hero_pass if dark_ok else '没有页面报告：先 dump 首页、游戏中、复活和结算页'), 'page_richness.json')
     sheets_ = overlap_sheets(dump_files, out)
     add('穿模审查图（给 Codex 看）', None if sheets_ else False, ('%d 张：%s（放大看每个按钮、胶囊、数字有没有穿模）' % (len(sheets_), out / 'overlap'))
@@ -770,10 +910,11 @@ def main():
     if shots:
         code, text = run('audit_dark_area.py', [*shots, '--project', proj, '--dumps', dumps, '--out', out / 'screens.json', *binding], logs)
         j = first_json(text)
-        over = '；'.join('%s：%s' % (Path(x['path']).name, '、'.join(x['problems'])) for x in j.get('over', [])[:5])
-        add('大块深色与纯色底（画风禁止项，不设亮度下限）', code == 0, over or '通过（%d 张截图）' % j.get('checked', 0), 'screens.json')
+        row, original_style_result = dark_area_row(proj, board, code, j)   # R4Q3: English original pictures -> 不适用
+        rows.append(row)
     else:
-        add('大块深色与纯色底（画风禁止项，不设亮度下限）', False, '没有截图')
+        original_style_result = None
+        add(DARK_AREA_TITLE, False, '没有截图')
 
     layout = out / 'ui-layout.json'
     if dump_files:
@@ -814,9 +955,10 @@ def main():
     # (both boards, first round included): runtime frames from the dumps (low_res) + scene/prefab sprites, one row, blocking.
     try:
         ce = json.loads((proj / 'docs' / 'art' / 'clarity-exempt.json').read_text(encoding='utf-8-sig'))
-        exempt = [str(x['frame']) for x in ce.get('frames', []) if isinstance(x, dict) and x.get('frame') and str(x.get('why', '')).strip()]
+        exempt_rows = [x for x in ce.get('frames', []) if isinstance(x, dict) and x.get('frame') and str(x.get('why', '')).strip()]
     except (OSError, ValueError, AttributeError):
-        exempt = []
+        exempt_rows = []
+    exempt = [str(x['frame']) for x in exempt_rows]
     low = []
     try:
         for pg in rep.get('pages', []):
@@ -830,39 +972,47 @@ def main():
         cj = json.loads((out / 'clarity.json').read_text(encoding='utf-8'))
     except (OSError, ValueError):
         cj = first_json(text)
-    static = [x for x in cj.get('findings', []) if isinstance(x, dict) and
-              not any(fnmatch.fnmatch(str(x.get('image', '')).lower(), g.lower()) for g in exempt)]
+    static = static_clarity_left(proj, cj.get('findings', []), exempt_rows)   # 美工skill 2026-11-05: frame names match
     static_txt = ['%s/%s "%s" %sx%s 显示 %sx%s（%s）' % (x.get('file'), x.get('node'), x.get('image'), *(x.get('source') or ['?', '?']),
                                                    *(x.get('display') or ['?', '?']), '放大使用' if x.get('level') == 'upscaled' else '不到2倍')
                   for x in static[:4]]
     clear_ok = dark_ok and not low and not static
     add('清晰度（ART-04：运行时的图≥节点2倍、背景≥1.5倍）', clear_ok,
-        '；'.join(low[:5] + static_txt)[:900] if (low or static) else
+        '；'.join(distinct(low, 5) + static_txt)[:900] if (low or static) else
         (('通过：运行时 dump 里的图和场景里的图都够清晰（已豁免 %d 条原图）' % len(exempt) if cj.get('status') != 'not_run' else
           '运行时 dump 里的图够清晰；场景/预制体静态检查没执行（%s），只靠运行时 dump' % cj.get('reason', '0 项'))
          if dark_ok else '没有页面报告：先 dump 全部页面（含游戏中）'),
         'clarity.json')
 
     # 用户 2026-10-22：体力/货币/关卡进度放在最上方，货币贴合题材；有关卡就有地图（显示总关数），无尽游戏没有地图
-    code, text = run('audit_top_bar.py', ['--project', proj, '--dumps', dumps, '--out', out / 'top_bar.json', *binding], logs)
-    try:
-        checks = json.loads((out / 'top_bar.json').read_text(encoding='utf-8'))['checks']
-    except (OSError, ValueError, KeyError):
-        checks = [{'id': 'run', 'passed': False, 'detail': text.strip()[-200:]}]
-    art = [c for c in checks if not c['passed'] and not c['id'].startswith('live_')]
-    later = [c for c in checks if not c['passed'] and c['id'].startswith('live_')]
-    add('顶部资源栏', False if art else (None if later else True),
-        '；'.join(c['detail'][:110] for c in art[:3]) if art else ('通过；测试阶段再看过关后数字变大' if later else '通过'), 'top_bar.json')
-    code, text = run('audit_level_plan.py', ['--project', proj, '--dumps', dumps, '--out', out / 'level_plan.json', *binding], logs)
-    try:
-        checks = json.loads((out / 'level_plan.json').read_text(encoding='utf-8'))['checks']
-    except (OSError, ValueError, KeyError):
-        checks = [{'id': 'run', 'passed': False, 'detail': text.strip()[-200:]}]
-    pages = {'map_page', 'map_shows_total', 'endless_no_map', 'mode_recorded', 'run'}
-    art = [c for c in checks if not c['passed'] and c['id'] in pages]
-    plan = [c for c in checks if not c['passed'] and c['id'] not in pages]
-    add('关卡地图', False if art else (None if plan else True),
-        '；'.join(c['detail'][:110] for c in (art or plan)[:3]) or '通过', 'level_plan.json')
+    # 简化.11.14.1：这两行是重塑板块的设计，英化游戏没用这些板块时不适用（feature_policy top_bar / level_map）
+    not_applicable = {rule: design_row_not_applicable(proj, board, rule) for rule in DESIGN_ROWS}
+    if not_applicable['top_bar']:
+        rows.append({'check': DESIGN_ROWS['top_bar'][0], 'status': '不适用', 'detail': not_applicable['top_bar'], 'log': ''})
+    else:
+        code, text = run('audit_top_bar.py', ['--project', proj, '--dumps', dumps, '--out', out / 'top_bar.json', *binding], logs)
+        try:
+            checks = json.loads((out / 'top_bar.json').read_text(encoding='utf-8'))['checks']
+        except (OSError, ValueError, KeyError):
+            checks = [{'id': 'run', 'passed': False, 'detail': text.strip()[-200:]}]
+        art = [c for c in checks if not c['passed'] and not c['id'].startswith('live_')]
+        later = [c for c in checks if not c['passed'] and c['id'].startswith('live_')]
+        add('顶部资源栏', False if art else (None if later else True),
+            '；'.join(c['detail'][:110] for c in art[:3]) if art else ('通过；测试阶段再看过关后数字变大' if later else '通过'), 'top_bar.json')
+    if not_applicable['level_map']:
+        rows.append({'check': DESIGN_ROWS['level_map'][0], 'status': '不适用', 'detail': not_applicable['level_map'], 'log': ''})
+    else:
+        code, text = run('audit_level_plan.py', ['--project', proj, '--dumps', dumps, '--out', out / 'level_plan.json', *binding], logs)
+        try:
+            checks = json.loads((out / 'level_plan.json').read_text(encoding='utf-8'))['checks']
+        except (OSError, ValueError, KeyError):
+            checks = [{'id': 'run', 'passed': False, 'detail': text.strip()[-200:]}]
+        pages = {'map_page', 'map_shows_total', 'endless_no_map', 'mode_recorded', 'run'}
+        art = [c for c in checks if not c['passed'] and c['id'] in pages]
+        plan = [c for c in checks if not c['passed'] and c['id'] not in pages]
+        add('关卡地图', False if art else (None if plan else True),
+            '；'.join(c['detail'][:110] for c in (art or plan)[:3]) or '通过', 'level_plan.json')
+    look = [x for x in LOOK if not any(not_applicable[r] and x.startswith(DESIGN_ROWS[r][1]) for r in DESIGN_ROWS)]
 
     # 用户 2026-10-24：礼盒 10 帧只在美术阶段查（原来在 audit_game_modules.py / 最终门禁里）
     add(*gift_box_row(proj))
@@ -872,13 +1022,31 @@ def main():
     if shots:
         code, text = run('make_contact_sheet.py', [*shots, '--out', out / 'sheets', *binding], logs)
         add('总览图（给 Codex 看）', None if code == 0 else False, str(out / 'sheets') if code == 0 else text.strip()[-200:])
+    # 美工skill 2026-11-05: 页面内容与背景 printed again what the rows above list one by one (蛋壳特工队: 1063 of 1224
+    # page problems). Its status stays page_richness's own; its text keeps only the kinds no other row reports.
+    if dark_ok:
+        own_row = (DARK_TEXT_KINDS | ONE_PIECE_KINDS | SHAPE_COLOUR_KINDS | OVERLAP_KINDS | STYLE_KINDS | BUTTON_COLOUR_KINDS
+                   | HERO_HUD_KINDS | {'dark_solid_text_backplate', 'flat_value_plate', 'low_res', 'no_screenshot'})
+        rest, moved = [], 0
+        for pg in rep.get('pages', []):
+            for prob in pg.get('problems', []):
+                if prob.split(':', 1)[0] in own_row:
+                    moved += 1
+                else:
+                    rest.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', prob[:90]))
+        for r in rows:
+            if r['check'] == '页面内容与背景' and r['status'] == '需处理' and (rest or moved):
+                r['detail'] = ('；'.join(distinct(rest, 8)) + ('；' if rest and moved else '') +
+                               ('另 %d 条见上面各行（这里不再重复）' % moved if moved else ''))[:900]
     blocking = [r for r in rows if r['status'] == '需处理']
     report = {'tool': 'art_check', 'schema': 1, 'board': board, 'board_source': board_source, 'art_style': 'remake' if remake_art else 'original',
               'assets_fingerprint': tree_fingerprint(proj), 'checked': len(rows), 'failed': len(blocking),
-              'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows, 'look_list': LOOK,
+              'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows, 'look_list': look,
               'base_generated': static_summary, 'time': dt.datetime.now().isoformat(timespec='seconds')}
     if value_result is not None:
         report['value_presentation'] = value_result
+    if original_style_result is not None:     # R4Q3: which pictures were kept as original, who decided (receipt reads it)
+        report['original_style'] = original_style_result
     if a.binding:
         try:
             b = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')
@@ -901,7 +1069,7 @@ def main():
           ('**需处理 %d 项：改完重新读页面、重新跑本脚本，全部通过才交用户。**' % len(blocking)) if blocking else '**脚本检查全部通过。**接着 Codex 看总览图：',
           '', '| 检查 | 结果 | 说明 |', '| --- | --- | --- |']
     md += ['| %s | %s | %s |' % (r['check'], r['status'], r['detail'].replace('|', '/')) for r in rows]
-    md += ['', '## 看图清单（普通游戏页逐项看；已核实官方加载/Retry按cocos-loading-screen.md实看，保留清晰度、比例、边缘及可操作Retry，不套游戏主题生图规则）', ''] + ['- [ ] ' + x for x in LOOK]
+    md += ['', '## 看图清单（普通游戏页逐项看；已核实官方加载/Retry按cocos-loading-screen.md实看，保留清晰度、比例、边缘及可操作Retry，不套游戏主题生图规则）', ''] + ['- [ ] ' + x for x in look]
     (out / 'art-check.md').write_text('\n'.join(md) + '\n', encoding='utf-8')
     print('\n'.join(md))
     print('\n完整结果：%s' % out)

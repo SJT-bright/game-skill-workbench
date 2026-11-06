@@ -140,16 +140,21 @@ function boxesFromPrefab(objs, obstacleNames) {
 }
 
 // Buttons of a ui_dump.js page (screen rects as fractions, top-left origin) converted to design units.
+// 生成时预防 R4G1 (#2): ui_dump.js marks nodes with a code-attached touch listener (comps.touch); they are obstacles
+// too, without --obstacle. Same rule as HomeGrowthEntries.collectButtons: a touch-only node with BlockInputEvents or
+// covering >= half the screen is a background / mask, not a tap target (box.by = 'button' | 'touch' | 'name').
+var BACKDROP_SHARE = 0.5;
 function boxesFromDump(dump, screen, obstacleNames) {
   var names = obstacleNames || [];
   return (dump.nodes || []).filter(function (n) {
-    var c = n.comps || {};
-    return (c.button || names.indexOf(n.name) >= 0) && (n.opacity === undefined || n.opacity >= 0.05) && (n.screen || n.rect);
+    var c = n.comps || {}, r = n.screen || n.rect;
+    var touch = !c.button && c.touch && r && !c.block_input && r[2] * r[3] < BACKDROP_SHARE;
+    return (c.button || touch || names.indexOf(n.name) >= 0) && (n.opacity === undefined || n.opacity >= 0.05) && r;
   }).map(function (n) {
-    var r = n.screen || n.rect;
+    var r = n.screen || n.rect, c = n.comps || {};
     var w = r[2] * screen.w, h = r[3] * screen.h;
     return {name: n.name, x: (r[0] + r[2] / 2 - 0.5) * screen.w, y: (0.5 - r[1] - r[3] / 2) * screen.h, w: w, h: h,
-      button: !!(n.comps || {}).button};
+      button: !!c.button, by: c.button ? 'button' : (c.touch && names.indexOf(n.name) < 0 ? 'touch' : 'name')};
   });
 }
 

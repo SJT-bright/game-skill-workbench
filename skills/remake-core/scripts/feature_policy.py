@@ -96,7 +96,82 @@ RULES = {
     'remake_art_style': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'block'},
     # Saul 2026-10-30: the remake home layout (settings top-left, bottom row = two platform entries) is remake only
     'remake_home_layout': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    # 简化.11.14.1 (Codex 英化会话 2026-11-05: an original game with no coins, random levels and no home page was told by
+    # art_check to add a coin top bar, a level table and a map). The top resource bar and the level map are remake-board
+    # designs (remake-levels). An English game keeps the original game and adds no systems (Saul 2026-10-28), so they do
+    # not apply -- unless the project used those boards for new gameplay Saul asked for (a LOCALIZE_BOARD_RECORDS file
+    # exists, Saul 2026-10-30; applies() then answers block). preflight.py makes the same call for its rows.
+    'top_bar': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    'level_map': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    # R4N1 (补查2 第 5 组, SLS07 / SLS35 / 弹球传奇): four more new-game rules that an English game's original gameplay
+    # does not follow. Same call as top_bar / level_map: English games get 不适用 unless the project has a record of that
+    # board (RULE_RECORDS below); remake and unknown boards are checked as before.
+    #   skin_min_levels     make_skin_table.py --levels needs --final-level >= 60 (SLS35: original 6 levels)
+    #   econ_window_levels  make_economy_config.py needs --total-levels >= ECON-LEVEL10 window (10) (SLS35)
+    #   checkin_design      CheckinFlow / DailyCheckin design rows: coin days grow, a check-in skin, a big day-7 bundle
+    #                       (弹球传奇 keeps its original seven-day table)
+    #   writer_coin_reward  check_kit_project.py (run by the package writer): PlatformConfig.normalLevelCoins > 0
+    #                       (SLS07 has no coins; Saul 11-04 「没金币游戏的两个奖励点」 pay the no-coin replacements)
+    'skin_min_levels': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    'econ_window_levels': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    'checkin_design': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    'writer_coin_reward': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    # R4Q3 (补查3 第 3 组, 火箭三消 / 弹球传奇, Saul chose 「保留原画风」 twice): art_check's 大块深色与纯色底 row does
+    # not apply to the ORIGINAL pictures of an English game that keeps its art (same SHA-256 as the Chinese original,
+    # original_style.py); new pictures are still checked. Remake, and English games that chose remake art, block.
+    'dark_flat_original': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'block'},
 }
+
+# The records the remake boards write. Must stay equal to preflight.LOCALIZE_BOARD_RECORDS (test_localize_design_rows.py).
+LOCALIZE_BOARD_RECORDS = ('docs/modules.json', 'docs/features.json', 'docs/top-bar.json', 'docs/league/decision.json',
+                          'assets/resources/config/level_plan.json', 'docs/levels/level_plan.json',
+                          'assets/resources/config/unlock_table.json', 'docs/economy/unlock_table.json')
+BOARD_RECORD_RULES = ('top_bar', 'level_map')
+
+
+def localize_board_records(project, rule=None):
+    """The LOCALIZE_BOARD_RECORDS files present in project (an English game that used the remake boards).
+    rule: one of RULE_RECORDS -> only the records that switch that rule on."""
+    names = RULE_RECORDS.get(rule, LOCALIZE_BOARD_RECORDS) if rule else LOCALIZE_BOARD_RECORDS
+    return [r for r in names if (Path(project) / r).is_file()]
+
+
+# R4N1: which records switch each new rule back on for an English game. The level / economy / check-in rules are NOT
+# switched on by unlock_table.json (make_skin_table.py writes it itself, so a rerun would block on its own output) or by
+# a check-in config alone; they follow the remake module decision and the level plan (new levels Saul asked for).
+_LEVEL_RECORDS = ('docs/modules.json', 'assets/resources/config/level_plan.json', 'docs/levels/level_plan.json')
+RULE_RECORDS = {
+    'skin_min_levels': _LEVEL_RECORDS,
+    'econ_window_levels': _LEVEL_RECORDS,
+    'checkin_design': ('docs/modules.json', 'docs/features.json'),
+    'writer_coin_reward': LOCALIZE_BOARD_RECORDS,
+}
+
+
+def game_levels(project):
+    """(real level count or None, reason) from docs/game_capabilities.json level_count (game_capabilities.py write
+    --level-count N | --no-levels "why"). None = endless / not recorded."""
+    if project is None:
+        return None, 'no project given'
+    import game_capabilities
+    caps = game_capabilities.load(project)
+    v = caps.get('level_count')
+    if isinstance(v, int) and not isinstance(v, bool):
+        return v, 'level_count=%d (%s)' % (v, caps['source'].get('level_count'))
+    if isinstance(v, dict):
+        return None, 'level_count none: %s' % v.get('none')
+    return None, 'not recorded: docs/game_capabilities.json has no "level_count" (game_capabilities.py write --merge --level-count N)'
+
+
+def rule_verdict(rule, board, project=None):
+    """(applies() answer, one-line reason) for the R4N1 rules, for the CLIs to print."""
+    v = applies(rule, board, project)
+    if v != 'not_applicable':
+        recs = localize_board_records(project, rule) if project is not None and board == 'localize' else []
+        return v, ('English game with remake-board records %s: checked as a new game' % ', '.join(recs) if recs
+                   else '%s board: checked as a new game' % (board or 'unknown (= remake)'))
+    return v, ('English game (board localize from %s): %s does not apply to the original gameplay (feature_policy R4N1)'
+               % (board_of(project)[1] if project is not None else '--board', rule))
 
 
 # P20 第 3 点「能力先判」(问题普查 20261104): rules that apply only when the game HAS something. The answer comes from the
@@ -146,4 +221,14 @@ def applies(rule, board, project=None, caps=None):
     key = board if board in BOARDS else 'remake'
     if key == 'localize' and project is not None and art_style(project) == 'remake' and 'localize_remake_art' in table:
         key = 'localize_remake_art'
+    if rule in BOARD_RECORD_RULES and key != 'remake' and project is not None and localize_board_records(project):
+        return 'block'
+    if rule in RULE_RECORDS and key != 'remake' and project is not None:
+        if localize_board_records(project, rule):
+            return 'block'
+        if rule == 'writer_coin_reward':
+            # an English game that DOES have a coin wallet (economy_capabilities.json wallet true) must still set B
+            import game_capabilities
+            if game_capabilities.load(project).get('wallet') is True:
+                return 'block'
     return table[key]

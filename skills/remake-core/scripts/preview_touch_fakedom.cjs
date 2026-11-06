@@ -37,6 +37,10 @@ const got = [];
   });
   overlay.addEventListener(t, (e) => got.push({on: 'overlay', type: t}));
 });
+if (!process.argv[2] || process.argv[2] === '--help' || process.argv[2] === '-h') {  // R4I1: usage, never a crash
+  console.log('usage: node preview_touch_fakedom.cjs <path of preview-touch-bridge.js | none>  (test helper of test_p21b_p13_preview.py)');
+  process.exit(process.argv[2] ? 0 : 2);
+}
 const bridge = process.argv[2];
 if (bridge !== 'none') new Function('window', fs.readFileSync(bridge, 'utf8'))(win);
 const mouse = (target, type, x, y) => target.dispatchEvent({type, bubbles: true, cancelable: true, button: 0, clientX: x, clientY: y,

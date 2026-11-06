@@ -18,7 +18,8 @@ backgrounds about half). The limited skin, two formats (user 2026-10-24, both al
     (then 19 + N skins: N limited + the free one + 18 for coins).
 Current economy: limited skins cost the top tier (80B; 50B on normal-10-50.v1) in levels and endless games; optional milestone awards grant the same item once. Legacy-2r retains its former limited routes.
 
-Fill in "name" and "art" (what the skin changes: common = one accessory, rare = colours + accessory, epic = full outfit,
+Fill in "previewFrame" (R4O2: each skin's own preview picture; templates bind only this, never a slot/frame picture or a
+Sprite colour tint; check_skin_preview.py), "name" and "art" (what the skin changes: common = one accessory, rare = colours + accessory, epic = full outfit,
 legendary = full costume + effect, limited = the most detailed: themed costume, accessories, aura, own idle animation),
 keep the numbers, then run audit_acquisition_progression.py.
 
@@ -30,6 +31,7 @@ Usage:
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 STEPS = {'common': 1, 'rare': 4, 'epic': 10, 'legendary': 20}
@@ -55,6 +57,8 @@ BG_TIERS = [('common', 3), ('rare', 3), ('epic', 2), ('legendary', 1)]
 SKIN_BONUS = {'common': [5, 6, 7, 8, 8, 9, 10], 'rare': [12, 13, 15, 16, 18, 20], 'epic': [24, 27, 30], 'legendary': [38, 45]}
 BG_BONUS = {'common': [2, 3, 5], 'rare': [6, 8, 10], 'epic': [12, 15], 'legendary': [20]}
 LIMITED_BONUS = 55
+# R4O2 (补查2 第 7 组, SLS35): each skin shows its OWN preview picture; the store/trial template binds only this field
+PREVIEW_TODO = 'TODO: own preview picture of %s (e.g. skins/<id>_preview.png); never a slot/frame/tile background, never a tint'
 LIMITED_ADS = 6
 ART = {'common': 'TODO: one accessory (hat, glasses, scarf)', 'rare': 'TODO: new colours + an accessory',
        'epic': 'TODO: a full outfit', 'legendary': 'TODO: a full costume with a glow/effect',
@@ -99,6 +103,9 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
     want = skin_tiers_B(policy)
     if price_profile=='ordinary-levels' and targets!=want:raise ValueError('%s requires %s ordinary levels; existing custom tables retain their saved contract' % (policy, ','.join(str(v) for v in want.values())))
     normal_level_coins = R if normal_level_coins is None else normal_level_coins
+    # R4N1: an English game keeps its original level count (SLS35: 6); with fewer than 10 levels the limited skin goes
+    # on the last level (the remake CLI path still refuses fewer than 60 levels before getting here)
+    chapter = 10 if final_level >= 10 else max(1, final_level)
     skins = curve(R, SKIN_TIERS, price_profile, normal_level_coins, targets)
     top = max(p for _, p in skins)
 
@@ -106,14 +113,14 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
         return {'id': sid, 'group': 'skin', 'order': order, 'rarity': 'limited', 'limited': True,
                 'name': 'TODO', 'art': ART['limited'], 'bonus': {'type': 'coins', 'pct': LIMITED_BONUS}}
     if mode == 'levels' and limited_mode == 'every_10':
-        for i, n in enumerate(limited_levels(10, final_level)):
+        for i, n in enumerate(limited_levels(chapter, final_level)):
             row = limited_skin('%s_limited_%d' % (hero, n), i + 1)
             row.update(unlock='level', level=n, condition='clear', ads=0, coins=0)
             items.append(row)
     else:
         row = limited_skin(hero + '_limited', 1)
         if mode == 'levels':
-            row.update(unlock='level', level=limited_levels(10, final_level)[-1], condition='clear', ads=0, coins=0)
+            row.update(unlock='level', level=limited_levels(chapter, final_level)[-1], condition='clear', ads=0, coins=0)
         else:
             row.update(unlock='ads_coins', ads=LIMITED_ADS, coins=int(math.ceil(1.5 * top / 100.0) * 100))
         items.append(row)
@@ -141,6 +148,9 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
             items.append({'id': 'bg_%02d' % (i + 2), 'group': 'background', 'order': i + 2, 'rarity': rarity, 'unlock': 'coins',
                           'ads': 0, 'coins': price, 'bonus': {'type': 'coins', 'pct': BG_BONUS[rarity][k]}, 'name': 'TODO',
                           'art': 'TODO: the scene in a new theme (calm, few details: remake-art/references/page-richness.md)'})
+    if economy_policy == SKIN_POLICY and price_profile == 'ordinary-levels':   # R4O2; frozen tables keep their bytes
+        for row in items:
+            row['previewFrame'] = PREVIEW_TODO % row['id']
     coin_ad = 5*normal_level_coins if type(normal_level_coins) is int else b_coins(5, normal_level_coins)  # 5B, whole coins
     t = {'module': 'skin.v1', 'coins_per_ad': (coin_ad if price_profile=='ordinary-levels' else R), 'coins_per_level': normal_level_coins, 'normal_level_coins': normal_level_coins,
          'price_profile': price_profile, 'price_level_targets': targets, 'price_steps': [1, 4, 10, 20], 'mode': mode, 'items': items}
@@ -150,7 +160,7 @@ def make(R, mode, final_level, backgrounds, hero, limited_mode='final', price_pr
     return t
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--R', type=b_number, required=True, help='ordinary base B for new pricing (may be fractional, e.g. 72.5); legacy-2r ad unit for old contracts')
     ap.add_argument('--price-profile', choices=PRICE_PROFILES, default='ordinary-levels')
@@ -167,11 +177,25 @@ def main():
     ap.add_argument('--no-backgrounds', action='store_true', help='the game has no scene to dress (no background skins)')
     ap.add_argument('--hero', default='hero', help='id prefix of the protagonist skins')
     ap.add_argument('--out', type=Path, required=True)
-    a = ap.parse_args()
+    ap.add_argument('--project', type=Path, help='R4N1: game folder; board from feature_policy.board_of, real level count '
+                    'from docs/game_capabilities.json level_count (English games keep the original level count)')
+    ap.add_argument('--board', choices=['localize', 'remake'], help='R4N1: override the recorded board')
+    a = ap.parse_args(argv)
     if a.R <= 0:
         ap.error('--R must be > 0')
-    if a.levels and a.final_level < 60:
-        ap.error('--final-level %d: a level game has 60 levels or more (英化 70, 重塑 60; Saul 2026-10-29)' % a.final_level)
+    import feature_policy  # same folder
+    board = feature_policy.board_of(a.project, a.board)[0] if a.project else a.board
+    rule, why = feature_policy.rule_verdict('skin_min_levels', board, a.project)
+    if a.levels and rule == 'not_applicable':
+        real, src = feature_policy.game_levels(a.project)
+        if real is not None and '--final-level' not in (argv if argv is not None else sys.argv[1:]):
+            a.final_level = real
+        print('skin_min_levels 不适用: %s; --final-level %d (%s)' % (why, a.final_level, src), file=sys.stderr)
+        if a.final_level < 1:
+            ap.error('--final-level must be >= 1')
+    elif a.levels and a.final_level < 60:
+        ap.error('--final-level %d: a level game has 60 levels or more (英化 70, 重塑 60; Saul 2026-10-29). %s; an English '
+                 'game keeping its original levels: --project <game> with board localize' % (a.final_level, why))
     try:
         policy = a.economy_policy if a.price_profile == 'ordinary-levels' else SKIN_POLICY_LEGACY  # legacy-2r keeps its old metadata
         tiers = a.tier_levels if a.tier_levels is not None else ','.join(str(v) for v in skin_tiers_B(policy).values())

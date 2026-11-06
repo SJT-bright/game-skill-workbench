@@ -33,8 +33,9 @@ def walk(project, suffixes):
             yield p
 
 
-def frame_sizes(project):
-    """sprite-frame uuid -> (name, raw width, raw height)"""
+def frame_sizes(project, files=None):
+    """sprite-frame uuid -> (name, raw width, raw height). files (a dict, optional): also gets uuid -> the picture's
+    project-relative path (art_check checks an exempt original against its bytes, 美工skill 2026-11-05)."""
     frames = {}
     for meta in walk(project, {'.meta'}):
         if not meta.name.lower().endswith(('.png.meta', '.jpg.meta', '.jpeg.meta', '.webp.meta')):
@@ -51,6 +52,8 @@ def frame_sizes(project):
             w, h = data.get('rawWidth') or data.get('width'), data.get('rawHeight') or data.get('height')
             if sub.get('uuid') and w and h:
                 frames[sub['uuid']] = (name + ('' if key in ('f9941', name.rsplit('.', 1)[0]) else ':' + key), w, h)
+                if isinstance(files, dict):
+                    files[sub['uuid']] = (meta.parent / name).relative_to(project).as_posix()
     return frames
 
 
@@ -99,7 +102,8 @@ def main():
     if a.out and a.out.exists():
         print(json.dumps({'status': 'error', 'error': f'output exists: {a.out}'}))
         return 2
-    frames = frame_sizes(a.project)
+    files = {}
+    frames = frame_sizes(a.project, files)
     findings, checked, seen = [], 0, set()
     for f in walk(a.project, {'.fire', '.scene', '.prefab'}):
         try:
@@ -136,7 +140,8 @@ def main():
             seen.add(key)
             findings.append({'file': key[0], 'node': node_name, 'image': name,
                              'source': [rw, rh], 'display': [round(dw), round(dh)], 'ratio': round(ratio, 2),
-                             'level': 'upscaled' if both > 1.0 else 'below_2x'})
+                             'level': 'upscaled' if both > 1.0 else 'below_2x',
+                             **({'image_path': files[uuid]} if uuid in files else {})})
     findings.sort(key=lambda x: -x['ratio'])
     upscaled = sum(1 for x in findings if x['level'] == 'upscaled')
     report = {'tool': 'audit_image_clarity', 'checked': checked, 'upscaled': upscaled,
@@ -151,7 +156,8 @@ def main():
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-    print(json.dumps({'checked': checked, 'upscaled': upscaled, 'below_2x': len(findings) - upscaled,
+    # R4I1 (Round4 #4): the printed report starts with the engine and the number of items actually checked
+    print(json.dumps({'engine': report['engine'], 'checked': checked, 'upscaled': upscaled, 'below_2x': len(findings) - upscaled,
                       'worst': findings[:8], 'status': report.get('status', 'checked'),
                       **({'reason': report['reason']} if report.get('status') == 'not_run' else {})}, ensure_ascii=False))
     if report.get('status') == 'not_run':

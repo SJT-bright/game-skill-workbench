@@ -627,6 +627,133 @@ function setup(options) {
     } finally { config.normalLevelCoins = keep; }
   });
 
+  // R4E (问题普查补查 第四节 2, 蛋壳特工队 T07:save_value_unvalidated): a save holding 999999 for level / map / VIP / skin.
+  var R4E_SCHEMA = {schema: 1, tables: {maps: [1, 2, 3], skins: ['cat', 'dog'], heroes: ['h1', 'h2']},
+    keys: {level: {type: 'int', min: 1, max: 60, 'default': 1}, mapId: {type: 'id', 'table': 'maps', 'default': 1},
+      vip: {type: 'int', min: 0, max: 3, 'default': 0}, skin: {type: 'id', 'table': 'skins', 'default': 'cat'},
+      heroLevel: {type: 'map', keyTable: 'heroes', of: {type: 'int', min: 1, max: 30}, 'default': {h1: 1}},
+      coins: {type: 'int', min: 0, 'default': 0}}};
+  function r4eStore(schema, logs) {
+    var st = memoryStorage();
+    st.setItem('egg', JSON.stringify({level: 999999, mapId: 999999, vip: 999999, skin: 999999, coins: 77,
+      heroLevel: {h1: 999999, h2: 4, ghost: 1}, platformClaims: {shortcut: false, profile: false}, meta: {}}));
+    var o = {storage: st, key: 'egg', login: false, log: function (l) { logs.push(l); }};
+    if (schema !== undefined) o.schema = schema;
+    return {store: new SaveStore({level: 1, mapId: 1, vip: 0, skin: 'cat', coins: 0, heroLevel: {h1: 1}}, o), storage: st};
+  }
+
+  await test('schema_out_of_range_values_fall_back_to_defaults_and_log', async function () {
+    var logs = [], w = r4eStore(R4E_SCHEMA, logs), writes = w.storage.writes, r = w.store.load(), d = w.store.get();
+    assert.strictEqual(r.ok, true); assert.strictEqual(r.status, 'loaded');
+    assert.deepStrictEqual([d.level, d.mapId, d.vip, d.skin, d.coins], [1, 1, 0, 'cat', 77]);
+    assert.deepStrictEqual(d.heroLevel, {h1: 1, h2: 4}, 'known hero back to its default, unknown hero dropped');
+    assert.strictEqual(r.repaired.length, 5);
+    assert.strictEqual(logs.length, 5);
+    assert.ok(logs.every(function (l) { return l.indexOf('[SaveStore] schema: ') === 0; }), logs.join('\n'));
+    assert.strictEqual(w.storage.writes, writes, 'the read-time check writes nothing');
+    assert.strictEqual(w.store.update(function (x) { x.coins += 1; }).ok, true);
+    assert.strictEqual(JSON.parse(w.storage.raw.egg).level, 1, 'the next save stores the repaired value');
+  });
+
+  await test('schema_absent_or_false_keeps_old_behaviour', async function () {
+    [undefined, false].forEach(function (schema) {
+      var logs = [], w = r4eStore(schema, logs), r = w.store.load();
+      assert.strictEqual(w.store.get().level, 999999, 'without a schema the value is handed back as before');
+      assert.strictEqual(r.repaired, undefined); assert.strictEqual(logs.length, 0);
+    });
+    global.TikTokSaveSchema = R4E_SCHEMA;
+    try {
+      var logs = [], w = r4eStore(undefined, logs); w.store.load();
+      assert.strictEqual(w.store.get().level, 1, 'the generated SaveSchema.js global is used when no option is given');
+      var logs2 = [], w2 = r4eStore(false, logs2); w2.store.load();
+      assert.strictEqual(w2.store.get().level, 999999, 'schema: false turns it off');
+    } finally { delete global.TikTokSaveSchema; }
+  });
+
+  // R4J1 (广告skill ad-boost v1.2.17): a year of daily claim ids must not pile up in meta.grants, and pruning must
+  // never let a claim that can still be made again pay twice. Ids are the ones the ad-boost modules build.
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(t) { var d = new Date(t); return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate()); }
+  var J1_DAYS = 90;   // a quarter keeps the test at about a second; the old kit kept 1620 ids by then (6570, 225 KB a year)
+  function yearOfDailyClaims(options) {
+    var DAY = 86400000, start = Date.UTC(2026, 10, 5, 12), clock = {t: start};
+    var o = {storage: memoryStorage(), key: 'j1', login: false, now: function () { return clock.t; }};
+    Object.keys(options || {}).forEach(function (k) { o[k] = options[k]; });
+    var s = new SaveStore({coins: 0}, o); s.load();
+    var once = ['level:1:first', 'gift:chest:L6', 'gift:home:0', 'checkin:20397'];
+    once.forEach(function (id) { s.grant({id: id, add: {coins: 1}}); });
+    for (var day = 0; day < J1_DAYS; day++) {
+      clock.t = start + day * DAY;
+      var today = ymd(clock.t), i;
+      for (i = 0; i < 5; i++) s.grant({id: 'online-ladder:' + today + ':' + i, add: {coins: 1}});
+      for (i = 0; i < 4; i++) s.grant({id: 'timer-chest:tchest:' + (day * 4 + i) + ':' + (clock.t + i * 60000), add: {coins: 1}});
+      for (i = 0; i < 3; i++) s.grant({id: 'coin-ad:' + today + ':r' + i, add: {coins: 1}});
+      for (i = 0; i < 6; i++) s.grant({id: 'gift:home:' + (clock.t + i * 1800000), add: {coins: 1}});
+    }
+    return {store: s, clock: clock, once: once, ymd: ymd, DAY: DAY};
+  }
+  await test('grant_daily_ids_with_their_day_are_pruned_after_7_days', function () {
+    var y = yearOfDailyClaims(), g = y.store.get().meta.grants, n = Object.keys(g).length;
+    var bytes = JSON.stringify(g).length;
+    assert(n <= 4 + 9 * 18, '90 days of daily claims keep about 8 days of ids, got ' + n);
+    assert(bytes < 12000, 'meta.grants stays small, got ' + bytes + ' bytes');
+    y.once.forEach(function (id) { assert(g[id], id + ' (no day in it) is kept for good'); });
+    assert.strictEqual(y.store.get().coins, 4 + J1_DAYS * 18, 'every claim paid exactly once');
+  });
+  await test('grant_wheel_daily_ids_are_pruned_offline_and_shopfree_kept_r4n6', function () {   // R4N6 (广告skill)
+    var DAY = 86400000, start = Date.UTC(2026, 10, 5, 12), clock = {t: start};
+    var s = new SaveStore({coins: 0}, {storage: memoryStorage(), key: 'n6', login: false, now: function () { return clock.t; }});
+    s.load();
+    var keep = ['offline:claim:' + ymd(start), 'shopfree:' + ymd(start) + ':1', 'checkin:20397'];
+    keep.forEach(function (id) { s.grant({id: id, add: {coins: 1}}); });
+    for (var day = 0; day < 30; day++) {
+      clock.t = start + day * DAY;
+      for (var i = 0; i < 3; i++) s.grant({id: 'wheel:' + ymd(clock.t) + ':' + i, add: {coins: 1}});
+    }
+    var g = s.get().meta.grants, wheel = Object.keys(g).filter(function (id) { return id.indexOf('wheel:') === 0; });
+    assert(wheel.length <= 3 * 8, '30 days of wheel spins keep about 8 days of ids, got ' + wheel.length);
+    keep.forEach(function (id) { assert(g[id], id + ' is not a pruned prefix and stays'); });
+    assert.strictEqual(s.grant({id: 'wheel:' + ymd(clock.t) + ':0', add: {coins: 1}}).already, true, 'today\'s spin is still once only');
+  });
+  await test('grant_pruning_keeps_claims_that_can_still_come_again', function () {
+    var y = yearOfDailyClaims(), s = y.store, coins = s.get().coins, today = y.ymd(y.clock.t);
+    var threeDaysAgo = y.ymd(y.clock.t - 3 * y.DAY);
+    ['online-ladder:' + today + ':0', 'coin-ad:' + threeDaysAgo + ':r2', 'gift:home:' + y.clock.t, 'level:1:first', 'gift:chest:L6']
+      .forEach(function (id) {
+        var r = s.grant({id: id, add: {coins: 100}});
+        assert.strictEqual(r.already, true, id + ' must still be a repeat');
+      });
+    assert.strictEqual(s.get().coins, coins, 'nothing paid twice');
+    var off = yearOfDailyClaims({grantDayPrefixes: []});
+    assert(Object.keys(off.store.get().meta.grants).length > J1_DAYS * 18, 'grantDayPrefixes: [] keeps every id (old behaviour)');
+  });
+  // schema 2 (make_save_schema.py "nullable" / type object / "in_defaults": false), the shapes ad-boost could not express
+  var J1_SCHEMA = {schema: 2, tables: {}, keys: {
+    'checkin.state': {type: 'object', nullable: true, in_defaults: false},
+    'checkin.state.claimed': {type: 'int', min: 0, max: 6, in_defaults: false},
+    'checkin.state.last_day': {type: 'int', nullable: true, in_defaults: false},
+    'energy.value': {type: 'int', min: 0, max: 60, in_defaults: false},
+    'adboostTimerChest.round': {type: 'object', nullable: true, in_defaults: false},
+    'wheel.pending': {type: 'int', min: 0, nullable: true, 'default': null}}};
+  await test('schema2_null_kept_object_checked_out_of_defaults_key_removed_when_bad', function () {
+    var st = memoryStorage(), logs = [];
+    st.setItem('j1s', JSON.stringify({checkin: {state: {v: 1, claimed: 99, last_day: null, created: 5}}, energy: {value: 'lots', anchorAt: 3},
+      adboostTimerChest: {day: '2026-11-05', round: null}, wheel: {pending: null}, platformClaims: {shortcut: false, profile: false}, meta: {}}));
+    var s = new SaveStore({wheel: {pending: null}}, {storage: st, key: 'j1s', login: false, schema: J1_SCHEMA, log: function (l) { logs.push(l); }});
+    var r = s.load(), d = s.get();
+    assert.strictEqual(d.checkin.state.last_day, null, 'null last_day is a valid value (before: removed, CheckinFlow then repaired it as claimed today)');
+    assert.strictEqual(d.adboostTimerChest.round, null);
+    assert.strictEqual(d.wheel.pending, null);
+    assert.ok(!('claimed' in d.checkin.state), 'bad claimed with no default is removed, CheckinFlow rebuilds it');
+    assert.ok(!('value' in d.energy), 'bad energy.value removed, Energy.normalize fills it');
+    assert.strictEqual(d.energy.anchorAt, 3);
+    assert.strictEqual(r.repaired.length, 2, logs.join('\n'));
+    st.setItem('j1s', JSON.stringify({checkin: {state: 'x'}, adboostTimerChest: {round: 7}, platformClaims: {shortcut: false, profile: false}, meta: {}}));
+    var s2 = new SaveStore({}, {storage: st, key: 'j1s', login: false, schema: J1_SCHEMA, log: function () {}}); s2.load();
+    assert.ok(!('state' in s2.get().checkin) && !('round' in s2.get().adboostTimerChest), 'a non-object state / round is removed');
+    assert.strictEqual(SaveStore.SUPPORTED_SCHEMA, 2);
+  });
+
   var failed = results.filter(function (r) { return r.status !== 'passed'; });
   console.log(JSON.stringify({suite: 'tiktok-platform-kit', passed: results.length - failed.length, failed: failed.length, results: results}, null, 2));
   if (failed.length) process.exitCode = 1;

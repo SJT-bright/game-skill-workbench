@@ -42,13 +42,31 @@
 | 每帧更新 | `update(dt) { var d = session.tick(dt); if (!d) return; ... }`，后面所有移动和计时都用 `d` | 每帧里自己判断各种暂停标志 |
 | 移动、旋转、滚动 | `session.move(node, vx, vy, d)`（单位：每秒），其他量用 `RunSession.step(v, 每秒变化, d)`；物理推力用 `PhysicsClock.force(v, dt)` | `node.x += 5`（按帧固定步长） |
 | 特效、子弹、飘字 | `FxPool.create(cc, {parent, make, reset, max, life})`，`pool.spawn(x, y)`，`update` 里 `pool.tick(d)`，换局 `pool.releaseAll()` | 每次 `new cc.Node` 或 `cc.instantiate`、播完不删；`update` 里造节点 |
+| 障碍物、敌人、子弹的回收和隐藏（生成时预防 R4L2） | 图片、动画、碰撞体都挂在**同一个根节点**下，整个根节点一起回收：池子里的用 `pool.release(根节点)` / 到期自动回池，不进池的用 `session.recycle(根节点)`（要删再加 `{destroy: true}`），取出复用用 `pool.spawn` / `session.reuse(根节点)`。零件会关掉根节点和子节点上全部碰撞体、物理体（2.4 `cc.Collider`/`cc.PhysicsCollider`/`cc.RigidBody`，3.x `Collider2D`/`RigidBody2D`），停掉缓动、动作和组件 `schedule`，复用时只把它关掉的碰撞体打开；敌人的定时器在 `reset` 或 `onEnable` 里重新开，或用 `session.every(ms, fn, 根节点)` 绑在敌人上 | 自己写 `图片节点.active = false`、`图片节点.destroy()`、把动画子节点单独还给别的池；只关图不关碰撞体（回家快跑：蜗牛 5 秒后图没了，碰撞体还挡人） |
 | 广告暂停 | ad-boost：`Kit.setup(session.adHooks())`（原因 `'ad'`，每次 `pauseGame` 对应一次 `resumeGame`） | 广告回调里直接改暂停布尔 |
 
 - 零件文件：`remake-core/assets/platform-kit/parts/RunSession.js`、`parts/FxPool.js`，2.4 和 3.x 同一份（2.4 放进 `assets/tiktok-platform/` 用 `require('RunSession')`，3.x 当插件脚本，全局名 `TikTokRunSession`、`TikTokFxPool`）。接口说明在文件头注释里。
+- 新游戏不手拷这两个文件：每次构建前的 `tiktok_finalize.py sync --board remake` 自动装好并按哈希换回（3.x 连插件 .meta）；英化游戏 sync 不装，要用时照上一条手拷（生成时预防 R4F1）。
 - 场景主组件：`onLoad` 里 `session = RunSession.create(cc, {owner: this.node})`，`onDestroy` 里 `session.dispose()`、`pool.destroy()`。开发版可在 `onLoad` 里调一次 `FxPool.devWatch(cc)`：`update` 里造节点、场景节点数一直涨时打警告，正式版自动不生效。
 - 暂停页、复活页、结算页（P05 模板）打开时 `session.pause(...)`，关掉时调它返回的 `release()`。「回首页」才用 `session.resumeAll()`。
 - **英化游戏不改原版玩法代码**：原版的状态、定时器、特效写法照旧，只在 AI 新加的暂停、复活、广告入口用 `RunSession`（例如新加的复活页 `pause('revive')`、ad-boost 的 `adHooks()`）。
-- 证据：`tests/run-session.test.js`（单个布尔暂停、Retry 只清一部分、旧碰撞回调、`setInterval`、每帧 `+= 5` 五个旧写法反例都判错）、`tests/fx-pool.test.js`（120 次发射节点数不涨；方块迷阵写法涨到 120）。都只是 Node 模拟，待真机复测。
+- 证据：`tests/run-session.test.js`（单个布尔暂停、Retry 只清一部分、旧碰撞回调、`setInterval`、每帧 `+= 5` 五个旧写法反例都判错）、`tests/fx-pool.test.js`（120 次发射节点数不涨；方块迷阵写法涨到 120）、`tests/entity-retire.test.js`（回收后碰撞体、物理体全关，复用再开，旧缓动和定时器不带到下一只；回家快跑只藏图片的写法留下看不见的挡人碰撞体）。都只是 Node 模拟，待真机复测。
+
+### 买、做、退都进事务（经营类玩法，生成时预防 R4L3）
+
+喵咪小吃铺一款出了 4 条：家具在 B 房间按 A 房间的价格扣钱、做菜等待时取消退回了已经用掉的食材、三条鱼做完显示肉类成品（成品图读到下一张订单）、公寓里同一个示例房间出现两次。原因都是买、做、退在结束时才去读会变的全局字段，没有锁，存档分几次写。**新游戏（自制、重塑）凡是花钱、花材料换东西的操作（商店、家具、做菜、合成、升级、出售）一律用平台包 `parts/ShopTx.js`**：
+
+| 要做的事 | 只这样写 | 不要这样写 |
+|---|---|---|
+| 点「买 / 做 / 退」 | `var tx = shop.begin(kind, {lock: 'furniture:' + room + ':' + item, buttons: [按钮], snapshot: {订单、价格、配方}, cost: {coins: 价格, 'inv.fish': 3}})`；返回 null 就什么都不做 | 直接改 `coins`，按钮不锁，靠 500ms 防连点 |
+| 等待、确认、动画之后 | 只读 `tx.snap`（价格、成品图、房间都从这里来） | 结束时再读 `this.currentPrice`、`orders[current]`、当前房间页签 |
+| 做菜中途用掉材料 | `tx.consume({'inv.fish': 1})` | 开始就整份扣掉，取消时整份加回 |
+| 完成 | `tx.commit({add: {coins: tx.snap.recipe.price}, apply: function (d) {...}}, onDone)`：扣费和发奖同一次 `SaveStore.grant`；只能领一次的订单给 `id: 'order:' + 订单id` | 先 `update` 扣钱、再 `update` 放东西 |
+| 取消 | `tx.cancel()`：只扣已经 consume 的，其余本来就没扣 | 退回开始时扣的全部 |
+| 商品表、示例房间 | `ShopTx.catalog(rows, {name: 'rooms'})`，重复 id 或只改了 id 的复制行当场报错 | 复制一行改个名当新示例 |
+
+- sync 给新游戏自动装（2.4 `require('ShopTx')`，3.x 插件，全局 `TikTokShopTx`），英化游戏不装、原版经营代码不改。
+- 证据：`tests/shop-tx.test.js`（四种旧写法都判错；连点两次只扣一次；存档失败钱和东西都不变、事务留着可重试）。只是 Node 模拟，待真机复测。
 
 ## 各板块正文在哪里（2026-10-27 拆分）
 

@@ -43,6 +43,9 @@ var variants = [
   // v1.6 (W-G1): the first Retry after a failed launch scene works
   {name: 'failed_scene_not_released', file: 'main.js', before: 'if (sceneFailed) { sceneFailed = false; releaseFailedScene(); }', after: 'if (sceneFailed) { sceneFailed = false; }'},
   {name: 'failed_scene_released_under_wrong_id', file: 'main.js', before: "var id = info.uuid + '@import';", after: 'var id = info.uuid;'},
+  // v1.8 (R4Q5): stats off at startup
+  {name: 'showfps_from_settings_debug', file: 'main.js', before: 'showFPS: false,  // v1.8: never from settings.debug', after: 'showFPS: !__globalAdapter.isSubContext && settings.debug,'},
+  {name: 'stats_not_turned_off', file: 'main.js', before: '    hideStats();\n    setTimeout(hideStats, 0);', after: ''},
   {name: 'superseded_scene_failure_not_recorded', file: 'main.js',
     before: "        if (error) { fail('scene', token, error); return; }\n        launched();\n      });\n      var found = cc.director.loadScene(settings.launchScene, function (error) {\n        if (error) sceneFailed = true;",
     after: "        if (error) { sceneFailed = true; fail('scene', token, error); return; }\n        launched();\n      });\n      var found = cc.director.loadScene(settings.launchScene, function (error) {\n        void 0;"}

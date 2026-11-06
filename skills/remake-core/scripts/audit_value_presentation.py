@@ -164,13 +164,86 @@ def runtime_findings(project, dumps):
     return findings, len(records)
 
 
-def audit(project, dumps=None):
+def _fnt_chars(path):
+    """Characters a text BMFont can draw (its `char id=` lines); None when the file is not a text .fnt."""
+    try:
+        ids = re.findall(r'^\s*char\s+id=(\d+)', Path(path).read_text(encoding='utf-8', errors='replace'), re.M)
+    except OSError:
+        return None
+    return {chr(int(i)) for i in ids if int(i) < 0x110000} or None
+
+
+def bitmap_glyph_findings(project, dumps):
+    """R4R2 (补查3 第 10 组; 方块收割者 put K/M/B/T/Q/E and 弹球传奇 'x' into 0-9 bitmap fonts, 11-05): every character a
+    bitmap-font Label shows at run time must be a `char id` of that .fnt, or the glyph is simply not drawn. Fonts are
+    matched by the dump's font name = .fnt file stem. Returns (findings, {font rel path: missing chars})."""
+    import audit_text_fit as T
+    root = Path(project)
+    fnts = {}
+    for p in sorted((root / 'assets').rglob('*.fnt')):
+        if not SKIP.intersection(p.relative_to(root).parts):
+            fnts.setdefault(p.stem.lower(), p)
+    findings, missing = [], {}
+    for d in T.load_dumps(dumps):
+        for n in d['nodes']:
+            lab = (n.get('comps') or {}).get('label')
+            if not lab or n.get('active') is False or lab.get('font_kind') not in {'bitmap', 'atlas'}:
+                continue
+            fnt = fnts.get(str(lab.get('font') or '').lower())
+            has = _fnt_chars(fnt) if fnt else None
+            if has is None:
+                continue
+            lack = sorted({ch for ch in plain(lab.get('string')) if not ch.isspace() and ch not in has})
+            if not lack:
+                continue
+            rel = fnt.relative_to(root).as_posix()
+            missing.setdefault(rel, set()).update(lack)
+            findings.append({'kind': 'bitmap_glyph_missing', 'file': d.get('_file'), 'page': d.get('screen'),
+                             'path': n.get('path'), 'text': plain(lab.get('string')), 'font': rel, 'missing': ''.join(lack),
+                             'message': '位图字 %s 里没有 %s，这几个字不会显示。已写进 docs/english/charset.json 的 '
+                                        'fonts[].missing：按这份字符集重画位图字（同一画风，含单位字母和符号），'
+                                        '或把单位/符号改用整字图 Sprite 槽' % (rel, ''.join(lack))})
+    return findings, {k: ''.join(sorted(v)) for k, v in missing.items()}
+
+
+def record_missing_glyphs(project, missing):
+    """Merge runtime-missing glyphs into docs/english/charset.json fonts[] (the record english_copy_guard writes), so
+    the redraw starts from one list. Previous file kept as charset.json.bak once."""
+    if not missing:
+        return None
+    p = Path(project) / 'docs/english/charset.json'
+    try:
+        doc = json.loads(p.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        doc = {'tool': 'audit_value_presentation', 'charset': {'fonts': []}}
+    if p.is_file() and not p.with_suffix('.json.bak').exists():
+        p.with_suffix('.json.bak').write_bytes(p.read_bytes())
+    cs = doc.setdefault('charset', {}) if 'charset' in doc or 'tool' in doc else doc
+    fonts = cs.setdefault('fonts', [])
+    for font, chars in missing.items():
+        row = next((f for f in fonts if f.get('font') == font), None)
+        if row is None:
+            row = {'font': font, 'has': '', 'missing': ''}
+            fonts.append(row)
+        row['missing'] = ''.join(sorted(set(row.get('missing') or '') | set(chars)))
+        row['missing_runtime'] = chars
+        row['fix'] = 'redraw this bitmap font with every character of value_charset + missing (same art style)'
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    return p
+
+
+def audit(project, dumps=None, write_charset=False):
     root = Path(project)
     findings = scene_findings(root) if dumps is None else []
     pages = 0
     if dumps is not None:
         runtime, pages = runtime_findings(root, dumps)
         findings += runtime
+        glyphs, missing = bitmap_glyph_findings(root, dumps)          # R4R2
+        findings += glyphs
+        if write_charset:
+            record_missing_glyphs(root, missing)
     return {'tool': 'audit_value_presentation', 'schema': 1, 'revision': REVISION,
             'mode': 'runtime' if dumps is not None else 'source', 'passed': not findings,
             'source_sha256': source_fingerprint(root), 'pages': pages, 'findings': findings,
@@ -182,10 +255,11 @@ def main():
     ap.add_argument('--project', type=Path, required=True)
     ap.add_argument('--dumps', type=Path, nargs='+')
     ap.add_argument('--out', type=Path)
+    ap.add_argument('--dry-run', action='store_true', help='R4R2: do not write missing glyphs into docs/english/charset.json')
     a = ap.parse_args()
     if not (a.project / 'assets').is_dir():
         ap.error('project has no assets/')
-    r = audit(a.project, a.dumps)
+    r = audit(a.project, a.dumps, write_charset=not a.dry_run)
     s = json.dumps(r, ensure_ascii=False, indent=2) + '\n'
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True); a.out.write_text(s, encoding='utf-8')

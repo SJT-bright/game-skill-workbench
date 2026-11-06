@@ -260,10 +260,12 @@ class Interface(unittest.TestCase):
 
     def test_wiring_runs_before_the_receipt_and_check_is_unchanged(self):
         body = inspect.getsource(M.main)
-        self.assertIn('writer_regressions(check, a.ad_regression, gate_policy, a.board)', body)
+        # 简化.11.15 (出包后返工): the same call, plus the last passed package (rework_of) the writer resolved
+        self.assertIn('writer_regressions(check, a.ad_regression, gate_policy, a.board, rework_of=rework_of)', body)
+        self.assertLess(body.index('resolve_rework(a.rework_of, out)'), body.index('writer_regressions(check'))
         self.assertLess(body.index('writer_regressions(check'), body.index('vnz.make_receipt('))
-        self.assertIn('runtime_gate(verified_files, folder, ad_regression, policy=gates.get(\'policy\'), board=board)',
-                      inspect.getsource(C.check))
+        self.assertIn('runtime_gate(verified_files, folder, ad_regression, policy=gates.get(\'policy\'), board=board,\n'
+                      '                                       rework=rework)', inspect.getsource(C.check))
 
 
 if __name__ == '__main__':

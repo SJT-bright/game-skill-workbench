@@ -16,6 +16,7 @@
   音频来源      audit_audio_sources.py    每个音频都有合格授权记录
   中文残留      audit_english_coverage.py 源码/包里的中文候选数量（需人工分类：注释不算）
   英文文案      audit_copy_quality.py     拼写、中文/全角标点、占位符、中式英语、叫法统一、字放不下（读 docs/test 里的 dump_ui）
+  文案写入校验  english_copy_guard.py --dry-run  英化有文案表时：RichText 标签不配对、登记的看广告按钮没写 WATCH AD（只提示）
   广告接入标记  audit_platform_markers.py 激励广告和成长（加桌面、主页回访）必需的接口调用；状态不正常就是需处理
   互推          audit_platform_markers.py 跳转其他小游戏（navigateToMiniProgram 等）
   异步返回方式  audit_async_contracts.py  奖励查询的回调和 Promise 都接住了吗（Monkey Dash 2026-10-21）
@@ -37,6 +38,7 @@
   关卡抽测清单  plan_level_tests.py       哪些关要真实触摸                         （需 --levels）
   皮肤收集梯度  audit_acquisition_progression.py  新建玩法查模板梯度；维护范围查原有收集和经济（自动找 unlock_table.json）
   禁止广告跳关  audit_no_ad_skip.py       源码/场景/上传包里的跳关代码和文字（必须为0）
+  已装 Skill    installed_skill_check.py  已装文件和发版哈希不一样就提示「已装 Skill 被改过，请走补丁」（只提示）
   排名系统      audit_league.py           加不加排名的判断（重塑按四个问题；英化不新增）、算法未改、参数模拟、皮肤和文案
   可选玩法      audit_optional_features.py 新建玩法查皮肤增益和七日签到模板；维护范围复验已存在的生产 JS
   单调页面      audit_page_richness.py    首页/过关/失败（和排名页）是否单调：纯色底、只有字的按钮、系统字体、空白面板
@@ -194,6 +196,24 @@ def main():
                              '创新玩法用了关卡/皮肤/经济板块时照查）') if localize
             else '重塑（启动包做游戏）：执行本轮功能预检，设计与美术归所属阶段')
 
+    # 简化.11.14 R4D（普查 T21:installed_skill_direct_edit，39 次）：已装 Skill 被直接改过只提示，不拦、不还原。
+    try:
+        import installed_skill_check
+        ins = installed_skill_check.check()
+        if ins.get('status') == 'modified':
+            add('已装 Skill', '提示', ins['line'])
+    except Exception as exc:  # noqa: BLE001 - a hint only, never blocks preflight
+        add('已装 Skill', '提示', '没核对成（%s）' % repr(exc)[:120])
+
+    # R4F2 #8（普查：蛋壳特工队整套字体进主包）：工程有 TTF/OTF 而本机没装 fontTools 时，字体子集一步只能判「未执行」。
+    try:
+        import subset_fonts
+        line = subset_fonts.preflight_line(proj)
+        if line:
+            add('字体子集', '提示', line)
+    except Exception as exc:  # noqa: BLE001 - a hint only, never blocks preflight
+        add('字体子集', '提示', '没核对成（%s）' % repr(exc)[:120])
+
     # Page entry regression: only static triage here; LOAD-01 still requires runtime coverage.
     code, text = run('audit_page_readiness.py', ['--project', proj, '--source-only', '--out', out / 'page_readiness.json'], logs)
     j = first_json(text)
@@ -268,6 +288,25 @@ def main():
             '；测试时用 chrome_touch 的 dump_ui 把每个页面读一遍', 'copy_quality.json')
     else:
         add('英文文案', '出错', text.strip()[-300:], 'logs/audit_copy_quality.log')
+
+    # 3c R4O6（R4N5 english_copy_guard）：英化工程有 docs/copy/copy-table.csv 时只读跑一遍（--dry-run，记录写到预检输出，
+    # 不改工程）。RichText 标签不配对、登记过的看广告按钮没写 WATCH AD 报出来。11-05 在 12 款英化工程上只读校准会拦在做的
+    # 火箭三消，所以只作提示，不算需处理；改字和换行用第 2 阶段的 english_copy_guard.py（不带 --dry-run）。
+    guard = HERE.parent.parent / 'cocos-game-to-english' / 'scripts' / 'english_copy_guard.py'
+    if localize and (proj / 'docs/copy/copy-table.csv').is_file():
+        if guard.is_file():
+            code, text = run(str(guard), ['--project', proj, '--dry-run', '--out', out / 'copy_guard.json'], logs)
+            j = first_json(text)
+            if code in (0, 1) and 'passed' in j:
+                blk = j.get('blocking') or []
+                add('文案写入校验', '提示' if blk or j.get('warnings') else '通过',
+                    (f"{len(blk)}处要改（先只提示）：" + '；'.join(str(x)[:120] for x in blk[:3]) if blk else 'RichText 标签配对、登记的看广告按钮写了 WATCH AD')
+                    + (f"；另有{len(j.get('warnings') or [])}条提醒（缺字、字面 \\n、名字像看广告的按钮）" if j.get('warnings') else '')
+                    + '。改法：第 2 阶段跑 english_copy_guard.py --project <工程>', 'copy_guard.json')
+            else:
+                add('文案写入校验', '提示', '没跑成：' + text.strip()[-200:], 'logs/english_copy_guard.log')
+        else:
+            add('文案写入校验', '提示', '没装 cocos-game-to-english/scripts/english_copy_guard.py，这一项没跑')
 
     # 4 广告接入标记（v7.5 细菌2048 第2条 / 方块迷阵 第2条：成长标记每个 TikTok 游戏都查；status 不是正常值就是需处理）
     pm_args = [proj, '--report', out / 'platform.json']

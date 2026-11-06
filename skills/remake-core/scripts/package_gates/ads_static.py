@@ -9,10 +9,63 @@ A2_hide_kills_ad: an EVENT_HIDE / onHide handler cancels, destroys or unbinds th
     background while the full-screen ad plays, so every finished video would grant nothing (remake: block; other
     boards: warning).
 Ad timing (timeouts) is not checked here; it is on hold.
+
+简化.11.14 R4A (生成时预防 P01-2): the kit main.js v1.7 installs the platform kit's own parts/rewarded-guard.js in
+EVERY 2.4 package. That file names createRewardedVideoAd (it wraps it), but it is not a game ad caller. A JavaScript
+file whose bytes hash to a KIT_MANIFEST sha256 of the guard (files["parts/rewarded-guard.js"] and part rewarded24,
+each with previous_sha256) is recognised as the kit guard: it is left out of modules() (A1, A2, G1k) and out of
+rewarded_callers(), which cocos-game-check ad_regression.needs_regression() / runtime_regression 'rewarded_ads' use
+to decide whether the rewarded-ad regression is required. A changed guard has another hash and counts as game code.
+An unreadable KIT_MANIFEST recognises nothing (stricter, never looser).
 """
+import hashlib
+import json
 import re
+from pathlib import Path
 
 from . import finding
+
+KIT_MANIFEST = Path(__file__).resolve().parents[2] / 'assets' / 'platform-kit' / 'KIT_MANIFEST.json'
+GUARD_FILE = 'parts/rewarded-guard.js'
+GUARD_PART = 'rewarded24'
+_DIGEST = re.compile(r'[0-9a-f]{64}')
+
+
+def kit_guard_hashes(manifest_path=None):
+    """sha256 values of the platform kit's own rewarded-guard.js as KIT_MANIFEST.json lists them (read on every call)."""
+    try:
+        manifest = json.loads(Path(manifest_path or KIT_MANIFEST).read_bytes())
+    except (OSError, ValueError, UnicodeError):
+        return frozenset()
+    out = set()
+
+    def add(spec):
+        if isinstance(spec, dict):
+            for digest in [spec.get('sha256')] + list(spec.get('previous_sha256') or []):
+                if isinstance(digest, str) and _DIGEST.fullmatch(digest):
+                    out.add(digest)
+    files = manifest.get('files') if isinstance(manifest.get('files'), dict) else {}
+    add(files.get(GUARD_FILE))
+    parts = manifest.get('parts') if isinstance(manifest.get('parts'), dict) else {}
+    part = parts.get(GUARD_PART)
+    if isinstance(part, dict):
+        add(part.get('file'))
+    return frozenset(out)
+
+
+def is_kit_guard(data, hashes=None):
+    """True when these bytes are the kit's rewarded-guard.js, unchanged."""
+    if not isinstance(data, (bytes, bytearray)):
+        return False
+    hashes = kit_guard_hashes() if hashes is None else hashes
+    return bool(hashes) and hashlib.sha256(data).hexdigest() in hashes
+
+
+def rewarded_callers(files, hashes=None):
+    """files: {relative name: bytes}. JavaScript files that name createRewardedVideoAd, the kit guard left out."""
+    hashes = kit_guard_hashes() if hashes is None else hashes
+    return sorted(name for name, data in files.items()
+                  if name.endswith('.js') and b'createRewardedVideoAd' in data and not is_kit_guard(data, hashes))
 
 KIT_MODULE = 'RewardedService'
 # The kit module looks the SDK up through its own getSDK('createRewardedVideoAd'); a game module that is merely
@@ -59,9 +112,13 @@ def a1_level(view):
 
 
 def modules(view):
-    """[(file, module name, text)] - Cocos bundle files split per script module; other JS is one module."""
+    """[(file, module name, text)] - Cocos bundle files split per script module; other JS is one module.
+    The kit's own rewarded-guard.js (KIT_MANIFEST hash) is platform code, not a game module: left out."""
     out = []
+    guard = kit_guard_hashes()
     for name in view.game_js():
+        if guard and is_kit_guard((getattr(view, 'files', None) or {}).get(name), guard):
+            continue
         text = view.text(name)
         marks = [(m.start(), m.group(1)) for m in MODULE_2X.finditer(text)] or \
                 [(m.start(), m.group(1)) for m in MODULE_3X.finditer(text)]
@@ -128,6 +185,26 @@ def _hide_handlers(text):
     return out
 
 
+def nonplatform_grants(mods):
+    """R4N2 (补查2 第 4 组) A3: ['module/function'] of ad functions (show*Video* / *RewardAd* / pay ...) with a
+    branch that is not the platform (Channel.DEFAULT, default:, else of a platform test) and calls the reward
+    callback without any ad (合成进化恐龙 SdkMgr.showRewardAd, 奔跑吧巨人 GameLogic.pay). Same detector as
+    tiktok_rewire.direct_grant, so what rewire-ads fixes at stage 2 is what this gate reports. The kit is skipped."""
+    try:
+        import tiktok_rewire as rw
+    except Exception:  # noqa: BLE001
+        return []
+    out = []
+    for f, m, t in mods:
+        if _is_kit(m, t) or kit_module_name(m) in ('AdBridge', 'AdBridge3x') or not re.search(r'(?i)video|rewardad|\bpay\b', t):
+            continue
+        masked = rw.mask(t)
+        for fn in rw.functions(t, masked):
+            if rw.WRAPPER_NAME.match(fn['name']) and rw.direct_grant(t, masked, fn) is not None:
+                out.append('%s/%s' % (m, fn['name']))
+    return sorted(set(out))
+
+
 def check(view):
     mods = modules(view)
     out = []
@@ -156,6 +233,13 @@ def check(view):
                     if any(KILL.search(b) for b in _method_bodies(ad_text, call)):
                         hits.append('%s/%s calls %s() which ends the rewarded ad' % (m, handler, call))
                         break
+    np_hits = nonplatform_grants(mods)
+    if np_hits:
+        out.append(finding('A3_nonplatform_grant', a1_level(view),
+                           'an ad function grants the reward on a non-platform branch without any ad (browser / '
+                           'default channel / else): %s; tiktok_finalize.py rewire-ads rewires it to RewardedService '
+                           '(reward only in its success callback)' % '; '.join(np_hits[:4]),
+                           {'hits': np_hits, 'policy': view.get_policy()[0] if hasattr(view, 'get_policy') else None}))
     if hits:
         out.append(finding('A2_hide_kills_ad', _level(view),
                            'an EVENT_HIDE/onHide handler ends the playing rewarded ad, so a video watched while '

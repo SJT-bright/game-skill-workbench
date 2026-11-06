@@ -41,6 +41,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re as _re
 from pathlib import Path
 import sys
 import tempfile
@@ -58,6 +59,25 @@ GATE_3X = 'ART_receipt_3x_not_covered'
 GATE_BASE_AUDIO = 'ART_base_audio'
 RERUN = '美术改过（或没跑美术检查），重跑 art_check'
 STATUSES = ('pass', 'fail', 'not_covered_3x')
+# R4Q3 (补查3 第 3 组): Saul's 「保留原画风」 record, read by the receipt (original_style.py owns the format)
+KEEP_RECORD = Path('docs') / 'art' / 'keep_original_style.json'
+GATE_KEEP = 'ART_receipt_kept_original_style'
+DARK_AREA_ROW = '大块深色与纯色底（画风禁止项，不设亮度下限）'   # = art_check.DARK_AREA_TITLE
+
+
+def _keep_record(project):
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))
+    import original_style
+    return original_style.keep_record(project)
+
+
+def _kept_by_record(project, receipt):
+    """R4Q3: True when a failed English receipt failed ONLY on the dark-area row, art_check could not tell original
+    pictures from new ones, and docs/art/keep_original_style.json records Saul's choice to keep the original art."""
+    style = receipt.get('original_style') or {}
+    return (receipt.get('blocking_rows') == [DARK_AREA_ROW] and style.get('applies') == 'not_applicable'
+            and style.get('state') in ('no_original', 'unmeasured') and bool(_keep_record(project)))
 
 
 def _sha(data):
@@ -87,6 +107,107 @@ def image_fingerprints(project):
 
 def images_digest(images):
     return _sha(json.dumps(images, sort_keys=True, separators=(',', ':')).encode('utf-8'))
+
+
+# 生成时预防 R4M2 (补查第 12 组): the receipt also stands for the TEXT, FONTS and LAYOUT on screen, so changing a label,
+# a font file or a node's position / size after the art check makes the receipt stale like a changed image.
+#   fonts   .ttf .otf .ttc .woff .woff2 .fnt: file bytes
+#   layout  .fire .scene .prefab: only what decides the picture (node name / position / size / anchor / scale / rotation
+#           / active / opacity / colour / parent, and every field of Label, RichText, Sprite, Widget, Layout,
+#           UITransform, UIOpacity, outline / shadow, Mask, ScrollView / PageView parts); script components and
+#           gameplay values stored in a prefab are NOT in it, so tuning numbers does not force a new art check
+#   text    text tables (assets/**/(i18n|lang|locale|localization|strings|texts)/*.json or file names like lang_*.json)
+#           and string literals a script writes into a label (`.string = '...'`, `.text = '...'`)
+# Receipts written before R4M2 have no `display` field: their images are still compared, the display part is reported
+# as `display_unrecorded` (no block), and the next art_check writes it. tiktok_finalize source carries display
+# changes its own steps made, like images.
+DISPLAY_SCHEMA = 1
+FONT_SUFFIXES = ('.ttf', '.otf', '.ttc', '.woff', '.woff2', '.fnt')
+LAYOUT_SUFFIXES = ('.fire', '.scene', '.prefab')
+TEXT_TABLE_DIRS = {'i18n', 'lang', 'langs', 'language', 'languages', 'locale', 'locales', 'localization', 'l10n',
+                   'strings', 'text', 'texts'}
+TEXT_TABLE_PREFIX = ('lang', 'i18n', 'locale', 'strings', 'text_', 'texts')
+KIT_SCRIPT_DIRS = {'tiktok-platform'}          # the kit's own scripts are not game text
+DISPLAY_NODE_KEYS = ('_name', '_parent', '_active', '_opacity', '_color', '_contentSize', '_anchorPoint', '_trs',
+                     '_position', '_scale', '_eulerAngles', '_rotationX', '_rotationY', '_skewX', '_skewY',
+                     '_lpos', '_lrot', '_lscale', '_euler', '_layer')
+DISPLAY_COMPONENTS = {'cc.Label', 'cc.RichText', 'cc.Sprite', 'cc.Widget', 'cc.Layout', 'cc.UITransform',
+                      'cc.UIOpacity', 'cc.LabelOutline', 'cc.LabelShadow', 'cc.Mask', 'cc.Graphics', 'cc.EditBox',
+                      'cc.ScrollView', 'cc.PageView', 'cc.ProgressBar', 'cc.Slider', 'cc.Toggle', 'cc.Button',
+                      'cc.BlockInputEvents', 'cc.SafeArea', 'cc.Canvas', 'cc.Camera',
+                      'sp.Skeleton', 'dragonBones.ArmatureDisplay', 'cc.ParticleSystem', 'cc.ParticleSystem2D'}
+VOLATILE_KEYS = {'_id', '_objFlags', '__prefab', 'node', '_prefab', '__editorExtras__', 'fileId', '_enabled'}
+CODE_TEXT = _re.compile(r"""\.(?:string|text)\s*=\s*(['"`])((?:\\.|(?!\1).){1,400})\1""")
+
+
+def _layout_digest(data):
+    """sha256 of the display part of one Cocos scene / prefab (list of serialised objects); raw bytes when unparsable."""
+    try:
+        items = json.loads(data.decode('utf-8-sig'))
+    except (UnicodeDecodeError, ValueError):
+        return _sha(data)
+    if not isinstance(items, list):
+        return _sha(data)
+    keep = []
+    for i, obj in enumerate(items):
+        if not isinstance(obj, dict):
+            continue
+        kind = obj.get('__type__')
+        if kind in ('cc.Node', 'cc.PrivateNode'):
+            keep.append([i, kind, {k: obj.get(k) for k in DISPLAY_NODE_KEYS if k in obj}])
+        elif kind in DISPLAY_COMPONENTS:
+            keep.append([i, kind, {k: v for k, v in obj.items() if k not in VOLATILE_KEYS}])
+    return _sha(json.dumps(keep, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8'))
+
+
+def _is_text_table(rel):
+    parts = [x.lower() for x in rel.parts]
+    name = parts[-1]
+    return name.endswith('.json') and (bool(TEXT_TABLE_DIRS & set(parts[:-1])) or name.startswith(TEXT_TABLE_PREFIX))
+
+
+def display_fingerprints(project):
+    """{key: sha256} of the fonts, layout and text under <project>/assets/ (keys: 'font:', 'layout:', 'text:',
+    'code-text:' + project-relative posix path). Read only, about a second for a big game."""
+    project = Path(project)
+    root = project / 'assets'
+    out = {}
+    if not root.is_dir():
+        return out
+    for p in sorted(root.rglob('*')):
+        if not p.is_file() or p.is_symlink() or p.name.startswith('._'):
+            continue
+        rel = p.relative_to(project)
+        folders = {x.lower() for x in rel.parts[:-1]}
+        if SKIP_DIRS & folders:
+            continue
+        name = p.name.lower()
+        try:
+            if name.endswith(FONT_SUFFIXES):
+                out['font:' + rel.as_posix()] = _sha(p.read_bytes())
+            elif name.endswith(LAYOUT_SUFFIXES):
+                out['layout:' + rel.as_posix()] = _layout_digest(p.read_bytes())
+            elif _is_text_table(rel):
+                out['text:' + rel.as_posix()] = _sha(p.read_bytes())
+            elif name.endswith(('.js', '.ts')) and not name.endswith('.d.ts') and not (KIT_SCRIPT_DIRS & folders):
+                found = sorted(m.group(2) for m in CODE_TEXT.finditer(p.read_text(encoding='utf-8', errors='replace')))
+                if found:
+                    out['code-text:' + rel.as_posix()] = _sha('\n'.join(found).encode('utf-8'))
+        except OSError:
+            continue
+    return out
+
+
+DISPLAY_LABEL = {'font': '字体', 'layout': '布局', 'text': '文字表', 'code-text': '脚本里的文字'}
+
+
+def _display_parts(keys):
+    """['布局 2 处：assets/a.prefab、…', …] for the changed / added / removed display keys."""
+    groups = {}
+    for key in keys:
+        kind, _, path = key.partition(':')
+        groups.setdefault(kind, []).append(path)
+    return ['%s %d 处：%s' % (DISPLAY_LABEL.get(k, k), len(v), _list(v, 5)) for k, v in sorted(groups.items())]
 
 
 def engine(project):
@@ -138,10 +259,20 @@ def write(project, status, report=None, report_path=None, note=None):
         'created': dt.datetime.now().astimezone().isoformat(timespec='seconds'),
         'images_count': len(images), 'images_sha256': images_digest(images),
         'art_check_images_sha256': images_digest(images), 'images': images, 'carried': []}
+    display = display_fingerprints(project)            # 生成时预防 R4M2: text, fonts, layout
+    receipt.update(display_schema=DISPLAY_SCHEMA, display=display, display_sha256=images_digest(display))
     if isinstance(report.get('base_generated'), dict):
         receipt['base_generated'] = report['base_generated']      # v7.8 H8 / H10 summary (art_records.summary)
     if isinstance(report.get('value_presentation'), dict):
         receipt['value_presentation'] = report['value_presentation']
+    # R4Q3 (补查3 第 3 组): which rows still need fixing, the original-style verdict and Saul's keep record
+    receipt['blocking_rows'] = [r.get('check') for r in report.get('rows') or [] if isinstance(r, dict)
+                                and r.get('status') == '需处理'][:40]
+    if isinstance(report.get('original_style'), dict):
+        receipt['original_style'] = report['original_style']
+    keep = _keep_record(project)
+    if keep:
+        receipt['keep_original_style'] = keep
     if note:
         receipt['note'] = note
     _write_json(receipt_path(project), receipt)
@@ -248,6 +379,20 @@ def check(project, board=None, policy=None):
     return out
 
 
+def _display_compare(project, receipt, out):
+    """生成时预防 R4M2: fill out['display_*']. A receipt from before R4M2 (no `display`) -> display_state unrecorded:
+    reported, never refused (the next art_check records it), so the projects in progress keep their receipts."""
+    out['display_changed'], out['display_added'], out['display_removed'] = [], [], []
+    recorded = receipt.get('display')
+    if not isinstance(recorded, dict):
+        out['display_state'] = 'unrecorded'
+        return
+    current = display_fingerprints(project)
+    out['display_changed'], out['display_added'], out['display_removed'] = diff(recorded, current)
+    moved = out['display_changed'] or out['display_added'] or out['display_removed']
+    out['display_state'] = 'changed' if moved else 'match'
+
+
 def _value_receipt_current(project, receipt):
     from audit_value_presentation import REVISION, source_fingerprint
     proof = receipt.get('value_presentation') or {}
@@ -263,7 +408,8 @@ def _check_images(project, board=None, policy=None):
     receipt, error = read(project)
     out = {'project': str(project), 'receipt': str(receipt_path(project)), 'board': board, 'policy': policy,
            'strict': strict, 'images_count': len(current), 'changed': [], 'added': [], 'removed': [],
-           'status': (receipt or {}).get('status'), 'gate': GATE}
+           'status': (receipt or {}).get('status'), 'gate': GATE,
+           'display_changed': [], 'display_added': [], 'display_removed': [], 'display_state': None}
     try:
         out['engine'] = engine(project)
     except Exception:  # noqa: BLE001
@@ -282,6 +428,8 @@ def _check_images(project, board=None, policy=None):
         out['changed'], out['added'], out['removed'] = diff(receipt['images'], current)
         moved = out['changed'] or out['added'] or out['removed']
         status = receipt.get('status')
+        _display_compare(project, receipt, out)          # 生成时预防 R4M2
+        display_moved = out['display_changed'] or out['display_added'] or out['display_removed']
         if moved:
             parts = []
             for label, key in (('改了', 'changed'), ('新增', 'added'), ('删了', 'removed')):
@@ -289,12 +437,38 @@ def _check_images(project, board=None, policy=None):
                     parts.append('%s %d 张：%s' % (label, len(out[key]), _list(out[key])))
             out['state'] = 'changed'
             why = '回执（%s，%s）之后图片变了，%s' % (status, receipt.get('created'), '；'.join(parts))
+        elif display_moved:
+            parts = []
+            for label, key in (('改了', 'display_changed'), ('新增', 'display_added'), ('删了', 'display_removed')):
+                if out[key]:
+                    parts.append('%s%s' % (label, '、'.join(_display_parts(out[key]))))
+            out['state'] = 'display_changed'
+            why = '回执（%s，%s）之后画面上的文字、字体或布局变了，%s' % (status, receipt.get('created'), '；'.join(parts))
         elif board == 'localize' and not _value_receipt_current(project, receipt):
             out['state'] = 'value_evidence_stale'
             why = '缺分数/奖励实际页面验收，或文字代码、字体、坐标、绑定已变；旧图片回执不能放行'
         elif status == 'pass':
             out.update(state='match_pass', level='ok',
-                       message='美术回执对得上：art_check 通过（%s），%d 张图未改' % (receipt.get('created'), len(current)))
+                       message='美术回执对得上：art_check 通过（%s），%d 张图未改%s' % (
+                           receipt.get('created'), len(current),
+                           '，文字、字体、布局未改' if out['display_state'] == 'match' else
+                           '（旧回执没记文字、字体、布局，下次 art_check 补上）'))
+            kept = receipt.get('original_style') or {}
+            if kept.get('state') == 'kept_original':      # R4Q3: say which pictures were kept and who decided
+                who = receipt.get('keep_original_style') or {}
+                out['message'] += '；原图保留 %d 张（大块深色/纯色不适用%s）' % (
+                    len(kept.get('original') or []), '，%s %s 定的' % (who.get('decided_by'), who.get('date')) if who else '')
+            return out
+        elif status == 'fail' and board == 'localize' and _kept_by_record(project, receipt):
+            # R4Q3: the only row left is 大块深色与纯色底, the original pictures could not be told from new ones (no
+            # original record / no Pillow), and Saul's keep_original_style.json says keep the original art: the
+            # record stands in for the hand-written authorization the sessions used to need. Warn, never block.
+            keep = _keep_record(project)
+            out.update(state='kept_original_record', level='warn', gate=GATE_KEEP,
+                       message='保留原画风（%s %s 定的，%s）：回执里只剩「大块深色与纯色底」这一行，分不清原图和新图（%s），'
+                       '按记录放行并警告；补上原包登记（raw_inputs.py keep 或 art_records.py base）后重跑 art_check' % (
+                           keep.get('decided_by'), keep.get('date'), KEEP_RECORD.as_posix(),
+                           (receipt.get('original_style') or {}).get('state')))
             return out
         elif status == 'not_covered_3x' and out['engine'] == 3:
             out.update(state='match_3x', level='warn', gate=GATE_3X,
@@ -327,12 +501,16 @@ def finding(result):
     evidence = {k: result.get(k) for k in ('state', 'status', 'board', 'policy', 'receipt')}
     evidence.update({k: result[k][:50] for k in ('changed', 'added', 'removed')})
     evidence['base_audio'] = list(result.get('base_audio') or [])[:50]
+    evidence['display_state'] = result.get('display_state')            # 生成时预防 R4M2
+    evidence.update({k: list(result.get(k) or [])[:50] for k in ('display_changed', 'display_added', 'display_removed')})
     return {'id': result['gate'], 'level': 'block' if result['level'] == 'block' else 'warn',
             'message': result['message'], 'evidence': evidence}
 
 
 ROW = {'no_images': '没有图片，不用核对', 'match_pass': '对得上（art_check 通过）', 'match_3x': '3.x 未覆盖（不是通过）',
-       'missing': '没有回执', 'unreadable': '回执读不了', 'not_pass': '回执不是通过', 'changed': '图片改过'}
+       'missing': '没有回执', 'unreadable': '回执读不了', 'not_pass': '回执不是通过', 'changed': '图片改过',
+       'display_changed': '文字、字体或布局改过',   # display_changed: 生成时预防 R4M2
+       'kept_original_record': '保留原画风（按 keep_original_style.json 放行，警告）'}   # R4Q3
 
 
 def table_row(result):
@@ -352,6 +530,8 @@ def summary(result):
     out = {k: result.get(k) for k in ('state', 'level', 'status', 'board', 'policy', 'engine', 'images_count', 'receipt')}
     out.update({k: result[k][:20] for k in ('changed', 'added', 'removed')})
     out['base_audio'] = list(result.get('base_audio') or [])[:20]
+    out['display_state'] = result.get('display_state')                 # 生成时预防 R4M2
+    out.update({k: list(result.get(k) or [])[:20] for k in ('display_changed', 'display_added', 'display_removed')})
     out['message'] = result.get('message')
     return out
 
@@ -367,12 +547,20 @@ def carry(project, by, before=None):
         return None
     current = image_fingerprints(project)
     changed, added, removed = diff(receipt['images'], current)
-    if not (changed or added or removed):
+    # 生成时预防 R4M2: display (text, fonts, layout) is carried only when it was recorded and matched before this run
+    display_now = display_fingerprints(project) if isinstance(receipt.get('display'), dict) and \
+        before.get('display_state') == 'match' else None
+    dmoved = diff(receipt['display'], display_now) if display_now is not None else ([], [], [])
+    if not (changed or added or removed or any(dmoved)):
         return receipt
-    receipt['carried'] = list(receipt.get('carried') or []) + [{
-        'by': by, 'time': dt.datetime.now().astimezone().isoformat(timespec='seconds'),
-        'changed': changed[:200], 'added': added[:200], 'removed': removed[:200],
-        'why': 'the receipt matched every image before this run; only this run changed these files'}]
+    entry = {'by': by, 'time': dt.datetime.now().astimezone().isoformat(timespec='seconds'),
+             'changed': changed[:200], 'added': added[:200], 'removed': removed[:200],
+             'why': 'the receipt matched every image before this run; only this run changed these files'}
+    if any(dmoved):
+        entry.update(display_changed=dmoved[0][:200], display_added=dmoved[1][:200], display_removed=dmoved[2][:200])
+        receipt['display'] = display_now
+        receipt['display_sha256'] = images_digest(display_now)
+    receipt['carried'] = list(receipt.get('carried') or []) + [entry]
     receipt['images'] = current
     receipt['images_count'] = len(current)
     receipt['images_sha256'] = images_digest(current)

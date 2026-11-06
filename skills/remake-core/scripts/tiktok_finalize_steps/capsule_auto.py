@@ -9,7 +9,9 @@ overlap first (99 times in 64 games) and 16 top bars / coin counters under the c
   English games (board localize) and legacy games: nothing written. K_W_capsule_auto lists the top-bar nodes found in
       the scenes and prefabs (name contains top / hud / coin, or a node in the top 15% of the design right under the
       Canvas or a page root), so the session can check them on the phone sizes / put them under the capsule itself.
-  Cocos 3.x: not installed yet (CapsuleAuto is 2.4 only); the same list as info.
+  Cocos 3.x (生成时预防 R4G2, #29): new games get the kit plugin scripts CapsuleLayout.plugin.js and
+      CapsuleAuto.plugin.js (KIT_PARTS_3X parts capsulelayout3x / capsuleauto3x, "step": "capsule_auto") in
+      assets/tiktok-platform/ with the import-as-plugin .meta; English and legacy 3.x games get K_W_capsule_auto.
 
 Scanned: every scene and the prefabs whose file name says home / main / menu / start / lobby / game / play / battle /
 hud / top / bar / ui (level and item prefabs are not pages). Static top-bar rule (the runtime part uses the same names; it moves only what overlaps the capsule): name
@@ -151,9 +153,62 @@ def _shown(bars, k=8):
     return '; '.join('%s %s (%s)' % (b['file'], b['node'], b['why']) for b in bars[:k])
 
 
+def _kit3(ctx):
+    """[(dest, bytes, part spec)] of the 3.x capsule plugins (KIT_PARTS_3X parts with "step": "capsule_auto")."""
+    out = []
+    for name, part in (ctx.manifest.parts_for(3, 'source') if ctx.manifest else []):
+        if part.get('step') == STEP:
+            try:
+                data = ctx.manifest.kit_bytes(name)
+            except Exception as error:                    # KitError: bytes differ from the manifest
+                raise ValueError(str(error))
+            out.append(((part.get('file') or {}).get('dest'), data, part.get('file') or {}))
+    if not out:
+        raise ValueError('KIT_PARTS_3X has no capsule_auto plugin parts')
+    return out
+
+
+def _apply3(ctx, r):
+    """New 3.x game: kit CapsuleLayout / CapsuleAuto plugin scripts + their import-as-plugin .meta (R4G2)."""
+    from .kit_sources import plugin_meta
+    try:
+        parts = _kit3(ctx)
+    except ValueError as error:
+        r.state = 'conflict'
+        r.block('K_kit_unusable', str(error))
+        return r.as_dict()
+    states = []
+    for dest, data, spec in parts:
+        have = ctx.read(dest)
+        if have != data:
+            if have is not None:
+                r.info.append('moved %s to %s' % (dest, ctx.move_away(dest)))
+            ctx.write(dest, data)
+            old = have is not None and sha256(have) in set(spec.get('previous_sha256') or [])
+            r.change(dest, have, data, '%s %s' % (dest.split('/')[-1], 'added' if have is None else
+                                                   'restored (%s)' % ('kit_old' if old else 'own')))
+        states.append('kit_current' if have == data else 'absent')
+        meta_rel = dest + '.meta'
+        old_meta = ctx.read(meta_rel)
+        meta = plugin_meta(old_meta, dest)
+        if meta != old_meta:
+            ctx.write(meta_rel, meta)
+            r.change(meta_rel, old_meta, meta, 'import as plugin (native + mini-game)')
+    r.state = 'kit_current' if set(states) == {'kit_current'} else 'absent'
+    return r.as_dict()
+
+
 def detect(ctx):
-    if ctx.engine != 2 or ctx.policy == 'legacy' or ctx.board == 'localize':
+    if ctx.engine not in (2, 3) or ctx.policy == 'legacy' or ctx.board == 'localize':
         return 'n/a'
+    if ctx.engine == 3:
+        try:
+            parts = _kit3(ctx)
+        except ValueError:
+            return 'conflict'
+        got = [ctx.read(dest) for dest, _, _ in parts]
+        return 'kit_current' if all(g == d for g, (_, d, _) in zip(got, parts)) else \
+            ('absent' if all(g is None or g == d for g, (_, d, _) in zip(got, parts)) else 'kit_old')
     states = []
     for key in PARTS:
         try:
@@ -172,9 +227,11 @@ def apply(ctx):
     r.info.append('design %gx%g; %d scene/prefab file(s); %d top-bar node(s): %s'
                   % (found['design'][0], found['design'][1], found['scenes'], len(bars), _shown(bars) or '-'))
     strict = ctx.policy != 'legacy' and ctx.board != 'localize'
+    if strict and ctx.engine == 3:                       # 生成时预防 R4G2 (#29)
+        return _apply3(ctx, r)
     if not strict or ctx.engine != 2:
         r.state = 'n/a'
-        if bars and ctx.engine == 2:
+        if bars and ctx.engine in (2, 3) and not strict:
             r.warn('K_W_capsule_auto', '%d top-bar node(s) not kept out from under the TikTok capsule by the kit (%s: '
                    'CapsuleAuto is installed for new games only): %s. Check them on both phone sizes; move the ones '
                    'under the capsule with CapsuleLayout.placeBelow (assets/tiktok-platform/CapsuleLayout.js)'

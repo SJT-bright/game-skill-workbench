@@ -11,11 +11,25 @@ Cocos 2.4, new policy: the build's main.js must be the kit main.js (startup part
     engine in a callback) stays with a warning for the game's session.
 Cocos 2.4, legacy policy: nothing changes; own startup files are warnings (K_W_own_startup).
 Cocos 3.x: no device-proven startup part exists (R3, Q5): check only, own startup files are warnings.
+生成时预防 R4B (问题普查 startup_stuck 34 款, startup_retry_broken 27, host_api_mismatch 12): this step also installs
+    the first lines of game.js, so no game hand-writes them (install_early):
+    hostshim24 / hostshim3x  parts/host-shim.js, line BEFORE the adapter (2.4 adapter-min.js, 3.x web-adapter.js)
+    boot3x                   parts-3x/boot-guard-3x.js, line BEFORE System.warmup( (3.x only)
+    New games: installed (native phase and `sync --native` on the build game.js; source phase on a 3.x
+    build-templates/bytedance-mini-game/game.js when the project has one, so every build already has the lines).
+    Legacy games: report only. A 3.x game with its own start page (game.js loads ./boot-loading, or a root
+    boot-loading.js / native-recovery.js, LunasJade): boot3x reported, never stacked. A game.js without the anchor
+    (not a stock Cocos mini-game game.js) is reported and left alone; an anchor found 2+ times refuses (K2).
+    rewardguard3x            parts/rewarded-guard.js, line AFTER web-adapter.js (3.x only, 生成时预防 R4G2; 2.4 gets
+                             it from the kit main.js v1.7)
+    2.4 source phase: the editor writes game.js at build time, so only host-shim.js reaches build-templates/bytedance
+    (build_templates step, part template); the game.js line is written by native / sync --native.
 """
 import re
 
-from . import (KitError, MAIN_REQUIRE, Result, STOCK_ROOT_JS, is_engine_or_adapter, kit_main_current,
-               kit_main_versions, live_matches, neutralize, require_rx, sha256, step_parts, text_of)
+from . import (KitError, MAIN_REQUIRE, Result, STOCK_ROOT_JS, anchors, install_part, is_engine_or_adapter,
+               kit_main_current, kit_main_versions, kit_lines, live_matches, neutralize, part_action, part_facts,
+               part_findings, require_rx, self_check, sha256, step_parts, text_of, wire_line, wirings)
 
 STEP = 'startup'
 KIT_MAIN = 'build-templates/bytedance/main.js'
@@ -184,7 +198,146 @@ def install_webp_probe(ctx, r):
         self_check(ctx, r, [(name, part)], 'new')
 
 
+# ---------------------------------------------------------------- 生成时预防 R4B: host shim + 3.x startup guard
+EARLY_STEPS = ('hostshim', 'boot',
+               'rewardguard')   # 生成时预防 R4G2: 3.x rewarded-ad guard (part rewardguard3x, after web-adapter)
+TEMPLATE_DIR3 = 'build-templates/bytedance-mini-game/'
+TEMPLATE_GAMES3 = ('game.js', 'game.ejs')
+OWN_BOOT_FILES = re.compile(r'^(?:boot-loading|native-recovery)\.js$')
+
+
+def early_parts(manifest, engine):
+    out = []
+    for step in EARLY_STEPS:
+        out += step_parts(manifest, step, engine)
+    return out
+
+
+def is_boot(name, part):
+    return part.get('step') == 'boot' or name == 'boot3x'
+
+
+def own_boot_page(files, manifest, part):
+    """-> [why] when a 3.x game has its own start page (LunasJade boot-loading.js / native-recovery.js): game.js
+    loads it on a live line, a root file has its name, or a root file carries the part's own_markers. The kit guard
+    itself and other kit part files never count; a copy of the kit's reference boot-loading.js does (it IS a page)."""
+    pats = [re.compile(p) for p in part.get('own_markers') or []]
+    dests = {(p.get('file') or {}).get('dest') for p in manifest.parts.values()}
+    out = []
+    game = text_of(files.get('game.js'))
+    for p in pats:
+        if live_matches(game, p):
+            out.append('game.js /%s/' % p.pattern)
+    for rel, data in sorted(files.items()):
+        if '/' in rel or not rel.endswith('.js') or rel == 'game.js' or rel in dests or is_engine_or_adapter(rel):
+            continue
+        if OWN_BOOT_FILES.search(rel):
+            out.append(rel)
+        elif any(p.search(text_of(data)) for p in pats):
+            out.append(rel)
+    return out
+
+
+def _anchor_of(wiring):
+    return wiring.get('insert_before') or wiring.get('insert_after')
+
+
+def install_early(ctx, r):
+    """Native phase: install host-shim (+ boot3x on 3.x) in the build folder. Writes into r (r.state untouched)."""
+    for name, part in early_parts(ctx.manifest, ctx.engine):
+        files = ctx.files()
+        f = part_facts(files, ctx.manifest, name, part, ctx.engine)
+        if is_boot(name, part):
+            own = own_boot_page(files, ctx.manifest, part)
+            if own:
+                r.warn('K_W_own_startup', '%s not installed: the game has its own start page (%s); the kit startup '
+                       'guard is never stacked on it' % (name, ', '.join(own)), {'part': name, 'own': own})
+                continue
+        action = part_action(part, ctx.policy, 'replace' if ctx.policy == 'new' else 'skip')
+        if action == 'skip':
+            r.info.append('%s not installed (%s game: report only; %s)' % (
+                name, ctx.policy, 'game.js already loads it' if f['marked'] or f['plain'] else 'state ' + f['state']))
+            continue
+        game_w = wirings(part, ctx.engine, 'game.js')
+        if not f['marked'] and not f['plain'] and game_w and not anchors(f['game'], _anchor_of(game_w[0]))[0]:
+            r.warn('K_W_startup_anchor', '%s not installed: game.js has no /%s/ (not a stock Cocos mini-game '
+                   "game.js); hand it to this game's session" % (name, _anchor_of(game_w[0])), {'part': name})
+            continue
+        sub = Result(STEP)
+        install_part(ctx, sub, name, part, action)
+        r.changed += sub.changed
+        r.blocks += sub.blocks
+        r.warnings += sub.warnings
+        r.info += sub.info
+        if not sub.blocks:
+            self_check(ctx, r, [(name, part)], 'new')
+
+
+def _template_files3(ctx):
+    base = ctx.path(TEMPLATE_DIR3)
+    if not base.is_dir():
+        return {}
+    return {p.name: p.read_bytes() for p in sorted(base.iterdir()) if p.is_file() and not p.name.startswith('.')}
+
+
+def apply_source(ctx):
+    """Source phase (and sync): wire the 3.x build-template game.js / game.ejs when the project has one."""
+    from .build_templates import applies
+    r = Result(STEP)
+    r.state = 'n/a'
+    parts = early_parts(ctx.manifest, ctx.engine) if ctx.engine in (2, 3) else []
+    if not parts:
+        return r.as_dict()
+    if ctx.engine == 2:
+        r.info.append('2.4: host-shim.js comes with build-templates/bytedance; its game.js line is written by '
+                      '`native` / `sync --native` (the editor writes game.js)')
+        return r.as_dict()
+    tmpl = _template_files3(ctx)
+    games = [g for g in TEMPLATE_GAMES3 if g in tmpl]
+    if not games:
+        r.info.append('no %sgame.js: the load lines are written by `native` / `sync --native`' % TEMPLATE_DIR3)
+        return r.as_dict()
+    states = []
+    for g in games:
+        rel = TEMPLATE_DIR3 + g
+        text = text_of(tmpl[g])
+        new = text
+        for name, part in parts:
+            if is_boot(name, part):
+                own = own_boot_page(dict(tmpl, **{'game.js': new.encode('utf-8')}), ctx.manifest, part)
+                if own:
+                    r.warn('K_W_own_startup', '%s not wired in %s: the game has its own start page (%s)'
+                           % (name, rel, ', '.join(own)), {'part': name, 'own': own})
+                    continue
+            if ctx.policy != 'new' or not applies(ctx) or \
+                    part_action(part, ctx.policy, 'replace') == 'skip':
+                r.info.append('%s: %s not wired (%s; report only)' % (rel, name, 'legacy game' if ctx.policy != 'new'
+                                                                   else 'localize board: original templates kept'))
+                states.append('kit_current' if kit_lines(new, name) else 'absent')
+                continue
+            game_w = wirings(part, 3, 'game.js')
+            if not game_w:
+                continue
+            trial, state, detail = wire_line(new, name, ctx.manifest.version, game_w[0])
+            if state == 'conflict':
+                if not anchors(new, _anchor_of(game_w[0]))[0]:
+                    r.info.append('%s: %s not wired (%s); `native` writes it in the build game.js' % (rel, name, detail))
+                else:
+                    r.block('K2_kit_wiring', '%s: %s' % (rel, detail), {'part': name, 'file': rel})
+                continue
+            states.append(state)
+            new = trial
+        if new != text and not r.blocks:
+            ctx.write(rel, new.encode('utf-8'))
+            r.change(rel, tmpl[g], new.encode('utf-8'), 'host-shim / boot-guard load line in the build template')
+    r.state = 'absent' if r.changed else ('kit_current' if states and all(s == 'kit_current' for s in states)
+                                          else r.state)
+    return r.as_dict()
+
+
 def detect(ctx):
+    if ctx.phase == 'source':
+        return 'n/a' if ctx.engine != 3 or not _template_files3(ctx) else 'report'
     if ctx.engine != 2:
         return 'n/a'
     files = ctx.files()
@@ -193,13 +346,19 @@ def detect(ctx):
 
 
 def apply(ctx):
+    if ctx.phase == 'source':
+        return apply_source(ctx)
     r = Result(STEP)
     files = ctx.files()
     if ctx.engine != 2:
         r.state = 'n/a'
         for rel in own_startup(files, ctx.manifest, ctx.engine) if ctx.engine == 3 else []:
-            r.warn('K_W_own_startup', 'own startup file %s kept (v7.7 has no 3.x startup part, R3); hand it to this '
-                   "game's session" % rel, {'file': rel})
+            r.warn('K_W_own_startup', 'own startup file %s kept (the kit 3.x startup guard is boot3x); hand it to '
+                   "this game's session" % rel, {'file': rel})
+        if ctx.engine == 3:
+            install_early(ctx, r)
+            if r.changed:
+                r.state = 'absent'
         return r.as_dict()
     state = main_state(files, ctx.manifest)
     r.state = state
@@ -212,6 +371,7 @@ def apply(ctx):
             r.info.append('main.js is not the kit main.js (legacy game: left as is)')
         else:
             install_main_extras(ctx, r)
+        install_early(ctx, r)      # report only (policy legacy = report)
         return r.as_dict()
     try:
         kit = kit_main_bytes(ctx.manifest)
@@ -258,6 +418,7 @@ def apply(ctx):
         r.change('game.js', files.get('game.js'), new_game.encode('utf-8'), 'own startup load lines commented out')
     if ctx.options.get('keep_webp_exception'):
         install_webp_probe(ctx, r)
+    install_early(ctx, r)
     for item in verify(ctx.files(), ctx.manifest, ctx.policy, 2):
         if item['level'] == 'block':
             r.blocks.append(dict(item, message='after install: ' + item['message']))
@@ -286,6 +447,13 @@ def verify(files, manifest, policy, engine=None):
                             'missing' if have is None else 'not the kit file', str(spec.get('sha256'))[:12]),
                         'evidence': {'part': 'startup24', 'file': spec['dest'],
                                      'state': 'absent' if have is None else 'own'}})
+    if policy == 'new' and engine in (2, 3):
+        # R4B: a host-shim / boot3x that is present must be the kit file, loaded once, before its anchor. Not required
+        # (a package built before R4B has none); finalize's own self-check requires it for the games it installs.
+        for name, part in early_parts(manifest, engine):
+            if is_boot(name, part) and own_boot_page(root, manifest, part):
+                continue
+            out += part_findings(files, manifest, name, part, engine, policy, required=False)
     if engine != 2 or policy != 'new':
         return out
     state = main_state(root, manifest)

@@ -192,8 +192,12 @@ def build(a, table, rules):
         errors.append('bonus_level needs --mode levels (an endless or idle game has no levels to add a bonus level to)')
     if 'offline' in have and a.mode != 'idle':
         errors.append('offline income only for games with per-second output (--mode idle; ECON-OFFLINE note)')
-    if a.total_levels < rules['ECON-LEVEL10']['window_levels']:
-        errors.append('--total-levels must be at least %d' % rules['ECON-LEVEL10']['window_levels'])
+    window_rule = getattr(a, 'window_rule', 'block')   # R4N1: feature_policy econ_window_levels, set in main()
+    if a.mode == 'levels' and a.total_levels < 1:
+        errors.append('--total-levels must be at least 1')
+    elif window_rule != 'not_applicable' and a.total_levels < rules['ECON-LEVEL10']['window_levels']:
+        errors.append('--total-levels must be at least %d (%s)' % (rules['ECON-LEVEL10']['window_levels'],
+                      getattr(a, 'window_why', 'new game')))
     if errors:
         raise Refused('\n'.join(errors))
     items = parse_list(a.item_ids) or ['booster'] if has_items else []
@@ -227,6 +231,8 @@ def build(a, table, rules):
         cum = [m.exact(k * i) for i in range(a.total_levels + 1)]
         per = [cum[i + 1] - cum[i] for i in range(a.total_levels)]
         cfg['level_reward'] = {'per_level': per, 'every_10_levels': m.exact(lv['sum_B'])}
+        if a.total_levels < lv['window_levels']:   # R4N1: English game shorter than the window -> window = real levels
+            cfg['level_reward']['window_levels'] = a.total_levels
         row('level_clear', 'ECON-LEVEL10', per[0], 'level_reward/per_level', amounts=per, per='level', needs_ad=False, x2='ad_button')
     x2 = rules['ECON-X2']
     cfg['result_x2'] = {'multiplier': x2['multiplier'], 'pay': x2['pay'],
@@ -595,7 +601,20 @@ def main(argv=None):
     ap.add_argument('--achievement-tiers', type=int, default=5, help='tiers per achievement class, inside ECON-QUEST achievement_tiers')
     ap.add_argument('--skin-table', help='unlock_table.json from make_skin_table.py (adds skin rows to the snapshot only)')
     ap.add_argument('--ad-unlock-table', help='ad_unlock_table.json from product_contract.py ad-unlock')
+    ap.add_argument('--project', type=Path, help='R4N1: game folder; board from feature_policy.board_of, real level count '
+                    'from docs/game_capabilities.json level_count')
+    ap.add_argument('--board', choices=['localize', 'remake'], help='R4N1: override the recorded board (--kind english = localize)')
     a = ap.parse_args(argv)
+    import feature_policy  # same folder (R4N1)
+    board = (feature_policy.board_of(a.project, a.board)[0] if a.project else a.board) or (
+        'localize' if a.kind == 'english' else None)
+    a.window_rule, a.window_why = feature_policy.rule_verdict('econ_window_levels', board, a.project)
+    if a.window_rule == 'not_applicable' and a.mode == 'levels':
+        real, src = feature_policy.game_levels(a.project)
+        if real is not None and '--total-levels' not in (argv if argv is not None else sys.argv[1:]):
+            a.total_levels = real
+        print('econ_window_levels 不适用: %s; --total-levels %d (%s); 经济窗口缩到真实关数'
+              % (a.window_why, a.total_levels, src), file=sys.stderr)
     if pc._num(a.B) and float(a.B).is_integer():
         a.B = int(a.B)  # B = 10, not 10.0, in the files the game reads
     try:

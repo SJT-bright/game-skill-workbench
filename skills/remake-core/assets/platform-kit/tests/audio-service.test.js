@@ -31,11 +31,18 @@ var SOUNDS = {bgm: {file: 'audio/bgm_home', kind: 'music', volume: 1}, click: {f
   win: {file: 'audio/win', volume: 1}};
 
 function world(Impl, storage) {
-  var t = {now: 1000};
+  var t = {now: 1000, timers: []};
+  // R4E: a fake timer on the same clock; t.advance(ms) moves time and runs the timers that are due.
+  t.advance = function (ms) {
+    t.now += ms;
+    t.timers.filter(function (x) { return !x.done && x.at <= t.now; }).forEach(function (x) { x.done = true; x.fn(); });
+  };
   var store = new SaveStore({coins: 0}, {storage: storage || memoryStorage(), key: 'audio:test', login: false});
   store.load();
   var backend = fakeBackend();
-  var svc = new Impl({store: store, backend: backend, loader: backend.load, now: function () { return t.now; }});
+  var svc = new Impl({store: store, backend: backend, loader: backend.load, now: function () { return t.now; },
+    setTimer: function (fn, ms) { var x = {fn: fn, at: t.now + ms, done: false}; t.timers.push(x); return x; },
+    clearTimer: function (x) { if (x) x.done = true; }});
   svc.register(SOUNDS);
   return {svc: svc, b: backend, t: t, store: store};
 }
@@ -117,6 +124,34 @@ var CHECKS = {
     w.t.now += 100; w.svc.playSfx('click');
     assert.strictEqual(w.b.effects.length, 2, 'the sound did not play again after its throttle time');
   },
+  // R4E (没声音 15 款): the game registered sounds and called playMusic in the home scene but never bindFirstFrame.
+  fallback_without_bindFirstFrame: function (Impl) {
+    var w = world(Impl);
+    w.svc.playMusic('bgm'); w.svc.playSfx('click');
+    var warned = [], keep = console.warn;
+    console.warn = function (m) { warned.push(String(m)); };
+    try {
+      w.t.advance(4900); w.b.flush();
+      assert.strictEqual(w.b.loads.length, 0, 'sound loaded before the 5 s fallback: ' + w.b.loads.join(','));
+      w.t.advance(200); w.b.flush();
+    } finally { console.warn = keep; }
+    assert.strictEqual(w.b.music, 'audio/bgm_home', 'no bindFirstFrame: the music never started (5.1 s after playMusic)');
+    assert.strictEqual(w.svc.settings().startedBy, 'fallback');
+    assert.strictEqual(warned.length, 1, 'the fallback must log one warning, got ' + warned.length);
+    w.t.now += 1000; w.svc.playSfx('click'); w.b.flush();
+    assert.strictEqual(w.b.effects.length, 1, 'sound effects still not_ready after the fallback');
+  },
+  fallback_not_used_when_bound: function (Impl) {
+    var w = world(Impl);
+    w.svc.playMusic('bgm');
+    var after = null;
+    w.svc.bindFirstFrame({once: function (ev, fn) { after = fn; }}, {EVENT_AFTER_DRAW: 'd'});
+    w.t.advance(300); after(); w.b.flush();
+    assert.strictEqual(w.b.musicPlays, 1);
+    w.t.advance(6000); w.b.flush();
+    assert.strictEqual(w.b.musicPlays, 1, 'the fallback started the music a second time');
+    assert.strictEqual(w.svc.settings().startedBy, 'first_frame');
+  },
   saved_in_savestore: function (Impl) {
     var st = memoryStorage(), w = world(Impl, st);
     w.svc.setMusicOn(false); w.svc.setSfxVolume(0.3);
@@ -161,6 +196,9 @@ var LEGACY = {
   })],
   '同一音效不节流（一帧响 10 次）': ['throttle_same_sfx', variant(function (p, base) {
     p.playSfx = function (id) { delete this.lastPlay[id]; return base.playSfx.call(this, id); };
+  })],
+  'AudioService 1.1：没调 bindFirstFrame 永远不响（R4E，没声音 15 款）': ['fallback_without_bindFirstFrame', variant(function (p) {
+    p._armFallback = function () {};
   })]
 };
 

@@ -84,6 +84,8 @@ def kit_plugins(manifest):
     out = []
     for _, part in manifest.parts_for(3, 'source'):
         dest = (part.get('file') or {}).get('dest') or ''
+        if part.get('step'):              # 生成时预防 R4G2: optional plugins of a source step (capsule_auto), new 3.x only
+            continue
         if part.get('plugin') and dest.endswith('.plugin.js'):
             out.append((dest.rsplit('/', 1)[-1][:-len('.plugin.js')], dest))
     return sorted(out)
@@ -159,6 +161,49 @@ def config_findings(view, policy):
     return out
 
 
+GUARD_STEPS = {2: 'rewarded', 3: 'rewardguard'}   # rewarded24 (2.4) / rewardguard3x (3.x), file parts/rewarded-guard.js
+
+
+def _board(view):
+    board = getattr(view, 'board', None)
+    rec = getattr(view, 'finalize_record', None)
+    if not board and isinstance(rec, dict):
+        board = rec.get('board')
+    if not board and getattr(view, 'project', None):
+        from tiktok_finalize_steps import policy as P
+        board = (P.read_marker(view.project) or {}).get('board')
+    return board
+
+
+def guard_findings(files, manifest, policy, engine, board):
+    """生成时预防 R4L1 (R4F1 leftover): a NEW remake / self-made package (2.4 and 3.x) without the rewarded-ad guard
+    loaded is refused (K_rewarded_guard). finalize native / sync --native install it (2.4: kit main.js requires it, or
+    one game.js line when the game keeps its own main.js; 3.x: one game.js line after web-adapter), so only a build
+    that skipped native lacks it. English (board localize), an unknown board and legacy games: reported only
+    (K_W_rewarded_guard). A guard that IS loaded is checked by the startup / rewarded parts as before."""
+    from tiktok_finalize_steps import part_facts, part_findings, step_parts
+    out = []
+    step = GUARD_STEPS.get(engine)
+    for name, part in step_parts(manifest, step, engine) if step else []:
+        f = part_facts(files, manifest, name, part, engine)
+        loaded = f['via_main'] or f['marked'] or f['plain']
+        if loaded:
+            if engine == 2 and not f['via_main'] and policy == 'new':
+                out += part_findings(files, manifest, name, part, engine, policy, required=True)  # own main.js line
+            continue
+        block = policy == 'new' and board == 'remake'
+        why = ('new game' if block else 'legacy game' if policy != 'new' else
+               'English game' if board == 'localize' else 'board unknown')
+        out.append(finding('K_rewarded_guard' if block else 'K_W_rewarded_guard', 'block' if block else 'warn',
+                           'rewarded-ad guard %s not loaded by %s (%s, %s): the 15 s / no-late-reward rule then rests '
+                           'on the game\'s own ad code. Run tiktok_finalize.py native (or sync --native) on this '
+                           'build; it installs %s and its one load line' % (
+                               f['dest'] or 'rewarded-guard.js', 'main.js or game.js' if engine == 2 else 'game.js',
+                               why, 'file %s' % f['state'], name),
+                           {'part': name, 'state': f['state'], 'board': board}))
+    return out
+
+
 def check(view):
     import tiktok_finalize_steps as T
     from tiktok_finalize_steps import appid, login, startup, storage, structure, touch
@@ -185,6 +230,7 @@ def check(view):
     out += login.verify(files, manifest, policy, engine)
     out += appid.verify(files, manifest, policy)
     out += structure.verify(files, manifest, policy, getattr(view, 'finalize_options', None))
+    out += guard_findings(files, manifest, policy, engine, _board(view))   # 生成时预防 R4L1: rewarded-guard
     if engine == 3 and policy == 'new':
         out += plugin_findings(files, manifest, policy)
     if engine == 2:

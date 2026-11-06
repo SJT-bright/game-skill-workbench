@@ -20,6 +20,16 @@ Findings: K_bg_cover (block) for new games (board remake, policy new); K_W_bg_co
 and legacy games. While the kit has no parts/ScreenFit.js (KIT_MANIFEST files) the finding is always the warning: a
 part that does not exist yet cannot be required.
 Called by tiktok_finalize `source` (SOURCE_STEPS; the wiring line is in the I3 handoff, not in this file).
+
+简化.11.14 R4A (生成时预防 P07 第 2 点, 热气球 flash_frame): the loading page and the home must not show two different
+game pictures. A loading page (scene / prefab whose file name says loading / boot / launch / splash / preload) whose
+root background is a PROJECT picture (its sprite frame uuid is in a .meta under assets/; engine and official
+built-in frames are not) different from the home's root background picture (home / main / menu / start / lobby
+page) shows one picture and then the home swaps it, and re-lays it at another size: 热气球 v1 showed the loading
+page's old picture, then a stretched portrait one, then shrank it to 750 wide. Finding K_bg_loading_swap (block for
+new remake games, warning for English and legacy games, same rule as K_bg_cover). The loading page itself must
+still be laid with ScreenFit.cover like every page. The kit main.js has no loading picture of its own (the TikTok
+loading toast over an empty canvas), so this is checked in the project where the pictures are chosen.
 """
 import json
 import re
@@ -68,8 +78,39 @@ def _kids(scene, node):
     return [c for c in (scene.obj(r) for r in node.get('_children') or []) if c and c.get('__type__') == 'cc.Node']
 
 
+LOADING = re.compile(r'loading|boot|launch|splash|preload', re.I)   # R4A: loading page file names
+HOME = re.compile(r'home|main|menu|start|lobby', re.I)
+UUID = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:@[0-9a-z]+)?', re.I)
+
+
 def _is_page(rel):
-    return rel.endswith(('.fire', '.scene')) or (rel.endswith('.prefab') and PAGE.search(rel.split('/')[-1]))
+    name = rel.split('/')[-1]
+    return rel.endswith(('.fire', '.scene')) or (rel.endswith('.prefab') and (PAGE.search(name) or LOADING.search(name)))
+
+
+def page_kind(rel):
+    """'loading' | 'home' | None from the file name (loading wins: 'MainLoading.fire' is a loading page)."""
+    stem = rel.split('/')[-1].rsplit('.', 1)[0]
+    if LOADING.search(stem):
+        return 'loading'
+    return 'home' if HOME.search(stem) else None
+
+
+def picture(scene, node):
+    """The sprite frame uuid a background node shows, or None."""
+    sprite = scene.comp(node, 'cc.Sprite')
+    frame = (sprite or {}).get('_spriteFrame')
+    uid = frame.get('__uuid__') if isinstance(frame, dict) else None
+    return uid if isinstance(uid, str) and uid else None
+
+
+def project_uuids(files):
+    """Every uuid written in a .meta under assets/ (textures and their sprite frames): the project's own pictures."""
+    out = set()
+    for rel, data in files.items():
+        if rel.startswith('assets/') and rel.endswith('.meta'):
+            out |= {u.lower() for u in UUID.findall(data.decode('utf-8', 'replace'))}
+    return out
 
 
 def backgrounds(scene, design):
@@ -160,20 +201,51 @@ def scan(root, files=None):
                 unreadable.append(rel)
     design = design_resolution(scenes)
     by_type, texts = script_index(root)
+    own = project_uuids(files)
     missing, ok, pages = [], [], 0
+    shown = {'loading': [], 'home': []}            # R4A: [(file, node path, picture uuid)] of project pictures
     for s in scenes:
         if not _is_page(s.rel):
             continue
         pages += 1
+        kind = page_kind(s.rel)
         for n in backgrounds(s, design):
             item = {'file': s.rel, 'node': s.path(n)}
             (ok if covered(s, n, by_type, texts) else missing).append(item)
+            pic = picture(s, n)
+            if kind and pic and pic.lower() in own:
+                shown[kind].append((s.rel, s.path(n), pic))
     missing, exempt = split_exempt(missing, exemptions(root))   # docs/art/static-exempt.json (same file as art_static)
-    return {'design': list(design), 'pages': pages, 'missing': missing, 'covered': ok, 'exempt': exempt,
-            'unreadable': unreadable}
+    home_pics = {p.lower() for _, _, p in shown['home']}
+    swaps = [{'file': f, 'node': n, 'picture': p, 'home': sorted({h[0] for h in shown['home']})}
+             for f, n, p in shown['loading'] if home_pics and p.lower() not in home_pics]
+    swaps, swap_exempt = split_exempt(swaps, exemptions(root))
+    return {'design': list(design), 'pages': pages, 'missing': missing, 'covered': ok, 'exempt': exempt + swap_exempt,
+            'unreadable': unreadable, 'loading_swap': swaps}
+
+
+def loading_findings(found, policy='new', board=None):
+    """R4A: K_bg_loading_swap - the loading page shows another project picture than the home."""
+    swaps = found.get('loading_swap') or []
+    if not swaps:
+        return []
+    hard = policy != 'legacy' and board != 'localize'
+    shown = '; '.join('%s %s (%s)' % (s['file'], s['node'], s['picture']) for s in swaps[:6])
+    return [{'id': 'K_bg_loading_swap' if hard else 'K_W_bg_loading_swap', 'level': 'block' if hard else 'warn',
+             'message': 'the loading page background is a different game picture from the home background (%s; home: '
+                        '%s): the player sees one picture, then the home swaps it and lays it again at another size '
+                        '(热气球 flash). Give the loading page no game picture: use the official Cocos default loading '
+                        '(cocos-game-check/startup/references/cocos-loading-screen.md, Saul 10-26), then run source '
+                        'again'
+                        % (shown, ', '.join(swaps[0]['home'])),
+             'evidence': swaps[:30]}]
 
 
 def findings(found, policy='new', board=None, kit_has_part=True):
+    return cover_findings(found, policy, board, kit_has_part) + loading_findings(found, policy, board)
+
+
+def cover_findings(found, policy='new', board=None, kit_has_part=True):
     if not found['missing']:
         return []
     hard = policy != 'legacy' and board != 'localize' and kit_has_part
@@ -190,7 +262,8 @@ def findings(found, policy='new', board=None, kit_has_part=True):
 
 def detect(ctx):
     found = scan(ctx.root)
-    return 'conflict' if found['missing'] else ('kit_current' if found['pages'] else 'n/a')
+    bad = found['missing'] or found.get('loading_swap')
+    return 'conflict' if bad else ('kit_current' if found['pages'] else 'n/a')
 
 
 def apply(ctx):
@@ -200,9 +273,10 @@ def apply(ctx):
     for item in findings(found, ctx.policy, getattr(ctx, 'board', None), kit_has):
         (r.blocks if item['level'] == 'block' else r.warnings).append(item)
     r.state = 'conflict' if r.blocks else ('kit_current' if found['pages'] else 'n/a')
-    r.info.append('%d page file(s); %d background(s) with ScreenFit.cover, %d without%s'
-                  % (found['pages'], len(found['covered']), len(found['missing']),
-                     '' if kit_has else '; kit has no parts/ScreenFit.js'))
+    r.info.append('%d page file(s); %d background(s) with ScreenFit.cover, %d without%s; %d loading page picture(s) '
+                  'differing from the home' % (found['pages'], len(found['covered']), len(found['missing']),
+                                               '' if kit_has else '; kit has no parts/ScreenFit.js',
+                                               len(found.get('loading_swap') or [])))
     return r.as_dict()
 
 

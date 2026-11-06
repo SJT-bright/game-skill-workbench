@@ -19,12 +19,16 @@ CLI:  python3 audit_new_english_images.py --zip <upload.zip> --pre-english <list
       P16 (2026-11-04): --make-list also cuts every atlas slice / animation frame, reads each with the local OCR and
       writes art-replace-round1.json next to --out: "replace" = pictures/slices with Chinese (first art round), "manual_review"
       = unreadable or no recognizer (no recognizer: everything is listed, nothing is called clean).
+      R4C (2026-11-05): the same file gets "regenerate" = panel/background pictures (both sides >= 96 px) that are one
+      plain colour block inside (no pattern/texture/shading); round 1 redraws them in the game's style. Patterned ones
+      are not listed.
 Exit 0 pass, 1 refused, 2 bad input.
 """
 import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import struct
 import sys
@@ -190,7 +194,225 @@ def scan_chinese(project, ocr='auto'):
     return out
 
 
-def make_list(project, ocr='auto', scan=True):
+FLAT_MIN_SIDE = 96      # panels / backgrounds; icons and small buttons are not judged here
+FLAT_COVER = 0.60       # visible pixels inside the visible box (a filled block, rounded corners allowed)
+FLAT_SHARE = 0.90       # share of the inner area within FLAT_TOL of its median colour
+FLAT_TOL = 16
+FLAT_DARK = 60          # mean luma below this: also "too dark"
+
+
+def flat_panel_reason(img):
+    """R4C (census too_dark 11/12, plain_background 9/11): a panel/background picture that is one plain colour block.
+    The outer 10 % ring of the visible box (outline, rounded corners) is ignored; inside, >= 90 % of the pixels within
+    16 of the median colour = no pattern, no texture, no shading. Pictures with a pattern, gradient or scenery are not
+    listed. Returns the reason text or None."""
+    im = img.convert('RGBA')
+    w, h = im.size
+    if min(w, h) < FLAT_MIN_SIDE:
+        return None
+    box = im.getchannel('A').point(lambda v: 255 if v > 128 else 0).getbbox()
+    if not box or min(box[2] - box[0], box[3] - box[1]) < FLAT_MIN_SIDE:
+        return None
+    im = im.crop(box).resize((64, 64))
+    px = list(im.getdata())
+    if sum(1 for p in px if p[3] > 128) < FLAT_COVER * len(px):
+        return None
+    inner = [p[:3] for i, p in enumerate(px) if 6 <= i % 64 < 58 and 6 <= i // 64 < 58 and p[3] > 128]
+    if not inner:
+        return None
+    med = [sorted(c[k] for c in inner)[len(inner) // 2] for k in range(3)]
+    share = sum(1 for c in inner if max(abs(c[k] - med[k]) for k in range(3)) <= FLAT_TOL) / float(len(inner))
+    if share < FLAT_SHARE:
+        return None
+    luma = 0.299 * med[0] + 0.587 * med[1] + 0.114 * med[2]
+    why = 'flat_panel: one plain colour #%02x%02x%02x covers %d%% of the inside' % (med[0], med[1], med[2], share * 100)
+    if luma < FLAT_DARK:
+        why += ' and it is dark (luma %d)' % luma
+    return why + ('; regenerate it in round 1 in the game\'s art style with shading, a border and a pattern/texture '
+                  '(not a single colour, not darker than the home page)')
+
+
+def flat_panels(project):
+    """Whole pictures of the Chinese original that are plain colour panels -> first-round regenerate list."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    rows = []
+    for p in sorted(Path(project).rglob('*')):
+        if not (p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES) or {'library', 'temp', 'build'} & set(p.parts):
+            continue
+        try:
+            with Image.open(p) as im:
+                why = flat_panel_reason(im)
+                size = list(im.size)
+        except (OSError, ValueError):
+            continue
+        if why:
+            rows.append({'kind': 'image', 'file': p.relative_to(project).as_posix(), 'size': size, 'reasons': [why]})
+    return rows
+
+
+TITLE_FILE = re.compile(r'(?i)(title|logo|banner|wordmark|biaoti|game[_\- ]?name|标题|游戏名|名字|名称|横幅)')
+HOME_SCENE = re.compile(r'(?i)(home|main|start|menu|lobby|hall|index|loading|launch|splash|boot|load|首页|主页|大厅|加载|启动)')
+# page titles and buttons stay word pictures (LEVEL FAILED, SHOP, PLAY): calibrated on 7 local English games 2026-11-05
+NOT_TITLE = re.compile(r'(?i)(win|lose|fail|result|level|shop|store|setting|pause|sign|rank|skin|task|reward|gift|tip|'
+                       r'over|victory|defeat|complete|popup|dialog|btn|button|eff|fx|anim|frame|\d{3,})')
+TITLE_MIN_W = 300
+TITLE_PROMPT = ('the hero / characters / props / a pattern or the scene of this game in its own art style; no game name, '
+                'no words, no letters (Saul 2026-11-05: 游戏里不出现游戏名)')
+
+
+def _uuids(img):
+    """The image's own uuid and its sprite-frame sub-uuids from <img>.meta (2.x subMetas, 3.x '<uuid>@xxxx')."""
+    meta = _read_meta(Path(str(img) + '.meta'))
+    out = {meta.get('uuid')} if meta.get('uuid') else set()
+    for sub in (meta.get('subMetas') or {}).values():
+        if isinstance(sub, dict) and sub.get('uuid'):
+            out.add(sub['uuid'])
+    return {u for u in out if isinstance(u, str) and len(u) >= 8}
+
+
+def _read_meta(p):
+    try:
+        return json.loads(p.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return {}
+
+
+def title_logos(project, scan):
+    """R4Q2 (补查3 第 2 组; Saul 2026-11-05: no game name in the game): the big worded picture at the top of the home /
+    loading page (the original title logo) goes onto "regenerate" with a hero / pattern / scene prompt, not onto a
+    translate-the-words list. Picked from the pictures the scan found words in (replace + manual_review): its file name
+    says title / logo / banner, or it is the widest worded picture (>= 300 px wide, wider than tall) that a home /
+    loading scene or prefab uses. Its replace row is marked regenerate_instead so nobody draws an English logo."""
+    project = Path(project)
+    rows = [r for key in ('replace', 'manual_review') for r in scan.get(key) or []
+            if r.get('kind') == 'image' and r.get('file')]
+    scenes = [p for p in project.rglob('*') if p.suffix.lower() in ('.fire', '.scene', '.prefab') and p.is_file()
+              and HOME_SCENE.search(p.stem) and not {'library', 'temp', 'build', 'docs', 'qa'} & set(p.parts)]
+    texts = []
+    for p in scenes:
+        try:
+            texts.append((p, p.read_text(encoding='utf-8', errors='replace')))
+        except OSError:
+            pass
+    picked, widest = {}, {}
+    for r in rows:
+        img = project / r['file']
+        if not img.is_file():
+            continue
+        try:
+            dims = pixels(img.read_bytes()[:65536]) or (0, 0)
+        except OSError:
+            continue
+        if NOT_TITLE.search(img.stem):
+            continue
+        if TITLE_FILE.search(img.name):
+            picked[r['file']] = 'file name %s says title/logo' % img.name
+            continue
+        if dims[0] < TITLE_MIN_W or dims[0] <= dims[1]:
+            continue
+        ids = _uuids(img)
+        for sp, text in texts:
+            if any(u in text for u in ids):
+                key = sp.relative_to(project).as_posix()
+                if dims[0] > widest.get(key, (0, ''))[0]:
+                    widest[key] = (dims[0], r['file'])
+    for key, (w, f) in widest.items():
+        picked.setdefault(f, 'widest worded picture (%d px) on %s' % (w, key))
+    out = []
+    for r in rows:
+        if r['file'] in picked:
+            r['regenerate_instead'] = 'title_logo'
+            if r['file'] not in {o['file'] for o in out}:
+                out.append({'kind': 'image', 'file': r['file'], 'size': r.get('size'), 'prompt': TITLE_PROMPT,
+                            'reasons': ['title_logo: %s; redraw it as the hero / a pattern / the scene with no game '
+                                        'name and no words, do not translate it' % picked[r['file']]]})
+    return out
+
+
+# R4R2 (补查3 第 1 组补充, 弹球传奇 11-05: 48 of 54 runtime words missing): whole-word pictures fetched by code at run
+# time (ball names, EQUIP / EQUIPPED) are in no prefab or scene, so the list above never showed them.
+WORD_CALL = re.compile(r'''\b(?:caption|wordImage|word_image|loadWord|loadCaption|EnglishArt\.(?:frame|word|caption))\s*\(\s*'''
+                       r'''(['"])([^'"\n]{1,40})\1''')
+WORD_PATH = re.compile(r'''(['"])(?:[\w\-/]*/)?(txt_[a-z0-9_]+)\1''')
+WORD_LABEL_CALL = re.compile(r'''\b(?:caption|EnglishArt\.(?:caption|label))\s*\(\s*(?:this\.)?([A-Za-z_$][\w$]*)\s*[,)]''')
+NAME_KEYS = ('name', 'title', 'displayName', 'display_name', 'label', 'nameEn', 'name_en')
+CJK_RE = re.compile(r'[\u3400-\u9fff\uf900-\ufaff]')
+
+
+def _word_slug(text):
+    return re.sub(r'^_|_$', '', re.sub(r'[^a-z0-9]+', '_', str(text).lower()))
+
+
+def runtime_word_images(project):
+    """Whole-word pictures that scripts ask for at run time, checked against the pictures in the project:
+      caption('equipped') / EnglishArt.frame('txt_shop')   -> txt_equipped / txt_shop (a literal key or word)
+      'EnglishUI/txt_classic'                               -> txt_classic
+      caption(this.stateLabel) + this.stateLabel.string = "EQUIPPED"   -> txt_equipped
+      caption(this.ballName) + ballName.string = list['name']           -> every short `name` of the JSON config tables
+    Missing ones are the "unwired" rows: draw txt_<slug>.png before the first round. A Chinese config name has no key
+    yet: translate it, then draw txt_<slug of the English>."""
+    root = Path(project)
+    have = {p.stem.lower() for p in root.rglob('*') if p.suffix.lower() in IMAGE_SUFFIXES
+            and not {'library', 'temp', 'build'} & set(p.parts)}
+    want, config_members = {}, False
+    scripts = [p for p in sorted((root / 'assets').rglob('*')) if p.suffix in ('.js', '.ts') and p.is_file()
+               and not p.name.endswith('.d.ts') and not {'library', 'temp', 'build', 'node_modules'} & set(p.parts)]
+    for p in scripts:
+        try:
+            src = p.read_text(encoding='utf-8', errors='replace')
+        except OSError:
+            continue
+        rel = p.relative_to(root).as_posix()
+        for m in WORD_CALL.finditer(src):
+            arg = m.group(2)
+            # EnglishArt.frame('btn_close') names the picture itself; caption('equipped') names a word -> txt_<slug>
+            key = arg.rsplit('/', 1)[-1] if 'frame' in m.group(0).split('(')[0] or arg.startswith('txt_') else 'txt_' + _word_slug(arg)
+            want.setdefault(key, {'from': rel, 'how': m.group(0)})
+        for m in WORD_PATH.finditer(src):
+            want.setdefault(m.group(2), {'from': rel, 'how': m.group(0)})
+        for m in WORD_LABEL_CALL.finditer(src):
+            member = re.escape(m.group(1))
+            for s in re.finditer(r'''\b%s\.string\s*=\s*(['"])([^'"\n]{1,40})\1''' % member, src):
+                if not CJK_RE.search(s.group(2)) and _word_slug(s.group(2)):
+                    want.setdefault('txt_' + _word_slug(s.group(2)), {'from': rel, 'how': '%s.string = %r' % (m.group(1), s.group(2))})
+            if re.search(r'''\b%s\.string\s*=\s*[\w$.]+(?:\[\s*['"](?:%s)['"]\s*\]|\.(?:%s)\b)''' % (member, '|'.join(NAME_KEYS), '|'.join(NAME_KEYS)), src):
+                config_members = True
+    untranslated = []
+    if config_members:
+        for p in sorted((root / 'assets').rglob('*.json')):
+            if {'library', 'temp', 'build'} & set(p.parts):
+                continue
+            try:
+                data = json.loads(p.read_text(encoding='utf-8-sig'))
+            except (OSError, ValueError):
+                continue
+            if isinstance(data, list) and data and isinstance(data[0], dict) and '__type__' in data[0]:
+                continue                                   # a serialized Cocos asset, not a config table
+            stack = [data]
+            while stack:
+                v = stack.pop()
+                if isinstance(v, list):
+                    stack += v
+                elif isinstance(v, dict):
+                    for k, x in v.items():
+                        if k in NAME_KEYS and isinstance(x, str) and 0 < len(x) <= 24:
+                            if CJK_RE.search(x):
+                                untranslated.append({'from': p.relative_to(root).as_posix(), 'text': x})
+                            elif _word_slug(x):
+                                want.setdefault('txt_' + _word_slug(x), {'from': p.relative_to(root).as_posix(), 'how': '%s: %r' % (k, x)})
+                        elif isinstance(x, (dict, list)):
+                            stack.append(x)
+    missing = [dict(key=k, file=k + '.png', **v) for k, v in sorted(want.items()) if k.lower() not in have]
+    return {'wanted': len(want), 'wired': len(want) - len(missing), 'missing': missing,
+            'untranslated_names': untranslated[:200],
+            'note': 'whole-word pictures the code fetches at run time; draw every missing txt_<slug>.png in the round-1 '
+                    'art batch (same style as the other word pictures), translate untranslated_names first'}
+
+
+def make_list(project, ocr='auto', scan=True, flat_mode='list'):
     out = {}
     for p in sorted(Path(project).rglob('*')):
         if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES and not {'library', 'temp', 'build'} & set(p.parts):
@@ -199,7 +421,23 @@ def make_list(project, ocr='auto', scan=True):
     if scan:
         scan = scan_chinese(project, ocr)
         scan.pop('items', None)
+        flats = flat_panels(project)
+        # R4Q3 (补查3 第 3 组, Saul chose 「保留原画风」 for 火箭三消 and 弹球传奇): an English game's first round keeps the
+        # original art, so plain one-colour panels / backgrounds of the original are LISTED for Saul to pick
+        # ("style_choices"), not put on "regenerate" (R4C did). flat_mode='regenerate' (--flat-panels regenerate) only
+        # when Saul named the art skill for them.
+        if flat_mode == 'regenerate':
+            scan['regenerate'] = flats or []
+        else:
+            scan['regenerate'] = []
+            scan['style_choices'] = flats or []
+            scan['style_choices_note'] = ('plain-colour panels/backgrounds of the original: kept as they are (英化第一轮照原画风); '
+                                          'redraw only the ones Saul picks, then rerun with --flat-panels regenerate')
+        if flats is None:
+            scan['regenerate_note'] = 'Pillow missing: plain-colour panels were not measured, look at every panel yourself'
         doc['chinese_scan'] = scan
+        scan['regenerate'] += title_logos(project, scan)  # R4Q2: the original title logo is redrawn without a name
+        scan['runtime_words'] = runtime_word_images(project)  # R4R2: words code fetches at run time, missing = unwired
     return doc
 
 
@@ -211,6 +449,8 @@ def main(argv=None):
     ap.add_argument('--out', type=Path)
     ap.add_argument('--ocr', default='auto', choices=['auto', 'vision', 'tesseract', 'windows', 'none', 'fake'],
                     help='--make-list: recognizer for the Chinese scan of every picture and atlas slice (default auto)')
+    ap.add_argument('--flat-panels', choices=('list', 'regenerate'), default='list', help='--make-list (R4Q3): plain-colour '
+                    'panels of the original: list them for Saul to pick (default) or put them on regenerate')
     ap.add_argument('--replace-out', type=Path, help='--make-list: first-round art replacement list '
                     '(default: art-replace-round1.json next to --out)')
     a = ap.parse_args(argv)
@@ -218,14 +458,15 @@ def main(argv=None):
         if a.make_list:
             if not a.out:
                 ap.error('--make-list needs --out')
-            doc = make_list(a.make_list, a.ocr)
+            doc = make_list(a.make_list, a.ocr, flat_mode=a.flat_panels)
             a.out.parent.mkdir(parents=True, exist_ok=True)
             a.out.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
             scan = doc['chinese_scan']
             rp = a.replace_out or a.out.parent / 'art-replace-round1.json'
             rp.write_text(json.dumps(scan, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
             print(json.dumps({'images': len(doc['images']), 'scan': scan['status'], 'replace': len(scan['replace']),
-                              'manual_review': len(scan['manual_review']), 'replace_list': str(rp)}, ensure_ascii=False))
+                              'manual_review': len(scan['manual_review']), 'regenerate': len(scan.get('regenerate') or []), 'style_choices': len(scan.get('style_choices') or []),
+                              'replace_list': str(rp)}, ensure_ascii=False))
             return 0
         if not (a.zip and a.pre_english):
             ap.error('--zip and --pre-english are required')

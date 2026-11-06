@@ -24,6 +24,8 @@ else {
   assert(good.nodes.some(n=>n.path==='DOMLoading/Logo'&&n.comps.sprite.frame_size[0]===547));
   assert(good.nodes.some(n=>n.comps.progress&&n.comps.progress.value===0.5));
   assert(capture({size:'cover'}).errors.includes('unsupported splash background fit'));
-  assert(capture({hidden:true}).error.includes('cc.director'));
+  // R4N3: a hidden DOM loading layer falls back to the engine adapter, which reports "engine not ready" and asks to retry
+  const hidden=capture({hidden:true});
+  assert(hidden.error.includes('engine not ready')&&hidden.retry===true,hidden.error);
   console.log('3 DOM capture controls passed');
 }

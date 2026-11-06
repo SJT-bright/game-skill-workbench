@@ -84,6 +84,26 @@ class Values(TextFitCase):
                         label=label('/',30,40,font='num',kind='bitmap'))])
         self.assertNotIn('runtime_value_font',self.kinds(V.audit(self.root,[self.root/'dumps'])))
 
+    def test_r4r2_bitmap_label_glyph_missing_from_fnt(self):
+        # 补查3 第 10 组: num.fnt has 0-9 only; the runtime shows 1.2K (方块收割者 units) and x50 (弹球传奇 first round)
+        self.dump([node('Canvas/Hud/Coins/Value',1,100,200,200,40,label=label('1.2K',200,40,font='num',kind='bitmap')),
+                   node('Canvas/Start/Reward/Value',2,100,300,200,40,label=label('x50',200,40,font='num',kind='bitmap')),
+                   node('Canvas/Hud/Level/Value',3,100,400,200,40,label=label('12',200,40,font='num',kind='bitmap'))])
+        r=V.audit(self.root,[self.root/'dumps'],write_charset=True)
+        rows=[f for f in r['findings'] if f['kind']=='bitmap_glyph_missing']
+        self.assertEqual({f['text']:f['missing'] for f in rows},{'1.2K':'.K','x50':'x'})
+        self.assertIn('按这份字符集重画位图字',rows[0]['message'])
+        cs=json.loads((self.root/'docs/english/charset.json').read_text())
+        self.assertEqual(cs['charset']['fonts'][0]['missing'],'.Kx')
+    def test_r4r2_covered_glyphs_and_dry_run_write_nothing(self):
+        with (self.root/'assets/font/num.fnt').open('a') as font:
+            for ch in '.Kx':
+                font.write('\nchar id=%d x=0 y=0 width=30 height=100 xoffset=0 yoffset=0 xadvance=35 page=0 chnl=15'%ord(ch))
+        self.dump([node('Canvas/Hud/Coins/Value',1,100,200,200,40,label=label('1.2K',200,40,font='num',kind='bitmap')),
+                   node('Canvas/Start/Reward/Value',2,100,300,200,40,label=label('x50',200,40,font='num',kind='bitmap'))])
+        self.assertNotIn('bitmap_glyph_missing',self.kinds(V.audit(self.root,[self.root/'dumps'],write_charset=True)))
+        self.assertFalse((self.root/'docs/english/charset.json').exists())
+
     def test_bitmap_alphabet_cannot_replace_fixed_level_word(self):
         self.dump([node('Canvas/Caption',1,20,200,160,40,
                         label=label('Level',160,40,font='num',kind='bitmap'))])

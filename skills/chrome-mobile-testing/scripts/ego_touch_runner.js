@@ -15,6 +15,7 @@ const res = {
 let entryEpoch = null;
 let task = null;
 let page = null;
+let artSession = null;
 const nowMs = () => Math.round(Date.now() - entryEpoch);
 const save = async () => fs.writeFile(C.out + "/ego-result.json", JSON.stringify(res, null, 1) + "\n");
 const reqs = new Map();
@@ -131,7 +132,11 @@ try {
   reqs.clear();
   entryEpoch = Date.now();
   res.entry_epoch = entryEpoch / 1000;
-  if (C.timing) await page.cdp("Page.navigate", { url: C.url }); // timing: do not wait for 'load'
+  if (C.artCapture) {
+    const {openCapture}=await import(C.artCapture.module);
+    artSession=await openCapture(C.artCapture);
+    await artSession.navigate(page);
+  } else if (C.timing) await page.cdp("Page.navigate", { url: C.url }); // timing: do not wait for 'load'
   else await page.goto(C.url);
   // Untimed runs: if the browser reset the emulation on navigation, set it again and reload once; still wrong -> stop.
   if (!C.timing && !(await phoneOk())) {
@@ -191,6 +196,12 @@ try {
       res.background.push({ from_ms: from, to_ms: nowMs(), visibility_while_away: state, method });
     } else if (kind === "unblock") {
       await page.cdp("Network.setBlockedURLs", { urls: [] });
+    } else if (kind === "dump_ui" && artSession) {
+      const file=await artSession.capture(page,action.case,{dumpExpression:action.dump_expression,purpose:action.purpose});
+      res.ui_dumps.push({screen:action.screen,kind:action.kind,path:file});
+      res.steps.push({label:'ui-'+action.screen,action,t_ms:nowMs(),dump:file});
+      await save();
+      continue;
     } else if (kind === "dump_ui") {
       // R4O4: {error: 引擎还没起来…, retry: true} -> wait 1 s and dump again, 3 dumps at most (chrome_touch.dump_with_retry)
       let dump = null, tries = 0;
@@ -220,6 +231,7 @@ try {
   res.status = "failed";
   res.error = String((error && error.stack) || error).slice(0, 2000);
 } finally {
+  if(artSession)await artSession.close();
   rec.stop = true;
   if (rec.loop) { try { await rec.loop; } catch (_) {} }
   if (rec.on) res.recording = { frames: rec.count, method: "sequential_screenshots", fps: rec.count && entryEpoch ? Math.round(rec.count / Math.max(1, (Date.now() - entryEpoch) / 1000) * 10) / 10 : 0, dir: C.out + "/frames" };

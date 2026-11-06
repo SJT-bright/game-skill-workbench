@@ -261,7 +261,7 @@ def validate(plan):
     if plan.get('cache','cold') not in {'cold','warm'}:raise ValueError('cache must be cold or warm')
     for action in actions:
         if action.get('type') not in {'tap','drag','cancel','wait','assert_text','snapshot','mark','background','unblock','unhang','dump_ui'}:raise ValueError('Unknown action')
-        if action['type']=='dump_ui' and (not re.fullmatch(r'[A-Za-z0-9_.-]{1,60}',str(action.get('screen',''))) or
+        if action['type']=='dump_ui' and (not re.fullmatch(r'[A-Za-z0-9_.:-]{1,60}' if plan.get('art_capture') else r'[A-Za-z0-9_.-]{1,60}',str(action.get('screen',''))) or
                                           action.get('kind') not in {'home','page','gameplay','popup'}):
             raise ValueError('dump_ui needs screen (letters/digits/_-.) and kind home/page/gameplay/popup')
         if action['type']=='dump_ui' and action.get('purpose','other') not in PURPOSES:
@@ -513,6 +513,25 @@ def run_ego(args):
     if not exe:
         raise ValueError('ego-browser not found: install/upgrade Ego Lite per the ego-browser Skill (references/install.md), '
                          'then run `ego-browser skill`. Do not switch to Chrome without the user\'s consent.')
+    art_config = None
+    if plan.get('art_capture'):
+        if not args.project or plan.get('cache')=='warm' or plan.get('timing'):
+            raise ValueError('art_capture requires --project, cold cache and an untimed plan')
+        project = Path(args.project).resolve()
+        cfg = plan['art_capture']
+        build = (project / cfg['build']).resolve()
+        matrix = json.loads((project/'docs/art/capture-plan.json').read_text(encoding='utf-8'))['cases']
+        states = {row['id']:row for row in matrix}
+        plan_sha = hashlib.sha256(args.plan.read_bytes()).hexdigest()
+        for action in actions:
+            if action['type'] == 'dump_ui':
+                state = states.get(action.get('case'), {})
+                if (state.get('planSha') != plan_sha or state.get('screen') != action['screen'] or
+                    state.get('kind') != action['kind']):
+                    raise ValueError('unregistered or changed art action recipe for '+str(action.get('case')))
+        art_config = {'project':str(project),'build':str(build),
+            'out':str((project / (getattr(args,'art_dumps',None) or cfg['out'])).resolve()),'module':(Path(__file__).resolve().parents[2] /
+            'remake-core/scripts/art_capture_round.mjs').as_uri()}
     args.out.mkdir(parents=True,exist_ok=False)
     out=args.out.resolve()
     label=(args.name or args.out.name).strip()[:40] or 'touch'
@@ -542,6 +561,8 @@ def run_ego(args):
             'userAgent':plan.get('user_agent',IPHONE_UA),'timing':timing,'screencast':timing and plan.get('screencast',True) is not False,
             'record':bool(args.record or plan.get('record')),'spaceName':space_name,'readJs':READ,'observerJs':OBSERVER,
             'hideJs':HIDE_JS,'showJs':SHOW_JS,'uiDumpJs':ui_dump_js(next(a for a in actions if a['type']=='dump_ui')) if needs_dump else None}
+    if art_config:
+        config['artCapture'] = art_config
     runner=(Path(__file__).resolve().parent/'ego_touch_runner.js').read_text(encoding='utf-8')
     script='const CONFIG = %s;\n%s%s'%(json.dumps(config,ensure_ascii=False),TIMING_PRELUDE if timing else '',runner)
     budget=60+sum(a.get('ms',0)/1000+a.get('timeout_ms',0)/1000+15 for a in actions)+(150 if plan.get('cache')=='warm' else 0)
@@ -598,6 +619,7 @@ def run_ego(args):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--art-dumps', type=Path, help='art_capture output for this round; keeps the signed action plan unchanged')
     p.add_argument('--url',required=True);p.add_argument('--plan',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True);p.add_argument('--headless',action='store_true');p.add_argument('--handoff',action='store_true',help='refused: Ego windows are never handed to the user')
     p.add_argument('--record',action='store_true',help='save every rendered frame for dynamic glitch analysis')

@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T12:34:16.797Z",
-  "treeHash": "bee918142331d7f252bb55d8da6e9cece8a37c6e13d1bd8e0761443df437feb2",
+  "createdAt": "2026-11-06T12:34:59.852Z",
+  "treeHash": "ead6e1366ea1e3710d0255f2bf3e815ba444c62328584eb3152061120136d9c5",
   "skills": [
     {
       "name": "chrome-mobile-testing",
-      "treeHash": "6cac95bb8ec0f8e5d8f29f845b2ab46a42d403c9d7f9347ee089a4447bef2663",
+      "treeHash": "bb36003d11ec15352a1bfe9d1525fad520d88dd29cb4a5987d9748f791c4a504",
       "fileCount": 13,
-      "bytes": 94447,
+      "bytes": 96561,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "9a58c0c21800739f41f495b0150b7deb0b3f4dfdebac2b3a821bdaa76b7bb23e",
-          "size": 2339,
+          "hash": "8becca80059d31972de5a724edee2e9bbe6bc40025b5acbc64cac70511d62916",
+          "size": 2341,
           "executable": false
         },
         {
@@ -23,14 +23,14 @@
         },
         {
           "path": "scripts/chrome_touch.py",
-          "hash": "69ef29a4d3abb8b5090f6a7ea452806eb538453a35c2e53c25b5356326d6d5c0",
-          "size": 43893,
+          "hash": "547e4582f4af287b858430e76538d40df0529213e8f888704a94c33a3f04b7c6",
+          "size": 45399,
           "executable": false
         },
         {
           "path": "scripts/ego_touch_runner.js",
-          "hash": "1950ea3fe439c2e6d469bb9e032d275f695844e6bcfcf14642b693e6a6d647ef",
-          "size": 14077,
+          "hash": "dfa070869171d6a21894f3329041ba5122e4db437416f9d358ed72b1ae75dfe7",
+          "size": 14683,
           "executable": false
         },
         {

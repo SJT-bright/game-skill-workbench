@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "c2806b0f-80c0-4122-915b-1d0791bde049",
+      "skillId": "s-c527d5389d209a5759a9",
+      "name": "remake-core",
+      "version": "v21",
+      "createdAt": "2026-11-06T21:55:21.552Z",
+      "summary": "文件变更：新增 8，修改 19，移除 0。",
+      "changes": {
+        "added": 8,
+        "modified": 19,
+        "deleted": 0
+      },
+      "treeHash": "fbbf26ed0a6c4bc3844825fd333c69c26145e37211768eca81858cf23cee0970",
+      "bytes": 12144756,
+      "fileCount": 615
+    },
+    {
       "id": "870b1edb-e973-4d67-b73d-39b1e81e2b1c",
       "skillId": "s-21e83a6b3e72cb97b66b",
       "directory": "cocos-game-check",

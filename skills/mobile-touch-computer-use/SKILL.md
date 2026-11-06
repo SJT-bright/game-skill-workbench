@@ -1,13 +1,18 @@
 ---
 name: mobile-touch-computer-use
-description: 用户要求游戏本地预览、试玩、游玩或打开游戏时，先自动弹出 Google Chrome 固定手机尺寸试玩窗口并轻量交接，不启动全量验收；需要代测时默认用 Ego Lite（ego-browser）自动验收游戏或网页的手机触控模拟、长屏布局、按钮和手势。适用于“替我测试手机端”“电脑模拟手机点击”“按钮手机点不动”等请求；通过 Ego Lite 官方 CLI 操作页面、手机视口和触摸输入，必要时操作已安装的系统模拟器，记录实际输入与界面变化，区分模拟结果与平台真机结果。
+description: 用户要求游戏本地预览、试玩、游玩或打开游戏时，先自动弹出 Google Chrome 固定手机尺寸试玩窗口并轻量交接，不启动全量验收；需要代测时仅用 Ego Lite（ego-browser）自动验收游戏或网页的手机触控模拟、长屏布局、按钮和手势。适用于“替我测试手机端”“电脑模拟手机点击”“按钮手机点不动”等请求；通过 Ego Lite 官方 CLI 操作页面、手机视口和触摸输入，必要时操作已安装的系统模拟器，记录实际输入与界面变化，区分模拟结果与平台真机结果。
 ---
 
 # 手机触控模拟验收
 
-**用户亲自试玩先走轻量入口**：预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读固定手机尺寸试玩（英化包 `remake-core/references/user-phone-preview.md`；重塑包 `remake-core/references/user-phone-preview.md`）。共享预览脚本用 `--keep` 默认自动弹出独立 Google Chrome 窗口，保留390×844同源手机框、只缩小不放大；读回实际窗口并确认首页/开始后再交接；仅试玩不执行下面的完整代测流程。
+## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
 
-让 Agent 直接操作界面完成测试，用户不必自己切设备模式、逐个点击或抄日志。**浏览器严格用 Ego Lite（用户 2026-10-21）**：自动测试（触摸计划、截图、录屏）在 Ego Lite 里做；**Ego 只给 Agent 自己测试，用户试玩按上述入口自动打开独立 Google Chrome（用户 2026-10-27）**。先运行 `ego-browser skill` 按它的说明操作；触摸计划、截图、录屏、加载计时直接用 `chrome_touch.py`（不加连接参数），它通过 `ego-browser nodejs` 在 Ego 里新建名字唯一的空间，设手机尺寸和触摸、跑计划，跑完只结束自己的空间，不关 Ego。**统一连接方式（用户 2026-10-27）**：只走 Ego 官方 `ego-browser nodejs`，没有 CDP 地址、不接 Playwright；空间名必须唯一（`<用途> <线名> <年月日-时分秒> <6位随机>`），同名会恢复成同一个空间，一个结束就把另一个关掉——这就是"测试空间反复失效"的原因。测试记录统一写 `browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=数字 spaceId、`space_name`。详见 [chrome-mobile-testing 的 Ego 连接方式](../chrome-mobile-testing/SKILL.md#ego-连接方式用户-2026-10-27统一)。Ego 没装就按 ego-browser 的安装说明装；连不上、装不好时，**先问用户**"装 Ego 还是这次改用 Chrome"，得到同意才可以用 Chrome（`chrome_touch.py --user-approved-chrome`）。本 Skill 不做 TikTok 真机测试，不需要 DevTool；浏览器结果不能标成平台手机通过。第一次在一台电脑上用 Ego 跑脚本时，先按 [一条命令校准](../chrome-mobile-testing/SKILL.md#第一次用先校准一条命令) 跑通再批量跑。
+所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+
+
+**用户亲自试玩先走轻量入口**：预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读固定手机尺寸试玩（英化包 `remake-core/references/user-phone-preview.md`；重塑包 `remake-core/references/user-phone-preview.md`）。共享预览脚本用 `--keep` 默认自动弹出独立 Google Chrome 窗口，保留390×844同源手机框、只缩小不放大；只读核对用户试玩窗口与 URL 后交接；首页/开始的自动验收在 Ego 完成；仅试玩不执行下面的完整代测流程。
+
+让 Agent 直接操作界面完成测试，用户不必自己切设备模式、逐个点击或抄日志。**浏览器严格用 Ego Lite（用户 2026-10-21）**：自动测试（触摸计划、截图、录屏）在 Ego Lite 里做；**Ego 只给 Agent 自己测试，用户试玩按上述入口自动打开独立 Google Chrome（用户 2026-10-27）**。先运行 `ego-browser skill` 按它的说明操作；触摸计划、截图、录屏、加载计时直接用 `chrome_touch.py`（不加连接参数），它通过 `ego-browser nodejs` 在 Ego 里新建名字唯一的空间，设手机尺寸和触摸、跑计划，跑完只结束自己的空间，不关 Ego。**统一连接方式（用户 2026-10-27）**：只走 Ego 官方 `ego-browser nodejs`，没有 CDP 地址、不接 Playwright；空间名必须唯一（`<用途> <线名> <年月日-时分秒> <6位随机>`），同名会恢复成同一个空间，一个结束就把另一个关掉——这就是"测试空间反复失效"的原因。测试记录统一写 `browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=数字 spaceId、`space_name`。详见 [chrome-mobile-testing 的 Ego 连接方式](../chrome-mobile-testing/SKILL.md#ego-连接方式用户-2026-10-27统一)。Ego 没装就按 ego-browser 的安装说明处理；连不上或尺寸异常时在 Ego 内排查，不能改用 Chrome 测试。本 Skill 不做 TikTok 真机测试，不需要 DevTool；浏览器结果不能标成平台手机通过。第一次在一台电脑上用 Ego 跑脚本时，先按 [一条命令校准](../chrome-mobile-testing/SKILL.md#第一次用先校准一条命令) 跑通再批量跑。
 
 **禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用remake-core 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，脚本自动请求独立 Chrome 窗口，Agent 核实实际可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
 
@@ -27,7 +32,7 @@ description: 用户要求游戏本地预览、试玩、游玩或打开游戏时�
 
 所有流程都不引入外部 Playwright、不找 CDP 地址；需要 `chrome-mobile-testing` 的计划、录屏或加载计时时直接跑 `chrome_touch.py`，它同样走 `ego-browser nodejs` + `page.cdp()`，记录标识与手写 Page API 流程一致（`browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=spaceId）。不用 AppleScript、系统鼠标脚本或 DOM `dispatchEvent` 代替操作。`page.evaluate()` 可只读观察 DOM/引擎公开状态和被动事件，不能调用游戏控制器、按钮回调、改余额、强制通关或造点击。文件工具可准备隔离副本、服务、日志和报告。
 
-按 [Ego Lite 操作与恢复](references/computer-use.md) 留存动作与结果。Ego Lite 不可用时说明具体故障，继续可做的离线检查；用户指定备用浏览器时才改走对应工具，不静默回退 Chrome。已有系统模拟器仅在目标需要时使用。自己绑定的测试空间从列表消失时，停止对旧 ID 的操作，核实它已不存在，自动新建并登记独立测试空间继续，不再询问用户，也不接管旧 ID。用户明确接管、要求停止或浏览器安全 hard stop 时立即停止对应操作。Agent 从不主动把 Ego 空间交给用户（用户 2026-10-23）。
+按 [Ego Lite 操作与恢复](references/computer-use.md) 留存动作与结果。Ego Lite 不可用时说明具体故障，继续可做的离线检查；不回退 Chrome；Ego 不能完成的项保留未测。已有系统模拟器仅在目标需要时使用。自己绑定的测试空间从列表消失时，停止对旧 ID 的操作，核实它已不存在，自动新建并登记独立测试空间继续，不再询问用户，也不接管旧 ID。用户明确接管、要求停止或浏览器安全 hard stop 时立即停止对应操作。Agent 从不主动把 Ego 空间交给用户（用户 2026-10-23）。
 
 使用直接全屏游戏入口；固定比例 iframe 可用于体验，但另测填满长屏的真实 Canvas。通常选两种不同长屏比例，尺寸按用户机型或项目风险决定。记录浏览器、模式、视口、DPR、Canvas CSS 范围与日期，机型名称不能当真实设备证据。
 
@@ -56,7 +61,7 @@ description: 用户要求游戏本地预览、试玩、游玩或打开游戏时�
 
 Canvas 游戏用当前截图定位，尺寸/场景变化后重新取状态。AX 索引只用最近状态；每组确定性动作后读状态，不能沿用旧坐标。简单截图文字识别遵守当前环境的 OCR 分流规则，整体空间/布局由主 Agent 判断。
 
-Cocos/TikTok任务同时读取 通用问题适用范围与重点（英化包 `remake-core/references/feedback-regressions.md`；重塑包 `remake-core/references/feedback-regressions.md`）。优先逐实际广告/奖励入口检查完成、发奖、保存、按钮状态、失败恢复和重复/迟到结果；再检查加载、排版及实际存在的输入、动画和暂停机制。个性化玩法与设计改动只留项目。执行项目已有回归后以 Ego Lite 实际输入验证界面；源码/Native检查不能补写touch或真实IAA。用户指定Chrome或禁止模拟器时遵守其路线。
+Cocos/TikTok任务同时读取 通用问题适用范围与重点（英化包 `remake-core/references/feedback-regressions.md`；重塑包 `remake-core/references/feedback-regressions.md`）。优先逐实际广告/奖励入口检查完成、发奖、保存、按钮状态、失败恢复和重复/迟到结果；再检查加载、排版及实际存在的输入、动画和暂停机制。个性化玩法与设计改动只留项目。执行项目已有回归后以 Ego Lite 实际输入验证界面；源码/Native检查不能补写touch或真实IAA。Chrome 仅供用户试玩；Agent 测试仍使用 Ego。
 
 ## 被动证据
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T21:55:52.311Z",
-  "treeHash": "16775b5d8715e19006befd2f33e5bf746ce49a62288ec3bb961b378ee6210f48",
+  "createdAt": "2026-11-06T21:56:23.930Z",
+  "treeHash": "e8747a28d8bc99fbc43b98ba4c1af38b87afb85969ce5684be5ddeaf7aa7622e",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2975,20 +2975,20 @@
     },
     {
       "name": "mobile-touch-computer-use",
-      "treeHash": "018c23cb6122316d0a4a6906926c44223ca2f9309c5e4ad9262db00c0107ace3",
+      "treeHash": "69c8c6ecd295d75b946c9bf954f2499f6b611fdaf0e4aa8d48bd05bdb0007993",
       "fileCount": 8,
-      "bytes": 45258,
+      "bytes": 47713,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "0928a1cd7adb075d28b9d61eb24eb9d47454d4dbe2e0f7d9fc8606b20becbf31",
-          "size": 1551,
+          "hash": "f09363ada86e23c2ffc80ead362969a0b30639ecf8aa3d9b05f2aa8c661a7a5a",
+          "size": 2850,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "190f136395d046bdb4b3e7e30a33b44428d5c779d6f6af27903c9004d7e5dede",
-          "size": 15367,
+          "hash": "a9fdd7e0e57ec8df13790d3be154f0852fd69a2f5cfe2e1a6b1bd0383c480530",
+          "size": 15911,
           "executable": false
         },
         {
@@ -3005,8 +3005,8 @@
         },
         {
           "path": "references/computer-use.md",
-          "hash": "1bedac8e11ec1a791d7bbc7ce4a9bf28066a87cb7c314bda8c42e2f634974f62",
-          "size": 8104,
+          "hash": "53790c2ff2199d115c1d06133cbb4bb7aac098d4c7d986de155b81e2928ada81",
+          "size": 8716,
           "executable": false
         },
         {

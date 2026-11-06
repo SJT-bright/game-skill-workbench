@@ -261,10 +261,27 @@ def write(project, status, report=None, report_path=None, note=None):
         'art_check_images_sha256': images_digest(images), 'images': images, 'carried': []}
     display = display_fingerprints(project)            # 生成时预防 R4M2: text, fonts, layout
     receipt.update(display_schema=DISPLAY_SCHEMA, display=display, display_sha256=images_digest(display))
+    from art_production import fingerprint as production_fingerprint
+    try:
+        production = production_fingerprint(project)
+        if production is not None:
+            receipt['production_binding'] = production
+    except ValueError as exc:
+        if status == 'pass':
+            raise ValueError('cannot write a passing art receipt: ' + str(exc)) from exc
+        receipt['production_binding_error'] = str(exc)
     if isinstance(report.get('base_generated'), dict):
         receipt['base_generated'] = report['base_generated']      # v7.8 H8 / H10 summary (art_records.summary)
+    if report.get('capture_round', {}).get('ready'):
+        receipt['capture_round'] = {k:report['capture_round'][k] for k in ('round','version','dumps','origin_hash')}
+        if status == 'pass':
+            receipt['capture_round']['artifact_hash'] = report['capture_round']['artifact_hash']
     if isinstance(report.get('value_presentation'), dict):
         receipt['value_presentation'] = report['value_presentation']
+    if isinstance(report.get('maintenance_mapping'), dict):
+        receipt['maintenance_mapping'] = report['maintenance_mapping']
+        # Provenance only: status still follows all blocking rows; no blanket pass or waiver.
+    if isinstance(report.get('english_visual_scope'),dict):receipt['english_visual_scope']=report['english_visual_scope']
     # R4Q3 (补查3 第 3 组): which rows still need fixing, the original-style verdict and Saul's keep record
     receipt['blocking_rows'] = [r.get('check') for r in report.get('rows') or [] if isinstance(r, dict)
                                 and r.get('status') == '需处理'][:40]
@@ -277,6 +294,20 @@ def write(project, status, report=None, report_path=None, note=None):
         receipt['note'] = note
     _write_json(receipt_path(project), receipt)
     return receipt
+
+
+def _capture_round_current(project, receipt, capture_build=None):
+    from art_round_check import matches_receipt
+    try:
+        proof = receipt['capture_round']
+        root = Path(project) / '.tiktok-kit/art-rounds'
+        version = proof['version']
+        if not isinstance(version, str) or len(version) != 64 or any(x not in '0123456789abcdef' for x in version):
+            return False
+        snapshot = json.loads((root/'snapshots'/(version+'.json')).read_text(encoding='utf-8'))
+        return matches_receipt(project, capture_build or snapshot['build'], proof)
+    except (KeyError, TypeError, ValueError, OSError):
+        return False
 
 
 def after_art_check(project, report, report_path):
@@ -349,14 +380,14 @@ def _list(items, n=8):
     return '、'.join(items[:n]) + ('……共 %d 张' % len(items) if len(items) > n else '')
 
 
-def check(project, board=None, policy=None):
+def check(project, board=None, policy=None, capture_build=None):
     """Read-only. -> {'state', 'level' ok|warn|block, 'gate', 'message', 'changed', 'added', 'removed', 'status',
     'board', 'policy', 'strict', 'receipt', 'images_count', 'engine', 'base_audio'}.
     state: no_images | missing | unreadable | not_pass | changed | match_pass | match_3x.
     v7.8 H8: sounds are not in the image receipt, so the sounds are compared with the recorded base here as well
     (art_records.base_audio_now, a hash compare, not an art check): a sound still byte-identical to the base and not in
     docs/art/base-keep.json refuses a new remake game (gate ART_base_audio) and warns otherwise."""
-    out = _check_images(project, board, policy)
+    out = _check_images(project, board, policy, capture_build)
     try:
         if str(HERE) not in sys.path:
             sys.path.insert(0, str(HERE))
@@ -393,15 +424,49 @@ def _display_compare(project, receipt, out):
     out['display_state'] = 'changed' if moved else 'match'
 
 
-def _value_receipt_current(project, receipt):
+def _value_receipt_current(project, receipt, details=None):
     from audit_value_presentation import REVISION, source_fingerprint
     proof = receipt.get('value_presentation') or {}
-    return (proof.get('revision') == REVISION and proof.get('mode') == 'runtime'
+    current = (proof.get('revision') == REVISION and proof.get('mode') == 'runtime'
             and proof.get('passed') is True and isinstance(proof.get('pages'), int) and proof['pages'] > 0
             and proof.get('source_sha256') == source_fingerprint(project))
+    if current:
+        return True
+    # Approved local changes reuse the immutable old pass plus registered
+    # current UI and value evidence; approval alone never bypasses this gate.
+    from approved_art_scope import MANIFEST, validate
+    if (Path(project) / MANIFEST).is_file():
+        try:
+            scoped = validate(project, receipt)
+        except (KeyError, ValueError, TypeError, OSError, ImportError) as error:
+            if details is not None:
+                details['approved_local_ui_scope_error'] = str(error)
+        else:
+            if details is not None:
+                details['approved_local_ui_scope'] = scoped
+            return True
+    return False
 
 
-def _check_images(project, board=None, policy=None):
+def _production_compare(project, receipt, out):
+    """Bind production declarations without repeating their pixel checks."""
+    from art_production import fingerprint
+    try:
+        current = fingerprint(project)
+    except ValueError as exc:
+        out.update(production_state='invalid', production_error=str(exc))
+        return False
+    recorded = (receipt or {}).get('production_binding')
+    declared = current is not None or 'production_binding' in (receipt or {}) or 'production_binding_error' in (receipt or {})
+    if not declared:
+        out['production_state'] = 'unrecorded'
+        return True
+    matches = current is not None and recorded == current and 'production_binding_error' not in (receipt or {})
+    out['production_state'] = 'match' if matches else 'changed'
+    return matches
+
+
+def _check_images(project, board=None, policy=None, capture_build=None):
     project = Path(project).resolve()
     strict, board, policy = strictness(project, board, policy)
     current = image_fingerprints(project)
@@ -418,7 +483,23 @@ def _check_images(project, board=None, policy=None):
     if board == 'localize':
         strict = True  # Receipt only; original-audio policy remains unchanged.
         out['receipt_strict'] = True
-    if not current and board != 'localize':
+    # Explicit user-locked existing-project maintenance is a distinct scoped
+    # state, never an invented old/full art pass. Unknown projects stay strict.
+    from locked_art_maintenance import MANIFEST as LOCKED_MANIFEST, validate as validate_locked
+    if board == 'localize' and capture_build is None and (project/LOCKED_MANIFEST).is_file():
+        try:
+            locked = validate_locked(project, receipt)
+        except (KeyError, ValueError, TypeError, OSError, ImportError) as exc:
+            out.update(state='user_locked_art_maintenance_invalid', level='block',
+                       locked_art_maintenance_error=str(exc),
+                       message='已锁定美术的局部维护证据无效：' + str(exc))
+        else:
+            out.update(state='user_locked_art_maintenance', level='ok',
+                       locked_art_maintenance=locked,
+                       message='用户已批准原画面；本轮实际改动、数值、启动及已登记问题证据一致。旧完整美术结果保持原样，不宣称全游戏 ART 通过。')
+        return out
+    production_current = _production_compare(project, receipt, out)
+    if not current and board != 'localize' and production_current:
         out.update(state='no_images', level='ok', message='工程 assets/ 下没有图片，没有美术要核对')
         return out
     if receipt is None:
@@ -430,7 +511,12 @@ def _check_images(project, board=None, policy=None):
         status = receipt.get('status')
         _display_compare(project, receipt, out)          # 生成时预防 R4M2
         display_moved = out['display_changed'] or out['display_added'] or out['display_removed']
-        if moved:
+        if not production_current:
+            out['state'] = 'production_binding_stale'
+            why = '制作素材、配方、图文内区/应查状态或制作规则已变；旧美工回执不能沿用'
+            if out.get('production_error'):
+                why += '：' + out['production_error']
+        elif moved:
             parts = []
             for label, key in (('改了', 'changed'), ('新增', 'added'), ('删了', 'removed')):
                 if out[key]:
@@ -444,9 +530,14 @@ def _check_images(project, board=None, policy=None):
                     parts.append('%s%s' % (label, '、'.join(_display_parts(out[key]))))
             out['state'] = 'display_changed'
             why = '回执（%s，%s）之后画面上的文字、字体或布局变了，%s' % (status, receipt.get('created'), '；'.join(parts))
-        elif board == 'localize' and not _value_receipt_current(project, receipt):
+        elif board == 'localize' and not _value_receipt_current(project, receipt, out):
             out['state'] = 'value_evidence_stale'
             why = '缺分数/奖励实际页面验收，或文字代码、字体、坐标、绑定已变；旧图片回执不能放行'
+        elif board == 'localize' and status == 'pass' and (
+                capture_build is not None or (Path(project)/'docs/art/capture-plan.json').exists() or
+                (Path(project)/'.tiktok-kit/art-rounds/current.json').exists()) and not _capture_round_current(project, receipt, capture_build):
+            out['state'] = 'capture_round_stale'
+            why = '本轮截图、工程或 Web 导出身份已变；按重拍清单补采并运行完整美工检查'
         elif status == 'pass':
             out.update(state='match_pass', level='ok',
                        message='美术回执对得上：art_check 通过（%s），%d 张图未改%s' % (
@@ -458,6 +549,9 @@ def _check_images(project, board=None, policy=None):
                 who = receipt.get('keep_original_style') or {}
                 out['message'] += '；原图保留 %d 张（大块深色/纯色不适用%s）' % (
                     len(kept.get('original') or []), '，%s %s 定的' % (who.get('decided_by'), who.get('date')) if who else '')
+            if out.get('approved_local_ui_scope'):
+                out['state'] = 'approved_local_ui_scope'
+                out['message'] += '；本轮已批准局部UI及数值证据合并核验通过，旧全局通过回执保持原样（不是新全游戏ART-06）'
             return out
         elif status == 'fail' and board == 'localize' and _kept_by_record(project, receipt):
             # R4Q3: the only row left is 大块深色与纯色底, the original pictures could not be told from new ones (no
@@ -508,6 +602,9 @@ def finding(result):
 
 
 ROW = {'no_images': '没有图片，不用核对', 'match_pass': '对得上（art_check 通过）', 'match_3x': '3.x 未覆盖（不是通过）',
+       'approved_local_ui_scope': '原美术未变，已批准局部UI与数值证据合并通过（非新全游戏ART-06）',
+       'user_locked_art_maintenance': '用户批准的美术已锁定；局部维护证据有效（非全游戏ART通过）',
+       'user_locked_art_maintenance_invalid': '已锁定美术的局部维护证据无效',
        'missing': '没有回执', 'unreadable': '回执读不了', 'not_pass': '回执不是通过', 'changed': '图片改过',
        'display_changed': '文字、字体或布局改过',   # display_changed: 生成时预防 R4M2
        'kept_original_record': '保留原画风（按 keep_original_style.json 放行，警告）'}   # R4Q3
@@ -533,6 +630,9 @@ def summary(result):
     out['display_state'] = result.get('display_state')                 # 生成时预防 R4M2
     out.update({k: list(result.get(k) or [])[:20] for k in ('display_changed', 'display_added', 'display_removed')})
     out['message'] = result.get('message')
+    for key in ('approved_local_ui_scope', 'approved_local_ui_scope_error', 'locked_art_maintenance', 'locked_art_maintenance_error'):
+        if key in result:
+            out[key] = result[key]
     return out
 
 

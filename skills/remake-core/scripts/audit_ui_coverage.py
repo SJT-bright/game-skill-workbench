@@ -157,7 +157,8 @@ def check_box(box, label, frame, problems, pad):
             if not isinstance(e, dict) or not e.get('name') or not valid_rect(e.get('rect')):
                 raise ValueError(label + ': each %s needs name and rect' % kind)
     for c in contents:
-        if not inside(c['rect'], safe, pad):
+        target=[0,0,*box['screen_size']] if c.get('outside_panel') and box.get('screen_size') else frame if c.get('chrome') else safe
+        if not inside(c['rect'], target, 0 if c.get('chrome') or c.get('outside_panel') else pad):
             problems.append('%s: %s crosses the inner border (needs %dpx padding inside the frame)' % (label, c['name'], pad))
         for d in decorations:
             if overlap(c['rect'], d['rect']):
@@ -165,8 +166,43 @@ def check_box(box, label, frame, problems, pad):
         named.append(c)
     for i, a in enumerate(named):
         for b in named[i + 1:]:
-            if overlap(a['rect'], b['rect']):
+            if overlap(a['rect'], b['rect']) and alpha_overlap(a,b):
                 problems.append('%s: %s overlaps %s' % (label, a['name'], b['name']))
+
+
+def alpha_overlap(a,b):
+    """Transparent sprite corners are not visible occlusion; unknown sources stay strict."""
+    for backing,content in ((a,b),(b,a)):
+        if backing.get('surface_backing') and content.get('text_content') and inside(content['rect'],backing['rect']):
+            return False  # a primitive backing/counter surface intentionally contains its own glyphs
+    if not a.get('alpha_sources') or not b.get('alpha_sources'):return True
+    from PIL import Image,ImageChops
+    x=max(a['rect'][0],b['rect'][0]);y=max(a['rect'][1],b['rect'][1]);right=min(a['rect'][0]+a['rect'][2],b['rect'][0]+b['rect'][2]);bottom=min(a['rect'][1]+a['rect'][3],b['rect'][1]+b['rect'][3])
+    if right<=x or bottom<=y:return False
+    def mask(item):
+        combined=None
+        for source in item['alpha_sources']:
+            rect=source.get('rect',item.get('source_rect',item['rect']))
+            p=Path(source['path'])
+            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=source['sha256']:raise ValueError('alpha source changed')
+            with Image.open(p) as im:
+                plane=im.convert('RGBA').getchannel('A').resize((max(1,round(rect[2])),max(1,round(rect[3]))))
+                plane=plane.crop((round(x-rect[0]),round(y-rect[1]),round(right-rect[0]),round(bottom-rect[1])))
+                combined=plane if combined is None else ImageChops.lighter(combined,plane)
+        return combined.point(lambda v:255 if v>=128 else 0)
+    intersection=ImageChops.multiply(mask(a),mask(b))
+    # Preserve the rectangle check's existing two-pixel tolerance for each
+    # connected visible contact, rather than unioning two remote contour tips.
+    points={(x,y) for y in range(intersection.height) for x in range(intersection.width) if intersection.getpixel((x,y))}
+    while points:
+        seed=points.pop();todo=[seed];component=[seed]
+        while todo:
+            x,y=todo.pop()
+            for q in ((x-1,y),(x+1,y),(x,y-1),(x,y+1)):
+                if q in points:points.remove(q);todo.append(q);component.append(q)
+        xs=[p[0] for p in component];ys=[p[1] for p in component]
+        if max(xs)-min(xs)+1>2 and max(ys)-min(ys)+1>2:return True
+    return False
 
 
 def zone(rect, size):
@@ -292,6 +328,7 @@ def check_buttons(s, size, problems, a):
             raise ValueError(s['name'] + ': button label must be none/small/text')
         (prim if b.get('primary') else sec).append(b)
     name = s['name']
+    scoped_home='home_original_composition' in getattr(a,'original_rules',{}).get(name,set())
     if len(prim) > 2:
         problems.append('%s: %d primary buttons; keep at most 2 big text buttons' % (name, len(prim)))
     for b in prim:
@@ -303,7 +340,7 @@ def check_buttons(s, size, problems, a):
     zones = {}
     for b in sec:
         r = clip(b['rect'], size)
-        if b.get('label') == 'text':
+        if b.get('label') == 'text' and not scoped_home:
             problems.append('%s: %s is a text tile; secondary features use an icon (optionally one small word)' % (name, b['name']))
         if r[2] * r[3] / screen > (max(a.max_icon,0.10) if s.get('role') == 'home' else a.max_icon):
             problems.append('%s: %s covers %.1f%% of the screen (icon limit %.1f%%)' % (name, b['name'], r[2] * r[3] / screen * 100, a.max_icon * 100))
@@ -313,7 +350,11 @@ def check_buttons(s, size, problems, a):
         zones.setdefault(z, []).append(b['name'])
     if s.get('role') == 'home':
         home_places._primary_y = min(((b['rect'][1]+b['rect'][3]/2)/size[1] for b in prim),default=0.7)
-        home_places(name, sec, size, problems)
+        if not scoped_home and getattr(a, 'board', None) != 'localize':
+            # The 2026-10-24 home layout (entrances on both sides of the hero, at most five under PLAY) is the remake
+            # home rule; English games keep the original home buttons and only add the two platform entrances (Saul
+            # 2026-10-30). 合成进化恐龙 2026-11-05 was failed by it as an English game.
+            home_places(name, sec, size, problems)
         if getattr(a, 'board', None) == 'remake':
             home_zones_remake(name, sec, size, problems, home_places._primary_y)
         leaves = [re.sub(r'[\s\-]+', '_', leaf(n)) for n in [b['name'] for b in buttons] + list(s.get('entry_names') or [])]
@@ -363,6 +404,9 @@ def check(layout, a):
         if not isinstance(s, dict) or not s.get('name') or s.get('kind') not in {'gameplay', 'popup', 'page'}:
             raise ValueError('each screen needs name and kind gameplay/popup/page')
         r = {'name': s['name'], 'kind': s['kind'], 'problems': []}
+        if s.get('error'):              # extract_ui_layout could not read this page (see its message)
+            r['problems'].append('layout of this page could not be read: %s' % s['error'])
+            r['passed'] = False; results.append(r); continue
         shares = share_entries(s)
         if shares or SHARE_WORDS.search(leaf(s['name'])):
             r['problems'].append('share feature on %s (%s): sharing cannot be used, remove the share button/entry and its '
@@ -406,7 +450,8 @@ def check(layout, a):
                 for n2, r2 in fixed[i + 1:]:
                     if overlap(r1, r2):
                         r['problems'].append('UI elements overlap: %s / %s' % (n1, n2))
-                if zone(r1, size) == 'center':
+                playfields=s.get('playfields',[])
+                if zone(r1, size) == 'center' and (not playfields or any(overlap(r1,b,tol=0) for b in playfields)):
                     r['problems'].append('HUD element %s sits in the middle of the play area; move it to an edge' % n1)
             cx0, cx1, cy0, cy1 = size[0] / 3, size[0] * 2 / 3, size[1] / 3, size[1] * 2 / 3
             for n, rc in temp:
@@ -422,7 +467,7 @@ def check(layout, a):
             share = area_union([clip(panel, size)]) / screen
             r['panel_ratio'] = round(share, 4)
             check_box(s, s['name'], panel, r['problems'], a.min_pad)
-            if share > a.max_popup:
+            if share > a.max_popup and 'original_popup_extent' not in getattr(a,'original_rules',{}).get(s['name'],set()):
                 r['problems'].append('popup panel covers %.0f%% of the screen (limit %.0f%%)' % (share * 100, a.max_popup * 100))
         r['passed'] = not r['problems']
         results.append(r)
@@ -476,6 +521,7 @@ def main():
                     help='default: <project>/docs/board.txt; a project without it is checked as remake (strictest). '
                          'remake adds the 2026-10-28 home zoning')
     ap.add_argument('--project', type=Path, help='Cocos project (default: found from the layout path or its dumps)')
+    ap.add_argument('--english-visual-scope',type=Path)
     a = ap.parse_args()
     global OPTIONAL
     from feature_policy import enabled
@@ -487,6 +533,17 @@ def main():
             raise ValueError('--rules-selftest only checks the geometry rules and never writes a gate report')
         layout = json.loads(a.layout.read_text(encoding='utf-8'))
         notes = None if a.rules_selftest else verify_provenance(layout)
+        a.original_rules={}
+        original_mapping=None
+        if a.english_visual_scope:
+            if not a.binding or not proj:raise ValueError('visual scope requires binding and project')
+            from english_visual_scope import validate,rules_for
+            dumps=[]
+            for item in layout['dumps']:
+                f=Path(item['path']);d=json.loads(f.read_text());d['_file']=str(f);dumps.append(d)
+            original_mapping=validate(a.english_visual_scope,proj,json.loads(a.binding.read_text())['binding'],dumps)
+            by_path={str(Path(d['_file']).resolve()):d for d in dumps}
+            a.original_rules={s['name']:rules_for(original_mapping,by_path[s['source_dump']['path']]) for s in layout['screens']}
         results = check(layout, a)
         for s, r in zip(layout['screens'], results):
             if s.get('auto_notes'):
@@ -513,6 +570,7 @@ def main():
                       'boxes with the contact sheets of the same build.'}
     if binding is not None:
         report['binding'] = binding
+    if original_mapping is not None:report['english_visual_scope']=original_mapping
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

@@ -88,6 +88,9 @@ def write(files, ocr='auto', verdicts=None, by=None):
         f = item.get('file')
         if f:
             per_file.setdefault('assets/' + f if not f.startswith('assets/') else f, []).append((item['kind'], verdict, text))
+    unknown_verdicts = set(verdicts) - set(by_sha)
+    if unknown_verdicts:
+        raise ValueError('manual verdict SHA is not an actual input image: ' + ', '.join(sorted(unknown_verdicts)))
     entries = []
     for digest, name in sorted(by_sha.items(), key=lambda kv: kv[1]):
         got = per_file.get('assets/' + name.lstrip('/')) or []
@@ -103,9 +106,10 @@ def write(files, ocr='auto', verdicts=None, by=None):
             e.update(status='pending', chinese='unknown', slices_reviewed=False,
                      why=scan.get('note') or 'recognizer could not settle this picture or one of its slices')
         v = verdicts.get(digest)
-        if v in ('yes', 'no') and e['status'] == 'pending':
+        if v in ('yes', 'no'):
             if not str(by or '').strip():
                 raise ValueError('--verdict needs --by <who looked>')
+            e['recognizer_verdict'] = {'status': e['status'], 'chinese': e.get('chinese'), 'text': [g[2] for g in got]}
             e.update(status='done', chinese=v, reviewer=str(by), slices_reviewed=True, verdict_source='person')
         entries.append(e)
     return {'schema': 'image_review.v1', 'generated_by': {'tool': WRITER, 'scan': scan.get('status'),

@@ -41,10 +41,11 @@ import sys
 from pathlib import Path
 
 WORLD = re.compile(r'^(bg|background|board|grid|map|world|tiles?|pieces?|blocks?|terrain|road|track|'
+                   r'_?uiboard|board[-_]?transfer[-_]?root|board[-_]?background|tile[-_]?origin[-_]?root|'
                    r'game_?(layer|root|node|world|area)|play_?(area|field|layer)|level_?(root|layer|node)|stage_?(root|layer))\d*$', re.I)
 HUD = re.compile(r'hud|top|bottom|bar|btn|button|icon|coin|gem|diamond|star|heart|life|lives|energy|score|timer|clock|'
                  r'level|lvl|badge|avatar|pause|setting|menu|counter|progress|combo|booster|item|prop|tool|gold|cash', re.I)
-TEMP = re.compile(r'tip|toast|hint|guide|bubble|tutorial|finger|hand|float', re.I)
+TEMP = re.compile(r'tip|toast|hint|guide|bubble|tutorial|how_?to_?play|finger|hand|float', re.I)
 DECOR = re.compile(r'corner|deco|ribbon|tassel|orn|flower|bow|leaf|sparkle|shine|glow|light|rivet|nail|vine', re.I)
 PRIMARY = re.compile(r'play|start|next|continue|begin|retry|again|^go$|claim', re.I)
 POPUP = re.compile(r'popup|^pop|dialog|dlg|window|modal|alert|result|settle|pause|fail|victory|defeat|win$|lose', re.I)
@@ -85,15 +86,32 @@ def load_dumps(inputs):
             viewport = (int(page['width']), int(page['height']))
         except (KeyError, TypeError, ValueError):
             raise ValueError('%s: dump needs a valid CSS viewport width/height' % f)
-        key = (str(d['screen']), viewport)
+        # One page at one size may be captured more than once on purpose: audit_value_presentation asks for a second
+        # capture showing the longest value from docs/art/longest-text.json (合成进化恐龙 2026-11-05: battle "current" and
+        # "longest" made this whole layout row unreadable). Such variants carry different capture_name values.
+        capture = (f.stem[len('capture-ui-dump-'):] if d.get('art_capture_id') and f.name.startswith('capture-ui-dump-') else d.get('capture_name'))
+        capture = capture.strip() if isinstance(capture, str) and capture.strip() else None
+        key = (str(d['screen']), viewport, capture)
         if key in names:
-            raise ValueError('screen %s at %sx%s dumped twice (%s, %s)' % (d['screen'], viewport[0], viewport[1], names[key], f))
+            raise ValueError('screen %s at %sx%s dumped twice (%s, %s): an old capture left in the folder? remove it. Two '
+                             'states of one page (e.g. current and longest value) need a different "capture_name" in '
+                             'each dump' % (d['screen'], viewport[0], viewport[1], names[key], f))
         names[key] = f
-    counts = {}
+        d['_viewport'], d['_capture'] = viewport, capture
+    counts, per_size = {}, {}
     for _, d in dumps:
         counts[d['screen']] = counts.get(d['screen'], 0) + 1
+        k = (str(d['screen']), d['_viewport'])
+        per_size[k] = per_size.get(k, 0) + 1
+    for f, d in dumps:
+        if per_size[(str(d['screen']), d['_viewport'])] > 1 and d['_capture'] is None:
+            raise ValueError('screen %s at %sx%s has several captures; give each one its own "capture_name" (%s)'
+                             % (d['screen'], d['_viewport'][0], d['_viewport'][1], f))
     for _, d in dumps:
-        if counts[d['screen']] > 1:
+        if per_size[(str(d['screen']), d['_viewport'])] > 1:
+            page = d['page']
+            d['_layout_name'] = '%s_%sx%s__%s' % (d['screen'], int(page['width']), int(page['height']), d['_capture'])
+        elif counts[d['screen']] > 1:
             page = d['page']
             d['_layout_name'] = '%s_%sx%s' % (d['screen'], int(page['width']), int(page['height']))
         else:
@@ -161,6 +179,11 @@ def text_of(n):
 class Screen:
     def __init__(self, path, d, o):
         self.d, self.o, self.notes = d, o, []
+        project=next((p for p in Path(path).resolve().parents if (p/'assets').is_dir()),None)
+        self.source_index={}
+        if project:
+            for source in (project/'assets').rglob('*.png'):
+                self.source_index.setdefault(source.stem,[]).append(source)
         self.size = [round(d['page']['width'] * (d['page'].get('dpr') or 1)), round(d['page']['height'] * (d['page'].get('dpr') or 1))]
         self.screen_area = self.size[0] * self.size[1]
         tags = o.get('tags') or {}
@@ -183,9 +206,29 @@ class Screen:
                 if n.get('screen') and raw and raw[2] and raw[3]:
                     inner = [r[0]+(inner[0]-raw[0])*r[2]/raw[2], r[1]+(inner[1]-raw[1])*r[3]/raw[3],
                              inner[2]*r[2]/raw[2], inner[3]*r[3]/raw[3]]
-                n['inner_px'] = to_px(d, inner)
+                # SpriteFrame capInsets delimit the stretchable centre, not a
+                # semantic content margin. Retain the measured metadata for
+                # review, but never treat 9-slice caps as the panel's text box.
+                n['slice_center_px'] = to_px(d, inner)
             self.nodes.append(n)
         self.by_path = {n['path']: n for n in self.nodes}
+
+    def visible_rect(self,n):
+        s=n.get('comps',{}).get('sprite',{})
+        sources=self.source_index.get(s.get('frame'),[])
+        if not sources or s.get('sliced') or s.get('tiled') or abs(n.get('angle',0))>.01:return list(n['px'])
+        try:
+            from PIL import Image
+            boxes=[]
+            for source in sources:
+                with Image.open(source) as im:
+                    a=im.convert('RGBA').getchannel('A');box=a.getbbox()
+                    if box is None:return list(n['px'])
+                    x,y,w,h=n['px'];boxes.append([x+box[0]/im.width*w,y+box[1]/im.height*h,(box[2]-box[0])/im.width*w,(box[3]-box[1])/im.height*h])
+            result=boxes[0]
+            for b in boxes[1:]:result=union(result,b)
+            return [round(v,1) for v in result]
+        except (OSError,ImportError):return list(n['px'])
 
     def share(self, r):
         return area(r) / self.screen_area
@@ -244,7 +287,8 @@ class Screen:
             elements.append(e)
         if not elements:
             self.notes.append('no HUD element found: check the dump was taken during play, or tag nodes with "include"')
-        return {'kind': 'gameplay', 'elements': elements}
+        boards=[n for n in self.nodes if re.fullmatch(r'_?UIBoard|Board|Grid',n['name'],re.I) and self.share(n['px'])>.1]
+        return {'kind': 'gameplay', 'elements': elements,'playfields':[n['px'] for n in boards]}
 
     def home(self):
         buttons = self.outermost([n for n in self.nodes if 'button' in n['comps'] and not self.in_world(n)])
@@ -302,22 +346,30 @@ class Screen:
         if tags:
             panel = tags[0]
         else:
-            surfaces = [n for n in sub if 0.04 <= self.share(n['px']) <= 0.9 and 'button' not in n['comps'] and
+            surfaces = [n for n in sub if not self.in_world(n) and 0.04 <= self.share(n['px']) <= 0.9 and 'button' not in n['comps'] and
                         ((('sprite' in n['comps']) and not DECOR.search(n['name'])) or
                          (n['name'] in ('PanelSurface', 'PanelArt') and 'graphics' in n['comps']))]
             if not surfaces:
                 raise ValueError('%s: no rendered panel surface under %s' % (self.d['screen'], root))
-            panel = max(surfaces, key=lambda n: area(n['px']))
+            framed=[n for n in surfaces if n['comps'].get('sprite',{}).get('sliced') or re.search(r'panel|boxbg|box[-_]?background',n['name'],re.I)]
+            if not framed:
+                # An unframed end-of-run overlay may deliberately retain its
+                # board. Do not pick a board shadow as an enclosing dialog.
+                actions=self.outermost([n for n in sub if 'button' in n['comps'] and not self.in_world(n)])
+                self.notes.append('unframed overlay: no semantic panel surface; retained game board is not a dialog frame')
+                return {'kind':'page','buttons':[{'name':n['path'],'rect':list(n['px']),'label':'none',
+                    **({'primary':True} if len(actions)<=2 or PRIMARY.search(n['name']) else {})} for n in actions], 'role':'overlay'}
+            panel = max(framed, key=lambda n: area(n['px']))
         self.notes.append('panel picked: ' + panel['path'])
         pr = panel['px']
-        safe, estimated = panel.get('inner_px'), False
+        safe, estimated = None, False
         if not safe:
             inner = [n for n in sub if 'sprite' in n['comps'] and INNER.search(n['name']) and n is not panel and inside(n['px'], pr)
                      and self.share(n['px']) >= 0.02]
             if inner:
                 safe = max(inner, key=lambda n: area(n['px']))['px']
             else:
-                pad = round(0.06 * min(pr[2], pr[3]), 1)
+                pad = 0
                 safe, estimated = [pr[0] + pad, pr[1] + pad, pr[2] - 2 * pad, pr[3] - 2 * pad], True
                 self.notes.append('inner box estimated (panel has no 9-slice borders): GPT checks the frame on the screenshot')
 
@@ -340,8 +392,29 @@ class Screen:
                 picked.append(n)
         decor_paths = [x['name'] for x in decorations]
         picked = [n for n in picked if not any(under(n['path'], p) for p in decor_paths)]
-        contents = [{'name': it['name'], 'rect': it['rect']} for it in self.merge_groups(self.outermost(picked))]
+        measured=[dict(n,px=self.visible_rect(n)) for n in self.outermost(picked)]
+        contents = [{'name': it['name'], 'rect': it['rect'],
+                     **({'chrome':True} if re.search(r'/(?:Close|BtnClose|CloseButton)(?:/|$)',it['name'],re.I) else {}),
+                     **({'outside_panel':True} if not overlaps(it['rect'],pr,0) or not (pr[0]<=it['rect'][0]+it['rect'][2]/2<=pr[0]+pr[2] and pr[1]<=it['rect'][1]+it['rect'][3]/2<=pr[1]+pr[3]) else {})}
+                    for it in self.merge_groups(measured)]
+        for item in contents:
+            n=next((n for n in measured if n['path']==item['name']),None)
+            members=[n] if n else [m for m in measured if '/{' in item['name'] and m['path'].rsplit('/',1)[0]==item['name'].split('/{',1)[0]]
+            sources=[]
+            for m in members:
+                sprite=m.get('comps',{}).get('sprite',{})
+                paths=self.source_index.get(sprite.get('frame'),[])
+                if not paths or sprite.get('sliced') or sprite.get('tiled'):sources=[];break
+                sources.extend({'path':str(p),'sha256':sha(p),'rect':list(m['px'])} for p in paths)
+            if sources:
+                item['alpha_sources']=sources
+                try:
+                    from PIL import Image
+                    item['surface_backing']=all(Image.open(source['path']).convert('RGB').getextrema()==tuple((v,v) for v in Image.open(source['path']).convert('RGB').getpixel((0,0))) for source in sources)
+                except (OSError,ImportError):pass
+            item['text_content']=any(bool(text_of(m)) or str(m.get('comps',{}).get('sprite',{}).get('frame','')).startswith(('digit_','symbol_')) for m in members)
         res = {'kind': 'popup', 'panel': list(pr), 'safe': [round(v, 1) for v in safe], 'decorations': decorations, 'contents': contents}
+        res['screen_size']=self.size
         if estimated:
             res['safe_estimated'] = True
         return res
@@ -360,7 +433,16 @@ def build(dump_inputs, overrides_path=None):
     dumps = load_dumps(dump_inputs)
     o = load_overrides(overrides_path)
     ordered = sorted(dumps, key=lambda x: (x[1].get('_layout_name', x[1]['screen']), str(x[0])))
-    screens = [Screen(f, d, o).build() for f, d in ordered]
+    screens = []
+    for f, d in ordered:
+        # One page that cannot be read (no popup found, no panel) used to stop the layout for every page, so the
+        # whole row only said "读不出布局" (合成进化恐龙 2026-11-05: 1 of 66 pages). Now that page carries the error
+        # and audit_ui_coverage fails it alone; the other pages are still checked (美工skill 2026-11-06).
+        try:
+            screens.append(Screen(f, d, o).build())
+        except ValueError as exc:
+            screens.append({'name': d.get('_layout_name', d['screen']), 'kind': 'page' if d['kind'] == 'home' else
+                            ('popup' if d['kind'] == 'result' else d['kind']), 'error': str(exc), 'auto_notes': []})
     for (f, d), s in zip(ordered, screens):
         s['source_dump'] = {'path': str(f), 'sha256': sha(f)}
     # Explicit route annotations are reviewed by the caller; geometry is never invented.

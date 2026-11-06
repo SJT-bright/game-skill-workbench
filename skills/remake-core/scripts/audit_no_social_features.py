@@ -44,6 +44,9 @@ def social_words(s):
  """Visible wording / node name that names a social or global board."""
  return bool(ENTITY.search(s)or scoped_board(s))
 def fake_place(s,label):
+ # Cocos RichText markup is formatting, not the player-visible rank label.
+ # Strip only recognized tags; literal ranks such as #3512 remain checked.
+ s=re.sub(r'</?(?:color|outline|size|b|i|u|br|on|off|a|img)(?:[=\s][^<>]*)?/?>','',s,flags=re.I)
  return bool(BIG_PLACE.search(s)or PERCENTILE.search(s)or(label and BIG_PLACE_LABEL.search(s)))
 def audit(project,web=None,native=None,dumps=None):
  project=Path(project);roots={'source':project/'assets'}

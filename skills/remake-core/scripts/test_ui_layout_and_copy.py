@@ -99,7 +99,7 @@ class RuntimeLayoutTests(unittest.TestCase):
         self.assertTrue(home['Canvas/BtnPlay'].get('primary'))
         self.assertEqual(home['Canvas/BtnShop']['label'], 'small')
         pause = s['pause_9x19']
-        self.assertEqual(pause['safe'], [135.0, 512.0, 480.0, 620.0])                        # from 9-slice borders
+        self.assertEqual(pause['safe'], pause['panel'])  # capInsets define stretch centre, not content padding
         self.assertEqual([d['name'] for d in pause['decorations']], ['Canvas/PausePopup/Panel/CornerTL'])
         self.assertEqual(len(pause['contents']), 3)
 
@@ -129,6 +129,13 @@ class RuntimeLayoutTests(unittest.TestCase):
         self.assertAlmostEqual(popup['panel'][2], 560.0, delta=2.0)
 
     def test_audit_measures_real_positions(self):
+        # A true panel escape remains invalid after separating capInsets from safe content.
+        f=self.dumps/'000-ui-dump-pause.json'
+        d=json.loads(f.read_text())
+        title=next(n for n in d['nodes'] if n['name']=='Title')
+        title['rect'][0]=0.05
+        if 'screen' in title:title['screen'][0]=0.05
+        f.write_text(json.dumps(d))
         code, layout = self.extract()
         code, out = py('audit_ui_coverage.py', self.tmp / 'ui-layout.json')
         self.assertEqual(code, 1)                      # the mock title really crosses the inner border
@@ -619,6 +626,13 @@ class PageRichnessTests(unittest.TestCase):
                           not n['path'].startswith('Canvas/Panel/Day3/Amount')]
             problems, _ = check(d)
             self.assertTrue(any('day 3 card has no visible reward content' in item for item in problems), problems)
+
+    def test_dominant_rgb_bin_keeps_first_raster_colour_on_a_tie(self):
+        from PIL import Image
+        from audit_page_richness import _dominant_bin
+        image = Image.new('RGB', (4, 1))
+        image.putdata([(250, 0, 3), (0, 16, 20), (249, 2, 6), (4, 18, 19)])
+        self.assertEqual(_dominant_bin(image), ((252, 4, 4), 2, 4))
 
     def test_light_bitmap_digits_on_dark_well_are_not_mistaken_for_dark_text(self):
         # User 2026-10-24: sample the dark-green value well, not the cream card around it.

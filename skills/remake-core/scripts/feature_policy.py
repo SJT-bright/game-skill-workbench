@@ -103,6 +103,7 @@ RULES = {
     # exists, Saul 2026-10-30; applies() then answers block). preflight.py makes the same call for its rows.
     'top_bar': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
     'level_map': {'remake': 'block', 'localize': 'not_applicable', 'localize_remake_art': 'not_applicable'},
+    'gift_box': {'remake': 'block', 'localize': 'block', 'localize_remake_art': 'block'},
     # R4N1 (补查2 第 5 组, SLS07 / SLS35 / 弹球传奇): four more new-game rules that an English game's original gameplay
     # does not follow. Same call as top_bar / level_map: English games get 不适用 unless the project has a record of that
     # board (RULE_RECORDS below); remake and unknown boards are checked as before.
@@ -221,8 +222,22 @@ def applies(rule, board, project=None, caps=None):
     key = board if board in BOARDS else 'remake'
     if key == 'localize' and project is not None and art_style(project) == 'remake' and 'localize_remake_art' in table:
         key = 'localize_remake_art'
-    if rule in BOARD_RECORD_RULES and key != 'remake' and project is not None and localize_board_records(project):
-        return 'block'
+    # An explicit per-feature false is authoritative only for original-style localization.
+    # Missing/unknown fields, remake art, and remake games retain the existing strict policy.
+    if key == 'localize' and project is not None and rule in ('top_bar', 'level_map', 'gift_box'):
+        if read_record(project, 'docs/features.json').get(rule) is False:
+            return 'not_applicable'
+    if rule in BOARD_RECORD_RULES and key != 'remake' and project is not None:
+        records = localize_board_records(project)
+        # An explicitly English module inventory is not a new-design contract.
+        # Preserve dedicated design records and explicit opt-ins; unrelated inventory
+        # (for example existing items, gift_box=false) must not demand a new map/HUD.
+        if key == 'localize' and read_record(project, 'docs/modules.json').get('kind') == 'english':
+            if read_record(project, 'docs/features.json').get(rule) is True:
+                return 'block'
+            records = [r for r in records if r not in ('docs/modules.json', 'docs/features.json')]
+        if records:
+            return 'block'
     if rule in RULE_RECORDS and key != 'remake' and project is not None:
         if localize_board_records(project, rule):
             return 'block'

@@ -244,7 +244,7 @@ class Project:
 
 def parse_fnt(text):
     """BMFont text format -> {'size', 'line_height', 'adv': {code: xadvance}, 'kern': {(a, b): amount}}."""
-    size, line_h, adv, kern = None, None, {}, {}
+    size, line_h, adv, kern, glyphs = None, None, {}, {}, {}
     for line in text.splitlines():
         tag, _, rest = line.strip().partition(' ')
         kv = dict(m.groups() for m in re.finditer(r'(\w+)=("[^"]*"|\S+)', rest))
@@ -255,13 +255,14 @@ def parse_fnt(text):
                 line_h = float(kv.get('lineHeight', '0'))
             elif tag == 'char':
                 adv[int(kv['id'])] = float(kv.get('xadvance', kv.get('width', '0')))
+                glyphs[int(kv['id'])] = {'width': float(kv.get('width', kv.get('xadvance', '0'))), 'xoffset': float(kv.get('xoffset', '0'))}
             elif tag == 'kerning':
                 kern[(int(kv['first']), int(kv['second']))] = float(kv.get('amount', '0'))
         except (KeyError, ValueError):
             continue
     if not adv:
         return None
-    return {'size': size or line_h or 1.0, 'line_height': line_h or size or 1.0, 'adv': adv, 'kern': kern}
+    return {'size': size or line_h or 1.0, 'line_height': line_h or size or 1.0, 'adv': adv, 'kern': kern, 'glyphs': glyphs}
 
 
 def bm_width(cfg, line, size, spacing):
@@ -277,6 +278,30 @@ def bm_width(cfg, line, size, spacing):
     return w + spacing * max(0, len(line) - 1)
 
 
+def bm_ink_width(cfg, line, size, spacing):
+    # xadvance places the following glyph; the final advance can include a
+    # transparent inter-character gap. Measure the union of actual glyph rects.
+    scale = size / (cfg['size'] or 1.0)
+    cursor, left, right, prev = 0.0, None, None, None
+    for index, ch in enumerate(line):
+        code = ord(ch)
+        advance = cfg['adv'].get(code)
+        if advance is None:
+            advance = cfg['adv'].get(32, cfg['size'] * 0.5) if ch == ' ' else cfg['size'] * 0.6
+        if prev is not None:
+            cursor += cfg['kern'].get((prev, code), 0.0) * scale
+        glyph = cfg.get('glyphs', {}).get(code)
+        width = glyph['width'] if glyph is not None else advance
+        offset = glyph.get('xoffset', 0.0) if glyph is not None else 0.0
+        if width > 0:
+            start, end = cursor + offset * scale, cursor + (offset + width) * scale
+            left = start if left is None else min(left, start)
+            right = end if right is None else max(right, end)
+        cursor += advance * scale + (spacing if index + 1 < len(line) else 0.0)
+        prev = code
+    return max(0.0, right - left) if left is not None else 0.0
+
+
 def measure(project, lab, text, size):
     """(width of the longest line in design units, exact) -- (None, False) when no font can measure it."""
     lines = text.split('\n') or ['']
@@ -287,7 +312,7 @@ def measure(project, lab, text, size):
         cfg = project.bmfont(name)
         if not cfg:
             return None, False
-        return max(bm_width(cfg, ln, size, spacing) for ln in lines), True
+        return max(bm_ink_width(cfg, ln, size, spacing) for ln in lines), True
     system = kind == 'system' or lab.get('system_font') is True or not name
     font, exact = project.ttf(name, size, system=system)
     if font is None:
@@ -598,6 +623,53 @@ def margin(t):
     return max(2.0, 0.03 * t.body.w)
 
 
+
+def available_row_budget(plate, text, icons, pad, alignment=1):
+    """Clip icons to the padded plate, merge overlap, and use this label's gap.
+    Existing actual overlap/off-plate checks retain their original tolerances.
+    """
+    start, end = plate.x0 + pad, plate.x1 - pad
+    occupied = []
+    for icon in icons:
+        left, right = max(start, icon.body.x0), min(end, icon.body.x1)
+        if right > left:
+            occupied.append((left, right))
+    merged = []
+    for left, right in sorted(occupied):
+        if merged and left <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(right, merged[-1][1]))
+        else:
+            merged.append((left, right))
+    free = []
+    cursor = start
+    for left, right in merged:
+        if left > cursor:
+            free.append((cursor, left))
+        cursor = max(cursor, right)
+    if cursor < end:
+        free.append((cursor, end))
+    component = next(((left, right) for left, right in free if left <= text.cx <= right), None)
+    room = 0.0
+    if component:
+        if alignment == 0:
+            room = max(0.0, component[1] - max(component[0], text.x0))
+        elif alignment == 2:
+            room = max(0.0, min(component[1], text.x1) - component[0])
+        else:
+            room = max(0.0, 2 * min(text.cx - component[0], component[1] - text.cx))
+    return room, sum(right-left for left, right in merged), component, merged
+
+
+def observed_longest_shrink(t, lab, longest_text):
+    """An already rendered longest string is actual evidence, not a projection.
+    Its ink still passes all ordinary on-screen/plate/icon/text assertions above.
+    Only SHRINK with a reported real font size and measured exact string qualifies.
+    """
+    actual, declared = lab.get('actualFontSize'), lab.get('fontSize')
+    return (lab.get('overflow') == 2 and t.measured
+            and type(actual) in (int, float) and type(declared) in (int, float)
+            and 0 < actual <= declared and str(longest_text) == t.text)
+
 def band_of(plate, t):
     """The bar painted inside the plate's picture under the text, as a screen Box, or None when the text does not
     sit on a plain bar (open panel, busy art, the bar is most of the picture)."""
@@ -844,16 +916,21 @@ def audit_dump(project, d, longest):
             row_icons = [p for p in pics if is_icon(p, t, plate, project) and p.body.area < plate.body.area
                          and p.body.overlap(row)[1] >= 0.35 * t.body.h and p.body.overlap(plate.body)[0] > 0
                          and p.body.area <= ICON_MAX * t.body.area]
-            icons_w = sum(p.body.w for p in row_icons)
             pad = max(4.0, 0.06 * plate.body.w)
-            gaps = 6.0 * len(row_icons)
-            room = plate.body.w - icons_w - 2 * pad - gaps
+            room, icons_w, available_interval, occupied_intervals = available_row_budget(plate.body, t.body, row_icons, pad, (lab or {}).get('h_align', 1))
+            gaps = 0.0  # Actual component endpoints already preserve the observed icon separation.
             budget.append({'page': page, 'path': t.path, 'text': t.text[:40], 'font_px': round(t.font_px or 0, 1),
                            'text_px': round(t.body.w, 1), 'plate': plate.path, 'plate_px': round(plate.body.w, 1),
                            'icons_px': round(icons_w, 1), 'room_px': round(room, 1), 'spare_px': round(room - t.body.w, 1),
-                           'need_plate_px': round(t.body.w + icons_w + 2 * pad + gaps, 1), 'viewport': vp})
+                           'need_plate_px': round(t.body.w + icons_w + 2 * pad + gaps, 1), 'available_interval': available_interval, 'occupied_intervals': occupied_intervals, 'viewport': vp})
             for rowl in longest:
                 if fnmatch.fnmatch(t.path, rowl['path']) and lab:
+                    if observed_longest_shrink(t, lab, rowl['text']):
+                        budget[-1].setdefault('observed_longest', []).append({
+                            'text': rowl['text'], 'actual_font_size': lab['actualFontSize'],
+                            'ink_width_px': round(t.body.w, 3),
+                            'validation': 'actual ink/plate/icon/screen assertions, not hypothetical declared-font projection'})
+                        continue
                     tw, _ = measure(project, lab, str(rowl['text']), float(lab.get('fontSize') or 0))
                     if tw is not None:
                         need = tw * (t.sx or 1)

@@ -54,7 +54,31 @@ def validate(report, native, binding, project):
   rel=row.get('relative_path','');p=native/rel
   need(bool(rel) and p.is_file() and sha(p)==row.get('sha256'),'Native input changed: '+rel)
  inputs={r.get('relative_path') for r in report.get('inputs',[])}
- if report.get('control_profile')!='cocos3_systemjs_native_v1':need({'game.js','main.js','adapter-min.js'}<=inputs,'entry and real adapter identities required')
+ # Custom project profiles still supplement the common gate. Select the
+ # actual Cocos3 entry shape only for an exact trusted runner/profile pair
+ # with its own registered validator, never from a report-supplied engine flag.
+ custom_cocos3_entry = False
+ profile = report.get('control_profile')
+ if (profile != 'cocos3_systemjs_native_v1' and
+     policy.get('control_profile') == profile and
+     (native/'application.js').is_file() and (native/'src/settings.json').is_file()):
+  try:
+   extension = project_qa.lookup(project, 'validators', profile)
+   custom_cocos3_entry = extension.get('project') == str(project)
+  except (ValueError, KeyError, TypeError, OSError):
+   custom_cocos3_entry = False
+ if custom_cocos3_entry:
+  required3 = {'game.js','application.js','web-adapter.js','engine-adapter.js','src/settings.json','cocos-js/cc.js'}
+  need(required3 <= inputs, 'Cocos3 actual entry, both adapters, settings and engine identities required')
+  engines3 = [p for p in native.glob('cocos-js/_virtual_cc-*.js') if p.is_file()]
+  if not engines3:
+   monolithic3 = native/'cocos-js/cc.js'
+   if monolithic3.is_file() and monolithic3.stat().st_size > 100000 and b'System.register' in monolithic3.read_bytes():
+    engines3 = [monolithic3]
+  need(len(engines3) == 1 and engines3[0].relative_to(native).as_posix() in inputs,
+       'Cocos3 exact bundled engine identity required')
+ elif profile != 'cocos3_systemjs_native_v1':
+  need({'game.js','main.js','adapter-min.js'}<=inputs,'entry and real adapter identities required')
  need(any('cocos' in str(x).lower() for x in inputs),'real engine identity required')
  need(bool(scene_bundle_inputs(report,native,inputs)),'actual scene bundle identity required')
  need(ref(report.get('runner',{}),'browser runner') is not None,'runner required')
@@ -70,6 +94,12 @@ def validate(report, native, binding, project):
  identity=data.get('engine_identity',{})
  for name in ['game_run_original','renderer_original','canvas_get_context_original']:
   need(identity.get(name) is True,'mock or replacement rejected: '+name)
+ if custom_cocos3_entry and len(engines3) == 1:
+  engine_source3 = engines3[0].read_bytes()
+  for function3 in ('game_run', 'renderer'):
+   observed3 = identity.get('functions', {}).get(function3, '')
+   need(isinstance(observed3, str) and len(observed3) > 30 and observed3.encode() in engine_source3,
+        'Cocos3 ' + function3 + ' observed function must match actual engine source')
  need(data.get('phase_order')==['entry','adapter','renderer','scene'],'actual Native chain incomplete')
  need(data.get('renderer',{}).get('webgl_context') is True,'real WebGL renderer missing')
  need(data.get('scene',{}).get('active') is True and bool(data.get('scene',{}).get('name')),'active actual scene missing')

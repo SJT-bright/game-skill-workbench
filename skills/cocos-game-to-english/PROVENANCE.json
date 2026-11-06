@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-06.english-simple.11.17.3",
+  "revision": "2026-11-06.english-simple.11.17.4",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "a2e31c36bb55d4073a50771633d3d1cd4e373d952b989f52222db5d83a3fed3f",
-      "bytes": 93471
+      "sha256": "65c454738c3b75c87e23ca437110ee6da0be78e140240a7439503bc8169d2318",
+      "bytes": 94509
     },
     {
       "path": "agents/openai.yaml",
@@ -61,8 +61,8 @@
     },
     {
       "path": "scripts/browser_env.py",
-      "sha256": "d1ac2e5469fa66742b7b8483b4384e814072fae41a21d5da7d1ef36182dcb42e",
-      "bytes": 22695
+      "sha256": "5cf3f6bdff35bc34dbc79af8ab7b800f0da86cebdb6c764e64d921c626900c09",
+      "bytes": 15257
     },
     {
       "path": "scripts/cdp_browser.mjs",
@@ -230,5 +230,18 @@
       "bytes": 11418
     }
   ],
-  "previous_provenance_sha256": "a2238e5c3bf0fb4b48ee7b931974605754b81626a58c1bb77353aaaaab102527"
+  "previous_provenance_sha256": "35aeb25aacb03c04e2f257662146592079791076c6eec9966f69d286cfd231b6",
+  "local_patches": [
+    {
+      "id": "ego-only-tests-20261106-geometry",
+      "authority": "User requires all Agent browser tests in Ego; actual viewport and native-host screenshots use official Ego Page CDP.",
+      "files": [
+        {
+          "path": "scripts/browser_env.py",
+          "sha256": "5cf3f6bdff35bc34dbc79af8ab7b800f0da86cebdb6c764e64d921c626900c09"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    }
+  ]
 }

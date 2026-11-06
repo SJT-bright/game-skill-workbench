@@ -1,31 +1,7 @@
 #!/usr/bin/env python3
-"""Run a pack command with a browser the packaging checks can drive, on any computer (English pack 10.2.10).
-
-Saul 2026-10-31: the English Skill is used on other people's computers, so no step may depend on Ego Lite. The pack's
-browser checks (ad_regression.py, runtime_regression.py and the writers that call them, serve_preview.py --keep,
-chrome_touch.py) look for `ego-browser`. This wrapper:
-  * Ego found (`ego-browser` on PATH or EGO_BROWSER set): the checks use Ego (Saul's own Mac keeps using Ego), through
-    the relay below that switches a stuck call to Chrome/Edge.
-  * no Ego: puts a launcher named ego-browser (ego-browser.cmd on Windows) on PATH and sets EGO_BROWSER to it. The
-    launcher runs cdp_browser.mjs with Node, which drives an ordinary Chrome, Edge or Chromium: headless, its own
-    temporary profile, never the user's own browser windows or profile. Checks and verdicts stay the same.
-  * neither works: says in plain words what is missing and exits 2 (the packaging tools' exit code for 环境不完整).
-
-  python3 browser_env.py -- <command ...>             e.g. python3 browser_env.py -- python3 build_checked_zip.py ...
-  python3 browser_env.py --browser chrome -- <cmd>    use Chrome/Edge even when Ego is installed (Ego not working)
-  python3 browser_env.py --check                      say which browser the checks will use; start it once
-  python3 browser_env.py --game <名字> --report r.json -- <cmd>   name the test spaces; write which browser really ran
-Windows: use `python` (or `py -3`) instead of `python3`.
-
-生成时预防 P21 (2026-11-04 普查: Ego 卡死 / 空间冲突 45 次):
-  * Own space names. Every command run here gets BROWSER_ENV_SPACE_PREFIX = <game>-<this process id>; tools that open
-    an Ego space take their name from space_name() (ad_regression.py does), so two sessions never share one space
-    (Ego taskSpace(name) resumes a same-name space and one run's finish() closed the other's pages).
-  * Ego stuck -> Chrome. With Ego, the pack's tools still find `ego-browser`, but it is a small relay: when one
-    `ego-browser nodejs` call fails with an Ego timeout / lost space (screenshot or page timed out, task space not found,
-    target closed) or prints nothing for BROWSER_ENV_EGO_STALL_S seconds (default 180), the same call is run again at
-    once on Chrome/Edge, and every later call of this command goes straight to Chrome. Ego itself is never quit or
-    restarted (that would break other sessions). The switch is printed and written to --report (fallbacks).
+"""Ego-only browser-test launcher (user 2026-11-06).
+Google Chrome is reserved for user trial links. Missing/stalled Ego never falls back to another browser.
+The wrapper retains unique space names and reports; offline checks do not require a browser.
 """
 import argparse
 import hashlib
@@ -65,10 +41,8 @@ ENV_STUCK_R4N3 = re.compile(r'(?<![\w.])-10005(?!\d)|webContents[^\n]{0,60}\bnul
 
 
 def env_stuck(text):
-    """R4N3: '环境卡住，换 Chrome 重试：<原文>' when `text` carries a host stall (-10005, webContents null,
-    Runtime.evaluate timeout, aborted before dispatch), else None."""
     m = ENV_STUCK_R4N3.search(text or '')
-    return '环境卡住，换 Chrome 重试：%s' % m.group(0) if m else None
+    return 'Ego 环境异常，保留未测并在 Ego 内排查：%s' % m.group(0) if m else None
 GENERIC_DIRS = {'web-mobile', 'bytedance-mini-game', 'build', 'dist', 'pkg', 'package', 'source', 'src', 'scripts',
                 'export', 'native', 'web', 'assets', 'tiktok', 'out', 'tmp'}
 
@@ -161,45 +135,23 @@ def find_browser():
 
 
 def find_ego():
-    own = os.environ.get('EGO_BROWSER')
-    if own and Path(own).exists():
-        return own
     return shutil.which('ego-browser')
 
 
 def plan(mode='auto'):
-    """Which browser route the checks will use: {'route': 'ego'|'chrome'|None, 'problem': text, ...}."""
-    ego = find_ego() if mode in ('auto', 'ego') else None
-    if ego:
-        return {'route': 'ego', 'ego_browser': ego}
-    if mode == 'ego':
-        return {'route': None, 'problem': '这台电脑没有 Ego Lite（找不到 ego-browser）。不用装 Ego：去掉 --browser ego，用 Chrome 或 Edge 跑。'}
-    node, major = node_path()
-    browser = find_browser()
-    problems = []
-    if not node:
-        problems.append('没有 Node.js（检查要用它驱动浏览器）。到 https://nodejs.org 装 LTS 版，装好后新开一个终端再跑。')
-    elif major is not None and major < MIN_NODE:
-        problems.append('Node.js 太旧（%d），要 %d 或更新：到 https://nodejs.org 装 LTS 版。' % (major, MIN_NODE))
-    if not browser:
-        problems.append('没有 Chrome、Edge 或 Chromium。装 Google Chrome 就行（Windows 自带 Edge）；装在别处的用 '
-                        'CDP_BROWSER=<浏览器程序的完整路径> 指定。')
-    if problems:
-        return {'route': None, 'problem': '；'.join(problems), 'node': node, 'browser': browser}
-    return {'route': 'chrome', 'node': node, 'node_major': major, 'browser': browser, 'runtime': str(RUNTIME)}
+    if mode not in ('auto', 'ego'):
+        return {'route': None, 'problem': '测试只允许 Ego（用户 2026-11-06）；--browser chrome 已停用，Chrome 仅供用户试玩。'}
+    ego = find_ego()
+    requested = os.environ.get('EGO_BROWSER')
+    if requested and (not ego or Path(requested).resolve() != Path(ego).resolve()):
+        return {'route': None, 'problem': 'EGO_BROWSER 指向非官方 Ego 启动器；移除 Chrome/Playwright 替身后重试。'}
+    if not ego:
+        return {'route': None, 'problem': '找不到官方 ego-browser；按 Ego Skill 处理环境，本项保留未执行，不回退 Chrome。'}
+    return {'route': 'ego', 'ego_browser': ego}
 
 
 def write_launchers(folder, node):
-    """ego-browser (POSIX sh) and ego-browser.cmd (Windows) that run cdp_browser.mjs with this Node."""
-    folder = Path(folder)
-    sh = folder / 'ego-browser'
-    q = lambda s: '"' + str(s).replace('\\', '\\\\').replace('"', '\\"').replace('$', '\\$').replace('`', '\\`') + '"'
-    sh.write_text('#!/bin/sh\nexec %s %s "$@"\n' % (q(node), q(RUNTIME)), encoding='utf-8')
-    sh.chmod(0o755)
-    cmd = folder / 'ego-browser.cmd'
-    pct = lambda s: '"' + str(s).replace('%', '%%') + '"'
-    cmd.write_text('@echo off\r\n%s %s %%*\r\n' % (pct(node), pct(RUNTIME)), encoding='utf-8')
-    return cmd if os.name == 'nt' else sh
+    raise ValueError('EGO_ONLY_TEST_POLICY: Chrome-as-Ego launchers are retired.')
 
 
 def write_relay_launchers(folder, ego):
@@ -218,22 +170,14 @@ def write_relay_launchers(folder, ego):
 
 
 def environment_for(chosen, folder, game=None):
+    if chosen.get('route') != 'ego':
+        raise ValueError('EGO_ONLY_TEST_POLICY: test browser must be Ego')
     env = dict(os.environ)
     env[SPACE_ENV] = '%s-%d' % (slug(game or Path.cwd().name), os.getpid())
     env[GAME_ENV] = game or Path.cwd().name
     env[EVENTS_ENV] = str(Path(folder) / 'browser-events.jsonl')
-    if chosen['route'] == 'chrome':
-        launcher = write_launchers(folder, chosen['node'])
-        env['PATH'] = str(Path(folder)) + os.pathsep + env.get('PATH', '')
-        env['EGO_BROWSER'] = str(launcher)
-        env['CDP_BROWSER'] = chosen['browser']
-    elif chosen['route'] == 'ego':
-        launcher = write_relay_launchers(folder, chosen['ego_browser'])
-        env['PATH'] = str(Path(folder)) + os.pathsep + env.get('PATH', '')
-        env['EGO_BROWSER'] = str(launcher)
-        spare = plan('chrome')                  # who takes over when Ego gets stuck; none -> Ego's result stands
-        if spare['route'] == 'chrome':
-            env[FALLBACK_NODE_ENV], env[FALLBACK_BROWSER_ENV] = spare['node'], spare['browser']
+    env['EGO_BROWSER'] = chosen['ego_browser']
+    for key in (FALLBACK_NODE_ENV, FALLBACK_BROWSER_ENV): env.pop(key, None)
     return env
 
 
@@ -319,74 +263,37 @@ def ego_stuck_reason(code, stderr_text, stalled):
 
 
 def relay(ego, args, env=None, stdin_data=None, stall=None, out=None, err=None):
-    """Stand in front of the real Ego for one `ego-browser ...` call. Only `nodejs` calls can switch: an Ego timeout,
-    a lost space or a silent Ego reruns the same call on Chrome/Edge (cdp_browser.mjs); after one switch every later
-    call of this browser_env run goes to Chrome directly. Ego itself is never quit or restarted."""
+    """Compatibility for existing Ego relays; propagate Ego's result and never spawn Chrome."""
     env = dict(os.environ if env is None else env)
     out, err = out or sys.stdout, err or sys.stderr
     if args[:1] != ['nodejs']:
         return subprocess.run(_argv_for(ego) + list(args), env=env).returncode
-    if stall is None:
-        try:
-            stall = float(env.get(STALL_ENV) or DEFAULT_EGO_STALL_S)
-        except ValueError:
-            stall = DEFAULT_EGO_STALL_S
-    data = None
-    if '-e' not in args:                        # the script comes on stdin (chrome_touch.py): keep it for a rerun
-        data = stdin_data if stdin_data is not None else sys.stdin.read()
-    events = env.get(EVENTS_ENV)
-    node, browser = env.get(FALLBACK_NODE_ENV), env.get(FALLBACK_BROWSER_ENV)
-    chrome_env = dict(env, CDP_BROWSER=browser or '')
-    chrome_argv = (_argv_for(node) + [str(RUNTIME)] + list(args)) if node and browser else None
-    if chrome_argv and any(r.get('to') == 'chrome' for r in read_events(events)):
-        record_event(events, {'time': time.time(), 'kind': 'sticky', 'to': 'chrome', 'call': ' '.join(args[:2])})
-        return _pump(chrome_argv, chrome_env, data, None, out, err)[0]
+    if stall is None: stall = float(env.get(STALL_ENV) or DEFAULT_EGO_STALL_S)
+    data = stdin_data if stdin_data is not None else (sys.stdin.read() if '-e' not in args else None)
     code, text, stalled = _pump(_argv_for(ego) + list(args), env, data, stall, out, err)
     reason = ego_stuck_reason(code, text, stalled)
-    if reason is None:
-        return code
-    if not chrome_argv:
-        err.write('[browser_env] Ego 卡住了（%s），这台电脑没有能接手的 Chrome/Edge 和 Node.js，只能按 Ego 这次的结果算。\n' % reason)
-        return code if code else 1
-    record_event(events, {'time': time.time(), 'kind': 'switch', 'from': 'ego', 'to': 'chrome', 'reason': reason,
-                          'call': ' '.join(args[:2]), 'ego_exit': code})
-    err.write('[browser_env] Ego 卡住了（%s）：这一步马上改用 Chrome 从头再跑一遍，后面的步骤也直接用 Chrome。'
-              'Ego 本身不退出、不重启；上面 Ego 那次的输出作废。\n' % reason)
-    err.flush()
-    return _pump(chrome_argv, chrome_env, data, None, out, err)[0]
+    if reason:
+        record_event(env.get(EVENTS_ENV), {'time': time.time(), 'kind': 'ego_error', 'reason': reason, 'route': 'ego'})
+        err.write('[browser_env] Ego 测试未完成：%s；不回退 Chrome。\n' % reason)
+        return code or 1
+    return code
 
 
 def check(mode):
-    chosen = plan(mode)
-    if chosen['route'] == 'chrome':
-        try:
-            r = subprocess.run([chosen['node'], str(RUNTIME), '--check'], capture_output=True, text=True, timeout=120,
-                               env=dict(os.environ, CDP_BROWSER=chosen['browser']))
-            chosen['browser_check'] = json.loads((r.stdout or '').strip().splitlines()[-1])
-        except (OSError, ValueError, IndexError, subprocess.SubprocessError) as error:
-            chosen['browser_check'] = {'ok': False, 'problem': str(error)}
-        if not chosen['browser_check'].get('ok'):
-            chosen['problem'] = '浏览器起来了但不能用：' + str(chosen['browser_check'].get('problem') or chosen['browser_check'])
-    return chosen
+    return plan(mode)
 
 
 def say(chosen):
-    if chosen['route'] == 'ego':
-        return '出包检查用 Ego Lite（%s）。' % chosen['ego_browser']
-    if chosen['route'] == 'chrome' and not chosen.get('problem'):
-        extra = chosen.get('browser_check') or {}
-        tail = '，WebGL：%s，帧率约 %s' % (extra.get('renderer', '?'), extra.get('fps', '?')) if extra else ''
-        return '出包检查用 %s（后台运行、单独的临时资料夹，不碰你自己的浏览器）%s。' % (chosen['browser'], tail)
-    return '出包检查现在跑不了：' + chosen.get('problem', '原因不明')
+    return '浏览器测试仅用 Ego Lite（%s）。' % chosen['ego_browser'] if chosen.get('route') == 'ego' else chosen.get('problem', 'Ego 不可用，本项未执行。')
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description='让出包检查在任何电脑上都有浏览器可用（没有 Ego 时用 Chrome/Edge/Chromium）')
+    ap = argparse.ArgumentParser(description='浏览器测试只使用官方 Ego；Chrome 仅用于用户试玩链接')
     ap.add_argument('--browser', choices=['auto', 'ego', 'chrome'], default='auto')
     ap.add_argument('--check', action='store_true', help='只说用哪个浏览器，并启动一次确认能用')
     ap.add_argument('--json', action='store_true')
     ap.add_argument('--game', help='游戏名：测试空间名用它加进程号（不写就从命令里的 --project/--package 等猜）')
-    ap.add_argument('--report', type=Path, help='写一份 JSON：实际用了哪个浏览器、有没有从 Ego 换到 Chrome')
+    ap.add_argument('--report', type=Path, help='写一份 JSON：Ego 路线、实际退出码及禁用回退状态')
     ap.add_argument('--relay-ego', help=argparse.SUPPRESS)     # used by the ego-browser launcher this script writes
     ap.add_argument('command', nargs=argparse.REMAINDER)
     a = ap.parse_args(argv)
@@ -416,17 +323,10 @@ def main(argv=None):
 
 
 def finish_report(chosen, env, code, report=None):
-    """Say whether Ego was swapped for Chrome during the command; write --report. Returns the command's exit code."""
-    rows = read_events(env.get(EVENTS_ENV))
-    switches = [r for r in rows if r.get('kind') == 'switch']
-    if switches:
-        print('[browser_env] 换过浏览器：Ego 卡住 %d 次（第一次：%s），之后 %d 步直接用 Chrome 跑完。结果以 Chrome 那次为准。'
-              % (len(switches), switches[0].get('reason'), sum(1 for r in rows if r.get('kind') == 'sticky')),
-              file=sys.stderr, flush=True)
     if report:
-        doc = {'route': chosen['route'], 'browser': chosen.get('ego_browser') or chosen.get('browser'),
-               'space_prefix': env.get(SPACE_ENV), 'switched_to_chrome': bool(switches), 'fallbacks': rows,
-               'fallback_available': bool(env.get(FALLBACK_NODE_ENV)) or chosen['route'] == 'chrome', 'exit_code': code}
+        doc = {'route': chosen['route'], 'browser': chosen.get('ego_browser'), 'space_prefix': env.get(SPACE_ENV),
+               'switched_to_chrome': False, 'fallbacks': [], 'fallback_available': False, 'exit_code': code,
+               'browser_policy': 'ego_only_tests_20261106'}
         Path(report).write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     return code
 

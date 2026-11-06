@@ -1,13 +1,18 @@
 ---
 name: cocos-game-to-english
-description: "英化（触发词：英化、英化skill、中文源码、翻译成英文、英化这个游戏）。拿到能运行的中文Cocos完整游戏时用：开工先给中文原版的手机试玩链接（不等回复）；把中文美工和文字改成英文（第一轮按美工板块 remake-art 照原画风重新生成所有按钮和文字）；补齐固定入口（个人主页回访、添加桌面、音效/BGM音量、关内暂停键、结算页看广告双倍与Retry、看广告复活），删除分享/更多游戏/联网排行榜；看广告的几项按包里的 remake-ads、remake-economy 做，看广告的板块默认按包里的 ad-boost 诊断后按推荐加，不问 Saul；先过美工检查和中文专项检查，再给英文试玩链接和人工检测清单；Saul 试玩没问题后做其余全量检查和出包；macOS、Windows 都能用，没有 Ego 时用 Chrome/Edge 跑检查。默认不改玩法、不加关卡、不加新系统。"
+description: "英化（触发词：英化、英化skill、中文源码、翻译成英文、英化这个游戏）。拿到能运行的中文Cocos完整游戏时用：开工先给中文原版的手机试玩链接（不等回复）；把中文美工和文字改成英文（第一轮按美工板块 remake-art 照原画风重新生成所有按钮和文字）；补齐固定入口（个人主页回访、添加桌面、音效/BGM音量、关内暂停键、结算页看广告双倍与Retry、看广告复活），删除分享/更多游戏/联网排行榜；看广告的几项按包里的 remake-ads、remake-economy 做，看广告的板块默认按包里的 ad-boost 诊断后按推荐加，不问 Saul；先过美工检查和中文专项检查，再给英文试玩链接和人工检测清单；Saul 试玩没问题后做其余全量检查和出包；macOS、Windows 都能用；浏览器测试仅使用 Ego，Chrome 只供用户试玩。默认不改玩法、不加关卡、不加新系统。"
 ---
 
 > 2026-11-01 用户更新：Grok 图片识别已停用。本文任何 Grok 读图、OCR、截图转录或 `grok-image-review` 路由均失效；所有读图由 Codex 自己直接查看并完成。文本搬取等非图片任务按各自规则执行。
 
 # 英化（独立流程）
 
-修订：`2026-11-06.english-simple.11.17.3`（英文美工按状态和视口决定重拍，同页多状态分别检查，旧截图保留原始来源。历次改动见[版本历史](版本历史.md)。）
+## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
+
+所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+
+
+修订：`2026-11-06.english-simple.11.17.4`（英文美工按状态和视口决定重拍，同页多状态分别检查，旧截图保留原始来源。历次改动见[版本历史](版本历史.md)。）
 
 共用功能验收与故障复验按[实际触发与玩家结果](../cocos-game-check/test/README.md)选测。
 
@@ -16,6 +21,8 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 **减少美工返工（11.17.3）**：新按钮/切图先列全部使用页的 CSS 尺寸预算；共享数字字体先定字距和最长串，再批量接入。第一件检查旧 Widget/Layout 回写、资源角色错绑、状态图重复染色和点击区。按视口连续采新截图减少启动；旧图沿用需独立整页一致、本轮受控存档和完整通过记录。规则与命令仍在下方制作/采集引用中，只做美工，不扩大玩法。
 
 **美工制作即检查（11.17.2）**：第 2 / 4 阶段按[制作与检测共用证据](../remake-art/references/production-check-link.md)执行。固定按钮和切片由生成工具登记约束，第一件接入即调用原图文/像素检查；第 3 阶段复用输入与规则均未变化的计算。首件不发试玩回执，完整美工与中文检查时点不变。
+
+**独立图标防放大（11.17.4）**：视频图标、勾、乘号、关闭符号和图文按钮在制作前明确角色与显示槽，首次接入按[独立显示预算](../remake-art/references/local-ui-contract.md#高清图标接入时锁定独立显示预算)登记受影响视口；源 PNG 分辨率不作显示尺寸。图标位置与文字净空以真实 Art 底板为准，尺寸正常不能代替内框和图文间隔通过。使用 ad-boost 面板时先执行[模板显示槽规则](../ad-boost/references/art-display-slots.md)，批量生图前运行调用集回归；不能把乘号当作勾、把烘焙在图里的图标再叠一份。
 
 **美工检查时点（Saul 2026-11-03）**：完整美工检查移到每轮英文试玩链接之前，先查、修好、复查通过再给链接；后续轮次复查受影响整页、共享组件和新增页面。广告回归、平台兼容及其余出包检查仍在试玩确认后的第 5 阶段。
 
@@ -56,10 +63,10 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 - **「Saul」是谁**：本包写的「Saul」指正在用这个 Skill 的人（给你游戏、试玩、做决定的那个人）。「Saul 定的」规则照样遵守；回复照样用大白话，要他定的只出选择题，跑命令、找路径、装东西都由你来做。
 - **开工先查电脑**：第 1 阶段第一件事跑 `python3 <skills>/cocos-game-to-english/scripts/check_machine.py --project <中文原工程>`，一分钟内查完 Python、Pillow、numpy、ffmpeg、Node.js、出包检查用的浏览器和这款游戏的 Cocos Creator。缺必须的，用大白话告诉用户缺什么、影响哪一步，问一句能不能装；同意后由你来装，装好再跑一次。缺的东西不影响的步骤先接着做。它打印的第一行「引擎路线」不是「照常开工」时，先照它做（2.0～2.3 复制一份副本升到 2.4.15；3.0～3.5 先装同一小版本的 Creator 导出原版），零件只装它列出的那些，再做别的。它报「Cocos 编辑器配置能解析」不通过时，先关 Creator，把报出的文件改名备份，再开 Creator。
 - **Cocos Creator**：不假设装在哪。用 `find_creator.py --project <工程>` 找本机的编辑器、拿 2.x/3.x 对应的构建命令；构建前跑 `find_creator.py --busy`（整台电脑同时只跑一个构建）；3.x 的 web-mobile 导出缺 `index.html` 时跑 `fix_web_entry_3x.py --export <导出> --project <工程>`。没装工程那个版本怎么办、各版本的已知问题，见 [Cocos Creator 版本和已知问题](references/local-creator-versions.md)。
-- **浏览器**：要开浏览器的检查和出包命令，一律在前面加 `python3 <skills>/cocos-game-to-english/scripts/browser_env.py --`：写包入口 `make_tiktok_zip.py`、`build_checked_zip.py`，`check_package.py`、`prepare_delivery.py`、`ad_regression.py`、`runtime_regression.py`，交付试玩链接 `serve_preview.py --keep`，截图和 dump_ui 用的 `chrome_touch.py`。装了 Ego Lite 就用 Ego；没装就用 Chrome、Edge 或 Chromium：后台运行、单独的临时资料夹，不碰用户自己的浏览器和窗口。**不用让用户装 Ego。** Ego 起不来或卡住（运行超时、报 browser exit、环境不完整）时，在 `browser_env.py` 后面加 `--browser chrome` 重跑同一个命令，不要让用户重启 Ego。10.2.10 在真包上比过两条路线：两款游戏的广告回归 10 例、一款游戏的 5 套运行时检查（启动、网络、布局、按钮普查、空壳），Chrome 和 Ego 的结论逐条相同。两包共用的文件里写着「必须用 Ego」「换 Chrome 要先问用户」的地方，英化以本段为准。
-- **自己看画面**（第 1、3 阶段「确认能进首页、能玩一局」）：有 Ego 就在 Ego 里打开链接；没有就用 `browser_env.py --` 包着 chrome-mobile-testing 的 `chrome_touch.py` 跑一个计划（等首页、截图、点开始、再截图，计划写法见 chrome-mobile-testing），看截图和报告里的 `page_errors`。
+- **浏览器**：浏览器测试、截图、美术、试玩链接冒烟及出包命令用 `python3 <skills>/cocos-game-to-english/scripts/browser_env.py -- <命令>`；启动器只选官方 Ego，不创建 Chrome 替身、不回退 Chrome。没装或起不来时按 ego-browser 指南诊断并保留未测。用户试玩由 `serve_preview.py --keep` 另开独立 Chrome 手机框。
+- **自己看画面**：首次进首页、开始一局及后续视觉验收均在 Ego 中完成；没有 Ego 或操作失败时先修复 Ego 环境，不使用 Chrome 补验。
 - **Windows**：`python3` 写成 `python`（或 `py -3`）；路径有空格或中文时整段加引号。本包和 ad-boost 里 macOS 才有的写法换掉：`pgrep` 用 `find_creator.py --busy`；`/usr/bin/python3` 用 `python`；`cp -c`（macOS 的快速复制）用普通复制；`open -R`（在访达里选中文件）改成直接给完整路径；构建卡住时加的 `--no-sandbox --disable-gpu-sandbox --disable-gpu` 是 macOS 的写法，Windows 先不加。
-- **浏览器卡住和构建沙箱（简化.11.14）**：要开浏览器的检查一律用 `browser_env.py --game <游戏名> --report <文件> -- <命令>`；Ego 卡住它会自己换 Chrome，回复里照 report 写「这一步换成 Chrome 跑的」，不要自己去退出或重启 Ego。构建前先跑 `find_creator.py --preflight`，退出 3 就别构建、也别重试，换不受沙箱限制的终端；构建命令照 find_creator 打印的原样用（TikTok 那条前后各带一次 sync，sync 没过不构建；3.x 出包命令带 `configPath=docs/startup/build-config-3x.json`），别删末尾三个参数，也别只复制 Creator 那半条。
+- **浏览器卡住和构建沙箱（简化.11.14）**：Ego 卡住时保留首个错误，在 Ego 内排查；不能自动换 Chrome。构建前先跑 `find_creator.py --preflight`，退出 3 就别构建、也别重试，换不受沙箱限制的终端；构建命令照 find_creator 打印的原样用（TikTok 那条前后各带一次 sync，sync 没过不构建；3.x 出包命令带 `configPath=docs/startup/build-config-3x.json`），别删末尾三个参数，也别只复制 Creator 那半条。
 - **试玩链接打不开窗口**：`serve_preview.py` 会试着开一个 Google Chrome 窗口；没装 Chrome 时窗口不开，服务照样在。把 `http://127.0.0.1:端口/` 链接发给用户，用户用任何浏览器（Edge、Safari 都行）打开。
 - **没有生图工具**：有核准整词字图和同款干净无字底时，先用包内[固定英文按钮生成器](../remake-art/references/fixed-caption-button.md)完成；需要新画的资产再用生图工具生成（代码画的不算）。你没有生图工具时，先用大白话告诉用户：这台电脑上的 AI 不能生成图片；再出一道选择题：「换一个能生图的 AI 来做美术这一步」「先把别的做完给试玩链接，带中文的图先留原图」。选第二个，就把要换的图列进 `docs/english/art-todo.json`（每张：图片路径、在哪一页、中文原文、英文定稿、尺寸），其余照常做；图里还有中文的出不了包（图片复核记录会拦）。ad-boost 的美术流水线没有 Codex 时退出码 3，照 ad-boost 说的用你自己的生图工具出图，再用 `record_manual.py` 补记录。
 - **没有 Grok**：`grok-image-review` 只是帮忙读图上的字，没有就自己打开原图看。
@@ -141,7 +148,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
    - **准备 `qa/ad-regression.json`（第 1 / 2 阶段定位真实入口与字段，第 5 阶段补齐并运行完整套件；不挡英文试玩链接）**：出包前的 10 个广告回归用例要它。`request` 走游戏自己真实的看广告方法，`grant` 挂在游戏真实的发奖函数上，`ready` 写首页已就绪的条件。示例：[examples/MusicSlice_ad-regression.json](examples/MusicSlice_ad-regression.json)（多渠道 AdsManager：`config.videoType=0` 后调 `config.AdsManager.ShowVideo()`，发奖统一走 `config.getReward`，示例把它换成计数）。同一个文件也给出包时必跑的运行时回归用（`cocos-game-check/package-check/references/runtime-regression.md`）：必须有 `home`（首页可用时返回 true），建议写 `enter_level`；缺 `home` 出包会被拒。**手机才出的问题要的几块（v7.9 手机问题源头约束，新游戏缺了出包被拒）**：`play`（首页 PLAY）；`resume_play`（`start` 进到一关、`probe` 真点一下、`state_js`，有倒计时写 `clock_js`；暂停键、继续键、关内广告名字认得出就不用写）；`ad_entries` 至少写结算页 Watch Ad x2（`"role": "double"`）和复活（`"role": "revive"`），各带真实操作到它出现（过关；让主角自己失败，`wait_node` 等按钮），第 8 项加的板块也写进去；`save_restart` 每一步写 `kind`，首页有什么就要有什么：过一关（`level`）、商店 / 皮肤买一件（`buy`）、领一次奖（`claim`）。写法和例子见 runtime-regression.md 的「手机检查补全」一节。
    - **广告规则去哪看**：按上面「看广告的几项按广告板块做」：广告计时和广告回归看 [超时规则与广告回归](../remake-ads/references/ad-timeout-and-regression.md)，复活页和结算 x2 两屏看 [一局结束：每屏一个视频按钮](../remake-ads/references/end-flow-one-video.md)，领奖窗看广告双倍勾选框看 [广告板块共用表](../remake-ads/SKILL.md#共用的广告设计)，数额看 [经济规则](../remake-economy/references/economy-rules.md)；和 [TikTok 固定适配·已定口径](../cocos-game-check/references/tiktok-fixed-adaptation.md) 有出入时以已定口径为准。
    - **图片复核记录 `docs/english/image-review.json`（第 5 阶段写，不挡英文试玩链接）**：上传包里每张不同的图（按 SHA-256）一条：谁看的、有没有中文、换成了什么；图集按切片看（`"slices_reviewed": true`）。缺记录、还是 pending、写着有中文却还是同一张图，出包会被拒（`remake-core/scripts/audit_image_review_record.py`）。图上的文字由 Codex 自己读取并作出结论。**照中文专项检查的结果写（Saul 2026-11-01）**：每张图有没有中文、图集是不是逐个切片看过，以 `docs/english/chinese-audit/` 里最后一次通过的 check 为准（自动扫描覆盖的写 `"reviewer": "chinese_audit 自动扫描"`，有复核结论的写复核编号）；不能凭印象手写 done / no / `slices_reviewed: true`，Garden Guardians 的 highwave 就是这样漏掉的。出包时程序把这两份对起来查，留 v7.9。 **这份记录不许手写（简化.11.14）**：出包前跑 `python3 <skills>/remake-core/scripts/audit_image_review_record.py write --zip <上传包> --out docs/english/image-review.json`；还剩 pending 的图，自己看过以后加 `--verdict <sha256>=yes|no --by "<谁看的>"` 再跑一次。手写或手改过的记录，出包时会被拒。
-3. **英文试玩链接＋人工检测清单（Saul 2026-10-31）**：第 2 阶段做完导出 Web，先完成下面的中文专项检查和完整美工检查，通过后再给链接。每次导出后先跑 `python3 <skills>/cocos-game-to-english/scripts/check_export_images.py --project <工程> --export <这轮的 Web 导出>`（几秒，只看导出里是不是工程里现在的图；报旧图就是导出没成功，删掉导出目录重新构建，到 0 张旧图再往下走，见[常见坑](references/english-ui-rebuild.md)第 3 条；3.x 导出里没有 `index.html` 时先跑 `fix_web_entry_3x.py --export <这轮的 Web 导出> --project <工程>`）。
+3. **英文试玩链接＋人工检测清单（Saul 2026-10-31）**：第 2 阶段做完导出 Web，先完成下面的中文专项检查和完整美工检查，通过后再给链接。美工返工按[首件制作联动](../remake-art/references/production-check-link.md#三款真实返工的首件处理11174)合并共享修改；整轮前按[输入预检](../remake-art/references/capture-rounds.md#整轮像素检查前先核输入11174)确认采集范围，资源检查若用 Native，另传真实 Web 的 `--capture-build`，不让 Native 路径绕过截图身份。每次导出后先跑 `python3 <skills>/cocos-game-to-english/scripts/check_export_images.py --project <工程> --export <这轮的 Web 导出>`（几秒，只看导出里是不是工程里现在的图；报旧图就是导出没成功，删掉导出目录重新构建，到 0 张旧图再往下走，见[常见坑](references/english-ui-rebuild.md)第 3 条；3.x 导出里没有 `index.html` 时先跑 `fix_web_entry_3x.py --export <这轮的 Web 导出> --project <工程>`）。
    **中文专项检查（Saul 2026-11-01，每次给英文试玩链接前都做）**：这也太牛了的波次警告里还有「高波来袭！」：字在 Spine 图集 highwave.png 的 `wave` 切片里，脚本和场景里搜不到，旧的图片复核记录却写着没中文。所以给链接前用 `python3 <skills>/cocos-game-to-english/scripts/chinese_audit.py` 查，结果都在工程的 `docs/english/chinese-audit/`：
    ① `scan --project <工程> --export <这轮的 Web 导出>`：列出全部资源；脚本、场景、预制体、配置里的字按字符串、注释、字段分开（注释、开发日志、节点名、编辑器路径自动放过，会显示的要结论）；每张图和每个图集切片（Spine `.atlas`、`.plist`、BMFont、龙骨）逐个识字；导出里对不上源图的图单独识。第一轮几分钟，以后每轮只识新加和改过的。
    ② 有要复核的：`sheet --project <工程> --pending` 拼出复核图（每格都看得清），你打开逐项看，每项写结论：`review --project <工程> --id <编号> --verdict <结论> --by "<你>" --evidence <复核图或切片图>`。确有中文写 `chinese`，然后把图改成英文、重新导出、回到 ①；识字认错了（特效、花纹、数字被认成字）写 `false_positive`，图一个像素都不改；会显示的文字确实不显示写 `not_displayed --reason "<理由>"`。识字出错、这台电脑没有识字工具的，也要这样逐个看过，不能当成没有字。隔离渲染的截图证据写 `--evidence-kind isolated_render`，它只证明资源显示对了，不算自然玩到、也不算真机。
@@ -163,7 +170,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 4. **试玩改进（Saul 找问题、提改进，AI 改）**：用时：发完第一个链接就跑 `T stage 4`；Saul 每次回复先跑 `T back`；每起一轮新链接，`serve_preview.py` 自动记 `T link <第几轮>`（同一份导出重开不算新一轮），它打印的上一轮用时贴在新链接那条回复最后；它打印「没记上」时手动跑；Saul 说没问题时跑 `T back` 和 `T done`，用时发给他。Saul 试玩时接着做已计划的剩余内容；每轮起新链接前做中文专项检查和受影响范围的完整美工复查（见第 3 阶段），本轮功能的局部验证随实现完成，完整套件留到第 5 阶段。等的时候接着做第一个链接没等的部分（10.2.7）：其余页面的按钮和图片字，以及第 8 项 ad-boost 板块（零件、面板、音效、美术、接线）。他发来问题时先改他说的；这时已经做好的图和板块一起放进这一轮，没做完的放下一轮，不为了等图拖住他的修改。第 5 阶段之前，至少要有一轮链接带齐所有页面的新图和第 8 项的板块；Saul 在那之前就说没问题，就把剩下的做完、起新一轮链接，跟他说「剩下的 XX 页和 YY 板块换好了，看一眼没问题就说一声，我开始全量检查」。他说的每一条（画面和游玩的 bug，以及他点名的玩法、手感、难度、数值改动）一次全部改完、只构建一次；按第 3 阶段复查受影响整页、共享组件和新增页面的美工，通过后再起这一轮的新链接：照第 3 阶段对这一轮的导出过一次中文专项检查（scan 只识新加和改过的图，没变的沿用上一轮的回执和复核；新出来要复核的照样逐项看）；过了，先停掉上一轮的试玩服务，再用同样的命令起，`--name` 写第几轮（`--snapshot` 起的链接不会跟着重新导出变，不能只叫他刷新）。只是重开同一份导出（服务停了、Saul 要再看一遍）时，`serve_preview.py` 核对过它就是查过的那份，不用重新 scan。回复里写改了哪几条，再列一遍清单里和这几处有关的几条请他复查。玩法改动只改 Saul 点名的；要加新系统的，照上面「创新玩法」用现成板块。这样来回，直到 Saul 说试玩没问题（「没问题了」「可以了」「出包」这类话）。等他回复时可以先写第 5 阶段要用的 `qa/ad-regression.json`，这是提前准备适配；本轮改动的局部验证照常执行，不提前跑第 5 阶段的完整套件。
 5. **全量检查和出包（Saul 说试玩没问题以后）**：Saul 说试玩没问题，就是同意做全量检查和出包，不再问一次。检查一条不减：
    - **先固定可验候选，再跑长矩阵**：按[稳定候选上的检查调度](../cocos-game-check/test/references/candidate-execution.md)，先核声音控件有实际播放消费者、奖励能落到真实可用对象、暂停重开没有旧回调，再校准实际 Native 的 adapter 准备路径；已有有效证据引用即可。同批已确认修复集中构建，完整套件前固定生产产物与检查器。工具失败先定点诊断；局部排查、完整验收和 writer 的结论各自保留，不减少下列门禁。
-   - 这一阶段要开浏览器的命令，前面都加 `python3 <skills>/cocos-game-to-english/scripts/browser_env.py --`（哪些命令见「换电脑也能用」；有 Ego 的电脑照样用 Ego，没有的用 Chrome/Edge）。
+   - 这一阶段要开浏览器的命令，前面都加 `python3 <skills>/cocos-game-to-english/scripts/browser_env.py --`（哪些命令见「换电脑也能用」；只用 Ego，缺失或故障时保留未测）。
    - **测试按完整清单跑完才算（生成时预防 R4D）**：`runtime_regression.py`、`ad_regression.py` 只有按完整清单跑完才算通过；带 `--suites` / `--cases` 是排查用，结论是「没跑完」（退出码 3），交付回复里照写没跑的项，不写成通过。检查脚本报告开头写引擎版本和实际检查项数，0 项、缺第三方库都报 not_run（并给安装命令），not_run 不算通过；检查脚本默认只读，`--help` 和不带参数都不许崩（发版自检 C10 逐个跑一遍）。
    - 先补齐记录：`qa/ad-regression.json` 和 `docs/english/image-review.json`（写法见第 2 阶段；image-review.json 用 `audit_image_review_record.py write` 生成，不手写）。
    - **美工检查已在每轮试玩链接前完成**：核对最后通过的美工证据与当前交付版本一致，不重复评审已认可的画风和配色。本阶段若改动图片、布局或新增页面，按第 3 阶段复查受影响整页、共享组件和条件状态；用户可见的改动先给通过美工检查的新链接确认，再继续出包。出包转换、压缩引起的缺图、变形、色带等仍须在最终产物核查。

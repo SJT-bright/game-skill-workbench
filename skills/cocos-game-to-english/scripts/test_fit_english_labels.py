@@ -330,6 +330,47 @@ class ValueTextToBitmap(unittest.TestCase):
         self.assertEqual(self.gate(), {'scoreLabel', 'scoreTitle'})
 
 
+class R4N5Scope(unittest.TestCase):
+    setUp, tearDown, objs = FitCase.setUp, FitCase.tearDown, FitCase.objs
+
+    """补查2 第 5 节: 火箭三消 retired placeholders were still measured; 合成进化恐龙 got two unrelated renames."""
+
+    def retire_music(self, active=False, status='retired'):
+        objs = self.objs()
+        objs[2]['_active'] = active
+        self.prefab.write_text(json.dumps(objs, indent=2), encoding='utf-8')
+        (self.root / 'docs/english').mkdir(parents=True, exist_ok=True)
+        (self.root / 'docs/english/label-values.json').write_text(json.dumps({'labels': [
+            {'path': '*/musicLabel', 'status': status, 'reason': '旧 Result 子树退役，新 Result 页面替代'}]}), encoding='utf-8')
+
+    def test_retired_switched_off_placeholder_is_not_measured(self):
+        self.retire_music()
+        rec = F.run(self.root, dry_run=True)
+        self.assertEqual([r['where'].split('/')[-1] for r in rec['retired']], ['musicLabel'])
+        self.assertFalse(any(r['where'].endswith('/musicLabel') for r in rec['changed'] + rec['todo']),
+                         'OLD WAY BUG: the retired placeholder is still measured')
+
+    def test_retired_row_on_a_live_node_is_still_measured(self):
+        self.retire_music(active=True)
+        rec = F.run(self.root, dry_run=True)
+        self.assertEqual(rec['retired'], [])
+        self.assertTrue(any(r['where'].endswith('/musicLabel') for r in rec['changed']))
+        self.assertIn('retired_but_active', [n.get('note') for n in rec['notes']])
+
+    def test_nodes_limit_writes_and_same_name_is_reported_only(self):
+        rec = F.run(self.root, nodes=['*/timer'])
+        objs = self.objs()
+        names = [o.get('_name') for o in objs if o.get('__type__') == 'cc.Node']
+        self.assertEqual(names.count('Btn'), 2, 'OLD WAY BUG: an unrelated same-name node is renamed')
+        self.assertEqual(objs[3]['_N$overflow'], 1, 'musicLabel is not in --nodes: not written')
+        self.assertTrue(any(r['where'].endswith('/musicLabel') and r['would'] == 'SHRINK' for r in rec['report_only']))
+        btn = next(r for r in rec['same_name'] if r['name'] == 'Btn')
+        self.assertIn('not in --nodes', btn['kept'])
+        rec = F.run(self.root, nodes=['*/musicLabel', 'SettingPanel/Btn'])
+        self.assertEqual(self.objs()[3]['_N$overflow'], 2)
+        self.assertIn('Btn_2', [o.get('_name') for o in self.objs() if o.get('__type__') == 'cc.Node'])
+
+
 class CommandLine(unittest.TestCase):
     def test_exit_codes(self):
         root = Path(tempfile.mkdtemp(prefix='fitcli_'))

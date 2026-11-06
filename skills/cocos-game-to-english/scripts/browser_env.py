@@ -55,7 +55,20 @@ DEFAULT_EGO_STALL_S = 180                   # below watched_run's 240 s, so the 
 # Ego failures that say "Ego is stuck", not "the game failed". Matched on the error stream of a failed call only.
 EGO_STUCK = re.compile(r'task ?space (?:\S+ )?not found|EGO_TASK_SPACE\w*|Target closed|Session closed|LaunchServices'
                        r'|(?:CDP|protocol|screenshot|captureScreenshot|navigat\w*|goto|page\.\w+|Page\.\w+|waitFor\w*)'
-                       r'[^\n]{0,80}tim(?:ed|e)[ -]?out|tim(?:ed|e)[ -]?out[^\n]{0,80}(?:CDP|screenshot|navigat|page|goto)', re.I)
+                       r'[^\n]{0,80}tim(?:ed|e)[ -]?out|tim(?:ed|e)[ -]?out[^\n]{0,80}(?:CDP|screenshot|navigat|page|goto)'
+                       # R4N3 (补查2 第 1 组 1d): host-side stalls seen in 方块收割者 / 火箭三消 / 合成进化恐龙 -> 环境卡住，换 Chrome 重试
+                       r'|(?<![\w.])-10005(?!\d)|webContents[^\n]{0,60}\bnull\b|\bnull\b[^\n]{0,60}webContents'
+                       r'|Runtime\.evaluate[^\n]{0,80}tim(?:ed|e)[ -]?out|aborted before dispatch', re.I)
+# R4N3: the same host-stall texts as EGO_STUCK's last line, for tools that do not run through the relay
+ENV_STUCK_R4N3 = re.compile(r'(?<![\w.])-10005(?!\d)|webContents[^\n]{0,60}\bnull\b|\bnull\b[^\n]{0,60}webContents'
+                            r'|Runtime\.evaluate[^\n]{0,80}tim(?:ed|e)[ -]?out|aborted before dispatch', re.I)
+
+
+def env_stuck(text):
+    """R4N3: '环境卡住，换 Chrome 重试：<原文>' when `text` carries a host stall (-10005, webContents null,
+    Runtime.evaluate timeout, aborted before dispatch), else None."""
+    m = ENV_STUCK_R4N3.search(text or '')
+    return '环境卡住，换 Chrome 重试：%s' % m.group(0) if m else None
 GENERIC_DIRS = {'web-mobile', 'bytedance-mini-game', 'build', 'dist', 'pkg', 'package', 'source', 'src', 'scripts',
                 'export', 'native', 'web', 'assets', 'tiktok', 'out', 'tmp'}
 

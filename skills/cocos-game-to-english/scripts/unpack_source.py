@@ -65,7 +65,7 @@ def unpack(source, out, game_folder=None):
     if source.is_dir() and out.is_relative_to(source):
         raise ValueError('--out must be outside the source folder')
     if not source.is_dir() and not zipfile.is_zipfile(source):
-        raise ValueError('--source is not a ZIP or a folder: %s' % source)
+        raise ValueError(raw_inputs.zip_problem(source) or '--source is not a ZIP or a folder: %s' % source)  # R4N3
     game_folder = Path(game_folder).resolve() if game_folder else out.parent
     if source.is_dir() and game_folder.is_relative_to(source):
         raise ValueError('--game-folder must be outside the source folder (the raw copy goes into it)')

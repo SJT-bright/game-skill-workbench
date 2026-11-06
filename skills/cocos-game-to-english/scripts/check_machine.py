@@ -101,11 +101,155 @@ def collect(project=None, quick=False):
                             '请用户打开 Cocos Dashboard（https://www.cocos.com/creator-download），在「编辑器」里下载 %s；'
                             '装在别处的设 COCOS_CREATOR=<CocosCreator 程序的完整路径>' % r['version'],
                             '导出中文原版和英文版的试玩链接、出包'))
+        try:  # R4N3: engine version vs the Skill's support table, fixed route first
+            e = engine_check(project)
+        except (OSError, ValueError, KeyError) as error:
+            e = None
+            rows.append(row('引擎版本和平台零件', False, False, '没读出来：%s' % error, '确认 --project 指的是工程那一层',
+                            '开工路线和零件清单'))
+        if e:
+            rows.insert(0, dict(row('引擎版本和平台零件', e['status'] == 'supported', e['status'] == 'unsupported',
+                                    engine_text(e), '照上面的引擎路线做', '开工路线：先照这条做，再做别的'), engine=e))
     else:
         editors = find_creator.installed_editors()
         rows.append(row('Cocos Creator', editors, True, '、'.join(e['version'] for e in editors) or '一个都没找到',
                         '请用户装 Cocos Dashboard，再按工程的版本下载编辑器', '导出试玩链接和出包'))
+    rows.append(editor_config_row(project))   # 11.17 R4Q7
     return rows
+
+
+# 11.17 R4Q7 (补查3 第 5 节, SLS35 / SLS04-1): Creator would not start because its layout.json / window.json were cut
+# short ("Unexpected end of JSON input"). Report only: nothing is changed or deleted.
+def editor_config_files(project=None, home=None):
+    home = Path(home) if home else Path.home()
+    cc = home / '.CocosCreator'
+    files = [cc / 'editor' / 'layout.json', cc / 'editor' / 'window.json']
+    files += sorted((cc / 'profiles').glob('*.json')) if (cc / 'profiles').is_dir() else []
+    if project and (Path(project) / 'local').is_dir():
+        files += sorted((Path(project) / 'local').glob('*.json'))
+    return [f for f in files if f.is_file()]
+
+
+def editor_config_row(project=None, home=None):
+    bad = []
+    for f in editor_config_files(project, home):
+        try:
+            json.loads(f.read_text(encoding='utf-8-sig'))
+        except (OSError, ValueError) as error:
+            bad.append('%s（%s）' % (f, str(error)[:80]))
+    return row('Cocos 编辑器配置能解析', not bad, False, '都能解析' if not bad else '读不了：' + '；'.join(bad),
+               '先关掉 Cocos Creator，把上面读不了的文件改名备份（例如加 .bak），再打开 Creator，它会重新生成；'
+               '这个检查只报不改', 'Creator 打不开或打开就报 Unexpected end of JSON input，导出和出包都做不了')
+
+
+# R4N3 (补查2 第 1 组 1a): the project's engine version against the Skill's support table (KIT_MANIFEST.json
+# engine_support) and the parts that can be installed on it (needs.engine_versions). Read-only.
+KIT_DIR = HERE.parent.parent / 'remake-core' / 'assets' / 'platform-kit'
+
+
+def kit_manifest(kit_dir=None):
+    kit_dir = Path(kit_dir or KIT_DIR)
+    doc = json.loads((kit_dir / 'KIT_MANIFEST.json').read_text(encoding='utf-8'))
+    for rel in doc.get('includes') or []:
+        try:
+            doc.setdefault('included', {})[rel] = json.loads((kit_dir / rel).read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            pass
+    return doc
+
+
+def project_engine(project):
+    """'2.4.15' from project.json (2.x), package.json creator.version or project.json creator.version (3.x)."""
+    try:
+        return find_creator.project_version(project)[0]
+    except ValueError:
+        prj = Path(project) / 'project.json'
+        try:
+            doc = json.loads(prj.read_text(encoding='utf-8-sig'))
+        except (OSError, ValueError):
+            raise
+        for v in ((doc.get('creator') or {}).get('version'), doc.get('engineVersion')):
+            if find_creator.parse_version(v):
+                return str(v)
+        raise
+
+
+def version_matches(version, patterns):
+    v = find_creator.parse_version(version)
+    for pat in patterns or []:
+        bits = str(pat).strip().split('.')
+        if v and all(b in ('x', '*') or (b.isdigit() and i < 3 and int(b) == v[i]) for i, b in enumerate(bits)):
+            return True
+    return False
+
+
+def engine_route(version, manifest):
+    """{'status': supported|route|unsupported, 'route', 'build_as', 'say'} for this engine version."""
+    sup = manifest.get('engine_support') or {}
+    v = find_creator.parse_version(version)
+    minor = '%d.%d' % v[:2] if v else str(version)
+    if version_matches(version, sup.get('supported')):
+        return {'status': 'supported', 'route': 'supported', 'build_as': version,
+                'say': '引擎 %s 在支持表里，照常开工。' % version}
+    for r in sup.get('routes') or []:
+        if version_matches(version, r.get('match')):
+            build_as = str(r.get('build_as') or '{version}').format(version=version)
+            return {'status': 'route', 'route': r.get('route'), 'build_as': build_as,
+                    'say': str(r.get('say') or '').format(version=version, minor=minor)}
+    return {'status': 'unsupported', 'route': 'unsupported', 'build_as': None,
+            'say': str(sup.get('unsupported_say') or '引擎 {version} 不在支持表里。').format(version=version)}
+
+
+def part_plan(build_as, manifest):
+    """(install, skip): parts that can go on build_as, parts that cannot and why (needs.engine_versions)."""
+    sup = manifest.get('engine_support') or {}
+    install, skip = [], []
+    if not build_as:
+        return install, skip
+    major = (find_creator.parse_version(build_as) or (0,))[0]
+    tested_3x = [p for p in sup.get('supported') or [] if str(p).startswith('3.')]
+
+    def place(name, entry, engine):
+        if engine and engine != major:
+            return
+        needs = (entry or {}).get('needs') or {}
+        pats = needs.get('engine_versions') or (['2.4.x'] if engine == 2 else ['3.x'] if engine == 3 else ['2.4.x', '3.x'])
+        if not version_matches(build_as, pats):
+            skip.append({'part': name, 'why': '要 %s%s，%s 没有' % ('、'.join(pats), ('（%s）' % '、'.join(needs['api']))
+                                                                  if needs.get('api') else '', build_as)})
+            return
+        untested = major == 3 and tested_3x and not version_matches(build_as, tested_3x)
+        install.append({'part': name, 'untested': bool(untested)})
+
+    for name, part in (manifest.get('parts') or {}).items():
+        place(name, part, part.get('engine'))
+    for rel, entry in (manifest.get('files') or {}).items():
+        if entry.get('needs'):
+            place(rel.split('/')[-1].rsplit('.', 1)[0], entry, None)
+    for name, entry in ((sup.get('generated') or {}).items()):
+        place(name, entry, None)
+    for doc in (manifest.get('included') or {}).values():
+        for name, part in (doc.get('parts') or {}).items():
+            place(name, part, part.get('engine') or doc.get('engine'))
+    return install, skip
+
+
+def engine_check(project, kit_dir=None):
+    version = project_engine(project)
+    manifest = kit_manifest(kit_dir)
+    route = engine_route(version, manifest)
+    install, skip = part_plan(route['build_as'], manifest)
+    return dict(route, version=version, install=install, skip=skip)
+
+
+def engine_text(e):
+    lines = ['引擎路线：' + e['say']]
+    if e['install'] or e['skip']:
+        lines.append('零件清单（按 %s）：装 %s' % (e['build_as'], '、'.join(
+            p['part'] + ('（这个版本没测过）' if p['untested'] else '') for p in e['install']) or '无'))
+        if e['skip']:
+            lines.append('不装：' + '；'.join('%s（%s）' % (p['part'], p['why']) for p in e['skip']))
+    return '\n'.join(lines)
 
 
 def say(rows):

@@ -29,11 +29,16 @@ label-values.json: {"labels": [{"path": "*/coinLabel", "max_value": 999999}, {"p
 The prefab / scene is rewritten in place (a copy of the original goes to docs/english/fit-labels/backup/). The record
 is docs/english/fit-labels.json. Exit codes: 0 nothing left to fix, 1 to-fix list not empty, 2 bad input.
 
-  python fit_english_labels.py --project GAME [--dry-run] [--values JSON] [--files a.prefab ...]
+R4N5: a values row {"path": ..., "status": "retired", "reason": "旧 Result 子树退役，新 Result 页面替代"} on a Label whose
+node (or an ancestor) or the Label itself is switched off is not measured (listed under `retired`). --nodes limits the
+writes (SHRINK, bitmap switch, same-name suffix) to the labels / nodes passed in; the rest goes to `report_only`.
+
+  python fit_english_labels.py --project GAME [--dry-run] [--values JSON] [--files a.prefab ...] [--nodes '*/cnt' ...]
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import fnmatch
 import json
 import re
@@ -300,9 +305,40 @@ def load_values(root, path):
             continue
         for r in (data.get('labels') if isinstance(data, dict) else data) or []:
             if isinstance(r, dict) and r.get('path') and (r.get('text') or r.get('longest') or 'max_value' in r
-                                                          or r.get('room')):
+                                                          or r.get('room') or is_retired(r)):
                 rows.append(r)
     return rows
+
+
+# R4N5 (补查2 第 5 节, 火箭三消 11-05): a placeholder the English work retired -- its node switched off and a new page
+# showing the value instead -- is not measured. The row needs status "retired" and a reason; the node (or an ancestor)
+# or the Label must really be off in the prefab, else it is measured as before and noted retired_but_active.
+RETIRED = {'retired', 'disabled', 'removed', '退役'}
+
+
+def is_retired(r):
+    return str(r.get('status') or '').strip().lower() in RETIRED and len(str(r.get('reason') or '').strip()) >= 4
+
+
+def switched_off(doc, node, lab):
+    if lab.get('_enabled') is False:
+        return True
+    seen = set()
+    while isinstance(node, dict) and id(node) not in seen and node.get('__type__') == 'cc.Node':
+        seen.add(id(node))
+        if node.get('_active') is False:
+            return True
+        node = doc.parent(node)
+    return False
+
+
+def in_scope(where, nodes):
+    """R4N5 (补查2 第 5 节, 合成进化恐龙 11-05: two unrelated same-name nodes were renamed): with --nodes only the
+    labels / nodes passed in are written; everything else is measured and reported."""
+    if not nodes:
+        return True
+    tail = where.split(':', 1)[-1]
+    return any(fnmatch.fnmatch(where, n) or fnmatch.fnmatch(tail, n) or tail == n.strip('/') for n in nodes)
 
 
 VALUE_PART = re.compile(r'(\d{1,2}:\d{2}(?::\d{2})?)|(\d+(?:\.\d+)?)(\s*%)|(\d+)')
@@ -428,7 +464,7 @@ def script_names(root):
     return names
 
 
-def same_name_siblings(doc, protected, rename):
+def same_name_siblings(doc, protected, rename, scope=None, rel=''):
     out, kids = [], {}
     for o in doc.objs:
         if isinstance(o, dict) and o.get('__type__') == 'cc.Node':
@@ -444,8 +480,10 @@ def same_name_siblings(doc, protected, rename):
             if len(group) < 2:
                 continue
             rec = {'parent': doc.path_of(doc.objs[par]), 'name': name, 'count': len(group), 'renamed': []}
-            if name in protected or not rename:
-                rec['kept'] = 'a script names "%s"' % name if name in protected else 'dry run'
+            here = '%s:%s' % (rel, (rec['parent'] + '/' + name).strip('/'))
+            if name in protected or not rename or not in_scope(here, scope):
+                rec['kept'] = ('a script names "%s"' % name if name in protected else 'dry run' if not rename
+                               else 'not in --nodes: reported only')
             else:
                 k = 2
                 for n in group[1:]:
@@ -527,13 +565,13 @@ BITMAP_FIX = {'word_image': '固定词（SCORE / BEST / LEVEL / COINS…）换�
               'no_bitmap_font': '数字用同套生成的位图数字（.fnt，或运行时 UI.digits）；工程里没有包含这些字符的 .fnt'}
 
 
-def run(root, files=None, values=None, dry_run=False):
+def run(root, files=None, values=None, dry_run=False, nodes=None):
     root = Path(root)
     fonts, rows = Fonts(root), load_values(root, values)
     protected = script_names(root)
     record = {'tool': 'fit_english_labels', 'schema': 1, 'project': root.name, 'dry_run': dry_run, 'min_shrink': MIN_SHRINK,
               'changed': [], 'todo': [], 'grows': [], 'fits': 0, 'skipped_chinese': [], 'same_name': [], 'notes': [],
-              'measured_with': {}, 'files_written': [], 'to_bitmap': [], 'bitmap_needed': []}
+              'measured_with': {}, 'files_written': [], 'to_bitmap': [], 'bitmap_needed': [], 'retired': [], 'report_only': []}
     is_value, bms = _value_text(), bitmap_fonts(fonts)
     for f in [Path(x) for x in files] if files else ui_files(root):
         try:
@@ -556,6 +594,17 @@ def run(root, files=None, values=None, dry_run=False):
                 continue
             if not LETTER_OR_DIGIT.search(p['string']):
                 continue
+            rrow = next((r for r in rows if is_retired(r) and (fnmatch.fnmatch(where, r['path'])
+                                                               or fnmatch.fnmatch(where.split(':', 1)[-1], r['path']))), None)
+            if rrow is not None:
+                if switched_off(doc, p['node'], lab):
+                    record['retired'].append({'where': where, 'text': p['string'], 'reason': str(rrow['reason']).strip()})
+                    continue
+                record['notes'].append({'where': where, 'note': 'retired_but_active',
+                                        'why': 'values row says retired, but the node and the Label are on: measured'})
+            scoped = in_scope(where, nodes)
+            if not scoped:
+                lab = copy.deepcopy(lab)          # measured and reported; the prefab keeps this label as it is
             fn, method = fonts.width_fn(p['font'])
             record['measured_with'][method] = record['measured_with'].get(method, 0) + 1
             text, note = longest_value(p['string'], where, rows, widest(fn, p['size']))
@@ -565,9 +614,13 @@ def run(root, files=None, values=None, dry_run=False):
                 if how == 'switched':
                     record['to_bitmap'].append({'where': where, 'text': p['string'], 'font': fpath.relative_to(root).as_posix()
                                                 if fpath.is_relative_to(root) else str(fpath)})
+                    if not scoped:
+                        record['to_bitmap'].pop()
+                        record['report_only'].append({'where': where, 'text': p['string'], 'would': 'switch to the bitmap font',
+                                                      'reason': 'not in --nodes'})
                     p['font'] = u
                     fn, method = fonts.width_fn(u)
-                    dirty = True
+                    dirty = dirty or scoped
                 elif how != 'bitmap':
                     # still fitted below (the trial build must not cut it), but fitting is not the fix: the row says
                     # what to make, and the value_presentation gate keeps failing it until it is bitmap / a picture
@@ -593,6 +646,9 @@ def run(root, files=None, values=None, dry_run=False):
                 record['fits'] += 1
             elif verdict == 'grows':
                 record['grows'].append(base)
+            elif verdict == 'shrink' and not scoped:
+                base.update({'would': 'SHRINK', 'reason': 'not in --nodes'})
+                record['report_only'].append(base)
             elif verdict == 'shrink':
                 base['overflow_after'] = 'SHRINK'
                 lab[p['k_overflow']] = 2
@@ -603,7 +659,7 @@ def run(root, files=None, values=None, dry_run=False):
                 dirty = True
             else:
                 record['todo'].append(base)
-        sn = same_name_siblings(doc, protected, rename=not dry_run)
+        sn = same_name_siblings(doc, protected, rename=not dry_run, scope=nodes, rel=rel)
         for r in sn:
             r['file'] = rel
             dirty = dirty or bool(r['renamed'])
@@ -625,12 +681,14 @@ def main(argv=None):
     ap.add_argument('--files', nargs='+', help='only these prefab / scene files (default: all under assets/)')
     ap.add_argument('--values', type=Path, help='longest values (default docs/english/label-values.json)')
     ap.add_argument('--dry-run', action='store_true', help='measure and report, write nothing')
+    ap.add_argument('--nodes', nargs='+', help='R4N5: only write these labels / nodes (glob on "file:node/path" or the '
+                                               'node path); the rest, same-name siblings too, are reported only')
     ap.add_argument('--out', type=Path, help='record path (default <project>/docs/english/fit-labels.json)')
     a = ap.parse_args(argv)
     if not (a.project / 'assets').is_dir():
         print(json.dumps({'error': 'not a Cocos project (no assets/): %s' % a.project}, ensure_ascii=False))
         return 2
-    rec = run(a.project, a.files, a.values, a.dry_run)
+    rec = run(a.project, a.files, a.values, a.dry_run, a.nodes)
     # Fitting a TTF Score/Reward label does not satisfy the art requirement.
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'remake-core/scripts'))
@@ -644,6 +702,7 @@ def main(argv=None):
     print(json.dumps({'tool': 'fit_english_labels', 'passed': rec['passed'], 'fits': rec['fits'],
                       'set_to_shrink': len(rec['changed']), 'grows_with_text': len(rec['grows']), 'todo': [t['where'] + ' -- ' + t.get('why', '') for t in rec['todo']][:40],
                       'same_name': len(rec['same_name']), 'still_chinese': len(rec['skipped_chinese']),
+                      'retired_not_measured': len(rec['retired']), 'report_only': len(rec['report_only']),
                       'to_bitmap': len(rec['to_bitmap']), 'bitmap_needed': [b['where'] + ' -- ' + b['fix'] for b in rec['bitmap_needed']][:40],
                       'value_findings': values['findings'][:40], 'files_written': rec['files_written'], 'record': str(out)}, ensure_ascii=False, indent=2))
     return 0 if rec['passed'] else 1

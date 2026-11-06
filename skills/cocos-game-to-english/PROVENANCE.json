@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-05.english-simple.11.15",
+  "revision": "2026-11-05.english-simple.11.17",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "b57e3ab038220a73db3c3976fefdf5435463de9c5e9117f5443536ea6885b3cd",
-      "bytes": 81745
+      "sha256": "7407c7743086305fa026ed22cf9b1d946440efc0e1066f3c92a1610123bb2c34",
+      "bytes": 92682
     },
     {
       "path": "agents/openai.yaml",
@@ -40,9 +40,14 @@
       "bytes": 1479
     },
     {
+      "path": "references/early-prevention.md",
+      "sha256": "6561bfe972468f64f0a7c9251851c8bbf8ba2873a3abb54985d38d1ab4cd0400",
+      "bytes": 6650
+    },
+    {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "01f9beaec2f1ac8cb093bbd8306a2e4c961b6f4e023f5862459a1e3d9c3f41e3",
-      "bytes": 31491
+      "sha256": "c27fe35abf0b3429647cedfeba88e963bfe5652a2fc80ea1822c073713bf7502",
+      "bytes": 34103
     },
     {
       "path": "references/fixed-entries.md",
@@ -51,13 +56,13 @@
     },
     {
       "path": "references/local-creator-versions.md",
-      "sha256": "2557c5cd165168eb2259849f798b00fbc7f69c4ae8ce05f0b3f77b53bea1da90",
-      "bytes": 4768
+      "sha256": "0b163a4480dea5d28a23841fb68fceeb65705fadc2c263f878f801796360c8ca",
+      "bytes": 5369
     },
     {
       "path": "scripts/browser_env.py",
-      "sha256": "8ee262ca720c44797ad5cb1c10af5b585d18624b048bc24e5855b37937a25898",
-      "bytes": 21653
+      "sha256": "d1ac2e5469fa66742b7b8483b4384e814072fae41a21d5da7d1ef36182dcb42e",
+      "bytes": 22695
     },
     {
       "path": "scripts/cdp_browser.mjs",
@@ -71,23 +76,28 @@
     },
     {
       "path": "scripts/check_machine.py",
-      "sha256": "0a8717f7f82bb47420c9e39e93dc34ec873ab4ed99e6fd89286863573765a402",
-      "bytes": 7985
+      "sha256": "ea836edc85e47e59307c0b220d57cba0e0ef632c41a9ad822708d0fcb4a6dc35",
+      "bytes": 15206
     },
     {
       "path": "scripts/chinese_audit.py",
-      "sha256": "edab5cfb54d72946924896ff5b749e19e56dac1d237ae92de7a342d3ef7cecde",
-      "bytes": 99151
+      "sha256": "86f1ff897bd7af0a92f42306b060b64149c180e4ca007601d54185ee5fdfec2b",
+      "bytes": 100501
+    },
+    {
+      "path": "scripts/english_copy_guard.py",
+      "sha256": "bca2c42d32db819b7d055058e52f030a685e1846963b73ddd730bef79a600033",
+      "bytes": 26255
     },
     {
       "path": "scripts/find_creator.py",
-      "sha256": "092102a80554bc483a11ae724a6ec2830abfd6a661b55d7ffbc746eb7cb91357",
-      "bytes": 28279
+      "sha256": "8c3c8e73a21d7c4a4d8e7e4e622eb4ace3ae010970f79de35619e067ec94bcb6",
+      "bytes": 28297
     },
     {
       "path": "scripts/fit_english_labels.py",
-      "sha256": "a3adc2cd2580446b563d68a752fa2cd8515891b1ac86412c825539fcfba335db",
-      "bytes": 32365
+      "sha256": "a3f7d2e63df871ec10731de3d99fac4c51584253d5d2a4a483fcb2e73d40dfbc",
+      "bytes": 36072
     },
     {
       "path": "scripts/fix_web_entry_3x.py",
@@ -125,14 +135,24 @@
       "bytes": 31960
     },
     {
+      "path": "scripts/test_engine_route.py",
+      "sha256": "6cbceaa7637f18b109e10bf7a2c9fe4ddb5d53e1ecaeada6b57d6ae2fafd1105",
+      "bytes": 4834
+    },
+    {
+      "path": "scripts/test_english_copy_guard.py",
+      "sha256": "579cd2ee96ada2866bee6e205d10951285eaed1c2bb70d9ad2524603cdfecdb1",
+      "bytes": 11926
+    },
+    {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "15d974c778c8fcc1d41edb44082b6ead6e652517b9730c837bd4abf702fd34e9",
-      "bytes": 66773
+      "sha256": "7bd51c63906e5b6c1fbb3a61bc16d8e60a060b450e06af36eb76c77ab9ad651c",
+      "bytes": 71217
     },
     {
       "path": "scripts/test_fit_english_labels.py",
-      "sha256": "2a10adc1985fc3dab69a7437a813532a8397eafa7f53f92eabcb9ed7868beb85",
-      "bytes": 19914
+      "sha256": "4c64148cdd1fb7b69ccd189c953830ba72ffeaaa9621840d085d4149f804dccc",
+      "bytes": 22361
     },
     {
       "path": "scripts/test_p21_browser_env.py",
@@ -160,6 +180,21 @@
       "bytes": 10834
     },
     {
+      "path": "scripts/test_r4n3_env_stuck.py",
+      "sha256": "8e94d81f9afbf97ba9be3d76a3696159077cfbaabda825b6799f86f7e56844a4",
+      "bytes": 1732
+    },
+    {
+      "path": "scripts/test_r4q7_editor_config.py",
+      "sha256": "d54e24a72673de1bfff64f27844220d065cee524a0826d8cc5ad6b024405690d",
+      "bytes": 1984
+    },
+    {
+      "path": "scripts/test_r4q7_export_not_this_source.py",
+      "sha256": "27abd382487b06774721e61137806dbdeaca2b9d8a0396784cf1defe9b11834e",
+      "bytes": 2614
+    },
+    {
       "path": "scripts/test_serve_preview_gate.py",
       "sha256": "9800597d7f8564cc4000a1b45216fb82ce9cbe783d7b1d4bb5b3213f28b71808",
       "bytes": 16585
@@ -170,20 +205,30 @@
       "bytes": 17834
     },
     {
+      "path": "scripts/test_ts_full_check.py",
+      "sha256": "f223220cd2b203f566977032df60ae603ba7fc360f65c1bee1ce8f0d2f09611d",
+      "bytes": 4744
+    },
+    {
       "path": "scripts/test_unpack_source.py",
       "sha256": "5122a1bfd703635757dcacb4886c9e7867b5f3db427a3cfa4c3a934aa07073e3",
       "bytes": 4187
     },
     {
+      "path": "scripts/ts_full_check.py",
+      "sha256": "d9dd0e003800af7fda4fecb276e650e02b6b26808e579e5cc1f3cc48e85a9e38",
+      "bytes": 9332
+    },
+    {
       "path": "scripts/unpack_source.py",
-      "sha256": "7cd7c86a874c8e5a6503411919f6badc31462c7201a1ad0aa48fb1f85f286745",
-      "bytes": 8962
+      "sha256": "940291f4c1a881691fc5857837b84cc62c3f44909cd4ac304da03bbeb318ff27",
+      "bytes": 9004
     },
     {
       "path": "版本历史.md",
-      "sha256": "fbdc3eafcfd4d2a0833e59de8c25402cd17910878f0af42bfd226c00b770087d",
-      "bytes": 9295
+      "sha256": "58710078310adec20514cd99917f6926dfa598ed0f32c02af88493f92b92f3b9",
+      "bytes": 10438
     }
   ],
-  "previous_provenance_sha256": "e87019f404a22912f3941f3e0f4fb2d3f97922100c9cc6ca8128ddd7d05ccd68"
+  "previous_provenance_sha256": "1582b0387b16b9331ad71ac753a8a6e9e506a67d47bbfe6ec20b17408ec1d332"
 }

@@ -911,6 +911,29 @@ def export_state(project, export, items, on_pixels):
             'own_scan': own, 'items': out_items}
 
 
+EXPORT_SKEW_S = 2.0   # file-system timestamp slack
+
+
+def source_newer_than_export(project, export):
+    """11.17 R4Q7: assets/ files (not .meta) changed after the newest file of the export, i.e. the export was built from
+    an older source (奔跑吧巨人: homePanel.prefab and EnglishPlatform.ts edited for build 8, checked with export 7).
+    Fingerprint = modification time: a Cocos export does not record which source it came from."""
+    try:
+        built = max(p.stat().st_mtime for p in walk_files_all(Path(export)))
+    except ValueError:
+        return []
+    assets = Path(project) / 'assets'
+    if not assets.is_dir():
+        return []
+    out = []
+    for p in walk_files_all(assets):
+        if p.suffix.lower() == '.meta':
+            continue
+        if p.stat().st_mtime > built + EXPORT_SKEW_S:
+            out.append(p.relative_to(project).as_posix())
+    return sorted(out)
+
+
 # ---------------------------------------------------------------- recognizers
 
 def cache_dir():
@@ -1797,6 +1820,10 @@ def evaluate(project, out, export=None, snapshot=None):
             if a_ or r_ or c_:
                 problem('export_changed', '导出和扫过的那份不一样：多了 %d、少了 %d、改了 %d 个文件（%s）' % (
                     len(a_), len(r_), len(c_), _show(a_ + r_ + c_)), '重新 scan --export')
+        newer = source_newer_than_export(project, export)
+        if newer:   # 11.17 R4Q7 (奔跑吧巨人 source8 + export7 passed): the export was built before these source edits
+            problem('export_not_this_source', '导出不是这版源码：导出构建以后，源码又改了 %d 个文件（%s）' % (
+                len(newer), _show(newer)), '用现在的源码重新构建导出，再 scan --export、check', files=newer[:200])
         try:
             sys.path.insert(0, str(HERE))
             import check_export_images as CEI

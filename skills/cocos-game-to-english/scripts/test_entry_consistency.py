@@ -51,6 +51,10 @@
 15. (简化.11.15, Saul 2026-11-04 "出包后的返工修改，就只检查修改涉及的那些部分") Rework after a test package: stage 5 says to run
    rework_scope.py against the last delivered package, check by hand only what it lists, and let the writers rerun only
    the browser checks the change can affect (the reuse rules themselves are tested in test_rework_scope.py).
+16. (前期预防, written by the 蛋壳特工队 session 2026-11-04, Saul 2026-11-05 "前期预防也收进 11.15") The stage lead points at
+   references/early-prevention.md: stage 1 also lists conditional states, shared-part users and what a change saves;
+   stages 2 and 4 get a representative piece right before copying it and check a changed feature where it is wired;
+   qa/ad-regression.json is started in stages 1-2 without blocking the trial link; full suites stay in stage 5.
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 """
 import json
@@ -333,7 +337,10 @@ class AdBoostAndRedesign(unittest.TestCase):
         for phrase in ('](../ad-boost/SKILL.md)', '--mode localize', '不出选择题、不问 Saul', '「缺必备」或「少」加前 3 个',
                        '「一般」加前 2 个', '「多」加第 1 个', '只在原游戏本来就有这个系统时才加', '奖励关会动原关卡，不加',
                        '原首页按钮一个都不动', '新入口只放空位', '没有空位时不问', '跟原游戏画风走', 'CHANGELOG.md',
-                       '广告奖励行为及广告回归）放到第 5 阶段', '英化游戏以本页为准', '按英化默认做法加入'):
+                       # 前期预防 (Saul 2026-11-05 收进 11.15): this operation's reward and save are checked when wired;
+                       # the full README section 8 acceptance and the ad regression stay in stage 5
+                       '接入时先验证本次操作的奖励、保存和防重复结果', '各板块 README 第 8 节的完整验收及广告回归放到第 5 阶段',
+                       '英化游戏以本页为准', '按英化默认做法加入'):
             self.assertIn(phrase, part, phrase)
         for old in ('Saul 说广告太少时用 ad-boost', '选择题里选了哪个板块，就是授权', '没有空位时问 Saul 放哪'):
             self.assertNotIn(old, text, old)
@@ -410,7 +417,9 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_trial_improve_rechecks_changed_art_before_next_link(self):
         _, st = self.stages()
-        for phrase in ('其余检查留到第 5 阶段', '一次全部改完', '只构建一次', '复查受影响整页、共享组件和新增页面', 'Saul 点名', '直到 Saul 说试玩没问题',
+        # 前期预防 (11.15): the round's own change is checked as it is made; the full suites still wait for stage 5
+        for phrase in ('本轮功能的局部验证随实现完成，完整套件留到第 5 阶段', '不提前跑第 5 阶段的完整套件', '一次全部改完', '只构建一次',
+                       '复查受影响整页、共享组件和新增页面', 'Saul 点名', '直到 Saul 说试玩没问题',
                        '先停掉上一轮的试玩服务', '不能只叫他刷新'):
             self.assertIn(phrase, st[4], phrase)
         self.assertNotIn('刷新同一个链接', (ENTRY / 'SKILL.md').read_text(encoding='utf-8'))
@@ -448,10 +457,13 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_records_for_packaging_do_not_block_the_link(self):
         _, st = self.stages()
-        for record in ('`qa/ad-regression.json`', '`docs/english/image-review.json`'):
+        # 前期预防 (11.15): the adapter's real entries are found in stages 1-2, the file is completed and run in stage 5
+        for record, when in (('`qa/ad-regression.json`', '第 1 / 2 阶段定位真实入口与字段，第 5 阶段补齐并运行完整套件'),
+                             ('`docs/english/image-review.json`', '第 5 阶段写')):
             line = [l for l in st[2].splitlines() if l.startswith('   - **') and record in l.split('**')[1]]
             self.assertEqual(len(line), 1, record)
-            self.assertIn('第 5 阶段写，不挡英文试玩链接', line[0])
+            self.assertIn(when, line[0], record)
+            self.assertIn('不挡英文试玩链接', line[0].split('**')[1], record)
 
     def test_art_redo_starts_with_samples(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -585,8 +597,12 @@ class FasterFirstLink(unittest.TestCase):
         doc = (ENTRY / 'references' / 'english-ui-rebuild.md').read_text(encoding='utf-8')
         self.assertEqual(doc.count('\n## 常见坑（英化包 10.2.7'), 1)
         section = doc.split('\n## 常见坑', 1)[1].split('\n## ', 1)[0]
-        self.assertEqual(re.findall(r'^([1-9])\. \*\*', section, re.M), ['1', '2', '3', '4'])
-        for phrase in ('染黑', 'sprite-frame', 'check_export_images.py', 'node.width', 'overflow'):
+        nums = re.findall(r'^([1-9])\. \*\*', section, re.M)
+        # Saul 10-31 的 4 条在前；R4N5（11-05）接着加了 5～7 条。编号要连续，原来 4 条的要点都还在。
+        self.assertGreaterEqual(len(nums), 4)
+        self.assertEqual(nums, [str(i) for i in range(1, len(nums) + 1)])
+        for phrase in ('染黑', 'sprite-frame', 'check_export_images.py', 'node.width', 'overflow',
+                       'english_copy_guard.py', 'charset.json', '--nodes'):
             self.assertIn(phrase, section, phrase)
 
     def test_readme_names_the_current_version(self):
@@ -606,7 +622,7 @@ class FasterFirstLink(unittest.TestCase):
 
 UPDATES = PACK / '更新记录.txt'
 AD_SECTION = '\n## 看广告：固定几项按广告板块做，第 8 项默认加 ad-boost 板块'
-OLD_VERSION_NOTES = ('11.14.1', '11.14', '11.13', '11.12', '11.1', '11', '10.2.12', '10.2.11', '10.2.10', '10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1',
+OLD_VERSION_NOTES = ('11.16', '11.15', '11.14.1', '11.14', '11.13', '11.12', '11.1', '11', '10.2.12', '10.2.11', '10.2.10', '10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1',
                      '10.2', '10.1', '10')
 # (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
 PRE_TRIAL_NOTES = (
@@ -977,6 +993,43 @@ class ReworkAfterDelivery(unittest.TestCase):
         if not README.is_file():
             self.skipTest('installed copies have no pack README; the release tree and ZIP do')
         self.assertIn('rework_scope.py', README.read_text(encoding='utf-8'))
+
+
+class PreventionAtFirstBuild(unittest.TestCase):
+    """前期预防 (蛋壳特工队会话 2026-11-04 写的，Saul 2026-11-05「前期预防也收进 11.15」): stage 1 also lists conditional
+    states, the users of shared parts and what a change saves; stages 2 and 4 get one representative piece right before
+    copying it and check a changed feature where it is wired. The full regression and packaging suites stay in stage 5."""
+    PAGE = ENTRY / 'references' / 'early-prevention.md'
+
+    def text(self):
+        return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+
+    def test_stage_lead_points_at_the_page(self):
+        lead = self.text().split('\n## 阶段', 1)[1].split('\n1. **', 1)[0]
+        mark = '**前期预防（Saul 2026-11-04）**'
+        self.assertEqual(lead.count(mark), 1)
+        self.assertLess(lead.index(mark), lead.index('**先查美工，再给英文试玩链接'))
+        para = [l for l in lead.splitlines() if l.startswith(mark)][0]
+        for phrase in ('[前期预防](references/early-prevention.md)', '第 1 阶段读取', '先确认代表件实际状态，再批量制作',
+                       '“第 5 阶段检查”指完整回归与出包套件', '不推迟这些制作和接入时的局部验证'):
+            self.assertIn(phrase, para, phrase)
+
+    def test_stage2_and_new_features_use_it(self):
+        _, stages = TrialFirstThenFullChecks().stages()
+        self.assertIn('按[前期预防](references/early-prevention.md)先确认本批代表件和实际状态，再铺到所有受影响使用位置',
+                      stages[2].splitlines()[0])
+        self.assertIn('新增功能先按[前期预防](references/early-prevention.md)做局部验证，玩法、经济等完整回归留到第 5 阶段',
+                      self.text())
+
+    def test_page_keeps_the_full_suites_in_stage5(self):
+        page = self.PAGE.read_text(encoding='utf-8')
+        for heading in ('## 第 1 阶段：按实际状态盘点，提前确定接入契约', '## 第 2 阶段：先把共享组件做对，再铺到其余位置',
+                        '## 改功能时：保存和生命周期跟着实现一起处理', '## 发现新遗漏时如何避免再犯'):
+            self.assertEqual(page.count('\n' + heading + '\n'), 1, heading)
+        for phrase in ('完整广告、平台与出包套件仍在第 5 阶段', '这里不新增审批、独立清单或全量测试轮次',
+                       '这里只做接入准备，正式套件仍由第 5 阶段执行', '未修改的系统不因此全量重测',
+                       '这些局部结果也不代替第 5 阶段平台回归', '不填假成功、宽泛豁免或臆造命令'):
+            self.assertIn(phrase, page, phrase)
 
 
 class OriginalTrialServer(unittest.TestCase):

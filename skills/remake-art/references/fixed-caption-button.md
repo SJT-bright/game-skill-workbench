@@ -18,3 +18,6 @@
 ```sh
 python3 scripts/compose_fixed_button.py examples/fixed-caption/recipe.json claim-demo.png
 ```
+
+生成的透明图要裁边时用 `python3 <skills>/remake-art/scripts/trim_visible.py in.png --out out.png`（按 alpha ≥ 8 算包围框，再留 2px 安全边，写 `.trim.json` 回执），别手写 `getbbox()`：生图常留 alpha 1～7 的散点，裸包围框会留一大圈空边（R4O2，合成进化恐龙 NO THANKS/CLAIM）。本脚本的字和图标前景已用同一算法。
+生成的字图（整词图、按钮字）收到后裁边一律加 `--word`：`trim_visible.py in.png --out out.png --word` 先用 `clean_glow.py` 去掉描边外的半透明彩色光晕再裁；退出码 1 表示去不掉，按它打印的提示词（同尺寸、同字、no glow）重生成再跑，旧图不接（R4R3，弹球传奇 FREE GEMS/OK 提示词写了 no glow 仍带光晕）。只想查不改用 `clean_glow.py --check`。原游戏的图和缩小过的图集不要跑它（发光特效、带柔和投影的原版字会被当成光晕）。

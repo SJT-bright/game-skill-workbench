@@ -41,6 +41,21 @@ Errors (nothing is written for the whole run):
   * no Sprite on the node, a Label on the same node (2.4 and 3.x draw one render component per node), node not
     found / ambiguous, picture not imported, picture imported as a type that is not a sprite or a texture,
     a 3.x picture bound into a 2.4 file (or the other way round), a 3.x node without cc.UITransform.
+Button slots (生成时预防 R4Q1, 补查3 group 1, 5 games: old Label still drawn over a whole new picture, Widget and
+parent Layout both moving the button, natural sprite size, grey state left on the old picture). A node that is a
+button slot (a cc.Button on the node, or on its parent with the node as target / no target) is bound as a slot:
+  * "slot": "auto" (default) - the picture carries the words: every Label / RichText under the slot whose text has
+    CJK characters stops drawing (_enabled false; component and string stay for game code); other labels (numbers,
+    prices) and icon sprites stay on. "whole": every text label under the slot stops drawing. "bg": none.
+  * one layout owner: a parent cc.Layout that lays out children wins and the slot's own cc.Widget is turned off;
+    the slot's own Layout stops resizing the slot (resize CONTAINER -> NONE); the owner goes into the record;
+  * sizeMode CUSTOM in the picture's ratio (as for every binding);
+  * the Button's target is the slot node; SPRITE transition: normal / pressed / hover / disabled = the new frame
+    (2.4: enableAutoGrayEffect on, the engine greys it; 3.x: transition COLOR, disabledColor greys it);
+    2.4 COLOR / SCALE / NONE: enableAutoGrayEffect on. interactable is kept and recorded.
+  --slots [files]  read only: every button slot whose text has CJK characters, per file (page), shown bound
+                   (in docs/art/bind_log.json or its CJK labels already off) or 未接. A Label with a RichText
+                   ancestor is part of that RichText, never a slot title of its own. exit 1 when one is 未接.
 Every binding is recorded with the old box and the new size in <project>/docs/art/bind_log.json.
 --check lists every SIMPLE sprite whose drawn picture is more than 10 % off its own ratio (the old way: a new
 frame dropped into the old box); exit 1 when there is one.
@@ -50,6 +65,7 @@ import json
 import math
 import os
 import pathlib
+import re
 import sys
 import uuid as uuidlib
 
@@ -510,6 +526,171 @@ def cover_old_text(doc, i, frames):
     return blocks, labels
 
 
+# ---------------------------------------------------------------- button slots (R4Q1)
+CJK = re.compile(r'[\u3400-\u9fff\uf900-\ufaff\u3000-\u303f\uff00-\uffef]')
+TEXT_TYPES = ('cc.Label', 'cc.RichText')
+SLOT_MODES = ('auto', 'whole', 'bg')
+SPRITE_TRANSITION, COLOR_TRANSITION = 2, 1
+
+
+def comp_enabled(c):
+    return c.get('_enabled', True) is not False
+
+
+def text_of(c):
+    for k in ('_string', '_N$string', 'string'):
+        if isinstance(c.get(k), str):
+            return c[k]
+    return ''
+
+
+def bkey(doc, btn, name):
+    """Serialized key of a cc.Button field: 3.x `_name`, 2.4 `_N$name` (older 2.x files may carry plain `name`)."""
+    for k in ('_N$' + name, '_' + name, name):
+        if k in btn:
+            return k
+    return ('_' + name) if doc.v3 else ('_N$' + name)
+
+
+def under_richtext(doc, i, top):
+    """A Label whose ancestor (up to and excluding `top`'s parent) carries a RichText belongs to that RichText."""
+    p = doc.parent(i)
+    while p is not None and doc.data[p].get('__type__') == 'cc.Node':
+        if doc.comps(p, 'cc.RichText'):
+            return True
+        if p == top:
+            break
+        p = doc.parent(p)
+    return False
+
+
+def slot_button(doc, i):
+    """-> (button component, its node) when node i is a button slot, else (None, None)."""
+    for b in doc.comps(i, 'cc.Button'):
+        return b, i
+    par = doc.parent(i)
+    if par is not None and doc.data[par].get('__type__') == 'cc.Node':
+        for b in doc.comps(par, 'cc.Button'):
+            t = b.get(bkey(doc, b, 'target'))
+            if not isinstance(t, dict) or t.get('__id__') in (None, i):
+                return b, par
+    return None, None
+
+
+def slot_texts(doc, i):
+    """[(node, component, text)] for the text components drawn inside a slot (RichText children not separate)."""
+    out = []
+    for c in doc.descendants(i, 4):
+        for comp in doc.comps(c, 'cc.Label') + doc.comps(c, 'cc.RichText'):
+            if comp.get('__type__') == 'cc.Label' and under_richtext(doc, c, i):
+                continue
+            out.append((c, comp, text_of(comp)))
+    return out
+
+
+def layout_type(doc, lay):
+    v = lay.get(bkey(doc, lay, 'layoutType'), lay.get('_layoutType', 0))
+    return v if isinstance(v, int) else 0
+
+
+def bind_slot(doc, i, sp, uuid, mode):
+    """Make the slot show only the new whole picture. Returns (record, changes) where changes is the list of
+    (component, key) written, so a nested 3.x binding can turn them into propertyOverrides."""
+    changes = []
+
+    def put(comp, key, value):
+        if comp.get(key) != value:
+            comp[key] = value
+            changes.append((comp, key))
+
+    rec = {'mode': mode}
+    off, kept = [], []
+    for c, comp, text in slot_texts(doc, i):
+        if not comp_enabled(comp):
+            continue
+        if mode == 'whole' or (mode == 'auto' and CJK.search(text)):
+            put(comp, '_enabled', False)
+            off.append('%s %s' % (doc.path_of(c), json.dumps(text, ensure_ascii=False)))
+        elif text.strip():
+            kept.append('%s %s' % (doc.path_of(c), json.dumps(text, ensure_ascii=False)))
+    rec['labels_off'], rec['labels_kept'] = off, kept
+    # one layout owner
+    owner, disabled = 'none', []
+    par = doc.parent(i)
+    par_lay = [l for l in (doc.comps(par, 'cc.Layout') if par is not None else []) if comp_enabled(l)
+               and layout_type(doc, l) != 0]
+    widgets = [w for w in doc.comps(i, 'cc.Widget') if comp_enabled(w)]
+    if par_lay:
+        owner = 'parent cc.Layout (%s)' % doc.path_of(par)
+        for w in widgets:
+            put(w, '_enabled', False)
+            disabled.append('cc.Widget on %s' % doc.path_of(i))
+    elif widgets:
+        owner = 'cc.Widget'
+    for lay in doc.comps(i, 'cc.Layout'):
+        k = '_resizeMode' if doc.v3 else bkey(doc, lay, 'resize')
+        if comp_enabled(lay) and lay.get(k, 0) == 1:
+            put(lay, k, 0)
+            disabled.append('own cc.Layout resize CONTAINER -> NONE')
+    rec['layout_owner'], rec['layout_disabled'] = owner, disabled
+    # button target + grey state
+    btn, bnode = slot_button(doc, i)
+    if btn is not None:
+        put(btn, bkey(doc, btn, 'target'), {'__id__': i})
+        tk = bkey(doc, btn, 'transition')
+        frame = dict(sp['_spriteFrame'])
+        if btn.get(tk, 0) == SPRITE_TRANSITION:
+            for name in ('normalSprite', 'pressedSprite', 'hoverSprite', 'disabledSprite'):
+                put(btn, bkey(doc, btn, name), dict(frame))
+            if doc.v3:
+                put(btn, tk, COLOR_TRANSITION)
+        if not doc.v3:
+            put(btn, bkey(doc, btn, 'enableAutoGrayEffect'), True)
+        ik = bkey(doc, btn, 'interactable')
+        rec['button'] = {'node': doc.path_of(bnode), 'target': doc.path_of(i), 'transition': btn.get(tk, 0),
+                         'interactable': btn.get(ik, True) is not False,
+                         'grey': 'disabledColor (COLOR)' if doc.v3 else 'enableAutoGrayEffect'}
+    return rec, changes
+
+
+def slot_list(project, files=None):
+    """Read only: every button slot with CJK text, per file, and whether it was bound (R4Q1)."""
+    project = pathlib.Path(project).resolve()
+    if not files:
+        files = sorted(p for ext in ('*.prefab', '*.fire', '*.scene') for p in (project / 'assets').rglob(ext))
+    log_path = project / 'docs' / 'art' / 'bind_log.json'
+    try:
+        log = (read_json(log_path).get('bindings') or {}) if log_path.exists() else {}
+    except (ValueError, OSError):
+        log = {}
+    out = []
+    for f in files:
+        try:
+            doc = Doc(f)
+        except (BindError, ValueError, OSError):
+            continue
+        rel = pathlib.Path(f).resolve().relative_to(project).as_posix()
+        seen = set()
+        for bi in doc.nodes:
+            for btn in doc.comps(bi, 'cc.Button'):
+                t = btn.get(bkey(doc, btn, 'target'))
+                si = t['__id__'] if isinstance(t, dict) and isinstance(t.get('__id__'), int) else bi
+                if si in seen or doc.data[si].get('__type__') != 'cc.Node':
+                    continue
+                seen.add(si)
+                texts = slot_texts(doc, bi)
+                cjk = [(c, comp, s) for c, comp, s in texts if CJK.search(s)]
+                if not cjk:
+                    continue
+                path = doc.path_of(si)
+                logged = any(k.startswith(rel + '#') and k.split('#', 1)[1] in (path, doc.path_of(bi))
+                             for k in log)
+                bound = logged or all(not comp_enabled(comp) for _, comp, _ in cjk)
+                out.append({'file': rel, 'slot': path, 'button': doc.path_of(bi), 'bound': bound,
+                            'text': [s for _, _, s in cjk][:4]})
+    return out
+
+
 # ---------------------------------------------------------------- bind
 SPRITE_OVERRIDE_KEYS = ('_spriteFrame', '_sizeMode', '_isTrimmedMode', '_atlas')
 
@@ -534,7 +715,9 @@ def bind_one(doc, b, frames, by_png, project, meta_fixes=None):
     doc, i, nest = outer_doc.resolve(b['node'])
     if nest is not None:
         return bind_nested(outer_doc, doc, i, nest, b, frames, by_png, project, meta_fixes)
-    return bind_local(doc, i, b, frames, by_png, project, meta_fixes)
+    rec = bind_local(doc, i, b, frames, by_png, project, meta_fixes)
+    rec.pop('_slot_changes', None)
+    return rec
 
 
 def bind_nested(outer_doc, view, i, nest, b, frames, by_png, project, meta_fixes):
@@ -555,6 +738,15 @@ def bind_nested(outer_doc, view, i, nest, b, frames, by_png, project, meta_fixes
         if sp.get(k) != before_sp.get(k):
             sp_id = sp_id or view.comp_file_id(sp, 'cc.Sprite')
             changes.append((pre + [sp_id], [k], sp.get(k)))
+    skipped = []
+    for comp, key in rec.pop('_slot_changes', []):   # R4Q1 slot changes on other components of the nested prefab
+        v = comp.get(key)
+        if isinstance(v, dict) and '__id__' in v:
+            skipped.append('%s.%s (node reference; set it in the nested .prefab)' % (comp.get('__type__'), key))
+            continue
+        changes.append((pre + [view.comp_file_id(comp, comp.get('__type__'))], [key], v))
+    if skipped:
+        rec.setdefault('slot', {})['nested_not_written'] = skipped
     for lid, path, v in changes:
         set_override(outer_doc, inst, lid, path, json.loads(json.dumps(v)))
     rec['prefab'] = outer_doc.path.relative_to(project).as_posix()
@@ -628,6 +820,11 @@ def bind_local(doc, i, b, frames, by_png, project, meta_fixes=None, scale_mul=(1
     sp['_isTrimmedMode'] = bool(trim)
     r = drawn_ratio(new, trim, geo)
     rec['ratio_diff'] = round(abs(r / (geo['rect'][0] / float(geo['rect'][1])) - 1), 4) if r else None
+    mode = b.get('slot', 'auto')
+    if mode not in SLOT_MODES:
+        raise BindError('%s: "slot" must be one of %s' % (b['node'], ', '.join(SLOT_MODES)))
+    if slot_button(doc, i)[0] is not None or mode == 'whole':
+        rec['slot'], rec['_slot_changes'] = bind_slot(doc, i, sp, uuid, mode)
     return rec
 
 
@@ -742,8 +939,17 @@ def main():
     ap.add_argument('--gen-log', default='')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--check', nargs='*')
+    ap.add_argument('--slots', nargs='*', help='read only: button slots with CJK text per file, bound or 未接 (R4Q1)')
     a = ap.parse_args()
     try:
+        if a.slots is not None:
+            rows = slot_list(a.project, a.slots)
+            for r in rows:
+                print('%s %s %s (button %s): %s' % ('[已接]' if r['bound'] else '[未接]', r['file'], r['slot'],
+                                                    r['button'], ' / '.join(r['text'])))
+            miss = sum(1 for r in rows if not r['bound'])
+            print('%d button slot(s) with CJK text, %d 未接' % (len(rows), miss))
+            return 1 if miss else 0
         if a.check is not None:
             bad = run_check(a.project, a.check)
             for b in bad:

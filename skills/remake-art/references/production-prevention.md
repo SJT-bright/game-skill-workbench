@@ -12,13 +12,14 @@ Saul 2026-11-03：已有美工检查中能提前避免的问题，应在生成�
 ## 出图和接图的两条固定做法（R4C，普查 squashed_image 32 款、sprite_crop_fragment 17 款）
 
 1. **接图一律用 `bind_art.py`，不手改节点宽高**。新图放进工程后跑 `python3 <skills>/remake-art/scripts/bind_art.py --project <工程> --map bind.json`，它按新图比例在旧框里算节点尺寸、设 trim 和 sizeMode，并记进 `docs/art/bind_log.json`；Cocos 3.x 场景里的嵌套预制体实例，按实例路径写节点（如 `Canvas/PlayBtn/icon`），脚本写进实例的 propertyOverrides，不改嵌套的 .prefab。不要只换 SpriteFrame 不改框，也不要凭眼睛填宽高。接完跑 `bind_art.py --project <工程> --check`，有压扁的退出码是 1。它列的是工程里所有比例差 10% 以上的节点，不只是这一轮接的图。英化游戏只改这一轮换过图的节点；图还是原游戏那张的（哈希在 `docs/english/pre-english-images.json` 里），比如 8×8 白图拉满屏的遮罩、角色身体部件、进度条，照原样不动。
+   **按钮槽一次接完（R4Q1，补查3 第 1 组 5 款）**：接的节点是按钮槽（自己有 cc.Button，或父节点的 Button 指向它）时，`bind_art.py` 默认把槽里带中文的 Label/RichText 停掉渲染（组件和字符串留着给代码读；`"slot": "whole"` 停掉全部文字，`"bg"` 都不停），数字、价格和图标照留；父 Layout 在排子节点就停掉槽上的 Widget，槽自己的 Layout 不再撑大槽，谁管布局写进接图记录；Button 的 target 指向槽，SPRITE 过渡的四张图都换成新图，灰态 2.4 用 enableAutoGrayEffect、3.x 改 COLOR 过渡。别手关 Label、别手改 Button 的图。接完跑 `bind_art.py --project <工程> --slots` 看同一页还有哪些带中文的按钮槽「未接」，有未接退出码是 1。
 2. **新美术一张图只放一个主体；条状图只用脚本切**。按钮、图标、标题、角色各自单独生成。确实要一张条状图或拼图（数字条、开箱帧、行列拼图）时，只用 `remake-art/scripts/cut_sheet_frame.py`（行列拼图，见[透明拼图切出独立 PNG](atlas-slice-integrity.md#透明拼图切出独立-png先定归属再紧裁)）或 `ad-boost/scripts/art/cut_strip.py`（字宽不等的数字/字母条）切，不按图宽÷格数手算框，也不在图片软件里手裁。
 
 ## 数值栏的词、数字与符号整组制作
 
 用户 2026-11-04 的原图中，LEVEL 与 / 仍为普通字，旁边的 1、GOAL、40、60 已美化。第一轮美工凡有等级或关卡标签，LEVEL、Level、Lv.、Lvl 都要按本游戏画风做成完整图片字。同组 GOAL、SCORE、STAGE 等固定短词也执行。与装饰字和位图数字一起显示的 /、:、%、+、−、× 及实际使用的单位和分隔符必须有同套画法，不能用默认字体、TTF 描边或加粗临时补位。普通正文说明继续使用可读正文排版。
 
-1. **开图前列整组内容**。从这一组 UI 的固定词、格式化代码和已有状态，列出实际显示的词、0–9、符号、单位以及最长合法字符串。即使分在不同节点，或词本来就是英文，也纳入同一个生成任务。例如此图列 LEVEL、GOAL、0–9、/，同时规划 LEVEL 1 和 GOAL 40 / 60 的组合。动态数值保持真实绑定。
+1. **开图前列整组内容**。从这一组 UI 的固定词、格式化代码和已有状态，列出实际显示的词、0–9、符号、单位以及最长合法字符串。即使分在不同节点，或词本来就是英文，也纳入同一个生成任务。例如此图列 LEVEL、GOAL、0–9、/，同时规划 LEVEL 1 和 GOAL 40 / 60 的组合。动态数值保持真实绑定。英化游戏不用手列：英文写完后跑 `python3 <skills>/cocos-game-to-english/scripts/english_copy_guard.py --project <工程>`，它写的 `docs/english/charset.json` 里，`value_charset` 是要画的数字和符号，`word_images` 是要出的整词图，`fonts[].missing` 是现有 .fnt 还缺的字（见[资源数字实显短检](stat-digit-runtime-review.md)第 5 条，R4N5）。
 2. **用同一参考生成**。图片词完整出图，数字和符号同套生成。提示词明确与已认可数字一致的填色、描边、厚度、光照与材质，同时提供整行预期比例和基线。符号可比数字小，仍须有相同画法和清楚的间距。保留图集的字形名单，逐项确认斜杠、冒号等真的存在、可辨认、未切断。
 3. **接图前补齐字形**。用实际格式化输出核对字符覆盖，把符号放进位图字体或独立 Sprite。缺字形时补生成同套符号，禁止悄悄回退系统字体或用空字符替代。固定词只有一个显示来源，接入新词图时停用对应旧文字层。
 4. **第一组按完整行接入**。以最终显示大小查看 LEVEL 与等级、GOAL 与当前值 / 目标值，试最短、最长及分母变化的合法状态。按可见字芯对齐基线、留白和整体权重，避免仅数字完成而标签与符号遗漏。修改值仍能正确刷新，不将演示数字烘焙成固定值。

@@ -18,25 +18,46 @@ def runlen(values):
     for item in values:length=length+1 if item else 0;best=max(best,length)
     return best
 
+def components(mask,width,height):
+    """8-connected parts of a row-major 0/1 mask: [{'area','bbox'}] in the order a raster scan first meets them, the
+    same list the old pixel-by-pixel flood fill made. It joins runs of set pixels row by row instead of visiting every
+    pixel; the fill took 11 s for the 139 textures of 蛋壳特工队 (美工skill 2026-11-05)."""
+    data=bytes(mask);parent=[];runs=[];prev=[]
+    def root(a):
+        while parent[a]!=a:parent[a]=parent[parent[a]];a=parent[a]
+        return a
+    for y in range(height):
+        row=data[y*width:(y+1)*width];cur=[];x=row.find(1)
+        while x!=-1:
+            end=row.find(0,x)
+            if end==-1:end=width
+            cur.append(len(runs));runs.append((y,x,end));parent.append(len(parent));x=row.find(1,end)
+        k=0
+        for rid in cur:
+            b0,b1=runs[rid][1],runs[rid][2]
+            while k<len(prev) and runs[prev[k]][2]<b0:k+=1      # ends left of the pixel before b0: not touching
+            m=k
+            while m<len(prev) and runs[prev[m]][1]<=b1:          # starts at most one pixel right of b1-1: touching
+                ra,rb=root(prev[m]),root(rid)
+                if ra!=rb:parent[max(ra,rb)]=min(ra,rb)
+                m+=1
+        prev=cur
+    parts={}
+    for rid,(y,x0,x1) in enumerate(runs):
+        r=root(rid)
+        if r not in parts:parts[r]={'area':0,'bbox':[x0,y,x1,y+1]}
+        p=parts[r];p['area']+=x1-x0;b=p['bbox']
+        b[0]=min(b[0],x0);b[2]=max(b[2],x1);b[3]=max(b[3],y+1)
+    return list(parts.values())     # dict order = first run of each part = where the raster scan first met it
+
 def inspect_texture(path):
     from PIL import Image
     with Image.open(path) as source:im=source.convert('RGBA')
-    width,height=im.size;mask=bytearray(v>8 for v in im.getchannel('A').tobytes())
+    width,height=im.size;mask=bytearray(im.getchannel('A').point(lambda v:1 if v>8 else 0).tobytes())
     if not any(mask):return {'size':[width,height],'suspects':['empty_alpha'],'edge_runs':{},'components':[]}
     edges={'top':mask[:width],'bottom':mask[-width:],'left':mask[::width],'right':mask[width-1::width]}
     cuts={key:runlen(values) for key,values in edges.items() if runlen(values)>=max(16,len(values)*.15)}
-    remaining=mask[:];parts=[]
-    for i in range(width*height):
-        if not remaining[i]:continue
-        queue=deque([i]);remaining[i]=0;area=0;box=[width,height,0,0]
-        while queue:
-            z=queue.popleft();area+=1;x=z%width;y=z//width
-            box=[min(box[0],x),min(box[1],y),max(box[2],x+1),max(box[3],y+1)]
-            for xx in range(max(0,x-1),min(width,x+2)):
-                for yy in range(max(0,y-1),min(height,y+2)):
-                    index=yy*width+xx
-                    if remaining[index]:remaining[index]=0;queue.append(index)
-        parts.append({'area':area,'bbox':box})
+    parts=components(mask,width,height)
     parts.sort(key=lambda x:-x['area']);floor=max(12,parts[0]['area']*.0005)
     fragments=[c for c in parts[1:] if c['area']>=floor]
     margin=max(2,min(width,height)*.005);b=parts[0]['bbox'];touches=min(b[0],b[1],width-b[2],height-b[3])<margin
@@ -86,26 +107,29 @@ def check(root,names,role='single_body'):
                 name=doc[5][0].get('name')
                 if name not in matches:continue
                 uuid=decode(doc[1][0]);native=folder.parent/'native'
-                textures=list(native.rglob(uuid+'.png'))
-                if len(textures)!=1:raise ValueError('missing/ambiguous standalone PNG')
-                path=textures[0].resolve()
-                if not path.is_relative_to(root):raise ValueError('texture outside Native root')
-                matches[name].append(path)
+                textures=sorted(native.rglob(uuid+'.png'))
+                if not textures:raise ValueError('missing standalone PNG')
+                for texture in textures:
+                    path=texture.resolve()
+                    if not path.is_relative_to(root):
+                        errors.append({'path':str(p.relative_to(root)),'texture':str(texture.relative_to(root)),'error':'texture outside Native root'})
+                        continue
+                    matches[name].append(path)
             except (OSError,ValueError,TypeError,IndexError,KeyError) as exc:
                 errors.append({'path':str(p.relative_to(root)),'error':str(exc)})
-    rows=[];cache={}
+    rows=[];cache={};candidate_counts={}
     for name,paths in matches.items():
-        if len(paths)!=1:
-            if len(paths)>1:errors.append({'frame':name,'error':'ambiguous frame name across bundles'})
-            continue
-        path=paths[0]
-        try:
-            if path not in cache:cache[path]=dict(inspect_texture(path),sha256=hashlib.sha256(path.read_bytes()).hexdigest())
-            row=dict(cache[path],name=name,texture=str(path.relative_to(root)));rows.append(row)
-        except (OSError,ValueError,ImportError) as exc:errors.append({'frame':name,'error':str(exc)})
+        # Inspect every distinct candidate. Name collisions do not identify which
+        # bundle the runtime used, but must not hide a candidate's source signals.
+        paths=sorted(set(paths));candidate_counts[name]=len(paths)
+        for path in paths:
+            try:
+                if path not in cache:cache[path]=dict(inspect_texture(path),sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+                row=dict(cache[path],name=name,texture=str(path.relative_to(root)),candidate_count=len(paths));rows.append(row)
+            except (OSError,ValueError,ImportError) as exc:errors.append({'frame':name,'texture':str(path.relative_to(root)),'error':str(exc)})
     missing=sorted(set(names)-{row['name'] for row in rows});review=any(row['suspects'] for row in rows)
     status='incomplete' if missing or errors or not rows else 'needs_review' if review else 'no_signals'
-    return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'art_verdict':'not_assessed','coverage':'named standalone Cocos2/3 source or Cocos2 export PNG signals only; actual frame rect and whole-page composition need project observation'}
+    return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'candidate_counts':candidate_counts,'runtime_binding':'not_assessed','art_verdict':'not_assessed','coverage':'all discovered distinct standalone PNG candidates for each named Cocos2/3 source or Cocos2 export frame; name collisions are exhaustively inspected, not resolved to runtime bindings; actual frame rect and whole-page composition need project observation'}
 
 def captured_inventory(dumps):
     names=set();pages=set()

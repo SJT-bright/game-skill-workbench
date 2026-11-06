@@ -18,6 +18,9 @@ if __name__ == '__main__':
         _spec.loader.exec_module(_mod)
         _mod.need_modules('PIL')
 from PIL import Image
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+from trim_visible import visible_box
 
 
 def positive(value, field):
@@ -39,9 +42,11 @@ def load_art(root, record):
 def foreground(root, record):
     image = load_art(root, record)
     alpha = image.getchannel('A')
-    if alpha.getextrema()[0] == 255 or alpha.getbbox() is None:
+    # R4O2: crop on visible alpha (>= 8) + 2 px, not on every alpha>0 speck the image model left behind
+    box = visible_box(image)
+    if alpha.getextrema()[0] == 255 or box is None:
         raise ValueError('foreground requires visible ink and a transparent background')
-    return image.crop(alpha.getbbox())
+    return image.crop(box)
 
 
 def width_at(image, height):

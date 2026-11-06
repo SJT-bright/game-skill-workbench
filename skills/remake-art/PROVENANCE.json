@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-05.english-simple.11.15",
+  "revision": "2026-11-05.english-simple.11.17",
   "skill": "remake-art",
-  "previous_provenance_sha256": "73b17a946b6f6d35c0bfebc86e7b1556a92c6d28d75462e8876442198eaf5506",
+  "previous_provenance_sha256": "026a0f089a7997749b9ee24c1097501b2e55e6372542f00c26d166a6bc0765b3",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "48204bfb1744c5baf51b0bb2186cb53cc52bb2ecdb5c768dfd1fe0180bf8536d",
-      "bytes": 20126
+      "sha256": "c74fde0bf812461655379a2fba03d18e4220b8acb24c0f62904ed636710073c8",
+      "bytes": 20525
     },
     {
       "path": "agents/openai.yaml",
@@ -47,13 +47,13 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "f312f438c383f7563342033acd7577e961d64b18381d29e960cfc73bc4f9e0bc",
-      "bytes": 5852
+      "sha256": "8ff3d3c00150eb6e4aa295e83066164dd01123135f5c25c4d347aa3819f8fa1f",
+      "bytes": 6700
     },
     {
       "path": "references/artwork-and-feedback.md",
-      "sha256": "fcf70487b437c90369578a43ff815beb81585ff5a51aa0c91ce9385874ae2676",
-      "bytes": 24597
+      "sha256": "b6a406695c663159cda7278b9b36f403a1a0a94a43d1bf250b8f4fd34ae3c5cc",
+      "bytes": 25122
     },
     {
       "path": "references/atlas-slice-integrity.md",
@@ -97,8 +97,8 @@
     },
     {
       "path": "references/fixed-caption-button.md",
-      "sha256": "3100b05e6886cf384196441f4144035d77c1ed7233769951b5dd1ddc1fda863e",
-      "bytes": 2670
+      "sha256": "c7d1880347f74f5c89c95302c4268ad2cdfae632c12e5b9614cfa37c3c85d6e6",
+      "bytes": 3615
     },
     {
       "path": "references/full-visual-review.md",
@@ -107,8 +107,8 @@
     },
     {
       "path": "references/home-by-gameplay.md",
-      "sha256": "b91f6eb1ffd5c26a3edf97272ea34c032e2e0ae446b82f83e00eede328860d62",
-      "bytes": 5652
+      "sha256": "30149a2194f52732523d6588b55d2f9caea20e9a58035e782a6e7e0d2f5ff3de",
+      "bytes": 5706
     },
     {
       "path": "references/large-background-static-review.md",
@@ -122,13 +122,13 @@
     },
     {
       "path": "references/mobile-button-size-and-home-layout.md",
-      "sha256": "318dae22288084d3e7c1eb7814abac3526ae0c37c4c0ab9561e6b65013c20b78",
-      "bytes": 7738
+      "sha256": "e42da7ddfcb9f20c1533d7a39a02fd7919d205bcd19b6f8f2b94b41ae6420851",
+      "bytes": 7922
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "cb6d24681c3c108406d8fb5a74f0cfa98138003bff9af98fda85a2175013a617",
-      "bytes": 94075
+      "sha256": "c13d2761879b79eca3ef22c17f59a5845d19a783ed0700b71667662ab3005011",
+      "bytes": 94774
     },
     {
       "path": "references/panel-composite-review.md",
@@ -142,13 +142,13 @@
     },
     {
       "path": "references/production-prevention.md",
-      "sha256": "2857b68d5915523250fd3f88764bbc3728587b3e3f594499ecfd815a59e8d278",
-      "bytes": 29527
+      "sha256": "d057b24cf82c98452d394ec97f71e9162cf7da46b4a41ffb8379f68adc7145da",
+      "bytes": 30725
     },
     {
       "path": "references/saul-art-rules.md",
-      "sha256": "d0c7f036c9ccafb33c93fe3da2de9a9642245962888400f7597cb22ce4e11013",
-      "bytes": 49657
+      "sha256": "133cb14036870904c92c1ddef969d03238de4b2e24375c9d9ba5599e856ce695",
+      "bytes": 50010
     },
     {
       "path": "references/standalone-alpha-review.md",
@@ -157,13 +157,13 @@
     },
     {
       "path": "references/stat-digit-runtime-review.md",
-      "sha256": "59ee911e5c720a4e33fe4dc719c6c1207f453a0fe96ac91a29b12ff2b37c4b9e",
-      "bytes": 1699
+      "sha256": "be1643ded0ca1f5fbe4de13a84d768b9c0ef4b42b7bd270ecf1b921fca015c41",
+      "bytes": 2240
     },
     {
       "path": "references/style-limits.md",
-      "sha256": "4139a363c20d55fe0e482d411dc22761fcfb8e96977998095903dc3b6b9b568f",
-      "bytes": 28452
+      "sha256": "c41e6a2008357f81e6a5e4884a12e197fefa9b5dfc1a9a060acebe73bd7dc66f",
+      "bytes": 28654
     },
     {
       "path": "references/text-backplate-review.md",
@@ -187,8 +187,8 @@
     },
     {
       "path": "scripts/bind_art.py",
-      "sha256": "874d303c6472905a32e8b0363d0ce4299ab7ae99facaa3eab2684e482bc9d651",
-      "bytes": 37167
+      "sha256": "7a8e70f1f30145b84cda29ce2b128d7489f4a7b9a95c83d949cf4687be3d9da6",
+      "bytes": 46980
     },
     {
       "path": "scripts/check_button_group.py",
@@ -207,8 +207,8 @@
     },
     {
       "path": "scripts/check_native_sprite_sources.py",
-      "sha256": "883985feea39cbc3006bd612f5725cc04918de195f9bf0e212cfb0ded7876403",
-      "bytes": 10422
+      "sha256": "e8915cb6bc106c79571e881559dd552923893a3c26cf70d8c83e7fabcd36a21e",
+      "bytes": 11491
     },
     {
       "path": "scripts/check_phone_boundary.py",
@@ -216,9 +216,14 @@
       "bytes": 3800
     },
     {
+      "path": "scripts/clean_glow.py",
+      "sha256": "cb28a375acf2997e76b30cbdc92b2b02fb450b436ed840275c8a3d2420ff8b37",
+      "bytes": 10288
+    },
+    {
       "path": "scripts/compose_fixed_button.py",
-      "sha256": "197add49614a3fc77496abe016c21266ce3f2d9937902b1f802bc7ac3bdd0212",
-      "bytes": 4528
+      "sha256": "387a5f72d3f9a152cf07d0869ff6b06619b23172dacf3b4345ae6f827f8e78d1",
+      "bytes": 4751
     },
     {
       "path": "scripts/cut_sheet_frame.py",
@@ -227,8 +232,13 @@
     },
     {
       "path": "scripts/make_greybox_reference.py",
-      "sha256": "2a6360eb4a2156ea342a962a9d8116a436b2e4f51fda4d2c11d207eb77f382c7",
-      "bytes": 9354
+      "sha256": "10ad3548a8a06e13d00d4f6afb7388c084ed8724328867d5a61490622995b693",
+      "bytes": 10832
+    },
+    {
+      "path": "scripts/prompt_name_guard.py",
+      "sha256": "621e00e8568bdb15e515540e6753087637afdeae60f6e64da7ecbfa9d76fb3f5",
+      "bytes": 21382
     },
     {
       "path": "scripts/test_bind_art.py",
@@ -239,6 +249,16 @@
       "path": "scripts/test_bind_art_3x.py",
       "sha256": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
       "bytes": 27976
+    },
+    {
+      "path": "scripts/test_bind_art_slot.py",
+      "sha256": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
+      "bytes": 8953
+    },
+    {
+      "path": "scripts/test_clean_glow.py",
+      "sha256": "457d2ce302ddc9c219c922fc801b3f9b569da539e1cf598edca252a056aa8533",
+      "bytes": 5301
     },
     {
       "path": "scripts/test_cut_sheet_frame.py",
@@ -256,9 +276,34 @@
       "bytes": 3130
     },
     {
+      "path": "scripts/test_prompt_name_guard.py",
+      "sha256": "426ab51d629de1ce5df18b96cc47166e27173777f5e5ddb1d4c88f695f376a59",
+      "bytes": 6766
+    },
+    {
+      "path": "scripts/test_prompt_name_guard_fix.py",
+      "sha256": "1db5cb55716168e7b0b6b21a1b4bb0a1e36d9a462e538b21728b12df36c34a40",
+      "bytes": 4096
+    },
+    {
+      "path": "scripts/test_prompt_name_guard_refs.py",
+      "sha256": "a689ed2c77cbe491ab6a5d9dd436ff00d07388df0b5854a56ae325b09df3bcb5",
+      "bytes": 2634
+    },
+    {
       "path": "scripts/test_source_residue.py",
       "sha256": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
       "bytes": 3144
+    },
+    {
+      "path": "scripts/test_trim_visible.py",
+      "sha256": "944ebdfe49ae356658feedd822bbd552da8b862a0f9f912e41ad5a08a33b06ba",
+      "bytes": 2933
+    },
+    {
+      "path": "scripts/trim_visible.py",
+      "sha256": "891bec3a3cd8f7d806e815ec7b1bf29734ba1dede728d303bb0cc574d73668c1",
+      "bytes": 4556
     }
   ]
 }

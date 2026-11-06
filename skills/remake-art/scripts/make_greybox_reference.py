@@ -10,7 +10,9 @@ the prompt can say "#3 is the start button, 220x90".
     python3 make_greybox_reference.py --folder <dir of sprites> --out ref.png        one block per file, in a grid
     python3 make_greybox_reference.py --dump <ui-dump.json> --out ref.png            one block per visible node
                                                                                       (chrome_touch dump_ui)
-Options: --boxes (rectangles instead of silhouettes), --min-area N (ignore specks, default 64 px), --scale S.
+Options: --boxes (rectangles instead of silhouettes), --min-area N (ignore specks, default 64 px), --scale S,
+--project <game> (R4O2: pieces named after the game or a logo become "title slot" rows, so no game name reaches the
+prompt; Saul 2026-11-05). Before generating, run prompt_name_guard.py --project <game> --file <prompt file>.
 An opaque picture (a screenshot) has no islands to find: use --dump of the same page instead (the tool refuses).
 Writes <out> and <out>.json ({source, sha256, mode, items: [{n, name, box: [x, y, w, h]}]}). Needs Pillow only.
 """
@@ -29,6 +31,10 @@ TONES = ((176, 176, 176), (140, 140, 140), (204, 204, 204))   # three flat greys
 BACK = (244, 244, 244)
 INK = (32, 32, 32)
 EXT = ('.png', '.webp', '.jpg', '.jpeg')
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import prompt_name_guard  # noqa: E402  (same folder, standard library only)
+import re  # noqa: E402
+TITLE_PIECE = re.compile(r'(?i)(^|[^a-z])(logo|game[_ -]?title|game[_ -]?name|title[_ -]?logo)([^a-z]|$)|游戏名|标题\s*logo')
 
 
 def font(size):
@@ -163,6 +169,8 @@ def main(argv=None):
     ap.add_argument('--boxes', action='store_true', help='rectangles instead of silhouettes')
     ap.add_argument('--min-area', type=int, default=64)
     ap.add_argument('--scale', type=float, default=2.0, help='--dump only: output pixels per CSS pixel')
+    ap.add_argument('--project', type=Path, help='R4O2: game folder; legend names carrying the game name become '
+                    'title slots (the legend goes into prompts)')
     a = ap.parse_args(argv)
     if Image is None:
         print('Pillow is missing: run with a Python that has it (e.g. /usr/bin/python3 on macOS)', file=sys.stderr)
@@ -191,6 +199,16 @@ def main(argv=None):
               'mode': 'image' if a.image else 'folder' if a.folder else 'dump', 'size': list(size),
               'note': 'Only this grey-box picture goes to the image model, never the base art (总表 H12).',
               'items': [{'n': n, 'name': name, 'box': list(box)} for n, name, box, _c, _s in items]}
+    # R4O2 (Saul 2026-11-05): the legend is pasted into prompts, so it must not carry the game name; a title/logo
+    # piece becomes a slot for the protagonist, characters, props or a pattern
+    legend['prompt_rule'] = ('Never write the game name in a prompt; where a title or logo was, ask for the '
+                             'protagonist, characters, props, a pattern or the scene (check: prompt_name_guard.py).')
+    names = prompt_name_guard.game_names(a.project) if a.project else []
+    for row in legend['items']:
+        hit = prompt_name_guard.scan(row['name'], names) or TITLE_PIECE.search(row['name'])
+        if hit:
+            row['name'] = 'title slot: fill with the protagonist / characters / props / a pattern, no game name'
+            row['title_slot'] = True
     Path(str(a.out) + '.json').write_text(json.dumps(legend, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     print(json.dumps({'out': str(a.out), 'items': len(items), 'legend': str(a.out) + '.json'}, ensure_ascii=False))
     return 0

@@ -10,7 +10,7 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 
 # Cocos美术重做与局部修正（美术与UI板块）
 
-修订：`2026-10-27.modules-v6`。**管什么**：画风禁止项（只写负向约束；画风本身跟启动包走，用户 2026-10-27/28）、页面布局与分区、按钮、图片字与 Logo、图标、动效、首页与设置页、加载页画面。**不管什么**：文字内容是否地道（文案（重塑包 remake-copy 板块，英化包不含））、数值（[经济](../remake-economy/SKILL.md)）、关卡数据（关卡（重塑包 remake-levels 板块，英化包不含））。
+修订：`2026-10-27.modules-v6`。**管什么**：画风禁止项（只写负向约束；画风本身跟启动包走，用户 2026-10-27/28）、页面布局与分区、按钮、图片字与首页大图、图标、动效、首页与设置页、加载页画面。**不管什么**：文字内容是否地道（文案（重塑包 remake-copy 板块，英化包不含））、数值（[经济](../remake-economy/SKILL.md)）、关卡数据（关卡（重塑包 remake-levels 板块，英化包不含））。
 
 **必须遵循（Saul 2026-10-29）**：TikTok 固定适配（触摸、启动加载、激励广告、存档读值、适配层、图片、加桌面/回访、登录/App ID、胶囊/首页底排/不要 Credits）和跨游戏通用流程一律按 [TikTok 固定适配](../cocos-game-check/references/tiktok-fixed-adaptation.md) 做：美术只出 PNG/JPG，右上角留给胶囊，首页底排只放两个平台入口，不做 Credits；新游戏只用平台包标准件，不手写；旧游戏只给警告，由各自会话处理。
 
@@ -27,14 +27,14 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 | 工作 | 按需读取 |
 |---|---|
 | 主题、样板与同套资产 | [UI规范与样板](references/ui-style-and-samples.md)、[画风只守禁止项](references/style-limits.md) |
-| Logo、图片字、按钮连字、位图数字 | [页面不单调与文字](references/page-richness.md)、[字底与字形](references/text-backplate-review.md) |
+| 首页大图（不写游戏名）、图片字、按钮连字、位图数字 | [页面不单调与文字](references/page-richness.md)、[字底与字形](references/text-backplate-review.md) |
 | 双倍按钮、首页分区和动态标题/主角 | [按钮与首页](references/mobile-button-size-and-home-layout.md)；结算页 ×2 大按钮＋下方一行 Claim 文字见[结算页设计](../remake-ads/SKILL.md#结算页设计用户-2026-10-27) |
 | 首页按玩法设计、会动的背景、可互动的首页物件 | [首页按玩法设计](references/home-by-gameplay.md)（用户 2026-10-28） |
 | 集合预览、首尾压框、装备对应 | [集合预览](references/collection-preview-review.md) |
 | 拼装后的实际画面和输入 | [美术自审](references/artwork-and-feedback.md)、[局部UI契约](references/local-ui-contract.md) |
 | 用户确认后的检查范围 | [美术前移与锁定](references/art-before-trial.md)、[执行去重](../cocos-game-check/test/references/review-execution-plan.md) |
 
-已有核准整词字图且可取得同款无字底的固定英文按钮，优先按[固定词按钮生成](references/fixed-caption-button.md)把底图、图标和整词按实尺寸一次合成一张 PNG。其余已知文字/按钮与其底图由内置image_gen整体生成，标题使用风格化logo，动态数字使用生成的位图字；不以程序字或空底叠字冒充。字图等比缩放，实际组合图核字芯/描边、装饰压字、关闭与父面板、最长数字串和字距；普通矩形边界通过不能代替实际画面。
+已有核准整词字图且可取得同款无字底的固定英文按钮，优先按[固定词按钮生成](references/fixed-caption-button.md)把底图、图标和整词按实尺寸一次合成一张 PNG。其余已知文字/按钮与其底图由内置image_gen整体生成，页面标题用图片字，游戏名不放进游戏（原位置放主角或图案图），动态数字使用生成的位图字；不以程序字或空底叠字冒充。字图等比缩放，实际组合图核字芯/描边、装饰压字、关闭与父面板、最长数字串和字距；普通矩形边界通过不能代替实际画面。
 
 **数值栏必须整组制作（Saul 2026-11-04）**：任何页面的 LEVEL / Lv. 固定标签都做图片字，与数值同组的 GOAL、SCORE 及 /、:、%、+、−、× 等实际符号一起按同套画风制作。生成前列齐词、数字与符号，按[数值栏整组制作](references/production-prevention.md#数值栏的词数字与符号整组制作)接入第一组；不能只换数字，把普通标签或符号留在旁边。
 
@@ -50,7 +50,7 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 
 **灰盒参考、样板先行、3D 换皮只管重塑（v7.8 H12）**：英化换图要跟原画风一致，可以直接拿原图做参考；重塑包里"生图参考只传灰盒（`remake-art/scripts/make_greybox_reference.py`）、提示词默认不写 highlight 和 outline、先出 1 张首页样板、3D 底子整棵关掉重铺"这几条英化不用。
 
-完整首次重做覆盖实际全部页面、弹窗和条件状态、两种比例及两轮自审；局部修改查受影响整页、共享组件与真实点击，已通过且无新变化不再追加整轮。`art_check.py`按适用行运行，未测范围不写通过。用户确认画面后，最终出包只查运行故障，不重评审美。
+完整首次重做覆盖实际全部页面、弹窗和条件状态、两种比例及两轮自审；局部修改查受影响整页、共享组件与真实点击，已通过且无新变化不再追加整轮。`art_check.py`按适用行运行，未测范围不写通过。用户确认画面后，最终出包只查运行故障，不重评审美。确认后又改了文字、字体、按钮或节点位置，美术回执会过期（R4M2），和改图一样要只对改动重跑 `art_check.py`（做法见[试玩后锁定](references/art-before-trial.md#用户试玩确认之后)），回执自动更新；别手改 `.tiktok-kit/art-receipt.json`。
 
 共同症状按[当前合同](../remake-core/references/current-contracts.md)进入所属参考。交用户[同版固定手机预览](../remake-core/references/user-phone-preview.md)，结束自建QA页与无用服务。本任务不自动生成游戏包；已报告缺图/遮挡等问题记入项目，并定点修复复验。
 

@@ -76,7 +76,8 @@ def slots_problems():
 # 简化.11.13 P10 (I1): SaveStore.plugin.js c6d7b35f = the plugin of the SaveStore.js before grant() / best().
 # R4E: dcf16d37 = the plugin of SaveStore.js 9fca45e2 (简化.11.13, before the read-time schema check).
 # R4J1: 81f90088 = the plugin of SaveStore.js ba99f771 (R4E, before schema 2 and the dated grant id clean-up).
-PREVIOUS = {'missionflow3x': ['9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2'],
+PREVIOUS = {'missions3x': ['7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d'],
+            'missionflow3x': ['fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919', '9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2'],
             'rewarded3x': ['16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a'],
             'savestore3x': ['c6d7b35f87ec51d5c768a33636354506c238bd86f92ab5c5847687499cd31eb1',
                             'dcf16d37f6032f97e799624f2da01ccf972686bc93305cd778f4f0a207f38a59',

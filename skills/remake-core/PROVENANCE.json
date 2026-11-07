@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.6",
+  "revision": "2026-11-07.english-simple.11.17.7",
   "skill": "remake-core",
   "previous_provenance_sha256": "7488560f765aad4bdd835fffd422ea7d2957b2382a95c1618c849ee5a86c5fa5",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
@@ -73,13 +73,13 @@
     },
     {
       "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-      "sha256": "8ee5655c22eb9b7ead714ad60981fc92c40d8103123a39dffc8a63731d39e472",
-      "bytes": 11102
+      "sha256": "d53b4c541709f09090e5f86a5742784f6723dac91e81320c9b929b4c4b325c17",
+      "bytes": 10973
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "d31a6965da9e307157f1c291c8a54bb350797d3cc87ced93d8caaba1bbac1c20",
-      "bytes": 57884
+      "sha256": "a46c75599ac21031a5897b9cd79b5a8442022fbda6536f8d8ca7fc7cebf6e1ab",
+      "bytes": 58895
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -93,13 +93,13 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
-      "sha256": "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab",
-      "bytes": 34442
+      "sha256": "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963",
+      "bytes": 34705
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
-      "sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
-      "bytes": 10614
+      "sha256": "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49",
+      "bytes": 14226
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/PlatformConfig.js",
@@ -118,8 +118,8 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
-      "sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
-      "bytes": 5880
+      "sha256": "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e",
+      "bytes": 5825
     },
     {
       "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
@@ -148,8 +148,8 @@
     },
     {
       "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "8ec0b725019878172952e10ab6c1fc88d177fb15c9fab09bf9424bdffc822d6f",
-      "bytes": 14783
+      "sha256": "e299703e59d6da7dfc1434fe4d846af9d5a8c73f2e8ca09bc36ed5c640bc642c",
+      "bytes": 14947
     },
     {
       "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
@@ -253,8 +253,8 @@
     },
     {
       "path": "assets/platform-kit/plugins-3x/MissionFlow.plugin.js",
-      "sha256": "fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919",
-      "bytes": 12810
+      "sha256": "4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae",
+      "bytes": 16422
     },
     {
       "path": "assets/platform-kit/plugins-3x/PlatformConfig.plugin.js",
@@ -273,8 +273,8 @@
     },
     {
       "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
-      "sha256": "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d",
-      "bytes": 8130
+      "sha256": "876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f",
+      "bytes": 8075
     },
     {
       "path": "assets/platform-kit/settings/bytedance.json",
@@ -337,6 +337,11 @@
       "bytes": 13079
     },
     {
+      "path": "assets/platform-kit/tests/entry-tracking.test.js",
+      "sha256": "e7bf0dfc0a8fa55853051c12ec4c6f7ac80714269749ec9d3ea8a7284a6fc701",
+      "bytes": 4556
+    },
+    {
       "path": "assets/platform-kit/tests/fx-pool.test.js",
       "sha256": "5855719f21e5e3b59b175432e517b547b8525ce2f00e2c086bd8d9187a6322bc",
       "bytes": 10639
@@ -383,8 +388,8 @@
     },
     {
       "path": "assets/platform-kit/tests/home-entries-no-coin.test.js",
-      "sha256": "1faa6181d92b12907a120d81bf39b7d2ce258ba7e221f9ce7874401b592ac6e1",
-      "bytes": 6746
+      "sha256": "af0f86db809c8c31a74e0119f35f81cbc44cce443479eac8ad1534b59bfa810a",
+      "bytes": 6805
     },
     {
       "path": "assets/platform-kit/tests/home-entries-notice-settle.test.js",
@@ -403,8 +408,8 @@
     },
     {
       "path": "assets/platform-kit/tests/home-entries.test.js",
-      "sha256": "f6f5f3a788acbdf43131f8477a4d36e260649c77aef278ce1f1c3c8344d5f1a0",
-      "bytes": 15471
+      "sha256": "e776abcf0a6ab4954be16e5bab2cf7f8710009438d96ae2b82c52614462768f8",
+      "bytes": 15701
     },
     {
       "path": "assets/platform-kit/tests/home-free-slot.test.js",
@@ -418,13 +423,13 @@
     },
     {
       "path": "assets/platform-kit/tests/kit-negative-controls.js",
-      "sha256": "549a4dc04e354468662e04908bb89a5b4089425ed19db4c728989347cec994e9",
-      "bytes": 5725
+      "sha256": "014e88ad4b523bc5cba8f6f2eabe678394d6cb68b16bb480f519c5ab99732c4e",
+      "bytes": 5736
     },
     {
       "path": "assets/platform-kit/tests/kit.test.js",
-      "sha256": "a6841911f1c1130bf7956f306f4981ebb624ed3e01305a62b5f3eea519999a8b",
-      "bytes": 46525
+      "sha256": "41c081182500383733f9ace9e7785e0443338dcf96ee3fbb2c82e8cb9666c94c",
+      "bytes": 47675
     },
     {
       "path": "assets/platform-kit/tests/physics-clock.test.js",
@@ -458,8 +463,8 @@
     },
     {
       "path": "assets/platform-kit/tests/run-all.js",
-      "sha256": "f73db4f32d01da390b0803a901e166a28b578762d037dda03a1f45fdb7bf4628",
-      "bytes": 8965
+      "sha256": "849f877765bea0cc0991e6693e55e0043e068e82d2922c1cf6d6feba0aaa823f",
+      "bytes": 9053
     },
     {
       "path": "assets/platform-kit/tests/run-session.test.js",
@@ -552,6 +557,11 @@
       "bytes": 21495
     },
     {
+      "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab.txt",
+      "sha256": "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab",
+      "bytes": 34442
+    },
+    {
       "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc.txt",
       "sha256": "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc",
       "bytes": 23796
@@ -585,6 +595,11 @@
       "path": "assets/platform-kit/tools/kit_versions/MissionFlow/7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a.txt",
       "sha256": "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a",
       "bytes": 8255
+    },
+    {
+      "path": "assets/platform-kit/tools/kit_versions/MissionFlow/d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11.txt",
+      "sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
+      "bytes": 10614
     },
     {
       "path": "assets/platform-kit/tools/kit_versions/PlatformConfig/b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46.txt",
@@ -632,6 +647,11 @@
       "bytes": 9135
     },
     {
+      "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608.txt",
+      "sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
+      "bytes": 5880
+    },
+    {
       "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4.txt",
       "sha256": "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
       "bytes": 5288
@@ -643,8 +663,8 @@
     },
     {
       "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-      "sha256": "583621a37a0a73b5f345e9dd18facc46c0597be13112f0a80d84b76b266b1c8c",
-      "bytes": 23397
+      "sha256": "ef69d34797d500801b92775c9e9f7c308348016268f4925868d53eb8bc5a9f81",
+      "bytes": 23561
     },
     {
       "path": "assets/platform-kit/webp-probe/cocos2.4/loading/webp-probe.webp",
@@ -928,8 +948,8 @@
     },
     {
       "path": "references/tiktok-home-growth.md",
-      "sha256": "0c8810a8806c34c8ce0858890469ed08a4fc28f5e6b6a07097344696d51c27e4",
-      "bytes": 18727
+      "sha256": "c769f626e8eef83c7a88a316ddc1f0e770f5319b4415344d85ed3e3b002de1ff",
+      "bytes": 20098
     },
     {
       "path": "references/token-economy.md",
@@ -1638,8 +1658,8 @@
     },
     {
       "path": "scripts/package_gates/mission.py",
-      "sha256": "65b1ab8cebd4cf0a95ab9230bf66a9c8e57e9a45a77086dd28f4472fa8ac2c54",
-      "bytes": 5526
+      "sha256": "b5f621fefc4857881fe3a72d618416e2a1cc08c6fb357923da47e5620fb8b0e7",
+      "bytes": 6604
     },
     {
       "path": "scripts/package_gates/network.py",
@@ -2263,8 +2283,8 @@
     },
     {
       "path": "scripts/test_kit_module_versions.py",
-      "sha256": "0ddd4f512564382f706007a0d1d5ceb06c6010eeb13109c75c8fa72a5c721a7f",
-      "bytes": 5354
+      "sha256": "197bfec00a699ddaca0b3427c4622093add7a5ff55fdcb023110f05bd966fd55",
+      "bytes": 6250
     },
     {
       "path": "scripts/test_kit_parts.py",
@@ -3336,7 +3356,203 @@
           "after_bytes": 13887
         }
       ]
+    },
+    {
+      "id": "2026-11-07.english-simple.11.17.7",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "25052bcfd2fca60cee1e61175fe8c267ff7d07fd79f0907f70717633a0fcf4da",
+      "files": [
+        {
+          "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
+          "before_sha256": "8ee5655c22eb9b7ead714ad60981fc92c40d8103123a39dffc8a63731d39e472",
+          "base_sha256": "8ee5655c22eb9b7ead714ad60981fc92c40d8103123a39dffc8a63731d39e472",
+          "release_sha256": "d53b4c541709f09090e5f86a5742784f6723dac91e81320c9b929b4c4b325c17",
+          "after_sha256": "d53b4c541709f09090e5f86a5742784f6723dac91e81320c9b929b4c4b325c17",
+          "after_bytes": 10973,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/KIT_MANIFEST.json",
+          "before_sha256": "35c8485578215147210798542c9cd94acd5e676b108b3d775d30f1d704048ae2",
+          "base_sha256": "d31a6965da9e307157f1c291c8a54bb350797d3cc87ced93d8caaba1bbac1c20",
+          "release_sha256": "171c2d92ac77fc367086cd0ceba9158678b588ee4f458050b0ad6950171e595a",
+          "after_sha256": "a46c75599ac21031a5897b9cd79b5a8442022fbda6536f8d8ca7fc7cebf6e1ab",
+          "after_bytes": 58895,
+          "method": "merge"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
+          "before_sha256": "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab",
+          "base_sha256": "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab",
+          "release_sha256": "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963",
+          "after_sha256": "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963",
+          "after_bytes": 34705,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
+          "before_sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
+          "base_sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
+          "release_sha256": "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49",
+          "after_sha256": "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49",
+          "after_bytes": 14226,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
+          "before_sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
+          "base_sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
+          "release_sha256": "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e",
+          "after_sha256": "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e",
+          "after_bytes": 5825,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+          "before_sha256": "8ec0b725019878172952e10ab6c1fc88d177fb15c9fab09bf9424bdffc822d6f",
+          "base_sha256": "8ec0b725019878172952e10ab6c1fc88d177fb15c9fab09bf9424bdffc822d6f",
+          "release_sha256": "e299703e59d6da7dfc1434fe4d846af9d5a8c73f2e8ca09bc36ed5c640bc642c",
+          "after_sha256": "e299703e59d6da7dfc1434fe4d846af9d5a8c73f2e8ca09bc36ed5c640bc642c",
+          "after_bytes": 14947,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/plugins-3x/MissionFlow.plugin.js",
+          "before_sha256": "fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919",
+          "base_sha256": "fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919",
+          "release_sha256": "4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae",
+          "after_sha256": "4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae",
+          "after_bytes": 16422,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
+          "before_sha256": "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d",
+          "base_sha256": "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d",
+          "release_sha256": "876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f",
+          "after_sha256": "876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f",
+          "after_bytes": 8075,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/entry-tracking.test.js",
+          "before_sha256": null,
+          "base_sha256": null,
+          "release_sha256": "e7bf0dfc0a8fa55853051c12ec4c6f7ac80714269749ec9d3ea8a7284a6fc701",
+          "after_sha256": "e7bf0dfc0a8fa55853051c12ec4c6f7ac80714269749ec9d3ea8a7284a6fc701",
+          "after_bytes": 4556,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/home-entries-no-coin.test.js",
+          "before_sha256": "1faa6181d92b12907a120d81bf39b7d2ce258ba7e221f9ce7874401b592ac6e1",
+          "base_sha256": "1faa6181d92b12907a120d81bf39b7d2ce258ba7e221f9ce7874401b592ac6e1",
+          "release_sha256": "af0f86db809c8c31a74e0119f35f81cbc44cce443479eac8ad1534b59bfa810a",
+          "after_sha256": "af0f86db809c8c31a74e0119f35f81cbc44cce443479eac8ad1534b59bfa810a",
+          "after_bytes": 6805,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/home-entries.test.js",
+          "before_sha256": "f6f5f3a788acbdf43131f8477a4d36e260649c77aef278ce1f1c3c8344d5f1a0",
+          "base_sha256": "f6f5f3a788acbdf43131f8477a4d36e260649c77aef278ce1f1c3c8344d5f1a0",
+          "release_sha256": "e776abcf0a6ab4954be16e5bab2cf7f8710009438d96ae2b82c52614462768f8",
+          "after_sha256": "e776abcf0a6ab4954be16e5bab2cf7f8710009438d96ae2b82c52614462768f8",
+          "after_bytes": 15701,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/kit-negative-controls.js",
+          "before_sha256": "549a4dc04e354468662e04908bb89a5b4089425ed19db4c728989347cec994e9",
+          "base_sha256": "549a4dc04e354468662e04908bb89a5b4089425ed19db4c728989347cec994e9",
+          "release_sha256": "014e88ad4b523bc5cba8f6f2eabe678394d6cb68b16bb480f519c5ab99732c4e",
+          "after_sha256": "014e88ad4b523bc5cba8f6f2eabe678394d6cb68b16bb480f519c5ab99732c4e",
+          "after_bytes": 5736,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/kit.test.js",
+          "before_sha256": "a6841911f1c1130bf7956f306f4981ebb624ed3e01305a62b5f3eea519999a8b",
+          "base_sha256": "a6841911f1c1130bf7956f306f4981ebb624ed3e01305a62b5f3eea519999a8b",
+          "release_sha256": "41c081182500383733f9ace9e7785e0443338dcf96ee3fbb2c82e8cb9666c94c",
+          "after_sha256": "41c081182500383733f9ace9e7785e0443338dcf96ee3fbb2c82e8cb9666c94c",
+          "after_bytes": 47675,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/run-all.js",
+          "before_sha256": "f73db4f32d01da390b0803a901e166a28b578762d037dda03a1f45fdb7bf4628",
+          "base_sha256": "f73db4f32d01da390b0803a901e166a28b578762d037dda03a1f45fdb7bf4628",
+          "release_sha256": "849f877765bea0cc0991e6693e55e0043e068e82d2922c1cf6d6feba0aaa823f",
+          "after_sha256": "849f877765bea0cc0991e6693e55e0043e068e82d2922c1cf6d6feba0aaa823f",
+          "after_bytes": 9053,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab.txt",
+          "before_sha256": null,
+          "base_sha256": null,
+          "release_sha256": "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab",
+          "after_sha256": "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab",
+          "after_bytes": 34442,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/MissionFlow/d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11.txt",
+          "before_sha256": null,
+          "base_sha256": null,
+          "release_sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
+          "after_sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
+          "after_bytes": 10614,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608.txt",
+          "before_sha256": null,
+          "base_sha256": null,
+          "release_sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
+          "after_sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
+          "after_bytes": 5880,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tools/make_plugin_scripts.py",
+          "before_sha256": "583621a37a0a73b5f345e9dd18facc46c0597be13112f0a80d84b76b266b1c8c",
+          "base_sha256": "583621a37a0a73b5f345e9dd18facc46c0597be13112f0a80d84b76b266b1c8c",
+          "release_sha256": "ef69d34797d500801b92775c9e9f7c308348016268f4925868d53eb8bc5a9f81",
+          "after_sha256": "ef69d34797d500801b92775c9e9f7c308348016268f4925868d53eb8bc5a9f81",
+          "after_bytes": 23561,
+          "method": "release"
+        },
+        {
+          "path": "references/tiktok-home-growth.md",
+          "before_sha256": "0c8810a8806c34c8ce0858890469ed08a4fc28f5e6b6a07097344696d51c27e4",
+          "base_sha256": "0c8810a8806c34c8ce0858890469ed08a4fc28f5e6b6a07097344696d51c27e4",
+          "release_sha256": "c769f626e8eef83c7a88a316ddc1f0e770f5319b4415344d85ed3e3b002de1ff",
+          "after_sha256": "c769f626e8eef83c7a88a316ddc1f0e770f5319b4415344d85ed3e3b002de1ff",
+          "after_bytes": 20098,
+          "method": "release"
+        },
+        {
+          "path": "scripts/package_gates/mission.py",
+          "before_sha256": "65b1ab8cebd4cf0a95ab9230bf66a9c8e57e9a45a77086dd28f4472fa8ac2c54",
+          "base_sha256": "65b1ab8cebd4cf0a95ab9230bf66a9c8e57e9a45a77086dd28f4472fa8ac2c54",
+          "release_sha256": "b5f621fefc4857881fe3a72d618416e2a1cc08c6fb357923da47e5620fb8b0e7",
+          "after_sha256": "b5f621fefc4857881fe3a72d618416e2a1cc08c6fb357923da47e5620fb8b0e7",
+          "after_bytes": 6604,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_kit_module_versions.py",
+          "before_sha256": "0ddd4f512564382f706007a0d1d5ceb06c6010eeb13109c75c8fa72a5c721a7f",
+          "base_sha256": "0ddd4f512564382f706007a0d1d5ceb06c6010eeb13109c75c8fa72a5c721a7f",
+          "release_sha256": "197bfec00a699ddaca0b3427c4622093add7a5ff55fdcb023110f05bd966fd55",
+          "after_sha256": "197bfec00a699ddaca0b3427c4622093add7a5ff55fdcb023110f05bd966fd55",
+          "after_bytes": 6250,
+          "method": "release"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "0f61a6989b70de4f4dca7b228702cbe95292941f4d39883a776af09dbfdefb27"
+  "previous_local_provenance_sha256": "5402d0fe8db61e20d86c01e57ac7e5ba8cc9376674992a01876853317be59ee3"
 }

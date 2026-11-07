@@ -5,7 +5,7 @@ var methods = {
 };
 var messages = {
   success: 'Return through this TikTok entry, then check your reward.',
-  eligible: 'Your reward is ready to claim.', ineligible: 'Open this game from the TikTok entry, then check again.',
+  eligible: 'Your reward is ready to claim.', ineligible: '',
   unsupported: 'This feature is available inside a supported TikTok app.',
   error: 'The request failed. Please try again.', timeout: 'The check took too long. Please try again.',
   invalid: 'No reward information was returned. Please try again.', cancelled: 'The check ended. Please try again.',

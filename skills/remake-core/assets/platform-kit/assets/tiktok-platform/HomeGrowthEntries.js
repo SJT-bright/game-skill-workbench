@@ -191,7 +191,7 @@ Controller.prototype.iconFailed = function (kind) {
   if (this.iconFallback[kind] === false) { this.iconFallback[kind] = true; this._render(); }
 };
 
-Controller.prototype.onShow = function () { this.flow.onShow(); };
+Controller.prototype.onShow = function (entry) { return this.flow.onShow(entry); };
 Controller.prototype.tick = function () { this.flow.tick(); };
 Controller.prototype.dispose = function () { this.flow.dispose(); };
 
@@ -545,12 +545,9 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
         if (!sprite || !sprite.spriteFrame) { self.controller.iconFailed(kind); return; }
         self.scheduleOnce(function () { if (!textureLoaded(sprite)) self.controller.iconFailed(kind); }, ICON_WAIT_MS / 1000);
       });
-      if (!this._onShow) {
-        this._onShow = function () { if (self.controller) self.controller.onShow(); };
-        cc.game.on(cc.game.EVENT_SHOW, this._onShow);
-      }
       // R4Q6: one notice for every message (GameUIKit toast > TikTok showToast > messageLabel for NOTICE_MS)
       this._lastMessage = '';
+      this._isHomeVisible = options.isHomeVisible;
       this._notice = makeNotice({ui: options.ui || findKitUI(), platform: platformToast,
         label: this.messageLabel ? {set: function (t) { self.messageLabel.string = t; self.messageLabel.node.active = true; },
           hide: function () { if (cc.isValid(self.messageLabel.node)) self.messageLabel.node.active = false; }} : null,
@@ -564,6 +561,7 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
           place: function () { return self.placeEntries(); }});
       }
       this.controller._render();
+      this.controller.flow.startEntryTracking();
       return this.controller;
     },
     // Also callable again after the home layout changed. -> result of placeEntries (kept / moved / error).
@@ -619,14 +617,23 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
       if (state.message !== this._lastMessage) {
         this._lastMessage = state.message || '';
         if (state.message) this._message(state.message);
+        else if (this._notice) this._notice.clear();
       }
     },
+    _canShowNotice: function () {
+      return this.node.activeInHierarchy &&
+        (typeof this._isHomeVisible !== 'function' || this._isHomeVisible() === true);
+    },
     _message: function (text) {
-      if (this._notice) this._notice.show(text);
+      if (this._notice && this._canShowNotice()) this._notice.show(text);
     },
     update: function () {
       if (this._settle && !this._settle.done) this._settle.tick();
       if (this.controller) this.controller.tick();
+      if (this._notice && this._lastMessage && !this._canShowNotice()) {
+        this._notice.clear();
+        this._lastMessage = '';
+      }
     },
     // leaving the home (another page / panel switched on, the home node hidden): no notice stays behind
     onDisable: function () {
@@ -635,7 +642,6 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
     },
     onDestroy: function () {
       if (this._notice) this._notice.clear();
-      if (this._onShow) cc.game.off(cc.game.EVENT_SHOW, this._onShow);
       if (this.controller) this.controller.dispose();
       this.controller = null;
     }

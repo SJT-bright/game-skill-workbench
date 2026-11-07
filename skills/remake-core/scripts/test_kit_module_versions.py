@@ -6,6 +6,7 @@ from the real kit texts: the current files and the previous versions kept in pla
 Real packages (全民飞车漂移 v1 / v2 refused on RewardedService + SaveStore, v3 MissionFlow text only, v3.1 clean) are in
 briefs/out/W87/RESULT.md. Run: python3 -B test_kit_module_versions.py
 """
+import hashlib
 import json
 import re
 import sys
@@ -65,9 +66,26 @@ class KitModuleVersions(unittest.TestCase):
         self.assertEqual(len(K.verify(files, self.man, 'legacy', 2)), 2)
 
     def test_display_text_only_difference_warns(self):
-        got = K.verify(bundle(('MissionFlow', self.old('MissionFlow', '7ea4980b'))), self.man, 'new', 2)
+        current = self.cur['MissionFlow']
+        previous = current.replace('Available in TikTok.', 'Available in TikTok Preview.')
+        self.assertNotEqual(current, previous)
+        current_tokens = K.tokens(current)
+        previous_tokens = K.tokens(previous)
+        fps = K.load()
+        old_sha = hashlib.sha256(previous.encode('utf-8')).hexdigest()
+        fps['modules']['MissionFlow'].update(
+            current_only=sorted(current_tokens - previous_tokens),
+            previous={old_sha: sorted(previous_tokens - current_tokens)},
+        )
+        got = K.verify(bundle(('MissionFlow', previous)), self.man, 'new', 2, fingerprints=fps)
         self.assertEqual([(f['id'], f['level']) for f in got], [('K6_kit_module_old', 'warn')])
         self.assertIn('only display strings differ', got[0]['message'])
+
+    def test_mission_flow_before_entry_tracking_blocks(self):
+        files = bundle(('MissionFlow', self.old('MissionFlow', 'd5e256db')))
+        got = K.verify(files, self.man, 'new', 2)
+        self.assertEqual(self.ids(got, 'block'), [('K6_kit_module_old', 'MissionFlow')])
+        self.assertIn('entryOp', got[0]['message'])
 
     def test_edited_copy_unknown_and_other_engines(self):
         text = self.cur['RewardedService']

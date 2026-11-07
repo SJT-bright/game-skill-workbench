@@ -13,6 +13,7 @@ var suites = [
   ['存档层 storage-guard（false/\'\'/undefined/数字读回 true）', 'storage-guard.test.js'],
   ['存档层 故意改坏必须被抓到', 'storage-guard-negative-controls.js'],
   ['首页双入口 HomeGrowthEntries（不支持提示/文字备用/5B/只发一次）', 'home-entries.test.js'],
+  ['回访入口实际来源、冷启动与旧资格回调', 'entry-tracking.test.js'],
   ['首页双入口 故意改坏必须被抓到', 'home-entries-negative-controls.js'],
   ['没金币游戏的首页双入口 home-entries-no-coin（R4O3：normalLevelCoins 0 时走 reward 选项发体力 +3、各一次；都没有不发、不报存档失败、rewardIssue 写原因；有金币照发 5B；旧零件失败）', 'home-entries-no-coin.test.js'],
   ['首页找空位 home_free_slot（6 个按钮的首页两个入口不压任何按钮、估坐标的旧做法会压、放不下报错、安全区、2.4/3.x prefab 和 ui_dump）', 'home-free-slot.test.js'],

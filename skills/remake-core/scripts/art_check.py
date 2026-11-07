@@ -787,11 +787,13 @@ def main():
 
     # Standalone PNGs can contain adjacent-sheet remnants; atlas manifests do not cover them.
     code, text = run('../../remake-art/scripts/check_native_sprite_sources.py',
-                     [proj, '--dumps', dumps, '--out', out / 'sprite_sources.json'], logs)
+                     [proj, '--dumps', dumps, '--atlas-report', out / 'atlas_slices' / 'report.json',
+                      '--out', out / 'sprite_sources.json'], logs)
     source = first_json(text)
     source_ok = code == 0 and source.get('status') == 'no_signals' and source.get('checked', 0) > 0
     add('独立透明UI源图（残片、安全边与实际帧清点）', source_ok,
-        '检查 %s 项；%s；信号须结合源图及实景复核，非整页验收' % (source.get('checked', 0), source.get('status', 'tool_error')),
+        '独立图 %s 项，图集及引擎默认控件 %s 项；%s；信号须结合源图及实景复核' %
+        (source.get('checked', 0), len(source.get('routed_frames', {})), source.get('status', 'tool_error')),
         'sprite_sources.json')
 
     code, text = run('audit_page_richness.py', ['--project', proj, '--dumps', dumps, '--out', out / 'page_richness.json', *binding,

@@ -32,7 +32,7 @@ function sandbox(opts) {
   // Fake 2.4 downloader/parser: handlers registered by ext, like the minigame adapter does.
   var fileCalls = [];
   function fakeFile(kind) {
-    return function (url, options, done) { var c = {kind: kind, url: url, done: done}; fileCalls.push(c); if (opts.file) opts.file(c, fileCalls.length); };
+    return function (url, options, done) { var c = {kind: kind, url: url, options: options, done: done}; fileCalls.push(c); if (opts.file) opts.file(c, fileCalls.length); };
   }
   var downloader = {_downloaders: {'.png': fakeFile('download'), '.json': fakeFile('download'), bundle: fakeFile('bundle')}, maxRetryCount: 3,
     register: function (ext, fn) { this._downloaders[ext] = fn; }};
@@ -447,6 +447,74 @@ function heldSceneWithImage(answer, extra) {
   });
   return s;
 }
+test('abandoned_startup_scope_releases_only_its_own_requests', function () {
+  var s = okBoot();
+  var calls = [];
+  var png = s.downloader._downloaders['.png'];
+  png('outside.png', {}, function (error) { calls.push(error ? 'outside failed' : 'outside ready'); });
+  var close = s.downloader.__kitBeginLoadScope();
+  png('held.png', {}, function (error) { calls.push(error ? 'held released' : 'unexpected late ready'); });
+  var old = s.fileCalls[s.fileCalls.length - 1];
+  close(new Error('abandoned'));
+  old.done(null, 'old');
+  png('held.png', {}, function (error) { calls.push(error ? 'fresh failed' : 'fresh ready'); });
+  s.fileCalls[s.fileCalls.length - 1].done(null, 'new');
+  s.fileCalls.find(function (row) { return row.url === 'outside.png'; }).done(null, 'outside');
+  assert.deepStrictEqual(calls, ['held released', 'fresh ready', 'outside ready']);
+});
+test('cocos_bundle_handles_promise_only_and_missing_progress_without_double_completion', function () {
+  ['promise','both','no-progress'].forEach(function (mode) {
+    var platform, successes = 0, subscribe;
+    var s = okBoot({file: function (entry) {
+      if (entry.kind !== 'bundle') return;
+      var task = platform.loadSubpackage({name:'custom',success:function () {
+        successes++; entry.done(null,'bundle');
+      }});
+      task.onProgressUpdate(function () {});
+    }});
+    platform = s.platform;
+    var original = platform.loadSubpackage = function (options) {
+      if (mode !== 'promise') options.success({});
+      if (mode === 'no-progress') return undefined;
+      return {then:function (resolve) { subscribe = resolve; }};
+    };
+    var results = [];
+    s.downloader._downloaders.bundle('custom',{},function (error, value) { results.push([error,value]); });
+    if (subscribe) subscribe({});
+    assert.strictEqual(platform.loadSubpackage, original, 'must restore the original SDK method');
+    assert.strictEqual(successes,1);
+    assert.deepStrictEqual(results, [[null,'bundle']]);
+  });
+});
+test('advancing_package_bytes_extend_only_the_current_bundle_idle_budget', function () {
+  var s = okBoot();
+  var forwarded = [], results = [];
+  s.downloader._downloaders.bundle('MainScene', {onFileProgress: function (e) { forwarded.push(e); }},
+    function (error, value) { results.push([error, value]); });
+  var request = s.fileCalls[s.fileCalls.length - 1];
+  for (var i = 1; i <= 6; i++) {
+    s.advance(7000);
+    request.options.onFileProgress({progress: 1, totalBytesWritten: i * 100});
+  }
+  assert.strictEqual(results.length, 0);
+  assert.strictEqual(forwarded.length, 6);
+  request.done(null, 'bundle');
+  request.options.onFileProgress({progress: 100, totalBytesWritten: 999});
+  assert.deepStrictEqual(results, [[null, 'bundle']]);
+  assert.strictEqual(forwarded.length, 6, 'late progress is ignored');
+});
+test('repeated_or_regressive_bundle_progress_does_not_hide_a_stall', function () {
+  var s = okBoot();
+  var failures = [];
+  s.downloader._downloaders.bundle('MainScene', {}, function (error) { failures.push(String(error)); });
+  var request = s.fileCalls[s.fileCalls.length - 1];
+  s.advance(1000); request.options.onFileProgress({progress: 40, totalBytesWritten: 400});
+  s.advance(4000); request.options.onFileProgress({progress: 40, totalBytesWritten: 400});
+  s.advance(4000); request.options.onFileProgress({progress: 39, totalBytesWritten: 390});
+  s.advance(1100);
+  assert.strictEqual(failures.length, 1);
+  assert(failures[0].includes('file did not answer: MainScene'));
+});
 test('v15_rerequest_loads_home_without_a_load_failed_dialog', function () {
   var s = heldSceneWithImage(function (c, n) { if (n >= 2) c.done(null, 'img'); });
   s.advance(25000);

@@ -69,7 +69,7 @@ function setup(opts) {
       assert.strictEqual(t.state().shortcut.reward, '+60', '5B with B = 12');
       t.c.press('shortcut');
       t.fake.last('addShortcut').opts.success({}); await flush();
-      t.c.onShow(); await flush();                                       // back from the new icon
+      t.c.onShow({scene: 'desktop_shortcut'}); await flush();                                       // back from the new icon
       t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.store.get().coins, 60);
       assert.strictEqual(t.state().shortcut.reward, 'Collected');
@@ -93,10 +93,10 @@ function setup(opts) {
       assert.strictEqual(t.c.press('profile'), 'busy');
       assert.strictEqual(t.fake.count('startEntranceMission'), 1, 'one jump for three taps');
       t.fake.last('startEntranceMission').opts.success({}); await flush();
-      t.c.onShow(); await flush();
+      t.c.onShow({scene: 'center'}); await flush();
       t.fake.last('getEntranceMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.store.get().coins, 60);
-      t.c.onShow(); await flush();
+      t.c.onShow({scene: 'center'}); await flush();
       assert.strictEqual(t.store.get().coins, 60, 'paid once');
       assert.strictEqual(t.fake.count('getEntranceMissionReward'), 1, 'no query once collected');
     });
@@ -104,19 +104,19 @@ function setup(opts) {
       var t = setup();
       t.c.press('shortcut');
       t.fake.last('addShortcut').opts.success({}); await flush();
-      t.c.onShow(); await flush();
+      t.c.onShow({scene: 'desktop_shortcut'}); await flush();
       t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.c.press('shortcut'), 'start');
       assert.strictEqual(t.fake.count('addShortcut'), 2, 'the entry keeps working');
       t.fake.last('addShortcut').opts.success({}); await flush();
-      t.c.onShow(); await flush();
+      t.c.onShow({scene: 'desktop_shortcut'}); await flush();
       assert.strictEqual(t.store.get().coins, 60, 'no second reward');
     });
     await test('not_eligible_after_return_then_tap_goes_again', async function () {
       var t = setup();
       t.c.press('shortcut');
       t.fake.last('addShortcut').opts.success({}); await flush();
-      t.c.onShow(); await flush();
+      t.c.onShow({scene: 'desktop_shortcut'}); await flush();
       t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: false}); await flush();
       assert.strictEqual(t.store.get().coins, 0);
       assert.strictEqual(t.fake.count('addShortcut'), 1, 'the check after returning does not jump by itself');
@@ -168,10 +168,10 @@ function setup(opts) {
       var t = setup();
       t.c.press('shortcut');
       var jump = t.fake.last('addShortcut');
-      t.c.onShow(); await flush();                                       // back before the jump answered
+      t.c.onShow({scene: 'desktop_shortcut'}); await flush();                                       // back before the jump answered
       jump.opts.success({}); await flush();                              // late answer of the old jump
       assert.strictEqual(t.fake.count('getShortcutMissionReward'), 1, 'one check after returning');
-      assert.strictEqual(t.c.flow.phase, 'checking', 'the late jump answer does not reset the check');
+      assert.strictEqual(t.state().message, '', 'the late jump answer does not reopen guidance');
     });
     await test('platform_answers_are_logged_in_the_engine', async function () {
       var lines = [], keep = console.info;
@@ -195,7 +195,7 @@ function setup(opts) {
         assert.strictEqual(t.state().shortcut.reward, '');
         t.c.press('shortcut');
         t.fake.last('addShortcut').opts.success({}); await flush();
-        t.c.onShow(); await flush();
+        t.c.onShow({scene: 'desktop_shortcut'}); await flush();
         t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
         assert.strictEqual(t.store.get().coins, 0);
         assert.strictEqual(t.store.isClaimed('shortcut'), false);
@@ -218,7 +218,7 @@ function setup(opts) {
       global.cc = fakeCC;
       try {
         var Comp = loadEntries();
-        var comp = new Comp(); comp.scheduleOnce = function () {};
+        var comp = new Comp(); comp.node = {activeInHierarchy: true}; comp.scheduleOnce = function () {};
         comp.shortcutNode = new Node('a'); comp.profileNode = new Node('b');
         comp.shortcutNode.comps.Button = new Button();
         var store = new SaveStore({coins: 0}, {storage: memoryStorage(), key: 'cc', login: false}); store.load();

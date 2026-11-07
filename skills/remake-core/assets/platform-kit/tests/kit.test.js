@@ -220,16 +220,16 @@ function setup(options) {
     t.flow.open('shortcut');
     assert(t.fake.last('getShortcutMissionReward'), 'opening rechecks eligibility');
     t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: false}); await flush();
-    assert.strictEqual(t.view().phase, 'idle'); assert(/Open this game/.test(t.view().message));
+    assert.strictEqual(t.view().phase, 'idle'); assert.strictEqual(t.view().message, MissionFlow.TEXT.notReady);
     t.flow.start(); t.fake.last('addShortcut').opts.success({}); await flush();
     assert.strictEqual(t.view().message, MissionFlow.TEXT.navigated);
-    t.flow.onShow();
+    t.flow.onShow({scene: 'desktop_shortcut'});
     var w = t.storage.writes;
     t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
     assert.strictEqual(t.storage.writes, w + 1, 'claim + coins in exactly one write');
     assert.strictEqual(t.store.get().coins, 25);
     assert(t.store.isClaimed('shortcut'));
-    assert.strictEqual(t.view().phase, 'done'); assert(/\+25 Coins/.test(t.view().message));
+    assert.strictEqual(t.view().phase, 'done'); assert.strictEqual(t.view().message, '', 'automatic award stays quiet');
     var again = new SaveStore({coins: 0}, {storage: t.storage, key: 'test:save'}); again.load();
     assert.strictEqual(again.get().coins, 25); assert(again.isClaimed('shortcut'));
   });
@@ -237,13 +237,13 @@ function setup(options) {
     var t = setup();
     t.flow.open('profile');
     var A = t.fake.last('getEntranceMissionReward');
-    t.flow.onShow();
+    t.flow.onShow({scene: 'center'});
     var B = t.fake.last('getEntranceMissionReward');
     assert(A !== B, 'coming back must send a NEW query');
     A.opts.success({canReceiveReward: true}); await flush();
     assert.strictEqual(t.store.get().coins, 0, 'late A must not pay');
     B.opts.success({canReceiveReward: false}); await flush();
-    assert.strictEqual(t.view().phase, 'idle'); assert(t.view().message.length > 0);
+    assert.strictEqual(t.view().phase, 'idle'); assert.strictEqual(t.view().message, '');
     assert.strictEqual(t.store.get().coins, 0);
   });
   await test('flow_taps_during_one_check_are_merged', async function () {
@@ -252,6 +252,27 @@ function setup(options) {
     t.flow.check(); t.flow.check(); t.flow.check();
     var n = t.fake.calls.filter(function (c) { return c.method === 'getShortcutMissionReward'; }).length;
     assert.strictEqual(n, 1);
+  });
+  await test('flow_second_sidebar_entry_replaces_pending_qualification', async function () {
+    var t = setup();
+    t.flow.onShow({scene: 'center'});
+    var first = t.fake.last('getEntranceMissionReward');
+    t.flow.onShow({scene: 'center'});
+    var latest = t.fake.last('getEntranceMissionReward');
+    assert.notStrictEqual(latest, first, 'each real entry uses its own qualification');
+    first.opts.success({canReceiveReward: true});
+    latest.opts.success({canReceiveReward: false});
+    await flush();
+    assert.strictEqual(t.store.get().coins, 0);
+    assert.strictEqual(t.store.isClaimed('profile'), false);
+  });
+  await test('flow_ordinary_return_does_not_query_last_selected_task', async function () {
+    var t = setup();
+    t.flow.open('profile', {navigate: true});
+    t.fake.last('startEntranceMission').opts.success({}); await flush();
+    t.flow.onShow({scene: 'search'}); await flush();
+    assert.strictEqual(t.fake.last('getEntranceMissionReward'), null);
+    assert.strictEqual(t.store.get().coins, 0);
   });
   await test('flow_every_non_success_result_is_visible', async function () {
     var cases = [
@@ -281,11 +302,11 @@ function setup(options) {
     t.flow.open('shortcut');
     t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: false}); await flush();
     t.flow.start(); var nav = t.fake.last('addShortcut');
-    t.flow.onShow();
+    t.flow.onShow({scene: 'desktop_shortcut'});
     t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
     assert.strictEqual(t.view().phase, 'done');
     nav.opts.success({}); await flush();
-    assert.strictEqual(t.view().phase, 'done'); assert(/Reward received/.test(t.view().message));
+    assert.strictEqual(t.view().phase, 'done'); assert.strictEqual(t.view().message, '');
   });
   await test('flow_save_failure_pays_nothing_then_retry_pays_once', async function () {
     var t = setup();

@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 
-def run(command, project, build, dumps=None):
+def _run_single(command, project, build, dumps=None):
     arguments = ['node', str(Path(__file__).with_name('art_capture_round.mjs')), command, str(project), str(build)]
     if dumps is not None:
         arguments.append(str(dumps))
@@ -18,6 +18,43 @@ def run(command, project, build, dumps=None):
         return result
     except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
         return {'error': str(exc)}
+
+def run(command, project, build, dumps=None):
+    """Verify two sealed capture rounds against the same live Web export."""
+    root = Path(dumps).resolve() if dumps is not None else None
+    manifest = root / 'same-build-rounds.json' if root else None
+    if command != 'verify' or manifest is None or not manifest.is_file():
+        return _run_single(command, project, build, dumps)
+    try:
+        primary, extra = root / 'primary', root / 'supplement'
+        extra_project = Path(json.loads(manifest.read_text())['supplement_project']).resolve(strict=True)
+        if extra_project == Path(project).resolve():
+            raise ValueError('supplement must have an independent registered capture round')
+        for file in root.rglob('*'):
+            if file.is_symlink():
+                raise ValueError('symbolic link in combined capture evidence')
+            if 'ui-dump-' in file.name and file.suffix == '.json' and file.parent not in (primary, extra):
+                raise ValueError('unregistered dump outside both capture rounds: ' + file.name)
+        original = _run_single('verify', project, build, primary)
+        supplement = _run_single('verify', extra_project, build, extra)
+        for report in (original, supplement):
+            if report.get('ready') is not True or report.get('error'):
+                raise ValueError(report.get('error') or 'capture round incomplete')
+        identities = (_run_single('status', p, build) for p in (project, extra_project))
+        left, right = identities
+        for key in ('source_hash', 'export_hash', 'collector_hash'):
+            if not left.get(key) or left[key] != right.get(key):
+                raise ValueError('capture rounds do not share the same ' + key)
+        cases = original['cases'] + supplement['cases']
+        if len({row['id'] for row in cases}) != len(cases):
+            raise ValueError('duplicate case in combined capture rounds')
+        return dict(original, cases=cases, supplement={
+            'round': supplement['round'], 'version': supplement['version'],
+            'origin_hash': origin_hash(supplement),
+        })
+    except (OSError, KeyError, TypeError, ValueError) as exc:
+        return {'ready': False, 'error': str(exc)}
+
 
 def origin_hash(plan):
     pairs = [(row['id'], row['origin']) for row in plan['cases']]

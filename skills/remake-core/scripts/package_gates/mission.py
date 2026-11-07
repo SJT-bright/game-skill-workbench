@@ -16,6 +16,7 @@ W2_login (warn): no TikTok login call. 8 of 14 completed games never call login,
 Saul decides otherwise.
 """
 import re
+from pathlib import PurePosixPath
 
 from . import finding
 
@@ -25,6 +26,8 @@ LOGIN = re.compile(r'\.login\s*\(|\[\s*["\']login["\']\s*\]')
 GROWTH_CALLS = ('addShortcut', 'checkShortcut', 'startEntranceMission', 'getShortcutMissionReward',
                 'getEntranceMissionReward')
 G1K_LEVELS = {'new': 'block', 'legacy': 'warn'}
+RETIRED_COPY = re.compile(r'\bopen\s+this\s+game\s+from\s+the\s+tiktok\s+entry\s*,?\s*then\s+check\s+again\b', re.I)
+TEXT_ESCAPE = re.compile(r'\\(?:u00([0-7][0-9a-f])|x([0-7][0-9a-f])|([nrt]))', re.I)
 # Fallback when KIT_MANIFEST.json cannot be read: the kit 2.0 fingerprints (parts.missions.modules).
 KIT_MODULES = {'MissionFlow': r'Add this game to your home screen, open it from the new icon, then come back for '
                               r'your reward\.',
@@ -80,10 +83,30 @@ def outside_kit_calls(view):
     return out
 
 
+def retired_copy(view):
+    """Find the retired player hint in shipped code and text resources."""
+    hits = []
+    game_scripts = set(view.game_js())
+    for name in sorted(view.files):
+        if name not in game_scripts and PurePosixPath(name).suffix.lower() not in ('.json', '.txt', '.html'):
+            continue
+        text = TEXT_ESCAPE.sub(lambda match: chr(int(match[1] or match[2], 16))
+                               if match[1] or match[2] else ' ', view.text(name))
+        if RETIRED_COPY.search(text):
+            hits.append(name)
+    return hits
+
+
 def check(view):
     names = view.game_js()
     blob = '\n'.join(view.text(n) for n in names)
     out = []
+    retired = retired_copy(view)
+    if retired:
+        out.append(finding(
+            'G1_retired_revisit_copy', 'block',
+            'remove the retired generic TikTok-entry reward hint from the shipped build: ' + ', '.join(retired[:8]),
+            {'files': retired}))
     missing = [api for api in MISSION_APIS if api not in blob]
     if missing:
         present = [api for api in MISSION_APIS if api not in missing]

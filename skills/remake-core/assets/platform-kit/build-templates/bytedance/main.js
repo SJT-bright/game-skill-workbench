@@ -170,14 +170,71 @@ window.boot = function () {
     // A bundle request is not duplicated; a silent one is released before the 10 s stall Retry, so the
     // Retry starts a fresh request instead of joining the stuck one.
     var BUNDLE = {attempts: 1, parallelAfter: 0, giveUp: 9000};
+    // Cocos 2.4 captures its bundle adapter before boot, but calls tt.loadSubpackage
+    // synchronously when requesting a bundle. Bridge only that call, leaving other SDK callers alone.
+    function requestBundle(request) {
+      var sdk = typeof tt !== 'undefined' ? tt : platform;
+      var load = sdk && sdk.loadSubpackage;
+      if (typeof load !== 'function') return request();
+      function compatible(options) {
+        var settled = false;
+        function terminal(fn) {
+          return function () {
+            if (settled) return;
+            settled = true;
+            if (typeof fn === 'function') fn.apply(this, arguments);
+          };
+        }
+        var success = terminal(options.success), fail = terminal(options.fail);
+        var task = load.call(this, Object.assign({}, options, {success: success, fail: fail}));
+        if (task && typeof task.then === 'function') task.then(success, fail);
+        if (task && typeof task.onProgressUpdate === 'function') return task;
+        return {onProgressUpdate: function () {}};
+      }
+      try { sdk.loadSubpackage = compatible; } catch (_) { return request(); }
+      try { return request(); }
+      finally { if (sdk.loadSubpackage === compatible) sdk.loadSubpackage = load; }
+    }
+    var activeLoadScope = null;
+    // The game may abandon its current startup attempt before the per-file deadline.
+    // Settle the engine's waiting handlers so its next attempt opens new requests.
+    downloader.__kitBeginLoadScope = function () {
+      var pending = new Set();
+      activeLoadScope = pending;
+      return function (error) {
+        if (activeLoadScope === pending) activeLoadScope = null;
+        if (error) pending.forEach(function (finish) { finish(error); });
+      };
+    };
     function bounded(original, receiver, policy) {
       return function (url, options, complete) {
         var done = false, attempts = 0, waited = 0, last = Date.now();
+        var requestOptions = options, scope = activeLoadScope;
+        if (policy === BUNDLE) {
+          var highestBytes = 0, highestPercent = 0;
+          var onProgress = options && options.onFileProgress;
+          requestOptions = Object.assign({}, options, {onFileProgress: function (event) {
+            if (done) return;
+            var bytes = event && event.totalBytesWritten;
+            var percent = event && event.progress;
+            var bytesAdvanced = Number.isFinite(bytes) && bytes > highestBytes;
+            var percentAdvanced = Number.isFinite(percent) && percent > highestPercent;
+            if (bytesAdvanced) highestBytes = bytes;
+            if (percentAdvanced) highestPercent = percent;
+            if (bytesAdvanced || percentAdvanced) {
+              waited = 0;
+              last = Date.now();
+              noteProgress();
+            }
+            if (typeof onProgress === 'function') onProgress.apply(this, arguments);
+          }});
+        }
         guardsWaiting++;
         function finish(error, value) {
           if (done) return;
           done = true;
           guardsWaiting = Math.max(0, guardsWaiting - 1);
+          if (scope) scope.delete(finish);
           if (!error) noteProgress();
           complete(error, value);
         }
@@ -186,13 +243,16 @@ window.boot = function () {
         function attempt() {
           var mine = ++attempts;
           try {
-            original.call(receiver, url, options, function (error, value) {
+            var onResult = function (error, value) {
               if (done) return;                       // first answer already won
               if (!error) { finish(null, value); return; }
               if (mine !== attempts) return;          // a newer attempt is still running
               if (attempts < policy.attempts) { setTimeout(again, 500); return; }
               finish(error);
-            });
+            };
+            var request = function () { return original.call(receiver, url, requestOptions, onResult); };
+            if (policy === BUNDLE) requestBundle(request);
+            else request();
           } catch (error) {
             if (mine === attempts && attempts < policy.attempts) setTimeout(again, 500);
             else finish(error);
@@ -207,6 +267,7 @@ window.boot = function () {
           if (waited >= policy.giveUp) { finish(new Error('file did not answer: ' + url)); return; }
           raf(tick);
         }
+        if (scope) scope.add(finish);
         attempt();
         if (!done) raf(tick);
       };

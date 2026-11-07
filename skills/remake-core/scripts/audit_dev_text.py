@@ -28,7 +28,7 @@ PHRASES += [r'\b(home|profile|shop|store|map|settings|league|skins?|level|result
             r'\b(screen|page|panel|popup|scene)\s+(open|opened|closed|shown|hidden|loaded)\b',
             r'\b(return|back)\s+(open|opened|closed|ready|active)\b', r'\b\d+\s*/\s*\d+\s+resolved\b']
 PAT = re.compile('|'.join(PHRASES), re.I)
-STR = re.compile(r'''(["'`])((?:\\.|(?!\1).){2,200})\1''')
+STR = re.compile(r'''(["'`])((?:\\.|(?!\1)[^\\]){2,200})\1''')
 LABEL_KEYS = ('_string', '_N$string', 'string', 'text', '_text')
 SKIP_DIRS = {'node_modules', 'library', 'temp', 'local', 'build', 'profiles', '.git', 'settings'}
 # v7.7.4: platform-kit 2.0 in v7.7.3 shipped MissionFlow with 'LOCAL PREVIEW: open the game inside TikTok to use this.'

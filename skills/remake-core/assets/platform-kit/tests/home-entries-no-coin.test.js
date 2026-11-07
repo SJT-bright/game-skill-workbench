@@ -50,7 +50,7 @@ async function visit(t, kind) {
   var query = kind === 'shortcut' ? 'getShortcutMissionReward' : 'getEntranceMissionReward';
   t.c.press(kind);
   t.fake.last(nav).opts.success({}); await flush();
-  t.c.onShow(); await flush();
+  t.c.onShow({scene: kind === 'profile' ? 'center' : 'desktop_shortcut'}); await flush();
   t.fake.last(query).opts.success({canReceiveReward: true}); await flush();
 }
 var energy = function (kind, draft) { draft.energy = (Number(draft.energy) || 0) + 3; };

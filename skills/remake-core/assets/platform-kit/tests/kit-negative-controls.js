@@ -4,15 +4,15 @@
 var fs = require('fs'), os = require('os'), path = require('path'), child = require('child_process');
 var src = path.join(__dirname, '..', 'assets', 'tiktok-platform');
 var variants = [
-  {name: 'coming_back_does_not_cancel_old_query', file: 'MissionFlow.js',
-    before: 'this.missions.onResume();          // old query is cancelled and its lock released\n  this.version++; this.op++;',
-    after: ''},
+  {name: 'ordinary_foreground_reuses_previous_task', file: 'MissionFlow.js',
+    before: "entry.scene === 'desktop_shortcut' ? 'shortcut' : null",
+    after: "entry.scene === 'desktop_shortcut' ? 'shortcut' : this.kind"},
   {name: 'old_answer_can_update_panel', file: 'MissionFlow.js',
     before: 'if (!isCurrent() || op !== self.op) return;\n    self.pendingCheck = null;', after: 'self.pendingCheck = null;'},
   {name: 'failed_save_reported_as_success', file: 'MissionFlow.js',
     before: 'if (result.ok) {', after: 'if (true) {'},
   {name: 'non_success_result_is_silent', file: 'MissionFlow.js',
-    before: "self.message = r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;\n    self._render();\n  });\n  return this.pendingCheck;",
+    before: "self.message = r.status === 'ineligible' ? TEXT.notReady\n      : r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;\n    self._render();\n  });\n  return this.pendingCheck;",
     after: '});\n  return this.pendingCheck;'},
   {name: 'no_own_timer_by_default', file: 'MissionFlow.js',
     before: 'options.missionTimeoutMs ? {timeoutMs: options.missionTimeoutMs} : undefined',
@@ -28,8 +28,8 @@ var variants = [
     before: 'fresh.meta.recoveredFromCorrupt = this.now();', after: ''},
   // v1.2 (D4 1.3, D4 6, D6 4/9)
   {name: 'mission_sdk_lookup_only_ttminis', file: 'MissionFlow.js',
-    before: "typeof tt !== 'undefined' && tt,\n    typeof wx !== 'undefined' && wx\n  ];\n  var names = ",
-    after: "false,\n    false\n  ];\n  var names = "},
+    before: "typeof tt !== 'undefined' && tt,\n    typeof wx !== 'undefined' && wx",
+    after: "false,\n    false"},
   // 简化.11.3: a runtime whose mission methods exist but has no canIUse must still count as TikTok.
   {name: 'flow_native_requires_canIUse', file: 'MissionFlow.js',
     before: "var names = ['canIUse', 'addShortcut', 'startEntranceMission', 'getShortcutMissionReward', 'getEntranceMissionReward'];",

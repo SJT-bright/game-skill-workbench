@@ -144,6 +144,10 @@ def audit(d, project, image_module, binding=None, manifest=None):
         retry = [n for n in active if 'button' in n.get('comps', {})]
         for n in active:
             comps = n.get('comps') or {}
+            # Actual Cocos dumps include structural Canvas and Camera rows.
+            # They contribute no visual mask; the pixel checks still cover the backdrop.
+            if not comps or comps == {'canvas': True}:
+                continue
             r = n.get('screen') or n.get('rect')
             if not isinstance(r, list) or len(r) != 4 or not all(type(v) in (int, float) and math.isfinite(v) for v in r) or min(r[2:]) <= 0:
                 raise ValueError('actual visible node rectangle required')
@@ -198,7 +202,10 @@ def audit(d, project, image_module, binding=None, manifest=None):
             if text and (r[3] > 0.10 or r[2] > 1):
                 raise ValueError('loading text must not mask a full-page picture')
             if comps:
-                if set(comps) - {'sprite', 'graphics', 'label', 'richtext', 'image_text', 'button', 'progress', 'block_input'}:
+                supported = {'sprite', 'graphics', 'label', 'richtext', 'image_text', 'button', 'progress', 'block_input'}
+                if row['phase'] == 'retry' and 'button' in comps and comps.get('touch') is True:
+                    supported.add('touch')  # cc.Button registers its own touch handlers.
+                if set(comps) - supported:
                     raise ValueError('unsupported visible loading component')
                 if n is logo or text or 'graphics' in comps or 'sprite' in comps:
                     masks.append(rect)
@@ -236,13 +243,28 @@ def audit(d, project, image_module, binding=None, manifest=None):
                     raise ValueError('loading text is absent or replaced by a solid block')
             else:
                 family = [n for n in active if node['path'] == n['path'] or n['path'].startswith(node['path'] + '/')]
-                colors = [background,(255,255,255),(0,0,0)]
+                colors = [background, (255,255,255), (0,0,0), *backings]
                 for item in family:
                     c = item.get('comps', {})
                     value = (c.get('graphics') or {}).get('fillColor') or (c.get('sprite') or {}).get('color') or (c.get('label') or {}).get('color')
                     if isinstance(value,list) and len(value)>=3:
                         colors.append(value[:3])
-                if any(not any(on_blend(pixel,a,b) for a in colors for b in colors) for pixel in sample):
+                progress_owners = [a for a in ancestors if 'progress' in (a.get('comps') or {})]
+                if progress_owners and any(tuple(c) == (61,197,222) for c in colors):
+                    # The official 2.4 cyan is encoded as this equivalent triplet by Display P3 captures.
+                    colors.append((104,194,219))
+                for index, pixel in enumerate(sample):
+                    if any(on_blend(pixel,a,b) for a in colors for b in colors):
+                        continue
+                    # A track edge can be antialiased twice (track over background, fill over track).
+                    width, height = box[2] - box[0], box[3] - box[1]
+                    x, y = index % width, index // width
+                    if progress_owners and min(x, y, width - 1 - x, height - 1 - y) < 2:
+                        track = (progress_owners[-1]['comps'].get('graphics') or {}).get('fillColor', background)[:3]
+                        if any(on_blend(pixel, background, tuple(
+                                (1 - alpha) * base + alpha * fill for base, fill in zip(track, color)))
+                                for color in colors for alpha in (0.25, 0.5, 0.75)):
+                            continue
                     raise ValueError('nonstandard/game image hidden inside loading control')
         if logo_box is None:
             raise ValueError('official logo is outside the actual canvas')

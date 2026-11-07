@@ -691,13 +691,14 @@ def finalized_files(native, project, board=None, app_id=None):
     tiktok_finalize.finalize_native on the build folder first (make_tiktok_zip.finalize_for_writer); on a raw Creator
     build that rewrites adapter-min.js and the engine, adds the kit files and recompresses most PNGs (割草小能手 2.4.15:
     3 code files and 66 PNGs), which would read as a code change. The same step runs here on a temporary copy, so the
-    build folder is not touched; a second run on a finalized build changes nothing. ValueError when finalize refuses
+    build folder and the project's PNG cache stay untouched. ValueError when finalize refuses
     (the writer will refuse too)."""
     import shutil
     import tempfile
     import tiktok_finalize as F
     native = Path(native).resolve()
     board, options = source_settings(project, board)
+    options['png_cache_read_only'] = True
     tmp = Path(tempfile.mkdtemp(prefix='rework-preview-'))
     try:
         copy = tmp / (native.name or 'native')

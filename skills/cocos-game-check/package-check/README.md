@@ -1,5 +1,7 @@
 # 最终Native/ZIP检查与成品增量出包
 
+**测试包与同版试玩链接同发（用户 2026-11-07）**。只要交付含游戏测试包，同一回复须给出 ZIP 和已启动、可打开的同版手机试玩链接。跳过美术、重发、改名同样适用，用户明确说本次不用链接时按其指示。仅有 ZIP 只算出包，交付未完成。正式交付用 `prepare_delivery.py --preview-url` 回读手机入口与脚本，并用启动合同的 Web 指纹校验正在服务的快照，任何一项失败都不写交付回执。
+
 接在用户已授权的出包或具体启动故障维护之后。新制作完整验收由[打包主入口](../package/README.md)选择范围；本入口不重做全游戏玩法、美术或所有历史事故。只读检查已有ZIP仍可单独执行。
 
 **交付前无例外复查**：每次要给测试包，先按[最终 ZIP 分包体积复查](references/fresh-upload-size.md)生成本次新回执；包括现成、旧、外来、同版重发和仅改名包。`prepare_delivery` 自动先跑这一项，其他 CI 仍可按原规则复用；用户仅索取已有文件时直接运行共享 `upload_size_gate.py`，不得只算 ZIP CRC/哈希。
@@ -18,7 +20,8 @@ python scripts/build_checked_zip.py --native <Native> --expected-app-id <ID> \
 python scripts/prepare_delivery.py --zip <上述同一ZIP> --native <同一Native> \
   --expected-app-id <ID> --record <新交付回执.json> --project <工程> \
   --resource-manifest <同一资源清单.json> --startup-contract <同一启动合同.json> \
-  --loading-recovery-runtime <同一恢复索引.json>
+  --loading-recovery-runtime <同一恢复索引.json> \
+  --preview-url <已启动的同版手机试玩URL>
 ```
 
 已报告拖动/音频问题另按[实际交互与声音](references/drag-audio-postconditions.md)带当前trace。启动/资源故障缺同版运行证据不得只用Web可玩、ZIP CRC或旧CI覆盖；定位首错和实际依赖，不在错误版本上刷长测。共享代码在相邻remake-core/scripts，两个目录必须同级安装。
@@ -26,3 +29,5 @@ python scripts/prepare_delivery.py --zip <上述同一ZIP> --native <同一Nativ
 交稳定ZIP链接和必要说明，并给同版已启动的[固定手机预览](../../remake-core/references/user-phone-preview.md)。报告与故障原件留项目，不混进游戏包；不改变已批准美术，不自动上传平台。
 
 同期广告模拟、制作统计、Credits和评价等规则按[当前合同](../../remake-core/references/current-contracts.md)选择相关正文，不复制事故全文。
+
+先用手机试玩入口以 `--snapshot` 启动或复用同版服务。仅索取已有 ZIP 时仍须重跑分包体积复查，同时用 `python scripts/verify_delivery_preview.py --preview-url <链接> --web-sha256 <已与该ZIP绑定的Web构建指纹>` 核验试玩。Web 指纹来自同版构建记录，不能从待验链接倒填。两项通过后同一回复附两个链接。

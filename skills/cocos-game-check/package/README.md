@@ -1,5 +1,7 @@
 # TikTok小游戏出包与交付
 
+**测试包与同版试玩链接同发（用户 2026-11-07）**。只要交付含游戏测试包，同一回复须给出 ZIP 和已启动、可打开的同版手机试玩链接。跳过美术、重发、改名同样适用，用户明确说本次不用链接时按其指示。仅有 ZIP 只算出包，交付未完成。正式交付用 `prepare_delivery.py --preview-url` 回读手机入口与脚本，并用启动合同的 Web 指纹校验正在服务的快照，任何一项失败都不写交付回执。
+
 修订：`2026-10-27.modules-v6`。相关正文：[成品测试通过后自动出包](references/check-fix-package-loop.md)、[TikTok小游戏应用创建](references/tiktok-app-creation.md)、[上传后真机测试不在范围](references/tiktok-device-stage.md)。
 
 本入口负责用户授权的测试包、上传ZIP与重新出包。只有真实Cocos Native构建可以生成平台ZIP；根目录直接包含game.js、game.json、project.config.json，不带外层文件夹、源码、Web套壳、套娃ZIP和QA跳关标记。成品制作流程通过后按当前合同连续出包；仅检测/评审/试玩遵守用户边界；本入口不授权平台上传或发布。

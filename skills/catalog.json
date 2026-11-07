@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T13:32:20.614Z",
-  "treeHash": "efa2e5841310a47b0913e5d0153615c0d7b5ccb2b0762dd99b57c6c57d12cdbb",
+  "createdAt": "2026-11-07T16:33:15.383Z",
+  "treeHash": "30dd7bd987b9dc309e70b13531436b9ddf94702df2d7772bf720b78a529e5228",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,9 +245,9 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "83262dc399ba372a3df2469c77e1d196c1d33af15150f2858dd026b75bab83c4",
-      "fileCount": 178,
-      "bytes": 1902580,
+      "treeHash": "aff80d1435f3cfd692285a0d41bdabf1fd0138fbe7dcd51b86c63667cfe264b5",
+      "fileCount": 179,
+      "bytes": 1910755,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -257,8 +257,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "f0adea3e945a86a600d78c735f0f6c953f342a9dfd5ed82f451e5a96ee7e9dd3",
-          "size": 19389,
+          "hash": "b49eeba4d604035aa1915e513a665c0ef28ea3974506a1299275770e3c2f83bf",
+          "size": 19896,
           "executable": false
         },
         {
@@ -383,8 +383,8 @@
         },
         {
           "path": "package/README.md",
-          "hash": "2e28e0888faba6a24fd977381a804938d1f0a2cdf927d24f36472bca4d525ce1",
-          "size": 5382,
+          "hash": "28dd957f1b570165a27ebd4f141d843eb8be15f50a684413c7ffb25d0175a70f",
+          "size": 5889,
           "executable": false
         },
         {
@@ -419,8 +419,8 @@
         },
         {
           "path": "package-check/README.md",
-          "hash": "353b954234578999f4a3da4766c066d32be35ea7c3bb1bf63bb917abe7c9b172",
-          "size": 3415,
+          "hash": "62c2e2db857ace8fb46af5e83a9ef79985d37b4ab344182a4e7e2bfb35cfd631",
+          "size": 4361,
           "executable": false
         },
         {
@@ -629,14 +629,14 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "7b3eca90a8e1ee7ddb781142b7b71ee678cbc1d0623df08982ed8dcead004993",
-          "size": 13061,
+          "hash": "87eda2b2894add9ccd4a4d9883c4b3b3a68e20e2108617966b78a5aec273cce7",
+          "size": 13983,
           "executable": false
         },
         {
           "path": "package-check/scripts/rework_scope.py",
-          "hash": "da181920149a6ab58e25f08dc48877baa3f50efcfc0fcef9df39c667c65d6c50",
-          "size": 42384,
+          "hash": "845f34f6516137fea827eb9abda1c6be6e7fb919f4baf6dac2df9506e4886f62",
+          "size": 42403,
           "executable": false
         },
         {
@@ -989,8 +989,8 @@
         },
         {
           "path": "package-check/scripts/test_issue_relocation.py",
-          "hash": "1bff6652db8259d2b24b4087e0b5aabb6f0e2b2166f3458ad30bdf8c9957a206",
-          "size": 12115,
+          "hash": "bdd0a796a51cba85cdc8766df1ad85ebbc5a89231a8e5f5702d1319d248e6dd8",
+          "size": 12787,
           "executable": false
         },
         {
@@ -1025,8 +1025,8 @@
         },
         {
           "path": "package-check/scripts/test_package_reuse.py",
-          "hash": "6049a8e185a9145d44a3ed3a09b2894e63e6f0b4bb36d9065b0faa0400d31cce",
-          "size": 6346,
+          "hash": "8b1696a02e9a7979c86f6df989bb741b1a7681b4578b9de184b30be0e9dea6e2",
+          "size": 7378,
           "executable": false
         },
         {
@@ -1079,8 +1079,8 @@
         },
         {
           "path": "package-check/scripts/test_rework_scope.py",
-          "hash": "362da7ece47be92768320d2b29e773f9061d02031ff8f10385be45922756a468",
-          "size": 36230,
+          "hash": "be6d6aaf75ec8c072a4a1811dfde8a40654869ff35a51569ee3cc479c06e92b4",
+          "size": 36282,
           "executable": false
         },
         {
@@ -1123,6 +1123,12 @@
           "path": "package-check/scripts/tool_identity.py",
           "hash": "63a14772c7422a7df80e87b920e243dd29566234cb641ac449e8a5b83823d8f4",
           "size": 12744,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/verify_delivery_preview.py",
+          "hash": "ca87b0885124b2988dbd83becd718ca867fb18ab0f4b11624733f8e7db9cd298",
+          "size": 3518,
           "executable": false
         },
         {

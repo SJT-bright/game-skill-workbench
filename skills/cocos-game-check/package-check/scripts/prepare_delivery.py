@@ -16,6 +16,7 @@ import tempfile
 from check_package import check, native_files
 from audit_final_package_startup import audit_final_startup
 import package_obligations
+from verify_delivery_preview import verify_preview
 
 # Parent decision 2026-10-29 (DECISIONS.md, design risk R9): until the first v7.7 NEW game passes a phone scan, every
 # delivery reply says this line. Remove this constant (and its use below) after the first v7.7 game passes a phone
@@ -97,7 +98,7 @@ def source_sha256(source):
     return digest.hexdigest()
 
 
-def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None):
+def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None):
     archive, native, record = (Path(p).resolve() for p in (archive, native, record))
     temporary = Path(tempfile.gettempdir()).resolve()
     if archive.is_relative_to(temporary) or any(x.casefold() in ('temp', 'rwtemp') for x in archive.parts):
@@ -180,9 +181,18 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'reply_lines': [KIT_PARTS_PHONE_RETEST],
                'logic_source_binding': logic,
                'boundary': 'Local file/link identity only; include markdown_link, reply_lines and the finalize '
-                           'table_markdown in the actual reply. No upload performed.'}
+                           'table_markdown and preview.markdown_link in the actual reply. No upload performed.'}
+    contract_bytes = Path(startup_contract).read_bytes() if startup_contract else b''
+    if not preview_url:
+        raise ValueError('缺同版试玩链接：只有 ZIP，交付未完成。')
+    if hashlib.sha256(contract_bytes).hexdigest() != startup_runtime.get('startup_contract_sha256'):
+        raise ValueError('同版启动合同缺失或在校验后变化，无法核对试玩版本。')
+    web_sha = json.loads(contract_bytes)['binding']['web_tree_sha256']
     record.parent.mkdir(parents=True, exist_ok=True)
     with package_obligations.publication_guard(files, native, project, resource_manifest, obligations):
+        receipt['preview'] = verify_preview(preview_url, web_sha)
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != after:
+            raise ValueError('ZIP changed while checking the preview; no delivery record written')
         with record.open('x', encoding='utf-8') as stream:
             json.dump(receipt, stream, ensure_ascii=False, indent=2)
             stream.write('\n')
@@ -202,9 +212,10 @@ def main():
     parser.add_argument('--ad-regression', type=Path, help='adapter JSON for the rewarded-ad and runtime regressions (default $TIKTOK_AD_REGRESSION_ADAPTER); every package with game.js is refused without it')
     parser.add_argument('--logic-report', type=Path, help='logic_check.py report; its current_source_sha256 must equal the delivered --source')
     parser.add_argument('--source', type=Path, help='delivered source project folder or source ZIP: checked by source_hygiene.py (no .git/.svn/.idea, no credential files); also needed with --logic-report')
+    parser.add_argument('--preview-url', help='live matching phone preview URL; required for delivery')
     args = parser.parse_args()
     try:
-        print(json.dumps(prepare(args.zip, args.native, args.expected_app_id, args.record, args.project, args.startup_contract, args.loading_recovery_runtime, args.resource_manifest, args.ad_regression, args.logic_report, args.source), ensure_ascii=False))
+        print(json.dumps(prepare(args.zip, args.native, args.expected_app_id, args.record, args.project, args.startup_contract, args.loading_recovery_runtime, args.resource_manifest, args.ad_regression, args.logic_report, args.source, args.preview_url), ensure_ascii=False))
     except (ValueError, OSError, RuntimeError) as error:
         print(json.dumps({'status': 'refuse', 'error': str(error)}, ensure_ascii=False))
         return 1

@@ -194,8 +194,17 @@ class RelocatedWriterDelivery(unittest.TestCase):
         self.assertTrue(result['package_obligations']['reported_issues']['checked_issues'][0]['dependency_bytes_reused'])
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
                 patch('prepare_delivery.audit_final_startup',return_value={'passed':True}):
-            receipt=prepare(archive,moved,APP,self.root/'delivery.json',
-                            project=self.project,resource_manifest=manifest)
+            import hashlib
+            url='http://127.0.0.1:54321/'
+            contract=self.root/'startup-fixture.json'
+            contract.write_text(json.dumps({'binding': {'web_tree_sha256': 'a'*64}}))
+            startup={'passed':True,'startup_contract_sha256':hashlib.sha256(contract.read_bytes()).hexdigest()}
+            with patch('prepare_delivery.audit_final_startup',return_value=startup), \
+                    patch('prepare_delivery.verify_preview',return_value={'url':url}) as preview:
+                receipt=prepare(archive,moved,APP,self.root/'delivery.json',project=self.project,
+                                resource_manifest=manifest,startup_contract=contract,preview_url=url)
+            preview.assert_called_once_with(url,'a'*64)
+            self.assertEqual(receipt['preview']['url'],url)
         self.assertTrue(receipt['expected_tree_exact'])
 
     def test_original_evidence_loss_blocks_writer_before_runtime(self):

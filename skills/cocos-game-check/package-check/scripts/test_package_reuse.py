@@ -73,13 +73,26 @@ class PackageReadReuse(unittest.TestCase):
                          {p.relative_to(native).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in native.rglob('*') if p.is_file()})
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)), patch('prepare_delivery.audit_final_startup',return_value={'passed':True}):
             # v7.5: a hand-written ZIP without a writer receipt is an unofficial entry and is refused first.
-            with self.assertRaisesRegex(ValueError,'unofficial entry'):prepare(self.archive,native,APP,self.root/'no-receipt.json',project=project,resource_manifest=manifest)
+            with self.assertRaisesRegex(ValueError,'unofficial entry|official writer receipt'):prepare(self.archive,native,APP,self.root/'no-receipt.json',project=project,resource_manifest=manifest)
             self.assertFalse((self.root/'no-receipt.json').exists())
             # Stand-in for the official writer: the receipt binds these exact ZIP bytes and Native tree.
             digests={n:hashlib.sha256(d).hexdigest() for n,d in self.files.items()}
             stamp=verifier.make_receipt('build_checked_zip',self.archive,hashlib.sha256(self.archive.read_bytes()).hexdigest(),digests,{'blocks':[],'warnings':[],'gates':[]},None,finalize=finalize)
             verifier.receipt_path(self.archive).write_text(json.dumps(stamp))
-            receipt=prepare(self.archive,native,APP,self.root/'delivery.json',project=project,resource_manifest=manifest)
+            url='http://127.0.0.1:54321/'
+            contract=self.root/'startup-fixture.json'
+            contract.write_text(json.dumps({'binding': {'web_tree_sha256': 'a'*64}}))
+            startup={'passed':True,'startup_contract_sha256':hashlib.sha256(contract.read_bytes()).hexdigest()}
+            with self.assertRaisesRegex(ValueError, '只有 ZIP'):
+                prepare(self.archive,native,APP,self.root/'no-preview.json',project=project,resource_manifest=manifest)
+            self.assertFalse((self.root/'no-preview.json').exists())
+            self.assertTrue((self.root/'no-preview.json.size.json').exists())
+            with patch('prepare_delivery.audit_final_startup',return_value=startup), \
+                    patch('prepare_delivery.verify_preview',return_value={'url':url}) as preview:
+                receipt=prepare(self.archive,native,APP,self.root/'delivery.json',project=project,resource_manifest=manifest,
+                                startup_contract=contract,preview_url=url)
+            preview.assert_called_once_with(url,'a'*64)
+            self.assertEqual(receipt['preview']['url'],url)
             self.assertEqual(receipt['sha256'],hashlib.sha256(self.archive.read_bytes()).hexdigest())
             (native/'child.js').write_bytes(b'changed')
             with self.assertRaisesRegex(ValueError,'differs from actual Native'):prepare(self.archive,native,APP,self.root/'bad-delivery.json',project=project,resource_manifest=manifest)

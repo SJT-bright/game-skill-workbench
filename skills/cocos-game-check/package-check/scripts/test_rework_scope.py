@@ -521,7 +521,8 @@ class PreviewBeforePackaging(Base):
         self.assertNotEqual(call['native'].resolve(), folder.resolve())
         self.assertFalse(call['native'].exists())                   # the copy is gone again
         self.assertEqual((folder / 'adapter-min.js').read_bytes(), RAW_ADAPTER)   # the build folder is not touched
-        self.assertEqual((call['board'], call['app_id'], call['options']), ('localize', 'tt0000000000000000', {}))
+        self.assertEqual((call['board'], call['app_id'], call['options']),
+                         ('localize', 'tt0000000000000000', {'png_cache_read_only': True}))
         self.assertEqual(len(list((project / 'docs' / 'checks').glob('rework-*.json'))), 1)
 
     def test_without_finalize_the_raw_build_would_read_as_a_code_change(self):

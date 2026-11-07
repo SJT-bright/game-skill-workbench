@@ -165,9 +165,10 @@ class WriterRegressions(unittest.TestCase):
 
     def test_new_game_without_browser_refused(self):
         code, err, _ = self.make('new', self.adapter(),
-                                 [mock.patch.dict(os.environ, {RR.ENV_BROWSER: str(self.d / 'no-ego-browser')})])
+                                 [mock.patch.dict(os.environ, {RR.ENV_BROWSER: ''}),
+                                  mock.patch.object(RR, '_which', return_value=None)])
         self.assertEqual(code, 1, err)
-        self.assertIn('needs the Ego browser', err)
+        self.assertIn('Ego CLI 不可用', err)
         self.assertFalse(self.out.exists())
 
     def test_new_game_incomplete_environment_refused(self):

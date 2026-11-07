@@ -116,6 +116,8 @@ class PreflightMaintenanceTests(unittest.TestCase):
 
                 def stub(name, args, logs):
                     calls.append(name)
+                    if name in ('audit_english_coverage.py', 'audit_copy_quality.py'):
+                        self.assertEqual('--text-only' in args, not recheck)
                     payload = {'failed': 0, 'checked': 1, 'blocking': 0, 'review': 0,
                                'runtime_strings': 1, 'known_risks': [], 'found': [],
                                'decision': {}, 'passed': True, 'errors': []}

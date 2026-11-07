@@ -357,6 +357,7 @@ window.boot = function () {
       loadBundle(cc.AssetManager.BuiltinBundleName.RESOURCES, loadEngine);
     });
     var loadSubpackage = guarded('resources subpackage', function () {
+      if (settings.hasResourcesBundle === false) { loadEngine(); return; }
       var present = settings.subpackages && settings.subpackages.indexOf('resources') !== -1;
       if (subpackageDone || !present || !platform || typeof platform.loadSubpackage !== 'function') {
         loadResources();

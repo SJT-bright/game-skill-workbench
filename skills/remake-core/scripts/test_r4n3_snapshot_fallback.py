@@ -13,6 +13,7 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -22,7 +23,7 @@ import serve_preview as SP  # noqa: E402
 
 class SnapshotFallback(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix='r4n3-snap-'))
+        self.tmp = Path(tempfile.mkdtemp(prefix='r4n3-snap-')).resolve()
         self.project = self.tmp / '蛋壳特工队'
         (self.project / 'assets').mkdir(parents=True)
         (self.project / 'project.json').write_text('{"version": "2.4.15"}')
@@ -55,6 +56,25 @@ class SnapshotFallback(unittest.TestCase):
         self.assertTrue(Path(copy).is_relative_to(self.project / '.tiktok-kit' / 'snapshots'))
         self.assertEqual((Path(copy) / 'main.js').read_text(), '1')
         self.assertEqual(list(shared.iterdir()), [])
+
+    def test_project_fallback_verifies_the_copy_before_starting(self):
+        copies = []
+
+        def reject(snapshot):
+            self.assertTrue(snapshot.is_relative_to(self.project / '.tiktok-kit' / 'snapshots'))
+            self.assertEqual((snapshot / 'main.js').read_text(), '1')
+            copies.append(snapshot)
+            raise SystemExit('pretrial evidence refused')
+
+        shared = self.tmp / 'shared'
+        real_can_write = SP._can_write
+        with patch.object(browser_slots, 'SNAPSHOTS', shared), patch.object(browser_slots, 'sweep'), \
+                patch.object(SP, '_can_write', side_effect=lambda p: p != shared and real_can_write(p)):
+            with self.assertRaisesRegex(SystemExit, 'pretrial evidence refused'):
+                SP.main(['--directory', str(self.export), '--project', str(self.project), '--snapshot'],
+                        verify_snapshot=reject)
+        self.assertEqual(len(copies), 1)
+        self.assertFalse(copies[0].exists())
 
     def test_explicit_project_is_used(self):
         shared = self.tmp / 'ro'

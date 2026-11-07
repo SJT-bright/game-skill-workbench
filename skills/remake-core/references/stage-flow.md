@@ -17,8 +17,8 @@
 
 - **本 Skill 不做任何上传 TikTok 后的测试**：不出真机清单、不要求扫码/录屏、不分析手机录屏、不跑 `check_known_issues.py --stage device`。出的 ZIP 由用户自己决定怎么上传和测。
 - **全部测试都在浏览器手机模拟里做**，目标只有一个：用户在浏览器里不会遇到**进不了游戏、加载卡住、按钮点了没反应**，**尤其是所有和广告有关的流程**（看广告复活、领奖、试用、双倍、失败/取消/超时/没广告/很慢/重复点击/迟到回调）。广告用本地模拟（替身）把每种结果都实际触发一遍，见[加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md#三广告要做到)。
-- **手机模拟用 iPhone、在一个浏览器里测一次**（用户 2026-10-22）：Ego Lite 和 Chrome 内核相同，不用两个都测。`chrome_touch.py` 的 `device` 默认 `iphone_15`，短屏用 `iphone_se`。每个按钮都要点一遍，按钮清单从游戏里自动读出，见[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)。
-- **AI 自己测试严格用 Ego Lite；用户试玩按[固定手机入口](user-phone-preview.md)自动弹出独立 Google Chrome**（用户 2026-10-23：Ego 只给 AI 自己测试，禁止在 Ego 里开窗口让用户试玩；`serve_preview.py --keep` 起本地服务，链接写在 Codex 回复里；Ego 里"需要你处理"/等用户的空间 AI 自己关掉，见[Ego 只给 AI 测试](machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）：先运行 `ego-browser skill` 按它的说明操作；我们的触摸计划/截图/录屏工具用 `chrome_touch.py` 跑在 Ego 里（通过 `ego-browser nodejs`，不需要任何地址）（见[手机触屏](../../mobile-touch-computer-use/SKILL.md)）。AI 代测改变默认执行器时仍先遵循本轮授权；用户试玩自动打开 Chrome 已获本次持续授权，无需再问。
+- **用 Ego Lite 模拟 iPhone**（用户 2026-11-06）。`chrome_touch.py` 的 `device` 默认 `iphone_15`，短屏用 `iphone_se`。每个按钮都要点一遍，按钮清单从游戏里自动读出，见[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)。
+- **AI 自己测试严格用 Ego Lite；用户试玩按[固定手机入口](user-phone-preview.md)自动弹出独立 Google Chrome**（用户 2026-10-23：Ego 只给 AI 自己测试，禁止在 Ego 里开窗口让用户试玩；`serve_preview.py --keep` 起本地服务，链接写在 Codex 回复里；Ego 里"需要你处理"/等用户的空间 AI 自己关掉，见[Ego 只给 AI 测试](machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）：先运行 `ego-browser skill` 按它的说明操作；我们的触摸计划/截图/录屏工具用 `chrome_touch.py` 跑在 Ego 里（通过 `ego-browser nodejs`，不需要任何地址）（见[手机触屏](../../mobile-touch-computer-use/SKILL.md)）。Ego 不可用时保留未测并继续离线工作。
 - **新建测试空间不问用户（用户 2026-10-23，已长期授权）**：每次测试自己新建 TaskSpace；空间不在/失活/被占直接新建接着测；每一轮、每个新对话开头先 `browser_slots.py tidy` 收拾上一轮的空间，不留闲置的。见[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)。
 - **不依赖、不询问 TikTok 开发者工具**：电脑上没有是正常情况，不问、不让用户安装或登录，不标"受阻"。
 - 浏览器模拟证明不了真实 TikTok 里的广告填充、平台审核、真实手机性能，汇报时如实写"浏览器模拟已通过"，不说"TikTok 上已验证"。
@@ -27,18 +27,18 @@
 
 | 情况 | 怎么办 |
 |---|---|
-| 缺 Python 依赖、Playwright、Pillow、ffmpeg | 自己安装（装在独立环境里），不问 |
+| 缺 Python 依赖、Pillow、ffmpeg | 自己安装（装在独立环境里），不问 |
 | 没有 TikTok 开发者工具/模拟器/Runtime | 正常情况，全在浏览器测，最终Native还须有当前入口、真实引擎、HOME→可信输入与失败Retry恢复证据；不冒称真机通过 |
-| 没有 Ego Lite，或连不上 Ego | **要为浏览器问用户的两种情况之一**：先按 ego-browser 的安装说明试着装好/连上；还不行就问用户"装 Ego 还是这次改用 Chrome"，等回答 |
+| 没有 Ego Lite，或连不上 Ego | 按 ego-browser 安装和排障指南处理。仍不可用时保留未测，继续离线工作 |
 | Ego 测试空间不存在/失活/被占/报错（例："测试空间 86 已不存在"） | **直接新建自己的空间接着测，不问**（用户 2026-10-23 已长期授权，见[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）；汇报里一句话带过 |
-| Ego 卡到没法准确测试（新建空间后仍严重卡顿、计时和触摸判断不准） | **要为浏览器问用户的另一种情况**：问"这次是否改用 Chrome"，等回答 |
+| Ego 卡到没法准确测试（新建空间后仍严重卡顿、计时和触摸判断不准） | 记录影响和已核对的实际视口，保留对应项未测，继续离线工作 |
 | 没有 Grok、其他桌面 AI 应用 | 完全单应用，自己做 |
 | 音效网站要登录、有人机验证，没有 Freesound key | 跳过这些网站，用免登录的来源；最后汇报里提一句 |
 | 没有手机 | 本 Skill 不做真机测试，不问 |
 | 后台信息（应用归属、广告位是否已启用）没法核实 | 记"未核实"，继续做，不问 |
 | 规则里写"已授权的测试包/候选" | 用户说"打包"就是授权，不再另外确认 |
 
-**只有这些才问用户**：缺游戏源码或启动包；Saul 点名给英化游戏加的创新玩法范围；重塑启动包没写的皮肤板块（写规格时用勾选框问一次，默认要，见[皮肤板块](../../remake-skins/SKILL.md)）；交试玩版时的确认（"英化通过"/"按重塑画风重做"、"美术玩法通过"）；用户说的类型和拖进来的文件对不上（说"英化"却附了启动包，说"重塑"却没有启动包，见[两个板块](two-boards.md#二开工第一件事判断走哪个板块)）；第一次做游戏时的广告 App ID、Client Key、激励广告位（只问一次）；锁定后修 bug 需要改设计；用户自己要求做的 TikTok 后台登录、上传、发布；电脑上没有 Cocos Creator（给官方下载入口，说明要装哪个版本）；Ego Lite 用不了、要改用 Chrome 时。问之前先把能做的都做完，一次问清。
+**只有这些才问用户**：缺游戏源码或启动包；Saul 点名给英化游戏加的创新玩法范围；重塑启动包没写的皮肤板块（写规格时用勾选框问一次，默认要，见[皮肤板块](../../remake-skins/SKILL.md)）；交试玩版时的确认（"英化通过"/"按重塑画风重做"、"美术玩法通过"）；用户说的类型和拖进来的文件对不上（说"英化"却附了启动包，说"重塑"却没有启动包，见[两个板块](two-boards.md#二开工第一件事判断走哪个板块)）；第一次做游戏时的广告 App ID、Client Key、激励广告位（只问一次）；锁定后修 bug 需要改设计；用户自己要求做的 TikTok 后台登录、上传、发布；电脑上没有 Cocos Creator（给官方下载入口，说明要装哪个版本）。问之前先把能做的都做完，一次问清。
 
 ## 两个板块的走法（用户 2026-10-21 定，见[两个板块](two-boards.md)）
 
@@ -75,7 +75,7 @@
 - **原始输入只读保留（生成时预防 R4D）**：英化开工用 `unpack_source.py` 放中文源码，它先把原包复制进游戏文件夹的只读 `_原始输入/`（unpack_source 自动做）；清理旧版本只用 `remake-core/scripts/clean_old_versions.py`，`_原始输入/` 只有 Saul 自己能删。
 - **重塑**：先做玩法、关卡（关卡表 `level_plan.json`：限定关、奖励关）、顶部资源栏、广告和收集系统的代码（占位图）→ 节点 1 玩法通过 → 再做**全部美术**（每个页面和弹窗、背景、按钮、图标、字体、动画）和音乐音效，接进真实 Cocos 工程。美术先做样板、AI 自审后整套生成（不在中途停下等用户）。
 - **标准件开工就装、每次构建前同步（生成时预防 P02/P05，两个板块都做）**：建好工程、跑完 `tiktok_finalize.py init` 就跑一次 `tiktok_finalize.py source --project <工程> --board <remake|localize>`，以后**每次构建前**先跑 `tiktok_finalize.py sync --project <工程> --board <板块>`（约 1 秒：平台包文件按哈希换回、装 `GameUIKit.js`，不动图片）；英化工程构建出 TikTok 小游戏包后再加 `--native <构建目录>` 跑一次（启动件、触摸、存档层装进构建，连同宿主接口兜底 host-shim 和 3.x 启动看守，不手写 game.js 那几行；3.x 工程 sync 也装 `GameUIKit.ts`）。旧游戏只报告。新做的弹窗、按钮一律用平台包 `GameUIKit`（`UI.popup`、`UI.button`、`UI.toast`、`UI.digits`；原版按钮用 `UI.wrapExisting`），别手写遮罩、淡出和点击。见[平台包接入说明](../assets/platform-kit/README_接入说明.md)第十一节。顶栏不手算胶囊位置：新游戏 source 自动装 CapsuleAuto。页面背景一律用 `ScreenFit.cover(cc, bg, {watch:true})`，别按设计尺寸铺，source 会查首页、局内、结算的背景（新游戏拦，英化警告）。加载页一律用 Cocos 官方默认加载样式、不放游戏图（[加载界面规则](../../cocos-game-check/startup/references/cocos-loading-screen.md)，Saul 10-26），首页背景在 onLoad 里一次设好最终那张图再 cover，别先放一张再换图、再缩放（热气球闪换图）；source 的 `K_bg_loading_swap` 会查（新游戏拦，英化警告）。激励广告的超时和迟到兜底由平台包 `main.js` v1.7 自动装的 `rewarded-guard.js` 管，生成的代码只调 `RewardedService`，别自己写计时，也别改 guard。update 里移动一律乘 dt（或 RunSession.move），节点在 onLoad 建好或从 FxPool 取，别在 update 里 new；sync 每次构建前会扫（新游戏拦，英化只提示）。
-- **构建命令自带 sync（生成时预防 R4F1）**：构建命令一律用 `find_creator.py --project <工程>` 打印的那条，它前面已经带 `tiktok_finalize.py sync --project <工程> --board <板块>`（板块读 `.tiktok-kit/policy.json`），sync 没过就不构建，别只复制 Creator 那半条。sync 还会：给新游戏装 `RunSession.js`、`FxPool.js`；跑只读的 `art_static`，构建前就报压扁的图（新游戏拦，英化警告）；`--native` 给自带 `main.js` 的 2.4 包在 game.js 里装 rewarded-guard 那一行（用平台包 main.js 的不重复装）。
+- **构建命令自带 sync（生成时预防 R4F1）**：构建命令一律用 `find_creator.py --project <工程>` 打印的那条，它前面已经带 `tiktok_finalize.py sync --project <工程> --board <板块>`（板块读 `.tiktok-kit/policy.json`），sync 没过就不构建，别只复制 Creator 那半条。sync 还会：给新游戏装 `RunSession.js`、`FxPool.js`；正式试玩前的 Sprite 比例另由 `source` 检查并写入源码记录；`--native` 给自带 `main.js` 的 2.4 包在 game.js 里装 rewarded-guard 那一行（用平台包 main.js 的不重复装）。
 - **TikTok 构建命令后面自带 sync --native（生成时预防 R4J4）**：`find_creator.py --project <工程>` 打印的 TikTok 构建命令，构建成功后（2.4 退出码 0，3.x 是 0 或 36）自动接 `tiktok_finalize.py sync --project <工程> --board <板块> --native <构建目录>`。构建目录按构建参数算：2.4 是 `<buildPath，默认 build>/bytedance`，3.x 是 `<buildPath，默认 project://build>/<outputName，默认 bytedance-mini-game>`。照原样用整条命令，别只复制 Creator 那半条；算不出目录（例如用了 configPath）时命令里没有这一步，按输出的提示手跑。
 - **source 也拦帧率移动、手搭弹窗和开发用文字（生成时预防 R4F3）**：`frame_scan` 现在也在 `source` 里跑，新游戏 update 里不乘 dt 的移动、在 update 里 new 节点会进源码记录，写包入口靠 K5 拒包（以前只在 sync 里报，出包不拦）。`ui_kit_scan` 查三样：手搭弹窗（`new cc.Node` + `BlockInputEvents` 没用 GameUIKit）、代码里写死的遮罩透明度和颜色、玩家看得到的文字里有 PREVIEW / DEBUG / TODO / 测试 / 调试 / 预览版。生成时弹窗一律 `UI.popup`，遮罩颜色只在 `UI.setup({maskColor, maskOpacity})` 写一次，玩家文字从文案表取，预览专用字只放 serve_preview 外壳。开发用文字新游戏拦；手搭弹窗和写死遮罩先只警告（校准干净后再拦）；英化警告，旧游戏只记录。
 - **sync 也报手搭弹窗和开发用文字（生成时预防 R4J2）**：`ui_kit_scan` 排在 `sync` 源码步骤（SYNC_SOURCE_STEPS）末尾，每次构建前就把手搭弹窗、写死的遮罩值、玩家文字里的 PREVIEW / DEBUG / 测试 打进 `.tiktok-kit/sync.json`（口径同 source：新游戏开发用文字拦，其余警告，旧游戏只记录；约 0.1 秒）。看到就当场改成 `UI.popup` 和文案表，别等出包。
@@ -256,12 +256,12 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
 美术只在美术关查一次；打包时**只核对回执，不重跑美术检查**（用户 2026-10-24：再测一遍可能有误差）。回执只防"美术关之后改了图没人看"（丛林荡藤 v1～v6、企鹅雪道美术 v1～v6、Holly v1～v3 都是这样交出去的）。
 
 - **谁写**：`art_check.py` 每次跑完分析，写 `<工程>/.tiktok-kit/art-receipt.json`：结论（通过 `pass` / 失败 `fail`）、对应的 `art-check.json`、工具校验值、时间，以及 `assets/` 下全部图片的指纹（png/jpg/webp 等、图集 `.plist`、3D 模型 `.fbx/.gltf/.glb`）。缺采集时 2.4 工程不动旧回执；3.x 工程（`ui_dump` 还读不了 3.x 页面）写 `not_covered_3x`，意思是"3.x 未覆盖"，不是通过。
-- **谁查**：两个写包入口（`make_tiktok_zip.py`、`build_checked_zip.py`，同一个 `finalize_for_writer`）和用户试玩 `serve_preview.py --keep`（必须给 `--project <工程>`）。重塑新游戏（board remake、policy new）没有回执、回执不是通过、或回执里的图和工程现在的对不上，就不写 ZIP、不起试玩，提示"美术改过（或没跑美术检查），重跑 art_check"并列出变了的图。旧游戏和英化游戏只警告（英化游戏照样要在美术关跑 `art_check.py`，警告会写进写包结果）。3.x 的 `not_covered_3x` 回执照样放行，但写包结果和 finalize 表里有一行"3.x 未覆盖"，交付说明照实写。
-- **源码段的改图不算改美术**：`tiktok_finalize.py source` 的 `images` 步骤会把 WebP 换成 PNG/JPG、缩超大图。它在动手前先核回执，图全对得上才把回执跟到它自己写出的图（回执里 `carried` 记着改了哪些）；本来就对不上的不跟，写包入口照样警告或拒。
+- **谁查**：两个写包入口（`make_tiktok_zip.py`、`build_checked_zip.py`，同一个 `finalize_for_writer`）和用户试玩 `serve_preview.py --keep`（必须给 `--project <工程>`）。重塑新游戏（board remake、policy new）没有回执、回执不是通过、或回执里的图和工程现在的对不上，就不写 ZIP、不起试玩，提示"美术改过（或没跑美术检查），重跑 art_check"并列出变了的图。旧重塑游戏只警告。正式英化试玩必须有与当前 Web 对应的通过回执。英化写包核对已有记录，保留明确批准的维护范围判定。3.x 未覆盖状态写入交付表。
+- **源码素材转换在正式试玩前完成**：`tiktok_finalize.py source` 的 `images` 步骤会把 WebP 换成 PNG/JPG、缩超大图。它在动手前先核回执，图全对得上才把回执跟到它自己写出的图（回执里 `carried` 记着改了哪些）；本来就对不上的不跟，写包入口照样警告或拒。
 - **文字、字体、布局也算美术**（生成时预防 R4M2）：回执的 `display` 还记字体文件、场景/预制体里管显示的字段（节点位置、大小、显隐、颜色，Label/Sprite/Widget/Layout 等组件）、文字表和脚本写进 label 的文字；这些变了和改图一样判过期（`display_changed`），重跑 `art_check.py`。脚本组件上的玩法数值不算。R4M2 以前的旧回执没有 `display`，只核图，下次 art_check 自动补上。
 - **不用采集的两行**（v7.8）：美术检查有两行不用页面采集：H8 底子原图原声、H10 生图记录；3.x 工程这两行不通过时回执写 fail（不是 `not_covered_3x`）。英化游戏 H8 不查、H10 只提示。
-- **和第 13 条不冲突**：图、文字、字体和布局都没变，回执一直对得上，打包不用重跑美术。试玩确认后又改了图（换图、修图、改尺寸）或文字、字体、按钮、节点位置，只对改动按美术关的做法重跑 `art_check.py`（复制上一轮整套采集，只把改到的页面两种尺寸重新 dump 换进去；只放这几页去跑，「页面全覆盖」一行不会通过），通过后回执自动更新，别手改回执。
-- **源码段静态拦**（`tiktok_finalize_steps/art_static.py`，新游戏拦、旧游戏警告，进源码记录，写包入口靠 K5 拒）：SIMPLE+CUSTOM 精灵的节点比例和图片比例差超过 10%（丛林荡藤 v4 四张图）；有碰撞体但图被关掉或没图（`K_art_hidden_body`）。九宫格/平铺、进度条的 bar、整行或整列同色的图（能拉伸）不算。弹窗遮罩不量透明度（Saul 10-31）：明暗跟游戏风格走，整体不要太亮，不要暗沉、没有设计图案的背景，只能人看，不做数值门禁。原游戏或运行时被代码藏起来的节点写进 `docs/art/static-exempt.json`（每条写 `why`，会列在警告里），更好的做法是改节点尺寸或删掉不用的节点。
+- **和第 13 条不冲突**：图、文字、字体和布局都没变，回执一直对得上，打包不用重跑美术。试玩确认后又改了图（换图、修图、改尺寸）或文字、字体、按钮、节点位置，回到试玩前美术阶段，只对改动重跑 `art_check.py`（复制上一轮整套采集，只把改到的页面两种尺寸重新 dump 换进去；只放这几页去跑，「页面全覆盖」一行不会通过），通过后回执自动更新，别手改回执。
+- **试玩前源码检查**（`tiktok_finalize_steps/art_static.py`，新重塑拦、旧游戏和英化提示，结果进入源码记录，写包时由 K5 核对）：SIMPLE+CUSTOM 精灵的节点比例和图片比例差超过 10%（丛林荡藤 v4 四张图）；有碰撞体但图被关掉或没图（`K_art_hidden_body`）。九宫格/平铺、进度条的 bar、整行或整列同色的图（能拉伸）不算。弹窗遮罩不量透明度（Saul 10-31）：明暗跟游戏风格走，整体不要太亮，不要暗沉、没有设计图案的背景，只能人看，不做数值门禁。原游戏或运行时被代码藏起来的节点写进 `docs/art/static-exempt.json`（每条写 `why`，会列在警告里），更好的做法是改节点尺寸或删掉不用的节点。
 
 ## 最终测试补充：加载场景假通过（2026-10-25）
 

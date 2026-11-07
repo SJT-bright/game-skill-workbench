@@ -78,7 +78,7 @@ def _cache_path(ctx):
 
 
 def load_cache(ctx, version):
-    """-> (entries {in_sha: out_sha}, note). A cache made by another pngquant version or argument list is dropped."""
+    """Read existing results. With a converter version, reject cache entries made by a different version."""
     path = _cache_path(ctx)
     if path is None or not path.is_file():
         return {}, None
@@ -86,7 +86,8 @@ def load_cache(ctx, version):
         data = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return {}, f'{KIT_DIR}/{CACHE} unreadable, rebuilt'
-    if not isinstance(data, dict) or data.get('pngquant') != version or data.get('args') != ARGS:
+    if (not isinstance(data, dict) or not data.get('pngquant') or data.get('args') != ARGS
+            or (version is not None and data.get('pngquant') != version)):
         return {}, f'{KIT_DIR}/{CACHE} made by pngquant {data.get("pngquant") if isinstance(data, dict) else "?"} ' \
                    f'{data.get("args") if isinstance(data, dict) else ""}; cache discarded'
     entries = data.get('entries')
@@ -160,23 +161,24 @@ def pngs(root):
     return sorted(p for p in root.rglob('*') if p.is_file() and not p.is_symlink() and p.suffix.lower() == '.png')
 
 
-def plan(ctx, cache=None):
+def plan(ctx, cache=None, *, prepared_only=False):
     """Read-only. -> dict: exe, version, cache, todo [(path, data)], kept [(rel, why)], blocks, warnings.
     cache: entries already in memory (apply's self-check passes the cache it just wrote)."""
     root = Path(_get(ctx, 'root'))
     opts = _get(ctx, 'options') or {}
     out = {'exe': None, 'version': None, 'cache': {}, 'todo': [], 'done': [], 'kept': [], 'blocks': [],
            'warnings': [], 'bytes_before': 0}
-    exe = pngquant_path(ctx)
-    if not exe or not os.access(exe, os.X_OK):
-        out['blocks'].append('pngquant not found (brew install pngquant); PNG compression cannot be skipped')
-        return out
-    try:
-        out['version'] = pngquant_version(exe)
-    except (OSError, subprocess.SubprocessError) as error:
-        out['blocks'].append(f'pngquant unusable: {error}')
-        return out
-    out['exe'] = exe
+    if not prepared_only:
+        exe = pngquant_path(ctx)
+        if not exe or not os.access(exe, os.X_OK):
+            out['blocks'].append('pngquant not found (brew install pngquant); PNG compression cannot be skipped')
+            return out
+        try:
+            out['version'] = pngquant_version(exe)
+        except (OSError, subprocess.SubprocessError) as error:
+            out['blocks'].append(f'pngquant unusable: {error}')
+            return out
+        out['exe'] = exe
     if cache is None:
         cache, note = load_cache(ctx, out['version'])
         if note:
@@ -224,9 +226,29 @@ def detect(ctx):
     return 'absent' if p['todo'] else 'kit_current'
 
 
-# ---------------------------------------------------------------- apply
+# ---------------------------------------------------------------- prepared input and apply
+
+def check_prepared(ctx):
+    """Compare actual PNG bytes with the existing quantization results, without changing files."""
+    res = Result(PART)
+    p = plan(ctx, prepared_only=True)
+    for message in p['warnings']:
+        res.warn(GATE, message)
+    for message in p['blocks']:
+        res.block(GATE, message)
+    if p['todo']:
+        root = Path(_get(ctx, 'root'))
+        names = ', '.join(path.relative_to(root).as_posix() for path, _ in p['todo'][:5])
+        res.block(GATE, 'Native PNG 尚未完成试玩前处理（%d 张）：%s。先回试玩前阶段执行 tiktok_finalize.py native，再核对图片记录。'
+                  % (len(p['todo']), names))
+    res.state = 'conflict' if res.blocks else 'kit_current'
+    res.info.append({'already_final': len(p['done']),
+                     'kept_unquantised': [rel for rel, _ in p['kept']][:50]})
+    return res.as_dict()
 
 def apply(ctx):
+    if (_get(ctx, 'options') or {}).get('prepared_png_only'):
+        return check_prepared(ctx)
     res = Result(PART)
     p = plan(ctx)
     res.warnings += [{'id': GATE, 'level': 'warn', 'message': w} for w in p['warnings']]

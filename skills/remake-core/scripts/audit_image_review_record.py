@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""English image review record (v7.5, MusicSlice item 7). Read-only.
+"""Review English trial and Native images before the formal trial. Delivery only verifies the record.
 
 MusicSlice v29b shipped HomeSprites.png with "已拥有" drawn on the skin-shop button: the English rules said "look at every
 image" but nothing at packaging time checked that anyone had. So every English upload package needs a record with one
@@ -14,13 +14,13 @@ entry per DISTINCT image (by SHA-256) in the package:
 Refused when: the record is missing or unreadable; an image in the package has no entry; an entry is pending / has no
 reviewer / says neither yes nor no; an entry says "chinese": "yes" and that same SHA is still in the package (it was not
 replaced); an atlas (entry "atlas": true, or a .plist next to it) was not reviewed slice by slice.
-grok-image-review may transcribe the text on an image; the verdict in the record is the main agent's.
-
 API for the package entries (board localize):  check(files, record_path) -> {"passed": bool, "problems": [...], ...}
   files: a dict {name: bytes}, an iterable of (name, bytes) pairs, or an iterable of file paths.
 CLI:  python3 audit_image_review_record.py --zip <upload.zip> --record <image-review.json> [--out report.json]
-      python3 audit_image_review_record.py write --zip <upload.zip> --out docs/english/image-review.json [--ocr auto]
+      python3 audit_image_review_record.py write --directory <Web> --directory <prepared Native>
+                                         --out docs/english/image-review.json [--ocr auto]
                                          [--verdict <sha256>=yes|no ... --by "<who>"]
+      Both modes also accept a ZIP as input, or one or more --directory arguments.
 P16 (2026-11-04): the record is written ONLY by `write` (OCR of every image and slice in the package, sealed with
 generated_by.entries_sha256); a hand-filled or hand-edited record is refused.
 Exit 0 pass, 1 refused, 2 bad input.
@@ -33,6 +33,23 @@ import sys
 import zipfile
 
 IMAGE_SUFFIXES = ('.png', '.jpg', '.jpeg', '.webp')
+REVIEW_SUFFIXES = IMAGE_SUFFIXES + ('.plist', '.atlas', '.json', '.fnt')
+
+
+def directory_items(directories):
+    """Read actual export bytes. Give each root its own namespace so atlas sidecars keep their neighbours."""
+    directories = [Path(directory).resolve() for directory in directories]
+    for i, root in enumerate(directories, 1):
+        if not root.is_dir():
+            raise ValueError('image review input is not a directory: %s' % root)
+        for path in sorted(root.rglob('*')):
+            if not path.name.lower().endswith(REVIEW_SUFFIXES):
+                continue
+            if path.is_symlink():
+                raise ValueError('symbolic link in image review input: %s' % path)
+            if path.is_file():
+                rel = path.relative_to(root).as_posix()
+                yield ('export-%d/%s' % (i, rel) if len(directories) > 1 else rel), path.read_bytes()
 
 
 def _items(files):
@@ -55,7 +72,7 @@ def entries_seal(entries):
 
 
 def write(files, ocr='auto', verdicts=None, by=None):
-    """Build the record from the package itself (P16, 2026-11-04: image-review.json is written only by this script).
+    """Build the record from the exports or ZIP (P16, 2026-11-04: image-review.json is written only by this script).
 
     Every distinct package image and every slice/frame inside it is read by the local recognizer (via
     audit_new_english_images.scan_chinese -> chinese_audit). chinese = yes if the picture or any of its slices has Chinese;
@@ -73,12 +90,12 @@ def write(files, ocr='auto', verdicts=None, by=None):
         for name, data in _items(files):
             if callable(getattr(data, 'read', None)):
                 data = data.read()
-            if name.lower().endswith(IMAGE_SUFFIXES + ('.plist', '.atlas', '.json', '.fnt')):
+            if name.lower().endswith(REVIEW_SUFFIXES):
                 target = root / name.lstrip('/').replace('..', '_')
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(data)
                 if name.lower().endswith(IMAGE_SUFFIXES):
-                    by_sha.setdefault(hashlib.sha256(data).hexdigest(), name)
+                    by_sha.setdefault(hashlib.sha256(data).hexdigest(), []).append(name)
         root.mkdir(exist_ok=True)
         scan = ani.scan_chinese(tmp, ocr)
     finally:
@@ -92,15 +109,17 @@ def write(files, ocr='auto', verdicts=None, by=None):
     if unknown_verdicts:
         raise ValueError('manual verdict SHA is not an actual input image: ' + ', '.join(sorted(unknown_verdicts)))
     entries = []
-    for digest, name in sorted(by_sha.items(), key=lambda kv: kv[1]):
-        got = per_file.get('assets/' + name.lstrip('/')) or []
+    for digest, names in sorted(by_sha.items(), key=lambda kv: kv[1][0]):
+        name = names[0]
+        uses = [per_file.get('assets/' + path.lstrip('/'), []) for path in names]
+        got = [entry for use in uses for entry in use]
         slices = [g for g in got if g[0] == 'slice']
         verdicts_here = {g[1] for g in got}
         e = {'sha256': digest, 'file': name, 'atlas': bool(slices), 'slices': len(slices),
              'recognizer': (scan.get('recognizer') or {}).get('name')}
         if got and 'chinese' in verdicts_here:
             e.update(status='done', chinese='yes', reviewer=WRITER, slices_reviewed=True)
-        elif got and verdicts_here == {'clean'}:
+        elif all(uses) and verdicts_here == {'clean'}:
             e.update(status='done', chinese='no', reviewer=WRITER, slices_reviewed=True)
         else:
             e.update(status='pending', chinese='unknown', slices_reviewed=False,
@@ -137,15 +156,16 @@ def check(files, record_path):
         if not isinstance(entries, list):
             raise ValueError('no "images" list')
     except (OSError, ValueError) as exc:
-        report['problems'].append('image review record missing or unreadable (%s): review every distinct image in the upload '
-                                  'package and write docs/english/image-review.json' % exc)
+        report['problems'].append('image review record missing or unreadable (%s): return to pre-trial review of every distinct image in the Web and Native '
+                                  'exports and write docs/english/image-review.json' % exc)
         return report
     gen = record.get('generated_by') if isinstance(record.get('generated_by'), dict) else {}
     if gen.get('tool') != WRITER or gen.get('entries_sha256') != entries_seal(entries):
         report['problems'].append('image-review.json was not written by %s (or was edited by hand afterwards): a hand-filled '
                                   'record does not count (P16, 2026-11-04). Run: python3 audit_image_review_record.py write '
-                                  '--zip <upload.zip> --out docs/english/image-review.json' % WRITER)
+                                  '--directory <Web> --directory <prepared Native> --out docs/english/image-review.json' % WRITER)
         return report
+    atlas_digests = {digest for name, digest in names.items() if name.lower().rsplit('.', 1)[0] in plists}
     by_sha = {}
     for e in entries:
         if isinstance(e, dict) and isinstance(e.get('sha256'), str):
@@ -164,16 +184,31 @@ def check(files, record_path):
         elif chinese == 'yes':
             report['problems'].append('%s (sha256 %s): recorded as having Chinese but the same image is still in the package '
                                       '(redraw it in English, then record the new image)' % (name, digest[:12]))
-        stem = name.lower().rsplit('.', 1)[0]
-        if (e.get('atlas') or stem in plists) and e.get('slices_reviewed') is not True:
+        if (e.get('atlas') or digest in atlas_digests) and e.get('slices_reviewed') is not True:
             report['problems'].append('%s: atlas must be reviewed slice by slice ("slices_reviewed": true)' % name)
     report['passed'] = not report['problems']
     return report
 
 
+def input_args(parser):
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--zip', type=Path, help='existing package ZIP')
+    inputs.add_argument('--directory', type=Path, action='append', help='export root, repeat for Web and prepared Native')
+
+
+def input_items(args):
+    if args.zip:
+        with zipfile.ZipFile(args.zip) as archive:
+            for name in archive.namelist():
+                if name.lower().endswith(REVIEW_SUFFIXES):
+                    yield name, archive.read(name)
+    else:
+        yield from directory_items(args.directory)
+
+
 def main_write(argv):
     ap = argparse.ArgumentParser(prog='audit_image_review_record.py write', description=write.__doc__)
-    ap.add_argument('--zip', type=Path, required=True, help='upload package ZIP')
+    input_args(ap)
     ap.add_argument('--out', type=Path, required=True, help='docs/english/image-review.json')
     ap.add_argument('--ocr', default='auto', choices=['auto', 'vision', 'tesseract', 'windows', 'none', 'fake'])
     ap.add_argument('--verdict', action='append', default=[], metavar='SHA256=yes|no',
@@ -187,8 +222,7 @@ def main_write(argv):
             ap.error('--verdict must be SHA256=yes or SHA256=no: %r' % v)
         verdicts[sha.strip()] = val
     try:
-        with zipfile.ZipFile(a.zip) as zf:
-            doc = write(((n, zf.read(n)) for n in zf.namelist() if not n.endswith('/')), a.ocr, verdicts, a.by)
+        doc = write(input_items(a), a.ocr, verdicts, a.by)
     except (OSError, ValueError, zipfile.BadZipFile) as exc:
         print(json.dumps({'written': False, 'error': str(exc)})); return 2
     a.out.parent.mkdir(parents=True, exist_ok=True)
@@ -205,16 +239,18 @@ def main(argv=None):
     if argv[:1] == ['write']:
         return main_write(argv[1:])
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--zip', type=Path, required=True, help='upload package ZIP')
+    input_args(ap)
     ap.add_argument('--record', type=Path, required=True)
     ap.add_argument('--out', type=Path)
     a = ap.parse_args(argv)
     try:
-        with zipfile.ZipFile(a.zip) as zf:
-            r = check(((n, zf.read(n)) for n in zf.namelist() if not n.endswith('/')), a.record)
-    except (OSError, zipfile.BadZipFile) as exc:
+        r = check(input_items(a), a.record)
+    except (OSError, ValueError, zipfile.BadZipFile) as exc:
         print(json.dumps({'passed': False, 'error': str(exc)})); return 2
-    r['zip'] = str(a.zip)
+    if a.zip:
+        r['zip'] = str(a.zip)
+    else:
+        r['directories'] = [str(path.resolve()) for path in a.directory]
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(r, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

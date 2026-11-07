@@ -287,7 +287,7 @@ def px(rect, canvas, dpr):
     return [(cx + rect[0] * cw) * dpr, (cy + rect[1] * ch) * dpr, rect[2] * cw * dpr, rect[3] * ch * dpr]
 
 
-def audit(project, dumps, table_path, glossary_path):
+def audit(project, dumps, table_path, glossary_path, *, check_layout=True):
     glossary = json.loads(Path(glossary_path).read_text(encoding='utf-8')) if glossary_path and Path(glossary_path).is_file() else {}
     words = load_words(glossary.get('allow', []))
     trademarks = load_trademarks(allowed=glossary.get('trademark_ok') or [])
@@ -337,9 +337,9 @@ def audit(project, dumps, table_path, glossary_path):
                 add(review, s, 'chinglish', tip)
         if re.search(r'\s[,.!?;:]', text) or re.search(r'[,!?;](?=[A-Za-z])', text) or '  ' in text:
             add(review, s, 'spacing', '空格或标点位置不对')
-        if any(o.get('button') for o in occ) and len(text) > 18:
+        if check_layout and any(o.get('button') for o in occ) and len(text) > 18:
             add(review, s, 'long_button', '按钮文字太长（%d 个字符），手机上不好读' % len(text))
-        if len(text.split()) > 6 and text.isupper():
+        if check_layout and len(text.split()) > 6 and text.isupper():
             add(review, s, 'all_caps_sentence', '整句全大写不好读，长句用正常大小写')
         for term, kind, level, word, instead in trademark_hits(text, trademarks):
             add(blocking if level == 'block' else review, s, 'trademark',
@@ -356,7 +356,7 @@ def audit(project, dumps, table_path, glossary_path):
             add(review, s, 'trademark_literal', '代码或数据里的字符串有商标词「%s」（%s）：如果会显示给玩家，换成通用叫法%s'
                 % (word, kind, '，如 "%s"' % instead if instead else ''))
     # text must fit: measured from the running game
-    for s in runtime:
+    for s in (runtime if check_layout else ()):
         if not s.get('rect') or not s.get('canvas'):
             continue
         r = px(s['rect'], s['canvas'], s['dpr'] or 1)
@@ -382,7 +382,7 @@ def audit(project, dumps, table_path, glossary_path):
                            'message': '同一个东西（%s）用了不同叫法：%s；统一成一个' % (concept, '；'.join(
                                '%s（%s）' % (k, '、'.join(sorted(v)[:3])) for k, v in sorted(found.items())))})
     styles = {}
-    for s in runtime:
+    for s in (runtime if check_layout else ()):
         if s['button']:
             st = case_style(s['text'])
             if st:
@@ -435,6 +435,7 @@ def main():
     ap.add_argument('--glossary', type=Path)
     ap.add_argument('--sheet', type=Path, help='write a markdown review sheet for GPT')
     ap.add_argument('--require-runtime', action='store_true', help='fail when no UI dump of the running game was found')
+    ap.add_argument('--text-only', action='store_true', help='check language and placeholders without measuring visual layout')
     ap.add_argument('--binding', type=Path)
     ap.add_argument('--out', type=Path)
     a = ap.parse_args()
@@ -453,7 +454,7 @@ def main():
             binding = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')
             if not isinstance(binding, dict):
                 raise ValueError('no binding object in %s' % a.binding)
-        r = audit(a.project, dumps, table, glossary)
+        r = audit(a.project, dumps, table, glossary, check_layout=not a.text_only)
     except (OSError, ValueError) as e:
         print(json.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False))
         return 2

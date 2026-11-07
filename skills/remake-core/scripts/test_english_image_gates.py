@@ -119,6 +119,11 @@ class PackageEntryWiring(unittest.TestCase):
         self.assertIn('image review', found)
         self.assertIn('pre-English image list missing', found)
         self.assertTrue(self.problems(self.files, None, 'localize'))
+        from tiktok_finalize import SOURCE_RECORD
+        source = self.project / SOURCE_RECORD
+        source.parent.mkdir()
+        source.write_text('{"board":"localize"}')
+        self.assertEqual(' | '.join(self.problems(self.files, self.project, None)), found)
 
     def test_localize_complete_records_pass_and_big_new_image_refuses(self):
         self.write([self.entry(NEW), self.entry(BG)], [sha(BG)])

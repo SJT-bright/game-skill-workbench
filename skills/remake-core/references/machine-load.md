@@ -60,7 +60,7 @@ python scripts/heavy_lock.py run --project <这个游戏的文件夹> --name "<�
 - **测试从不等构建**：要测的时候，用最新一次已完成的构建开新的预览（`serve_preview.py --snapshot`）、新开测试窗口，马上测；新构建出来后再按影响复测。
 - 不想排队时加 `--no-wait`：同一个游戏正在写就立刻返回 75，按上面的办法先测已有构建。
 - 不同游戏之间**从不互相等**；不写 `--project` 时不排队、直接运行（全机锁已取消）。
-- 测试和检查命令（`chrome_touch.py`、`serve_preview.py`、`ego-browser`、Playwright 脚本、`audit_*`/`check_*`/`test_*`、录屏分析、批量跑关）**不要用锁包**；包了也会直接放行，不等任何锁。
+- 测试和检查命令（`chrome_touch.py`、`serve_preview.py`、`ego-browser`、`audit_*`/`check_*`/`test_*`、录屏分析、批量跑关）**不要用锁包**；包了也会直接放行，不等任何锁。
 - Cocos 编辑器界面（打开场景、手动构建）同一个工程只能有一个会话在用；测试不需要编辑器，用命令行构建即可。编辑器被占时不等：先做轻活或用命令行构建（同样走上面的按游戏排队）。
 - 启动加载计时（LOAD-03）在电脑很忙时可能变慢：超标时先看 `cleanup_machine.py` 报的占用，忙的话重测一次再判定。
 
@@ -70,7 +70,7 @@ python scripts/heavy_lock.py run --project <这个游戏的文件夹> --name "<�
 |---|---|
 | Codex 子会话 | 同时在干活的不超过上面按内存定的数量；做完的线写完交接就结束，不挂着等 |
 | Cocos 编辑器 | 只开一个；没人用时关掉。能用命令行构建时不开编辑器界面（2.4：`CocosCreator --path <工程> --build "platform=web-mobile"`；3.x：`--project <工程> --build ...`，参数以官方文档为准） |
-| 测试浏览器 | 每次测试在 Ego 里新开自己的独立测试窗口，后台运行，可以同时多开，**被占就新开、从不排队**；新开前 `browser_slots.py sweep --close` 关掉空了的旧窗口；（用户同意用 Chrome 时）自动测试 `--headless`；**Ego 只给 AI 测试，从不置前交给用户**（用户试玩自动打开独立 Chrome 手机框）；脚本结束自动关闭自己的窗口；**手动开的空间/预览测完马上 `browser_slots.py close --name <线名>`，汇报前 `check` 通过（所有环节，用户 2026-10-23）** |
+| 测试浏览器 | 每次测试在 Ego 里新开自己的独立测试窗口，后台运行，可以同时多开，**被占就新开、从不排队**；新开前 `browser_slots.py sweep --close` 关掉空了的旧窗口；**Ego 只给 AI 测试，从不置前交给用户**（用户试玩自动打开独立 Chrome 手机框）；脚本结束自动关闭自己的窗口；**手动开的空间/预览测完马上 `browser_slots.py close --name <线名>`，汇报前 `check` 通过（所有环节，用户 2026-10-23）** |
 | 本地预览服务 | 每条测试线自己开（新端口，`--snapshot` 用私有副本），不共用、不等别人的；20 分钟没人访问自动关闭；测完马上关（`browser_slots.py close --name <线名>`）；给用户试玩的本地预览加 `--keep`，链接写在 Codex 回复里，用户玩完就关 |
 | 音频 | 素材库索引默认只用一半 CPU 核心（最多 4 个）；音频流水线走这个游戏自己的锁（`--project`） |
 

@@ -40,7 +40,7 @@ process.stdin.on('end', () => {
       }
       return 'package';
     }
-    const dependencies=[], dynamic=[]; let internal=0;
+    const dependencies=[], dynamic=[], literalRequires=[]; let internal=0;
     for (const node of nodes) {
       let argument, kind;
       if (node.type==='CallExpression' && node.callee.type==='Identifier' && node.callee.name==='require') {
@@ -55,7 +55,10 @@ process.stdin.on('end', () => {
       if (!argument) continue;
       let request = argument.type==='Literal' && typeof argument.value==='string' ? argument.value : null;
       if (argument.type==='TemplateLiteral' && argument.expressions.length===0) request=argument.quasis[0].value.cooked;
-      if (request!==null) dependencies.push({request,kind,line:node.loc.start.line});
+      if (request!==null) {
+        dependencies.push({request,kind,line:node.loc.start.line});
+        if (kind === 'require') literalRequires.push({node,request});
+      }
       else dynamic.push({line:node.loc.start.line,kind});
     }
     // Only actual writes in the entry's immediately executed code declare
@@ -64,6 +67,7 @@ process.stdin.on('end', () => {
     function constant(node) {
       if (!node) return {known:false};
       if (node.type==='Literal') return {known:true,value:node.value};
+      if (node.type==='TemplateLiteral' && node.expressions.length===0) return {known:true,value:node.quasis[0].value.cooked};
       if (node.type==='UnaryExpression') {
         const item=constant(node.argument);if(!item.known)return item;
         if(node.operator==='!')return {known:true,value:!item.value};
@@ -126,7 +130,140 @@ process.stdin.on('end', () => {
     }
     const native_entry_protocols=[];
     if (writes.has('__bambooNativeCompat') && writes.has('__bambooResolvePlatform')) native_entry_protocols.push('bamboo_native_host_v1');
-    process.stdout.write(JSON.stringify({dependencies,dynamic,bundle_internal_requires:internal,parser:'acorn@8.15.0',native_entry_protocols}));
+    // This is a conservative startup scan. A call after a possible early
+    // return, in a conditional branch, or in a dormant callback is not proof
+    // that the actual startup will execute it.
+    function mayExit(statement) {
+      if (!statement) return false;
+      switch (statement.type) {
+        case 'ReturnStatement':
+        case 'ThrowStatement':
+          return true;
+        case 'BlockStatement':
+          return statement.body.some(mayExit);
+        case 'IfStatement':
+          return mayExit(statement.consequent) || mayExit(statement.alternate);
+        case 'SwitchStatement':
+          return statement.cases.some(branch => branch.consequent.some(mayExit));
+        case 'TryStatement':
+          return mayExit(statement.block) || mayExit(statement.handler?.body) || mayExit(statement.finalizer);
+        case 'LabeledStatement':
+        case 'WithStatement':
+        case 'WhileStatement':
+        case 'DoWhileStatement':
+        case 'ForStatement':
+        case 'ForInStatement':
+        case 'ForOfStatement':
+          return mayExit(statement.body);
+        default:
+          return false;
+      }
+    }
+    const afterExit = new WeakSet(), scannedBlocks = new WeakSet();
+    function precededByExit(statement, block) {
+      if (!scannedBlocks.has(block)) {
+        scannedBlocks.add(block);
+        let possibleExit = false;
+        for (const sibling of block.body) {
+          if (possibleExit) afterExit.add(sibling);
+          else possibleExit = mayExit(sibling);
+        }
+      }
+      return afterExit.has(statement);
+    }
+    function definiteExecution(node, boundary = ast) {
+      for (let child=node,parent=parents.get(node);parent;child=parent,parent=parents.get(parent)) {
+        if ((parent.type === 'Program' || parent.type === 'BlockStatement') && precededByExit(child, parent)) return false;
+        if (parent === boundary) return true;
+        if (isFunction(parent)) {
+          const call = parents.get(parent);
+          if (parent.async || parent.generator || call?.type !== 'CallExpression' || call.callee !== parent) return false;
+        }
+        if ((parent.type === 'IfStatement' || parent.type === 'ConditionalExpression') && child !== parent.test) return false;
+        if (parent.type === 'LogicalExpression' && child === parent.right) return false;
+        if (parent.type === 'AssignmentExpression' && ['&&=', '||=', '??='].includes(parent.operator)) return false;
+        if (/^(ChainExpression|StaticBlock|SwitchCase|TryStatement|WithStatement|WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement)$/.test(parent.type)) return false;
+      }
+      return false;
+    }
+    function memberName(node) {
+      if (node?.type !== 'MemberExpression') return null;
+      return node.computed ? constant(node.property).value : node.property.name;
+    }
+    function globalBoot(node, site) {
+      return memberName(node) === 'boot' && globalReceiver(node.object, site);
+    }
+    function hostRequire(node, seen = new Set()) {
+      const found = binding('require', node);
+      if (!found) return true;
+      if (found.init?.type !== 'Identifier' || found.init.name !== 'require' || seen.has(found.init)) return false;
+      seen.add(found.init);
+      return hostRequire(found.init, seen);
+    }
+    const startup_requires = [...new Set(literalRequires.filter(({node}) =>
+      definiteExecution(node) && hostRequire(node)).map(({request}) => request))];
+    const bootAssignments = nodes.filter(node => node.type === 'AssignmentExpression' &&
+      globalBoot(node.left, node) && entryExecution(node));
+    const bootAssignment = bootAssignments.length === 1 ? bootAssignments[0] : null;
+    const assignedBoot = bootAssignment?.operator === '=' && definiteExecution(bootAssignment) &&
+      isFunction(bootAssignment.right) && !bootAssignment.right.async && !bootAssignment.right.generator ?
+      bootAssignment.right : null;
+    let calls_global_boot = false, direct_startup_resources = false, direct_boot_resources = false;
+    function isCocosMember(node, names) {
+      for (let index = names.length - 1; index >= 0; index--) {
+        if (memberName(node) !== names[index]) return false;
+        node = node.object;
+      }
+      return node?.type === 'Identifier' && node.name === 'cc' && !binding('cc', node);
+    }
+    for (const node of nodes) {
+      if (node.type !== 'CallExpression' || node.optional) continue;
+      if (!calls_global_boot && globalBoot(node.callee, node) && definiteExecution(node)) calls_global_boot = true;
+      if (!isCocosMember(node.callee, ['assetManager', 'loadBundle'])) continue;
+      const argument = node.arguments[0];
+      if (constant(argument).value !== 'resources' &&
+          !isCocosMember(argument, ['AssetManager', 'BuiltinBundleName', 'RESOURCES'])) continue;
+      if (definiteExecution(node)) direct_startup_resources = true;
+      else if (assignedBoot && definiteExecution(node, assignedBoot)) direct_boot_resources = true;
+    }
+    // The 2.4 platform-kit startup loads a builtin through the adapter's computed
+    // module path, so literal require collection cannot see this dependency.
+    const namedCall = (node, name) => node?.type === 'CallExpression' &&
+      node.callee.type === 'Identifier' && node.callee.name === name;
+    const boot = nodes.find(node => node.type === 'AssignmentExpression' && entryExecution(node) &&
+      node.left.type === 'MemberExpression' && !node.left.computed &&
+      node.left.object.name === 'window' && node.left.property.name === 'boot' && isFunction(node.right))?.right;
+    const start = boot?.body.body?.find(node => node.type === 'FunctionDeclaration' && node.id.name === 'start');
+    function guardedStep(variable, stage) {
+      const declaration = nodes.find(node => node.type === 'VariableDeclarator' &&
+        start && scopeOf(node) === start && node.id.name === variable && namedCall(node.init, 'guarded') &&
+        node.init.arguments[0]?.value === stage && isFunction(node.init.arguments[1]));
+      return declaration?.init.arguments[1].body.body;
+    }
+    const loadResources = guardedStep('loadResources', 'resources');
+    const loadSubpackage = guardedStep('loadSubpackage', 'resources subpackage');
+    let startup24_resources = null;
+    if (loadSubpackage && loadResources?.some(statement => {
+      const call = statement.expression;
+      return namedCall(call, 'loadBundle') &&
+        source.slice(call.arguments[0]?.start, call.arguments[0]?.end).replace(/\s/g, '') ===
+          'cc.AssetManager.BuiltinBundleName.RESOURCES';
+    })) {
+      const first = loadSubpackage[0];
+      const test = first?.test;
+      const branch = first?.consequent?.body;
+      const setting = test?.type === 'BinaryExpression' && test.operator === '===' && constant(test.right).value === false ? test.left :
+        test?.type === 'UnaryExpression' && test.operator === '!' ? test.argument : null;
+      const skipsAbsent = first?.type === 'IfStatement' && memberName(setting) === 'hasResourcesBundle' &&
+        setting.object.name === 'settings' && branch?.length === 2 &&
+        namedCall(branch[0].expression, 'loadEngine') && branch[1].type === 'ReturnStatement';
+      startup24_resources = skipsAbsent
+        ? (test.type === 'UnaryExpression' ? 'skip_falsy' : 'skip_explicitly_absent')
+        : 'unconditional';
+    }
+    process.stdout.write(JSON.stringify({dependencies,dynamic,bundle_internal_requires:internal,parser:'acorn@8.15.0',
+      native_entry_protocols,startup24_resources,startup_requires,global_boot_assignments:bootAssignments.length,calls_global_boot,
+      direct_startup_resources,direct_boot_resources}));
   } catch (error) {
     process.stdout.write(JSON.stringify({error:String(error.message)})); process.exitCode=1;
   }

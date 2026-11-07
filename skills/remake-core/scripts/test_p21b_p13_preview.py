@@ -1,9 +1,9 @@
 """生成时预防 J2b: serve_preview.py
-P21 ⑤ 后半 - a link a person opens gets one headless home screenshot first (black / one colour / still loading /
-page error -> no link; no browser / timeout -> 没截图, never "passed").
+P21 ⑤ 后半 - a link a person opens gets one Ego home screenshot first (black / one colour / still loading /
+page error -> no link; no browser / timeout -> 未测, never "passed").
 P13 ④ - the phone-frame game page turns a mouse drag on the canvas into touchstart / touchmove / touchend with the
 fields the platform kit touch parts read.
-No real browser: the browser is a fake script (writes a black or a normal PNG, or hangs) found through CDP_BROWSER,
+No real browser: the fixture supplies a fake Ego CLI on its test PATH, writes a black or normal PNG, or hangs,
 and the mouse -> touch part runs in a fake DOM under Node (preview_touch_fakedom.cjs). The 11.12+J2 serve_preview.py
 (git HEAD~0 of the patch work tree, or _work/backup) is run the same way and must show the old problems."""
 import importlib.util
@@ -23,6 +23,7 @@ from functools import partial
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.request import Request, urlopen
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 PY = sys.executable
@@ -44,12 +45,20 @@ BLACK = png(39, 84, lambda x, y: (0, 0, 0))
 WHITE = png(39, 84, lambda x, y: (255, 255, 255))
 NORMAL = png(39, 84, lambda x, y: ((x * 6) % 256, (y * 3) % 256, 120 if y > 40 else 30))
 
-FAKE_BROWSER = r'''#!%s
-import json, os, sys, time, urllib.request
+FAKE_EGO = r'''#!%s
+import json, os, re, sys, time, urllib.request
 mode = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mode.txt')).read().strip()
-args = sys.argv[1:]
-shot = [a.split('=', 1)[1] for a in args if a.startswith('--screenshot=')][0]
-url = args[-1]
+assert sys.argv[1:3] == ['nodejs', '-e'], sys.argv[1:3]
+script = sys.argv[3]
+assert 'Page.captureScreenshot' in script
+assert 'Emulation.setTouchEmulationEnabled' in script
+assert 't.finish({keep:[]})' in script
+literal = r'("(?:[^"\\]|\\.)*")'
+def argument(command, end):
+    return json.loads(re.search(re.escape(command) + literal + re.escape(end), script).group(1))
+space = argument('taskSpace(', ')')
+shot = argument('fs.writeFile(', ',')
+url = argument('p.goto(', ')')
 if mode == 'timeout':
     time.sleep(60)
 probe = {'loading': {'errors': [], 'splash': True, 'engine': True, 'scene': None},
@@ -63,7 +72,12 @@ if probe:
 if mode != 'noimage':
     name = {'black': 'black.png', 'white': 'white.png'}.get(mode, 'normal.png')
     open(shot, 'wb').write(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), name), 'rb').read())
-print('fake browser', mode, file=sys.stderr)
+if mode == 'cleanup_failure':
+    sys.exit('fixture space cleanup failed')
+if mode == 'wrong_receipt':
+    space += '-old'
+print(json.dumps({'browser_route': 'ego_taskspace', 'input_transport': 'ego_page_cdp', 'session_id': 7,
+                  'space_name': space, 'screenshot': shot, 'space_finished': True}))
 '''
 
 
@@ -76,13 +90,13 @@ class Tmp(unittest.TestCase):
         (self.web / 'index.html').write_text('<html><head></head><body><canvas id="GameCanvas"></canvas>'
                                              '<script src="main.js"></script></body></html>', encoding='utf-8')
         (self.web / 'main.js').write_text('window.boot=1;', encoding='utf-8')
-        fake = self.d / 'fakebrowser'
+        fake = self.d / 'fake-ego-bin'
         fake.mkdir()
         (fake / 'black.png').write_bytes(BLACK)
         (fake / 'white.png').write_bytes(WHITE)
         (fake / 'normal.png').write_bytes(NORMAL)
-        self.browser = fake / 'chrome'
-        self.browser.write_text(FAKE_BROWSER % PY, encoding='utf-8')
+        self.browser = fake / 'ego-browser'
+        self.browser.write_text(FAKE_EGO % PY, encoding='utf-8')
         self.browser.chmod(0o755)
         self.mode('normal')
 
@@ -105,8 +119,9 @@ class Tmp(unittest.TestCase):
         self.mode(mode)
         server, url = self.serve()
         shot = url + '__preview/t1/index.html?__phone_game=1&__home_shot=1'
-        return SP.home_shot_gate(shot, export or self.web, (390, 844), self.d / 'home.png', browser=str(self.browser),
-                                 probe=lambda: server.home_probe, timeout=timeout, wait=1)
+        with patch.object(SP, 'find_shot_browser', return_value=str(self.browser)):
+            return SP.home_shot_gate(shot, export or self.web, (390, 844), self.d / 'home.png',
+                                     probe=lambda: server.home_probe, timeout=timeout, wait=1)
 
 
 class PngStats(unittest.TestCase):
@@ -118,7 +133,7 @@ class PngStats(unittest.TestCase):
         self.assertLess(s['dominant'], 0.5)
 
     def test_all_png_filters(self):
-        # Chrome writes filtered rows (Sub/Up/Average/Paeth); decode them the same as unfiltered
+        # Decode filtered PNG rows (Sub/Up/Average/Paeth) the same as unfiltered rows.
         width, height = 8, 6
         rows = [bytes((x * 30 + y * 7) % 256 for x in range(width * 3)) for y in range(height)]
         prev, raw = bytes(width * 3), b''
@@ -145,6 +160,9 @@ class HomeShotGate(Tmp):
         level, message, info = self.gate('normal')
         self.assertEqual(level, 'pass', message)
         self.assertEqual(info['probe']['scene'], 'Home')
+        self.assertEqual(info['browser_route'], 'ego_taskspace')
+        self.assertEqual(info['input_transport'], 'ego_page_cdp')
+        self.assertTrue(info['space_name'].startswith('preview-home-'))
         self.assertIn(str(self.d / 'home.png'), message)
 
     def test_black_screen_is_refused(self):
@@ -168,41 +186,48 @@ class HomeShotGate(Tmp):
         self.assertIn('页面报错', message)
         self.assertIn('TypeError', message)
 
-    def test_timeout_says_no_screenshot(self):
+    def test_timeout_keeps_browser_check_untested(self):
         t0 = time.time()
-        level, message, _ = self.gate('timeout', timeout=2)
+        level, message, info = self.gate('timeout', timeout=2)
         self.assertLess(time.time() - t0, 20)
         self.assertEqual(level, 'warn')
-        self.assertIn('没截图', message)
-        self.assertNotIn('通过（', message)
+        self.assertIsNone(info['screenshot'])
+        self.assertIn('保留未测', message)
 
-    def test_browser_without_picture_says_no_screenshot(self):
-        level, message, _ = self.gate('noimage')
+    def test_browser_without_picture_does_not_reuse_an_old_file(self):
+        (self.d / 'home.png').write_bytes(NORMAL)
+        level, message, info = self.gate('noimage')
         self.assertEqual(level, 'warn')
+        self.assertIsNone(info['screenshot'])
         self.assertIn('没截图', message)
+        self.assertFalse((self.d / 'home.png').exists())
 
-    def test_no_browser_on_this_computer_says_no_screenshot(self):
-        old = SP.find_shot_browser
-        SP.find_shot_browser = lambda: None
-        try:
-            level, message, _ = SP.home_shot_gate('http://127.0.0.1:9/', self.web, (390, 844), self.d / 'x.png')
-        finally:
-            SP.find_shot_browser = old
+    def test_ego_cleanup_failure_is_not_a_screenshot_pass(self):
+        level, message, info = self.gate('cleanup_failure')
         self.assertEqual(level, 'warn')
-        self.assertIn('没截图', message)
-        self.assertIn('找不到 Chrome、Edge', message)
+        self.assertIsNone(info['screenshot'])
+        self.assertIn('保留未测', message)
 
-    def test_browser_found_with_existing_lookup(self):
-        # CDP_BROWSER is the existing browser_env.find_browser override
-        old = os.environ.get('CDP_BROWSER')
-        os.environ['CDP_BROWSER'] = str(self.browser)
-        try:
+    def test_image_without_matching_ego_space_receipt_is_untested(self):
+        level, message, info = self.gate('wrong_receipt')
+        self.assertEqual(level, 'warn')
+        self.assertIsNone(info['screenshot'])
+        self.assertIn('当前空间回执', message)
+        self.assertNotIn('首页截图核对通过', message)
+
+    def test_no_ego_does_not_try_another_browser(self):
+        with patch.object(SP, 'find_shot_browser', return_value=None):
+            def forbidden(*args, **kwargs):
+                self.fail('started a browser without the official Ego CLI')
+            level, message, info = SP.home_shot_gate('http://127.0.0.1:9/', self.web, (390, 844), self.d / 'x.png',
+                                                    run=forbidden)
+        self.assertEqual(level, 'warn')
+        self.assertIsNone(info['screenshot'])
+        self.assertIn('找不到官方 Ego CLI', message)
+
+    def test_screenshot_lookup_ignores_desktop_browser_override(self):
+        with patch.dict(os.environ, {'PATH': str(self.browser.parent), 'CDP_BROWSER': str(self.d / 'Chrome')}):
             self.assertEqual(SP.find_shot_browser(), str(self.browser))
-        finally:
-            if old is None:
-                os.environ.pop('CDP_BROWSER', None)
-            else:
-                os.environ['CDP_BROWSER'] = old
 
     def test_cocos3_problem_only_warns(self):
         (self.web / 'index.html').write_text('<html><head></head><body><canvas id="GameCanvas"></canvas><script src="main.js">'
@@ -251,10 +276,11 @@ def old_scripts(dest):
 
 
 class EndToEnd(Tmp):
-    """serve_preview.py --idle-minutes 0 (a link a person opens) with the fake browser drawing a black screen."""
+    """serve_preview.py --idle-minutes 0 (a link a person opens) with the fake Ego CLI drawing a black screen."""
 
     def run_main(self, scripts, new=True):
-        env = dict(os.environ, CDP_BROWSER=str(self.browser), GAME_SKILL_LOCK_DIR=str(self.d / 'locks'),
+        env = dict(os.environ, PATH=str(self.browser.parent) + os.pathsep + os.environ.get('PATH', ''),
+                   GAME_SKILL_LOCK_DIR=str(self.d / 'locks'),
                    PYTHONDONTWRITEBYTECODE='1')
         extra = ['--home-shot-wait', '1', '--home-shot-timeout', '20'] if new else []
         p = subprocess.Popen([PY, '-B', str(scripts / 'serve_preview.py'), '--directory', str(self.web), '--no-browser',
@@ -273,6 +299,7 @@ class EndToEnd(Tmp):
             except subprocess.TimeoutExpired:
                 p.kill()
         reader.join(timeout=5)
+        p.stdout.close()
         return p.returncode, ''.join(lines)
 
     def test_old_gives_link_on_black_screen_new_refuses(self):

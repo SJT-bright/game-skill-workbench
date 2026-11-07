@@ -71,7 +71,7 @@ def records(root, role):
             yield rel.as_posix(), p.read_bytes()
 
 
-def scan(targets):
+def scan(targets, *, include_images=True):
     result = {'schema': 'english_coverage_inventory.v1', 'status': 'review_required',
               'targets': {}, 'text_candidates': [], 'images': [], 'encoded_visuals': [],
               'chinese_paths': [], 'unreadable_text': [], 'other_suffixes': {},
@@ -89,10 +89,10 @@ def scan(targets):
             location = {'target': role, 'path': name}
             if HAN.search(name):
                 result['chinese_paths'].append(location)
-            if suffix in IMAGES:
+            if include_images and suffix in IMAGES:
                 group = image_groups.setdefault(digest, {'sha256': digest, 'locations': [], 'review': 'pending'})
                 group['locations'].append(location)
-            if suffix in ENCODED_VISUALS:
+            if include_images and suffix in ENCODED_VISUALS:
                 result['encoded_visuals'].append({**location, 'sha256': digest, 'review': 'pending_source_mapping'})
             if suffix not in TEXT:
                 others[suffix or '(no suffix)'] += 1
@@ -133,6 +133,7 @@ def main():
     for role in ('source', 'web', 'native'):
         parser.add_argument('--' + role, type=Path)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--text-only', action='store_true', help='omit the image review inventory')
     parser.add_argument('--fail-on-candidates', action='store_true',
                         help='Diagnostic exit 2 for any candidate, including internal comments; not a visual gate')
     args = parser.parse_args()
@@ -143,7 +144,7 @@ def main():
         if args.output.resolve().is_relative_to(root.resolve()) or args.output.resolve() == root.resolve():
             parser.error('Write evidence outside every scanned target')
     try:
-        result = scan(targets)
+        result = scan(targets, include_images=not args.text_only)
     except (OSError, ValueError, zipfile.BadZipFile, RuntimeError) as error:
         parser.error(str(error))
     args.output.parent.mkdir(parents=True, exist_ok=True)

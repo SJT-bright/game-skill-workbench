@@ -20,9 +20,9 @@ Windows当前Python可用`py -3 -X utf8 -B`，Mac使用已安装的`python3 -B`�
 | Grok候选 | PATH，其次用户目录.grok/bin/grok.exe | PATH，其次用户目录.grok/bin/grok |
 | 后台进程 | 仅操作运行器创建并跟踪的PID树 | 仅操作运行器创建的新POSIX进程组 |
 | 路径/命令 | PowerShell参数和本机实际路径 | POSIX shell参数和本机实际路径 |
-| 浏览器 | 遵循用户/项目明确选择及配套Skill，查实际能力 | 同左，不从操作系统推断已安装Ego/Chrome或已登录 |
+| 浏览器 | Agent 测试使用 Ego Lite；用户试玩窗口使用 Google Chrome | 同左，不从操作系统推断已安装Ego/Chrome或已登录 |
 
-已有四个支持脚本内置Windows/POSIX条件分支，保留一份实现；不为系统差异复制两套业务规则。显式指定Ego/Chrome时不静默切换浏览器（在 Ego 里新建/更换自己的测试空间不算切换，不问用户，见[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）；默认路线继续按[手机触屏Skill](../../mobile-touch-computer-use/SKILL.md)，Chrome路线读[Chrome工具](../../chrome-mobile-testing/SKILL.md)。Windows实测不替代Mac运行或手机/IAA证据。
+已有四个支持脚本内置Windows/POSIX条件分支，保留一份实现；不为系统差异复制两套业务规则。按[浏览器测试规则](browser-testing-policy.md)执行。Ego 并发空间的处理按[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)。Windows实测不替代Mac运行或手机/IAA证据。
 
 ## 接收Mac新改动时
 

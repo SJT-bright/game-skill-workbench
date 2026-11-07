@@ -189,6 +189,28 @@ test('normal_start_loads_every_stage_once_and_hides_loading', function () {
   assert.strictEqual(s.log.run, 1); assert.strictEqual(s.log.loadScene, 1); assert(s.log.hide >= 1);
   assert.strictEqual(s.log.modal.length, 0);
 });
+test('explicitly_absent_resources_preserves_a_differently_named_subpackage', function () {
+  var s = sandbox();
+  s.ctx._CCSettings.hasResourcesBundle = false;
+  s.ctx._CCSettings.subpackages = ['MainScene'];
+  s.boot();
+  assert.deepStrictEqual(s.log.bundles, ['internal', 'main']);
+  assert.strictEqual(s.log.sub.length, 0);
+  assert.strictEqual(s.log.run, 1);
+  assert.strictEqual(s.log.loadScene, 1);
+  assert.strictEqual(s.log.modal.length, 0);
+});
+test('resources_in_main_package_is_still_loaded', function () {
+  var s = sandbox();
+  s.ctx._CCSettings.hasResourcesBundle = true;
+  s.ctx._CCSettings.subpackages = [];
+  s.boot();
+  assert.deepStrictEqual(s.log.bundles, ['internal', 'resources', 'main']);
+  assert.strictEqual(s.log.sub.length, 0);
+  assert.strictEqual(s.log.run, 1);
+  assert.strictEqual(s.log.loadScene, 1);
+  assert.strictEqual(s.log.modal.length, 0);
+});
 test('subpackage_failure_shows_retry_and_retry_succeeds', function () {
   var s = sandbox({sub: function (o, n) { if (n === 1) o.fail({errMsg: 'net'}); else o.success(); }});
   s.boot();

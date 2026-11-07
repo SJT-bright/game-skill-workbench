@@ -235,6 +235,9 @@ class CopyQualityTests(unittest.TestCase):
         kinds = {x['kind'] for x in r['review']}
         self.assertTrue({'maybe_cut', 'button_case'} <= kinds, kinds)
         self.assertIn('Claim Reward Now', (root / 'sheet.md').read_text())
+        code, text_only = self.run_audit(root, '--text-only', '--require-runtime')
+        self.assertEqual((code, text_only['checks']), (0, []))
+        self.assertTrue(kinds.isdisjoint(x['kind'] for x in text_only['review']))
 
     def test_no_runtime_text_blocks_when_required(self):
         root = self.project(['PLAY'])

@@ -283,6 +283,16 @@ with tempfile.TemporaryDirectory(prefix='finalize-images ') as td:
     r = png.apply(ctx)
     check('png-cache-other-version-dropped', any('discarded' in w['message'] for w in r['warnings']), r['warnings'])
 
+    writer_ctx = Ctx('native', nat, project=proj, policy='new', options={'prepared_png_only': True})
+    cache_path = proj / '.tiktok-kit/png-cache.json'
+    cache_before = cache_path.read_bytes()
+    check('post-trial-accepts-prepared-png', not png.apply(writer_ctx)['blocks'] and tree_bytes(nat) == snap)
+    noisy(48, 48, seed=9).save(d / 'new.png')
+    with_new_picture = tree_bytes(nat)
+    refused = png.apply(writer_ctx)
+    check('post-trial-refuses-unprepared-png-without-mutating-files', bool(refused['blocks']) and not refused['changed']
+          and tree_bytes(nat) == with_new_picture and cache_path.read_bytes() == cache_before, refused)
+
     # determinism: two fresh copies give the same bytes
     nat2 = root / 'native2'
     d2 = nat2 / 'assets' / 'x'

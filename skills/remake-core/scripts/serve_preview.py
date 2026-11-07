@@ -245,7 +245,6 @@ def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, bro
     (no browser on this computer, browser failed or timed out, export without scripts) - the message says 没截图, it
     is never reported as passed. probe: callable returning the page probe report (dict) or None."""
     import subprocess
-    import tempfile
     info = {'screenshot': None, 'browser': None}
     try:
         entry = (Path(export_dir) / 'index.html').read_bytes()
@@ -254,13 +253,12 @@ def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, bro
     if not re.search(br'<script\b', entry, re.I):
         return 'warn', '首页截图没截：导出的 index.html 里没有脚本，不像能跑的 Cocos 导出（没截图，不算通过）', info
     # EGO_ONLY_TEST_POLICY: the link's automatic check is a test; Chrome is the user's window only.
-    import shutil
-    import secrets
-    ego = shutil.which('ego-browser')
+    ego = find_shot_browser()
     if not ego:
         return 'warn', '首页截图未执行：找不到官方 Ego CLI；不能用 Chrome 补测，未核对不算通过', info
     info['browser'] = ego
     info['browser_route'] = 'ego_taskspace'
+    info['input_transport'] = 'ego_page_cdp'
     out_png = Path(out_png).resolve()
     try: out_png.unlink()
     except OSError: pass
@@ -268,17 +266,34 @@ def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, bro
     name = 'preview-home-%s-%s' % (os.getpid(), secrets.token_hex(4))
     info['space_name'] = name
     script = """const fs=await import('node:fs/promises');
-const t=await taskSpace(%s),p=t.page('p1');
-let finished=false;
+const t=await taskSpace(%s);
+const sessionId=t.spaceId;
+let failure;
 try {
+ const p=t.page('p1');
  await p.cdp('Network.enable',{});await p.cdp('Network.setCacheDisabled',{cacheDisabled:true});
  async function size(){await p.cdp('Emulation.setDeviceMetricsOverride',{width:%d,height:%d,deviceScaleFactor:1,mobile:true});await p.cdp('Emulation.setVisibleSize',{width:%d,height:%d});await p.cdp('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});}
  await size();await p.goto(%s);await size();
  const until=Date.now()+%d;while(Date.now()<until)await new Promise(r=>setTimeout(r,250));
  const image=await p.cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await fs.writeFile(%s,Buffer.from(image.data,'base64'));
- console.log(JSON.stringify({browser_route:'ego_taskspace',session_id:t.spaceId,space_name:%s,screenshot:%s}));
- await t.finish({keep:[]});finished=true;
-}catch(e){console.error(String(e));throw e;}
+} catch (error) {
+ failure=error;
+}
+if (!failure || !/control|hand.?off|inactive|unassigned|hard.?stop|EGO_TASK_SPACE_NAME_IN_USE/i.test(String(failure))) {
+ try {
+  await t.finish({keep:[]});
+  const spaces=await listTaskSpaces();
+  const ids=spaces.map(space=>space.id??space.spaceId??space.space_id);
+  if (ids.some(id=>id==null || String(id)===String(sessionId))) {
+   throw new Error('Ego screenshot TaskSpace closure could not be confirmed');
+  }
+ } catch (error) {
+  if (!failure) throw error;
+  console.error(String(error));
+ }
+}
+if (failure) throw failure;
+console.log(JSON.stringify({browser_route:'ego_taskspace',input_transport:'ego_page_cdp',session_id:sessionId,space_name:%s,screenshot:%s,space_finished:true}));
 """ % (json.dumps(name),width,height,width,height,json.dumps(shot_url),int(wait*1000),json.dumps(str(out_png)),json.dumps(name),json.dumps(str(out_png)))
     try:
         done=(run or subprocess.run)([ego,'nodejs','-e',script],stdin=subprocess.DEVNULL,capture_output=True,timeout=timeout)
@@ -289,6 +304,22 @@ try {
         return 'warn', '首页 Ego 截图未执行：%s；不回退 Chrome' % error, info
     if done.returncode:
         return 'warn', '首页 Ego 截图或空间收尾未完成（%s）；保留未测，不回退 Chrome' % tail, info
+    output = (done.stdout or b'') + b'\n' + (done.stderr or b'')
+    evidence = None
+    for line in reversed(output.decode('utf-8', 'replace').splitlines()):
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(row, dict) and 'session_id' in row:
+            evidence = row
+            break
+    if (not evidence or evidence.get('browser_route') != info['browser_route']
+            or evidence.get('input_transport') != info['input_transport'] or evidence.get('space_name') != name
+            or evidence.get('screenshot') != str(out_png) or evidence.get('space_finished') is not True
+            or type(evidence.get('session_id')) is not int or evidence['session_id'] <= 0):
+        return 'warn', '首页 Ego 截图缺少有效的当前空间回执，未核对不算通过', info
+    info.update(session_id=evidence['session_id'], space_finished=True)
     if not out_png.is_file():
         return 'warn', '首页截图没截成：浏览器退出码 %s，没写出图（%s）。没截图，不算通过' % (done.returncode, tail or '无输出'), info
     info['screenshot'] = str(out_png)
@@ -504,7 +535,7 @@ def make_snapshot(directory, project=None, slots=None):
     return dest, 'project', True
 
 
-def main():
+def main(argv=None, *, verify_snapshot=None, chinese_original=False):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', required=True, type=Path)
     parser.add_argument('--port', type=int, default=0)
@@ -527,7 +558,7 @@ def main():
                         'before the picture is taken (default 12)')
     parser.add_argument('--home-shot-timeout', type=float, default=90, help='headless home screenshot: give up after this '
                         'many seconds (default 90; then the link says 没截图)')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.ad_simulator_setup:
         if not args.ad_simulator or not args.ad_simulator_setup.is_file():
             parser.error('--ad-simulator-setup requires --ad-simulator and an existing JavaScript file')
@@ -543,7 +574,12 @@ def main():
     if not (directory / 'index.html').is_file():
         raise SystemExit('找不到 index.html，请指定实际 Cocos Web 导出目录。')
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    if args.keep:
+    if verify_snapshot is None and not chinese_original and not args.raw and (args.keep or args.open or args.idle_minutes == 0):
+        from feature_policy import board_of
+        candidates = [_project_of(directory, args.project), *list(directory.parents)[:3]]
+        if any(board_of(p)[0] == 'localize' or (p / 'docs/english').is_dir() for p in candidates):
+            parser.error('英化正式试玩请用 cocos-game-to-english/scripts/serve_preview.py 核对当前美术回执与图片复核记录')
+    if args.keep and verify_snapshot is None:
         # v7.8 U7（补）: a user trial needs the art receipt, like the package writers (checked only, never a new art run)
         if not args.project:
             parser.error('用户试玩 --keep 需要 --project <这款游戏的 Cocos 工程>：起服务前要核对美术回执 .tiktok-kit/art-receipt.json')
@@ -563,6 +599,13 @@ def main():
         if browser_slots is None:
             raise SystemExit('--snapshot needs browser_slots.py next to this script')
         directory, snap_where, snap_own = make_snapshot(directory, args.project, browser_slots)  # R4N3
+        if verify_snapshot is not None:
+            try:
+                verify_snapshot(directory)
+            except (SystemExit, OSError, ValueError):
+                import shutil
+                shutil.rmtree(directory, ignore_errors=True)
+                raise
         print('快照目录：%s（%s）' % (directory, '共享目录' if snap_where == 'shared' else
                                     '共享目录写不进，改用工程里的 .tiktok-kit/snapshots/'), flush=True)
     token = None if args.raw else secrets.token_hex(8)
@@ -599,15 +642,18 @@ def main():
         # and the game writes its save (localStorage) for the origin it runs on. They run on a second port of their
         # own (another origin, its own localStorage), so the link a person opens starts from a fresh save.
         check_server, check_url = start_check_server(handler)
-        # 生成时预防 P21 ⑤ (后半): one headless screenshot of the game page before the link is printed
+        # 生成时预防 P21 ⑤ (后半): one Ego screenshot of the game page before the link is printed
         import tempfile
         shot_url = check_url + ('__preview/%s/' % token if token else '') + 'index.html?__phone_game=1&__home_shot=1'
         check_server.home_probe = None
-        level, message, _ = home_shot_gate(
+        level, message, shot_info = home_shot_gate(
             shot_url, current_export, phone_size,
             Path(tempfile.gettempdir()) / ('serve_preview_home_%d.png' % server.server_port),
             probe=lambda: getattr(check_server, 'home_probe', None), timeout=args.home_shot_timeout, wait=args.home_shot_wait)
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
+        if shot_info.get('space_finished'):
+            fields = ('browser_route', 'input_transport', 'session_id', 'space_name', 'space_finished', 'screenshot')
+            print('PREVIEW_HOME_EGO ' + json.dumps({key: shot_info[key] for key in fields}, ensure_ascii=False), flush=True)
         if level == 'block':
             stop_check_server(check_server)
             server.shutdown()

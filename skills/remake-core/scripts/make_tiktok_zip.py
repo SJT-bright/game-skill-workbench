@@ -204,6 +204,9 @@ def english_image_problems(files, project, board):
     <project>/docs/english/image-review.json (audit_image_review_record.py) and every NEW English image (SHA not in
     <project>/docs/english/pre-english-images.json) must be <= 800 KB (audit_new_english_images.py). A missing record or
     list refuses. The 2.5x-display rule needs prefab sizes and is not run here (warning until Saul decides)."""
+    if board is None and project:
+        from tiktok_finalize import read_source_record
+        board = (read_source_record(project) or {}).get('board')
     if board != 'localize':
         return []
     if project is None:
@@ -260,12 +263,17 @@ def finalize_for_writer(native, project, board, app_id, options=None):
         kit = F.T.load_manifest()
     except F.T.KitError as error:
         return None, None, ['K_kit_unusable: %s' % error]
-    problems = ['%s: %s' % (f['id'], f['message']) for f in F.check_source_record(project, kit, options=options)]
     art = art_receipt_check(project, board)
+    localize = board == 'localize' or (art or {}).get('board') == 'localize'
+    source = (F.check_trial_source(project, 'localize', kit, options) if localize else
+              F.check_source_record(project, kit, options))
+    problems = ['%s: %s' % (f['id'], f['message']) for f in source]
     if art and art['level'] == 'block':
         problems.append('%s: %s' % (art['gate'], art['message']))
     if problems:
         return None, None, problems
+    if localize:
+        options['prepared_png_only'] = True
     record = F.finalize_native(native, project, board, app_id, manifest=kit, options=options)
     record['source_record'] = source_record_ref(project)
     add_art_receipt(record, art)

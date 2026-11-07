@@ -535,10 +535,13 @@ class Delivery(KitInSync):
     def test_delivery_record_carries_retest_line_and_parts_table(self):
         native = self.d / 'native'
         native.mkdir()
-        (native / 'game.js').write_text('//g')
-        archive = write_zip(self.d / 'Game_v1.zip', {'game.js': b'//g'})
-        digests = {'game.js': sha(b'//g')}
-        record = {'kind': 'finalize-native', 'kit_version': '2.0', 'policy': 'new', 'decision': {'reason': 'r'},
+        files = {'game.js': b'//g', 'game.json': b'{"subpackages":[]}',
+                 'project.config.json': json.dumps({'appid': APP}).encode()}
+        for name, data in files.items():
+            (native / name).write_bytes(data)
+        archive = write_zip(self.d / 'Game_v1.zip', files)
+        digests = {name: sha(data) for name, data in files.items()}
+        record = {'kind': 'finalize-native', 'kit_version': '2.0', 'board': 'remake', 'policy': 'new', 'decision': {'reason': 'r'},
                   'blocks': [], 'warnings': [], 'steps': [], 'files_after': {},
                   'table': [{'step': 'touch', 'result': '已装', 'changed': 2, 'warnings': 0}]}
         stamp = V.make_receipt('build_checked_zip', archive, sha(archive.read_bytes()), digests,

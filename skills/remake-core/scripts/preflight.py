@@ -50,7 +50,7 @@ art_check.py），默认不再执行：清晰度、大块深色与纯色底、UI
 签到扩展、顶部资源栏、关卡地图这些行只记录“本次未执行”，不冒充通过；缺失/改动回所属阶段。
 加 --recheck-earlier 时实际执行这些检查，并将失败列为需处理（比如没走设计关/美术关的老工程）。
 
---stage final（出包前）：任何一项“跳过”都算需处理（比如没给 --native-zip）。
+--stage final（出包前）：任何一项“跳过”都算需处理（比如没给 --native-zip）。不接受 --recheck-earlier。
 结果：<输出文件夹>/preflight.md（一页摘要）、preflight.json、logs/（每项完整输出）。
 退出码：0 全部通过；1 有"需处理"；2 参数错误。
 本预检只做静态与截图测量，不代替真实触摸测试、真机和真实广告验收；它的作用是让 GUI 测试少跑几轮。
@@ -140,6 +140,8 @@ def main():
     ap.add_argument('--recheck-earlier', action='store_true',
                     help='实际执行设计关/美术关项目，失败计为需处理；默认不执行这些前置阶段检查')
     a = ap.parse_args()
+    if a.stage == 'final' and a.recheck_earlier:
+        ap.error('出包预检只核对前置记录；设计和美术复查须在正式试玩前执行')
     if a.maintenance_scope and not a.binding:
         ap.error('--maintenance-scope requires --binding so every preservation check is tied to the current source/Web/Native build')
     if a.maintenance_visual_policy and not (a.maintenance_scope and a.binding):
@@ -254,6 +256,8 @@ def main():
 
     # 3 中文残留（候选需人工分类，数量作提示）
     eng_args = ['--source', proj, '--output', out / 'english.json']
+    if not a.recheck_earlier:
+        eng_args += ['--text-only']
     if a.native_zip:
         eng_args += ['--native', a.native_zip]
     code, text = run('audit_english_coverage.py', eng_args, logs)
@@ -261,13 +265,16 @@ def main():
     if j and code in (0, 2):
         n, bad = j.get('text_candidates', 0), j.get('unreadable_text', 0)
         add('中文残留', '需处理' if bad else ('提示' if n else '通过'),
-            f"中文候选{n}处（含注释，需按英化规则分类）；无法读取的文本{bad}个；需人工看图的图片{j.get('unique_images_requiring_review', 0)}张",
+            f"中文候选{n}处（含注释，需按英化规则分类）；无法读取的文本{bad}个"
+            + (f"；需人工看图的图片{j.get('unique_images_requiring_review', 0)}张" if a.recheck_earlier else ''),
             'english.json')
     else:
         add('中文残留', '出错', text.strip()[-300:], 'logs/audit_english_coverage.log')
 
     # 3b 英文文案质量（用户 2026-10-21）
     cq_args = ['--project', proj, '--out', out / 'copy_quality.json', '--sheet', out / 'copy-review.md']
+    if not a.recheck_earlier:
+        cq_args += ['--text-only']
     if a.copy_table:
         cq_args += ['--copy-table', a.copy_table]
     if a.glossary:
@@ -280,7 +287,7 @@ def main():
         found = '；'.join(f"{x['text'][:30]}：{x['message']}" for x in j.get('found', [])[:3])
         add('英文文案', '需处理' if j.get('blocking') else ('提示' if j.get('review') or not j.get('runtime_strings') else '通过'),
             (f"{j['blocking']}处必须改：{found}" if j.get('blocking') else f"检查{j.get('checked', 0)}条文字，没有必须改的")
-            + (f"；{j['review']}处待 GPT 看（中式英语、叫法、大小写、可能被截断）" if j.get('review') else '')
+            + (f"；{j['review']}处文字内容待复核" if j.get('review') else '')
             + ('' if j.get('runtime_strings') else '；还没读到运行中游戏的文字：测试时用 chrome_touch 的 dump_ui 把每个页面读一遍')
             + '。审查单 copy-review.md', 'copy_quality.json')
     elif code == 2 and j.get('status') == 'not_run':   # P20: no text at all = not run; final stage turns 跳过 into 需处理

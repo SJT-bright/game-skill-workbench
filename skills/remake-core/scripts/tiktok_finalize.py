@@ -6,7 +6,8 @@
                                    v7.8 H8: also record the base game's images and sounds (art_records.py)
     tiktok_finalize.py adopt   --project P                               a legacy game switches to the kit (marker)
     tiktok_finalize.py decide  [--project P] [--native N | --zip Z]      new or legacy, and why
-    tiktok_finalize.py source  --project P --board B [--app-id ID]      source phase, BEFORE the Cocos build
+    tiktok_finalize.py source  --project P --board B [--app-id ID]      prepare source and check Sprite ratios before trial
+    tiktok_finalize.py check-source --project P                        verify the existing source record after trial
     tiktok_finalize.py native  --native N --project P --board B [--app-id ID]
                                                                          native phase on the build folder (in place)
     tiktok_finalize.py inventory --project P                             list the original's platform code (English)
@@ -254,7 +255,8 @@ def record_base_at_init(project, board, base=None, no_base_why=None):
 
 def read_source_record(project):
     try:
-        return json.loads((Path(project) / SOURCE_RECORD).read_text(encoding='utf-8'))
+        record = json.loads((Path(project) / SOURCE_RECORD).read_text(encoding='utf-8'))
+        return record if isinstance(record, dict) else None
     except (OSError, ValueError, TypeError):
         return None
 
@@ -263,7 +265,7 @@ def check_source_record(project, manifest=None, options=None):
     """K5_source_finalized (package writers only): the source record exists, has no block, was made with this kit
     version and the project has not changed since (assets/, build-templates/, settings/). options = the writer's
     finalize options (None = not compared, e.g. preflight): --keep-webp-exception must equal the source record's."""
-    fix = 'run `tiktok_finalize.py source --project %s --board <board>` and build again' % project
+    fix = 'return to pre-trial preparation and run `tiktok_finalize.py source --project %s --board <board>`' % project
     if not project:
         return [T.finding('K5_source_finalized', 'block', 'no --project given: the source record cannot be checked; '
                           + fix)]
@@ -296,6 +298,21 @@ def check_source_record(project, manifest=None, options=None):
                                          fix if not want[key] else fix + ' ' + flag + ' <same reason>'),
                                      {'option': key, 'source': have[key], 'writer': want[key]}))
     return out
+
+
+def check_trial_source(project, board, manifest=None, options=None):
+    """Read the current source record, including the already executed Sprite ratio check."""
+    problems = check_source_record(project, manifest, options)
+    if problems:
+        return problems
+    record = read_source_record(project) or {}
+    if record.get('board') != board or not any(
+        step.get('step') == 'art_static' and step.get('state') in ('kit_current', 'n/a') and not step.get('blocks')
+        for step in (record.get('steps') or []) if isinstance(step, dict)
+    ):
+        return [T.finding('K_trial_sprite_aspect', 'block',
+                          '试玩前缺当前 Sprite 比例检查记录，请先执行 tiktok_finalize.py source --project <工程> --board ' + board)]
+    return []
 
 
 def _native_files(native):
@@ -443,7 +460,6 @@ SYNC_NATIVE_STEPS = ('startup', 'touch', 'storage')      # same order as NATIVE_
 UI_KIT_KEY = 'parts/GameUIKit.js'                         # P05: the shared popup / button part (Cocos 2.4)
 UI_KIT_KEYS = {2: UI_KIT_KEY, 3: 'parts-3x/GameUIKit.ts'}   # 生成时预防 R4B (P05 3.x): sync installs GameUIKit.ts too
 UI_KIT_DEFAULT_DEST = {2: 'assets/tiktok-platform/GameUIKit.js', 3: 'assets/tiktok-platform/GameUIKit.ts'}
-SYNC_SOURCE_STEPS += ('art_static',)   # 生成时预防 R4F1 (#17, P08-3): squashed pictures reported before the build, read only
 SYNC_NATIVE_STEPS += ('rewarded',)     # 生成时预防 R4F1: rewarded-guard for a 2.4 package that keeps its own main.js
 SYNC_SOURCE_STEPS += ('home_entry_scan',)  # 生成时预防 R4M2 (R4L1 leftover): 3.x hand-placed home entries at every build, read only (<0.1 s)
 SYNC_SOURCE_STEPS += ('game_name_scan',)  # 生成时预防 R4O1 (Saul 11-05): game-name text before every build, read only
@@ -622,7 +638,7 @@ def ensure_first_screen(project, board):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     sub = ap.add_subparsers(dest='cmd', required=True)
-    for name in ('init', 'adopt', 'decide', 'source', 'native', 'inventory', 'sync', 'rewire-ads'):
+    for name in ('init', 'adopt', 'decide', 'source', 'check-source', 'native', 'inventory', 'sync', 'rewire-ads'):
         p = sub.add_parser(name)
         p.add_argument('--project')
         p.add_argument('--board', choices=('remake', 'localize'))
@@ -636,6 +652,15 @@ def main(argv=None):
             p.add_argument('--no-base-why', help='从零做、没有底子时写原因')
     args = ap.parse_args(argv)
     options = {'keep_webp_exception': args.keep_webp_exception} if args.keep_webp_exception else {}
+    if args.cmd == 'check-source':
+        if not args.project:
+            ap.error('--project is required')
+        if args.board == 'localize':
+            blocks = check_trial_source(args.project, args.board, options=options or None)
+        else:
+            blocks = check_source_record(args.project, options=options or None)
+        _print({'blocks': blocks, 'decision': {'reason': '只读核对已有源码段记录'}})
+        return 1 if blocks else 0
     if args.cmd in ('init', 'adopt'):
         if not args.project:
             ap.error('--project is required')
@@ -688,6 +713,8 @@ def main(argv=None):
         _print(record)
         return 1 if record['blocks'] else 0
     if args.cmd == 'source':
+        if not args.project:
+            ap.error('--project is required')
         note = ensure_first_screen(args.project, args.board)    # R4F2 #7
         if note:
             print(note)

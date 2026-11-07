@@ -89,12 +89,55 @@ def audit_scene_components(document, path):
     return errors
 
 
+def audit_cocos2_resources(files, settings, engine_subpackages, subpackage_roots, forced_by, uses_kit, edges):
+    """Check the resources entry selected by the Cocos 2.4 ByteDance adapter."""
+    flag = re.search(r"""\bhasResourcesBundle["']?\s*:\s*(true|false|!\s*[01])\s*[,}]""", settings)
+    declared = flag and re.sub(r'\s+', '', flag.group(1)) in ('true', '!0')
+    if flag and not declared:
+        if 'resources' in engine_subpackages:
+            return ['Cocos2 resources: hasResourcesBundle=false conflicts with settings.js subpackages containing resources']
+        if forced_by:
+            return [f'Cocos2 resources: {forced_by} loads assets/resources/index.js despite '
+                    'hasResourcesBundle=false; skip the resources load when the bundle is absent']
+        return []
+    if not declared and not (uses_kit or forced_by):
+        return []
+    remote = re.search(r"""\bremoteBundles["']?\s*:\s*(\[[^\]]*\])""", settings)
+    if remote and 'resources' not in engine_subpackages:
+        try:
+            if 'resources' in json.loads(remote.group(1)):
+                # The package does not contain the remote config.
+                return []
+        except (TypeError, ValueError):
+            pass
+    if 'resources' in engine_subpackages:
+        base = 'subpackages/resources'
+        if subpackage_roots.get('resources') != base:
+            return ['Cocos2 resources: settings.js expects game.json to declare resources at subpackages/resources']
+        entry = base + '/game.js'
+    else:
+        base = 'assets/resources'
+        entry = base + '/index.js'
+    version_map = re.search(r"""\bbundleVers["']?\s*:\s*\{([^}]*)\}""", settings)
+    version = version_map and re.search(r"""\bresources["']?\s*:\s*["']([\w-]+)["']""", version_map.group(1))
+    config = base + ('/config.' + version.group(1) + '.json' if version else '/config.json')
+    errors = ['Cocos2 resources: missing startup dependency: ' + path
+              for path in (entry, config) if path not in files]
+    if base == 'assets/resources' and entry in files and not any(
+            edge['source'] == 'ccRequire.js' and edge['resolved'] == entry for edge in edges):
+        errors.append('Cocos2 resources: ccRequire.js does not register ' + entry)
+    return errors
+
+
 def audit_files(files):
     """files is a ZIP-root-relative {path: bytes}; no filesystem mutation."""
     errors, warnings, edges, dynamic = [], [], [], []
     parse_stats = {"cache_hits":0,"executed":0}
     signature = None
     entry_protocols = set()
+    startup_modules, startup_imports = {}, {}
+    settings = files.get('src/settings.js', b'').decode('utf-8-sig', errors='replace')
+    engine_subpackages, subpackage_roots = set(), {}
     names = set(files)
     folded = {n.casefold(): n for n in names}
 
@@ -124,24 +167,25 @@ def audit_files(files):
         subs = game.get('subpackages', game.get('subPackages', []))
         if not isinstance(subs, list):
             raise ValueError('subpackage list must be an array')
-        subnames, roots = set(), set()
+        roots = set()
         for sub in subs:
             root, name = sub.get('root'), sub.get('name')
             if not isinstance(root, str) or not root or not isinstance(name, str) or not name:
                 raise ValueError('subpackage root/name required')
-            if name in subnames or root.rstrip('/') in roots:
+            if name in subpackage_roots or root.rstrip('/') in roots:
                 raise ValueError('duplicate subpackage name/root')
-            subnames.add(name)
-            roots.add(root.rstrip('/'))
-            entry = need(root.rstrip('/') + '/game.js', 'game.json subpackages')
+            root = root.rstrip('/')
+            subpackage_roots[name] = root
+            roots.add(root)
+            entry = need(root + '/game.js', 'game.json subpackages')
             if entry:
                 pending.append(entry)
-        settings = files.get('src/settings.js', b'').decode('utf-8-sig', errors='replace')
-        match = re.search(r'\bsubpackages\s*:\s*(\[[^\]]*\])', settings)
+        match = re.search(r"""\bsubpackages["']?\s*:\s*(\[[^\]]*\])""", settings)
         if match:
             try:
                 listed = json.loads(match.group(1))
-                if not set(listed).issubset(subnames):
+                engine_subpackages = set(listed)
+                if not engine_subpackages.issubset(subpackage_roots):
                     errors.append('settings.js references undeclared game.json subpackages')
             except (ValueError, TypeError):
                 warnings.append('settings subpackage expression needs runtime validation')
@@ -217,6 +261,10 @@ def audit_files(files):
             continue
         if name == 'game.js':
             entry_protocols = set(parsed.get('native_entry_protocols', []))
+        startup_modules[name] = {key: parsed.get(key) for key in
+                                 ('startup24_resources', 'global_boot_assignments', 'calls_global_boot',
+                                  'direct_startup_resources', 'direct_boot_resources')}
+        immediate_requires = set(parsed.get('startup_requires', ()))
         dynamic.extend(dict(source=name, **site) for site in parsed['dynamic'])
         for dependency in parsed['dependencies']:
             request = dependency['request']
@@ -226,6 +274,47 @@ def audit_files(files):
                           'line': dependency['line'], 'kind': dependency['kind']})
             if target:
                 pending.append(target)
+                if dependency['kind'] == 'require' and request in immediate_requires:
+                    startup_imports.setdefault(name, set()).add(target)
+    # Follow only immediate imports from the platform entry here. The full closure above also
+    # contains delayed subpackage entries and helpers that may never run on cold startup.
+    eager = set()
+    pending = ['game.js']
+    while pending:
+        name = pending.pop()
+        if name not in eager:
+            eager.add(name)
+            pending.extend(startup_imports.get(name, ()))
+    def is_cocos2_adapter(name):
+        content = files.get(name, b'')
+        return all(marker in content for marker in (b'__cocos_require__', b'subpackages/', b'assets/'))
+
+    adapter_loaded = any(is_cocos2_adapter(name) for name in eager - {'game.js', 'src/settings.js'})
+    standard_layout = {'src/settings.js', 'main.js', 'adapter-min.js'}.issubset(visited) and \
+        is_cocos2_adapter('adapter-min.js')
+    if ('src/settings.js' in eager and adapter_loaded) or standard_layout:
+        startup_entries = {name: startup_modules.get(name, {}) for name in sorted(eager)}
+        boot_count = sum(entry.get('global_boot_assignments') or 0 for entry in startup_entries.values())
+        invokes_boot = boot_count == 1 and any(entry.get('calls_global_boot') for entry in startup_entries.values())
+        forced_by = None
+        uses_kit = False
+        for name, entry in startup_entries.items():
+            kit = entry.get('startup24_resources') if invokes_boot else None
+            if kit == 'unconditional':
+                forced_by = f'startup24 in {name}'
+                break
+            uses_kit = uses_kit or kit == 'skip_explicitly_absent'
+            if entry.get('direct_startup_resources') or (invokes_boot and entry.get('direct_boot_resources')):
+                forced_by = f'startup code in {name}'
+                break
+        if standard_layout and boot_count <= 1 and not forced_by:
+            # Retain the standard template check when game.js invokes its known boot via a wrapper.
+            standard_kit = startup_modules.get('main.js', {}).get('startup24_resources')
+            if standard_kit == 'unconditional':
+                forced_by = 'startup24 in main.js'
+            uses_kit = uses_kit or standard_kit == 'skip_explicitly_absent'
+        errors.extend(audit_cocos2_resources(files, settings, engine_subpackages, subpackage_roots,
+                                            forced_by, uses_kit, edges))
     # Cocos 3 compiled scenes may serialize a missing script as a null component,
     # while the scene and every referenced file still exist. Inspect component slots,
     # never arbitrary null values (which are valid for optional asset properties).
@@ -362,5 +451,5 @@ def audit_files(files):
             'errors': sorted(set(errors)), 'warnings': sorted(set(warnings)),
             'reachable_files': sorted(visited), 'require_edges': edges, 'dynamic_requires': dynamic,
             'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
-            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch registration, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes',
+            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch/resources registration and provable startup loads, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes',
             'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'account/region/network', 'platform acceptance']}

@@ -419,6 +419,13 @@ class Static(Tmp):
         (p / 'assets' / 'ui' / 'pop.prefab').write_text(json.dumps(prefab24([{'name': 'btn_reward', 'size': (128, 148),
                                                                               'sprite': {}}])))
         self.assertEqual(F.finalize_source(p, 'remake', steps=('art_static',))['blocks'], [])
+        before = (p / F.SOURCE_RECORD).read_bytes()
+        with mock.patch.object(F, '_run_steps', side_effect=AssertionError('final verification must not run source steps')), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(F.main(['check-source', '--project', str(p)]), 0)
+            (p / 'assets/ui/pop.prefab').write_text('[]')
+            self.assertEqual(F.main(['check-source', '--project', str(p)]), 1)
+        self.assertEqual((p / F.SOURCE_RECORD).read_bytes(), before)
 
 
 class Preview(Tmp):

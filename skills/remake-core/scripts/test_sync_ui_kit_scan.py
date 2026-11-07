@@ -2,7 +2,7 @@
 """生成时预防 R4J2 (R4F3 leftover): `tiktok_finalize.py sync` runs ui_kit_scan, so a hand-built popup or a developer word
 in player text (回家快跑 ad toast "LOCAL PREVIEW") is reported at the first build, not only at `source` before packaging.
 Cases:
-  1 wiring   ui_kit_scan is the last SYNC_SOURCE_STEPS entry (after art_static)
+  1 wiring   ui_kit_scan stays in sync, Sprite ratios are checked only during source preparation
   2 new      sync on a new remake game with HANDMADE + DEV: K_dev_text block, K_W_ui_handmade_popup warning in the sync
              record (old code: neither, the sync record is clean)
   3 legacy   a legacy game: ui_kit_scan only reported, no block or warning
@@ -37,7 +37,8 @@ class SyncUiKitScan(unittest.TestCase):
 
     def test_1_wiring(self):
         self.assertEqual(F.SYNC_SOURCE_STEPS[-1], 'ui_kit_scan')
-        self.assertLess(F.SYNC_SOURCE_STEPS.index('art_static'), F.SYNC_SOURCE_STEPS.index('ui_kit_scan'))
+        self.assertNotIn('art_static', F.SYNC_SOURCE_STEPS)
+        self.assertIn('art_static', F.SOURCE_STEPS)
 
     def test_2_new_game_reported_at_sync(self):
         project(self.tmp, {'assets/scripts/Revive.js': HANDMADE, 'assets/scripts/Ad.js': DEV})

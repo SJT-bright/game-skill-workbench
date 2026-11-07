@@ -572,9 +572,23 @@ def parse_spine_atlas(text):
             continue
         region = {'name': line, 'page': page['file'], 'rotate': 0, 'orig': None, 'offset': None, 'index': -1}
         regions.append(region)
+    boxes = {}
     for r in regions:
         if not all(k in r for k in ('x', 'y', 'w', 'h')):
             raise ValueError('切片 %s 缺坐标或尺寸' % r['name'])
+        if r['rotate'] not in (0, 90, 180, 270):
+            raise ValueError('unsupported Spine rotation for %s: %s' % (r['name'], r['rotate']))
+        w, h = (r['h'], r['w']) if r['rotate'] in (90, 270) else (r['w'], r['h'])
+        x, y = r['x'], r['y']
+        boxes.setdefault(r['page'], {})[(x, y, x + w, y + h)] = r['name']
+    for page, page_boxes in boxes.items():
+        active = []
+        for (x, y, right, bottom), name in sorted(page_boxes.items()):
+            active = [row for row in active if row[0] > x]
+            for _, top, end, other in active:
+                if y < end and top < bottom:
+                    raise ValueError('Spine page %s has partially overlapping slices: %s and %s' % (page, other, name))
+            active.append((right, y, bottom, name))
     return pages, regions
 
 
@@ -732,13 +746,18 @@ def _resolve_page(atlas_path, page_file, project):
     return stem if stem.is_file() and Path(page_file).suffix == '' else None
 
 
-def current_state(project, export=None, slice_dir=None, on_pixels=None):
+def current_state(project, export=None, slice_dir=None, on_pixels=None, spine_pages=None):
     """Recompute everything that can be computed without a recognizer: manifests, text findings, atlases, every
     picture and slice with its pixel SHA. on_pixels(item, image) is called for every picture/slice/unmatched export
     picture so scan can prepare recognizer input without holding all pictures in memory."""
     project = Path(project)
     if not (project / 'assets').is_dir():
         raise Usage('不是 Cocos 工程（没有 assets/）：%s' % project)
+    core_scripts = HERE.parents[1] / 'remake-core' / 'scripts'
+    if str(core_scripts) not in sys.path:
+        sys.path.insert(0, str(core_scripts))
+    import spine_atlas_binding as spine
+
     files = source_files(project)
     manifest = manifest_of(files)
     texts, items, atlases = [], [], []
@@ -778,7 +797,8 @@ def current_state(project, export=None, slice_dir=None, on_pixels=None):
                 continue
             entry['error'] = '图集描述读不了：%s' % clip(str(exc), 200)
             atlases.append(entry)
-            items.append({'id': short_id('atl', rel), 'kind': 'atlas_error', 'file': rel, 'error': entry['error']})
+            items.append({'id': short_id('atl', rel), 'kind': 'atlas_error', 'file': rel, 'error': entry['error'],
+                          'binding_error': kind == 'spine_atlas'})
             continue
         if got is None:
             if kind == 'plist':
@@ -786,9 +806,25 @@ def current_state(project, export=None, slice_dir=None, on_pixels=None):
             continue
         fmt, pages, regions = got
         entry['format'], entry['regions'] = fmt, len(regions)
+        bound_pages = None
+        if fmt == 'spine_atlas':
+            try:
+                if spine_pages is None:
+                    bound_pages = spine.resolve_source(files, rel, [page['file'] for page in pages])
+                else:
+                    bound_pages = spine_pages[rel]
+                if {page['file'] for page in pages} != {region['page'] for region in regions} or not regions:
+                    raise ValueError('Spine atlas has a page with no slices')
+            except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+                entry['error'] = 'Spine texture binding unresolved: %s' % clip(str(exc), 300)
+                atlases.append(entry)
+                items.append({'id': short_id('atl', rel), 'kind': 'atlas_error', 'file': rel,
+                              'binding_error': True, 'error': entry['error']})
+                continue
         page_imgs = {}
         for pg in pages:
-            pp = _resolve_page(p, pg.get('file'), project)
+            name = pg.get('file')
+            pp = files.get(bound_pages.get(name)) if bound_pages is not None else _resolve_page(p, name, project)
             row = {'name': pg.get('file'), 'file': None, 'sha256': None}
             if pp is not None and inside(pp, project):
                 row['file'] = pp.relative_to(project).as_posix()
@@ -816,12 +852,16 @@ def current_state(project, export=None, slice_dir=None, on_pixels=None):
                     'rotate': r.get('rotate', 0) % 360}
             if r['page'] not in page_imgs:
                 item['error'] = pg.get('error') or '找不到纹理页 %s' % r['page']
+                if fmt == 'spine_atlas':
+                    item['binding_error'] = True
                 items.append(item)
                 continue
             try:
                 img = cut_region(page_imgs[r['page']][1], r)
             except ValueError as exc:
                 item['error'] = str(exc)
+                if fmt == 'spine_atlas':
+                    item['binding_error'] = True
                 items.append(item)
                 continue
             item['size'] = list(img.size)
@@ -1761,7 +1801,11 @@ def evaluate(project, out, export=None, snapshot=None):
         row = {'id': iid, 'kind': k, 'file': item.get('file'), 'slice': item.get('slice')}
         st, why = None, []
         old = audit_items.get(iid)
-        if audit and (old is None or (old.get('bind_sha256') or bind_sha(old)) != b):
+        if item.get('binding_error'):
+            problem('spine_binding_unresolved', '%s：%s' % (_label(item), item['error']),
+                    '修正 Spine 图集、切片范围或贴图绑定，再重新 scan', item)
+            st, why = 'invalid_spine_input', [item['error']]
+        elif audit and (old is None or (old.get('bind_sha256') or bind_sha(old)) != b):
             problem('not_scanned_now', '%s：扫描记录里没有现在这一版' % _label(item), '重新 scan', item)
             st = 'stale'
         elif k == 'text':

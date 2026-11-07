@@ -46,7 +46,7 @@
 
 ## 七、每个按钮都点一遍（iPhone 模拟，INPUT-05，用户 2026-10-22）
 
-**在一个浏览器里测一次就够**：Ego Lite 和 Chrome 是同一个内核（Chromium），结果一样，不用两个都测；默认 Ego Lite，改用 Chrome 仍要先问用户。手机用 `chrome_touch.py` 的 iPhone 预设：
+**在 Ego Lite 测试**（用户 2026-11-06）。手机用 `chrome_touch.py` 的 iPhone 预设：
 
 - `"device": "iphone_15"`（默认，393×852、3 倍像素、iPhone 浏览器标识、触摸）：**每个按钮都点一遍**。
 - `"device": "iphone_se"`（375×667，短屏）：再跑一遍主流程。

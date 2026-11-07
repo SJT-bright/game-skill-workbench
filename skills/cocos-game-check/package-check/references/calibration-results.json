@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-06",
- "release_label": "v7.9-en11.17.5-ego",
- "selftest_report_sha256": "02c21fd7e3ae208751e5d2243069215622c1bf47b21f90f0c77793ab857d4ffa",
+ "release_label": "v7.9-en11.17.6-ego",
+ "selftest_report_sha256": "9fcda635194c360df87376882bce38bef7f2bb417a4302c1eae6c9158b3d1cd9",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
@@ -53,8 +53,8 @@
   "remake-core/scripts/tiktok_finalize_steps/touch.py": "fab070f35c3dd59ec9919131322846953b04a779406e1fb12be318131ee26004",
   "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581",
   "cocos-game-check/package-check/scripts/check_package.py": "d51d07707a4db3c13ca6e5c59978001f37c23da3f49524d6d7b3420228c596ac",
-  "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "0cfc836970d9bf6f9b18c605bf7bc2088a8ee2d25d2a29fe58c05f5257a4363f",
-  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "1659eb4e4e579a41274e291cfbfb388b06ca8198fe7e29ed586263ce9722d2b8"
+  "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
+  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211"
  },
  "real_artifact_controls": [
   {

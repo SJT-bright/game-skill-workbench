@@ -16,6 +16,8 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 ## 先定是哪一类游戏
 
+**每次交付前必跑（用户 2026-11-07）**。交试玩链接、测试包或平台包前，用独立 Ego TaskSpace 对实际交付构建执行[冷启动到首页可操作的过渡检查](startup/references/cocos-loading-screen.md#每次交付必检冷启动到首页可操作用户-2026-11-07)。故意延迟首页必需素材，从导航前观察到首页就绪和真实触摸产生业务结果。任何适用目标失败、未跑或证据不完整都不得按通过交付。
+
 **每次给测试包前必跑（用户 2026-11-05）**：无论新旧、外来包、同版重发、仅改名、没有重新构建，或用户只说“给我测试包”，先按[每次交付的分包体积复查](package-check/references/fresh-upload-size.md)重新读实际最终 ZIP 并生成本次新回执。此项不复用旧结论，不被启动/广告探针失败中断，也不受“局部修改只查改动”豁免。检查不过/未跑不交包；CRC/哈希正确不等于体积与分包正确。平台已拒绝的同字节包不能靠本地体积通过解封。
 
 | 类型 | 判断 | 适用 |
@@ -32,10 +34,12 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 关 | 什么时候跑 | 查什么 | 不查什么 |
 |---|---|---|---|
 | 1. 设计关 | 玩法（占位图）做完、交用户确认玩法之前 | 玩法、关卡、经济、皮肤、模块，以及所有广告节点的位置与流程（复活、结算×2、局内道具/增益、礼包、看广告解锁）；`remake-core/scripts/design_check.py` | 美术 |
-| 2. 美术关 | 美术做完、交用户试玩之前；之后改图只复查受影响的整页 | 画面、按钮、图片字、穿模、暗区、清晰度；`remake-core/scripts/art_check.py`、[art](../remake-art/SKILL.md) | 设计数值 |
-| 3. 最终总检测 | 用户确认玩法和美术、锁定之后，出包之前 | 只查功能：能进、不卡加载、按钮有反应（含 TikTok 触摸坐标探针）、广告完成/取消/失败、存档、包体；`remake-core/scripts/check_known_issues.py`、`preflight.py`、`logic_check.py`，再出包与最终包检查 | **不再查美术和设计**，也不重评审美 |
+| 2. 美术关 | 美术做完、交用户试玩之前；之后改图只复查受影响的整页 | 画面、按钮、图片字、穿模、暗区、清晰度、Sprite 比例和英化逐图复核；`remake-core/scripts/art_check.py`、[art](../remake-art/SKILL.md) | 设计数值 |
+| 3. 最终总检测 | 用户确认玩法和美术、锁定之后，出包之前 | 只查功能：能进、不卡加载、按钮有反应（含 TikTok 触摸坐标探针）、广告完成/取消/失败、存档、包体；`remake-core/scripts/check_known_issues.py`、`preflight.py`、`logic_check.py`，再出包与最终包检查 | **不再查美术和设计**，仅核对已有回执和当前版本 |
 
-用户试玩确认后美术锁定；出包前如需改美术，只按受影响页面复查美术关，不重跑整套。英化默认没有设计关（不改玩法），美术关只查改过的页面；Saul 要求创新玩法时，新加的部分照对应板块查。
+正式试玩前完成源码段与 Sprite 比例检查，英化另核对 Web 和已处理 Native 的逐图复核记录。最终总检测用 `tiktok_finalize.py check-source` 读取已有源码记录。
+
+用户试玩确认后美术锁定。若有新的美术改动，回试玩前只复查受影响页面。英化默认没有设计关（不改玩法），美术关只查改过的页面；Saul 要求创新玩法时，新加的部分照对应板块查。
 
 ## 完整验收的执行顺序
 
@@ -65,13 +69,13 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 看广告入口真点（5 个入口加复活）、试玩链接点看广告 | 有 adapter `ad_entries` 时必查；给 Saul 试玩链接前必查 | 同左 | 运行时套件 `ad_entries`（复活等主角自己失败，不要开局强制失败）；`serve_preview.py --keep` 给链接前自动跑 `trial_link`（模拟广告窗要在最上层、点「看完」游戏要变），不过就不给链接，也能 `runtime_regression.py trial --url <链接>` 手动跑 |
 | 评审别人的游戏（只检测不修改） | 可用 | 可用 | [review](review/README.md) |
 
-引擎：重塑固定 Cocos Creator 2.4.15 与平台包；英化保持原游戏的引擎版本。v7.7 起出包时由 `tiktok_finalize` 把平台包标准件装进英化工程（2.4.x 和 3.x 都装，见 [TikTok 固定适配·出包时怎么装](references/tiktok-fixed-adaptation.md)）；换成平台包 `main.js` 只在清单 `startup24` 列出的引擎版本上做（2.4.4、2.4.6、2.4.13、2.4.15；其他 2.4 版本保留自己的 `main.js`，触摸和存档两行插进 `game.js`）。平台包工程检查（`remake-core/scripts/audit_platform_kit_required.py`，内含 `check_kit_project.py`）按实际构建用的 Creator 版本判断：2.x 重塑工程用本机 2.4.15 构建，要求 `build-templates/bytedance/` 带平台包 `main.js` 和 `touch-coordinates.js`；英化工程（`.tiktok-kit/policy.json` 的 board 是 `localize`，或有 `docs/english/`）不查构建模板，改查源码段记录是否新鲜（和写包入口的 K5 同一个检查），所以跑 `preflight.py` 前先跑 `tiktok_finalize.py source`。
+引擎：重塑固定 Cocos Creator 2.4.15 与平台包；英化保持原游戏的引擎版本。v7.7 起出包时由 `tiktok_finalize` 把平台包标准件装进英化工程（2.4.x 和 3.x 都装，见 [TikTok 固定适配·出包时怎么装](references/tiktok-fixed-adaptation.md)）；换成平台包 `main.js` 只在清单 `startup24` 列出的引擎版本上做（2.4.4、2.4.6、2.4.13、2.4.15；其他 2.4 版本保留自己的 `main.js`，触摸和存档两行插进 `game.js`）。平台包工程检查（`remake-core/scripts/audit_platform_kit_required.py`，内含 `check_kit_project.py`）按实际构建用的 Creator 版本判断：2.x 重塑工程用本机 2.4.15 构建，要求 `build-templates/bytedance/` 带平台包 `main.js` 和 `touch-coordinates.js`；英化工程（`.tiktok-kit/policy.json` 的 board 是 `localize`，或有 `docs/english/`）不查构建模板，改查源码段记录是否新鲜（和写包入口的 K5 同一个检查）。试玩前跑 `tiktok_finalize.py source`，最终预检核对该记录。
 
 ## 模拟测试逐按钮必检（用户 2026-11-03）
 
 模拟功能验收必须先按实际画面盘点，再逐个实点并验证业务结果；只有 Sprite、没有点击绑定的按钮样式区域也须纳入。完整验收覆盖实际存在的页面与条件状态，局部修复覆盖受影响页面和状态；同版有效证据可复用。漏测、受限、无响应不得写“所有按钮通过”。执行时必读[逐按钮覆盖规则](test/references/button-interaction-coverage.md)，报告应测、实点、复用、失败和未测数量；button_sweep 的 passed 不能代替此项验收。
 
-英化复合控件有历史漏检时，制作方提供目标槽、状态、正常参考和原问题图；统一检查按[局部 UI 契约](../remake-art/references/local-ui-contract.md)调用 art_check 的局部入口，使用 pixel_reference 或 pixel_regions 校准按钮占用、文字分区和角标可见性；素材切片另走源图检查。记录具体声明和跑到的状态。
+英化复合控件有历史漏检时，制作方提供目标槽、状态、正常参考和原问题图；在正式试玩前按[局部 UI 契约](../remake-art/references/local-ui-contract.md)调用 art_check 的局部入口，使用 pixel_reference 或 pixel_regions 校准按钮占用、文字分区和角标可见性；素材切片另走源图检查。记录具体声明和跑到的状态。
 
 凡新增或改动图标＋文字按钮、海报说明条、长正文和奖励计数，按[图文内区检查](../remake-art/references/local-ui-contract.md)登记受影响状态。试玩前普通 art_check 读取 docs/art/visual-slots.json；逐项核对实际截图，原料切对、语义绑定和运行布局分别验。
 

@@ -104,7 +104,7 @@ Saul 2026-11-04：「出包后的返工修改，就只检查修改涉及的那�
   没量到时当作都在首页前）再加 `startup`、`startup3x`、`network`。重跑的套件按 `after` 把它依赖的也带上。
 - **沿用**：其余套件和激励广告回归 10 例沿用上一个包的通过结果，汇总里每一条写 `reused_from`（上一个包的回执）；新收据照样记下
   两项回归（沿用了哪些、从哪个包），交付时 `prepare_delivery.py` 照样复用新收据。
-- **每次都跑**：静态检查（共用门禁、ZIP 核对、启动闭包、打包资源、finalize、美术回执）。几秒钟，不省。
+- **每次都跑**：静态检查（共用门禁、ZIP 核对、启动闭包、打包资源、finalize、已有美术回执核对）。几秒钟，不省。
 - **真包核对（11-05，割草小能手工程副本，Creator 2.4.15）**：同一工程不改再构建一次，Native 143 个文件和上一次逐字节相同；只改一张按钮图
   再构建，只变那一张 PNG，`tiktok_finalize.py native` 之后照样只变那一张。这款的 resources 分包在首页前下载，改它里面的图要重跑 6 个
   套件（看画面的 4 个加 startup、network），沿用 frame_rate、popin、resume_play、save_restart 和广告回归 10 例。用时按 SLS07 v6 写包
@@ -113,8 +113,8 @@ Saul 2026-11-04：「出包后的返工修改，就只检查修改涉及的那�
 - 写包入口打印「返工范围｜……」几行（改了什么、用到改动的页面、重跑了什么、沿用了什么、AI 自己还要查什么）；报告和 `check()` 的结果
   里有 `rework`。出完包写包入口自己把这份计划记进 `<工程>/docs/checks/rework-<时间>.json`（报告里 `rework_record`；写不成只提示，
   不影响已经出好的包），下一个接手的 AI 读它就知道查过什么、改了什么。
-- 出包前先看：`rework_scope.py --old <出包文件夹> --native <新构建> --project <工程>`。写包入口会先在构建上装平台件、压 PNG
-  （`tiktok_finalize.finalize_native`），没装过的 Creator 构建和交付包比，代码和大部分 PNG 都不一样（割草小能手 2.4.15：3 个代码文件、
+- 新一轮试玩前运行 `rework_scope.py --old <出包文件夹> --native <新构建> --project <工程>`。平台件和 PNG 在英化试玩前处理
+  （`tiktok_finalize.finalize_native`）。没装过的 Creator 构建和交付包比，代码和大部分 PNG 都不一样（割草小能手 2.4.15：3 个代码文件、
   66 张 PNG），所以预览先在构建的副本上做同一步再比（约 2 秒，构建文件夹不动；App ID 用上一个交付包的，board 和选项用工程 source
   记录里的），和写包入口的判断一样。`--new <新包.zip>` 直接比两个包。
 

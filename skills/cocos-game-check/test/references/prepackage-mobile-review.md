@@ -10,7 +10,7 @@
 
 直接拖动物件、邻接误选、透明弹窗挡触摸、"下一局其实不能玩"，按[重开与触摸输入](replay-and-input-checks.md)检查（锁定后由测试执行完成，画面结论由 GPT 看总览图下）。
 
-2026-10-15 用户指定以后默认使用 Ego Lite 测试；2026-10-21 用户再次明确：自动测试**严格用 Ego Lite**（脚本 `chrome_touch.py` 通过 Ego 官方 `ego-browser nodejs` 跑），改用 Chrome 前必须先问用户。**2026-10-23 用户定：Ego 只给 AI 自己测试，用户试玩按[固定手机入口](../../../remake-core/references/user-phone-preview.md)自动打开独立 Google Chrome**，禁止在 Ego 里开窗口让用户试玩，Ego 里等用户的空间由 AI 关掉（见[Ego 只给 AI 测试](../../../remake-core/references/machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）。2026-10-16 用户明确取消在 Ego 中让用户审查 UI 并等待确认的环节：Agent 默认自主检查和优化每个按钮，再继续完整功能检查。真实 TikTok 手机与 IAA 验收仍分别记录。本页接入 `mobile-touch-computer-use` Skill，补全制作到交付之间的检查顺序；不要求已被用户确认结项的游戏重新测试。
+按 [Ego Lite 浏览器测试规则](../../../remake-core/references/browser-testing-policy.md)执行，`chrome_touch.py` 通过官方 `ego-browser nodejs` 运行。**2026-10-23 用户定：Ego 只给 AI 自己测试，用户试玩按[固定手机入口](../../../remake-core/references/user-phone-preview.md)自动打开独立 Google Chrome**，禁止在 Ego 里开窗口让用户试玩，Ego 里等用户的空间由 AI 关掉（见[Ego 只给 AI 测试](../../../remake-core/references/machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）。2026-10-16 用户明确取消在 Ego 中让用户审查 UI 并等待确认的环节：Agent 默认自主检查和优化每个按钮，再继续完整功能检查。真实 TikTok 手机与 IAA 验收仍分别记录。本页接入 `mobile-touch-computer-use` Skill，补全制作到交付之间的检查顺序；不要求已被用户确认结项的游戏重新测试。
 
 本页承接 全量中文检索/英化与全 UI 生图重构（重塑包 remake-copy 板块）、检测前独立的 [共通首页与声音设计](../../../remake-art/references/common-game-components.md) 及 [全量视觉巡检/优化/复查](../../../remake-art/references/full-visual-review.md)，随后执行功能、手机及打包检查。新制作先完成全部页面/控件的生图设计与实际接入，查看全部可见图像原件及实际显示位置/条件状态，修复穿插/盖字/越框/层级/裁切与观感问题并复查；局部维护按用户范围。视觉完成不代表按钮输入、广告、性能、手机或真实 IAA 通过；阶段定义见 [全流程覆盖](../../../remake-core/references/process-gates.md#默认由-agent-自主完成两阶段检查)。
 
@@ -96,7 +96,7 @@ python <skills>/remake-core/scripts/plan_level_tests.py --level-plan <实际关�
 
 该 Skill 默认由 Agent 操作 Ego Lite 模拟触摸，用户不代做浏览器 UI 审查；需要用户协助的真实 TikTok 手机检查另列。Ego Lite 模拟结果不标成 iPhone/Android 真机、原生输入转换、真实 IAA 或平台接受通过。
 
-Ego 测试空间不存在/失活/被占时直接新建自己的空间接着测，不问用户（用户 2026-10-23 已长期授权，见[新开测试空间不用问](../../../remake-core/references/machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）；只有 Ego 卡到没法准确测试才问是否改用 Chrome。Ego Lite 不可用时记录具体阻挡，继续离线检查；用户明确指定备用浏览器时再沿对应工具文档执行，不静默切回 Chrome。缺少触摸能力或原始证据标受限，不伪造事件，不调用游戏控制器替代操作。仅改窗口尺寸、手机外框或固定比例 iframe 不能算触摸通过。
+Ego 测试空间不存在/失活/被占时直接新建自己的空间接着测，不问用户（用户 2026-10-23 已长期授权，见[新开测试空间不用问](../../../remake-core/references/machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)）。Ego Lite 无法准确测试时记录具体阻挡，保留对应项未测，继续离线检查。缺少触摸能力或原始证据标受限，不伪造事件，不调用游戏控制器替代操作。仅改窗口尺寸、手机外框或固定比例 iframe 不能算触摸通过。
 
 ## 一键入口的内容
 
@@ -142,7 +142,7 @@ Ego 测试空间不存在/失活/被占时直接新建自己的空间接着测�
 
 ## Windows迁移分支
 
-Windows统一使用Google Chrome（谷歌浏览器），按桌面总控的新机就绪（重塑包 desktop-agent-orchestrator 板块）检测/准备。迁移包中的手机触控Skill与chrome-mobile-testing提供Chrome操作和依赖，不运行macOS安装脚本。手机环境须在引擎启动前设置，原始touch/引擎命中/业务状态与模拟边界均留证；缺工具标待验并继续其余已授权工作。
+Windows 同样通过官方 Ego Lite 路线测试，按 ego-browser 的安装说明核对环境。Google Chrome 只打开用户试玩窗口。手机环境须在引擎启动前设置，原始touch/引擎命中/业务状态与模拟边界均留证；缺工具标待验并继续其余已授权工作。
 
 
 运动、横竖屏适配及相关反馈，另按 [手机连续状态与帧率检查](mobile-motion-state-review.md) 复核实际存在的状态迁移、时间单位、输入退出和末级效果；仍分别记录编译包、真实 Cocos、可信触摸与手机证据。

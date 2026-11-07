@@ -26,7 +26,7 @@
 
 ## 正式writer命令
 
-Creator 构建之前先跑 `python3 <skills>/remake-core/scripts/tiktok_finalize.py source --project <工程> --board remake|localize`；写包入口会先查源码段记录（K5），再在门禁之前自动跑产物段（装触摸、存档层、启动件、适配层、App ID，压缩 PNG），并用 K1～K5 确认，`--project` 必须给。游戏自己的打包步骤（例如 MabelsMeadow 的 `scripts/prepare-native-package.py` 把 `config/*.json` 放到包根）不是标准件，仍由这款游戏在写包入口之前对 `<Native>` 做完。收据是 schema 2、带 `finalize` 记录；v7.6 写包入口出的 ZIP 收据在 v7.7 不算官方入口，交付前用 v7.7 写包入口重新出。WebP 例外（只限 2.4）要给 `--keep-webp-exception <原因>`，原因和源码段用的一字不差，否则 K5 拒绝。规则见 [TikTok 固定适配·出包时怎么装](../references/tiktok-fixed-adaptation.md)。
+正式试玩前准备源码与构建时先跑 `python3 <skills>/remake-core/scripts/tiktok_finalize.py source --project <工程> --board remake|localize`。英化在试玩前先执行 `tiktok_finalize.py native` 完成 PNG 处理并复核实际图片。试玩后的写包入口核对已有源码记录（K5）、美术回执及图片指纹，并执行触摸、存档、启动、适配层和 App ID 等平台步骤，并用 K1～K5 确认，`--project` 必须给。游戏自己的打包步骤（例如 MabelsMeadow 的 `scripts/prepare-native-package.py` 把 `config/*.json` 放到包根）不是标准件，仍由这款游戏在写包入口之前对 `<Native>` 做完。收据是 schema 2、带 `finalize` 记录；v7.6 写包入口出的 ZIP 收据在 v7.7 不算官方入口，交付前用 v7.7 写包入口重新出。WebP 例外（只限 2.4）要给 `--keep-webp-exception <原因>`，原因和源码段用的一字不差，否则 K5 拒绝。规则见 [TikTok 固定适配·出包时怎么装](../references/tiktok-fixed-adaptation.md)。
 
 ```sh
 python <skills>/remake-core/scripts/make_tiktok_zip.py \

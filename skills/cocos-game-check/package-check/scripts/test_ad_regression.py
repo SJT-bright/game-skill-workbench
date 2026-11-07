@@ -81,8 +81,14 @@ class FailClosed(unittest.TestCase):
         package.mkdir()
         (package / 'game.js').write_text('')
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None):
-            with self.assertRaisesRegex(ad_regression.RegressionRefused, 'needs the Ego browser'):
+            with self.assertRaisesRegex(ad_regression.RegressionRefused, 'Ego CLI 不可用'):
                 ad_regression.run(package, self.adapter({'request': 'grant();'}))
+
+    def test_nonofficial_browser_override_refuses(self):
+        with patch.dict(os.environ, {'EGO_BROWSER': str(self.root / 'desktop-browser')}), \
+                patch.object(ad_regression, '_which', return_value=str(self.root / 'ego-browser')):
+            with self.assertRaisesRegex(ad_regression.RegressionRefused, 'EGO_BROWSER'):
+                ad_regression.find_browser()
 
     def staged(self):
         """An ad package staged as check() stages verified bytes (game.js at the root)."""
@@ -104,7 +110,7 @@ class FailClosed(unittest.TestCase):
         files, folder = self.staged()
         adapter = self.adapter({'request': 'grant();'})
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None):
-            with self.assertRaisesRegex(ValueError, 'needs the Ego browser'):
+            with self.assertRaisesRegex(ValueError, 'Ego CLI 不可用'):
                 rewarded_ad_gate(files, folder, adapter)
 
     def test_gate_refuses_failed_regression_and_reads_env_adapter(self):

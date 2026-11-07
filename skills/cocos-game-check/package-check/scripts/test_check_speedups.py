@@ -79,9 +79,11 @@ class AdapterPreflight(Tmp):
         self.package = self.root / 'pkg'
         for name, data in GAME.items():
             write(self.package / name, data)
-        env = mock.patch.dict(os.environ, {runtime_regression.ENV_BROWSER: str(self.browser)})
-        env.start()
-        self.addCleanup(env.stop)
+        environment = mock.patch.dict(os.environ, {runtime_regression.ENV_BROWSER: ''})
+        lookup = mock.patch.object(runtime_regression, '_which', return_value=str(self.browser))
+        for patch in (environment, lookup):
+            patch.start()
+            self.addCleanup(patch.stop)
 
     def problems(self, adapter, policy):
         catalog = runtime_regression.load_suites()

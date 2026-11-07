@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Runtime regression runner: suite contract, fail-closed wiring and verdict, without a browser.
 
-A fake `ego-browser` (this file run with --fake-browser) reads the entry the runner wrote, fetches
+A test fixture returned by the mocked Ego CLI lookup reads the entry the runner wrote, fetches
 game.js from the real host server, and writes the suite result the test asked for. The browser
 suites themselves are proven on real packages (references/runtime-regression.md).
 """
@@ -70,7 +70,7 @@ class Base(unittest.TestCase):
         return path
 
     def run_fake(self, adapter, **kw):
-        with patch.dict(os.environ, {'EGO_BROWSER': self.browser}):
+        with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=self.browser):
             return rr.run(self.package, self.adapter(adapter), suites_dir=self.suites, work=self.root / 'work', **kw)
 
 
@@ -152,7 +152,14 @@ class Contract(Base):
 class FailClosed(Base):
     def test_no_browser_refuses(self):
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('runtime_regression._which', return_value=None):
-            with self.assertRaisesRegex(rr.RuntimeRefused, 'needs the Ego browser'):
+            with self.assertRaisesRegex(rr.RuntimeRefused, 'Ego CLI 不可用'):
+                rr.run(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
+
+    def test_nonofficial_browser_override_refuses_before_serving(self):
+        with patch.dict(os.environ, {'EGO_BROWSER': str(self.root / 'desktop-browser')}), \
+                patch.object(rr, '_which', return_value=self.browser), \
+                patch.object(rr, '_free_port', side_effect=AssertionError('served')):
+            with self.assertRaisesRegex(rr.RuntimeRefused, 'EGO_BROWSER'):
                 rr.run(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
 
     def test_missing_needed_field_refuses(self):
@@ -196,7 +203,8 @@ class FailClosed(Base):
 
     def test_cli_writes_out_and_exit_code(self):
         out = self.root / 'out.json'
-        with patch.dict(os.environ, {'EGO_BROWSER': self.browser}), patch('runtime_regression.SUITES_DIR', self.suites):
+        with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=self.browser), \
+                patch.object(rr, 'SUITES_DIR', self.suites):
             code = rr.main(['run', '--package', str(self.package), '--adapter',
                             str(self.adapter({'home': 'return true', 'fake_mode': 'fail'})), '--out', str(out)])
         self.assertEqual(code, 1)
@@ -293,7 +301,8 @@ class Environment(Base):
 
     def cli(self, package, adapter):
         out = self.root / 'cli.json'
-        with patch.dict(os.environ, {'EGO_BROWSER': self.browser}), patch('runtime_regression.SUITES_DIR', self.suites):
+        with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=self.browser), \
+                patch.object(rr, 'SUITES_DIR', self.suites):
             code = rr.main(['run', '--package', str(package), '--adapter', str(self.adapter(adapter)), '--out', str(out)])
         return code, json.loads(out.read_text())
 
@@ -379,7 +388,8 @@ class B30Wiring(Base):
         browser.write_text('#!%s\n%s' % (sys.executable, FAKE_NOHOST))
         browser.chmod(browser.stat().st_mode | stat.S_IEXEC)
         self.sidecar('trial_link', {'name': 'trial_link', 'applies': ['trial_url'], 'fields': ['trial'], 'host': 'none', 'timeout_s': 60})
-        with patch.dict(os.environ, {'EGO_BROWSER': str(browser)}), patch('runtime_regression._free_port', side_effect=AssertionError('served')):
+        with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=str(browser)), \
+                patch.object(rr, '_free_port', side_effect=AssertionError('served')):
             return rr.trial_smoke('http://127.0.0.1:5/', self.adapter({'trial': {'mode': mode}}), suites_dir=self.suites, work=self.root / 'w')
 
     def test_trial_smoke_runs_without_a_package_server(self):

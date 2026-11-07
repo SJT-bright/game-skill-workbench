@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T07:14:29.303Z",
-  "treeHash": "c2c47397f3cf0afa44203bd6524b8a7067739c00c46d22f0de19c47188bfd409",
+  "createdAt": "2026-11-07T10:17:54.110Z",
+  "treeHash": "782bd4f955fb1d15b996cbab0ac84fb43c25fb7344f20da49d2abcb09b6cd879",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "b86108789d1fe49e5eaa159d435ee44841c05ffb2b3e5db4d42040efbe8f68d0",
-      "fileCount": 175,
-      "bytes": 1861113,
+      "treeHash": "1b85079d637d399ffa7a76af6b8717346258b56cf905584137f6c1022fd490a6",
+      "fileCount": 176,
+      "bytes": 1883625,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "3164a7402256e1dee2a99e0777976fb2148e2ed1117a113ad09c8f309d1e86be",
-          "size": 31525,
+          "hash": "a2e86d8fb543156699ee3219ccd57ba29f9ae0b4ed032be3d1ab19207f5d8780",
+          "size": 40250,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d",
-          "size": 18507,
+          "hash": "44086f3d51851a559461ad597885bb13a408a9f0b50f32bf4a9461654aeeb3b8",
+          "size": 19243,
           "executable": false
         },
         {
@@ -383,8 +383,8 @@
         },
         {
           "path": "package/README.md",
-          "hash": "ac25c7db4e8827452b88ac2e62024ed99b65c516feb2a4286fbc0060cc2f70ef",
-          "size": 5262,
+          "hash": "2e28e0888faba6a24fd977381a804938d1f0a2cdf927d24f36472bca4d525ce1",
+          "size": 5382,
           "executable": false
         },
         {
@@ -431,7 +431,7 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "58a7578cc8e514834f9562ab93a4da3d66bf91f429859c3f2a83d94db2658f62",
+          "hash": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
           "size": 19011,
           "executable": false
         },
@@ -503,8 +503,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "d6b09f1d7d533f5c9d13d74fd7c9515a170a2e3c0e1cd234d8e639fec56de4e0",
-          "size": 72288,
+          "hash": "8a7348993f7032d25733268a79c3428b748cd0f404b749673318b23c3da76df7",
+          "size": 72296,
           "executable": false
         },
         {
@@ -905,8 +905,8 @@
         },
         {
           "path": "package-check/scripts/test_ad_regression.py",
-          "hash": "9e0c6c44231754e0c1aa3eafacc15caa00a5514e476263dd845143cf14f99503",
-          "size": 25195,
+          "hash": "021f1a64a1199da578ee41e0eedd50bc62bed67ec722a938557702e71e63dc8e",
+          "size": 25571,
           "executable": false
         },
         {
@@ -929,8 +929,8 @@
         },
         {
           "path": "package-check/scripts/test_check_speedups.py",
-          "hash": "0048a80acca4ffeae8a61d267ba3eb0ef7873b4f931461504ee61ca0bfb747b0",
-          "size": 26111,
+          "hash": "dc4451639c547a85a5427b87114bf3a2804128591f75981293f199d7bb00a9ec",
+          "size": 26257,
           "executable": false
         },
         {
@@ -1031,8 +1031,8 @@
         },
         {
           "path": "package-check/scripts/test_r4d_case_list_complete.py",
-          "hash": "cf1e05d4480d207842a5e9b253beb69398934491b7730f81b016e9a2b9123173",
-          "size": 4486,
+          "hash": "acf59f6f0693515239e33f8cdc07bd6f46eb9c3f775a40a88bb515b528616451",
+          "size": 4550,
           "executable": false
         },
         {
@@ -1073,8 +1073,8 @@
         },
         {
           "path": "package-check/scripts/test_runtime_regression.py",
-          "hash": "97d30873f7c5257a22a0ae7b908379afa2668614370db5d08400b93aa3eb872e",
-          "size": 23732,
+          "hash": "025eeb345462d1202259225e4efb1f06bc58fb364c4bc8b90e092fff0a970633",
+          "size": 24433,
           "executable": false
         },
         {
@@ -1121,8 +1121,8 @@
         },
         {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "f45c51013154cafec3c00fe8bfd1e837849257e1280ecb7547693127c664da7c",
-          "size": 110852,
+          "hash": "6977e026e90d3f9f98e39d9e6938814799ce67bcc0dab3e15e96d81337831296",
+          "size": 111994,
           "executable": false
         },
         {
@@ -1145,8 +1145,8 @@
         },
         {
           "path": "startup/references/cocos-loading-screen.md",
-          "hash": "6bbd13941f241f41008e8e38fa07e36bbff314e576cfc79121ad9c5fc8526cff",
-          "size": 6435,
+          "hash": "42e1980098d6c04389aaf6fa87626117b24420ca528883ec32d825a44031b557",
+          "size": 10286,
           "executable": false
         },
         {
@@ -1207,6 +1207,12 @@
           "path": "startup/references/startup-loading-timing.md",
           "hash": "8a05c71564e1a6e55c5021f5595fc4bbbd0f14885aae706cecfcd02c63f93557",
           "size": 14325,
+          "executable": false
+        },
+        {
+          "path": "startup/scripts/cold-start-transition.mjs",
+          "hash": "ab0377add36041bcbad68cb059ea3f786b275444573e12477263ada8e29eb6a8",
+          "size": 7063,
           "executable": false
         },
         {
@@ -1271,14 +1277,14 @@
         },
         {
           "path": "test/references/prepackage-mobile-review.md",
-          "hash": "c82d436e867fd4870773cecf3fe8a7820bedf2d4343af29c22dce4a5a877b164",
-          "size": 22827,
+          "hash": "5d920c192f0adfba7b586f0b45d5e05a573454203caaa67c018c40766c6de579",
+          "size": 22503,
           "executable": false
         },
         {
           "path": "test/references/replay-and-input-checks.md",
-          "hash": "94cbda17f6ba851b6a682c6b5549ad66b5f65f186ec25a9a432e4b54750dbcfe",
-          "size": 10012,
+          "hash": "7d14061afa8d83da6be92115063fc1c339684e9b70ee28b7d771aee01982416a",
+          "size": 9874,
           "executable": false
         },
         {
@@ -1295,8 +1301,8 @@
         },
         {
           "path": "test/references/testing-scope-and-stop.md",
-          "hash": "e9d30d038c1c7e52632d4501d46c945527a33f46d07d8c7b55689d4a249b1209",
-          "size": 13894,
+          "hash": "4dc7348c7c869fecdda7309e696ade2d70cdb0c931e258a51ca33a0cfc15807f",
+          "size": 13936,
           "executable": false
         }
       ]

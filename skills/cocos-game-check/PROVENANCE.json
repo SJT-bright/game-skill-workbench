@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-06.english-simple.11.17.5",
+  "revision": "2026-11-06.english-simple.11.17.6",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d",
-      "bytes": 18507
+      "sha256": "e6f0159708a8c37f53ed0534a7096bd59c3081cc0107800e09899389571cc326",
+      "bytes": 18760
     },
     {
       "path": "agents/openai.yaml",
@@ -121,7 +121,7 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "58a7578cc8e514834f9562ab93a4da3d66bf91f429859c3f2a83d94db2658f62",
+      "sha256": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
       "bytes": 19011
     },
     {
@@ -176,8 +176,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "316f0281c9293c8e26fca6c7c3a476328c341240006083ef82616df6742ede9a",
-      "bytes": 71871
+      "sha256": "8a7348993f7032d25733268a79c3428b748cd0f404b749673318b23c3da76df7",
+      "bytes": 72296
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -481,8 +481,8 @@
     },
     {
       "path": "package-check/scripts/test_ad_regression.py",
-      "sha256": "9e0c6c44231754e0c1aa3eafacc15caa00a5514e476263dd845143cf14f99503",
-      "bytes": 25195
+      "sha256": "021f1a64a1199da578ee41e0eedd50bc62bed67ec722a938557702e71e63dc8e",
+      "bytes": 25571
     },
     {
       "path": "package-check/scripts/test_button_sweep_diag.py",
@@ -501,8 +501,8 @@
     },
     {
       "path": "package-check/scripts/test_check_speedups.py",
-      "sha256": "0048a80acca4ffeae8a61d267ba3eb0ef7873b4f931461504ee61ca0bfb747b0",
-      "bytes": 26111
+      "sha256": "dc4451639c547a85a5427b87114bf3a2804128591f75981293f199d7bb00a9ec",
+      "bytes": 26257
     },
     {
       "path": "package-check/scripts/test_dead_shell.py",
@@ -586,8 +586,8 @@
     },
     {
       "path": "package-check/scripts/test_r4d_case_list_complete.py",
-      "sha256": "cf1e05d4480d207842a5e9b253beb69398934491b7730f81b016e9a2b9123173",
-      "bytes": 4486
+      "sha256": "acf59f6f0693515239e33f8cdc07bd6f46eb9c3f775a40a88bb515b528616451",
+      "bytes": 4550
     },
     {
       "path": "package-check/scripts/test_r4o4_probe_adapter.py",
@@ -616,8 +616,8 @@
     },
     {
       "path": "package-check/scripts/test_runtime_regression.py",
-      "sha256": "97d30873f7c5257a22a0ae7b908379afa2668614370db5d08400b93aa3eb872e",
-      "bytes": 23732
+      "sha256": "025eeb345462d1202259225e4efb1f06bc58fb364c4bc8b90e092fff0a970633",
+      "bytes": 24433
     },
     {
       "path": "package-check/scripts/test_sound_settings_profile.py",
@@ -656,8 +656,8 @@
     },
     {
       "path": "package/README.md",
-      "sha256": "1d8f5abe5ce016caadd04915860e722d7677160a231374e3bb36ad007addccd5",
-      "bytes": 5026
+      "sha256": "2e28e0888faba6a24fd977381a804938d1f0a2cdf927d24f36472bca4d525ce1",
+      "bytes": 5382
     },
     {
       "path": "package/references/check-fix-package-loop.md",
@@ -686,8 +686,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "f45c51013154cafec3c00fe8bfd1e837849257e1280ecb7547693127c664da7c",
-      "bytes": 110852
+      "sha256": "f31f0a0afcb8899a9a0e82f2fece34ec8f5656c96624941f042ac9d2ad449d14",
+      "bytes": 111269
     },
     {
       "path": "review/README.md",
@@ -806,13 +806,13 @@
     },
     {
       "path": "test/references/prepackage-mobile-review.md",
-      "sha256": "c82d436e867fd4870773cecf3fe8a7820bedf2d4343af29c22dce4a5a877b164",
-      "bytes": 22827
+      "sha256": "5d920c192f0adfba7b586f0b45d5e05a573454203caaa67c018c40766c6de579",
+      "bytes": 22503
     },
     {
       "path": "test/references/replay-and-input-checks.md",
-      "sha256": "94cbda17f6ba851b6a682c6b5549ad66b5f65f186ec25a9a432e4b54750dbcfe",
-      "bytes": 10012
+      "sha256": "7d14061afa8d83da6be92115063fc1c339684e9b70ee28b7d771aee01982416a",
+      "bytes": 9874
     },
     {
       "path": "test/references/review-execution-plan.md",
@@ -821,8 +821,8 @@
     },
     {
       "path": "test/references/testing-scope-and-stop.md",
-      "sha256": "e9d30d038c1c7e52632d4501d46c945527a33f46d07d8c7b55689d4a249b1209",
-      "bytes": 13894
+      "sha256": "4dc7348c7c869fecdda7309e696ade2d70cdb0c931e258a51ca33a0cfc15807f",
+      "bytes": 13936
     }
   ],
   "previous_provenance_sha256": "c8473b5313f3c4543d56fda0ff9638365cef661aa3714d6645de1da0e62270eb",
@@ -857,7 +857,168 @@
         }
       ],
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    },
+    {
+      "id": "2026-11-06.english-simple.11.17.6",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "68c82c95d65b15da9fb045a96ac3f041c9957e0b61cd35f6f52a1d193fd841ab",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d",
+          "base_sha256": "14586ab0ad66ee602c8a91fa86c24a54a5ec9d95c54004bbd9b7f5870b45ab23",
+          "release_sha256": "23726cd8321bfc9da7dd8c2705a25b3fcb83babb5358a16c60c6d491bcf485c9",
+          "after_sha256": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d",
+          "after_bytes": 18507,
+          "method": "retain"
+        },
+        {
+          "path": "package-check/references/calibration-results.json",
+          "before_sha256": "58a7578cc8e514834f9562ab93a4da3d66bf91f429859c3f2a83d94db2658f62",
+          "base_sha256": "58a7578cc8e514834f9562ab93a4da3d66bf91f429859c3f2a83d94db2658f62",
+          "release_sha256": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
+          "after_sha256": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
+          "after_bytes": 19011,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/ad_regression.py",
+          "before_sha256": "73c49de29dece28367ec4344574fc5af0e32b605493f2e99ed3c0ba38fd71407",
+          "base_sha256": "cce89b866e64f75fe3995a0179c793e246c0ec53dedfee58d1ec5495ed7cb7b6",
+          "release_sha256": "73c49de29dece28367ec4344574fc5af0e32b605493f2e99ed3c0ba38fd71407",
+          "after_sha256": "73c49de29dece28367ec4344574fc5af0e32b605493f2e99ed3c0ba38fd71407",
+          "after_bytes": 20067,
+          "method": "retain"
+        },
+        {
+          "path": "package-check/scripts/ad_regression/cases.mjs",
+          "before_sha256": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
+          "base_sha256": "0cfc836970d9bf6f9b18c605bf7bc2088a8ee2d25d2a29fe58c05f5257a4363f",
+          "release_sha256": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
+          "after_sha256": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
+          "after_bytes": 24108,
+          "method": "retain"
+        },
+        {
+          "path": "package-check/scripts/ego_test_page.mjs",
+          "before_sha256": "fb806eacecb06ac5d785283b086ef66bf915b82070085601d34d07b1549e0645",
+          "base_sha256": null,
+          "release_sha256": "fb806eacecb06ac5d785283b086ef66bf915b82070085601d34d07b1549e0645",
+          "after_sha256": "fb806eacecb06ac5d785283b086ef66bf915b82070085601d34d07b1549e0645",
+          "after_bytes": 1729,
+          "method": "retain"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression.py",
+          "before_sha256": "578ffc5ef1808e83a6113ecc9847755de30388e440e8493ef87567ab995457cf",
+          "base_sha256": "9bd97f630f76189c60ba673386526a2bf82fc04375dd38f0b10ffa994dae4858",
+          "release_sha256": "78aa569e0da8ee9eaf70a24591b7bf3f3ff2453a4ef3c9f6ace14524306d3685",
+          "after_sha256": "578ffc5ef1808e83a6113ecc9847755de30388e440e8493ef87567ab995457cf",
+          "after_bytes": 61645,
+          "method": "retain"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/lib.mjs",
+          "before_sha256": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+          "base_sha256": "1659eb4e4e579a41274e291cfbfb388b06ca8198fe7e29ed586263ce9722d2b8",
+          "release_sha256": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+          "after_sha256": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+          "after_bytes": 15242,
+          "method": "retain"
+        },
+        {
+          "path": "package-check/scripts/test_ad_regression.py",
+          "before_sha256": "9e0c6c44231754e0c1aa3eafacc15caa00a5514e476263dd845143cf14f99503",
+          "base_sha256": "9e0c6c44231754e0c1aa3eafacc15caa00a5514e476263dd845143cf14f99503",
+          "release_sha256": "021f1a64a1199da578ee41e0eedd50bc62bed67ec722a938557702e71e63dc8e",
+          "after_sha256": "021f1a64a1199da578ee41e0eedd50bc62bed67ec722a938557702e71e63dc8e",
+          "after_bytes": 25571,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/test_check_speedups.py",
+          "before_sha256": "0048a80acca4ffeae8a61d267ba3eb0ef7873b4f931461504ee61ca0bfb747b0",
+          "base_sha256": "0048a80acca4ffeae8a61d267ba3eb0ef7873b4f931461504ee61ca0bfb747b0",
+          "release_sha256": "dc4451639c547a85a5427b87114bf3a2804128591f75981293f199d7bb00a9ec",
+          "after_sha256": "dc4451639c547a85a5427b87114bf3a2804128591f75981293f199d7bb00a9ec",
+          "after_bytes": 26257,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/test_r4d_case_list_complete.py",
+          "before_sha256": "cf1e05d4480d207842a5e9b253beb69398934491b7730f81b016e9a2b9123173",
+          "base_sha256": "cf1e05d4480d207842a5e9b253beb69398934491b7730f81b016e9a2b9123173",
+          "release_sha256": "acf59f6f0693515239e33f8cdc07bd6f46eb9c3f775a40a88bb515b528616451",
+          "after_sha256": "acf59f6f0693515239e33f8cdc07bd6f46eb9c3f775a40a88bb515b528616451",
+          "after_bytes": 4550,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/test_runtime_regression.py",
+          "before_sha256": "97d30873f7c5257a22a0ae7b908379afa2668614370db5d08400b93aa3eb872e",
+          "base_sha256": "97d30873f7c5257a22a0ae7b908379afa2668614370db5d08400b93aa3eb872e",
+          "release_sha256": "025eeb345462d1202259225e4efb1f06bc58fb364c4bc8b90e092fff0a970633",
+          "after_sha256": "025eeb345462d1202259225e4efb1f06bc58fb364c4bc8b90e092fff0a970633",
+          "after_bytes": 24433,
+          "method": "release"
+        },
+        {
+          "path": "test/references/prepackage-mobile-review.md",
+          "before_sha256": "c82d436e867fd4870773cecf3fe8a7820bedf2d4343af29c22dce4a5a877b164",
+          "base_sha256": "c82d436e867fd4870773cecf3fe8a7820bedf2d4343af29c22dce4a5a877b164",
+          "release_sha256": "5d920c192f0adfba7b586f0b45d5e05a573454203caaa67c018c40766c6de579",
+          "after_sha256": "5d920c192f0adfba7b586f0b45d5e05a573454203caaa67c018c40766c6de579",
+          "after_bytes": 22503,
+          "method": "release"
+        },
+        {
+          "path": "test/references/replay-and-input-checks.md",
+          "before_sha256": "94cbda17f6ba851b6a682c6b5549ad66b5f65f186ec25a9a432e4b54750dbcfe",
+          "base_sha256": "94cbda17f6ba851b6a682c6b5549ad66b5f65f186ec25a9a432e4b54750dbcfe",
+          "release_sha256": "7d14061afa8d83da6be92115063fc1c339684e9b70ee28b7d771aee01982416a",
+          "after_sha256": "7d14061afa8d83da6be92115063fc1c339684e9b70ee28b7d771aee01982416a",
+          "after_bytes": 9874,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "pretrial-art-gate-20261107",
+      "authority": "User requested direct local updates to the current Skills and scripts.",
+      "scope": "Formal English trial art evidence and read-only art verification during delivery.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "5dd06c1d99ce3656e2457f955b7b5439afbd615c493f1471bf58a6c3e347529d",
+          "after_sha256": "e6f0159708a8c37f53ed0534a7096bd59c3081cc0107800e09899389571cc326",
+          "after_bytes": 18760
+        },
+        {
+          "path": "package/README.md",
+          "before_sha256": "ac25c7db4e8827452b88ac2e62024ed99b65c516feb2a4286fbc0060cc2f70ef",
+          "after_sha256": "2e28e0888faba6a24fd977381a804938d1f0a2cdf927d24f36472bca4d525ce1",
+          "after_bytes": 5382
+        },
+        {
+          "path": "package-check/references/runtime-regression.md",
+          "before_sha256": "d6b09f1d7d533f5c9d13d74fd7c9515a170a2e3c0e1cd234d8e639fec56de4e0",
+          "after_sha256": "8a7348993f7032d25733268a79c3428b748cd0f404b749673318b23c3da76df7",
+          "after_bytes": 72296
+        },
+        {
+          "path": "references/tiktok-fixed-adaptation.md",
+          "before_sha256": "f45c51013154cafec3c00fe8bfd1e837849257e1280ecb7547693127c664da7c",
+          "after_sha256": "f31f0a0afcb8899a9a0e82f2fece34ec8f5656c96624941f042ac9d2ad449d14",
+          "after_bytes": 111269
+        },
+        {
+          "path": "test/references/testing-scope-and-stop.md",
+          "before_sha256": "e9d30d038c1c7e52632d4501d46c945527a33f46d07d8c7b55689d4a249b1209",
+          "after_sha256": "4dc7348c7c869fecdda7309e696ade2d70cdb0c931e258a51ca33a0cfc15807f",
+          "after_bytes": 13936
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "bc3b701cbff9fa0c7dd96ee04a334abe6780c94e0212933047a9efc1ed73e227"
+  "previous_local_provenance_sha256": "6168ee73ecd4f94fb6e7720ad5db1b17dac5745714f6e7ce793cd5f443ecdb72"
 }

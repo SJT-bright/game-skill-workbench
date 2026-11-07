@@ -43,7 +43,8 @@ class RuntimeHalfRun(Base):
         if suites:
             argv += ['--suites', suites]
         err = io.StringIO()
-        with patch.dict(os.environ, {'EGO_BROWSER': self.browser, 'COCOS_SKILL_FEEDBACK_DIR': self.feedback.name}), \
+        with patch.dict(os.environ, {'EGO_BROWSER': '', 'COCOS_SKILL_FEEDBACK_DIR': self.feedback.name}), \
+                patch.object(mod, '_which', return_value=self.browser), \
                 patch.object(mod, 'SUITES_DIR', self.suites), contextlib.redirect_stdout(io.StringIO()) as out, \
                 contextlib.redirect_stderr(err):
             code = mod.main(argv)

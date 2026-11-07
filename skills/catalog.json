@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T04:01:47.499Z",
-  "treeHash": "28ffe487b1de89366c4f76fd15d330d1f9d9ee715b83b3a0ca91077adcc58564",
+  "createdAt": "2026-11-07T04:04:52.519Z",
+  "treeHash": "efe251fb96798007a7ff58526262344262b48f49b6ad5429fe1126767e93a547",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3429,9 +3429,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "ebbd838f9516460668beb8121e99178214a520ec1f37428323065c00633d8e2d",
-      "fileCount": 615,
-      "bytes": 12144479,
+      "treeHash": "89de961e215401612849d87ba0dad11bb028e009f9b73349b080e51d3c5d9cbf",
+      "fileCount": 618,
+      "bytes": 12165572,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -4629,8 +4629,8 @@
         },
         {
           "path": "scripts/art_receipt.py",
-          "hash": "469d41baf00ab6e5c04fa77bb4d4801f5f2b93940c5fa73dfa3ba616e885a25b",
-          "size": 38532,
+          "hash": "6d68966ce8429b8ee27674e5bfa645f51ce14607cd19773122442740fae98382",
+          "size": 38673,
           "executable": false
         },
         {
@@ -5108,6 +5108,24 @@
           "executable": false
         },
         {
+          "path": "scripts/debrand_art_successor.py",
+          "hash": "1d4f984270d0ccf2398302028e7f41fce6cf8b80869c5bc4d377c07df3d30a3d",
+          "size": 5605,
+          "executable": false
+        },
+        {
+          "path": "scripts/debrand_issue_successor.py",
+          "hash": "07dd41505b5e531120ce0c4a7f2b393541d95dfa18d10a5ea5cd7d4d1fb66154",
+          "size": 2575,
+          "executable": false
+        },
+        {
+          "path": "scripts/debrand_startup_successor.py",
+          "hash": "deaf7981c7eecb8d2a7cd7e60f256599f3824c1a321b9db1747f24ee86743812",
+          "size": 12031,
+          "executable": false
+        },
+        {
           "path": "scripts/delivery_folder.py",
           "hash": "30bc993cf65c68f323646cddd1b89f998e3f625476943e1ccbb6ae65fbdb8839",
           "size": 10503,
@@ -5253,8 +5271,8 @@
         },
         {
           "path": "scripts/locked_art_maintenance.py",
-          "hash": "f9d710e23684150b78101c4533eb4435e643591c04cb6c6c991cf3e42fea6f05",
-          "size": 14697,
+          "hash": "48e20eafeed2906850843c4ef5f25f01547d7783536e5c18048752b7b6d3e7b3",
+          "size": 14901,
           "executable": false
         },
         {
@@ -5457,8 +5475,8 @@
         },
         {
           "path": "scripts/package_issue_gate.py",
-          "hash": "7cfe6e7b11473877e506aba6a335591c48c7987850c7d55944ef9d3e125735c6",
-          "size": 43389,
+          "hash": "8204a44bdccc1053572006b5d340cb06313f134b8bdf23492b81c9def369601b",
+          "size": 43926,
           "executable": false
         },
         {

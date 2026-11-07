@@ -195,6 +195,9 @@ def validate(project, receipt=None, manifest=None):
     import audit_ui_contract as U
     import package_issue_gate as I
     project = Path(project).resolve()
+    if manifest is None and (project/'docs/art/debrand-successor.json').is_file():
+        from debrand_art_successor import validate as validate_debrand
+        return validate_debrand(project, receipt)
     # A successor preserves the original manifest/receipt instead of overwriting
     # or rebinding them. It must prove its exact semantic delta and current local
     # recovery observations; unknown projects keep the original contract below.

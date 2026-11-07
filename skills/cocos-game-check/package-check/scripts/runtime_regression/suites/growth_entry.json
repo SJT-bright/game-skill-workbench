@@ -1,0 +1,9 @@
+{
+  "name": "growth_entry",
+  "about": "Start from the TikTok profile sidebar or desktop icon; a regular return must not query a growth mission, and an asynchronous growth reply must not appear over a covered screen.",
+  "applies": ["missions"],
+  "needs": ["home", "growth_entry"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 180,
+  "owner": "G3 / TikTok profile sidebar and home shortcut"
+}

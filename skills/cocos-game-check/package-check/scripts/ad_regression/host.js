@@ -267,10 +267,16 @@
     window.addEventListener('mouseup', function (e) { if (!down) return; down = false; H_.touchend.emit({ touches: [], changedTouches: mt(e), timeStamp: e.timeStamp }); });
   }
   var hidden = false;
-  function setHidden(h) { if (h === hidden) return; hidden = h; beacon('lifecycle', h ? 'hide' : 'show'); (h ? H_.hide : H_.show).emit(h ? {} : { scene: '1001', query: {} }); }
+  var growthLaunchScene = Q.get('growth_launch');
+  var growthEnterScene = growthLaunchScene;
+  function setHidden(h) { if (h === hidden) return; hidden = h; beacon('lifecycle', h ? 'hide' : 'show'); (h ? H_.hide : H_.show).emit(h ? {} : { scene: growthEnterScene || '1001', query: {} }); }
   window.__hostListen(document, 'visibilitychange', function () { setHidden(!window.__hostVisible()); });
   window.__simHide = function () { setHidden(true); };
-  window.__simShow = function () { setHidden(false); };
+  window.__simShow = function (scene) {
+    growthEnterScene = typeof scene === 'string' ? scene : null;
+    if (growthLaunchScene !== null) beacon('growth-show-scene', growthEnterScene);
+    setHidden(false);
+  };
 
   // ---------- audio ----------
   var audioLive = 0, innerAudios = [], audioCleared = 0, sfxPlays = 0;
@@ -374,7 +380,7 @@
   };
 
   // ---------- storage ----------
-  var SP = 'ttstore:'; var NLS = window.localStorage;
+  var SP = 'ttstore:' + (growthLaunchScene !== null ? 'growth:' + (Q.get('growth_store') || '') + ':' : ''); var NLS = window.localStorage;
   function sKeys() { var k = []; for (var i = 0; i < NLS.length; i++) { var n = NLS.key(i); if (n.indexOf(SP) === 0) k.push(n.slice(SP.length)); } return k; }
   var storageWrites = 0;
   // reset=1 (alias fresh=1): start from an empty save. __storeRaw(key, rawJsonText) plants a raw
@@ -643,8 +649,8 @@
     onAudioInterruptionBegin: H_.audioBegin.on, offAudioInterruptionBegin: H_.audioBegin.off,
     onAudioInterruptionEnd: H_.audioEnd.on, offAudioInterruptionEnd: H_.audioEnd.off,
     onWindowResize: H_.resize.on, offWindowResize: H_.resize.off,
-    getLaunchOptionsSync: function () { return { scene: '1001', query: {}, extra: {} }; },
-    getEnterOptionsSync: function () { return { scene: '1001', query: {} }; },
+    getLaunchOptionsSync: function () { return { scene: growthLaunchScene || '1001', query: {}, extra: {} }; },
+    getEnterOptionsSync: function () { return { scene: growthEnterScene || '1001', query: {} }; },
     getPerformance: function () { return performance; },
     triggerGC: function () {},
     setPreferredFramesPerSecond: function (f) { beacon('fps', f); },
@@ -675,9 +681,9 @@
     canIUse: function (name) { if (/Mission|Shortcut/.test(name)) return missionsOn; return typeof tt[name] === 'function'; },
     // Missions: mission=none|reward|fail at load; __setMission(mode) switches it while the game runs (Mabel r8).
     addShortcut: function (o) { missionCalls.addShortcut++; beacon('mission', 'addShortcut'); setTimeout(function () { cb(o, missionMode !== 'fail', missionMode === 'fail' ? { errMsg: 'addShortcut:fail' } : {}); }, 300); },
-    getShortcutMissionReward: function (o) { missionCalls.getShortcutMissionReward++; beacon('mission', 'getShortcutMissionReward'); setTimeout(function () { cb(o, missionMode !== 'fail', missionMode === 'fail' ? { errMsg: 'getShortcutMissionReward:fail' } : { canReceiveReward: missionMode === 'reward' }); }, 200); },
+    getShortcutMissionReward: function (o) { missionCalls.getShortcutMissionReward++; beacon('mission', 'getShortcutMissionReward'); setTimeout(function () { if (growthLaunchScene !== null) beacon('growth-reply', {api: 'getShortcutMissionReward', eligible: missionMode === 'reward'}); cb(o, missionMode !== 'fail', missionMode === 'fail' ? { errMsg: 'getShortcutMissionReward:fail' } : { canReceiveReward: missionMode === 'reward' }); }, growthLaunchScene === null ? 200 : Number(Q.get('growth_delay')) || 200); },
     startEntranceMission: function (o) { missionCalls.startEntranceMission++; beacon('mission', 'startEntranceMission'); setTimeout(function () { cb(o, missionMode !== 'fail', missionMode === 'fail' ? { errMsg: 'startEntranceMission:fail' } : {}); }, 300); },
-    getEntranceMissionReward: function (o) { missionCalls.getEntranceMissionReward++; beacon('mission', 'getEntranceMissionReward'); setTimeout(function () { cb(o, missionMode !== 'fail', missionMode === 'fail' ? { errMsg: 'getEntranceMissionReward:fail' } : { canReceiveReward: missionMode === 'reward' }); }, 200); },
+    getEntranceMissionReward: function (o) { missionCalls.getEntranceMissionReward++; beacon('mission', 'getEntranceMissionReward'); setTimeout(function () { if (growthLaunchScene !== null) beacon('growth-reply', {api: 'getEntranceMissionReward', eligible: missionMode === 'reward'}); cb(o, missionMode !== 'fail', missionMode === 'fail' ? { errMsg: 'getEntranceMissionReward:fail' } : { canReceiveReward: missionMode === 'reward' }); }, growthLaunchScene === null ? 200 : Number(Q.get('growth_delay')) || 200); },
     // login is counted; login=fail makes it fail. The game must never wait on it (Mabel W2_login).
     login: function (o) { o = o || {}; loginCalls++; window.__loginCalls = loginCalls; beacon('login', loginCalls); setTimeout(function () { cb(o, Q.get('login') !== 'fail', Q.get('login') === 'fail' ? { errMsg: 'login:fail' } : { code: 'qa-code', anonymousCode: 'qa-anon' }); }, 200); },
     showModal: showModal,

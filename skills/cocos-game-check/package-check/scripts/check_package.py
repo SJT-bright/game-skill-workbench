@@ -109,6 +109,8 @@ def runtime_gate(files, folder, adapter=None, policy=None, board=None, rework=No
         if isinstance(rework, dict) and rework.get('reuse'):
             import rework_scope
             rerun = rework_scope.to_rerun(rework, names)
+            if 'growth_entry' in names and 'growth_entry' not in rerun:
+                rerun.append('growth_entry')
             summary = (runtime_regression_gate.run(folder, adapter, rerun, policy=policy, board=board) if rerun
                        else None)
             return rework_scope.merge_runtime(rework, summary, names)
@@ -348,6 +350,13 @@ def writer_regressions(files, folder, adapter=None, policy=None, board=None, rew
         out['warnings'].extend(out['runtime_regression'].get('warnings') or [])
     if legacy:
         out['warnings'].extend('%s [legacy game: warning]' % r for r in reasons)
+        # This one suite is required when a legacy game is exported again, too.
+        # Keep the legacy policy for all the other checks.
+        if 'game.js' in files and runtime_regression_gate.predicate('missions', files, {}):
+            runtime = out['runtime_regression'] or {}
+            if not any(r.get('suite') == 'growth_entry' and r.get('passed') is True and r.get('cases')
+                       for r in runtime.get('suites') or []):
+                out['problems'].append('growth_entry: the sidebar and shortcut runtime check must pass on this build')
     else:
         out['problems'] = reasons
     out['blocked'] = bool(out['problems'])

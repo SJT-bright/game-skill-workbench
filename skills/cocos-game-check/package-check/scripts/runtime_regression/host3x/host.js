@@ -36,7 +36,10 @@ const GATE = window.__gateLog = [];
 function gateLog(kind, data) { GATE.push({ t: Math.round(PNow()), kind, data }); }
 window.__gateNow = () => Math.round(PNow());
 const AD = window.__adStats = { created: 0, reused: 0, shown: 0, closedEnded: 0, closedEarly: 0, errors: 0, live: 0, units: {} };
-const STORE = 'RR3:' + (Q.get('store') || 'default') + ':';
+const growthLaunchScene = Q.get('growth_launch');
+let growthEnterScene = growthLaunchScene;
+let growthMissionMode = Q.get('mission') || 'none';
+const STORE = 'RR3:' + (Q.get('growth_store') || Q.get('store') || 'default') + ':';
 const T0 = performance.now();
 const now = () => Math.round(performance.now() - T0);
 const X = window.__H = { log: [], faults: [...F], modals: [], ads: [], firstErr: null, marks: {}, missing: {} };
@@ -278,7 +281,7 @@ main.addEventListener('pointercancel', e => emitTouch('Cancel', e));
 
 // ---------- subpackages ----------
 const GJ = JSON.parse(xhrSync('game.json', 'text'));
-const roots = {}; (GJ.subpackages || []).forEach(s => { roots[s.name] = s.root; });
+const roots = {}; (GJ.subpackages || []).forEach(s => { roots[s.name] = s.root.replace(/\/+$/, '') + '/'; });
 // Real byte size of each subpackage root, computed by server.py from the package on disk.
 const SIZES = (() => { try { return JSON.parse(xhrSync('__host/sizes.json', 'text')) || {}; } catch (_) { return {}; } })();
 const loaded = new Set(), attempts = {};
@@ -376,6 +379,16 @@ function createRewardedVideoAd(opt) {
 
 // ---------- tt ----------
 const showCbs = [], hideCbs = [];
+function growthReply(api, options) {
+  beacon('mission', api);
+  if (growthLaunchScene === null) return cb(options, true, {canReceiveReward: F.has('growth_yes')});
+  const mode = growthMissionMode;
+  setTimeout(() => {
+    beacon('growth-reply', {api, eligible: mode === 'reward'});
+    cb(options, mode !== 'fail', mode === 'fail' ? {errMsg: api + ':fail'} : {canReceiveReward: mode === 'reward'});
+  }, Number(Q.get('growth_delay')) || 200);
+}
+window.__setMission = mode => { growthMissionMode = mode; beacon('mission-mode', mode); };
 const sys = { brand: 'Apple', model: DEV ? DEV.model : 'iPhone', pixelRatio: DPR, devicePixelRatio: DPR, screenWidth: W, screenHeight: H, windowWidth: W, windowHeight: H,
   statusBarHeight: DEV ? DEV.sb : 47, language: 'en', version: '34.0.0', system: 'iOS 17.5', platform: Q.get('os') || 'ios', SDKVersion: Q.get('sdk') || '3.9.0', appName: 'TikTok',
   safeArea: DEV ? { top: DEV.sb, left: 0, right: W, bottom: DEV.safeBottom, width: W, height: DEV.safeBottom - DEV.sb } : { top: 47, left: 0, right: W, bottom: H - 34, width: W, height: H - 81 },
@@ -384,7 +397,8 @@ const tt = {
   env: { USER_DATA_PATH: 'ttfile://user' },
   getSystemInfoSync: () => Object.assign({}, sys, { safeArea: Object.assign({}, sys.safeArea) }),
   getSystemInfo(o) { cb(o, true, tt.getSystemInfoSync()); },
-  getLaunchOptionsSync: () => ({ scene: '011004', query: {}, path: '' }), getEnterOptionsSync: () => ({ scene: '011004', query: {} }),
+  getLaunchOptionsSync: () => ({ scene: growthLaunchScene || '011004', query: {}, path: '' }),
+  getEnterOptionsSync: () => ({ scene: growthEnterScene || '011004', query: {} }),
   getMenuButtonBoundingClientRect: () => {
     const c = DEV ? DEV.cap : { top: 52, left: W - 95, right: W - 8, bottom: 84 }, k = CAPK;
     const r = { top: c.top * k, left: c.left * k, right: c.right * k, bottom: c.bottom * k, width: (c.right - c.left) * k, height: (c.bottom - c.top) * k };
@@ -416,8 +430,8 @@ const tt = {
   showModal, showToast(o) { log('toast', o && o.title); gateLog('toast', o && o.title); beacon('toast', o && o.title); o && cb(o, true, {}); }, hideToast() {}, showLoading(o) { log('showLoading', o && o.title); drawLoading(String((o && o.title) || ''), !!(o && o.mask === true)); o && o.success && setTimeout(() => cb(o, true, {})); }, hideLoading(o) { drawLoading(null); o && setTimeout(() => cb(o, true, {})); },
   vibrateShort(o) { log('vibrate', 'short'); beacon('vibrate', 'short'); o && cb(o, true, {}); }, vibrateLong(o) { beacon('vibrate', 'long'); o && cb(o, true, {}); },
   createRewardedVideoAd,
-  addShortcut(o) { log('growth.addShortcut'); beacon('mission', 'addShortcut'); cb(o, true, {}); }, getShortcutMissionReward(o) { beacon('mission', 'getShortcutMissionReward'); cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
-  startEntranceMission(o) { log('growth.startEntranceMission'); beacon('mission', 'startEntranceMission'); cb(o, true, {}); }, getEntranceMissionReward(o) { beacon('mission', 'getEntranceMissionReward'); cb(o, true, { canReceiveReward: F.has('growth_yes') }); },
+  addShortcut(o) { log('growth.addShortcut'); beacon('mission', 'addShortcut'); cb(o, true, {}); }, getShortcutMissionReward(o) { growthReply('getShortcutMissionReward', o); },
+  startEntranceMission(o) { log('growth.startEntranceMission'); beacon('mission', 'startEntranceMission'); cb(o, true, {}); }, getEntranceMissionReward(o) { growthReply('getEntranceMissionReward', o); },
   setPreferredFramesPerSecond() {}, getBatteryInfoSync: () => ({ level: 80, isCharging: false }), getPerformance: () => performance,
   showKeyboard() {}, hideKeyboard() {}, onKeyboardInput() {}, offKeyboardInput() {}, onKeyboardConfirm() {}, offKeyboardConfirm() {}, onKeyboardComplete() {}, offKeyboardComplete() {},
 };
@@ -436,7 +450,12 @@ GT.TTWebAssembly = Object.assign({}, WebAssembly, {
 
 // lifecycle helpers for tests
 X.hide = () => { log('lifecycle', 'hide'); hideCbs.slice().forEach(f => f({})); };
-X.show = () => { log('lifecycle', 'show'); showCbs.slice().forEach(f => f({ scene: '011004', query: {} })); };
+X.show = scene => {
+  log('lifecycle', 'show');
+  growthEnterScene = typeof scene === 'string' ? scene : null;
+  if (growthLaunchScene !== null) beacon('growth-show-scene', growthEnterScene);
+  showCbs.slice().forEach(f => f({scene: growthEnterScene || '011004', query: {}}));
+};
 // v7.9: the same names as the 2.x host, so a suite drives the lifecycle the same way on both engines
 window.__simHide = X.hide; window.__simShow = X.show;
 // v7.9 (手机检查补全): the next ads end this way (same name as the 2.x host): complete | cancel | error | reject | hang

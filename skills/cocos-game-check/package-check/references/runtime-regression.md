@@ -16,6 +16,11 @@ cd cocos-game-check/package-check/scripts
 python3 -B runtime_regression.py list
 python3 -B runtime_regression.py required --package <解压包或.zip> --adapter <adapter.json>
 python3 -B runtime_regression.py run --package <解压包或.zip> --adapter <adapter.json> [--suites a,b] [--board remake|localize] [--trial <试玩链接>] [--out r.json] [--work 目录]
+```
+
+TikTok `growth_entry` 对含回访任务的 2.x 和 3.x 包均执行，历史游戏重新出包也需要当前证据。Adapter 的 `home` 等到真实首页，`growth_entry.profile_button` 指向实际 Profile 控件，`covered_steps` 用真实触摸打开商店、设置或局内覆盖层，`observe_js` 返回当前的 `{wallet, claimed:{profile, shortcut}, covered, hints}`，`reward_delta` 取本作真实奖励数值。无金币的项目读取对应可量化奖励。套件分别送入侧栏和桌面冷启动、无按钮历史的侧栏热返回、普通返回、资格延迟等事件，核对 SDK 调用、落账和重开，以及可见提示。SDK 由宿主模拟，TikTok 实机应以侧栏启动模式复验。
+
+```bash
 python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapter <adapter.json>] [--out r.json]   # v7.8：只跑试玩链接冒烟
 ```
 

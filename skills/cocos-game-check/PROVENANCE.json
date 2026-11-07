@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-06.english-simple.11.17.6",
+  "revision": "2026-11-07.english-simple.11.17.7",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "e6f0159708a8c37f53ed0534a7096bd59c3081cc0107800e09899389571cc326",
-      "bytes": 18760
+      "sha256": "f0adea3e945a86a600d78c735f0f6c953f342a9dfd5ed82f451e5a96ee7e9dd3",
+      "bytes": 19389
     },
     {
       "path": "agents/openai.yaml",
@@ -121,8 +121,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
-      "bytes": 19011
+      "sha256": "27b0c90c1a6a75502b84a527b8fc8f9ba419664af4b25809ad3d7f245e504845",
+      "bytes": 19078
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -176,8 +176,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "8a7348993f7032d25733268a79c3428b748cd0f404b749673318b23c3da76df7",
-      "bytes": 72296
+      "sha256": "c1043be9890c582981111c29d9da3cc3c3ba25f08d8175e03faaeebc006e20f2",
+      "bytes": 73030
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -196,8 +196,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
-      "sha256": "50857697481249eaf7d7dffa01cf3d4673a29ac384b178d2e23e0006728acefb",
-      "bytes": 58559
+      "sha256": "9d5cf36854c2bfcb4ac00c54bc4237a02fd8f1bc65e5394e3f98175a0bf97b60",
+      "bytes": 59349
     },
     {
       "path": "package-check/scripts/ad_regression/play.html",
@@ -241,8 +241,8 @@
     },
     {
       "path": "package-check/scripts/check_package.py",
-      "sha256": "d51d07707a4db3c13ca6e5c59978001f37c23da3f49524d6d7b3420228c596ac",
-      "bytes": 33825
+      "sha256": "5056cbed88f8d268bd44e453f860a716b113edff3d4dfb14937fa996440ada3e",
+      "bytes": 37742
     },
     {
       "path": "package-check/scripts/ego_test_page.mjs",
@@ -296,8 +296,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/host.js",
-      "sha256": "575f0f7ac2011c5dde40c491b58d881aa08091d5a3962394a95339684b03c759",
-      "bytes": 40994
+      "sha256": "2d3f9ab58ad1ebde35ca46e4f67d9472c53f66fc3d1c8f08566d415c7706081d",
+      "bytes": 41820
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/play.html",
@@ -383,6 +383,16 @@
       "path": "package-check/scripts/runtime_regression/suites/frame_rate.mjs",
       "sha256": "45bb675a0363200f55e46d4989bd01b1f88fae9fb9dd40b3ed605b1367247102",
       "bytes": 7084
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/growth_entry.json",
+      "sha256": "b6e3e218187d9b41679b13f7c9f026487356aba96ca5a9d7d1d783adc127165f",
+      "bytes": 393
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
+      "sha256": "a0e5d14414536fb38b76d19c7a7df7ce870d536dd4e9e2ae1f6bd5fb0ed5e8af",
+      "bytes": 9437
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/image_stall.json",
@@ -686,8 +696,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "f31f0a0afcb8899a9a0e82f2fece34ec8f5656c96624941f042ac9d2ad449d14",
-      "bytes": 111269
+      "sha256": "9fe58f5447a98df82f117d8910aedc2ac267eeac7392f8b2ead25bb4410d645d",
+      "bytes": 112738
     },
     {
       "path": "review/README.md",
@@ -1018,7 +1028,95 @@
           "after_bytes": 13936
         }
       ]
+    },
+    {
+      "id": "2026-11-07.english-simple.11.17.7",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "be2949544f2484cfe6ad6fad613e39e1e9d2433a2bd0b6a68800d6698d40d71f",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "44086f3d51851a559461ad597885bb13a408a9f0b50f32bf4a9461654aeeb3b8",
+          "base_sha256": "23726cd8321bfc9da7dd8c2705a25b3fcb83babb5358a16c60c6d491bcf485c9",
+          "release_sha256": "55112c331fc24ba8dffcb282e5d45f6a404214d8c985557bf478a565c5c3bafd",
+          "after_sha256": "f0adea3e945a86a600d78c735f0f6c953f342a9dfd5ed82f451e5a96ee7e9dd3",
+          "after_bytes": 19389,
+          "method": "merge"
+        },
+        {
+          "path": "package-check/references/calibration-results.json",
+          "before_sha256": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
+          "base_sha256": "a359a0394b7f290b8ae03aefe71b740ff9d63b642bc0b55a27dc18968758f717",
+          "release_sha256": "27b0c90c1a6a75502b84a527b8fc8f9ba419664af4b25809ad3d7f245e504845",
+          "after_sha256": "27b0c90c1a6a75502b84a527b8fc8f9ba419664af4b25809ad3d7f245e504845",
+          "after_bytes": 19078,
+          "method": "release"
+        },
+        {
+          "path": "package-check/references/runtime-regression.md",
+          "before_sha256": "8a7348993f7032d25733268a79c3428b748cd0f404b749673318b23c3da76df7",
+          "base_sha256": "316f0281c9293c8e26fca6c7c3a476328c341240006083ef82616df6742ede9a",
+          "release_sha256": "717fa5f1cfd4f458b2fad7256098b8018450f60efe8355b066ba7a4857c2cbee",
+          "after_sha256": "c1043be9890c582981111c29d9da3cc3c3ba25f08d8175e03faaeebc006e20f2",
+          "after_bytes": 73030,
+          "method": "merge"
+        },
+        {
+          "path": "package-check/scripts/ad_regression/host.js",
+          "before_sha256": "50857697481249eaf7d7dffa01cf3d4673a29ac384b178d2e23e0006728acefb",
+          "base_sha256": "50857697481249eaf7d7dffa01cf3d4673a29ac384b178d2e23e0006728acefb",
+          "release_sha256": "9d5cf36854c2bfcb4ac00c54bc4237a02fd8f1bc65e5394e3f98175a0bf97b60",
+          "after_sha256": "9d5cf36854c2bfcb4ac00c54bc4237a02fd8f1bc65e5394e3f98175a0bf97b60",
+          "after_bytes": 59349,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/check_package.py",
+          "before_sha256": "d8757d22dc3ff862fd53a7d284adb2895d2664402becde867a29cfefc47e21ab",
+          "base_sha256": "d51d07707a4db3c13ca6e5c59978001f37c23da3f49524d6d7b3420228c596ac",
+          "release_sha256": "284c255be11f427162c23313ffeef89d7ea269767390c231bd8b02a2c7baa17e",
+          "after_sha256": "5056cbed88f8d268bd44e453f860a716b113edff3d4dfb14937fa996440ada3e",
+          "after_bytes": 37742,
+          "method": "merge"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/host3x/host.js",
+          "before_sha256": "575f0f7ac2011c5dde40c491b58d881aa08091d5a3962394a95339684b03c759",
+          "base_sha256": "575f0f7ac2011c5dde40c491b58d881aa08091d5a3962394a95339684b03c759",
+          "release_sha256": "2d3f9ab58ad1ebde35ca46e4f67d9472c53f66fc3d1c8f08566d415c7706081d",
+          "after_sha256": "2d3f9ab58ad1ebde35ca46e4f67d9472c53f66fc3d1c8f08566d415c7706081d",
+          "after_bytes": 41820,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/growth_entry.json",
+          "before_sha256": null,
+          "base_sha256": null,
+          "release_sha256": "b6e3e218187d9b41679b13f7c9f026487356aba96ca5a9d7d1d783adc127165f",
+          "after_sha256": "b6e3e218187d9b41679b13f7c9f026487356aba96ca5a9d7d1d783adc127165f",
+          "after_bytes": 393,
+          "method": "release"
+        },
+        {
+          "path": "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
+          "before_sha256": null,
+          "base_sha256": null,
+          "release_sha256": "a0e5d14414536fb38b76d19c7a7df7ce870d536dd4e9e2ae1f6bd5fb0ed5e8af",
+          "after_sha256": "a0e5d14414536fb38b76d19c7a7df7ce870d536dd4e9e2ae1f6bd5fb0ed5e8af",
+          "after_bytes": 9437,
+          "method": "release"
+        },
+        {
+          "path": "references/tiktok-fixed-adaptation.md",
+          "before_sha256": "f5198f80bad9c73af197dd1290c01820f42baa988e737e84f55bff04bff70a1e",
+          "base_sha256": "f45c51013154cafec3c00fe8bfd1e837849257e1280ecb7547693127c664da7c",
+          "release_sha256": "fd64f85af6bfe23b0d05cfdee700f353d5c80f7b9174b1cbfb7d58f28a982213",
+          "after_sha256": "9fe58f5447a98df82f117d8910aedc2ac267eeac7392f8b2ead25bb4410d645d",
+          "after_bytes": 112738,
+          "method": "merge"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "6168ee73ecd4f94fb6e7720ad5db1b17dac5745714f6e7ce793cd5f443ecdb72"
+  "previous_local_provenance_sha256": "a2e86d8fb543156699ee3219ccd57ba29f9ae0b4ed032be3d1ab19207f5d8780"
 }

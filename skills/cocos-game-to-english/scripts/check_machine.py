@@ -8,8 +8,9 @@ the Chinese original is exported, so a missing tool is found in the first minute
 
 Checks: Python 3.8+; Pillow (needed to package: image conversion, art checks); numpy and ffmpeg (recommended: some
 art checks and the sound loudness check say "not measured" without them, English games only get a warning); Node.js
-18+ and a browser the packaging checks can drive (Ego Lite if installed, else Chrome, Edge or Chromium, see
-browser_env.py; --quick skips starting the browser once); the Cocos Creator for the project (find_creator.py).
+18+ (recommended for standalone Node checks), official Ego Lite for Agent browser tests, and Cocos Creator
+for the project (find_creator.py). The Ego check only verifies launcher discovery; the actual test still requires
+a working isolated TaskSpace. --quick is retained for compatibility.
 It installs nothing. Every missing item says what it breaks and how to add it, so the AI can ask the user once and fix it.
 Exit 0 everything required is there, 1 something required is missing, 2 bad input.
 """
@@ -71,19 +72,12 @@ def collect(project=None, quick=False):
                     '出包时量不了声音响度（英化游戏只警告，不拦包）'))
     chosen = browser_env.plan('auto') if quick else browser_env.check('auto')
     node, major = browser_env.node_path()
-    if chosen.get('route') == 'ego':
-        rows.append(row('出包检查用的浏览器', True, True, browser_env.say(chosen)))
-        if not node:
-            rows.append(row('Node.js', False, False, '没有', '到 https://nodejs.org 装 LTS 版',
-                            'Ego 用不了时没法改用 Chrome/Edge 跑检查'))
-    else:
-        rows.append(row('Node.js', node and (major or 0) >= browser_env.MIN_NODE, True,
-                        '%s（%s）' % (major, node) if node else '没有', '到 https://nodejs.org 装 LTS 版，装好后新开终端',
-                        '广告回归、运行时检查、截图都要它驱动浏览器'))
-        ok = chosen.get('route') == 'chrome' and not chosen.get('problem')
-        rows.append(row('出包检查用的浏览器', ok, True, browser_env.say(chosen),
-                        '装 Google Chrome（https://www.google.com/chrome），Windows 自带的 Edge 也行；装在别处的设 '
-                        'CDP_BROWSER=<浏览器程序的完整路径>', '广告回归、运行时检查、截图、出包'))
+    rows.append(row('Node.js', node and (major or 0) >= browser_env.MIN_NODE, False,
+                    '%s（%s）' % (major, node) if node else '没有', '到 https://nodejs.org 装 LTS 版',
+                    '单独运行的 Node.js 检查'))
+    rows.append(row('出包检查用的浏览器', chosen.get('route') == 'ego', True, browser_env.say(chosen),
+                    '按包内 ego-browser 指南配置官方 Ego Lite。不可用时浏览器项目保留未测',
+                    '广告回归、运行时检查、截图和出包浏览器验收'))
     if project:
         try:
             r = find_creator.report(project)

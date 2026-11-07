@@ -18,12 +18,11 @@ import threading
 import time
 
 HERE = Path(__file__).resolve().parent
-RUNTIME = HERE / 'cdp_browser.mjs'
 MIN_NODE = 18
 ENV_CODE = 2
 SPACE_ENV = 'BROWSER_ENV_SPACE_PREFIX'      # <game>-<pid> of the browser_env run; space_name() builds on it
 GAME_ENV = 'BROWSER_ENV_GAME'
-EVENTS_ENV = 'BROWSER_ENV_EVENTS'           # JSON lines: one row per Ego -> Chrome switch
+EVENTS_ENV = 'BROWSER_ENV_EVENTS'           # JSON lines for Ego diagnostics
 FALLBACK_NODE_ENV = 'BROWSER_ENV_FALLBACK_NODE'
 FALLBACK_BROWSER_ENV = 'BROWSER_ENV_FALLBACK_BROWSER'
 STALL_ENV = 'BROWSER_ENV_EGO_STALL_S'
@@ -32,7 +31,7 @@ DEFAULT_EGO_STALL_S = 180                   # below watched_run's 240 s, so the 
 EGO_STUCK = re.compile(r'task ?space (?:\S+ )?not found|EGO_TASK_SPACE\w*|Target closed|Session closed|LaunchServices'
                        r'|(?:CDP|protocol|screenshot|captureScreenshot|navigat\w*|goto|page\.\w+|Page\.\w+|waitFor\w*)'
                        r'[^\n]{0,80}tim(?:ed|e)[ -]?out|tim(?:ed|e)[ -]?out[^\n]{0,80}(?:CDP|screenshot|navigat|page|goto)'
-                       # R4N3 (补查2 第 1 组 1d): host-side stalls seen in 方块收割者 / 火箭三消 / 合成进化恐龙 -> 环境卡住，换 Chrome 重试
+                       # R4N3 (补查2 第 1 组 1d): host-side stalls seen in 方块收割者 / 火箭三消 / 合成进化恐龙 -> preserve the first Ego host error
                        r'|(?<![\w.])-10005(?!\d)|webContents[^\n]{0,60}\bnull\b|\bnull\b[^\n]{0,60}webContents'
                        r'|Runtime\.evaluate[^\n]{0,80}tim(?:ed|e)[ -]?out|aborted before dispatch', re.I)
 # R4N3: the same host-stall texts as EGO_STUCK's last line, for tools that do not run through the relay
@@ -96,7 +95,7 @@ def node_path():
 
 
 def browser_candidates(env=None, platform=None):
-    """Same search order as cdp_browser.mjs."""
+    """Find desktop browser executables for compatibility diagnostics."""
     env = os.environ if env is None else env
     platform = sys.platform if platform is None else platform
     found = []
@@ -251,7 +250,7 @@ def _pump(argv, env, data, stall, out, err):
 
 
 def ego_stuck_reason(code, stderr_text, stalled):
-    """Why this Ego call counts as "Ego stuck" (switch to Chrome), or None (the result stands, pass or fail)."""
+    """Why this Ego call counts as "Ego stuck" or None (the result stands, pass or fail)."""
     if stalled:
         return 'Ego %d 秒没有任何输出' % stalled
     if code != 0:
@@ -290,7 +289,7 @@ def say(chosen):
 def main(argv=None):
     ap = argparse.ArgumentParser(description='浏览器测试只使用官方 Ego；Chrome 仅用于用户试玩链接')
     ap.add_argument('--browser', choices=['auto', 'ego', 'chrome'], default='auto')
-    ap.add_argument('--check', action='store_true', help='只说用哪个浏览器，并启动一次确认能用')
+    ap.add_argument('--check', action='store_true', help='只检查官方 Ego 启动器的可发现性')
     ap.add_argument('--json', action='store_true')
     ap.add_argument('--game', help='游戏名：测试空间名用它加进程号（不写就从命令里的 --project/--package 等猜）')
     ap.add_argument('--report', type=Path, help='写一份 JSON：Ego 路线、实际退出码及禁用回退状态')
@@ -299,7 +298,11 @@ def main(argv=None):
     a = ap.parse_args(argv)
     command = a.command[1:] if a.command[:1] == ['--'] else a.command
     if a.relay_ego:
-        return relay(a.relay_ego, command)
+        official = find_ego()
+        if not official or Path(a.relay_ego).resolve() != Path(official).resolve():
+            print('Ego 测试只能使用 PATH 中的官方启动器。', file=sys.stderr)
+            return ENV_CODE
+        return relay(official, command)
     if a.check or not command:
         chosen = check(a.browser)
         print(json.dumps(chosen, ensure_ascii=False, indent=2) if a.json else say(chosen))
@@ -307,7 +310,7 @@ def main(argv=None):
     chosen = plan(a.browser)
     if not chosen['route']:
         print('环境不完整：' + chosen['problem'], file=sys.stderr)
-        return ENV_CODE
+        return finish_report(chosen, {}, ENV_CODE, a.report)
     folder = tempfile.mkdtemp(prefix='ego-compat-')
     try:
         env = environment_for(chosen, folder, a.game or guess_game(command))
@@ -327,6 +330,8 @@ def finish_report(chosen, env, code, report=None):
         doc = {'route': chosen['route'], 'browser': chosen.get('ego_browser'), 'space_prefix': env.get(SPACE_ENV),
                'switched_to_chrome': False, 'fallbacks': [], 'fallback_available': False, 'exit_code': code,
                'browser_policy': 'ego_only_tests_20261106'}
+        if not chosen['route']:
+            doc.update(status='not_run', reason=chosen.get('problem'))
         Path(report).write_text(json.dumps(doc, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     return code
 

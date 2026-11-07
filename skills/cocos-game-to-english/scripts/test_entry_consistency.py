@@ -38,7 +38,7 @@
    carry the English exception where the old sentence stands (2026-10-30 timing reports: 3.5-5 h before the link).
 12. (10.2.10, Saul 2026-10-31 "我的英化skill基本是给别人用的……各个步骤都要具有不同电脑的通用性") Any computer: a machine
    check first, Creator found by script (Dashboard record, usual folders, COCOS_CREATOR), every browser command wrapped
-   by browser_env.py (Ego when installed, else Chrome/Edge/Chromium), the 3.x entry-page fix, Windows wording, and
+   by browser_env.py (official Ego Lite for Agent tests), the 3.x entry-page fix, Windows wording, and
    what to do without an image tool or Grok; no Saul-only command or path left in the entry and the version doc.
 13. (10.2.12, Saul 2026-11-01 "能不能在skill放一个阶段用时的汇报……全面一点设计") Timing report: every stage and step is
    timed by stage_timer.py; the entry says when to run which command in each stage, the step names and reference times
@@ -60,7 +60,6 @@ Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_entry_consistency.py
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -714,7 +713,7 @@ class StructureAndReadingMap(unittest.TestCase):
 
 class PortableOnAnyComputer(unittest.TestCase):
     """10.2.10 (Saul 2026-10-31): the English Skill is used on other people's computers: a machine check first, Creator
-    found by script, every browser command wrapped so it runs without Ego, Windows wording, and what to do without an
+    found by script, browser tests routed through official Ego Lite (2026-11-06), Windows wording, and what to do without an
     image tool or Grok."""
     TOOLS = ('check_machine.py', 'find_creator.py', 'browser_env.py', 'fix_web_entry_3x.py')
 
@@ -734,16 +733,38 @@ class PortableOnAnyComputer(unittest.TestCase):
         self.assertIn('check_machine.py', [l for l in summary.splitlines() if l.startswith('- ①')][0])
 
     def test_section_covers_every_portability_point(self):
-        part = self.text().split('\n## 换电脑也能用', 1)[1].split('\n## ', 1)[0]
+        text = self.text()
+        part = text.split('\n## 换电脑也能用', 1)[1].split('\n## ', 1)[0]
         for phrase in ('**「Saul」是谁**', '正在用这个 Skill 的人', 'check_machine.py --project', 'find_creator.py --project',
-                       'find_creator.py --busy', 'fix_web_entry_3x.py --export', 'browser_env.py --`', '**不用让用户装 Ego。**',
-                       '--browser chrome', '不要让用户重启 Ego', 'make_tiktok_zip.py', 'build_checked_zip.py', 'check_package.py',
-                       'prepare_delivery.py', 'ad_regression.py', 'runtime_regression.py', 'serve_preview.py --keep',
-                       'chrome_touch.py', '逐条相同', '**自己看画面**', 'page_errors', '**Windows**', '`python3` 写成 `python`',
+                       'find_creator.py --busy', 'fix_web_entry_3x.py --export', '**Windows**', '`python3` 写成 `python`',
                        '`pgrep` 用 `find_creator.py --busy`', '`/usr/bin/python3` 用 `python`', '`cp -c`', '`open -R`',
                        '**试玩链接打不开窗口**', '**没有生图工具**', 'art-todo.json', 'record_manual.py', '**没有 Grok**',
                        '**只在 Saul 电脑上有的路径**'):
             self.assertIn(phrase, part, phrase)
+
+        policy = text.split('\n## 浏览器测试路线', 1)[1].split('\n## ', 1)[0]
+        for phrase in ('**Ego Lite** 独立 TaskSpace', 'Google Chrome 只用于交给用户亲自试玩',
+                       '不用 Playwright', '保留未测'):
+            self.assertIn(phrase, policy)
+
+        browser = next(line for line in part.splitlines() if line.startswith('- **浏览器**'))
+        for phrase in ('browser_env.py -- <命令>', '只选官方 Ego', '不回退 Chrome', '保留未测',
+                       '用户试玩由 `serve_preview.py --keep` 另开独立 Chrome 手机框'):
+            self.assertIn(phrase, browser)
+        visual = next(line for line in part.splitlines() if line.startswith('- **自己看画面**'))
+        self.assertIn('均在 Ego 中完成', visual)
+        self.assertIn('不使用 Chrome 补验', visual)
+        diagnostics = next(line for line in part.splitlines() if line.startswith('- **浏览器卡住和构建沙箱'))
+        self.assertIn('在 Ego 内排查', diagnostics)
+        self.assertIn('不能自动换 Chrome', diagnostics)
+        for legacy in ('--browser chrome', '--user-approved-chrome', '不用让用户装 Ego'):
+            self.assertNotIn(legacy, part)
+
+        # Packaging and regression tools are now described where they run.
+        stages = self.stages()
+        self.assertIn('prepare_delivery.py', stages[1])
+        for tool in ('make_tiktok_zip.py', 'build_checked_zip.py', 'ad_regression.py', 'runtime_regression.py'):
+            self.assertIn(tool, stages[5])
 
     def test_stages_use_the_tools(self):
         st = self.stages()
@@ -769,12 +790,8 @@ class PortableOnAnyComputer(unittest.TestCase):
         for name in self.TOOLS:
             r = subprocess.run([sys.executable, '-B', str(HERE / name), '--help'], capture_output=True, text=True, env=env)
             self.assertEqual(r.returncode, 0, name + ': ' + r.stderr[-300:])
-        self.assertTrue((HERE / 'cdp_browser.mjs').is_file())
+        self.assertFalse((HERE / 'cdp_browser.mjs').exists())
         self.assertTrue((HERE / 'test_portable_tools.py').is_file())
-        node = shutil.which('node')
-        if node:
-            r = subprocess.run([node, str(HERE / 'cdp_browser.mjs'), '--help'], capture_output=True, text=True)
-            self.assertEqual(r.returncode, 0, r.stderr[-300:])
 
     def test_readme_and_install_text_name_the_tools(self):
         if not README.is_file():
@@ -782,10 +799,14 @@ class PortableOnAnyComputer(unittest.TestCase):
         readme = README.read_text(encoding='utf-8')
         for name in self.TOOLS:
             self.assertIn(name, readme, name)
-        if CODEX_TEXT.is_file():
-            codex = CODEX_TEXT.read_text(encoding='utf-8')
-            self.assertIn('check_machine.py', codex)
-            self.assertIn('不用装 Ego', codex)
+        self.assertTrue(CODEX_TEXT.is_file())
+        codex = CODEX_TEXT.read_text(encoding='utf-8')
+        self.assertIn('check_machine.py', codex)
+        for text in (readme, codex):
+            for phrase in ('Ego Lite', '保留未测', 'Chrome 只供用户亲自试玩'):
+                self.assertIn(phrase, text)
+            for legacy in ('不用装 Ego', '用 Chrome 或 Edge', '--browser chrome'):
+                self.assertNotIn(legacy, text)
 
 
 class TimingReport(unittest.TestCase):

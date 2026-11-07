@@ -2,16 +2,14 @@
 """English pack 10.2.10 (Saul 2026-10-31: the English Skill must work on other people's computers).
 
 find_creator.py finds Creator on macOS and Windows layouts and in the Dashboard's own list, picks the exact version or
-the nearest patch of the same minor version, and builds 2.x / 3.x commands; browser_env.py uses Ego when it is there and
-otherwise a Chrome/Edge launcher that the pack's tools find exactly like Ego; check_machine.py names every missing item
-with what it breaks and how to add it; fix_web_entry_3x.py writes only a missing 3.x entry page and refuses templates it
-does not know; cdp_browser.mjs really drives a browser when one is installed (skipped otherwise).
+the nearest patch of the same minor version, and builds 2.x / 3.x commands. browser_env.py selects official Ego Lite
+and refuses missing or unsupported routes before running any test. check_machine.py reports what is missing and how
+to add it. fix_web_entry_3x.py writes only a missing 3.x entry page and refuses unknown templates.
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_portable_tools.py
 """
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -130,46 +128,43 @@ class FindCreator(unittest.TestCase):
 
 class BrowserEnv(unittest.TestCase):
     def test_ego_is_used_when_installed(self):
-        with mock.patch.object(BE, 'find_ego', return_value='/u/bin/ego-browser'):
+        with mock.patch.object(BE, 'find_ego', return_value='/u/bin/ego-browser'), \
+                mock.patch.dict(os.environ, {'EGO_BROWSER': ''}):
             self.assertEqual(BE.plan('auto'), {'route': 'ego', 'ego_browser': '/u/bin/ego-browser'})
+            self.assertEqual(BE.plan('ego'), BE.plan('auto'))
 
-    def test_chrome_route_and_plain_problems(self):
+    def test_no_ego_does_not_fall_back(self):
         with mock.patch.object(BE, 'find_ego', return_value=None), \
-                mock.patch.object(BE, 'node_path', return_value=('/n/node', 22)), \
-                mock.patch.object(BE, 'find_browser', return_value='/b/chrome'):
-            p = BE.plan('auto')
-        self.assertEqual((p['route'], p['browser']), ('chrome', '/b/chrome'))
-        with mock.patch.object(BE, 'find_ego', return_value=None), \
-                mock.patch.object(BE, 'node_path', return_value=(None, None)), \
-                mock.patch.object(BE, 'find_browser', return_value=None):
-            p = BE.plan('auto')
-        self.assertIsNone(p['route'])
-        self.assertIn('nodejs.org', p['problem'])
-        self.assertIn('Chrome', p['problem'])
-        with mock.patch.object(BE, 'find_ego', return_value=None):
-            self.assertIsNone(BE.plan('ego')['route'])
+                mock.patch.dict(os.environ, {'EGO_BROWSER': '', 'CDP_BROWSER': '/b/chrome'}), \
+                mock.patch.object(BE.subprocess, 'run') as spawn:
+            for mode in ('auto', 'ego'):
+                plan = BE.plan(mode)
+                self.assertIsNone(plan['route'])
+                self.assertIn('ego-browser', plan['problem'])
+                self.assertEqual(BE.main(['--browser', mode, '--', 'test-command']), BE.ENV_CODE)
+            spawn.assert_not_called()
 
-    def test_windows_browser_search(self):
-        env = {'PROGRAMFILES': 'C:\\Program Files', 'PROGRAMFILES(X86)': 'C:\\Program Files (x86)', 'LOCALAPPDATA': 'C:\\L'}
-        c = BE.browser_candidates(env, 'win32')
-        self.assertTrue(any(x.endswith('msedge.exe') for x in c))
-        self.assertTrue(any(x.endswith('chrome.exe') for x in c))
+    def test_explicit_chrome_and_fake_ego_override_are_refused(self):
+        with mock.patch.object(BE, 'find_ego', return_value='/u/bin/ego-browser'), \
+                mock.patch.dict(os.environ, {'EGO_BROWSER': '/b/fake-ego'}), \
+                mock.patch.object(BE.subprocess, 'run') as spawn:
+            self.assertEqual(BE.main(['--browser', 'chrome', '--', 'test-command']), BE.ENV_CODE)
+            self.assertIsNone(BE.plan()['route'])
+            self.assertIn('EGO_BROWSER', BE.plan()['problem'])
+            self.assertEqual(BE.main(['--', 'test-command']), BE.ENV_CODE)
+            spawn.assert_not_called()
 
-    def test_launchers_are_found_like_ego(self):
-        with tempfile.TemporaryDirectory() as td:
-            chosen = {'route': 'chrome', 'node': sys.executable, 'browser': '/b/chrome'}
-            env = BE.environment_for(chosen, td)
-            sh, cmd = Path(td) / 'ego-browser', Path(td) / 'ego-browser.cmd'
-            self.assertTrue(sh.is_file() and cmd.is_file())
-            self.assertTrue(os.access(sh, os.X_OK))
-            self.assertIn('%*', cmd.read_text(encoding='utf-8'))
-            self.assertEqual(env['EGO_BROWSER'], str(cmd if os.name == 'nt' else sh))
-            self.assertTrue(env['PATH'].startswith(td))
-            self.assertEqual(shutil.which('ego-browser', path=env['PATH']), str(cmd if os.name == 'nt' else sh))
-
-    def test_missing_environment_exits_2(self):
-        with mock.patch.object(BE, 'plan', return_value={'route': None, 'problem': 'x'}):
-            self.assertEqual(BE.main(['--', 'true']), 2)
+    def test_wrapped_environment_binds_the_official_ego_without_fallback(self):
+        with tempfile.TemporaryDirectory() as td, \
+                mock.patch.dict(os.environ, {BE.FALLBACK_BROWSER_ENV: '/b/chrome', BE.FALLBACK_NODE_ENV: '/n/node'}):
+            chosen = {'route': 'ego', 'ego_browser': '/u/bin/ego-browser'}
+            env = BE.environment_for(chosen, td, game='Portable Demo')
+            self.assertEqual(env['EGO_BROWSER'], chosen['ego_browser'])
+            self.assertEqual(env[BE.GAME_ENV], 'Portable Demo')
+            self.assertEqual(env['PATH'], os.environ['PATH'])
+            self.assertNotIn(BE.FALLBACK_BROWSER_ENV, env)
+            self.assertNotIn(BE.FALLBACK_NODE_ENV, env)
+            self.assertFalse(list(Path(td).glob('ego-browser*')))
 
 
 class CheckMachine(unittest.TestCase):
@@ -190,12 +185,13 @@ class CheckMachine(unittest.TestCase):
         self.assertIn('可以开工', CM.say(rows))
 
     def test_missing_required_items_are_named_with_a_fix(self):
-        CM, rows = self.collect({'route': None, 'problem': '没有 Chrome'}, [], spec=False, ffmpeg=None, node=(None, None))
+        CM, rows = self.collect({'route': None, 'problem': '找不到官方 Ego Lite'}, [], spec=False, ffmpeg=None, node=(None, None))
         missing = {r['name'] for r in rows if r['required'] and not r['ok']}
-        self.assertEqual(missing, {'Pillow', 'Node.js', '出包检查用的浏览器', 'Cocos Creator'})
+        self.assertEqual(missing, {'Pillow', '出包检查用的浏览器', 'Cocos Creator'})
         text = CM.say(rows)
         self.assertIn('缺（必须）', text)
         self.assertIn('缺（建议）  numpy', text)
+        self.assertIn('缺（建议）  Node.js', text)
         self.assertIn('问一句能不能装', text)
         self.assertTrue(all(r['fix'] for r in rows if not r['ok']))
 
@@ -255,25 +251,6 @@ class FixWebEntry(unittest.TestCase):
         win = self.FW.template_dirs('C:/CocosDashboard/resources/.editors/Creator/3.7.1/CocosCreator.exe')
         self.assertTrue(any(str(p).replace('\\', '/').endswith('3.7.1/resources/resources/3d/engine/templates/web-mobile')
                             for p in win), win)
-
-
-@unittest.skipUnless(shutil.which('node') and BE.find_browser(), 'needs Node and Chrome/Edge/Chromium')
-class RealBrowser(unittest.TestCase):
-    def test_tools_run_through_the_launcher(self):
-        with tempfile.TemporaryDirectory() as td:
-            entry = Path(td) / 'entry.mjs'
-            entry.write_text("""const t = await taskSpace('portable-test'); const p = t.page('p1');
-await p.goto('data:text/html,<!doctype html><script>window.v=40</script>');
-const r = { add: await p.evaluate((a) => window.v + a, 2), iife: await p.evaluate('(function(){return 1})()') };
-await p.screenshot({ path: %s }); await t.finish({ keep: [] });
-(await import('node:fs')).writeFileSync(%s, JSON.stringify(r));""" % (
-                json.dumps(str(Path(td) / 's.png')), json.dumps(str(Path(td) / 'r.json'))), encoding='utf-8')
-            code = BE.main(['--browser', 'chrome', '--', sys.executable, '-c',
-                            'import os,subprocess,sys; sys.exit(subprocess.run([os.environ["EGO_BROWSER"], "nodejs", "-e", '
-                            '"await import(" + %r + ")"]).returncode)' % json.dumps(entry.as_uri())])
-            self.assertEqual(code, 0)
-            self.assertEqual(json.loads((Path(td) / 'r.json').read_text()), {'add': 42, 'iife': 1})
-            self.assertGreater((Path(td) / 's.png').stat().st_size, 500)
 
 
 if __name__ == '__main__':

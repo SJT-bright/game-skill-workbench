@@ -9,16 +9,15 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 ## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
 
-所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见[浏览器测试规则](../remake-core/references/browser-testing-policy.md)。
 
-
-修订：`2026-11-06.english-simple.11.17.4`（英文美工按状态和视口决定重拍，同页多状态分别检查，旧截图保留原始来源。历次改动见[版本历史](版本历史.md)。）
+修订：`2026-11-06.english-simple.11.17.6`（正式包的浏览器测试和自检统一采用 Ego Lite。历次改动见[版本历史](版本历史.md)。）
 
 共用功能验收与故障复验按[实际触发与玩家结果](../cocos-game-check/test/README.md)选测。
 
 **每次给测试包都复查分包体积（用户 2026-11-05）**：新旧、外来、同版重发、仅改名或用户仅索取已有文件均不豁免；交最终 ZIP 前按[统一检查的本次体积复查](../cocos-game-check/package-check/references/fresh-upload-size.md)重新读最终文件并生成新回执。不复用旧体积结果，不以 CRC/哈希或 Web 可玩替代；局部返工只查改动也不能跳过本项。失败/未跑不交包，已被平台拒绝的同字节 ZIP 不得原样重发。
 
-**减少美工返工（11.17.3）**：新按钮/切图先列全部使用页的 CSS 尺寸预算；共享数字字体先定字距和最长串，再批量接入。第一件检查旧 Widget/Layout 回写、资源角色错绑、状态图重复染色和点击区。按视口连续采新截图减少启动；旧图沿用需独立整页一致、本轮受控存档和完整通过记录。规则与命令仍在下方制作/采集引用中，只做美工，不扩大玩法。
+**减少美工返工（11.17.5）**：第 2 / 4 阶段先按[少返工的制作与采集](../remake-art/references/art-iteration-workflow.md)盘点共享用途、定 CSS / 字体预算，显式选首件整页检查后再铺同类；每批结束或失败时按工具计划分清原料、接入、构建与采集原因。同因修正合批，保持有效轮次，连续采新截图；旧图沿用仍由原采集门禁决定。只做美工，不扩大玩法或缩减每轮试玩前的完整检查。
 
 **美工制作即检查（11.17.2）**：第 2 / 4 阶段按[制作与检测共用证据](../remake-art/references/production-check-link.md)执行。固定按钮和切片由生成工具登记约束，第一件接入即调用原图文/像素检查；第 3 阶段复用输入与规则均未变化的计算。首件不发试玩回执，完整美工与中文检查时点不变。
 
@@ -58,7 +57,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 ## 换电脑也能用（10.2.10，Saul 2026-10-31）
 
-英化包是给别人用的，会装在别人的电脑上（macOS 或 Windows）。照下面做，每一步在哪台电脑上都能跑（Saul 2026-10-31：「我的英化skill基本是给别人用的……各个步骤都要具有不同电脑的通用性，不要出现ego这些不兼容，无法测试……cocos无法正常使用等问题」）：
+英化包供 macOS 和 Windows 使用。开工先检查本机依赖。没有可用的 Ego Lite 时，浏览器相关项目记为未测，离线检查可继续。
 
 - **「Saul」是谁**：本包写的「Saul」指正在用这个 Skill 的人（给你游戏、试玩、做决定的那个人）。「Saul 定的」规则照样遵守；回复照样用大白话，要他定的只出选择题，跑命令、找路径、装东西都由你来做。
 - **开工先查电脑**：第 1 阶段第一件事跑 `python3 <skills>/cocos-game-to-english/scripts/check_machine.py --project <中文原工程>`，一分钟内查完 Python、Pillow、numpy、ffmpeg、Node.js、出包检查用的浏览器和这款游戏的 Cocos Creator。缺必须的，用大白话告诉用户缺什么、影响哪一步，问一句能不能装；同意后由你来装，装好再跑一次。缺的东西不影响的步骤先接着做。它打印的第一行「引擎路线」不是「照常开工」时，先照它做（2.0～2.3 复制一份副本升到 2.4.15；3.0～3.5 先装同一小版本的 Creator 导出原版），零件只装它列出的那些，再做别的。它报「Cocos 编辑器配置能解析」不通过时，先关 Creator，把报出的文件改名备份，再开 Creator。
@@ -66,7 +65,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 - **浏览器**：浏览器测试、截图、美术、试玩链接冒烟及出包命令用 `python3 <skills>/cocos-game-to-english/scripts/browser_env.py -- <命令>`；启动器只选官方 Ego，不创建 Chrome 替身、不回退 Chrome。没装或起不来时按 ego-browser 指南诊断并保留未测。用户试玩由 `serve_preview.py --keep` 另开独立 Chrome 手机框。
 - **自己看画面**：首次进首页、开始一局及后续视觉验收均在 Ego 中完成；没有 Ego 或操作失败时先修复 Ego 环境，不使用 Chrome 补验。
 - **Windows**：`python3` 写成 `python`（或 `py -3`）；路径有空格或中文时整段加引号。本包和 ad-boost 里 macOS 才有的写法换掉：`pgrep` 用 `find_creator.py --busy`；`/usr/bin/python3` 用 `python`；`cp -c`（macOS 的快速复制）用普通复制；`open -R`（在访达里选中文件）改成直接给完整路径；构建卡住时加的 `--no-sandbox --disable-gpu-sandbox --disable-gpu` 是 macOS 的写法，Windows 先不加。
-- **浏览器卡住和构建沙箱（简化.11.14）**：Ego 卡住时保留首个错误，在 Ego 内排查；不能自动换 Chrome。构建前先跑 `find_creator.py --preflight`，退出 3 就别构建、也别重试，换不受沙箱限制的终端；构建命令照 find_creator 打印的原样用（TikTok 那条前后各带一次 sync，sync 没过不构建；3.x 出包命令带 `configPath=docs/startup/build-config-3x.json`），别删末尾三个参数，也别只复制 Creator 那半条。
+- **浏览器卡住和构建沙箱**：浏览器命令可用 `browser_env.py --game <游戏名> --report <文件> -- <命令>` 记录路线。Ego 卡住时保留首个错误，在 Ego 内排查；不能自动换 Chrome。构建前先跑 `find_creator.py --preflight`，退出 3 就别构建、也别重试，换不受沙箱限制的终端；构建命令照 find_creator 打印的原样用（TikTok 那条前后各带一次 sync，sync 没过不构建；3.x 出包命令带 `configPath=docs/startup/build-config-3x.json`），别删末尾三个参数，也别只复制 Creator 那半条。
 - **试玩链接打不开窗口**：`serve_preview.py` 会试着开一个 Google Chrome 窗口；没装 Chrome 时窗口不开，服务照样在。把 `http://127.0.0.1:端口/` 链接发给用户，用户用任何浏览器（Edge、Safari 都行）打开。
 - **没有生图工具**：有核准整词字图和同款干净无字底时，先用包内[固定英文按钮生成器](../remake-art/references/fixed-caption-button.md)完成；需要新画的资产再用生图工具生成（代码画的不算）。你没有生图工具时，先用大白话告诉用户：这台电脑上的 AI 不能生成图片；再出一道选择题：「换一个能生图的 AI 来做美术这一步」「先把别的做完给试玩链接，带中文的图先留原图」。选第二个，就把要换的图列进 `docs/english/art-todo.json`（每张：图片路径、在哪一页、中文原文、英文定稿、尺寸），其余照常做；图里还有中文的出不了包（图片复核记录会拦）。ad-boost 的美术流水线没有 Codex 时退出码 3，照 ad-boost 说的用你自己的生图工具出图，再用 `record_manual.py` 补记录。
 - **没有 Grok**：`grok-image-review` 只是帮忙读图上的字，没有就自己打开原图看。
@@ -171,13 +170,16 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 5. **全量检查和出包（Saul 说试玩没问题以后）**：Saul 说试玩没问题，就是同意做全量检查和出包，不再问一次。检查一条不减：
    - **先固定可验候选，再跑长矩阵**：按[稳定候选上的检查调度](../cocos-game-check/test/references/candidate-execution.md)，先核声音控件有实际播放消费者、奖励能落到真实可用对象、暂停重开没有旧回调，再校准实际 Native 的 adapter 准备路径；已有有效证据引用即可。同批已确认修复集中构建，完整套件前固定生产产物与检查器。工具失败先定点诊断；局部排查、完整验收和 writer 的结论各自保留，不减少下列门禁。
    - 这一阶段要开浏览器的命令，前面都加 `python3 <skills>/cocos-game-to-english/scripts/browser_env.py --`（哪些命令见「换电脑也能用」；只用 Ego，缺失或故障时保留未测）。
+   - 涉及浏览器的入口包括 `make_tiktok_zip.py`、`build_checked_zip.py`、`check_package.py`、`ad_regression.py` 和 `runtime_regression.py`。
    - **测试按完整清单跑完才算（生成时预防 R4D）**：`runtime_regression.py`、`ad_regression.py` 只有按完整清单跑完才算通过；带 `--suites` / `--cases` 是排查用，结论是「没跑完」（退出码 3），交付回复里照写没跑的项，不写成通过。检查脚本报告开头写引擎版本和实际检查项数，0 项、缺第三方库都报 not_run（并给安装命令），not_run 不算通过；检查脚本默认只读，`--help` 和不带参数都不许崩（发版自检 C10 逐个跑一遍）。
    - 先补齐记录：`qa/ad-regression.json` 和 `docs/english/image-review.json`（写法见第 2 阶段；image-review.json 用 `audit_image_review_record.py write` 生成，不手写）。
    - **美工检查已在每轮试玩链接前完成**：核对最后通过的美工证据与当前交付版本一致，不重复评审已认可的画风和配色。本阶段若改动图片、布局或新增页面，按第 3 阶段复查受影响整页、共享组件和条件状态；用户可见的改动先给通过美工检查的新链接确认，再继续出包。出包转换、压缩引起的缺图、变形、色带等仍须在最终产物核查。
    - 电脑上看不出来的：用[统一检查](../cocos-game-check/SKILL.md)，类型选“英化”。先跑一次 `python3 <skills>/remake-core/scripts/tiktok_finalize.py source --project <工程> --board localize`（英化工程的「平台包」一行查的是源码段记录是否新鲜，不查 `build-templates/bytedance/`），再跑 `check_known_issues.py`、`preflight.py`、`logic_check.py`（以往积累的已知问题在这里查）；广告、触摸、启动加载、存档、加桌面/回访按 [TikTok 固定适配](../cocos-game-check/references/tiktok-fixed-adaptation.md) 查。出包检查的页面探针读场景和坐标一律走 `remake-core/scripts/engine_adapter.js`（`runtime_regression/engine_adapter.mjs` 是它的拷贝）；报「引擎还没起来」是页面还在加载，会自动重试，不是游戏的错。3.x 工程要做完整 TS 检查时用 `python3 <skills>/cocos-game-to-english/scripts/ts_full_check.py --project <工程>`，别直接 `tsc -p tsconfig.json`（它会读 temp/ 里别的电脑的引擎路径）。
    - 标准件同步（P02）：第 1 阶段起每次构建前已跑 `sync`；这里的 `source` 只是出包前的最后一次，它报出要换回的文件时，说明前面有构建没跑 `sync`，那几次构建的自测要按新构建重做受影响的部分。
    - 广告加量（第 8 项 ad-boost 加的板块）：照 ad-boost 各板块 `modules/<板块>/README.md` 第 8 节验收；对比接线前后的两张首页，原按钮一个没动；每个新的看广告按钮真实点击测看完、取消、失败、超时、连点；`qa/ad-regression.json` 照 ad-boost 的例子写（签到、转盘结果、礼包领奖窗这种带勾选框的写 `double_claim`）。
-   - 出包：改过源码就再跑一次 `source` 再构建，再用写包入口出包（`make_tiktok_zip.py` 和 `build_checked_zip.py` 都要给 `--project`；游戏自己的打包步骤在写包入口之前做完；广告回归 10 例和运行时套件由写包入口跑），按统一检查里的出包与最终包检查。v7.6 写包入口出的收据在 v7.7 不再是官方入口，交付前用 v7.7 写包入口重新出。交付时的试玩链接用 `--snapshot --keep --project <工程>` 起（这时跑看广告冒烟；中文专项检查照第 3 阶段对这份导出再过一次）。中文专项检查只管 Web 试玩；上传包里的图照样按出包检查查，不能拿试玩的结果代替。交付回复贴写包报告里的标准件小表，并写“标准件待真机复测”。
+   - 出包：改过源码就再跑一次 `source` 再构建，再用写包入口出包（`make_tiktok_zip.py` 和 `build_checked_zip.py` 都要给 `--project`；游戏自己的打包步骤在写包入口之前做完；广告回归 10 例和运行时套件由写包入口跑），按统一检查里的出包与最终包检查。v7.6 写包入口出的收据在 v7.7 不再是官方入口，交付前用 v7.7 写包入口重新出。交付回复贴写包报告里的标准件小表，并写“标准件待真机复测”。
+   - **测试包和同版试玩在同一条回复交付（首次出包和返工都适用）**。最终回复分别列「TikTok 测试包」和「同版试玩」。测试包给本次已通过交付检查的最终 ZIP。同版试玩给与测试包对应同一版工程导出的 Web 手机试玩链接。已有同版试玩服务时，核对导出身份、服务可用和用户侧固定手机窗口的实际画面，确认后沿用。需要重起时，用英化入口的 `serve_preview.py --snapshot --keep --project <工程>`，中文专项检查照第 3 阶段对这份导出再过一次，同时核对美工回执并做试玩所需的轻量冒烟。试玩检查只覆盖 Web，测试包仍走自己的交付检查，不能拿试玩的结果代替。
+     - 试玩若因导出、回执、服务或窗口确认受阻，在「同版试玩」一项写清实际卡点。测试包通过自身交付检查后照常交付，不等试玩恢复。沿用同版仍有效的验收证据，只核对试玩交付需要的项目，不为补链接重跑整套验收。
    - 手机上看到的问题（v7.9）：Saul 在手机上报过问题的，登记时写 `--source device` 和手机上跑的那个 ZIP；问题门禁 `check` 的结果有 `device_issues` 时，每条的 `line`（「复现了手机上的画面和同一行报错」「不能完全确定是同一个原因」「电脑上没复现，不能说修好了」）原样贴进交付回复，不改成「已修复」。做法见统一检查的[手机上看到的问题](../cocos-game-check/package-check/references/resource-and-reported-issues.md)。
    - 用时：这一阶段开始跑 `T stage 5`；交付时依次跑 `T mark 交付`、`T done`、`T report --all`，第 5 阶段用时和全程总表都放进交付回复。
    - **出包后返工（简化.11.15，Saul 2026-11-04：「出包后的返工修改，就只检查修改涉及的那些部分」「比如我修改了贴图，之后出包甚至又要检查一遍音频，这种情况不要发生」）**：测试包交给 Saul 以后又要改，只查改到的部分，不从头再查一遍：

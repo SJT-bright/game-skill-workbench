@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""R4N3 (补查2 第 1 组 1d): host stalls count as "环境卡住，换 Chrome 重试", not as a game failure.
+"""R4N3 (补查2 第 1 组 1d): host stalls remain untested and are diagnosed within Ego, separately from game failures.
 
 Texts as the Codex sessions printed them (方块收割者、火箭三消 -10005; 合成进化恐龙 webContents null, CDP
 Runtime.evaluate timeout, two "aborted before dispatch"). Game errors must not match.  python3 test_r4n3_env_stuck.py
@@ -28,10 +28,12 @@ GAME_ERRORS = [
 
 
 class EnvStuck(unittest.TestCase):
-    def test_host_stalls_switch_to_chrome(self):
+    def test_host_stalls_remain_untested_and_stay_in_ego(self):
         for text in STALLS:
             self.assertIsNotNone(B.ego_stuck_reason(1, text, None), text)
-            self.assertIn('换 Chrome 重试', B.env_stuck(text) or '', text)
+            message = B.env_stuck(text) or ''
+            self.assertIn('保留未测', message, text)
+            self.assertIn('在 Ego 内排查', message, text)
 
     def test_game_errors_stand(self):
         for text in GAME_ERRORS:

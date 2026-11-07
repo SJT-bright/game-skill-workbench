@@ -5,7 +5,7 @@ Fixtures only: fake Ego / fake Node / fake Chrome scripts, a local HTTP server o
 no Ego, no Cocos Creator is started; nothing outside temporary folders is touched (browser_slots is never called).
 Each part shows the old behaviour next to the new one:
   ① two runs with the same space name share one Ego space (one run's finish() closes the other's page) / names differ
-  ② an Ego call that times out, loses its space or goes silent stays failed / is rerun on Chrome, marked as a switch
+  ② an Ego call that times out, loses its space or goes silent preserves its result and records the Ego error
   ③ an outer time limit counts the queue for the lock / --run-timeout counts only from the lock
   ④ the build command lacks the sandbox switches, a sandboxed terminal is retried / switches always there, exit 3
   ⑤ a link that serves an old copy of the export is handed out / refused after reading the link back
@@ -26,6 +26,7 @@ import textwrap
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -117,17 +118,15 @@ class SpaceNames(unittest.TestCase):
         self.assertEqual(BE.guess_game(['x', '--package=/a/Pine_fix2.zip']), 'Pine_fix2')
 
 
-class EgoFallback(unittest.TestCase):
+class EgoFailures(unittest.TestCase):
     def setUp(self):
         self.td = tempfile.TemporaryDirectory()
         self.addCleanup(self.td.cleanup)
         self.dir = Path(self.td.name)
         self.calls = self.dir / 'ego-calls.txt'
         self.events = self.dir / 'events.jsonl'
-        # fake Chrome runner: stands in for `node cdp_browser.mjs nodejs ...`
-        self.node = write(self.dir / 'fakenode', '#!%s\nimport sys\nif sys.argv[1:2] == ["--version"]:\n    print("v20.1.0")\n'
-                          'else:\n    data = "" if "-e" in sys.argv else sys.stdin.read()\n'
-                          '    print("CHROME_OK", " ".join(sys.argv[2:]), data.strip())\n' % PY, 0o755)
+        self.node = write(self.dir / 'fakenode', '#!%s\nfrom pathlib import Path\nPath(%r).touch()\n' %
+                          (PY, str(self.dir / 'fallback-ran')), 0o755)
         self.browser = write(self.dir / 'FakeChrome', '')
 
     def ego(self, body):
@@ -153,71 +152,73 @@ class EgoFallback(unittest.TestCase):
         with self.assertRaises(subprocess.TimeoutExpired):
             subprocess.run([PY, str(ego), 'nodejs', '-e', 'x'], capture_output=True, timeout=2)
 
-    def test_timeout_switches_to_chrome_and_sticks(self):
+    def assert_no_fallback(self):
+        self.assertFalse((self.dir / 'fallback-ran').exists())
+
+    def test_timeout_is_recorded_without_switch_or_sticky_route(self):
         ego = self.ego('sys.stderr.write("Error: Page.captureScreenshot timed out after 15000ms\\n"); sys.exit(1)')
         code, out, err = self.relay(ego, ['nodejs', '-e', 'await run()'], self.env())
-        self.assertEqual(code, 0)
-        self.assertIn('CHROME_OK', out)
-        self.assertIn('改用 Chrome', err)
+        self.assertEqual(code, 1)
+        self.assertEqual(out, '')
+        self.assertIn('不回退 Chrome', err)
         rows = BE.read_events(self.events)
-        self.assertEqual([r['kind'] for r in rows], ['switch'])
+        self.assertEqual([(r['kind'], r['route']) for r in rows], [('ego_error', 'ego')])
         self.assertIn('captureScreenshot', rows[0]['reason'])
-        code, out, _ = self.relay(ego, ['nodejs', '-e', 'second'], self.env())
-        self.assertEqual((code, 'CHROME_OK' in out), (0, True))
-        self.assertEqual(self.calls.read_text().count('call'), 1)   # the second step never went to Ego
-        self.assertEqual(BE.read_events(self.events)[-1]['kind'], 'sticky')
+        code, _, _ = self.relay(ego, ['nodejs', '-e', 'second'], self.env())
+        self.assertEqual(code, 1)
+        self.assertEqual(self.calls.read_text().count('call'), 2)
+        self.assert_no_fallback()
 
-    def test_lost_space_switches(self):
+    def test_lost_space_stays_failed(self):
         ego = self.ego('sys.stderr.write("Error: task space not found: 89\\n"); sys.exit(4)')
-        code, out, _ = self.relay(ego, ['nodejs', '-e', 'x'], self.env())
-        self.assertEqual((code, 'CHROME_OK' in out), (0, True))
+        code, _, err = self.relay(ego, ['nodejs', '-e', 'x'], self.env())
+        self.assertEqual(code, 4)
+        self.assertIn('task space not found', err)
+        self.assertEqual(BE.read_events(self.events)[0]['kind'], 'ego_error')
+        self.assert_no_fallback()
 
-    def test_silent_ego_is_stopped_and_switched(self):
+    def test_silent_ego_is_stopped_without_switch(self):
         ego = self.ego('time.sleep(30)')
         started = time.monotonic()
-        code, out, _ = self.relay(ego, ['nodejs', '-e', 'x'], self.env(), stall=1)
+        code, _, _ = self.relay(ego, ['nodejs', '-e', 'x'], self.env(), stall=1)
         self.assertLess(time.monotonic() - started, 10)
-        self.assertEqual((code, 'CHROME_OK' in out), (0, True))
+        self.assertNotEqual(code, 0)
         self.assertIn('没有任何输出', BE.read_events(self.events)[0]['reason'])
+        self.assert_no_fallback()
 
-    def test_stdin_script_is_rerun_on_chrome(self):
-        ego = self.ego('sys.stdin.read(); sys.stderr.write("CDP request timed out\\n"); sys.exit(1)')
+    def test_stdin_script_runs_once_in_ego(self):
+        ego = self.ego('print(sys.stdin.read()); sys.stderr.write("CDP request timed out\\n"); sys.exit(1)')
         code, out, _ = self.relay(ego, ['nodejs'], self.env(), stdin_data='const CONFIG = 1;')
-        self.assertEqual(code, 0)
+        self.assertEqual(code, 1)
         self.assertIn('const CONFIG = 1;', out)
+        self.assertEqual(self.calls.read_text().count('call'), 1)
+        self.assert_no_fallback()
 
-    def test_game_failure_is_not_a_switch(self):
+    def test_game_failure_is_not_a_browser_error(self):
         ego = self.ego('print("nocallback: reward count 1"); sys.stderr.write("rewarded-ad regression failed\\n"); sys.exit(1)')
         code, out, _ = self.relay(ego, ['nodejs', '-e', 'x'], self.env())
         self.assertEqual(code, 1)
-        self.assertNotIn('CHROME_OK', out)
+        self.assertIn('nocallback', out)
         self.assertEqual(BE.read_events(self.events), [])
+        self.assert_no_fallback()
 
-    def test_no_chrome_keeps_ego_result(self):
-        ego = self.ego('sys.stderr.write("Error: Page.captureScreenshot timed out\\n"); sys.exit(1)')
-        env = dict(os.environ, **{BE.EVENTS_ENV: str(self.events)})
-        env.pop(BE.FALLBACK_NODE_ENV, None)
-        code, _, err = self.relay(ego, ['nodejs', '-e', 'x'], env)
-        self.assertEqual(code, 1)
-        self.assertIn('没有能接手', err)
-
-    @unittest.skipUnless(POSIX, 'the end-to-end launcher test uses a POSIX shell script')
-    def test_end_to_end_report_says_switched(self):
-        ego = self.ego('sys.stderr.write("Error: Page.captureScreenshot timed out\\n"); sys.exit(1)')
-        caller = write(self.dir / 'check_caller.py', 'import os, subprocess, sys\n'
-                       'print(os.environ["%s"])\n'
-                       'r = subprocess.run([os.environ["EGO_BROWSER"], "nodejs", "-e", "x"], capture_output=True, text=True)\n'
-                       'print(r.stdout); sys.exit(r.returncode)\n' % BE.SPACE_ENV)
+    def test_wrapper_report_preserves_ego_route_and_child_status(self):
         report = self.dir / 'browser-report.json'
-        env = dict(os.environ, EGO_BROWSER=str(ego), CDP_NODE=str(self.node), CDP_BROWSER=str(self.browser))
-        r = subprocess.run([PY, '-B', str(HERE / 'browser_env.py'), '--game', 'HappyCup', '--report', str(report), '--',
-                            PY, str(caller)], capture_output=True, text=True, env=env, timeout=60)
-        self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn('CHROME_OK', r.stdout)
-        self.assertIn('HappyCup-', r.stdout)
-        doc = json.loads(report.read_text(encoding='utf-8'))
-        self.assertEqual((doc['route'], doc['switched_to_chrome']), ('ego', True))
-        self.assertIn('换过浏览器', r.stderr)
+        for code in (0, 4):
+            with self.subTest(exit_code=code), patch.object(BE, 'find_ego', return_value=str(self.dir / 'official-ego')), \
+                    patch.dict(os.environ, {'EGO_BROWSER': '', BE.FALLBACK_NODE_ENV: str(self.node),
+                                            BE.FALLBACK_BROWSER_ENV: str(self.browser)}):
+                caller = ('import os; '
+                          'assert os.environ["EGO_BROWSER"].endswith("official-ego"); '
+                          'assert os.environ[%r].startswith("HappyCup-"); '
+                          'assert %r not in os.environ; '
+                          'raise SystemExit(%d)' % (BE.SPACE_ENV, BE.FALLBACK_BROWSER_ENV, code))
+                self.assertEqual(BE.main(['--game', 'HappyCup', '--report', str(report), '--', PY, '-c', caller]), code)
+                doc = json.loads(report.read_text(encoding='utf-8'))
+                self.assertEqual((doc['route'], doc['switched_to_chrome'], doc['exit_code']), ('ego', False, code))
+                self.assertEqual(doc['fallbacks'], [])
+                self.assertFalse(doc['fallback_available'])
+                self.assert_no_fallback()
 
 
 def load(path, name):
@@ -316,8 +317,7 @@ class CreatorSandbox(unittest.TestCase):
 
 class PreviewReadback(unittest.TestCase):
     def setUp(self):
-        import serve_preview as SP
-        self.SP = SP
+        self.SP = load(ROOT / 'remake-core' / 'scripts' / 'serve_preview.py', 'serve_preview_p21_readback')
         self.td = tempfile.TemporaryDirectory()
         self.addCleanup(self.td.cleanup)
         self.export = Path(self.td.name) / 'web-mobile'

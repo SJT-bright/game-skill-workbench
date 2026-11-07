@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T16:35:17.680Z",
-  "treeHash": "f920a3bd37e94a4e1ebeb7fc0fe1a958bc086531da67ec0e4ae98aaeefd3684e",
+  "createdAt": "2026-11-07T19:35:49.221Z",
+  "treeHash": "0c715a8778ede122cada2c8a3de9e1c8614d4606ba65878c5c376cc80b2296ca",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "aff80d1435f3cfd692285a0d41bdabf1fd0138fbe7dcd51b86c63667cfe264b5",
+      "treeHash": "bab554c730159f50a03eaab0467279d243c11ddbdfb88232b904322c2fdc88fb",
       "fileCount": 179,
-      "bytes": 1910755,
+      "bytes": 1914896,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8",
-          "size": 45382,
+          "hash": "d45ebada5f6ecde3ddf4325c89be31f4a18a84b90ed84447795b2b53e5eefd55",
+          "size": 48201,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "b49eeba4d604035aa1915e513a665c0ef28ea3974506a1299275770e3c2f83bf",
-          "size": 19896,
+          "hash": "c7873ea7de5175e85de9635d030b2592fb65534df0d138b48ab86ebaf4bd65ae",
+          "size": 20125,
           "executable": false
         },
         {
@@ -383,8 +383,8 @@
         },
         {
           "path": "package/README.md",
-          "hash": "28dd957f1b570165a27ebd4f141d843eb8be15f50a684413c7ffb25d0175a70f",
-          "size": 5889,
+          "hash": "8391d07d808c1fc2214735ad12129574c7200bfa987157d6247fd3e1c38cf2a4",
+          "size": 6009,
           "executable": false
         },
         {
@@ -431,8 +431,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "27b0c90c1a6a75502b84a527b8fc8f9ba419664af4b25809ad3d7f245e504845",
-          "size": 19078,
+          "hash": "05988c4f3e030565dca604cba5cf4e5c521ca3b97bc1fdf45ffbe73a010c1ea6",
+          "size": 20051,
           "executable": false
         },
         {

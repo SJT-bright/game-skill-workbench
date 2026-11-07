@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-07",
- "release_label": "v7.9-en11.17.7-revisit",
- "selftest_report_sha256": "44fa4bc8046ebdc9919b2872f34ba0caa50d7e2ce7a1d7fd765605b30dabc04b",
+ "release_label": "v7.9-en11.17.8-art",
+ "selftest_report_sha256": "d1d7e458d61158e54697ecee84a0da8493639f25ee7726476b9f80d2ade031ac",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
@@ -19,9 +19,9 @@
   "remake-core/scripts/package_gates/startup.py": "1cf45b50c1dd0c471d0aadbee033d134a1f9b2aacf69f9276059a762a91dd356",
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
-  "remake-core/scripts/verify_native_zip.py": "1840141073fba39f15a377c403a40cc10e1c364d7772f68cdd367337b3ee2390",
+  "remake-core/scripts/verify_native_zip.py": "4bdfdc5e6f304b2dc230b9a1189d33807b124702fb85d7bfcf0309bff4677e12",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
-  "remake-core/scripts/tiktok_finalize.py": "ea390e65937e68379de6112f0b1e248536a297bbbc5d44ac7d5d4c7857b562c6",
+  "remake-core/scripts/tiktok_finalize.py": "7568aad39310fccac024e12f5949baaa39f6123c4e78f7d76f21dec574ee8f15",
   "remake-core/scripts/tiktok_finalize_steps/__init__.py": "8f29bc0f63a139c38dd8d58f52b57b7aafcb16a6058fafc04f1a34597954b31d",
   "remake-core/scripts/tiktok_finalize_steps/adapter.py": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7",
   "remake-core/scripts/tiktok_finalize_steps/appid.py": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76",
@@ -39,7 +39,7 @@
   "remake-core/scripts/tiktok_finalize_steps/orientation.py": "43692def64c653d32d818d5c8ebb672576f375db0e904342ad5d628b4509e409",
   "remake-core/scripts/tiktok_finalize_steps/physics_clock.py": "8e36d901cab216e3f879d0fde35b24eee97a5bb0fb81646264186f6a20cc1f7d",
   "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac",
-  "remake-core/scripts/tiktok_finalize_steps/png.py": "51409ecdafa317885cff52eb32efc96880bd5fb7d46e668ebaf90a3218b317b5",
+  "remake-core/scripts/tiktok_finalize_steps/png.py": "806c3c158f5bad9ce5209a90a3f7e78fc0f21b6cc4efd2ef85624ab3591f5165",
   "remake-core/scripts/tiktok_finalize_steps/policy.py": "46c08e93a3b90ca5f9a7f8e2e28ed3d2d1136dbeb49d0cf0f81bed848b6e8a2a",
   "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py": "6d765a7b9f404a38d17b17ac35b8e508e4d5546aabe4cf8179d907a4f42e3498",
   "remake-core/scripts/tiktok_finalize_steps/rewarded.py": "a978d0ae5c74589ea9f2f932ae8614844f7d7942f2395a3b15adfd5ccda14021",
@@ -54,7 +54,10 @@
   "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581",
   "cocos-game-check/package-check/scripts/check_package.py": "284c255be11f427162c23313ffeef89d7ea269767390c231bd8b02a2c7baa17e",
   "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
-  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211"
+  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+  "remake-core/scripts/audit_image_review_record.py": "631387e5efde7676733adfd2be68e06224282e30b4bb494ccc1553e0ba787471",
+  "remake-core/scripts/audit_atlas_slices.py": "5b7d85a3b2b5050986917d0d2a289f127c4e211f2985071d1360f370236822ca",
+  "remake-core/scripts/spine_atlas_binding.py": "4169014911f9b33ac95f4c291bad14ba1d0f270844d110b0b55a5bbe14c904f4"
  },
  "real_artifact_controls": [
   {
@@ -670,10 +673,33 @@
    },
    "ok": true,
    "since": "v7.9-en11.3"
+  },
+  {
+   "id": "monkeymarket-v5-spine-image-review",
+   "game": "猴子集市",
+   "role": "good",
+   "check": "spine_image_review",
+   "item": "ART_spine_runtime_atlas",
+   "expect": {
+    "clean_write_exit": 0,
+    "clean_check_exit": 0,
+    "marker_write_exit": 1,
+    "marker_check_exit": 1,
+    "exact_slices": {
+     "e98570bc-2d9c-4592-9a89-c15bd7680a77.3da8a.png": 284,
+     "374feeaa-0867-423d-b607-a9c1c1d6a1d5.a816c.png": 32
+    },
+    "marker_textures": [
+     "374feeaa-0867-423d-b607-a9c1c1d6a1d5.a816c.png",
+     "e98570bc-2d9c-4592-9a89-c15bd7680a77.3da8a.png"
+    ]
+   },
+   "ok": true,
+   "since": null
   }
  ],
  "test_inventory": {
-  "files": 504,
+  "files": 507,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",

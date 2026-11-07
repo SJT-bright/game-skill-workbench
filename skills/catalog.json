@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-06T21:57:26.602Z",
-  "treeHash": "b79de35e2a4e19fd335072c014552d993d131c630927236f1caed2a2b9c10984",
+  "createdAt": "2026-11-07T00:59:09.572Z",
+  "treeHash": "fb9550ee64d9220730c5210cbca9de7182347aee06f1ea886b70fe263cc4c2d1",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3417,14 +3417,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "fbbf26ed0a6c4bc3844825fd333c69c26145e37211768eca81858cf23cee0970",
+      "treeHash": "ebbd838f9516460668beb8121e99178214a520ec1f37428323065c00633d8e2d",
       "fileCount": 615,
-      "bytes": 12144756,
+      "bytes": 12144479,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "420e8a179a559e0afe2c6fdb4223cd91b928387a07c15b0286ef0b47cebf201d",
-          "size": 107467,
+          "hash": "a74d3297c227e16ba0c13661d14ee8e9dadc90f4953723cbca82aee3cbfb0516",
+          "size": 107955,
           "executable": false
         },
         {
@@ -5649,8 +5649,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "a374d8fba5377fea2cef1bfb31c9816b0e485973109ab58ae1485e9d0de2f632",
-          "size": 42512,
+          "hash": "80e2cfec8b3782dec02d553fbaffeb452e3806f06fbb44c546b84a2d7a760787",
+          "size": 41747,
           "executable": false
         },
         {

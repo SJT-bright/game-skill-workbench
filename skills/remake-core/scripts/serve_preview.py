@@ -20,7 +20,7 @@ the reason is printed and the link is given. Exports that never call createRewar
 生成时预防 P21 ⑤: a link a person opens (--keep, --open or --idle-minutes 0) is read back over HTTP before it is printed:
 the entry page and its <script src> files must be byte-identical to the export folder given now (with --snapshot: the
 export, not the copy). Different (old cache, old copy, export changed meanwhile) -> no link, exit 1.
-生成时预防 P21 ⑤ 后半: after the read-back, a headless Chrome/Edge (browser_env.find_browser) screenshots the game page;
+生成时预防 P21 ⑤ 后半: after the read-back, an official Ego Page screenshots the game page;
 black / one-colour picture, still on the loading page, or a page error -> no link, exit 1. No browser, timeout or a
 browser error -> the link is given with 没截图 (never counted as passed). The picture path is printed: look at it.
 生成时预防 P13 ④: the game page inside the phone frame gets assets/preview-touch-bridge.js (response only): a mouse
@@ -231,26 +231,9 @@ def png_stats(data):
 
 
 def find_shot_browser():
-    """The headless browser for the home screenshot: browser_env.find_browser (Chrome, Edge, Chromium; CDP_BROWSER /
-    CHROME_PATH first) from cocos-game-to-english, else preview_chrome.find_chrome. None when there is none."""
-    english = Path(__file__).resolve().parents[2] / 'cocos-game-to-english' / 'scripts'
-    try:
-        if english.is_dir() and str(english) not in sys.path:
-            sys.path.append(str(english))
-        import browser_env
-        found = browser_env.find_browser()
-        if found:
-            return found
-    except Exception:  # noqa: BLE001
-        pass
-    for key in ('CDP_BROWSER', 'CHROME_PATH'):
-        if os.environ.get(key) and os.path.isfile(os.environ[key]):
-            return os.environ[key]
-    try:
-        from preview_chrome import find_chrome
-        return str(find_chrome())
-    except (OSError, ImportError):
-        return None
+    """Compatibility lookup for screenshot callers: official Ego only, never desktop Chrome."""
+    import shutil
+    return shutil.which('ego-browser')
 
 
 def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, browser=None, timeout=90, wait=12,

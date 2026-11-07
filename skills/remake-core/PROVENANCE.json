@@ -1828,8 +1828,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "a374d8fba5377fea2cef1bfb31c9816b0e485973109ab58ae1485e9d0de2f632",
-      "bytes": 42512
+      "sha256": "80e2cfec8b3782dec02d553fbaffeb452e3806f06fbb44c546b84a2d7a760787",
+      "bytes": 41747
     },
     {
       "path": "scripts/source_hygiene.py",
@@ -3077,6 +3077,17 @@
         }
       ],
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_声音端点与广告角色读取_20261106/receipt.json"
+    },
+    {
+      "id": "ego-only-retired-shot-lookup-20261106",
+      "authority": "User 2026-11-06: Chrome only for user trial links; all Agent browser tests in Ego.",
+      "files": [
+        {
+          "path": "scripts/serve_preview.py",
+          "sha256": "80e2cfec8b3782dec02d553fbaffeb452e3806f06fbb44c546b84a2d7a760787"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
     }
   ]
 }

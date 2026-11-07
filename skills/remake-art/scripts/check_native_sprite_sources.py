@@ -1,4 +1,4 @@
-"""Source-PNG triage for named Cocos2 source/export standalone game sprites.
+"""Source texture triage for named Cocos2 source/export standalone game sprites.
 Signals need human comparison; not an art verdict or a full bundle-format verifier.
 """
 import argparse,base64,hashlib,json,re
@@ -85,7 +85,9 @@ def check(root,names,role='single_body'):
             pass
     source_mode=source_mode or creator3
     if source_mode:
-        for p in (root/'assets').rglob('*.png.meta'):
+        images = (p for p in (root/'assets').rglob('*.meta')
+                  if Path(p.stem).suffix.lower() in {'.png', '.jpg', '.jpeg'})
+        for p in images:
             try:
                 doc=json.loads(p.read_text())
                 metas=doc.get('subMetas',{})
@@ -93,7 +95,7 @@ def check(root,names,role='single_body'):
                              if creator3 else set(metas))
                 for name in frame_names.intersection(names):
                     tex=Path(str(p)[:-5]).resolve()
-                    if not tex.is_relative_to(root) or not tex.is_file():raise ValueError('missing source PNG')
+                    if not tex.is_relative_to(root) or not tex.is_file():raise ValueError('missing source texture')
                     matches[name].append(tex)
             except (OSError,ValueError,TypeError) as exc:errors.append({'path':str(p.relative_to(root)),'error':str(exc)})
     # Limited profile: standalone import/*.json + sibling native directory.
@@ -129,7 +131,7 @@ def check(root,names,role='single_body'):
             except (OSError,ValueError,ImportError) as exc:errors.append({'frame':name,'texture':str(path.relative_to(root)),'error':str(exc)})
     missing=sorted(set(names)-{row['name'] for row in rows});review=any(row['suspects'] for row in rows)
     status='incomplete' if missing or errors or not rows else 'needs_review' if review else 'no_signals'
-    return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'candidate_counts':candidate_counts,'runtime_binding':'not_assessed','art_verdict':'not_assessed','coverage':'all discovered distinct standalone PNG candidates for each named Cocos2/3 source or Cocos2 export frame; name collisions are exhaustively inspected, not resolved to runtime bindings; actual frame rect and whole-page composition need project observation'}
+    return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'candidate_counts':candidate_counts,'runtime_binding':'not_assessed','art_verdict':'not_assessed','coverage':'all discovered distinct PNG/JPEG source textures or standalone Cocos2 export PNGs for each named frame; name collisions are exhaustively inspected, not resolved to runtime bindings; actual frame rect and whole-page composition need project observation'}
 
 def captured_inventory(dumps):
     names=set();pages=set()
@@ -151,6 +153,70 @@ def captured_inventory(dumps):
 def captured_frames(dumps):
     return captured_inventory(dumps)['selected_frames']
 
+def route_other_sources(result, dumps, atlas_report):
+    """Route observed frames that are outside the standalone texture profile."""
+    if not dumps or not result['missing']:
+        return result
+    root = Path(result['input'])
+    atlas = json.loads(atlas_report.read_text()) if atlas_report and atlas_report.is_file() else {}
+    candidates = {}
+    for sheet in atlas.get('atlases', []):
+        checked = {row['frame'] for row in sheet['frames'] if not row['problems']}
+        skipped = {row['frame']: row['reason'] for row in sheet['skipped']}
+        for frame in checked | skipped.keys():
+            for name in sheet['frame_names'].get(frame, [frame]):
+                candidates.setdefault(name, []).append({
+                    'type': 'atlas', 'manifest': sheet['manifest'],
+                    'manifest_sha256': sheet['manifest_sha256'], 'slice': frame,
+                    'status': skipped.get(frame, 'checked'),
+                    'sizes': sheet['runtime_sizes'].get(frame, [])
+                })
+    observations = {}
+    for path in Path(dumps).rglob('*.json'):
+        try:
+            doc = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        if not isinstance(doc, dict):
+            continue
+        for node in doc.get('nodes', []):
+            sprite = node.get('comps', {}).get('sprite', {})
+            name = sprite.get('frame')
+            if name in result['missing']:
+                observations.setdefault(name, []).append(sprite)
+    engine = root / 'project.json'
+    engine_version = json.loads(engine.read_text()).get('version') if engine.is_file() else None
+    builtin = Path('/Applications/Cocos/Creator/2.4.15/CocosCreator.app/Contents/Resources/static/default-assets/image')
+    routes = {}
+    for name in result['missing']:
+        samples = observations.get(name, [])
+        matched = [row for row in candidates.get(name, [])
+                   if samples and all(sample.get('frame_size') in row['sizes'] for sample in samples)]
+        if len(matched) == 1:
+            routes[name] = matched[0]
+            continue
+        if candidates.get(name) or engine_version != '2.4.15' or name not in (
+                'default_scrollbar_vertical', 'default_scrollbar_vertical_bg'):
+            continue
+        texture = builtin / (name + '.png')
+        meta = texture.with_suffix('.png.meta')
+        if not (texture.is_file() and meta.is_file()):
+            continue
+        frame = json.loads(meta.read_text())['subMetas'][name]
+        size = [frame['rawWidth'], frame['rawHeight']]
+        if samples and all(sample.get('sliced') is True and sample.get('frame_size') == size
+                           for sample in samples):
+            routes[name] = {'type': 'creator_default_sliced_control', 'texture': str(texture),
+                            'sha256': hashlib.sha256(texture.read_bytes()).hexdigest(),
+                            'meta_sha256': hashlib.sha256(meta.read_bytes()).hexdigest(),
+                            'frame_uuid': frame['uuid'], 'size': size}
+    result['routed_frames'] = routes
+    result['missing'] = sorted(set(result['missing']) - routes.keys())
+    if not result['missing'] and not result['errors'] and result['rows']:
+        result['status'] = 'needs_review' if any(row['suspects'] for row in result['rows']) else 'no_signals'
+        result['passed'] = result['status'] == 'no_signals'
+    return result
+
 def apply_review(result):
     path=Path(result['input'])/'docs/art/sprite-source-review.json'
     if not path.is_file() or result['status']=='incomplete':return result
@@ -167,9 +233,9 @@ def apply_review(result):
     return result
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('native_root',type=Path,metavar='ROOT');parser.add_argument('frames',nargs='*');parser.add_argument('--dumps',type=Path);parser.add_argument('--out',type=Path);parser.add_argument('--role',choices=['single_body','background','tile','multi_body'],default='single_body');args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('native_root',type=Path,metavar='ROOT');parser.add_argument('frames',nargs='*');parser.add_argument('--dumps',type=Path);parser.add_argument('--out',type=Path);parser.add_argument('--atlas-report',type=Path);parser.add_argument('--role',choices=['single_body','background','tile','multi_body'],default='single_body');args=parser.parse_args()
     names=args.frames or captured_frames(args.dumps)
-    result=apply_review(check(args.native_root,names,args.role))
+    result=apply_review(route_other_sources(check(args.native_root,names,args.role),args.dumps,args.atlas_report))
     if args.dumps:result['capture_inventory']=captured_inventory(args.dumps)
     if args.out:args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(json.dumps(result,ensure_ascii=False,indent=2))
     print(json.dumps(result,ensure_ascii=False,indent=2))

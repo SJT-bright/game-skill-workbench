@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T13:31:07.611Z",
-  "treeHash": "f4867c9b1cef850af4562d80c870059c550acb78091772613077cd01697aa9de",
+  "createdAt": "2026-11-07T13:31:41.801Z",
+  "treeHash": "832f751b5132f103a74257584d5ece4d7df893d55c128f07d82b44a039ffe015",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3043,9 +3043,9 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "66616482c16b0b2b027be07860ea7e90a735b8c124c5ec87e71aa89fae48d352",
+      "treeHash": "7de30280a642668d5fe04e80b19e03ef9104fb607ca8f0a377644c0d27b5c2ec",
       "fileCount": 64,
-      "bytes": 1439864,
+      "bytes": 1443520,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3313,8 +3313,8 @@
         },
         {
           "path": "scripts/check_native_sprite_sources.py",
-          "hash": "37310078da45ff5d44b07a405dec0a76b932e103f4b8e889a4715462aee74545",
-          "size": 12037,
+          "hash": "8e8f956591134007a051ab69a8a96f1cda463f5cfe5a3a106c8f7e8e08766476",
+          "size": 15693,
           "executable": false
         },
         {

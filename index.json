@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "b5000dcd-98cf-4316-bc9d-6f06a70df205",
+      "skillId": "s-c527d5389d209a5759a9",
+      "name": "remake-core",
+      "version": "v22",
+      "createdAt": "2026-11-07T00:59:56.080Z",
+      "summary": "文件变更：新增 0，修改 2，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 2,
+        "deleted": 0
+      },
+      "treeHash": "ebbd838f9516460668beb8121e99178214a520ec1f37428323065c00633d8e2d",
+      "bytes": 12144479,
+      "fileCount": 615
+    },
+    {
       "id": "9c2e5b8d-73a1-4e3f-b95c-142992146709",
       "skillId": "s-5a9f8b608f84c10c43c3",
       "directory": "ego-browser",

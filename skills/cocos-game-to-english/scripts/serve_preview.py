@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""English entry for the shared preview server; an English trial link must pass the Chinese check first.
+"""English entry for the shared preview server. A formal link requires the current pre-trial evidence.
 
 v7.8 (总表 B21 / B30 F): the shared server is remake-core/scripts/serve_preview.py in this pack (it runs the trial-link
 smoke before a --keep link is printed). The old target cocos-game-core/scripts/ is not shipped in the English pack,
@@ -10,7 +10,9 @@ warning with "高波来袭！" drawn in one slice of a Spine atlas while the old
 a person will play -- --open, --keep or --idle-minutes 0 -- now starts only when
   1. it serves a private copy (--snapshot), and
   2. chinese_audit.py check passes on that very export (the same checker as `chinese_audit.py check --export`), and
-  3. the copy the shared server makes is byte-for-byte the export that was checked (a build still running fails here).
+  3. the current art receipt passed and the source record includes the Sprite ratio check,
+  4. the Web export and prepared Native are covered by image-review.json, and
+  5. the copy the shared server makes is byte-for-byte the export that was checked.
 Every such link is written to <project>/docs/english/chinese-audit/trial-links.json (export, snapshot, check result).
 Internal QA servers (none of the three flags, or --raw) start as before.
   --chinese-original  the stage-1 Chinese original: no Chinese check (it is the Chinese game on purpose); with
@@ -27,17 +29,19 @@ Refused (exit 1, no server): check not passed without --draft, no --snapshot, En
 changed between the check and the copy.
 """
 from pathlib import Path
+import argparse
 import runpy
 import shutil
 import sys
 
 HERE = Path(__file__).resolve().parent
-WRAPPER_ONLY = ('--chinese-original', '--draft')
 HELP = ('英化入口自己的参数（其余见下面共用服务的参数）：\n'
         '  --chinese-original  第 1 阶段的中文原版链接，不做中文专项检查；带 --project 时记下用时「中文原版链接」\n'
         '  --draft             Saul 要先看没做完的英文版：中文专项检查没过也起，列出没处理的问题，不能叫「检查过」\n'
         '  --project <工程>     英化工程（导出在 <工程>/build/web-mobile 时可以不写）\n'
-        '给人试玩的链接（--open、--keep 或 --idle-minutes 0）必须带 --snapshot，并先过 chinese_audit.py check。\n'
+        '  --native <目录>     试玩前已处理的同版 TikTok Native 构建目录，正式英文试玩必填\n'
+        '  --reopen            重开已通过的同版试玩，只核对既有记录\n'
+        '正式英文试玩先核对美术回执、Sprite 比例记录、中文专项检查和两个导出的逐图复核记录，必须带 --snapshot。\n'
         '英文试玩链接自动记用时（stage_timer.py link <第几轮>），打印的上一轮用时贴在新链接那条回复最后。\n')
 
 
@@ -98,11 +102,45 @@ def refuse(message):
     raise SystemExit(1)
 
 
+def pretrial_records(project, export, native):
+    """Verify prepared evidence only. Source scans, PNG conversion and OCR run before this entry."""
+    import audit_image_review_record as images
+    import tiktok_finalize as finalize
+    from tiktok_finalize_steps import png
+
+    problems = finalize.check_trial_source(project, 'localize')
+    if problems:
+        refuse('\n'.join(row['message'] for row in problems))
+    if native is None:
+        refuse('正式英文试玩需要 --native <同版已处理的 TikTok 构建目录>，以核对实际包内图片的复核记录。')
+    native = native.expanduser().resolve()
+    if not all((native / name).is_file() for name in ('game.js', 'game.json', 'project.config.json')):
+        refuse('找不到实际 TikTok Native 构建目录：%s' % native)
+    prepared = png.check_prepared({'root': native, 'project': project})
+    if prepared['blocks']:
+        refuse('\n'.join(row['message'] for row in prepared['blocks']))
+    record = project / 'docs/english/image-review.json'
+    try:
+        review = images.check(images.directory_items([export, native]), record)
+    except (OSError, ValueError) as error:
+        refuse('读取待试玩图片失败：%s' % error)
+    if not review['passed']:
+        refuse('逐图复核未通过，请在试玩前用 audit_image_review_record.py write --directory <Web> '
+               '--directory <已处理的 Native> 生成记录。\n' + '\n'.join(review['problems'][:10]))
+    return native, record, project / finalize.SOURCE_RECORD, review['distinct_images']
+
+
 def gate(argv, say=print):
     """Return (arguments for the shared server, snapshot check or None); exit 1 when the link is refused."""
-    draft, original = '--draft' in argv, '--chinese-original' in argv
-    argv = [a for a in argv if a not in WRAPPER_ONLY]
-    if original:
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    parser.add_argument('--draft', action='store_true')
+    parser.add_argument('--chinese-original', action='store_true')
+    parser.add_argument('--reopen', action='store_true')
+    parser.add_argument('--native', type=Path)
+    opts, argv = parser.parse_known_args(argv)
+    if opts.reopen and (opts.draft or opts.chinese_original or not for_a_person(argv)):
+        parser.error('--reopen 只能用于重开已通过的正式英文试玩')
+    if opts.chinese_original:
         say('中文原版链接：不做中文专项检查（这是中文原版，不是英化结果）。')
         given = option(argv, '--project')
         if given and for_a_person(argv):
@@ -126,48 +164,77 @@ def gate(argv, say=print):
                '第 1 阶段的中文原版链接加 --chinese-original')
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
     import art_receipt
-    art = art_receipt.check(project, board='localize', capture_build=export)
-    if art['level'] != 'ok':
-        refuse(art['message'])
     sys.path.insert(0, str(HERE))
     import chinese_audit as CA
+    export_sha = CA.export_manifest(export)['sha256']
+    art = art_receipt.check(project, board='localize', capture_build=export)
+    if art['level'] != 'ok' or art.get('status') != 'pass':
+        refuse('需要当前正式美术通过回执。' + art['message'])
+    art_path = art_receipt.receipt_path(project)
     out = CA.resolve_out(project, None)
     try:
         CA.guard_out(out, project, export)
-        result = CA.evaluate(project, out, export, None)
+        result = None if opts.reopen else CA.evaluate(project, out, export, None)
     except (CA.Usage, CA.Refused) as exc:
         refuse('中文专项检查跑不了：%s' % exc)
-    CA.write_json(out / 'check-result.json', result)
-    problems = result['problems']
+    check_path = out / 'check-result.json'
+    log = out / 'trial-links.json'
+    if result is not None:
+        CA.write_json(check_path, result)
+        if (result.get('export') or {}).get('manifest_sha256') != export_sha:
+            refuse('Web 导出在验收核对期间发生变化，请等构建结束后重新核对。')
+    elif not check_path.is_file():
+        refuse('缺同版已通过的中文专项检查记录。')
+    problems = result['problems'] if result is not None else []
     if problems:
         say('中文专项检查没通过，%d 条问题（全部在 %s）：' % (len(problems), out / 'check-result.json'))
         for row in problems[:20]:
             say('  [%s] %s → %s' % (row['code'], row['message'], row['fix']))
         if len(problems) > 20:
             say('  ……还有 %d 条' % (len(problems) - 20))
-        if not draft:
+        if not opts.draft:
             refuse('先处理上面的问题：scan --project <工程> --export <这份导出>，用 sheet 看清要复核的几项、逐个 review，'
                    '再 check；通过了再起链接（%s）' % (HERE / 'chinese_audit.py'))
         say('--draft：Saul 要先看没做完的英文版。回复里写明这一版没过中文专项检查、上面这些还没处理，不能说「检查过」。')
-    else:
-        say('中文专项检查：通过（%s）。' % (out / 'check-result.json'))
-    expected = (result.get('export') or {}).get('manifest_sha256')
-    checked = CA.sha_file(out / 'check-result.json')
+    elif result is not None:
+        say('中文专项检查：通过（%s）。' % check_path)
+    bindings = {'art_receipt_sha256': art_path, 'check_result_sha256': check_path}
+    native = None
+    if not opts.draft:
+        native, record, source_record, distinct_images = pretrial_records(project, export, opts.native)
+        bindings.update(image_review_sha256=record, source_record_sha256=source_record)
+    evidence = {key: CA.sha_file(path) for key, path in bindings.items()}
+    if opts.reopen:
+        rows = CA.read_json(log, [])
+        if not isinstance(rows, list) or not any(
+            isinstance(row, dict) and row.get('passed') is True and row.get('draft') is False
+            and row.get('export_manifest_sha256') == row.get('snapshot_manifest_sha256') == export_sha
+            and all(row.get(key) == digest for key, digest in evidence.items())
+            for row in rows
+        ):
+            refuse('找不到与当前导出和回执一致的已通过试玩记录。请回到试玩前阶段核对变更。')
+        say('同版试玩已通过的记录核对一致。')
+    elif not opts.draft:
+        say('试玩前检查通过：当前美术回执、Sprite 比例记录和 %d 张不同图片的复核记录。' % distinct_images)
     name = option(argv, '--name') or ''
+    if not option(argv, '--project'):
+        argv += ['--project', str(project)]
 
     def verify(snapshot_dir):
         got = CA.export_manifest(snapshot_dir)['sha256']
-        if got != expected:
+        if got != export_sha:
             shutil.rmtree(str(snapshot_dir), ignore_errors=True)
             refuse('试玩快照和刚查过的导出不一样（查完以后导出又变了，可能构建还在跑）。等构建完，'
                    '重新 scan --export、check，再起链接')
-        log = out / 'trial-links.json'
+        if any(not path.is_file() or CA.sha_file(path) != evidence[key] for key, path in bindings.items()):
+            refuse('试玩快照创建期间验收记录已变，请重新核对后再起链接。')
         rows = CA.read_json(log, [])
         rows = rows if isinstance(rows, list) else []
-        same_export = bool(rows) and isinstance(rows[-1], dict) and rows[-1].get('export_manifest_sha256') == expected
-        rows.append({'time': CA.now(), 'name': name, 'export': str(export), 'export_manifest_sha256': expected,
-                     'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'check_result_sha256': checked,
-                     'passed': not problems, 'draft': bool(problems), 'open_problems': len(problems)})
+        same_export = bool(rows) and isinstance(rows[-1], dict) and rows[-1].get('export_manifest_sha256') == export_sha
+        rows.append({'time': CA.now(), 'name': name, 'export': str(export), 'export_manifest_sha256': export_sha,
+                     'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'native': str(native) if native else None,
+                     'passed': not problems and not opts.draft, 'draft': opts.draft,
+                     'open_problems': len(problems), **evidence})
         CA.write_json(log, rows)
         say('试玩快照和查过的导出一字不差，记在 %s。' % log)
         if same_export:
@@ -179,25 +246,16 @@ def gate(argv, say=print):
 
 def main(argv):
     root = HERE.parents[1]
-    target = next((p for p in (root / 'remake-core/scripts/serve_preview.py', root / 'cocos-game-core/scripts/serve_preview.py')
-                   if p.is_file()), None)
-    if target is None:
+    target = root / 'remake-core/scripts/serve_preview.py'
+    if not target.is_file():
         raise SystemExit('Missing shared preview server remake-core/scripts/serve_preview.py')
     sys.path.insert(0, str(target.parent))
     if '-h' in argv or '--help' in argv:
         print(HELP, flush=True)
+    original = '--chinese-original' in argv
     argv, verify = gate(argv)
-    if verify is not None:
-        import browser_slots                                # the shared server imports this same module object
-        make_copy = browser_slots.snapshot
-
-        def checked_snapshot(source):
-            dest = make_copy(source)
-            verify(dest)
-            return dest
-        browser_slots.snapshot = checked_snapshot
-    sys.argv = [str(target)] + argv
-    runpy.run_path(str(target), run_name='__main__')
+    shared = runpy.run_path(str(target))
+    shared['main'](argv, verify_snapshot=verify, chinese_original=original)
 
 
 if __name__ == '__main__':

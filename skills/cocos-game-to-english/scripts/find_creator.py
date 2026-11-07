@@ -296,9 +296,8 @@ def sandbox_text(problem):
 
 
 # 生成时预防 R4F1 (#11, P02-3): every printed build command starts with `tiktok_finalize.py sync` (about 1 s: the
-# platform-kit files put back to their KIT_MANIFEST bytes, GameUIKit / RunSession / FxPool / ShopTx for new games, squashed
-# pictures reported) so a build never runs on parts that drifted; before, only SKILL.md said "run sync before every
-# build" (普查 startup_stuck 34 款, touch_coord_missing 28 款). A sync that exits 1 stops the build (&&).
+# platform-kit files put back to their KIT_MANIFEST bytes, GameUIKit / RunSession / FxPool / ShopTx for new games).
+# A sync that exits 1 stops the build (&&).
 FINALIZE = Path(__file__).resolve().parents[2] / 'remake-core' / 'scripts' / 'tiktok_finalize.py'
 BOARDS = ('remake', 'localize')
 
@@ -452,7 +451,7 @@ def say(r):
             lines.append('%s：%s' % (label, r['commands'][name]['text']))
     if r.get('commands') and (r.get('sync') or {}).get('argv'):
         lines.append('每条构建命令前面都带 tiktok_finalize.py sync（板块 %s，约 1 秒：平台包文件按哈希换回，新游戏装 GameUIKit、'
-                     'RunSession、FxPool、ShopTx，报压扁的图）；sync 没过就不构建，先改它报的问题。用脚本跑时按 --json 里的 '
+                     'RunSession、FxPool、ShopTx）。正式试玩前的 Sprite 比例由 source 检查。sync 没过就不构建。用脚本跑时按 --json 里的 '
                      'steps 依次跑。' % r['sync']['board'])
     if (r.get('commands', {}).get('bytedance-mini-game') or {}).get('native_sync_argv'):
         tt = r['commands']['bytedance-mini-game']

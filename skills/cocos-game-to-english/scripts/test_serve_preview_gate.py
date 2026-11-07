@@ -22,6 +22,7 @@ import threading
 import time
 import unittest
 import urllib.request
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 _spec = importlib.util.spec_from_file_location('english_serve_preview', str(HERE / 'serve_preview.py'))
@@ -35,18 +36,33 @@ def make_game(td, colour=(200, 120, 40, 255)):
     root = Path(td) / 'Game'
     (root / 'assets' / 'tex').mkdir(parents=True)
     (root / 'docs' / 'english').mkdir(parents=True)
+    (root / 'project.json').write_text('{"engine":"cocos-creator-js","version":"2.4.15"}')
     Image.new('RGBA', (48, 32), colour).save(str(root / 'assets' / 'tex' / 'btn.png'))
     web = root / 'build' / 'web-mobile'
     (web / 'assets').mkdir(parents=True)
     (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas></html>', encoding='utf-8')
     shutil.copy2(str(root / 'assets' / 'tex' / 'btn.png'), str(web / 'assets' / 'btn.png'))
+    native = native_dir(root)
+    native.mkdir()
+    for name in ('game.js', 'game.json', 'project.config.json'):
+        (native / name).write_text('{}')
+    Image.new('RGB', (48, 32), (35, 50, 80)).save(native / 'reward.jpg')
     # This suite isolates the Chinese gate. Supply a scoped synthetic art receipt; live capture is tested separately.
     matrix = {'cases':[dict(id='fixture', screen='home', kind='home', width=393, height=852, dpr=1,
                             recipe='test', environment='test', stable=False, witness=[{'path':'fixture'}])]}
     (root/'docs/art').mkdir(exist_ok=True)
     (root/'docs/art/capture-plan.json').write_text(json.dumps(matrix))
     synthetic_art_review(root, web)
+    import tiktok_finalize as F
+    from audit_image_review_record import main as image_review
+    assert not F.finalize_source(root, 'localize', steps=('art_static',))['blocks']
+    assert image_review(['write', '--directory', str(web), '--directory', str(native), '--out',
+                         str(root / 'docs/english/image-review.json'), '--ocr', 'fake']) == 0
     return root, web
+
+
+def native_dir(root):
+    return root / 'build' / 'bytedance'
 
 
 def synthetic_art_review(root, web):
@@ -124,6 +140,37 @@ class GateDecisions(unittest.TestCase):
         self.assertEqual(GATE.gate(argv)[1], None)
         self.assertEqual(GATE.gate(['--directory', '/nowhere', '--raw', '--idle-minutes', '0'])[1], None)
 
+    def test_formal_trial_requires_executed_sprite_check_and_actual_native_image_review(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            scan(root, web, env_for(td))
+            native = native_dir(root)
+            args = ['--directory', str(web), '--snapshot', '--open', '--native', str(native)]
+            import tiktok_finalize as F
+            F.finalize_source(root, 'localize', steps=())
+            with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                GATE.gate(args, say=quiet()[1])
+            self.assertIn('Sprite 比例', err.getvalue())
+
+            F.finalize_source(root, 'localize', steps=('art_static',))
+            from PIL import Image
+            Image.new('RGB', (48, 32), (80, 75, 50)).save(native / 'reward.jpg')
+            with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                GATE.gate(args, say=quiet()[1])
+            self.assertIn('逐图复核未通过', err.getvalue())
+            self.assertIn('reward.jpg', err.getvalue())
+
+    def test_direct_shared_open_cannot_skip_the_english_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            shared = HERE.parents[1] / 'remake-core/scripts/serve_preview.py'
+            result = subprocess.run([sys.executable, '-B', str(shared), '--directory', str(web), '--snapshot',
+                                     '--open', '--no-browser', '--project', str(root)],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('英化正式试玩请用', result.stderr)
+            self.assertNotIn('http://127.0.0.1:', result.stdout)
+
     def test_chinese_original_is_not_checked_and_flag_is_not_passed_on(self):
         lines, say = quiet()
         argv, verify = GATE.gate(['--directory', '.', '--snapshot', '--open', '--idle-minutes', '0',
@@ -189,7 +236,7 @@ class GateDecisions(unittest.TestCase):
             scan(root, web, env_for(td))
             lines, say = quiet()
             argv, verify = GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--project', str(root),
-                                      '--name', 'G 英文 第1轮'], say=say)
+                                      '--native', str(native_dir(root)), '--name', 'G 英文 第1轮'], say=say)
             self.assertIsNotNone(verify)
             self.assertIn('--project', argv)                 # the shared server still gets it
             self.assertIn('通过', ''.join(lines))
@@ -199,6 +246,8 @@ class GateDecisions(unittest.TestCase):
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual(len(log), 1)
             self.assertTrue(log[0]['passed'])
+            self.assertIn('art_receipt_sha256', log[0])
+            self.assertIn('image_review_sha256', log[0])
             self.assertEqual(log[0]['snapshot_manifest_sha256'], log[0]['export_manifest_sha256'])
             self.assertEqual(log[0]['name'], 'G 英文 第1轮')
             bad = Path(td) / 'snap-bad'
@@ -209,6 +258,23 @@ class GateDecisions(unittest.TestCase):
                 verify(bad)
             self.assertFalse(bad.exists())                   # the copy that does not match is removed
             self.assertIn('不一样', err.getvalue())
+
+    def test_reopen_only_checks_the_passed_records(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            scan(root, web, env_for(td))
+            args = ['--directory', str(web), '--project', str(root), '--native', str(native_dir(root)),
+                    '--snapshot', '--keep']
+            _, verify = GATE.gate(args, say=quiet()[1])
+            verify(shutil.copytree(web, Path(td) / 'first'))
+            with patch('chinese_audit.evaluate', side_effect=AssertionError('reopen must not rerun the check')):
+                _, verify = GATE.gate(args + ['--reopen'], say=quiet()[1])
+                verify(shutil.copytree(web, Path(td) / 'second'))
+                result = root / 'docs/english/chinese-audit/check-result.json'
+                result.write_text('{}')
+                with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                    GATE.gate(args + ['--reopen'], say=quiet()[1])
+                self.assertIn('找不到与当前导出和回执一致的已通过试玩记录', err.getvalue())
 
     def test_draft_starts_with_the_problems_listed(self):
         with tempfile.TemporaryDirectory() as td:
@@ -239,7 +305,8 @@ class TrialLinkTiming(unittest.TestCase):
     playtest): serve_preview.py records `stage_timer.py link <N>` itself, N = different exports handed out."""
 
     def link(self, root, web, td, say):
-        argv, verify = GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--project', str(root)], say=say)
+        argv, verify = GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--project', str(root),
+                                 '--native', str(native_dir(root))], say=say)
         snap = Path(tempfile.mkdtemp(prefix='snap-', dir=td))
         shutil.rmtree(str(snap))
         shutil.copytree(str(web), str(snap))
@@ -329,7 +396,8 @@ class RealServer(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root, web = make_game(td)
             env = env_for(td)
-            argv = ['--directory', str(web), '--snapshot', '--no-browser', '--idle-minutes', '0', '--name', 'test 英文']
+            argv = ['--directory', str(web), '--snapshot', '--no-browser', '--idle-minutes', '0',
+                    '--native', str(native_dir(root)), '--name', 'test 英文']
             p, lines, reader = self.start(td, argv, env)
             try:
                 p.wait(timeout=60)

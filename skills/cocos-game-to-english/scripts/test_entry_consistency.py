@@ -390,10 +390,15 @@ class TrialFirstThenFullChecks(unittest.TestCase):
             self.assertIn(early, st[3])
         self.assertIn('复查受影响整页、共享组件和新增页面', st[4])
         for late in ('check_known_issues.py', 'preflight.py', 'make_tiktok_zip.py',
-                     'build_checked_zip.py', '广告回归 10 例', 'tiktok_finalize.py source', 'image-review.json'):
+                     'build_checked_zip.py', '广告回归 10 例'):
             self.assertNotIn(late, st[3], late)
             self.assertNotIn(late, st[4], late)
             self.assertIn(late, st[5], late)
+        self.assertIn('tiktok_finalize.py check-source', st[5])
+        self.assertNotIn('再跑一次 `source`', st[5])
+        for early in ('tiktok_finalize.py source', 'audit_image_review_record.py write'):
+            self.assertIn(early, st[3])
+            self.assertNotIn(early, st[5])
 
     def test_trial_link_requires_language_art_and_playable_start(self):
         _, st = self.stages()
@@ -417,7 +422,7 @@ class TrialFirstThenFullChecks(unittest.TestCase):
     def test_trial_improve_rechecks_changed_art_before_next_link(self):
         _, st = self.stages()
         # 前期预防 (11.15): the round's own change is checked as it is made; the full suites still wait for stage 5
-        for phrase in ('本轮功能的局部验证随实现完成，完整套件留到第 5 阶段', '不提前跑第 5 阶段的完整套件', '一次全部改完', '只构建一次',
+        for phrase in ('本轮功能的局部验证随实现完成，完整套件留到第 5 阶段', '不提前跑第 5 阶段的完整套件', '一次全部改完', '同批导出 Web 和 Native 各一次',
                        '复查受影响整页、共享组件和新增页面', 'Saul 点名', '直到 Saul 说试玩没问题',
                        '先停掉上一轮的试玩服务', '不能只叫他刷新'):
             self.assertIn(phrase, st[4], phrase)
@@ -425,7 +430,7 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_full_checks_keep_every_check(self):
         _, st = self.stages()
-        for phrase in ('检查一条不减', '核对最后通过的美工证据与当前交付版本一致', '缺图、变形、色带', '不重复评审已认可的画风和配色',
+        for phrase in ('检查一条不减', '核对最后通过的美工证据与当前交付版本一致', '运行功能、平台兼容和最终 ZIP', '不重复评审已认可的画风和配色',
                        '用户可见的改动先给通过美工检查的新链接确认', 'logic_check.py', 'TikTok 固定适配', '运行时套件由写包入口跑',
                        '不再问一次'):
             self.assertIn(phrase, st[5], phrase)
@@ -457,12 +462,9 @@ class TrialFirstThenFullChecks(unittest.TestCase):
     def test_records_for_packaging_do_not_block_the_link(self):
         _, st = self.stages()
         # 前期预防 (11.15): the adapter's real entries are found in stages 1-2, the file is completed and run in stage 5
-        for record, when in (('`qa/ad-regression.json`', '第 1 / 2 阶段定位真实入口与字段，第 5 阶段补齐并运行完整套件'),
-                             ('`docs/english/image-review.json`', '第 5 阶段写')):
-            line = [l for l in st[2].splitlines() if l.startswith('   - **') and record in l.split('**')[1]]
-            self.assertEqual(len(line), 1, record)
-            self.assertIn(when, line[0], record)
-            self.assertIn('不挡英文试玩链接', line[0].split('**')[1], record)
+        line = next(l for l in st[2].splitlines() if l.startswith('   - **准备 `qa/ad-regression.json`'))
+        self.assertIn('第 5 阶段补齐并运行完整套件', line)
+        self.assertIn('不挡英文试玩链接', line.split('**')[1])
 
     def test_art_redo_starts_with_samples(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -935,6 +937,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
             self.assertIn(phrase, three, phrase)
         link = [l for l in three.splitlines() if l.startswith('   起链接：')][0]
         self.assertIn('serve_preview.py --directory <这轮的 Web 导出> --project <工程> --snapshot --open --idle-minutes 0', link)
+        self.assertIn('--native <已处理的 Native>', link)
         self.assertLess(three.index('**中文专项检查'), three.index('中文专项检查和完整美工检查都通过后，再确认三件'))
 
     def test_stage_one_link_is_marked_chinese_original(self):
@@ -945,13 +948,13 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
         _, st = self.stages()
         self.assertIn('每轮起新链接前做中文专项检查和受影响范围的完整美工复查', st[4])
         self.assertIn('scan 只识新加和改过的图', st[4])
-        self.assertIn('中文专项检查照第 3 阶段对这份导出再过一次', st[5])
+        self.assertIn('读取同版已通过的试玩前证据', st[5])
         self.assertIn('不能拿试玩的结果代替', st[5])
 
     def test_image_record_follows_the_chinese_check(self):
         _, st = self.stages()
         bullet = [l for l in st[2].splitlines() if l.startswith('   - **图片复核记录')][0]
-        for phrase in ('照中文专项检查的结果写', 'docs/english/chinese-audit/', 'chinese_audit 自动扫描', '不能凭印象手写'):
+        for phrase in ('照中文专项检查的结果写', 'docs/english/chinese-audit/', 'chinese_audit', '自动扫描', '不能凭印象手写'):
             self.assertIn(phrase, bullet, phrase)
 
     def test_any_computer_section_names_the_recognizers(self):
@@ -989,6 +992,7 @@ class ReworkAfterDelivery(unittest.TestCase):
         self.assertEqual(stage5.count('**出包后返工（简化.11.15'), 1)
         rework = stage5.split('**出包后返工（简化.11.15', 1)[1]
         for phrase in ('比如我修改了贴图，之后出包甚至又要检查一遍音频', 'rework_scope.py --old <出包文件夹> --native',
+                       '前两步在发新链接前完成',
                        '先在构建的副本上装平台件、压 PNG', '出完包写包入口自己再记一份',
                        '`<工程>/docs/checks/rework-<时间>.json`', '「你（AI）自己要查的」', '不再听声音',
                        '不重测存档、广告流程', '改了代码：就地验证改的那个功能', '`--rework-of` 默认 `auto`',

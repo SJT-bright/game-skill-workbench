@@ -24,9 +24,9 @@ description: 用户要求游戏本地预览、试玩、游玩或打开游戏时�
 
 保护已有标签页、登录、存档和服务。会消费道具、改变进度或领取奖励时，优先使用同字节构建的新本地 origin 或测试账户。记录隔离方式，不清浏览器数据、不改用户进度、不调用游戏函数造场景。
 
-## Ego Lite 默认路线
+## Ego Lite 测试路线
 
-先查找并读取 `ego-browser` Skill；本机入口为 `<SKILLS_DIR>/ego-browser/SKILL.md`。用户本次明确选择的执行器优先于默认路线和旧任务继承的 Chrome/CUA 流程。指定 Ego Lite 时先执行真实 `ego-browser nodejs` 命令，失败后才诊断。**被占就开新的，绝不等待（用户 2026-10-23）**：每个会话、每次测试用**自己新建的、名字唯一的** TaskSpace（`taskSpace("<用途> <线名> <时间> <随机>")`，绝不复用固定名字），记录数字 spaceId 并登记（`<SKILLS_DIR>/remake-core/scripts/browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>"`），本次测试内以同一 ID 恢复、复用 Page；遇到空间被别的会话/别的测试占用、正在被用、排队、还没轮到，**不等待、不接管别人的空间，立刻新建一个**。每次新建前先跑 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；旧 Ego 空间和仅心跳超时的活资源先核当前归属与用途，别人还在用的不动；**测试用完马上自己关（用户 2026-10-23，所有环节）**：`browser_slots.py close --name "<线名>"`（Ego 先由拥有者用已绑定的官方 API 结束，再核空间消失并注销；退出码 2 保留待处理记录），汇报前 `browser_slots.py check --name "<线名>"` 通过。不选择或检查用户未指定的 profile。
+先查找并读取 `ego-browser` Skill；本机入口为 `<SKILLS_DIR>/ego-browser/SKILL.md`。先通过官方 `ego-browser nodejs` 执行测试，失败时按实际错误排查 Ego。**被占就开新的，绝不等待（用户 2026-10-23）**：每个会话、每次测试用**自己新建的、名字唯一的** TaskSpace（`taskSpace("<用途> <线名> <时间> <随机>")`，绝不复用固定名字），记录数字 spaceId 并登记（`<SKILLS_DIR>/remake-core/scripts/browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>"`），本次测试内以同一 ID 恢复、复用 Page；遇到空间被别的会话/别的测试占用、正在被用、排队、还没轮到，**不等待、不接管别人的空间，立刻新建一个**。每次新建前先跑 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；旧 Ego 空间和仅心跳超时的活资源先核当前归属与用途，别人还在用的不动；**测试用完马上自己关（用户 2026-10-23，所有环节）**：`browser_slots.py close --name "<线名>"`（Ego 先由拥有者用已绑定的官方 API 结束，再核空间消失并注销；退出码 2 保留待处理记录），汇报前 `browser_slots.py check --name "<线名>"` 通过。不选择或检查用户未指定的 profile。
 
 全部页面导航、截图、点击、拖动和键盘输入优先走 Ego Lite 官方 CLI 的 Page API。Canvas 用当前截图确定 CSS 坐标。手机 UA、触摸模拟、移动端鼠标转触摸配置和设备尺寸必须在游戏脚本启动前设置；已经加载过游戏时，在同一 Page 配好后完整 reload，再核对 DOM、实际引擎触控能力和 Canvas 触摸监听，详见 [启动与触控核验](references/computer-use.md)。需要触摸阶段时用该 Page 的 `Input.dispatchTouchEvent`，记录 `input_transport=ego_page_cdp`；普通 `page.mouse` 不自动算触摸。
 

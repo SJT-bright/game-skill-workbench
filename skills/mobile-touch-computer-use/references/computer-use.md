@@ -4,7 +4,7 @@
 
 # Ego Lite 操作与恢复
 
-2026-10-15 用户指定以后默认用 Ego Lite；替代本页旧 Chrome/CUA 默认路线。用户本次明确选择优先于默认工具和历史任务路线。先读已安装 `ego-browser` Skill（本机 `<SKILLS_DIR>/ego-browser/SKILL.md`），以其当前 API 为准。
+Agent 浏览器测试统一使用 Ego Lite 官方接口。先读已安装 `ego-browser` Skill（本机 `<SKILLS_DIR>/ego-browser/SKILL.md`），以其当前 API 为准。
 
 用 `ego-browser nodejs` 的 heredoc 执行。**每个会话、每次测试新建自己的 TaskSpace，名字必须唯一**（用户 2026-10-23：被占就开新的，绝不等待；2026-10-27：`taskSpace(名字)` 遇到同名会恢复旧空间，两个测试同名就共用一个空间，一个 `finish()` 把另一个关掉，这是"测试空间反复失效"的原因。名字写成 `<用途> <线名> <年月日-时分秒> <6位随机>`，不用固定名字）：新建前先跑 `browser_slots.py sweep --close`（remake-core 的 scripts）关掉空了的旧空间；新建后打印 `spaceId` 并 `browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>"`；本次测试内用 `taskSpace(同一数字ID)` 恢复（用 ID，不用名字）；JS 变量不跨命令保存。用 `task.page("p1")`，复用 Page。空间被别的会话/测试占用、正在被用、排队或还没轮到时，**不等待、不接管，立刻新建一个**；同一个错误在自己的空间里复现时才按失败排查（换新空间不能把真失败说成通过）。不能操作其他任务的空间。
 

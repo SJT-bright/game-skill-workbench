@@ -315,6 +315,60 @@ def check_trial_source(project, board, manifest=None, options=None):
     return []
 
 
+PREPARED_NATIVE = Path('.tiktok-kit/native-prepared')
+
+
+def prepared_source_identity(project):
+    record = read_source_record(project)
+    if not record or not record.get('source_sha256'):
+        raise ValueError('缺少当前源码段记录')
+    keys = ('source_sha256', 'kit_version', 'board', 'policy', 'options')
+    return {key: record.get(key) for key in keys}
+
+
+def record_prepared_native(project, native, source_identity):
+    """Seal successful English Native preparation, before preview reads the build."""
+    import os
+    import tempfile
+    from verify_native_zip import native_directory_digest
+
+    if prepared_source_identity(project) != source_identity:
+        raise ValueError('源码记录在 Native 处理期间变化，请重新核对候选')
+    native_sha = native_directory_digest(native)
+    folder = Path(project) / PREPARED_NATIVE
+    folder.mkdir(parents=True, exist_ok=True)
+    record = {'schema': 'english-prepared-native.v1', 'source': source_identity,
+              'native_tree_sha256': native_sha}
+    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=folder, delete=False) as f:
+        temp = Path(f.name)
+        try:
+            json.dump(record, f, ensure_ascii=False)
+            f.write('\n')
+            f.close()
+            os.replace(temp, folder / (native_sha + '.json'))
+        finally:
+            temp.unlink(missing_ok=True)
+    return native_sha
+
+
+def check_prepared_native(project, native):
+    """Return the current candidate identity and its independent preparation record."""
+    from verify_native_zip import native_directory_digest
+
+    native_sha = native_directory_digest(native)
+    path = Path(project) / PREPARED_NATIVE / (native_sha + '.json')
+    try:
+        record = json.loads(path.read_text(encoding='utf-8'))
+        if record != {'schema': 'english-prepared-native.v1',
+                       'source': prepared_source_identity(project), 'native_tree_sha256': native_sha}:
+            raise ValueError('记录与当前源码或 Native 不符')
+    except (OSError, ValueError) as exc:
+        raise ValueError('当前 Native 缺少同版准备证据。请核对实际构建来源，在试玩前执行 '
+                         'tiktok_finalize.py native --project <工程> --native <候选> --board localize '
+                         '--app-id <目标AppID>。') from exc
+    return native_sha, path
+
+
 def _native_files(native):
     return T.Ctx('native', native).files()
 
@@ -583,10 +637,11 @@ def finalize_sync(project, board, native=None, policy=None, manifest=None, legac
     decision = decide_policy(project=project, override=policy, legacy=legacy, board=board)
     ctx = T.Ctx('source', project, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest)
+    sync_steps = SYNC_SOURCE_STEPS if board == 'localize' else SYNC_SOURCE_STEPS + ('art_static',)
     if decision['policy'] == 'legacy':
-        results = _detect_only(ctx, SYNC_SOURCE_STEPS)
+        results = _detect_only(ctx, sync_steps)
     else:
-        results = _run_steps(ctx, SYNC_SOURCE_STEPS)
+        results = _run_steps(ctx, sync_steps)
     results.append(sync_ui_kit(ctx))
     results.append(sync_run_parts(ctx))   # 生成时预防 R4F1 (#28): RunSession.js + FxPool.js for new remake games
     results += _detect_only(ctx, SYNC_END_STEPS) if decision['policy'] == 'legacy' else _run_steps(ctx, SYNC_END_STEPS)   # R4N6
@@ -722,8 +777,17 @@ def main(argv=None):
     else:
         if not args.native:
             ap.error('--native is required')
+        prepared_source = None
+        if (args.board == 'localize' and args.project and not args.policy
+                and not check_trial_source(args.project, args.board, options=options)):
+            prepared_source = prepared_source_identity(args.project)
         record = finalize_native(args.native, args.project, args.board, args.app_id, policy=args.policy,
                                  options=options)
+        if prepared_source and not record['blocks']:
+            try:
+                record['prepared_native_sha256'] = record_prepared_native(args.project, args.native, prepared_source)
+            except (OSError, ValueError) as exc:
+                record['blocks'].append(T.finding('K_trial_native_prepared', 'block', str(exc)))
         print(table_markdown(record))
     _print(record)
     return 1 if record['blocks'] else 0

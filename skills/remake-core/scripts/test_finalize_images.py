@@ -304,6 +304,24 @@ with tempfile.TemporaryDirectory(prefix='finalize-images ') as td:
     png.apply(Ctx('native', nat3, project=root / 'c3', policy='new'))
     check('png-deterministic', tree_bytes(nat2) == tree_bytes(nat3) and tree_bytes(nat2) != {})
 
+    # Rework analyzes a temporary copy with the same output as a normal run.
+    raw = root / 'preview-raw'
+    raw.mkdir()
+    noisy(200, 120, seed=12).save(raw / 'a.png')
+    expected = root / 'preview-expected'
+    shutil.copytree(raw, expected)
+    cache_path = proj / '.tiktok-kit/png-cache.json'
+    cache_path.write_text(json.dumps(dict(cache, entries={'bad': []})))
+    invalid_cache = cache_path.read_bytes()
+    invalid_mtime = cache_path.stat().st_mtime_ns
+    preview_options = {'png_cache_read_only': True}
+    preview = png.apply(Ctx('native', raw, project=proj, options=preview_options))
+    ordinary = png.apply(Ctx('native', expected, project=root / 'preview-ordinary'))
+    check('rework-computes-same-png-output-without-persisting-bad-cache', not preview['blocks']
+          and not ordinary['blocks'] and preview['changed'] and tree_bytes(raw) == tree_bytes(expected)
+          and cache_path.read_bytes() == invalid_cache and cache_path.stat().st_mtime_ns == invalid_mtime
+          and any('invalid PNG hashes' in w['message'] for w in preview['warnings']), preview)
+
     # quantize=false via image-overrides, found in the build by uuid
     nq = root / 'nq'
     nqp = nq / 'proj'

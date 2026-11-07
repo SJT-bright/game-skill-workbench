@@ -33,6 +33,7 @@ OVERRIDES = 'image-overrides.json'
 ARGS = ['--quality=0-85', '--skip-if-larger', '--strip']
 SKIPPED_CODES = (98, 99)          # 98: result would be larger, 99: quality below minimum -> keep the input
 GATE = 'PNG0_compress'
+SHA256 = re.compile(r'[0-9a-f]{64}')
 UUID_IN_NAME = re.compile(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
 
 
@@ -86,12 +87,18 @@ def load_cache(ctx, version):
         data = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return {}, f'{KIT_DIR}/{CACHE} unreadable, rebuilt'
-    if (not isinstance(data, dict) or not data.get('pngquant') or data.get('args') != ARGS
-            or (version is not None and data.get('pngquant') != version)):
+    cache_version = data.get('pngquant') if isinstance(data, dict) else None
+    if (not isinstance(cache_version, str) or not cache_version or data.get('args') != ARGS
+            or (version is not None and cache_version != version)):
         return {}, f'{KIT_DIR}/{CACHE} made by pngquant {data.get("pngquant") if isinstance(data, dict) else "?"} ' \
                    f'{data.get("args") if isinstance(data, dict) else ""}; cache discarded'
     entries = data.get('entries')
-    return (dict(entries) if isinstance(entries, dict) else {}), None
+    if not isinstance(entries, dict) or any(
+        not SHA256.fullmatch(key) or not isinstance(value, str) or not SHA256.fullmatch(value)
+        for key, value in entries.items()
+    ):
+        return {}, f'{KIT_DIR}/{CACHE} contains invalid PNG hashes; cache discarded'
+    return dict(entries), None
 
 
 def save_cache(ctx, version, entries):
@@ -287,8 +294,11 @@ def apply(ctx):
             changed_n += 1
             res.change(path.relative_to(root).as_posix(), data, new, 'pngquant 256 colours')
         cache[sha256(new)] = sha256(new)            # an output fed back in is already final
-    save_cache(ctx, p['version'], cache)
-    again = plan(ctx, cache=cache)                   # re-read and self-check (design 1.4)
+    cache_read_only = (_get(ctx, 'options') or {}).get('png_cache_read_only', False)
+    if not cache_read_only:
+        save_cache(ctx, p['version'], cache)
+    # The copy is checked again using the output hashes from this run.
+    again = plan(ctx, cache=cache, prepared_only=cache_read_only)
     if again['blocks'] or again['todo']:
         res.block(GATE, 'png: rewrite did not verify, still to compress: ' +
                   ', '.join(x[0].relative_to(root).as_posix() for x in again['todo'][:5]))

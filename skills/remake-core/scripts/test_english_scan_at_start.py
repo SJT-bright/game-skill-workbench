@@ -232,6 +232,49 @@ class ReviewRecordWriter(Base):
         rec['images'][0]['chinese'] = 'no' if rec['images'][0]['chinese'] == 'yes' else 'yes'
         self.assertFalse(self.check(files, rec)['passed'], 'hand edit of a written record passed')
 
+    def test_same_texture_with_new_atlas_geometry_must_be_reviewed(self):
+        files = self.pkg()
+        descriptor = next(name for name in files if name.endswith('wave.plist'))
+        atlas = plistlib.loads(files[descriptor])
+        frame = atlas['frames']['wave_0.png']
+        atlas['frames'] = {'wave_0.png': frame}
+        files[descriptor] = plistlib.dumps(atlas)
+        with self.env():
+            approved = review.write(files, 'fake')
+            self.assertTrue(self.check(files, approved)['passed'])
+            self.assertIs(review.write(files, 'fake', previous=approved), approved)
+            frame['frame'] = '{{20,0},{20,10}}'
+            files[descriptor] = plistlib.dumps(atlas)
+            failed = self.check(files, approved)
+            self.assertFalse(failed['passed'])
+            self.assertIn('atlas descriptor or page changed', failed['problems'][0])
+            current = review.write(files, 'fake', previous=approved)
+        self.assertEqual(current['generated_by']['reused'], 1)
+        self.assertFalse(self.check(files, current)['passed'])
+        page = next(entry for entry in current['images'] if entry['file'].endswith('wave.png'))
+        self.assertEqual((page['chinese'], page['slices']), ('yes', 1))
+
+    def test_distinct_atlas_uses_of_same_image_are_checked(self):
+        files = self.pkg()
+        descriptor = next(name for name in files if name.endswith('wave.plist'))
+        atlas = plistlib.loads(files[descriptor])
+        approved_atlas = dict(atlas, frames={'wave_0.png': atlas['frames']['wave_0.png']})
+        texture = next(name for name in files if name.endswith('wave.png'))
+        web = {descriptor: plistlib.dumps(approved_atlas), texture: files[texture]}
+        native = {'native/' + descriptor: files[descriptor], 'native/' + texture: files[texture]}
+        with self.env():
+            approved = review.write(web, 'fake')
+            combined = review.write({**web, **native}, 'fake', previous=approved)
+        self.assertFalse(self.check(native, approved)['passed'])
+        self.assertFalse(self.check({**web, **native}, combined)['passed'])
+        self.assertEqual(combined['generated_by']['reused'], 0)
+
+        self.fake[psha(self.frames[1])] = 'BIG WAVE!'
+        with self.env():
+            both_clean = review.write({**web, **native}, 'fake', previous=combined)
+        self.assertTrue(self.check({**web, **native}, both_clean)['passed'])
+        self.assertTrue(self.check(native, both_clean)['passed'])
+
     def test_no_recognizer_leaves_pending_until_a_person_decides(self):
         self.assertTrue(hasattr(review, 'write'), 'no script writer for image-review.json')
         files = self.pkg(chinese_frame=False)

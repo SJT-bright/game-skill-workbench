@@ -84,6 +84,19 @@ def tree_digest(file_sha256):
     return h.hexdigest()
 
 
+def native_directory_digest(root):
+    """Fingerprint the files that can become Native ZIP members."""
+    root = Path(root)
+    hashes = {}
+    for path in root.rglob('*'):
+        rel = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            raise ValueError('symlink in Native candidate: ' + rel)
+        if path.is_file() and not forbidden(rel):
+            hashes[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return tree_digest(hashes)
+
+
 RECEIPT_SCHEMA = 2
 
 

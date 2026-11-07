@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T16:33:15.383Z",
-  "treeHash": "30dd7bd987b9dc309e70b13531436b9ddf94702df2d7772bf720b78a529e5228",
+  "createdAt": "2026-11-07T16:34:12.635Z",
+  "treeHash": "d759d1a87e6e1ecd03adf6c18122f3830c963134874d790f22fecc427b645b58",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3441,9 +3441,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "dae58c232c85fa7b13c9504a68cda61a01237d7bc14812e318c5bb837c122f5c",
+      "treeHash": "0f9a889529b2030aac54a426c9ff8702ac9055477107dcc48ffd4ef8e498df75",
       "fileCount": 629,
-      "bytes": 12404677,
+      "bytes": 12421820,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -4407,8 +4407,8 @@
         },
         {
           "path": "references/check-stages.md",
-          "hash": "965a8ea9de23261c0c2a06bcd0b8468e4286458813439389681c8ea41a0ea4f5",
-          "size": 7656,
+          "hash": "e1b9306b27c0b7c772726442da92c7ab8a1a927cca3a43878bb870b11f15f9d0",
+          "size": 7483,
           "executable": false
         },
         {
@@ -4533,8 +4533,8 @@
         },
         {
           "path": "references/process-gates.md",
-          "hash": "c6fafa646124aebe67e3344fd95676f88ba9ccf3b69795d31315b49564cb917a",
-          "size": 20113,
+          "hash": "b4051d86ce14fb850b5eeddc0025cdc31de81f2b43f2931ef07bd725abd272a3",
+          "size": 19938,
           "executable": false
         },
         {
@@ -4575,8 +4575,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "8b0e8002e87b8c3dd64c507c9bc77a006b10774d77ddf948a30e3b2d709084d8",
-          "size": 55084,
+          "hash": "b5111fa419e3ca1cd12d1f8205b41fad6b534acaff25c4e0d0cecb6c88bb8401",
+          "size": 54908,
           "executable": false
         },
         {
@@ -4839,8 +4839,8 @@
         },
         {
           "path": "scripts/audit_image_review_record.py",
-          "hash": "e91c2114dce5b16ef964e41814007bb9af9930d664f51e2ef210c96c5f106b8a",
-          "size": 14063,
+          "hash": "694ae71b4cbe63c62b95cfe2e3e6d01631f42eb6115c76d4b44cb75e97a2c418",
+          "size": 20304,
           "executable": false
         },
         {
@@ -5223,8 +5223,8 @@
         },
         {
           "path": "scripts/extract_ui_layout.py",
-          "hash": "26583cb2c2ee9125a33b6f1a47f8ace13ef46b63ec2115117f5397a6bdafbdbb",
-          "size": 28227,
+          "hash": "09bc68beb8faf46a41ccaa36f354c2bd887672bc55ebe1e937878445b8bbe09a",
+          "size": 28576,
           "executable": false
         },
         {
@@ -5403,8 +5403,8 @@
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "40f4575a70020d0f3fc8edb83e7f4f8b700f4c342226ec8389aa7d7bb11689cd",
-          "size": 43667,
+          "hash": "5620a0305333018efb75e928036b84dcfa8cc0dd308183dcdb9ca6bb696360f2",
+          "size": 46662,
           "executable": false
         },
         {
@@ -5727,8 +5727,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "b120810ecbb84c27cef55de52acd5757fbe9c992970592e8257b3552490f05ef",
-          "size": 44362,
+          "hash": "b3f2a1964f9ae39d7c9599f067b2f26152eca21ccd14161edd068a1ead8f458f",
+          "size": 44805,
           "executable": false
         },
         {
@@ -6063,8 +6063,8 @@
         },
         {
           "path": "scripts/test_english_scan_at_start.py",
-          "hash": "74e040bb130d99e563d16ed6bd086b64764865000f90888cea02e798a74d37e7",
-          "size": 12205,
+          "hash": "747eef4099c211faa5dcd49d23f3f04e6e9fe6fb1231ddf7e1ce28ab9529de38",
+          "size": 14697,
           "executable": false
         },
         {
@@ -6081,8 +6081,8 @@
         },
         {
           "path": "scripts/test_finalize_images.py",
-          "hash": "65d5b3b7ffdbbaa4bb7c482b27353f922c5865b2a3c68de10eaa8c336e4294b4",
-          "size": 21014,
+          "hash": "553f6d60fd4527cf7a7d6ca9d801369c4041602fb22163de25bd73945440af4a",
+          "size": 22104,
           "executable": false
         },
         {
@@ -6981,8 +6981,8 @@
         },
         {
           "path": "scripts/tiktok_finalize.py",
-          "hash": "dbace024b69fbb4bd74199b09873c3f0177d951000557f9e6834cfdd740c0eb7",
-          "size": 42533,
+          "hash": "c02b3eba4e0a042244e2ebc172d88373d9f555f77863975e20515be38c2e8bc4",
+          "size": 45609,
           "executable": false
         },
         {
@@ -7089,8 +7089,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/png.py",
-          "hash": "333a769340aa3c96f1d808d8ea9e5ae761a358daeb79ccd98305f3896a3b80f2",
-          "size": 13887,
+          "hash": "806c3c158f5bad9ce5209a90a3f7e78fc0f21b6cc4efd2ef85624ab3591f5165",
+          "size": 14393,
           "executable": false
         },
         {
@@ -7203,8 +7203,8 @@
         },
         {
           "path": "scripts/verify_native_zip.py",
-          "hash": "39c52da9ac2ce1022fd1f12aa664c86d1f3175724ee50ec99080227b1e6254e1",
-          "size": 24309,
+          "hash": "0a9bc30ca065ee27ae90be43994bc4b15ba699f40c7ab19fb722f62563f5aa2d",
+          "size": 24784,
           "executable": false
         },
         {

@@ -177,13 +177,18 @@ def text_of(n):
 
 
 class Screen:
-    def __init__(self, path, d, o):
+    def __init__(self, path, d, o, source_indexes=None):
         self.d, self.o, self.notes = d, o, []
-        project=next((p for p in Path(path).resolve().parents if (p/'assets').is_dir()),None)
-        self.source_index={}
-        if project:
-            for source in (project/'assets').rglob('*.png'):
-                self.source_index.setdefault(source.stem,[]).append(source)
+        project = next((p for p in Path(path).resolve().parents if (p / 'assets').is_dir()), None)
+        if source_indexes is None:
+            source_indexes = {}
+        if project not in source_indexes:
+            index = {}
+            if project:
+                for source in (project / 'assets').rglob('*.png'):
+                    index.setdefault(source.stem, []).append(source)
+            source_indexes[project] = index
+        self.source_index = source_indexes[project]
         self.size = [round(d['page']['width'] * (d['page'].get('dpr') or 1)), round(d['page']['height'] * (d['page'].get('dpr') or 1))]
         self.screen_area = self.size[0] * self.size[1]
         tags = o.get('tags') or {}
@@ -434,12 +439,14 @@ def build(dump_inputs, overrides_path=None):
     o = load_overrides(overrides_path)
     ordered = sorted(dumps, key=lambda x: (x[1].get('_layout_name', x[1]['screen']), str(x[0])))
     screens = []
+    # Screens from the same project share its file index during this extraction.
+    source_indexes = {}
     for f, d in ordered:
         # One page that cannot be read (no popup found, no panel) used to stop the layout for every page, so the
         # whole row only said "读不出布局" (合成进化恐龙 2026-11-05: 1 of 66 pages). Now that page carries the error
         # and audit_ui_coverage fails it alone; the other pages are still checked (美工skill 2026-11-06).
         try:
-            screens.append(Screen(f, d, o).build())
+            screens.append(Screen(f, d, o, source_indexes).build())
         except ValueError as exc:
             screens.append({'name': d.get('_layout_name', d['screen']), 'kind': 'page' if d['kind'] == 'home' else
                             ('popup' if d['kind'] == 'result' else d['kind']), 'error': str(exc), 'auto_notes': []})

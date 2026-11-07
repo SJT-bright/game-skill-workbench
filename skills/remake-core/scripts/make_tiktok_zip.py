@@ -214,7 +214,10 @@ def english_image_problems(files, project, board):
     import audit_image_review_record
     import audit_new_english_images
     docs = Path(project) / 'docs' / 'english'
-    problems = ['image review: ' + p for p in audit_image_review_record.check(files, docs / 'image-review.json')['problems']]
+    review = docs / 'image-review.json'
+    problems = ['image review: ' + p for p in audit_image_review_record.check(files, review)['problems']]
+    if not problems:
+        problems.extend(pretrial_native_problems(files, project, review))
     pre = docs / 'pre-english-images.json'
     if not pre.is_file():
         problems.append('pre-English image list missing: %s (audit_new_english_images.py --make-list <Chinese original '
@@ -225,6 +228,43 @@ def english_image_problems(files, project, board):
         except (OSError, ValueError, TypeError) as error:
             problems.append('pre-English image list unreadable: %s (%s)' % (pre, error))
     return problems
+
+
+def pretrial_native_problems(files, project, review):
+    """Recheck the prepared candidate from the last formal trial, using actual writer input bytes."""
+    from art_receipt import receipt_path
+    from tiktok_finalize import PREPARED_NATIVE, SOURCE_RECORD
+
+    project = Path(project)
+    prepared = project / PREPARED_NATIVE
+    requires_bound_trial = any(prepared.glob('*.json'))
+    missing_trial = ['ART_trial_native: 已处理的 Native 需要成功启动的同版正式试玩记录。']
+    trial_log = project / 'docs/english/chinese-audit/trial-links.json'
+    if not trial_log.is_file():
+        return missing_trial if requires_bound_trial else []
+    try:
+        rows = json.loads(trial_log.read_text(encoding='utf-8'))
+        if not isinstance(rows, list):
+            raise ValueError('expected a list')
+    except (OSError, ValueError) as error:
+        return ['ART_trial_native: 试玩记录无法读取：' + str(error)]
+    row = next((row for row in reversed(rows) if isinstance(row, dict) and row.get('passed') is True
+                and row.get('draft') is False and row.get('native_tree_sha256')), None)
+    if row is None or (requires_bound_trial and not row.get('native_preparation_sha256')):
+        return missing_trial if requires_bound_trial else []
+    actual = vnz.tree_digest({name: hashlib.sha256(data).hexdigest() for name, data in files.items()})
+    if actual != row['native_tree_sha256']:
+        return ['ART_trial_native: 当前写包用的 Native 与正式试玩绑定的候选不同。先核对变更范围并更新正式试玩证据。']
+    paths = {'image_review_sha256': review, 'art_receipt_sha256': receipt_path(project),
+             'source_record_sha256': project / SOURCE_RECORD}
+    if requires_bound_trial:
+        paths['native_preparation_sha256'] = prepared / (actual + '.json')
+    try:
+        if any(sha(path) != row.get(key) for key, path in paths.items()):
+            return ['ART_trial_native: 正式试玩的前置证据已更新，请核对同版后重新记录。']
+    except OSError as error:
+        return ['ART_trial_native: 正式试玩的前置证据无法读取：' + str(error)]
+    return []
 
 
 def sha(path):
@@ -254,8 +294,8 @@ def finalize_for_writer(native, project, board, app_id, options=None):
        project marker / the frozen legacy list (design section 2).
     v7.8 (U7 补): with step 1 the art receipt <project>/.tiktok-kit/art-receipt.json is CHECKED (art_receipt.check,
        never a new art run): a new remake game whose receipt is missing, not a pass, or whose images changed is
-       refused here, before the build folder is touched; legacy / English games and "3.x 未覆盖" get a warning and a
-       row in the finalize table (record['art_receipt']).
+       refused here, before the build folder is touched. English also requires a passing art receipt and prepared
+       PNGs; legacy remake warnings keep their existing policy.
     -> (record, gate_context, problems). problems non-empty = refuse; record is None when step 1 refused."""
     import tiktok_finalize as F
     options = dict(options or {})
@@ -263,16 +303,23 @@ def finalize_for_writer(native, project, board, app_id, options=None):
         kit = F.T.load_manifest()
     except F.T.KitError as error:
         return None, None, ['K_kit_unusable: %s' % error]
+    source_board = (F.read_source_record(project) or {}).get('board') if project else None
+    board_mismatch = bool(board and source_board and board != source_board)
+    board = board or source_board
     art = art_receipt_check(project, board)
     localize = board == 'localize' or (art or {}).get('board') == 'localize'
     source = (F.check_trial_source(project, 'localize', kit, options) if localize else
               F.check_source_record(project, kit, options))
     problems = ['%s: %s' % (f['id'], f['message']) for f in source]
-    if art and art['level'] == 'block':
+    if board_mismatch:
+        problems.append('K5_source_finalized: writer board differs from the source record')
+    if art and (art['level'] == 'block' or
+                (localize and art.get('status') != 'pass' and not art.get('locked_art_maintenance'))):
         problems.append('%s: %s' % (art['gate'], art['message']))
     if problems:
         return None, None, problems
     if localize:
+        board = 'localize'
         options['prepared_png_only'] = True
     record = F.finalize_native(native, project, board, app_id, manifest=kit, options=options)
     record['source_record'] = source_record_ref(project)
@@ -394,14 +441,16 @@ def regression_receipt(regressions):
         return None
 
 
-def write_zip(native, files, target):
+def write_zip(native, files, target, *, reviewed_files=None):
     from upload_size_gate import enforce
-    enforce({rel: (native / rel).stat().st_size for rel in files}, json.loads((native / 'game.json').read_text(encoding='utf-8-sig')))
     from audit_no_ad_simulator import enforce_files
-    payload = {rel: (native / rel).read_bytes() for rel in files}
+    payload = reviewed_files if reviewed_files is not None else {rel: (native / rel).read_bytes() for rel in files}
+    if set(payload) != set(files):
+        raise ValueError('Native file list changed after review')
+    enforce({rel: len(data) for rel, data in payload.items()}, json.loads(payload['game.json'].decode('utf-8-sig')))
     enforce_files(payload)
     with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-        for rel in sorted(files):
+        for rel in sorted(payload):
             zi = zipfile.ZipInfo(rel, FIXED_TIME)
             zi.compress_type = zipfile.ZIP_DEFLATED
             zi.external_attr = 0o644 << 16
@@ -597,11 +646,11 @@ def main():
     tmpdir = Path(tempfile.mkdtemp(prefix='.tiktok-zip-', dir=out.parent))
     try:
         tmp = tmpdir / out.name
-        write_zip(native, sizes, tmp)
+        write_zip(native, sizes, tmp, reviewed_files=obligation_files)
         result = vnz.verify(tmp, a.app_id)                    # built-in TikTok limits, forbidden entries, CRC, root entry
-        tree = {rel: sha(native / rel) for rel in sizes}
-        if tree != result['file_sha256']:
-            raise ValueError('ZIP and the Native build differ in paths or file bytes')
+        reviewed_tree = {rel: hashlib.sha256(data).hexdigest() for rel, data in obligation_files.items()}
+        if reviewed_tree != result['file_sha256']:
+            raise ValueError('ZIP differs from the Native bytes reviewed before packaging')
         check = tmpdir / 'extracted copy'                     # independent extraction into a folder with a space
         with zipfile.ZipFile(tmp) as z:
             z.extractall(check)

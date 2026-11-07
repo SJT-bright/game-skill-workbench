@@ -595,13 +595,14 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
     except Exception:
         browser_slots = None
     current_export = directory                          # what the link must show (P21 ⑤), also with --snapshot
+    record_ready_trial = None
     if args.snapshot:
         if browser_slots is None:
             raise SystemExit('--snapshot needs browser_slots.py next to this script')
         directory, snap_where, snap_own = make_snapshot(directory, args.project, browser_slots)  # R4N3
         if verify_snapshot is not None:
             try:
-                verify_snapshot(directory)
+                record_ready_trial = verify_snapshot(directory)
             except (SystemExit, OSError, ValueError):
                 import shutil
                 shutil.rmtree(directory, ignore_errors=True)
@@ -612,7 +613,13 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
     handler = partial(Handler, directory=str(directory), phone_size=None if args.raw else phone_size, preview_token=token,
                       ad_simulator=args.ad_simulator, ad_simulator_setup=args.ad_simulator_setup,
                       touch_bridge=not args.raw)
-    server = ThreadingHTTPServer(('127.0.0.1', args.port), handler)
+    try:
+        server = ThreadingHTTPServer(('127.0.0.1', args.port), handler)
+    except OSError:
+        if args.snapshot:
+            import shutil
+            shutil.rmtree(directory, ignore_errors=True)
+        raise
     url = f'http://127.0.0.1:{server.server_port}/'
     slot = None
     if browser_slots is not None:
@@ -623,6 +630,18 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
         except Exception:
             slot = None
     serving = None
+
+    def abort_start(check_server=None):
+        if check_server is not None:
+            stop_check_server(check_server)
+        server.shutdown()
+        server.server_close()
+        if slot:
+            browser_slots.release(slot)
+        if args.snapshot:
+            import shutil
+            shutil.rmtree(directory, ignore_errors=True)
+
     for_person = args.keep or args.open or args.idle_minutes == 0
     if for_person:
         serving = threading.Thread(target=server.serve_forever, daemon=True)
@@ -631,17 +650,18 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
         ok, rows, problem = entry_readback(url, current_export, html_injected=args.ad_simulator)
         if not ok:
             print('不给试玩链接：%s。重新导出完、确认导出目录对了，再起一个新的预览服务。' % problem, file=sys.stderr, flush=True)
-            server.shutdown()
-            server.server_close()
-            if slot:
-                browser_slots.release(slot)
+            abort_start()
             raise SystemExit(1)
         print('试玩链接读回核对：入口 %d 个文件和现在的导出一字不差（%s）。' % (len(rows), '、'.join(r['file'] for r in rows)),
               flush=True)
         # 生成时预防 #40 (普查 trial_link_dead 14、stale_preview 10): the screenshot and the trial smoke play the game
         # and the game writes its save (localStorage) for the origin it runs on. They run on a second port of their
         # own (another origin, its own localStorage), so the link a person opens starts from a fresh save.
-        check_server, check_url = start_check_server(handler)
+        try:
+            check_server, check_url = start_check_server(handler)
+        except OSError:
+            abort_start()
+            raise
         # 生成时预防 P21 ⑤ (后半): one Ego screenshot of the game page before the link is printed
         import tempfile
         shot_url = check_url + ('__preview/%s/' % token if token else '') + 'index.html?__phone_game=1&__home_shot=1'
@@ -655,11 +675,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
             fields = ('browser_route', 'input_transport', 'session_id', 'space_name', 'space_finished', 'screenshot')
             print('PREVIEW_HOME_EGO ' + json.dumps({key: shot_info[key] for key in fields}, ensure_ascii=False), flush=True)
         if level == 'block':
-            stop_check_server(check_server)
-            server.shutdown()
-            server.server_close()
-            if slot:
-                browser_slots.release(slot)
+            abort_start(check_server)
             raise SystemExit(1)
     if args.keep:
         # v7.8 (总表 B21 / B30 F): the trial-link smoke runs on the same pages before the link is printed; a failure keeps
@@ -668,15 +684,17 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
         level, message = trial_smoke_gate(check_url, directory, args.adapter, ad_simulator=args.ad_simulator)
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
         if level == 'block':
-            stop_check_server(check_server)
-            server.shutdown()
-            server.server_close()
-            if slot:
-                browser_slots.release(slot)
+            abort_start(check_server)
             raise SystemExit(1)
     if for_person:
         stop_check_server(check_server)
         print('自动截图和冒烟用的是单独的检查端口，试玩链接 %s 没被自动打开过，存档是新的。' % url, flush=True)
+    if record_ready_trial is not None:
+        try:
+            record_ready_trial()
+        except (SystemExit, OSError, ValueError):
+            abort_start()
+            raise
     lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
     entry_kind = '内部QA入口（禁止交给用户试玩）' if args.raw else f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
     print(f'{entry_kind}：{url}\n（用户试玩会自动请求独立 Google Chrome 窗口；同时在回复中保留此本地链接。须读回实际窗口，不能把启动请求当作已显示。）\n保持窗口打开；按 Control+C 结束。{lifetime}'

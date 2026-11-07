@@ -38,12 +38,13 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 | 集合预览、首尾压框、装备对应 | [集合预览](references/collection-preview-review.md) |
 | 拼装后的实际画面和输入 | [美术自审](references/artwork-and-feedback.md)、[局部UI契约](references/local-ui-contract.md) |
 | 用户确认后的检查范围 | [美术前移与锁定](references/art-before-trial.md)、[执行去重](../cocos-game-check/test/references/review-execution-plan.md) |
+| 新游戏开工、共享修改或反复返工 | [少返工的制作与采集](references/art-iteration-workflow.md)（用途盘点、首件、故障分流和下一步计划） |
 
 已有核准整词字图且可取得同款无字底的固定英文按钮，优先按[固定词按钮生成](references/fixed-caption-button.md)把底图、图标和整词按实尺寸一次合成一张 PNG。其余已知文字/按钮与其底图由内置image_gen整体生成，页面标题用图片字，游戏名不放进游戏（原位置放主角或图案图），动态数字使用生成的位图字；不以程序字或空底叠字冒充。字图等比缩放，实际组合图核字芯/描边、装饰压字、关闭与父面板、最长数字串和字距；普通矩形边界通过不能代替实际画面。
 
 **数值栏必须整组制作（Saul 2026-11-04）**：任何页面的 LEVEL / Lv. 固定标签都做图片字，与数值同组的 GOAL、SCORE 及 /、:、%、+、−、× 等实际符号一起按同套画风制作。生成前列齐词、数字与符号，按[数值栏整组制作](references/production-prevention.md#数值栏的词数字与符号整组制作)接入第一组；不能只换数字，把普通标签或符号留在旁边。
 
-**制作和检测联动（11.17.4）**：固定按钮与透明切片用[生产联动入口](references/production-check-link.md)自动登记原料、配方和应查实例；新制普通素材先列跨页 CSS 尺寸/字体预算，首件核布局写入者、状态图和实际点击区；首件接入用 `art_check.py --production-only` 调原文字尺寸、布局适配和像素检查器；整轮前先按[输入预检](references/capture-rounds.md#整轮像素检查前先核输入11174)核对当前采集范围与 Web 版本。正常试玩检查核同一份声明并复用仍有效的像素计算，素材通过不替代页面通过。
+**制作和检测联动（11.17.5）**：开工按[少返工的制作与采集](references/art-iteration-workflow.md)查共享消费者、定跨用途预算；固定按钮与透明切片用[生产联动入口](references/production-check-link.md)登记原料、配方和实例。首件用 `--production-only --first-piece-case ID` 检查选中整页，其余实例明确待验。每批完成或失败后用原采集身份和下一步计划区分制作、接入、构建与采集故障；同因修正合批，避免重复整轮。完整检查前先核输入，像素计算只复用输入与规则均未变化的项，首件不代替页面或试玩验收。
 
 **独立图标与符号先锁显示槽**：本次新增或替换的视频图标、勾、乘号、关闭符号和图文按钮，生图前确定用途与设计尺寸，PNG 像素不能决定节点显示大小；首件按真实 canvas 换算，在 [visual-slots 的 display_budget](references/local-ui-contract.md#高清图标接入时锁定独立显示预算) 登记各受影响视口的独立期望宽高。图标按等比适配后的实际 Art 底板定位，配合 inside 和图文间隔，不能只核较大的触摸 root。底板文字已烘焙时，生成规格必须预留图标净空；缺留白就调整制作规格或使用完整图文按钮，不能靠默认边距强行叠加。ad-boost 面板同时遵循随包的显示槽规则，并在批量制作前跑其调用集回归。
 

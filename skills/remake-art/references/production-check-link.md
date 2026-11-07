@@ -43,10 +43,10 @@ python3 <skills>/remake-core/scripts/art_production.py --project PROJECT --adopt
 
 ```sh
 python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --production-only --out OUTSIDE_PROJECT
-python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --production-only --dumps FIRST_PIECE_DUMPS --board localize --out ANOTHER_FRESH_OUTSIDE_PROJECT
+python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --production-only --dumps FIRST_PIECE_DUMPS --board localize --first-piece-case VISUAL_SLOT_ID --out ANOTHER_FRESH_OUTSIDE_PROJECT
 ```
 
-第一条只核非空已登记素材；未登记且没给截图报 not_run。第二条执行原图文槽检查和原页面像素分析，输出底层全部问题和仍缺的项目页面。已声明但缺少对应案例或规则时失败，不用没有声明充当已检查。首件目录使用既有真实采集方式；历史裁图的人工圈区回放只用于校准，不能冒充运行树证据。
+第一条只核非空已登记素材；未登记且没给截图报 not_run。第二条用 visual-slots 的 ID 选择首件，可重复参数；按精确页面和 CSS 宽高匹配唯一原采集。选中整页执行原文字、布局、图文槽与像素检查，其余规则列为 remaining_cases，不因未拍其它页阻塞这件；全体已登记生产资产仍核验。缺失、歧义或未知 ID 失败。省略局部参数保留原全声明检查，完整美工入口不接受局部参数。历史裁图只用于校准，不能冒充运行树证据。
 
 production-only 不写 ART 回执、不放行试玩，素材核验也不证明运行时已绑定正确 SpriteFrame。每轮英文试玩前正常 art_check 继续核实际导出、采集来源、全部页面、图集、文字、交互及其余适用规则。原有游戏没有 production_assets 时走原完整检查，不把旧素材自动标为已核准。
 

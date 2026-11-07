@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.4",
+  "revision": "2026-11-06.english-simple.11.17.6",
   "skill": "remake-art",
-  "previous_provenance_sha256": "ac28b4d3e9a9e89fe4ab4d7fd98b87e4c5b56f132b28b6007e9901d2ddb80b70",
+  "previous_provenance_sha256": "2efe22456919f9b945289e763374d5174dfbc2ab247058bf6bb4f38ac29a35c2",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "96338dc1f0256b5bcbb0085af57745897d0fd378de2500915a95013b5f30e68d",
-      "bytes": 22887
+      "sha256": "01922d3179bc1ac114b2f59bc07046dc44072acfd54123480736270e01be2dc8",
+      "bytes": 22472
     },
     {
       "path": "agents/openai.yaml",
@@ -49,6 +49,11 @@
       "path": "references/art-before-trial.md",
       "sha256": "8ff3d3c00150eb6e4aa295e83066164dd01123135f5c25c4d347aa3819f8fa1f",
       "bytes": 6700
+    },
+    {
+      "path": "references/art-iteration-workflow.md",
+      "sha256": "0d69db21603423ff0cd4cc40c5049eaa35e09362e346dfc48b3825ec483332c3",
+      "bytes": 10134
     },
     {
       "path": "references/artwork-and-feedback.md",
@@ -97,8 +102,8 @@
     },
     {
       "path": "references/dynamic-visual-review.md",
-      "sha256": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
-      "bytes": 4354
+      "sha256": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
+      "bytes": 4341
     },
     {
       "path": "references/fixed-caption-button.md",
@@ -147,8 +152,8 @@
     },
     {
       "path": "references/production-check-link.md",
-      "sha256": "141d920d68ee379bbbe76597ffa26ba305535c1ebf35fa92130d8b37cb22aba0",
-      "bytes": 13126
+      "sha256": "08fd36fb05469a84deaf96090d72a5b1a2b5ed0262ab81548cc317104ee61692",
+      "bytes": 13317
     },
     {
       "path": "references/production-prevention.md",
@@ -318,15 +323,21 @@
   ],
   "local_patches": [
     {
-      "id": "ego-only-tests-20261106-entrypoint-supplement",
-      "authority": "User 2026-11-06: Chrome only for user trial links; all Agent browser tests in Ego.",
+      "id": "2026-11-06.english-simple.11.17.6",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "78e4b78349867e875cbcfc9719187757ad791e850da3197a3e1d5925d7d48966",
       "files": [
         {
-          "path": "SKILL.md",
-          "sha256": "96338dc1f0256b5bcbb0085af57745897d0fd378de2500915a95013b5f30e68d"
+          "path": "references/dynamic-visual-review.md",
+          "before_sha256": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
+          "base_sha256": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
+          "release_sha256": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
+          "after_sha256": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
+          "after_bytes": 4341,
+          "method": "release"
         }
-      ],
-      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+      ]
     }
-  ]
+  ],
+  "previous_local_provenance_sha256": "63e26029a2fa791ac761ba48a68fd05b4dd7344bc4839a32785e06009230036a"
 }

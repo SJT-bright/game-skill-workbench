@@ -99,23 +99,91 @@ def _layout_preflight(project, documents, out, board=None, binding=None):
         result['elapsed_seconds'] = time.monotonic()-started
 
 
-def run(project, dumps, out, board=None, binding=None):
+def _first_piece_binding(project, dump_files, case_ids, board=None, binding=None):
+    """Use existing read-only cache dependency rules; never create capture/ART evidence."""
+    import art_analysis_cache
+    import audit_art_slots
+    import audit_page_richness
+    files = [Path(value).resolve() for value in dump_files]
+    documents = audit_page_richness.selected_dump_files(
+        audit_page_richness.load(sorted({value.parent for value in files})), files)
+    documents, selected, remaining = audit_art_slots.first_piece_documents(
+        Path(project)/'docs/art/visual-slots.json', documents, case_ids)
+    options = dict(scope='first-piece-only', selected_cases=selected, board=board,
+                   binding=(dict(path=str(Path(binding).resolve()), sha256=art_analysis_cache.file_hash(binding))
+                            if binding else None))
+    cache = art_analysis_cache.PageCache(project, options=options)
+    result = dict(schema='art_first_piece_input_binding.v1', scope=options,
+                  available=cache.base is not None, source_and_rules_sha256=cache.base,
+                  documents=[], checker_sha256={}, receipt_written=False,
+                  note='Dependency freshness only; not capture provenance, an ART receipt or visual approval.')
+    for doc in documents:
+        shot = audit_page_richness.screenshot_of(doc).resolve()
+        key = cache.key(doc, shot)
+        result['documents'].append(dict(file=str(Path(doc['_file']).resolve()),
+            dump_sha256=art_analysis_cache.file_hash(doc['_file']), screenshot=str(shot),
+            screenshot_sha256=art_analysis_cache.file_hash(shot), dependency_key=key))
+        result['available'] = result['available'] and key is not None
+    for name in ('art_preflight.py', 'audit_art_slots.py', 'audit_page_richness.py',
+                 'art_analysis_cache.py', 'art_production.py', 'art_check.py'):
+        result['checker_sha256'][name] = art_analysis_cache.file_hash(HERE/name)
+    if not result['available']:
+        result['error'] = cache.reason or 'selected evidence has unclosed dependencies or needs a specialized checker'
+    return result, cache
+
+
+def first_piece_input_binding(project, dump_files, case_ids, board=None, binding=None):
+    """Public read-only helper for recomputing exactly the first-piece report binding."""
+    try:
+        result, cache = _first_piece_binding(project, dump_files, case_ids, board, binding)
+        cache.finish()  # No get/put: verifies stability without writing a cache.
+        return result
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+        return dict(schema='art_first_piece_input_binding.v1', available=False,
+                    error=str(exc), receipt_written=False)
+
+
+def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_files=None):
     import art_production
     project, out = Path(project).resolve(), Path(out).resolve()
+    if dump_files is not None and case_ids is None:
+        raise ValueError('explicit original dump files require first-piece case IDs')
+    if case_ids is not None and dumps is None and dump_files is None:
+        raise ValueError('first-piece selection requires actual dumps')
     if out.is_relative_to(project) or out.exists() and any(out.iterdir()):
         raise ValueError('use a fresh output directory outside project')
     out.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    production = art_production.audit(project, require_cases=dumps is not None)
+    has_dumps = dumps is not None or dump_files is not None
+    production = art_production.audit(project, require_cases=has_dumps)
     result = dict(tool='art_production_preflight', scope='assets-and-first-integration-only',
                   production=production, runtime_verified=False, receipt_written=False)
+    if case_ids is not None:
+        result.update(selected_cases=[], remaining_cases=[], full_art_passed=None)
     passed = production['passed']
-    if dumps is None and (not production['declared'] or not production['assets']):
+    if not has_dumps and (not production['declared'] or not production['assets']):
         result.update(error='no registered production assets; nothing was checked', status='not_run')
         passed = False
-    if dumps is not None:
+    if has_dumps:
         import audit_page_richness
-        documents = audit_page_richness.load([Path(dumps)])
+        folders = sorted({Path(f).resolve().parent for f in dump_files}) if dump_files is not None else [Path(dumps)]
+        documents = audit_page_richness.selected_dump_files(audit_page_richness.load(folders), dump_files)
+        config = project / 'docs/art/visual-slots.json'
+        binding_guard = None
+        if case_ids is not None:
+            import audit_art_slots
+            try:
+                documents, selected, remaining = audit_art_slots.first_piece_documents(config, documents, case_ids)
+                result.update(selected_cases=selected, remaining_cases=remaining)
+                result['input_binding'], binding_guard = _first_piece_binding(
+                    project, [d['_file'] for d in documents], case_ids, board, binding)
+                if not result['input_binding']['available']:
+                    raise ValueError('first-piece input binding unavailable: ' + result['input_binding']['error'])
+            except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+                result.update(error=str(exc), passed=False, elapsed_seconds=time.monotonic()-started)
+                _write_json(out/'production-preflight.json', result)
+                print(json.dumps(result, ensure_ascii=False))
+                return 1
         if not documents:
             result['error'] = 'no captured pages'
             passed = False
@@ -124,19 +192,21 @@ def run(project, dumps, out, board=None, binding=None):
             result['text'] = _text_preflight(project, dump_files, out)
             result['layout'] = _layout_preflight(project, documents, out, board, binding)
             passed = passed and result['text']['passed'] and result['layout']['passed'] is not False
-        config = project / 'docs/art/visual-slots.json'
         if config.exists():
             import audit_art_slots
             try:
                 result['slots'] = audit_art_slots.run(config,
                     [Path(d['_file']) for d in documents],
-                    [audit_page_richness.screenshot_of(d) for d in documents])
+                    [audit_page_richness.screenshot_of(d) for d in documents], case_ids=case_ids)
             except (ValueError, OSError, KeyError, TypeError) as exc:
                 result['slots'] = dict(passed=False, error=str(exc))
             passed = passed and result['slots']['passed']
         report = out/'pages.json'
         cmd = [sys.executable, '-B', str(HERE/'audit_page_richness.py'), '--project', str(project),
-               '--dumps', str(dumps), '--out', str(report)]
+               '--dumps', *[str(f) for f in folders], '--out', str(report)]
+        if case_ids is not None:
+            for doc in documents:
+                cmd += ['--dump-file', str(Path(doc['_file']).resolve())]
         if board: cmd += ['--board', board]
         if binding: cmd += ['--binding', str(binding)]
         proc = subprocess.run(cmd, capture_output=True, text=True)
@@ -152,6 +222,13 @@ def run(project, dumps, out, board=None, binding=None):
                 findings=[p for p in pages['pages'] if p['problems']],
                 remaining_project_purposes=pages['missing'])
             passed = passed and bool(pages['pages']) and not pages['setup'] and not result['pages']['findings']
+        if binding_guard is not None:
+            try:
+                binding_guard.finish()
+            except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+                result['input_binding'].update(available=False, error=str(exc))
+                result['error'] = 'first-piece inputs changed during analysis'
+                passed = False
     result.update(passed=bool(passed), elapsed_seconds=time.monotonic()-started)
     (out/'production-preflight.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))
     print(json.dumps(result, ensure_ascii=False))

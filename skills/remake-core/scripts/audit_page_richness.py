@@ -2577,6 +2577,23 @@ def screenshot_of(d):
     return f.parent / name
 
 
+def selected_dump_files(documents, paths):
+    """Limit analysis to explicit, already-loaded original dumps; never rewrite evidence."""
+    if paths is None:
+        return documents
+    if not paths:
+        raise ValueError('explicit dump-file selection must be nonempty')
+    requested = [str(Path(value).resolve()) for value in paths]
+    if len(set(requested)) != len(requested):
+        raise ValueError('duplicate dump-file selection')
+    loaded = {}
+    for doc in documents:
+        loaded.setdefault(str(Path(doc['_file']).resolve()), []).append(doc)
+    if any(value not in loaded or len(loaded[value]) != 1 for value in requested):
+        raise ValueError('dump-file must identify exactly one dump already loaded from --dumps')
+    return [loaded[value][0] for value in requested]
+
+
 def flat_background(d, image_module):
     shot = screenshot_of(d)
     if not shot.is_file():
@@ -3144,6 +3161,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--project', type=Path, required=True)
     ap.add_argument('--dumps', type=Path, nargs='*', help='folders with chrome_touch dump_ui files (default <project>/docs/test)')
+    ap.add_argument('--dump-file', type=Path, action='append', help='an already-loaded original dump to analyse; repeat for first-piece page selection')
     ap.add_argument('--binding', type=Path)
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--maintenance-scope', type=Path)
@@ -3158,6 +3176,10 @@ def main():
     proj = a.project.resolve()
     folders = a.dumps or [proj / 'docs/test']
     dumps = load([f for f in folders if Path(f).is_dir()])
+    try:
+        dumps = selected_dump_files(dumps, a.dump_file)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        ap.error(str(exc))
     global CAPTION_FRAMES, RUNTIME_TEXT, BUTTON_SET, CANVAS_TEXT_FILES, CLARITY_EXEMPT, MODE, OPTIONAL, GENERATED_TEXT_SOURCES
     global HERO_GLOBS
     try:                                     # v7.8 H11: the hero named by the project (else found by name / size)
@@ -3241,8 +3263,12 @@ def main():
         except (ValueError,OSError,KeyError,TypeError) as exc:
             setup.append('english_visual_scope: '+str(exc))
     from art_analysis_cache import PageCache, option_state
+    cache_options = option_state(a)
+    # Selection only chooses whole pages; it changes no per-page visual rule.
+    # Keep first-piece and full checks compatible for the exact same original dump.
+    cache_options.pop('dump_file', None)
     analysis_cache = PageCache(proj, dict(board=BOARD, binding=presentation_binding,
-        maintenance=maintenance_mapping, cli=option_state(a)), enabled=not a.no_analysis_cache)
+        maintenance=maintenance_mapping, cli=cache_options), enabled=not a.no_analysis_cache)
     pages, failed = [], []
     for d in dumps:
         from english_visual_scope import rules_for

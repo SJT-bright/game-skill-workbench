@@ -610,6 +610,7 @@ def main():
     ap.add_argument('--capture-build', type=Path, help='actual Web export used for screenshot provenance when --build is Native')
     ap.add_argument('--out', type=Path)
     ap.add_argument('--production-only', action='store_true', help='first integration: production and declared visual checks, never a trial receipt')
+    ap.add_argument('--first-piece-case', action='append', help='explicit visual-slots case ID; repeat for a scoped production-only check with dumps')
     ap.add_argument('--inputs-only', action='store_true', help='read-only capture inventory and Web provenance preflight; no pixels or ART receipt')
     a = ap.parse_args()
     if a.maintenance_scope or a.maintenance_visual_policy:
@@ -617,6 +618,8 @@ def main():
             ap.error('maintenance scope, visual policy and binding are required together')
         if a.loading_only or a.ui_contract or a.production_only or a.inputs_only:
             ap.error('maintenance mapping requires the full evidence-set mode')
+    if a.first_piece_case is not None and (not a.production_only or not a.dumps):
+        ap.error('--first-piece-case requires --production-only and explicit --dumps; never applies to the full art gate')
     if a.inputs_only:
         if a.production_only or a.loading_only or a.ui_contract or a.ui_native or a.ui_runner or a.ui_calibrate or a.maintenance_scope or a.maintenance_visual_policy or a.english_visual_scope:
             ap.error('--inputs-only cannot combine with other scoped modes')
@@ -630,7 +633,7 @@ def main():
         if not a.out:
             ap.error('--production-only requires --out outside project')
         from art_preflight import run as production_preflight
-        return production_preflight(a.project, a.dumps, a.out, a.board, a.binding)
+        return production_preflight(a.project, a.dumps, a.out, a.board, a.binding, case_ids=a.first_piece_case)
     if a.loading_only:
         if a.ui_contract or a.ui_native or a.ui_runner or a.ui_calibrate:
             ap.error('--loading-only cannot be combined with UI contract mode')

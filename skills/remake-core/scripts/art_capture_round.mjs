@@ -15,6 +15,55 @@ const write = (f,o) => {
 };
 const safeId = s => typeof s==='string' && /^[A-Za-z0-9_.-]+$/.test(s) && s!=='.' && s!=='..';
 const isImage = f => /\.(?:png|jpe?g)$/i.test(f);
+function notReady(detail,message) {
+  return Object.assign(new Error(message),{code:'capture_not_ready',reason_code:'capture_not_ready',
+    detail_code:detail,next_action:'recapture_current_case'});
+}
+function witnessSpec(w) {
+  if(!w||typeof w.path!=='string'||!w.path.trim()||
+     ('count' in w&&(!Number.isInteger(w.count)||w.count<=0))||
+     ['frame','font','font_kind'].some(k=>k in w&&(typeof w[k]!=='string'||!w[k].trim()))||
+     ('text' in w&&typeof w.text!=='string')||
+     ('require_font_metrics' in w&&typeof w.require_font_metrics!=='boolean')||
+     (w.require_font_metrics===true&&w.font_kind!=='bitmap'))
+    throw notReady('invalid_witness','invalid state witness: '+(w?.path||'<missing path>'));
+}
+// This checks only the explicitly requested state, never infers a price or visual pass from a path.
+export function validateWitnesses(nodes,state) {
+  if(!Array.isArray(nodes)||!nodes.length||!Array.isArray(state?.witness)||!state.witness.length)
+    throw notReady('missing_witness','required state witness missing: '+(state?.id||'<unknown>'));
+  return state.witness.map(w=>{
+    witnessSpec(w);
+    const atPath=nodes.filter(n=>n?.path===w.path);
+    if(!('count' in w)&&atPath.length>1)
+      throw notReady('ambiguous_witness','state witness path is ambiguous; declare count: '+w.path);
+    const matches=atPath.filter(n=>{
+      const label=n.comps?.label||n.comps?.richtext;
+      return n.active!==false && !(typeof n.opacity==='number'&&n.opacity<=0) &&
+        (!('text' in w)||label?.string===w.text) &&
+        (!('frame' in w)||n.comps?.sprite?.frame===w.frame) &&
+        (!('font' in w)||label?.font===w.font) &&
+        (!('font_kind' in w)||label?.font_kind===w.font_kind);
+    });
+    if(matches.length!==(w.count??1))
+      throw notReady(matches.length>(w.count??1)?'ambiguous_witness':'missing_witness',
+        'required state witness missing, hidden or mismatched: '+w.path);
+    return matches.map(n=>{
+      const label=n.comps?.label||n.comps?.richtext,sprite=n.comps?.sprite;
+      if('frame' in w&&(!Array.isArray(sprite.frame_size)||sprite.frame_size.length!==2||
+         !sprite.frame_size.every(x=>Number.isFinite(x)&&x>0)))
+        throw notReady('frame_not_loaded','state witness frame has no loaded positive dimensions: '+w.path);
+      if(w.require_font_metrics===true&&(typeof label?.font!=='string'||!label.font.trim()||
+         label.text_metric!=='fnt'||!Number.isFinite(label.text_w)||label.text_w<=0))
+        throw notReady('font_metrics_not_ready','state witness bitmap font metrics are not ready: '+w.path);
+      // Include requested observations in the same-frame comparison, without asserting all glyphs loaded.
+      return [n.id,n.path,n.screen||n.rect,label?.string,sprite?.frame,
+        ...('frame' in w?[sprite.frame_size]:[]),
+        ...(('font' in w||'font_kind' in w||w.require_font_metrics)?[label?.font,label?.font_kind]:[]),
+        ...(w.require_font_metrics?[label.text_metric,label.text_w]:[])];
+    });
+  });
+}
 function files(root, dirs=['.']) {
   const result={};
   function walk(rel) {
@@ -44,6 +93,7 @@ function context(project,build) {
       typeof c.recipe!=='string'||!c.recipe.trim()||typeof c.environment!=='string'||!c.environment.trim()||![c.width,c.height].every(v=>Number.isInteger(v)&&v>0)||
       !Number.isFinite(c.dpr)||c.dpr<=0||!Array.isArray(c.witness)||!c.witness.length||c.witness.some(w=>!w||typeof w.path!=='string'||!w.path))throw Error('invalid or duplicate case '+c.id);
     if(c.storageSha!==undefined && !/^[a-f0-9]{64}$/.test(c.storageSha))throw Error('invalid storageSha: '+c.id);
+    c.witness.forEach(witnessSpec);
     ids.add(c.id);
   }
   const store=path.join(project,'.tiktok-kit/art-rounds');
@@ -62,6 +112,39 @@ function loadSnapshot(c,id) {
 }
 const active=c=>read(path.join(c.store,'current.json'));
 const byId=(c,id)=>{const v=c.policy.cases.find(x=>x.id===id);if(!v)throw Error('unknown case '+id);return v;};
+function status(c) {
+  const result={schema:'art_capture_status.v1',read_only:true,
+    source_hash:digest(c.snapshot.source),export_hash:digest(c.snapshot.exported),
+    matrix_hash:c.snapshot.policy,collector_hash:c.snapshot.collector,
+    current_round:null,current_round_version:null,
+    changes:{source:null,export:null,matrix:null,collector:null},changed_files:{source:[],export:[]},
+    suggested_action:'unknown',reason_code:'no_previous_round'};
+  let previous;
+  try {
+    const round=active(c);
+    result.current_round=round.id;result.current_round_version=round.version;
+    previous=loadSnapshot(c,round.version);
+  }catch(e){
+    if(e.code!=='ENOENT')throw e;
+    if(result.current_round!==null)result.reason_code='previous_snapshot_missing';
+    return result;
+  }
+  const source=diff(previous.source,c.snapshot.source),exported=diff(previous.exported,c.snapshot.exported);
+  result.changed_files={source,export:exported};
+  result.changes={source:!!source.length,export:!!exported.length,
+    matrix:previous.policy!==c.snapshot.policy,collector:previous.collector!==c.snapshot.collector};
+  if(source.length&&!exported.length){
+    result.suggested_action='rebuild_web';result.reason_code='source_changed_export_unchanged';
+  }else if(exported.length){
+    result.suggested_action='verify_export_then_new_round';result.reason_code='export_changed';
+  }else if(result.changes.matrix||result.changes.collector){
+    result.suggested_action='new_round';result.reason_code='capture_inputs_changed';
+  }else{
+    result.suggested_action='keep_round';result.reason_code='identities_unchanged';
+  }
+  return result;
+}
+export function captureStatus({project,build}) { return status(context(project,build)); }
 function checkRound(c) {
   const r=active(c);
   if(r.version!==c.version)throw Error('export, source, matrix or collector changed; start a new round');
@@ -241,17 +324,16 @@ export async function openCapture({project,build,out}) {
       if((dumpExpression||state.adapterSha) && (!dumpExpression||sha(Buffer.from(dumpExpression))!==state.adapterSha))throw Error('registered collector missing or changed');
       const storageBefore=await storage(page);
       const dump=await expr(page,expression);
-      if(!Array.isArray(dump?.nodes)||!dump.nodes.length||dump.error||dump.truncated)throw Error('incomplete live dump');
-      const witnesses=nodes=>state.witness?.map(w=>nodes.filter(n=>n.path===w.path &&
-          n.active!==false && n.opacity!==0 &&
-          (!('text' in w)||(n.comps?.label||n.comps?.richtext)?.string===w.text) &&
-          (!('frame' in w)||n.comps?.sprite?.frame===w.frame)).map(n=>[n.id,n.path,n.screen||n.rect,n.comps?.label?.string,n.comps?.sprite?.frame]));
-      const seen=witnesses(dump.nodes);
-      if(!seen?.length||seen.some(matches=>!matches.length))throw Error('required state witness missing: '+id);
+      if(!Array.isArray(dump?.nodes)||!dump.nodes.length||dump.error||dump.truncated)
+        throw notReady('incomplete_dump','incomplete live dump');
+      const seen=validateWitnesses(dump.nodes,state);
       const px=await page.cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
       const png=Buffer.from(px.data,'base64'),after=await live(page);
       const again=await expr(page,expression);
-      if(invalid||digest(seen)!==digest(witnesses(again.nodes))||digest(before)!==digest(after)||!reads.has('index.html')||
+      if(again?.error||again?.truncated)throw notReady('incomplete_dump','incomplete live dump after capture');
+      const seenAfter=validateWitnesses(again?.nodes,state);
+      if(digest(seen)!==digest(seenAfter))throw notReady('witness_changed','state witness changed during capture: '+id);
+      if(invalid||digest(before)!==digest(after)||!reads.has('index.html')||
          png.readUInt32BE(16)!==Math.round(state.width*state.dpr)||png.readUInt32BE(20)!==Math.round(state.height*state.dpr)||
          png.toString('hex',0,8)!=='89504e470d0a1a0a')throw Error(invalid||'capture context changed');
       const storageAfter=await storage(page);
@@ -278,9 +360,10 @@ export async function openCapture({project,build,out}) {
 if(process.argv[1] && fs.existsSync(process.argv[1]) && fs.realpathSync(process.argv[1])===fs.realpathSync(fileURLToPath(import.meta.url))){
   try{
     const [cmd,proj,build,folder,arg]=process.argv.slice(2);
-    if(!['start','plan','verify','review','identity'].includes(cmd))throw Error('use start|plan|verify|review PROJECT BUILD [DUMPS] [CASE]');
+    if(!['start','plan','verify','review','identity','status'].includes(cmd))throw Error('use start|plan|verify|review|identity|status PROJECT BUILD [DUMPS] [CASE]');
     const c=context(proj,build);
-    if(cmd==='identity')console.log(JSON.stringify(checkRound(c)));
+    if(cmd==='status')console.log(JSON.stringify(status(c)));
+    else if(cmd==='identity')console.log(JSON.stringify(checkRound(c)));
     else if(cmd==='start')console.log(JSON.stringify(begin(c)));
     else if(cmd==='review')evidenceReview(c,path.resolve(folder),arg,process.argv[7],process.argv[8]);
     else {
@@ -298,5 +381,9 @@ if(process.argv[1] && fs.existsSync(process.argv[1]) && fs.realpathSync(process.
       console.log(JSON.stringify(report,null,2));
       if(cmd==='verify'&&!report.ready)process.exitCode=1;
     }
-  }catch(e){console.error(e.message);process.exitCode=2;}
+  }catch(e){
+    console.log(JSON.stringify({error:e.message,reason_code:e.reason_code||'capture_command_failed',
+      ...(e.detail_code?{detail_code:e.detail_code}:{}),...(e.next_action?{next_action:e.next_action}:{})}));
+    console.error(e.message);process.exitCode=2;
+  }
 }

@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.4",
+  "revision": "2026-11-06.english-simple.11.17.5",
   "skill": "remake-core",
-  "previous_provenance_sha256": "25214400dcd29b5806b54bf49ee48fdbc074255fe8093fb4cd5ea99e37958dec",
+  "previous_provenance_sha256": "7488560f765aad4bdd835fffd422ea7d2957b2382a95c1618c849ee5a86c5fa5",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -122,6 +122,11 @@
       "bytes": 5880
     },
     {
+      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
+      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
+      "bytes": 5603
+    },
+    {
       "path": "assets/platform-kit/build-templates/bytedance/main.js",
       "sha256": "274bdd4e362bdb79a10c4fb5c7f3fff40a03b63a3fc2cfc4dde5dea105d09711",
       "bytes": 20311
@@ -132,9 +137,24 @@
       "bytes": 2593
     },
     {
-      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
-      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
-      "bytes": 5603
+      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
+      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "bytes": 14203
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
+      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+      "bytes": 88164
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+      "sha256": "8ec0b725019878172952e10ab6c1fc88d177fb15c9fab09bf9424bdffc822d6f",
+      "bytes": 14783
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
+      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
+      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/parts/AudioService.js",
@@ -215,26 +235,6 @@
       "path": "assets/platform-kit/parts/storage-guard.js",
       "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
       "bytes": 4483
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
-      "bytes": 14203
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-      "bytes": 88164
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "8ec0b725019878172952e10ab6c1fc88d177fb15c9fab09bf9424bdffc822d6f",
-      "bytes": 14783
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
-      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
-      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/plugins-3x/CapsuleAuto.plugin.js",
@@ -777,6 +777,11 @@
       "bytes": 2398
     },
     {
+      "path": "references/browser-testing-policy.md",
+      "sha256": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71",
+      "bytes": 1879
+    },
+    {
       "path": "references/check-stages.md",
       "sha256": "5c7703205df674e8ec46bae79944fe66823dad4242dd2a376157f993181344f6",
       "bytes": 7549
@@ -963,13 +968,18 @@
     },
     {
       "path": "scripts/art_capture_round.mjs",
-      "sha256": "c00bc6cd41b9bc0eb0a85b6733f57518102aa5974575e926475ddbc6eb68ffb8",
-      "bytes": 19960
+      "sha256": "84cc97432274084b85a3015b2525a81f3230b791f0b29e953fcee83cc03dae95",
+      "bytes": 24837
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "88facb725f57f061235f4d5d8f786e73ee6da344581a5359999e4b82fb7fca28",
-      "bytes": 84666
+      "sha256": "884948ae0c12c646ce03d8000e0361e12b4641ea5a3ed2011b4ba67660f3735a",
+      "bytes": 85051
+    },
+    {
+      "path": "scripts/art_consumer_index.py",
+      "sha256": "d478a720eda349e844da94e7654722d9467b0d32cf842cce5b61ef60532a610a",
+      "bytes": 12237
     },
     {
       "path": "scripts/art_input_check.py",
@@ -977,9 +987,14 @@
       "bytes": 4398
     },
     {
+      "path": "scripts/art_iteration_plan.py",
+      "sha256": "83b6458da8651ebf070371fec4148407482b9de7cf11e2dfcf134f43b1334549",
+      "bytes": 20352
+    },
+    {
       "path": "scripts/art_preflight.py",
-      "sha256": "5df7f956c10990b4d93f24a984878b630a519eed9799af612ec5dd90e4ef4007",
-      "bytes": 8721
+      "sha256": "48c7ce06cdf29eb23ba36740060203c26dc576ee8c59c6a63c1b0ab76ef4035f",
+      "bytes": 13652
     },
     {
       "path": "scripts/art_production.py",
@@ -1028,8 +1043,8 @@
     },
     {
       "path": "scripts/audit_art_slots.py",
-      "sha256": "c6fe18188478e08124d3de6822761f9f564c42900464bd6e2d4987618b5b2d9f",
-      "bytes": 8947
+      "sha256": "f0e8d070115ff2c119f332109507b0e4ab65f9ec6588231557234c64a6f8f1c7",
+      "bytes": 11820
     },
     {
       "path": "scripts/audit_async_contracts.py",
@@ -1218,8 +1233,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "dabba73b21075674276693100c3b0db37d46b0318b432efc3f2854878e08b183",
-      "bytes": 202601
+      "sha256": "600fab3fb6ca9dfaf92d5bbb323be82fe525ed1e0f1d7ca9d8e68b2d25c0a666",
+      "bytes": 195099
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1887,6 +1902,11 @@
       "bytes": 9425
     },
     {
+      "path": "scripts/test_art_capture_decisions.py",
+      "sha256": "10521aa1faac8e30b7b0e476d049b6c91fab14ba48c5f3076bc846b3c1c60e38",
+      "bytes": 14306
+    },
+    {
       "path": "scripts/test_art_capture_round.py",
       "sha256": "416c2bca041b5f279f79944b7bcd5748cede4d8a24e60c5c95f3d3484fdc9eaf",
       "bytes": 2334
@@ -1907,14 +1927,29 @@
       "bytes": 5085
     },
     {
+      "path": "scripts/test_art_consumer_index.py",
+      "sha256": "70a128fe94b650778712b84cd09f4743b6b7504a5b642b441c9423bc717181b4",
+      "bytes": 9780
+    },
+    {
       "path": "scripts/test_art_display_budget.py",
       "sha256": "397ce7dca801c9dac04c9a1da68eb0e05a22cbcfa44d04acba02222657bb380b",
       "bytes": 8876
     },
     {
+      "path": "scripts/test_art_first_piece_scope.py",
+      "sha256": "3f15692062aadf1ebd539c67fdcc61921dcd05bc80d57bc46d6245a96e2374ae",
+      "bytes": 12553
+    },
+    {
       "path": "scripts/test_art_input_preflight.py",
       "sha256": "e6451f493dfb5e16b487818c7686e79798d84836f3f5e692f5eb07c2532afd90",
       "bytes": 6708
+    },
+    {
+      "path": "scripts/test_art_iteration_plan.py",
+      "sha256": "39d22f464ef921177868d7b2e09365c7ff4a0842c59fbf86d94de91f876b4804",
+      "bytes": 17982
     },
     {
       "path": "scripts/test_art_overlap_v78.py",
@@ -3035,11 +3070,6 @@
       "path": "scripts/which_package.py",
       "sha256": "0bfe71161931c8dff8a4b033257dba32a54dd287f06df731b96cfed829d208bb",
       "bytes": 10306
-    },
-    {
-      "path": "references/browser-testing-policy.md",
-      "sha256": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71",
-      "bytes": 1879
     }
   ],
   "source_bundle_sha256": "5b1d8a07c8be7cfbe01b9a79d56bf466cfeccd5f440659c7938f7669755c7f14",
@@ -3089,5 +3119,6 @@
       ],
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
     }
-  ]
+  ],
+  "previous_local_provenance_sha256": "a74d3297c227e16ba0c13661d14ee8e9dadc90f4953723cbca82aee3cbfb0516"
 }

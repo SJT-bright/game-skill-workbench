@@ -131,9 +131,62 @@ def inspect(im,nodes,case,doc=None):
     if not rows:raise ValueError('empty slot check')
     return rows
 
-def run(config,dump_files,shots):
+def selected_cases(config, case_ids):
+    """Resolve explicit first-piece slot IDs, never capture IDs or guessed names."""
+    cases = json.loads(Path(config).read_text())['cases']
+    if not isinstance(cases, list) or not cases:
+        raise ValueError('required cases missing')
+    if not isinstance(case_ids, (list, tuple)) or not case_ids or any(
+            not isinstance(value, str) or not value or value != value.strip() for value in case_ids):
+        raise ValueError('first-piece case IDs must be explicit and nonempty')
+    if len(set(case_ids)) != len(case_ids):
+        raise ValueError('duplicate first-piece case ID')
+    declared = {}
+    for case in cases:
+        identifier = case.get('id') if isinstance(case, dict) else None
+        if not isinstance(identifier, str) or not identifier or identifier != identifier.strip() or identifier in declared:
+            raise ValueError('invalid or duplicate declared slot case ID')
+        declared[identifier] = case
+    unknown = [value for value in case_ids if value not in declared]
+    if unknown:
+        raise ValueError('unknown first-piece slot case: ' + ', '.join(unknown))
+    selected = [declared[value] for value in case_ids]
+    for case in selected:
+        if not isinstance(case.get('screen'), str) or not case['screen'].strip():
+            raise ValueError('first-piece slot requires an exact screen')
+        for axis in ('width', 'height'):
+            number(case.get('viewport_' + axis), 'first-piece viewport ' + axis, positive=True)
+    return selected, [case['id'] for case in cases if case['id'] not in case_ids]
+
+
+def matches_case(case, doc, exact_viewport=False):
+    return (doc.get('screen') == case['screen'] and
+            doc.get('viewport', {}).get('width') == case['viewport_width'] and
+            (not (exact_viewport or 'display_budget' in case) or
+             doc.get('viewport', {}).get('height') == case['viewport_height']))
+
+
+def first_piece_documents(config, documents, case_ids):
+    """Select whole original pages; each requested slot must have exactly one capture."""
+    selected, remaining = selected_cases(config, case_ids)
+    chosen = {}
+    for case in selected:
+        matches = [doc for doc in documents if matches_case(case, doc, exact_viewport=True)]
+        if len(matches) != 1:
+            raise ValueError('required first-piece state absent or ambiguous: ' + case['id'])
+        doc = matches[0]
+        if doc.get('truncated') or doc.get('errors') or doc.get('error'):
+            raise ValueError('incomplete first-piece capture: ' + case['id'])
+        chosen[str(Path(doc['_file']).resolve())] = doc
+    return list(chosen.values()), [case['id'] for case in selected], remaining
+
+
+def run(config,dump_files,shots,case_ids=None):
     cases=json.loads(Path(config).read_text())['cases']
     if not isinstance(cases,list) or not cases:raise ValueError('required cases missing')
+    remaining = None
+    if case_ids is not None:
+        cases, remaining = selected_cases(config, case_ids)
     allowed={Path(s).resolve() for s in shots}; docs=[]
     for f in dump_files:
         doc=json.loads(Path(f).read_text())
@@ -147,8 +200,7 @@ def run(config,dump_files,shots):
         row={'id':case['id'],'passed':False}
         try:
             validate_display_budget(case)
-            matches=[d for d in docs if d.get('screen')==case['screen'] and d.get('viewport',{}).get('width')==case['viewport_width']
-                     and ('display_budget' not in case or d.get('viewport',{}).get('height')==case['viewport_height'])]
+            matches=[d for d in docs if matches_case(case, d, exact_viewport=case_ids is not None)]
             if len(matches)!=1:raise ValueError('required state absent or ambiguous')
             doc=matches[0]; path=doc['_slot_shot']
             if path not in allowed or doc.get('truncated') or doc.get('errors'):raise ValueError('incomplete or unpaired capture')
@@ -156,4 +208,8 @@ def run(config,dump_files,shots):
             row['passed']=all(r['passed'] for r in row['checks'])
         except (ValueError,TypeError,KeyError,OSError,IndexError) as err:row['error']=str(err)
         results.append(row)
-    return dict(passed=all(r['passed'] for r in results),cases=results)
+    result = dict(passed=all(r['passed'] for r in results),cases=results)
+    if case_ids is not None:
+        result.update(selected_cases=[case['id'] for case in cases], remaining_cases=remaining,
+                      full_art_passed=None)
+    return result

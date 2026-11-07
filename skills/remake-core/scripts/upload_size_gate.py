@@ -48,6 +48,9 @@ def enforce(sizes, game, platform='tiktok'):
         safe_name(raw)
         if not re.fullmatch(r'[A-Za-z0-9_./-]+',raw):
             raise ValueError('Non-portable subpackage root: '+repr(raw))
+        if platform == 'tiktok' and raw.endswith('/'):
+            corrected = raw.rstrip('/')
+            raise ValueError(f'TikTok subpackage {name} root must not end with /: {raw!r}; use {corrected!r}')
         root=raw.rstrip('/')+'/'
         if any(root.casefold().startswith(r.casefold()) or r.casefold().startswith(root.casefold()) for r in roots):
             raise ValueError('Overlapping/duplicate subpackage roots: '+root)

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T19:35:49.221Z",
-  "treeHash": "0c715a8778ede122cada2c8a3de9e1c8614d4606ba65878c5c376cc80b2296ca",
+  "createdAt": "2026-11-07T19:36:38.278Z",
+  "treeHash": "1bdc77c3b23a70aed78ce53067e45c241908dd404cf6e48fe673e36e703baf7a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3441,14 +3441,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "0f9a889529b2030aac54a426c9ff8702ac9055477107dcc48ffd4ef8e498df75",
-      "fileCount": 629,
-      "bytes": 12421820,
+      "treeHash": "f0684ce19dd97cbfe6d718d926789952b44c29f9db6f8c2e8ffb5c3c86930037",
+      "fileCount": 631,
+      "bytes": 12462566,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8",
-          "size": 132265,
+          "hash": "55331c9853c55c62ec22d1a0a32536738d87c57d4cc4355ecb571288ec9220ca",
+          "size": 142344,
           "executable": false
         },
         {
@@ -4575,8 +4575,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "b5111fa419e3ca1cd12d1f8205b41fad6b534acaff25c4e0d0cecb6c88bb8401",
-          "size": 54908,
+          "hash": "513a0c150a02407f16e560dad890396e7034cd8c71f1110bad22c79840dcc0dd",
+          "size": 55134,
           "executable": false
         },
         {
@@ -4737,8 +4737,8 @@
         },
         {
           "path": "scripts/audit_atlas_slices.py",
-          "hash": "cfe4df6725c32d55b54c6df9f564b72e7a075892906271e48009b75d1e68f29a",
-          "size": 17773,
+          "hash": "5b7d85a3b2b5050986917d0d2a289f127c4e211f2985071d1360f370236822ca",
+          "size": 18135,
           "executable": false
         },
         {
@@ -4839,8 +4839,8 @@
         },
         {
           "path": "scripts/audit_image_review_record.py",
-          "hash": "694ae71b4cbe63c62b95cfe2e3e6d01631f42eb6115c76d4b44cb75e97a2c418",
-          "size": 20304,
+          "hash": "631387e5efde7676733adfd2be68e06224282e30b4bb494ccc1553e0ba787471",
+          "size": 22822,
           "executable": false
         },
         {
@@ -4893,8 +4893,8 @@
         },
         {
           "path": "scripts/audit_new_english_images.py",
-          "hash": "17b229f4dd3c2c303ce49493f701d1f1caed28c3ff30c416fe57b847723a8eaf",
-          "size": 26801,
+          "hash": "0579ba85c4fa53d64dffd34b7f8a58a523351b3e9e1e707a7a549bf4f65dc16b",
+          "size": 27170,
           "executable": false
         },
         {
@@ -4953,8 +4953,8 @@
         },
         {
           "path": "scripts/audit_page_richness.py",
-          "hash": "9a2fef38392d4d03777ec0eb0069fb6983071354e79e4c5cb43f7c46d7b99b4b",
-          "size": 203942,
+          "hash": "e1542c4f19c3780e23dd8e628276a85de9af1351eda29a5883ac53a2f46e7a1e",
+          "size": 206054,
           "executable": false
         },
         {
@@ -5103,8 +5103,8 @@
         },
         {
           "path": "scripts/check_text_backplates.py",
-          "hash": "a89882a1272a1d62ecfb806aeaebe2321418ca56672ce7fb99b3b627958fb2e0",
-          "size": 8016,
+          "hash": "5372e9db91ab8ef6c5d529469e75791291fbcdca4d5b9b4e3cbb13d6b1789673",
+          "size": 8806,
           "executable": false
         },
         {
@@ -5735,6 +5735,12 @@
           "path": "scripts/source_hygiene.py",
           "hash": "c2cd95d2bf0323f0ec2203d5672c4d9ca7b97fe711149d9e70760dea76f6df81",
           "size": 7982,
+          "executable": false
+        },
+        {
+          "path": "scripts/spine_atlas_binding.py",
+          "hash": "4169014911f9b33ac95f4c291bad14ba1d0f270844d110b0b55a5bbe14c904f4",
+          "size": 14361,
           "executable": false
         },
         {
@@ -6764,6 +6770,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_spine_atlas_binding.py",
+          "hash": "506733e5c06795b968b634f9b9dc5c951379ae4c838fb02ffd93afb7a350c5af",
+          "size": 9905,
+          "executable": false
+        },
+        {
           "path": "scripts/test_startup_animation_phases.py",
           "hash": "1850237bfe429cba362a66ad01e31052d6444539943ce527c4569d39c2b17bae",
           "size": 5400,
@@ -6981,8 +6993,8 @@
         },
         {
           "path": "scripts/tiktok_finalize.py",
-          "hash": "c02b3eba4e0a042244e2ebc172d88373d9f555f77863975e20515be38c2e8bc4",
-          "size": 45609,
+          "hash": "7568aad39310fccac024e12f5949baaa39f6123c4e78f7d76f21dec574ee8f15",
+          "size": 45633,
           "executable": false
         },
         {

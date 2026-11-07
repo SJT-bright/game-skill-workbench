@@ -514,6 +514,7 @@ SYNC_NATIVE_STEPS = ('startup', 'touch', 'storage')      # same order as NATIVE_
 UI_KIT_KEY = 'parts/GameUIKit.js'                         # P05: the shared popup / button part (Cocos 2.4)
 UI_KIT_KEYS = {2: UI_KIT_KEY, 3: 'parts-3x/GameUIKit.ts'}   # 生成时预防 R4B (P05 3.x): sync installs GameUIKit.ts too
 UI_KIT_DEFAULT_DEST = {2: 'assets/tiktok-platform/GameUIKit.js', 3: 'assets/tiktok-platform/GameUIKit.ts'}
+SYNC_SOURCE_STEPS += ('art_static',)   # 生成时预防 R4F1: Sprite aspect warnings before the first build
 SYNC_NATIVE_STEPS += ('rewarded',)     # 生成时预防 R4F1: rewarded-guard for a 2.4 package that keeps its own main.js
 SYNC_SOURCE_STEPS += ('home_entry_scan',)  # 生成时预防 R4M2 (R4L1 leftover): 3.x hand-placed home entries at every build, read only (<0.1 s)
 SYNC_SOURCE_STEPS += ('game_name_scan',)  # 生成时预防 R4O1 (Saul 11-05): game-name text before every build, read only
@@ -637,11 +638,10 @@ def finalize_sync(project, board, native=None, policy=None, manifest=None, legac
     decision = decide_policy(project=project, override=policy, legacy=legacy, board=board)
     ctx = T.Ctx('source', project, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest)
-    sync_steps = SYNC_SOURCE_STEPS if board == 'localize' else SYNC_SOURCE_STEPS + ('art_static',)
     if decision['policy'] == 'legacy':
-        results = _detect_only(ctx, sync_steps)
+        results = _detect_only(ctx, SYNC_SOURCE_STEPS)
     else:
-        results = _run_steps(ctx, sync_steps)
+        results = _run_steps(ctx, SYNC_SOURCE_STEPS)
     results.append(sync_ui_kit(ctx))
     results.append(sync_run_parts(ctx))   # 生成时预防 R4F1 (#28): RunSession.js + FxPool.js for new remake games
     results += _detect_only(ctx, SYNC_END_STEPS) if decision['policy'] == 'legacy' else _run_steps(ctx, SYNC_END_STEPS)   # R4N6

@@ -808,10 +808,14 @@ def numeric_picture_values(nodes):
     symbols={'percent':'%', 'plus':'+', 'minus':'-', 'slash':'/', 'colon':':', 'dot':'.', 'comma':',', 'x':'x'}
     groups={}
     for n in nodes:
-        frame=str(n.get('comps',{}).get('sprite',{}).get('frame',''))
+        sprite=n.get('comps',{}).get('sprite',{})
+        frame=str(sprite.get('frame',''))
         digit=re.fullmatch(r'(?:digit|num|number|glyph)[_-]?(\d)',frame,re.I)
         symbol=re.fullmatch(r'symbol[_-]([a-z]+)',frame,re.I)
         char=digit.group(1) if digit else symbols.get(symbol.group(1).lower()) if symbol else None
+        glyph=sprite.get('bitmap_glyph')
+        if isinstance(glyph,str) and len(glyph)==1 and glyph in '0123456789x+-/:.%':
+            char=glyph
         if char is None or n.get('opacity',1)<=.05 or area(n.get('screen') or n['rect'])<=0:
             continue
         if any(node_under(n,a) and a is not n and DIGIT.search(text(a)) and
@@ -2405,6 +2409,14 @@ def overlap_problems(nodes, buttons, full):
                 if not (card_like(c) and parent_of(d_) == parent_of(c) and d_.get('order', 0) > c.get('order', 0) and
                         'sprite' in d_['comps'] and not text(d_) and center_in(d_['rect'], cr) and area(d_['rect']) < area(cr)):
                     continue
+            # A nested capsule that actually contains the item owns its bounds.
+            # Decorative outer ancestors can be outside the capsule entirely.
+            if node_under(d_, c) and any(
+                h is not c and h is not d_ and node_under(h,c) and node_under(d_,h)
+                and inter(h['rect'],d_['rect']) >= 0.98*area(d_['rect'])
+                for h in holders
+            ):
+                continue
             r = d_['rect']
             ox = (max(0.0, cr[0] - r[0]) + max(0.0, r[0] + r[2] - cr[0] - cr[2])) / r[2] if r[2] else 0
             oy = (max(0.0, cr[1] - r[1]) + max(0.0, r[1] + r[3] - cr[1] - cr[3])) / r[3] if r[3] else 0
@@ -2949,10 +2961,15 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             sub_names = lambda b: ' '.join([b['name'], str((b['comps'].get('sprite') or {}).get('frame', ''))] +
                                            [n['name'] + ' ' + str((n['comps'].get('sprite') or {}).get('frame', '')) + ' ' + text(n)
                                             for n in nodes if node_under(n, b)])
-            if not any(DOUBLE_BUTTON.search(sub_names(b)) for b in buttons):
+            claimed_status = any(
+                b['name'] == 'LinkClaim' and b['comps']['button'].get('interactable') is False
+                and any(node_under(n,b) and n['comps'].get('sprite',{}).get('frame') == 'txt_claimed' for n in content)
+                for b in result_controls
+            )
+            if not any(DOUBLE_BUTTON.search(sub_names(b)) for b in buttons) and not claimed_status:
                 problems.append('result_double: no "watch an ad, x2 reward" button: every level end (endless: every run end) offers '
                                 'it (user 2026-10-23, both boards; AdRewards.resultReward(...).doubled), name it BtnDouble / btn_x2_*')
-            else:
+            elif not claimed_status:
                 problems += result_claim_problems(buttons, sub_names)
     button_share = coverage([b['rect'] for b in buttons])
     problems += video_button_problems(purpose, content, nodes)
@@ -3083,20 +3100,33 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
                             'stars and locked/current/cleared state)' % level_count)
     if purpose == 'checkin':
         day_labels = [n for n in content if re.fullmatch(r'(day\s*)?[1-7]', text(n), re.I)]
+        day_labels = [(n,text(n)) for n in day_labels]
+        for n,value in numeric_pictures:
+            if not re.fullmatch('[1-7]',value) or '/GeneratedValue/' not in n['path']:
+                continue
+            word = n['path'].split('/GeneratedValue/',1)[0] + '/GeneratedWord'
+            if any(m['path']==word and m['comps'].get('sprite',{}).get('frame')=='txt_day' for m in pictures):
+                day_labels.append((n,value))
         cards = []
         need = []
-        for lab in day_labels:
+        for lab,day_text in day_labels:
             day_match = re.search(r'/Day([1-7])/', lab['path'])
             day_root = lab['path'][:day_match.start()] + '/Day' + day_match.group(1) if day_match else ''
             holders = [m for m in nodes if day_root and under(m['path'], day_root) and m['path'].endswith('/CardSurface') and
                        ('graphics' in m['comps'] or 'sprite' in m['comps']) and area(m['rect']) < 0.5]
+            # Legacy sign-in cards render the DAY word and bitmap number together
+            # under a caption node whose siblings include the card surface.
+            if not holders and '/GeneratedValue/' in lab['path']:
+                group = lab['path'].split('/GeneratedValue/',1)[0].rsplit('/',1)[0]
+                holders = [m for m in pictures if parent_of(m) == group and center_in(lab['rect'],m['rect'])
+                           and 0.01 <= area(m['rect']) < 0.5]
             if not holders:
                 holders = [m for m in pictures if m is not lab and center_in(lab['rect'], m['rect']) and 0.01 <= area(m['rect']) < 0.5]
             if holders:
                 card = max(holders, key=lambda m: area(m['rect']))
-                day = int(re.sub(r'\D', '', text(lab)))
+                day = int(re.sub(r'\D', '', day_text))
                 cards.append((day, card))
-                card_root = card['path'].rsplit('/CardSurface', 1)[0]
+                card_root = parent_of(card)
                 inside = [m for m in content if m['path'].startswith(card_root + '/') and
                           center_in(m.get('screen') or m['rect'], card.get('screen') or card['rect']) and
                           area(m['rect']) < 0.9 * area(card['rect'])]
@@ -3129,7 +3159,11 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             others = sorted(area(c['rect']) for d, c in cards if d != 7)
             if big < 2 * others[len(others) // 2] and 'checkin_original_card_sizes' not in MAINTENANCE_RULES:
                 need.append('the day-7 card must be the big one (>= 2x the other cards, full width, big chest/gift picture)')
-        if not any(claim_button(b, nodes) or any(words(n) for n in nodes if node_under(n, b)) for b in buttons):
+        waiting_status = d.get('screen') == 'checkin_claimed' and any(
+            n['name']=='ClaimStatus' and text(n) in ('Your next reward will be available tomorrow.', 'Check your device date.')
+            for n in content
+        )
+        if not waiting_status and not any(claim_button(b, nodes) or any(words(n) for n in nodes if node_under(n, b)) for b in buttons):
             need.append('a Claim button')
         if need:
             problems.append('checkin_page: ' + '; '.join(need))

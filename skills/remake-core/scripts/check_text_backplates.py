@@ -16,6 +16,25 @@ if __name__ == '__main__':
 from PIL import Image
 
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def enclosed_by_letter_fill(pixels, points, width, height):
+    # A dark counter in an alpha word image has a continuous bright glyph
+    # around it. Transparent pixels remain open to the exterior.
+    queue=deque([points[0]])
+    visited={points[0]}
+    while queue:
+        x,y=queue.popleft()
+        if x in (0,width-1) or y in (0,height-1):
+            return False
+        for pos in ((x-1,y),(x+1,y),(x,y-1),(x,y+1)):
+            if pos in visited:
+                continue
+            r,g,b,alpha=pixels[pos]
+            if alpha>=230 and .2126*r+.7152*g+.0722*b>=150:
+                continue
+            visited.add(pos)
+            queue.append(pos)
+    return True
+
 def find_backplates(im,targets):
     found=[]
     for t in targets:
@@ -46,6 +65,8 @@ def find_backplates(im,targets):
             core=sum(all((a+dx,b+dy) in ps for dx in (-1,0,1) for dy in (-1,0,1)) for a,b in pts)
             # Broad flat interior differs from a thin contour. Thresholds stay fixed across old/new/control.
             if ww>=max(8,.18*h) and hh>=max(12,.25*h) and occupancy>=.55 and core/len(pts)>=.25:
+                if im.mode=='RGBA' and enclosed_by_letter_fill(pixels,pts,cw,ch):
+                    continue
                 if 'ui_surface_rects' in t:
                     box=[x0+min(xs),y0+min(ys),ww,hh]
                     def covers(b):

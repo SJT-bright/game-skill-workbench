@@ -124,7 +124,7 @@ def _row(item, ocr_text=None, reasons=None):
     return r
 
 
-def scan_chinese(project, ocr='auto'):
+def scan_chinese(project, ocr='auto', spine_pages=None):
     """P16 (生成时预防, 2026-11-04): at the START of English work, cut every atlas slice and animation frame (Cocos .plist,
     Spine/libGDX .atlas, DragonBones *_tex.json, BMFont pages, via chinese_audit.current_state) and read each whole
     picture and slice with the local recognizer (Vision on macOS, Windows.Media.Ocr via ocr_windows.ps1, tesseract).
@@ -156,7 +156,7 @@ def scan_chinese(project, ocr='auto'):
             tasks[key] = {'key': key, 'path': str(p), 'pixels_sha256': item['pixels_sha256'], 'size': list(img.size),
                           'both': both, 'prepared': info}
         try:
-            state = C.current_state(project, None, None, on_pixels)
+            state = C.current_state(project, None, None, on_pixels, spine_pages=spine_pages)
             results = rec.run(list(tasks.values())) if tasks else {}
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -167,6 +167,8 @@ def scan_chinese(project, ocr='auto'):
                recognizer={'name': rec.name, 'version': rec.version, 'note': rec.note, 'notes': notes})
     if not use:
         out['note'] = rec.note or 'no recognizer that reads Chinese: every picture and slice is listed for manual review'
+    out['spine_binding_problems'] = [_row(item, reasons=[item['error']]) for item in state['items']
+                                     if item.get('binding_error')]
     out['items'] = []   # (item, verdict 'chinese' | 'clean' | 'manual', ocr text, reasons); dropped before writing
     for item in state['items']:
         k = item['kind']
@@ -464,10 +466,12 @@ def main(argv=None):
             scan = doc['chinese_scan']
             rp = a.replace_out or a.out.parent / 'art-replace-round1.json'
             rp.write_text(json.dumps(scan, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+            unresolved = scan.get('spine_binding_problems') or []
             print(json.dumps({'images': len(doc['images']), 'scan': scan['status'], 'replace': len(scan['replace']),
+                              'spine_binding_problems': unresolved[:10],
                               'manual_review': len(scan['manual_review']), 'regenerate': len(scan.get('regenerate') or []), 'style_choices': len(scan.get('style_choices') or []),
                               'replace_list': str(rp)}, ensure_ascii=False))
-            return 0
+            return int(bool(unresolved))
         if not (a.zip and a.pre_english):
             ap.error('--zip and --pre-english are required')
         with zipfile.ZipFile(a.zip) as zf:

@@ -34,6 +34,8 @@ import sys
 import zipfile
 
 IMAGE_SUFFIXES = ('.png', '.jpg', '.jpeg', '.webp')
+import spine_atlas_binding as spine
+
 ATLAS_SUFFIXES = ('.plist', '.atlas', '.fnt', 'tex.json')
 
 
@@ -42,7 +44,8 @@ def _atlas_input(name):
 
 
 def _review_input(name):
-    return name.lower().endswith(IMAGE_SUFFIXES) or _atlas_input(name)
+    return (name.lower().endswith(IMAGE_SUFFIXES) or _atlas_input(name)
+            or spine.CONFIG.fullmatch(name) or spine.IMPORT.fullmatch(name))
 
 
 def directory_items(directories):
@@ -52,13 +55,14 @@ def directory_items(directories):
         if not root.is_dir():
             raise ValueError('image review input is not a directory: %s' % root)
         for path in sorted(root.rglob('*')):
-            if not _review_input(path.name):
+            rel = path.relative_to(root).as_posix()
+            name = 'export-%d/%s' % (i, rel) if len(directories) > 1 else rel
+            if not _review_input(name):
                 continue
             if path.is_symlink():
                 raise ValueError('symbolic link in image review input: %s' % path)
             if path.is_file():
-                rel = path.relative_to(root).as_posix()
-                yield ('export-%d/%s' % (i, rel) if len(directories) > 1 else rel), path.read_bytes()
+                yield name, path.read_bytes()
 
 
 def _items(files):
@@ -86,17 +90,31 @@ def _descriptor_text(data):
     return data.decode(encoding)
 
 
-def _atlas_context(names, descriptors, chinese):
+def _atlas_context(names, descriptors, chinese, inputs):
     """Bind each texture to the exact descriptors and page names that determine its slices."""
-    contexts, expected_slices = {}, {}
+    contexts, expected_slices, spine_pages = {}, {}, {}
+    try:
+        configs = spine.bundle_configs(inputs)
+        missing = sorted(set(spine.missing_runtime_atlases(inputs, configs)))
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError) as error:
+        raise ValueError('could not read runtime Spine inventory: %s' % error) from error
+    if missing:
+        raise ValueError('missing runtime Spine atlas: ' + ', '.join(missing))
     if chinese is None:
-        return contexts, expected_slices
+        if any(name.lower().endswith('.atlas') for name in descriptors):
+            raise ValueError('Spine atlas verification requires the English audit module')
+        return contexts, expected_slices, spine_pages
     for name, data in descriptors.items():
-        regions = []
+        regions, bindings = [], {}
         low = name.lower()
         try:
             if low.endswith('.atlas'):
                 pages, regions = chinese.parse_spine_atlas(_descriptor_text(data))
+                page_names = [page['file'] for page in pages]
+                if not page_names or not regions or len(set(page_names)) != len(page_names):
+                    raise ValueError('missing or repeated Spine pages, or no slices')
+                if spine.COMPILED.fullmatch(name):
+                    bindings = spine.resolve(inputs, name, page_names, configs)
             elif low.endswith('.plist'):
                 parsed = chinese.parse_plist_atlas(data)
                 if parsed is None:
@@ -127,11 +145,40 @@ def _atlas_context(names, descriptors, chinese):
                                    posixpath.join(parent, posixpath.basename(file))))
             if not file or not PurePosixPath(file).suffix:
                 candidates.extend(str(PurePosixPath(name).with_suffix(ext)) for ext in IMAGE_SUFFIXES)
-            image = next((candidate for candidate in candidates if candidate in names), None)
+            binding = bindings.get(file)
+            image = (binding['texture'] if binding else
+                     next((candidate for candidate in candidates if candidate in names), None))
+            if low.endswith('.atlas'):
+                if image not in names or not count.get(file):
+                    raise ValueError('Spine atlas %s has no reviewable texture or slices for page %s' % (name, file))
+                spine_pages.setdefault('assets/' + name, {})[file] = 'assets/' + image
             if image is not None:
-                contexts.setdefault(names[image], set()).add(descriptor + ':' + (file or ''))
+                identity = descriptor + ':' + (file or '')
+                if binding:
+                    identity += ':' + binding['texture_uuid']
+                    if binding['image_uuid'] != binding['texture_uuid']:
+                        identity += ':' + binding['image_uuid']
+                contexts.setdefault(names[image], set()).add(identity)
                 expected_slices[image] = expected_slices.get(image, 0) + count.get(file, 0)
-    return {digest: sorted(inputs) for digest, inputs in contexts.items()}, expected_slices
+    return {digest: sorted(values) for digest, values in contexts.items()}, expected_slices, spine_pages
+
+
+def _review_files(files):
+    inputs, names, descriptors = {}, {}, {}
+    for name, data in _items(files):
+        if not _review_input(name):
+            continue
+        if callable(getattr(data, 'read', None)):
+            data = data.read()
+        path = PurePosixPath(name)
+        if path.is_absolute() or '..' in path.parts or path.as_posix() != name or name in inputs:
+            raise ValueError('noncanonical or repeated image review input: ' + name)
+        inputs[name] = data
+        if name.lower().endswith(IMAGE_SUFFIXES):
+            names[name] = hashlib.sha256(data).hexdigest()
+        elif _atlas_input(name):
+            descriptors[name] = data
+    return inputs, names, descriptors
 
 
 def _record_entries(record):
@@ -155,7 +202,7 @@ def _entries_by_sha(entries):
 def _review_rules(chinese):
     if chinese is None:
         return None
-    paths = [Path(__file__), Path(__file__).with_name('audit_new_english_images.py'), Path(chinese.__file__)]
+    paths = [Path(__file__), Path(__file__).with_name('audit_new_english_images.py'), Path(chinese.__file__), Path(spine.__file__)]
     return entries_seal([hashlib.sha256(path.read_bytes()).hexdigest() for path in paths])
 
 
@@ -173,7 +220,6 @@ def write(files, ocr='auto', verdicts=None, by=None, previous=None):
     An existing clean entry is reused when the image bytes, slice descriptors and review tools are unchanged.
     """
     import tempfile
-    import shutil
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import audit_new_english_images as ani
     verdicts = {k.lower(): v for k, v in (verdicts or {}).items()}
@@ -185,46 +231,44 @@ def write(files, ocr='auto', verdicts=None, by=None, previous=None):
         gen = previous['generated_by']
         if gen.get('rules_sha256') == rules and gen.get('ocr') == ocr:
             old = _entries_by_sha(previous_entries)
-    tmp = Path(tempfile.mkdtemp(prefix='image-review-'))
-    try:
-        by_sha, names, descriptors, root = {}, {}, {}, tmp / 'assets'
-        for name, data in _items(files):
-            if not _review_input(name):
-                continue
-            if callable(getattr(data, 'read', None)):
-                data = data.read()
-            name = name.lstrip('/').replace('..', '_')
-            target = root / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(data)
-            if name.lower().endswith(IMAGE_SUFFIXES):
-                digest = hashlib.sha256(data).hexdigest()
-                names[name] = digest
-                by_sha.setdefault(digest, []).append(name)
-            else:
-                descriptors[name] = data
-        contexts, expected_slices = _atlas_context(names, descriptors, chinese)
-        unknown_verdicts = set(verdicts) - set(by_sha)
-        if unknown_verdicts:
-            raise ValueError('manual verdict SHA is not an actual input image: ' + ', '.join(sorted(unknown_verdicts)))
-        reused = {}
-        for digest, paths in by_sha.items():
-            entry = old.get(digest, {})
-            if (digest not in verdicts and entry.get('status') == 'done' and entry.get('chinese') == 'no'
-                    and entry.get('slices_reviewed') is True and str(entry.get('reviewer') or '').strip()
-                    and entry.get('atlas_context') == contexts.get(digest, [])):
-                reused[digest] = dict(entry, file=paths[0])
-                for path in paths:
-                    (root / path).unlink()
-        root.mkdir(exist_ok=True)
-        scan = ani.scan_chinese(tmp, ocr) if len(reused) < len(by_sha) else {'status': 'reused'}
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+    inputs, names, descriptors = _review_files(files)
+    contexts, expected_slices, spine_pages = _atlas_context(names, descriptors, chinese, inputs)
+    by_sha = {}
+    for name, digest in names.items():
+        by_sha.setdefault(digest, []).append(name)
+    unknown_verdicts = set(verdicts) - set(by_sha)
+    if unknown_verdicts:
+        raise ValueError('manual verdict SHA is not an actual input image: ' + ', '.join(sorted(unknown_verdicts)))
+    reused = {}
+    for digest, paths in by_sha.items():
+        entry = old.get(digest, {})
+        if (digest not in verdicts and entry.get('status') == 'done' and entry.get('chinese') == 'no'
+                and entry.get('slices_reviewed') is True and str(entry.get('reviewer') or '').strip()
+                and entry.get('atlas_context') == contexts.get(digest, [])):
+            reused[digest] = dict(entry, file=paths[0])
+    scan = {'status': 'reused'}
+    if len(reused) < len(by_sha):
+        with tempfile.TemporaryDirectory(prefix='image-review-') as scratch:
+            root = Path(scratch) / 'assets'
+            root.mkdir()
+            changed = {name: inputs[name] for name, digest in names.items() if digest not in reused}
+            changed.update(descriptors)
+            for name, data in changed.items():
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+            scan = ani.scan_chinese(Path(scratch), ocr, spine_pages=spine_pages)
     per_file = {}
-    for item, verdict, text, _ in scan.get('items') or []:
+    slice_findings = {}
+    for item, verdict, text, reasons in scan.get('items') or []:
         f = item.get('file')
-        if f:
-            per_file.setdefault('assets/' + f if not f.startswith('assets/') else f, []).append((item['kind'], verdict, text))
+        if f and not item.get('error'):
+            per_file.setdefault(f, []).append((item['kind'], verdict, text))
+        if f and item['kind'] == 'slice' and verdict != 'clean':
+            slice_findings.setdefault(f, []).append({
+                'atlas': item['atlas_file'].removeprefix('assets/'), 'slice': item['slice'],
+                'region': item['region'], 'verdict': verdict, 'text': text, 'reasons': reasons,
+            })
     entries = []
     for digest, paths in sorted(by_sha.items(), key=lambda kv: kv[1][0]):
         name = paths[0]
@@ -240,6 +284,10 @@ def write(files, ocr='auto', verdicts=None, by=None, previous=None):
         e = {'sha256': digest, 'file': name, 'atlas': bool(slices), 'slices': len(slices),
              'atlas_context': contexts.get(digest, []),
              'recognizer': (scan.get('recognizer') or {}).get('name')}
+        findings = [finding for path in paths for finding in slice_findings.get('assets/' + path, ())]
+        if findings:
+            e['slice_finding_count'] = len(findings)
+            e['slice_findings'] = findings[:20]
         if got and 'chinese' in verdicts_here:
             e.update(status='done', chinese='yes', reviewer=WRITER, slices_reviewed=True)
         elif all(uses) and has_all_slices and verdicts_here == {'clean'}:
@@ -249,6 +297,8 @@ def write(files, ocr='auto', verdicts=None, by=None, previous=None):
                      why=scan.get('note') or 'recognizer could not settle this picture or one of its slices')
         v = verdicts.get(digest)
         if v in ('yes', 'no'):
+            if not has_all_slices:
+                raise ValueError('manual verdict cannot replace missing atlas slices: ' + name)
             if not str(by or '').strip():
                 raise ValueError('--verdict needs --by <who looked>')
             e['recognizer_verdict'] = {'status': e['status'], 'chinese': e.get('chinese'), 'text': [g[2] for g in got]}
@@ -262,22 +312,11 @@ def write(files, ocr='auto', verdicts=None, by=None, previous=None):
 
 
 def check(files, record_path):
-    names, images, descriptors, plists = {}, {}, {}, set()
-    for name, data in _items(files):
-        if not _review_input(name):
-            continue
-        if callable(getattr(data, 'read', None)):
-            data = data.read()
-        name = name.lstrip('/').replace('..', '_')
-        low = name.lower()
-        if low.endswith(IMAGE_SUFFIXES):
-            digest = hashlib.sha256(data).hexdigest()
-            images.setdefault(digest, name)
-            names[name] = digest
-        else:
-            descriptors[name] = data
-            if low.endswith('.plist'):
-                plists.add(low[:-len('.plist')])
+    inputs, names, descriptors = _review_files(files)
+    images = {}
+    for name, digest in names.items():
+        images.setdefault(digest, name)
+    plists = {name.lower()[:-len('.plist')] for name in descriptors if name.lower().endswith('.plist')}
     report = {'tool': 'audit_image_review_record', 'schema': 1, 'record': str(record_path), 'distinct_images': len(images),
               'problems': [], 'passed': False}
     try:
@@ -296,7 +335,7 @@ def check(files, record_path):
         return report
     try:
         import audit_new_english_images as ani
-        contexts, _ = _atlas_context(names, descriptors, ani._chinese_audit()) if descriptors else ({}, {})
+        contexts, _, _ = _atlas_context(names, descriptors, ani._chinese_audit(), inputs)
     except ValueError as error:
         report['problems'].append(str(error))
         return report

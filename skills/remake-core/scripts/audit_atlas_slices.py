@@ -9,6 +9,7 @@ if __name__ == '__main__':
         _mod = _ilu.module_from_spec(_spec)
         _spec.loader.exec_module(_mod)
         _mod.need_modules('PIL')
+from io import BytesIO
 from PIL import Image
 import re
 
@@ -37,7 +38,7 @@ def components(image,threshold=64):
 def inside(component,rect):
  x,y,w,h=rect;return sum(max(0,min(x1,x+w)-max(x0,x)) for x0,x1,yy in component['runs'] if y<=yy<y+h)
 
-import argparse,json,hashlib,sys
+import argparse,json,hashlib,plistlib,sys
 from PIL import ImageDraw
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import plist_atlas_adapter as plist
@@ -110,11 +111,16 @@ def audit(manifest_path,out=None,only=None):
  from flat_atlas_adapter import is_flat_atlas,normalize
  if manifest_path.suffix.lower()=='.plist':
   # TexturePacker / Cocos sprite sheets: same roles and checks, the adapter only converts geometry.
-  raw=plist.load(manifest_path)
+  try:
+   manifest_bytes=manifest_path.read_bytes()
+   raw=plistlib.loads(manifest_bytes)
+  except (OSError,ValueError,TypeError,OverflowError,plistlib.InvalidFileException):
+   raw=None
   if not plist.is_plist_atlas(raw):raise ValueError('not_a_plist_atlas: '+str(manifest_path))
   manifest=plist.normalize(manifest_path,raw,only)
  else:
-  manifest=json.loads(manifest_path.read_text())
+  manifest_bytes=manifest_path.read_bytes()
+  manifest=json.loads(manifest_bytes.decode())
   if is_flat_atlas(manifest) or _flat_any(manifest):
    raw_flat=manifest;manifest=normalize(manifest_path,manifest,only or sorted(k for k in manifest if not str(k).startswith('_')))
    # art patch v3 (2026-10-31): the adapter gives every listed frame single_body, which turned unprefixed multi-word picture text into
@@ -148,8 +154,12 @@ def audit(manifest_path,out=None,only=None):
   if role=='scope_body' and not tex.is_file():skipped.append({'frame':name,'reason':'texture missing: '+tex.name});continue
   walls=manifest.get('packed_rects');others=None
   if str(tex) not in cache:
-   image=Image.open(tex).convert('RGBA');cache[str(tex)]=(image,components(image) if walls is None else {},0 if walls is None else extrusion(image,walls))
-  image,cs,ext=cache[str(tex)];rect=frame['rect']
+   texture_bytes=tex.read_bytes()
+   with Image.open(BytesIO(texture_bytes)) as decoded:
+    image=decoded.convert('RGBA')
+   texture_sha256=hashlib.sha256(texture_bytes).hexdigest()
+   cache[str(tex)]=(image,texture_sha256,components(image) if walls is None else {},0 if walls is None else extrusion(image,walls))
+  image,texture_sha256,cs,ext=cache[str(tex)];rect=frame['rect']
   if not isinstance(rect,list) or len(rect)!=4 or not all(isinstance(x,int) for x in rect) or min(rect[:2])<0 or min(rect[2:])<=0 or rect[0]+rect[2]>image.width or rect[1]+rect[3]>image.height:
    issues.append({'frame':name,'kind':'invalid_or_out_of_texture_rect'});continue
   if role=='scope_body' and opaque_edges(image,rect):skipped.append({'frame':name,'reason':'opaque to all four edges (tile)'});continue
@@ -157,7 +167,7 @@ def audit(manifest_path,out=None,only=None):
   visible=sorted([(inside(c,rect),c) for c in cs.values()],key=lambda q:-q[0]);visible=[q for q in visible if q[0]>0]
   if not visible:issues.append({'frame':name,'kind':'empty_slice'});continue
   area=visible[0][0];significant=[q for q in visible if q[0]>=max(24,area*.005)]
-  row={'frame':name,'texture':str(tex),'texture_sha256':hashlib.sha256(tex.read_bytes()).hexdigest(),'rect':rect,'role':role,'components':[{'visible_area':n,'full_area':c['area'],'bbox':c['bbox']} for n,c in significant],'problems':[]}
+  row={'frame':name,'texture':str(tex),'texture_sha256':texture_sha256,'rect':rect,'role':role,'components':[{'visible_area':n,'full_area':c['area'],'bbox':c['bbox']} for n,c in significant],'problems':[]}
   expected=2 if role=='two_marks' else 1
   if role not in ('multi_body','scope_body') and len(significant)>expected:row['problems'].append('foreign_alpha_island')
   if role not in ('multi_body','scope_body') and len(significant)<expected:row['problems'].append('declared_part_missing')
@@ -174,7 +184,7 @@ def audit(manifest_path,out=None,only=None):
    x,y,w,h=rect;crop=image.crop((x,y,x+w,y+h));crop=crop.rotate(90,expand=True) if frame.get('rotated') else crop;board=Image.new('RGBA',crop.size,'#e6dfd0');board.alpha_composite(crop);board.convert('RGB').save(Path(out)/(name.replace(':','colon').replace('/','slash')+'-slice.png'))
    if row['problems']:
     pad=45;box=[max(0,x-pad),max(0,y-pad),min(image.width,x+w+pad),min(image.height,y+h+pad)];neighbour=image.crop(box);bg=Image.new('RGBA',neighbour.size,'#e6dfd0');bg.alpha_composite(neighbour);draw=ImageDraw.Draw(bg);draw.rectangle((x-box[0],y-box[1],x+w-box[0]-1,y+h-box[1]-1),outline='#e43937',width=3);bg.convert('RGB').save(Path(out)/(name.replace(':','colon').replace('/','slash')+'-context.png'))
- return {'tool':'audit_atlas_slices','passed':not issues,'manifest':str(manifest_path.resolve()),'manifest_sha256':hashlib.sha256(manifest_path.read_bytes()).hexdigest(),'checked':len(rows),'issues':issues,'frames':rows,'declared_frames':{k:v['rect']for k,v in manifest['frames'].items()},'runtime_frames':{k:v.get('runtime_rect',v['rect'])for k,v in manifest['frames'].items()},'runtime_sizes':manifest.get('runtime_sizes',{}),'frame_names':{k:v.get('names',[k])for k,v in manifest['frames'].items()},'adapter':manifest.get('adapter','frames_v1'),'skipped':skipped,'scope':'v7.8: every slice. icon_/node_/btn_/digit_ = one body; other slices (picture text, pieces, projectiles, obstacles) = body not cut and no edge strip; tilesets/sliced plates/opaque tiles skipped (listed). .plist roles use the bare frame name; rotated frames are checked where they sit in the texture.'}
+ return {'tool':'audit_atlas_slices','passed':not issues,'manifest':str(manifest_path.resolve()),'manifest_sha256':hashlib.sha256(manifest_bytes).hexdigest(),'checked':len(rows),'issues':issues,'frames':rows,'declared_frames':{k:v['rect']for k,v in manifest['frames'].items()},'runtime_frames':{k:v.get('runtime_rect',v['rect'])for k,v in manifest['frames'].items()},'runtime_sizes':manifest.get('runtime_sizes',{}),'frame_names':{k:v.get('names',[k])for k,v in manifest['frames'].items()},'adapter':manifest.get('adapter','frames_v1'),'skipped':skipped,'scope':'v7.8: every slice. icon_/node_/btn_/digit_ = one body; other slices (picture text, pieces, projectiles, obstacles) = body not cut and no edge strip; tilesets/sliced plates/opaque tiles skipped (listed). .plist roles use the bare frame name; rotated frames are checked where they sit in the texture.'}
 
 
 def check_project(project,dumps=None,out=None,only=None):

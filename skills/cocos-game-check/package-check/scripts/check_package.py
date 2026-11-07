@@ -257,6 +257,21 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             tool_equivalence = ad.get('tool_sha256') == verified_policy['original_tool_sha256']['rewarded_ad_regression']
         except Exception as error:
             return no('browser policy equivalence refused: %s' % error)
+    debrand_proof = (rt.get('rework') or {}).get('debrand_delta')
+    if isinstance(debrand_proof, dict):
+        try:
+            import importlib.util
+            file = Path(__file__).with_name('debrand_delta_guard.py')
+            spec = importlib.util.spec_from_file_location('_delivery_debrand_delta', file)
+            guard = importlib.util.module_from_spec(spec); spec.loader.exec_module(guard)
+            verified = guard.validate(debrand_proof['old_zip']['path'], files, adapter, debrand_proof['scope']['path'])
+            if verified != debrand_proof:
+                return no('exact debrand source/scene proof changed on delivery readback')
+            inherited = verified['inherited_ad']
+            adapter_equivalence = ad.get('adapter_sha256') == inherited['original_adapter_sha256']
+            tool_equivalence = ad.get('tool_sha256') == inherited['original_tool_sha256']
+        except Exception as error:
+            return no('debrand inherited ad identity refused: %s' % error)
     if ad_regression_gate.needs_regression(files):
         if ad.get('status') != 'passed':
             return no('the writer did not run the rewarded-ad regression on a package that needs it')

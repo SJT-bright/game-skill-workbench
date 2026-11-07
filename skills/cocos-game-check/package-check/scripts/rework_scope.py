@@ -331,6 +331,18 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
     """Writer reuse plan for the package `new_files` ({name: bytes}) against the last passed package `old_zip`.
     -> {'schema', 'reuse': bool, 'why', 'old': {...}, 'changes': {...}, 'required', 'rerun', 'reused', 'ad', ...}.
     Never raises for a reuse problem: reuse False with the reason (every check then runs)."""
+    if os.environ.get('DEBRAND_DELTA_SCOPE'):
+        import importlib.util
+        import sys
+        file = Path(__file__).with_name('debrand_reuse_plan.py')
+        spec = importlib.util.spec_from_file_location('_scoped_debrand_plan', file)
+        helper = importlib.util.module_from_spec(spec); spec.loader.exec_module(helper)
+        # Supply this module's already authenticated generic helpers.
+        class Base: pass
+        api = Base()
+        for key in ('read_zip','official_record','_adapter_path','_closure','diff','summary_of_changes','_sha_file','SCHEMA'):
+            setattr(api,key,globals()[key])
+        return helper.plan(api, old_zip, new_files, adapter, policy, board)
     import ad_regression as ad
     import runtime_regression as rr
     out = {'schema': SCHEMA, 'reuse': False, 'why': None, 'old': {'zip': str(old_zip)}, 'changes': None,
@@ -501,7 +513,8 @@ def merge_runtime(p, summary, names):
             'rework': {'reran': [n for n in names if n not in reused], 'reused': reused, 'reused_from': receipt,
                        'old_zip': p['old'].get('name'), 'changed': kinds_text(p),
                        **({'optional_art_delta': p['optional_art_delta']} if p.get('optional_art_delta') else {}),
-                       **({'browser_policy_tool_equivalence':p['browser_policy_tool_equivalence']} if p.get('browser_policy_tool_equivalence') else {})}}
+                       **({'browser_policy_tool_equivalence':p['browser_policy_tool_equivalence']} if p.get('browser_policy_tool_equivalence') else {}),
+                       **({'debrand_delta':p['debrand_delta']} if p.get('debrand_delta') else {})}}
 
 
 # ---------------------------------------------------------------- plain words

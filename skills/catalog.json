@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T00:59:41.007Z",
-  "treeHash": "882d2735e33a6e87fdcf8f8bc081e97368c7c3a29e9f6c292df79633753afbd1",
+  "createdAt": "2026-11-07T04:01:47.499Z",
+  "treeHash": "28ffe487b1de89366c4f76fd15d330d1f9d9ee715b83b3a0ca91077adcc58564",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -257,9 +257,9 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "2ba94e35b8a480e31bd0d7a0a4c3b37bd4c37db66251fff3b295547e1b143851",
-      "fileCount": 173,
-      "bytes": 1849007,
+      "treeHash": "d5c304b22d6fb483fed5b4fc5c5a2e454ea8157784ac007d3d01374070f4f19f",
+      "fileCount": 175,
+      "bytes": 1860956,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -599,8 +599,20 @@
         },
         {
           "path": "package-check/scripts/check_package.py",
-          "hash": "ac6d455795c29b629b99d4ed634758d5043e2bec3975d9b738be069f98697fab",
-          "size": 36051,
+          "hash": "d8757d22dc3ff862fd53a7d284adb2895d2664402becde867a29cfefc47e21ab",
+          "size": 37056,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/debrand_delta_guard.py",
+          "hash": "b1c02e16ce551b355c2fc90f1939e46c43f7ae364ee0bc068d56f62f45a8b78b",
+          "size": 7983,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/debrand_reuse_plan.py",
+          "hash": "fbc1f4229b8dc954cf716775103138d02a090d25e2e9b967b6d054ebec11a3f5",
+          "size": 2167,
           "executable": false
         },
         {
@@ -635,8 +647,8 @@
         },
         {
           "path": "package-check/scripts/rework_scope.py",
-          "hash": "7d81b8005453403df66dcec4d23e6194ba346dccb4a531d255e4dbc7b6b00b7e",
-          "size": 41590,
+          "hash": "da181920149a6ab58e25f08dc48877baa3f50efcfc0fcef9df39c667c65d6c50",
+          "size": 42384,
           "executable": false
         },
         {

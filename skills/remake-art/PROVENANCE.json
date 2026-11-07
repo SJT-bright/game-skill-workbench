@@ -7,8 +7,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "01922d3179bc1ac114b2f59bc07046dc44072acfd54123480736270e01be2dc8",
-      "bytes": 22472
+      "sha256": "9c32ddfd298b63f489018259a0f555db73d9586b5fb0d23ee24c092da88c46d5",
+      "bytes": 23189
     },
     {
       "path": "agents/openai.yaml",
@@ -47,8 +47,8 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "8ff3d3c00150eb6e4aa295e83066164dd01123135f5c25c4d347aa3819f8fa1f",
-      "bytes": 6700
+      "sha256": "c79d68145fa7ebc5f7fcebdf74494503e6e973ced178db16a8bba4f6e2fb8a94",
+      "bytes": 7292
     },
     {
       "path": "references/art-iteration-workflow.md",
@@ -337,7 +337,26 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "pretrial-art-gate-20261107",
+      "authority": "User requested direct local updates to the current Skills and scripts.",
+      "scope": "Formal English trial art evidence and read-only art verification during delivery.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "7c2aa2f42e63258005ce85633a041e9a7dc1507fa151d4dbd8b6e4eaf352ef79",
+          "after_sha256": "9c32ddfd298b63f489018259a0f555db73d9586b5fb0d23ee24c092da88c46d5",
+          "after_bytes": 23189
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "ffd68663aacc939151cdc411569898233f4c9887095f2f6779a077c19926014a",
+          "after_sha256": "c79d68145fa7ebc5f7fcebdf74494503e6e973ced178db16a8bba4f6e2fb8a94",
+          "after_bytes": 7292
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "63e26029a2fa791ac761ba48a68fd05b4dd7344bc4839a32785e06009230036a"
+  "previous_local_provenance_sha256": "a091d36ee347feb741c2bd6aef754b36c211cc9a30dee3e718c60547cbd63904"
 }

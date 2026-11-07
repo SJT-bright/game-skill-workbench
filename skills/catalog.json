@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T10:21:59.743Z",
-  "treeHash": "76fb924a8365cd6654e1e1054e3e09535c6945470ccac4acd85f0e0e55bbf8bf",
+  "createdAt": "2026-11-07T10:22:38.752Z",
+  "treeHash": "66739fcd2fb3d7c2fb061148a45ae1f23253654a1c4e7c4a0bab846e335071d6",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3031,20 +3031,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "a8edf169af1f97f9886f36dcb253659ee45e514fe217e73d97cc8e4b08def294",
+      "treeHash": "66616482c16b0b2b027be07860ea7e90a735b8c124c5ec87e71aa89fae48d352",
       "fileCount": 64,
-      "bytes": 1438695,
+      "bytes": 1439864,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a091d36ee347feb741c2bd6aef754b36c211cc9a30dee3e718c60547cbd63904",
-          "size": 11758,
+          "hash": "9c22dcdf1e1005f1617471e7fd52cf8ced4550b1e6eadf48f8d3562e227656af",
+          "size": 12593,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "7c2aa2f42e63258005ce85633a041e9a7dc1507fa151d4dbd8b6e4eaf352ef79",
-          "size": 23085,
+          "hash": "9c32ddfd298b63f489018259a0f555db73d9586b5fb0d23ee24c092da88c46d5",
+          "size": 23189,
           "executable": false
         },
         {
@@ -3091,8 +3091,8 @@
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "ffd68663aacc939151cdc411569898233f4c9887095f2f6779a077c19926014a",
-          "size": 7062,
+          "hash": "c79d68145fa7ebc5f7fcebdf74494503e6e973ced178db16a8bba4f6e2fb8a94",
+          "size": 7292,
           "executable": false
         },
         {

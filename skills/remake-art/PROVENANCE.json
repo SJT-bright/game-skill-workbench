@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.6",
+  "revision": "2026-11-07.english-simple.11.17.8",
   "skill": "remake-art",
   "previous_provenance_sha256": "2efe22456919f9b945289e763374d5174dfbc2ab247058bf6bb4f38ac29a35c2",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
@@ -47,13 +47,13 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "c79d68145fa7ebc5f7fcebdf74494503e6e973ced178db16a8bba4f6e2fb8a94",
-      "bytes": 7292
+      "sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+      "bytes": 7475
     },
     {
       "path": "references/art-iteration-workflow.md",
-      "sha256": "0d69db21603423ff0cd4cc40c5049eaa35e09362e346dfc48b3825ec483332c3",
-      "bytes": 10134
+      "sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+      "bytes": 10185
     },
     {
       "path": "references/artwork-and-feedback.md",
@@ -62,8 +62,8 @@
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
-      "bytes": 15248
+      "sha256": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
+      "bytes": 16919
     },
     {
       "path": "references/button-group-review.md",
@@ -77,8 +77,8 @@
     },
     {
       "path": "references/capture-rounds.md",
-      "sha256": "a7e41d9d11d357aa6fd3e45577294d475110dd452d4ebce6b8ff014ef16bfef9",
-      "bytes": 9843
+      "sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+      "bytes": 9913
     },
     {
       "path": "references/card-ornament-layout-review.md",
@@ -112,8 +112,8 @@
     },
     {
       "path": "references/full-visual-review.md",
-      "sha256": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
-      "bytes": 11847
+      "sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+      "bytes": 11809
     },
     {
       "path": "references/home-by-gameplay.md",
@@ -137,8 +137,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "c13d2761879b79eca3ef22c17f59a5845d19a783ed0700b71667662ab3005011",
-      "bytes": 94774
+      "sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+      "bytes": 94755
     },
     {
       "path": "references/panel-composite-review.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "references/production-check-link.md",
-      "sha256": "08fd36fb05469a84deaf96090d72a5b1a2b5ed0262ab81548cc317104ee61692",
-      "bytes": 13317
+      "sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+      "bytes": 13559
     },
     {
       "path": "references/production-prevention.md",
@@ -356,7 +356,77 @@
           "after_bytes": 7292
         }
       ]
+    },
+    {
+      "id": "2026-11-07.english-simple.11.17.8",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "90e2f124f1e429e59e4bd869aaf820379b3927e164902cc99d1d006541267fb2",
+      "files": [
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+          "base_sha256": "8ff3d3c00150eb6e4aa295e83066164dd01123135f5c25c4d347aa3819f8fa1f",
+          "release_sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+          "after_sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+          "after_bytes": 7475,
+          "method": "retain"
+        },
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "base_sha256": "0d69db21603423ff0cd4cc40c5049eaa35e09362e346dfc48b3825ec483332c3",
+          "release_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "after_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "after_bytes": 10185,
+          "method": "retain"
+        },
+        {
+          "path": "references/atlas-slice-integrity.md",
+          "before_sha256": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+          "base_sha256": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+          "release_sha256": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
+          "after_sha256": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
+          "after_bytes": 16919,
+          "method": "release"
+        },
+        {
+          "path": "references/capture-rounds.md",
+          "before_sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+          "base_sha256": "a7e41d9d11d357aa6fd3e45577294d475110dd452d4ebce6b8ff014ef16bfef9",
+          "release_sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+          "after_sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+          "after_bytes": 9913,
+          "method": "retain"
+        },
+        {
+          "path": "references/full-visual-review.md",
+          "before_sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+          "base_sha256": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
+          "release_sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+          "after_sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+          "after_bytes": 11809,
+          "method": "retain"
+        },
+        {
+          "path": "references/page-richness.md",
+          "before_sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+          "base_sha256": "c13d2761879b79eca3ef22c17f59a5845d19a783ed0700b71667662ab3005011",
+          "release_sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+          "after_sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+          "after_bytes": 94755,
+          "method": "retain"
+        },
+        {
+          "path": "references/production-check-link.md",
+          "before_sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+          "base_sha256": "08fd36fb05469a84deaf96090d72a5b1a2b5ed0262ab81548cc317104ee61692",
+          "release_sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+          "after_sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+          "after_bytes": 13559,
+          "method": "retain"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "a091d36ee347feb741c2bd6aef754b36c211cc9a30dee3e718c60547cbd63904"
+  "previous_local_provenance_sha256": "9c22dcdf1e1005f1617471e7fd52cf8ced4550b1e6eadf48f8d3562e227656af"
 }

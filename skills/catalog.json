@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T19:36:38.278Z",
-  "treeHash": "1bdc77c3b23a70aed78ce53067e45c241908dd404cf6e48fe673e36e703baf7a",
+  "createdAt": "2026-11-07T19:37:02.942Z",
+  "treeHash": "e678cf7ffe053697517e2a69f9d47784e5e87ae5556eb5d35c5566ec76c2d27c",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3049,14 +3049,14 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "27cc53ad9c347e2268ffb8f8ad1198906dcfa35dfda03db7fb49232053116faa",
+      "treeHash": "47486578b20a714c849bd4c2d24b8a566d10fceadc6a310ab41ba7830873fc50",
       "fileCount": 64,
-      "bytes": 1444009,
+      "bytes": 1449516,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "9c22dcdf1e1005f1617471e7fd52cf8ced4550b1e6eadf48f8d3562e227656af",
-          "size": 12593,
+          "hash": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928",
+          "size": 16429,
           "executable": false
         },
         {
@@ -3127,8 +3127,8 @@
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
-          "size": 15248,
+          "hash": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
+          "size": 16919,
           "executable": false
         },
         {

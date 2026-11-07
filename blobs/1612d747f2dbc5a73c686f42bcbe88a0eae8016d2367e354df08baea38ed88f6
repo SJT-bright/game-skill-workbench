@@ -1,0 +1,342 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "skill": "cocos-game-to-english",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "revision": "2026-11-06.english-simple.11.17.6",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "d40b9032a96ede805b10a706b6da9568aac4aa52008041dcd0b31747d38a5cc9",
+      "bytes": 96199
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "bytes": 176
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/README.md",
+      "sha256": "6308ef3ac51b7339e333e20c6dd156ba2521a50d2e0a5eb90028fa2ecdc89af2",
+      "bytes": 1824
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/main.js",
+      "sha256": "a00ae9866bab67708122c6c567b677bad046aa91e75a07b5dac462353d3525f0",
+      "bytes": 4190
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/package.json",
+      "sha256": "9fa38054d0cb490c108c6ce1f45967b05ac7141d939e2fa03aef3ded17e8689a",
+      "bytes": 176
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "sha256": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "bytes": 1380
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "sha256": "a8a75cdffd9d7f89490f61dc559a0704f77ef3ddc635382a51b9bf3654e004e8",
+      "bytes": 1479
+    },
+    {
+      "path": "references/early-prevention.md",
+      "sha256": "6561bfe972468f64f0a7c9251851c8bbf8ba2873a3abb54985d38d1ab4cd0400",
+      "bytes": 6650
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "sha256": "580bea94e298dd29a02cdf7c26209d84fdf060d81e79c2ab65b86533ea80981f",
+      "bytes": 34553
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "sha256": "2421f569c3d5ca5ab68fa85227ca948e2282069417c985fdf27d4fe629dc43f3",
+      "bytes": 12547
+    },
+    {
+      "path": "references/local-creator-versions.md",
+      "sha256": "0b163a4480dea5d28a23841fb68fceeb65705fadc2c263f878f801796360c8ca",
+      "bytes": 5369
+    },
+    {
+      "path": "scripts/browser_env.py",
+      "sha256": "87781db5398ed7aa715fc22f571b842263f60d5072c044b6606bcac51c00f571",
+      "bytes": 15575
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "sha256": "21fda56bc9ed0cd548c5cd8be4190294cbcb45888a9ad38f3a27b9367d365321",
+      "bytes": 7959
+    },
+    {
+      "path": "scripts/check_machine.py",
+      "sha256": "e6d36022e2cd490a079121a813110b389b6ea82a2604e0f748b92f4ec1dc27cd",
+      "bytes": 14756
+    },
+    {
+      "path": "scripts/chinese_audit.py",
+      "sha256": "86f1ff897bd7af0a92f42306b060b64149c180e4ca007601d54185ee5fdfec2b",
+      "bytes": 100501
+    },
+    {
+      "path": "scripts/english_copy_guard.py",
+      "sha256": "bca2c42d32db819b7d055058e52f030a685e1846963b73ddd730bef79a600033",
+      "bytes": 26255
+    },
+    {
+      "path": "scripts/find_creator.py",
+      "sha256": "8c3c8e73a21d7c4a4d8e7e4e622eb4ace3ae010970f79de35619e067ec94bcb6",
+      "bytes": 28297
+    },
+    {
+      "path": "scripts/fit_english_labels.py",
+      "sha256": "a3f7d2e63df871ec10731de3d99fac4c51584253d5d2a4a483fcb2e73d40dfbc",
+      "bytes": 36072
+    },
+    {
+      "path": "scripts/fix_web_entry_3x.py",
+      "sha256": "25db43d136f17f2ea0872e13d9f906cbcd04556d48b5187337320f6f9f7f5b71",
+      "bytes": 8620
+    },
+    {
+      "path": "scripts/ocr_vision.swift",
+      "sha256": "0e9e8100c5338c6c77fe6c142be1745402786fa00eb238c629d6b447740d0850",
+      "bytes": 2854
+    },
+    {
+      "path": "scripts/ocr_windows.ps1",
+      "sha256": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
+      "bytes": 4615
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "sha256": "472b6a41b010c1db81215bd47c8a014b47a5766d1584c1501419feea3ddced8b",
+      "bytes": 10740
+    },
+    {
+      "path": "scripts/stage_timer.py",
+      "sha256": "68b000b1d17ff77d3eb6edd97f2fea2a1338a9cf432dca2021f2858555cca6b4",
+      "bytes": 34882
+    },
+    {
+      "path": "scripts/test_check_export_images.py",
+      "sha256": "b1bcaf2de070c1c4d6782d0cd39c5fa350d6632f95674d9d77adf3b8c09dda4d",
+      "bytes": 5626
+    },
+    {
+      "path": "scripts/test_chinese_audit.py",
+      "sha256": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
+      "bytes": 31960
+    },
+    {
+      "path": "scripts/test_engine_route.py",
+      "sha256": "6cbceaa7637f18b109e10bf7a2c9fe4ddb5d53e1ecaeada6b57d6ae2fafd1105",
+      "bytes": 4834
+    },
+    {
+      "path": "scripts/test_english_copy_guard.py",
+      "sha256": "579cd2ee96ada2866bee6e205d10951285eaed1c2bb70d9ad2524603cdfecdb1",
+      "bytes": 11926
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "sha256": "94214071b7b16e82a30480983a2bc2ebab36a126daa58fdff8635be833f404a9",
+      "bytes": 72398
+    },
+    {
+      "path": "scripts/test_fit_english_labels.py",
+      "sha256": "4c64148cdd1fb7b69ccd189c953830ba72ffeaaa9621840d085d4149f804dccc",
+      "bytes": 22361
+    },
+    {
+      "path": "scripts/test_p21_browser_env.py",
+      "sha256": "819843f1b9d1a07a412db13e465505de711aaf459d76ff75d25a5ed1d1ab6960",
+      "bytes": 19321
+    },
+    {
+      "path": "scripts/test_portable_tools.py",
+      "sha256": "2d320778e528d009094b030c78ac12d6406107078f143c0c75463ff07f7f84f9",
+      "bytes": 14432
+    },
+    {
+      "path": "scripts/test_r4d_raw_input_intake.py",
+      "sha256": "cee4e16005b0f39d42767adeb230650cea45e0fdc93ba0ab3d91d79e84fe631c",
+      "bytes": 3639
+    },
+    {
+      "path": "scripts/test_r4f1_build_sync.py",
+      "sha256": "3386c5910582dd13189fc14221ccd7278c0ec6fb1b4bd9cce517880c9bb685f0",
+      "bytes": 4333
+    },
+    {
+      "path": "scripts/test_r4j4_native_sync.py",
+      "sha256": "684f879847a4e34f0edb0deb03bdba8392096120566ae468301bf5e5ee08f855",
+      "bytes": 10834
+    },
+    {
+      "path": "scripts/test_r4n3_env_stuck.py",
+      "sha256": "a8051bd16b0cdefcef3950035f303ab7c0c2267690c6d878770643fd27c77a09",
+      "bytes": 1843
+    },
+    {
+      "path": "scripts/test_r4q7_editor_config.py",
+      "sha256": "d54e24a72673de1bfff64f27844220d065cee524a0826d8cc5ad6b024405690d",
+      "bytes": 1984
+    },
+    {
+      "path": "scripts/test_r4q7_export_not_this_source.py",
+      "sha256": "27abd382487b06774721e61137806dbdeaca2b9d8a0396784cf1defe9b11834e",
+      "bytes": 2614
+    },
+    {
+      "path": "scripts/test_serve_preview_gate.py",
+      "sha256": "c3471a2c98e4d34ec309e9a83496a8ff27ea9fcb049b617d0de7540748752421",
+      "bytes": 18855
+    },
+    {
+      "path": "scripts/test_stage_timer.py",
+      "sha256": "c06fcdc8a89cf9f2dbe373ffca67f07d5c86e28d296577e559d7a5b99a5cddc0",
+      "bytes": 17834
+    },
+    {
+      "path": "scripts/test_ts_full_check.py",
+      "sha256": "f223220cd2b203f566977032df60ae603ba7fc360f65c1bee1ce8f0d2f09611d",
+      "bytes": 4744
+    },
+    {
+      "path": "scripts/test_unpack_source.py",
+      "sha256": "5122a1bfd703635757dcacb4886c9e7867b5f3db427a3cfa4c3a934aa07073e3",
+      "bytes": 4187
+    },
+    {
+      "path": "scripts/ts_full_check.py",
+      "sha256": "d9dd0e003800af7fda4fecb276e650e02b6b26808e579e5cc1f3cc48e85a9e38",
+      "bytes": 9332
+    },
+    {
+      "path": "scripts/unpack_source.py",
+      "sha256": "940291f4c1a881691fc5857837b84cc62c3f44909cd4ac304da03bbeb318ff27",
+      "bytes": 9004
+    },
+    {
+      "path": "版本历史.md",
+      "sha256": "077bd8c7d0b94d783de28100827bf63f27569c1376dbddbf1afd9c5b4845ddd6",
+      "bytes": 11856
+    }
+  ],
+  "previous_provenance_sha256": "746278324cdf0f03ca95b006c3a06028e48844c14682a1358ce8f3beefeeee90",
+  "local_patches": [
+    {
+      "id": "ego-only-tests-20261106-geometry",
+      "authority": "User requires all Agent browser tests in Ego; actual viewport and native-host screenshots use official Ego Page CDP.",
+      "files": [
+        {
+          "path": "scripts/browser_env.py",
+          "sha256": "5cf3f6bdff35bc34dbc79af8ab7b800f0da86cebdb6c764e64d921c626900c09"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    },
+    {
+      "id": "ego-lite-portability-doc-assertion-20261106",
+      "authority": "User requested updating the local Codex and .agents assertions to the current Ego Lite policy.",
+      "files": [
+        {
+          "path": "scripts/test_entry_consistency.py",
+          "sha256": "1e6e387819a9f3e73acc24b50cff8533fd32be9309ae5e74a38915f5763e35de"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/_内部/maintenance/updates/20261106-art-workflow-system/local-ego-doc-assertion-20261106-lyv1g3vl/verification.json"
+    },
+    {
+      "id": "2026-11-06.english-simple.11.17.6",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "484d5004eb30143197ceced3be97626cdbbdceeafa295d4485373ea122a71c38",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "bd2ccda44f2f6df1bf49c9dbd9853a0512d5e7a879e3252d64b0f17c9a0f7ed7",
+          "base_sha256": "15a81afe94c1481f12865377a86620a7254abb25491482262111402ccc15cefc",
+          "release_sha256": "da6034b85256d5eee0696917ee9a71d26770646fc2aa38a0d690646b9183f28b",
+          "after_sha256": "d40b9032a96ede805b10a706b6da9568aac4aa52008041dcd0b31747d38a5cc9",
+          "after_bytes": 96199,
+          "method": "reviewed_merge"
+        },
+        {
+          "path": "scripts/browser_env.py",
+          "before_sha256": "5cf3f6bdff35bc34dbc79af8ab7b800f0da86cebdb6c764e64d921c626900c09",
+          "base_sha256": "d1ac2e5469fa66742b7b8483b4384e814072fae41a21d5da7d1ef36182dcb42e",
+          "release_sha256": "87781db5398ed7aa715fc22f571b842263f60d5072c044b6606bcac51c00f571",
+          "after_sha256": "87781db5398ed7aa715fc22f571b842263f60d5072c044b6606bcac51c00f571",
+          "after_bytes": 15575,
+          "method": "reviewed_merge"
+        },
+        {
+          "path": "scripts/cdp_browser.mjs",
+          "before_sha256": "34650ec70c22e9ad1e1645be77a2bd78478b6dda347924a269e7128ac93be0df",
+          "base_sha256": "34650ec70c22e9ad1e1645be77a2bd78478b6dda347924a269e7128ac93be0df",
+          "release_sha256": null,
+          "after_sha256": null,
+          "after_bytes": null,
+          "method": "release"
+        },
+        {
+          "path": "scripts/check_machine.py",
+          "before_sha256": "ea836edc85e47e59307c0b220d57cba0e0ef632c41a9ad822708d0fcb4a6dc35",
+          "base_sha256": "ea836edc85e47e59307c0b220d57cba0e0ef632c41a9ad822708d0fcb4a6dc35",
+          "release_sha256": "e6d36022e2cd490a079121a813110b389b6ea82a2604e0f748b92f4ec1dc27cd",
+          "after_sha256": "e6d36022e2cd490a079121a813110b389b6ea82a2604e0f748b92f4ec1dc27cd",
+          "after_bytes": 14756,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_entry_consistency.py",
+          "before_sha256": "1e6e387819a9f3e73acc24b50cff8533fd32be9309ae5e74a38915f5763e35de",
+          "base_sha256": "7bd51c63906e5b6c1fbb3a61bc16d8e60a060b450e06af36eb76c77ab9ad651c",
+          "release_sha256": "94214071b7b16e82a30480983a2bc2ebab36a126daa58fdff8635be833f404a9",
+          "after_sha256": "94214071b7b16e82a30480983a2bc2ebab36a126daa58fdff8635be833f404a9",
+          "after_bytes": 72398,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_p21_browser_env.py",
+          "before_sha256": "630f845921ca6ef4c1bec4f788fdaf29c45eecf12f3ec2e10cd46e3817b320df",
+          "base_sha256": "630f845921ca6ef4c1bec4f788fdaf29c45eecf12f3ec2e10cd46e3817b320df",
+          "release_sha256": "819843f1b9d1a07a412db13e465505de711aaf459d76ff75d25a5ed1d1ab6960",
+          "after_sha256": "819843f1b9d1a07a412db13e465505de711aaf459d76ff75d25a5ed1d1ab6960",
+          "after_bytes": 19321,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_portable_tools.py",
+          "before_sha256": "2e7f475a724be70678b3d284d0aedb267d7f29f9e279f3ef658792dd69f3e771",
+          "base_sha256": "2e7f475a724be70678b3d284d0aedb267d7f29f9e279f3ef658792dd69f3e771",
+          "release_sha256": "2d320778e528d009094b030c78ac12d6406107078f143c0c75463ff07f7f84f9",
+          "after_sha256": "2d320778e528d009094b030c78ac12d6406107078f143c0c75463ff07f7f84f9",
+          "after_bytes": 14432,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_r4n3_env_stuck.py",
+          "before_sha256": "8e94d81f9afbf97ba9be3d76a3696159077cfbaabda825b6799f86f7e56844a4",
+          "base_sha256": "8e94d81f9afbf97ba9be3d76a3696159077cfbaabda825b6799f86f7e56844a4",
+          "release_sha256": "a8051bd16b0cdefcef3950035f303ab7c0c2267690c6d878770643fd27c77a09",
+          "after_sha256": "a8051bd16b0cdefcef3950035f303ab7c0c2267690c6d878770643fd27c77a09",
+          "after_bytes": 1843,
+          "method": "release"
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "b8161afe3d53025ed14a1a0b43965f1a6a8263a3c5d836adbb4df934d0f23a20",
+          "base_sha256": "b8161afe3d53025ed14a1a0b43965f1a6a8263a3c5d836adbb4df934d0f23a20",
+          "release_sha256": "077bd8c7d0b94d783de28100827bf63f27569c1376dbddbf1afd9c5b4845ddd6",
+          "after_sha256": "077bd8c7d0b94d783de28100827bf63f27569c1376dbddbf1afd9c5b4845ddd6",
+          "after_bytes": 11856,
+          "method": "release"
+        }
+      ]
+    }
+  ],
+  "previous_local_provenance_sha256": "89b74fb321355cdee0d53a72fd1032036503bd6bfd84157bd0ec7b07e14ed747"
+}

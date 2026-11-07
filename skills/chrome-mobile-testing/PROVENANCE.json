@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.1",
+  "revision": "2026-11-06.english-simple.11.17.6",
   "skill": "chrome-mobile-testing",
-  "previous_provenance_sha256": "9a58c0c21800739f41f495b0150b7deb0b3f4dfdebac2b3a821bdaa76b7bb23e",
+  "previous_provenance_sha256": "37b8a04b665862e28f9e40d39512980f4c3124f6c4469034d55ebb09b1c33e7e",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
@@ -12,23 +12,13 @@
     },
     {
       "path": "scripts/chrome_touch.py",
-      "sha256": "ea12d3ac9e99e194e8b70852308e013782f721b523a4d00f181b824d9dbabcea",
-      "bytes": 30590
+      "sha256": "93563abe3ed6320a7ae26505b5c2aa5fd2203b7031ea99ba7a2258e75028572e",
+      "bytes": 30101
     },
     {
       "path": "scripts/ego_touch_runner.js",
       "sha256": "409317030c574826283b251264d075afe446e32a1c97aba8befd34745fdcd1e1",
       "bytes": 15952
-    },
-    {
-      "path": "scripts/prepare_chrome.py",
-      "sha256": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
-      "bytes": 1902
-    },
-    {
-      "path": "tests/bin/ego-browser",
-      "sha256": "c393f9ebed922816ccefced55c17009ce004b420e16b5e953b3508350d59c97d",
-      "bytes": 2920
     },
     {
       "path": "tests/calibration-plan.json",
@@ -47,13 +37,13 @@
     },
     {
       "path": "tests/test_ego_route.py",
-      "sha256": "f77b415f2e3f9ffea570bd404cad6f0e552fe82cf890eba06f29856beb78549b",
-      "bytes": 4925
+      "sha256": "ffd076fab74fa880723c4fc777be46408995f3935b896fbfe0d9d1cee444ffd2",
+      "bytes": 7111
     },
     {
       "path": "tests/test_r4o4_dump_retry.py",
-      "sha256": "23b8acda2a783a600787401ea66dac57a2dd17f6cda9e2f3fd10aad8675a9231",
-      "bytes": 2893
+      "sha256": "7eecbecc02580a59456c472e9ec9b03ba2fa0d5c46ee3644adafad60560917a4",
+      "bytes": 2858
     },
     {
       "path": "tests/test_timing_fps.py",
@@ -62,8 +52,8 @@
     },
     {
       "path": "tests/timing-plan.json",
-      "sha256": "7eece6a52f0ea6a0f2413020932648dd279c6806874bb1a12442171df1b3b309",
-      "bytes": 290
+      "sha256": "8bcc9dd535f585767ff9ac0444aa84eeb6ba35fd5dec6c71155f53df4b7fa841",
+      "bytes": 327
     }
   ],
   "parent_release_sha256": "0dffc1f86bc770211d9d39cc379e958eadafda1f62e3839bd8443262a42a4b32",
@@ -105,6 +95,68 @@
         }
       ],
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    },
+    {
+      "id": "2026-11-06.english-simple.11.17.6",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "53f22764c3eb47c55002468838a27d4d6a91cda37b40a278e2b94bd98a675e81",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "f1ca47fbc860c08a4d508c1bd5defabb3c588422fcb8a1e529e579848912c40f",
+          "base_sha256": "0c545a21ac0197aa0fb9ef6c1eb254779da946aa3ab5a8cada2a77e920491577",
+          "release_sha256": "f1ca47fbc860c08a4d508c1bd5defabb3c588422fcb8a1e529e579848912c40f",
+          "after_sha256": "f1ca47fbc860c08a4d508c1bd5defabb3c588422fcb8a1e529e579848912c40f",
+          "after_bytes": 16535,
+          "method": "retain"
+        },
+        {
+          "path": "scripts/chrome_touch.py",
+          "before_sha256": "ea12d3ac9e99e194e8b70852308e013782f721b523a4d00f181b824d9dbabcea",
+          "base_sha256": "547e4582f4af287b858430e76538d40df0529213e8f888704a94c33a3f04b7c6",
+          "release_sha256": "93563abe3ed6320a7ae26505b5c2aa5fd2203b7031ea99ba7a2258e75028572e",
+          "after_sha256": "93563abe3ed6320a7ae26505b5c2aa5fd2203b7031ea99ba7a2258e75028572e",
+          "after_bytes": 30101,
+          "method": "reviewed_merge"
+        },
+        {
+          "path": "scripts/ego_touch_runner.js",
+          "before_sha256": "409317030c574826283b251264d075afe446e32a1c97aba8befd34745fdcd1e1",
+          "base_sha256": "dfa070869171d6a21894f3329041ba5122e4db437416f9d358ed72b1ae75dfe7",
+          "release_sha256": "409317030c574826283b251264d075afe446e32a1c97aba8befd34745fdcd1e1",
+          "after_sha256": "409317030c574826283b251264d075afe446e32a1c97aba8befd34745fdcd1e1",
+          "after_bytes": 15952,
+          "method": "retain"
+        },
+        {
+          "path": "scripts/prepare_chrome.py",
+          "before_sha256": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+          "base_sha256": "d3ffa6a05c92fba9e5019b17539b88bd76028943f4dc6d24e4685a9f442f30c1",
+          "release_sha256": null,
+          "after_sha256": null,
+          "after_bytes": null,
+          "method": "release"
+        },
+        {
+          "path": "tests/test_ego_route.py",
+          "before_sha256": "1fc48d0dc8d89ff7493ebe5663e1c49186d341faa36ec39f4114c32a1ad5e67b",
+          "base_sha256": "1fc48d0dc8d89ff7493ebe5663e1c49186d341faa36ec39f4114c32a1ad5e67b",
+          "release_sha256": "ffd076fab74fa880723c4fc777be46408995f3935b896fbfe0d9d1cee444ffd2",
+          "after_sha256": "ffd076fab74fa880723c4fc777be46408995f3935b896fbfe0d9d1cee444ffd2",
+          "after_bytes": 7111,
+          "method": "release"
+        },
+        {
+          "path": "tests/test_r4o4_dump_retry.py",
+          "before_sha256": "23b8acda2a783a600787401ea66dac57a2dd17f6cda9e2f3fd10aad8675a9231",
+          "base_sha256": "23b8acda2a783a600787401ea66dac57a2dd17f6cda9e2f3fd10aad8675a9231",
+          "release_sha256": "7eecbecc02580a59456c472e9ec9b03ba2fa0d5c46ee3644adafad60560917a4",
+          "after_sha256": "7eecbecc02580a59456c472e9ec9b03ba2fa0d5c46ee3644adafad60560917a4",
+          "after_bytes": 2858,
+          "method": "release"
+        }
+      ]
     }
-  ]
+  ],
+  "previous_local_provenance_sha256": "5aee6d846e456afde11d9126e7b3f28fc02787de298604e4705c818b299d369a"
 }

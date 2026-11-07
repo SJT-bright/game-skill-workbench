@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Run an Agent-reviewed local touch plan in a Chromium browser and retain evidence.
+"""Run an Agent-reviewed local touch plan in Ego Lite and retain evidence.
 
 Default browser is Ego Lite (user rules 2026-10-21 / 2026-10-27). Since 2026-10-27 the plan runs through Ego's
 OFFICIAL API: the script ego_touch_runner.js is piped to `ego-browser nodejs`, creates its own uniquely named
 TaskSpace, uses page.cdp() for the iPhone emulation, touch and network, and finishes only that space. There is no
 --cdp-url any more: Ego exposes no DevTools endpoint and its guide forbids attaching Playwright. Two runs with the
 same space name used to share one space (taskSpace(name) resumes it), and one run's finish() killed the other:
-every run now gets a unique name. Launching Google Chrome is only allowed after the user agreed
-(--user-approved-chrome, Playwright route below); the user's own trial uses serve_preview.py --keep, not this tool.
+every run now gets a unique name. All Agent browser tests use Ego Lite. The user's own Chrome trial uses
+serve_preview.py --keep.
 Ego is ONLY for the agent's own tests (user 2026-10-23): a run never hands its window to the user. --handoff is
 refused; the user plays the local preview link the agent gives in Codex (serve_preview.py --keep).
 
@@ -21,8 +21,8 @@ input_transport=ego_page_cdp, session_id = the numeric Ego spaceId, space_name =
 
 --record (or "record": true in the plan) saves frames to <out>/frames/NNNNN_TTTTTTTms.jpg for
 scripts/audit_frame_glitches.py. In Ego the frames are sequential screenshots (a few per second, fps in the report):
-enough for black screens, frozen screens and wrong pages, NOT for one-frame flicker. The Chrome route (user consent
-only) records every rendered frame (about 60 per second). Record short flows (one flow per run).
+enough for black screens, frozen screens and wrong pages. Mark one-frame flicker untested if Ego does not capture it.
+Record short flows (one flow per run).
 
 Startup/loading timing (scripts/audit_startup_loading.py of cocos-game-core reads these reports):
   plan "timing": true      no screenshots between steps (they would distort timing); navigation does not wait for 'load'
@@ -37,15 +37,14 @@ Startup/loading timing (scripts/audit_startup_loading.py of cocos-game-core read
          polls until true and records t_ms since navigation start (entry); timeout = failed run
   plan "init_js": "<js>"         runs before the game's own scripts: stub or break the platform SDK
                                  (e.g. a tt object without showModal, or a showModal that never calls back)
-  plan "hang_urls": ["*logo*"]   (Chrome route only; Ego refuses it) those requests never answer (no callback); action {"type":"unhang"} lets
-                                 later requests through (the held ones stay pending, like a lost callback)
+  plan "hang_urls" is unsupported in Ego. Keep the network condition untested if the plan requires it.
   action {"type":"background","ms":12000}  switches to another tab for ms and records the game page's
          document.visibilityState while away (must read "hidden" for the background test to count)
 All network requests (url, status, encoded bytes, finish time) are recorded for the first-screen check.
 
 Phone (user 2026-10-22): plan "device": "iphone_15" (default: 393x852, DPR 3, iPhone user agent, touch) |
   "iphone_se" (375x667, the short 9:16 ratio) | "iphone_15_pro_max"; or give viewport/dpr/user_agent yourself.
-  Ego Lite and Chrome are the same Chromium engine: run the phone simulation once, in one browser (Ego Lite by default).
+  Run the phone simulation in Ego Lite.
   This is Chromium with iPhone screen, touch and user agent, not Apple's WebKit.
 
 UI layout and copy are read from the running game, never typed in (user rule 2026-10-21):
@@ -72,7 +71,7 @@ import signal
 import sys
 
 IPHONE_UA='Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
-# User 2026-10-22: the final phone simulation is an iPhone in one browser (Ego Lite and Chrome are the same Chromium).
+# Keep the iPhone simulation presets stable across Ego Lite runs.
 DEVICES={'iphone_15':{'viewport':{'width':393,'height':852},'dpr':3,'user_agent':IPHONE_UA},          # tall ratio (default)
          'iphone_se':{'viewport':{'width':375,'height':667},'dpr':2,'user_agent':IPHONE_UA},          # short 9:16 ratio
          'iphone_15_pro_max':{'viewport':{'width':430,'height':932},'dpr':3,'user_agent':IPHONE_UA}}
@@ -409,9 +408,9 @@ if __name__=='__main__':
     p.add_argument('--art-dumps', type=Path, help='art_capture output for this round; keeps the signed action plan unchanged')
     p.add_argument('--url',required=True);p.add_argument('--plan',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True);p.add_argument('--headless',action='store_true');p.add_argument('--handoff',action='store_true',help='refused: Ego windows are never handed to the user')
-    p.add_argument('--record',action='store_true',help='save every rendered frame for dynamic glitch analysis')
+    p.add_argument('--record',action='store_true',help='save sequential Ego screenshots for dynamic glitch analysis')
     p.add_argument('--cdp-url',help='removed 2026-10-27: Ego has no DevTools endpoint; runs go through ego-browser nodejs')
-    p.add_argument('--channel',default='chrome',help='only with --user-approved-chrome: chrome, or chromium = bundled Playwright browser')
+    p.add_argument('--channel',default='chrome',help=argparse.SUPPRESS)
     p.add_argument('--user-approved-chrome',action='store_true',help='retired: all Agent browser tests require Ego; Chrome is user trial only')
     p.add_argument('--name',help='short label shown to other sessions in browser_slots.py list, e.g. "测试线 音量复核"')
     p.add_argument('--project',help='game folder (only a label for the slot list; runs never queue)')

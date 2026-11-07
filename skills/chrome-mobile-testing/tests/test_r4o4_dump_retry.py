@@ -57,8 +57,8 @@ class DumpRetry(unittest.TestCase):
         self.assertIn('no result', str(e.exception))
         self.assertEqual(self.calls, 1)
 
-    def test_run_and_ego_runner_use_it(self):
-        self.assertIn('dump_with_retry(lambda:page.evaluate(ui_dump_js(action)', (SCRIPTS / 'chrome_touch.py').read_text(encoding='utf-8'))
+    def test_ego_runner_uses_dump_retry(self):
+        self.assertIn('ego_touch_runner.js', (SCRIPTS / 'chrome_touch.py').read_text(encoding='utf-8'))
         js = (SCRIPTS / 'ego_touch_runner.js').read_text(encoding='utf-8')
         self.assertRegex(js, r'dump\.error && dump\.retry\) \|\| tries >= 3\) break;')
 

@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-06.english-simple.11.17.6",
+  "revision": "2026-11-07.english-simple.11.17.7",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "ac1a169e331b4061b65a8efb15ce2d08ee2ed29f42c4a352f5097ee46def7e31",
-      "bytes": 96688
+      "sha256": "0d7c80978fa5033981d68bfd36f12163db30057a02177c2b12394cf05fee2b1f",
+      "bytes": 96738
     },
     {
       "path": "agents/openai.yaml",
@@ -221,8 +221,8 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "077bd8c7d0b94d783de28100827bf63f27569c1376dbddbf1afd9c5b4845ddd6",
-      "bytes": 11856
+      "sha256": "30447303af59d4278155c6f3bdd4b5d5acf46150f335aed1750d1f91100cf994",
+      "bytes": 12017
     }
   ],
   "previous_provenance_sha256": "746278324cdf0f03ca95b006c3a06028e48844c14682a1358ce8f3beefeeee90",
@@ -373,7 +373,32 @@
           "after_bytes": 22779
         }
       ]
+    },
+    {
+      "id": "2026-11-07.english-simple.11.17.7",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "2daea70a419459f78ad0e9f06de8c6ba9180ff59378c6b2aabc368884adde702",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "ac1a169e331b4061b65a8efb15ce2d08ee2ed29f42c4a352f5097ee46def7e31",
+          "base_sha256": "da6034b85256d5eee0696917ee9a71d26770646fc2aa38a0d690646b9183f28b",
+          "release_sha256": "2e1283f2bbd2dbd4eed86f77d4adcdd6737566249a83cec70c20b0fa3f56d3c6",
+          "after_sha256": "0d7c80978fa5033981d68bfd36f12163db30057a02177c2b12394cf05fee2b1f",
+          "after_bytes": 96738,
+          "method": "merge"
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "077bd8c7d0b94d783de28100827bf63f27569c1376dbddbf1afd9c5b4845ddd6",
+          "base_sha256": "077bd8c7d0b94d783de28100827bf63f27569c1376dbddbf1afd9c5b4845ddd6",
+          "release_sha256": "30447303af59d4278155c6f3bdd4b5d5acf46150f335aed1750d1f91100cf994",
+          "after_sha256": "30447303af59d4278155c6f3bdd4b5d5acf46150f335aed1750d1f91100cf994",
+          "after_bytes": 12017,
+          "method": "release"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "1612d747f2dbc5a73c686f42bcbe88a0eae8016d2367e354df08baea38ed88f6"
+  "previous_local_provenance_sha256": "5a5d794c4beb9ba6ecfd18e5582fd7068da8627cca321e269340f7d7eb0a3e27"
 }

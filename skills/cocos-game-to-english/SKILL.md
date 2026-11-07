@@ -11,7 +11,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见[浏览器测试规则](../remake-core/references/browser-testing-policy.md)。
 
-修订：`2026-11-06.english-simple.11.17.6`（正式包的浏览器测试和自检统一采用 Ego Lite。历次改动见[版本历史](版本历史.md)。）
+修订：`2026-11-07.english-simple.11.17.7`（个人主页侧栏和桌面回访按本次来源查奖，最终 Native 必查冷进、保活返回和到账。历次改动见[版本历史](版本历史.md)。）
 
 本机修订（2026-11-07）：逐图及图集切片复核和 Sprite 比例检查在正式试玩前完成。第 5 阶段仅核对已有证据、跑功能与平台回归、查最终 ZIP。
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-07T16:34:48.819Z",
-  "treeHash": "5603fbe7b2afaf1f1c907b6616a1e38713fd4951ba351e257fc88463cde01a29",
+  "createdAt": "2026-11-07T16:35:17.680Z",
+  "treeHash": "f920a3bd37e94a4e1ebeb7fc0fe1a958bc086531da67ec0e4ae98aaeefd3684e",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2011,9 +2011,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "c656e5a682f9a02d67a9080e38a874562126c3e85eb8ce06b8fd61f2a6429ba1",
+      "treeHash": "062946198ebb6db4fcf2fc33ac59cce1da1397d21f7f027cb17fd11065b3ae1d",
       "fileCount": 45,
-      "bytes": 765165,
+      "bytes": 767649,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2023,8 +2023,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "0d7c80978fa5033981d68bfd36f12163db30057a02177c2b12394cf05fee2b1f",
-          "size": 96738,
+          "hash": "6dd965aab4359a27cce01af50fb30936d2f343b5eb2911ecb1e81db607780906",
+          "size": 93077,
           "executable": false
         },
         {
@@ -2149,8 +2149,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "744cb8c9d647cc6a1d14babece7ae8ca9656ad7bed37d29fac97582ae18aadef",
-          "size": 14627,
+          "hash": "34e56bbf61a418b65b14011843f0a171a32caa769d6c4e455eab37aac3edf0b2",
+          "size": 15810,
           "executable": false
         },
         {
@@ -2245,8 +2245,8 @@
         },
         {
           "path": "scripts/test_serve_preview_gate.py",
-          "hash": "68b4e1448ab5fa73171dece96376c337808fd070e5aad3f9cea96b353ae4eb41",
-          "size": 22779,
+          "hash": "3f915bd55e2a391ef0c011185c0a4f584c694c498deafe3dc83df01600abdeeb",
+          "size": 27741,
           "executable": false
         },
         {

@@ -14,6 +14,7 @@ import json
 import os
 from pathlib import Path
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -56,6 +57,7 @@ def make_game(td, colour=(200, 120, 40, 255)):
     import tiktok_finalize as F
     from audit_image_review_record import main as image_review
     assert not F.finalize_source(root, 'localize', steps=('art_static',))['blocks']
+    F.record_prepared_native(root, native, F.prepared_source_identity(root))
     assert image_review(['write', '--directory', str(web), '--directory', str(native), '--out',
                          str(root / 'docs/english/image-review.json'), '--ocr', 'fake']) == 0
     return root, web
@@ -153,8 +155,10 @@ class GateDecisions(unittest.TestCase):
             self.assertIn('Sprite 比例', err.getvalue())
 
             F.finalize_source(root, 'localize', steps=('art_static',))
+            F.record_prepared_native(root, native, F.prepared_source_identity(root))
             from PIL import Image
             Image.new('RGB', (48, 32), (80, 75, 50)).save(native / 'reward.jpg')
+            F.record_prepared_native(root, native, F.prepared_source_identity(root))
             with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
                 GATE.gate(args, say=quiet()[1])
             self.assertIn('逐图复核未通过', err.getvalue())
@@ -242,7 +246,9 @@ class GateDecisions(unittest.TestCase):
             self.assertIn('通过', ''.join(lines))
             good = Path(td) / 'snap-good'
             shutil.copytree(str(web), str(good))
-            verify(good)
+            record = verify(good)
+            self.assertFalse((root / "docs/english/chinese-audit/trial-links.json").exists())
+            record()
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual(len(log), 1)
             self.assertTrue(log[0]['passed'])
@@ -266,15 +272,57 @@ class GateDecisions(unittest.TestCase):
             args = ['--directory', str(web), '--project', str(root), '--native', str(native_dir(root)),
                     '--snapshot', '--keep']
             _, verify = GATE.gate(args, say=quiet()[1])
-            verify(shutil.copytree(web, Path(td) / 'first'))
+            verify(shutil.copytree(web, Path(td) / 'first'))()
             with patch('chinese_audit.evaluate', side_effect=AssertionError('reopen must not rerun the check')):
                 _, verify = GATE.gate(args + ['--reopen'], say=quiet()[1])
-                verify(shutil.copytree(web, Path(td) / 'second'))
+                verify(shutil.copytree(web, Path(td) / 'second'))()
                 result = root / 'docs/english/chinese-audit/check-result.json'
                 result.write_text('{}')
                 with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
                     GATE.gate(args + ['--reopen'], say=quiet()[1])
                 self.assertIn('找不到与当前导出和回执一致的已通过试玩记录', err.getvalue())
+
+    def test_same_chinese_result_does_not_invalidate_the_earlier_ready_trial(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            scan(root, web, env_for(td))
+            args = ['--directory', str(web), '--native', str(native_dir(root)), '--snapshot', '--open']
+            _, verify = GATE.gate(args, say=quiet()[1])
+            verify(shutil.copytree(web, Path(td) / 'first'))()
+            path = root / 'docs/english/chinese-audit/check-result.json'
+            before = path.read_bytes()
+
+            with patch('chinese_audit.now', return_value='2099-01-01T00:00:00Z'):
+                # Begin an identical regular trial without committing it.
+                GATE.gate(args, say=quiet()[1])
+
+            self.assertEqual(path.read_bytes(), before)
+            _, reopen = GATE.gate(args + ['--reopen'], say=quiet()[1])
+            reopen(shutil.copytree(web, Path(td) / 'reopened'))()
+
+    def test_native_layout_changes_without_image_changes_are_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            scan(root, web, env_for(td))
+            native = native_dir(root)
+            args = ['--directory', str(web), '--native', str(native), '--snapshot', '--open']
+            from make_tiktok_zip import pretrial_native_problems
+            review = root / 'docs/english/image-review.json'
+            files = {path.relative_to(native).as_posix(): path.read_bytes()
+                     for path in native.rglob('*') if path.is_file()}
+            self.assertIn('需要成功启动', pretrial_native_problems(files, root, review)[0])
+            _, verify = GATE.gate(args, say=quiet()[1])
+            commit = verify(shutil.copytree(web, Path(td) / 'first'))
+            self.assertIn('需要成功启动', pretrial_native_problems(files, root, review)[0])
+            commit()
+            self.assertEqual(pretrial_native_problems(files, root, review), [])
+            (native / 'game.js').write_text('/* layout changed, all images unchanged */')
+            files['game.js'] = (native / 'game.js').read_bytes()
+            self.assertIn('ART_trial_native', pretrial_native_problems(files, root, review)[0])
+            for mode in ([], ['--reopen']):
+                with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                    GATE.gate(args + mode, say=quiet()[1])
+                self.assertIn('缺少同版准备证据', err.getvalue())
 
     def test_draft_starts_with_the_problems_listed(self):
         with tempfile.TemporaryDirectory() as td:
@@ -289,7 +337,7 @@ class GateDecisions(unittest.TestCase):
             self.assertIn('不能说「检查过」', text)
             snap = Path(td) / 'snap'
             shutil.copytree(str(web), str(snap))
-            verify(snap)
+            verify(snap)()
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual((log[0]['passed'], log[0]['draft']), (False, True))
             self.assertGreater(log[0]['open_problems'], 0)
@@ -310,7 +358,7 @@ class TrialLinkTiming(unittest.TestCase):
         snap = Path(tempfile.mkdtemp(prefix='snap-', dir=td))
         shutil.rmtree(str(snap))
         shutil.copytree(str(web), str(snap))
-        verify(snap)
+        verify(snap)()
 
     def test_new_export_is_a_round_same_export_is_not_and_numbers_do_not_double(self):
         with tempfile.TemporaryDirectory() as td:
@@ -391,6 +439,38 @@ class RealServer(unittest.TestCase):
                 p.wait()
         reader.join(timeout=5)
         p.stdout.close()
+
+    def test_failed_service_prerequisites_do_not_record_pass(self):
+        shared = runpy.run_path(str(HERE.parents[1] / 'remake-core/scripts/serve_preview.py'))
+        serve = shared['main']
+        for failure in ('bind', 'entry', 'home', 'smoke'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as td:
+                root, web = make_game(td)
+                scan(root, web, env_for(td))
+                argv = ['--directory', str(web), '--native', str(native_dir(root)), '--snapshot', '--keep', '--no-browser']
+                argv, verify = GATE.gate(argv, say=quiet()[1])
+                log = root / 'docs/english/chinese-audit/trial-links.json'
+                snapshot = Path(td) / 'snap'
+
+                def make_copy(*args):
+                    return shutil.copytree(web, snapshot), 'project', True
+
+                def no_listener(*args):
+                    raise OSError('test: cannot bind trial listener')
+
+                replacements = {'make_snapshot': make_copy,
+                                'entry_readback': lambda *a, **kw: (failure != 'entry', [], 'entry check failed'),
+                                'home_shot_gate': lambda *a, **kw: ('block' if failure == 'home' else 'ok', 'home check', {}),
+                                'trial_smoke_gate': lambda *a, **kw: ('block' if failure == 'smoke' else 'ok', 'smoke check')}
+                if failure == 'bind':
+                    replacements['ThreadingHTTPServer'] = no_listener
+                import browser_slots
+                with patch.dict(serve.__globals__, replacements), patch.object(browser_slots, 'sweep'), \
+                        patch.object(browser_slots, 'register', return_value=None), _stderr(io.StringIO()), \
+                        self.assertRaises(OSError if failure == 'bind' else SystemExit):
+                    serve(argv, verify_snapshot=verify)
+                self.assertFalse(log.exists(), 'a failed launch left formal trial evidence')
+                self.assertFalse(snapshot.exists(), 'a failed launch leaked its snapshot')
 
     def test_refused_without_check_then_served_after_it(self):
         with tempfile.TemporaryDirectory() as td:

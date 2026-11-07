@@ -116,6 +116,10 @@ def pretrial_records(project, export, native):
     native = native.expanduser().resolve()
     if not all((native / name).is_file() for name in ('game.js', 'game.json', 'project.config.json')):
         refuse('找不到实际 TikTok Native 构建目录：%s' % native)
+    try:
+        native_sha, native_record = finalize.check_prepared_native(project, native)
+    except (OSError, ValueError) as error:
+        refuse(str(error))
     prepared = png.check_prepared({'root': native, 'project': project})
     if prepared['blocks']:
         refuse('\n'.join(row['message'] for row in prepared['blocks']))
@@ -127,7 +131,7 @@ def pretrial_records(project, export, native):
     if not review['passed']:
         refuse('逐图复核未通过，请在试玩前用 audit_image_review_record.py write --directory <Web> '
                '--directory <已处理的 Native> 生成记录。\n' + '\n'.join(review['problems'][:10]))
-    return native, record, project / finalize.SOURCE_RECORD, review['distinct_images']
+    return native, native_sha, native_record, record, project / finalize.SOURCE_RECORD, review['distinct_images']
 
 
 def gate(argv, say=print):
@@ -180,9 +184,14 @@ def gate(argv, say=print):
     check_path = out / 'check-result.json'
     log = out / 'trial-links.json'
     if result is not None:
-        CA.write_json(check_path, result)
         if (result.get('export') or {}).get('manifest_sha256') != export_sha:
             refuse('Web 导出在验收核对期间发生变化，请等构建结束后重新核对。')
+        previous = CA.read_json(check_path)
+        same_pass = (result.get('passed') is True and isinstance(previous, dict) and previous.get('passed') is True
+                     and CA.sha_json({k: v for k, v in previous.items() if k != 'checked_at'})
+                     == CA.sha_json({k: v for k, v in result.items() if k != 'checked_at'}))
+        if not same_pass:
+            CA.write_json(check_path, result)
     elif not check_path.is_file():
         refuse('缺同版已通过的中文专项检查记录。')
     problems = result['problems'] if result is not None else []
@@ -199,16 +208,20 @@ def gate(argv, say=print):
     elif result is not None:
         say('中文专项检查：通过（%s）。' % check_path)
     bindings = {'art_receipt_sha256': art_path, 'check_result_sha256': check_path}
-    native = None
+    native = native_sha = None
     if not opts.draft:
-        native, record, source_record, distinct_images = pretrial_records(project, export, opts.native)
-        bindings.update(image_review_sha256=record, source_record_sha256=source_record)
+        native, native_sha, native_record, record, source_record, distinct_images = pretrial_records(
+            project, export, opts.native)
+        bindings.update(image_review_sha256=record, source_record_sha256=source_record,
+                        native_preparation_sha256=native_record)
+        from verify_native_zip import native_directory_digest
     evidence = {key: CA.sha_file(path) for key, path in bindings.items()}
     if opts.reopen:
         rows = CA.read_json(log, [])
         if not isinstance(rows, list) or not any(
             isinstance(row, dict) and row.get('passed') is True and row.get('draft') is False
             and row.get('export_manifest_sha256') == row.get('snapshot_manifest_sha256') == export_sha
+            and row.get('native_tree_sha256') == native_sha
             and all(row.get(key) == digest for key, digest in evidence.items())
             for row in rows
         ):
@@ -226,21 +239,28 @@ def gate(argv, say=print):
             shutil.rmtree(str(snapshot_dir), ignore_errors=True)
             refuse('试玩快照和刚查过的导出不一样（查完以后导出又变了，可能构建还在跑）。等构建完，'
                    '重新 scan --export、check，再起链接')
-        if any(not path.is_file() or CA.sha_file(path) != evidence[key] for key, path in bindings.items()):
-            refuse('试玩快照创建期间验收记录已变，请重新核对后再起链接。')
-        rows = CA.read_json(log, [])
-        rows = rows if isinstance(rows, list) else []
-        same_export = bool(rows) and isinstance(rows[-1], dict) and rows[-1].get('export_manifest_sha256') == export_sha
-        rows.append({'time': CA.now(), 'name': name, 'export': str(export), 'export_manifest_sha256': export_sha,
-                     'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'native': str(native) if native else None,
-                     'passed': not problems and not opts.draft, 'draft': opts.draft,
-                     'open_problems': len(problems), **evidence})
-        CA.write_json(log, rows)
-        say('试玩快照和查过的导出一字不差，记在 %s。' % log)
-        if same_export:
-            say('（和上一个链接是同一份导出，不算新一轮试玩，用时不另记）')
-        else:
-            say(timing(project, 'link', round_number(rows)))
+
+        def record_ready_trial():
+            if any(not path.is_file() or CA.sha_file(path) != evidence[key] for key, path in bindings.items()):
+                refuse('试玩服务准备期间验收记录已变，请重新核对后再起链接。')
+            if native is not None and native_directory_digest(native) != native_sha:
+                refuse('试玩服务准备期间 Native 已变，请回到试玩前核对候选。')
+            rows = CA.read_json(log, [])
+            rows = rows if isinstance(rows, list) else []
+            same_export = bool(rows) and isinstance(rows[-1], dict) and rows[-1].get('export_manifest_sha256') == export_sha
+            rows.append({'time': CA.now(), 'name': name, 'export': str(export), 'export_manifest_sha256': export_sha,
+                         'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'native': str(native) if native else None,
+                         'native_tree_sha256': native_sha,
+                         'passed': not problems and not opts.draft, 'draft': opts.draft,
+                         'open_problems': len(problems), **evidence})
+            CA.write_json(log, rows)
+            say('试玩快照和查过的导出一字不差，记在 %s。' % log)
+            if same_export:
+                say('（和上一个链接是同一份导出，不算新一轮试玩，用时不另记）')
+            else:
+                say(timing(project, 'link', round_number(rows)))
+
+        return record_ready_trial
     return argv, verify
 
 

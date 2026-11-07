@@ -48,7 +48,7 @@ python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --production
 
 第一条只核非空已登记素材；未登记且没给截图报 not_run。第二条用 visual-slots 的 ID 选择首件，可重复参数；按精确页面和 CSS 宽高匹配唯一原采集。选中整页执行原文字、布局、图文槽与像素检查，其余规则列为 remaining_cases，不因未拍其它页阻塞这件；全体已登记生产资产仍核验。缺失、歧义或未知 ID 失败。省略局部参数保留原全声明检查，完整美工入口不接受局部参数。历史裁图只用于校准，不能冒充运行树证据。
 
-production-only 不写 ART 回执、不放行试玩，素材核验也不证明运行时已绑定正确 SpriteFrame。每轮英文试玩前正常 art_check 继续核实际导出、采集来源、全部页面、图集、文字、交互及其余适用规则。原有游戏没有 production_assets 时走原完整检查，不把旧素材自动标为已核准。
+production-only 不写 ART 回执、不放行试玩，素材核验也不证明运行时已绑定正确 SpriteFrame。每轮英文试玩前正常 art_check 继续核实际导出、采集来源、全部页面、图集、文字、交互及其余适用规则。原有游戏没有 production_assets 时走原完整检查，不把旧素材自动标为已核准。完整通过后由 art_check 写美术回执，并带入适用的制作绑定。正式试玩核对回执和当前 Web，最终写包核对同一份已验收证据及包内图片。具体入口见[试玩前与锁定后](art-before-trial.md)。
 
 首件选择覆盖共享规则的最坏使用点：最窄文字槽、最大图标尺寸、最长值、最小手机、最多同时出现的浮字，以及 normal/pressed/disabled/selected 状态。页面素材清单包括设置、任务、暂停、复活和结算，先清点缺图，再批量生成。恐龙案例说明首页的一张清晰图不能代表结果页放大后的同图。
 

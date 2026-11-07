@@ -46,7 +46,7 @@ stable=true 是申请条件，不能单凭声明放行。完整源码和状态�
 
 ## 整轮像素检查前先核输入（11.17.4）
 
-采完当前清单，先用同一套覆盖与来源规则做一次只读预检：
+完整 `art_check.py` 会先核采集范围与来源，再进入像素分析。需要单独定位缺采或版本问题时，可以运行只读预检：
 
 ```sh
 python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --board localize --dumps CURRENT_DUMPS --build WEB_EXPORT --inputs-only --out OUTSIDE_FRESH_DIRECTORY

@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-10-27.remake-v7",
+  "revision": "2026-11-06.english-simple.11.17.6",
   "skill": "ego-browser",
   "previous_provenance_sha256": "8ed7c3f25fc652b1095eb7a849680f294428758a694346c0580dd73c3f55ff8a",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
@@ -63,6 +63,23 @@
         }
       ],
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_测试统一Ego_20261106/receipt.json"
+    },
+    {
+      "id": "2026-11-06.english-simple.11.17.6",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "bf5a3a32ab23db678c6a8e318da89652a952e7a1881aa62358d4ccf4e30ed715",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "d6a82ebf835e9ed93db36568af9571cac70dbb750edd73e46dacc13cc8368d2a",
+          "base_sha256": "ae3ebd9a80c882793e7e6a52821a1ca093fdfa792460d5f62cd8d35c5f39df89",
+          "release_sha256": "d6a82ebf835e9ed93db36568af9571cac70dbb750edd73e46dacc13cc8368d2a",
+          "after_sha256": "d6a82ebf835e9ed93db36568af9571cac70dbb750edd73e46dacc13cc8368d2a",
+          "after_bytes": 2207,
+          "method": "retain"
+        }
+      ]
     }
-  ]
+  ],
+  "previous_local_provenance_sha256": "e3715ca603bb8610d2caf5a1c79e7108bc460750099e51174ed26e039482ad87"
 }

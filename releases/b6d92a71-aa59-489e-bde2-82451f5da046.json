@@ -1,0 +1,1093 @@
+{
+  "id": "b6d92a71-aa59-489e-bde2-82451f5da046",
+  "skillId": "s-21e83a6b3e72cb97b66b",
+  "directory": "cocos-game-check",
+  "name": "cocos-game-check",
+  "version": "v26",
+  "createdAt": "2026-11-07T16:34:09.358Z",
+  "summary": "文件变更：新增 1，修改 8，移除 0。",
+  "changes": {
+    "added": 1,
+    "modified": 8,
+    "deleted": 0
+  },
+  "treeHash": "aff80d1435f3cfd692285a0d41bdabf1fd0138fbe7dcd51b86c63667cfe264b5",
+  "bytes": 1910755,
+  "fileCount": 179,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8",
+      "size": 45382,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "b49eeba4d604035aa1915e513a665c0ef28ea3974506a1299275770e3c2f83bf",
+      "size": 19896,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "4f6b7a64a78f8715eb61122b6a25101af8ed36c6dce5e6df46b0b92c75e2de89",
+      "size": 188,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/art_check.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_audio_sources.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_english_coverage.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_mobile_input.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_page_readiness.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_page_richness.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_runtime_resources.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_startup_contract.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/audit_upload_startup.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/check_known_issues.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/design_check.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/extract_ui_layout.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/logic_check.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/make_tiktok_zip.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/package_issue_gate.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/preflight.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/project_qa.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/serve_preview.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "core/scripts/verify_native_zip.py",
+      "hash": "ebd136c5511c7e83b356076642fb49c480835b5600d524633947015d74b245f3",
+      "size": 1161,
+      "executable": false
+    },
+    {
+      "path": "package/README.md",
+      "hash": "28dd957f1b570165a27ebd4f141d843eb8be15f50a684413c7ffb25d0175a70f",
+      "size": 5889,
+      "executable": false
+    },
+    {
+      "path": "package/references/check-fix-package-loop.md",
+      "hash": "3c15e9a170546c8ae78bd820c653dc0c22aaca9fb8c4df0a2913309347a0c538",
+      "size": 12842,
+      "executable": false
+    },
+    {
+      "path": "package/references/package-forms.md",
+      "hash": "f4daa9e63cfabf2da890cf7246c2690724c06855cbf678de77a6dd69f81fcf7d",
+      "size": 4809,
+      "executable": false
+    },
+    {
+      "path": "package/references/tiktok-app-creation.md",
+      "hash": "a4ec00510de4200c8decc8d64a047be2f4ca6f9df5b920b98e755485c3b25898",
+      "size": 8378,
+      "executable": false
+    },
+    {
+      "path": "package/references/tiktok-device-stage.md",
+      "hash": "1c10f15146a10beb40d90382da0ad8da85ea982f5eb9abdc672e6ab112e02b5a",
+      "size": 1451,
+      "executable": false
+    },
+    {
+      "path": "package/scripts/upload_preflight.py",
+      "hash": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
+      "size": 2366,
+      "executable": false
+    },
+    {
+      "path": "package-check/README.md",
+      "hash": "62c2e2db857ace8fb46af5e83a9ef79985d37b4ab344182a4e7e2bfb35cfd631",
+      "size": 4361,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/bootstrap-order-review.md",
+      "hash": "68c7836696999ae34db03efc2f388160d5a50068e3bfbc5b3ca7a34c2af15bd2",
+      "size": 1381,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/calibration-results.json",
+      "hash": "27b0c90c1a6a75502b84a527b8fc8f9ba419664af4b25809ad3d7f245e504845",
+      "size": 19078,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/check-contract.md",
+      "hash": "2dce01c569459f3ae8bcafb58da435e2c3a097a64297c627c656469b74d632e4",
+      "size": 12286,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/check-status.json",
+      "hash": "77ac2031df9bc636f59a7ce14ada35c20937ac995c89fb93bb44a9476ad7d079",
+      "size": 3269,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/drag-audio-postconditions.md",
+      "hash": "9df50df6a21f853923fa20e0263daf18c83ace264c1560c0900a233e6a41b0de",
+      "size": 4729,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/failure-casebook.md",
+      "hash": "ff12586bca39bc3e09144fc50599fee6eb5dbebf7414b0012804c73338f3e33d",
+      "size": 4158,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/forbidden-player-windows.md",
+      "hash": "8c9f2cc3fe2e6a375b0dad7942ca6dab84e94caf53bc8f8f04c9c103b1d992c4",
+      "size": 2129,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/fresh-upload-size.md",
+      "hash": "e501cabaa9755a456cef47001f65fabf8ff97a0ff2dde4e7155d7b8aba0baf0c",
+      "size": 2968,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/gate-order-and-identity.md",
+      "hash": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
+      "size": 4604,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/main-package-overflow.md",
+      "hash": "49b209122928e7c1af0c1221d3c99427e6f3fb4895937852d2712bbdc135939d",
+      "size": 4610,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/resource-and-reported-issues.md",
+      "hash": "20631aa91c7074a831d8f646bea1cf44773f8bc3f3d49a6b89d61f03c17fc62b",
+      "size": 16836,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/resource-loss-recovery.md",
+      "hash": "f83804daeca8c39833a2d82394a9b2ad454a077aa6322f54e4c22acc05863aef",
+      "size": 1712,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/root-entry-and-delivery.md",
+      "hash": "9d47237620493b81376cd2f895eacdb1f273031ab0e04b5dd168116920429c2d",
+      "size": 3968,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/runtime-regression.md",
+      "hash": "c1043be9890c582981111c29d9da3cc3c3ba25f08d8175e03faaeebc006e20f2",
+      "size": 73030,
+      "executable": false
+    },
+    {
+      "path": "package-check/references/webp-decode-capability.md",
+      "hash": "216e3c6ecd181acb85ddcd791d7e2f6b55103130ab94dbeed22c864f208d39aa",
+      "size": 6405,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/ad_regression/cases.mjs",
+      "hash": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
+      "size": 24108,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/ad_regression/host.js",
+      "hash": "9d5cf36854c2bfcb4ac00c54bc4237a02fd8f1bc65e5394e3f98175a0bf97b60",
+      "size": 59349,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/ad_regression/play.html",
+      "hash": "352626a9d6c6df9a6bc8dd5493572cea649e3d1ded7bb0cffb7533fa0d5a2af7",
+      "size": 765,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/ad_regression/server.py",
+      "hash": "bdc7878870930eb557beed0a3ab6bded888c1ecea5d2070a57b1aa14731d1faa",
+      "size": 2622,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/ad_regression.py",
+      "hash": "73c49de29dece28367ec4344574fc5af0e32b605493f2e99ed3c0ba38fd71407",
+      "size": 20067,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/audit_interaction_audio.py",
+      "hash": "942540bcdb8de4af9fbf266076f765d08d6d1972fffa8207903d53b3e810d351",
+      "size": 5603,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/audit_runtime_resources.py",
+      "hash": "4e1a9f9a06ea7648ccabcbf3d2ac0ad320227d28fa546f87b87fbe36bae9b206",
+      "size": 410,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/audit_sound_settings.py",
+      "hash": "56d921d3a895e59e44a5a84e25b9ad52a9d119ba6505beced5932b1fc9f1a783",
+      "size": 8857,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/browser_policy_tool_equivalence.py",
+      "hash": "b818e5b1b00575122738fd992cf8700f3ec1221247df89df267efee1e784c6aa",
+      "size": 5557,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/build_checked_zip.py",
+      "hash": "9be1842ebd675cf8e0a9b59de21e46f11dbf45382ad79c6abda1199276c64382",
+      "size": 16407,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/check_guard.cjs",
+      "hash": "d9598ff68d1f5a4bc35fd0479985adcddc7f77545797c9047d92539e64bf2d2b",
+      "size": 1902,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/check_guard.py",
+      "hash": "9a8cab307fb074120e1045d37d69080ce40dde3a32949e9782866f617c85a626",
+      "size": 9444,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/check_package.py",
+      "hash": "5056cbed88f8d268bd44e453f860a716b113edff3d4dfb14937fa996440ada3e",
+      "size": 37742,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/debrand_delta_guard.py",
+      "hash": "b1c02e16ce551b355c2fc90f1939e46c43f7ae364ee0bc068d56f62f45a8b78b",
+      "size": 7983,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/debrand_reuse_plan.py",
+      "hash": "fbc1f4229b8dc954cf716775103138d02a090d25e2e9b967b6d054ebec11a3f5",
+      "size": 2167,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/ego_test_page.mjs",
+      "hash": "fb806eacecb06ac5d785283b086ef66bf915b82070085601d34d07b1549e0645",
+      "size": 1729,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/make_runtime_resource_manifest.py",
+      "hash": "52f70e3a3bdc1bddbd33675732e8eeab028fa752b4a7e7ef02f4eb54ed9c6607",
+      "size": 8579,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/play-art-js-equivalence.cjs",
+      "hash": "256fb0c377ce4c331a4fac68a67949ebb4492fa97a78626ac53e5d9d9b2f4b63",
+      "size": 3605,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/play_art_delta_guard.py",
+      "hash": "0380e4c70d1e8293a2e2e46df6cdf22a8a52be4069233450ba25efa8eb78745c",
+      "size": 25586,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/prepare_delivery.py",
+      "hash": "87eda2b2894add9ccd4a4d9883c4b3b3a68e20e2108617966b78a5aec273cce7",
+      "size": 13983,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/rework_scope.py",
+      "hash": "845f34f6516137fea827eb9abda1c6be6e7fb919f4baf6dac2df9506e4886f62",
+      "size": 42403,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/README.md",
+      "hash": "760828b0907daaf25a6d537060d99dc1897b4288ac16ddbd80b3eb4329fdf8c9",
+      "size": 10737,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/engine_adapter.mjs",
+      "hash": "0ec91b99f7a91161a90a2df62de9a11f9ee7a4f0d63144986b892a12fe8ae1d0",
+      "size": 4356,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/frame_rate_compare.mjs",
+      "hash": "c3a257aac7ed7aeffb320c501e0fddf72b5e1a358b766e331b50198e0db7529e",
+      "size": 8130,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/gates.mjs",
+      "hash": "7598ac161f63749473bf0eb76f06eef02e62d73b44f6504cce72a12ef5cfc083",
+      "size": 34689,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/geom.mjs",
+      "hash": "319082579c44ef58581ffaef39fa10911545bc6f79459a229caa5e4ccd597a95",
+      "size": 11652,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/host3x/host.js",
+      "hash": "2d3f9ab58ad1ebde35ca46e4f67d9472c53f66fc3d1c8f08566d415c7706081d",
+      "size": 41820,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/host3x/play.html",
+      "hash": "aecb30c8d63354871f7f521b7776e2a1db745aac4ee9ed23ac3937f1682c53f5",
+      "size": 1376,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/host3x/server.py",
+      "hash": "9c5aa36daefe09fca28cc42ca7429729d64482af6b61fcaa7beedcc2e09a247f",
+      "size": 3987,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/layout_rules.mjs",
+      "hash": "0813cb48b28dd96200fd57e3009c2abc16a63694a620c0dd06bae99a9d894b2c",
+      "size": 21367,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/lib.mjs",
+      "hash": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+      "size": 15242,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/network-allowlist.json",
+      "hash": "fe4337552b6981115c5cd6cd787b012dcf3c0d17d857d69b2d672bc535e1d05b",
+      "size": 265,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/phone.mjs",
+      "hash": "61ff2ce793fa861fa62fd2fa06ffe498be7b4f6d5677390e9d5cdf2bef8e475b",
+      "size": 20612,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/popin_watch.mjs",
+      "hash": "c1b769029448a012b346043188ddcb8971486383b3504dbb53bf14ec81c4700e",
+      "size": 6664,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/revive_return.mjs",
+      "hash": "8177a22366c92ccc2f9aa3f777e64e744063612e9800a95f886e7a81745418a5",
+      "size": 2328,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/ad_entries.json",
+      "hash": "f86c098c71e02f6dc89fdeadd3290da0d509180ab4bd5f52635affba6fc2a4ee",
+      "size": 663,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/ad_entries.mjs",
+      "hash": "7f3ed69c9431fa559ed1221d5760ca51518728dd0b1e2fe866cea1dc5c04245a",
+      "size": 6738,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/ad_outcome.json",
+      "hash": "3a54196e789856691e80973a03f0b19111dd79a0191da004b8fa75a7a5e8edf6",
+      "size": 1075,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/ad_outcome.mjs",
+      "hash": "98fedc67070b9750e20ca06dc4c1e3f5817953c5c02087ce27ec41fd9e68ceaa",
+      "size": 27007,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/button_sweep.json",
+      "hash": "fe317bb759291689b87814e8438d423964188ca8f644e9543e123069adccee0b",
+      "size": 1268,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/button_sweep.mjs",
+      "hash": "99b4fd5a742e3004000a4e73c1847283360f6a29c2266214289baf0e15bf6f9b",
+      "size": 24951,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/dead_shell.json",
+      "hash": "03c604cb083c42cd315fb82015a8321ba27f0c6d3bd8e477289e1897fbc9d12e",
+      "size": 720,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/dead_shell.mjs",
+      "hash": "983011fe4a4cc07217b1f86eaa6f2ef8af9c906ea7b57cdd6e5ebc6ecb179d7e",
+      "size": 8834,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/frame_rate.json",
+      "hash": "6de397e1d468028bdd85ba3b32ea381bfa65fe23cfb2e4b901fff86ecbb5f780",
+      "size": 1018,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/frame_rate.mjs",
+      "hash": "45bb675a0363200f55e46d4989bd01b1f88fae9fb9dd40b3ed605b1367247102",
+      "size": 7084,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/growth_entry.json",
+      "hash": "b6e3e218187d9b41679b13f7c9f026487356aba96ca5a9d7d1d783adc127165f",
+      "size": 393,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
+      "hash": "a0e5d14414536fb38b76d19c7a7df7ce870d536dd4e9e2ae1f6bd5fb0ed5e8af",
+      "size": 9437,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/image_stall.json",
+      "hash": "fcc0c92f7fcdd25bb2d3b857de4554d51a447523b905be81c8bc5a64847cd51e",
+      "size": 1040,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/image_stall.mjs",
+      "hash": "7d4c22477d26159c72404a266e77f6ed39a8d618cdc15f857796d625285e283a",
+      "size": 14191,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/layout_state.json",
+      "hash": "31eb7b1103452f40d94a1e6bce7c8e91b576a24b3fbcdfc04fc10551222a5231",
+      "size": 697,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/layout_state.mjs",
+      "hash": "d5e482096958e1c2eaaf57ddfa1b469171ae60be9a1f19f6b7da04202660414e",
+      "size": 12377,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/network.json",
+      "hash": "7e8695fa155403513d1f1819202855d788d322b4b5ba937717a8fe7f1afe6144",
+      "size": 418,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/network.mjs",
+      "hash": "7192b6069ce2a108da44031bbc558fa25da686973156139767ae0f3c54f64114",
+      "size": 3719,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/popin.json",
+      "hash": "a5b3b0eb70017ef0786b1517ba0d359595b82e29876e3b058c1046fa40f369eb",
+      "size": 968,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/popin.mjs",
+      "hash": "577791fe7630cebb7b3c0cffa8ad1c2ec53a1ee756d34d12fb0ef225d8d595e3",
+      "size": 10078,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/resume_play.json",
+      "hash": "f2af5dac16c2e81192c43e7bd4e9e7a75bce646b3e1542da4ce22aca71c3ae18",
+      "size": 1394,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/resume_play.mjs",
+      "hash": "6389ec5b403916af6fb57c0eac071e9c2db8c1a77948c1bef42da37b965a9571",
+      "size": 18785,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/save_restart.json",
+      "hash": "c30fd35d594f3a1fb26f2634b58860ffb153f3295bf1605f84deecf730c1b76a",
+      "size": 1282,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/save_restart.mjs",
+      "hash": "22876a5015ed801ed369afad6a4b70210b8b0ac31701c0146b360eb07f7fccfc",
+      "size": 11191,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup.json",
+      "hash": "3a3c0587ee822a31502d4288b625c4cc947ff213522d458cda2e4c5b635e088a",
+      "size": 905,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup.mjs",
+      "hash": "a0ee51b20b8eae308bc7c6a105e79d4119465f9b93f1d8b1966b7a289fcbc1bb",
+      "size": 16104,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup3x.json",
+      "hash": "d6aaac29d74449abad48b390bdd94ae988ca72de12d689c382555dfedd28fed9",
+      "size": 416,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/startup3x.mjs",
+      "hash": "f854b8fce655cfbd89bc455bd5be7a25d6809d7e01e22a459577811f377eaa4e",
+      "size": 3617,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/trial_link.json",
+      "hash": "3e000dac772994cb687a791166062d600e8edad469933e5f319fed66230b885b",
+      "size": 551,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression/suites/trial_link.mjs",
+      "hash": "2930a1ac1e39b1ba64012506c767a7d70d8c75da349278709dd45654ba843256",
+      "size": 17614,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/runtime_regression.py",
+      "hash": "578ffc5ef1808e83a6113ecc9847755de30388e440e8493ef87567ab995457cf",
+      "size": 61645,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_ad_host_mouse_touch.py",
+      "hash": "df27ecf52f0543eaca729681fe8c5d425b773821095919c61cd6e68b42590c5f",
+      "size": 4636,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_ad_regression.py",
+      "hash": "021f1a64a1199da578ee41e0eedd50bc62bed67ec722a938557702e71e63dc8e",
+      "size": 25571,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_button_sweep_diag.py",
+      "hash": "28dde957467ae08d1b393c3352ed916f39d79863a11b7cbcc24bce69acb4fca0",
+      "size": 14974,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_check_guard.py",
+      "hash": "806b09c62deb660278ecb83cc8e8c4e3a9b16f4755d70ca44c89ef441553d01b",
+      "size": 8909,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_check_inputs.py",
+      "hash": "2c974db50a3cded1cda9fbe097003d37f1f050534b28fb40e652a2c76ab7dbd8",
+      "size": 17151,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_check_speedups.py",
+      "hash": "dc4451639c547a85a5427b87114bf3a2804128591f75981293f199d7bb00a9ec",
+      "size": 26257,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_dead_shell.py",
+      "hash": "9115928a4c31bbebae52da3c7fb22e79aec059fde034fa504e7f58d70d42faf6",
+      "size": 12779,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_delivery_folder.py",
+      "hash": "85d6a2f0ff7c563f336a8d6211d933681b605ff15624847504b118de81771c66",
+      "size": 9085,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_device_issue_repro.py",
+      "hash": "4ffeb76b0a7bdc26e40a3e43f18bf61e4067d6607f7c92270a368970378d6d71",
+      "size": 16926,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_final_startup_gate.py",
+      "hash": "ba71f6f17fad5577e7609d8bd2515cc02fe564d832935c0325000c9c1eaca5eb",
+      "size": 5050,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_frame_rate_gate.py",
+      "hash": "ea1fb265349b895b8823e2e231ee3c6e8058a402aace470f1766172150ab39f7",
+      "size": 10806,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_gate_order_and_identity.py",
+      "hash": "29bb7dd8043b9829b9f9e78aadd83627918d767a9fe8cd7ef215db41a2cdc144",
+      "size": 8499,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_geom_camera.py",
+      "hash": "f74664c32ef10e39c2d65958533236000719a7b5776b5b1924ba2f6456d65fee",
+      "size": 5548,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_issue_relocation.py",
+      "hash": "bdd0a796a51cba85cdc8766df1ad85ebbc5a89231a8e5f5702d1319d248e6dd8",
+      "size": 12787,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_issue_supersede.py",
+      "hash": "72f518289f4cc36d180d7cd8bf4bd607bba2a16707fcdcdc44453a733daf54e2",
+      "size": 8039,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_kit_rewarded_guard.py",
+      "hash": "3c7341039a248326ba7f7795b254d47765065aefd6a9522fabdf567cf4d1322a",
+      "size": 5386,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_layout_gates.py",
+      "hash": "340a05b3b32785c5b9bbf11a977c983d7e39748a46fe5f7af7072ac644fbe78b",
+      "size": 13358,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_make_runtime_resource_manifest.py",
+      "hash": "52e59cdb3e572614076ffda7b79f8c41ea8a0479c69b0973f93cdb74acd8920b",
+      "size": 9741,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_package_checks.py",
+      "hash": "2c5807659593ca31b42a6dbe9bd7e1b619c239468eb6bfe1efccaadb9c91daac",
+      "size": 21047,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_package_reuse.py",
+      "hash": "8b1696a02e9a7979c86f6df989bb741b1a7681b4578b9de184b30be0e9dea6e2",
+      "size": 7378,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_phone_suites.py",
+      "hash": "9857326d3af720b8d5c4b1257e86dc7626694df614463e09e50b04a2248b1f14",
+      "size": 17048,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_popin_gate.py",
+      "hash": "492279e9c88905027dc508e2e9deb5d32099b36452f550e1dc1f835211cfcd8a",
+      "size": 15022,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_r4d_case_list_complete.py",
+      "hash": "acf59f6f0693515239e33f8cdc07bd6f46eb9c3f775a40a88bb515b528616451",
+      "size": 4550,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_r4o4_probe_adapter.py",
+      "hash": "d57ccfcb9677e12eb723d0797b7b861723058993761dba5f1b641adfe944bfa8",
+      "size": 9851,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_r4p3_probe_adapter.py",
+      "hash": "b7202b56f35725e88cb5a3a2eb4c480156175a7d140cd51d5315067a65726dc4",
+      "size": 11772,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_r4q7_adapter_comment_keys.py",
+      "hash": "4e6fa39c25a6ff596a5a6a152cdbea44cd57ef0ef6f4caf099495cba85dc2be4",
+      "size": 1571,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_resource_and_issue_obligations.py",
+      "hash": "eea0ea40b499a8750046f4bb32d1f0cea9f26484aff70ca9b29624dfc1195724",
+      "size": 20013,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_revive_return.mjs",
+      "hash": "b6f733ed5dd726657ec12fde9ee6aaea4ae7880e1c374953e4171b6e18e6f327",
+      "size": 2227,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_rework_scope.py",
+      "hash": "be6d6aaf75ec8c072a4a1811dfde8a40654869ff35a51569ee3cc479c06e92b4",
+      "size": 36282,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_runtime_regression.py",
+      "hash": "025eeb345462d1202259225e4efb1f06bc58fb364c4bc8b90e092fff0a970633",
+      "size": 24433,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_sound_settings_profile.py",
+      "hash": "678fc2cade9c6dd8e4d3008d0f7f90680cc9a5e45ae60d7f2e8af66a62f9e359",
+      "size": 11150,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_stable_paths.py",
+      "hash": "dc39fd9a919cc3502cb506c47b223966deb8d3fb918da81c52804a1b3887abb6",
+      "size": 2941,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_tap_point.py",
+      "hash": "12829076b574cdb76118f671fb2c3947e5776e0798260372f7e3001cbe3e4644",
+      "size": 13655,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_tool_identity.py",
+      "hash": "c8a5ac2c0c324b33ad1274b4168956c645fdcfd5bc1087f1e5c552ba06190040",
+      "size": 10942,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/test_webp_decode_probe.cjs",
+      "hash": "f72cc30ec839cb32bc367cd253dd3528a986c866dbe6c486901cee1d3ce62556",
+      "size": 7549,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/tool_identity.py",
+      "hash": "63a14772c7422a7df80e87b920e243dd29566234cb641ac449e8a5b83823d8f4",
+      "size": 12744,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/verify_delivery_preview.py",
+      "hash": "ca87b0885124b2988dbd83becd718ca867fb18ab0f4b11624733f8e7db9cd298",
+      "size": 3518,
+      "executable": false
+    },
+    {
+      "path": "package-check/scripts/watched_run.py",
+      "hash": "a710baa7ffbaa660f7069e4569a7918d90ed4a49f4a9a859d37f2d1eff86ce1d",
+      "size": 5248,
+      "executable": false
+    },
+    {
+      "path": "references/tiktok-fixed-adaptation.md",
+      "hash": "9fe58f5447a98df82f117d8910aedc2ac267eeac7392f8b2ead25bb4410d645d",
+      "size": 112738,
+      "executable": false
+    },
+    {
+      "path": "review/README.md",
+      "hash": "f4aab015771ba8a134a63f9f4cfadccbfc4d492c80e86374643b93d2f577f9ae",
+      "size": 2116,
+      "executable": false
+    },
+    {
+      "path": "review/references/review-mode.md",
+      "hash": "b2069bb97415b80c77520cf73c094bc639a02f60bf809c6d05523ffb4906ae20",
+      "size": 5789,
+      "executable": false
+    },
+    {
+      "path": "startup/README.md",
+      "hash": "073a522f333e88dac499dbf250cd48d783bc2d34951bbb8bcd2648bb594c080f",
+      "size": 7775,
+      "executable": false
+    },
+    {
+      "path": "startup/references/cocos-loading-screen.md",
+      "hash": "42e1980098d6c04389aaf6fa87626117b24420ca528883ec32d825a44031b557",
+      "size": 10286,
+      "executable": false
+    },
+    {
+      "path": "startup/references/final-package-startup-gate.md",
+      "hash": "6d58496a96638b10fa0e7dd3740d38bc7a98247e5a0f7578e453d299eac799ab",
+      "size": 4587,
+      "executable": false
+    },
+    {
+      "path": "startup/references/loading-and-ad-prevention.md",
+      "hash": "b808d2ba61c42f4c5a91d331b41a6a974a8bab23ac5083144971a6730ef52ae1",
+      "size": 6635,
+      "executable": false
+    },
+    {
+      "path": "startup/references/loading-recovery-casebook.md",
+      "hash": "c388c37b99d3ccae9bd593fbae6ce38cb2ab9bfae77b73f17d651c309519cbbd",
+      "size": 13188,
+      "executable": false
+    },
+    {
+      "path": "startup/references/loading-recovery-regression.md",
+      "hash": "90604dd1673d930fcd91432da41df414712319f04afc0522c4cfaeecfba734e4",
+      "size": 19589,
+      "executable": false
+    },
+    {
+      "path": "startup/references/loading-scene-false-positive.md",
+      "hash": "744c0b8416789beeadf161e83374c1c2a3f719c9f0ad758432480258563b5d12",
+      "size": 12520,
+      "executable": false
+    },
+    {
+      "path": "startup/references/native-reward-storage-and-empty-features.md",
+      "hash": "34ecfb237fa3b1e2c2f78e7a2cad22ddeb268d14d2cc1c301afd4f2a179d9b33",
+      "size": 18002,
+      "executable": false
+    },
+    {
+      "path": "startup/references/native-startup-path-casebook.md",
+      "hash": "c6132b69298b970708d43671822027ea999734690b475d9101a87a381dd3e485",
+      "size": 11177,
+      "executable": false
+    },
+    {
+      "path": "startup/references/performance-and-iteration.md",
+      "hash": "477e17579fef91c9be5f0e864bbe599d6d5f1ff25a74fbcc8cd3312330fe6922",
+      "size": 3234,
+      "executable": false
+    },
+    {
+      "path": "startup/references/startup-contract.md",
+      "hash": "7e79418da9ecc96eb911f77786a439f700489730c0de2e31d68399aea98d7199",
+      "size": 10581,
+      "executable": false
+    },
+    {
+      "path": "startup/references/startup-loading-timing.md",
+      "hash": "8a05c71564e1a6e55c5021f5595fc4bbbd0f14885aae706cecfcd02c63f93557",
+      "size": 14325,
+      "executable": false
+    },
+    {
+      "path": "startup/scripts/cold-start-transition.mjs",
+      "hash": "ab0377add36041bcbad68cb059ea3f786b275444573e12477263ada8e29eb6a8",
+      "size": 7063,
+      "executable": false
+    },
+    {
+      "path": "test/README.md",
+      "hash": "e8409f539db83f0662c7fd585eab4682172db3ce1808af0d5b3eb041aa23e4ed",
+      "size": 4457,
+      "executable": false
+    },
+    {
+      "path": "test/assets/logic-report-template.md",
+      "hash": "bf2c938b9593886334c8cc733e67c8e45c264edcb3bb68d15078eb766160760f",
+      "size": 3956,
+      "executable": false
+    },
+    {
+      "path": "test/references/button-interaction-coverage.md",
+      "hash": "00a1b8e765bd4b636a87b1130f3b116f1e2a34276f1c22cd0cdc2a0255998a6a",
+      "size": 7604,
+      "executable": false
+    },
+    {
+      "path": "test/references/button-state-check.md",
+      "hash": "2cb559c4dd4dbbabaa180659afe27181eb5e575a6cc270e8b80dd0633ec23cd4",
+      "size": 17839,
+      "executable": false
+    },
+    {
+      "path": "test/references/candidate-execution.md",
+      "hash": "515bfd8aed6777398a98d5c9d7b87587a0e853481977050df4b0b860de0f91b1",
+      "size": 7345,
+      "executable": false
+    },
+    {
+      "path": "test/references/learned-regressions.md",
+      "hash": "2976cd62537eed63723c505aecd87bdb8da8dfb8a397dc71dce4fd49c0646944",
+      "size": 12364,
+      "executable": false
+    },
+    {
+      "path": "test/references/logic-rules.md",
+      "hash": "4baf25241826af5a7503c5b0a4751fb37fb5a9cdbd3c573d1fdec62982490fab",
+      "size": 11635,
+      "executable": false
+    },
+    {
+      "path": "test/references/mobile-input-gates.md",
+      "hash": "2c35b783e93321d61d58a78c1a3e60dec3e03b8ccf956fe18d4004228e4b9a5e",
+      "size": 17216,
+      "executable": false
+    },
+    {
+      "path": "test/references/mobile-motion-state-review.md",
+      "hash": "d96c99bd66d02ea4e47e8239737804433738c154644f893b40da270140601f75",
+      "size": 4714,
+      "executable": false
+    },
+    {
+      "path": "test/references/page-readiness-and-cancel.md",
+      "hash": "3f1fbc1af75da5859c5559f3509c4a7e8c433dfcb341b83b2bee2798e9ac3f5b",
+      "size": 10254,
+      "executable": false
+    },
+    {
+      "path": "test/references/prepackage-mobile-review.md",
+      "hash": "5d920c192f0adfba7b586f0b45d5e05a573454203caaa67c018c40766c6de579",
+      "size": 22503,
+      "executable": false
+    },
+    {
+      "path": "test/references/replay-and-input-checks.md",
+      "hash": "7d14061afa8d83da6be92115063fc1c339684e9b70ee28b7d771aee01982416a",
+      "size": 9874,
+      "executable": false
+    },
+    {
+      "path": "test/references/review-execution-plan.md",
+      "hash": "c57431ac272f008b7e59724cbaac74fe098257f1fbc87d647095bd20ea0bc541",
+      "size": 9274,
+      "executable": false
+    },
+    {
+      "path": "test/references/revive-state-contract.md",
+      "hash": "1412b80e95c4760716165c37da973f9a4bc21cd9f7567d5e5edab1674a37fe08",
+      "size": 6679,
+      "executable": false
+    },
+    {
+      "path": "test/references/testing-scope-and-stop.md",
+      "hash": "4dc7348c7c869fecdda7309e696ade2d70cdb0c931e258a51ca33a0cfc15807f",
+      "size": 13936,
+      "executable": false
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+{
+  "id": "c69bf5f9-9ea8-4392-876f-9d9872ea4203",
+  "skillId": "s-c80e30dda4e7623bf0ac",
+  "name": "remake-art",
+  "version": "v20",
+  "createdAt": "2026-11-07T10:23:24.144Z",
+  "summary": "文件变更：新增 0，修改 3，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 3,
+    "deleted": 0
+  },
+  "treeHash": "66616482c16b0b2b027be07860ea7e90a735b8c124c5ec87e71aa89fae48d352",
+  "bytes": 1439864,
+  "fileCount": 64,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "9c22dcdf1e1005f1617471e7fd52cf8ced4550b1e6eadf48f8d3562e227656af",
+      "size": 12593,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "9c32ddfd298b63f489018259a0f555db73d9586b5fb0d23ee24c092da88c46d5",
+      "size": 23189,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
+      "size": 353,
+      "executable": false
+    },
+    {
+      "path": "examples/fixed-caption/base.png",
+      "hash": "f5d81f5323e3d5441e333107ce31b63c2a7e7c6bc8d4b17e72cf4df48f335317",
+      "size": 7917,
+      "executable": false
+    },
+    {
+      "path": "examples/fixed-caption/claim.png",
+      "hash": "aa4ccea4099f36c2a6e42f87b46b2dba47100dad842c54867f6227c6cdf280f8",
+      "size": 26681,
+      "executable": false
+    },
+    {
+      "path": "examples/fixed-caption/recipe.json",
+      "hash": "3e21afa591d546dddd8491bf4436d71efb9f488b1fc0e61b0f0089e6f6f67433",
+      "size": 548,
+      "executable": false
+    },
+    {
+      "path": "examples/fixed-caption/video.png",
+      "hash": "456f783b4aaf6c327152cb1ffe6ae635696f414c51d747887b2f2f642e47b860",
+      "size": 412,
+      "executable": false
+    },
+    {
+      "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+      "hash": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "size": 744350,
+      "executable": false
+    },
+    {
+      "path": "references/actor-pose-handoffs.md",
+      "hash": "3ebfe8a468ed53bfa4793b12665d334cbf76216550421d0e22be7bdfdad45343",
+      "size": 5476,
+      "executable": false
+    },
+    {
+      "path": "references/art-before-trial.md",
+      "hash": "c79d68145fa7ebc5f7fcebdf74494503e6e973ced178db16a8bba4f6e2fb8a94",
+      "size": 7292,
+      "executable": false
+    },
+    {
+      "path": "references/art-iteration-workflow.md",
+      "hash": "0d69db21603423ff0cd4cc40c5049eaa35e09362e346dfc48b3825ec483332c3",
+      "size": 10134,
+      "executable": false
+    },
+    {
+      "path": "references/artwork-and-feedback.md",
+      "hash": "b6a406695c663159cda7278b9b36f403a1a0a94a43d1bf250b8f4fd34ae3c5cc",
+      "size": 25122,
+      "executable": false
+    },
+    {
+      "path": "references/atlas-slice-integrity.md",
+      "hash": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+      "size": 15248,
+      "executable": false
+    },
+    {
+      "path": "references/button-group-review.md",
+      "hash": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+      "size": 2705,
+      "executable": false
+    },
+    {
+      "path": "references/capsule-content-fit.md",
+      "hash": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+      "size": 1278,
+      "executable": false
+    },
+    {
+      "path": "references/capture-rounds.md",
+      "hash": "a7e41d9d11d357aa6fd3e45577294d475110dd452d4ebce6b8ff014ef16bfef9",
+      "size": 9843,
+      "executable": false
+    },
+    {
+      "path": "references/card-ornament-layout-review.md",
+      "hash": "eee10888defc6ed5f687e0f2e319b52747780ac7486d1f8407dbf53c66b8e1ee",
+      "size": 3654,
+      "executable": false
+    },
+    {
+      "path": "references/card-text-fit-review.md",
+      "hash": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+      "size": 1734,
+      "executable": false
+    },
+    {
+      "path": "references/collection-preview-review.md",
+      "hash": "c227e3a52691dbfee0ef1790faea76c3800d240f6112280ceda3dfa65cea5413",
+      "size": 2049,
+      "executable": false
+    },
+    {
+      "path": "references/common-game-components.md",
+      "hash": "4558749502a157d4c0da41186270b31489dbc1805395009e34cc51072f442002",
+      "size": 16067,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-visual-review.md",
+      "hash": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
+      "size": 4341,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-caption-button.md",
+      "hash": "c7d1880347f74f5c89c95302c4268ad2cdfae632c12e5b9614cfa37c3c85d6e6",
+      "size": 3615,
+      "executable": false
+    },
+    {
+      "path": "references/full-visual-review.md",
+      "hash": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
+      "size": 11847,
+      "executable": false
+    },
+    {
+      "path": "references/home-by-gameplay.md",
+      "hash": "30149a2194f52732523d6588b55d2f9caea20e9a58035e782a6e7e0d2f5ff3de",
+      "size": 5706,
+      "executable": false
+    },
+    {
+      "path": "references/large-background-static-review.md",
+      "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+      "size": 2140,
+      "executable": false
+    },
+    {
+      "path": "references/local-ui-contract.md",
+      "hash": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
+      "size": 12503,
+      "executable": false
+    },
+    {
+      "path": "references/mobile-button-size-and-home-layout.md",
+      "hash": "e42da7ddfcb9f20c1533d7a39a02fd7919d205bcd19b6f8f2b94b41ae6420851",
+      "size": 7922,
+      "executable": false
+    },
+    {
+      "path": "references/page-richness.md",
+      "hash": "c13d2761879b79eca3ef22c17f59a5845d19a783ed0700b71667662ab3005011",
+      "size": 94774,
+      "executable": false
+    },
+    {
+      "path": "references/panel-composite-review.md",
+      "hash": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+      "size": 1843,
+      "executable": false
+    },
+    {
+      "path": "references/phone-preview-boundary.md",
+      "hash": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+      "size": 2724,
+      "executable": false
+    },
+    {
+      "path": "references/production-check-link.md",
+      "hash": "08fd36fb05469a84deaf96090d72a5b1a2b5ed0262ab81548cc317104ee61692",
+      "size": 13317,
+      "executable": false
+    },
+    {
+      "path": "references/production-prevention.md",
+      "hash": "62b1eccdc6516864757fd4a76f2cf62e2a59ce8ccda0fbf6b80023cd1068a657",
+      "size": 31630,
+      "executable": false
+    },
+    {
+      "path": "references/saul-art-rules.md",
+      "hash": "133cb14036870904c92c1ddef969d03238de4b2e24375c9d9ba5599e856ce695",
+      "size": 50010,
+      "executable": false
+    },
+    {
+      "path": "references/standalone-alpha-review.md",
+      "hash": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+      "size": 2237,
+      "executable": false
+    },
+    {
+      "path": "references/stat-digit-runtime-review.md",
+      "hash": "be1643ded0ca1f5fbe4de13a84d768b9c0ef4b42b7bd270ecf1b921fca015c41",
+      "size": 2240,
+      "executable": false
+    },
+    {
+      "path": "references/style-limits.md",
+      "hash": "c41e6a2008357f81e6a5e4884a12e197fefa9b5dfc1a9a060acebe73bd7dc66f",
+      "size": 28654,
+      "executable": false
+    },
+    {
+      "path": "references/text-backplate-review.md",
+      "hash": "324750481195bc7a1a0503b39ce62f3286f834a1f7c99174e02c45e465cd53f3",
+      "size": 3811,
+      "executable": false
+    },
+    {
+      "path": "references/text-fit-and-coverage.md",
+      "hash": "3044cd6eb835011c4c5751d6293211acbbcc13e6a88f6f07c79ffb2f2d55122e",
+      "size": 8653,
+      "executable": false
+    },
+    {
+      "path": "references/theme-readability.md",
+      "hash": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
+      "size": 2118,
+      "executable": false
+    },
+    {
+      "path": "references/ui-style-and-samples.md",
+      "hash": "d874898651cbfd579343b60aa3500f7041ba93f0c7cf63be3811aa56ce492e33",
+      "size": 16498,
+      "executable": false
+    },
+    {
+      "path": "scripts/bind_art.py",
+      "hash": "7a8e70f1f30145b84cda29ce2b128d7489f4a7b9a95c83d949cf4687be3d9da6",
+      "size": 46980,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_button_group.py",
+      "hash": "a4674efc8cacf8510335d935b6d42e1dab9c48dd5c66ec323e7ffa441873f61d",
+      "size": 2996,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_card_layout.py",
+      "hash": "590f674319d922c2c631c809f8b347c6338e350d0fe8c5dfa9756c2cc3b00eea",
+      "size": 5193,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_collection_preview.py",
+      "hash": "1d2d288a3ec8b93a3320fd5fbba03f05d98cf6c247343293f9548d70e22bf699",
+      "size": 3181,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_native_sprite_sources.py",
+      "hash": "37310078da45ff5d44b07a405dec0a76b932e103f4b8e889a4715462aee74545",
+      "size": 12037,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_phone_boundary.py",
+      "hash": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+      "size": 3800,
+      "executable": false
+    },
+    {
+      "path": "scripts/clean_glow.py",
+      "hash": "cb28a375acf2997e76b30cbdc92b2b02fb450b436ed840275c8a3d2420ff8b37",
+      "size": 10288,
+      "executable": false
+    },
+    {
+      "path": "scripts/compose_fixed_button.py",
+      "hash": "f8432ba542e7842dd607d9568c8aefd8bd5b1b65dfe8b6ec412e03920e4f7477",
+      "size": 5647,
+      "executable": false
+    },
+    {
+      "path": "scripts/cut_sheet_frame.py",
+      "hash": "bed307143f1f9ae4eb3afb4e662c6700d9f8d9c96ff06804a95d44711fdac35d",
+      "size": 6255,
+      "executable": false
+    },
+    {
+      "path": "scripts/make_greybox_reference.py",
+      "hash": "10ad3548a8a06e13d00d4f6afb7388c084ed8724328867d5a61490622995b693",
+      "size": 10832,
+      "executable": false
+    },
+    {
+      "path": "scripts/prompt_name_guard.py",
+      "hash": "621e00e8568bdb15e515540e6753087637afdeae60f6e64da7ecbfa9d76fb3f5",
+      "size": 21382,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_bind_art.py",
+      "hash": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
+      "size": 8821,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_bind_art_3x.py",
+      "hash": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
+      "size": 27976,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_bind_art_slot.py",
+      "hash": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
+      "size": 8953,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_clean_glow.py",
+      "hash": "457d2ce302ddc9c219c922fc801b3f9b569da539e1cf598edca252a056aa8533",
+      "size": 5301,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_cut_sheet_frame.py",
+      "hash": "38d07b8ef653eb1507800fcb93a2431b9e339536194d33d356427726601420c7",
+      "size": 2084,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_greybox_reference.py",
+      "hash": "30a36a66fda8c55c9a039ead59a42471d23b15b76d1c03007deb0c690b9dab19",
+      "size": 4165,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_native_sprite_sources.py",
+      "hash": "c3e3996608d5c08cd58a8aba3f83d8149d3ddccc234523349c97c30f6ef48f07",
+      "size": 6616,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_prompt_name_guard.py",
+      "hash": "426ab51d629de1ce5df18b96cc47166e27173777f5e5ddb1d4c88f695f376a59",
+      "size": 6766,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_prompt_name_guard_fix.py",
+      "hash": "1db5cb55716168e7b0b6b21a1b4bb0a1e36d9a462e538b21728b12df36c34a40",
+      "size": 4096,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_prompt_name_guard_refs.py",
+      "hash": "a689ed2c77cbe491ab6a5d9dd436ff00d07388df0b5854a56ae325b09df3bcb5",
+      "size": 2634,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_source_residue.py",
+      "hash": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+      "size": 3144,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_trim_visible.py",
+      "hash": "944ebdfe49ae356658feedd822bbd552da8b862a0f9f912e41ad5a08a33b06ba",
+      "size": 2933,
+      "executable": false
+    },
+    {
+      "path": "scripts/trim_visible.py",
+      "hash": "891bec3a3cd8f7d806e815ec7b1bf29734ba1dede728d303bb0cc574d73668c1",
+      "size": 4556,
+      "executable": false
+    }
+  ]
+}

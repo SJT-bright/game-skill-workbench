@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-05.english-simple.11.15",
+  "revision": "2026-11-08.english-simple.11.17.10",
   "skill": "grok-delegate",
-  "previous_provenance_sha256": "4f72a3ca650bdf9c19903e4d042b81ba8d89d802813c23481a3a5f01ffaed0c7",
+  "previous_provenance_sha256": "7cb2f245256d33036ac8ddcfe7e4a6e296f0d474772f1fec168267187a614ef4",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "8b6732f9c6ab793b6d79e64778e5e73575e26b0a1df3b6a9812310b7994d8e47",
-      "bytes": 6528
+      "sha256": "ede98407b78b4e6aff71c23855c29aca47f9ea36db9409226e87c01c9d077bd8",
+      "bytes": 6272
     },
     {
       "path": "agents/openai.yaml",
@@ -47,8 +47,8 @@
     },
     {
       "path": "references/task-matrix.md",
-      "sha256": "94cb34fbc0c6a65647726ab9e49bde270ef17db728cb0a3ac872c590f6faae44",
-      "bytes": 4946
+      "sha256": "9bef2451455ad374d52912d1d800501f9aea1c4ec7b7de97107f7a332f1d2b3e",
+      "bytes": 4405
     },
     {
       "path": "scripts/delegate.py",

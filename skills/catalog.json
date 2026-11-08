@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T13:54:28.595Z",
-  "treeHash": "81761873fdbcf841af30ae0904dd0d693ea4b0c242fb4df88675bdb8a1060da3",
+  "createdAt": "2026-11-08T13:54:56.459Z",
+  "treeHash": "45ab39f8eebd09ee501ef9b0676606d0f98d01fbc83c9a2a6805f8577df06dc8",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2905,14 +2905,14 @@
     },
     {
       "name": "grok-delegate",
-      "treeHash": "6582a7758b36dcdc7243925ea842bf91ad6fcd83d9a16a4ace4b0eff4f3260d8",
+      "treeHash": "f7a2a7deabe1165af7f06655e8ff302050110419b488cfca2b1214938de3f171",
       "fileCount": 12,
-      "bytes": 59151,
+      "bytes": 59154,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7cb2f245256d33036ac8ddcfe7e4a6e296f0d474772f1fec168267187a614ef4",
-          "size": 2049,
+          "hash": "cf64c0bba78698fb48185f0fbc27358b7ce9b938dfec9b1f2ed1b1e566eff6f6",
+          "size": 2052,
           "executable": false
         },
         {

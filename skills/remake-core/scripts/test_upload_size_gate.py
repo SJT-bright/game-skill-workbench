@@ -5,7 +5,7 @@ import tempfile
 import unittest
 import zipfile
 
-from upload_size_gate import enforce, inspect_files, inspect_zip
+from upload_size_gate import enforce, enforce_files, inspect_files, inspect_zip
 
 
 def payload():
@@ -17,6 +17,62 @@ def payload():
 
 
 class SizeGate(unittest.TestCase):
+    def test_trailing_slash_has_identical_partition_without_mutating_configuration(self):
+        sizes={'game.js':12,'subpackages/res/file':50,'subpackages/resources/file':8}
+        results=[]
+        for root in ('subpackages/res','subpackages/res/'):
+            game={'subpackages':[{'name':'res','root':root}]}
+            snapshot=json.dumps(game)
+            results.append(enforce(sizes,game))
+            self.assertEqual(json.dumps(game),snapshot)
+        self.assertEqual(results[0],results[1])
+        self.assertEqual(results[1]['main_bytes'],20)
+
+    def test_trailing_slash_is_accepted_by_writer_and_final_inspection(self):
+        f=payload()
+        f['game.json']=b'{"subpackages":[{"name":"res","root":"subpackages/res/"}]}'
+        snapshot=dict(f)
+        written=enforce_files(f);checked=inspect_files(f)
+        for key in ('main_bytes','total_bytes','normal_subpackages','independent_subpackages'):
+            self.assertEqual(written[key],checked[key])
+        self.assertEqual(f,snapshot)
+        self.assertIn('Trailing slash accepted',checked['warnings'][0])
+        del f['subpackages/res/game.js']
+        with self.assertRaisesRegex(ValueError,'Missing/empty subpackage'):
+            inspect_files(f)
+
+    def test_trailing_slash_does_not_hide_overlapping_roots(self):
+        for other in ('subpackages/res','subpackages/res/','subpackages/res/nested/'):
+            with self.subTest(other=other), self.assertRaisesRegex(ValueError,'Overlapping/duplicate'):
+                enforce({'subpackages/res/file':1,'subpackages/res/nested/file':1},
+                        {'subpackages':[{'name':'a','root':'subpackages/res/'},{'name':'b','root':other}]})
+
+    def test_unsafe_paths_are_rejected_before_normalization(self):
+        for root in ('','/','/subpackages/res/','../res/','subpackages/../res/',
+                     'subpackages//res/','./res/','C:/res/','subpackages\\res/'):
+            with self.subTest(root=root), self.assertRaisesRegex(ValueError,'Unsafe archive path'):
+                enforce({'subpackages/res/file':1},{'subpackages':[{'name':'res','root':root}]})
+
+    def test_trailing_slash_does_not_relax_independent_limit(self):
+        with self.assertRaisesRegex(ValueError,'Independent'):
+            enforce({'subpackages/res/file':4_000_001},
+                    {'subpackages':[{'name':'res','root':'subpackages/res/','independent':True}]})
+
+    def test_trailing_slash_zip_keeps_platform_rejection_and_original_bytes(self):
+        with tempfile.TemporaryDirectory(prefix='upload-size-slash-') as tmp:
+            root=Path(tmp);p=root/'original.zip';f=payload()
+            f['game.json']=b'{"subpackages":[{"name":"res","root":"subpackages/res/"}]}'
+            with zipfile.ZipFile(p,'w') as z:
+                for n,b in f.items():z.writestr(n,b)
+            original=p.read_bytes();a=inspect_zip(p)
+            self.assertTrue(a['passed'],a['errors'])
+            feedback=root/'feedback.json'
+            feedback.write_text(json.dumps({'platform':'tiktok','rejected_sha256':a['sha256']}))
+            b=inspect_zip(p,feedback=feedback)
+            self.assertFalse(b['passed'])
+            self.assertIn('This exact ZIP was rejected',b['errors'][0])
+            self.assertEqual(p.read_bytes(),original)
+
     def test_main_exact_boundary_then_over(self):
         self.assertEqual(enforce({'game.js':4_000_000},{})['main_bytes'],4_000_000)
         with self.assertRaisesRegex(ValueError,'main package'):

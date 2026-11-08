@@ -48,9 +48,9 @@ def enforce(sizes, game, platform='tiktok'):
         safe_name(raw)
         if not re.fullmatch(r'[A-Za-z0-9_./-]+',raw):
             raise ValueError('Non-portable subpackage root: '+repr(raw))
-        if platform == 'tiktok' and raw.endswith('/'):
-            corrected = raw.rstrip('/')
-            raise ValueError(f'TikTok subpackage {name} root must not end with /: {raw!r}; use {corrected!r}')
+        # A trailing separator is valid directory syntax. Validate the original
+        # path first, then use the same directory prefix for either spelling.
+        # This normalizes accounting only; never rewrite the inspected ZIP.
         root=raw.rstrip('/')+'/'
         if any(root.casefold().startswith(r.casefold()) or r.casefold().startswith(root.casefold()) for r in roots):
             raise ValueError('Overlapping/duplicate subpackage roots: '+root)
@@ -107,7 +107,7 @@ def inspect_files(files, platform='tiktok'):
         if not files.get(root+'game.js'):
             raise ValueError('Missing/empty subpackage game.js entry: '+root)
         if sub['root'].endswith('/'):
-            warnings.append('Use canonical directory root without trailing slash for upload portability: '+sub['root'])
+            warnings.append('Trailing slash accepted; directory prefix normalized for checks only: '+sub['root'])
     orphans=[n for n in files if n.startswith('subpackages/') and not any(n.startswith(r) for r in roots)]
     if orphans:
         raise ValueError('Unregistered subpackage files are counted in main: '+', '.join(orphans[:5]))

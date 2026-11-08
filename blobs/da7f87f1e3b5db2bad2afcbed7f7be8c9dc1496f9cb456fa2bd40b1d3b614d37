@@ -1,0 +1,49 @@
+{
+  "schema": "check-workflow.v1",
+  "route": "source",
+  "roots": {
+    "source": "${PROJECT}/assets",
+    "dumps": "${PROJECT}/docs/test/notice",
+    "longest": "${PROJECT}/docs/art/longest-text.json"
+  },
+  "nodes": [
+    {
+      "id": "text/notice/fit",
+      "label": "公告页英文文本框实际字宽",
+      "domain": "text",
+      "phase": 2,
+      "basis": "示例结构；使用前按此游戏实际 Label、字体、最长值和调用者替换依赖及命令，不直接照抄为通过依据",
+      "inputs": {
+        "source": [
+          "*"
+        ],
+        "dumps": [
+          "*"
+        ],
+        "longest": [
+          "*"
+        ]
+      },
+      "command": [
+        "${PYTHON}",
+        "-B",
+        "${SKILLS}/remake-core/scripts/audit_text_fit.py",
+        "--project",
+        "${PROJECT}",
+        "--dumps",
+        "${PROJECT}/docs/test/notice",
+        "--out",
+        "${PROJECT}/docs/checks/text-fit.json"
+      ],
+      "tool_files": [
+        "${SKILLS}/remake-core/scripts/audit_text_fit.py"
+      ],
+      "verdict": {
+        "file": "${PROJECT}/docs/checks/text-fit.json",
+        "pointer": "/passed",
+        "equals": true
+      },
+      "after": []
+    }
+  ]
+}

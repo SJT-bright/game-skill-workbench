@@ -69,11 +69,16 @@ const director = (page, m) => page.evaluate(EA.inPage(function (m) {
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'layout_state', engine: ENGINE, policy: POLICY, board: BOARD, passes: [], findings: [], startup: null, homeRules: null };
   const add = (f, key) => rep.findings.push(Object.assign({ key }, f));
+  const startupOnly = !!C.selection && C.selection.includes('@startup');
   const states = Array.isArray(A.layout_states) && A.layout_states.length ? A.layout_states : [{ name: 'home' }];
-  const devices = ['iphone14', 'se'], units = ['pt', 'px'];
+  const devices = startupOnly ? ['iphone14'] : ['iphone14', 'se'], units = startupOnly ? ['pt'] : ['pt', 'px'];
   const P = {};
+  const homeUnit = devices[0] + '/' + states[0].name;
+  const checkStartup = startupOnly || !C.selection || C.selection.includes(homeUnit);
   let startupDone = false;
   for (const dev of devices) for (const st of states) for (const unit of units) {
+    if (startupOnly && st !== states[0]) continue;
+    if (!startupOnly && C.selection && !C.selection.includes(dev + '/' + st.name)) continue;
     const key = dev + '/' + st.name + '/' + unit, d = G.DEVICES[dev];
     const pass = { key };
     rep.passes.push(pass);
@@ -87,7 +92,7 @@ await L.suite(async ({ out, page }) => {
       continue;
     }
     const homeScene = A.home_scene || home.scene;
-    if (!startupDone) {
+    if (!startupDone && checkStartup) {
       startupDone = true;
       const lg = await page.evaluate(() => ({
         subs: (window.__hostLog || []).filter((r) => r.kind === 'subpackage').map((r) => ({ t: r.t, name: r.data && r.data.name })),
@@ -99,16 +104,29 @@ await L.suite(async ({ out, page }) => {
       for (const f of R.startupFindings(sz, names)) add(f, key);
       rep.engineVersion = (await G.engineMajor(page)).version;
     }
+    if (startupOnly) continue; // User accepted visual rework; keep hidden startup measurement only.
     if (A.after_home_js) { pass.afterHome = await G.evalJs(page, A.after_home_js).catch((e) => 'threw: ' + e); await G.sleep(400); }
     if (st.actions) {
       const r = await G.runActions(page, st.actions);
       pass.actions = r.log;
       if (!r.ok) { add({ code: 'state', msg: key + ': state not reached: ' + r.why }, key); continue; }
     }
-    let missing = null;
-    for (const p of st.expect_visible || []) if (!(await G.nodeCentre(page, p))) { missing = p; break; }
-    if (missing) { add({ code: 'state', msg: key + ': state not reached, ' + missing + ' not visible' }, key); continue; }
+    // Test the settled state, not the popup's entrance animation. This is the
+    // existing settling delay moved earlier, not an additional wait or retry.
     await G.sleep(st.settle_ms || 1200);
+    let missing = null;
+    pass.expectedVisibility = [];
+    for (const p of st.expect_visible || []) {
+      const target = await G.nodeCentre(page, p);
+      pass.expectedVisibility.push({ path: p, target, viewport: { width: d.W, height: d.H } });
+      if (!target || target.x + target.w / 2 <= 0 || target.x - target.w / 2 >= d.W ||
+          target.y + target.h / 2 <= 0 || target.y - target.h / 2 >= d.H) { missing = p; break; }
+    }
+    if (missing) {
+      add({ code: 'state', path: missing, msg: key + ': state not reached, ' + missing + ' not visible in viewport' }, key);
+      pass.png = await G.shot(page, path.join(C.evidenceDir, 'layout-' + dev + '-' + st.name + '-' + unit + '.png'));
+      continue;
+    }
     // two unpaused samples: nodes that move by themselves are left out of the pt / px comparison
     const a = await G.visibleNodes(page);
     await G.sleep(700);
@@ -145,11 +163,26 @@ await L.suite(async ({ out, page }) => {
     pt.unitShift = shift;
     if (shift.length) add({ code: 'unit_shift', msg: dev + '/' + st.name + ': ' + shift.length + ' node(s) move when the capsule rect comes in pixels instead of points, e.g. ' + shift.slice(0, 3).map((s) => s.path.split('/').slice(-2).join('/') + ' dy=' + s.dy).join(', ') + ' (read the capsule with platform-kit CapsuleLayout.js)' }, dev + '/' + st.name);
   }
-  if (!rep.startup) add({ code: 'startup_size', msg: 'startup download not measured: the home screen was never reached' }, 'startup');
+  if (checkStartup && !rep.startup) add({ code: 'startup_size', msg: 'startup download not measured: the home screen was never reached' }, 'startup');
   for (const p of rep.passes) delete p.nodes;
   // verdict: one case per check; a finding blocks unless the rules say warning (legacy game, Cocos 3.x, SE capsule, edge of band)
   for (const f of rep.findings) f.level = f.warnOnly ? 'warn' : R.level(f.code, { engine: ENGINE, policy: POLICY });
-  const ran = new Set(['home', 'startup_size', 'startup_audio', 'offscreen', 'capsule', 'safe_area', 'covered_3d', 'unit_shift'].concat(
+  // Each page/viewport is independent; pt/px stay together for the unit-shift comparison.
+  // Keep the original aggregate cases below as well, so diagnostics lose no checks.
+  out.units = {};
+  if (startupOnly) {
+    const found = rep.findings.filter(f => ['home', 'startup_size', 'startup_audio', 'invalid_run'].includes(f.code));
+    const passed = !found.some(f => f.level === 'block');
+    out.units['@startup'] = { passed, cases: [{ id: '@startup', passed, detail: found }] };
+  }
+  for (const dev of devices) for (const st of states) {
+    const id = dev + '/' + st.name;
+    if (startupOnly || (C.selection && !C.selection.includes(id))) continue;
+    const found = rep.findings.filter(f => f.key === id || f.key.startsWith(id + '/') || (id === homeUnit && f.key === 'startup'));
+    const blocks = found.filter(f => f.level === 'block');
+    out.units[id] = { passed: blocks.length === 0, cases: [{ id, passed: blocks.length === 0, detail: found }] };
+  }
+  const ran = startupOnly ? new Set(['home', 'startup_size', 'startup_audio', 'invalid_run']) : new Set(['home', 'startup_size', 'startup_audio', 'offscreen', 'capsule', 'safe_area', 'covered_3d', 'unit_shift'].concat(
     states.some((s) => s.actions || s.expect_visible) ? ['state'] : [],
     BOARD === 'remake' ? ['settings_pos', 'bottom_row', 'platform_entries'] : BOARD === 'localize' ? ['platform_entries'] : []));
   for (const code of CODES) {

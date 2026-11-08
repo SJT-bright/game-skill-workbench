@@ -14,6 +14,7 @@ from one file. Each case runs in well under a second, no browser:
                receiver reads the same list; check-status.json is the one list
 """
 import json
+import inspect
 import os
 import sys
 import tempfile
@@ -145,7 +146,8 @@ class EmptyInputs(unittest.TestCase):
 
         def fake_suite(name, *a, **k):
             self.calls.append(name)
-            return {'suite': name, 'passed': True, 'problems': [], 'cases': [{'id': 'x', 'passed': True}],
+            selected = inspect.signature(self.saved[2]).bind(name, *a, **k).arguments.get('selection') or ['x']
+            return {'suite': name, 'passed': True, 'problems': [], 'cases': [{'id': ident, 'passed': True} for ident in selected],
                     'warnings': [], 'evidence': None, 'seconds': 0.0, 'browser': True}
         rr.run_suite = fake_suite
 

@@ -216,7 +216,9 @@ class RelocatedWriterDelivery(unittest.TestCase):
         self.assertFalse(out.exists())
 
     def test_original_evidence_loss_blocks_delivery_record(self):
-        moved,manifest=self.package(); archive=self.root/'game.zip';write_archive(archive,native_files(moved))
+        moved,manifest=self.package(); archive=self.root/'game.zip'
+        with patch('build_checked_zip.audit_final_startup',return_value={'passed':True}):
+            build(moved,APP,archive,project=self.project,resource_manifest=manifest)
         (self.normal/'state.json').unlink();record=self.root/'delivery.json'
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
                 patch('prepare_delivery.audit_final_startup') as runtime:

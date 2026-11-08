@@ -114,6 +114,9 @@ class AfterPrior(Base):
         self.assertEqual(first['prior'], {})
         self.assertEqual(late['prior']['zz_first']['suite'], 'zz_first')
         self.assertEqual(late['facts'], {'rewarded_ads': False})
+
+    def test_single_selected_suite_has_current_facts_without_prior(self):
+        self.fake_prior()
         (self.package / 'main.js').write_text('tt.createRewardedVideoAd({adUnitId: "x"})')
         self.assertEqual(self.run_fake({'home': 'return true'}, suites=['aa_late'])['suites'][0]['evidence'],
                          {'suite': 'aa_late', 'prior': {}, 'facts': {'rewarded_ads': True}})
@@ -159,6 +162,12 @@ class AdRoles(Base):
         with self.assertRaisesRegex(rr.RuntimeRefused, 'before the browser.*ad_outcome: adapter.ad_entries lists no'):
             self.run_fake({'home': 'return true'}, policy='new')
         self.assertTrue(self.run_fake({'home': 'return true'}, policy='legacy')['passed'])
+
+    def test_complete_roles_pass_for_a_new_game(self):
+        (self.suites / 'fake.json').unlink()
+        (self.suites / 'fake.mjs').unlink()
+        self.sidecar('ad_outcome', {**SIDECAR, 'name': 'ad_outcome', 'needs': [], 'na_field': 'ad_outcome',
+                                    'fields': ['fake_mode', 'ad_entries']})
         good = {'home': 'return true', 'ad_entries': [dict(self.ENTRY, role='double'), dict(self.ENTRY, id='y', role='revive')]}
         self.assertTrue(self.run_fake(good, policy='new')['passed'])
 

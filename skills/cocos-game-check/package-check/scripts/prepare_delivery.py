@@ -3,7 +3,8 @@
 
 v7.5 (D7 items 1, 14, 15): refuses a ZIP without a matching <zip>.receipt.json from make_tiktok_zip.py /
 build_checked_zip.py (hand-zipped "verify + ordinary zip" packages are 非官方入口), and with --logic-report refuses
-when the logic_check report's current_source_sha256 differs from the delivered source (--source folder or ZIP).
+when the delivered source differs from the real project or its existing per-case logic records are no longer valid.
+Legacy reports without a ledger retain the exact aggregate source-hash check; no delivery check registers observations.
 
 v7.7: the writer receipt must carry a passed finalize record (verify_native_zip receipt schema 2), so a ZIP that never
 went through tiktok_finalize is unofficial and refused. The delivery record repeats the finalize policy and the
@@ -58,7 +59,7 @@ def writer_finalize(receipt_file):
                        for r in rows])
     return {'policy': fin.get('policy'), 'policy_reason': fin.get('policy_reason'),
             'kit_version': fin.get('kit_version'), 'table': rows, 'table_markdown': table,
-            'warnings': fin.get('warnings') or []}
+            'warnings': fin.get('warnings') or [], 'art_receipt': fin.get('art_receipt')}
 
 
 def source_sha256(source):
@@ -96,6 +97,42 @@ def source_sha256(source):
         for _, rel, n in sorted(rows):
             digest.update(rel.encode('utf-8') + b'\0' + hashlib.sha256(z.read(n)).digest())
     return digest.hexdigest()
+
+
+def logic_source_binding(logic_report, source, project=None):
+    """Verify delivered source identity and existing observations without running gameplay."""
+    from logic_regressions import current_report, source_digest
+    report_path, source = Path(logic_report).resolve(), Path(source).resolve()
+    report = json.loads(report_path.read_text(encoding='utf-8'))
+    if not isinstance(report, dict):
+        raise ValueError('logic_check report must be an object')
+    checked, delivered = report.get('current_source_sha256'), source_sha256(source)
+    recorded_project = report.get('project_root')
+    root = Path(project).resolve() if project is not None else (source if source.is_dir() else None)
+    if root is None and isinstance(recorded_project, str) and Path(recorded_project).is_absolute():
+        root = Path(recorded_project).resolve()
+    if root is not None:
+        if not (root / 'assets').is_dir() or source_digest(root) != delivered:
+            raise ValueError('delivered source differs from the current project source; verify the actual delivery source before reusing logic evidence')
+    modern = 'project_root' in report or any(isinstance(row, dict) and 'incremental' in row
+                                            for field in ('regressions', 'flows')
+                                            for row in (report.get(field) if isinstance(report.get(field), list) else []))
+    ledger = root / 'docs/checks/incremental/ledger.sqlite3' if root is not None else None
+    if modern or (ledger is not None and ledger.is_file()):
+        if root is None or not current_report(report, root):
+            raise ValueError('logic_check existing per-case records cannot be reused for the current project; '
+                             'locate the affected evidence or missing binding; delivery does not register records or rerun gameplay')
+        validation = 'existing_case_records'
+    else:
+        # Old reports had only an aggregate source identity. Preserve that exact
+        # compatibility boundary; a mismatched hash must never become a new pass.
+        if not checked or checked != delivered:
+            raise ValueError('logic_check report current_source_sha256 %s differs from the delivered source %s (%s): '
+                             'verify the delivery source and original evidence binding' % (checked, delivered, source))
+        validation = 'legacy_exact_source'
+    return {'report': str(report_path), 'source': str(source), 'project': str(root) if root is not None else None,
+            'current_source_sha256': delivered, 'report_source_sha256': checked,
+            'validation': validation, 'browser_executed': False}
 
 
 def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None):
@@ -154,15 +191,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     if logic_report is not None:
         if source is None:
             raise ValueError('--logic-report needs --source (the delivered source folder or ZIP)')
-        import json as _json
-        logic = _json.loads(Path(logic_report).read_text(encoding='utf-8'))
-        checked = logic.get('current_source_sha256') if isinstance(logic, dict) else None
-        delivered = source_sha256(source)
-        if not checked or checked != delivered:
-            raise ValueError('logic_check report current_source_sha256 %s differs from the delivered source %s (%s): '
-                             'rerun logic_check on the source you deliver' % (checked, delivered, source))
-        logic = {'report': str(Path(logic_report).resolve()), 'source': str(Path(source).resolve()),
-                 'current_source_sha256': delivered}
+        logic = logic_source_binding(logic_report, source, project)
     receipt = {'status': 'delivery_file_verified', 'archive': str(archive),
                'sha256': after, 'bytes': archive.stat().st_size,
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
@@ -210,7 +239,7 @@ def main():
     parser.add_argument('--loading-recovery-runtime', type=Path)
     parser.add_argument('--resource-manifest', type=Path, required=True)
     parser.add_argument('--ad-regression', type=Path, help='adapter JSON for the rewarded-ad and runtime regressions (default $TIKTOK_AD_REGRESSION_ADAPTER); every package with game.js is refused without it')
-    parser.add_argument('--logic-report', type=Path, help='logic_check.py report; its current_source_sha256 must equal the delivered --source')
+    parser.add_argument('--logic-report', type=Path, help='logic_check.py report; reuse existing per-case project records only after --source identity matches the current project')
     parser.add_argument('--source', type=Path, help='delivered source project folder or source ZIP: checked by source_hygiene.py (no .git/.svn/.idea, no credential files); also needed with --logic-report')
     parser.add_argument('--preview-url', help='live matching phone preview URL; required for delivery')
     args = parser.parse_args()

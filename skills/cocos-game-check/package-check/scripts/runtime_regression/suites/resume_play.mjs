@@ -208,6 +208,7 @@ await L.suite(async ({ out, page }) => {
     return { c, fail, warn };
   }
   for (const cs of cases) {
+    if (C.selection && !C.selection.includes(cs.id)) continue;
     const shareable = !cs.order;            // ad cases use the item up: always a fresh load
     let r = await attempt(cs, live && shareable);
     if (r.fail && !r.gap && r.c.reused_level && !/^invalid run/.test(r.fail)) { r.c.first_try = r.fail; rep.cases.push(r.c); r = await attempt(cs, false); }

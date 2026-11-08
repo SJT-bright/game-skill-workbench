@@ -195,11 +195,31 @@ class FailClosed(Base):
             self.run_fake({'home': 'return true', 'fake_mode': 'fail'})
         self.assertFalse(ctx.exception.summary['passed'])
 
-    def test_no_result_or_wrong_suite_refuses(self):
+    def test_no_result_refuses(self):
         with self.assertRaisesRegex(rr.RuntimeRefused, 'produced no result'):
             self.run_fake({'home': 'return true', 'fake_mode': 'none'})
+
+    def test_wrong_suite_refuses(self):
         with self.assertRaisesRegex(rr.RuntimeRefused, "result names suite 'other'"):
             self.run_fake({'home': 'return true', 'fake_mode': 'wrongsuite'})
+
+    def test_fatal_reports_remaining_suite_not_run(self):
+        self.sidecar('fake2', dict(SIDECAR, name='fake2'))
+        fatal = {'suite': 'fake', 'passed': False, 'fatal': 'EGO_HARD_STOP: synthetic control loss',
+                 'problems': ['fake: aborted'], 'batch_problems': ['fake: aborted'],
+                 'cases': [{'id': 'before_stop', 'passed': True}], 'warnings': [], 'browser': True}
+        with patch.object(rr, 'run_suite', return_value=fatal) as execution:
+            with self.assertRaises(rr.RuntimeRefused) as caught:
+                self.run_fake({'home': 'return true'})
+        self.assertEqual(execution.call_count, 1)
+        summary = caught.exception.summary
+        self.assertFalse(summary['passed'])
+        self.assertFalse(summary['complete'])
+        self.assertEqual(summary['planned_not_run'], ['fake2'])
+        missing = next(row for row in summary['not_run'] if row['suite'] == 'fake2')
+        self.assertEqual(missing['status'], 'not_run')
+        self.assertIn('fatal', missing['reason'])
+        self.assertTrue(summary['proof_error'])
 
     def test_cli_writes_out_and_exit_code(self):
         out = self.root / 'out.json'

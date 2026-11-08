@@ -605,7 +605,7 @@ def ordered(names, catalog):
 
 
 def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, work, timeout=None, policy=None,
-              policy_reason=None, board=None, trial_url=None, prior=None, facts=None):
+              policy_reason=None, board=None, trial_url=None, prior=None, facts=None, selection=None, session_file=None):
     serves = meta.get('host', 'package') != 'none'
     host = HOST3 if engine == '3.x' else HOST2
     if serves and not (host / 'server.py').is_file():
@@ -632,7 +632,8 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
                'resultFile': str(result_file), 'evidenceDir': str(folder), 'lib': (TOOL / 'lib.mjs').as_uri(),
                'progressFile': str(progress_file),
                'policy': policy, 'policyReason': policy_reason, 'board': board, 'trialUrl': trial_url,
-               'prior': prior or {}, 'facts': facts or {}}
+               'prior': prior or {}, 'facts': facts or {}, 'selection': selection,
+               'sessionFile':str(session_file) if session_file else os.environ.get('ENGLISH_CHECK_EGO_SESSION')}
         entry = folder / 'entry.mjs'
         entry.write_text('globalThis.CFG = %s;\nawait import(%s);\n' % (
             json.dumps(cfg, ensure_ascii=False), json.dumps(meta['script'].as_uri())), encoding='utf-8')
@@ -655,6 +656,9 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
         except (OSError, ValueError):
             tail = ((proc.stdout or '')[-400:] + (proc.stderr or '')[-400:]).strip()
             raise RuntimeRefused('runtime suite %s produced no result (browser exit %s): %s' % (name, proc.returncode, tail))
+        if proc.returncode:
+            result['fatal']=result.get('fatal') or 'Ego process exited %s after writing results'%proc.returncode
+            result['passed']=False
     finally:
         if server is not None:
             server.terminate()
@@ -664,10 +668,16 @@ def run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, w
                 server.kill()
                 server.wait()
     passed, problems = judge(result, name)
+    case_prefixes=[name+'/'+str(c.get('id'))+':' for c in result.get('cases',[]) if c.get('passed') is not True]
+    # Keep EVERY validator-level refusal, including future Python rules. Only
+    # failures explicitly attributable to a case can be split across unit records.
+    batch_problems=[p for p in problems if not any(p.startswith(prefix) for prefix in case_prefixes)]
     return {'suite': name, 'passed': passed, 'problems': problems,
+            'batch_problems':batch_problems,'fatal':result.get('fatal'),
             'cases': [{k: c.get(k) for k in ('id', 'passed', 'detail')} for c in result.get('cases') or [] if isinstance(c, dict)],
-            'warnings': result.get('warnings') or [], 'evidence': result.get('evidence'),
-            'seconds': round(time.monotonic() - started, 1)}
+            'warnings': result.get('warnings') or [], 'evidence': result.get('evidence'), 'units': result.get('units'),
+            'raw_files': [str(p) for p in folder.rglob('*') if p.is_file() and p.suffix in ('.json','.png','.jsonl')],
+            'seconds': round(time.monotonic() - started, 1), 'browser': True}
 
 
 def _row(name, cases, warnings=(), problems=()):
@@ -815,8 +825,51 @@ def input_report(files, adapter, names, catalog, policy, caps=None, full_run=Tru
     return report
 
 
+def preflight(files, adapter, adapter_path, names, catalog, engine, policy, policy_reason,
+              board=None, trial_url=None, caps=None, *, full_run=True):
+    """One no-browser input contract shared by planning and actual execution."""
+    skipped = not_run(files, adapter, names, catalog, trial_url)
+    early, early_rows = config_problems(names, catalog, adapter, engine, policy, caps)
+    # 总表 P19 ②: an input that is there but empty, or a new rewarded game's missing ad-entry list, is 「未执行」 (new
+    # game; a legacy game only warns). With other adapter problems it is listed with them, all at once.
+    gap = input_report(files, adapter, [n for n in names if n in catalog], catalog, policy, caps,
+                       full_run=full_run)
+    input_warnings = []
+    if gap and policy == 'legacy':
+        input_warnings.append('%s [legacy game: warning]' % gap['reason'])
+    elif gap and early:
+        early = early + ['未执行：' + gap['reason']]
+    elif gap:
+        error = InputsNotRun('runtime regression not run (未执行, before the browser): ' + gap['reason'])
+        error.summary = dict(gap, id='runtime_regression', engine=engine, required=names, not_run=skipped,
+                             policy=policy, policy_reason=policy_reason, board=board, problems=[gap['reason']],
+                             warnings=[], stopped_before_browser=True, browser=False, proof_error=True)
+        raise error
+    if early:
+        error = RuntimeRefused('runtime regression failed before the browser (adapter check, 总表 19 ②): '
+                               + ' | '.join(early))
+        error.summary = {'id': 'runtime_regression', 'passed': False, 'engine': engine,
+                         'suites': list(early_rows.values()), 'required': names, 'not_run': skipped, 'board': board,
+                         'problems': early, 'policy': policy, 'policy_reason': policy_reason, 'startup_measured': None,
+                         'warnings': input_warnings + [w for r in early_rows.values() for w in r['warnings']],
+                         'tool_sha256': tool_digest(catalog),
+                         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
+                         'seconds': 0.0, 'stopped_before_browser': True, 'browser': False, 'proof_error': True}
+        if gap:
+            error.summary.update(status='not_run', missing=gap['missing'], reason=gap['reason'], checked=0)
+        raise error
+    return early_rows, input_warnings
+
+
 def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_dir=None, policy=None, board=None,
         trial_url=None, capabilities=None):
+    import runtime_incremental
+    return runtime_incremental.run(sys.modules[__name__],package_dir,adapter_path,suites,work,timeout,suites_dir,
+                                   policy,board,trial_url,capabilities)
+
+
+def _run_uncached(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_dir=None, policy=None, board=None,
+        trial_url=None, capabilities=None, selections=None, prior_evidence=None):
     """Run suites (default: required_suites) against an unzipped package. Raises RuntimeRefused unless all pass.
     policy: 'new' | 'legacy' for suites that warn on a legacy game (dead_shell); None = judged from the package bytes.
     v7.8 (总表 A6 补): a Cocos package without a touch part raises EnvironmentIncomplete before any suite runs.
@@ -830,10 +883,6 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
     catalog = load_suites(suites_dir)
     adapter = load_adapter(adapter_path, catalog)
     files = package_files(package_dir)
-    problem = touch_problem(files)
-    if problem:
-        raise EnvironmentIncomplete(problem)
-    browser = find_browser()
     engine = detect_engine(files, adapter)
     policy, policy_reason = package_policy(files, policy)
     names = list(suites) if suites else required_suites(files, adapter, catalog, trial_url)
@@ -846,38 +895,21 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
     # v7.9 (出包检查提速 S3, 总表 19 ②): what the adapter lacks for any suite of this run refuses before the first suite
     # opens a browser, every problem at once (config_problems). The verdict and the texts are the ones the suites gave.
     caps = load_capabilities(capabilities if capabilities is not None else os.environ.get(ENV_CAPABILITIES))
-    early, early_rows = config_problems(names, catalog, adapter, engine, policy, caps)
-    # 总表 P19 ②: an input that is there but empty, or a new rewarded game's missing ad-entry list, is 「未执行」 (new
-    # game; a legacy game only warns). With other adapter problems it is listed with them, all at once.
-    gap = input_report(files, adapter, [n for n in names if n in catalog], catalog, policy, caps,
-                       full_run=not suites)
-    input_warnings = []
-    if gap and policy == 'legacy':
-        input_warnings.append('%s [legacy game: warning]' % gap['reason'])
-    elif gap and early:
-        early = early + ['未执行：' + gap['reason']]
-    elif gap:
-        error = InputsNotRun('runtime regression not run (未执行, before the browser): ' + gap['reason'])
-        error.summary = dict(gap, id='runtime_regression', engine=engine, required=names, not_run=skipped,
-                             policy=policy, policy_reason=policy_reason, board=board, problems=[gap['reason']],
-                             warnings=[], stopped_before_browser=True)
-        raise error
-    if early:
-        error = RuntimeRefused('runtime regression failed before the browser (adapter check, 总表 19 ②): '
-                               + ' | '.join(early))
-        error.summary = {'id': 'runtime_regression', 'passed': False, 'engine': engine,
-                         'suites': list(early_rows.values()), 'required': names, 'not_run': skipped, 'board': board,
-                         'problems': early, 'policy': policy, 'policy_reason': policy_reason, 'startup_measured': None,
-                         'warnings': input_warnings + [w for r in early_rows.values() for w in r['warnings']],
-                         'tool_sha256': tool_digest(catalog),
-                         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
-                         'seconds': 0.0, 'stopped_before_browser': True}
-        raise error
+    early_rows, input_warnings = preflight(files, adapter, adapter_path, names, catalog, engine,
+                                             policy, policy_reason, board, trial_url, caps, full_run=not suites)
+    needs_browser = any(name not in early_rows for name in names)
+    browser = None
+    if needs_browser:
+        problem = touch_problem(files)
+        if problem:
+            raise EnvironmentIncomplete(problem)
+        browser = find_browser()
     owned = work is None
     work = Path(work or tempfile.mkdtemp(prefix='tiktok-runtime-regression-')).resolve()
     work.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    rows, problems, evidence = [], [], {}
+    rows, problems, evidence = [], [], dict(prior_evidence or {})
+    session_file=os.environ.get('ENGLISH_CHECK_EGO_SESSION') or work/'ego-session.json'
     names = ordered(names, catalog)
     # v7.9: what the package bytes say, for suites that decide what to require (CFG.facts)
     facts = {'rewarded_ads': predicate('rewarded_ads', files, adapter)}
@@ -893,17 +925,26 @@ def run(package_dir, adapter_path, suites=None, work=None, timeout=None, suites_
                 continue
             prior = {d: evidence[d] for d in meta.get('after', []) if d in evidence}
             row = run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, work, timeout, policy,
-                            policy_reason, board, trial_url, prior, facts)
+                            policy_reason, board, trial_url, prior, facts, (selections or {}).get(name),session_file)
             rows.append(row)
             problems.extend(row['problems'])
             if isinstance(row.get('evidence'), dict):
                 evidence[name] = row['evidence']
+            if row.get('fatal'):
+                break  # Never operate another page/suite after a browser control or fatal error.
     finally:
+        if browser is not None and not os.environ.get('ENGLISH_CHECK_EGO_SESSION') and Path(session_file).exists():
+            from ego_check_session import finish as finish_session
+            finish_session(browser,session_file)
         if owned:
             shutil.rmtree(work, ignore_errors=True)
     # 简化.11.14 R4D（喵咪小吃铺全量测试只跑首轮就收尾）: the case list is required_suites(); a --suites run that left
     # out an applicable suite is 「没跑完」, never 通过 (main() exits INCOMPLETE_EXIT). planned_not_run lists them.
-    planned_not_run = [s['suite'] for s in skipped if s['reason'] == NOT_SELECTED]
+    completed_suites = {row['suite'] for row in rows}
+    interrupted = [name for name in names if name not in completed_suites]
+    skipped += [{'suite': name, 'status': 'not_run',
+                 'reason': 'not run after a prior suite fatal error; browser operations stopped'} for name in interrupted]
+    planned_not_run = list(dict.fromkeys([s['suite'] for s in skipped if s['reason'] == NOT_SELECTED] + interrupted))
     summary = {'id': 'runtime_regression', 'passed': not problems, 'engine': engine, 'suites': rows,
                'complete': not planned_not_run, 'planned_not_run': planned_not_run,
                'required': names, 'not_run': skipped, 'board': board, 'problems': problems, 'policy': policy,

@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
- "date": "2026-11-07",
- "release_label": "v7.9-en11.17.8-art",
- "selftest_report_sha256": "d1d7e458d61158e54697ecee84a0da8493639f25ee7726476b9f80d2ade031ac",
+ "date": "2026-11-08",
+ "release_label": "v7.9-en11.17.11-returned",
+ "selftest_report_sha256": "fb90f019d38091cabf9f1f2db55ed08b020def66f74bfc5b264622d9e13e55d0",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
@@ -19,10 +19,11 @@
   "remake-core/scripts/package_gates/startup.py": "1cf45b50c1dd0c471d0aadbee033d134a1f9b2aacf69f9276059a762a91dd356",
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
-  "remake-core/scripts/verify_native_zip.py": "4bdfdc5e6f304b2dc230b9a1189d33807b124702fb85d7bfcf0309bff4677e12",
+  "remake-core/scripts/verify_native_zip.py": "1b54eb33c05a008152672452eb9e443da720e8b38267bc205279ea310e3bfa1b",
+  "remake-core/scripts/upload_size_gate.py": "d71d441a6ce30d203cac6734194ec857b7fa00261143ba0b3b72c0e1aed92302",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
   "remake-core/scripts/tiktok_finalize.py": "7568aad39310fccac024e12f5949baaa39f6123c4e78f7d76f21dec574ee8f15",
-  "remake-core/scripts/tiktok_finalize_steps/__init__.py": "8f29bc0f63a139c38dd8d58f52b57b7aafcb16a6058fafc04f1a34597954b31d",
+  "remake-core/scripts/tiktok_finalize_steps/__init__.py": "9f4b0ce398692e8165b35567dd68f2c893728718d894c80c4d0574ce3eea81e8",
   "remake-core/scripts/tiktok_finalize_steps/adapter.py": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7",
   "remake-core/scripts/tiktok_finalize_steps/appid.py": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76",
   "remake-core/scripts/tiktok_finalize_steps/art_static.py": "5e11c1c62091b225e5294dc32d4d133693c79f4a472e765cb0e2a31fd5174e5a",
@@ -52,9 +53,9 @@
   "remake-core/scripts/tiktok_finalize_steps/structure.py": "a303704fbe79da829b0ee5da4ef76223c63a04b11b0a81117d125a28a076be8f",
   "remake-core/scripts/tiktok_finalize_steps/touch.py": "fab070f35c3dd59ec9919131322846953b04a779406e1fb12be318131ee26004",
   "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581",
-  "cocos-game-check/package-check/scripts/check_package.py": "284c255be11f427162c23313ffeef89d7ea269767390c231bd8b02a2c7baa17e",
-  "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "3daf1b2ecc3e3e28c5ae47f4047fce49119b144367a7faec7268564f3df70542",
-  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "52aef31b5144d4bcb5749fb31453e3cb8eddb965a6bb2bfd24837f7098e68211",
+  "cocos-game-check/package-check/scripts/check_package.py": "0292ec6f364a7c6d1cffe0e63337afd278aa66e764fb3b4becc125670dcbb25e",
+  "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
+  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "66b3faf8e5f300c34257d48560b287ef60a5ddb0ac3459170211c202e45496cc",
   "remake-core/scripts/audit_image_review_record.py": "631387e5efde7676733adfd2be68e06224282e30b4bb494ccc1553e0ba787471",
   "remake-core/scripts/audit_atlas_slices.py": "5b7d85a3b2b5050986917d0d2a289f127c4e211f2985071d1360f370236822ca",
   "remake-core/scripts/spine_atlas_binding.py": "4169014911f9b33ac95f4c291bad14ba1d0f270844d110b0b55a5bbe14c904f4"
@@ -696,22 +697,84 @@
    },
    "ok": true,
    "since": null
+  },
+  {
+   "id": "carescape-trailing-root",
+   "game": "CarEscape",
+   "role": "good",
+   "check": "upload_size_zip",
+   "item": "2026-11-08 分包尾斜杠兼容",
+   "expect": {
+    "passed": true,
+    "main_bytes": 1416361,
+    "total_bytes": 5378169,
+    "normal_subpackages": {
+     "subpackages/resources/": 3961808
+    },
+    "independent_subpackages": {},
+    "crc_verified": true,
+    "errors": [],
+    "warnings": [
+     "Trailing slash accepted; directory prefix normalized for checks only: subpackages/resources/"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "sheep-platform-rejected-exact-zip",
+   "game": "鸽鸽小羊",
+   "role": "bad",
+   "check": "upload_size_zip",
+   "item": "2026-11-05 同字节平台拒绝",
+   "expect": {
+    "passed": false,
+    "main_bytes": 1224175,
+    "total_bytes": 7797255,
+    "normal_subpackages": {
+     "subpackages/MainScene/": 5841472,
+     "subpackages/AudioAssets/": 731608
+    },
+    "independent_subpackages": {},
+    "crc_verified": true,
+    "errors": [
+     "This exact ZIP was rejected by the platform; local arithmetic cannot clear the rejection"
+    ],
+    "platform_feedback": {
+     "path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/莫慌-鸽鸽小羊-24/验收记录/2026-11-07-TikTok重出包/最终版-三处修复/TikTok平台上传拒绝.json",
+     "sha256": "9d9fbd545795eb32cceac66243749f4dd1632a81c246df841d7865f83159cacd",
+     "same_rejected_archive": true
+    }
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "returned-delivery-control-evidence",
+   "game": "返工交付控制路径（隔离用例）",
+   "role": "control",
+   "check": "returned_control_proof",
+   "item": null,
+   "expect": {
+    "control_evidence_current": true,
+    "recorded_tests": 16,
+    "ai_visual_pass_claimed": false,
+    "whole_game_acceptance": false
+   },
+   "ok": true,
+   "since": null
   }
  ],
  "test_inventory": {
-  "files": 507,
+  "files": 706,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",
    "game-audio-library/scripts/test_audio_manager_contracts.cjs",
-   "game-audio-library/scripts/test_index_identity.py",
    "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js",
    "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
    "remake-core/scripts/test_known_issue_gate.py",
-   "remake-core/scripts/test_official_loading.py",
-   "remake-core/scripts/test_ui_layout_and_copy.py",
-   "remake-core/scripts/test_writer_refusal.py",
-   "ad-boost/audio/test/test_pick_sfx.py"
+   "remake-core/scripts/test_writer_refusal.py"
   ],
   "new_failures": 0
  }

@@ -31,18 +31,19 @@ export function evidence(name, data) {
 
 // ---------- browser ----------
 export async function open(name) {
-  const task = await taskSpace(C.space || ('tiktok-runtime-' + C.suite));
+  const session = await import('./session.mjs');
+  const task = await session.open({...C,space:C.space || ('tiktok-runtime-' + C.suite)});
   const page = wrapEgoPage(task.page(name || 'p1'));
   // v7.9: no HTTP cache. Ego is one browser for every session; a trial server another session ran earlier on the same
   // 127.0.0.1 port (python http.server sends no Cache-Control, so files are kept by heuristic freshness) left its
   // main.js in the cache, and a later run here booted that other game's code (2026-11-01, 甜点消消乐 R48: "home not
   // reached" while main.js asked for touch-coordinates.js that R48 does not have).
-  try { await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true }); } catch (_) {}
+  await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true });
   return { task, page };
 }
 export async function close(task, page) {
-  try { await page.goto('about:blank'); } catch (_) {}
-  try { await task.finish({ keep: [] }); } catch (_) {}
+  const session = await import('./session.mjs');
+  await session.leave(task,page,C);
 }
 export function url(query) {
   const q = [C.hostQuery, query].filter(Boolean).join('&');
@@ -261,9 +262,11 @@ export async function suite(body, opt = {}) {
     await body({ out, page, task });
   } catch (e) {
     out.fatal = String(e && e.stack || e).slice(0, 800);
+    const session = await import('./session.mjs');
+    session.stopped(C,e);
   } finally {
     out.save();
-    if (task) await close(task, page);
+    if (task && !out.fatal) await close(task, page);
     console.log('RUNTIME_SUITE_DONE ' + C.suite);
   }
   return out;

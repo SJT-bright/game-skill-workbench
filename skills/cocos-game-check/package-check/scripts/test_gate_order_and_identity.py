@@ -105,7 +105,8 @@ class WriterOrder(unittest.TestCase):
 
     def test_delivery_native_mutation_during_startup_refused(self):
         archive = self.root / 'input.zip'
-        write_archive(archive, self.files)
+        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
+            build(self.native, APP, archive, resource_manifest=self.manifest, project=self.project)
         record = self.root / 'delivery.json'
         def mutate(*args, **kwargs):
             (self.native / 'child.js').write_text('changed = true;')

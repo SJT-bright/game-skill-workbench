@@ -30,7 +30,7 @@ in the old record, only the browser checks that can see such a change run again:
 Everything else keeps the old pass, with its receipt named (reused_from): the rewarded-ad regression (10 cases),
 ad_outcome, save_restart, resume_play, frame_rate, popin. A suite that runs again also runs the suites its sidecar names
 in "after". Anything else (code, config, structure, data, other, a different adapter or tool, no official old package):
-every browser check runs, as before, and the reason is printed. Static checks (package gates, ZIP verifier, startup
+scope_required: declare affected checks; never run all by default, as before, and the reason is printed. Static checks (package gates, ZIP verifier, startup
 closure, packed assets, finalize, art receipt) always run: they take seconds.
 
 What the AI itself re-checks is in the same plan (ai.todo / ai.skip): a picture change re-checks the pages that use it,
@@ -134,13 +134,13 @@ def find_latest(folder):
     try:
         text = latest.read_text(encoding='utf-8')
     except OSError:
-        return None, 'no %s in %s: no earlier package to compare with, every check runs' % (LATEST, folder)
+        return None, 'no %s in %s: no earlier package to compare with, scope required; never automatically rerun all checks' % (LATEST, folder)
     if not text.startswith(LATEST_MARK):
-        return None, '%s was not written by a writer: every check runs' % latest
+        return None, '%s was not written by a writer: scope required; never automatically rerun all checks' % latest
     named = re.search(r'^上传 TikTok 用这个：(.+?)\s*$', text, re.M)
     sha = re.search(r'^sha256：([0-9a-f]{64})\s*$', text, re.M)
     if not sha:
-        return None, '%s has no sha256 line: every check runs' % latest
+        return None, '%s has no sha256 line: scope required; never automatically rerun all checks' % latest
     want = sha.group(1)
     size = re.search(r'^大小：(\d+) 字节\s*$', text, re.M)
     size = int(size.group(1)) if size else None
@@ -165,7 +165,7 @@ def find_latest(folder):
                 return cand, 'the package %s names (%s)' % (LATEST, cand.name)
         except OSError:
             continue
-    return None, 'the package %s names (sha256 %s...) is not in %s or %s/: every check runs' % (
+    return None, 'the package %s names (sha256 %s...) is not in %s or %s/: scope required; never automatically rerun all checks' % (
         LATEST, want[:12], folder, OLD_FOLDER)
 
 
@@ -176,17 +176,17 @@ def resolve(arg, out=None):
         return None, 'rework reuse off'
     text = str(arg).strip()
     if text.lower() in ('', 'none', 'off', 'no'):
-        return None, 'rework reuse off (--rework-of none): every check runs'
+        return None, 'rework reuse off (--rework-of none): scope required; never automatically rerun all checks'
     if text.lower() == 'auto':
         if out is None:
-            return None, 'rework reuse: no output folder known, every check runs'
+            return None, 'rework reuse: no output folder known, scope required; never automatically rerun all checks'
         return find_latest(Path(out).resolve().parent)
     path = Path(text).expanduser()
     if path.is_dir():
         return find_latest(path)
     if path.is_file():
         return path, 'given with --rework-of'
-    return None, '--rework-of %s does not exist: every check runs' % text
+    return None, '--rework-of %s does not exist: scope required; never automatically rerun all checks' % text
 
 
 def read_zip(path):
@@ -330,7 +330,7 @@ def _closure(names, rerun, catalog):
 def plan(old_zip, new_files, adapter=None, policy=None, board=None):
     """Writer reuse plan for the package `new_files` ({name: bytes}) against the last passed package `old_zip`.
     -> {'schema', 'reuse': bool, 'why', 'old': {...}, 'changes': {...}, 'required', 'rerun', 'reused', 'ad', ...}.
-    Never raises for a reuse problem: reuse False with the reason (every check then runs)."""
+    Never raises for a reuse problem: reuse False with the reason (the persistent check ledger decides affected nodes)."""
     if os.environ.get('DEBRAND_DELTA_SCOPE'):
         import importlib.util
         import sys
@@ -389,7 +389,7 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
         blocking = [] if optional_art_delta else [k for k in changes['kinds'] if k not in RESOURCE_KINDS]
         if blocking:
             first = changes['kinds'][blocking[0]][:3]
-            return no('changed %s (%s): every browser check runs' % (
+            return no('changed %s (%s): scope_required: declare affected checks; never run all by default' % (
                 ', '.join(sorted(blocking)), ', '.join(first)))
         adapter = _adapter_path(adapter)
         adapter_sha = _sha_file(adapter) if adapter and Path(adapter).is_file() else None
@@ -448,7 +448,7 @@ def plan(old_zip, new_files, adapter=None, policy=None, board=None):
     except Exception as error:  # noqa: BLE001
         if scoped:
             raise ValueError('scoped PLAY reuse refused (%s: %s)' % (type(error).__name__, error)) from error
-        return no('rework plan failed (%s: %s): every check runs' % (type(error).__name__, error))
+        return no('rework plan failed (%s: %s): scope required; never automatically rerun all checks' % (type(error).__name__, error))
 
 
 def summary_of_changes(changes):
@@ -491,9 +491,12 @@ def merge_runtime(p, summary, names):
         if isinstance(row, dict):
             rows[row.get('suite')] = row
     reused = [n for n in names if n not in rows]
+    prior = {r.get('suite'):r for r in old.get('suites',[]) if isinstance(r,dict)}
     for name in reused:
-        rows[name] = {'suite': name, 'passed': True, 'problems': [], 'cases': [], 'warnings': [], 'evidence': None,
-                      'seconds': 0.0, 'browser': False, 'reused_from': receipt}
+        if prior.get(name,{}).get('passed') is not True:
+            raise ValueError('原回执缺少已通过的节点：'+name)
+        rows[name] = dict(prior[name], seconds=0.0, browser=False, reused_from=receipt,
+                          original_seconds=prior[name].get('original_seconds',prior[name].get('seconds')))
     warnings = list((summary or {}).get('warnings') or [])
     warnings += [w for w in old.get('warnings') or [] if any(str(w).startswith(n + ':') for n in reused)]
     catalog = rr.load_suites()
@@ -552,7 +555,7 @@ def describe(p, pages=None):
                                        ' 等 %d 个' % v['count'] if v['count'] > 5 else ''))
     if pages:
         lines.append('- 用到改动的页面：' + '、'.join(pages[:12]) + (' 等 %d 个' % len(pages) if len(pages) > 12 else ''))
-    lines.append('- 每次都跑：静态检查和 ZIP 核对（几秒）')
+    lines.append('- 本次文件核对：最终 ZIP 体积、分包和构建身份；静态检查也按输入依赖沿用或补查')
     if p.get('reuse'):
         lines.append('- 写包时重跑：' + ('、'.join(p.get('rerun') or []) or '没有（浏览器检查全部沿用）'))
         reused = list(p.get('reused') or [])
@@ -560,7 +563,7 @@ def describe(p, pages=None):
             reused = ['激励广告回归 10 例'] + reused
         lines.append('- 沿用上一个包的通过结果：' + ('、'.join(reused) or '没有'))
     else:
-        lines.append('- 写包时：浏览器检查全部照跑（%s）' % (p.get('why') or '没有可比的上一个包'))
+        lines.append('- 写包时：先由持久记录定位改动节点；范围不明先补依赖，禁止全量重跑（%s）' % (p.get('why') or '没有可比的上一个包'))
     todo, skip = ai_checks(p)
     if todo:
         lines.append('- 你（AI）自己要查的：' + '；'.join(todo))

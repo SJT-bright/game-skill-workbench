@@ -81,7 +81,7 @@ class Plan(unittest.TestCase):
         self.assertEqual(len([n for n in now if n.endswith('.zip') and 'TikTok测试包' in n]), 1)
         text = (self.dir / D.LATEST).read_text(encoding='utf-8')
         self.assertTrue(text.startswith(D.MARK))
-        self.assertIn('上传 TikTok 用这个：%s' % new, text)
+        self.assertIn('上传 TikTok 用这个：%s' % new.resolve(), text)
         self.assertIn('sha256：' + 'f' * 64, text)
         self.assertIn('剪刀达人_TikTok测试包_v26.zip', text)
         for keep in ('notes.md', 'delivery_receipt_v29.json', '剪刀达人_源码_v29.zip', 'OtherGame_TikTok.zip', 'broken.zip'):
@@ -148,7 +148,7 @@ class Writer(unittest.TestCase):
         self.assertEqual(sorted(p.name for p in folder.iterdir()),
                          sorted(['Game_v2.zip', 'Game_v2.zip.receipt.json', 'Game_源码_v1.zip', D.OLD_DIR, D.LATEST]))
         self.assertEqual(sorted(p.name for p in (folder / D.OLD_DIR).iterdir()), ['Game_v1.zip', 'Game_v1.zip.receipt.json'])
-        self.assertEqual(result['delivery_folder']['latest'], str(folder / D.LATEST))
+        self.assertEqual(result['delivery_folder']['latest'], str((folder / D.LATEST).resolve()))
         self.assertIn(result['sha256'], (folder / D.LATEST).read_text(encoding='utf-8'))
 
     def test_writer_keep_old_packages(self):

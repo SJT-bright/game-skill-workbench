@@ -206,6 +206,7 @@ def tool_digest():
     for name in ('host.js', 'play.html', 'server.py', 'cases.mjs'):
         h.update(name.encode() + b'\0' + (TOOL / name).read_bytes())
     h.update(b'watched_run.py\0' + (HERE / 'watched_run.py').read_bytes())     # v7.9: it decides when a step is stuck
+    h.update(b'session.mjs\0' + (HERE / 'runtime_regression/session.mjs').read_bytes())
     h.update(Path(__file__).read_bytes())
     return h.hexdigest()
 
@@ -227,6 +228,11 @@ def _space_name(package_dir):
 
 
 def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
+    import ad_incremental
+    return ad_incremental.run(sys.modules[__name__],package_dir,adapter_path,cases,work,timeout)
+
+
+def _run_uncached(package_dir, adapter_path, cases=None, work=None, timeout=None):
     """Run the regression against an unzipped package directory. Raises RegressionRefused unless all pass."""
     package_dir = Path(package_dir).resolve()
     if not (package_dir / 'game.js').is_file():
@@ -260,6 +266,7 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         # AD_REGRESSION_SPACE is only a prefix now, so two sessions that both set it still get different spaces.
         space = _space_name(package_dir)
         cfg = {'space': space, 'url': 'http://127.0.0.1:%d/__host/play.html?mouse=1&ad=manual' % port,
+               'sessionFile':os.environ.get('ENGLISH_CHECK_EGO_SESSION'),
                'adapter': adapter, 'cases': cases, 'bootTimeoutMs': boot_ms, 'resultFile': str(result_file),
                'progressFile': str(work / 'progress.txt')}
         entry = work / 'run-ad-regression.mjs'
@@ -283,6 +290,7 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
         except (OSError, ValueError):
             tail = (proc.stdout[-400:] + proc.stderr[-400:]).strip()
             raise RegressionRefused('ad regression produced no result (browser exit %s): %s' % (proc.returncode, tail))
+        if proc.returncode:result['fatal']=result.get('fatal') or 'Ego process exited %s after writing results'%proc.returncode
     finally:
         server.terminate()
         try:
@@ -299,7 +307,8 @@ def run(package_dir, adapter_path, cases=None, work=None, timeout=None):
     summary = {'id': 'rewarded_ad_regression', 'passed': passed, 'cases': [
         dict({k: row.get(k) for k in ('case', 'ok', 'want', 'granted', 'problems')}, **({'paid': row['paid']} if 'paid' in row else {}))
         for row in result.get('cases', [])],
-        'boot': result.get('boot'), 'warnings': (result.get('warnings') or []) + hints, 'tool_sha256': tool_digest(),
+        'boot': result.get('boot'), 'fatal':result.get('fatal'), 'raw_files':[str(p) for p in (result_file,log) if p.is_file()],
+        'warnings': (result.get('warnings') or []) + hints, 'tool_sha256': tool_digest(),
         'adapter_sha256': hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
         'seconds': round(time.monotonic() - started, 1)}
     # 简化.11.14 R4D: the case list is default_cases(adapter); a --cases subset is 「没跑完」, never 通过 (main()).
@@ -327,7 +336,7 @@ def finish(summary, code):
         code = INCOMPLETE_EXIT
         summary.update(passed=False, selected_passed=True, status='incomplete')
     summary['verdict'] = {0: '通过', 1: '包不通过', 2: str(summary.get('environment', ''))[:200],
-                          INCOMPLETE_EXIT: '没跑完：这些用例没跑：%s（只跑一部分不算通过，去掉 --cases 跑完整清单）'
+                          INCOMPLETE_EXIT: '覆盖记录尚缺：%s（只补未通过项，已通过项沿用；不要重跑整套）'
                           % '、'.join(summary.get('planned_not_run') or [])}[code]
     return code
 

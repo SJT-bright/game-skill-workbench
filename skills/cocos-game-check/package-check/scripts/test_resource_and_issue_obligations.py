@@ -235,7 +235,13 @@ class EntryPoints(unittest.TestCase):
         self.assertFalse(out.exists())
 
     def test_delivery_cannot_skip_open_issue_or_manifest(self):
-        manifest=self.setup_package();self.report();archive=self.root/'game.zip';write_archive(archive,native_files(self.native));record=self.root/'delivery.json';other=self.root/'other';other.mkdir()
+        manifest=self.setup_package();archive=self.root/'game.zip';record=self.root/'delivery.json';other=self.root/'other';other.mkdir()
+        # The regression concerns a newly reported issue after a valid package
+        # was written. A hand-made ZIP has no official writer receipt and is
+        # correctly rejected earlier, before this obligation can be checked.
+        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
+            build(self.native,APP,archive,resource_manifest=manifest,project=self.project)
+        self.report()
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)),patch('prepare_delivery.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError,'no passed retest'):prepare(archive,self.native,APP,record,project=self.project,resource_manifest=manifest)
             runtime.assert_not_called()

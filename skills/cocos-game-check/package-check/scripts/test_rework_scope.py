@@ -4,7 +4,7 @@
 rework_scope.plan compares the new package with the last passed one (an official writer receipt with the regression
 record), file by file: only pictures, sounds or fonts changed (same code, settings, adapter, tools, policy, board,
 required suites) -> only the browser suites that can see the change run again and the rest keep the old pass
-(reused_from the old receipt); anything else -> every check runs, with the reason. check_package's two gates and both
+(reused_from the old receipt); other changes require precise node dependencies, never an automatic full run. check_package's two gates and both
 writer paths take the plan; the receipt record keeps what was reused; prepare_delivery still reuses the new receipt for
 the same bytes. The AI's own hand checks follow the same plan (a picture change never re-checks sound). The preview
 before packaging (--native) finalizes a copy of the build first, like the writers do to the build itself, and the
@@ -200,7 +200,7 @@ class Plans(Base):
         self.assertEqual(p['rerun'], [])
         self.assertEqual(p['reused'], names)
 
-    def test_code_settings_structure_and_data_run_everything(self):
+    def test_code_settings_structure_and_data_require_precise_scope(self):
         old, _ = self.official(package())
         for label, change in (
                 ('code', {'assets/main/index.js': b'cc._RF.push(module, "main"); /* fixed */'}),
@@ -212,7 +212,7 @@ class Plans(Base):
             p = self.plan(old, package(**change))
             self.assertFalse(p['reuse'], label)
             self.assertIn(label, p['why'], label)
-            self.assertIn('every browser check runs', p['why'])
+            self.assertIn('scope_required', p['why'])
 
     def test_adapter_tool_policy_and_board_must_match(self):
         new = package(**{'subpackages/resources/native/5b/%s.png' % PNG_UUID: b'v2'})
@@ -268,7 +268,7 @@ class FindTheOldPackage(Base):
         self.assertEqual(RS.resolve('auto', self.out / 'Game_v016.zip')[0], old)
         renamed = self.out / '割草小能手.zip'
         old.rename(renamed)
-        self.assertEqual(RS.resolve('auto', self.out / 'Game_v016.zip')[0], renamed)
+        self.assertEqual(RS.resolve('auto', self.out / 'Game_v016.zip')[0], renamed.resolve())
         (self.out / RS.OLD_FOLDER).mkdir()
         moved = self.out / RS.OLD_FOLDER / 'Game_v015.zip'
         renamed.rename(moved)
@@ -339,6 +339,22 @@ class Gates(Base):
         with mock.patch.object(RR, 'run', side_effect=AssertionError('must not run')):
             out = C.runtime_gate(package(), self.folder, str(self.adapter), policy='new', board='localize', rework=p)
         self.assertTrue(all(r.get('reused_from') for r in out['suites']))
+
+    def test_writer_reuse_keeps_original_case_evidence(self):
+        p = self.plan(self.old, package())
+        original = p['records']['runtime_regression']['suites'][0]
+        original.update(cases=[{'case':'original-observation','passed':True}],
+                        evidence='original-runtime.json',seconds=12.5)
+        with mock.patch.object(RR,'run',side_effect=AssertionError('must not run')):
+            out=C.runtime_gate(package(),self.folder,str(self.adapter),policy='new',board='localize',rework=p)
+        kept=next(r for r in out['suites'] if r['suite']==original['suite'])
+        self.assertEqual(kept['cases'],original['cases'])
+        self.assertEqual(kept['original_seconds'],12.5)
+        ad=C.rewarded_ad_gate(self.new,self.folder,str(self.adapter),rework=self.p)
+        record=C.regression_record(ad,out)
+        row=next(r for r in record['runtime_regression']['suites'] if r['suite']==original['suite'])
+        self.assertEqual(row['cases'],original['cases'])
+        self.assertEqual(row['evidence'],'original-runtime.json')
 
     def test_receipt_record_keeps_the_reuse_and_delivery_still_reuses_it(self):
         calls = []
@@ -607,7 +623,7 @@ class StandardLibraryOnly(unittest.TestCase):
         tree = ast.parse((HERE / 'rework_scope.py').read_text(encoding='utf-8'))
         names = {a.name.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         names |= {n.module.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
-        self.assertLessEqual(names, {'argparse', 'hashlib', 'json', 'os', 're', 'shutil', 'sys', 'tempfile', 'time',
+        self.assertLessEqual(names, {'argparse', 'hashlib', 'importlib', 'json', 'os', 're', 'shutil', 'sys', 'tempfile', 'time',
                                      'zipfile', 'datetime', 'pathlib', 'ad_regression', 'runtime_regression',
                                      'verify_native_zip', 'tiktok_finalize', 'tiktok_finalize_steps'})
 

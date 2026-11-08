@@ -1,5 +1,10 @@
 // Read-only compiled-module normalization. Only the Python guard removes the
 // exact reviewed fallback statements; this helper never removes game code.
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+ console.log('Usage: node play-art-js-equivalence.cjs <terser-module-path> [home]\nReads a JSON pair of JavaScript sources from stdin; reports structural equivalence.');
+ process.exit(0);
+}
+if (!process.argv[2]) {console.error('Missing terser module path. Run with --help.');process.exit(2);}
 const fs=require('node:fs');
 const terser=require(process.argv[2]);
 const acorn=require(require.resolve('acorn',{paths:[process.argv[2]]}));

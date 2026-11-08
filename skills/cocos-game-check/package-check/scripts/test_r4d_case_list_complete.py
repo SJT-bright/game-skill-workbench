@@ -87,7 +87,9 @@ class AdHalfRun(unittest.TestCase):
         s = {'passed': True, 'planned_not_run': ar.CASES[5:]}
         self.assertEqual(ar.finish(s, 0), ar.INCOMPLETE_EXIT)
         self.assertFalse(s['passed'])
-        self.assertTrue(s['verdict'].startswith('没跑完'))
+        self.assertEqual(s['status'], 'incomplete')
+        self.assertTrue(s['selected_passed'])
+        self.assertTrue(s['verdict'].startswith('覆盖记录尚缺'))
         self.assertIn(ar.CASES[5], s['verdict'])
         s = {'passed': True, 'planned_not_run': []}
         self.assertEqual((ar.finish(s, 0), s['verdict']), (0, '通过'))

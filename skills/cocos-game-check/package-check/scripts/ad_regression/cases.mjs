@@ -82,12 +82,14 @@ async function runDouble(name, io) {
 
 let task, page;
 try {
-  task = await taskSpace(C.space || 'tiktok-ad-regression');
+  const session = await import('../runtime_regression/session.mjs');
+  task = await session.open({...C,space:C.space || 'tiktok-ad-regression'});
   page = wrapEgoPage(task.page('p1'));
   // v7.9: no HTTP cache (runtime_regression/lib.mjs open(): another session's trial server on the same port left its
   // files in the shared Ego cache, and a run booted that other game's main.js)
-  try { await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true }); } catch (_) {}
+  await page.cdp('Network.enable', {}); await page.cdp('Network.setCacheDisabled', { cacheDisabled: true });
 } catch (e) {
+  const session=await import('../runtime_regression/session.mjs'); session.stopped(C,e);
   out.fatal = 'browser unavailable: ' + String(e && e.message || e).slice(0, 300);
   save(); console.log('AD_REGRESSION_DONE'); throw e;
 }
@@ -390,9 +392,11 @@ try {
   }
 } catch (e) {
   out.fatal = String(e && e.message || e).slice(0, 500);
+  const session = await import('../runtime_regression/session.mjs');
+  session.stopped(C,e);
 } finally {
   save();
-  try { await page.goto('about:blank'); } catch (_) {}
-  try { await task.finish({ keep: [] }); } catch (_) {}
+  const session = await import('../runtime_regression/session.mjs');
+  if (!out.fatal) await session.leave(task,page,C);
   console.log('AD_REGRESSION_DONE');
 }

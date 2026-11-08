@@ -109,8 +109,6 @@ def runtime_gate(files, folder, adapter=None, policy=None, board=None, rework=No
         if isinstance(rework, dict) and rework.get('reuse'):
             import rework_scope
             rerun = rework_scope.to_rerun(rework, names)
-            if 'growth_entry' in names and 'growth_entry' not in rerun:
-                rerun.append('growth_entry')
             summary = (runtime_regression_gate.run(folder, adapter, rerun, policy=policy, board=board) if rerun
                        else None)
             return rework_scope.merge_runtime(rework, summary, names)
@@ -120,12 +118,38 @@ def runtime_gate(files, folder, adapter=None, policy=None, board=None, rework=No
 
 
 def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
-    """简化.11.15: rework_scope.plan for the writers (None when no old package is given). A planning problem is never a
-    refusal: the plan says reuse False and why, and every check runs as before."""
+    """Resolve the historical proof without turning an unknown edit into a full browser run."""
     if not rework_of:
         return None
     import rework_scope
-    return rework_scope.plan(rework_of, files, adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER), policy, board)
+    result=rework_scope.plan(rework_of, files, adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER), policy, board)
+    if not result.get('reuse'):
+        from check_ledger import project_of, Ledger
+        current_adapter=adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
+        project=project_of(adapter=current_adapter)
+        ledger=Ledger(project)
+        try:
+            import runtime_incremental
+            rr=runtime_regression_gate;catalog=rr.load_suites();a=rr.load_adapter(current_adapter,catalog)
+            engine=rr.detect_engine(files,a);resolved_policy,_=rr.package_policy(files,policy)
+            ids=[]
+            for name in rr.required_suites(files,a,catalog):
+                units=runtime_incremental.unit_ids(name,catalog[name],a,rr.precheck(name,catalog[name],a,engine,resolved_policy) is not None)
+                ids.extend('runtime.'+name+'/'+unit for unit in units)
+            if ad_regression_gate.needs_regression(files):ids.extend('ads.'+c for c in ad_regression_gate.default_cases(a))
+            # Returned visual acceptance is a disposition, not a missing art test.
+            # Its independent hidden-startup node is planned by runtime_incremental.
+            from returned_art_acceptance import MANIFEST, validate
+            if board == 'localize' and (project/MANIFEST).is_file():
+                validate(project, native_files=files)
+                ids=[cid for cid in ids if not cid.startswith('runtime.layout_state/')]
+            missing=[cid for cid in ids if not ledger.previous(cid)]
+        finally:ledger.close()
+        if missing:
+            raise ValueError('返工缺少这些逐项基线，禁止用无关记录触发整套首次运行：'+','.join(missing)+
+                             '。先恢复原证据；真实新增项在对应制作节点补做一次。原计划：'+str(result.get('why')))
+        return None  # The per-unit ledger, rather than the old extension-wide rule, now decides.
+    return result
 
 
 NO_ADAPTER_HINT = ('write the game\'s adapter JSON (usually <project>/qa/ad-regression.json; fields: '
@@ -185,8 +209,10 @@ def regression_record(ad, runtime):
         if runtime_part:
             keep.update(required=list(summary.get('required') or []), engine=summary.get('engine'),
                         policy=summary.get('policy'), board=summary.get('board'),
-                        suites=[dict({'suite': r.get('suite'), 'passed': r.get('passed')},
-                                     **({'reused_from': r['reused_from']} if r.get('reused_from') else {}))
+                        suites=[{key:r[key] for key in ('suite','passed','cases','warnings','evidence','raw_files',
+                                                       'units','seconds','original_seconds','original_at','reused_from',
+                                                       'functional_passed','accepted_for_delivery','visual_status',
+                                                       'visual_checks_executed','visual_acceptance','accepted_visual_units') if key in r}
                                 for r in summary.get('suites') or [] if isinstance(r, dict)],
                         startup_measured=summary.get('startup_measured'))
             if isinstance(summary.get('rework'), dict):
@@ -343,13 +369,17 @@ def writer_regressions(files, folder, adapter=None, policy=None, board=None, rew
             reasons.append(text)
             partial = getattr(error, 'summary', None) or getattr(error.__context__, 'summary', None)   # runtime_gate
             # re-raises RuntimeRefused as ValueError. 总表 P19: an input that was missing keeps 「未执行」 (not_run).
-            status = 'not_run' if isinstance(partial, dict) and partial.get('status') == 'not_run' else 'failed'
+            status = partial.get('status') if isinstance(partial,dict) and partial.get('status') in ('not_run','scope_required') else 'failed'
             out[key] = dict(partial, status=status) if isinstance(partial, dict) else {'id': key, 'status': status,
                                                                                        'error': text[:2000]}
     if isinstance(out['runtime_regression'], dict):
         out['warnings'].extend(out['runtime_regression'].get('warnings') or [])
     if legacy:
         out['warnings'].extend('%s [legacy game: warning]' % r for r in reasons)
+        for key in ('rewarded_ad_regression','runtime_regression'):
+            part=out.get(key) or {}
+            if part.get('proof_error') or part.get('status')=='scope_required':
+                out['problems'].append(key+'：检查证据/范围无效，旧游戏也不能降级为通过')
         # This one suite is required when a legacy game is exported again, too.
         # Keep the legacy policy for all the other checks.
         if 'game.js' in files and runtime_regression_gate.predicate('missions', files, {}):

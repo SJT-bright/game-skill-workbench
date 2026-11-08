@@ -237,7 +237,7 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
 await L.suite(async ({ out, page }) => {
   out.evidence.subpackage = PKG || null;
   out.evidence.config = CFGFILE;
-  const only = (A.startup_cases || '').split(',').filter(Boolean);
+  const only = C.selection || (A.startup_cases || '').split(',').filter(Boolean);
   for (const c of CASES) {
     if (only.length && !only.includes(c[0])) continue;
     await runCase(page, out, c);

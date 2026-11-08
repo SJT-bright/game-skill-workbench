@@ -37,6 +37,7 @@ await L.suite(async ({ out, page }) => {
   if (bad.length) { out.add('adapter', false, bad); return; }
   for (const entry of A.ad_entries) for (const state of entry.states) {
     const id = entry.id + '/' + state.name;
+    if (C.selection && !C.selection.includes(id)) continue;
     const c = { id, button: entry.button, why: state.why };
     rep.cases.push(c);
     let fail = null, warn = null;

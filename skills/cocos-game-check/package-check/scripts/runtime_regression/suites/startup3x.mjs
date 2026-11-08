@@ -53,6 +53,7 @@ async function runCase(page, out, [id, query, limitMs, want]) {
 await L.suite(async ({ out, page }) => {
   try { await page.cdp('Page.stopScreencast', {}); } catch (_) {}
   for (const c of CASES) {
+    if (C.selection && !C.selection.includes(c[0])) continue;
     await runCase(page, out, c);
     console.log(JSON.stringify(out.cases[out.cases.length - 1]).slice(0, 300));
   }

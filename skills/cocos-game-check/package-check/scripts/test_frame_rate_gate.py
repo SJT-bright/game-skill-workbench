@@ -130,10 +130,15 @@ class Wiring(Base):
 
     def test_na_passes_without_the_browser(self):
         self.fr()
-        summary = self.run_fake({'home': 'return true', 'frame_rate': {'n/a': 'match-3 board, nothing moves on its own'}})
+        adapter = {'home': 'return true', 'frame_rate': {'n/a': 'match-3 board, nothing moves on its own'}}
+        with patch.object(rr, 'find_browser', side_effect=AssertionError('n/a must not need a browser')):
+            summary = self.run_fake(adapter)
+            reused = self.run_fake(adapter)
         row = summary['suites'][0]
         self.assertTrue(summary['passed'])
         self.assertEqual((row['cases'][0]['id'], row['browser']), ('n_a', False))
+        self.assertFalse(reused['suites'][0]['browser'])
+        self.assertEqual(reused['executed_units'], 0)
 
     def test_missing_or_bad_field_refuses_new_warns_legacy(self):
         self.fr()

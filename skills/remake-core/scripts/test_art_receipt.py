@@ -156,12 +156,25 @@ class ArtCheckWrites(Tmp):
                 stack.enter_context(mock.patch.object(art_check, target, value))
             return art_check.main()
 
-    def test_missing_inputs_keep_the_24_receipt(self):
+    def test_valid_prior_receipt_reuses_without_analysis_or_new_capture(self):
         p = project24(self.d / 'p')
         (p / 'assets' / 'a.png').write_bytes(b'one')
-        R.write(p, 'pass', {'status': 'pass'})
+        report=self.d/'original-art-report.json'
+        report.write_text('{"passed":true,"status":"pass","failed":0}')
+        R.after_art_check(p, {'status': 'pass','passed':True}, report)
         before = R.receipt_path(p).read_bytes()
-        self.assertEqual(self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis'))), 1)
+        self.assertEqual(self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis'))), 0)
+        self.assertEqual(R.receipt_path(p).read_bytes(), before)
+
+    def test_changed_prior_art_requires_scope_without_analysis(self):
+        p = project24(self.d / 'p')
+        (p / 'assets' / 'a.png').write_bytes(b'one')
+        report=self.d/'original-art-report.json'
+        report.write_text('{"passed":true,"status":"pass","failed":0}')
+        R.after_art_check(p, {'status': 'pass','passed':True}, report)
+        before = R.receipt_path(p).read_bytes()
+        (p / 'assets' / 'a.png').write_bytes(b'changed')
+        self.assertEqual(self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no full analysis'))), 3)
         self.assertEqual(R.receipt_path(p).read_bytes(), before)
 
     def test_missing_inputs_on_3x_write_not_covered(self):

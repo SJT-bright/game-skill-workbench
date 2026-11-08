@@ -155,11 +155,11 @@ class RegressionTests(unittest.TestCase):
         self.write_doc(self.doc())
         self.run_cli('--mode', 'build')
         report = json.loads((self.root / 'docs/logic/logic-check.json').read_text())
-        self.assertTrue(reg.current_report(report, self.root / 'docs/logic'))
+        self.assertTrue(reg.current_report(report, self.root))
         self.evidence.write_text('modified after report creation')
-        self.assertFalse(reg.current_report(report, self.root / 'docs/logic'))
+        self.assertFalse(reg.current_report(report, self.root))
         report.pop('regression_version')
-        self.assertFalse(reg.current_report(report, self.root / 'docs/logic'))
+        self.assertFalse(reg.current_report(report, self.root))
 
     def test_missing_observation_and_boolean_placeholder_rejected(self):
         doc = self.doc()
@@ -284,10 +284,10 @@ class RegressionTests(unittest.TestCase):
     def test_main_gate_rechecks_mutated_audio_measurement(self):
         self.write_doc(self.doc());self.run_cli('--mode','build')
         report=json.loads((self.root/'docs/logic/logic-check.json').read_text())
-        self.assertTrue(reg.current_report(report,self.root/'docs/logic'))
+        self.assertTrue(reg.current_report(report,self.root))
         row=next(x for x in report['regressions'] if x['id']=='R09')
         row['audio_samples'][1]['rms_samples']=[0.,0.,0.]
-        self.assertFalse(reg.current_report(report,self.root/'docs/logic'))
+        self.assertFalse(reg.current_report(report,self.root))
 
     def test_rescaled_same_aspect_ratio_cannot_count_as_two(self):
         doc, row = self.drag_doc()

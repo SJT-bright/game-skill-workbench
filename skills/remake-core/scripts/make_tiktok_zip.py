@@ -211,6 +211,13 @@ def english_image_problems(files, project, board):
         return []
     if project is None:
         return ['English image checks need --project (docs/english/image-review.json and pre-english-images.json)']
+    from returned_art_acceptance import MANIFEST as RETURNED_MANIFEST, validate as validate_returned
+    if (Path(project)/RETURNED_MANIFEST).is_file():
+        try:
+            validate_returned(project, native_files=files)
+        except (ValueError, KeyError, TypeError, OSError) as error:
+            return ['ART_returned_user_acceptance: '+str(error)]
+        return []  # User-accepted returned art; no new AI image/Chinese verdict is claimed.
     import audit_image_review_record
     import audit_new_english_images
     docs = Path(project) / 'docs' / 'english'
@@ -307,14 +314,22 @@ def finalize_for_writer(native, project, board, app_id, options=None):
     board_mismatch = bool(board and source_board and board != source_board)
     board = board or source_board
     art = art_receipt_check(project, board)
+    if art and art.get('returned_art_acceptance'):
+        from returned_art_acceptance import validate as validate_returned
+        try:
+            validate_returned(project, native=native)
+        except (ValueError, KeyError, TypeError, OSError) as error:
+            return None, None, ['ART_returned_user_acceptance: '+str(error)]
     localize = board == 'localize' or (art or {}).get('board') == 'localize'
-    source = (F.check_trial_source(project, 'localize', kit, options) if localize else
+    source = (F.check_source_record(project, kit, options) if art and art.get('returned_art_acceptance') else
+              F.check_trial_source(project, 'localize', kit, options) if localize else
               F.check_source_record(project, kit, options))
     problems = ['%s: %s' % (f['id'], f['message']) for f in source]
     if board_mismatch:
         problems.append('K5_source_finalized: writer board differs from the source record')
     if art and (art['level'] == 'block' or
-                (localize and art.get('status') != 'pass' and not art.get('locked_art_maintenance'))):
+                (localize and art.get('status') != 'pass' and not art.get('locked_art_maintenance')
+                 and not art.get('returned_art_acceptance'))):
         problems.append('%s: %s' % (art['gate'], art['message']))
     if problems:
         return None, None, problems

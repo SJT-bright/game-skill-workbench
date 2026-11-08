@@ -283,6 +283,10 @@ class EndToEnd(Tmp):
                    GAME_SKILL_LOCK_DIR=str(self.d / 'locks'),
                    PYTHONDONTWRITEBYTECODE='1')
         extra = ['--home-shot-wait', '1', '--home-shot-timeout', '20'] if new else []
+        if new:
+            project = self.d / 'project'
+            (project / 'assets').mkdir(parents=True, exist_ok=True)
+            extra += ['--project', str(project)]
         p = subprocess.Popen([PY, '-B', str(scripts / 'serve_preview.py'), '--directory', str(self.web), '--no-browser',
                               '--idle-minutes', '0', *extra],
                              env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)

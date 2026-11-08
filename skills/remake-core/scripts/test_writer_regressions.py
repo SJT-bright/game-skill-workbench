@@ -164,12 +164,19 @@ class WriterRegressions(unittest.TestCase):
         self.assertFalse(self.out.exists())
 
     def test_new_game_without_browser_refused(self):
-        code, err, _ = self.make('new', self.adapter(),
+        from test_check_speedups import COMPLETE
+        lookup = mock.Mock(return_value=None)
+        execution = mock.Mock(side_effect=AssertionError('no browser suite may execute'))
+        code, err, _ = self.make('new', self.adapter(COMPLETE),
                                  [mock.patch.dict(os.environ, {RR.ENV_BROWSER: ''}),
-                                  mock.patch.object(RR, '_which', return_value=None)])
+                                  mock.patch.object(RR, '_which', lookup),
+                                  mock.patch.object(RR, 'run_suite', execution)])
         self.assertEqual(code, 1, err)
         self.assertIn('Ego CLI 不可用', err)
+        lookup.assert_called_once_with('ego-browser')
+        execution.assert_not_called()
         self.assertFalse(self.out.exists())
+        self.assertFalse(V.receipt_path(self.out).exists())
 
     def test_new_game_incomplete_environment_refused(self):
         def incomplete(*a, **kw):

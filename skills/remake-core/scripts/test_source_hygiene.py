@@ -134,7 +134,10 @@ class DeliveryRefusesUncleanSource(unittest.TestCase):
         archive, native, record = work / 'Game.zip', work / 'native', work / 'out' / 'record.json'
         native.mkdir()
         with zipfile.ZipFile(archive, 'w') as z:
+            # A valid game ZIP must pass the fresh size gate before source hygiene.
+            z.writestr('game.js', 'boot();')
             z.writestr('game.json', '{}')
+            z.writestr('project.config.json', '{"appid":"123"}')
         source = zip_of(project())
         with mock.patch.object(P.tempfile, 'gettempdir', return_value='/nonexistent-temp'), \
                 mock.patch.object(P, 'check', side_effect=AssertionError('the package check must not run first')):

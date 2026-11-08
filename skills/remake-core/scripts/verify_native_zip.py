@@ -119,7 +119,8 @@ def finalize_summary(record):
             'engine': record.get('engine'), 'blocks': [b.get('id') for b in record.get('blocks') or []],
             'warnings': ['%s: %s' % (w.get('id'), w.get('message')) for w in record.get('warnings') or []],
             'files_after': dict(record.get('files_after') or {}), 'table': record.get('table') or [],
-            'steps': steps, 'source_record': record.get('source_record')}
+            'steps': steps, 'source_record': record.get('source_record'),
+            'art_receipt': record.get('art_receipt')}
 
 
 def finalize_problem(summary, file_sha256):

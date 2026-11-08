@@ -397,6 +397,52 @@ def triaged(f, triage):
     return None
 
 
+def validate_flows(document, project, digest, *, read_only=False):
+    """Validate the recorded flow evidence against the same per-case ledger."""
+    import hashlib
+    from logic_case_ledger import CaseRecords
+    proj = Path(project).resolve()
+    records = document.get('flows', [])
+    records = records if isinstance(records, list) else []
+    flow_records = CaseRecords(proj, read_only=read_only)
+    flows, problems = [], []
+    try:
+        for fid, title, rule in FLOWS:
+            matches = [x for x in records if isinstance(x, dict) and x.get('id') == fid]
+            x = matches[0] if len(matches) == 1 else {}
+            st = x.get('status', 'missing')
+            ev = str(x.get('evidence') or '')
+            row = dict(x, id=fid, title=title, rule=rule, status=st, evidence=ev, note=x.get('note', ''))
+            row.pop('problem', None)
+            if len(matches) > 1:
+                row['problem'] = 'duplicate flow id'
+            elif st == 'n/a' and not str(x.get('why') or x.get('note') or '').strip():
+                row['problem'] = 'n/a needs a why'
+            elif st not in ('pass', 'n/a'):
+                row['problem'] = {'fail': 'flow fails: fix it and walk it again', 'untested': 'not walked yet',
+                                  'missing': 'not recorded in docs/logic/flows.json (run --init)'}.get(st, 'unknown status ' + str(st))
+            if st in ('pass', 'n/a') and not row.get('problem'):
+                try:
+                    paths = [e.strip() for e in re.split(r'[;,]', ev) if e.strip()]
+                    if st == 'pass' and not paths:
+                        raise ValueError('pass without a nonempty evidence file in the project (screenshot / dump / log)')
+                    if any(not (proj / e).is_file() or (proj / e).stat().st_size == 0 for e in paths):
+                        raise ValueError('each evidence reference must be a nonempty file, not a directory or missing path')
+                    observed = dict(row)
+                    observed['evidence'] = [{'path': e, 'sha256': hashlib.sha256((proj / e).read_bytes()).hexdigest()} for e in paths]
+                    current_binding = (document.get('regression_binding') == {'source_sha256': digest}
+                                       or x.get('source_binding') == {'source_sha256': digest})
+                    row['incremental'] = flow_records.resolve(fid, observed, current_binding, [], current_digest=digest)
+                except (ValueError, OSError) as exc:
+                    row['problem'] = str(exc)
+            if row.get('problem'):
+                problems.append(row)
+            flows.append(row)
+    finally:
+        flow_records.close()
+    return flows, problems
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--project', type=Path, required=True)
@@ -454,22 +500,7 @@ def main():
     except (OSError, ValueError, AttributeError):
         rec = None
         document = {}
-    flows, flow_problems = [], []
-    for fid, title, rule in FLOWS:
-        x = (rec or {}).get(fid, {})
-        st = x.get('status', 'missing') if rec is not None else 'missing'
-        ev = str(x.get('evidence') or '')
-        row = {'id': fid, 'title': title, 'rule': rule, 'status': st, 'evidence': ev, 'note': x.get('note', '')}
-        if st == 'pass' and not (ev and any((proj / e.strip()).exists() for e in re.split(r'[;,]', ev) if e.strip())):
-            row['problem'] = 'pass without an evidence file in the project (screenshot / dump / log)'
-        elif st == 'n/a' and not str(x.get('why') or x.get('note') or '').strip():
-            row['problem'] = 'n/a needs a why'
-        elif st not in ('pass', 'n/a'):
-            row['problem'] = {'fail': 'flow fails: fix it and walk it again', 'untested': 'not walked yet',
-                              'missing': 'not recorded in docs/logic/flows.json (run --init)'}.get(st, 'unknown status ' + str(st))
-        if row.get('problem'):
-            flow_problems.append(row)
-        flows.append(row)
+    flows, flow_problems = validate_flows(document, proj, digest)
     regression_rows, regression_problems = regressions.validate(document, proj, digest)
     # Self-contained reports let the main gate recheck evidence hashes later.
     for row in regression_rows:
@@ -485,7 +516,7 @@ def main():
               'failed': blocking, 'passed': blocking == 0 and n_files > 0, 'status': 'pass' if blocking == 0 and n_files > 0 else 'fail',
               'open_findings': len(open_fails), 'flow_problems': len(flow_problems), 'findings': findings, 'flows': flows,
               'regression_version': 1, 'regressions': regression_rows, 'regression_problems': len(regression_problems),
-              'current_source_sha256': digest,
+              'current_source_sha256': digest, 'project_root': str(proj),
               'regression_binding': document.get('regression_binding'),
               'boundary': 'Static suspects need a source read; flows are recorded by the tester from real touch runs; untested is never pass.'}
     if a.mode == 'review':

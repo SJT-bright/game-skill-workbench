@@ -388,6 +388,9 @@ def check(project, board=None, policy=None, capture_build=None):
     (art_records.base_audio_now, a hash compare, not an art check): a sound still byte-identical to the base and not in
     docs/art/base-keep.json refuses a new remake game (gate ART_base_audio) and warns otherwise."""
     out = _check_images(project, board, policy, capture_build)
+    if out.get('returned_art_acceptance'):
+        out.update(base_audio=[], base_audio_state='not_rechecked')
+        return out
     try:
         if str(HERE) not in sys.path:
             sys.path.insert(0, str(HERE))
@@ -469,6 +472,20 @@ def _production_compare(project, receipt, out):
 def _check_images(project, board=None, policy=None, capture_build=None):
     project = Path(project).resolve()
     strict, board, policy = strictness(project, board, policy)
+    from returned_art_acceptance import MANIFEST as RETURNED_MANIFEST, validate as validate_returned
+    if board == 'localize' and (project/RETURNED_MANIFEST).is_file():
+        base = dict(project=str(project), board=board, policy=policy, strict=strict, engine=None,
+                    receipt=str(receipt_path(project)), images_count=None, changed=[], added=[], removed=[],
+                    display_changed=[], display_added=[], display_removed=[], display_state='user_accepted',
+                    gate='ART_returned_user_acceptance')
+        try:
+            acceptance = validate_returned(project, web=capture_build)
+        except (ValueError, KeyError, TypeError, OSError) as error:
+            return dict(base, state='returned_art_acceptance_invalid', status='invalid', level='block',
+                        message='返工交付绑定需更新（不重跑美术）：'+str(error))
+        return dict(base, state=acceptance['state'], status='user_accepted', level='ok',
+                    returned_art_acceptance=acceptance,
+                    message='用户要求美术返工后交测试包：按该请求接受当前美术，未重复 AI 美术验收；原美术报告保留。')
     current = image_fingerprints(project)
     receipt, error = read(project)
     out = {'project': str(project), 'receipt': str(receipt_path(project)), 'board': board, 'policy': policy,
@@ -601,7 +618,8 @@ def finding(result):
             'message': result['message'], 'evidence': evidence}
 
 
-ROW = {'no_images': '没有图片，不用核对', 'match_pass': '对得上（art_check 通过）', 'match_3x': '3.x 未覆盖（不是通过）',
+ROW = {'user_accepted_returned_art': '返工美术按用户授权接受，未重复 AI 验收',
+       'returned_art_acceptance_invalid': '返工交付身份需更新（只定位当前差异）', 'no_images': '没有图片，不用核对', 'match_pass': '对得上（art_check 通过）', 'match_3x': '3.x 未覆盖（不是通过）',
        'approved_local_ui_scope': '原美术未变，已批准局部UI与数值证据合并通过（非新全游戏ART-06）',
        'user_locked_art_maintenance': '用户批准的美术已锁定；局部维护证据有效（非全游戏ART通过）',
        'user_locked_art_maintenance_successor': '已锁定美术精确局部返工证据有效；旧执行身份保留（非全游戏ART通过）',
@@ -632,7 +650,7 @@ def summary(result):
     out['display_state'] = result.get('display_state')                 # 生成时预防 R4M2
     out.update({k: list(result.get(k) or [])[:20] for k in ('display_changed', 'display_added', 'display_removed')})
     out['message'] = result.get('message')
-    for key in ('approved_local_ui_scope', 'approved_local_ui_scope_error', 'locked_art_maintenance', 'locked_art_maintenance_error'):
+    for key in ('returned_art_acceptance', 'approved_local_ui_scope', 'approved_local_ui_scope_error', 'locked_art_maintenance', 'locked_art_maintenance_error'):
         if key in result:
             out[key] = result[key]
     return out

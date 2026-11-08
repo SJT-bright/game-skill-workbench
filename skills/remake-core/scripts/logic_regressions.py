@@ -171,10 +171,15 @@ def observable_effects(rec, ident):
         return ['invalid measured effect evidence: ' + str(exc)]
 
 
-def validate(document, project, digest):
+def validate(document, project, digest, *, read_only=False):
     """Check completeness/integrity; cannot decide if observation text is true."""
     records = document.get('regressions', [])
     records = records if isinstance(records, list) else []
+    from logic_case_ledger import CaseRecords
+    import check_ledger
+    # Caller-supplied report digests are claims, not the current source identity.
+    digest = source_digest(project)
+    case_records=CaseRecords(project, read_only=read_only)
     rows, problems = [], []
     for ident, title, rule, layers, required in CASES:
         matches = [r for r in records if isinstance(r, dict) and r.get('id') == ident]
@@ -191,8 +196,6 @@ def validate(document, project, digest):
             if ident == 'R06':
                 errors.append('R06 button coverage cannot use n/a; scope the affected control inventory instead')
         elif status == 'pass':
-            if document.get('regression_binding') != {'source_sha256': digest}:
-                errors.append('stale/missing current script and runtime-data binding; rerun affected cases')
             if rec.get('layer') not in layers:
                 errors.append('required observation layer: ' + ', '.join(layers))
             obs = rec.get('observations')
@@ -240,20 +243,39 @@ def validate(document, project, digest):
         else:
             errors.append({'missing': 'case missing; run --init to append without resetting prior results',
                            'untested': 'not tested; cannot pass', 'fail': 'reproduced failure; fix and rerun'}.get(status, 'unknown status'))
+        if status in ('pass', 'n/a') and not errors:
+            current_binding=(document.get('regression_binding') == {'source_sha256': digest} or
+                             rec.get('source_binding') == {'source_sha256': digest})
+            try:
+                row['incremental']=case_records.resolve(ident,rec,current_binding,errors,current_digest=digest)
+            except (check_ledger.NeedsScope,ValueError,OSError) as exc:
+                errors.append(str(exc))
         if errors:
             row['problem'] = '; '.join(errors)
             problems.append(row)
         rows.append(row)
+    case_records.close()
     return rows, problems
 
 
-def current_report(report, base):
-    """Main gate must not accept pre-regression or subsequently edited evidence."""
-    digest = report.get('current_source_sha256', '')
-    if (report.get('mode') != 'build' or report.get('regression_version') != 1 or
-            report.get('regression_problems') != 0 or not isinstance(digest, str) or
-            re.fullmatch(r'[0-9a-f]{64}', digest) is None or
-            report.get('regression_binding') != {'source_sha256': digest}):
+def current_report(report, project):
+    """Read existing records for the explicit project; never register or run a check."""
+    import sqlite3
+    from logic_check import validate_flows
+    try:
+        root = Path(project).resolve()
+        recorded_root = report.get('project_root')
+        claimed_digest = report.get('current_source_sha256', '')
+        if (not isinstance(recorded_root, str) or not Path(recorded_root).is_absolute()
+                or Path(recorded_root).resolve() != root or not (root / 'assets').is_dir()
+                or report.get('mode') != 'build' or report.get('passed') is not True
+                or report.get('failed') != 0 or report.get('regression_version') != 1
+                or report.get('regression_problems') != 0 or report.get('flow_problems') != 0
+                or not isinstance(claimed_digest, str) or re.fullmatch(r'[0-9a-f]{64}', claimed_digest) is None):
+            return False
+        digest = source_digest(root)
+        _, errors = validate(report, root, digest, read_only=True)
+        _, flow_errors = validate_flows(report, root, digest, read_only=True)
+        return not errors and not flow_errors
+    except (ValueError, OSError, TypeError, KeyError, sqlite3.Error):
         return False
-    _, errors = validate(report, base, digest)
-    return not errors

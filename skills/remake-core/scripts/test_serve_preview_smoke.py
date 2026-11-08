@@ -85,13 +85,26 @@ class TrialSmokeGate(unittest.TestCase):
         self.assertEqual((level, s.calls), ('pass', []))
         self.assertIn('不涉及看广告', message)
 
-    def test_main_runs_it_before_printing_the_link_only_for_keep(self):
-        text = (HERE / 'serve_preview.py').read_text(encoding='utf-8')
-        main = text[text.index('def main('):]
-        # #40: the smoke runs on the check port (check_url), not on the printed link (test_preview_fresh_save.py)
-        self.assertLess(main.index('trial_smoke_gate(check_url, directory, args.adapter, ad_simulator=args.ad_simulator)'), main.index("print(f'{entry_kind}"))
-        self.assertIn('if args.keep:\n        # v7.8 (总表 B21 / B30 F)', main)
-        self.assertTrue((serve_preview.CHECK_SCRIPTS / 'runtime_regression.py').is_file())
+    def test_second_handoff_reuses_check_and_change_needs_precise_scope(self):
+        import preview_check_once as once
+        import check_ledger
+        calls=[]
+        def capture():
+            calls.append(1)
+            return ('pass','actual capture',{'passed':True})
+        project=self.web/'project'
+        export=self.web/'export'
+        export.mkdir()
+        (export/'main.js').write_text('game v1')
+        first=once.run(project,'home',export,{'viewport':[390,844]},capture)
+        second=once.run(project,'home',export,{'viewport':[390,844]},capture)
+        self.assertEqual(first[0],second[0])
+        self.assertEqual(len(calls),1)
+        self.assertIn('original_at',second[2])
+        (export/'main.js').write_text('game v2')
+        with self.assertRaises(check_ledger.NeedsScope):
+            once.run(project,'home',export,{'viewport':[390,844]},capture)
+        self.assertEqual(len(calls),1)
 
 
 if __name__ == '__main__':

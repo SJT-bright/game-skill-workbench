@@ -126,6 +126,15 @@ def main():
                     'evidence':[{'path':str(artifact),'sha256':gate.sha(artifact.read_bytes())}],
                     'button_check_root':str(root),
                     'button_check':{'path':str((button_dir/button_ref['path']).resolve()),'sha256':button_ref['sha256']}}
+                # The final gate only reads existing project records. Register
+                # these explicit synthetic fixtures through the real validators.
+                from logic_check import FLOWS, validate_flows
+                extra.update(project_root=str(project.resolve()), flow_problems=0,
+                             flows=[{'id': fid, 'status': 'n/a', 'note': 'Synthetic orchestration fixture; no gameplay.'}
+                                    for fid, *_ in FLOWS])
+                extra['regressions'], regression_errors = logic_reg.validate(extra, project, logic_reg.source_digest(project))
+                extra['flows'], flow_errors = validate_flows(extra, project, logic_reg.source_digest(project))
+                assert not regression_errors and not flow_errors, (regression_errors, flow_errors)
             if tool == 'audit_loading_recovery':
                 from audit_loading_recovery import SCENARIOS, POLICY_VERSION
                 from test_loading_recovery_gate import RecoveryGateTests

@@ -46,7 +46,9 @@ class FreshSaveOnUserLink(unittest.TestCase):
 
         def smoke(url, *a, **k):
             seen['smoke'] = url
-            return 'pass', 'smoke ok'
+            raw = project / 'synthetic-smoke.json'
+            raw.write_text('{"passed":true,"fixture":"origin-isolation-only"}')
+            return 'pass', 'smoke ok', {'raw_files':[str(raw)],'summary':{'passed':True}}
 
         def launch(url, **k):
             seen['user'] = url

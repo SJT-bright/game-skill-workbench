@@ -297,7 +297,7 @@ def evidence(refs, base, errors, label, expected_binding, require_current=False)
         errors.append(label + ': historical/negative evidence alone cannot support current pass')
 
 
-def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD):
+def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD, *, project=None):
     """Each automatic tool named by the catalog must have a current, passing, unedited report."""
     refs = row.get('auto_reports', [])
     if not isinstance(refs, list):
@@ -320,7 +320,7 @@ def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD)
                 continue
             if tool in {'audit_page_readiness', 'audit_loading_recovery'} and report.get('stage') != 'runtime':
                 continue  # Static preflight is never page-entry acceptance.
-            if tool == 'logic_check' and not current_logic_report(report, p.parent):
+            if tool == 'logic_check' and (project is None or not current_logic_report(report, project)):
                 continue  # F01-F20 alone, stale cases or changed raw evidence cannot pass LOGIC-01.
             if tool == 'audit_native_storage_contract':
                 try:
@@ -628,7 +628,7 @@ def audit(args):
         check_row(rows.get(item['id'], {}), base, errors, item['id'], expected_binding)
         row = rows.get(item['id'], {})
         if row.get('status') == 'pass' and auto_tools(item, board):
-            auto_reports(item, row, base, errors, expected_binding, board)
+            auto_reports(item, row, base, errors, expected_binding, board, project=args.project)
         if row.get('status') == 'pass' and item.get('requires_gui'):
             layers = row.get('layers', []) if row.get('layer') == 'mixed' else [row.get('layer')]
             if not isinstance(layers, list) or not set(layers) & {'gui_mouse', 'gui_touch', 'device'}:

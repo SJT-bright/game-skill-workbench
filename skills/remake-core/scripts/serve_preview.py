@@ -57,39 +57,51 @@ def uses_rewarded_ads(directory):
     return False
 
 
-def trial_smoke_gate(url, directory, adapter=None, smoke=None, *, ad_simulator=False):
+def trial_smoke_gate(url, directory, adapter=None, smoke=None, *, ad_simulator=False, evidence_dir=None):
     """v7.8 (总表 B21 / B30 F): before a user trial link is printed, tap one rewarded-ad entry on the link exactly as
     Saul opens it (runtime_regression.trial_smoke, suite trial_link). An injected preview must also complete its ad. Returns (level, message): 'block' = do not give the link out, 'warn' = the smoke
     did not run (reason printed), 'pass'. smoke: the trial_smoke function (tests)."""
+    summary=None
+    def answer(level,message,*,not_applicable=False):
+        if evidence_dir is None:return level,message
+        info={'not_applicable':not_applicable,'summary':summary,'raw_files':[]}
+        if summary is not None:
+            result=Path(evidence_dir)/'trial_link/result.json'
+            info['raw_files']=[str(p.resolve()) for p in Path(evidence_dir).rglob('*')
+                               if p.is_file() and p.suffix in ('.json','.jsonl','.png')]
+            if level=='pass' and not result.is_file():
+                return 'block','不给试玩链接：广告试玩没有写出本次原始结果，不能复用通过',info
+        return level,message,info
     if not uses_rewarded_ads(directory):
-        return 'pass', '试玩链接冒烟：这个导出不调用 createRewardedVideoAd，不涉及看广告，没跑'
+        return answer('pass', '试玩链接冒烟：这个导出不调用 createRewardedVideoAd，不涉及看广告，没跑',not_applicable=True)
     if smoke is None:
         try:
             if str(CHECK_SCRIPTS) not in sys.path:
                 sys.path.insert(0, str(CHECK_SCRIPTS))
             import runtime_regression
         except Exception as error:  # noqa: BLE001
-            return 'warn', '试玩链接冒烟没跑：找不到 cocos-game-check 的 runtime_regression.py（%s）' % error
+            return answer('warn', '试玩链接冒烟没跑：找不到 cocos-game-check 的 runtime_regression.py（%s）' % error)
         smoke, refused = runtime_regression.trial_smoke, runtime_regression.RuntimeRefused
     else:
         refused = getattr(smoke, 'refused', Exception)
     try:
-        summary = smoke(url, adapter)
+        summary = smoke(url, adapter, work=Path(evidence_dir)) if evidence_dir is not None else smoke(url, adapter)
     except refused as error:
         if getattr(error, 'summary', None):
-            return 'block', '不给试玩链接：试玩链接冒烟不通过：%s' % error
-        return 'warn', '试玩链接冒烟没跑：%s' % error
+            summary=error.summary
+            return answer('block', '不给试玩链接：试玩链接冒烟不通过：%s' % error)
+        return answer('warn', '试玩链接冒烟没跑：%s' % error)
     if summary.get('not_run'):
-        return 'warn', '试玩链接冒烟没跑：%s（可用 --adapter 给出 trial.taps）' % summary['not_run']
+        return answer('warn', '试玩链接冒烟没跑：%s（可用 --adapter 给出 trial.taps）' % summary['not_run'])
     evidence = summary.get('evidence') or {}
     if not summary.get('passed'):
-        return 'block', '不给试玩链接：没有通过本次入口响应检查'
+        return answer('block', '不给试玩链接：没有通过本次入口响应检查')
     if evidence.get('simulatorCompleted') is True:
         response = '项目读数' if evidence.get('responseKind') == 'project_readback' else '画面文字'
-        return 'pass', '试玩链接冒烟通过：已点开模拟广告并选择看完，%s随后有变化' % response
+        return answer('pass', '试玩链接冒烟通过：已点开模拟广告并选择看完，%s随后有变化' % response)
     if ad_simulator:
-        return 'block', '不给模拟试玩链接：未证实独立模拟面板已打开并完成'
-    return 'pass', '试玩链接冒烟通过：点击广告入口后游戏给出了可见响应'
+        return answer('block', '不给模拟试玩链接：未证实独立模拟面板已打开并完成')
+    return answer('pass', '试玩链接冒烟通过：点击广告入口后游戏给出了可见响应')
 
 
 SCRIPT_SRC = re.compile(r'<script\b[^>]*\bsrc\s*=\s*["\']([^"\']+)["\']', re.I)
@@ -535,7 +547,7 @@ def make_snapshot(directory, project=None, slots=None):
     return dest, 'project', True
 
 
-def main(argv=None, *, verify_snapshot=None, chinese_original=False):
+def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_art=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', required=True, type=Path)
     parser.add_argument('--port', type=int, default=0)
@@ -579,7 +591,14 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
         candidates = [_project_of(directory, args.project), *list(directory.parents)[:3]]
         if any(board_of(p)[0] == 'localize' or (p / 'docs/english').is_dir() for p in candidates):
             parser.error('英化正式试玩请用 cocos-game-to-english/scripts/serve_preview.py 核对当前美术回执与图片复核记录')
-    if args.keep and verify_snapshot is None:
+    if returned_art is not None:
+        if verify_snapshot is None or not args.project:
+            parser.error('返工试玩必须来自英化入口的当前授权绑定')
+        import returned_art_acceptance
+        current = returned_art_acceptance.validate(Path(args.project), web=directory)
+        if current != returned_art:
+            parser.error('返工试玩绑定与当前候选不同')
+    if args.keep and verify_snapshot is None and not chinese_original:
         # v7.8 U7（补）: a user trial needs the art receipt, like the package writers (checked only, never a new art run)
         if not args.project:
             parser.error('用户试玩 --keep 需要 --project <这款游戏的 Cocos 工程>：起服务前要核对美术回执 .tiktok-kit/art-receipt.json')
@@ -654,6 +673,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
             raise SystemExit(1)
         print('试玩链接读回核对：入口 %d 个文件和现在的导出一字不差（%s）。' % (len(rows), '、'.join(r['file'] for r in rows)),
               flush=True)
+    if for_person and not chinese_original and returned_art is None:
         # 生成时预防 #40 (普查 trial_link_dead 14、stale_preview 10): the screenshot and the trial smoke play the game
         # and the game writes its save (localStorage) for the origin it runs on. They run on a second port of their
         # own (another origin, its own localStorage), so the link a person opens starts from a fresh save.
@@ -666,10 +686,16 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
         import tempfile
         shot_url = check_url + ('__preview/%s/' % token if token else '') + 'index.html?__phone_game=1&__home_shot=1'
         check_server.home_probe = None
-        level, message, shot_info = home_shot_gate(
-            shot_url, current_export, phone_size,
-            Path(tempfile.gettempdir()) / ('serve_preview_home_%d.png' % server.server_port),
-            probe=lambda: getattr(check_server, 'home_probe', None), timeout=args.home_shot_timeout, wait=args.home_shot_wait)
+        from preview_check_once import run as preview_once
+        from check_ledger import NeedsScope
+        try:
+            level, message, shot_info = preview_once(args.project,'home',current_export,
+                {'viewport':list(phone_size),'ad_simulator':args.ad_simulator,'wait':args.home_shot_wait},
+                lambda:home_shot_gate(shot_url,current_export,phone_size,
+                    Path(tempfile.gettempdir())/('serve_preview_home_%d.png'%server.server_port),
+                    probe=lambda:getattr(check_server,'home_probe',None),timeout=args.home_shot_timeout,wait=args.home_shot_wait))
+        except NeedsScope as exc:
+            abort_start(check_server);raise SystemExit('试玩节点待定位（不自动全测）：'+str(exc))
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
         if shot_info.get('space_finished'):
             fields = ('browser_route', 'input_transport', 'session_id', 'space_name', 'space_finished', 'screenshot')
@@ -677,18 +703,29 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False):
         if level == 'block':
             abort_start(check_server)
             raise SystemExit(1)
-    if args.keep:
+    if args.keep and not chinese_original and returned_art is None:
         # v7.8 (总表 B21 / B30 F): the trial-link smoke runs on the same pages before the link is printed; a failure keeps
         # the link from the user (the ad window behind the game looked like a frozen game in 全民飞车漂移 v1-v3).
         # #40: on the check port, so the reward it earns is not in the save the user opens.
-        level, message = trial_smoke_gate(check_url, directory, args.adapter, ad_simulator=args.ad_simulator)
+        try:
+            trial_evidence=Path(args.project).resolve()/'docs/checks/incremental/preview-runs'/secrets.token_hex(12)
+            trial_result = preview_once(args.project,'ad-response',directory,{'ad_simulator':args.ad_simulator},
+                lambda:trial_smoke_gate(check_url,directory,args.adapter,ad_simulator=args.ad_simulator,
+                                       evidence_dir=trial_evidence),args.adapter)
+            level, message = trial_result[:2]
+        except NeedsScope as exc:
+            abort_start(check_server);raise SystemExit('试玩节点待定位（不自动全测）：'+str(exc))
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)
         if level == 'block':
             abort_start(check_server)
             raise SystemExit(1)
-    if for_person:
+    if for_person and not chinese_original and returned_art is None:
         stop_check_server(check_server)
         print('自动截图和冒烟用的是单独的检查端口，试玩链接 %s 没被自动打开过，存档是新的。' % url, flush=True)
+    elif for_person and returned_art is not None:
+        print('返工交付：已读回同版入口；按用户授权免重复美术截图，不重跑无关广告试玩。', flush=True)
+    elif for_person and chinese_original:
+        print('中文原版：已核准导出与链接身份，交 Google Chrome 供用户试玩；未启动自动浏览器验收。', flush=True)
     if record_ready_trial is not None:
         try:
             record_ready_trial()

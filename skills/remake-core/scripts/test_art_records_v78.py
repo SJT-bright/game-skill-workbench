@@ -335,8 +335,14 @@ class ArtCheckRows(Tmp):
                 contextlib.redirect_stdout(io.StringIO()), contextlib.ExitStack() as stack:
             for target, value in patches.items():
                 stack.enter_context(mock.patch.object(art_check, target, value))
-            code = art_check.main()
-        return code, json.loads((out / 'art-check.json').read_text())
+            try:
+                code = art_check.main()
+            except SystemExit as exc:
+                if exc.code != 3:
+                    raise
+                code = exc.code
+        report = out / 'art-check.json'
+        return code, json.loads(report.read_text()) if report.exists() else None
 
     def test_missing_capture_still_reports_h8_h10_and_3x_receipt_fails(self):
         p = project(self.d / 'p', engine=3)
@@ -351,18 +357,24 @@ class ArtCheckRows(Tmp):
         out = R.check(p, policy='new')
         self.assertEqual(out['level'], 'block')
         self.assertIn('没有底子记录', out['message'])
-        # fixed: base recorded, picture recorded as generated -> the 3.x receipt is "not covered" again (W83)
+        # Recording provenance does not erase the earlier failed acceptance.
+        # Locate the changed scope first; never rerun all art automatically.
         AR.record_none(p, 'scratch')
         AR.record_generated(p, [p / 'assets' / 'btn.png'], 'codex image_gen', prompt='PLAY button')
-        self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
-        self.assertEqual(json.loads(R.receipt_path(p).read_text())['status'], 'not_covered_3x')
+        before = R.receipt_path(p).read_bytes()
+        code, rep = self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
+        self.assertEqual(code, 3)
+        self.assertIsNone(rep)
+        self.assertEqual(R.receipt_path(p).read_bytes(), before)
 
     def test_missing_capture_keeps_a_24_receipt(self):
         p = project(self.d / 'p')
         pil_button(p / 'assets' / 'btn.png')
         R.write(p, 'pass', {'status': 'pass'})
         before = R.receipt_path(p).read_bytes()
-        self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
+        code, rep = self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
+        self.assertEqual(code, 3)
+        self.assertIsNone(rep)
         self.assertEqual(R.receipt_path(p).read_bytes(), before)
 
     def test_full_analysis_rows_make_the_receipt_fail(self):

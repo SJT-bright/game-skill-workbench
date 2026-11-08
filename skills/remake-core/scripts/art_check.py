@@ -653,6 +653,12 @@ def main():
         return subprocess.call(cmd)
     if a.ui_native or a.ui_runner or a.ui_calibrate:
         ap.error('local UI probe flags require --ui-contract')
+    from art_recheck_guard import resolve as resolve_prior_art
+    try:
+        prior_result=resolve_prior_art(a)
+    except (ValueError,OSError) as exc:
+        ap.exit(3,'美术记录需定位：'+str(exc)+'\n')
+    if prior_result is not None:return prior_result
     proj = a.project.resolve()
     if not (proj / 'assets').is_dir():
         ap.error('%s is not a Cocos project (no assets folder)' % proj)
@@ -1149,7 +1155,7 @@ def main():
                                                              '按重塑画风' if remake_art else '沿用原画风', report['time']), '',
           '美术回执：%s（%s，%d 张图的指纹；出包和用户试玩只核对它，图再改就要重跑本脚本）' % (
               art_receipt.receipt_path(proj), receipt['status'], receipt['images_count']), '',
-          ('**需处理 %d 项：改完重新读页面、重新跑本脚本，全部通过才交用户。**' % len(blocking)) if blocking else '**脚本检查全部通过。**接着 Codex 看总览图：',
+          ('**需处理 %d 项：只定位这些失败项及改动依赖；保留原通过项，禁止整套重跑。**' % len(blocking)) if blocking else '**脚本检查全部通过。**接着 Codex 只看尚未认可的画面：',
           '', '| 检查 | 结果 | 说明 |', '| --- | --- | --- |']
     md += ['| %s | %s | %s |' % (r['check'], r['status'], r['detail'].replace('|', '/')) for r in rows]
     md += ['', '## 看图清单（普通游戏页逐项看；已核实官方加载/Retry按cocos-loading-screen.md实看，保留清晰度、比例、边缘及可操作Retry，不套游戏主题生图规则）', ''] + ['- [ ] ' + x for x in look]

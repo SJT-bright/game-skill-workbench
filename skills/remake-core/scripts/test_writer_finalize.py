@@ -535,7 +535,7 @@ class Delivery(KitInSync):
     def test_delivery_record_carries_retest_line_and_parts_table(self):
         native = self.d / 'native'
         native.mkdir()
-        files = {'game.js': b'//g', 'game.json': b'{"subpackages":[]}',
+        files = {'game.js': b'//g', 'game.json': b'{}',
                  'project.config.json': json.dumps({'appid': APP}).encode()}
         for name, data in files.items():
             (native / name).write_bytes(data)
@@ -552,13 +552,20 @@ class Delivery(KitInSync):
         self.assertEqual(result['entry'], 'official')
         other_temp = self.d / 'other-temp'
         other_temp.mkdir()
+        contract = self.d / 'startup-contract.json'
+        contract.write_text(json.dumps({'binding': {'web_tree_sha256': 'a' * 64}}))
+        preview = {'markdown_link': '[fixture](http://127.0.0.1:1/)', 'passed': True}
         with mock.patch.object(D, 'check', return_value=result), \
                 mock.patch.object(D.package_obligations, 'verify', return_value={'passed': True}), \
                 mock.patch.object(D.package_obligations, 'publication_guard',
                                   lambda *a, **k: contextlib.nullcontext()), \
-                mock.patch.object(D, 'audit_final_startup', return_value={'passed': True}), \
+                mock.patch.object(D, 'audit_final_startup', return_value={
+                    'passed': True, 'startup_contract_sha256': sha(contract.read_bytes())}), \
+                mock.patch.object(D, 'verify_preview', return_value=preview) as verify_preview, \
                 mock.patch.object(D.tempfile, 'gettempdir', return_value=str(other_temp)):
-            out = D.prepare(archive, native, APP, self.d / 'delivery.json', resource_manifest=self.d / 'r.json')
+            out = D.prepare(archive, native, APP, self.d / 'delivery.json', resource_manifest=self.d / 'r.json',
+                            startup_contract=contract, preview_url='http://127.0.0.1:1/')
+            verify_preview.assert_called_once_with('http://127.0.0.1:1/', 'a' * 64)
         self.assertEqual(out['kit_parts_status'], '标准件待真机复测')
         self.assertIn('标准件待真机复测', out['reply_lines'])
         self.assertEqual(out['finalize']['policy'], 'new')

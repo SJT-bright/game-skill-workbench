@@ -1,0 +1,15 @@
+{
+  "schema": "art_default_rules_compat.v1",
+  "scope": "11.17.11-default-path-only",
+  "files": {
+    "remake-core/scripts/art_production.py": {
+      "before_sha256": "f412477610d224be2df3f4da63e67837f71cf566c9a6fd20ed7c31680e05e590",
+      "after_sha256": "99dd986c6f6afbe9660af06d50d140accbd6e0a02f470f4c1a6ae9288367fab2"
+    },
+    "remake-art/scripts/cut_sheet_frame.py": {
+      "before_sha256": "bed307143f1f9ae4eb3afb4e662c6700d9f8d9c96ff06804a95d44711fdac35d",
+      "after_sha256": "dd7702c97e75f5a14b86c06f15e8f66a780daa5ae9705b69bbf580c372e28435"
+    }
+  },
+  "proof": "test_art_rule_compat.py: real 11.17.11 producer output, default crop pixel replay and fixed-button fingerprints remain equal; all other dependencies stay byte-bound. rows_from_bands true is excluded."
+}

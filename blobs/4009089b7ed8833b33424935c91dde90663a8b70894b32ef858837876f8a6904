@@ -1,0 +1,9 @@
+{
+  "schema": "art_capture_producer_compat.v1",
+  "scope": "producer-field-only",
+  "before_script_sha256": "84cc97432274084b85a3015b2525a81f3230b791f0b29e953fcee83cc03dae95",
+  "after_script_sha256": "46660e1b66b7bbd84e4fe1e508dbac44353b2415b4be5e21225ce6809751368e",
+  "ui_dump_sha256": "1a6afae476cd2a429e473e8235bd436e891f044a177329bc6f0ee092a32f8a4d",
+  "before_collector_sha256": "cdf2e6ffc4f4bdc943ec565bc40b9758b47277e1f3b71d0e19da4c87fad45d91",
+  "proof": "test_art_capture_producer.py: exact source delta, official capture to page loader, old complete round read-only verification, source/export/PNG/rule drift refusal."
+}

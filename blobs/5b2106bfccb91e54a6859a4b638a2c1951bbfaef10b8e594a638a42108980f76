@@ -1,0 +1,31 @@
+{
+  "schema": "runtime-reporting-compat.v1",
+  "scope": "reporting-only-exact-byte-pair",
+  "baseline": "11.17.11",
+  "old_runtime_sha256": "f8224ece890c1c7dcd152f16de45674ac074b3349f0f3bd41c9a628f84d6aff6",
+  "new_runtime_sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
+  "helper_sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
+  "proof": "Exact reverse of the listed reporting edits reconstructs the formal 11.17.11 module bytes. Any additional edit fails the pair check.",
+  "edits": [
+    {
+      "before": "import os\n",
+      "after": "import os\nimport runtime_timing as RT\n"
+    },
+    {
+      "before": "    return CL.tool_fingerprint([Path(rr.__file__),",
+      "after": "    return RT.rule_fingerprint(CL, [Path(rr.__file__),"
+    },
+    {
+      "before": "            batch_report.update(result)\n",
+      "after": "            batch_report.update(result)\n            batch_report['_timing_batch_id'] = uuid.uuid4().hex\n"
+    },
+    {
+      "before": "                 'seconds':0 if all(proofs[c]['reused'] for c in members) else batch_report.get('seconds',0),",
+      "after": "                 'seconds':RT.suite_seconds(batch_report, name, all(proofs[c]['reused'] for c in members)),"
+    },
+    {
+      "before": "            row['browser']=any(not proofs[cid]['reused'] and results[cid].get('browser',True) for cid in members)",
+      "after": "            row['browser']=any(not proofs[cid]['reused'] and results[cid].get('browser',True) for cid in members)\n            row['timing']=RT.suite_metadata(batch_report, name, all(proofs[c]['reused'] for c in members))"
+    }
+  ]
+}

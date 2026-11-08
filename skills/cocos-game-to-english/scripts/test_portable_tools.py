@@ -104,7 +104,8 @@ class FindCreator(unittest.TestCase):
         a3 = FC.build_argv(ed, '/p', 3, 'bytedance-mini-game')
         t2 = FC.build_argv(ed, '/p', 2, 'bytedance-mini-game')     # 简化.11.15: 2.x calls the TikTok platform bytedance
         self.assertEqual((a2[1], a2[4]), ('--path', 'platform=web-mobile;debug=true'))
-        self.assertEqual((a3[1], a3[4]), ('--project', 'platform=bytedance-mini-game;debug=false'))
+        self.assertEqual(a3[1], '--project')
+        self.assertEqual(a3[4], 'platform=bytedance-mini-game;configPath=' + str(FC.config_path_3x('/p', 'bytedance-mini-game')))
         self.assertEqual((t2[1], t2[4]), ('--path', 'platform=bytedance;debug=false'))
         self.assertIn('"platform=web-mobile;debug=true"', FC.quote(['C:\\E\\CocosCreator.exe', '--build', 'platform=web-mobile;debug=true'], 'win32'))
         proj = self.project('2.4.4', 2)

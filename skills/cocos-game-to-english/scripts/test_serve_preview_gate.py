@@ -399,7 +399,11 @@ class TrialLinkTiming(unittest.TestCase):
             root, web = make_game(td)
             for _ in range(2):
                 lines, say = quiet()
-                GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--chinese-original', '--project', str(root)], say=say)
+                args = ['--directory', str(web), '--snapshot', '--keep', '--chinese-original', '--project', str(root)]
+                before = list(timing_events(root))
+                GATE.gate(args, say=say)
+                self.assertEqual(timing_events(root), before)  # gate is earlier than an actual ready service
+                GATE.chinese_ready(args, say)(web)
             marks = [e for e in timing_events(root) if e['ev'] == 'mark']
             self.assertEqual([e['name'] for e in marks], ['中文原版链接'])
             GATE.gate(['--directory', str(web), '--snapshot', '--keep', '--chinese-original'], say=quiet()[1])   # no --project: fine

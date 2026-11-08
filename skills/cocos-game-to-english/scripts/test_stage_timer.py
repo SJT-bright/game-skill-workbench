@@ -4,7 +4,7 @@
 stage_timer.py records stages, steps, trial links, waits for the user and time points by the computer clock in
 <project>/docs/timing/, and prints the report the session sends: per stage (its steps, how many times, pictures made),
 per trial round (the user's play time apart from the time the user waited for the AI) and the whole run at delivery
-(also written to timing-report.md). A forgotten done/end is closed at the stage end and named; a stage over its
+(also written to timing-report.md). New spans remain open across stages, while untagged legacy spans retain their incomplete boundary; a stage over its
 reference time is pointed out once; parallel writers never break a line; bad lines are skipped; the tool uses the
 standard library only and no macOS-only call.
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_stage_timer.py
@@ -128,11 +128,15 @@ class ForgottenSteps(Base):
         self.T(0, 'begin', '查电脑')
         out = self.T(10, 'stage', '2')
         self.assertIn('用时｜第 1 阶段「盘点」：10 分', out)
-        self.assertIn('- 查电脑：10 分（没记结束，算到阶段结束）', out)
+        self.assertIn('- 查电脑：还在做，到现在 10 分', out)
         self.assertIn('上面是第 1 阶段的用时，发给用户', out)
         self.assertIn('记下：09:10 开始第 2 阶段「修改」', out)
-        out = self.T(12, 'end', '查电脑')                  # a late end still lands on the step
+        out = self.T(12, 'end', '查电脑')                  # A late end retains the real span, while per-stage reports clip its interval
         self.assertIn('这次用了 12 分', out)
+        events, bad = ST.load(self.project)
+        timeline = ST.Timeline(events, T0 + 12 * 60, bad)
+        self.assertIn('- 查电脑：10 分', timeline.stage_report(0))
+        self.assertIn('- 查电脑：2 分', timeline.stage_report(1))
 
     def test_end_without_begin_and_double_begin_are_harmless(self):
         self.T(0, 'stage', '2')
@@ -309,7 +313,7 @@ class Robustness(Base):
         tree = ast.parse(src)
         names = {a.name.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         names |= {n.module.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
-        self.assertLessEqual(names, {'argparse', 'json', 'os', 'sys', 'time', 'datetime', 'pathlib', 'contextlib', 'io'})   # 11.9 call()
+        self.assertLessEqual(names, {'argparse', 'json', 'os', 'sys', 'time', 'datetime', 'pathlib', 'contextlib', 'io', 'uuid', 'subprocess'})   # 11.9 call()
         for gone in ('fcntl', '/usr/bin/python3', 'pgrep', 'cp -c', 'open -R'):
             self.assertNotIn(gone, src.split('"""', 2)[2], gone)
 

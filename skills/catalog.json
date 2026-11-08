@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T20:04:47.982Z",
-  "treeHash": "5c36f67b8a17f709a951fd688dde6ee87231fe63d032ea007c0dbbf065603af5",
+  "createdAt": "2026-11-08T20:06:04.655Z",
+  "treeHash": "23ec086dcfa94e16c071b2031f6f47ecdb0dbb2336918d9f6aef019fe1743405",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2053,20 +2053,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "17ea59b73ed76803d9785a03da675b4c7b4370abf53bfeb80be2d7a6df1d47cc",
-      "fileCount": 45,
-      "bytes": 785414,
+      "treeHash": "7aa10e2b10a31d8e65c13aa81cb68838437b3a47cbf804f175b44fe8ed23af80",
+      "fileCount": 49,
+      "bytes": 857874,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "c2e0464b9ab93dee14e1131acb05187f3093f0a666f54f9514199e2879a2d0e6",
-          "size": 20151,
+          "hash": "a691803646dfdbfd3be6543bd1d10b648dac5bf11cf4969c7a42b19ee6bfe6b5",
+          "size": 20822,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "666f2944ca5bcc93e0b6be0cb3cec88334e15515707bd5626f43c1d5ff3ad867",
-          "size": 96575,
+          "hash": "0cf868a0ee66d3357faf63bf8d1de58da6e74fb8342cbddb375ac61b1dca8cf1",
+          "size": 93985,
           "executable": false
         },
         {
@@ -2113,8 +2113,8 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "580bea94e298dd29a02cdf7c26209d84fdf060d81e79c2ab65b86533ea80981f",
-          "size": 34553,
+          "hash": "bc51941a8f13467f38d88092eb870f027a662495bba26966a95e6ab34b7da971",
+          "size": 35129,
           "executable": false
         },
         {
@@ -2127,6 +2127,12 @@
           "path": "references/local-creator-versions.md",
           "hash": "0b163a4480dea5d28a23841fb68fceeb65705fadc2c263f878f801796360c8ca",
           "size": 5369,
+          "executable": false
+        },
+        {
+          "path": "references/phase-timing.md",
+          "hash": "9751917ad1774e886b16ee5fb0070a885e1f42e1c449e4a25477016d76be182a",
+          "size": 5600,
           "executable": false
         },
         {
@@ -2161,8 +2167,8 @@
         },
         {
           "path": "scripts/find_creator.py",
-          "hash": "1578c2e7ef5321473eaf0e32751a1540e2a10cc5a424442fc14a36caeca66c69",
-          "size": 28117,
+          "hash": "cd8d4c1d93716dbf49c67e6f5b7d5c6132b5c914da14ecf02d5705b2d854950d",
+          "size": 38436,
           "executable": false
         },
         {
@@ -2191,14 +2197,14 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "2584d7a5cabbdbff011584b5c02e514668b35398ebbba18a27131832ca46eb8a",
-          "size": 18008,
+          "hash": "3e82d9b3a616c552a94e47442803ea270b6c11fb4c487fa49d2f2a48cf39d04a",
+          "size": 20559,
           "executable": false
         },
         {
           "path": "scripts/stage_timer.py",
-          "hash": "f7ec89e3165d6ed26ca30a9d20ea19a265b7868b5d56319ac180caf0457bf145",
-          "size": 34882,
+          "hash": "8bf3c91c552959b485d483ec5c3d13840a126f553030ab4389adb324b89fe0f2",
+          "size": 60221,
           "executable": false
         },
         {
@@ -2211,6 +2217,12 @@
           "path": "scripts/test_chinese_audit.py",
           "hash": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
           "size": 31960,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_creator_typed_config.py",
+          "hash": "1e3ed6e209bc6543613d1b8098a91840ad6e2279661dcfc448e85f05b4fe21fe",
+          "size": 7221,
           "executable": false
         },
         {
@@ -2227,8 +2239,8 @@
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "1f3feb993e730597ecc2acb3eb75d5f2ddeee6e83afd03b5e7c1c9e46dbe0e58",
-          "size": 77148,
+          "hash": "4629dc6f2947384220360a216ba1fd6e7bfd964d7fb31fd12d32bc99b8602f0f",
+          "size": 78222,
           "executable": false
         },
         {
@@ -2245,8 +2257,14 @@
         },
         {
           "path": "scripts/test_portable_tools.py",
-          "hash": "2d320778e528d009094b030c78ac12d6406107078f143c0c75463ff07f7f84f9",
-          "size": 14432,
+          "hash": "35e6a043148b4421464aa405471cc496e558b101dbbda7593d8cac03dbefae35",
+          "size": 14507,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_preview_timing_hooks.py",
+          "hash": "a728604c25c1f6b3eee18c7af408ee7a1e9c42ded52749b9b48877888b94c609",
+          "size": 7117,
           "executable": false
         },
         {
@@ -2263,8 +2281,8 @@
         },
         {
           "path": "scripts/test_r4j4_native_sync.py",
-          "hash": "684f879847a4e34f0edb0deb03bdba8392096120566ae468301bf5e5ee08f855",
-          "size": 10834,
+          "hash": "b95e5d4a920a3b2966b66296493fd56eacef259611a156bbb10c978d6a66913a",
+          "size": 11033,
           "executable": false
         },
         {
@@ -2287,14 +2305,20 @@
         },
         {
           "path": "scripts/test_serve_preview_gate.py",
-          "hash": "3f915bd55e2a391ef0c011185c0a4f584c694c498deafe3dc83df01600abdeeb",
-          "size": 27741,
+          "hash": "abc902faa76d430f83c85c743f3f2f2b2b383cf39536ed4f8a1069e89d86e63c",
+          "size": 27981,
           "executable": false
         },
         {
           "path": "scripts/test_stage_timer.py",
-          "hash": "c06fcdc8a89cf9f2dbe373ffca67f07d5c86e28d296577e559d7a5b99a5cddc0",
-          "size": 17834,
+          "hash": "f457daea7ad2d5030337e37dd03931565f370695497554af5eac29c95d8f4598",
+          "size": 18165,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_stage_timer_runs.py",
+          "hash": "7431bba2b0166db4fe224dd31c53551a44cde2183c46f5256825395aebaedab1",
+          "size": 13737,
           "executable": false
         },
         {

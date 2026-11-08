@@ -647,7 +647,8 @@ OLD_VERSION_NOTES = ('11.16', '11.15', '11.14.1', '11.14', '11.13', '11.12', '11
                      '10.2', '10.1', '10')
 # (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
 PRE_TRIAL_NOTES = (
-    ('remake-art/SKILL.md', '两轮自审', '英化第一轮重新生成按钮和文字不算下文说的“完整首次重做”'),
+    ('remake-art/SKILL.md', '各适用项实际核一次；输入未变不追加第二轮自审',
+     '英化第一轮重新生成按钮和文字不算下文说的“完整首次重做”'),
     ('remake-art/references/art-before-trial.md', '加载失败/重试状态', '英化每轮英文试玩链接前同样要完成美工检查'),
     ('remake-art/references/page-richness.md', '至少两轮自审', '每轮英文试玩链接前须按英化入口第 3 阶段完成美工检查'),
     ('remake-core/references/tiktok-home-growth.md', '交用户试玩前就做小样本', '英化游戏例外：都放到英化入口第 5 阶段做'),
@@ -834,15 +835,18 @@ class PortableOnAnyComputer(unittest.TestCase):
 
 
 class TimingReport(unittest.TestCase):
-    """10.2.12 (Saul 2026-11-01): a timing report after every stage, with every step (the art included), every trial
-    round and the whole run; the entry and stage_timer.py use the same step names and reference times."""
-    HEADING = '\n## 用时汇报（10.2.12'
+    """Current timing contract: observe each run and named step, preserve actual failures and waits,
+    and report at stage/trial/delivery boundaries without making timing another quality gate."""
+    HEADING = '\n## 用时汇报（'
 
     def text(self):
         return (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
 
     def section(self):
         return self.text().split(self.HEADING, 1)[1].split('\n## ', 1)[0]
+
+    def reference(self):
+        return (ENTRY / 'references' / 'phase-timing.md').read_text(encoding='utf-8')
 
     def stages(self):
         part = self.text().split('\n## 阶段', 1)[1].split('\n## ', 1)[0]
@@ -865,38 +869,47 @@ class TimingReport(unittest.TestCase):
 
     def test_section_says_when_to_run_every_command(self):
         part = self.section()
-        for phrase in ('scripts/stage_timer.py --project <工程>`', '`<工程>/docs/timing/stage-timing.jsonl`', '不要自己估、自己算',
-                       '`T stage <1-5>`', '`T done`', '原样发给 Saul', '单独发一条短消息，不等回复', '`T begin <步骤>`',
-                       '`T end <步骤>`', '`--count 图=<张数>`', '`--who 美术子进程`', '子进程自己不记', '`T link <第几轮>`',
-                       '`T ask <事情>`', '`T back`', '不算进 Saul 等你的时间', '`T mark 中文原版链接`', '`T mark 改要求：<几个字>`',
-                       '`T link <N>`', '贴在新链接那条回复最后', '`T mark 交付`、`T done`、`T report --all`',
-                       '`docs/timing/timing-report.md`', '每阶段、每轮只提醒一次', '不是硬限制，不为了赶时间少做一步', '`T status`',
-                       '`--at 时:分`', '**不挡流程**'):
+        for phrase in ('](references/phase-timing.md)', 'scripts/stage_timer.py --project <工程>`',
+                       'T start --run-id', '--route source|handoff|returned|maintenance', '`T stage <1-5>`', '`T status`',
+                       'T begin 名称 --span-id', 'T end 名称 --span-id', '同一任务只由一个拥有者记',
+                       'T run --span-id', '真实退出码、单调时钟秒数和实时输出', '不自动重试',
+                       'external-begin ID 名称', 'external-end ID', 'pause 原因', 'resume', 'abort 原因',
+                       'ask 原因', 'back', '真实 ready 后自动记录', '相同内容重开沿用',
+                       '阶段结束 `T done`', '试玩交付与最终交付用 `T report --all`',
+                       '不形成新门禁、不改变已有质量证据', '不能直接相加', '不能把整个批次秒数复制给每项'):
             self.assertIn(phrase, part, phrase)
+        ref = self.reference()
+        st = self.tool()
+        for path in (st.LOG, st.REPORT):
+            self.assertIn(path.name, ref)
+        for phrase in ('not_recorded', '未采样', 'monotonic_seconds', '--parent-id', 'wall_interval_totals_valid=false',
+                       '总墙钟', '已完成执行区间并集', '工具区间并集', '用户等待', '外部等待', '暂停', '未记录空档',
+                       '不用于 `run`', '不会测出“AI 纯计算时间”'):
+            self.assertIn(phrase, ref, phrase)
 
-    def test_reference_times_and_step_names_are_the_tools_own(self):
+    def test_reference_budget_and_nodes_follow_current_observed_work(self):
         st = self.tool()
         part = self.section()
-        for n, minutes in st.REF_MIN.items():
-            self.assertIn('第 %d 阶段 %s' % (n, st.fmt(minutes * 60)), part, n)
-        self.assertIn('从 Saul 回复到新链接 %s' % st.fmt(st.ROUND_REF_MIN * 60), part)
-        # 简化.11.9: the other way round too -- a stage the tool no longer reminds about is not listed with a time
-        listed = part.split('参考用时是', 1)[1].split('（等 Saul', 1)[0]
-        for n in st.STAGES:
-            if n not in st.REF_MIN and n != 4:
-                self.assertNotRegex(listed, r'第 %d 阶段 \d' % n, n)
-        self.assertIn('第 3 阶段先不设', part)
-        self.assertIn('由 `serve_preview.py` 自动记', part)
-        table = part.split('| 阶段 | 步骤名', 1)[1].split('\n\n', 1)[0]
+        # Legacy reminder constants remain readable by old logs; they are not a promised budget for every game.
+        for phrase in ('预算在盘点后按实际页面状态', '外部生成队列', '不因超时自动全测、重启浏览器或重复构建',
+                       '不能单凭耗时判断模型出错', '优化比较须同输入同范围'):
+            self.assertIn(phrase, part, phrase)
+        table = part.split('| 阶段 | 必须分别记录的节点 |', 1)[1].split('\n\n', 1)[0]
         rows = {}
-        for line in table.splitlines()[2:]:
+        for line in table.splitlines():
             cells = [c.strip() for c in line.strip('|').split('|')]
-            rows[cells[0]] = cells[1]
-        for n, names in st.STEPS:
-            label = '%d %s' % (n, st.STAGES[n]) if n else '哪个阶段都可能有'
-            self.assertIn(label, rows, label)
-            for name in names:
-                self.assertIn(name, rows[label], (label, name))
+            m = re.match(r'([1-5]) ', cells[0])
+            if m:
+                rows[int(m.group(1))] = cells[1]
+        self.assertEqual(set(rows), set(st.STAGES))
+        required = {1: ('安全解包', '环境与引擎', '中文原版构建与 ready'),
+                    2: ('首件', '生成与等待', '切图', '图文接入', '音频', '实际构建与局部验证'),
+                    3: ('准备或复用', '页面采集路线', '证据沿用', '链接 ready'),
+                    4: ('影响范围', '定点修复', '只验变化或记录视觉授权'),
+                    5: ('只读核对', '真实缺项', '正式写包', '最终 ZIP', '同版试玩交付')}
+        for n, phrases in required.items():
+            for phrase in phrases:
+                self.assertIn(phrase, rows[n], (n, phrase))
 
     def test_every_stage_says_when_to_time(self):
         st = self.stages()
@@ -1018,7 +1031,8 @@ class ReworkAfterDelivery(unittest.TestCase):
         self.assertEqual(stage5.count('**出包后返工（简化.11.15'), 1)
         rework = stage5.split('**出包后返工（简化.11.15', 1)[1]
         for phrase in ('比如我修改了贴图，之后出包甚至又要检查一遍音频', 'rework_scope.py --old <出包文件夹> --native',
-                       '先在构建的副本上装平台件、压 PNG', '出完包写包入口自己再记一份',
+                       '先核对本轮 Native 的真实准备记录', '输入、选项与规则均一致时沿用',
+                       '缺失或变化时才在构建副本上准备（原构建不动）', '出完包写包入口自己再记一份',
                        '`<工程>/docs/checks/rework-<时间>.json`', '「你（AI）自己要查的」', '不再听声音',
                        '不额外手动重测无影响的功能', '侧栏和桌面回访也只在其依赖变化或尚未覆盖时执行',
                        '改了代码：就地验证改的那个功能', '`--rework-of` 默认 `auto`',

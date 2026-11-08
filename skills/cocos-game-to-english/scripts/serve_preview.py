@@ -45,12 +45,12 @@ HELP = ('英化入口自己的参数（其余见下面共用服务的参数）�
         '英文试玩链接自动记用时（stage_timer.py link <第几轮>），打印的上一轮用时贴在新链接那条回复最后。\n')
 
 
-def timing(project, *args):
+def timing(project, *args, run_id=None):
     """stage_timer.py <args> for this project; a problem is a warning line, never a refusal (用时汇报不挡流程)."""
     try:
         sys.path.insert(0, str(HERE))
         import stage_timer
-        return stage_timer.call(project, *args)
+        return stage_timer.call(project, *args, *(['--run-id', run_id] if run_id else []))
     except Exception as exc:  # noqa: BLE001
         return '用时没记上（%s）：%r' % (' '.join(map(str, args)), exc)
 
@@ -134,7 +134,7 @@ def pretrial_records(project, export, native):
     return native, native_sha, native_record, record, project / finalize.SOURCE_RECORD, review['distinct_images']
 
 
-def returned_preview(argv, project, export, native, say):
+def returned_preview(argv, project, export, native, say, timing_run_id=None):
     """Requested post-delivery visual rework: identity checks, no repeated art QA."""
     import returned_art_acceptance as returned
     try:
@@ -160,6 +160,7 @@ def returned_preview(argv, project, export, native, say):
                          'native_tree_sha256': accepted['native']['sha256'],
                          'acceptance_sha256': accepted['manifest_sha256']})
             returned.write(log, rows)
+            say(timing(project, 'publish', 'english:' + accepted['web']['sha256'] + ':' + accepted['native']['sha256'], run_id=timing_run_id))
             say('返工试玩身份一致；美术按用户授权接受，未生成新的 AI 美术通过记录。')
         return ready
     verify.returned_art = accepted
@@ -167,7 +168,7 @@ def returned_preview(argv, project, export, native, say):
     return argv, verify
 
 
-def gate(argv, say=print):
+def gate(argv, say=print, timing_run_id=None):
     """Return (arguments for the shared server, snapshot check or None); exit 1 when the link is refused."""
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     parser.add_argument('--draft', action='store_true')
@@ -182,9 +183,7 @@ def gate(argv, say=print):
         given = option(argv, '--project')
         if given and for_a_person(argv):
             project = Path(given).expanduser().resolve()
-            if project.is_dir():
-                say(timing(project, 'mark', '中文原版链接', '--once'))
-            else:
+            if not project.is_dir():
                 say('用时没记上：--project 不是文件夹（%s），中文原版链接照样起。' % project)
         return argv, None
     if not for_a_person(argv):
@@ -202,7 +201,7 @@ def gate(argv, say=print):
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
     import returned_art_acceptance as returned
     if (project/returned.MANIFEST).is_file():
-        return returned_preview(argv, project, export, opts.native, say)
+        return returned_preview(argv, project, export, opts.native, say, timing_run_id)
     import art_receipt
     sys.path.insert(0, str(HERE))
     import chinese_audit as CA
@@ -283,7 +282,6 @@ def gate(argv, say=print):
                 refuse('试玩服务准备期间 Native 已变，请回到试玩前核对候选。')
             rows = CA.read_json(log, [])
             rows = rows if isinstance(rows, list) else []
-            same_export = bool(rows) and isinstance(rows[-1], dict) and rows[-1].get('export_manifest_sha256') == export_sha
             rows.append({'time': CA.now(), 'name': name, 'export': str(export), 'export_manifest_sha256': export_sha,
                          'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'native': str(native) if native else None,
                          'native_tree_sha256': native_sha,
@@ -291,13 +289,33 @@ def gate(argv, say=print):
                          'open_problems': len(problems), **evidence})
             CA.write_json(log, rows)
             say('试玩快照和查过的导出一字不差，记在 %s。' % log)
-            if same_export:
-                say('（和上一个链接是同一份导出，不算新一轮试玩，用时不另记）')
-            else:
-                say(timing(project, 'link', round_number(rows)))
+            say(timing(project, 'publish', 'english:' + export_sha + ':' + str(native_sha or ''), run_id=timing_run_id))
 
         return record_ready_trial
     return argv, verify
+
+
+
+def chinese_ready(argv, say=print, timing_run_id=None):
+    """Observe the real ready boundary, including Chinese links without snapshots.
+    The callback does not re-run visual checks or keep the service timer open.
+    """
+    given = option(argv, '--project')
+    if not given or not for_a_person(argv):
+        return None
+    project = Path(given).expanduser().resolve()
+    if not project.is_dir():
+        return None
+    def ready(directory):
+        try:
+            sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
+            sys.path.insert(0, str(HERE))
+            from chinese_audit import export_manifest
+            identity = 'chinese:' + export_manifest(Path(directory))['sha256']
+            say(timing(project, 'publish', identity, '--kind', 'chinese', run_id=timing_run_id))
+        except Exception as exc:
+            say('用时没记上（中文链接已就绪）：' + str(exc))
+    return ready
 
 
 def main(argv):
@@ -309,10 +327,43 @@ def main(argv):
     if '-h' in argv or '--help' in argv:
         print(HELP, flush=True)
     original = '--chinese-original' in argv
-    argv, verify = gate(argv)
-    shared = runpy.run_path(str(target))
-    shared['main'](argv, verify_snapshot=verify, chinese_original=original,
-                   returned_art=getattr(verify, 'returned_art', None))
+    observation, timer = None, None
+    directory = option(argv, '--directory')
+    project = find_project(directory, option(argv, '--project')) if directory else None
+    if project is not None and for_a_person(argv):
+        try:
+            sys.path.insert(0, str(HERE))
+            import stage_timer as timer
+            observation = timer.begin_observation(project, '试玩服务启动', node_id='preview/service-ready')
+        except Exception as exc:
+            print('用时没记上（服务仍继续启动）：' + str(exc), file=sys.stderr)
+    try:
+        timing_run_id = observation.get('run_id') if observation else None
+        argv, verify = gate(argv, timing_run_id=timing_run_id)
+        shared = runpy.run_path(str(target))
+        chinese_hook = chinese_ready(argv, timing_run_id=timing_run_id) if original else None
+        def on_ready(directory):
+            if chinese_hook:
+                chinese_hook(directory)
+            if observation:
+                timer.finish_observation(observation, note='真实入口与候选已核准，服务就绪')
+        shared['main'](argv, verify_snapshot=verify, chinese_original=original,
+                       returned_art=getattr(verify, 'returned_art', None), on_ready=on_ready)
+    except BaseException as exc:
+        if observation:
+            try:
+                timer.finish_observation(observation, state='interrupted' if isinstance(exc, KeyboardInterrupt) else 'failed',
+                                         exit_code=getattr(exc, 'code', 1), note=type(exc).__name__)
+            except Exception:
+                pass
+        raise
+    finally:
+        if observation and not observation.get('finished'):
+            try:
+                timer.finish_observation(observation, state='interrupted', exit_code=None, note='未到达ready即退出')
+            except Exception:
+                pass
+
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Find the Cocos Creator for a project on this computer and print the build commands (English pack 10.2.10). Read-only.
+"""Find the Cocos Creator for a project on this computer and print the build commands (English pack 10.2.10). Discovery is read-only.
 
 Saul 2026-10-31: the English Skill is used on other people's computers (macOS or Windows). Until 10.2.8 the pack only
 listed the editors on Saul's Mac under /Applications/Cocos/Creator. This script looks where Creator can be on any
@@ -25,6 +25,7 @@ and exit 3: Creator would crash or hang there every time, so the build is not st
 Exit 0 found (exact or substitute), 1 not installed, 2 bad input, 3 this terminal is sandboxed (do not retry).
 """
 import argparse
+import copy
 import json
 import os
 from pathlib import Path
@@ -190,16 +191,149 @@ SANDBOX_MARKS = ('CODEX_SANDBOX', 'CODEX_SANDBOX_NETWORK_DISABLED', 'APP_SANDBOX
 SANDBOX_EXIT = 3
 
 
+def config_path_3x(project, platform_name):
+    name = 'build-config-3x.json' if platform_name == 'bytedance-mini-game' else 'build-config-3x-web-mobile.json'
+    return Path(project).resolve() / 'docs' / 'startup' / name
+
+
+def _json_object(path):
+    value = json.loads(path.read_text(encoding='utf-8-sig'))
+    if not isinstance(value, dict):
+        raise ValueError('构建配置必须是 JSON 对象：' + str(path))
+    return value
+
+
+def build_config_3x(project, platform_name, validate=True):
+    """Typed options from the project's own target task; never builds or edits source."""
+    project = Path(project).resolve()
+    if platform_name not in ('web-mobile', 'bytedance-mini-game'):
+        raise ValueError('不支持的 3.x 构建目标：' + str(platform_name))
+    saved = project / 'profiles/v2/packages/builder.json'
+    options = {}
+    if saved.exists():
+        data = _json_object(saved)
+        common = data.get('common', {})
+        if not isinstance(common, dict):
+            raise ValueError('builder.common 必须是对象')
+        options = copy.deepcopy(common)
+        manager = data.get('BuildTaskManager', {})
+        if not isinstance(manager, dict) or not isinstance(manager.get('taskMap', {}), dict):
+            raise ValueError('builder.BuildTaskManager.taskMap 必须是对象')
+        tasks = []
+        for key, row in manager.get('taskMap', {}).items():
+            if not isinstance(row, dict) or not isinstance(row.get('options', {}), dict):
+                raise ValueError('builder 构建任务格式错误：' + str(key))
+            if row.get('options', {}).get('platform') == platform_name:
+                tasks.append((int(key) if str(key).isdigit() else -1, str(key), row['options']))
+        if tasks:
+            options.update(copy.deepcopy(sorted(tasks, key=lambda x: x[:2])[-1][2]))
+        elif options.get('platform') != platform_name:
+            # Do not reuse another platform's output name or package options.
+            options.pop('outputName', None)
+            packages = options.get('packages', {})
+            options['packages'] = {platform_name: copy.deepcopy(packages.get(platform_name, {}))} if isinstance(packages, dict) else packages
+    platform_profile = project / 'profiles/v2/packages' / (platform_name + '.json')
+    if platform_profile.exists():
+        profile = _json_object(platform_profile)
+        common = profile.get('common', {})
+        platform_options = profile.get('options', {})
+        if not isinstance(common, dict) or not isinstance(platform_options, dict):
+            raise ValueError('平台配置 common/options 必须是对象')
+        if common.get('platform', platform_name) != platform_name:
+            raise ValueError('平台配置名称与 common.platform 不一致')
+        options.update(copy.deepcopy(common))
+        packages = options.setdefault('packages', {})
+        if not isinstance(packages, dict): raise ValueError('packages 必须是对象')
+        for key, value in platform_options.items():
+            if not isinstance(value, dict): raise ValueError('平台 options 项必须是对象：' + key)
+            current = packages.get(key, {})
+            if not isinstance(current, dict): raise ValueError('平台 packages 项必须是对象：' + key)
+            packages[key] = dict(current, **copy.deepcopy(value))
+    for key in ('debug', 'sourceMaps', 'md5Cache', 'mainBundleIsRemote', 'replaceSplashScreen', 'skipCompressTexture', 'useBuiltinServer', 'experimentalEraseModules'):
+        if key in options and type(options[key]) is not bool:
+            raise ValueError('构建配置 %s 必须是 JSON 布尔值，不能使用字符串或数字' % key)
+    options['platform'] = platform_name
+    options['debug'] = platform_name == 'web-mobile'
+    if platform_name == 'bytedance-mini-game': options['sourceMaps'] = False
+    options.setdefault('buildPath', 'project://build')
+    options.setdefault('outputName', platform_name)
+    for key in ('buildPath', 'outputName'):
+        if not isinstance(options[key], str) or not options[key].strip():
+            raise ValueError('构建配置 %s 必须是非空路径' % key)
+    base = options['buildPath']
+    if '://' in base and not base.startswith('project://'):
+        raise ValueError('buildPath 只支持本机路径或 project://')
+    if any(x in options['outputName'] for x in ('/', '\\')) or options['outputName'] in ('.', '..'):
+        raise ValueError('outputName 必须是单个目录名')
+    if not validate:
+        return options
+    if 'scenes' not in options:
+        scenes = []
+        for scene in sorted((project / 'assets').rglob('*.scene')):
+            meta = _json_object(scene.with_suffix(scene.suffix + '.meta'))
+            scenes.append({'url': 'db://' + scene.relative_to(project).as_posix(), 'uuid': meta.get('uuid'), 'inBundle': False})
+        options['scenes'] = scenes
+    scenes = options['scenes']
+    if not isinstance(scenes, list) or not scenes:
+        raise ValueError('没有明确的构建场景；先配置 builder.scenes/startScene，不盲选启动场景')
+    uuids = set()
+    for scene in scenes:
+        if not isinstance(scene, dict) or not isinstance(scene.get('uuid'), str) or not scene['uuid']:
+            raise ValueError('scenes 项必须包含有效 uuid')
+        if scene['uuid'] in uuids: raise ValueError('scenes 包含重复 uuid')
+        uuids.add(scene['uuid'])
+        url = scene.get('url')
+        if not isinstance(url, str) or not url.startswith('db://assets/'):
+            raise ValueError('scene.url 必须指向本工程 assets')
+        path = (project / url[5:]).resolve()
+        if not path.is_relative_to(project / 'assets') or not path.is_file():
+            raise ValueError('构建场景不存在：' + url)
+        if _json_object(path.with_suffix(path.suffix + '.meta')).get('uuid') != scene['uuid']:
+            raise ValueError('构建场景 UUID 与本机 meta 不一致：' + url)
+        if 'inBundle' in scene and type(scene['inBundle']) is not bool:
+            raise ValueError('scene.inBundle 必须是布尔值')
+    if not options.get('startScene') and len(scenes) == 1:
+        options['startScene'] = scenes[0]['uuid']
+    if options.get('startScene') not in uuids:
+        raise ValueError('startScene 不在构建场景中；请明确选择，不能自动换启动场景')
+    if 'packages' in options and not isinstance(options['packages'], dict):
+        raise ValueError('packages 必须是对象')
+    return options
+
+
+def write_build_config_3x(project, platform_name):
+    version, major = project_version(project)
+    if major != 3: raise ValueError('typed JSON 构建配置只用于 Creator 3.x，当前是 ' + version)
+    data = build_config_3x(project, platform_name)
+    target = config_path_3x(project, platform_name)
+    if any(p.is_symlink() for p in (target, *target.parents)):
+        raise ValueError('构建配置输出路径不能经过符号链接')
+    encoded = json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n'
+    if target.exists() and target.read_text(encoding='utf-8') == encoded: return target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(target.name + '.tmp-' + str(os.getpid()))
+    try:
+        temporary.write_text(encoded, encoding='utf-8'); os.replace(temporary, target)
+    finally:
+        if temporary.exists(): temporary.unlink()
+    return target
+
+
 def build_argv(editor, project, major, platform_name):
-    # 简化.11.15: Cocos Creator 2.x names the TikTok (ByteDance) mini-game platform 'bytedance' (build/bytedance);
-    # only 3.x calls it 'bytedance-mini-game'. 2.4.15 given the 3.x name stops with "Cannot read property 'isNative' of
-    # undefined" and then hangs (found 11-05 on a copy of 割草小能手; the delivered builds all used platform=bytedance).
     if platform_name == 'bytedance-mini-game' and major == 2:
         platform_name = 'bytedance'
-    debug = 'true' if platform_name == 'web-mobile' else 'false'
-    flag = '--path' if major == 2 else '--project'
-    return [editor['exe'], flag, str(Path(project).resolve()), '--build', 'platform=%s;debug=%s' % (platform_name, debug)] \
-        + SANDBOX_FLAGS
+    if major == 3:
+        config = str(config_path_3x(project, platform_name))
+        if ';' in config: raise ValueError('Creator configPath 不能包含分号，请使用无分号的工程路径')
+        argument = 'platform=%s;configPath=%s' % (platform_name, config)
+    else:
+        argument = 'platform=%s;debug=%s' % (platform_name, 'true' if platform_name == 'web-mobile' else 'false')
+    return [editor['exe'], '--path' if major == 2 else '--project', str(Path(project).resolve()), '--build', argument] + SANDBOX_FLAGS
+
+
+def config_prepare_argv(project, platform_name):
+    return [sys.executable or 'python3', str(Path(__file__).resolve()), '--project', str(Path(project).resolve()),
+            '--write-build-config', platform_name]
 
 
 def sandbox_problem(env=None, home=None, probe=True):
@@ -332,7 +466,7 @@ def chain(first, second, platform):
 # made (普查 startup_stuck 34/42 款, touch_coord_missing 28/34 款: English builds packaged without that step). The folder
 # comes from the build argv: buildPath (2.4 default `build`, also read from the Build panel's saved buildPath; 3.x
 # default `project://build`) + the platform name (2.4 `bytedance`; 3.x outputName, default `bytedance-mini-game`).
-# configPath or anything it cannot read: no --native step, and the output says to run it by hand.
+# Typed configPath is resolved from the generated plan or a readable JSON; unknown paths get an explicit hint.
 BUILD_OK = {2: (0,), 3: (0, 36)}     # Creator 3.x command-line builds that succeed may exit 36
 
 
@@ -355,7 +489,19 @@ def native_dir(argv, project, major):
     if platform_name not in ('bytedance', 'bytedance-mini-game'):
         return None, '不是 TikTok 构建（platform=%s）' % platform_name
     if opts.get('configPath'):
-        return None, '构建参数用了 configPath，构建目录写在那个配置文件里'
+        config = Path(opts['configPath'])
+        if not config.is_absolute(): config = project / config
+        try:
+            if major == 3 and config == config_path_3x(project, platform_name):
+                data = build_config_3x(project, platform_name, validate=False)
+            elif config.is_file():
+                data = _json_object(config)
+            else: return None, 'configPath 文件不存在：' + str(config)
+            if data.get('platform', platform_name) != platform_name:
+                return None, 'configPath 的 platform 与命令不一致'
+            opts = dict(data, **{k: v for k, v in opts.items() if k != 'configPath'})
+        except (OSError, ValueError, TypeError) as exc:
+            return None, 'configPath 无效：' + str(exc)
     base = opts.get('buildPath')
     if base is None and major == 2:     # 2.4: with no buildPath on the command line Creator uses the Build panel's one
         for saved in (project / 'local' / 'builder.json', project / 'settings' / 'builder.json'):
@@ -368,6 +514,8 @@ def native_dir(argv, project, major):
                     return None, '%s 里的 buildPath 看不懂（%r）' % (saved.name, value)
                 base = value
                 break
+    if base is not None and (not isinstance(base, str) or not base.strip()):
+        return None, 'buildPath 必须是非空字符串'
     base = (base or 'build').strip()
     if base.startswith('project://'):
         base = base[len('project://'):]
@@ -375,6 +523,8 @@ def native_dir(argv, project, major):
         return None, 'buildPath=%s 不是普通路径' % base
     folder = Path(base) if Path(base).is_absolute() else project / base
     name = opts.get('outputName') if major == 3 else None
+    if name is not None and (not isinstance(name, str) or not name.strip() or name in ('.', '..') or any(c in name for c in ('/', '\\'))):
+        return None, 'outputName 必须是单个非空目录名'
     return folder / (name or platform_name), None
 
 
@@ -397,6 +547,14 @@ def chain_native(sync, build, native, platform, major):
                                                 quote(native, platform))
 
 
+def configured_chain(sync, prepare, build, native, platform, major):
+    # No build can run unless configuration generation completed successfully.
+    tail = chain_native(prepare, build, native, platform, major) if native else chain(prepare, build, platform)
+    if not sync: return tail
+    if platform == 'win32': return '%s; if ($LASTEXITCODE -eq 0) { %s }' % (quote(sync, platform), tail)
+    return quote(sync, platform) + ' && ' + tail
+
+
 def report(project, platform=None, env=None, home=None, sandbox_probe=True, board=None, finalize=None):
     platform = sys.platform if platform is None else platform
     version, major = project_version(project)
@@ -414,16 +572,20 @@ def report(project, platform=None, env=None, home=None, sandbox_probe=True, boar
     if pick['editor']:
         for name in ('web-mobile', 'bytedance-mini-game'):
             argv = build_argv(pick['editor'], project, major, name)
+            prepare = config_prepare_argv(project, name) if major == 3 else None
+            text = chain(sync, argv, platform) if sync else quote(argv, platform)
+            if prepare:
+                text = configured_chain(sync, prepare, argv, None, platform, major)
             r.setdefault('commands', {})[name] = {
-                'argv': argv, 'sync_argv': sync, 'steps': [a for a in (sync, argv) if a],
-                'text': chain(sync, argv, platform) if sync else quote(argv, platform)}
+                'argv': argv, 'sync_argv': sync, 'prepare_argv': prepare,
+                'steps': [a for a in (sync, prepare, argv) if a], 'text': text}
         tt = r['commands']['bytedance-mini-game']    # R4J4: after the TikTok build, sync --native <build folder>
         folder, why = native_dir(tt['argv'], project, major)
         tt['native_dir'], tt['build_ok_exit'] = (str(folder) if folder else None), list(BUILD_OK.get(major, (0,)))
         if sync and folder:
             tt['native_sync_argv'] = native_sync_argv(sync, folder)
             tt['steps'].append(tt['native_sync_argv'])
-            tt['text'] = chain_native(sync, tt['argv'], tt['native_sync_argv'], platform, major)
+            tt['text'] = configured_chain(sync, tt['prepare_argv'], tt['argv'], tt['native_sync_argv'], platform, major) if tt['prepare_argv'] else chain_native(sync, tt['argv'], tt['native_sync_argv'], platform, major)
         elif sync:
             r['hints'].append('TikTok 构建命令后面没接 sync --native（%s）：构建完成后手跑 tiktok_finalize.py sync '
                               '--project <工程> --board %s --native <构建日志里的产物目录>' % (why, board))
@@ -456,11 +618,13 @@ def say(r):
     if (r.get('commands', {}).get('bytedance-mini-game') or {}).get('native_sync_argv'):
         tt = r['commands']['bytedance-mini-game']
         lines.append('TikTok 构建成功后（退出码 %s）自动再跑 sync --native %s，把启动件、触摸修正、存档层、host-shim、guard 装进构建；'
-                     '它没过就先改它报的问题，别拿这个构建出包。用脚本跑时 steps 第 3 条只在构建退出码是 build_ok_exit 里的数时跑。'
+                     '它没过就先改它报的问题，别拿这个构建出包。用脚本跑时最后的 native_sync_argv 仅在构建退出码是 build_ok_exit 里的数时跑。'
                      % ('/'.join(str(c) for c in tt['build_ok_exit']), tt['native_dir']))
     if r.get('commands') and r['commands']['web-mobile']['text'].startswith('& '):
         lines.append('（上面是 PowerShell 写法；在 cmd 里去掉开头的「& 」，把「; if ($LASTEXITCODE -eq 0) { … }」写成「&& …」。'
                      '用脚本跑时用 --json 里的 steps，不经过命令行。）')
+    if r.get('major') == 3 and r.get('commands'):
+        lines.append('3.x 构建先运行 prepare_argv，生成 docs/startup/build-config-3x*.json；debug 使用 JSON 布尔值。发现命令只读，生成配置不改源码，配置错误则停止构建。')
     lines += ['注意：' + h for h in r['hints']]
     return '\n'.join(lines)
 
@@ -472,8 +636,17 @@ def main(argv=None):
     ap.add_argument('--busy', action='store_true')
     ap.add_argument('--preflight', action='store_true', help='构建前一刻：这个终端能不能启动 Creator（沙箱受限退出 3，不要重试）')
     ap.add_argument('--json', action='store_true')
+    ap.add_argument('--write-build-config', choices=('web-mobile', 'bytedance-mini-game'), help='仅为 3.x 写入经过验证的布尔 JSON 配置，不启动构建')
     ap.add_argument('--board', choices=BOARDS, help='sync 用的板块（默认读工程 .tiktok-kit/policy.json，没有就是 localize）')
     a = ap.parse_args(argv)
+    if a.write_build_config:
+        if not a.project: ap.error('--write-build-config 需要 --project')
+        try:
+            target = write_build_config_3x(a.project, a.write_build_config)
+        except (OSError, ValueError, TypeError) as error:
+            print('构建配置拒绝：' + str(error)); return 2
+        print(json.dumps({'configPath': str(target)}, ensure_ascii=False) if a.json else str(target))
+        return 0
     if a.preflight:
         problem = sandbox_problem()
         if a.json:

@@ -93,6 +93,8 @@ class NativeSync(unittest.TestCase):
               '{"ver": "1.2.9", "uuid": "1b2c3d4e-0000-4000-8000-00000000abcd", "importer": "scene"}')
         self.p3 = self.tmp / 'proj3x'
         touch(self.p3 / 'package.json', json.dumps({'creator': {'version': '3.8.8'}}))
+        touch(self.p3 / 'assets' / 'Main.scene', '[]')
+        touch(self.p3 / 'assets' / 'Main.scene.meta', '{"uuid":"main-scene"}')
         self.creator = touch(self.tmp / 'FakeCreator', FAKE_CREATOR % sys.executable)
         os.chmod(self.creator, 0o755)
 
@@ -120,12 +122,13 @@ class NativeSync(unittest.TestCase):
         r = self.report(self.p3, '3.8.8', platform='darwin')
         tt = r['commands']['bytedance-mini-game']
         want = str(self.p3.resolve() / 'build' / 'bytedance-mini-game')
-        self.assertEqual(tt['steps'][2][-2:], ['--native', want])
+        self.assertEqual(tt['steps'][-1][-2:], ['--native', want])
+        self.assertEqual(tt['steps'][1], tt['prepare_argv'])
         self.assertEqual(tt['build_ok_exit'], [0, 36])
         self.assertTrue(tt['text'].endswith('--native ' + want), tt['text'])
         win = self.report(self.p3, '3.8.8', platform='win32')['commands']['bytedance-mini-game']['text']
         self.assertRegex(win, r'; if \(\$LASTEXITCODE -eq 0 -or \$LASTEXITCODE -eq 36\) \{ & .*tiktok_finalize\.py'
-                              r'.* sync .*--native .*bytedance-mini-game \} \}$')
+                              r'.* sync .*--native .*bytedance-mini-game \} \} \}$')
         win24 = self.report(self.p2, '2.4.15', platform='win32')['commands']['bytedance-mini-game']['text']
         self.assertRegex(win24, r'; if \(\$LASTEXITCODE -eq 0\) \{ & .*--native .*bytedance \} \}$')
 

@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-08.english-simple.11.17.11",
+  "revision": "2026-11-08.english-simple.11.17.12",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "666f2944ca5bcc93e0b6be0cb3cec88334e15515707bd5626f43c1d5ff3ad867",
-      "bytes": 96575
+      "sha256": "0cf868a0ee66d3357faf63bf8d1de58da6e74fb8342cbddb375ac61b1dca8cf1",
+      "bytes": 93985
     },
     {
       "path": "agents/openai.yaml",
@@ -46,8 +46,8 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "580bea94e298dd29a02cdf7c26209d84fdf060d81e79c2ab65b86533ea80981f",
-      "bytes": 34553
+      "sha256": "bc51941a8f13467f38d88092eb870f027a662495bba26966a95e6ab34b7da971",
+      "bytes": 35129
     },
     {
       "path": "references/fixed-entries.md",
@@ -58,6 +58,11 @@
       "path": "references/local-creator-versions.md",
       "sha256": "0b163a4480dea5d28a23841fb68fceeb65705fadc2c263f878f801796360c8ca",
       "bytes": 5369
+    },
+    {
+      "path": "references/phase-timing.md",
+      "sha256": "9751917ad1774e886b16ee5fb0070a885e1f42e1c449e4a25477016d76be182a",
+      "bytes": 5600
     },
     {
       "path": "scripts/browser_env.py",
@@ -86,8 +91,8 @@
     },
     {
       "path": "scripts/find_creator.py",
-      "sha256": "1578c2e7ef5321473eaf0e32751a1540e2a10cc5a424442fc14a36caeca66c69",
-      "bytes": 28117
+      "sha256": "cd8d4c1d93716dbf49c67e6f5b7d5c6132b5c914da14ecf02d5705b2d854950d",
+      "bytes": 38436
     },
     {
       "path": "scripts/fit_english_labels.py",
@@ -111,13 +116,13 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "2584d7a5cabbdbff011584b5c02e514668b35398ebbba18a27131832ca46eb8a",
-      "bytes": 18008
+      "sha256": "3e82d9b3a616c552a94e47442803ea270b6c11fb4c487fa49d2f2a48cf39d04a",
+      "bytes": 20559
     },
     {
       "path": "scripts/stage_timer.py",
-      "sha256": "f7ec89e3165d6ed26ca30a9d20ea19a265b7868b5d56319ac180caf0457bf145",
-      "bytes": 34882
+      "sha256": "8bf3c91c552959b485d483ec5c3d13840a126f553030ab4389adb324b89fe0f2",
+      "bytes": 60221
     },
     {
       "path": "scripts/test_check_export_images.py",
@@ -128,6 +133,11 @@
       "path": "scripts/test_chinese_audit.py",
       "sha256": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
       "bytes": 31960
+    },
+    {
+      "path": "scripts/test_creator_typed_config.py",
+      "sha256": "1e3ed6e209bc6543613d1b8098a91840ad6e2279661dcfc448e85f05b4fe21fe",
+      "bytes": 7221
     },
     {
       "path": "scripts/test_engine_route.py",
@@ -141,8 +151,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "1f3feb993e730597ecc2acb3eb75d5f2ddeee6e83afd03b5e7c1c9e46dbe0e58",
-      "bytes": 77148
+      "sha256": "4629dc6f2947384220360a216ba1fd6e7bfd964d7fb31fd12d32bc99b8602f0f",
+      "bytes": 78222
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -156,8 +166,13 @@
     },
     {
       "path": "scripts/test_portable_tools.py",
-      "sha256": "2d320778e528d009094b030c78ac12d6406107078f143c0c75463ff07f7f84f9",
-      "bytes": 14432
+      "sha256": "35e6a043148b4421464aa405471cc496e558b101dbbda7593d8cac03dbefae35",
+      "bytes": 14507
+    },
+    {
+      "path": "scripts/test_preview_timing_hooks.py",
+      "sha256": "a728604c25c1f6b3eee18c7af408ee7a1e9c42ded52749b9b48877888b94c609",
+      "bytes": 7117
     },
     {
       "path": "scripts/test_r4d_raw_input_intake.py",
@@ -171,8 +186,8 @@
     },
     {
       "path": "scripts/test_r4j4_native_sync.py",
-      "sha256": "684f879847a4e34f0edb0deb03bdba8392096120566ae468301bf5e5ee08f855",
-      "bytes": 10834
+      "sha256": "b95e5d4a920a3b2966b66296493fd56eacef259611a156bbb10c978d6a66913a",
+      "bytes": 11033
     },
     {
       "path": "scripts/test_r4n3_env_stuck.py",
@@ -191,13 +206,18 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "3f915bd55e2a391ef0c011185c0a4f584c694c498deafe3dc83df01600abdeeb",
-      "bytes": 27741
+      "sha256": "abc902faa76d430f83c85c743f3f2f2b2b383cf39536ed4f8a1069e89d86e63c",
+      "bytes": 27981
     },
     {
       "path": "scripts/test_stage_timer.py",
-      "sha256": "c06fcdc8a89cf9f2dbe373ffca67f07d5c86e28d296577e559d7a5b99a5cddc0",
-      "bytes": 17834
+      "sha256": "f457daea7ad2d5030337e37dd03931565f370695497554af5eac29c95d8f4598",
+      "bytes": 18165
+    },
+    {
+      "path": "scripts/test_stage_timer_runs.py",
+      "sha256": "7431bba2b0166db4fe224dd31c53551a44cde2183c46f5256825395aebaedab1",
+      "bytes": 13737
     },
     {
       "path": "scripts/test_ts_full_check.py",
@@ -225,7 +245,7 @@
       "bytes": 12972
     }
   ],
-  "previous_provenance_sha256": "4877e4bcf32120d81334778d5805c125caa2c741676b6f1db6149d3975037e86",
+  "previous_provenance_sha256": "c2e0464b9ab93dee14e1131acb05187f3093f0a666f54f9514199e2879a2d0e6",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

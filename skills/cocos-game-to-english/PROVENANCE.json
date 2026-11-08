@@ -6,8 +6,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "557655cb757574d55cf7feffe6366afd707c6cd1a3ba4a3ad33db400d5db172f",
-      "bytes": 93216
+      "sha256": "225fcb9ad25c72eca7134613386c9682c8e24284ffef109536c3c68cf6583951",
+      "bytes": 93403
     },
     {
       "path": "agents/openai.yaml",
@@ -459,7 +459,19 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "2026-11-07.codex.11.17.8-art-capture-scope",
+      "scope": "Codex only, pre-capture art scope review",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "557655cb757574d55cf7feffe6366afd707c6cd1a3ba4a3ad33db400d5db172f",
+          "after_sha256": "225fcb9ad25c72eca7134613386c9682c8e24284ffef109536c3c68cf6583951",
+          "after_bytes": 93403
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "61fe34eef8083c375443129cbd99232e25d15d9bc75bd5b72c909755a698d4bd"
+  "previous_local_provenance_sha256": "8d0c6a78efab79340c10f0abccbaf721ea1bd07f9cf9caa87d2f2d91a3ca4660"
 }

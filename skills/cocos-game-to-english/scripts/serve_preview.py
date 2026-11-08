@@ -134,6 +134,39 @@ def pretrial_records(project, export, native):
     return native, native_sha, native_record, record, project / finalize.SOURCE_RECORD, review['distinct_images']
 
 
+def returned_preview(argv, project, export, native, say):
+    """Requested post-delivery visual rework: identity checks, no repeated art QA."""
+    import returned_art_acceptance as returned
+    try:
+        accepted = returned.validate(project, web=export, native=native)
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        refuse('返工交付绑定需更新（不重跑美术）：'+str(error))
+    if not option(argv, '--project'):
+        argv += ['--project', str(project)]
+    log = project/'docs/english/returned-trial-links.json'
+    def verify(snapshot):
+        if returned.web_hash(snapshot) != accepted['web']['sha256']:
+            refuse('返工试玩快照与授权候选字节不同，请定位本次构建差异。')
+        def ready():
+            current = returned.validate(project, web=export, native=native)
+            if current != accepted:
+                refuse('返工授权在启动期间改变，请更新当前交付绑定。')
+            rows = returned.read(log) if log.is_file() else []
+            if not isinstance(rows, list): rows = []
+            rows.append({'time': __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
+                         'status': 'user_accepted', 'ai_art_rechecked': False, 'passed': None,
+                         'export': str(export), 'snapshot': str(snapshot),
+                         'snapshot_manifest_sha256': accepted['web']['sha256'],
+                         'native_tree_sha256': accepted['native']['sha256'],
+                         'acceptance_sha256': accepted['manifest_sha256']})
+            returned.write(log, rows)
+            say('返工试玩身份一致；美术按用户授权接受，未生成新的 AI 美术通过记录。')
+        return ready
+    verify.returned_art = accepted
+    say('用户授权返工交付：沿用既有检查；本轮美术免复验，准备同版试玩。')
+    return argv, verify
+
+
 def gate(argv, say=print):
     """Return (arguments for the shared server, snapshot check or None); exit 1 when the link is refused."""
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
@@ -167,6 +200,9 @@ def gate(argv, say=print):
         refuse('找不到英化工程：加 --project <英化工程>（导出在 <工程>/build/web-mobile 时可以不写）。'
                '第 1 阶段的中文原版链接加 --chinese-original')
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
+    import returned_art_acceptance as returned
+    if (project/returned.MANIFEST).is_file():
+        return returned_preview(argv, project, export, opts.native, say)
     import art_receipt
     sys.path.insert(0, str(HERE))
     import chinese_audit as CA
@@ -275,7 +311,8 @@ def main(argv):
     original = '--chinese-original' in argv
     argv, verify = gate(argv)
     shared = runpy.run_path(str(target))
-    shared['main'](argv, verify_snapshot=verify, chinese_original=original)
+    shared['main'](argv, verify_snapshot=verify, chinese_original=original,
+                   returned_art=getattr(verify, 'returned_art', None))
 
 
 if __name__ == '__main__':

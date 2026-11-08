@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T13:51:17.080Z",
-  "treeHash": "3976ff2ce47a163f39703dc039a1142216ce78ee158882f024a4cc8c140dbcb8",
+  "createdAt": "2026-11-08T13:52:05.203Z",
+  "treeHash": "becf0aa1634a7e3bbebacd32ff137044a92e7c5db525939ad5bd60263928f0da",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3079,20 +3079,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "8f6df8dfb6d1e40a00316a91d310139c12f47dd9f5c2ff7755b7c223efad8918",
+      "treeHash": "8308988281ec7a2259ce104291a44a090b18bbf4ddb1bd8fa1483ee40c9da46a",
       "fileCount": 64,
-      "bytes": 1451684,
+      "bytes": 1454216,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "fbafa8c9d3fbeb11e35aa282f67a715abd8d5d8323ec6673ec08151d1781a4fd",
-          "size": 16882,
+          "hash": "23d0d26a2c3f90cc4f68203b97410e024c4ad585437e14fd6e7b3ee80722e353",
+          "size": 16883,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "9c32ddfd298b63f489018259a0f555db73d9586b5fb0d23ee24c092da88c46d5",
-          "size": 23189,
+          "hash": "33a990cb0d5f32de4cef284ba41b9b8e1f9d1cd925b114191168aa7c8f60c372",
+          "size": 24401,
           "executable": false
         },
         {
@@ -3139,14 +3139,14 @@
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
-          "size": 7475,
+          "hash": "00768090f5fdff8bf353526e3a73f73d43ea6425a58178119c472fff42f9dced",
+          "size": 8052,
           "executable": false
         },
         {
           "path": "references/art-iteration-workflow.md",
-          "hash": "233b4241f5275ddbb2fcac4f468b9a5997726e83f6902994aad9d1aed37cd82d",
-          "size": 11900,
+          "hash": "1a70d06edd7dbcd361fcd52d86de7c08ee86e0bf15c989be6add803b0fe6643c",
+          "size": 12373,
           "executable": false
         },
         {
@@ -3271,8 +3271,8 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "62b1eccdc6516864757fd4a76f2cf62e2a59ce8ccda0fbf6b80023cd1068a657",
-          "size": 31630,
+          "hash": "3e9cefe11c9cb39788838e2213dfc4a0a18de0cc28a7bf0deac323bdd0622da4",
+          "size": 31899,
           "executable": false
         },
         {

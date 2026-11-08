@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T20:04:01.322Z",
-  "treeHash": "824a751d96cd4af2c037d753e8c32d9fbf52f48880dc3f52697fcedc6d6f4c6b",
+  "createdAt": "2026-11-08T20:04:47.982Z",
+  "treeHash": "5c36f67b8a17f709a951fd688dde6ee87231fe63d032ea007c0dbbf065603af5",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3091,20 +3091,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "8308988281ec7a2259ce104291a44a090b18bbf4ddb1bd8fa1483ee40c9da46a",
-      "fileCount": 64,
-      "bytes": 1454216,
+      "treeHash": "73173c59b061c7016097d9c9e58ed3b23e50170b73a8229f44c52547635b5597",
+      "fileCount": 65,
+      "bytes": 1459352,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "23d0d26a2c3f90cc4f68203b97410e024c4ad585437e14fd6e7b3ee80722e353",
-          "size": 16883,
+          "hash": "d2d0b832290b8472e16010442057f4ba8721eed3075dbc71040ce330bf0b685c",
+          "size": 17051,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "33a990cb0d5f32de4cef284ba41b9b8e1f9d1cd925b114191168aa7c8f60c372",
-          "size": 24401,
+          "hash": "1bd0263e243bcaf5c229932fa87cb0b8f25c31619c69fba37d95a99f42a6a9d6",
+          "size": 24449,
           "executable": false
         },
         {
@@ -3169,8 +3169,8 @@
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
-          "size": 16919,
+          "hash": "c66ed4c8dea4fd7af4a87cfa32150f372c4bc4ab03e580daf005a62dfd7e0d25",
+          "size": 17950,
           "executable": false
         },
         {
@@ -3283,8 +3283,8 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "3e9cefe11c9cb39788838e2213dfc4a0a18de0cc28a7bf0deac323bdd0622da4",
-          "size": 31899,
+          "hash": "e27a44ef4d653b3f382a38b2df63ba0fec83b150c41d5b8340e0c8b38d2196c6",
+          "size": 32669,
           "executable": false
         },
         {
@@ -3385,8 +3385,8 @@
         },
         {
           "path": "scripts/cut_sheet_frame.py",
-          "hash": "bed307143f1f9ae4eb3afb4e662c6700d9f8d9c96ff06804a95d44711fdac35d",
-          "size": 6255,
+          "hash": "dd7702c97e75f5a14b86c06f15e8f66a780daa5ae9705b69bbf580c372e28435",
+          "size": 7855,
           "executable": false
         },
         {
@@ -3471,6 +3471,12 @@
           "path": "scripts/test_trim_visible.py",
           "hash": "944ebdfe49ae356658feedd822bbd552da8b862a0f9f912e41ad5a08a33b06ba",
           "size": 2933,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_uneven_word_strip.py",
+          "hash": "c6a76f000264a3ca35e9af3d5a1f08ecd76cf9388c42b170dd7c423c67797c5a",
+          "size": 1519,
           "executable": false
         },
         {

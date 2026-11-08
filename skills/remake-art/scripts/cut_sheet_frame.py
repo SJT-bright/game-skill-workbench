@@ -43,7 +43,24 @@ def seam(projection, index, count):
         raise ValueError(f'boundary {index}/{count}: {len(candidates)} plausible clear bands; supply a separated sheet or individual source')
     return candidates[0]
 
-def extract(sheet, rows, cols, row, col):
+def separated_row_edges(projection, rows):
+    """Opt-in single-column strips: every separator must be wholly transparent.
+
+    Exact band count is intentional. Extra detached rows, a missing separator or
+    artwork at the outside edge must be reviewed rather than guessed/merged.
+    """
+    bands = []
+    for occupied, group in itertools.groupby(range(len(projection)), projection.__getitem__):
+        coords = list(group)
+        if not occupied and len(coords) >= 4:
+            bands.append((coords[0], coords[-1] + 1))
+    if (len(bands) != rows + 1 or bands[0][0] != 0
+            or bands[-1][1] != len(projection)):
+        raise ValueError(f'expected {rows + 1} complete clear bands including outer margins; found {len(bands)}')
+    return [0] + [(a + b) // 2 for a, b in bands[1:-1]] + [len(projection)]
+
+
+def extract(sheet, rows, cols, row, col, rows_from_bands=False):
     if not (1 <= row <= rows and 1 <= col <= cols):
         raise ValueError('row or column outside grid')
     im = sheet.convert('RGBA')
@@ -51,7 +68,13 @@ def extract(sheet, rows, cols, row, col):
     if not mask.getbbox() or mask.getextrema()[0] != 0:
         raise ValueError('expected transparent sheet')
     yp = mask.getprojection()[1]
-    top, bottom = (seam(yp, i, rows) for i in (row-1, row))
+    if rows_from_bands:
+        if cols != 1:
+            raise ValueError('rows-from-bands only accepts a single-column strip')
+        edges = separated_row_edges(yp, rows)
+        top, bottom = edges[row-1:row+1]
+    else:
+        top, bottom = (seam(yp, i, rows) for i in (row-1, row))
     xp = mask.crop((0, top, im.width, bottom)).getprojection()[0]
     left, right = (seam(xp, i, cols) for i in (col-1, col))
     cell = (left, top, right, bottom)
@@ -94,9 +117,13 @@ def main():
     parser.add_argument('--fixed-rect', type=int, nargs=4, metavar=('L','T','R','B'),
                         help='use an unrotated integer source rectangle mandated by the importer')
     parser.add_argument('--source-sha256', help='expected hash of the visually approved source sheet')
+    parser.add_argument('--rows-from-bands', action='store_true',
+                        help='single-column strip with exactly ROWS+1 transparent horizontal bands; requires approved source hash')
     art_production.add_arguments(parser)
     args=parser.parse_args()
     linked = art_production.requested(args, parser)
+    if args.rows_from_bands and not args.source_sha256:
+        parser.error('--rows-from-bands requires --source-sha256 of the visually approved row order')
     receipt=args.out.with_suffix('.crop.json')
     if (not linked and (args.out.exists() or receipt.exists())) or args.out.suffix.lower()!='.png':
         parser.error('supply a new .png path with no previous receipt')
@@ -104,14 +131,14 @@ def main():
         record = None
         if linked:
             record = art_production.prepare(args.project, args.asset_id, args.cases, 'sheet_frame', args.out.resolve(),
-                sheet=args.sheet.resolve(), parameters={'grid': args.grid, 'cell': args.cell, 'fixed_rect': args.fixed_rect}, final_size=args.final_size, usage_budget=args.usage_budget)
+                sheet=args.sheet.resolve(), parameters={'grid': args.grid, 'cell': args.cell, 'fixed_rect': args.fixed_rect, 'rows_from_bands': args.rows_from_bands}, final_size=args.final_size, usage_budget=args.usage_budget)
         data = args.sheet.read_bytes()
         sheet_hash = hashlib.sha256(data).hexdigest()
         if args.source_sha256 and args.source_sha256.lower() != sheet_hash:
             raise ValueError('source differs from approved sheet')
         with Image.open(io.BytesIO(data)) as im:
             rgba = im.convert('RGBA')
-            master,cell,bounds=extract(rgba,*args.grid,*args.cell)
+            master,cell,bounds=extract(rgba,*args.grid,*args.cell, rows_from_bands=args.rows_from_bands)
             if args.fixed_rect:
                 bounds = tuple(args.fixed_rect)
                 master = fixed_frame(rgba, cell, bounds)
@@ -119,8 +146,9 @@ def main():
         parser.exit(2,f'crop refused: {exc}\n')
     if record is not None:
         master = art_production.apply_derivations(master, record)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     master.save(args.out)
-    receipt.write_text(json.dumps(dict(sheet_sha256=sheet_hash,mode=("fixed_rect" if args.fixed_rect else "tight_master"),grid=args.grid,cell=args.cell,cell_rect=cell,crop_rect=bounds,master_sha256=digest(args.out)),indent=2))
+    receipt.write_text(json.dumps(dict(sheet_sha256=sheet_hash,mode=("fixed_rect" if args.fixed_rect else "tight_master"),rows_from_bands=args.rows_from_bands,grid=args.grid,cell=args.cell,cell_rect=cell,crop_rect=bounds,master_sha256=digest(args.out)),indent=2))
     if record is not None:
         print(json.dumps(art_production.commit(args.project, record)))
 if __name__=='__main__':main()

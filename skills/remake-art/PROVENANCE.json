@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.11",
+  "revision": "2026-11-08.english-simple.11.17.12",
   "skill": "remake-art",
-  "previous_provenance_sha256": "ae6f11cc3321cf3cd65ad9662a8da91cfe980b0c85fcf098d16ffb43c8ff49f9",
+  "previous_provenance_sha256": "23d0d26a2c3f90cc4f68203b97410e024c4ad585437e14fd6e7b3ee80722e353",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "33a990cb0d5f32de4cef284ba41b9b8e1f9d1cd925b114191168aa7c8f60c372",
-      "bytes": 24401
+      "sha256": "1bd0263e243bcaf5c229932fa87cb0b8f25c31619c69fba37d95a99f42a6a9d6",
+      "bytes": 24449
     },
     {
       "path": "agents/openai.yaml",
@@ -62,8 +62,8 @@
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
-      "bytes": 16919
+      "sha256": "c66ed4c8dea4fd7af4a87cfa32150f372c4bc4ab03e580daf005a62dfd7e0d25",
+      "bytes": 17950
     },
     {
       "path": "references/button-group-review.md",
@@ -157,8 +157,8 @@
     },
     {
       "path": "references/production-prevention.md",
-      "sha256": "3e9cefe11c9cb39788838e2213dfc4a0a18de0cc28a7bf0deac323bdd0622da4",
-      "bytes": 31899
+      "sha256": "e27a44ef4d653b3f382a38b2df63ba0fec83b150c41d5b8340e0c8b38d2196c6",
+      "bytes": 32669
     },
     {
       "path": "references/saul-art-rules.md",
@@ -242,8 +242,8 @@
     },
     {
       "path": "scripts/cut_sheet_frame.py",
-      "sha256": "bed307143f1f9ae4eb3afb4e662c6700d9f8d9c96ff06804a95d44711fdac35d",
-      "bytes": 6255
+      "sha256": "dd7702c97e75f5a14b86c06f15e8f66a780daa5ae9705b69bbf580c372e28435",
+      "bytes": 7855
     },
     {
       "path": "scripts/make_greybox_reference.py",
@@ -314,6 +314,11 @@
       "path": "scripts/test_trim_visible.py",
       "sha256": "944ebdfe49ae356658feedd822bbd552da8b862a0f9f912e41ad5a08a33b06ba",
       "bytes": 2933
+    },
+    {
+      "path": "scripts/test_uneven_word_strip.py",
+      "sha256": "c6a76f000264a3ca35e9af3d5a1f08ecd76cf9388c42b170dd7c423c67797c5a",
+      "bytes": 1519
     },
     {
       "path": "scripts/trim_visible.py",

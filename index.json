@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "d11f9368-69ac-4a95-b1e4-6104f9c55285",
+      "skillId": "s-21e83a6b3e72cb97b66b",
+      "directory": "cocos-game-check",
+      "name": "cocos-game-check",
+      "version": "v30",
+      "createdAt": "2026-11-08T16:57:36.946Z",
+      "summary": "文件变更：新增 0，修改 6，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 6,
+        "deleted": 0
+      },
+      "treeHash": "8d0207788a3b96f8a6c91360a80bbeed35037b2c2907452d32bc0d90293998c7",
+      "bytes": 1969999,
+      "fileCount": 184
+    },
+    {
       "id": "ed1fe8dc-46ee-406e-beaa-9ec64747d525",
       "skillId": "s-bedd22bb6c578608dd49",
       "directory": "grok-delegate",

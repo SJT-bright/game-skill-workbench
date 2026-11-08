@@ -203,6 +203,22 @@ def inspect_zip(archive, platform='tiktok', feedback=None):
     return result
 
 
+def inspect_final_zip(archive, platform='tiktok', feedback=None):
+    """Fresh final-package gate. TikTok adds official CLI checks to the size receipt."""
+    result = inspect_zip(archive, platform, feedback)
+    if platform == 'tiktok':
+        result['size_passed'] = result['passed']
+        if result['passed']:
+            from tiktok_cli_gate import verify
+            cli = result['tiktok_cli'] = verify(result['archive'], result['sha256'])
+            result['passed'] = cli['passed']
+            result['errors'].extend(cli['errors'])
+        else:
+            result['tiktok_cli'] = {'passed': False, 'status': 'blocked_by_size_or_zip_check'}
+        result['boundary'] = 'Fresh local ZIP/CRC/size and TikTok CLI checks; platform upload and device tests are separate.'
+    return result
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--zip',type=Path,required=True)
@@ -213,7 +229,7 @@ def main():
     if args.report.exists() or args.report.is_symlink() or args.report.resolve()==args.zip.resolve():
         parser.error('report must be a new file distinct from ZIP; rerun with a fresh report path')
     try:
-        result=inspect_zip(args.zip,args.platform,args.platform_feedback)
+        result=inspect_final_zip(args.zip,args.platform,args.platform_feedback)
         args.report.parent.mkdir(parents=True,exist_ok=True)
         with args.report.open('x',encoding='utf-8') as out:
             json.dump(result,out,ensure_ascii=False,indent=2);out.write('\n')

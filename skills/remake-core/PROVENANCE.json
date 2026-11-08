@@ -3865,6 +3865,46 @@
           "method": "retain"
         }
       ]
+    },
+    {
+      "id": "tiktok-cli-final-zip-20261108",
+      "authority": "User requested automatic official CLI check and build for every final TikTok test ZIP.",
+      "files": [
+        {
+          "path": "scripts/upload_size_gate.py",
+          "sha256": "34f6872c5f52506f73f4e37d4425aa65d59f7cae22378b26c07b0159130ac8f2"
+        },
+        {
+          "path": "scripts/tiktok_cli_gate.py",
+          "sha256": "c458ca8e7ac5e615d984c61d4d15e99bd48d78df57678b696bcad7cbd459cb25"
+        },
+        {
+          "path": "scripts/make_tiktok_zip.py",
+          "sha256": "26b6de4fa794440092806ceb2de8f4c3179192ea06b6e8441741e23ce59e74c3"
+        },
+        {
+          "path": "references/incremental-checks.md",
+          "sha256": "6ec41874645ae7c2773a5489a36f425ed30cfd34a97aee050733bb141032d2f5"
+        },
+        {
+          "path": "scripts/test_upload_size_gate.py",
+          "sha256": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c"
+        }
+      ]
+    },
+    {
+      "id": "tiktok-cli-once-per-handoff-20261108",
+      "authority": "User requested one fresh official CLI check/build on the final ZIP per delivery.",
+      "files": [
+        {
+          "path": "scripts/make_tiktok_zip.py",
+          "sha256": "d958c5067b05db8b3c04cbe912a7f69c063054e90a68d1dbc6c212b47bd355bf"
+        },
+        {
+          "path": "scripts/upload_size_gate.py",
+          "sha256": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e"
+        }
+      ]
     }
   ],
   "previous_local_provenance_sha256": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8"

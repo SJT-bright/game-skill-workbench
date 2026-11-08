@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T16:56:45.593Z",
-  "treeHash": "1cd3bc09a38e459ac9fc4f8ef8d1b6d4f44bddff4d91751f4167b7c1db3fd20e",
+  "createdAt": "2026-11-08T16:59:58.022Z",
+  "treeHash": "12816f34552507a6fc384f5a94ed9d1c65566283a349ce5bd95645f732cd1355",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3471,14 +3471,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "b6577056bccb634177f8102b141b88687a8bf887a7c3e2a86c4e1e9cf6686fd0",
-      "fileCount": 645,
-      "bytes": 12614913,
+      "treeHash": "a12e7da10ea1849cde200b993e89c6ac44727d5877d8c3baa6717b6538a24703",
+      "fileCount": 646,
+      "bytes": 12626335,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "3df2759740f574a16e96d7d79e89a3e2b3c81168e4af9339ff5e87d11b357aad",
-          "size": 146514,
+          "hash": "be92b5fae537c99cc201ea8828af34dda9fb4c3565b8aab78219383af2e4d1d4",
+          "size": 148003,
           "executable": false
         },
         {
@@ -4515,8 +4515,8 @@
         },
         {
           "path": "references/incremental-checks.md",
-          "hash": "7a769c99c4d103c096be4ec2bcd246c46a3967cb7bbab648eecda94592d17542",
-          "size": 9899,
+          "hash": "6ec41874645ae7c2773a5489a36f425ed30cfd34a97aee050733bb141032d2f5",
+          "size": 9934,
           "executable": false
         },
         {
@@ -7047,8 +7047,8 @@
         },
         {
           "path": "scripts/test_upload_size_gate.py",
-          "hash": "e5c8fc8b30bd5c96c042edbcd76c187b06220ed5c9334a7639707e6c460b3b90",
-          "size": 8570,
+          "hash": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c",
+          "size": 10647,
           "executable": false
         },
         {
@@ -7103,6 +7103,12 @@
           "path": "scripts/test_writer_regressions.py",
           "hash": "4887492b8b62d9de09ec6fd785ceaa07d77a64bd23b9cc22da9da3df67344afc",
           "size": 15145,
+          "executable": false
+        },
+        {
+          "path": "scripts/tiktok_cli_gate.py",
+          "hash": "c458ca8e7ac5e615d984c61d4d15e99bd48d78df57678b696bcad7cbd459cb25",
+          "size": 7016,
           "executable": false
         },
         {
@@ -7311,8 +7317,8 @@
         },
         {
           "path": "scripts/upload_size_gate.py",
-          "hash": "d71d441a6ce30d203cac6734194ec857b7fa00261143ba0b3b72c0e1aed92302",
-          "size": 13068,
+          "hash": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
+          "size": 13873,
           "executable": false
         },
         {

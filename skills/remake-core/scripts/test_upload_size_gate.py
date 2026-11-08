@@ -1,11 +1,14 @@
 """Final ZIP partition boundaries and fresh delivery receipts; no browser/CI."""
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
-from upload_size_gate import enforce, enforce_files, inspect_files, inspect_zip
+from upload_size_gate import enforce, enforce_files, inspect_files, inspect_final_zip, inspect_zip
+from tiktok_cli_gate import invoke
 
 
 def payload():
@@ -153,6 +156,38 @@ class SizeGate(unittest.TestCase):
             self.assertFalse(d['passed']);self.assertIn('rejected',d['errors'][0])
             feedback.write_text(json.dumps({'platform':'tiktok','rejected_sha256':a['sha256'].upper()}))
             self.assertFalse(inspect_zip(q,feedback=feedback)['passed'])
+
+    def test_final_gate_binds_cli_to_zip_and_preserves_rejection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / 'candidate.zip'
+            with zipfile.ZipFile(archive, 'w') as zipped:
+                for name, data in payload().items():
+                    zipped.writestr(name, data)
+            cli_failure = {'passed': False, 'errors': ['ttmg build failed']}
+            with patch('tiktok_cli_gate.verify', return_value=cli_failure) as cli:
+                result = inspect_final_zip(archive)
+                cli.assert_called_once_with(str(archive.resolve()), result['sha256'])
+            self.assertTrue(result['size_passed'])
+            self.assertFalse(result['passed'])
+            self.assertEqual(result['errors'], ['ttmg build failed'])
+            feedback = root / 'feedback.json'
+            feedback.write_text(json.dumps({'platform': 'tiktok', 'rejected_sha256': result['sha256']}))
+            with patch('tiktok_cli_gate.verify') as cli:
+                rejected = inspect_final_zip(archive, feedback=feedback)
+                cli.assert_not_called()
+            self.assertFalse(rejected['passed'])
+            self.assertTrue(rejected['platform_feedback']['same_rejected_archive'])
+
+    def test_cli_check_and_build_have_different_success_statuses(self):
+        for command, status in [('check', 'passed'), ('build', 'succeeded')]:
+            with self.subTest(command=command):
+                for exit_code in (0, 1):
+                    stdout = json.dumps({'command': command, 'status': status, 'summary': {'errors': 0}})
+                    completed = subprocess.CompletedProcess([], exit_code, stdout, '')
+                    with patch('tiktok_cli_gate.run', return_value=(completed, 0.1)):
+                        result = invoke(('node', 'cli.js'), command, Path('game'), Path('.'))
+                    self.assertEqual(result['passed'], exit_code == 0)
 
 
 if __name__=='__main__':

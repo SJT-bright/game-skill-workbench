@@ -13,6 +13,7 @@ import sys
 import time
 import uuid
 import os
+import runtime_timing as RT
 
 CORE=Path(__file__).resolve().parents[3]/'remake-core/scripts'
 sys.path.insert(0,str(CORE))
@@ -39,7 +40,7 @@ def unit_ids(name, meta, adapter, prechecked=False):
 def _rule(rr,meta,engine):
     host=rr.HOST3 if engine=='3.x' else rr.HOST2
     common=[p for p in rr.TOOL.glob('*.mjs') if p.name!='frame_rate_compare.mjs']
-    return CL.tool_fingerprint([Path(rr.__file__),meta['script'],meta['script'].with_suffix('.json'),*common,host,
+    return RT.rule_fingerprint(CL, [Path(rr.__file__),meta['script'],meta['script'].with_suffix('.json'),*common,host,
                                 Path(__file__),CORE/'check_ledger.py'])
 
 def _unit_row(row,unit):
@@ -136,6 +137,7 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                 result=getattr(exc,'summary',None)
                 if not result:raise
             batch_report.update(result)
+            batch_report['_timing_batch_id'] = uuid.uuid4().hex
             after_roots.update(root())
             missing_owner=CL.unmapped_changes(project,roots,after_roots)
             if missing_owner:raise CL.NeedsScope('执行期间出现未归属变化：'+', '.join(missing_owner))
@@ -159,9 +161,10 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                  'problems':[x for r in parts for x in r.get('problems',[])]+(['missing units: '+','.join(sorted(missing))] if missing else []),
                  'warnings':list(dict.fromkeys(w for r in parts for w in r.get('warnings',[]))),
                  'evidence':next((r.get('evidence') for r in parts if r.get('evidence')),None),
-                 'seconds':0 if all(proofs[c]['reused'] for c in members) else batch_report.get('seconds',0),
+                 'seconds':RT.suite_seconds(batch_report, name, all(proofs[c]['reused'] for c in members)),
                  'incremental':{cid:proofs[cid] for cid in members}}
             row['browser']=any(not proofs[cid]['reused'] and results[cid].get('browser',True) for cid in members)
+            row['timing']=RT.suite_metadata(batch_report, name, all(proofs[c]['reused'] for c in members))
             if all(proofs[c]['reused'] for c in members):row['reused_from']={'ledger':str(ledger.home),'checks':members}
             if returned_art and name == 'layout_state' and pre[name] is None:
                 row.update(functional_passed=row['passed'], accepted_for_delivery=row['passed'],

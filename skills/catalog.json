@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T16:59:58.022Z",
-  "treeHash": "12816f34552507a6fc384f5a94ed9d1c65566283a349ce5bd95645f732cd1355",
+  "createdAt": "2026-11-08T20:01:14.432Z",
+  "treeHash": "cfd61cb43561cb899f7164edba7c1b596262b07afcd53abef2b830e830e1ca26",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,14 +245,14 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "8d0207788a3b96f8a6c91360a80bbeed35037b2c2907452d32bc0d90293998c7",
-      "fileCount": 184,
-      "bytes": 1969999,
+      "treeHash": "709c2736b3c064f57e876131d0d27dc60338bac5b21b77a315a94f3ecdc7e9ad",
+      "fileCount": 186,
+      "bytes": 1974971,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "f6209b5a4ba3caa713e1f6da458285be056196314ff8a0343700403d892ab90a",
-          "size": 53139,
+          "hash": "2b2ca698227ccf1c68eb46b4c1789c6f04bb839ffd38c126a1c6a997959cfa6f",
+          "size": 51639,
           "executable": false
         },
         {
@@ -431,8 +431,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "fb30164f0e9365d37ee043b8ce8d56e0bc8d17e46f0464e75294fb0d238eee67",
-          "size": 21877,
+          "hash": "dd3cb39ec3c88ae6e4616de9875491e81d107b498eb886ca8c70ef81ff100b9a",
+          "size": 21979,
           "executable": false
         },
         {
@@ -647,14 +647,20 @@
         },
         {
           "path": "package-check/scripts/rework_scope.py",
-          "hash": "dbf16af09a158473f0765192283793570e1d107771f35d3e57d27932d9ece671",
-          "size": 43129,
+          "hash": "6b523ed2a1c322b54a7d15c098a029dc14f08c7f5b37dcdaa1985c9109a219a4",
+          "size": 43290,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/runtime-reporting-compat.json",
+          "hash": "5b2106bfccb91e54a6859a4b638a2c1951bbfaef10b8e594a638a42108980f76",
+          "size": 1659,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_incremental.py",
-          "hash": "f8224ece890c1c7dcd152f16de45674ac074b3349f0f3bd41c9a628f84d6aff6",
-          "size": 12760,
+          "hash": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
+          "size": 12961,
           "executable": false
         },
         {
@@ -934,6 +940,12 @@
           "executable": false
         },
         {
+          "path": "package-check/scripts/runtime_timing.py",
+          "hash": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
+          "size": 3192,
+          "executable": false
+        },
+        {
           "path": "package-check/scripts/test_ad_host_mouse_touch.py",
           "hash": "df27ecf52f0543eaca729681fe8c5d425b773821095919c61cd6e68b42590c5f",
           "size": 4636,
@@ -983,8 +995,8 @@
         },
         {
           "path": "package-check/scripts/test_delivery_logic_records.py",
-          "hash": "739cde0bccd6fc3eab5ae503a56e50387d08ba6ebd10f459925f70b0ef6e674b",
-          "size": 7832,
+          "hash": "069d4ffc566c67e75c46d6ef7ff6fca22d550fa7f2d401fad3deb8fb9740774f",
+          "size": 8989,
           "executable": false
         },
         {

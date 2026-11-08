@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-08.english-simple.11.17.11",
+  "revision": "2026-11-08.english-simple.11.17.12",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "77462f8f26c4ba919ca5bd5ac7c21368bf8da3643198422e3d2f19f343efb3e2",
-      "bytes": 21386
+      "sha256": "65f85f694c04d58f27d0a527508c594eac4126d59fcf92c98ed6e1a54f947a49",
+      "bytes": 21836
     },
     {
       "path": "agents/openai.yaml",
@@ -141,8 +141,8 @@
     },
     {
       "path": "package-check/README.md",
-      "sha256": "62c2e2db857ace8fb46af5e83a9ef79985d37b4ab344182a4e7e2bfb35cfd631",
-      "bytes": 4361
+      "sha256": "8b0d6bbcaceb17a256ef67fe547ce280177c156583c7ad5d0814d2e483abeb4b",
+      "bytes": 4381
     },
     {
       "path": "package-check/references/bootstrap-order-review.md",
@@ -151,8 +151,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "fb30164f0e9365d37ee043b8ce8d56e0bc8d17e46f0464e75294fb0d238eee67",
-      "bytes": 21877
+      "sha256": "dd3cb39ec3c88ae6e4616de9875491e81d107b498eb886ca8c70ef81ff100b9a",
+      "bytes": 21979
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -181,8 +181,8 @@
     },
     {
       "path": "package-check/references/fresh-upload-size.md",
-      "sha256": "8c2d824173d4fe8af62257670b3033020c23beb72cd2b691d0fc3e3d49782617",
-      "bytes": 3772
+      "sha256": "48993ff40ef62f2d2f0b77e527b439fd188a547e48559cdcc209f77aa2c22fc8",
+      "bytes": 5086
     },
     {
       "path": "package-check/references/gate-order-and-identity.md",
@@ -326,18 +326,23 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "22acb00dd71064b7cd7e92a893c92c5b42bf46954650de26b454a69d49675859",
-      "bytes": 16260
+      "sha256": "e8d6a4b22aa5d5f7051117c14cc95731333243e7f8ca30dd49d12247cc10b213",
+      "bytes": 16657
     },
     {
       "path": "package-check/scripts/rework_scope.py",
-      "sha256": "dbf16af09a158473f0765192283793570e1d107771f35d3e57d27932d9ece671",
-      "bytes": 43129
+      "sha256": "6b523ed2a1c322b54a7d15c098a029dc14f08c7f5b37dcdaa1985c9109a219a4",
+      "bytes": 43290
+    },
+    {
+      "path": "package-check/scripts/runtime-reporting-compat.json",
+      "sha256": "5b2106bfccb91e54a6859a4b638a2c1951bbfaef10b8e594a638a42108980f76",
+      "bytes": 1659
     },
     {
       "path": "package-check/scripts/runtime_incremental.py",
-      "sha256": "f8224ece890c1c7dcd152f16de45674ac074b3349f0f3bd41c9a628f84d6aff6",
-      "bytes": 12760
+      "sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
+      "bytes": 12961
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -570,6 +575,11 @@
       "bytes": 64768
     },
     {
+      "path": "package-check/scripts/runtime_timing.py",
+      "sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
+      "bytes": 3192
+    },
+    {
       "path": "package-check/scripts/test_ad_host_mouse_touch.py",
       "sha256": "df27ecf52f0543eaca729681fe8c5d425b773821095919c61cd6e68b42590c5f",
       "bytes": 4636
@@ -611,8 +621,8 @@
     },
     {
       "path": "package-check/scripts/test_delivery_logic_records.py",
-      "sha256": "739cde0bccd6fc3eab5ae503a56e50387d08ba6ebd10f459925f70b0ef6e674b",
-      "bytes": 7832
+      "sha256": "069d4ffc566c67e75c46d6ef7ff6fca22d550fa7f2d401fad3deb8fb9740774f",
+      "bytes": 8989
     },
     {
       "path": "package-check/scripts/test_device_issue_repro.py",
@@ -631,8 +641,8 @@
     },
     {
       "path": "package-check/scripts/test_gate_order_and_identity.py",
-      "sha256": "848ea205768261c43f8345a082ec4b732e659268d3c37f00018eacf1576d7c1c",
-      "bytes": 8648
+      "sha256": "29e05882b3e8c10bfb9111b88374c83c4ff71ab07798f23df6ce13494eda820b",
+      "bytes": 9958
     },
     {
       "path": "package-check/scripts/test_geom_camera.py",
@@ -920,7 +930,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "d33ec9fbf6df8cc8c1661c973dde26d65d4f820202b88265321a44fc3328e7b6",
+  "previous_provenance_sha256": "b1addad4fb6b9b714ebdc2695ac9663ca87a859e136efbfc2ae4e31abc8fb26c",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -1251,54 +1261,6 @@
           "after_sha256": "8391d07d808c1fc2214735ad12129574c7200bfa987157d6247fd3e1c38cf2a4",
           "after_bytes": 6009,
           "method": "reviewed_merge"
-        }
-      ]
-    },
-    {
-      "id": "tiktok-cli-final-zip-20261108",
-      "authority": "User requested automatic official CLI check and build for every final TikTok test ZIP.",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "sha256": "61a314fb5a162cc55640597180123f779bd504f422f6791384fc88828f2eca40"
-        },
-        {
-          "path": "package-check/README.md",
-          "sha256": "8b0d6bbcaceb17a256ef67fe547ce280177c156583c7ad5d0814d2e483abeb4b"
-        },
-        {
-          "path": "package-check/references/fresh-upload-size.md",
-          "sha256": "9639d51475d81cb7c075d999c0f65c6997671336a3304914d2111475280a4fa9"
-        },
-        {
-          "path": "package-check/scripts/build_checked_zip.py",
-          "sha256": "f7a56a8b015d5cf147e351de61798771f490d3da2d9827cfa1c21c8fd97aece0"
-        },
-        {
-          "path": "package-check/scripts/prepare_delivery.py",
-          "sha256": "e8d6a4b22aa5d5f7051117c14cc95731333243e7f8ca30dd49d12247cc10b213"
-        }
-      ]
-    },
-    {
-      "id": "tiktok-cli-once-per-handoff-20261108",
-      "authority": "User requested one fresh official CLI check/build on the final ZIP per delivery.",
-      "files": [
-        {
-          "path": "package-check/scripts/build_checked_zip.py",
-          "sha256": "9be1842ebd675cf8e0a9b59de21e46f11dbf45382ad79c6abda1199276c64382"
-        },
-        {
-          "path": "SKILL.md",
-          "sha256": "65f85f694c04d58f27d0a527508c594eac4126d59fcf92c98ed6e1a54f947a49"
-        },
-        {
-          "path": "package-check/references/fresh-upload-size.md",
-          "sha256": "48993ff40ef62f2d2f0b77e527b439fd188a547e48559cdcc209f77aa2c22fc8"
-        },
-        {
-          "path": "package-check/scripts/test_gate_order_and_identity.py",
-          "sha256": "29e05882b3e8c10bfb9111b88374c83c4ff71ab07798f23df6ce13494eda820b"
         }
       ]
     }

@@ -702,6 +702,9 @@ def finalized_files(native, project, board=None, app_id=None):
     native = Path(native).resolve()
     board, options = source_settings(project, board)
     options['png_cache_read_only'] = True
+    prepared = F.prepared_native_result(native, project, board, app_id, options=options)
+    if prepared is not None:
+        return native_files(native), board
     tmp = Path(tempfile.mkdtemp(prefix='rework-preview-'))
     try:
         copy = tmp / (native.name or 'native')

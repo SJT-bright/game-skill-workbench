@@ -90,7 +90,16 @@ class DeliveryLogicRecords(unittest.TestCase):
         verified = {'sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
                     'file_sha256': {n: hashlib.sha256(d).hexdigest() for n, d in files.items()},
                     'entry': 'official', 'runtime_execution': 'synthetic verifier boundary'}
-        with patch.object(P.tempfile, 'gettempdir', return_value='/nonexistent-temp'), \
+        # This fixture exercises source-record reuse, not the installed external CLI.
+        # Keep the real final-ZIP size/config/hash inspection; isolate only CLI execution.
+        def cli_boundary(actual_archive, expected_sha):
+            self.assertEqual(Path(actual_archive).resolve(), archive.resolve())
+            self.assertEqual(expected_sha, verified['sha256'])
+            self.assertEqual(hashlib.sha256(Path(actual_archive).read_bytes()).hexdigest(), expected_sha)
+            return {'passed': True, 'errors': [], 'version': 'synthetic-cli-boundary'}
+
+        with patch('tiktok_cli_gate.verify', side_effect=cli_boundary) as cli, \
+                patch.object(P.tempfile, 'gettempdir', return_value='/nonexistent-temp'), \
                 patch.object(P, 'writer_board', return_value='localize'), \
                 patch.object(P, 'check', return_value=verified), patch.object(P, 'native_files', return_value=files), \
                 patch.object(P.package_obligations, 'verify', return_value={}), \
@@ -103,6 +112,13 @@ class DeliveryLogicRecords(unittest.TestCase):
         self.assertEqual(result['logic_source_binding']['validation'], 'existing_case_records')
         self.assertEqual(result['logic_source_binding']['current_source_sha256'], R.source_digest(self.root))
         self.assertTrue(record.is_file())
+        cli.assert_called_once_with(str(archive.resolve()), verified['sha256'])
+        size = json.loads(Path(str(record.resolve()) + '.size.json').read_text())
+        self.assertTrue(size['size_passed'])
+        self.assertEqual(size['sha256'], verified['sha256'])
+        self.assertEqual(size['total_bytes'], sum(len(data) for data in files.values()))
+        self.assertEqual(result['fresh_size_check']['sha256'], verified['sha256'])
+        self.assertFalse(result['fresh_size_check']['reused'])
 
     def test_related_source_change_refuses_without_new_execution(self):
         (self.root / 'assets/main.js').write_text('const changed = true;')

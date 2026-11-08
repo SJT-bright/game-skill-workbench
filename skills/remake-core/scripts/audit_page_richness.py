@@ -2555,14 +2555,43 @@ def under(path, prefix):
     return path == prefix or path.startswith(prefix + '/')
 
 
-def load(folders):
+def _verified_legacy_capture_ids(project, folder):
+    """Reuse the existing sealed-round verifier; never write/stamp legacy evidence."""
+    try:
+        project = Path(project).resolve()
+        store = project / '.tiktok-kit/art-rounds'
+        current = json.loads((store / 'current.json').read_text(encoding='utf-8'))
+        version = current['version']
+        if not isinstance(version, str) or not re.fullmatch(r'[a-f0-9]{64}', version):
+            return {}
+        snapshot = json.loads((store / 'snapshots' / (version + '.json')).read_text(encoding='utf-8'))
+        if snapshot.get('project') != str(project) or not isinstance(snapshot.get('build'), str):
+            return {}
+        from art_round_check import run
+        verified = run('verify', project, Path(snapshot['build']), folder)
+        if verified.get('ready') is not True or verified.get('error'):
+            return {}
+        return {'capture-ui-dump-' + row['id'] + '.json': row['origin']
+                for row in verified['cases'] if row.get('action') in ('fresh', 'reuse')}
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
+
+
+def load(folders, project=None):
     dumps = []
     for folder in folders:
+        legacy_ids = None
         for f in sorted(Path(folder).rglob('*ui-dump-*.json')):
             try:
                 d = json.loads(f.read_text(encoding='utf-8'))
             except (OSError, ValueError):
                 continue
+            if (project is not None and isinstance(d, dict) and 'producer' not in d
+                    and isinstance(d.get('art_capture_id'), str)):
+                if legacy_ids is None:
+                    legacy_ids = _verified_legacy_capture_ids(project, folder)
+                if legacy_ids.get(f.name) == d['art_capture_id']:
+                    d['producer'] = 'ego_page.dump_ui'  # in-memory only; original dump hash stays bound
             if isinstance(d, dict) and d.get('tool') == 'ui_dump' and d.get('producer') in {'chrome_touch.dump_ui', 'ego_page.dump_ui'} and d.get('schema') == 1 and isinstance(d.get('nodes'), list) and not d.get('error'):
                 d['_file'] = str(f)
                 dumps.append(d)
@@ -3209,7 +3238,7 @@ def main():
     BOARD = a.board
     proj = a.project.resolve()
     folders = a.dumps or [proj / 'docs/test']
-    dumps = load([f for f in folders if Path(f).is_dir()])
+    dumps = load([f for f in folders if Path(f).is_dir()], project=proj)
     try:
         dumps = selected_dump_files(dumps, a.dump_file)
     except (OSError, ValueError, TypeError, KeyError) as exc:

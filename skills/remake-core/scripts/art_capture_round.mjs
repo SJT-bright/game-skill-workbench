@@ -8,6 +8,21 @@ import {fileURLToPath} from 'node:url';
 const sha = b => createHash('sha256').update(b).digest('hex');
 const digest = o => sha(JSON.stringify(o));
 const read = f => JSON.parse(fs.readFileSync(f));
+// Exact compatibility for the reviewed producer-metadata-only release. Unknown edits
+// and ui_dump changes retain their own raw identity; no general semantic projection.
+function collectorFingerprint() {
+  const script=fs.readFileSync(fileURLToPath(import.meta.url));
+  const dumper=fs.readFileSync(new URL('./ui_dump.js',import.meta.url));
+  const actual=sha(Buffer.concat([script,dumper]));
+  try {
+    const proof=read(new URL('./art-capture-producer-compat.json',import.meta.url));
+    if(proof.schema==='art_capture_producer_compat.v1' &&
+       proof.scope==='producer-field-only' && sha(script)===proof.after_script_sha256 &&
+       sha(dumper)===proof.ui_dump_sha256 && /^[a-f0-9]{64}$/.test(proof.before_collector_sha256))
+      return proof.before_collector_sha256;
+  }catch{}
+  return actual;
+}
 const write = (f,o) => {
   fs.mkdirSync(path.dirname(f),{recursive:true});
   const tmp = f+'.'+randomUUID();
@@ -98,8 +113,7 @@ function context(project,build) {
   }
   const store=path.join(project,'.tiktok-kit/art-rounds');
   const snapshot={project,build,exported:files(build),source:files(project,['assets','settings','extensions','package.json','tsconfig.json','profiles']),
-    policy:digest(policy), collector:sha(Buffer.concat([fs.readFileSync(fileURLToPath(import.meta.url)),
-      fs.readFileSync(new URL('./ui_dump.js',import.meta.url))]))};
+    policy:digest(policy), collector:collectorFingerprint()};
   const version=digest(snapshot);
   return {project,build,policy,store,snapshot,version,loaded:new Map()};
 }
@@ -339,7 +353,7 @@ export async function openCapture({project,build,out}) {
       const storageAfter=await storage(page);
       const storageEvidence=digest(storageBefore)===digest(storageAfter)?storageBefore:{supported:false,sha256:null};
       const proofId=randomUUID(), file='capture-ui-dump-'+id+'.json',shot=id+'.png';
-      const bytes=Buffer.from(JSON.stringify({...dump,screen:state.screen,kind:state.kind,viewport:{width:state.width,height:state.height},
+      const bytes=Buffer.from(JSON.stringify({...dump,producer:'ego_page.dump_ui',screen:state.screen,kind:state.kind,viewport:{width:state.width,height:state.height},
         purpose:state.purpose||purpose||dump.purpose||'other',screenshot:shot,screenshot_sha256:sha(png),art_capture_id:proofId},null,2));
       fs.mkdirSync(out,{recursive:true});
       if(fs.existsSync(path.join(out,file))||fs.existsSync(path.join(out,shot)))throw Error('capture exists; use a fresh folder');

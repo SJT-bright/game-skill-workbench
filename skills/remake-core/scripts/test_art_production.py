@@ -204,6 +204,27 @@ class ProductionLink(unittest.TestCase):
         self.assertIn('loses',result['assets'][0]['error'])
 
 
+    def test_uneven_sheet_mode_is_replayed_and_bound(self):
+        sheet = self.source / 'uneven.png'
+        im = Image.new('RGBA', (120, 240))
+        draw = ImageDraw.Draw(im)
+        draw.rectangle((10, 10, 100, 40), fill='red')
+        draw.rectangle((10, 60, 100, 150), fill='blue')
+        draw.rectangle((10, 175, 100, 229), fill='green')
+        im.save(sheet)
+        output = self.root / 'assets/uneven.png'
+        command = [sys.executable, '-B', str(link.ART / 'cut_sheet_frame.py'), str(sheet),
+                   '--grid', '3', '1', '--cell', '2', '1', '--out', str(output),
+                   '--project', str(self.root), '--asset-id', 'uneven', '--cases', 'uneven-small',
+                   '--rows-from-bands', '--source-sha256', hashlib.sha256(sheet.read_bytes()).hexdigest()]
+        proc = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertTrue(link.audit(self.root, require_cases=False)['passed'])
+        data = json.loads(self.manifest().read_text())
+        data['production_assets'][0]['parameters']['rows_from_bands'] = False
+        self.save(data)
+        self.assertFalse(link.audit(self.root, require_cases=False)['passed'])
+
     def receipt_check(self):
         return receipt.check(self.root, board='remake', policy='new')
 

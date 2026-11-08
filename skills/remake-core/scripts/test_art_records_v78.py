@@ -303,7 +303,7 @@ class H10Generated(Tmp):
         AR.record_reason(p, 'keep', ['assets/ui/coin.webp'], 'kept on purpose')
         before = AR.snapshot(p)
 
-        def convert(ctx, names):
+        def convert(ctx, names, preparation=None):
             png(gen, 81)                                         # shrunk
             old.rename(old.with_suffix('.png'))                  # WebP -> PNG, new bytes
             png(old.with_suffix('.png'), 82)

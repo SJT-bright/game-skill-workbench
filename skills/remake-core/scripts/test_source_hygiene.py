@@ -139,13 +139,25 @@ class DeliveryRefusesUncleanSource(unittest.TestCase):
             z.writestr('game.json', '{}')
             z.writestr('project.config.json', '{"appid":"123"}')
         source = zip_of(project())
-        with mock.patch.object(P.tempfile, 'gettempdir', return_value='/nonexistent-temp'), \
+        # Only the external CLI boundary is synthetic; final ZIP inspection remains real.
+        digest = __import__('hashlib').sha256(archive.read_bytes()).hexdigest()
+        def cli_boundary(actual_archive, expected_sha):
+            self.assertEqual(Path(actual_archive).resolve(), archive.resolve())
+            self.assertEqual(expected_sha, digest)
+            self.assertEqual(__import__('hashlib').sha256(Path(actual_archive).read_bytes()).hexdigest(), digest)
+            return {'passed': True, 'errors': [], 'version': 'synthetic-cli-boundary'}
+        with mock.patch('tiktok_cli_gate.verify', side_effect=cli_boundary) as cli, \
+                mock.patch.object(P.tempfile, 'gettempdir', return_value='/nonexistent-temp'), \
                 mock.patch.object(P, 'check', side_effect=AssertionError('the package check must not run first')):
             with self.assertRaises(ValueError) as cm:
                 P.prepare(archive, native, '123', record, source=source)
         self.assertIn('source_hygiene', str(cm.exception))
         self.assertIn('.git', str(cm.exception))
         self.assertFalse(record.exists())
+        cli.assert_called_once_with(str(archive.resolve()), digest)
+        size = json.loads(Path(str(record.resolve()) + '.size.json').read_text())
+        self.assertTrue(size['size_passed'])
+        self.assertEqual(size['sha256'], digest)
 
 
 if __name__ == '__main__':

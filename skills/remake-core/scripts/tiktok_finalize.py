@@ -49,6 +49,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tiktok_finalize_steps as T  # noqa: E402
 from tiktok_finalize_steps import policy as P  # noqa: E402
+from preparation_cache import serialized  # noqa: E402
 
 SOURCE_RECORD = Path('.tiktok-kit') / 'finalize-source.json'
 SOURCE_TREES = ('assets', 'build-templates', 'settings')
@@ -80,8 +81,20 @@ def _step(name):
     return importlib.import_module('tiktok_finalize_steps.' + name)
 
 
-def _run_steps(ctx, names):
+def _preparation_session(ctx):
+    """Reuse is optional; inability to fingerprint never substitutes for executing a step."""
+    if ctx.phase != 'source' or ctx.policy != 'new' or not ctx.project:
+        return None
+    try:
+        from preparation_cache import Session
+        return Session(ctx)
+    except Exception:  # Optional reuse never replaces real preparation on lookup errors.
+        return None
+
+
+def _run_steps(ctx, names, preparation=None):
     results = []
+    preparation = preparation or _preparation_session(ctx)
     for name in names:
         try:
             module = _step(name)
@@ -91,7 +104,7 @@ def _run_steps(ctx, names):
                                                  % (name, error))]})
             continue
         try:
-            out = module.apply(ctx)
+            out = preparation.apply(name, lambda: module.apply(ctx)) if preparation else module.apply(ctx)
         except T.KitError as error:
             out = {'step': name, 'state': 'error', 'changed': [], 'warnings': [], 'info': [],
                    'blocks': [T.finding('K_kit_unusable', 'block', str(error))]}
@@ -154,6 +167,7 @@ def webp_exception_3x(engine, options):
     return []
 
 
+@serialized
 def finalize_source(project, board, engine=None, policy=None, app_id=None, manifest=None, legacy=None,
                     options=None, steps=SOURCE_STEPS, write_record=True):
     project = Path(project)
@@ -168,10 +182,12 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
         decision = dict(decision, marker_written=True)
     ctx = T.Ctx('source', project, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest, app_id=app_id, options=options)
+    ctx.preparation_policy_override = bool(policy)
     refused = webp_exception_3x(engine, options)
     art_before = _art_receipt_before(project, board, decision['policy']) if write_record else None
     records_before = _art_records_before(project) if write_record else None
-    results = [] if refused else _run_steps(ctx, steps)       # a refused option changes nothing
+    preparation_session = _preparation_session(ctx)
+    results = [] if refused else _run_steps(ctx, steps, preparation_session)  # a refused option changes nothing
     blocks, warnings = _collect(results)
     blocks = refused + blocks
     if engine not in (2, 3):
@@ -182,10 +198,20 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
               'blocks': blocks, 'warnings': warnings,
               'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'source_sha256': source_sha256(project),
               'backups': str(project / '.tiktok-kit')}
+    # Preserve the exact preparation conditions separately from the historical public
+    # RECORDED_OPTIONS contract. Consumers can verify existing evidence, not invent a pass.
+    from preparation_cache import context as preparation_context
+    record['preparation_context'] = preparation_context(ctx)
     if art_before is not None:
         record['art_receipt'] = _art_receipt_carry(project, art_before)
     if records_before is not None:
         record['art_records'] = _art_records_carry(project, records_before)
+    if decision['policy'] == 'new' and not blocks:
+        try:
+            from preparation_cache import source_pipeline_binding
+            record['preparation_binding'] = source_pipeline_binding(ctx, steps, preparation_session)
+        except Exception:
+            pass  # Unknown scopes still executed; there is no fabricated reuse proof.
     if write_record:
         path = project / SOURCE_RECORD
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -265,7 +291,8 @@ def check_source_record(project, manifest=None, options=None):
     """K5_source_finalized (package writers only): the source record exists, has no block, was made with this kit
     version and the project has not changed since (assets/, build-templates/, settings/). options = the writer's
     finalize options (None = not compared, e.g. preflight): --keep-webp-exception must equal the source record's."""
-    fix = 'return to pre-trial preparation and run `tiktok_finalize.py source --project %s --board <board>`' % project
+    fix = ('run `tiktok_finalize.py source --project %s --board <board>`; unchanged steps reuse their '
+           'content-bound evidence; only changed or unproved dependencies execute') % project
     if not project:
         return [T.finding('K5_source_finalized', 'block', 'no --project given: the source record cannot be checked; '
                           + fix)]
@@ -279,6 +306,25 @@ def check_source_record(project, manifest=None, options=None):
                              % (record.get('kit_version'), manifest.version, fix)))
     if record.get('source_sha256') != source_sha256(project):
         out.append(T.finding('K5_source_finalized', 'block', 'project changed after the source phase; ' + fix))
+    # New receipts also bind external inputs and rule bytes which the old source hash
+    # did not cover. Old receipts remain old receipts; they are never re-labelled cached.
+    preparation = record.get('preparation_context')
+    if isinstance(preparation, dict) and record.get('preparation_binding') and record.get('policy') == 'new':
+        from preparation_cache import source_pipeline_binding
+        ctx = T.Ctx('source', Path(project), project=Path(project), board=record.get('board'),
+                    engine=P.engine_of_project(Path(project)), policy=record.get('policy'), manifest=manifest,
+                    app_id=preparation.get('app_id'), options=preparation.get('options') or {})
+        ctx.preparation_policy_override = bool(record.get('policy_override'))
+        names = [r.get('step') for r in record.get('steps') or [] if r.get('step')]
+        try:
+            current_binding = source_pipeline_binding(ctx, names)
+        except Exception:
+            current_binding = None
+        if current_binding != record['preparation_binding']:
+            pending = source_preparation_plan(project, manifest=manifest, record=record).get('execute', [])
+            out.append(T.finding('K5_source_finalized', 'block',
+                                'preparation dependencies changed or have no current proof: %s; %s'
+                                % (', '.join(pending) or 'pipeline identity', fix), {'steps': pending}))
     if record.get('blocks'):
         out.append(T.finding('K5_source_finalized', 'block', 'source phase refused: %s'
                              % '; '.join('%s: %s' % (b['id'], b['message']) for b in record['blocks'][:3])))
@@ -298,6 +344,30 @@ def check_source_record(project, manifest=None, options=None):
                                          fix if not want[key] else fix + ' ' + flag + ' <same reason>'),
                                      {'option': key, 'source': have[key], 'writer': want[key]}))
     return out
+
+
+def source_preparation_plan(project, manifest=None, record=None):
+    """Read-only plan for the exact steps in a source receipt; no source/writer mutation."""
+    record = record or read_source_record(project) or {}
+    prior = record.get('preparation_context') or {}
+    manifest = manifest or T.load_manifest()
+    ctx = T.Ctx('source', Path(project), project=Path(project), board=record.get('board'),
+                engine=P.engine_of_project(Path(project)), policy=record.get('policy'), manifest=manifest,
+                app_id=prior.get('app_id'), options=prior.get('options') or {})
+    ctx.preparation_policy_override = bool(record.get('policy_override'))
+    session = _preparation_session(ctx)
+    plan = {'reuse': [], 'execute': []}
+    for result in record.get('steps') or []:
+        name = result.get('step')
+        if not name:
+            continue
+        hit = None
+        try:
+            hit = session.lookup(name)[2] if session else None
+        except Exception:
+            pass
+        plan['reuse' if hit and not result.get('blocks') else 'execute'].append(name)
+    return plan
 
 
 def check_trial_source(project, board, manifest=None, options=None):
@@ -373,6 +443,7 @@ def _native_files(native):
     return T.Ctx('native', native).files()
 
 
+@serialized
 def finalize_native(native, project=None, board=None, app_id=None, policy=None, manifest=None, legacy=None,
                     options=None, steps=NATIVE_STEPS):
     native = Path(native)
@@ -384,7 +455,21 @@ def finalize_native(native, project=None, board=None, app_id=None, policy=None, 
                              board=board)
     ctx = T.Ctx('native', native, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest, app_id=app_id, options=options)
+    ctx.preparation_policy_override = bool(policy)
     refused = webp_exception_3x(engine, options)
+    from preparation_cache import native_guard, native_lookup, native_store, reused_result, stamp
+    if not refused:
+        row, path = native_lookup(ctx, steps)
+        if row:
+            reused = reused_result(row, path)
+            reused['removed_dir'] = str(ctx.removed_dir)
+            reused['table'] = summary_table(reused)
+            return reused
+    started, tick = stamp(), time.monotonic()
+    try:
+        guard = native_guard(ctx, steps)
+    except Exception:
+        guard = None
     results = [] if refused else _run_steps(ctx, steps)       # a refused option changes nothing
     blocks, warnings = _collect(results)
     blocks = refused + blocks
@@ -399,6 +484,39 @@ def finalize_native(native, project=None, board=None, app_id=None, policy=None, 
               'policy_override': bool(policy), 'steps': results, 'blocks': blocks, 'warnings': warnings,
               'files_after': final, 'removed_dir': str(ctx.removed_dir),
               'created': time.strftime('%Y-%m-%dT%H:%M:%S%z')}
+    record['table'] = summary_table(record)
+    native_store(ctx, steps, record, started, time.monotonic() - tick, guard)
+    return record
+
+
+def prepared_native_result(native, project=None, board=None, app_id=None, policy=None, manifest=None, legacy=None,
+                           options=None, steps=NATIVE_STEPS):
+    """Read-only exact Native preparation proof, or None. Never prepares a raw build.
+
+    Writer, rework planning and preview may share this result only while candidate bytes,
+    source dependencies, policy, engine, tools and options match the original execution.
+    """
+    if not project:
+        return None
+    tick = time.monotonic()
+    from preparation_cache import native_lookup, reused_result
+    native = Path(native)
+    manifest = manifest or T.load_manifest()
+    names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
+    engine = P.engine_of_names(names)
+    decision = decide_policy(project=project, native=native, override=policy, legacy=legacy,
+                             record=read_source_record(project), board=board)
+    if webp_exception_3x(engine, options):
+        return None
+    ctx = T.Ctx('native', native, project=project, board=board, engine=engine, policy=decision['policy'],
+                manifest=manifest, app_id=app_id, options=options)
+    ctx.preparation_policy_override = bool(policy)
+    row, path = native_lookup(ctx, steps)
+    if not row:
+        return None
+    record = reused_result(row, path)
+    record['preparation']['binding_seconds'] = time.monotonic() - tick
+    record['removed_dir'] = str(ctx.removed_dir)
     record['table'] = summary_table(record)
     return record
 
@@ -628,23 +746,26 @@ def sync_run_parts(ctx):
     return r.as_dict()
 
 
+@serialized
 def finalize_sync(project, board, native=None, policy=None, manifest=None, legacy=None, write_record=True):
     """`sync`: kit_sources + build_templates (+ ui_kit) on the project, startup + touch + storage on --native.
     New games: kit bytes put back. Legacy games: detect only. -> record (also <project>/.tiktok-kit/sync.json)."""
-    started = time.time()
+    started = time.monotonic()
     project = Path(project)
     manifest = manifest or T.load_manifest()
     engine = P.engine_of_project(project)
     decision = decide_policy(project=project, override=policy, legacy=legacy, board=board)
     ctx = T.Ctx('source', project, project=project, board=board, engine=engine, policy=decision['policy'],
                 manifest=manifest)
+    ctx.preparation_policy_override = bool(policy)
+    preparation = _preparation_session(ctx)
     if decision['policy'] == 'legacy':
         results = _detect_only(ctx, SYNC_SOURCE_STEPS)
     else:
-        results = _run_steps(ctx, SYNC_SOURCE_STEPS)
-    results.append(sync_ui_kit(ctx))
-    results.append(sync_run_parts(ctx))   # 生成时预防 R4F1 (#28): RunSession.js + FxPool.js for new remake games
-    results += _detect_only(ctx, SYNC_END_STEPS) if decision['policy'] == 'legacy' else _run_steps(ctx, SYNC_END_STEPS)   # R4N6
+        results = _run_steps(ctx, SYNC_SOURCE_STEPS, preparation)
+    results.append(preparation.apply('ui_kit', lambda: sync_ui_kit(ctx)) if preparation else sync_ui_kit(ctx))
+    results.append(preparation.apply('run_parts', lambda: sync_run_parts(ctx)) if preparation else sync_run_parts(ctx))
+    results += _detect_only(ctx, SYNC_END_STEPS) if decision['policy'] == 'legacy' else _run_steps(ctx, SYNC_END_STEPS, preparation)
     if native:
         native = Path(native)
         names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
@@ -659,7 +780,7 @@ def finalize_sync(project, board, native=None, policy=None, manifest=None, legac
               'decision': _trim_decision(decision), 'board': board, 'engine': engine, 'native': str(native or ''),
               'steps': results, 'blocks': blocks, 'warnings': warnings,
               'changed': [c['file'] for r in results for c in r['changed']],
-              'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'seconds': round(time.time() - started, 3)}
+              'created': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'seconds': round(time.monotonic() - started, 3)}
     if write_record:
         path = project / SYNC_RECORD
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -554,7 +554,9 @@ def main():
         return 1
     # Reject size and missing/moved local art BEFORE replaying the expensive review.
     # This never substitutes for the full review gate below.
-    early_problems, early_sizes, _ = native_problems(native, a.board, gate_policy, gate_context)
+    import writer_check_reuse
+    native_audit = writer_check_reuse.NativeAuditMemo()
+    early_problems, early_sizes, _ = native_audit.run(native, a.board, gate_policy, gate_context, native_problems)
     from audit_packed_assets import audit as audit_packed_assets
     asset_result = audit_packed_assets(native)
     if early_problems or not asset_result['passed']:
@@ -604,13 +606,14 @@ def main():
     # Execute known production-runtime regressions before accepting any attested
     # coverage table. This is not satisfied by a handwritten pass row.
     probe_cmd = [sys.executable, str(HERE / 'run_reward_storage_probe.py'), '--native', str(native), '--web', str(a.web)]
-    probe_run = subprocess.run(probe_cmd, capture_output=True, text=True)
+    probe_run = writer_check_reuse.run_command(a.project, 'reward-storage', probe_cmd, native=native, web=a.web)
     if probe_run.returncode:
         print('REFUSED, no ZIP written: executable Native/Web reward storage probe failed:\n' +
               (probe_run.stdout + probe_run.stderr)[-2500:], file=sys.stderr)
         return 1
     try:
         storage_probe = json.loads(probe_run.stdout.strip().splitlines()[-1])
+        storage_probe['check_reuse'] = getattr(probe_run, 'check_reuse', {'reused': False})
     except (ValueError, IndexError):
         print('REFUSED, no ZIP written: reward storage probe produced no valid result', file=sys.stderr)
         return 1
@@ -645,12 +648,14 @@ def main():
         if not source_root.is_dir():source_root = a.project / 'src'
         coverage = a.coverage or a.project / 'docs/test/runtime-coverage.json'
         coverage_cmd = [sys.executable, str(HERE / 'audit_runtime_coverage.py'), '--source', str(source_root), '--native', str(native), '--web', str(a.web), '--coverage', str(coverage)]
-        coverage_result = subprocess.run(coverage_cmd, capture_output=True, text=True)
+        coverage_result = writer_check_reuse.run_command(a.project, 'runtime-coverage', coverage_cmd,
+            native=native, web=a.web, source=source_root, coverage=coverage)
         if coverage_result.returncode:
             print('REFUSED, no ZIP written: actual runtime persistence coverage failed:\n'+(coverage_result.stdout+coverage_result.stderr)[-2000:], file=sys.stderr)
             return 1
         gate['runtime_coverage_sha256'] = sha(coverage)
-    problems, sizes, info = native_problems(native, a.board, gate_policy, gate_context)
+        gate['runtime_coverage_reuse'] = getattr(coverage_result, 'check_reuse', {'reused': False})
+    problems, sizes, info = native_audit.run(native, a.board, gate_policy, gate_context, native_problems)
     if 'appId' in info and info['appId'] != a.app_id:
         problems.append('App ID: project.config.json appid is %r, the target is %r - rebuild with the right App ID'
                         % (info.get('appId'), a.app_id))

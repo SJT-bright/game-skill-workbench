@@ -556,6 +556,8 @@ class Delivery(KitInSync):
         contract.write_text(json.dumps({'binding': {'web_tree_sha256': 'a' * 64}}))
         preview = {'markdown_link': '[fixture](http://127.0.0.1:1/)', 'passed': True}
         with mock.patch.object(D, 'check', return_value=result), \
+                mock.patch('tiktok_cli_gate.verify', return_value={
+                    'passed': True, 'errors': [], 'version': 'fixture-cli'}) as cli, \
                 mock.patch.object(D.package_obligations, 'verify', return_value={'passed': True}), \
                 mock.patch.object(D.package_obligations, 'publication_guard',
                                   lambda *a, **k: contextlib.nullcontext()), \
@@ -565,6 +567,7 @@ class Delivery(KitInSync):
                 mock.patch.object(D.tempfile, 'gettempdir', return_value=str(other_temp)):
             out = D.prepare(archive, native, APP, self.d / 'delivery.json', resource_manifest=self.d / 'r.json',
                             startup_contract=contract, preview_url='http://127.0.0.1:1/')
+            cli.assert_called_once_with(str(archive.resolve()), sha(archive.read_bytes()))
             verify_preview.assert_called_once_with('http://127.0.0.1:1/', 'a' * 64)
         self.assertEqual(out['kit_parts_status'], '标准件待真机复测')
         self.assertIn('标准件待真机复测', out['reply_lines'])

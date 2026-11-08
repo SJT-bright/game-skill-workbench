@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.11",
+  "revision": "2026-11-08.english-simple.11.17.12",
   "skill": "remake-core",
-  "previous_provenance_sha256": "6da48a3be1aee36cd7eb15d6e64fa203b0a55e2adc29da18dfabadc85e086d9b",
+  "previous_provenance_sha256": "3df2759740f574a16e96d7d79e89a3e2b3c81168e4af9339ff5e87d11b357aad",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -868,8 +868,8 @@
     },
     {
       "path": "references/incremental-checks.md",
-      "sha256": "7a769c99c4d103c096be4ec2bcd246c46a3967cb7bbab648eecda94592d17542",
-      "bytes": 9899
+      "sha256": "6ec41874645ae7c2773a5489a36f425ed30cfd34a97aee050733bb141032d2f5",
+      "bytes": 9934
     },
     {
       "path": "references/known-issue-checklist.md",
@@ -997,6 +997,16 @@
       "bytes": 8987
     },
     {
+      "path": "scripts/art-capture-producer-compat.json",
+      "sha256": "4009089b7ed8833b33424935c91dde90663a8b70894b32ef858837876f8a6904",
+      "bytes": 633
+    },
+    {
+      "path": "scripts/art-default-rules-compat.json",
+      "sha256": "779d83d0d165321ce9a53458afc0c32cb43719e44773448cf5bdbda1a45cf452",
+      "bytes": 786
+    },
+    {
       "path": "scripts/art_analysis_cache.py",
       "sha256": "d7a7560e6d5f0308892dab68482110f8c2876ef280c43a4c76ddc4a40c3b1e9c",
       "bytes": 9730
@@ -1008,8 +1018,8 @@
     },
     {
       "path": "scripts/art_capture_round.mjs",
-      "sha256": "84cc97432274084b85a3015b2525a81f3230b791f0b29e953fcee83cc03dae95",
-      "bytes": 24837
+      "sha256": "46660e1b66b7bbd84e4fe1e508dbac44353b2415b4be5e21225ce6809751368e",
+      "bytes": 25562
     },
     {
       "path": "scripts/art_check.py",
@@ -1038,8 +1048,8 @@
     },
     {
       "path": "scripts/art_production.py",
-      "sha256": "f412477610d224be2df3f4da63e67837f71cf566c9a6fd20ed7c31680e05e590",
-      "bytes": 26426
+      "sha256": "99dd986c6f6afbe9660af06d50d140accbd6e0a02f470f4c1a6ae9288367fab2",
+      "bytes": 28279
     },
     {
       "path": "scripts/art_receipt.py",
@@ -1278,8 +1288,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "e1542c4f19c3780e23dd8e628276a85de9af1351eda29a5883ac53a2f46e7a1e",
-      "bytes": 206054
+      "sha256": "baf6d84c95b55b18cd10ef1b0904488688fe69ebb5993f381473130a7cec1ca3",
+      "bytes": 207684
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1668,8 +1678,8 @@
     },
     {
       "path": "scripts/make_tiktok_zip.py",
-      "sha256": "d958c5067b05db8b3c04cbe912a7f69c063054e90a68d1dbc6c212b47bd355bf",
-      "bytes": 47620
+      "sha256": "b8312eac07bcb8fca11f45c7cf1e864247f95d615522c04b17ff7794c415b38c",
+      "bytes": 48065
     },
     {
       "path": "scripts/modules_harness.mjs",
@@ -1812,6 +1822,11 @@
       "bytes": 51147
     },
     {
+      "path": "scripts/preparation_cache.py",
+      "sha256": "170b11e69f672a72b9bec736b8243069dbc4c538267b5a61d57234fd3e2ca2b4",
+      "bytes": 28272
+    },
+    {
       "path": "scripts/preview_check_once.py",
       "sha256": "d20ab9912dd4b180191240fe4a40d2dee330251c365aeda61d4160f32833718e",
       "bytes": 2943
@@ -1948,8 +1963,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "e9eb0b2c8f1995ddadeba77cd2dbc5e76a1a6d7e932e331268e5036323c05e99",
-      "bytes": 47661
+      "sha256": "2c603e04fc4702b3476e90cdb1cf3b56a5162c4ff1354160e40fffb319e5d992",
+      "bytes": 47888
     },
     {
       "path": "scripts/source_hygiene.py",
@@ -2022,6 +2037,11 @@
       "bytes": 14306
     },
     {
+      "path": "scripts/test_art_capture_producer.py",
+      "sha256": "e3bac6578f806e41af9eecb27948fb6fcebfcd8614b11327e9e5c226e0febde7",
+      "bytes": 8393
+    },
+    {
       "path": "scripts/test_art_capture_round.py",
       "sha256": "416c2bca041b5f279f79944b7bcd5748cede4d8a24e60c5c95f3d3484fdc9eaf",
       "bytes": 2334
@@ -2083,8 +2103,8 @@
     },
     {
       "path": "scripts/test_art_production.py",
-      "sha256": "175339453174a5e436c45b670d438cf17ac2a6b0207e1146a4697e8ec895390e",
-      "bytes": 25391
+      "sha256": "eb9c1d100ab10b3bb24d5527af16e8556f9cc82fc7c36cb399a5ec83b2db640e",
+      "bytes": 26633
     },
     {
       "path": "scripts/test_art_receipt.py",
@@ -2093,8 +2113,13 @@
     },
     {
       "path": "scripts/test_art_records_v78.py",
-      "sha256": "f4d4da7958e463bd843c11a9b2fc627858ef31f9bd53563499918d7811a01819",
-      "bytes": 23505
+      "sha256": "a4178af46fec5aef9d2b23f2a0eddadd035a1f4e8c700e934424a98b43ffdc38",
+      "bytes": 23523
+    },
+    {
+      "path": "scripts/test_art_rule_compat.py",
+      "sha256": "742e9a65070795a505aba224aa62ec9359815b6bfd01c305a48130ff01bef02c",
+      "bytes": 9853
     },
     {
       "path": "scripts/test_art_shipped_v78.py",
@@ -2657,6 +2682,11 @@
       "bytes": 3769
     },
     {
+      "path": "scripts/test_preparation_cache.py",
+      "sha256": "5ac2c927dcdfd4718a00bf12b1591764cabc04479e72fdfc0817bf150883b4dd",
+      "bytes": 18460
+    },
+    {
       "path": "scripts/test_preview_chrome.py",
       "sha256": "8e1ed63d06f392e73a07d0c2ac7c140d11a867b2968d38d9459ea783512ea16f",
       "bytes": 7846
@@ -2797,6 +2827,11 @@
       "bytes": 2837
     },
     {
+      "path": "scripts/test_runtime_timing_reporting.py",
+      "sha256": "a0168788b4994b70a111b72396bc3822875df1d50be6928799da60b5881868eb",
+      "bytes": 3884
+    },
+    {
       "path": "scripts/test_runtime_word_images.py",
       "sha256": "98b89d1544ab9862536cf15e9b74be62f12a695c4ce2a6b579e3dc41c6a1bff5",
       "bytes": 3532
@@ -2833,8 +2868,8 @@
     },
     {
       "path": "scripts/test_source_hygiene.py",
-      "sha256": "aff31d66060b4719d1a591e0630be8062bcac66dae269ef9e0d4ceb4c4f91ba3",
-      "bytes": 7603
+      "sha256": "4634ab9d01b744611df2971ba7e014e74154a23d158f229c3950831ffe390e38",
+      "bytes": 8494
     },
     {
       "path": "scripts/test_source_stage_gates.py",
@@ -2978,8 +3013,8 @@
     },
     {
       "path": "scripts/test_upload_size_gate.py",
-      "sha256": "e5c8fc8b30bd5c96c042edbcd76c187b06220ed5c9334a7639707e6c460b3b90",
-      "bytes": 8570
+      "sha256": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c",
+      "bytes": 10647
     },
     {
       "path": "scripts/test_value_labels.py",
@@ -3012,9 +3047,14 @@
       "bytes": 88200
     },
     {
+      "path": "scripts/test_writer_check_reuse.py",
+      "sha256": "b59f04ffddb4c586e57ec1e7d6de816ed39b67f17da26b6caa493051955fb3e8",
+      "bytes": 9493
+    },
+    {
       "path": "scripts/test_writer_finalize.py",
-      "sha256": "4b57e0c9899f71e7d1ad0c8869b6acc747d1062fbdc597e6b8aecf9ef8da59f6",
-      "bytes": 32543
+      "sha256": "28568f80a6c66140bfafd16f0fdb456e52cc5f034db4a6498a837002b0316a76",
+      "bytes": 32789
     },
     {
       "path": "scripts/test_writer_refusal.py",
@@ -3027,9 +3067,14 @@
       "bytes": 15145
     },
     {
+      "path": "scripts/tiktok_cli_gate.py",
+      "sha256": "c458ca8e7ac5e615d984c61d4d15e99bd48d78df57678b696bcad7cbd459cb25",
+      "bytes": 7016
+    },
+    {
       "path": "scripts/tiktok_finalize.py",
-      "sha256": "7568aad39310fccac024e12f5949baaa39f6123c4e78f7d76f21dec574ee8f15",
-      "bytes": 45633
+      "sha256": "7b3723d1bb816ad01036643117668ddf90396da87b0db49b655839f4ff9ac16d",
+      "bytes": 52045
     },
     {
       "path": "scripts/tiktok_finalize_steps/__init__.py",
@@ -3198,8 +3243,8 @@
     },
     {
       "path": "scripts/upload_size_gate.py",
-      "sha256": "d71d441a6ce30d203cac6734194ec857b7fa00261143ba0b3b72c0e1aed92302",
-      "bytes": 13068
+      "sha256": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
+      "bytes": 13873
     },
     {
       "path": "scripts/vendor/ACORN-LICENSE",
@@ -3225,6 +3270,11 @@
       "path": "scripts/which_package.py",
       "sha256": "0bfe71161931c8dff8a4b033257dba32a54dd287f06df731b96cfed829d208bb",
       "bytes": 10306
+    },
+    {
+      "path": "scripts/writer_check_reuse.py",
+      "sha256": "94ef95fec3cd44c6cca62207c5f403664e01893e3216a0fc85b22ce5a7e3f6cf",
+      "bytes": 12771
     }
   ],
   "source_bundle_sha256": "5b1d8a07c8be7cfbe01b9a79d56bf466cfeccd5f440659c7938f7669755c7f14",
@@ -3863,46 +3913,6 @@
           "after_sha256": "0a9bc30ca065ee27ae90be43994bc4b15ba699f40c7ab19fb722f62563f5aa2d",
           "after_bytes": 24784,
           "method": "retain"
-        }
-      ]
-    },
-    {
-      "id": "tiktok-cli-final-zip-20261108",
-      "authority": "User requested automatic official CLI check and build for every final TikTok test ZIP.",
-      "files": [
-        {
-          "path": "scripts/upload_size_gate.py",
-          "sha256": "34f6872c5f52506f73f4e37d4425aa65d59f7cae22378b26c07b0159130ac8f2"
-        },
-        {
-          "path": "scripts/tiktok_cli_gate.py",
-          "sha256": "c458ca8e7ac5e615d984c61d4d15e99bd48d78df57678b696bcad7cbd459cb25"
-        },
-        {
-          "path": "scripts/make_tiktok_zip.py",
-          "sha256": "26b6de4fa794440092806ceb2de8f4c3179192ea06b6e8441741e23ce59e74c3"
-        },
-        {
-          "path": "references/incremental-checks.md",
-          "sha256": "6ec41874645ae7c2773a5489a36f425ed30cfd34a97aee050733bb141032d2f5"
-        },
-        {
-          "path": "scripts/test_upload_size_gate.py",
-          "sha256": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c"
-        }
-      ]
-    },
-    {
-      "id": "tiktok-cli-once-per-handoff-20261108",
-      "authority": "User requested one fresh official CLI check/build on the final ZIP per delivery.",
-      "files": [
-        {
-          "path": "scripts/make_tiktok_zip.py",
-          "sha256": "d958c5067b05db8b3c04cbe912a7f69c063054e90a68d1dbc6c212b47bd355bf"
-        },
-        {
-          "path": "scripts/upload_size_gate.py",
-          "sha256": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e"
         }
       ]
     }

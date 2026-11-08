@@ -547,7 +547,7 @@ def make_snapshot(directory, project=None, slots=None):
     return dest, 'project', True
 
 
-def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_art=None):
+def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_art=None, on_ready=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', required=True, type=Path)
     parser.add_argument('--port', type=int, default=0)
@@ -732,6 +732,11 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         except (SystemExit, OSError, ValueError):
             abort_start()
             raise
+    if on_ready is not None:
+        try:
+            on_ready(directory)
+        except Exception as error:
+            print('用时没记上（服务已就绪）：' + str(error), file=sys.stderr, flush=True)
     lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
     entry_kind = '内部QA入口（禁止交给用户试玩）' if args.raw else f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
     print(f'{entry_kind}：{url}\n（用户试玩会自动请求独立 Google Chrome 窗口；同时在回复中保留此本地链接。须读回实际窗口，不能把启动请求当作已显示。）\n保持窗口打开；按 Control+C 结束。{lifetime}'

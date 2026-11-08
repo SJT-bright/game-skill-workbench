@@ -77,12 +77,40 @@ def read_manifest(project):
     return value
 
 
-def rule_hashes(kind):
+def rule_hashes(kind, parameters=None):
+    if kind == 'sheet_frame' and isinstance(parameters, dict) and 'rows_from_bands' in parameters:
+        if type(parameters['rows_from_bands']) is not bool:
+            raise ValueError('rows_from_bands must be a boolean')
     if kind not in KINDS:
         raise ValueError('unsupported production kind: ' + str(kind))
     paths = [HERE / 'art_production.py', HERE / 'art_usage_budget.py', HERE / 'tiktok_finalize_steps/images.py',
              *(ART / name for name in KINDS[kind])]
-    return {p.relative_to(SKILLS).as_posix(): sha(p) for p in paths}
+    actual = {p.relative_to(SKILLS).as_posix(): sha(p) for p in paths}
+    # Only this reviewed release pair may preserve the old default-path binding.
+    # The opt-in band extractor and every unknown future edit use actual bytes.
+    if kind == 'sheet_frame' and (not isinstance(parameters, (dict, type(None)))
+            or (parameters or {}).get('rows_from_bands', False) is not False):
+        return actual
+    try:
+        compat = json.loads((HERE / 'art-default-rules-compat.json').read_text(encoding='utf-8'))
+        expected_paths = {'remake-core/scripts/art_production.py',
+                          'remake-art/scripts/cut_sheet_frame.py'}
+        if (compat.get('schema') != 'art_default_rules_compat.v1'
+                or compat.get('scope') != '11.17.11-default-path-only'
+                or set(compat.get('files', {})) != expected_paths):
+            return actual
+        mappings = compat['files']
+        for relative in expected_paths:
+            pair = mappings[relative]
+            if (set(pair) != {'before_sha256', 'after_sha256'}
+                    or any(not isinstance(pair[k], str) or len(pair[k]) != 64
+                           or any(c not in '0123456789abcdef' for c in pair[k]) for k in pair)
+                    or sha(SKILLS / relative) != pair['after_sha256']):
+                return actual
+        return {key: mappings[key]['before_sha256'] if key in mappings else value
+                for key, value in actual.items()}
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return actual
 
 
 def load_producer(name):
@@ -111,7 +139,7 @@ def prepare(project, asset_id, cases, kind, output, spec=None, sheet=None, param
     if not target.is_relative_to(project / 'assets'):
         raise ValueError('registered output must be under project/assets')
     record = {'id': asset_id, 'kind': kind, 'expected_cases': cases[:],
-              'output': {'file': target.relative_to(project).as_posix()}, 'rules': rule_hashes(kind)}
+              'output': {'file': target.relative_to(project).as_posix()}, 'rules': rule_hashes(kind, parameters)}
     if kind == 'fixed_button':
         recipe = local(project, spec)
         data = json.loads(recipe.read_text(encoding='utf-8'))
@@ -170,7 +198,7 @@ def verify_file(project, entry):
 def replay(project, record):
     from PIL import Image
     kind = record['kind']
-    if record.get('rules') != rule_hashes(kind):
+    if record.get('rules') != rule_hashes(kind, record.get('parameters')):
         raise ValueError('production rules changed; rerun the producer for this asset')
     if 'usage_budget' in record:
         from art_usage_budget import validate_budget
@@ -198,7 +226,7 @@ def replay(project, record):
         producer = load_producer('cut_sheet_frame.py')
         with Image.open(source_paths[0]) as source:
             rgba = source.convert('RGBA')
-            expected, cell, bounds = producer.extract(rgba, *params['grid'], *params['cell'])
+            expected, cell, bounds = producer.extract(rgba, *params['grid'], *params['cell'], rows_from_bands=params.get('rows_from_bands', False))
             if params.get('fixed_rect') is not None:
                 fixed = params['fixed_rect']
                 if not isinstance(fixed, list) or len(fixed) != 4 or any(type(x) is not int for x in fixed):
@@ -468,7 +496,7 @@ def fingerprint(project):
             if not isinstance(inputs, list) or not inputs:
                 raise ValueError('production input records missing')
             bound = {'id': record['id'], 'kind': record['kind'],
-                     'rules': rule_hashes(record['kind']),
+                     'rules': rule_hashes(record['kind'], record.get('parameters')),
                      'inputs': [file_record(project, verify_file(project, entry)) for entry in inputs],
                      'output': file_record(project, verify_file(project, record['output']))}
             if 'usage_budget' in record:

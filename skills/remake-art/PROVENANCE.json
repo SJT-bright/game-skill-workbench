@@ -52,8 +52,8 @@
     },
     {
       "path": "references/art-iteration-workflow.md",
-      "sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
-      "bytes": 10185
+      "sha256": "233b4241f5275ddbb2fcac4f468b9a5997726e83f6902994aad9d1aed37cd82d",
+      "bytes": 11900
     },
     {
       "path": "references/artwork-and-feedback.md",
@@ -426,7 +426,19 @@
           "method": "retain"
         }
       ]
+    },
+    {
+      "id": "2026-11-07.codex.11.17.8-art-capture-scope",
+      "scope": "Codex only, pre-capture art scope review",
+      "files": [
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "after_sha256": "233b4241f5275ddbb2fcac4f468b9a5997726e83f6902994aad9d1aed37cd82d",
+          "after_bytes": 11900
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "9c22dcdf1e1005f1617471e7fd52cf8ced4550b1e6eadf48f8d3562e227656af"
+  "previous_local_provenance_sha256": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928"
 }

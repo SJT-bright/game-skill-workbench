@@ -135,7 +135,7 @@ def logic_source_binding(logic_report, source, project=None):
             'validation': validation, 'browser_executed': False}
 
 
-def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None):
+def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None, platform_feedback=None):
     archive, native, record = (Path(p).resolve() for p in (archive, native, record))
     temporary = Path(tempfile.gettempdir()).resolve()
     if archive.is_relative_to(temporary) or any(x.casefold() in ('temp', 'rwtemp') for x in archive.parts):
@@ -148,17 +148,18 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
         raise ValueError('delivery record already exists; choose a new record path')
     # Every delivery (even identical bytes / renamed or imported ZIPs) gets a fresh,
     # independent size receipt BEFORE startup/gameplay checks can fail or reuse CI.
-    from upload_size_gate import inspect_zip
+    from upload_size_gate import inspect_final_zip
     size_record = Path(str(record) + '.size.json')
     if size_record.exists() or size_record.is_symlink():
         raise ValueError('size receipt already exists; choose a fresh delivery record path')
-    size_check = inspect_zip(archive, 'tiktok')
+    size_check = inspect_final_zip(archive, 'tiktok', platform_feedback)
     size_record.parent.mkdir(parents=True, exist_ok=True)
     with size_record.open('x', encoding='utf-8') as stream:
         json.dump(size_check, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     if not size_check['passed']:
-        raise ValueError('fresh delivery size check failed: ' + '; '.join(size_check['errors']))
+        phase = 'TikTok CLI' if size_check.get('size_passed') else 'size'
+        raise ValueError(f'fresh delivery {phase} check failed: ' + '; '.join(size_check['errors']))
     # 简化.11.6 (Saul 2026-11-04, 91 SLS11): a delivered source never carries .git / .svn / .idea or credential files
     hygiene = None
     if source is not None:
@@ -201,6 +202,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'fresh_size_check': {'report': str(size_record), 'run_id': size_check['run_id'],
                                     'sha256': size_check['sha256'], 'main_bytes': size_check['main_bytes'],
                                     'total_bytes': size_check['total_bytes'], 'reused': False},
+               'tiktok_cli': {'version': size_check['tiktok_cli']['version'], 'report': str(size_record), 'passed': True},
                'final_startup_runtime': startup_runtime,
                'package_obligations': obligations,
                'source_hygiene': ({'source': hygiene['source'], 'passed': True} if hygiene else None),
@@ -242,9 +244,10 @@ def main():
     parser.add_argument('--logic-report', type=Path, help='logic_check.py report; reuse existing per-case project records only after --source identity matches the current project')
     parser.add_argument('--source', type=Path, help='delivered source project folder or source ZIP: checked by source_hygiene.py (no .git/.svn/.idea, no credential files); also needed with --logic-report')
     parser.add_argument('--preview-url', help='live matching phone preview URL; required for delivery')
+    parser.add_argument('--platform-feedback', type=Path, help='project-local record of a known platform rejection')
     args = parser.parse_args()
     try:
-        print(json.dumps(prepare(args.zip, args.native, args.expected_app_id, args.record, args.project, args.startup_contract, args.loading_recovery_runtime, args.resource_manifest, args.ad_regression, args.logic_report, args.source, args.preview_url), ensure_ascii=False))
+        print(json.dumps(prepare(args.zip, args.native, args.expected_app_id, args.record, args.project, args.startup_contract, args.loading_recovery_runtime, args.resource_manifest, args.ad_regression, args.logic_report, args.source, args.preview_url, args.platform_feedback), ensure_ascii=False))
     except (ValueError, OSError, RuntimeError) as error:
         print(json.dumps({'status': 'refuse', 'error': str(error)}, ensure_ascii=False))
         return 1

@@ -103,6 +103,22 @@ class WriterOrder(unittest.TestCase):
             check.assert_not_called()
         self.assertEqual(json.loads(record.read_text()), {'original': True})
 
+    def test_cli_runs_once_per_delivery_and_never_in_writer(self):
+        with patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': []}) as cli, \
+                patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
+            result = build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
+            cli.assert_not_called()
+            records = [self.root / 'delivery.json', self.root / 'redelivery.json']
+            for count, record in enumerate(records, start=1):
+                with patch('prepare_delivery.tempfile.gettempdir', return_value=str(self.root / 'other-temp')), \
+                        patch('prepare_delivery.writer_board', side_effect=ValueError('stop after final gate')):
+                    with self.assertRaisesRegex(ValueError, 'stop after final gate'):
+                        prepare(self.out, self.native, APP, record, project=self.project, resource_manifest=self.manifest)
+                self.assertEqual(cli.call_count, count)
+                cli.assert_called_with(str(self.out.resolve()), result['sha256'])
+            receipts = [json.loads(Path(str(record) + '.size.json').read_text()) for record in records]
+            self.assertNotEqual(receipts[0]['run_id'], receipts[1]['run_id'])
+
     def test_delivery_native_mutation_during_startup_refused(self):
         archive = self.root / 'input.zip'
         with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):

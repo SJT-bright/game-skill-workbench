@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T13:54:56.459Z",
-  "treeHash": "45ab39f8eebd09ee501ef9b0676606d0f98d01fbc83c9a2a6805f8577df06dc8",
+  "createdAt": "2026-11-08T16:56:45.593Z",
+  "treeHash": "1cd3bc09a38e459ac9fc4f8ef8d1b6d4f44bddff4d91751f4167b7c1db3fd20e",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "be5c7fcc7ee4e4ea593df3d5c1d49f6e624a3cfd983e63f7848e8b48b810ace2",
+      "treeHash": "8d0207788a3b96f8a6c91360a80bbeed35037b2c2907452d32bc0d90293998c7",
       "fileCount": 184,
-      "bytes": 1964648,
+      "bytes": 1969999,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "b1addad4fb6b9b714ebdc2695ac9663ca87a859e136efbfc2ae4e31abc8fb26c",
-          "size": 51279,
+          "hash": "f6209b5a4ba3caa713e1f6da458285be056196314ff8a0343700403d892ab90a",
+          "size": 53139,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "77462f8f26c4ba919ca5bd5ac7c21368bf8da3643198422e3d2f19f343efb3e2",
-          "size": 21386,
+          "hash": "65f85f694c04d58f27d0a527508c594eac4126d59fcf92c98ed6e1a54f947a49",
+          "size": 21836,
           "executable": false
         },
         {
@@ -419,8 +419,8 @@
         },
         {
           "path": "package-check/README.md",
-          "hash": "62c2e2db857ace8fb46af5e83a9ef79985d37b4ab344182a4e7e2bfb35cfd631",
-          "size": 4361,
+          "hash": "8b0d6bbcaceb17a256ef67fe547ce280177c156583c7ad5d0814d2e483abeb4b",
+          "size": 4381,
           "executable": false
         },
         {
@@ -467,8 +467,8 @@
         },
         {
           "path": "package-check/references/fresh-upload-size.md",
-          "hash": "8c2d824173d4fe8af62257670b3033020c23beb72cd2b691d0fc3e3d49782617",
-          "size": 3772,
+          "hash": "48993ff40ef62f2d2f0b77e527b439fd188a547e48559cdcc209f77aa2c22fc8",
+          "size": 5086,
           "executable": false
         },
         {
@@ -641,8 +641,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "22acb00dd71064b7cd7e92a893c92c5b42bf46954650de26b454a69d49675859",
-          "size": 16260,
+          "hash": "e8d6a4b22aa5d5f7051117c14cc95731333243e7f8ca30dd49d12247cc10b213",
+          "size": 16657,
           "executable": false
         },
         {
@@ -1007,8 +1007,8 @@
         },
         {
           "path": "package-check/scripts/test_gate_order_and_identity.py",
-          "hash": "848ea205768261c43f8345a082ec4b732e659268d3c37f00018eacf1576d7c1c",
-          "size": 8648,
+          "hash": "29e05882b3e8c10bfb9111b88374c83c4ff71ab07798f23df6ce13494eda820b",
+          "size": 9958,
           "executable": false
         },
         {

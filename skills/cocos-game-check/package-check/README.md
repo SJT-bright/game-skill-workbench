@@ -4,7 +4,7 @@
 
 接在用户已授权的出包或具体启动故障维护之后。新制作完整验收由[打包主入口](../package/README.md)选择范围；本入口不重做全游戏玩法、美术或所有历史事故。只读检查已有ZIP仍可单独执行。
 
-**交付前无例外复查**：每次要给测试包，先按[最终 ZIP 分包体积复查](references/fresh-upload-size.md)生成本次新回执；包括现成、旧、外来、同版重发和仅改名包。`prepare_delivery` 自动先跑这一项，其他 CI 仍可按原规则复用；用户仅索取已有文件时直接运行共享 `upload_size_gate.py`，不得只算 ZIP CRC/哈希。
+**交付前无例外复查（含 TikTok CLI）**：每次要给测试包，先按[最终 ZIP 分包体积复查](references/fresh-upload-size.md)生成本次新回执；包括现成、旧、外来、同版重发和仅改名包。`prepare_delivery` 自动先跑这一项，其他 CI 仍可按原规则复用；用户仅索取已有文件时直接运行共享 `upload_size_gate.py`，不得只算 ZIP CRC/哈希。
 
 1. 锁当前Native、目标App ID、稳定新ZIP路径、项目与证据。按[检查合同](references/check-contract.md)先核根入口、原生坐标、引擎/adapter、分包/场景、资源、未压缩体积；[检查顺序](references/gate-order-and-identity.md)先拒绝确定错误。
 2. 按[资源与历史问题门禁](references/resource-and-reported-issues.md)，运行当前生产调用清单反查。清单漏项、未知动态域、固定问题历史缺失、未复验/失败/失效拒包。相关问题有效时仅核证据与依赖，不重新跑该运行器。

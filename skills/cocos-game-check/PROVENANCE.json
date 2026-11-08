@@ -1253,6 +1253,54 @@
           "method": "reviewed_merge"
         }
       ]
+    },
+    {
+      "id": "tiktok-cli-final-zip-20261108",
+      "authority": "User requested automatic official CLI check and build for every final TikTok test ZIP.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "61a314fb5a162cc55640597180123f779bd504f422f6791384fc88828f2eca40"
+        },
+        {
+          "path": "package-check/README.md",
+          "sha256": "8b0d6bbcaceb17a256ef67fe547ce280177c156583c7ad5d0814d2e483abeb4b"
+        },
+        {
+          "path": "package-check/references/fresh-upload-size.md",
+          "sha256": "9639d51475d81cb7c075d999c0f65c6997671336a3304914d2111475280a4fa9"
+        },
+        {
+          "path": "package-check/scripts/build_checked_zip.py",
+          "sha256": "f7a56a8b015d5cf147e351de61798771f490d3da2d9827cfa1c21c8fd97aece0"
+        },
+        {
+          "path": "package-check/scripts/prepare_delivery.py",
+          "sha256": "e8d6a4b22aa5d5f7051117c14cc95731333243e7f8ca30dd49d12247cc10b213"
+        }
+      ]
+    },
+    {
+      "id": "tiktok-cli-once-per-handoff-20261108",
+      "authority": "User requested one fresh official CLI check/build on the final ZIP per delivery.",
+      "files": [
+        {
+          "path": "package-check/scripts/build_checked_zip.py",
+          "sha256": "9be1842ebd675cf8e0a9b59de21e46f11dbf45382ad79c6abda1199276c64382"
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "65f85f694c04d58f27d0a527508c594eac4126d59fcf92c98ed6e1a54f947a49"
+        },
+        {
+          "path": "package-check/references/fresh-upload-size.md",
+          "sha256": "48993ff40ef62f2d2f0b77e527b439fd188a547e48559cdcc209f77aa2c22fc8"
+        },
+        {
+          "path": "package-check/scripts/test_gate_order_and_identity.py",
+          "sha256": "29e05882b3e8c10bfb9111b88374c83c4ff71ab07798f23df6ce13494eda820b"
+        }
+      ]
     }
   ],
   "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8"

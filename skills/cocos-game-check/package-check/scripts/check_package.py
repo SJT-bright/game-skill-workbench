@@ -71,7 +71,7 @@ def write_archive(path, files):
 def rewarded_ad_gate(files, folder, adapter=None, rework=None):
     """Mandatory rewarded-ad regression on the exact verified bytes staged in folder
     (Basil timeout rule, remake-ads/references/ad-timeout-and-regression.md). Refuses unless
-    every case passes; a missing adapter or browser is a refusal, never a skip.
+    every applicable case passes. A revive-only probe belongs to the first manual playtest after art.
     rework (简化.11.15, rework_scope.plan): a reuse plan against the last passed package -> its pass is kept (only
     pictures, sounds or fonts changed; same code, adapter and tool) instead of running the 10 cases again."""
     if not ad_regression_gate.needs_regression(files):
@@ -79,13 +79,14 @@ def rewarded_ad_gate(files, folder, adapter=None, rework=None):
                 'reason': 'no createRewardedVideoAd call in package JavaScript'}
     adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
     input_gate('rewarded_ad_regression', adapter)
-    if isinstance(rework, dict) and rework.get('reuse') and rework.get('ad') == 'reuse':
-        import rework_scope
-        return rework_scope.reused_ad(rework)
     try:
-        if runtime_regression_gate.manual_revive_request(runtime_regression_gate.load_adapter(adapter)):
+        effective = runtime_regression_gate.load_adapter(adapter)
+        if runtime_regression_gate.manual_revive_request(effective) and not effective.get('double_claim'):
             return {'id': 'rewarded_ad_regression', 'status': 'not_applicable',
                     'reason': 'configured probe is rewarded revive, covered in the first manual playtest after art'}
+        if isinstance(rework, dict) and rework.get('reuse') and rework.get('ad') == 'reuse':
+            import rework_scope
+            return rework_scope.reused_ad(rework)
         return ad_regression_gate.run(folder, adapter)
     except (ad_regression_gate.RegressionRefused, runtime_regression_gate.RuntimeRefused) as error:
         raise ValueError(str(error))
@@ -139,7 +140,7 @@ def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
             for name in rr.required_suites(files,a,catalog):
                 units=runtime_incremental.unit_ids(name,catalog[name],a,rr.precheck(name,catalog[name],a,engine,resolved_policy) is not None)
                 ids.extend('runtime.'+name+'/'+unit for unit in units)
-            if ad_regression_gate.needs_regression(files) and not rr.manual_revive_request(a):
+            if ad_regression_gate.needs_regression(files):
                 ids.extend('ads.'+c for c in ad_regression_gate.default_cases(a))
             # Returned visual acceptance is a disposition, not a missing art test.
             # Its independent hidden-startup node is planned by runtime_incremental.
@@ -305,7 +306,8 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
         except Exception as error:
             return no('debrand inherited ad identity refused: %s' % error)
     try:
-        manual_probe = bool(adapter and runtime_regression_gate.manual_revive_request(runtime_regression_gate.load_adapter(adapter)))
+        current = runtime_regression_gate.load_adapter(adapter) if adapter else {}
+        manual_probe = runtime_regression_gate.manual_revive_request(current) and not current.get('double_claim')
     except runtime_regression_gate.RuntimeRefused:
         return no('current adapter could not be read')
     if ad_regression_gate.needs_regression(files) and not manual_probe:

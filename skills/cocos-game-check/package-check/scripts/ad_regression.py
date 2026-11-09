@@ -139,8 +139,9 @@ def load_adapter(path):
 
 
 def default_cases(adapter):
-    """The 10 cases, plus the three claim-window cases when the adapter describes the x2 checkbox."""
-    return CASES + (DOUBLE_CASES if isinstance(adapter, dict) and 'double_claim' in adapter else [])
+    """Test the configured non-revive probe and any independent x2 claim flow."""
+    base = [] if _environment().manual_revive_request(adapter) else CASES
+    return base + (DOUBLE_CASES if isinstance(adapter, dict) and 'double_claim' in adapter else [])
 
 
 def adapter_warnings(adapter):

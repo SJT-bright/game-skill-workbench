@@ -72,7 +72,7 @@ AD_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_
            'double_claim'}   # v7.8 (Saul 10-31, W100): ad_regression double_watch / double_quit / double_free
 CORE_KEYS = {'home', 'retry', 'retry_label', 'enter_level', 'host_query', 'engine', 'remake_home',
              'save_keys', 'level_timeout_s', 'runtime_note'}
-PREDICATES = ('tiktok', 'rewarded_ads', 'missions', 'remake_home', 'trial_url')
+PREDICATES = ('tiktok', 'rewarded_ads', 'automatic_rewarded_ads', 'missions', 'remake_home', 'trial_url')
 # v7.8 (总表 B30): "host": "none" = the suite opens a page of its own (trial_link: CFG.trialUrl), no package host server.
 # v7.8 (总表 P2 补, popin): "needs_new" = adapter fields a new game must have (missing: new game refused, legacy game
 # warned and the suite not run); "na_field" = a field whose value {"n/a": "reason"} passes the suite without a browser
@@ -89,7 +89,7 @@ POPIN_OPTIONAL = {'start': list, 'first_touch': bool, 'fly_s': (int, float), 'se
 
 def popin_problems(value):
     """v7.8 (总表 P2 补): what is wrong with adapter.popin, [] when it is usable. {"n/a": "reason"} is the whole block of
-    a game without scrolling obstacles; otherwise the four required strings (references/runtime-regression.md)."""
+    a game without scrolling obstacles; otherwise the three required strings (references/runtime-regression.md)."""
     if not isinstance(value, dict):
         return ['popin must be an object']
     if 'n/a' in value:
@@ -384,16 +384,18 @@ def automatic_adapter(raw):
     adapter = dict(raw)
     entries = raw.get('ad_entries')
     manual = [e for e in entries or [] if isinstance(e, dict) and
-              (e.get('role') == 'revive' or revive_target(e.get('button')))] if isinstance(entries, list) else []
+              (e.get('role') == 'revive' or (not e.get('role') and revive_target(e.get('button'))))] if isinstance(entries, list) else []
     paths = [e['button'] for e in manual if isinstance(e.get('button'), str)]
     adapter['_manual_revive_paths'] = paths
-    adapter['_manual_revive_only_entries'] = bool(manual and len(manual) == len(entries))
+    has_manual_route = bool(manual) or raw.get('request_role') == 'revive'
     if manual:
         remaining = [e for e in entries if e not in manual]
         if remaining:
             adapter['ad_entries'] = remaining
         else:
             adapter.pop('ad_entries')
+    has_other_route = bool(adapter.get('ad_entries') or raw.get('double_claim') or
+                           raw.get('request_role') not in (None, 'revive'))
     outcome = raw.get('ad_outcome')
     if isinstance(outcome, dict):
         outcome = dict(outcome)
@@ -404,37 +406,58 @@ def automatic_adapter(raw):
         if isinstance(outcome.get('entries'), dict):
             outcome['entries'] = {k: v for k, v in outcome['entries'].items()
                                   if k not in manual_ids and not revive_target(k, paths)}
+    def route_has_revive(route):
+        return isinstance(route, list) and any(
+            revive_target(step.get('tap') or step.get('wait_node'), paths)
+            if isinstance(step, dict) else revive_target(step, paths) for step in route)
+
     resume = raw.get('resume_play')
     if isinstance(resume, dict) and isinstance(resume.get('ad'), dict):
         ad = resume['ad']
-        if ad.get('role') == 'revive' or revive_target(ad.get('tap'), paths) or revive_target(ad.get('tap_js'), paths):
+        code = ad.get('tap_js')
+        scripted_revive = isinstance(code, str) and (
+            REVIVE_PROBE.search(code) or any(repr(path) in code or json.dumps(path) in code for path in paths))
+        if ad.get('role') == 'revive' or revive_target(ad.get('tap'), paths) or scripted_revive or route_has_revive(ad.get('actions')):
+            has_manual_route = True
             adapter['resume_play'] = {k: v for k, v in resume.items() if k != 'ad'}
             if isinstance(outcome, dict) and isinstance(outcome.get('entries'), dict):
                 outcome['entries'].pop('resume_play.ad', None)
+        else:
+            has_other_route = True
     layout = raw.get('layout_states')
     if isinstance(layout, list):
         adapter['layout_states'] = [s for s in layout if not isinstance(s, dict) or not (
             isinstance(s.get('name'), str) and REVIVE_WORD.search(s['name'])
-            or any(isinstance(a, dict) and revive_target(a.get('tap') or a.get('wait_node'), paths)
-                   for a in (s.get('actions') or [])))]
+            or route_has_revive(s.get('actions')))]
     trial = raw.get('trial')
     if isinstance(trial, dict) and (trial.get('role') == 'revive' or
             revive_target(trial.get('ad_button'), paths) or
-            any(revive_target(tap, paths) for tap in (trial.get('taps') or []))):
+            route_has_revive(trial.get('taps')) or route_has_revive(trial.get('open'))):
+        has_manual_route = True
         adapter.pop('trial')
+    popin = raw.get('popin')
+    if isinstance(popin, dict) and 'revive_js' in popin:
+        adapter['popin'] = {k: v for k, v in popin.items() if k != 'revive_js'}
+    adapter['_manual_revive_only_entries'] = has_manual_route and not has_other_route
+    if adapter['_manual_revive_only_entries'] and adapter.get('ad_entries') == []:
+        adapter.pop('ad_entries')
     return adapter
 
 
 def manual_revive_request(adapter):
     """Identify an existing lifecycle probe that exercises the excluded revive entry."""
-    if not adapter or adapter.get('double_claim'):
+    if not adapter:
         return False
+    if '_manual_revive_paths' not in adapter:
+        adapter = automatic_adapter(adapter)
     if adapter.get('request_role'):
         return adapter['request_role'] == 'revive'
     request = adapter.get('request')
+    if adapter.get('_manual_revive_only_entries'):
+        return True
     if not isinstance(request, str) or not request.strip():
-        return bool(adapter.get('_manual_revive_only_entries'))
-    return bool(REVIVE_PROBE.search(request) or any(p in request for p in adapter.get('_manual_revive_paths', [])))
+        return False
+    return bool(REVIVE_PROBE.search(request) or any(repr(p) in request or json.dumps(p) in request for p in adapter.get('_manual_revive_paths', [])))
 
 
 def load_adapter(path, suites=None):
@@ -493,6 +516,8 @@ def predicate(name, files, adapter, trial_url=None):
         return 'game.js' in files
     if name == 'rewarded_ads':
         return bool(rewarded_callers(files))
+    if name == 'automatic_rewarded_ads':
+        return not adapter.get('_manual_revive_only_entries') and bool(rewarded_callers(files))
     if name == 'missions':
         return any(_js_contains(files, n) for n in (b'startEntranceMission', b'addShortcut', b'navigateToScene'))
     if name == 'remake_home':
@@ -518,6 +543,7 @@ def required_suites(files, adapter, suites=None, trial_url=None):
 _NOT_RUN = {'trial_url': 'no trial link given (serve_preview.py --keep runs it before it prints the link; '
                          'runtime_regression.py trial --url <link> runs it by hand)',
             'rewarded_ads': 'no createRewardedVideoAd call in the package JavaScript',
+            'automatic_rewarded_ads': 'no applicable non-revive rewarded entry',
             'missions': 'no mission / shortcut call in the package JavaScript', 'remake_home': 'adapter.remake_home is not set'}
 
 

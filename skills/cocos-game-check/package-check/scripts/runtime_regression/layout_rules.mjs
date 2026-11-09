@@ -282,10 +282,6 @@ export function adEntriesProblems(entries) {
       if (!s || typeof s.name !== 'string' || !s.name) out.push('ad_entries[' + i + '].states[' + j + '].name must be a string');
       if (s && s.setup_js != null && typeof s.setup_js !== 'string') out.push('ad_entries[' + i + '].states[' + j + '].setup_js must be a string');
       if (s && s.actions != null && !Array.isArray(s.actions)) out.push('ad_entries[' + i + '].states[' + j + '].actions must be a list');
-      // the revive case waits for the hero to fail by itself (A12 补: a forced fail 3 s in comes before the first
-      // point where the game rightly offers a revive, so it reports a missing revive that is not missing)
-      if (s && /revive|复活/i.test(e.id + ' ' + s.name) && typeof s.setup_js === 'string' && /finish\s*\(\s*false|gameOver\s*\(|\.fail\s*\(|die\s*\(/i.test(s.setup_js) && !(s.actions || []).some((a) => a && a.wait_node))
-        out.push('ad_entries ' + e.id + '/' + s.name + ': a revive state must let the hero fail by itself (actions with wait_node on the revive button), not force the fail in setup_js');
     });
   });
   return out;

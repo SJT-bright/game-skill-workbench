@@ -1,8 +1,8 @@
 {
   "name": "ad_outcome",
-  "about": "Drive each rewarded-ad entry through cancel and completion using real UI taps and phone-like lifecycle. Declared revive entries additionally require reward, cancellation entitlement, same-run restoration, visible gameplay and a real next action. Both saved frames require visual review. Declared revives block even under legacy policy.",
+  "about": "Drive applicable non-revive rewarded entries through cancel and completion, including rewards and returning to usable gameplay. Rewarded revive is covered in the first manual playtest after art.",
   "applies": [
-    "rewarded_ads",
+    "automatic_rewarded_ads",
     "adapter:ad_entries"
   ],
   "needs": [],

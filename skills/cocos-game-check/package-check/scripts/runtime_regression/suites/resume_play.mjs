@@ -37,7 +37,6 @@ const POLICY = C.policy === 'legacy' ? 'legacy' : 'new';
 // with a warning (as before 手机检查补全)
 const LEGACY = POLICY === 'legacy';
 const B = A.resume_play || {};
-const FACTS = C.facts || {};
 const KEYS = new Set(['start', 'probe', 'state_js', 'clock_js', 'pause_button', 'continue_button', 'ad', 'settle_ms', 'background_ms', 'query', 'note', 'cases']);
 const isNone = (v) => !!v && typeof v === 'object' && !Array.isArray(v) && typeof v.none === 'string' && !!v.none.trim();
 

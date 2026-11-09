@@ -1,14 +1,12 @@
 // ad_entries (v7.8, 总表 A12 + B30 B): every rewarded-ad entry the adapter lists ("ad_entries", up to the five entries
-// plus revive) must react to a REAL click in a REAL state. From the 全民飞车门禁 prototype ad_entry_reaction_gate.mjs.
+// excluding rewarded revive) must react to a REAL click in a REAL state. From the 全民飞车门禁 prototype ad_entry_reaction_gate.mjs.
 // For each entry x state: fresh load (empty save, iPhone 14), reach home, run the state's real-input "actions"
 // (gates.runActions: tap, drag, wait_scene, wait_node ...) and then its setup_js, check the button is on screen and not
 // covered, record 2 s of idle labels, click its centre with the real mouse. Within 2 s one of:
 //   tt.createRewardedVideoAd or ad.show() was called (the ad starts), or tt.showToast / showModal was called, or a new
 //   visible label appears / a label's text changes (the player is told why not)
-// otherwise dead_button. missing_entry: the button is not on screen once the state is reached (DriftRacer v1: no revive
+// otherwise dead_button. missing_entry: the button is not on screen once the state is reached (DriftRacer v1: no rewarded
 // page at all). A disabled cc.Button (interactable=false) that stays silent is a warning (must be drawn greyed out).
-// Revive: let the hero fail by itself (wait_node on the revive button); forcing finish(false) 3 s in comes before the
-// first point where the game rightly offers a revive (layout_rules.adEntriesProblems refuses such a state).
 // Division of work: ad_regression.py drives the ad SDK callbacks (timeouts, X, rewards once) through adapter.request;
 // this suite only proves the buttons a player taps reach that flow. New game: refuses; legacy game: warnings.
 const L = await import(globalThis.CFG.lib);

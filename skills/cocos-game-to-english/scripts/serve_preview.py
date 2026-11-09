@@ -10,9 +10,8 @@ warning with "高波来袭！" drawn in one slice of a Spine atlas while the old
 a person will play -- --open, --keep or --idle-minutes 0 -- now starts only when
   1. it serves a private copy (--snapshot), and
   2. chinese_audit.py check passes on that very export (the same checker as `chinese_audit.py check --export`), and
-  3. the current art receipt passed and the source record includes the Sprite ratio check,
-  4. the Web export and prepared Native are covered by image-review.json, and
-  5. the copy the shared server makes is byte-for-byte the export that was checked.
+  3. the Native preparation and source identity are current, and
+  4. the copy the shared server makes is byte-for-byte the export that was checked.
 Every such link is written to <project>/docs/english/chinese-audit/trial-links.json (export, snapshot, check result).
 Internal QA servers (none of the three flags, or --raw) start as before.
   --chinese-original  the stage-1 Chinese original: no Chinese check (it is the Chinese game on purpose); with
@@ -41,7 +40,7 @@ HELP = ('英化入口自己的参数（其余见下面共用服务的参数）�
         '  --project <工程>     英化工程（导出在 <工程>/build/web-mobile 时可以不写）\n'
         '  --native <目录>     试玩前已处理的同版 TikTok Native 构建目录，正式英文试玩必填\n'
         '  --reopen            重开已通过的同版试玩，只核对既有记录\n'
-        '正式英文试玩先核对美术回执、Sprite 比例记录、中文专项检查和两个导出的逐图复核记录，必须带 --snapshot。\n'
+        '正式英文试玩核对中文专项检查及同版 Web / Native 身份，必须带 --snapshot。\n'
         '英文试玩链接自动记用时（stage_timer.py link <第几轮>），打印的上一轮用时贴在新链接那条回复最后。\n')
 
 
@@ -102,17 +101,18 @@ def refuse(message):
     raise SystemExit(1)
 
 
-def pretrial_records(project, export, native):
-    """Verify prepared evidence only. Source scans, PNG conversion and OCR run before this entry."""
-    import audit_image_review_record as images
+def pretrial_records(project, native):
+    """Verify the source and prepared Native identity for the trial."""
     import tiktok_finalize as finalize
     from tiktok_finalize_steps import png
 
-    problems = finalize.check_trial_source(project, 'localize')
+    problems = finalize.check_source_record(project)
     if problems:
         refuse('\n'.join(row['message'] for row in problems))
+    if finalize.prepared_source_identity(project)['board'] != 'localize':
+        refuse('源码准备记录需要使用英化入口的 localize 板块。')
     if native is None:
-        refuse('正式英文试玩需要 --native <同版已处理的 TikTok 构建目录>，以核对实际包内图片的复核记录。')
+        refuse('正式英文试玩需要 --native <同版已处理的 TikTok 构建目录>，以核对候选身份。')
     native = native.expanduser().resolve()
     if not all((native / name).is_file() for name in ('game.js', 'game.json', 'project.config.json')):
         refuse('找不到实际 TikTok Native 构建目录：%s' % native)
@@ -123,15 +123,7 @@ def pretrial_records(project, export, native):
     prepared = png.check_prepared({'root': native, 'project': project})
     if prepared['blocks']:
         refuse('\n'.join(row['message'] for row in prepared['blocks']))
-    record = project / 'docs/english/image-review.json'
-    try:
-        review = images.check(images.directory_items([export, native]), record)
-    except (OSError, ValueError) as error:
-        refuse('读取待试玩图片失败：%s' % error)
-    if not review['passed']:
-        refuse('逐图复核未通过，请在试玩前用 audit_image_review_record.py write --directory <Web> '
-               '--directory <已处理的 Native> 生成记录。\n' + '\n'.join(review['problems'][:10]))
-    return native, native_sha, native_record, record, project / finalize.SOURCE_RECORD, review['distinct_images']
+    return native, native_sha, native_record, project / finalize.SOURCE_RECORD
 
 
 def returned_preview(argv, project, export, native, say, timing_run_id=None):
@@ -139,8 +131,8 @@ def returned_preview(argv, project, export, native, say, timing_run_id=None):
     import returned_art_acceptance as returned
     try:
         accepted = returned.validate(project, web=export, native=native)
-    except (ValueError, KeyError, TypeError, OSError) as error:
-        refuse('返工交付绑定需更新（不重跑美术）：'+str(error))
+    except (ValueError, KeyError, TypeError, OSError):
+        return None  # An earlier optional authorization belongs to another candidate.
     if not option(argv, '--project'):
         argv += ['--project', str(project)]
     log = project/'docs/english/returned-trial-links.json'
@@ -201,15 +193,12 @@ def gate(argv, say=print, timing_run_id=None):
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
     import returned_art_acceptance as returned
     if (project/returned.MANIFEST).is_file():
-        return returned_preview(argv, project, export, opts.native, say, timing_run_id)
-    import art_receipt
+        accepted = returned_preview(argv, project, export, opts.native, say, timing_run_id)
+        if accepted is not None:
+            return accepted
     sys.path.insert(0, str(HERE))
     import chinese_audit as CA
     export_sha = CA.export_manifest(export)['sha256']
-    art = art_receipt.check(project, board='localize', capture_build=export)
-    if art['level'] != 'ok' or art.get('status') != 'pass':
-        refuse('需要当前正式美术通过回执。' + art['message'])
-    art_path = art_receipt.receipt_path(project)
     out = CA.resolve_out(project, None)
     try:
         CA.guard_out(out, project, export)
@@ -242,13 +231,11 @@ def gate(argv, say=print, timing_run_id=None):
         say('--draft：Saul 要先看没做完的英文版。回复里写明这一版没过中文专项检查、上面这些还没处理，不能说「检查过」。')
     elif result is not None:
         say('中文专项检查：通过（%s）。' % check_path)
-    bindings = {'art_receipt_sha256': art_path, 'check_result_sha256': check_path}
+    bindings = {'check_result_sha256': check_path}
     native = native_sha = None
     if not opts.draft:
-        native, native_sha, native_record, record, source_record, distinct_images = pretrial_records(
-            project, export, opts.native)
-        bindings.update(image_review_sha256=record, source_record_sha256=source_record,
-                        native_preparation_sha256=native_record)
+        native, native_sha, native_record, source_record = pretrial_records(project, opts.native)
+        bindings.update(source_record_sha256=source_record, native_preparation_sha256=native_record)
         from verify_native_zip import native_directory_digest
     evidence = {key: CA.sha_file(path) for key, path in bindings.items()}
     if opts.reopen:
@@ -263,7 +250,7 @@ def gate(argv, say=print, timing_run_id=None):
             refuse('找不到与当前导出和回执一致的已通过试玩记录。请回到试玩前阶段核对变更。')
         say('同版试玩已通过的记录核对一致。')
     elif not opts.draft:
-        say('试玩前检查通过：当前美术回执、Sprite 比例记录和 %d 张不同图片的复核记录。' % distinct_images)
+        say('试玩前已核对中文专项结果和同版 Native 准备记录。')
     name = option(argv, '--name') or ''
     if not option(argv, '--project'):
         argv += ['--project', str(project)]

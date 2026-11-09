@@ -26,6 +26,7 @@ import urllib.request
 from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
 _spec = importlib.util.spec_from_file_location('english_serve_preview', str(HERE / 'serve_preview.py'))
 GATE = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(GATE)
@@ -48,56 +49,14 @@ def make_game(td, colour=(200, 120, 40, 255)):
     for name in ('game.js', 'game.json', 'project.config.json'):
         (native / name).write_text('{}')
     Image.new('RGB', (48, 32), (35, 50, 80)).save(native / 'reward.jpg')
-    # This suite isolates the Chinese gate. Supply a scoped synthetic art receipt; live capture is tested separately.
-    matrix = {'cases':[dict(id='fixture', screen='home', kind='home', width=393, height=852, dpr=1,
-                            recipe='test', environment='test', stable=False, witness=[{'path':'fixture'}])]}
-    (root/'docs/art').mkdir(exist_ok=True)
-    (root/'docs/art/capture-plan.json').write_text(json.dumps(matrix))
-    synthetic_art_review(root, web)
     import tiktok_finalize as F
-    from audit_image_review_record import main as image_review
-    assert not F.finalize_source(root, 'localize', steps=('art_static',))['blocks']
+    assert not F.finalize_source(root, 'localize', steps=())['blocks']
     F.record_prepared_native(root, native, F.prepared_source_identity(root))
-    assert image_review(['write', '--directory', str(web), '--directory', str(native), '--out',
-                         str(root / 'docs/english/image-review.json'), '--ocr', 'fake']) == 0
     return root, web
 
 
 def native_dir(root):
     return root / 'build' / 'bytedance'
-
-
-def synthetic_art_review(root, web):
-    """Chinese gate tests use a test-only art receipt; real rendering is covered by capture replay."""
-    capture = Path(__file__).resolve().parents[2]/'remake-core/scripts/art_capture_round.mjs'
-    started = json.loads(subprocess.check_output(['node',str(capture),'start',str(root),str(web)], text=True))
-    import hashlib
-    import uuid
-    sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
-    from art_round_check import run, origin_hash, artifact_hash
-    store = root/'.tiktok-kit/art-rounds/proofs'
-    store.mkdir(exist_ok=True)
-    dumps = root/'docs/test/captured'
-    dumps.mkdir(parents=True, exist_ok=True)
-    proof_id = str(uuid.uuid4())
-    serial = lambda obj: json.dumps(obj, separators=(',', ':'), ensure_ascii=False).encode()
-    sha = lambda data: hashlib.sha256(data).hexdigest()
-    case = json.loads((root/'docs/art/capture-plan.json').read_text())['cases'][0]
-    png = (web/'assets/btn.png').read_bytes()
-    dump = serial(dict(art_capture_id=proof_id, screen='home',kind='home',viewport={'width':393,'height':852},
-                       screenshot='fixture.png'))
-    (dumps/'fixture.png').write_bytes(png)
-    (dumps/'capture-ui-dump-fixture.json').write_bytes(dump)
-    fields = dict(id=proof_id, caseHash=sha(serial(case)), case='fixture', version=started['version'], round=started['id'],
-                  dump=sha(dump), png=sha(png), reads=['assets/btn.png'], env='unit')
-    (store/(proof_id+'.json')).write_bytes(serial(dict(fields,seal=sha(serial(fields)))))
-    verified = run('verify', root, web, dumps)
-    assert verified.get('ready'), verified
-    proof = dict(round=started['id'], version=started['version'], dumps=str(dumps), origin_hash=origin_hash(verified), artifact_hash=artifact_hash(root, dumps), ready=True)
-    import art_receipt as AR
-    import audit_value_presentation as VP
-    AR.write(root, 'pass', {'capture_round':proof, 'value_presentation': {'revision': VP.REVISION, 'mode': 'runtime', 'passed': True,
-             'pages': 2, 'source_sha256': VP.source_fingerprint(root)}})
 
 
 def pixels_sha(path):
@@ -126,43 +85,34 @@ def quiet():
 class GateDecisions(unittest.TestCase):
     """The gate itself, in this process."""
 
-    def test_missing_art_blocks_every_person_mode_and_draft(self):
+    def test_person_modes_use_existing_candidate_without_an_art_receipt(self):
         for flags in (['--open'], ['--keep'], ['--idle-minutes', '0'], ['--open', '--draft']):
             with tempfile.TemporaryDirectory() as td:
                 root, web = make_game(td)
-                (root / '.tiktok-kit/art-receipt.json').unlink()
-                err = io.StringIO()
-                with self.assertRaises(SystemExit) as cm, _stderr(err):
-                    GATE.gate(['--directory', str(web), '--project', str(root), '--snapshot'] + flags, say=quiet()[1])
-                self.assertEqual(cm.exception.code, 1)
-                self.assertIn('重跑 art_check', err.getvalue())
+                scan(root, web, env_for(td))
+                args = ['--directory', str(web), '--native', str(native_dir(root)), '--snapshot'] + flags
+                _, verify = GATE.gate(args, say=quiet()[1])
+                self.assertTrue(callable(verify))
+                self.assertFalse((root / '.tiktok-kit/art-receipt.json').exists())
 
     def test_internal_qa_server_is_not_checked(self):
         argv = ['--directory', '/nowhere', '--snapshot', '--name', 'qa']
         self.assertEqual(GATE.gate(argv)[1], None)
         self.assertEqual(GATE.gate(['--directory', '/nowhere', '--raw', '--idle-minutes', '0'])[1], None)
 
-    def test_formal_trial_requires_executed_sprite_check_and_actual_native_image_review(self):
+    def test_formal_trial_still_requires_actual_prepared_native(self):
         with tempfile.TemporaryDirectory() as td:
             root, web = make_game(td)
             scan(root, web, env_for(td))
+            args = ['--directory', str(web), '--snapshot', '--open']
+            with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                GATE.gate(args, say=quiet()[1])
+            self.assertIn('需要 --native', err.getvalue())
             native = native_dir(root)
-            args = ['--directory', str(web), '--snapshot', '--open', '--native', str(native)]
-            import tiktok_finalize as F
-            F.finalize_source(root, 'localize', steps=())
+            (native / 'game.js').write_text('changed startup')
             with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
-                GATE.gate(args, say=quiet()[1])
-            self.assertIn('Sprite 比例', err.getvalue())
-
-            F.finalize_source(root, 'localize', steps=('art_static',))
-            F.record_prepared_native(root, native, F.prepared_source_identity(root))
-            from PIL import Image
-            Image.new('RGB', (48, 32), (80, 75, 50)).save(native / 'reward.jpg')
-            F.record_prepared_native(root, native, F.prepared_source_identity(root))
-            with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
-                GATE.gate(args, say=quiet()[1])
-            self.assertIn('逐图复核未通过', err.getvalue())
-            self.assertIn('reward.jpg', err.getvalue())
+                GATE.gate(args + ['--native', str(native)], say=quiet()[1])
+            self.assertIn('缺少同版准备证据', err.getvalue())
 
     def test_direct_shared_open_cannot_skip_the_english_gate(self):
         with tempfile.TemporaryDirectory() as td:
@@ -226,7 +176,6 @@ class GateDecisions(unittest.TestCase):
             # The export still contains the old image but represents a new build of the test page.
             with (web/'index.html').open('a') as f:
                 f.write('<!-- refreshed test export -->')
-            synthetic_art_review(root, web)
             os.utime(str(web / 'assets' / 'btn.png'), (1, 1))                                            # older export
             scan(root, web, env_for(td, {chinese: '高波来袭！'}))
             lines, say = quiet()
@@ -252,8 +201,8 @@ class GateDecisions(unittest.TestCase):
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual(len(log), 1)
             self.assertTrue(log[0]['passed'])
-            self.assertIn('art_receipt_sha256', log[0])
-            self.assertIn('image_review_sha256', log[0])
+            self.assertNotIn('art_receipt_sha256', log[0])
+            self.assertNotIn('image_review_sha256', log[0])
             self.assertEqual(log[0]['snapshot_manifest_sha256'], log[0]['export_manifest_sha256'])
             self.assertEqual(log[0]['name'], 'G 英文 第1轮')
             bad = Path(td) / 'snap-bad'
@@ -306,19 +255,9 @@ class GateDecisions(unittest.TestCase):
             scan(root, web, env_for(td))
             native = native_dir(root)
             args = ['--directory', str(web), '--native', str(native), '--snapshot', '--open']
-            from make_tiktok_zip import pretrial_native_problems
-            review = root / 'docs/english/image-review.json'
-            files = {path.relative_to(native).as_posix(): path.read_bytes()
-                     for path in native.rglob('*') if path.is_file()}
-            self.assertIn('需要成功启动', pretrial_native_problems(files, root, review)[0])
             _, verify = GATE.gate(args, say=quiet()[1])
-            commit = verify(shutil.copytree(web, Path(td) / 'first'))
-            self.assertIn('需要成功启动', pretrial_native_problems(files, root, review)[0])
-            commit()
-            self.assertEqual(pretrial_native_problems(files, root, review), [])
+            verify(shutil.copytree(web, Path(td) / 'first'))()
             (native / 'game.js').write_text('/* layout changed, all images unchanged */')
-            files['game.js'] = (native / 'game.js').read_bytes()
-            self.assertIn('ART_trial_native', pretrial_native_problems(files, root, review)[0])
             for mode in ([], ['--reopen']):
                 with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
                     GATE.gate(args + mode, say=quiet()[1])
@@ -377,12 +316,9 @@ class TrialLinkTiming(unittest.TestCase):
             stage_timer.call(root, 'link', 2)                              # the session also ran T link 2 by hand
             (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas><!-- round 2 --></html>', encoding='utf-8')
             scan(root, web, env_for(td))
-            with self.assertRaises(SystemExit), _stderr(io.StringIO()):
-                self.link(root, web, td, say)  # A new export must not inherit the previous art check.
-            synthetic_art_review(root, web)
             self.link(root, web, td, say)
-
             self.assertEqual([e['n'] for e in timing_events(root) if e['ev'] == 'link'], [1, 2])
+            self.assertFalse((root / '.tiktok-kit/art-receipt.json').exists())
 
     def test_timing_that_cannot_be_written_does_not_stop_the_link(self):
         with tempfile.TemporaryDirectory() as td:

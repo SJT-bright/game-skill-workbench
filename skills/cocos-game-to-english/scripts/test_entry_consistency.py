@@ -369,7 +369,7 @@ ART_HEADING = '\n## 美工：第一轮按美工 Skill 照原画风重做按钮�
 
 
 class TrialFirstThenFullChecks(unittest.TestCase):
-    """Complete pre-trial art coverage, scoped later rechecks, and final coverage using the same evidence ledger."""
+    """Technical pre-trial checks, human visual feedback, and final coverage using the same evidence ledger."""
 
     def stages(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -388,7 +388,7 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         for phrase in ('修复并复查通过后给英文试玩链接', '已知问题与平台兼容仍须完整覆盖',
                        '各项在对应制作节点执行一次', '第 5 阶段和写包入口读取同一记录', '以本页为准'):
             self.assertIn(phrase, lead, phrase)
-        for early in ('art_check.py', 'iPhone SE', '真实点击', '动态画面', '修复'):
+        for early in ('资源、图集、可测布局等技术项', '人工试玩画面清单', '能开始一局', '修复'):
             self.assertIn(early, st[3])
         self.assertIn('复查受影响整页、共享组件和新增页面', st[4])
         for late in ('check_known_issues.py', 'preflight.py', 'make_tiktok_zip.py',
@@ -397,13 +397,13 @@ class TrialFirstThenFullChecks(unittest.TestCase):
             self.assertNotIn(late, st[4], late)
             self.assertIn(late, st[5], late)
         self.assertIn('广告回归 10 例', lead)
-        for early in ('tiktok_finalize.py source', 'tiktok_finalize.py native', 'image-review.json'):
+        for early in ('tiktok_finalize.py source', 'tiktok_finalize.py native', 'audit_image_review_record.py'):
             self.assertIn(early, st[3])
             self.assertNotIn(early, st[5])
 
     def test_trial_link_requires_language_art_and_playable_start(self):
         _, st = self.stages()
-        # Formal preview requires art, image review and an interactive startup check.
+        # Formal preview requires the language check, current build identity and an interactive startup check.
         for phrase in ('通过后启动正式英文试玩', '能进首页', '能开始一局', '没有导致卡死的报错', '--ad-simulator',
                        '--idle-minutes 0'):
             self.assertIn(phrase, st[3], phrase)
@@ -441,11 +441,13 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         for phrase in ('按逐项记录核对完整覆盖', '完整覆盖不等于完整重跑',
                        '`runtime_regression.py`、`ad_regression.py` 合并有效旧记录和本次结果',
                        '合并后仍缺项才返回未完成', 'not_run 不算通过',
-                       '美工证据只读核对', '缺图、变形和色带', '绑定 Native 文件指纹',
-                       '用户可见变化先交通过美工检查的新试玩', 'logic.json', 'TikTok 固定适配',
+                       '确认同版 Web、Native 与 ZIP 的身份和包内资源完整性',
+                       '视觉问题留在制作或定点修复节点', 'logic.json', 'TikTok 固定适配',
                        '正式写包按同一 ledger 只补缺项和真实受影响项，已通过项直接沿用',
                        '重新复查最终 ZIP 的分包体积', '测试包与同版可用的手机试玩链接同发'):
             self.assertIn(phrase, st[5], phrase)
+        for obsolete in ('逐图复核沿用第 3 阶段的记录', 'image-review.json', 'art-receipt.json'):
+            self.assertNotIn(obsolete, st[5])
 
     def test_round1_art_uses_the_art_skill_in_the_original_style(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -476,10 +478,10 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         ad = next(l for l in st[2].splitlines() if l.startswith('   - **') and '`qa/ad-regression.json`' in l.split('**')[1])
         self.assertIn('第 1 / 2 阶段定位真实入口与字段，各项随制作执行一次，第 5 阶段只补缺及复验真实改动项', ad)
         self.assertIn('不挡英文试玩链接', ad.split('**')[1])
-        review = next(l for l in st[2].splitlines() if l.startswith('   - **图片复核记录'))
-        self.assertIn('在第 3 阶段从同版 Web 和已处理的 TikTok Native 生成', review)
-        self.assertNotIn('不挡英文试玩链接', review)
-        self.assertIn('逐图复核沿用第 3 阶段的记录', st[5])
+        review = st[3].split('**核实际图片和切片**', 1)[1].split('**中文专项检查', 1)[0]
+        self.assertIn('Web 与 Native 导出的差别', review)
+        self.assertIn('本次制作和改动范围', review)
+        self.assertNotIn('audit_image_review_record.py', st[5])
 
     def test_art_redo_starts_with_samples(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -562,8 +564,8 @@ class FasterFirstLink(unittest.TestCase):
                        'ad-boost 板块的图', '不能把未完成页面、中文图片字或本轮已计划的板块留到第二轮再补',
                        '已有有效证据直接沿用', '第一轮所有按钮都重新生成'):
             self.assertIn(phrase, art, phrase)
-        for phrase in ('全部页面、弹窗和条件状态', '两种尺寸截图', '未通过不给英文试玩链接',
-                       '不能把未完成的计划美工留到第二轮', '按规则保留的原图可以沿用'):
+        for phrase in ('本次制作和改动范围', '资源、图集、可测布局等技术项', '通过后启动正式英文试玩',
+                       '不能把未完成的计划美工留到第二轮', '人工试玩画面清单'):
             self.assertIn(phrase, st[3], phrase)
         for phrase in ('首次正式试玩前已完成全部计划美工', '后续只处理 Saul 的反馈和明确新增要求',
                        '新增页面、板块及其素材在该轮正式链接前完成制作并通过受影响项检查'):
@@ -645,16 +647,16 @@ UPDATES = PACK / '更新记录.txt'
 AD_SECTION = '\n## 看广告：固定几项按广告板块做，第 8 项默认加 ad-boost 板块'
 OLD_VERSION_NOTES = ('11.16', '11.15', '11.14.1', '11.14', '11.13', '11.12', '11.1', '11', '10.2.12', '10.2.11', '10.2.10', '10.2.9', '10.2.8', '10.2.7', '10.2.6', '10.2.5', '10.2.4', '10.2.3', '10.2.2', '10.2.1',
                      '10.2', '10.1', '10')
-# (English-pack copy of a shared doc, the old "before the trial" sentence, the English exception written next to it)
+# Current English-pack instructions and their stage or scope anchors.
 PRE_TRIAL_NOTES = (
-    ('remake-art/SKILL.md', '各适用项实际核一次；输入未变不追加第二轮自审',
-     '英化第一轮重新生成按钮和文字不算下文说的“完整首次重做”'),
-    ('remake-art/references/art-before-trial.md', '加载失败/重试状态', '英化每轮英文试玩链接前同样要完成美工检查'),
-    ('remake-art/references/page-richness.md', '至少两轮自审', '每轮英文试玩链接前须按英化入口第 3 阶段完成美工检查'),
-    ('remake-core/references/tiktok-home-growth.md', '交用户试玩前就做小样本', '英化游戏例外：都放到英化入口第 5 阶段做'),
-    ('remake-core/assets/user-playtest-checklist-template.md', 'AI 在给你试玩前已经走过', '英化游戏不用本模板'),
-    ('remake-core/references/stage-flow.md', '美术在交用户试玩前验收', '最终阶段核对已有证据与实际包内资源'),
-    ('remake-core/references/check-stages.md', '| 美术关 |', '英化在每轮英文试玩链接前查'),
+    ('remake-art/SKILL.md', '已通过且依赖未变的项禁止重复执行', '动效、明显闪屏和整体观感随已有试玩由人工检查'),
+    ('remake-art/references/art-before-trial.md', '广告回归、平台兼容和其余出包检查仍在英化入口第 5 阶段',
+     '同版试玩随附人工清单'),
+    ('remake-art/references/page-richness.md', '整套首次制作按适用项查技术问题', '复用已有同版证据'),
+    ('remake-core/references/tiktok-home-growth.md', '同一点击中只发出对应导航请求', '项目范围未涉及此链路时复用已有合格证据'),
+    ('remake-core/assets/user-playtest-checklist-template.md', '英化游戏按英化入口第 3 阶段', '本轮适用的人工快查清单'),
+    ('remake-core/references/stage-flow.md', '按范围核对图集、裁切、节点几何和绑定', '技术自检发现的实际缺陷修完后发同版试玩'),
+    ('remake-core/references/check-stages.md', '| 美术关 |', '观感、遮挡与动画按[人工试玩画面清单]'),
     ('cocos-game-to-english/references/dynamic-text-glyph-review.md', '成功/失败结算', '第 5 阶段全量检查时覆盖'),
 )
 
@@ -713,13 +715,13 @@ class StructureAndReadingMap(unittest.TestCase):
             self.assertIn(old, history, old)
         self.assertLess(len((ENTRY / 'SKILL.md').read_text(encoding='utf-8').split('\n---', 2)[0]), 1000)   # description
 
-    def test_pre_trial_sentences_carry_the_english_exception(self):
+    def test_pre_trial_documents_share_current_scope_and_review_handoff(self):
         for rel, old, note in PRE_TRIAL_NOTES:
             text = read(*rel.split('/'))
             self.assertIn(old, text, rel)
             self.assertIn(note, text, rel)
         lead = self.text().split('\n## 阶段', 1)[1].split('1. **盘点**', 1)[0]
-        for shared in ('第 3 阶段和美工 Skill 验收清单', '核对完整覆盖、只补缺项和真实受影响项',
+        for shared in ('画面观感按同版人工快查', '制作节点核对适用技术项',
                        '第 5 阶段和写包入口读取同一记录'):
             self.assertIn(shared, lead, shared)
 
@@ -961,7 +963,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
         self.assertNotIn('④ 试玩改进：不跑检查', summary)
         section, _ = self.stages()
         lead = section.split('1. **盘点**', 1)[0]
-        self.assertIn('中文专项检查、完整美工检查，修复并复查通过后给英文试玩链接', lead)
+        self.assertIn('中文专项检查、制作范围内的技术美工检查，修复并复查通过后给英文试玩链接', lead)
         self.assertNotIn('只确认能进首页、能玩一局，不跑检查。', lead)
 
     def test_stage_three_runs_scan_review_check_and_the_gated_link(self):
@@ -983,18 +985,19 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
 
     def test_later_rounds_recheck_and_delivery_reopens_the_verified_build(self):
         _, st = self.stages()
-        self.assertIn('每轮起新链接前做中文专项检查和受影响范围的完整美工复查', st[4])
+        self.assertIn('每轮起新链接前做中文专项检查和受影响范围的定点美工复查', st[4])
         self.assertIn('scan 只识新加和改过的图', st[4])
-        self.assertIn('逐图复核沿用第 3 阶段的记录', st[5])
+        self.assertIn('已通过项直接沿用', st[5])
         self.assertIn('现有同版服务经核实可以沿用', st[5])
         self.assertIn('--native <已处理的 Native> --reopen', st[5])
         self.assertNotIn('chinese_audit.py scan', st[5])
 
-    def test_image_record_follows_the_chinese_check(self):
+    def test_image_localization_and_chinese_evidence_are_bound_to_the_candidate(self):
         _, st = self.stages()
-        bullet = [l for l in st[2].splitlines() if l.startswith('   - **图片复核记录')][0]
-        for phrase in ('同版 Web 和已处理的 TikTok Native', '图集切片', 'Codex 直接看', '记录由工具写'):
-            self.assertIn(phrase, bullet, phrase)
+        self.assertIn('图片字和切片在实际制作范围内复核', st[2])
+        for phrase in ('图集切片', 'Web 与 Native 导出的差别', '手写的记录不算'):
+            self.assertIn(phrase, st[3], phrase)
+        self.assertLess(st[3].index('**核实际图片和切片**'), st[3].index('**通过后启动正式英文试玩'))
 
     def test_any_computer_section_names_the_recognizers(self):
         part = self.text().split('\n## 换电脑也能用', 1)[1].split('\n## ', 1)[0]

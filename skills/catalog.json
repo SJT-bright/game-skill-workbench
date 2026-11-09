@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-08T20:06:04.655Z",
-  "treeHash": "23ec086dcfa94e16c071b2031f6f47ecdb0dbb2336918d9f6aef019fe1743405",
+  "createdAt": "2026-11-09T08:30:48.437Z",
+  "treeHash": "2ebeddb1e099cc62a87eacde04d991d89fe8e4ee52bbfb3b6371a18bc96797e4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "709c2736b3c064f57e876131d0d27dc60338bac5b21b77a315a94f3ecdc7e9ad",
+      "treeHash": "35166b8be5da5f053cf8f62b3d3cf1200256b73ca64080de5140d6fac5470446",
       "fileCount": 186,
-      "bytes": 1974971,
+      "bytes": 1972411,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "2b2ca698227ccf1c68eb46b4c1789c6f04bb839ffd38c126a1c6a997959cfa6f",
-          "size": 51639,
+          "hash": "a155fde8a6538d231d86cc6a4c6d84477ee9c96552e04f38746493bb929cad46",
+          "size": 51640,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "65f85f694c04d58f27d0a527508c594eac4126d59fcf92c98ed6e1a54f947a49",
-          "size": 21836,
+          "hash": "308f734531af8da1f7a2b71090fe49f25352296ca033c2640069a6ba7a53b885",
+          "size": 21532,
           "executable": false
         },
         {
@@ -383,8 +383,8 @@
         },
         {
           "path": "package/README.md",
-          "hash": "8391d07d808c1fc2214735ad12129574c7200bfa987157d6247fd3e1c38cf2a4",
-          "size": 6009,
+          "hash": "9145721287020d50b892efc91e677e77d2bb85c545667f698338e84d6100caae",
+          "size": 5904,
           "executable": false
         },
         {
@@ -431,8 +431,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "dd3cb39ec3c88ae6e4616de9875491e81d107b498eb886ca8c70ef81ff100b9a",
-          "size": 21979,
+          "hash": "37eab66348c649ac40e808221d204437e765b5b9af99aa77ea48d2c557e66eee",
+          "size": 21935,
           "executable": false
         },
         {
@@ -503,8 +503,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "c65b530e4a9dcd8648d44c1017c599550d6195a29422e542981fd3d76a839142",
-          "size": 70369,
+          "hash": "e352d97a0247191088989f1d7768726c650af636fd432d85f16a7761318ad417",
+          "size": 70615,
           "executable": false
         },
         {
@@ -575,8 +575,8 @@
         },
         {
           "path": "package-check/scripts/build_checked_zip.py",
-          "hash": "9be1842ebd675cf8e0a9b59de21e46f11dbf45382ad79c6abda1199276c64382",
-          "size": 16407,
+          "hash": "8735c4a60e90c7cf10395f9f62a108047e26eca7a51ead0562a4d2db22c94bad",
+          "size": 15238,
           "executable": false
         },
         {
@@ -641,8 +641,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "e8d6a4b22aa5d5f7051117c14cc95731333243e7f8ca30dd49d12247cc10b213",
-          "size": 16657,
+          "hash": "596e88c7e8719053374102f57d131b7d166fd0cafa967337e3788525b1f6117c",
+          "size": 16618,
           "executable": false
         },
         {
@@ -815,14 +815,14 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/growth_entry.json",
-          "hash": "b6e3e218187d9b41679b13f7c9f026487356aba96ca5a9d7d1d783adc127165f",
-          "size": 393,
+          "hash": "58b9489ed474fbe203b71ce2a37b0944b115ff6445a9d2262e591494ec3bdb71",
+          "size": 337,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
-          "hash": "a0e5d14414536fb38b76d19c7a7df7ce870d536dd4e9e2ae1f6bd5fb0ed5e8af",
-          "size": 9437,
+          "hash": "951b62158ce03949efffef1ec990dc9b089bf45a0abb9bb0ebcf43c7f5e42ce4",
+          "size": 10575,
           "executable": false
         },
         {
@@ -977,8 +977,8 @@
         },
         {
           "path": "package-check/scripts/test_check_speedups.py",
-          "hash": "dc4451639c547a85a5427b87114bf3a2804128591f75981293f199d7bb00a9ec",
-          "size": 26257,
+          "hash": "01fcdace842131da1b860a1f8f249ecc197042b8751ad76646ab3aaff33196f0",
+          "size": 26168,
           "executable": false
         },
         {
@@ -1181,8 +1181,8 @@
         },
         {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "9fe58f5447a98df82f117d8910aedc2ac267eeac7392f8b2ead25bb4410d645d",
-          "size": 112738,
+          "hash": "4ce518fb9cf6cf93b1d43f4728e1257c3de1faa59b5ce95e06177f2926a72ebe",
+          "size": 111216,
           "executable": false
         },
         {
@@ -1193,8 +1193,8 @@
         },
         {
           "path": "review/references/review-mode.md",
-          "hash": "b2069bb97415b80c77520cf73c094bc639a02f60bf809c6d05523ffb4906ae20",
-          "size": 5789,
+          "hash": "bdb562907652a71580d8303052883d9e589f0114b8fa6ebfc2fbd7c597b13e1f",
+          "size": 5795,
           "executable": false
         },
         {
@@ -1223,14 +1223,14 @@
         },
         {
           "path": "startup/references/loading-recovery-casebook.md",
-          "hash": "c388c37b99d3ccae9bd593fbae6ce38cb2ab9bfae77b73f17d651c309519cbbd",
-          "size": 13188,
+          "hash": "a11e1f54de605bc2efd47aee5155286345e4e7abba615bbce614913a10c83487",
+          "size": 13154,
           "executable": false
         },
         {
           "path": "startup/references/loading-recovery-regression.md",
-          "hash": "90604dd1673d930fcd91432da41df414712319f04afc0522c4cfaeecfba734e4",
-          "size": 19589,
+          "hash": "a079ff9cd2b31a45eba9389b7fb713654ce7fef26853209d7fc364ab8d760749",
+          "size": 19634,
           "executable": false
         },
         {
@@ -1265,8 +1265,8 @@
         },
         {
           "path": "startup/references/startup-loading-timing.md",
-          "hash": "8a05c71564e1a6e55c5021f5595fc4bbbd0f14885aae706cecfcd02c63f93557",
-          "size": 14325,
+          "hash": "a78b3b65032145bfd730d2f8b803e58dd1b2e04743bcfe37ec84fc39fa91cae2",
+          "size": 14042,
           "executable": false
         },
         {
@@ -1289,8 +1289,8 @@
         },
         {
           "path": "test/references/button-interaction-coverage.md",
-          "hash": "00a1b8e765bd4b636a87b1130f3b116f1e2a34276f1c22cd0cdc2a0255998a6a",
-          "size": 7604,
+          "hash": "69de31c525c018b44770e2ee05f400c4ad596b4d6ca6c335f22e977b1077e942",
+          "size": 7529,
           "executable": false
         },
         {
@@ -1319,8 +1319,8 @@
         },
         {
           "path": "test/references/mobile-input-gates.md",
-          "hash": "2c35b783e93321d61d58a78c1a3e60dec3e03b8ccf956fe18d4004228e4b9a5e",
-          "size": 17216,
+          "hash": "d1a79b4883d0602f208dec2b525479c71fc0350fa9718e0bdf4a29d28de3e284",
+          "size": 17213,
           "executable": false
         },
         {
@@ -1337,26 +1337,26 @@
         },
         {
           "path": "test/references/prepackage-mobile-review.md",
-          "hash": "5d920c192f0adfba7b586f0b45d5e05a573454203caaa67c018c40766c6de579",
-          "size": 22503,
+          "hash": "a3ea3ad288bda6bb8361441edffca4bf919d9fcc6046d2a57e02e670bff2210a",
+          "size": 22462,
           "executable": false
         },
         {
           "path": "test/references/replay-and-input-checks.md",
-          "hash": "7d14061afa8d83da6be92115063fc1c339684e9b70ee28b7d771aee01982416a",
-          "size": 9874,
+          "hash": "a80bfa51155bf715978000796d354c621e109ac710cd3c036e510fd4c93dfdc1",
+          "size": 9769,
           "executable": false
         },
         {
           "path": "test/references/review-execution-plan.md",
-          "hash": "c57431ac272f008b7e59724cbaac74fe098257f1fbc87d647095bd20ea0bc541",
-          "size": 9274,
+          "hash": "ef3dc42bd885caefa7090182bab28f5bd218e11ba21c2ff17237121125047a3e",
+          "size": 9186,
           "executable": false
         },
         {
           "path": "test/references/revive-state-contract.md",
-          "hash": "1412b80e95c4760716165c37da973f9a4bc21cd9f7567d5e5edab1674a37fe08",
-          "size": 6679,
+          "hash": "fcd377646f4aa9b0b8f5c963f1995aa27e6329aa0f367b674a26bac6c84603c4",
+          "size": 6640,
           "executable": false
         },
         {

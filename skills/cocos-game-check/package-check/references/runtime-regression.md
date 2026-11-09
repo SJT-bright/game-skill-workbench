@@ -18,7 +18,9 @@ python3 -B runtime_regression.py required --package <解压包或.zip> --adapter
 python3 -B runtime_regression.py run --package <解压包或.zip> --adapter <adapter.json> [--suites a,b] [--board remake|localize] [--trial <试玩链接>] [--out r.json] [--work 目录]
 ```
 
-TikTok `growth_entry` 对含回访任务的 2.x 和 3.x 包均执行，历史游戏重新出包也需要当前证据。Adapter 的 `home` 等到真实首页，`growth_entry.profile_button` 指向实际 Profile 控件，`covered_steps` 用真实触摸打开商店、设置或局内覆盖层，`observe_js` 返回当前的 `{wallet, claimed:{profile, shortcut}, covered, hints}`，`reward_delta` 取本作真实奖励数值。无金币的项目读取对应可量化奖励。套件分别送入侧栏和桌面冷启动、无按钮历史的侧栏热返回、普通返回、资格延迟等事件，核对 SDK 调用、落账和重开，以及可见提示。SDK 由宿主模拟，TikTok 实机应以侧栏启动模式复验。
+TikTok `growth_entry` 检查含回访任务的 2.x 和 3.x 包，已有证据按本页增量规则沿用。Adapter 的 `home` 等到真实首页，`growth_entry.profile_button` / `shortcut_button` 分别指向两个真实入口。新游戏两项都填，旧项目缺 `shortcut_button` 时会明确记录首次点按覆盖缺口。套件在同一次首页会话里核对每项第一次点按只发出对应导航，期间无说明、第二个操作键、资格查询或奖励。现有冷启动、热返回、普通切前台和延迟资格用例继续核对账本。
+
+`covered_steps` 用真实触摸打开商店、设置或局内覆盖层。`observe_js` 读取实际的 `{wallet, claimed:{profile, shortcut}, covered, hints}`，其中 `hints` 包含当前可见的任务说明或旧任务面板控件，图片字也从实际可见节点读取。`reward_delta` 取本作可量化的真实奖励数值。SDK 由宿主模拟，TikTok 实机用各自入口另行验证。
 
 ```bash
 python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapter <adapter.json>] [--out r.json]   # v7.8：只跑试玩链接冒烟

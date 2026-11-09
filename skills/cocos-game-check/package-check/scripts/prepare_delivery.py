@@ -59,7 +59,7 @@ def writer_finalize(receipt_file):
                        for r in rows])
     return {'policy': fin.get('policy'), 'policy_reason': fin.get('policy_reason'),
             'kit_version': fin.get('kit_version'), 'table': rows, 'table_markdown': table,
-            'warnings': fin.get('warnings') or [], 'art_receipt': fin.get('art_receipt')}
+            'warnings': fin.get('warnings') or []}
 
 
 def source_sha256(source):

@@ -171,7 +171,6 @@ class FinalizeBeforeRuntime(Tmp):
         startup, checker = mock.Mock(), mock.Mock()
         with mock.patch('make_tiktok_zip.finalize_for_writer', return_value=(finalized, {}, [])), \
                 mock.patch('make_tiktok_zip.native_problems', return_value=([], None, {})), \
-                mock.patch('make_tiktok_zip.english_image_problems', return_value=[]), \
                 mock.patch.object(build_checked_zip.package_obligations, 'verify', return_value={}), \
                 mock.patch.object(check_package, 'packed_assets', return_value={'passed': True, 'errors': []}), \
                 mock.patch.object(build_checked_zip, 'audit_final_startup', startup), \

@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-08",
- "release_label": "v7.9-en11.17.12-timing",
- "selftest_report_sha256": "7098057b601da1a19a236d0dff9ca8f37ae09be525111742853cae591354b106",
+ "release_label": "v7.9-en11.17.13-growth-visual",
+ "selftest_report_sha256": "bdddac51d4969d622f87cfb89fc5e4c61eeb50174b6025c40b2892febb9d6690",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
@@ -11,7 +11,7 @@
   "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
   "remake-core/scripts/package_gates/kit_parts.py": "1e771575f90f31673008921ebd01772be803bbb381e2f1a6bc8c28bffee19693",
   "remake-core/scripts/package_gates/kit_versions.py": "a3c9306c7f0309493123cb06c5afafe6c135395934013dd88bfd2a9785db6ffd",
-  "remake-core/scripts/package_gates/mission.py": "b5f621fefc4857881fe3a72d618416e2a1cc08c6fb357923da47e5620fb8b0e7",
+  "remake-core/scripts/package_gates/mission.py": "78a2749ce1425c6bb5f131f84240dd06a87dc5e1b20c5fdbe0f9485658f6bf7b",
   "remake-core/scripts/package_gates/network.py": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
   "remake-core/scripts/package_gates/portrait.py": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
   "remake-core/scripts/package_gates/secrets.py": "c7998974bfbd2f4971e2ce9a737660ba4f799ace9e3b40532de42433f0600b7c",
@@ -19,7 +19,7 @@
   "remake-core/scripts/package_gates/startup.py": "1cf45b50c1dd0c471d0aadbee033d134a1f9b2aacf69f9276059a762a91dd356",
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
-  "remake-core/scripts/verify_native_zip.py": "1b54eb33c05a008152672452eb9e443da720e8b38267bc205279ea310e3bfa1b",
+  "remake-core/scripts/verify_native_zip.py": "0a9bc30ca065ee27ae90be43994bc4b15ba699f40c7ab19fb722f62563f5aa2d",
   "remake-core/scripts/upload_size_gate.py": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
   "remake-core/scripts/tiktok_finalize.py": "7b3723d1bb816ad01036643117668ddf90396da87b0db49b655839f4ff9ac16d",
@@ -766,14 +766,13 @@
   }
  ],
  "test_inventory": {
-  "files": 715,
+  "files": 716,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",
    "game-audio-library/scripts/test_audio_manager_contracts.cjs",
    "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js",
    "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
-   "remake-core/scripts/test_known_issue_gate.py",
    "remake-core/scripts/test_official_loading.py",
    "remake-core/scripts/test_ui_layout_and_copy.py",
    "remake-core/scripts/test_writer_refusal.py"

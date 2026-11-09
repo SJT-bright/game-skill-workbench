@@ -8,7 +8,7 @@
 
 **执行去重（2026-10-24.scope-v2）**：本页按[审查顺序与去重](review-execution-plan.md)执行。关卡抽测一次形成完整基线；局部修复只跑受影响关，最终核验和同版打包不重演有效的全部人工流程。旧文提及上传后手机/IAA仅作证据边界，不作为本 Skill 新增的默认测试阶段。
 
-直接拖动物件、邻接误选、透明弹窗挡触摸、"下一局其实不能玩"，按[重开与触摸输入](replay-and-input-checks.md)检查（锁定后由测试执行完成，画面结论由 GPT 看总览图下）。
+直接拖动物件、邻接误选、透明弹窗挡触摸、"下一局其实不能玩"，按[重开与触摸输入](replay-and-input-checks.md)检查（锁定后由测试执行完成）。
 
 按 [Ego Lite 浏览器测试规则](../../../remake-core/references/browser-testing-policy.md)执行，`chrome_touch.py` 通过官方 `ego-browser nodejs` 运行。**2026-10-23 用户定：Ego 只给 AI 自己测试，用户试玩按[固定手机入口](../../../remake-core/references/user-phone-preview.md)自动打开独立 Google Chrome**，禁止在 Ego 里开窗口让用户试玩，Ego 里等用户的空间由 AI 关掉（见[Ego 只给 AI 测试](../../../remake-core/references/machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）。2026-10-16 用户明确取消在 Ego 中让用户审查 UI 并等待确认的环节：Agent 默认自主检查和优化每个按钮，再继续完整功能检查。真实 TikTok 手机与 IAA 验收仍分别记录。本页接入 `mobile-touch-computer-use` Skill，补全制作到交付之间的检查顺序；不要求已被用户确认结项的游戏重新测试。
 
@@ -43,7 +43,7 @@ Ego Lite **只是** Agent 自己的检查工具，**从不是**用户的试玩�
 
 ## 动态画面与加载
 
-触摸测试时同时加 `--record` 录屏，按[动态画面检查](../../../remake-art/references/dynamic-visual-review.md)跑逐帧分析；加载和广告按[提前预防](../../startup/references/loading-and-ad-prevention.md)构造慢进度、后台、卡住、迟到四种情况并做冷启动计时。
+触摸测试用输入与状态日志，画面观察随[人工试玩画面清单](../../../remake-core/references/manual-visual-review.md)。加载和广告按[提前预防](../../startup/references/loading-and-ad-prevention.md)构造慢进度、后台、卡住、迟到四种情况并做冷启动计时。
 
 ## 关卡抽测：哪些关必须真实触摸
 

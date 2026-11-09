@@ -10,10 +10,10 @@
 2. **整游戏验收按本 Skill 的完整适用标准检查；局部审查只执行相关项**，用和自制游戏一样的工具，在 Ego Lite 里做：
    - 一键预检（`--board` 按上面定的板块）和当前范围适用的"自动检查"脚本（画风禁止项（只查负向）、每页背景、清晰度、明令禁止的UI与页面布局、开发用文字、中文残留、英文文案质量、异步返回方式、看广告跳关、音频来源、收集系统梯度）；页面布局和英文都用 chrome_touch 的 dump_ui 从运行中的游戏读出（`extract_ui_layout.py`、`audit_copy_quality.py --sheet`），不手填；
    - [启动契约](../../startup/references/startup-contract.md)（`audit_startup_contract.py` 和故障测试）、[启动加载计时](../../startup/references/startup-loading-timing.md)、[重开与触摸输入](../../test/references/replay-and-input-checks.md)、动态画面（重塑包 remake-art 板块）、每个广告入口的每种模拟结果（[广告要做到](../../startup/references/loading-and-ad-prevention.md#三广告要做到)）、关卡抽测；
-   - 每个页面和弹窗两种比例截图，`make_contact_sheet.py` 拼总览图，GPT 看图判定，并读文案审查单审英文语感；
+   - 适合肉眼判断的画面问题按[人工试玩画面清单](../../../remake-core/references/manual-visual-review.md)并入试玩，英文语感读文案审查单。
    - 广告和平台任务按[返回方式和等待出口](../../../remake-core/references/tiktok-home-growth.md#返回方式和等待出口写了超时--能结束等待monkey-dash-2026-10-21)把回调、Promise、SDK 和定时器都扣住的情况实际跑一遍。
    - **逻辑检查**（用户 2026-10-23）：用 [`cocos-game-check/test`](../../test/README.md) 的 **review 模式**：原件记 sha256、在副本上测、自己的端口和 Ego 窗口（不碰用户的预览和存档）；`logic_check.py --init`、盘点按钮去向表、`logic_check.py --mode review` 静态扫描＋逐条读源码、真实触摸走 F01–F20、故障测试（分包 404/503/不回应、广告 6 种结果、最后一秒、touchcancel、刷新、切后台、坏存档）、必要时隔离复现。标准按钮功能和一局状态按[逻辑规则](../../test/references/logic-rules.md)评。
-   可以按[测试分工](../../../remake-core/references/session-relay.md#锁定后的测试分工)交给其他 AI 执行，GPT 只看总览图。
+   可以按[测试分工](../../../remake-core/references/session-relay.md#锁定后的测试分工)交给其他 AI 执行。
 3. **给用户一份试玩清单**（[试玩清单模板](../../../remake-core/assets/user-playtest-checklist-template.md)，大白话），用户照着玩，把感受和问题统一发回。
 4. **合成《优化建议报告》**（`docs/review/优化建议报告.md`），写给做游戏的人，按[报告模板](../../test/assets/logic-report-template.md)（用户 2026-10-23 给的 Mahjong 报告格式）：
    - 开头概况和一页"**上传前必须解决的问题**"（A 档）；

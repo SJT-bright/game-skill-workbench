@@ -11,16 +11,7 @@ make_tiktok_zip.finalize_for_writer runs tiktok_finalize.finalize_native in plac
 as make_tiktok_zip.py), the App ID is compared after finalize wrote it, and every package gate runs with the finalize
 record (K4) and its policy. Report and receipt carry `finalize`.
 
-v7.8 (U7 补): the same finalize_for_writer also CHECKS the art receipt <project>/.tiktok-kit/art-receipt.json written by
-art_check.py (remake-core/scripts/art_receipt.py; the art check itself is never re-run here, Saul 10-24). A new remake
-game without a passing receipt whose image fingerprints equal the project's is refused before the build folder is
-touched; legacy and English games get a warning, a Cocos 3.x receipt "3.x 未覆盖" passes with a warning, and the result
-is a row of the finalize table printed below.
-
-v7.8 (总表 B32 b, d): after the ZIP is published, older packages of the same game in the --out folder go into 旧包/
-with their receipts and 最新.txt names the file to upload (remake-core/scripts/delivery_folder.py; --keep-old-packages
-leaves the folder alone); check() lists check tools that are not the released / installed ones (tool_identity.py,
-result modified_tools) and a feedback draft goes into ！Skill更新/ (new file only)."""
+"""
 import argparse
 import hashlib
 import json
@@ -85,10 +76,6 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
     manifest_path = Path(resource_manifest).resolve()
     manifest_bytes = manifest_path.read_bytes()
     obligations = package_obligations.verify(files, native, project, manifest_path)
-    from make_tiktok_zip import english_image_problems
-    english_problems = english_image_problems(files, project, board)
-    if english_problems:
-        raise ValueError('; '.join(english_problems))
     # native_problems already enforces the shared startup-dependency audit.
     # Do not run that identical check twice before runtime. Packed assets,
     # however, were previously only checked after the expensive runner.

@@ -1,0 +1,395 @@
+{
+  "name": "TikTokPlatformKit-Cocos2415",
+  "version": "2.0",
+  "engine": "2.4.15",
+  "date": "2026-10-29",
+  "includes": ["parts-3x/KIT_PARTS_3X.json"],
+  "engine_support": {"what": "R4N3 (补查2 第 1 组 1a, 方块收割者 2.1.2 / 合成进化恐龙 3.5.0): the engine versions this Skill's parts and build steps are made for; cocos-game-to-english/scripts/check_machine.py --project reads the project's version against this table and prints the fixed route first. Patterns: 2.4.x = any 2.4 build, 3.x = any 3 build, 2.4.15 = that build only. A part's needs.engine_versions says where it can be installed; a part without needs follows its engine (2 -> 2.4.x, 3 -> supported 3.x)", "supported": ["2.4.x", "3.6.x", "3.7.x", "3.8.x"], "editor_base": {"2": "2.4.15", "3": "3.8.8"}, "routes": [{"match": ["2.0.x", "2.1.x", "2.2.x", "2.3.x"], "route": "upgrade_copy_to_2.4.15", "build_as": "2.4.15", "say": "原工程 {version} 不在支持表里（没有 TikTok 构建目标，也没有平台零件要用的 cc.assetManager）。固定路线：复制一份工程副本，用 Cocos Creator 2.4.15 打开副本升级（原工程一个文件都不动），之后都在副本上做，按 2.4.15 装零件；在 docs/english/engine.txt 写一行「原工程 {version}，副本升到 2.4.15 构建」。先做这一步，再做别的。"}, {"match": ["3.0.x", "3.1.x", "3.2.x", "3.3.x", "3.4.x", "3.5.x"], "route": "install_same_minor_then_table", "build_as": "{version}", "say": "原工程 {version} 不在支持表里（3.x 零件只在 3.6～3.8 上测过）。固定路线：先装同一小版本的 Creator（{minor}.x），用它导出中文原版；英文版照下面的零件清单装，标「这个版本没测过」的零件首件构建后要先确认首页能进；首件进不去就复制副本升到 3.8.8 再做。先做这一步，再做别的。"}], "unsupported_say": "原工程 {version} 不在支持表里，也没有固定路线（支持 2.4.x 和 3.6～3.8）。先告诉用户这款用的引擎太老或太新，问要不要换一款，不要先改代码。", "generated": {"ResKeys": {"by": "remake-core/scripts/make_res_keys.py", "needs": {"engine_versions": ["2.4.x", "3.x"], "api": ["cc.assetManager"]}}}},
+  "note": "kit 2.0 (remake Skill v7.7). `files` = what a 2.4 kit project holds (check_kit_project.py); `parts` = the standard parts tiktok_finalize installs and package_gates/kit_parts.py proves, read only from here. 3.x parts live in parts-3x/KIT_PARTS_3X.json (W-A2), merged through `includes`. Every part is Node-tested only: 待真机复测 until the first v7.7 game passes a phone scan (design R9).",
+  "files": {
+    "assets/tiktok-platform/PlatformConfig.js": {
+      "sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+      "previous_sha256": ["b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46"],
+      "origin": "editable: only gameId / placementMap / normalLevelCoins per game; growthReward() = 5B (Saul 2026-10-29) is not edited",
+      "editable": true
+    },
+    "assets/tiktok-platform/RewardedService.js": {
+      "sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+      "previous_sha256": ["7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52", "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1", "04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd"],
+      "origin": "SnakeVSBlock v32 assets/src (passed on device), changed in v7.4 2026-10-28 to the Basil ad-timeout rule: 15 s request timeout not counting background time, no playback timeout, exit X 30 s after playback starts without a callback, immediate release after timeout or X; verified by tests/snake-regression and package-check ad_regression (Marlows r5 10/10); foreground deadlines are enforced at SDK callbacks as well as timer ticks (2026-11-04, tests/rewarded-timing.test.js); D2 2026-11-04: its own createRewardedVideoAd call carries root.__tiktokKitRewardedDirect so parts/rewarded-guard.js passes it through and only this service times the 15 s (tests/rewarded-guard.test.js D2 cases); 待真机复测"
+    },
+    "assets/tiktok-platform/TikTokMissionService.js": {
+      "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
+      "previous_sha256": ["10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e", "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608", "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4"],
+      "origin": "SnakeVSBlock v32 assets/src (passed on device), changed in 简化.11.3 (Saul 2026-11-02, Mosslight v20/v21 and 77~86 found on the phone that canIUse('startEntranceMission') answers undefined): only canIUse answering false (or throwing) skips an object, no canIUse is allowed; failures keep the platform errMsg / errorCode; Node-tested, 待真机复测; Successful navigation carries no player guidance. SDK call selection, callbacks and eligibility are unchanged."
+    },
+    "assets/tiktok-platform/SaveStore.js": {
+      "sha256": "2b86117a5c7b7f97ecfbbc267cc9dd2996edf56d5ee63a0a4e1c06c963541a41",
+      "previous_sha256": ["cb7d95e46be83decf23758895a3cc289f63781628437c6b80b02a9ab762f2415", "ba99f77166cc8859dd7ae6a8308250868bf2f73dd2c15bf4bb35a104f0e79499", "9fca45e213abf061ffec93f6380e56c12977e26bdbe5a8a1b059807abc46428b", "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf", "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406"],
+      "origin": "new in kit v1, Node-tested; v7.5: unreadable read decided by getStorageInfoSync().keys (missing key = new save), one fire-and-forget login after load; v7.7 unchanged, runs the same with storage-guard.js (kit.test.js savestore_with_storage_guard_behaves_the_same); 简化.11.13 P10: grant(delta, onDone) (wallet + claim id in one update, onDone only after read-back) and best(key, value) (writes the first record and higher scores only), kit.test.js grant_*/best_* + 4 census writings caught; 待真机复测; R4E (问题普查补查 第四节 2, 蛋壳特工队 999999): optional read-time schema check (options.schema / global TikTokSaveSchema from make_save_schema.py), bad values fall back to defaults with a [SaveStore] schema log line, no schema = unchanged; kit.test.js schema_* + scripts/test_make_save_schema.py; 待真机复测; R4J1 (广告skill ad-boost v1.2.17): schema 2 (nullable, type object, in_defaults false keys removed when bad) and grant() removes daily claim ids that carry their day (online-ladder:, timer-chest:, coin-ad:, gift:home:, offline:quick:, quest-x2:daily:) 7 days after that day; kit.test.js grant_daily_ids_* / grant_pruning_* / schema2_*; R4N6 (广告skill): wheel: added to the pruned prefixes (not all of offline:, no shopfree:, checkin unchanged), kit.test.js grant_wheel_daily_ids_*"
+    },
+    "assets/tiktok-platform/MissionFlow.js": {
+      "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
+      "previous_sha256": ["f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49", "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11", "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f", "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee", "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348", "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a"],
+      "origin": "new in kit v1, Node-tested; v7.5: hasNativeSDK uses TTMinis.game / tt / wx like TikTokMissionService.js; v7.7: without a reward option it pays PlatformConfig.growthReward() (5B) to draft.coins; v7.7.4: preview text is 'Available in TikTok.' (the v7.7.3 'LOCAL PREVIEW: ...' failed audit_dev_text); 待真机复测; 简化.11.3 (Saul 2026-11-02): a runtime counts as TikTok when it has canIUse or one of the four mission methods; open(kind, {navigate: true}) goes to TikTok at once (home entries); start() also works after the reward was collected (paid once, platformClaims); Home buttons dispatch immediately without a panel or player-facing navigation copy; automatic eligibility and single payout use the existing flow."
+    },
+    "assets/tiktok-platform/HomeGrowthEntries.js": {
+      "sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+      "previous_sha256": ["cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963", "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab", "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc", "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474", "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122", "632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c", "c3dbfcb6262976ddba7f719e66f6ef6940bb3fb796a96b696053464ffa70af77"],
+      "origin": "new in kit 2.0 (v7.7): fixed home bottom-row entries Add to Home + Profile Revisit, reward always growthReward(), \"Available in TikTok\" without the runtime, text when the icon fails; Node-tested (tests/home-entries.test.js); 待真机复测; 简化.11.3 (Saul 2026-11-02): one tap goes to TikTok at once and the reward is checked on return (until 简化.11.2 the first tap only checked; together with canIUse answering undefined on the phone, 77~86 never jumped); a collected entry still opens TikTok and pays nothing; the platform answers are logged to the console as [TikTokKit] lines; 生成时预防 N 批 (P06 3 / P14 2): init places the two entries at runtime from the boxes of the home's own cc.Button nodes (search of tools/home_free_slot.js, 2.4 node and 3.x UITransform boxes): entries clear of every button stay, entries on a button move to a free place, no room -> [TikTokKit] error and nothing moves; init(store, {place: false}) turns it off; Node-tested (tests/home-entries-slot.test.js, 蛋壳特工队 home); N2 批: plain nodes with a touch listener (ad-boost home entries such as WheelPanel.entry(), original-game touch buttons; 2.4 touchstart/touchend, 3.x touch-start/touch-end) count as buttons too, a touch-only node covering >= half the screen or with cc.BlockInputEvents is skipped as background / mask, placeEntries ignore option; Node-tested (tests/home-entries-touch.test.js); R4O3 (补查2 第 5 组, SLS07; Saul 2026-11-04 ECON-SHORTCUT / ECON-REVISIT): a game without coins (normalLevelCoins 0) passes init(store, {reward, rewardText}) and the entries pay that replacement (+3 energy); coins -> always growthReward() 5B and the option is ignored; neither -> nothing is paid, the claim is not spent, no \"Could not save\" message, controller.rewardIssue + a [TikTokKit] line say why; Node-tested (tests/home-entries-no-coin.test.js); Both home entries stay visible and dispatch on the first tap; no player-facing notice in Studio, on cancellation or on navigation failure."
+    },
+    "build-templates/bytedance/main.js": {
+      "sha256": "2cc6f5fab1970e3f156399a4d4bc01c75d0ac16770102b985038601b28651215",
+      "previous_sha256": ["4cb5533faeeaf347a6f71bbb9e5a684dff5c5d02a8898c60b9971f0f8f4115a0", "b37fee258650044217aa3ec39f228e1b6eef743807a5a03eb40f706b30ef4133", "274bdd4e362bdb79a10c4fb5c7f3fff40a03b63a3fc2cfc4dde5dea105d09711", "53502407a085a0545254034ac320079f9302f1713b4873e8a843228cbace063f", "2de75ea00f79d8889172d54e053160650161c6cc4b107dd51eb38f2b39a965d9", "0b662250961f3fb24cb75a27140db5fa8166cd69da58029eea49f12ee9d07d45", "6d06d8fb53038f1a4d26595001257f9d1b269fbb6b4f8f9b334d5943163f3f89", "442c328ffb1f7fa4b20ab201849ea25f1782010269a2c4f7d627aa5ff318e5d1", "75d635818778ff9b6e0dc66b6ee32c35b7c5ab9e18685d7fa42f84e73fb70dff", "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42"],
+      "origin": "MetalMaster r5 build-templates (passed on device) + 1 touch-fix line; v1.1 stall limit 10 s; v7.5 per-file load guard (re-request 10 s, fail 30 s, foreground only), visible Retry within 20 s for every startup step, startup exceptions shown; v1.3 (v7.7): storage-guard.js before game scripts, one silent login never awaited, standard WebP probe only when __TIKTOK_KIT_WEBP_PROBE__ = true; v1.4 (v7.7 W-D3): image-decode guard registered on the real 2.4 image parser (downloader.downloadDomImage; v1.2-v1.3 looked for parser._parsers, absent in every 2.4 engine); a Retry tapped after the scene came up no longer leaves a masked loading over the game; v1.5 (v7.7 W-F1a): same numbers (10 s re-request, 30 s file fail, background not counted), a per-file re-request counts as progress and the 10 s no-progress watchdog waits while a guarded file is inside its 30 s budget, so one stuck file shows Retry only when it fails and no Load failed dialog is left over a home page loaded after a re-request; the kit main.js always ships with webp-decode-probe.js (startup24.extra_files); v1.6 (v7.7 W-G1): the first Retry after a failed launch scene works (the failed scene's JSON, already deserialized in place, is dropped from cc.assetManager._files before the reload; before, the first Retry always failed at once with 'Can not deserialize the same JSON data again'), timer numbers unchanged; Node-tested + host-tested on 2.4.4/2.4.6/2.4.13/2.4.15 packages (v1.5 and v1.6 on 2.4.13 pkg81), 待真机复测; v1.7 (生成时预防 P01-2, 简化.11.14 R4A, together with RewardedService's __tiktokKitRewardedDirect mark from D2): installs ./rewarded-guard.js right after storage-guard (wraps createRewardedVideoAd only, an error never blocks startup), timer numbers unchanged; the package checks recognise the unchanged guard by its sha256 here (package_gates/ads_static.kit_guard_hashes) and do not count it as a game ad caller; Node-tested, 待真机复测; v1.8 (生成时预防 R4Q5, 补查3 第 5 组 奔跑吧巨人 Profiler/FPS 统计挡按钮): showFPS false and cc.debug.setDisplayStats(false) at launch and one tick later, never read from settings.debug or a save; Node-tested (tests/boot.test.js v18_*), 待真机复测; v1.9 (2026-11-07): skip the built-in resources stage only when Cocos explicitly declares hasResourcesBundle false; keep the existing main-package and subpackage paths for real resources bundles"
+    },
+    "build-templates/bytedance/touch-coordinates.js": {
+      "sha256": "5baebf9c652b9909c51640763e7d8bfe0a7628e314b7a18f856797e1e74c5216",
+      "previous_sha256": ["1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520"],
+      "previous_note": "1aeb690c = kit 2.0 as shipped until v7.9 (coordinates only); the current file adds the stale-touch reset on EVENT_HIDE / EVENT_SHOW (手机问题源头约束, 甜点消消乐 R48 code, 割草 v015)",
+      "origin": "StarPop v50 build-templates, byte-identical (delivery ZIP 星星点点消.zip sha cf82092e: package root and source build-templates/bytedance both 1aeb690c, 852 B); no user phone-scan confirmation found for StarPop v50: 待真机复测. Not the same file as 0369875d (RainyDuck v20 / MergeShot2048 pkg85, 1566 B, other code)"
+    },
+    "parts/storage-guard.js": {
+      "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "project_path": "build-templates/bytedance/storage-guard.js",
+      "origin": "new in kit 2.0 (v7.7): MergeShot2048 v85 storage-guard.js (40aee1a4, real-iPhone vConsole 10-28/10-29) + TobinsGem / Tansys key-list rule; SaveStore keys read raw; Node-tested (tests/storage-guard.test.js + negative controls); 待真机复测"
+    },
+    "parts/rewarded-guard.js": {
+      "sha256": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f",
+      "origin": "new in v7.9 (生成时预防 D 批, plan P01 point 2): wraps createRewardedVideoAd so un-rewired game ad code follows the 15 s foreground / no late reward rule; RewardedService's own ads pass through (__tiktokKitRewardedDirect, D2 批); F2 批: forwards the ad object's methods without naming load (selftest C4 0). Node-tested (tests/rewarded-guard.test.js: 埃及宝石 / 拇指弹球 v6 old RewardedService / 搭桥小能手 fixtures, rewarded-timing and AdBoostKit through the guard); 待真机复测",
+      "project_path": "build-templates/bytedance/rewarded-guard.js",
+      "use": "简化.11.14 R4A: wired. The kit main.js v1.7 requires it (startup24.extra_files ships it next to main.js; part rewarded24 installs it for a game that keeps its own main.js). The package checks recognise these bytes by sha256 (this entry and part rewarded24, with previous_sha256) and never count it as a game ad caller: no rewarded-ad regression is required for it alone. A changed copy has another hash and counts as game ad code. Do not edit it in a game"
+    },
+    "parts/ResLoader.js": {
+      "sha256": "b0df7e382818201aefac6912d0b9b59b7b68f37fd388336a4bec7a15ff700de8",
+      "needs": {"engine_versions": ["2.4.x", "3.x"], "api": ["cc.assetManager"]},
+      "origin": "new (生成时预防 P12): only ResKeys entries load; type from the key; every load settles (10 s foreground re-request, error retried once, 30 s fail, background not counted); owner gone = dropped; empty JSON rejects; ready() only after real success; Res.sprite placeholder + retry for non-home art; Node-tested (tests/res-loader.test.js, negative control 甜品消除大师 v11 ResMgr); 待真机复测. 1.1: no engine load call, keys carry request(cb) generated by make_res_keys.py (F2, C4 0)",
+      "reference": true,
+      "optional": true,
+      "use": "新游戏：开工时复制到 assets/tiktok-platform/ResLoader.js（3.x 设为插件脚本），所有资源经 Res.request(ResKeys.x)；英化游戏只给 AI 新加的入口和图片用，原版加载代码不改"
+    },
+    "parts/AudioService.js": {
+      "sha256": "97d94b99ae99ccc1172f3e2eb4fdacad8b11e27a4be4785fe39b30f50f1d8430",
+      "needs": {"engine_versions": ["2.4.x", "3.x"], "api": ["cc.assetManager"]},
+      "previous_sha256": ["bc4a63061bebeab7ac0ff8087e63aeed8d619c68181e0ad97350001e3598925f"],
+      "project_path": "assets/tiktok-platform/AudioService.js",
+      "origin": "new in 生成时预防 H 批 (P15): music and sfx channels each with their own switch and volume saved in SaveStore key audio; playSfx checks the switch before and after loading; no audio before the home page's first frame; wrapRewarded / adBegin / adEnd mute during an ad and restore the player's own volume; one sfx at most once per 80 ms; settings() changes nothing. One file for Cocos 2.4 and 3.x. Node-tested (tests/audio-service.test.js, 7 old-way counter-examples); 待真机复测. 1.1: loads through ResKeys only (F2, C4 0). 1.2 (R4E, 没声音 15 款): without bindFirstFrame the first playMusic / playSfx arms a 5 s fallback that starts the sound and logs one warning; tests/audio-service.test.js fallback_* + 1.1 counter-example",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: every new game's sound goes through it (create -> register -> bindFirstFrame -> playMusic / playSfx; settings page setters; ads wrapRewarded). Library sounds come in only through remake-core/scripts/import_audio.py. English games keep their original audio code. Not installed by tiktok_finalize, not required by check_kit_project or K1/K2"
+    },
+    "parts/ScreenFit.js": {
+      "sha256": "d3051a65b97276abd795c3bca590b200bb98f306cad88b918e10e0f5d21b8643",
+      "origin": "new in v7.9 (生成时预防 P07): cover / safeTop / safeBottom / canvasPolicy / checkCanvas from the engine's real visible rect (same calculation as CourseLane.js), 2.4 and 3.x in one file (require('ScreenFit') / global TikTokScreenFit). Node-tested (tests/screen-fit.test.js); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: new games call Fit.canvasPolicy at start, Fit.cover on every page's root background, Fit.safeTop / safeBottom on top bars and bottom button rows. Not installed by tiktok_finalize, not required by check_kit_project or K1/K2"
+    },
+    "parts/TouchOwner.js": {
+      "sha256": "8124f3cb710f11399ef28f5364ade18765c5b9afcc82ffbb87768d07e68e9971",
+      "origin": "new in v7.9 (生成时预防 P13): claim (first finger owns the control until touchend / touchcancel / EVENT_HIDE, no time limit), swipe / direction (one rule for 4 directions), cameraFor / toWorld / toLocal / hit through the camera that draws the node. Works with touch24 / touch3x, does not replace them. Node-tested (tests/touch-owner.test.js); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: drags, joysticks, swipes and release-inside buttons in new games. Not installed by tiktok_finalize, not required by check_kit_project or K1/K2"
+    },
+    "parts/CapsuleAuto.js": {
+      "sha256": "68a4ede5a6aded5404b1a26c36df0acafd32a3d3cc296a8a714972ebd4ffea44",
+      "previous_sha256": ["88aaf42b77f47ebe3df239c624ad0fff6b2902c1225e6e1303992943fa933f9d"],
+      "r4g2": "生成时预防 R4G2 (#29): the same file also runs on Cocos 3.x (cc.UITransform boxes, setWorldPosition, waits for cc); 3.x new games get it as plugins-3x/CapsuleAuto.plugin.js + CapsuleLayout.plugin.js (KIT_PARTS_3X capsuleauto3x / capsulelayout3x, source step capsule_auto)",
+      "project_path": "assets/tiktok-platform/CapsuleAuto.js",
+      "engine": 2,
+      "reference": true,
+      "optional": true,
+      "install": "tiktok_finalize.py source (step capsule_auto, new 2.4 games)",
+      "origin": "生成时预防 I3 批 P06 第 4 点: the top bar keeps out from under the TikTok capsule with nothing to call (census: overlap 99 times in 64 games, capsule 16). Node-tested (tests/capsule-auto.test.js); 待真机复测",
+      "use": "Cocos 2.4 new games: `tiktok_finalize.py source` copies it and CapsuleLayout.js to assets/tiktok-platform/ (English and legacy games: K_W_capsule_auto lists the top-bar nodes, nothing written). It moves only top-bar nodes that overlap the capsule; TikTokCapsuleAuto.off = true or a node name with nocapsule switches it off. Not required by check_kit_project or K1/K2 (reference)"
+    },
+    "parts/host-shim.js": {
+      "sha256": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
+      "origin": "new in 生成时预防 B 批 (P03): fills only missing host APIs (getSystemInfoSync / SDKVersion / canIUse / getOpenDataContext), never replaces one; one file for 2.4 (part hostshim24, game.js before the adapter) and 3.x (part hostshim3x, game.js before web-adapter); Node-tested (tests/host-shim.test.js, 躲雨小鸭 v16 / 射击高手2048 fixtures); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "生成时预防 R4B: installed by tiktok_finalize (startup step; parts hostshim24 / hostshim3x). source puts it in build-templates/bytedance (2.4) or build-templates/bytedance-mini-game (3.x, also wires a template game.js); native and sync --native add one marked line right before the adapter line of the build game.js (2.4 adapter-min.js, 3.x web-adapter). Legacy games: report only. Do not hand-write the line."
+    },
+    "parts-3x/boot-guard-3x.js": {
+      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
+      "previous_sha256": ["bb1a107005af791144137d36894217a538b225eadda801051714f9cb91563dab"],
+      "origin": "new in 生成时预防 B 批 (P03): Cocos 3.x startup guard with the 2.4 main.js v1.6 numbers (10 s re-request, 30 s fail, foreground only, at most 1 s per frame, Retry sends new requests and drops old answers); installed by part boot3x (parts-3x/KIT_PARTS_3X.json, right before System.warmup); Node-tested (tests/boot-3x.test.js); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "生成时预防 R4B: installed by tiktok_finalize for NEW 3.x games (startup step, part boot3x in parts-3x/KIT_PARTS_3X.json): one marked line right before System.warmup( in the build game.js (and in a build-templates game.js at source / sync). Legacy games and games with their own start page (game.js loads ./boot-loading, root boot-loading.js / native-recovery.js) are reported, never stacked. Do not hand-write the line."
+    },
+    "parts/GameUIKit.js": {
+      "sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+      "previous_sha256": ["77db8dc8d9fe1fd268bd7c99e5c693fe152fe16944bf2658e2e88494eaf624f5", "03b76c4ce7a85dd96603002f4cb8170115073571ff7cb6a26cdb96d0e63bf2a8", "98aecc9de698812e9fa796d01d4eda1a99992d3a046c1db13a27bcf0b5984842", "ddc1c28e659aa20dd229992bc9868ca8e6b8f5e8805625447d5c385cc3c902eb", "9ec1717005bc9918f266e73f405e8541586f46895c01ec0e3d0e73f8eff089f6", "76a0d0d15f57e9116869a9bcb30349577c10396611e4fcffac16fb038c4a5ea6", "8c55e6c49398df4836b38ec6f648da31f6b44f65f48cf97777a5f6983326b4a3", "fb91de7489e05866f2fc79e358cbd8b32709664b1243505cdf103c5d798321ec", "e805429017088a91e838187e071fcb7fcc3d0666fd353aad62556c89503e89c8"],
+      "previous_note": "77db8dc8 = GameUIKit 1.0.0 (英化 简化.11.13, A 批); 1.1.0 (A2 批) only adds: valueLabel, pausePage / revivePage / resultPage, setup({audio, onPageOpen}), the core markers for the 3.x build; 03b76c4c = GameUIKit 1.1.0 (A2 批); 1.1.1 (A3 批) only adds UI.adoptPopup (another kit's popup joins the same popup stack); 98aecc9d = GameUIKit 1.1.1 (A3 批); 1.1.2 (R4H 批) only adds: every popup() / open() and page template open() is recorded in PageRegistry (window.__pageRegistry) in a dev build, popup({pageId}) / page({pageId}); ddc1c28e = GameUIKit 1.1.2 (R4H 批); 1.1.3 (R4J2 批) only adds UI.recordPage(info, node, closeNode), the public name of the page record (AdBoostKit popups); 9ec17170 = GameUIKit 1.1.3 (R4J2 批); 1.1.4 (R4N4 批) only adds UI.text (box, overflow and wrap before the text), UI.guide (tutorial hand follows its target after every layout) and titleSize forwarded by the page templates; 76a0d0d1 = GameUIKit 1.1.4 (R4N4 批, in 11.16 candidate v2/v3 and the ad-boost v1.2.23 vendor); 1.1.5 (lead, 广告skill 11-05 建议) only changes: a page template with runAd shows one toast when the result says feedbackShown === false (AdBoostKit 1.3.3 did not show its own), none when true or when the field is missing; 8c55e6c4 = GameUIKit 1.1.5 (lead, 11.17候选 v1); 1.1.6 (R4Q6 批) only adds: UI.clearToast (every page opening clears the last toast; keepOnPage), popup / page template refresh(saved, handle) on every opening, UI.button({active}) and UI.newButton (active required), UI.iconValue (icon + number row), globalThis.TikTokGameUIKit on 2.4; fb91de74 = GameUIKit 1.1.6 (R4Q6 批, 11.17候选 v2); 1.1.7 (R4R4 批, 补读第 8 组补充 火箭三消) only adds: pictures in config() (closeFrame, toastFrame, digitFrames) are held with addRef() and given back with decRef(false) when replaced (config().closeFrame = f too), and every popup / toast / digits use checks the picture first (E.frameUsable: cc.isValid(frame, true) and its texture); a released close picture falls back to the first close picture set, then a drawn X, one warning, UI.frameIssues(); e8054290 = GameUIKit 1.1.7; 1.1.8 (2026-11-06 art source fix) keeps each valid node/explicit slot dimension, fills only missing dimensions from art display size in host coordinates (nested scale included), then frame metadata. wrapExisting no longer enlarges high-resolution art to native pixels; closeMinSize, click/disabled semantics unchanged. Node replay on both engines; not browser/phone acceptance",
+      "project_path": "assets/tiktok-platform/GameUIKit.js",
+      "engine": 2,
+      "origin": "new in 生成时预防 P05 (问题普查 20261104 A 批): AdBoostKit 1.2.0 popup / toast / digits / stripFrames / fitTrim without the ad parts, plus UI.button (missing handler throws at build time, fixed hit area, no press scale, 500 ms tap guard, disabled tap explains), UI.wrapExisting (original cc.Button: old click events off, SCALE -> COLOR), popup.guard (late callbacks dropped), close() always ends inactive. Node-tested (tests/game-ui-kit.test.js, 10 cases each with an old-way counter-example); 待真机复测. 1.1.0 (生成时预防 A2 批): UI.valueLabel (one line, SHRINK, width of the longest value: 设置页 100% on two lines), UI.pausePage / revivePage / resultPage with fixed button slots (RunSession pause by reason, Restart = session.newRun(initRun), SaveStore.grant when present, RewardedService / AdBoostKit.runAd, one ad button per page), setup({audio}) and setup({onPageOpen}) for the page registry; the core between the BEGIN / END lines is copied byte for byte into parts-3x/GameUIKit.ts. Node-tested on 2.4 and 3.x (tests/game-ui-pages.test.js 8 cases, tests/game-ui-kit.test.js 10 cases, each run on both engines); 待真机复测. 1.1.1 (生成时预防 A3 批): UI.adoptPopup({isOpen, setCovered}) - an AdBoostKit popup joins the same popup stack, so a popup over a page of the other kit dims only the top layer and the lower X is hidden, not visible-but-dead; release() on close (twice harmless), isOpen() false is dropped at restack. Node-tested on 2.4 and 3.x (tests/game-ui-adopt.test.js 6 cases); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "install": "tiktok_finalize.py sync",
+      "use": "Cocos 2.4 new games: `tiktok_finalize.py sync` copies it to assets/tiktok-platform/GameUIKit.js (legacy games: reported only). Every new or changed popup / button uses it (var UI = require('GameUIKit')); original buttons the AI touches go through UI.wrapExisting. Not required by check_kit_project or K1/K2 (reference), so a project without it is never refused for that"
+    },
+    "parts-3x/GameUIKit.ts": {
+      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+      "previous_sha256": ["41c7d61b2e1553f4047984f0c272b15e8601a7e97c52d1ce9b0930a7058e3103", "0a83834a94fafd575c6f1a925a586cc7c232d9afa83519e7d30f6068c24ca356", "96d5b434d6afb8897af9afd25c71c35f9dd1fbd2320a7a29b6c552e0ce72e9ac", "a549722f6fe5ab52dd4b7e4f73f9810662f3fecc8628e63334cb747204bfa498", "d61f7762b823dd77077f8d0ded41dda58ae4c380134a30923208be19ff72abb6", "950121aea3122ca4ed2c405f29c6d35130925acc1835b8598b89f3cc0e57b193", "04005a1f2edc31ca29ed42d39e41934a13c53f4249e138c3dda1ec8f11ce438b", "a756e93229b5b14c5617ef3a9030f49492cb78b589664e32cd72aed5f24c81fd"],
+      "previous_note": "41c7d61b = GameUIKit.ts 1.1.0 (A2 批); 1.1.1 (A3 批) is regenerated from the 1.1.1 core (adds UI.adoptPopup); 0a83834a = GameUIKit 1.1.1 (A3 批); 1.1.2 (R4H 批) is regenerated from the 1.1.2 core (PageRegistry record); 96d5b434 = GameUIKit.ts 1.1.2 (R4H 批); 1.1.3 (R4J2 批) is regenerated from the 1.1.3 core (adds UI.recordPage); a549722f = GameUIKit.ts 1.1.3 (R4J2 批); 1.1.4 (R4N4 批) is regenerated from the 1.1.4 core and adapter (adds UI.text, UI.guide, titleSize); d61f7762 = GameUIKit.ts 1.1.4 (R4N4 批); 1.1.5 (lead) is regenerated from the 1.1.5 core (page toast when runAd says feedbackShown === false); 950121ae = GameUIKit.ts 1.1.5 (lead); 1.1.6 (R4Q6 批) is regenerated from the 1.1.6 core (clearToast, refresh, newButton, iconValue); 04005a1f = GameUIKit.ts 1.1.6 (R4Q6 批); 1.1.7 (R4R4 批) is regenerated from the 1.1.7 core and adapter (released pictures fall back, frameUsable / setAngle in the adapter); a756e932 = GameUIKit 1.1.7; 1.1.8 (2026-11-06 art source fix) keeps each valid node/explicit slot dimension, fills only missing dimensions from art display size in host coordinates (nested scale included), then frame metadata. wrapExisting no longer enlarges high-resolution art to native pixels; closeMinSize, click/disabled semantics unchanged. Node replay on both engines; not browser/phone acceptance",
+      "project_path": "assets/tiktok-platform/GameUIKit.ts",
+      "engine": 3,
+      "origin": "new in 生成时预防 A2 批 (P05 3.x): GENERATED by tools/make_gameuikit_3x.py from the core of parts/GameUIKit.js (byte for byte) and parts-3x/GameUIKit.adapter-3x.js (ad-boost ui-kit adapter-3x.js 1.2.0 + the GameUIKit-only functions), same layout as ad-boost cocos3x/AdBoostKit.ts; the same interface as the 2.4 file. Node-tested (tests/game-ui-kit.test.js and tests/game-ui-pages.test.js run every case on 3.x too); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "install": "manual until tiktok_finalize.py sync installs it for engine 3 (A2 批 handoff)",
+      "use": "Cocos 3.x new games: copy unchanged to assets/tiktok-platform/GameUIKit.ts; import GameUIKit from '../tiktok-platform/GameUIKit' (or globalThis.TikTokGameUIKit). Never edit it: edit parts/GameUIKit.js or the adapter and run tools/make_gameuikit_3x.py (--check in the release self-test). Not required by check_kit_project or K1/K2"
+    },
+    "parts-3x/GameUIKit.adapter-3x.js": {
+      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "origin": "new in 生成时预防 A2 批: source of the Cocos 3.x engine adapter in parts-3x/GameUIKit.ts (tools/make_gameuikit_3x.py); not copied into games; 1.1.8 adds artSizeIn for child display geometry in host units",
+      "reference": true
+    },
+    "parts/CapsuleLayout.js": {
+      "sha256": "ba5ba44835b8584a98c8780aa019e00f90b298df6e87a4224f3c666d6988dc50",
+      "origin": "new in v7.8 (总表 U1 / B30): reads tt.getMenuButtonBoundingClientRect(), decides points vs pixels itself (Saul's iPhone 14 returned pixels 2026-10-29; 全民飞车漂移 v2, SpiderSwing, Hollys, FoxDenDash moved their top bar with the raw value) and converts to UI world coordinates incl. letterbox bars; one file for Cocos 2.4 (require('CapsuleLayout')) and 3.x (plugin script, global TikTokCapsuleLayout). Node-tested (tests/capsule-layout.test.js), runtime suite layout_state unit_shift; 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: copy into the game's assets/ when the game places nodes next to the capsule (top bar, settings button); new 2.4 games: installed by tiktok_finalize source (step capsule_auto) to assets/tiktok-platform/CapsuleLayout.js, with CapsuleAuto.js. Otherwise not installed by tiktok_finalize, not required by check_kit_project or K1/K2, so a project without it is never refused for that; layout_state's unit_shift refuses the bug itself, whatever the fix"
+    },
+    "parts/CourseLane.js": {
+      "sha256": "f67b32140a5642ce7fa218d9e6d619b2b5583e16531be386cf05fe5af12eb96d",
+      "origin": "new in v7.8 (总表 P2 补): spawnX / recycleX / lanesNeeded / clearForRevive for scrolling obstacles from the engine's real visible rect (cc.view visible size + origin, or the camera that draws the course), wide screens and letterbox included; BreezyBalloon v2.1 recycled pillars at a design-width x and they jumped into wide screens. One file for Cocos 2.4 (require('CourseLane')) and 3.x (plugin script, global TikTokCourseLane). Node-tested (tests/course-lane.test.js); BreezyBalloon v2.1 with its recycle and revive replaced by it at runtime passes the runtime suite popin on 390x844, 375x667, 768x1024, 1115x791; 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "opt-in: copy into the game's assets/ when the game scrolls obstacles (runner, flyer). Not installed by tiktok_finalize, not required by check_kit_project or K1/K2, so a project without it is never refused for that; the runtime suite popin refuses the bug itself, whatever the fix"
+    },
+    "parts/PhysicsClock.js": {
+      "sha256": "e791dee7b4b0c75b163bf0a8adf7fbfca4a23530dddd048124254b805f9fec94",
+      "project_path": "assets/tiktok-platform/PhysicsClock.js",
+      "origin": "new in v7.8 (总表 P16): Cocos 2.4 only. At load and before every scene launch sets cc.director.getPhysicsManager().enabledAccumulator = true (fixed 1/60 s steps that follow real time); Clock.scale(dt) / Clock.force(v, dt) scale a push tuned at 60 fps. 全民飞车漂移 v3.1 steps physics 1/60 s per frame and pushes per call: 19.9 % farther at 1 s on a 120 Hz screen; with the accumulator and scaled pushes 1.05 % (runtime suite frame_rate). Node-tested (tests/physics-clock.test.js); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "use": "tiktok_finalize source (step physics_clock) copies it to assets/tiktok-platform/PhysicsClock.js for a NEW 2.4 game whose scripts switch physics on without enabledAccumulator; legacy games are never given it. Not required by check_kit_project or K1/K2. The pushes stay the game's code (scale them by dt); the runtime suite frame_rate is the final judge"
+    },
+    "parts/RunSession.js": {
+      "sha256": "e4badc3e4df6e993e77f31e583b78566430f85f37f2c0a341900ea4528f4da70",
+      "previous_sha256": ["ed8ea69028d3168c167b377955dec84332c6b0affeef15c6325c0860c4e4f580", "8b44a0b96ff510505765836746508dc99ff036c8335e10acfd1106b2b2de6499"],
+      "previous_note": "8b44a0b9 = RunSession 1.1 (R4L2 批); 1.2 (R4N4 批) only adds session.track / untrack / tracked / stopTracked and opts.tweenTargets: newRun stops the tweens and actions of the registered nodes only (SLS35 Retry / Home Tween.stopAll)",
+      "project_path": "assets/tiktok-platform/RunSession.js",
+      "origin": "new in 生成时预防 G 批 (P11 + P18 move): one run's state (newRun rebuilds session.state), guarded callbacks and timers dropped on newRun / scene launch, pause counted per reason, EVENT_HIDE -> pause('hide'), move per second, adHooks() for ad-boost runAd. 割草 score, Pinecone revives, 大西瓜 IsHit + setInterval, 甜点消消乐 pause boolean. One file for Cocos 2.4 (require('RunSession')) and 3.x (plugin script, global TikTokRunSession). Node-tested (tests/run-session.test.js); 待真机复测. 1.1 (生成时预防 R4L2, 回家快跑 snail: picture gone, collider kept blocking): session.recycle(node, {destroy}) / reuse(node) and RunSession.retire / revive - every collider and physics body on the entity and its children off (2.4 cc.Collider / PhysicsCollider / RigidBody, 3.x Collider2D / RigidBody2D), tweens, actions, component schedules and session timers bound to it stopped; reuse turns only those colliders back on. Node-tested (tests/entity-retire.test.js, 2.4 and 3.x, old way and old part fail); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "sync_install": {"board": ["remake"], "policy": ["new"], "plugin_3x": true},
+      "use": "生成时预防 R4F1: new remake / self-made games (board remake, policy new) get it from `tiktok_finalize.py sync` (sync_install; 2.4 require('RunSession'), 3.x the same file imported as a plugin, global TikTokRunSession) and put all per-run state, timers, pauses and gameplay movement through it (remake-core/references/game-modules.md). English games keep the original gameplay: not installed, used only in the pause / revive / ad entries the AI adds (copy by hand). Not required by check_kit_project or K1/K2"
+    },
+    "parts/HomeEntrySlots.js": {
+      "sha256": "3cc806fba345a045e2a0cfc904878ae2ef7966147e26d02c1d84f31722f93126",
+      "previous_sha256": ["6ec66b7887696f3c641fc362edcf757e3f81cb1cb7d488d85c55b7c51608fb60"],
+      "project_path": "assets/tiktok-platform/HomeEntrySlots.plugin.js",
+      "reference": true,
+      "optional": true,
+      "origin": "new in 生成时预防 R4G1 批 (P06 3 / P14 2, element_overlap 64 款 / 99 次): Cocos 3.x home entries find their free place at runtime. The slot code is HomeGrowthEntries.js's byte for byte (tools/make_plugin_scripts.py --check), so 2.4 and 3.x use one search: visible cc.Button nodes (disabled ones too) and touch-listening nodes are obstacles, half-screen touch backgrounds and BlockInputEvents masks are not, no room -> error and nothing moved. Node-tested (tests/plugins-3x.test.js, 3.x node tree fixture with ad-boost entries); 待真机复测",
+      "use": "3.x only, as plugin script plugins-3x/HomeEntrySlots.plugin.js (part homeslots3x in parts-3x/KIT_PARTS_3X.json): tiktok_finalize source / sync install it for NEW 3.x games; legacy games are reported only. The home component calls TikTokKit.HomeEntrySlots.placeLater(cc, this, {root, entries}) - never hand-written entry coordinates. 2.4 games use HomeGrowthEntries (same code). Not required by check_kit_project"
+    },
+    "parts/FxPool.js": {
+      "sha256": "fd3317c57f0bf0a5ac90b9f85bd6285625113688c6fb96c28427910df78ce498",
+      "previous_sha256": ["12f098e2d9aff7cfdcc4e850c97d49a05124028f5c175e47efeb5c6ea5b66d87"],
+      "project_path": "assets/tiktok-platform/FxPool.js",
+      "origin": "new in 生成时预防 G 批 (P18): pool for effects, bullets and floating text with a hard cap and auto return after a game-time life; devWatch (CC_DEBUG only) warns on nodes made inside update and on a scene that keeps growing. 方块迷阵 left 86 effects after 120 merges. One file for Cocos 2.4 (require('FxPool')) and 3.x (plugin script, global TikTokFxPool). Node-tested (tests/fx-pool.test.js); 待真机复测. 1.1 (生成时预防 R4L2): a returned node goes through FxPool.retire (colliders and physics bodies on it and its children off, tweens, actions and component schedules of the whole subtree stopped), spawn through FxPool.revive (those colliders back on); same code block as RunSession.js. Node-tested (tests/entity-retire.test.js); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "sync_install": {"board": ["remake"], "policy": ["new"], "plugin_3x": true},
+      "use": "生成时预防 R4F1: new remake / self-made games (board remake, policy new) get it from `tiktok_finalize.py sync` (sync_install; 2.4 require('FxPool'), 3.x plugin, global TikTokFxPool) and make every short-lived node (effect, bullet, floating text) through it. English and legacy games: not installed. Not required by check_kit_project or K1/K2"
+    },
+    "parts/ShopTx.js": {
+      "sha256": "4423962b26e655ba63405298a1f2145fec55830d39f227d67f35c6f27b3c538f",
+      "project_path": "assets/tiktok-platform/ShopTx.js",
+      "origin": "new in 生成时预防 R4L3 批 (补查第 8 组, 喵咪小吃铺 4 cases: furniture charged another room's price, cancel while cooking gave back used ingredients, three fish showed the next order's meat result, a copied sample room shown twice): buy / make / refund as one transaction. begin() takes a frozen snapshot (order, price, recipe), holds a lock (same key twice -> null) and sets the listed buttons not interactable, reserves the cost; commit() is ONE SaveStore.grant (cost, reward, apply, claim id); cancel() takes only what consume() recorded; catalog() refuses repeated ids and rows equal apart from the id. One file for Cocos 2.4 (require('ShopTx')) and 3.x (plugin script, global TikTokShopTx). Node-tested (tests/shop-tx.test.js, each case with the old code shape as negative control); 待真机复测",
+      "reference": true,
+      "optional": true,
+      "sync_install": {"board": ["remake"], "policy": ["new"], "plugin_3x": true},
+      "use": "生成时预防 R4L3: new remake / self-made games (board remake, policy new) get it from `tiktok_finalize.py sync` (sync_install, like RunSession / FxPool) and run every buy / make / refund (shop, furniture, cooking, crafting, upgrades) through ShopTx.begin / commit / cancel, tables and sample rows through ShopTx.catalog (remake-core/references/game-modules.md). English and legacy games: not installed. Not required by check_kit_project or K1/K2"
+    },
+    "webp-probe/cocos2.4/webp-decode-probe.js": {
+      "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+      "origin": "Mabel's Meadow r8 package, byte-identical (decodes main-package loading/webp-probe.webp, 5 s no answer = WebP off, Retry re-checks); old WebP games and the --keep-webp-exception case only, new games use PNG/JPG; main.js v1.3 loads it only when __TIKTOK_KIT_WEBP_PROBE__ = true; 待真机复测",
+      "reference": true
+    },
+    "webp-probe/cocos2.4/loading/webp-probe.webp": {
+      "sha256": "f96d0f0f515e9d0e13233e3af41bf6e7a200062e0ada4c0dee596873d2142811",
+      "origin": "Mabel's Meadow r8 package, byte-identical 16x16 WebP with alpha; must sit in the MAIN package at loading/webp-probe.webp",
+      "reference": true
+    },
+    "webp-probe/cocos3.x-reference/webp-probe.js": {
+      "sha256": "2b5c06d66c9b93fa8c8271961b3666267777450b6cf43bf7fba0407ac278ef8a",
+      "origin": "LunasJade v0.10.1 build-templates/bytedance-mini-game, data: URI fallback removed in v7.5 (decodes webp-check.webp only); reference for existing 3.x games; 待真机复测",
+      "reference": true
+    },
+    "webp-probe/cocos3.x-reference/webp-check.webp": {
+      "sha256": "5ba936792ba4b75bd12db7c27d9b6644063fb54ec751470d743bdbd5beba0c1d",
+      "origin": "LunasJade v0.10.1, byte-identical 2x2 lossless (VP8L) WebP with alpha; main package root",
+      "reference": true
+    },
+    "webp-probe/cocos3.x-reference/boot-loading.js": {
+      "sha256": "1f8d6f6fb8971a5df49538f733ec81825c99a92a04c41bc52e5a862503ff8a38",
+      "origin": "LunasJade v0.10.1, byte-identical (loading page, subpackage download, WebP check via webp-probe.js, Retry); reference only; 待真机复测",
+      "reference": true
+    }
+  },
+  "parts": {
+    "touch24": {
+      "engine": 2, "phase": "native",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "build-templates/bytedance/touch-coordinates.js", "template": "build-templates/bytedance/touch-coordinates.js",
+               "dest": "touch-coordinates.js",
+               "sha256": "5baebf9c652b9909c51640763e7d8bfe0a7628e314b7a18f856797e1e74c5216", "previous_sha256": ["1aeb690c99fa084baf02a64a2a618e75321dbe613ab03dacb3f69b83cd6b5520"]},
+      "wiring": [
+        {"in": "main.js", "when": "kit_main", "kit_line": "require('./touch-coordinates').install(cc)"},
+        {"in": "game.js", "when": "not_kit_main", "insert_after": "__globalAdapter\\.adaptEngine\\(\\s*\\)\\s*;?",
+         "line": "try { require('./touch-coordinates').install(cc); } catch (e) { console.error('touch fix', e); } // tiktok-kit:touch24:2.0"}
+      ],
+      "own_markers": ["getTouchesByEvent\\s*=", "__starPopTouchCoordinates", "_rainyCoordinates", "tiktok-touch-adapter:"],
+      "own_files": ["(^|/)touch-coordinates\\.js$", "(^|/)tiktok-input\\.js$", "(^|/)[\\w-]*touch[\\w-]*\\.js$"],
+      "own_skip": ["^adapter(-min)?\\.js$", "^cocos/", "^src/", "^assets/", "^subpackages/"],
+      "known_own_sha256": {"0369875d16cbbb223a14d3d529ba3996ffbbef5fa45734a045c05210bc21f451": "RainyDuck v20 / MergeShot2048 pkg85 touch-coordinates.js (not the kit file; no scan confirmation)"},
+      "policy": {"new": "replace", "legacy": "add_if_absent"}
+    },
+    "startup24": {
+      "engine": 2, "phase": "native",
+      "file": {"src": "build-templates/bytedance/main.js", "template": "build-templates/bytedance/main.js", "dest": "main.js",
+               "sha256": "2cc6f5fab1970e3f156399a4d4bc01c75d0ac16770102b985038601b28651215",
+               "previous_sha256": ["4cb5533faeeaf347a6f71bbb9e5a684dff5c5d02a8898c60b9971f0f8f4115a0", "b37fee258650044217aa3ec39f228e1b6eef743807a5a03eb40f706b30ef4133", "274bdd4e362bdb79a10c4fb5c7f3fff40a03b63a3fc2cfc4dde5dea105d09711", "53502407a085a0545254034ac320079f9302f1713b4873e8a843228cbace063f", "2de75ea00f79d8889172d54e053160650161c6cc4b107dd51eb38f2b39a965d9", "0b662250961f3fb24cb75a27140db5fa8166cd69da58029eea49f12ee9d07d45", "6d06d8fb53038f1a4d26595001257f9d1b269fbb6b4f8f9b334d5943163f3f89", "442c328ffb1f7fa4b20ab201849ea25f1782010269a2c4f7d627aa5ff318e5d1", "75d635818778ff9b6e0dc66b6ee32c35b7c5ab9e18685d7fa42f84e73fb70dff", "5c09293637e60e43c5ab92cf2cbb172c9d023dc2c4ad71f53e5c4fad0e435b42"]},
+      "extra_files": [{"src": "webp-probe/cocos2.4/webp-decode-probe.js", "dest": "webp-decode-probe.js",
+                       "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56",
+                       "what": "required by main.js v1.3+ inside if (__TIKTOK_KIT_WEBP_PROBE__ === true); a static dependency check does not read the if, so the script always ships next to the kit main.js (W-D1 request 1). Script only: no probe image, no switch line (those are part webp_probe24, --keep-webp-exception), so it never runs"},
+                      {"src": "parts/rewarded-guard.js", "dest": "rewarded-guard.js",
+                       "sha256": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f",
+                       "what": "简化.11.14 R4A: main.js v1.7 requires ./rewarded-guard right after storage-guard, so the guard ships next to the kit main.js the same way as webp-decode-probe.js"}],
+      "wiring": [
+        {"in": "game.js", "requires": "require\\(\\s*['\"]\\./main(\\.js)?['\"]\\s*\\)", "count": 1,
+         "what": "game.js must load main.js exactly once (Nanas: kit template present but never loaded)"}
+      ],
+      "checks": [{"id": "login", "in": "main.js", "kit_line": "window.__tiktokKitLoginSent = true",
+                  "what": "login step (design 1.3 login.py): one silent login at startup, never awaited; proven by the kit main.js bytes"}],
+      "needs": {"engine_versions": ["2.4.4", "2.4.6", "2.4.13", "2.4.15"], "globals": ["window._CCSettings", "window.boot"],
+                "note": "design R4: kit main.js v1.4 host-tested after finalize on 2.4.4 (DotsDelivery v40), 2.4.6 (BobbysBeat v22), 2.4.13 (MergeShot2048 pkg81): first screen and level 1 load (v7.7 W-D3); 2.4.15 is the editor base. Other 2.4.x builds keep their own main.js; finalize wires touch24 + storage24 into game.js and warns"},
+      "own_markers": ["require\\(\\s*['\"]\\./(native-load-guard|runtime-load-guard|asset-load-guard|subpackage-guard|tiktok_bootstrap|boot-loading|StartupIO|native-boot-guard|native-startup-guard|SkiBoot|hotpot-loader|srr-native-boot|native-preload)['\"]",
+                      "cc\\.assetManager\\.loadBundle\\s*=[^=]", "cc\\.assetManager\\.downloader\\.(download|register)\\w*\\s*=[^=]"],
+      "own_files": ["(^|/)(native-load-guard|runtime-load-guard|asset-load-guard|subpackage-guard|tiktok_bootstrap|boot-loading|StartupIO|native-boot-guard|native-startup-guard|SkiBoot|hotpot-loader|srr-native-boot|native-preload)\\.js$"],
+      "policy": {"new": "replace", "legacy": "warn"}
+    },
+    "storage24": {
+      "engine": 2, "phase": "native",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "parts/storage-guard.js", "template": "build-templates/bytedance/storage-guard.js", "dest": "storage-guard.js",
+               "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+               "previous_sha256": ["40aee1a437d1be48aca797ce099f87f3a7dad28dadc8029baf66bf6b7cf31190", "0e090a0fc1b1b2408e28515ac3d8655b341928646f3959d8c7f64798047f8f9a"],
+               "previous_note": "40aee1a4 = MergeShot2048 pkg85 (base of the kit file), 0e090a0f = pkg83/pkg84 (old): both count as old versions of this part"},
+      "wiring": [
+        {"in": "main.js", "when": "kit_main", "kit_line": "require('./storage-guard')(cc, platform)"},
+        {"in": "game.js", "when": "not_kit_main", "insert_after": "__globalAdapter\\.adaptEngine\\(\\s*\\)\\s*;?",
+         "line": "try { require('./storage-guard')(cc, typeof TTMinis !== 'undefined' && TTMinis.game ? TTMinis.game : (typeof tt !== 'undefined' ? tt : null)); } catch (e) { console.error('storage guard', e); } // tiktok-kit:storage24:2.0"}
+      ],
+      "own_markers": ["(?:storage|localStorage)\\.(?:getItem|setItem)\\s*=[^=]", "(?:getStorageSync|setStorageSync)\\s*=[^=]", "__mergeAbsentKey"],
+      "own_files": ["(^|/)storage-guard\\.js$"],
+      "own_skip": ["^adapter(-min)?\\.js$", "^cocos/"],
+      "policy": {"new": "install", "legacy": "none"}
+    },
+    "rewarded24": {
+      "engine": 2, "phase": "native",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "parts/rewarded-guard.js", "template": "build-templates/bytedance/rewarded-guard.js", "dest": "rewarded-guard.js",
+               "sha256": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f", "previous_sha256": []},
+      "what": "简化.11.14 R4A: the kit main.js v1.7 requires it (kit_line); build_templates puts it next to main.js in a new remake project, startup24.extra_files in an English native build. The game.js line for a package that keeps its own main.js is written by the native step rewarded (STEP_ALIASES rewarded, 生成时预防 R4F1; native and sync --native)",
+      "wiring": [
+        {"in": "main.js", "when": "kit_main", "kit_line": "require('./rewarded-guard')(cc, platform)"},
+        {"in": "game.js", "when": "not_kit_main", "insert_after": "__globalAdapter\\.adaptEngine\\(\\s*\\)\\s*;?",
+         "line": "try { require('./rewarded-guard')(cc, typeof TTMinis !== 'undefined' && TTMinis.game ? TTMinis.game : (typeof tt !== 'undefined' ? tt : null)); } catch (e) { console.error('rewarded guard', e); } // tiktok-kit:rewarded24:2.0"}
+      ],
+      "own_files": ["(^|/)rewarded-guard\\.js$"],
+      "policy": {"new": "install", "legacy": "none"}
+    },
+    "hostshim24": {
+      "engine": 2, "phase": "native", "step": "hostshim",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "parts/host-shim.js", "template": "build-templates/bytedance/host-shim.js", "dest": "host-shim.js",
+               "sha256": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872", "previous_sha256": []},
+      "what": "简化.11.15 R4B: the host API shim (parts/host-shim.js) for Cocos 2.4 builds; tiktok_finalize native and sync --native put one marked line right before the adapter line of the build game.js (2.4.15 writes require('adapter-min.js') without ./). Legacy games: report only",
+      "wiring": [
+        {"in": "game.js", "insert_before": "require\\(\\s*['\"](?:\\./)?adapter(?:-min)?(?:\\.js)?['\"]\\s*\\)\\s*;?",
+         "line": "try { require('./host-shim.js').install(globalThis.TTMinis&&TTMinis.game||globalThis.tt); } catch (e) { console.error('host shim', e); } // tiktok-kit:hostshim24:2.0"}
+      ],
+      "own_markers": [],
+      "policy": {"new": "replace", "legacy": "report"}
+    },
+    "webp_probe24": {
+      "engine": 2, "phase": "native",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "only_with": "--keep-webp-exception",
+      "file": {"src": "webp-probe/cocos2.4/webp-decode-probe.js", "template": null, "dest": "webp-decode-probe.js",
+               "sha256": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56", "previous_sha256": []},
+      "extra_files": [{"src": "webp-probe/cocos2.4/loading/webp-probe.webp", "dest": "loading/webp-probe.webp",
+                       "sha256": "f96d0f0f515e9d0e13233e3af41bf6e7a200062e0ada4c0dee596873d2142811"}],
+      "wiring": [
+        {"in": "game.js", "insert_before": "require\\(\\s*['\"]\\./main(\\.js)?['\"]\\s*\\)",
+         "line": "window.__TIKTOK_KIT_WEBP_PROBE__ = true; // tiktok-kit:webp_probe24:2.0",
+         "what": "switch read by main.js v1.3; only with the kit main.js"}
+      ],
+      "own_markers": ["toDataURL\\(\\s*['\"]image/webp", "captureParser", "data:image/webp"],
+      "policy": {"new": "install_only_with_exception", "legacy": "none"}
+    },
+    "rewarded": {
+      "engine": 2, "phase": "source",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "assets/tiktok-platform/RewardedService.js", "dest": "assets/tiktok-platform/RewardedService.js",
+               "sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+               "previous_sha256": ["7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52", "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1", "04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd"]},
+      "module": "RewardedService",
+      "fingerprint": "getSDK\\(\\s*[\"']createRewardedVideoAd[\"']\\s*\\)",
+      "outside_kit_gate": "A1_rewarded_outside_kit",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "missions": {
+      "engine": 2, "phase": "source",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "assets/tiktok-platform/MissionFlow.js", "dest": "assets/tiktok-platform/MissionFlow.js",
+               "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
+               "previous_sha256": ["f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49", "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11", "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f", "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee", "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348", "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a"]},
+      "extra_files": [{"src": "assets/tiktok-platform/TikTokMissionService.js", "dest": "assets/tiktok-platform/TikTokMissionService.js",
+                       "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae", "previous_sha256": ["10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e", "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608", "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4"]}],
+      "modules": {"MissionFlow": "MissionFlow needs store, reward\\(kind, draft\\) and render\\(view\\)",
+                  "TikTokMissionService": "getShortcutMissionReward"},
+      "sdk_calls": ["addShortcut", "checkShortcut", "startEntranceMission", "getShortcutMissionReward", "getEntranceMissionReward"],
+      "outside_kit_gate": "G1k_growth_outside_kit",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "home_entries": {
+      "engine": 2, "phase": "source",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "assets/tiktok-platform/HomeGrowthEntries.js", "dest": "assets/tiktok-platform/HomeGrowthEntries.js",
+               "sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d", "previous_sha256": ["cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963", "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab", "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc", "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474", "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122", "632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c", "c3dbfcb6262976ddba7f719e66f6ef6940bb3fb796a96b696053464ffa70af77"]},
+      "module": "HomeGrowthEntries",
+      "fingerprint": "HomeGrowthEntries needs the game SaveStore|Available in TikTok",
+      "reward": "PlatformConfig.growthReward() = 5 * normalLevelCoins (5B); no per-game amount",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "savestore": {
+      "engine": 2, "phase": "source",
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "assets/tiktok-platform/SaveStore.js", "dest": "assets/tiktok-platform/SaveStore.js",
+               "sha256": "2b86117a5c7b7f97ecfbbc267cc9dd2996edf56d5ee63a0a4e1c06c963541a41",
+               "previous_sha256": ["cb7d95e46be83decf23758895a3cc289f63781628437c6b80b02a9ab762f2415", "ba99f77166cc8859dd7ae6a8308250868bf2f73dd2c15bf4bb35a104f0e79499", "9fca45e213abf061ffec93f6380e56c12977e26bdbe5a8a1b059807abc46428b", "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf", "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406"]},
+      "module": "SaveStore",
+      "fingerprint": ":corrupt-backup",
+      "policy": {"new": "restore", "legacy": "report"}
+    },
+    "platform_config": {
+      "engine": 2, "phase": "source", "editable": true,
+      "needs": {"engine_versions": ["2.4.x"]},
+      "file": {"src": "assets/tiktok-platform/PlatformConfig.js", "dest": "assets/tiktok-platform/PlatformConfig.js",
+               "sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+               "previous_sha256": ["b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46"]},
+      "required_text": ["config.growthReward = function"],
+      "policy": {"new": "add_if_absent", "legacy": "report"}
+    }
+  }
+}

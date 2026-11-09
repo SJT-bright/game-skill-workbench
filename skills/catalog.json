@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-09T18:42:49.939Z",
-  "treeHash": "07c1da4e032ee7ab330c986b11e157dad30ce288a165560128963ba25a96fca2",
+  "createdAt": "2026-11-09T18:45:46.587Z",
+  "treeHash": "55ae60a8be59a1458c691773b5662cb4fc8b76800b7b58b1a8b8c8e7891b41c7",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3513,20 +3513,20 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "852b0907906bffb07fed3eee18101f61f4873c36d7f905689e4501515854b508",
-      "fileCount": 660,
-      "bytes": 12745812,
+      "treeHash": "b7af3ebf34e5c8424902ea5d229e1a56af3305fa9e28fc66f36047dea472e175",
+      "fileCount": 661,
+      "bytes": 12755326,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d6c379b5761571388cca6b7fb54a79063591dda72dcdbd041e8ff4e94b94748e",
-          "size": 149319,
+          "hash": "9aba2f49ebbb707f3719fa34823ad93af27839ec80b9749d59ce1e075c175e8c",
+          "size": 150169,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
-          "size": 13070,
+          "hash": "a6724456bde6a65b3222c7546cb29465d172675b5a39f227b772b360bed1a265",
+          "size": 13273,
           "executable": false
         },
         {
@@ -3567,8 +3567,8 @@
         },
         {
           "path": "assets/known-issues.json",
-          "hash": "16b388786941812725d12e1774bd3a14d9dfc1f5bb64777a9915f99136b508b3",
-          "size": 148505,
+          "hash": "8c474b4e1606dbf017a912e05800537afe113b2ac17974802bc57de2c4bfd0d0",
+          "size": 147930,
           "executable": false
         },
         {
@@ -4383,8 +4383,8 @@
         },
         {
           "path": "assets/session-relay-templates.md",
-          "hash": "13e7590956dc1a2381675e250ad7d7c779c537b07326c2778dbfa9b13874c225",
-          "size": 18996,
+          "hash": "fd8508540cbe651c3003b98df6b1725f99cb16a9a822f0b8ebb13c8d6b5d44f7",
+          "size": 18978,
           "executable": false
         },
         {
@@ -4401,8 +4401,8 @@
         },
         {
           "path": "assets/user-playtest-checklist-template.md",
-          "hash": "73850bbcbfea2a9876f142802ddc1f1507b6f854c93c2dae1ec3e20a82a2c4d5",
-          "size": 5457,
+          "hash": "cdcce964f2ac02a6de3661b80463b81b8f17e6966e60322fbe9d21f75de93585",
+          "size": 5675,
           "executable": false
         },
         {
@@ -4611,8 +4611,8 @@
         },
         {
           "path": "references/manual-visual-review.md",
-          "hash": "e7458e392dfe7778c182c5f766f2a4dc4f97cac84277fc88195be5e3dd4396a6",
-          "size": 3977,
+          "hash": "fc521889653052a2f5b64e772d27b4b25cd50b0571a20a981f72dd6ecffe80b9",
+          "size": 5089,
           "executable": false
         },
         {
@@ -4649,6 +4649,12 @@
           "path": "references/production-accounting.md",
           "hash": "dfa6cdec955c863054f2d08c8450fb827e11c548b6cf4ec7da33887d5d98ff61",
           "size": 9126,
+          "executable": false
+        },
+        {
+          "path": "references/production-baseline.md",
+          "hash": "5cbaecb34d2c01343598737008d6a37d9c3a9b90a1cbdec9b71dd6a0c41672e2",
+          "size": 7586,
           "executable": false
         },
         {
@@ -4689,8 +4695,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "ead92dea6267417fb257a403595b6990f198d4fb29e3b70c99714acfc90e3255",
-          "size": 50816,
+          "hash": "43ec16baeed33652aaa1ccc24dfd8c8599737052ade134aea06b0fd827e5b40c",
+          "size": 50963,
           "executable": false
         },
         {
@@ -5427,8 +5433,8 @@
         },
         {
           "path": "scripts/game_capabilities.py",
-          "hash": "8d7004bedd5e6c8dd44ef84d558ba814f08b1d90b1256dc64b5e435e11168ad2",
-          "size": 26081,
+          "hash": "44bd15bb2af010c27c5bb1a852e92848d75ee549c8a8e42b5b93b54d9df7d197",
+          "size": 26072,
           "executable": false
         },
         {

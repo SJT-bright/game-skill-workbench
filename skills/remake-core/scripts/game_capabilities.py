@@ -238,7 +238,7 @@ def fill_adapter(adapter, caps, policy='new'):
             notes.append('resume_play.pause_button from the record: ' + why)
     outcome = out.get('ad_outcome')
     if not (isinstance(outcome, dict) and 'n/a' in outcome):
-        for role in ('double', 'revive'):
+        for role in ('double',):
             v, why = verdict(caps, 'ad_role:' + role)
             have = {e.get('role') for e in out.get('ad_entries') or [] if isinstance(e, dict)}
             if role in have:

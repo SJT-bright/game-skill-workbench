@@ -8,8 +8,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
-      "bytes": 13070
+      "sha256": "a6724456bde6a65b3222c7546cb29465d172675b5a39f227b772b360bed1a265",
+      "bytes": 13273
     },
     {
       "path": "agents/openai.yaml",
@@ -122,6 +122,11 @@
       "bytes": 5832
     },
     {
+      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
+      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
+      "bytes": 5603
+    },
+    {
       "path": "assets/platform-kit/build-templates/bytedance/main.js",
       "sha256": "2cc6f5fab1970e3f156399a4d4bc01c75d0ac16770102b985038601b28651215",
       "bytes": 23385
@@ -132,9 +137,24 @@
       "bytes": 2593
     },
     {
-      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
-      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
-      "bytes": 5603
+      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
+      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "bytes": 14203
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
+      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+      "bytes": 88164
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+      "sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
+      "bytes": 15103
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
+      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
+      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/parts/AudioService.js",
@@ -215,26 +235,6 @@
       "path": "assets/platform-kit/parts/storage-guard.js",
       "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
       "bytes": 4483
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
-      "bytes": 14203
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-      "bytes": 88164
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
-      "bytes": 15103
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
-      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
-      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/plugins-3x/CapsuleAuto.plugin.js",
@@ -945,6 +945,11 @@
       "path": "references/production-accounting.md",
       "sha256": "dfa6cdec955c863054f2d08c8450fb827e11c548b6cf4ec7da33887d5d98ff61",
       "bytes": 9126
+    },
+    {
+      "path": "references/production-baseline.md",
+      "sha256": "5cbaecb34d2c01343598737008d6a37d9c3a9b90a1cbdec9b71dd6a0c41672e2",
+      "bytes": 7586
     },
     {
       "path": "references/production-plan.md",
@@ -3940,7 +3945,25 @@
           "method": "retain"
         }
       ]
+    },
+    {
+      "id": "2026-11-09.production-baseline",
+      "scope": "Apply shared release regression design rules at game production entry points",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
+          "after_sha256": "a6724456bde6a65b3222c7546cb29465d172675b5a39f227b772b360bed1a265",
+          "after_bytes": 13273
+        },
+        {
+          "path": "references/production-baseline.md",
+          "before_sha256": null,
+          "after_sha256": "5cbaecb34d2c01343598737008d6a37d9c3a9b90a1cbdec9b71dd6a0c41672e2",
+          "after_bytes": 7586
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8"
+  "previous_local_provenance_sha256": "d6c379b5761571388cca6b7fb54a79063591dda72dcdbd041e8ff4e94b94748e"
 }

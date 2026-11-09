@@ -1,0 +1,13 @@
+{
+  "name": "resume_play",
+  "about": "Exercise foreground recovery after backgrounding, held touch, a pause popup and an applicable non-revive in-level rewarded ad. Rewarded revive is covered in the first manual playtest after art.",
+  "applies": ["tiktok"],
+  "needs_new": ["resume_play"],
+  "na_field": "resume_play",
+  "fields": ["home_scene", "after_home_js"],
+  "after": ["button_sweep"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 1200,
+  "owner": "v7.9 手机才出的五类问题 / 手机检查补全",
+  "proof": "补丁_手机检查补全_基于简化11.7/测试记录.md (甜点消消乐 R47 refused, finger_held included; R48 passes with the pause control found in the level; 香肠 R17 pause found from its popup; 割草 v015 / 人鱼 v18 refused: no pause control; 猴子快跑 v12 on Cocos 3.x)"
+}

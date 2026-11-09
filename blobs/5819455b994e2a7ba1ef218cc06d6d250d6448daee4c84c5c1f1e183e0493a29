@@ -1,0 +1,14 @@
+{
+  "name": "popin",
+  "about": "Watch collider obstacles during ordinary gameplay at four viewports. The first manual playtest after art covers rewarded revive.",
+  "applies": ["tiktok"],
+  "needs": [],
+  "needs_new": ["popin"],
+  "na_field": "popin",
+  "fields": ["popin", "home", "play", "home_scene", "after_home_js"],
+  "engines": ["2.x", "3.x"],
+  "uncovered": {"3.x": "the obstacle watch reads 2.4 colliders (cc.PhysicsCollider / cc.Collider) and 2.4 camera boxes; no 3.x scrolling-obstacle game was available to calibrate a Collider2D / UITransform version (W89, 2026-10-30)"},
+  "timeout_s": 900,
+  "owner": "W89",
+  "proof": "briefs/out/W89/RESULT.md (BreezyBalloon v2.1 refused on all 4 screens, v2.2 and v2.1 with platform-kit CourseLane pass)"
+}

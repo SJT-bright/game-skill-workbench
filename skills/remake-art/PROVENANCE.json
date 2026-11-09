@@ -7,8 +7,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "a7244c3c013d5cb7a131e7914b04bc7804b64bbba7e0b1f4ba7d98a9c2b5a900",
-      "bytes": 23816
+      "sha256": "517ad2196e796d18b931c1e236040cc98cb10677860d70d9759f82c3c0cf66c9",
+      "bytes": 24108
     },
     {
       "path": "agents/openai.yaml",
@@ -443,7 +443,19 @@
           "after_bytes": 11900
         }
       ]
+    },
+    {
+      "id": "2026-11-09.production-baseline",
+      "scope": "Apply shared release regression design rules at game production entry points",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "a7244c3c013d5cb7a131e7914b04bc7804b64bbba7e0b1f4ba7d98a9c2b5a900",
+          "after_sha256": "517ad2196e796d18b931c1e236040cc98cb10677860d70d9759f82c3c0cf66c9",
+          "after_bytes": 24108
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928"
+  "previous_local_provenance_sha256": "b3b5c3a925764cd615d9bb947e7b6b765a2c86755083e4728eda3761c4095d90"
 }

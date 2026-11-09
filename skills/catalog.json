@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-09T21:48:05.482Z",
-  "treeHash": "cbd3835c2cea4c4816a2b38c5abd82c76d654e0f1c9362728af4c6633aeca578",
+  "createdAt": "2026-11-09T21:48:38.051Z",
+  "treeHash": "a01eb77a5732c7980d8b21b32bd827bca42a99e024ac533aec68ff0b01be4ea0",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3507,9 +3507,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "b7af3ebf34e5c8424902ea5d229e1a56af3305fa9e28fc66f36047dea472e175",
+      "treeHash": "c0ca9184a1352a3bc413b81ce9070412e1a6ec239d7c1e4a71fa1d0d2e155e87",
       "fileCount": 661,
-      "bytes": 12755326,
+      "bytes": 12755490,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3561,8 +3561,8 @@
         },
         {
           "path": "assets/known-issues.json",
-          "hash": "8c474b4e1606dbf017a912e05800537afe113b2ac17974802bc57de2c4bfd0d0",
-          "size": 147930,
+          "hash": "baadc8dd3df85fa43d39073cafcfcc09a975ca85bcb8149d8538f9af80f92b7e",
+          "size": 147903,
           "executable": false
         },
         {
@@ -4689,8 +4689,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "43ec16baeed33652aaa1ccc24dfd8c8599737052ade134aea06b0fd827e5b40c",
-          "size": 50963,
+          "hash": "d9f599d17a3d84d5823cd6926faf0132cd14e854fe7b6ec63065a34d1ae73517",
+          "size": 50835,
           "executable": false
         },
         {
@@ -5427,8 +5427,8 @@
         },
         {
           "path": "scripts/game_capabilities.py",
-          "hash": "44bd15bb2af010c27c5bb1a852e92848d75ee549c8a8e42b5b93b54d9df7d197",
-          "size": 26072,
+          "hash": "64dbe3bdd52a15f71231033b330f593473917b9b1aa8462266269ed0ccf51a53",
+          "size": 26288,
           "executable": false
         },
         {
@@ -5685,8 +5685,8 @@
         },
         {
           "path": "scripts/page_registry.py",
-          "hash": "d76b29d99cf536b609d837f87589af342dc2dd37f91395fdf64b316d109c2247",
-          "size": 22133,
+          "hash": "a5f685c26e87543f9e4c18c5ca6ce71faa6e3e24b767b59fc554ee0334dc3192",
+          "size": 22236,
           "executable": false
         },
         {

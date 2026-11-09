@@ -16,8 +16,8 @@
 **测试范围（用户 2026-10-21，严格执行）**：
 
 - **本 Skill 不做任何上传 TikTok 后的测试**：不出真机清单、不要求扫码/录屏、不分析手机录屏、不跑 `check_known_issues.py --stage device`。出的 ZIP 由用户自己决定怎么上传和测。
-- **全部测试都在浏览器手机模拟里做**，目标只有一个：用户在浏览器里不会遇到**进不了游戏、加载卡住、按钮点了没反应**，**尤其是所有和广告有关的流程**（看广告复活、领奖、试用、双倍、失败/取消/超时/没广告/很慢/重复点击/迟到回调）。广告用本地模拟（替身）把每种结果都实际触发一遍，见[加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md#三广告要做到)。
-- **用 Ego Lite 模拟 iPhone**（用户 2026-11-06）。`chrome_touch.py` 的 `device` 默认 `iphone_15`，短屏用 `iphone_se`。每个按钮都要点一遍，按钮清单从游戏里自动读出，见[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)。
+- **AI 测试用浏览器手机模拟**。检查启动、加载、输入及适用的激励广告流程（领奖、试用、双倍及取消、超时、无填充、重复点击等）。局内广告复活在美工结束后的首轮人工试玩检查。模拟广告见[加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md#三广告要做到)。
+- **用 Ego Lite 模拟 iPhone**（用户 2026-11-06）。`chrome_touch.py` 的 `device` 默认 `iphone_15`，短屏用 `iphone_se`。自动覆盖范围内的按钮逐个点，按钮清单从游戏里自动读出，见[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)。
 - **AI 自己测试严格用 Ego Lite；用户试玩按[固定手机入口](user-phone-preview.md)自动弹出独立 Google Chrome**（用户 2026-10-23：Ego 只给 AI 自己测试，禁止在 Ego 里开窗口让用户试玩；`serve_preview.py --keep` 起本地服务，链接写在 Codex 回复里；Ego 里"需要你处理"/等用户的空间 AI 自己关掉，见[Ego 只给 AI 测试](machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）：先运行 `ego-browser skill` 按它的说明操作；我们的触摸计划/截图/录屏工具用 `chrome_touch.py` 跑在 Ego 里（通过 `ego-browser nodejs`，不需要任何地址）（见[手机触屏](../../mobile-touch-computer-use/SKILL.md)）。Ego 不可用时保留未测并继续离线工作。
 - **新建测试空间不问用户（用户 2026-10-23，已长期授权）**：每次测试自己新建 TaskSpace；空间不在/失活/被占直接新建接着测；每一轮、每个新对话开头先 `browser_slots.py tidy` 收拾上一轮的空间，不留闲置的。见[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)。
 - **不依赖、不询问 TikTok 开发者工具**：电脑上没有是正常情况，不问、不让用户安装或登录，不标"受阻"。

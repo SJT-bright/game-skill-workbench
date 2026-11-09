@@ -1676,7 +1676,7 @@
     },
     {
       "id": "POPIN",
-      "symptom": "宽屏下障碍在屏幕中间凭空出现、右半边一直空着，复活时看得见的障碍一帧挪走（BreezyBalloon v2.1 按设计宽度 750 回收柱子）",
+      "symptom": "宽屏普通对局中，障碍在屏幕中间凭空出现、右半边一直空着（BreezyBalloon v2.1 按设计宽度 750 回收柱子）",
       "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/popin.mjs appeared_on_screen / vanished_on_screen / jumped_on_screen（写包入口必跑，四种屏幕；修法：remake-core/assets/platform-kit/parts/CourseLane.js）",
       "level": "block（新游戏；名单上的老游戏警告；3.x 未覆盖只警告；没有滚动障碍写 n/a）",
       "source": "总表 22 P2 补 / W89"

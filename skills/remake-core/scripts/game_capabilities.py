@@ -251,14 +251,17 @@ def fill_adapter(adapter, caps, policy='new'):
             elif v == 'unknown':
                 missing.append(why)
         if not out.get('ad_entries'):
-            staged = [dict({'id': e.get('id') or e['role']}, **{k: e[k] for k in ('role', 'button', 'states')})
-                      for e in (caps.get('ad_entries') or []) if isinstance(e, dict) and e.get('states')]
+            entries = caps.get('ad_entries') or []
+            staged = [dict({'id': e.get('id') or e['role']},
+                           **{k: e[k] for k in ('role', 'button', 'states') if k in e})
+                      for e in entries if isinstance(e, dict) and (e.get('states') or e.get('role') == 'revive')]
             if staged:
                 out['ad_entries'] = staged
                 notes.append('ad_entries from the record: ' + ', '.join(e['id'] for e in staged))
-            elif ad_roles(caps):
+            automatic_roles = (ad_roles(caps) or set()) - {'revive'}
+            if automatic_roles and not any(e['role'] != 'revive' for e in staged):
                 missing.append('ad_entries: the record lists %s but no entry has "states" (the real steps that show '
-                               'the button); the ad_entries suite would not run' % ', '.join(sorted(ad_roles(caps))))
+                               'the button); the ad_entries suite would not run' % ', '.join(sorted(automatic_roles)))
     return out, notes, (missing if policy != 'legacy' else [])
 
 

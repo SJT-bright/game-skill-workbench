@@ -1,6 +1,6 @@
 ---
 name: chrome-mobile-testing
-description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默认通过 Ego Lite 官方接口（ego-browser nodejs）执行触摸计划、iPhone 预设（iPhone 15 / iPhone SE 两种比例）、截图、录屏、限速/禁缓存的启动加载计时；Google Chrome 仅用于用户试玩，不用于 Agent 测试。负责工具操作和证据，不替代物理手机或真实IAA。dump_ui 动作从运行中的 Cocos 游戏读出界面布局和文字（给 extract_ui_layout.py 和 audit_copy_quality.py）。
+description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默认通过 Ego Lite 官方接口（ego-browser nodejs）执行触摸计划、iPhone 预设（iPhone 15 / iPhone SE 两种比例）、截图、按需短片、限速/禁缓存的启动加载计时；Google Chrome 仅用于用户试玩，不用于 Agent 测试。负责工具操作和证据，不替代物理手机或真实IAA。dump_ui 动作从运行中的 Cocos 游戏读出界面布局和文字（给 extract_ui_layout.py 和 audit_copy_quality.py）。
 ---
 
 **用户试玩链接前置**：按固定手机尺寸试玩（英化包 `remake-core/references/user-phone-preview.md`；重塑包 `remake-core/references/user-phone-preview.md`）交接，不能用设备模拟配置代替实际手机外壳。共享 `serve_preview.py` 默认手机框；脚本代测若必须读顶层 Canvas，显式用内部 `--raw`，其 URL 不交给用户。
@@ -60,28 +60,11 @@ python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan 当前计划
 
 **被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑remake-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。所有浏览器测试仅用 Ego。不要再用排队锁包本命令（包了也会直接放行）。遗留的用remake-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用remake-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
 
-## 录屏（动态画面检查）
+## 按需记录短片
 
-加 `--record` 会把画面帧存到 `<输出>/frames/`，交给 `scripts/audit_frame_glitches.py`（英化包在 cocos-game-core，重塑包在 remake-core）。Ego 里是连续截图（每秒几帧）：查黑屏、白屏、卡住不动、错页。**一帧闪烁**要每秒60帧，Ego 当前录不到时在报告里写"闪烁未测"，不说通过。一个流程一次录制，每段不超过60秒。
+常规触摸测试和人工试玩沿用当前页面、操作计划与必要静态截图。闪黑、闪白、闪烁、转场、粒子和滚动等现象由试玩者按[人工试玩清单](../remake-core/references/manual-visual-review.md)观察。
 
-### 美术关必录的四段（v7.8，`art_check.py` 的「动态闪屏」一行没有录屏就不通过）
-
-每轮美术（两个板块）在 dump 完页面后，再录下面四段，一段一次运行、各自一个输出目录，**输出目录放在 art_check 读的 dump 目录下面**（默认 `<工程>/docs/test/`）：
-
-| 段 | 输出目录 | 计划里做什么 |
-| --- | --- | --- |
-| 首页点按钮 | `docs/test/rec-home-buttons/` | 进首页等 3 秒，依次点每个功能按钮，每次点完 `wait` 1500，再点关闭回首页 |
-| 开关弹窗 | `docs/test/rec-popups/` | 打开设置、礼盒、皮肤/商店等每个弹窗，停 1 秒再关，含切标签页 |
-| 调音量 | `docs/test/rec-volume/` | 打开设置的声音页，拖音乐、音效滑条到 0 再拖回，点静音开关两次 |
-| 局内消除 | `docs/test/rec-gameplay/` | 开一局，做 10～20 秒真实操作，至少触发几次消除/得分/碰撞特效，再暂停、继续 |
-
-命令（Ego 路线，计划里不用写 `"record"`，加 `--record` 即可）：
-
-```sh
-python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan rec-popups.json --out <工程>/docs/test/rec-popups --record --name "<线名> 美术录屏 弹窗"
-```
-
-每段跑完会得到 `<输出>/frames/NNNNN_TTTTTTTms.jpg`。`art_check.py --dumps <工程>/docs/test` 会找出 dump 目录下所有名叫 `frames` 的文件夹（最多 12 段），逐段跑 `audit_frame_glitches.py`，结果在 art_check 输出的 `frame_glitches/NN/report.json`；有闪黑、闪白、空帧、闪烁就是「需处理」，一段都没有也是「需处理」。录好的帧在美术检查跑完之前不要删（输出目录要是新的空目录，脚本会新建 `frames/`）。Ego 录不到一帧闪烁，报告写"闪烁未测（Ego 每秒几帧）"，不能写成通过。
+仅当用户明确要录像，或现场很难说明偶发问题时，才对故障入口保留一小段。工具仍支持 `--record` 或计划中的 `"record": true`，保存到 `<输出>/frames/`。Ego Lite 的这项能力是低帧率连续截图，适合定位持续问题；偶发单帧故障用受影响设备的高帧率录像定位。报告写实际观察和限制。录制和逐帧分析均不作为常规放行条件。
 
 ## 启动与触控核验
 

@@ -1,0 +1,9 @@
+{
+  "name": "growth_entry",
+  "about": "Each growth button navigates on its first tap without a hint. Confirm eligible launch sources and quiet regular returns.",
+  "applies": ["missions"],
+  "needs": ["home", "growth_entry"],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 180,
+  "owner": "G3 / TikTok profile sidebar and home shortcut"
+}

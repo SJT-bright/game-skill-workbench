@@ -83,8 +83,11 @@ def rewarded_ad_gate(files, folder, adapter=None, rework=None):
         import rework_scope
         return rework_scope.reused_ad(rework)
     try:
+        if runtime_regression_gate.manual_revive_request(runtime_regression_gate.load_adapter(adapter)):
+            return {'id': 'rewarded_ad_regression', 'status': 'not_applicable',
+                    'reason': 'configured probe is rewarded revive, covered in the first manual playtest after art'}
         return ad_regression_gate.run(folder, adapter)
-    except ad_regression_gate.RegressionRefused as error:
+    except (ad_regression_gate.RegressionRefused, runtime_regression_gate.RuntimeRefused) as error:
         raise ValueError(str(error))
 
 
@@ -136,7 +139,8 @@ def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
             for name in rr.required_suites(files,a,catalog):
                 units=runtime_incremental.unit_ids(name,catalog[name],a,rr.precheck(name,catalog[name],a,engine,resolved_policy) is not None)
                 ids.extend('runtime.'+name+'/'+unit for unit in units)
-            if ad_regression_gate.needs_regression(files):ids.extend('ads.'+c for c in ad_regression_gate.default_cases(a))
+            if ad_regression_gate.needs_regression(files) and not rr.manual_revive_request(a):
+                ids.extend('ads.'+c for c in ad_regression_gate.default_cases(a))
             # Returned visual acceptance is a disposition, not a missing art test.
             # Its independent hidden-startup node is planned by runtime_incremental.
             from returned_art_acceptance import MANIFEST, validate
@@ -300,7 +304,11 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             tool_equivalence = ad.get('tool_sha256') == inherited['original_tool_sha256']
         except Exception as error:
             return no('debrand inherited ad identity refused: %s' % error)
-    if ad_regression_gate.needs_regression(files):
+    try:
+        manual_probe = bool(adapter and runtime_regression_gate.manual_revive_request(runtime_regression_gate.load_adapter(adapter)))
+    except runtime_regression_gate.RuntimeRefused:
+        return no('current adapter could not be read')
+    if ad_regression_gate.needs_regression(files) and not manual_probe:
         if ad.get('status') != 'passed':
             return no('the writer did not run the rewarded-ad regression on a package that needs it')
         if adapter_sha is None or (ad.get('adapter_sha256') != adapter_sha and not adapter_equivalence):

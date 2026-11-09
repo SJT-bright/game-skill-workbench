@@ -46,7 +46,7 @@ DOUBLE_KEYS = ('open', 'claim', 'balance')
 ENV_ADAPTER = 'TIKTOK_AD_REGRESSION_ADAPTER'
 ENV_BROWSER = 'EGO_BROWSER'
 _which = shutil.which  # patch point for tests; shutil.which itself is shared
-ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim'}
+ADAPTER_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_timeout_s', 'note', 'double_claim', 'request_role'}
 # v7.7.5 (总表 A14): adapter.exit returns the X node (or {node, x, y} in its anchor space) and the tool finds where it
 # is on screen. Before v7.7.4 the tool's formula was wrong, so adapters converted the position themselves to
 # compensate (全民飞车漂移, 回家快跑, 狐狸回窝, 珊瑚守卫). With the corrected formula that compensation moves the tap

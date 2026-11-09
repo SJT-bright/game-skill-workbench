@@ -6,8 +6,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "308f734531af8da1f7a2b71090fe49f25352296ca033c2640069a6ba7a53b885",
-      "bytes": 21532
+      "sha256": "45c29abb4153646147eb82970a1717dabff307fc16791662c79756c602bca0a9",
+      "bytes": 21834
     },
     {
       "path": "agents/openai.yaml",
@@ -110,36 +110,6 @@
       "bytes": 1161
     },
     {
-      "path": "package/README.md",
-      "sha256": "9145721287020d50b892efc91e677e77d2bb85c545667f698338e84d6100caae",
-      "bytes": 5904
-    },
-    {
-      "path": "package/references/check-fix-package-loop.md",
-      "sha256": "3c15e9a170546c8ae78bd820c653dc0c22aaca9fb8c4df0a2913309347a0c538",
-      "bytes": 12842
-    },
-    {
-      "path": "package/references/package-forms.md",
-      "sha256": "f4daa9e63cfabf2da890cf7246c2690724c06855cbf678de77a6dd69f81fcf7d",
-      "bytes": 4809
-    },
-    {
-      "path": "package/references/tiktok-app-creation.md",
-      "sha256": "a4ec00510de4200c8decc8d64a047be2f4ca6f9df5b920b98e755485c3b25898",
-      "bytes": 8378
-    },
-    {
-      "path": "package/references/tiktok-device-stage.md",
-      "sha256": "1c10f15146a10beb40d90382da0ad8da85ea982f5eb9abdc672e6ab112e02b5a",
-      "bytes": 1451
-    },
-    {
-      "path": "package/scripts/upload_preflight.py",
-      "sha256": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
-      "bytes": 2366
-    },
-    {
       "path": "package-check/README.md",
       "sha256": "8b0d6bbcaceb17a256ef67fe547ce280177c156583c7ad5d0814d2e483abeb4b",
       "bytes": 4381
@@ -225,6 +195,11 @@
       "bytes": 3748
     },
     {
+      "path": "package-check/scripts/ad_regression.py",
+      "sha256": "9e818a2fadd72df67e9d42de8579cda26635ef40f582f1d90696a3ee1e9c952f",
+      "bytes": 20654
+    },
+    {
       "path": "package-check/scripts/ad_regression/cases.mjs",
       "sha256": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
       "bytes": 24364
@@ -243,11 +218,6 @@
       "path": "package-check/scripts/ad_regression/server.py",
       "sha256": "bdc7878870930eb557beed0a3ab6bded888c1ecea5d2070a57b1aa14731d1faa",
       "bytes": 2622
-    },
-    {
-      "path": "package-check/scripts/ad_regression.py",
-      "sha256": "9e818a2fadd72df67e9d42de8579cda26635ef40f582f1d90696a3ee1e9c952f",
-      "bytes": 20654
     },
     {
       "path": "package-check/scripts/audit_interaction_audio.py",
@@ -343,6 +313,11 @@
       "path": "package-check/scripts/runtime_incremental.py",
       "sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
       "bytes": 12961
+    },
+    {
+      "path": "package-check/scripts/runtime_regression.py",
+      "sha256": "31843436cab01987c20481a2d88ae7bca378474d3b9293d76b7c173f5091a648",
+      "bytes": 64768
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -570,11 +545,6 @@
       "bytes": 17614
     },
     {
-      "path": "package-check/scripts/runtime_regression.py",
-      "sha256": "31843436cab01987c20481a2d88ae7bca378474d3b9293d76b7c173f5091a648",
-      "bytes": 64768
-    },
-    {
       "path": "package-check/scripts/runtime_timing.py",
       "sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
       "bytes": 3192
@@ -773,6 +743,36 @@
       "path": "package-check/scripts/watched_run.py",
       "sha256": "a710baa7ffbaa660f7069e4569a7918d90ed4a49f4a9a859d37f2d1eff86ce1d",
       "bytes": 5248
+    },
+    {
+      "path": "package/README.md",
+      "sha256": "9145721287020d50b892efc91e677e77d2bb85c545667f698338e84d6100caae",
+      "bytes": 5904
+    },
+    {
+      "path": "package/references/check-fix-package-loop.md",
+      "sha256": "3c15e9a170546c8ae78bd820c653dc0c22aaca9fb8c4df0a2913309347a0c538",
+      "bytes": 12842
+    },
+    {
+      "path": "package/references/package-forms.md",
+      "sha256": "f4daa9e63cfabf2da890cf7246c2690724c06855cbf678de77a6dd69f81fcf7d",
+      "bytes": 4809
+    },
+    {
+      "path": "package/references/tiktok-app-creation.md",
+      "sha256": "a4ec00510de4200c8decc8d64a047be2f4ca6f9df5b920b98e755485c3b25898",
+      "bytes": 8378
+    },
+    {
+      "path": "package/references/tiktok-device-stage.md",
+      "sha256": "1c10f15146a10beb40d90382da0ad8da85ea982f5eb9abdc672e6ab112e02b5a",
+      "bytes": 1451
+    },
+    {
+      "path": "package/scripts/upload_preflight.py",
+      "sha256": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
+      "bytes": 2366
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
@@ -1263,7 +1263,19 @@
           "method": "reviewed_merge"
         }
       ]
+    },
+    {
+      "id": "2026-11-09.production-baseline",
+      "scope": "Apply shared release regression design rules at game production entry points",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "308f734531af8da1f7a2b71090fe49f25352296ca033c2640069a6ba7a53b885",
+          "after_sha256": "45c29abb4153646147eb82970a1717dabff307fc16791662c79756c602bca0a9",
+          "after_bytes": 21834
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8"
+  "previous_local_provenance_sha256": "a155fde8a6538d231d86cc6a4c6d84477ee9c96552e04f38746493bb929cad46"
 }

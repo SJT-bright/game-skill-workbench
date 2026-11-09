@@ -22,7 +22,7 @@ warns, Cocos 3.x blocks only on the startup download), ad_entries (B) when the a
 only with a trial link (`run --trial`, `trial --url`, serve_preview.py --keep). `run --board remake|localize` picks the
 home rules (the writers pass their board). The summary lists not_run (suite, reason) and startup_measured.
 
-v7.8 (总表 P2 补): suite popin applies to every TikTok package: 4 screens, invincible player, 18 s flight and a revive,
+v7.8 (总表 P2 补): suite popin applies to every TikTok package: 4 screens, invincible player, 18 s of normal gameplay,
 no obstacle may appear / vanish / jump on screen. adapter.popin is required for a new game (legacy: warning), {"n/a":
 "reason"} passes a game without scrolling obstacles without a browser, Cocos 3.x only warns 「未覆盖」 (precheck()).
 
@@ -82,7 +82,7 @@ PREDICATES = ('tiktok', 'rewarded_ads', 'missions', 'remake_home', 'trial_url')
 SIDECAR_KEYS = {'name', 'about', 'applies', 'needs', 'fields', 'engines', 'timeout_s', 'owner', 'proof', 'host',
                 'needs_new', 'na_field', 'uncovered', 'after'}
 BOARDS = ('remake', 'localize')
-POPIN_REQUIRED = ('player', 'invincible_js', 'revive_js', 'game_node')
+POPIN_REQUIRED = ('player', 'invincible_js', 'game_node')
 POPIN_OPTIONAL = {'start': list, 'first_touch': bool, 'fly_s': (int, float), 'settle_ms': int, 'after_start_js': str,
                   'ignore': str, 'ignore_groups': list, 'query': str, 'note': str}
 
@@ -98,7 +98,7 @@ def popin_problems(value):
         return [] if isinstance(value['n/a'], str) and value['n/a'].strip() else ['popin "n/a" needs the reason (text)']
     out = ['popin.%s missing (a non-empty string)' % k for k in POPIN_REQUIRED
            if not (isinstance(value.get(k), str) and value[k].strip())]
-    for key in sorted(set(value) - set(POPIN_REQUIRED) - set(POPIN_OPTIONAL)):
+    for key in sorted(set(value) - set(POPIN_REQUIRED) - set(POPIN_OPTIONAL) - {'revive_js'}):
         out.append('popin has unknown key %r' % key)
     for key, kind in POPIN_OPTIONAL.items():
         if key in value and (not isinstance(value[key], kind) or (kind is not bool and isinstance(value[key], bool))):
@@ -353,7 +353,7 @@ def load_suites(folder=None):
 
 
 def adapter_keys(suites):
-    keys = set(AD_KEYS) | CORE_KEYS
+    keys = set(AD_KEYS) | CORE_KEYS | {'request_role'}
     for meta in suites.values():
         keys.update(meta['needs'])
         keys.update(meta['fields'])
@@ -361,6 +361,80 @@ def adapter_keys(suites):
         if meta.get('na_field'):
             keys.add(meta['na_field'])
     return keys
+
+
+REVIVE_WORD = re.compile(r'reviv|relive|fuhuo|second[ _-]*chance|复活', re.I)
+REVIVE_AD_WORD = re.compile(r'watch|video|reward|ad(?:button|btn|entry|$)|(?:^|[_ -])ad(?:[_ -]|$)|广告|视频', re.I)
+REVIVE_PROBE = re.compile(
+    r"""\b(?:watch(?:Ad|Video)?(?:To)?Revive|revive(?:With|By)(?:Ad|Video)|(?:request|show)Revive(?:Ad|Video))\s*\(|(?:placementKey|placement|slot|role)\s*:\s*['"](?:ad[_-]?)?revive['"]""", re.I)
+
+
+def revive_target(value, paths=()):
+    if not isinstance(value, str):
+        return False
+    path = re.sub(r'#\d+$', '', value)
+    leaf = path.rsplit('/', 1)[-1]
+    return (any(path == p or (p.startswith('*/') and path.endswith(p[1:])) for p in paths)
+            or bool(REVIVE_WORD.search(leaf))
+            or bool(REVIVE_WORD.search(path) and REVIVE_AD_WORD.search(leaf)))
+
+
+def automatic_adapter(raw):
+    """Retain revive metadata in the project. Remove its routes from final automatic checks."""
+    adapter = dict(raw)
+    entries = raw.get('ad_entries')
+    manual = [e for e in entries or [] if isinstance(e, dict) and
+              (e.get('role') == 'revive' or revive_target(e.get('button')))] if isinstance(entries, list) else []
+    paths = [e['button'] for e in manual if isinstance(e.get('button'), str)]
+    adapter['_manual_revive_paths'] = paths
+    adapter['_manual_revive_only_entries'] = bool(manual and len(manual) == len(entries))
+    if manual:
+        remaining = [e for e in entries if e not in manual]
+        if remaining:
+            adapter['ad_entries'] = remaining
+        else:
+            adapter.pop('ad_entries')
+    outcome = raw.get('ad_outcome')
+    if isinstance(outcome, dict):
+        outcome = dict(outcome)
+        adapter['ad_outcome'] = outcome
+        if isinstance(outcome.get('none'), dict):
+            outcome['none'] = {k: v for k, v in outcome['none'].items() if k != 'revive'}
+        manual_ids = {e.get('id') for e in manual if isinstance(e.get('id'), str)}
+        if isinstance(outcome.get('entries'), dict):
+            outcome['entries'] = {k: v for k, v in outcome['entries'].items()
+                                  if k not in manual_ids and not revive_target(k, paths)}
+    resume = raw.get('resume_play')
+    if isinstance(resume, dict) and isinstance(resume.get('ad'), dict):
+        ad = resume['ad']
+        if ad.get('role') == 'revive' or revive_target(ad.get('tap'), paths) or revive_target(ad.get('tap_js'), paths):
+            adapter['resume_play'] = {k: v for k, v in resume.items() if k != 'ad'}
+            if isinstance(outcome, dict) and isinstance(outcome.get('entries'), dict):
+                outcome['entries'].pop('resume_play.ad', None)
+    layout = raw.get('layout_states')
+    if isinstance(layout, list):
+        adapter['layout_states'] = [s for s in layout if not isinstance(s, dict) or not (
+            isinstance(s.get('name'), str) and REVIVE_WORD.search(s['name'])
+            or any(isinstance(a, dict) and revive_target(a.get('tap') or a.get('wait_node'), paths)
+                   for a in (s.get('actions') or [])))]
+    trial = raw.get('trial')
+    if isinstance(trial, dict) and (trial.get('role') == 'revive' or
+            revive_target(trial.get('ad_button'), paths) or
+            any(revive_target(tap, paths) for tap in (trial.get('taps') or []))):
+        adapter.pop('trial')
+    return adapter
+
+
+def manual_revive_request(adapter):
+    """Identify an existing lifecycle probe that exercises the excluded revive entry."""
+    if not adapter or adapter.get('double_claim'):
+        return False
+    if adapter.get('request_role'):
+        return adapter['request_role'] == 'revive'
+    request = adapter.get('request')
+    if not isinstance(request, str) or not request.strip():
+        return bool(adapter.get('_manual_revive_only_entries'))
+    return bool(REVIVE_PROBE.search(request) or any(p in request for p in adapter.get('_manual_revive_paths', [])))
 
 
 def load_adapter(path, suites=None):
@@ -383,7 +457,7 @@ def load_adapter(path, suites=None):
             raise RuntimeRefused('runtime regression adapter "%s" must be a string' % key)
     if 'engine' in adapter and adapter['engine'] not in ('2.x', '3.x'):
         raise RuntimeRefused('runtime regression adapter "engine" must be "2.x" or "3.x"')
-    return adapter
+    return automatic_adapter(adapter)
 
 
 def detect_engine(files, adapter=None):
@@ -691,9 +765,6 @@ def precheck(name, meta, adapter, engine, policy):
     warning; a needs_new field missing or a malformed na_field refuses a new game and warns on a legacy game."""
     field = meta.get('na_field')
     if field and is_na(adapter.get(field)):
-        if name == 'ad_outcome' and any(isinstance(e, dict) and e.get('role') == 'revive' for e in (adapter.get('ad_entries') or [])):
-            why = 'a declared revive entry must run ad_outcome; remove the contradictory n/a'
-            return _row(name, [{'id': 'adapter', 'passed': False, 'detail': why}], problems=[why])
         return _row(name, [{'id': 'n_a', 'passed': True, 'detail': adapter[field]['n/a']}])
     why = (meta.get('uncovered') or {}).get(engine)
     if why:
@@ -705,9 +776,7 @@ def precheck(name, meta, adapter, engine, policy):
     if not problems:
         return None
     text = '; '.join(problems)
-    declared_revive = name == 'ad_outcome' and any(isinstance(e, dict) and e.get('role') == 'revive'
-                                                for e in (adapter.get('ad_entries') or []))
-    if policy == 'legacy' and not declared_revive:
+    if policy == 'legacy':
         return _row(name, [{'id': 'adapter', 'passed': True, 'detail': 'legacy game: warning'}],
                     ['%s not run: %s [legacy game: warning]' % (name, text)])
     return _row(name, [{'id': 'adapter', 'passed': False, 'detail': text}], (),
@@ -739,10 +808,8 @@ def config_problems(names, catalog, adapter, engine, policy, caps=None):
     return problems, rows
 
 
-# v7.9 (手机问题源头约束): every new game has a result-page Watch Ad x2 and a revive button (英化固定入口第 6、7 项,
-# remake-ads); both appear only after a level ends, where button_sweep never gets, so a game that does not list them
-# in ad_entries never has them tapped (人鱼 v18: ad_outcome found no entry at all). A game without one says why.
-AD_ROLES_REQUIRED = ('double', 'revive')
+# The end-result x2 entry remains an automatic check. Rewarded revive is manual after art.
+AD_ROLES_REQUIRED = ('double',)
 
 
 def load_capabilities(project):
@@ -760,7 +827,7 @@ def load_capabilities(project):
 
 def ad_roles_problems(adapter, caps=None):
     """New game, ad_outcome in the run (the package shows rewarded ads): adapter.ad_entries must hold an entry with
-    role "double" and one with role "revive", unless ad_outcome is {"n/a": reason} or ad_outcome.none.<role> says why.
+    role "double", unless ad_outcome is {"n/a": reason} or ad_outcome.none.double says why.
     P20 第 3 点: with the capability record (caps), a role the record says the game does not have (no_ad_roles, or
     double on a game with no coin and no items, ECON-NOCUR) is not asked for; the reason is the record's."""
     outcome = adapter.get('ad_outcome')
@@ -768,8 +835,8 @@ def ad_roles_problems(adapter, caps=None):
         return []
     none = outcome.get('none') if isinstance(outcome, dict) else None
     if none is not None and not (isinstance(none, dict) and all(
-            r in AD_ROLES_REQUIRED and isinstance(v, str) and v.strip() for r, v in none.items())):
-        return ['ad_outcome.none must map "double" / "revive" to why the game has no such button']
+            r in (*AD_ROLES_REQUIRED, 'revive') and isinstance(v, str) and v.strip() for r, v in none.items())):
+        return ['ad_outcome.none.double must explain why the game has no result-page x2 button']
     none = none or {}
     entries = adapter.get('ad_entries') if isinstance(adapter.get('ad_entries'), list) else []
     roles = {e.get('role') for e in entries if isinstance(e, dict)}
@@ -779,11 +846,8 @@ def ad_roles_problems(adapter, caps=None):
         missing = [r for r in missing if game_capabilities.verdict(caps, 'ad_role:' + r)[0] != 'no']
     if not missing:
         return []
-    what = {'double': 'result-page Watch Ad x2 (role "double": win a level, then the button)',
-            'revive': 'revive button (role "revive": let the hero fail by itself, wait_node on the button)'}
-    return ['ad_outcome: adapter.ad_entries lists no %s. A new game lists these buttons with the real steps that show them '
-            '(button_sweep never reaches a level end); a game without one writes ad_outcome.none.%s = "why" '
-            '(英化固定入口第 6、7 项; remake-ads)' % (' and no '.join(what[r] for r in missing), missing[0])]
+    return ['ad_outcome: adapter.ad_entries lists no result-page Watch Ad x2 (role "double"). '
+            'Supply its real route, or explain why it does not exist in ad_outcome.none.double.']
 
 
 class InputsNotRun(RuntimeRefused):
@@ -814,7 +878,7 @@ def input_report(files, adapter, names, catalog, policy, caps=None, full_run=Tru
         if isinstance(adapter['ad_entries'], list):
             inputs['adapter.ad_entries'] = adapter['ad_entries']
     elif full_run and policy != 'legacy' and predicate('rewarded_ads', files, adapter) and \
-            not is_na(adapter.get('ad_outcome')):
+            not is_na(adapter.get('ad_outcome')) and not adapter.get('_manual_revive_only_entries'):
         said_none = False
         if caps is not None:
             import game_capabilities

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-09T08:35:32.296Z",
-  "treeHash": "cac6180bbc8f46f5070e5d899ff1f820f787f132d983832e4122ffd46af4d28a",
+  "createdAt": "2026-11-09T08:36:38.349Z",
+  "treeHash": "c5ef5077d9a3de83bbccf17dd597f492c4a47d179adde2d3ff20757fad82303c",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3115,20 +3115,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "73173c59b061c7016097d9c9e58ed3b23e50170b73a8229f44c52547635b5597",
+      "treeHash": "e69f348a7bb6b8eaea332b97c5130f8f6739aac40335fbc6f5d178b8a90d3480",
       "fileCount": 65,
-      "bytes": 1459352,
+      "bytes": 1452305,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d2d0b832290b8472e16010442057f4ba8721eed3075dbc71040ce330bf0b685c",
+          "hash": "b3b5c3a925764cd615d9bb947e7b6b765a2c86755083e4728eda3761c4095d90",
           "size": 17051,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "1bd0263e243bcaf5c229932fa87cb0b8f25c31619c69fba37d95a99f42a6a9d6",
-          "size": 24449,
+          "hash": "a7244c3c013d5cb7a131e7914b04bc7804b64bbba7e0b1f4ba7d98a9c2b5a900",
+          "size": 23816,
           "executable": false
         },
         {
@@ -3169,14 +3169,14 @@
         },
         {
           "path": "references/actor-pose-handoffs.md",
-          "hash": "3ebfe8a468ed53bfa4793b12665d334cbf76216550421d0e22be7bdfdad45343",
-          "size": 5476,
+          "hash": "280f94dc1a74166910b36cde36eb1700ce1d2b16cfee28fed9019727383e52b2",
+          "size": 5584,
           "executable": false
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "00768090f5fdff8bf353526e3a73f73d43ea6425a58178119c472fff42f9dced",
-          "size": 8052,
+          "hash": "0bd3561225aabdad002a43f6cddc2bfdc1e86de353ef02a5604efe5a310e2935",
+          "size": 5386,
           "executable": false
         },
         {
@@ -3193,7 +3193,7 @@
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "c66ed4c8dea4fd7af4a87cfa32150f372c4bc4ab03e580daf005a62dfd7e0d25",
+          "hash": "3feb5d159c46a81b718a249c13b0ee57c1471d60f518e108faa27c5bbfb86734",
           "size": 17950,
           "executable": false
         },
@@ -3211,8 +3211,8 @@
         },
         {
           "path": "references/capture-rounds.md",
-          "hash": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
-          "size": 9913,
+          "hash": "cf26799504b9121e31a9308c1b3f66082ad6cfe65c12a3b544c9ff519a354dbe",
+          "size": 9934,
           "executable": false
         },
         {
@@ -3235,14 +3235,14 @@
         },
         {
           "path": "references/common-game-components.md",
-          "hash": "4558749502a157d4c0da41186270b31489dbc1805395009e34cc51072f442002",
-          "size": 16067,
+          "hash": "daa5d4ce51e44595c93d9a155bc9aa20d88fcdb66f8b81496049ee90417fcb06",
+          "size": 15549,
           "executable": false
         },
         {
           "path": "references/dynamic-visual-review.md",
-          "hash": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
-          "size": 4341,
+          "hash": "049ca273053e724706a0ebfae87cc4da73ba78fe11312563569af9d2c696a431",
+          "size": 2052,
           "executable": false
         },
         {
@@ -3253,8 +3253,8 @@
         },
         {
           "path": "references/full-visual-review.md",
-          "hash": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
-          "size": 11809,
+          "hash": "d7c79c7beb52384e815860c4d9c6bbf07956cf6bad8ea39592f7bd9144cf1e01",
+          "size": 11392,
           "executable": false
         },
         {
@@ -3283,8 +3283,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
-          "size": 94755,
+          "hash": "c75ba221cd4f028a80edb50704078af3397b8198ce21b439e90b6d36a96794d3",
+          "size": 94520,
           "executable": false
         },
         {
@@ -3301,20 +3301,20 @@
         },
         {
           "path": "references/production-check-link.md",
-          "hash": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
-          "size": 13559,
+          "hash": "91611881c153f67ceee7df826cb6a2364ce6cd159654a166f5647857ac459d46",
+          "size": 13219,
           "executable": false
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "e27a44ef4d653b3f382a38b2df63ba0fec83b150c41d5b8340e0c8b38d2196c6",
-          "size": 32669,
+          "hash": "592540f8849cc2007e58bbb56e9db30e3388c2a0f6582e2440fc9a02b3f70836",
+          "size": 32758,
           "executable": false
         },
         {
           "path": "references/saul-art-rules.md",
-          "hash": "133cb14036870904c92c1ddef969d03238de4b2e24375c9d9ba5599e856ce695",
-          "size": 50010,
+          "hash": "7ddebd10f64a056cfaa85705a93aa745a047b1868e26802b9a97686a1b9639ee",
+          "size": 50140,
           "executable": false
         },
         {
@@ -3331,8 +3331,8 @@
         },
         {
           "path": "references/style-limits.md",
-          "hash": "c41e6a2008357f81e6a5e4884a12e197fefa9b5dfc1a9a060acebe73bd7dc66f",
-          "size": 28654,
+          "hash": "87e4ee7c15deb18d15a5d7afac937f28bff17accd3693a815ab182ebbfdf927e",
+          "size": 28367,
           "executable": false
         },
         {
@@ -3343,8 +3343,8 @@
         },
         {
           "path": "references/text-fit-and-coverage.md",
-          "hash": "3044cd6eb835011c4c5751d6293211acbbcc13e6a88f6f07c79ffb2f2d55122e",
-          "size": 8653,
+          "hash": "1f56a3e61b97e5a7cda907ea4177ea115dca93f394966f7db72a4b914c6208d0",
+          "size": 8643,
           "executable": false
         },
         {
@@ -3355,7 +3355,7 @@
         },
         {
           "path": "references/ui-style-and-samples.md",
-          "hash": "d874898651cbfd579343b60aa3500f7041ba93f0c7cf63be3811aa56ce492e33",
+          "hash": "d19e763eca02c8658c501885cc5f039a8085dc0fa6300861a41d10c11826ee87",
           "size": 16498,
           "executable": false
         },

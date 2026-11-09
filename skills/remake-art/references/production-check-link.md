@@ -4,7 +4,7 @@
 
 ## 制作时自动登记
 
-固定词按钮仍先取得已核准整词图和干净无字底；字图拼写、底图是否无字由 Codex 看原件确认。把配方和原料放在工程内，调用原工具并加联动参数：
+固定词按钮仍先取得已核准整词图和干净无字底；按原料核对固定词拼写和底图文字源。实际按钮观感随正常试玩人工核对。把配方和原料放在工程内，调用原工具并加联动参数：
 
 ```sh
 python3 <skills>/remake-art/scripts/compose_fixed_button.py PROJECT/docs/art/claim/recipe.json PROJECT/assets/ui/claim.png --project PROJECT --asset-id claim --cases claim-ready-small claim-ready-tall
@@ -27,7 +27,7 @@ cases 使用现有 visual-slots 的实例/状态/视口 ID；列全同素材的�
 python3 <skills>/remake-core/scripts/art_production.py --project PROJECT --adopt-source-resize ASSET_ID
 ```
 
-此命令从原料重新计算原制作结果；只有当前图完整 RGBA 等于原图或按记录同比 LANCZOS 缩小的结果才登记。裁剪、放大、改像素和有损量化不能用更新摘要通过。登记保留原配方与派生尺寸；同 ID 下次重生成保留该尺寸，避免重新变回大图。该步骤不刷新 ART 回执，实际改变的页面需要重采集和复核。制作声明、源图、配方、应查实例、输出或规则变化都使旧回执失效；不因图片文件未变就沿用通过结论。
+此命令从原料重新计算原制作结果；只有当前图完整 RGBA 等于原图或按记录同比 LANCZOS 缩小的结果才登记。裁剪、放大、改像素和有损量化不能用更新摘要通过。登记保留原配方与派生尺寸；同 ID 下次重生成保留该尺寸，避免重新变回大图。实际改变的页面按影响范围更新采集和复核。制作声明、源图、配方、应查实例、输出或规则变化时，只重新核对依赖变化的项目。
 
 ## 共享素材先确定所有使用尺寸与字体预算
 
@@ -48,7 +48,7 @@ python3 <skills>/remake-core/scripts/art_check.py --project PROJECT --production
 
 第一条只核非空已登记素材；未登记且没给截图报 not_run。第二条用 visual-slots 的 ID 选择首件，可重复参数；按精确页面和 CSS 宽高匹配唯一原采集。选中整页执行原文字、布局、图文槽与像素检查，其余规则列为 remaining_cases，不因未拍其它页阻塞这件；全体已登记生产资产仍核验。缺失、歧义或未知 ID 失败。省略局部参数保留原全声明检查，完整美工入口不接受局部参数。历史裁图只用于校准，不能冒充运行树证据。
 
-production-only 不写 ART 回执、不放行试玩，素材核验也不证明运行时已绑定正确 SpriteFrame。每轮英文试玩前正常 art_check 继续核实际导出、采集来源、全部页面、图集、文字、交互及其余适用规则。原有游戏没有 production_assets 时走原完整检查，不把旧素材自动标为已核准。完整通过后由 art_check 写美术回执，并带入适用的制作绑定。正式试玩核对回执和当前 Web，最终写包核对同一份已验收证据及包内图片。具体入口见[试玩前与锁定后](art-before-trial.md)。
+`--production-only` 核对素材、制作约束和实际使用位置。首次制作或真实改动按需要核实际显示和图集切片，留分项结果。试玩与写包按候选身份和适用文件检查执行。见[试玩前与锁定后](art-before-trial.md)。
 
 首件选择覆盖共享规则的最坏使用点：最窄文字槽、最大图标尺寸、最长值、最小手机、最多同时出现的浮字，以及 normal/pressed/disabled/selected 状态。页面素材清单包括设置、任务、暂停、复活和结算，先清点缺图，再批量生成。恐龙案例说明首页的一张清晰图不能代表结果页放大后的同图。
 

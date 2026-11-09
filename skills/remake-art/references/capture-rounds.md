@@ -11,7 +11,7 @@
 1. 生成任务先列“改哪张图、在哪些状态/尺寸可见、共用者是谁”。先做最窄或最多层的一件。本轮开始执行 `node <skills>/remake-core/scripts/art_capture_round.mjs start PROJECT WEB_EXPORT`。导出或制作清单再变，就开新轮。此处 WEB_EXPORT 是真实可运行 Web 目录。
 2. 通过本包采集器采集。用新建的独立测试页，先设置手机 viewport、DPR、触摸和 UA，再调用下例。使用已有动作脚本到达真实状态；优先把同一段到达流程的状态一起采，源图或构建还在写时停止。本工具在仅本机可访问、独立端口的预览上提供已核准字节，限制外部依赖和 Service Worker。同一采集器把其打开以来读过的资源都算入依赖，跨状态预载可能多拍，但能保留实际依赖。每个独立到达流程另开采集器可缩小范围。需要外部网络、Worker 或专用动画证据时保留专用采集并实际复核，不能声明该状态可跨轮复用。
 3. `plan PROJECT WEB_EXPORT 上轮目录` 列出 fresh/reuse/recapture 和原因；锚点未取得时计划是暂定的。运行 `python3 <skills>/remake-core/scripts/art_capture_batch.py assemble PROJECT WEB_EXPORT 上轮目录 本轮新目录`，自动只复制允许沿用的 dump 和原 PNG，不改文件内容。按计划补拍剩余项，两种视口的锚点先拍；再跑 plan。若锚点环境变了，上一轮该尺寸全部重拍。登记新页、改变代码/字体/布局/图集、无法对应的新旧源文件、缺身份材料都全部重拍。复用仅覆盖输出文件清单不变、已存在的独立 PNG/JPEG 内容变化且可验证影响范围的情况。加载过改图的所有状态都重拍。脚本不会给旧图换上新轮次。
-4. 正常跑 `art_check.py --project PROJECT --board localize --dumps 本轮目录 --build WEB_EXPORT`。脚本先核对状态列表、采集来源、文件字节和当前导出，再跑原有完整视觉检查。完整报告 passed=true、逐页看图后，仅对已确认可复用的稳定状态执行 `review PROJECT WEB_EXPORT 本轮目录 状态ID 完整art-check.json 独立复拍目录`。已知问题所在页先修并重拍。此动作记录图像来源与人工看过的状态，最终通过仍由完整检查决定。下轮不得复用未确认的项。原图回放、文字/图片指纹或补写时间戳不能登记成真实新采集。
+4. 正常跑 `art_check.py --project PROJECT --board localize --dumps 本轮目录 --build WEB_EXPORT`。脚本先核对状态列表、采集来源、文件字节和当前导出，再跑技术检查。技术报告 passed=true 且该稳定状态已有人工观察后，才执行 `review PROJECT WEB_EXPORT 本轮目录 状态ID 完整art-check.json 独立复拍目录`。已知问题所在页先修并重拍。此动作记录图像来源与人工看过的状态，通过状态以已有技术报告和该项实际人工观察分别记载。下轮不得复用未确认的项。原图回放、文字/图片指纹或补写时间戳不能登记成真实新采集。
 
 在持有真实浏览器 Page 的 Node 动作脚本里：
 ```js
@@ -27,7 +27,7 @@ try {
 
 已有 `chrome_touch.py` 的 Ego 动作计划也能直接用：计划增加 `"art_capture":{"build":"build/web-mobile","out":"docs/test/本轮目录"}`；每个 `dump_ui` 增加 `"case":"settings-max-se"`，运行时传 `--project`。把**实际计划文件的 SHA-256** 记入各状态的 `planSha`；这样动作、初始数据或测试脚本改了也不会沿用旧证据。采集器用本轮导出的独立本机 URL；普通手机测试仍按原计划。每轮可传 `--art-dumps 新目录`，沿用原动作计划及 SHA。自定义 `dump_expression` 还须登记 `adapterSha`。通过检查器的输入证据不豁免交互或美术复核。
 
-同一批改图先合在一次构建里。源文件、已有导出与清单都没有变化时，用 identity 核对现有 Web 导出，直接进入本轮采集。专用状态先在采集适配里预留实际报告路径，再从同一次采集生成遮罩、录屏等附件。试玩放行时重新核对附件内容。
+同一批改图先合在一次构建里。源文件、已有导出与清单都没有变化时，用 identity 核对现有 Web 导出，直接进入本轮采集。专用状态可在同一次采集保存必要的遮罩诊断数据。画面问题按[人工试玩清单](../../remake-core/references/manual-visual-review.md)观察。
 
 ## 优先省去重复启动，保留新截图
 

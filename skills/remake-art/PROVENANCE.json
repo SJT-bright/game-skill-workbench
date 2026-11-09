@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.12",
+  "revision": "2026-11-08.english-simple.11.17.13",
   "skill": "remake-art",
-  "previous_provenance_sha256": "23d0d26a2c3f90cc4f68203b97410e024c4ad585437e14fd6e7b3ee80722e353",
+  "previous_provenance_sha256": "d2d0b832290b8472e16010442057f4ba8721eed3075dbc71040ce330bf0b685c",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "1bd0263e243bcaf5c229932fa87cb0b8f25c31619c69fba37d95a99f42a6a9d6",
-      "bytes": 24449
+      "sha256": "a7244c3c013d5cb7a131e7914b04bc7804b64bbba7e0b1f4ba7d98a9c2b5a900",
+      "bytes": 23816
     },
     {
       "path": "agents/openai.yaml",
@@ -42,13 +42,13 @@
     },
     {
       "path": "references/actor-pose-handoffs.md",
-      "sha256": "3ebfe8a468ed53bfa4793b12665d334cbf76216550421d0e22be7bdfdad45343",
-      "bytes": 5476
+      "sha256": "280f94dc1a74166910b36cde36eb1700ce1d2b16cfee28fed9019727383e52b2",
+      "bytes": 5584
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "00768090f5fdff8bf353526e3a73f73d43ea6425a58178119c472fff42f9dced",
-      "bytes": 8052
+      "sha256": "0bd3561225aabdad002a43f6cddc2bfdc1e86de353ef02a5604efe5a310e2935",
+      "bytes": 5386
     },
     {
       "path": "references/art-iteration-workflow.md",
@@ -62,7 +62,7 @@
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "c66ed4c8dea4fd7af4a87cfa32150f372c4bc4ab03e580daf005a62dfd7e0d25",
+      "sha256": "3feb5d159c46a81b718a249c13b0ee57c1471d60f518e108faa27c5bbfb86734",
       "bytes": 17950
     },
     {
@@ -77,8 +77,8 @@
     },
     {
       "path": "references/capture-rounds.md",
-      "sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
-      "bytes": 9913
+      "sha256": "cf26799504b9121e31a9308c1b3f66082ad6cfe65c12a3b544c9ff519a354dbe",
+      "bytes": 9934
     },
     {
       "path": "references/card-ornament-layout-review.md",
@@ -97,13 +97,13 @@
     },
     {
       "path": "references/common-game-components.md",
-      "sha256": "4558749502a157d4c0da41186270b31489dbc1805395009e34cc51072f442002",
-      "bytes": 16067
+      "sha256": "daa5d4ce51e44595c93d9a155bc9aa20d88fcdb66f8b81496049ee90417fcb06",
+      "bytes": 15549
     },
     {
       "path": "references/dynamic-visual-review.md",
-      "sha256": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
-      "bytes": 4341
+      "sha256": "049ca273053e724706a0ebfae87cc4da73ba78fe11312563569af9d2c696a431",
+      "bytes": 2052
     },
     {
       "path": "references/fixed-caption-button.md",
@@ -112,8 +112,8 @@
     },
     {
       "path": "references/full-visual-review.md",
-      "sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
-      "bytes": 11809
+      "sha256": "d7c79c7beb52384e815860c4d9c6bbf07956cf6bad8ea39592f7bd9144cf1e01",
+      "bytes": 11392
     },
     {
       "path": "references/home-by-gameplay.md",
@@ -137,8 +137,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
-      "bytes": 94755
+      "sha256": "c75ba221cd4f028a80edb50704078af3397b8198ce21b439e90b6d36a96794d3",
+      "bytes": 94520
     },
     {
       "path": "references/panel-composite-review.md",
@@ -152,18 +152,18 @@
     },
     {
       "path": "references/production-check-link.md",
-      "sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
-      "bytes": 13559
+      "sha256": "91611881c153f67ceee7df826cb6a2364ce6cd159654a166f5647857ac459d46",
+      "bytes": 13219
     },
     {
       "path": "references/production-prevention.md",
-      "sha256": "e27a44ef4d653b3f382a38b2df63ba0fec83b150c41d5b8340e0c8b38d2196c6",
-      "bytes": 32669
+      "sha256": "592540f8849cc2007e58bbb56e9db30e3388c2a0f6582e2440fc9a02b3f70836",
+      "bytes": 32758
     },
     {
       "path": "references/saul-art-rules.md",
-      "sha256": "133cb14036870904c92c1ddef969d03238de4b2e24375c9d9ba5599e856ce695",
-      "bytes": 50010
+      "sha256": "7ddebd10f64a056cfaa85705a93aa745a047b1868e26802b9a97686a1b9639ee",
+      "bytes": 50140
     },
     {
       "path": "references/standalone-alpha-review.md",
@@ -177,8 +177,8 @@
     },
     {
       "path": "references/style-limits.md",
-      "sha256": "c41e6a2008357f81e6a5e4884a12e197fefa9b5dfc1a9a060acebe73bd7dc66f",
-      "bytes": 28654
+      "sha256": "87e4ee7c15deb18d15a5d7afac937f28bff17accd3693a815ab182ebbfdf927e",
+      "bytes": 28367
     },
     {
       "path": "references/text-backplate-review.md",
@@ -187,8 +187,8 @@
     },
     {
       "path": "references/text-fit-and-coverage.md",
-      "sha256": "3044cd6eb835011c4c5751d6293211acbbcc13e6a88f6f07c79ffb2f2d55122e",
-      "bytes": 8653
+      "sha256": "1f56a3e61b97e5a7cda907ea4177ea115dca93f394966f7db72a4b914c6208d0",
+      "bytes": 8643
     },
     {
       "path": "references/theme-readability.md",
@@ -197,7 +197,7 @@
     },
     {
       "path": "references/ui-style-and-samples.md",
-      "sha256": "d874898651cbfd579343b60aa3500f7041ba93f0c7cf63be3811aa56ce492e33",
+      "sha256": "d19e763eca02c8658c501885cc5f039a8085dc0fa6300861a41d10c11826ee87",
       "bytes": 16498
     },
     {

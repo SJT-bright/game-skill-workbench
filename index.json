@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "e84e3e21-cdfa-46dc-8eb8-3d928d526041",
+      "skillId": "s-c80e30dda4e7623bf0ac",
+      "name": "remake-art",
+      "version": "v27",
+      "createdAt": "2026-11-09T08:37:24.223Z",
+      "summary": "文件变更：新增 0，修改 16，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 16,
+        "deleted": 0
+      },
+      "treeHash": "e69f348a7bb6b8eaea332b97c5130f8f6739aac40335fbc6f5d178b8a90d3480",
+      "bytes": 1452305,
+      "fileCount": 65
+    },
+    {
       "id": "b985b41d-56fc-43cd-98cd-c7aecea195a2",
       "skillId": "s-c527d5389d209a5759a9",
       "name": "remake-core",

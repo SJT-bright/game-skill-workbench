@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "93dc61f8-942e-4a7f-8e1b-24e5cd47a9cc",
+      "skillId": "s-a5a5d4cc5c2308178580",
+      "directory": "chrome-mobile-testing",
+      "name": "chrome-mobile-testing",
+      "version": "v15",
+      "createdAt": "2026-11-09T08:39:01.860Z",
+      "summary": "文件变更：新增 0，修改 2，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 2,
+        "deleted": 0
+      },
+      "treeHash": "725c3448830215752f1aa1a26824e8ff814b3724d8198fdc70a837794fb7341e",
+      "bytes": 77465,
+      "fileCount": 11
+    },
+    {
       "id": "34c91168-429f-4588-9e87-e21fa4d5f064",
       "skillId": "s-16601c48e7f1b99915ae",
       "directory": "mobile-touch-computer-use",

@@ -1,22 +1,5 @@
 #!/usr/bin/env python3
-"""v7.8 U7（补）: art-check receipt in both package writers and serve_preview --keep, static ratio source step.
-
-Synthetic fixtures only (never a game pass); the real-project evidence is in the W83 RESULT. Each rule has a bad case
-that is refused and a good case that passes:
-  receipt   art_receipt.check: no receipt / fail receipt / changed, added or removed image -> refused for a new remake
-            game, warning for legacy and English games; pass receipt with the same images -> ok; 3.x not_covered_3x
-            -> passes with the "3.x 未覆盖" warning; a project without images has nothing to check
-  art_check writes the receipt after its analysis (pass / fail); missing inputs keep a 2.4 receipt; 3.x -> not_covered_3x
-  writers   make_tiktok_zip.finalize_for_writer (both writers) refuses before the build folder changes; the result is
-            a row of the finalize table; make_tiktok_zip.py and build_checked_zip.build refuse with 重跑 art_check
-  carry     tiktok_finalize source moves a matching receipt to the PNG/JPG its images step wrote; a receipt that no longer
-            matched before the source phase is not carried
-  static    art_static: squashed SIMPLE/CUSTOM sprite blocked for new games, warned for legacy; SLICED, TRIMMED, right
-            ratio, one-colour stretch, ProgressBar bar and exempted node pass; any popup dim opacity (80, 30, 180) is
-            not judged (Saul 10-31); 3.x serialisation; the block lands in the source record (K5)
-  preview   serve_preview --keep needs --project and gets no server without a matching receipt
-Run: python3 test_art_receipt.py
-"""
+"""Historical evidence readback and retirement of aggregate receipts in current flows."""
 import contextlib
 import io
 import json
@@ -32,6 +15,7 @@ CHECK = HERE.parents[1] / 'cocos-game-check' / 'package-check' / 'scripts'
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(CHECK))
 import art_receipt as R  # noqa: E402
+from test_art_receipt_fixtures import write_fixture
 import art_check  # noqa: E402
 import tiktok_finalize as F  # noqa: E402
 import tiktok_finalize_steps as T  # noqa: E402
@@ -96,28 +80,28 @@ class Receipt(Tmp):
     def test_missing_receipt_blocks_a_new_remake_game_and_warns_otherwise(self):
         p = project24(self.d / 'p')
         (p / 'assets' / 'a.png').write_bytes(b'one')
-        out = R.check(p)
+        out = R.check_history(p)
         self.assertEqual((out['state'], out['level']), ('missing', 'block'))
         self.assertIn('重跑 art_check', out['message'])
-        self.assertEqual(R.check(p, policy='legacy')['level'], 'warn')
-        self.assertEqual(R.check(p, board='localize')['level'], 'block')
-        self.assertIn('英化游戏，不出包、不起试玩', R.check(p, board='localize')['message'])
+        self.assertEqual(R.check_history(p, policy='legacy')['level'], 'warn')
+        self.assertEqual(R.check_history(p, board='localize')['level'], 'block')
+        self.assertIn('英化游戏，不出包、不起试玩', R.check_history(p, board='localize')['message'])
 
     def test_project_without_images_has_nothing_to_check(self):
         p = project24(self.d / 'p')
-        self.assertEqual((R.check(p)['state'], R.check(p)['level']), ('no_images', 'ok'))
+        self.assertEqual((R.check_history(p)['state'], R.check_history(p)['level']), ('no_images', 'ok'))
 
     def test_pass_receipt_matches_until_an_image_changes(self):
         p = project24(self.d / 'p')
         (p / 'assets' / 'a.png').write_bytes(b'one')
         (p / 'assets' / 'b.png').write_bytes(b'two')
-        rec = R.write(p, 'pass', {'status': 'pass', 'checked': 20, 'failed': 0})
+        rec = write_fixture(p, 'pass', {'status': 'pass', 'checked': 20, 'failed': 0})
         self.assertEqual(rec['images_count'], 2)
-        self.assertEqual(R.check(p)['state'], 'match_pass')
+        self.assertEqual(R.check_history(p)['state'], 'match_pass')
         (p / 'assets' / 'a.png').write_bytes(b'one, redrawn')
         (p / 'assets' / 'c.png').write_bytes(b'new')
         (p / 'assets' / 'b.png').unlink()
-        out = R.check(p)
+        out = R.check_history(p)
         self.assertEqual((out['state'], out['level']), ('changed', 'block'))
         self.assertEqual((out['changed'], out['added'], out['removed']), (['assets/a.png'], ['assets/c.png'], ['assets/b.png']))
         self.assertIn('assets/a.png', out['message'])
@@ -125,26 +109,26 @@ class Receipt(Tmp):
     def test_fail_receipt_and_unreadable_receipt_block(self):
         p = project24(self.d / 'p')
         (p / 'assets' / 'a.png').write_bytes(b'one')
-        R.write(p, 'fail', {'status': 'fail', 'failed': 3})
-        out = R.check(p)
+        write_fixture(p, 'fail', {'status': 'fail', 'failed': 3})
+        out = R.check_history(p)
         self.assertEqual((out['state'], out['level']), ('not_pass', 'block'))
         self.assertIn('失败 3 项', out['message'])
         R.receipt_path(p).write_text('{broken')
-        self.assertEqual(R.check(p)['state'], 'unreadable')
+        self.assertEqual(R.check_history(p)['state'], 'unreadable')
 
     def test_3x_not_covered_passes_with_warning_but_not_on_24(self):
         p = project3x(self.d / 'p3')
         (p / 'assets' / 'a.png').write_bytes(b'one')
-        R.not_covered_3x(p, {'status': 'blocked_inputs'}, None)
-        out = R.check(p)
+        write_fixture(p, 'not_covered_3x', {'status': 'blocked_inputs'})
+        out = R.check_history(p)
         self.assertEqual((out['state'], out['level'], out['gate']), ('match_3x', 'warn', R.GATE_3X))
         self.assertIn('3.x 未覆盖', out['message'])
         (p / 'assets' / 'a.png').write_bytes(b'changed')
-        self.assertEqual(R.check(p)['level'], 'block')
+        self.assertEqual(R.check_history(p)['level'], 'block')
         q = project24(self.d / 'p2')
         (q / 'assets' / 'a.png').write_bytes(b'one')
-        R.not_covered_3x(q, {}, None)
-        self.assertEqual((R.check(q)['state'], R.check(q)['level']), ('not_pass', 'block'))
+        write_fixture(q, 'not_covered_3x')
+        self.assertEqual((R.check_history(q)['state'], R.check_history(q)['level']), ('not_pass', 'block'))
 
 
 class ArtCheckWrites(Tmp):
@@ -161,7 +145,7 @@ class ArtCheckWrites(Tmp):
         (p / 'assets' / 'a.png').write_bytes(b'one')
         report=self.d/'original-art-report.json'
         report.write_text('{"passed":true,"status":"pass","failed":0}')
-        R.after_art_check(p, {'status': 'pass','passed':True}, report)
+        write_fixture(p, 'pass', {'status': 'pass','passed':True}, report)
         before = R.receipt_path(p).read_bytes()
         self.assertEqual(self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis'))), 0)
         self.assertEqual(R.receipt_path(p).read_bytes(), before)
@@ -171,20 +155,21 @@ class ArtCheckWrites(Tmp):
         (p / 'assets' / 'a.png').write_bytes(b'one')
         report=self.d/'original-art-report.json'
         report.write_text('{"passed":true,"status":"pass","failed":0}')
-        R.after_art_check(p, {'status': 'pass','passed':True}, report)
+        write_fixture(p, 'pass', {'status': 'pass','passed':True}, report)
         before = R.receipt_path(p).read_bytes()
         (p / 'assets' / 'a.png').write_bytes(b'changed')
         self.assertEqual(self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no full analysis'))), 3)
         self.assertEqual(R.receipt_path(p).read_bytes(), before)
 
-    def test_missing_inputs_on_3x_write_not_covered(self):
+    def test_missing_inputs_on_3x_only_writes_check_details(self):
         p = project3x(self.d / 'p')
         (p / 'assets' / 'a.png').write_bytes(b'one')
         self.assertEqual(self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis'))), 1)
-        rec = json.loads(R.receipt_path(p).read_text())
-        self.assertEqual((rec['status'], rec['passed'], rec['images_count']), ('not_covered_3x', False, 1))
+        self.assertFalse(R.receipt_path(p).exists())
+        detail = json.loads((self.d/'out0/art-check.json').read_text())
+        self.assertEqual(detail['status'], 'blocked_inputs')
 
-    def test_analysis_that_fails_writes_a_fail_receipt(self):
+    def test_analysis_that_fails_only_writes_check_details(self):
         p = project24(self.d / 'p')
         (p / 'assets' / 'a.png').write_bytes(b'one')
         ready = {'ready': True, 'errors': [], 'dump_files': [], 'shots': [], 'records': [{'kind': 'gameplay'}],
@@ -194,19 +179,9 @@ class ArtCheckWrites(Tmp):
             code = self.run_art_check(p, capture_inventory=mock.Mock(return_value=ready),
                                       run=mock.Mock(return_value=(1, '')))
         self.assertEqual(code, 1)
-        rec = json.loads(R.receipt_path(p).read_text())
-        self.assertEqual(rec['status'], 'fail')
-        self.assertTrue(rec['art_check']['report_sha256'])
-        self.assertEqual(R.check(p)['level'], 'block')
-
-    def test_passing_report_writes_a_pass_receipt(self):
-        p = project24(self.d / 'p')
-        (p / 'assets' / 'a.png').write_bytes(b'one')
-        report = self.d / 'art-check.json'
-        report.write_text('{"passed": true}')
-        rec = R.after_art_check(p, {'passed': True, 'status': 'pass', 'checked': 25, 'failed': 0}, report)
-        self.assertEqual((rec['status'], rec['art_check']['checked']), ('pass', 25))
-        self.assertEqual(R.check(p)['state'], 'match_pass')
+        self.assertFalse(R.receipt_path(p).exists())
+        detail = json.loads((self.d/'out0/art-check.json').read_text())
+        self.assertFalse(detail['passed'])
 
 
 class Writers(W.KitInSync):
@@ -219,49 +194,36 @@ class Writers(W.KitInSync):
         self.assertEqual(rec['blocks'], [], rec['blocks'])
         return p
 
-    def test_no_receipt_refused_before_the_build_changes(self):
+    def test_writer_advances_without_an_art_receipt(self):
+        p, b = self.art_project(), self.native()
+        with mock.patch.object(R, 'read', side_effect=AssertionError('writers must not read an art receipt')):
+            record, _, problems = M.finalize_for_writer(b, p, 'remake', APP)
+        self.assertIsNotNone(record, problems)
+        self.assertNotIn('art_receipt', M.finalize_report(record))
+        self.assertFalse(R.receipt_path(p).exists())
+
+    def test_english_writer_ignores_even_unreadable_historical_art_receipt(self):
+        p, b = self.art_project(), self.native()
+        F.finalize_source(p, 'localize')
+        original = b'invalid historical art receipt'
+        R.receipt_path(p).write_bytes(original)
+        with mock.patch.object(R, 'read', side_effect=AssertionError('writers must not read an art receipt')), \
+                mock.patch('art_records.base_audio_now', side_effect=AssertionError('H8 audio only applies to remake')):
+            record, _, problems = M.finalize_for_writer(b, p, 'localize', APP)
+        self.assertIsNotNone(record, problems)
+        self.assertNotIn('art_receipt', record)
+        self.assertEqual(R.receipt_path(p).read_bytes(), original)
+
+    def test_remake_original_audio_gate_works_without_reading_an_art_receipt(self):
         p, b = self.art_project(), self.native()
         before = H.tree_sha(b)
-        record, _, problems = M.finalize_for_writer(b, p, 'remake', APP)
+        with mock.patch.object(R, 'read', side_effect=AssertionError('writers must not read an art receipt')), \
+                mock.patch('art_records.base_audio_now', return_value=['assets/audio/original.mp3']):
+            record, _, problems = M.finalize_for_writer(b, p, 'remake', APP)
         self.assertIsNone(record)
-        self.assertTrue(any(x.startswith('ART_receipt:') and '重跑 art_check' in x for x in problems), problems)
+        self.assertIn('ART_base_audio', problems[0])
+        self.assertIn('assets/audio/original.mp3', problems[0])
         self.assertEqual(H.tree_sha(b), before)
-
-    def test_matching_receipt_passes_and_is_a_table_row(self):
-        p, b = self.art_project(), self.native()
-        R.write(p, 'pass', {'status': 'pass'})
-        record, _, problems = M.finalize_for_writer(b, p, 'remake', APP)
-        self.assertFalse(any('ART_receipt' in x for x in problems), problems)
-        self.assertEqual(record['art_receipt']['state'], 'match_pass')
-        self.assertIn('art_receipt', F.table_markdown(record))
-        self.assertIn('art_receipt', M.finalize_report(record))
-
-    def test_image_changed_after_the_art_check_refused_even_with_a_fresh_source_record(self):
-        p, b = self.art_project(), self.native()
-        R.write(p, 'pass', {'status': 'pass'})
-        (p / 'assets' / 'ui' / 'btn_play.png').write_bytes(b'art v2, nobody looked')
-        F.finalize_source(p, 'remake')                       # K5 current again; the art check was not re-run
-        _, _, problems = M.finalize_for_writer(b, p, 'remake', APP)
-        self.assertEqual(len(problems), 1, problems)
-        self.assertIn('assets/ui/btn_play.png', problems[0])
-
-    def test_english_game_receipt_blocks(self):
-        p, b = self.art_project(), self.native()
-        _, _, problems = M.finalize_for_writer(b, p, 'localize', APP)
-        self.assertTrue(any('ART_receipt' in x for x in problems), problems)
-
-    def test_both_writer_entries_refuse(self):
-        p, b = self.art_project(), self.native()
-        import build_checked_zip as B
-        with self.assertRaisesRegex(ValueError, 'ART_receipt'):
-            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, board='remake')
-        review = self.d / 'review.json'
-        review.write_text('{}')
-        code, err = W.run_make_zip(['--native', b, '--app-id', APP, '--out', self.d / 'out.zip', '--project', p,
-                                    '--web', b, '--build-tag', 't', '--review', review, '--board', 'remake'])
-        self.assertEqual(code, 1)
-        self.assertIn('重跑 art_check', err)
-        self.assertFalse((self.d / 'out.zip').exists())
 
 
 class Carry(Tmp):
@@ -277,24 +239,15 @@ class Carry(Tmp):
             'width': 8, 'height': 8, 'platformSettings': {}, 'subMetas': {}}))
         return p
 
-    def test_matching_receipt_follows_the_webp_to_png_conversion(self):
+    def test_source_prepare_converts_images_without_reissuing_historical_receipt(self):
         p = self.project()
-        R.write(p, 'pass', {'status': 'pass'})
-        rec = F.finalize_source(p, 'remake', steps=('images',))
-        self.assertTrue((p / 'assets' / 'ui' / 'pic.jpg').is_file())            # opaque WebP -> JPG
-        self.assertEqual(rec['art_receipt'], {'before': 'match_pass', 'carried': True, 'after': 'match_pass'})
-        receipt = json.loads(R.receipt_path(p).read_text())
-        self.assertEqual((receipt['carried'][0]['added'], receipt['carried'][0]['removed']),
-                         (['assets/ui/pic.jpg'], ['assets/ui/pic.webp']))
-        self.assertEqual(receipt['status'], 'pass')
-
-    def test_receipt_that_no_longer_matched_is_not_carried(self):
-        p = self.project()
-        R.write(p, 'pass', {'status': 'pass'})
-        (p / 'assets' / 'ui' / 'other.png').write_bytes(b'added after the art check')
-        rec = F.finalize_source(p, 'remake', steps=('images',))
-        self.assertEqual(rec['art_receipt']['carried'], False)
-        self.assertEqual(R.check(p)['state'], 'changed')
+        write_fixture(p, 'pass')
+        before = R.receipt_path(p).read_bytes()
+        with mock.patch.object(R, 'image_fingerprints', side_effect=AssertionError('no aggregate scan')):
+            rec = F.finalize_source(p, 'remake', steps=('images',))
+        self.assertTrue((p / 'assets/ui/pic.jpg').is_file())
+        self.assertNotIn('art_receipt', rec)
+        self.assertEqual(R.receipt_path(p).read_bytes(), before)
 
 
 SPRITE_UUID = 'bbbbbbbb-0000-4000-8000-000000000001'
@@ -454,13 +407,6 @@ class Preview(Tmp):
         self.assertEqual(r.returncode, 2)
         self.assertIn('--project', r.stderr)
 
-    def test_keep_refused_without_matching_receipt(self):
-        p = project24(self.d / 'p')
-        (p / 'assets' / 'a.png').write_bytes(b'one')
-        r = self.serve('--keep', '--project', str(p))
-        self.assertEqual(r.returncode, 1)
-        self.assertIn('不起试玩服务', r.stderr)
-        self.assertIn('重跑 art_check', r.stderr)
 
 
 if __name__ == '__main__':

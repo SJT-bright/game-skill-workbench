@@ -4,8 +4,9 @@
 var fs = require('fs'), os = require('os'), path = require('path'), child = require('child_process');
 var kitDir = path.join(__dirname, '..', 'assets', 'tiktok-platform');
 var variants = [
-  {name: 'unsupported_is_silent', before: "if (!flow.native) { this.toast(TEXT.unsupported); return 'unsupported'; }", after: "if (!flow.native) { return 'unsupported'; }"},
-  {name: 'unsupported_fakes_success', before: "if (!flow.native) { this.toast(TEXT.unsupported); return 'unsupported'; }", after: ''},
+  {name: 'unsupported_shows_old_hint', before: "if (!flow.native) return 'unsupported';",
+    after: "if (!flow.native) { this.renderState({message: 'Available in TikTok'}); return 'unsupported'; }"},
+  {name: 'unsupported_reports_started', before: "if (!flow.native) return 'unsupported';", after: ''},
   {name: 'taps_not_merged', before: "if (flow.view().busy) return 'busy';", after: ''},
   {name: 'no_text_fallback', before: "if (this.iconFallback[kind] === false) { this.iconFallback[kind] = true; this._render(); }", after: ''},
   {name: 'own_reward_amount', before: "try { return this.config.growthReward(); } catch (_) { return 0; }", after: 'return 25;'},
@@ -14,8 +15,14 @@ var variants = [
   {name: 'first_tap_only_checks', before: 'flow.open(kind, {navigate: true});', after: 'flow.open(kind);'},
   // 简化.11.3: on the phone canIUse('startEntranceMission') answers undefined; requiring true broke every game.
   {name: 'canIUse_must_answer_true', file: 'TikTokMissionService.js', before: 'return candidate.canIUse(method) !== false;', after: 'return candidate.canIUse(method) === true;'},
-  {name: 'collected_entry_refuses_to_open', file: 'MissionFlow.js', before: "if (this.phase === 'opening' || this.phase === 'checking') { this.message = TEXT.wait; this._render(); return; }",
-    after: "if (this.phase === 'opening' || this.phase === 'checking') { this.message = TEXT.wait; this._render(); return; }\n  if (this.isClaimed(this.kind)) { this.message = TEXT.claimed; this._render(); return; }"}
+  {name: 'collected_entry_refuses_to_open', file: 'MissionFlow.js', before: '  var request = this.missions.navigate',
+    after: "  if (this.isClaimed(this.kind)) return;\n  var request = this.missions.navigate"},
+  {name: 'renders_legacy_hint_before_dispatch', file: 'MissionFlow.js',
+    before: 'if (direct && this.native) return this.start();',
+    after: "if (direct && this.native) { this.message = 'Opening TikTok...'; this._render(); return this.start(); }"},
+  {name: 'navigation_reintroduces_manual_reward', file: 'MissionFlow.js',
+    before: "if (r.status === 'success') self.navigatedOnce = true;",
+    after: "if (r.status === 'success') { self.navigatedOnce = true; self.message = 'Now tap CHECK REWARD'; }"}
 ];
 function copyKit(dir) {
   fs.readdirSync(kitDir).forEach(function (f) { if (/\.js$/.test(f)) fs.copyFileSync(path.join(kitDir, f), path.join(dir, f)); });

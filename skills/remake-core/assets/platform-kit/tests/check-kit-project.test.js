@@ -81,7 +81,7 @@ test('kit2_report_names_kit_version_2', function () {
  ['storage_guard_changed', edit('build-templates/bytedance/storage-guard.js', 'SAVESTORE_KEY.test', 'false &&'), /storage-guard\.js was changed/],
  ['rewarded_guard_missing', function (root) { fs.unlinkSync(path.join(root, 'build-templates', 'bytedance', 'rewarded-guard.js')); }, /rewarded-guard\.js/],
  ['home_entries_missing', function (root) { fs.unlinkSync(path.join(root, 'assets', 'tiktok-platform', 'HomeGrowthEntries.js')); }, /HomeGrowthEntries\.js/],
- ['home_entries_changed', edit('assets/tiktok-platform/HomeGrowthEntries.js', 'Available in TikTok', 'Done'), /HomeGrowthEntries\.js was changed/],
+ ['home_entries_changed', edit('assets/tiktok-platform/HomeGrowthEntries.js', 'HomeGrowthEntries needs the game SaveStore', 'Done'), /HomeGrowthEntries\.js was changed/],
  ['growth_reward_amount_changed', edit(CFG, 'config.GROWTH_REWARD_B = 5;', 'config.GROWTH_REWARD_B = 10;'), /growthReward/],
  ['growth_reward_removed', edit(CFG, 'config.growthReward = function', 'config.unused = function'), /growthReward/],
  ['normal_level_coins_unset', edit(CFG, 'normalLevelCoins: 12,', 'normalLevelCoins: 0,'), /normalLevelCoins/],

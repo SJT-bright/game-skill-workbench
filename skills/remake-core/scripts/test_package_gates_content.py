@@ -91,6 +91,14 @@ class Mission(unittest.TestCase):
         self.assertEqual(ids(mission, pkg24(), level='block', policy='legacy'), [])
         self.assertEqual(ids(mission, pkg24(), level='warn', policy='legacy'), ['G1k_growth_outside_kit'])
 
+    def test_retired_revisit_hint_in_shipped_label_or_script_blocks(self):
+        copy = 'Open this game from the TikTok entry,\nthen check again.'
+        files = pkg24(index_js=kit_missions(),
+                      extra={'assets/main/config.json': json.dumps({'string': copy}).encode()})
+        self.assertEqual(ids(mission, files, level='block', policy='legacy'), ['G1_retired_revisit_copy'])
+        files = pkg24(index_js=kit_missions() + 'var hint = ' + json.dumps(copy) + ';')
+        self.assertEqual(ids(mission, files, level='block', policy='new'), ['G1_retired_revisit_copy'])
+
 
 class Startup(unittest.TestCase):
     BIG = {'subpackages/resources/big.bin': b'\x00' * 4000001}

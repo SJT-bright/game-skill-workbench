@@ -119,15 +119,6 @@ class ValueLabelTests(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertNotIn('dev_info_text', codes([label('Canvas/Hud/Credits', value)]))
 
-    def test_recorded_frames_next_to_dumps_are_found(self):
-        import tempfile
-        with tempfile.TemporaryDirectory() as tmp:
-            frames = Path(tmp) / 'home-taps' / 'frames'
-            frames.mkdir(parents=True)
-            (frames / '00001_0000040ms.jpg').write_bytes(b'')
-            (Path(tmp) / 'loose.jpg').write_bytes(b'')
-            self.assertEqual(art_check.recorded_frame_dirs(tmp), [frames])
-
     def test_art_check_counts_it_as_fixed_text_still_typed(self):
         findings = audit.text_problems(DUMP, [label('Canvas/Result/RewardLine', 'LEVEL 1 • +10 PEARLS')], [], None)
         report = {'pages': [{'screen': 'result_win_iphone15', 'problems': findings}]}

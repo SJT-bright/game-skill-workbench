@@ -775,36 +775,25 @@ class BannedUiTests(unittest.TestCase):
 class StartupLoadingTests(unittest.TestCase):
     """LOAD-03 timing audit on synthetic chrome_touch reports (no browser)."""
     def make(self, root, mutate=None):
-        try:
-            from PIL import Image, ImageDraw
-        except ImportError:
-            self.skipTest("Pillow not installed")
         import hashlib
         prof = {"cold": 3, "warm": 1, "budgets": {"feedback_ms": 500, "home_ms": 3000, "play_to_ready_ms": 1000}}
         plan = {"declared_at": "1970-01-01T00:00:00+00:00", "viewports": [[393, 852], [412, 732]],
                 "profiles": {"local": dict(prof, network=None),
                              "first_network": dict(prof, network={"download_kbps": 10000, "upload_kbps": 5000, "latency_ms": 80}),
                              "slow_network": dict(prof, cold=1, warm=0, network={"download_kbps": 2000, "upload_kbps": 1000, "latency_ms": 150})},
-                "loading_roi": {"bootstrap": [40, 40, 120, 120], "enter_level": [40, 40, 120, 120]},
-                "animation_freeze_ms": 1000, "max_home_asset_kb": 500, "idle_timeout_ms": 3000, "old_deadline_ms": 4000}
+                "max_home_asset_kb": 500, "idle_timeout_ms": 3000, "old_deadline_ms": 4000}
         pf = root / "plan.json"; pf.write_text(json.dumps(plan))
         psha = hashlib.sha256(pf.read_bytes()).hexdigest()
         runs = []
-        def run(name, vp, profile=None, fault=None, marks=None, frozen=False, requests=(), extra=None):
-            d = root / name; fr = d / "frames"; fr.mkdir(parents=True)
-            for i in range(0, getattr(mutate, "frames", 60)):
-                im = Image.new("RGB", (360, int(360 * vp[1] / vp[0])), (200, 230, 255))
-                dr = ImageDraw.Draw(im); k = 0 if frozen else i
-                dr.pieslice((47, 47, 130, 130), k * 20, k * 20 + 90, fill=(255, 120, 0))
-                im.save(fr / f"{i:05d}_{i * 100:07d}ms.jpg")
+        def run(name, vp, profile=None, fault=None, marks=None, requests=(), extra=None):
+            d = root / name; d.mkdir()
             rep = {"status": "completed_pending_business_and_visual_review", "startup_plan_sha256": psha,
                    "viewport_requested": {"width": vp[0], "height": vp[1]}, "profile": profile, "fault": fault,
                    "cache_mode": "cold", "cache_disabled": True, "entry_epoch": 1000.0,
                    "network_applied": plan["profiles"][profile]["network"] if profile else None,
                    "marks": marks or {"first_feedback": 100, "home_usable": 2500, "play_touch": 2600,
                                       "level_ready": 3300, "first_effect": 3400},
-                   "requests": list(requests), "steps": [], "background": [],
-                   "recording": {"dir": str(fr), "first_frame_epoch": 1000.0}}
+                   "requests": list(requests), "steps": [], "background": []}
             rep.update(extra or {})
             if mutate:
                 mutate(name, rep)
@@ -812,7 +801,7 @@ class StartupLoadingTests(unittest.TestCase):
             runs.append(str(d))
         for vp in plan["viewports"]:
             for prof_name in plan["profiles"]:
-                run("%s-%dx%d" % (prof_name, vp[0], vp[1]), vp, prof_name, frozen=bool(mutate and prof_name == "slow_network" and getattr(mutate, "freeze", False)))
+                run("%s-%dx%d" % (prof_name, vp[0], vp[1]), vp, prof_name)
                 for cache in ('cold', 'warm'):
                     for repeat in range(1 if cache == 'cold' else 0, plan['profiles'][prof_name][cache]):
                         run("%s-%dx%d-%s-%d" % (prof_name, vp[0], vp[1], cache, repeat), vp, prof_name,
@@ -845,18 +834,16 @@ class StartupLoadingTests(unittest.TestCase):
             self.assertEqual(problems, [])
             self.assertTrue(all(r["passed"] for r in runs), [r for r in runs if not r["passed"]])
 
-    def test_slow_home_frozen_spinner_and_big_asset_fail(self):
+    def test_slow_home_and_big_asset_fail_without_frames(self):
         def mutate(name, rep):
             if name.startswith("first_network-393"):
                 rep["marks"]["home_usable"] = 3500                     # over the 3000 ms budget
             if name.startswith("local-412"):
                 rep["requests"] = [{"url": "http://x/hint_button.png", "bytes": 2100000, "t_ms": 900}]
-        mutate.freeze = True
         with tempfile.TemporaryDirectory() as t:
             runs, problems = self.audit(*self.make(Path(t), mutate))
             text = json.dumps(runs)
             self.assertIn("home usable 3500 ms > 3000", text)
-            self.assertIn("loading animation froze", text)
             self.assertIn("big asset loaded before home", text)
             self.assertTrue(problems)                                  # coverage now missing for those cells
 
@@ -870,12 +857,11 @@ class StartupLoadingTests(unittest.TestCase):
                 rep["marks"].update(retry_touch=3500, retry_ready=6000)                         # retry takes 2.5 s
             if name.startswith("first_network-412"):
                 rep["marks"].update(next_touch=3500)                                            # next level never ready
-        mutate.frames = 70
         with tempfile.TemporaryDirectory() as t:
             pf, runs = self.make(Path(t), mutate)
             plan = json.loads(pf.read_text())
             plan["profiles"]["local"]["budgets"]["home_ms"] = 9000      # a loose plan does not help: the size rule still applies
-            plan["animation_freeze_ms"] = 5000                             # stuck limits cannot be loosened
+            plan["retry_grace_ms"] = 5000                             # stuck limits cannot be loosened
             pf.write_text(json.dumps(plan))
             import hashlib
             psha = hashlib.sha256(pf.read_bytes()).hexdigest()
@@ -898,7 +884,6 @@ class StartupLoadingTests(unittest.TestCase):
             if name.startswith("first_network-393"):
                 rep["requests"] = chunks
                 rep["marks"].update(home_usable=11000, play_touch=11100, level_ready=11800, first_effect=11900)
-        mutate.frames = 125
         with tempfile.TemporaryDirectory() as t:
             pf, runs = self.make(Path(t), mutate)
             plan = json.loads(pf.read_text())

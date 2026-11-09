@@ -17,7 +17,7 @@
 // reports such a project before packaging: K_home_entries_no_reward).
 // Rules taken from earlier games:
 //  - the entries are always shown, also in a browser (ThumbPinball / GimblesGem hid them, nobody saw them);
-//  - without the TikTok runtime a tap shows "Available in TikTok" (never a fake success, TovesTulip/AdasAmber);
+//  - without the TikTok runtime the buttons stay visible and taps stay quiet;
 //  - an entry whose icon did not load shows its text instead of an empty box;
 //  - taps during a request are merged and a reward is paid once per entry per save.
 // 生成时预防 N 批 (P06 3 / P14 2, Saul 2026-11-04): WHERE the two entries sit is decided here, at runtime, from the
@@ -30,7 +30,6 @@ var MissionFlow = require('./MissionFlow');
 var TEXT = {
   shortcut: 'Add to Home',
   profile: 'Profile Revisit',
-  unsupported: 'Available in TikTok',
   collected: 'Collected'
 };
 var ICON_WAIT_MS = 2000;
@@ -65,7 +64,6 @@ function Controller(options) {
   if (!options.store) throw new Error('HomeGrowthEntries needs the game SaveStore');
   var self = this;
   this.config = options.config || require('./PlatformConfig');
-  this.toast = typeof options.toast === 'function' ? options.toast : function () {};
   this.renderState = typeof options.render === 'function' ? options.render : function () {};
   this.iconFallback = {shortcut: false, profile: false};
   this.lastView = null;
@@ -179,7 +177,7 @@ Controller.prototype._render = function () { try { this.renderState(this.state()
 Controller.prototype.press = function (kind) {
   if (kind !== 'shortcut' && kind !== 'profile') return 'ignored';
   var flow = this.flow;
-  if (!flow.native) { this.toast(TEXT.unsupported); return 'unsupported'; }
+  if (!flow.native) return 'unsupported';
   if (flow.kind !== kind) { flow.open(kind, {navigate: true}); return 'start'; }
   if (flow.view().busy) return 'busy';                             // merged
   flow.start();
@@ -204,8 +202,8 @@ function platformToast(text) {
 }
 
 // R4Q6 (补查3 第 6 组, 火箭三消: "Available in TikTok" hung in the middle of the screen with no backing, stayed on the
-// next page, and two of them stacked; 奔跑吧巨人: notices stacked up). Every notice of the entries ("Available in
-// TikTok", "Opening...", save / reward messages) goes through ONE notice: the GameUIKit toast when the game has the kit
+// next page, and two of them stacked; 奔跑吧巨人: notices stacked up). Any legacy reward message uses one notice:
+// the GameUIKit toast when the game has the kit
 // (single node, backing, timed, cleared on the next page), else TikTok's own showToast, else messageLabel shown for
 // NOTICE_MS and then hidden, else only a [TikTokKit] line. Never a text that stays. clear() runs when the home is left
 // (component onDisable). makeNotice({ui, platform(text) -> bool, label: {set(text), hide()}, later(ms, fn) -> cancel}).
@@ -531,7 +529,6 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
       this.controller = new Controller({
         store: store, onGranted: options.onGranted, missions: options.missions, native: options.native,
         reward: options.reward, rewardText: options.rewardText,
-        toast: function (text) { self._message(text); },
         render: function (state) { self._paint(state); }
       });
       ['shortcut', 'profile'].forEach(function (kind) {

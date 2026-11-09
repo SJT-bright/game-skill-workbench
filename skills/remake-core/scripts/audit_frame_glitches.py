@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Find dynamic visual glitches in a gameplay recording: black/white flashes, one-frame pops and flicker.
 
-Static screenshots cannot see these. Record the flow (chrome_touch.py --record, a screen recording of the
+Optional diagnosis when a specific symptom needs frame timing. Capture the affected action (chrome_touch.py --record, a screen recording of the
 phone simulation, or a phone screen recording) and run this on the video. Read-only.
 
 Detects (times in seconds):

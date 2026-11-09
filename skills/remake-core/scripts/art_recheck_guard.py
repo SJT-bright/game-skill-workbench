@@ -29,7 +29,7 @@ def resolve(args):
         if error:raise ValueError('原美术记录读不了；先恢复记录，不能当作首次任务重新全测：'+error)
         return None
     capture=args.capture_build or (args.build if args.build and (args.build/'index.html').exists() else None)
-    current=art_receipt.check(project,args.board,capture_build=capture)
+    current=art_receipt.check_history(project,args.board,capture_build=capture)
     # The successful original receipt must be a real full pass. A scoped approval
     # is kept as scoped approval, never promoted here.
     if receipt.get('status')=='pass' and current.get('state')=='match_pass' and current.get('level')=='ok':

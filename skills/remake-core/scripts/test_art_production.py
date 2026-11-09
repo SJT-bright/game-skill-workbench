@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from unittest import mock
 import art_receipt as receipt
+from test_art_receipt_fixtures import write_fixture
 from PIL import Image, ImageDraw
 import art_production as link
 
@@ -226,10 +227,10 @@ class ProductionLink(unittest.TestCase):
         self.assertFalse(link.audit(self.root, require_cases=False)['passed'])
 
     def receipt_check(self):
-        return receipt.check(self.root, board='remake', policy='new')
+        return receipt.check_history(self.root, board='remake', policy='new')
 
     def passed_receipt(self):
-        return receipt.write(self.root, 'pass', {'status': 'pass', 'checked': 1, 'failed': 0})
+        return write_fixture(self.root, 'pass', {'status': 'pass', 'checked': 1, 'failed': 0})
 
     def assert_receipt_stale(self):
         result = self.receipt_check()
@@ -244,7 +245,7 @@ class ProductionLink(unittest.TestCase):
             self.assertEqual(rec['production_binding'], binding)
             self.assertEqual(self.receipt_check()['state'], 'match_pass')
         # Production binding never replaces the English runtime value/capture gates.
-        checked = receipt.check(self.root, board='localize', policy='new')
+        checked = receipt.check_history(self.root, board='localize', policy='new')
         self.assertEqual(checked['state'], 'value_evidence_stale')
 
     def test_receipt_rejects_each_recipe_case_source_and_rule_drift(self):
@@ -307,7 +308,7 @@ class ProductionLink(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.passed_receipt()
         self.assertEqual(receipt.receipt_path(self.root).read_bytes(), original_receipt)
-        rec = receipt.write(self.root, 'fail', {'status': 'fail'})
+        rec = write_fixture(self.root, 'fail', {'status': 'fail'})
         self.assertIn('production_binding_error', rec)
         self.assert_receipt_stale()
 

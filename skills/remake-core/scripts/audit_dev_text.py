@@ -17,6 +17,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from package_gates.mission import has_retired_copy
 
 PHRASES = [r'prototype', r'placeholder', r'play\s*test', r'test\s*(lab|mode|build|only|entry)', r'debug', r'\bqa\b',
            r'dev\s*(mode|build|menu)', r'layouts? (are|is) reachable', r'try the mechanics', r'cheat', r'skip to level',
@@ -34,8 +35,7 @@ SKIP_DIRS = {'node_modules', 'library', 'temp', 'local', 'build', 'profiles', '.
 # v7.7.4: platform-kit 2.0 in v7.7.3 shipped MissionFlow with 'LOCAL PREVIEW: open the game inside TikTok to use this.'
 KIT_FILES = {'MissionFlow.js', 'MissionFlow.plugin.js'}
 KIT_HINT = ('old platform-kit file (v7.7.3 text): run `tiktok_finalize.py source --project <project> --board <board>` '
-            'to restore the current kit file ("Available in TikTok."); do not edit kit files by hand')
-
+            'to restore the current kit file; do not edit kit files by hand')
 
 def strip_comments(code):
     code = re.sub(r'/\*.*?\*/', '', code, flags=re.S)
@@ -63,7 +63,7 @@ def scan(project, final):
                 for m in STR.finditer(line):
                     s = m.group(2)
                     if ' ' in s or s.isupper():    # looks like display text, not an identifier/key
-                        if PAT.search(s):
+                        if PAT.search(s) or has_retired_copy(s):
                             hit = {'file': rel, 'line': line_no, 'text': s[:120]}
                             if f.name in KIT_FILES:    # v7.7.4: the v7.7.3 platform-kit text itself
                                 hit['hint'] = KIT_HINT
@@ -78,7 +78,7 @@ def scan(project, final):
                 x = stack.pop()
                 if isinstance(x, dict):
                     for k, v in x.items():
-                        if k in LABEL_KEYS and isinstance(v, str) and PAT.search(v):
+                        if k in LABEL_KEYS and isinstance(v, str) and (PAT.search(v) or has_retired_copy(v)):
                             hits.append({'file': rel, 'line': 0, 'text': v[:120]})
                         elif isinstance(v, (dict, list)):
                             stack.append(v)

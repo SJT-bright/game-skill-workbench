@@ -27,10 +27,9 @@ plan = {
 
 with tempfile.TemporaryDirectory(prefix='loading-phase-boundary-') as tmp:
     root = Path(tmp)
-    frame_dir = root / 'frames'
-    frame_dir.mkdir()
     run_dir = root / 'r3h-phase-fixture'
-    run_dir.mkdir()
+    frame_dir = run_dir / 'frames'
+    frame_dir.mkdir(parents=True)
     report_path = run_dir / 'report.json'
 
     def fixture(level_ready, source_events, frame_rows, include_content_boundary=True):
@@ -84,10 +83,10 @@ with tempfile.TemporaryDirectory(prefix='loading-phase-boundary-') as tmp:
         (1350, 'ready', 'black'),
     ]
     fixture(1350, old_home_events, old_home_frames)
-    runs, _ = check(plan, [run_dir], 'synthetic')
+    runs, _ = check(plan, [run_dir], 'synthetic', diagnose_frames=True)
     assert runs[0]['passed'], runs[0]
-    assert runs[0]['enter_level_max_freeze_ms'] < 1000, runs[0]
-    metrics = runs[0]['enter_level_phase_intervals']
+    assert runs[0]['frame_diagnostics']['enter_level_max_freeze_ms'] < 1000, runs[0]
+    metrics = runs[0]['frame_diagnostics']['enter_level_phase_intervals']
     assert metrics[0]['phase'] == 'ready' and not metrics[0]['loading_indicator_checked'], metrics
     assert metrics[1]['start_ms'] == 1300 and metrics[1]['end_ms'] == 1340, metrics
     results.append({'scenario': 'old Home without spinner then 40ms actual loading passes', 'correct_verdict': True})
@@ -109,17 +108,24 @@ with tempfile.TemporaryDirectory(prefix='loading-phase-boundary-') as tmp:
         (2310, 'ready', 'black'),
     ]
     fixture(2310, frozen_events, frozen_frames)
-    runs, _ = check(plan, [run_dir], 'synthetic')
-    assert not runs[0]['passed'], runs[0]
-    assert runs[0]['enter_level_max_freeze_ms'] == 1300, runs[0]
-    results.append({'scenario': 'visible loading spinner static for 1300ms is rejected', 'correct_verdict': True})
+    runs, _ = check(plan, [run_dir], 'synthetic', diagnose_frames=True)
+    assert runs[0]['passed'], runs[0]
+    assert not runs[0]['frame_diagnostics']['passed'], runs[0]
+    assert runs[0]['frame_diagnostics']['enter_level_max_freeze_ms'] == 1300, runs[0]
+    results.append({'scenario': 'visible loading spinner static for 1300ms is reported by the optional diagnosis', 'correct_verdict': True})
 
     fixture(1350, old_home_events, old_home_frames, include_content_boundary=False)
-    runs, _ = check(plan, [run_dir], 'synthetic')
-    assert not runs[0]['passed'], runs[0]
+    runs, _ = check(plan, [run_dir], 'synthetic', diagnose_frames=True)
+    assert runs[0]['passed'], runs[0]
+    assert not runs[0]['frame_diagnostics']['passed'], runs[0]
     assert any('matching observed Cocos phase boundary' in x or 'unknown observed indicator phase' in x
-               for x in runs[0]['problems']), runs[0]
-    results.append({'scenario': 'frame phase without observed source boundary is rejected', 'correct_verdict': True})
+               for x in runs[0]['frame_diagnostics']['problems']), runs[0]
+    results.append({'scenario': 'frame phase without observed source boundary is reported by the optional diagnosis', 'correct_verdict': True})
+
+    timing_runs, _ = check(plan, [run_dir], 'synthetic')
+    assert timing_runs[0]['passed'], timing_runs[0]
+    assert 'frame_diagnostics' not in timing_runs[0], timing_runs[0]
+    results.append({'scenario': 'regular timing does not inspect supplied image frames', 'correct_verdict': True})
 
     print(json.dumps({
         'scope': 'Synthetic loading phase-boundary calibration only; not game evidence.',

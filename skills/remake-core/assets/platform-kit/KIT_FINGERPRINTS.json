@@ -64,44 +64,55 @@
     "p:onShow",
     "p:open"
    ],
-   "current_only": [
-    "p:_canShowNotice",
-    "p:_isHomeVisible",
-    "p:isHomeVisible",
-    "p:startEntryTracking"
-   ],
-   "current_sha256": "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963",
+   "current_only": [],
+   "current_sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
    "editable": false,
    "previous": {
     "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122": [
      "p:EVENT_SHOW",
      "p:_onShow",
-     "s:+ TEXT.collected : (amount > 0 ?"
+     "p:unsupported",
+     "s:+ TEXT.collected : (amount > 0 ?",
+     "s:Available in TikTok"
     ],
     "632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c": [
      "p:EVENT_SHOW",
      "p:_onShow",
-     "s:+ TEXT.collected : (amount > 0 ?"
+     "p:unsupported",
+     "s:+ TEXT.collected : (amount > 0 ?",
+     "s:Available in TikTok"
     ],
     "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab": [
      "p:EVENT_SHOW",
-     "p:_onShow"
+     "p:_onShow",
+     "p:unsupported",
+     "s:Available in TikTok"
     ],
     "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc": [
      "p:EVENT_SHOW",
      "p:_onShow",
-     "s:+ TEXT.collected : (amount > 0 ?"
+     "p:unsupported",
+     "s:+ TEXT.collected : (amount > 0 ?",
+     "s:Available in TikTok"
     ],
     "c3dbfcb6262976ddba7f719e66f6ef6940bb3fb796a96b696053464ffa70af77": [
      "p:EVENT_SHOW",
-     "p:_onShow"
+     "p:_onShow",
+     "p:unsupported",
+     "s:Available in TikTok"
+    ],
+    "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963": [
+     "p:unsupported",
+     "s:Available in TikTok"
     ],
     "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474": [
      "p:EVENT_SHOW",
      "p:_onShow",
      "p:action",
      "p:check",
+     "p:unsupported",
      "s:+ TEXT.collected : (amount > 0 ?",
+     "s:Available in TikTok",
      "s:check",
      "s:claimed",
      "s:opened"
@@ -128,8 +139,6 @@
     "p:dispose",
     "p:eligible",
     "p:granted",
-    "p:intro_profile",
-    "p:intro_shortcut",
     "p:isClaimed",
     "p:isCurrent",
     "p:kind",
@@ -138,18 +147,15 @@
     "p:missions",
     "p:native",
     "p:navigate",
-    "p:navigated",
     "p:navigatedOnce",
     "p:onGranted",
     "p:onResume",
     "p:onShow",
     "p:open",
-    "p:opening",
     "p:ownsMissions",
     "p:pendingCheck",
     "p:phase",
     "p:platformClaims",
-    "p:preview",
     "p:profile",
     "p:query",
     "p:render",
@@ -170,49 +176,106 @@
     "s:) :",
     "s:, profile:",
     "s:./TikTokMissionService",
-    "s:Add this game to your home screen, open it from the new icon, then come back for your reward."
+    "s:Checking your reward...",
+    "s:Could not save your reward. Please try again.",
+    "s:MissionFlow needs store, reward(kind, draft) and render(view)",
+    "s:Please wait for the current request.",
+    "s:Reward already collected.",
+    "s:Reward received:"
    ],
    "current_only": [
-    "p:_saveReward",
-    "p:disposed",
-    "p:entryMissions",
-    "p:entryOp",
-    "p:notReady",
-    "p:offShow",
-    "p:scene",
-    "p:serviceOptions",
-    "p:source",
-    "p:startEntryTracking",
-    "p:stopEntryTracking",
-    "p:trackingEntries",
-    "s:Your reward is not ready yet.",
-    "s:center",
-    "s:desktop_shortcut",
-    "s:entry",
-    "s:getEnterOptionsSync",
-    "s:getLaunchOptionsSync",
-    "s:ineligible",
-    "s:profile",
-    "s:shortcut"
+    "p:directEntry"
    ],
-   "current_sha256": "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49",
+   "current_sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
    "editable": false,
    "previous": {
     "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f": [
-     "p:canIUse"
+     "p:canIUse",
+     "p:intro_profile",
+     "p:intro_shortcut",
+     "p:navigated",
+     "p:opening",
+     "p:preview",
+     "s:Add this game to your home screen, open it from the new icon, then come back for your reward.",
+     "s:Available in TikTok.",
+     "s:Now open the game from that entry, then tap CHECK REWARD.",
+     "s:Open your TikTok Profile, open this game from the sidebar, then come back for your reward.",
+     "s:Opening TikTok...",
+     "s:intro_",
+     "s:unsupported"
     ],
     "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee": [
      "p:canIUse",
-     "s:LOCAL PREVIEW: open the game inside TikTok to use this."
+     "p:intro_profile",
+     "p:intro_shortcut",
+     "p:navigated",
+     "p:opening",
+     "p:preview",
+     "s:Add this game to your home screen, open it from the new icon, then come back for your reward.",
+     "s:LOCAL PREVIEW: open the game inside TikTok to use this.",
+     "s:Now open the game from that entry, then tap CHECK REWARD.",
+     "s:Open your TikTok Profile, open this game from the sidebar, then come back for your reward.",
+     "s:Opening TikTok...",
+     "s:intro_",
+     "s:unsupported"
     ],
     "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348": [
      "p:canIUse",
-     "s:LOCAL PREVIEW: open the game inside TikTok to use this."
+     "p:intro_profile",
+     "p:intro_shortcut",
+     "p:navigated",
+     "p:opening",
+     "p:preview",
+     "s:Add this game to your home screen, open it from the new icon, then come back for your reward.",
+     "s:LOCAL PREVIEW: open the game inside TikTok to use this.",
+     "s:Now open the game from that entry, then tap CHECK REWARD.",
+     "s:Open your TikTok Profile, open this game from the sidebar, then come back for your reward.",
+     "s:Opening TikTok...",
+     "s:intro_",
+     "s:unsupported"
     ],
     "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a": [
-     "s:LOCAL PREVIEW: open the game inside TikTok to use this."
+     "p:intro_profile",
+     "p:intro_shortcut",
+     "p:navigated",
+     "p:opening",
+     "p:preview",
+     "s:Add this game to your home screen, open it from the new icon, then come back for your reward.",
+     "s:LOCAL PREVIEW: open the game inside TikTok to use this.",
+     "s:Now open the game from that entry, then tap CHECK REWARD.",
+     "s:Open your TikTok Profile, open this game from the sidebar, then come back for your reward.",
+     "s:Opening TikTok...",
+     "s:intro_",
+     "s:unsupported"
     ],
-    "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11": []
+    "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11": [
+     "p:intro_profile",
+     "p:intro_shortcut",
+     "p:navigated",
+     "p:opening",
+     "p:preview",
+     "s:Add this game to your home screen, open it from the new icon, then come back for your reward.",
+     "s:Available in TikTok.",
+     "s:Now open the game from that entry, then tap CHECK REWARD.",
+     "s:Open your TikTok Profile, open this game from the sidebar, then come back for your reward.",
+     "s:Opening TikTok...",
+     "s:intro_",
+     "s:unsupported"
+    ],
+    "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49": [
+     "p:intro_profile",
+     "p:intro_shortcut",
+     "p:navigated",
+     "p:opening",
+     "p:preview",
+     "s:Add this game to your home screen, open it from the new icon, then come back for your reward.",
+     "s:Available in TikTok.",
+     "s:Now open the game from that entry, then tap CHECK REWARD.",
+     "s:Open your TikTok Profile, open this game from the sidebar, then come back for your reward.",
+     "s:Opening TikTok...",
+     "s:intro_",
+     "s:unsupported"
+    ]
    },
    "previous_without_text": []
   },
@@ -435,7 +498,6 @@
     "p:unref",
     "p:unsupported",
     "s:No reward information was returned. Please try again.",
-    "s:Return through this TikTok entry, then check your reward.",
     "s:The check ended. Please try again.",
     "s:The check took too long. Please try again.",
     "s:The request failed. Please try again.",
@@ -448,17 +510,29 @@
     "s:getEntranceMissionReward",
     "s:getShortcutMissionReward",
     "s:ineligible",
-    "s:invalid"
+    "s:invalid",
+    "s:query"
    ],
-   "current_only": [],
-   "current_sha256": "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e",
+   "current_only": [
+    "p:navigation",
+    "s:navigation"
+   ],
+   "current_sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
    "editable": false,
    "previous": {
+    "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e": [
+     "s:Return through this TikTok entry, then check your reward.",
+     "s:navigate"
+    ],
     "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608": [
-     "s:Open this game from the TikTok entry, then check again."
+     "s:Open this game from the TikTok entry, then check again.",
+     "s:Return through this TikTok entry, then check your reward.",
+     "s:navigate"
     ],
     "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4": [
-     "s:Open this game from the TikTok entry, then check again."
+     "s:Open this game from the TikTok entry, then check again.",
+     "s:Return through this TikTok entry, then check your reward.",
+     "s:navigate"
     ]
    },
    "previous_without_text": []

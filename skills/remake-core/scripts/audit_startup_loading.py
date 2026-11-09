@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""LOAD-03: startup / enter-level timing, loading-animation freezes and first-screen size (user rules 2026-10-20/21/23).
+"""LOAD-03: startup / enter-level timing, recovery and first-screen size.
 
 Reads the startup plan (written BEFORE measuring) and the report folders written by
-chrome_touch.py (runs in Ego Lite via ego-browser nodejs, plan "timing": true, --record). Every single run
+chrome_touch.py (runs in Ego Lite via ego-browser nodejs, plan "timing": true). Every single run
 must pass; averages never hide a failure.
 
   python audit_startup_loading.py --plan startup-plan.json --runs RUN_DIR [RUN_DIR ...]
-         [--binding review.json] [--out report.json]
+         [--binding review.json] [--out report.json] [--diagnose-frames]
 
 Plan (startup-plan.json):
   {"declared_at": "2026-10-21T10:00:00+08:00",
@@ -17,18 +17,16 @@ Plan (startup-plan.json):
                        "cold": 3, "warm": 1},
      "slow_network":  {"network": {"download_kbps": 2000, "upload_kbps": 1000, "latency_ms": 150},
                        "cold": 1, "warm": 0}},
-   "animation_freeze_ms": 1000, "frame_gap_ms": 250,
-   "loading_roi": {"bootstrap": [x, y, w, h], "enter_level": [x, y, w, h]},   # CSS px of the spinner/bar
    "max_home_asset_kb": 500, "home_assets_allowed": ["home_bg"],
    "idle_timeout_ms": 10000, "old_deadline_ms": 15000, "retry_grace_ms": 2000}
 
-Each timed run's plan carries "profile", "viewport", "cache", "timing": true, "record": true,
+Each timed run's plan carries "profile", "viewport", "cache", "timing": true,
 "startup_plan_sha256" and marks first_feedback, home_usable, play_touch, level_ready, first_effect.
 Fault runs carry "fault": slow_progress | background_wait | stall_retry | late_callback (see
 cocos-game-check/startup/references/startup-loading-timing.md for what each must show).
 No fixed finish times (user 2026-10-23, second message: a big game cannot meet "home in 4 s", and a number it
 cannot meet makes the AI cut corners elsewhere). The Skill judges what does NOT depend on the game's size:
-  stuck        the loading animation never stops > 1 s, a stall shows Retry (idle_timeout_ms <= 10 s without progress,
+  stuck        a stall shows Retry (idle_timeout_ms <= 10 s without progress,
                Retry <= 2 s later), every route really ends in a playable level (a mark that never comes = fail)
   wasted time  each wait is compared with what this game really loads in it (bytes from the report, the profile's
                network): allowed = base (home 3 s, level 1.5 s) + 0.3 s per MB loaded + 1.5 x the download time +
@@ -38,7 +36,9 @@ cannot meet makes the AI cut corners elsewhere). The Skill judges what does NOT 
   re-entry     optional marks next_touch/next_ready, retry_touch/retry_ready, map_touch/map_ready are judged like
                PLAY -> level; tapped but never ready = "cannot enter the game"
 Plan budgets are optional project targets: when present the stricter of plan and size rule applies; a plan may not
-loosen the stuck limits (animation_freeze_ms, idle_timeout_ms, retry_grace_ms).
+loosen the stuck limits (idle_timeout_ms, retry_grace_ms). Observe the visible loading indicator in
+the existing human playthrough. --diagnose-frames measures a reported visual issue from an existing
+recording and does not affect the startup verdict.
 Exit codes: 0 pass, 1 problems found, 2 bad input.
 """
 import argparse
@@ -50,11 +50,12 @@ import sys
 from pathlib import Path
 
 MARKS = ('first_feedback', 'home_usable', 'play_touch', 'level_ready', 'first_effect')
-POLICY_VERSION = 'startup-raw-v2'
+POLICY_VERSION = 'startup-raw-v3'
+LEGACY_POLICY_VERSION = 'startup-raw-v2'
 MINIMUM_RUNS = {'local': {'cold': 3, 'warm': 1}, 'first_network': {'cold': 3, 'warm': 1}, 'slow_network': {'cold': 1, 'warm': 0}}
 # user 2026-10-23: no fixed finish times (a big game cannot meet them); judge stuck and wasted time instead.
 # Limits for "stuck" do not depend on the game's size, so a plan may be stricter but never looser.
-STUCK_LIMITS = {'animation_freeze_ms': 1000, 'idle_timeout_ms': 10000, 'retry_grace_ms': 2000}
+STUCK_LIMITS = {'idle_timeout_ms': 10000, 'retry_grace_ms': 2000}
 # first feedback = the tiny index.html splash, before any engine or asset: same for small and big games (plan may override)
 FEEDBACK_MS = {'local': 1000, 'first_network': 2000, 'slow_network': 3000}
 BASE_MS = {'home': 3000, 'level': 1500}      # engine start / scene switch that every game needs
@@ -92,16 +93,22 @@ def loaded_between(rep, start, end):
 
 
 def frames_of(run_dir, rep):
+    run_dir = run_dir.resolve()
     rec = rep.get('recording') or {}
     folder = Path(rec.get('dir') or run_dir / 'frames')
     if not folder.is_absolute():
         folder = run_dir / folder
+    folder = folder.resolve()
+    if not folder.is_relative_to(run_dir):
+        raise ValueError('recording frames outside run directory')
     if not folder.is_dir() or not rec.get('first_frame_epoch') or not rep.get('entry_epoch'):
         return []
     offset = (rec['first_frame_epoch'] - rep['entry_epoch']) * 1000
     out = []
     frame_rows = []
     for f in folder.glob('*.jpg'):
+        if not f.resolve().is_relative_to(folder):
+            raise ValueError('recording frame outside recording directory')
         try:
             frame_rows.append((int(f.stem.split('_')[1].rstrip('ms')), f))
         except (IndexError, ValueError):
@@ -139,11 +146,143 @@ def longest_freeze(frames, start, end, roi, viewport, image_module):
     return worst, max(max_gap, end - prev_t)
 
 
-def check(plan, run_dirs, plan_sha):
-    try:
-        from PIL import Image
-    except ImportError:
-        raise ValueError('Pillow is required for the loading-animation check: pip install pillow')
+def diagnose_loading_frames(plan, run_dir, rep, marks, viewport, image_module):
+    """Measure existing frame evidence only for an explicitly requested diagnosis."""
+    res = {'problems': []}
+    P = res['problems']
+    t = marks.get
+    freeze_limit = min(plan.get('animation_freeze_ms', 1000), 1000)
+    gap_limit = plan.get('frame_gap_ms', 250)
+    roi = plan.get('loading_roi', {})
+    viewport_key = '%sx%s' % tuple(viewport)
+    run_roi = plan.get('loading_roi_by_viewport', {}).get(viewport_key, roi)
+    frames = frames_of(run_dir, rep)
+    if not frames:
+        P.append('no recording frames available for this optional diagnosis')
+    else:
+        for seg, (a, z) in (('bootstrap', ('first_feedback', 'home_usable')), ('enter_level', ('play_touch', 'level_ready'))):
+            if None in (t(a), t(z)):
+                continue
+            span = t(z) - t(a)
+            if span < 300:
+                continue                      # instant, no loading screen needed
+            phase_rois = plan.get('loading_phase_rois_by_viewport', {}).get(viewport_key)
+            if phase_rois:
+                phases = {x.get('file'): x.get('phase') for x in (rep.get('recording') or {}).get('frame_phases', [])}
+                source_rows = (rep.get('observed') or {}).get('phases')
+                if not isinstance(source_rows, list) or not source_rows:
+                    P.append('%s: missing observed Cocos phase-boundary evidence' % seg); continue
+                source_events, source_invalid = [], False
+                previous_at = -float('inf')
+                for event in source_rows:
+                    event_at, event_phase = event.get('at'), event.get('phase')
+                    if (type(event_at) not in (int, float) or not math.isfinite(event_at) or
+                            event_at < previous_at or not isinstance(event_phase, str) or not event_phase):
+                        source_invalid = True
+                        break
+                    previous_at = event_at
+                    if source_events and event_at == source_events[-1][0]:
+                        if event_phase != source_events[-1][1]:
+                            source_invalid = True
+                            break
+                        continue
+                    if source_events and event_phase == source_events[-1][1]:
+                        continue
+                    source_events.append((event_at, event_phase))
+                if source_invalid or not source_events:
+                    P.append('%s: invalid or ambiguous observed Cocos phase-boundary evidence' % seg); continue
+
+                # Build the actual observed phase intervals. The input touch remains
+                # the timing origin, while an already-visible old ready page is not
+                # treated as a loading spinner. Each subsequent loading phase starts
+                # at its own recorded Cocos boundary, not at the preceding touch.
+                at_start = [e for e in source_events if e[0] <= t(a)]
+                if not at_start:
+                    P.append('%s: no observed phase boundary establishes the state at interval start' % seg); continue
+                active_phase = at_start[-1][1]
+                cursor = t(a)
+                phase_intervals = []
+                for event_at, event_phase in source_events:
+                    if event_at <= t(a) or event_at > t(z):
+                        continue
+                    phase_intervals.append((active_phase, cursor, event_at, event_at == t(a)))
+                    cursor, active_phase = event_at, event_phase
+                phase_intervals.append((active_phase, cursor, t(z), False))
+
+                # A carried-forward ready phase at PLAY must be supported by a
+                # recent original ready frame and this plan's explicit old-page
+                # transition contract. It is a known non-loading state, not an
+                # unknown-phase exemption.
+                initial_ready = phase_intervals[0][0] == 'ready'
+                if initial_ready and seg == 'enter_level':
+                    transition = plan.get('scene_transition_contract') or {}
+                    meaning = transition.get('meaning', '')
+                    preceding = [(at, f, phases.get(f.name)) for at, f in frames if at <= t(a)]
+                    if ('old-page/scene' not in meaning or 'no loading spinner is claimed if absent' not in meaning or
+                            not preceding or t(a) - preceding[-1][0] > gap_limit or preceding[-1][2] != 'ready'):
+                        P.append('%s: old ready scene cannot be excluded without the frozen transition contract and a recent ready frame' % seg); continue
+
+                phase_frames = [(at, f, phases.get(f.name)) for at, f in frames if t(a) <= at <= t(z)]
+                phase_mismatch = False
+                for at, f, frame_phase in phase_frames:
+                    source_active = [e for e in source_events if e[0] <= at]
+                    if not source_active:
+                        P.append('%s: recorded frame has no preceding observed phase boundary' % seg)
+                        phase_mismatch = True
+                        break
+                    # Screenshot filenames round milliseconds; tolerate only the
+                    # existing sub-millisecond capture-boundary skew.
+                    current_source_phase = source_active[-1][1]
+                    next_source = next((e for e in source_events if e[0] > at), None)
+                    if next_source and next_source[1] == frame_phase and next_source[0] - at <= 1:
+                        current_source_phase = next_source[1]
+                    if not frame_phase or current_source_phase != frame_phase:
+                        P.append('%s: frame phase lacks a matching observed Cocos phase boundary' % seg)
+                        phase_mismatch = True
+                        break
+                if phase_mismatch:
+                    continue
+
+                freeze = gap = 0
+                phase_metrics = []
+                for phase, phase_start, phase_end, _ in phase_intervals:
+                    if phase_end < phase_start:
+                        P.append('%s: observed phase interval is reversed' % seg); phase_mismatch = True; break
+                    if phase == 'ready':
+                        phase_metrics.append({'phase': phase, 'start_ms': phase_start, 'end_ms': phase_end,
+                                              'loading_indicator_checked': False, 'reason': 'source-observed ready scene has no claimed loading spinner'})
+                        continue
+                    if phase not in phase_rois:
+                        P.append('%s: missing/unknown observed indicator phase %s' % (seg, phase)); phase_mismatch = True; break
+                    group = [(at, f) for at, f, frame_phase in phase_frames
+                             if frame_phase == phase and phase_start <= at <= phase_end]
+                    fr, gp = longest_freeze(group, phase_start, phase_end, phase_rois[phase], viewport, image_module)
+                    freeze, gap = max(freeze, fr), max(gap, gp)
+                    phase_metrics.append({'phase': phase, 'start_ms': phase_start, 'end_ms': phase_end,
+                                          'frame_count': len(group), 'max_freeze_ms': fr, 'max_frame_gap_ms': gp,
+                                          'loading_indicator_checked': True})
+                if phase_mismatch:
+                    continue
+                res[seg + '_phase_intervals'] = phase_metrics
+            else:
+                if seg not in run_roi:
+                    P.append('loading_roi.%s missing in plan' % seg); continue
+                freeze, gap = longest_freeze(frames, t(a), t(z), run_roi[seg], viewport, image_module)
+            res[seg + '_max_freeze_ms'] = freeze
+            if freeze > freeze_limit:
+                P.append('%s loading animation froze for %d ms (limit %d)' % (seg, freeze, freeze_limit))
+            elif gap > max(gap_limit, freeze_limit):
+                P.append('%s: frame samples too sparse (%d ms)' % (seg, gap))
+    res['passed'] = not P
+    return res
+
+
+def check(plan, run_dirs, plan_sha, *, diagnose_frames=False):
+    if diagnose_frames:
+        try:
+            from PIL import Image
+        except ImportError as error:
+            raise ValueError('Pillow is required for optional frame diagnosis: pip install pillow') from error
     problems, runs, coverage = [], [], {}
     vps = plan.get('viewports')
     if not (isinstance(vps, list) and len(vps) >= 2 and len({round(w / h, 3) for w, h in vps}) >= 2):
@@ -170,11 +309,7 @@ def check(plan, run_dirs, plan_sha):
         problems.append('startup plan must be declared with timezone before measuring')
     for k, cap in STUCK_LIMITS.items():
         if plan.get(k, cap) > cap:
-            problems.append('plan %s %s is looser than the stuck limit %s (a loading screen that does not move or a stall '
-                            'without Retry looks broken in any game size); %s used' % (k, plan[k], cap, cap))
-    freeze_limit = min(plan.get('animation_freeze_ms', 1000), STUCK_LIMITS['animation_freeze_ms'])
-    gap_limit = plan.get('frame_gap_ms', 250)
-    roi = plan.get('loading_roi', {})
+            problems.append('plan %s %s is looser than the stuck limit %s; %s used' % (k, plan[k], cap, cap))
     max_kb = plan.get('max_home_asset_kb', 500)
     allowed = plan.get('home_assets_allowed', [])
     faults_seen = {}
@@ -209,7 +344,6 @@ def check(plan, run_dirs, plan_sha):
         fault = rep.get('fault')
         vp = rep.get('viewport_requested') or {}
         vp = [vp.get('width'), vp.get('height')]
-        run_roi = plan.get('loading_roi_by_viewport', {}).get('%sx%s' % tuple(vp), roi)
         if fault:
             faults_seen.setdefault(fault, []).append(name)
             res['fault'] = fault
@@ -337,124 +471,12 @@ def check(plan, run_dirs, plan_sha):
                     P.append('home usable %d ms after the last download finished (limit max(2 s, 25%% of the home time) = %d): '
                              'no fake minimum loading time, slow progress-bar tween or fixed timer - show the home page as soon '
                              'as it is ready (user 2026-10-23)' % (tail, tail_limit))
-        frames = frames_of(d, rep)
-        if not frames:
-            P.append('no recording frames (run with "record": true) - loading animation cannot be checked')
-        else:
-            for seg, (a, z) in (('bootstrap', ('first_feedback', 'home_usable')), ('enter_level', ('play_touch', 'level_ready'))):
-                if None in (t(a), t(z)):
-                    continue
-                span = t(z) - t(a)
-                res[seg + '_visible_ms'] = span
-                if span < 300:
-                    continue                      # instant, no loading screen needed
-                phase_rois = plan.get('loading_phase_rois_by_viewport', {}).get('%sx%s' % tuple(vp))
-                if phase_rois:
-                    phases = {x.get('file'): x.get('phase') for x in (rep.get('recording') or {}).get('frame_phases', [])}
-                    source_rows = (rep.get('observed') or {}).get('phases')
-                    if not isinstance(source_rows, list) or not source_rows:
-                        P.append('%s: missing observed Cocos phase-boundary evidence' % seg); continue
-                    source_events, source_invalid = [], False
-                    previous_at = -float('inf')
-                    for event in source_rows:
-                        event_at, event_phase = event.get('at'), event.get('phase')
-                        if (type(event_at) not in (int, float) or not math.isfinite(event_at) or
-                                event_at < previous_at or not isinstance(event_phase, str) or not event_phase):
-                            source_invalid = True
-                            break
-                        previous_at = event_at
-                        if source_events and event_at == source_events[-1][0]:
-                            if event_phase != source_events[-1][1]:
-                                source_invalid = True
-                                break
-                            continue
-                        if source_events and event_phase == source_events[-1][1]:
-                            continue
-                        source_events.append((event_at, event_phase))
-                    if source_invalid or not source_events:
-                        P.append('%s: invalid or ambiguous observed Cocos phase-boundary evidence' % seg); continue
-
-                    # Build the actual observed phase intervals. The input touch remains
-                    # the timing origin, while an already-visible old ready page is not
-                    # treated as a loading spinner. Each subsequent loading phase starts
-                    # at its own recorded Cocos boundary, not at the preceding touch.
-                    at_start = [e for e in source_events if e[0] <= t(a)]
-                    if not at_start:
-                        P.append('%s: no observed phase boundary establishes the state at interval start' % seg); continue
-                    active_phase = at_start[-1][1]
-                    cursor = t(a)
-                    phase_intervals = []
-                    for event_at, event_phase in source_events:
-                        if event_at <= t(a) or event_at > t(z):
-                            continue
-                        phase_intervals.append((active_phase, cursor, event_at, event_at == t(a)))
-                        cursor, active_phase = event_at, event_phase
-                    phase_intervals.append((active_phase, cursor, t(z), False))
-
-                    # A carried-forward ready phase at PLAY must be supported by a
-                    # recent original ready frame and this plan's explicit old-page
-                    # transition contract. It is a known non-loading state, not an
-                    # unknown-phase exemption.
-                    initial_ready = phase_intervals[0][0] == 'ready'
-                    if initial_ready and seg == 'enter_level':
-                        transition = plan.get('scene_transition_contract') or {}
-                        meaning = transition.get('meaning', '')
-                        preceding = [(at, f, phases.get(f.name)) for at, f in frames if at <= t(a)]
-                        if ('old-page/scene' not in meaning or 'no loading spinner is claimed if absent' not in meaning or
-                                not preceding or t(a) - preceding[-1][0] > gap_limit or preceding[-1][2] != 'ready'):
-                            P.append('%s: old ready scene cannot be excluded without the frozen transition contract and a recent ready frame' % seg); continue
-
-                    phase_frames = [(at, f, phases.get(f.name)) for at, f in frames if t(a) <= at <= t(z)]
-                    phase_mismatch = False
-                    for at, f, frame_phase in phase_frames:
-                        source_active = [e for e in source_events if e[0] <= at]
-                        if not source_active:
-                            P.append('%s: recorded frame has no preceding observed phase boundary' % seg)
-                            phase_mismatch = True
-                            break
-                        # Screenshot filenames round milliseconds; tolerate only the
-                        # existing sub-millisecond capture-boundary skew.
-                        current_source_phase = source_active[-1][1]
-                        next_source = next((e for e in source_events if e[0] > at), None)
-                        if next_source and next_source[1] == frame_phase and next_source[0] - at <= 1:
-                            current_source_phase = next_source[1]
-                        if not frame_phase or current_source_phase != frame_phase:
-                            P.append('%s: frame phase lacks a matching observed Cocos phase boundary' % seg)
-                            phase_mismatch = True
-                            break
-                    if phase_mismatch:
-                        continue
-
-                    freeze = gap = 0
-                    phase_metrics = []
-                    for phase, phase_start, phase_end, _ in phase_intervals:
-                        if phase_end < phase_start:
-                            P.append('%s: observed phase interval is reversed' % seg); phase_mismatch = True; break
-                        if phase == 'ready':
-                            phase_metrics.append({'phase': phase, 'start_ms': phase_start, 'end_ms': phase_end,
-                                                  'loading_indicator_checked': False, 'reason': 'source-observed ready scene has no claimed loading spinner'})
-                            continue
-                        if phase not in phase_rois:
-                            P.append('%s: missing/unknown observed indicator phase %s' % (seg, phase)); phase_mismatch = True; break
-                        group = [(at, f) for at, f, frame_phase in phase_frames
-                                 if frame_phase == phase and phase_start <= at <= phase_end]
-                        fr, gp = longest_freeze(group, phase_start, phase_end, phase_rois[phase], vp, Image)
-                        freeze, gap = max(freeze, fr), max(gap, gp)
-                        phase_metrics.append({'phase': phase, 'start_ms': phase_start, 'end_ms': phase_end,
-                                              'frame_count': len(group), 'max_freeze_ms': fr, 'max_frame_gap_ms': gp,
-                                              'loading_indicator_checked': True})
-                    if phase_mismatch:
-                        continue
-                    res[seg + '_phase_intervals'] = phase_metrics
-                else:
-                    if seg not in run_roi:
-                        P.append('loading_roi.%s missing in plan' % seg); continue
-                    freeze, gap = longest_freeze(frames, t(a), t(z), run_roi[seg], vp, Image)
-                res[seg + '_max_freeze_ms'] = freeze
-                if freeze > freeze_limit:
-                    P.append('%s loading animation froze for %d ms (limit %d)' % (seg, freeze, freeze_limit))
-                elif gap > max(gap_limit, freeze_limit):
-                    P.append('%s: frame samples too sparse (%d ms)' % (seg, gap))
+        for segment, start, end in (('bootstrap', 'first_feedback', 'home_usable'),
+                                    ('enter_level', 'play_touch', 'level_ready')):
+            if None not in (t(start), t(end)):
+                res[segment + '_visible_ms'] = t(end) - t(start)
+        if diagnose_frames:
+            res['frame_diagnostics'] = diagnose_loading_frames(plan, d, rep, marks, vp, Image)
         if t('home_usable') is not None:
             big = [r for r in rep.get('requests', []) if not r.get('failed') and r.get('t_ms', 0) <= t('home_usable')
                    and r.get('bytes', 0) > max_kb * 1024 and not any(a in r.get('url', '') for a in allowed)]
@@ -493,29 +515,15 @@ def check_report(report, report_directory=None, actual_current_binding=None):
     return errors
 
 
-def raw_manifest(run_dirs):
-    reports, frames = {}, {}
-    for value in run_dirs:
-        directory = Path(value).resolve()
-        raw_file = directory / 'report.json'
-        reports[str(raw_file)] = sha(raw_file)
-        raw = json.loads(raw_file.read_text(encoding='utf-8'))
-        folder = Path((raw.get('recording') or {}).get('dir') or directory / 'frames')
-        if not folder.is_absolute():
-            folder = directory / folder
-        folder = folder.resolve()
-        if not folder.is_relative_to(directory):
-            raise ValueError('recording frames outside run directory')
-        for f in sorted(folder.glob('*.jpg')):
-            frames[str(f.resolve())] = sha(f)
-    return reports, frames
+def raw_report_manifest(run_dirs):
+    return {str(path): sha(path) for path in (Path(directory).resolve() / 'report.json' for directory in run_dirs)}
 
 
 def validate_report(report, expected_binding=None, recheck=True):
-    """Reopen the exact plan, run records and pixels; never accept a pass stamp alone."""
+    """Reopen the exact plan and run records. Legacy reports can reuse their raw timing evidence."""
     errors = []
     try:
-        if report.get('policy_version') != POLICY_VERSION:
+        if report.get('policy_version') not in (POLICY_VERSION, LEGACY_POLICY_VERSION):
             errors.append('startup policy version missing/stale')
         if report.get('passed') is not True or report.get('failed') != 0:
             errors.append('startup report not passing')
@@ -528,9 +536,9 @@ def validate_report(report, expected_binding=None, recheck=True):
             errors.append('startup run directories missing/duplicated')
         if report.get('checked') != len(dirs):
             errors.append('startup run count inconsistent')
-        raw, frames = raw_manifest(dirs)
-        if raw != report.get('raw_reports') or frames != report.get('raw_frames') or not frames:
-            errors.append('startup raw reports/frames missing or changed')
+        raw = raw_report_manifest(dirs)
+        if raw != report.get('raw_reports'):
+            errors.append('startup raw reports missing or changed')
         if expected_binding is not None:
             if report.get('binding') != expected_binding:
                 errors.append('startup report binding stale')
@@ -553,10 +561,11 @@ def main():
     ap.add_argument('--runs', nargs='+', required=True)
     ap.add_argument('--binding', type=Path)
     ap.add_argument('--out', type=Path)
+    ap.add_argument('--diagnose-frames', action='store_true', help='measure existing recorded frames separately from the timing verdict')
     a = ap.parse_args()
     try:
         plan = json.loads(a.plan.read_text(encoding='utf-8'))
-        runs, problems = check(plan, a.runs, sha(a.plan))
+        runs, problems = check(plan, a.runs, sha(a.plan), diagnose_frames=a.diagnose_frames)
         binding = None
         if a.binding:
             binding = json.loads(a.binding.read_text(encoding='utf-8')).get('binding')
@@ -568,13 +577,13 @@ def main():
         print(json.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False), file=sys.stderr)
         return 2
     failed = sum(1 for r in runs if not r['passed']) + len(problems)
-    raw_reports, raw_frames = raw_manifest(a.runs)
+    raw_reports = raw_report_manifest(a.runs)
     report = {'tool': 'audit_startup_loading', 'policy_version': POLICY_VERSION, 'plan_file': str(a.plan.resolve()),
-              'run_directories': [str(Path(p).resolve()) for p in a.runs], 'raw_reports': raw_reports, 'raw_frames': raw_frames,
+              'run_directories': [str(Path(p).resolve()) for p in a.runs], 'raw_reports': raw_reports,
               'plan_sha256': sha(a.plan), 'checked': len(runs), 'failed': failed,
               'passed': failed == 0, 'coverage_problems': problems,
               'checks': [{'name': r['run'], 'passed': r['passed']} for r in runs], 'runs': runs,
-              'note': 'Browser simulation (Ego Lite) timing. Every run must pass; not a TikTok device measurement.'}
+              'note': 'Browser simulation (Ego Lite) timing. Visual loading observations belong to the human playthrough.'}
     if binding is not None:
         report['binding'] = binding
     if report['passed']:

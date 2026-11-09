@@ -2,7 +2,7 @@
 
 **范围裁定（2026-10-24）**：先按[检查范围、历史回归与停止条件](../../cocos-game-check/test/references/testing-scope-and-stop.md)选档；本页的全量步骤用于相应完整验收，局部维护只执行受影响项。质量与真实证据要求不变。
 
-直接拖动物件、邻接误选、透明弹窗挡触摸、"下一局其实不能玩"，按[重开与触摸输入](../../cocos-game-check/test/references/replay-and-input-checks.md)检查（锁定后由测试执行完成，画面结论由 GPT 看总览图下）。
+直接拖动物件、邻接误选、透明弹窗挡触摸、"下一局其实不能玩"，按[重开与触摸输入](../../cocos-game-check/test/references/replay-and-input-checks.md)检查（锁定后由测试执行完成）。
 
 ## 先看这里（测试线省 token 的读法）
 
@@ -11,7 +11,7 @@
 2. **"自动检查"列有脚本的行，必须跑脚本**：脚本加 `--binding <review.json> --out <报告.json>`，把报告写进该行的 `auto_reports`（`[{"path": "...", "sha256": "..."}]`）。门禁会核对报告是本版本、本工具、全部通过、未被改动；缺报告或不通过就拒绝打包。目前有：
    - `ART-02`、`ART-03`：`scripts/audit_dark_area.py <每个页面和弹窗的截图>`（只查负向：大块深色、整屏纯色、边缘纯色/纯黑底、大白板；不设亮度下限）
    - `AUDIO-02`：`scripts/audit_audio_sources.py --project <工程>`（每个音频都有合格来源记录）
-   - `VIS-01`：`scripts/audit_frame_glitches.py <录屏帧文件夹或视频>`（闪黑、闪白、单帧错误、闪烁）
+   - 动态画面问题在试玩时按[人工试玩画面清单](manual-visual-review.md)观察。
    - `ECON-01`：`scripts/audit_acquisition_progression.py --table <unlock_table.json>`；`NOSKIP-01`：`scripts/audit_no_ad_skip.py --project <工程>`
    - `STORAGE-01`：`scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json>`；旧版空字符串失败、现版 23 场景通过，真实主页/地图/关卡详情触控恢复，最终 Native 字节与报告一致；缺一项就拒绝测试 ZIP
 3. 修完问题、改代码或换图后，核实际证据绑定和受影响范围；只补失效检查及相关回归。现有工具使用全树绑定时按其要求真实重跑，不把旧报告换哈希当新证据；也不在同版有效时固定重开全部人工操作。
@@ -143,7 +143,7 @@ inventory输入是实际入口数组，例如：
 
 ## 检查完成与版本对应
 
-**画面结论只能由 GPT 写**：带 `visual_verdict` 标记的检查（ART-01–05、UI-02/03/05/06、VIEW-01、VIS-01）标了通过时，review 顶层必须有 `visual_verdict`：GPT 看过本版 `make_contact_sheet.py --binding` 生成的总览图，`reviewer` 填 `gpt`，`images_reviewed` 等于总览图上的截图数，`verdict` 为 `pass`，`open_issues` 为空，`observed` 写看了什么。测试执行 Agent 可以填其他行，但不能写这一项（见[测试分工](session-relay.md#锁定后的测试分工)）。
+画面观感、闪烁与动画按[人工试玩画面清单](manual-visual-review.md)随试玩检查。最终 review 核对原有功能证据。
 
 `review`使用schema 3，保存源/Native/Web指纹、build tag、catalog摘要、全部编号、入口矩阵及证据路径/哈希。证据行使用真实`layer`与`observed`；不适用需`reason`与当前绑定的依据；入口已声明的视频或持久奖励不能把相关AD/CLAIM/STATE总项免验。`completed`的`postconditions`填写奖励、模型及按钮结果；取消/失败填写零奖励与恢复；重开/刷新/迟到回调填写不额外奖励/请求。
 
@@ -179,7 +179,7 @@ inventory输入是实际入口数组，例如：
 - **HUD-01 顶部资源栏**（两个板块，不能标不适用，用户 2026-10-22；最终测试只看数字实时变化 `counts_update_live`，位置和图标在美术关查）：`audit_top_bar.py --binding` 的报告（`docs/top-bar.json`＋dump_ui）；测试时按"首页/地图 → 过一关 → 回首页/地图"dump，货币和关卡数要当场变大。观察 `currency_never_in_the_middle`（用户 2026-10-23：每个页面货币只在最上方，报告 `currency_only_at_top` 通过）。ART-05 观察 `home_currency_top_buttons_bottom_compact`（设置在上角、功能按钮按中部两侧和PLAY下方最多五个分区，按钮合计≤40%）；PAGE-01 观察 `popups_have_generated_illustration`（`plain_popup` 没有）。
 - **LEVEL-01 关卡板块**（两个板块，不能标不适用）：`audit_level_plan.py --binding` 的报告（**设计关**用 `design_check.py` 查，最终总检测不重查；`level_plan.json`：通关型重塑至少 60 关、英化默认不补关（`levels_at_least_70` 按板块判；重塑多于 60 也行，英化多出原版的关要有 `explicit_total`）、每 10 关一个限定关（第 10、20、30…关，华丽边框节点）、每 10 关一个按种子随机的奖励关（3 倍货币、看广告 6 倍、货币图标节点）、难度波浪分档（`wave-tiers.v2`，Saul 2026-10-29：1–2教学、第3关起变难（第3关高难）、每个限定关考核，之后低/中/高/超高 25/45/15/15 不规则波浪；v7.8 以前写着 `wave-tiers.v1`（1–3教学、4尖峰、5–9回落）的旧表照 v1 查、不返工）（无 policy 的旧表逐关递增）、限定皮肤格式 `limited_skin_mode` 是 `final`（只有最后一个限定关送）或 `every_10`（每个限定关各送一款）、地图显示总关数；无尽型没有地图）。`level_plan.json` 是通关型（mode levels）时 **LEVEL-02** 不能标不适用，观察项都要实玩填。
 - **FEAT-01 皮肤板块**：`docs/modules.json` 里 `skins.user_choice` 是 yes（默认）时不能标不适用，四个观察项都要浏览器实测（结算金币只加一次、试用也有加成、换完立刻生效、重开一致）；限定皮肤排最前变暗、卡片加成、越稀有越精致属于设计和美术，在设计关、美术关查（用户 2026-10-24）。
-- **ART-06 美术自检**（两个板块，**美术关**查，最终总检测不重查，用户 2026-10-24）：每轮美术后 `art_check.py` 的通过报告（含首页礼盒 10 帧动画一行）；观察里写明每轮美术做完都跑过（`art_check_after_each_art_round`）、按意见修改时整页复查过、Codex 按看图清单看过总览图；`two_full_self_review_rounds`：交用户前至少两整轮自审、第二轮零"需处理"（用户 2026-10-23：美术是重中之重）。
+- **ART-06 美术制作自检**（美术阶段）。用 art_check.py 检查裁切、布局、资源绑定等适用项，使用[人工试玩画面清单](manual-visual-review.md)交接肉眼可判断的问题。
 - **ART-04 清晰度**（两个板块，用户 2026-10-23；**美术关**查，最终总检测不重查）：`art_check.py` 的报告（清晰度行＝dump 里运行时的图 `low_res`＋`audit_image_clarity.py`）；观察 `runtime_frames_2x_background_1_5x`（代码里动态设置的图集格、角色帧有效像素≥节点 2 倍，背景≥1.5 倍）、`same_check_every_art_round`（每轮美术自检就过了这一行；反例 RobotSpaDay 用户确认美术后最终验收才查出 22 张不到 2 倍，所以 2026-10-24 起只在美术关查）。英化未改的原图写 `docs/art/clarity-exempt.json`（每条 why）。
 - **LOGIC-01 逻辑检查**（两个板块，不能标不适用，用户 2026-10-23）：`logic_check.py --mode build --binding` 的通过报告（`cocos-game-check/test`）：重塑第一轮玩法做完、玩法确认节点 1 之前跑过（`logic_check_after_gameplay_round`），英化在优化和广告接入之后、美术之前；`docs/logic/inventory.md` 的按钮去向表里每页有出路——关卡内能回首页、设置能返回、失败页 Home＋Retry（复活广告单独在下面）、胜利页 Home＋Next、按钮位置固定（`every_page_has_exit_and_standard_buttons`）；暂停停住物理和计时、离开一局清干净（`pause_stops_physics_and_leaving_cleans_up`）；广告/加载回调带局次、超时安全恢复且不能叠奖励（`async_round_tokens_and_ad_timeout_recovery`）；刷新后进度和声音设置都在（`progress_and_sound_restored_after_refresh`）；F01–F20 用真实触摸走过、两种比例、每个 pass 有证据文件（`flows_walked_with_real_touch`）。review 模式的报告不能用来过门禁。
 - **LOAD-02/LOAD-03 加载（最终检查重点，用户 2026-10-23）**：LOAD-03 报告必须是最终构建上的新报告，不写死结束时间（按 `*_allowed_ms`/`*_waste_ms` 判白等，计划不能放宽"不卡住"的三个数），观察 `no_fake_loading_wait`（下完就进，不超过 max(2 秒, 首页时间 25%)）、`every_level_entry_timed`（PLAY、地图选关、Next、Retry 进关都计时）、`final_build_loading_retest`；LOAD-02 观察 `every_entry_route_enters`（每条进关路线都真实进到能玩）。

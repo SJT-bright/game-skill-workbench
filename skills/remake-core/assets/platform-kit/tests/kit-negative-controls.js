@@ -12,7 +12,7 @@ var variants = [
   {name: 'failed_save_reported_as_success', file: 'MissionFlow.js',
     before: 'if (result.ok) {', after: 'if (true) {'},
   {name: 'non_success_result_is_silent', file: 'MissionFlow.js',
-    before: "self.message = r.status === 'ineligible' ? TEXT.notReady\n      : r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;\n    self._render();\n  });\n  return this.pendingCheck;",
+    before: "self.message = r.status === 'ineligible' ? TEXT.notReady : r.message;\n    self._render();\n  });\n  return this.pendingCheck;",
     after: '});\n  return this.pendingCheck;'},
   {name: 'no_own_timer_by_default', file: 'MissionFlow.js',
     before: 'options.missionTimeoutMs ? {timeoutMs: options.missionTimeoutMs} : undefined',

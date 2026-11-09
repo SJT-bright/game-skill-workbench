@@ -989,7 +989,7 @@ class PageRichnessTests(unittest.TestCase):
 class ArtCheckTests(unittest.TestCase):
     """art_check.py: the art line's own check right after each art round (user 2026-10-21)."""
     def run_check(self, scenes, flat=(), bar=False, extra_screens=(), board=None, runtime_verified=True, screen_alias=False,
-                  flash_frame=None, capture_identity=False):
+                  legacy_video=False, capture_identity=False):
         helper = PageRichnessTests()
         helper.addCleanup = self.addCleanup
         root = helper.project(scenes, league_add=False, flat=flat)
@@ -1057,15 +1057,11 @@ class ArtCheckTests(unittest.TestCase):
         (root / 'docs/art/generated.json').write_text(json.dumps({'kind': 'generated-art', 'images': [
             {'sha256': hashlib.sha256(p.read_bytes()).hexdigest(), 'file': p.relative_to(root).as_posix(),
              'prompt': 'fixture plate', 'tool': 'test'} for p in sorted((root / 'assets').rglob('*.png'))]}))
-        # user (美工调查 2026-10-30): every art round records taps/popups/volume/clears (chrome_touch.py --record)
-        recorded = root / 'docs/test' / 'record-home-taps' / 'frames'
-        recorded.mkdir(parents=True, exist_ok=True)
-        for i in range(60):          # 2.4 s at 25 fps; the tool ignores the first second (load-in)
-            still = Image.new('RGB', (180, 320), (70, 120, 170))
-            ImageDraw.Draw(still).rectangle((40, 200, 140, 240), fill=(230, 180, 60))
-            if flash_frame is not None and i == flash_frame:
-                still = Image.new('RGB', (180, 320), (255, 255, 255))
-            still.save(recorded / ('%05d_%07dms.jpg' % (i, i * 40)), quality=90)
+        if legacy_video:
+            # A stray recording from an older round is not an input to art_check.
+            frames = root / 'docs/test/record-home-taps/frames'
+            frames.mkdir(parents=True)
+            (frames / '00001_0000040ms.jpg').write_bytes(b'not a valid JPEG')
         out = Path(tempfile.mkdtemp(prefix='artcheck-out-')) / 'r'
         self.addCleanup(shutil.rmtree, out.parent, True)
         capture_args = []
@@ -1139,14 +1135,14 @@ class ArtCheckTests(unittest.TestCase):
         self.assertTrue(all(c['action'] == 'fresh' for c in verified['cases']))
         return build
 
-    def test_recorded_flash_fails_the_flicker_row(self):
+    def test_legacy_recording_is_not_an_art_gate(self):
         scenes = [('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
-        code, r, text = self.run_check(scenes, bar=True, flash_frame=40)
-        rows = {x['check']: x['status'] for x in r['rows']}
-        flicker = [k for k in rows if k.startswith('动态闪屏')]
-        self.assertEqual(len(flicker), 1, rows)
-        self.assertEqual(rows[flicker[0]], '需处理')
-        self.assertEqual(code, 1)
+        code, report, _ = self.run_check(scenes, bar=True, legacy_video=True)
+        self.assertEqual(code, 0, report['rows'])
+        self.assertFalse(any(row['check'].startswith('动态闪屏') for row in report['rows']))
+        tools = {timing.get('tool') for timing in report.get('check_timings', [])}
+        self.assertNotIn('audit_frame_glitches.py', tools)
+        self.assertNotIn('make_contact_sheet.py', tools)
 
     def test_good_pages_pass(self):
         scenes = [('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
@@ -1159,8 +1155,6 @@ class ArtCheckTests(unittest.TestCase):
         self.assertEqual(rows['字不压扁拉伸、字色有变化'], '通过')
         self.assertEqual(rows['实际页面状态与截图（docs/art/screens.json）'], '通过')
         self.assertEqual(rows['位置穿模（字和图不互相压、数字不叠印、不伸出按钮/胶囊/卡片、主功能字在按钮上、没有假透明格子）'], '通过')
-        self.assertEqual(rows['穿模审查图（给 Codex 看）'], '提示')            # zoomed crops of buttons/capsules/numbers made
-        self.assertIn('穿模审查图', text)
         self.assertEqual(rows['顶部资源栏'], '提示')          # "goes up after a win" is checked in the test stage
         self.assertEqual(rows['文字一次成图（整张按钮、图片数字）'], '通过')
         self.assertEqual(rows['同组按钮同一种风格（按钮和下面的字做法、底板、颜色一致）'], '通过')
@@ -1223,8 +1217,6 @@ class ArtCheckTests(unittest.TestCase):
         self.assertEqual(row['status'], '需处理')
         for kind in ('overlap_text_picture', 'clip_out', 'action_caption'):
             self.assertIn(kind, row['detail'])
-        sheets = next(x for x in r['rows'] if x['check'] == '穿模审查图（给 Codex 看）')
-        self.assertEqual(sheets['status'], '提示')
 
     def test_overlapping_digits_block_the_art_round(self):
         scenes = [('daily_overlap', 'reward'), ('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']

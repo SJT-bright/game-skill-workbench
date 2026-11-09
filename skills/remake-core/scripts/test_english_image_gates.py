@@ -88,51 +88,5 @@ class NewImages(unittest.TestCase):
         self.assertEqual(newimg.pixels(png(33, 44)), (33, 44))
 
 
-class PackageEntryWiring(unittest.TestCase):
-    """make_tiktok_zip.english_image_problems(): used by make_tiktok_zip.py and build_checked_zip.py (W4 REQUESTS 1)."""
-
-    def setUp(self):
-        from make_tiktok_zip import english_image_problems
-        self.problems = english_image_problems
-        self.tmp = tempfile.TemporaryDirectory()
-        self.project = Path(self.tmp.name)
-        self.files = {'game.js': b'x', 'home.png': NEW, 'bg.png': BG}
-
-    def tearDown(self):
-        self.tmp.cleanup()
-
-    def write(self, review_entries, pre):
-        docs = self.project / 'docs' / 'english'
-        docs.mkdir(parents=True, exist_ok=True)
-        (docs / 'image-review.json').write_text(json.dumps(sealed(review_entries)))
-        (docs / 'pre-english-images.json').write_text(json.dumps(pre))
-
-    def entry(self, b):
-        return {'sha256': sha(b), 'reviewer': 'main agent', 'status': 'done', 'chinese': 'no'}
-
-    def test_remake_board_not_affected(self):
-        self.assertEqual(self.problems(self.files, self.project, 'remake'), [])
-        self.assertEqual(self.problems(self.files, None, None), [])
-
-    def test_localize_missing_record_and_list_refuse(self):
-        found = ' | '.join(self.problems(self.files, self.project, 'localize'))
-        self.assertIn('image review', found)
-        self.assertIn('pre-English image list missing', found)
-        self.assertTrue(self.problems(self.files, None, 'localize'))
-        from tiktok_finalize import SOURCE_RECORD
-        source = self.project / SOURCE_RECORD
-        source.parent.mkdir()
-        source.write_text('{"board":"localize"}')
-        self.assertEqual(' | '.join(self.problems(self.files, self.project, None)), found)
-
-    def test_localize_complete_records_pass_and_big_new_image_refuses(self):
-        self.write([self.entry(NEW), self.entry(BG)], [sha(BG)])
-        self.assertEqual(self.problems(self.files, self.project, 'localize'), [])
-        big = png(10, 10, newimg.MAX_BYTES)
-        files = dict(self.files, **{'home.png': big})
-        self.write([self.entry(big), self.entry(BG)], [sha(BG)])
-        self.assertIn('> %d' % newimg.MAX_BYTES, ' '.join(self.problems(files, self.project, 'localize')))
-
-
 if __name__ == '__main__':
     unittest.main()

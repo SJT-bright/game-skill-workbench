@@ -51,6 +51,33 @@ test('dependencies_are_the_same_objects', function () {
   assert.strictEqual(a, b, 'one module instance');
   assert.strictEqual(Object.getOwnPropertyDescriptor(ctx.TikTokKit, 'PlatformConfig').writable, false);
 });
+test('growth_buttons_in_generated_plugins_dispatch_immediately_and_stay_quiet', function () {
+  var ctx = runIn(bareContext(), NAMES);
+  var M = ctx.TikTokKit.MissionFlow, views = [], calls = [];
+  var store = {isClaimed: function () { return true; }};
+  var options = {store: store, reward: function () {}, render: function (view) { views.push(view); }};
+  var studio = new M(options);
+  studio.open('shortcut', {navigate: true});
+  studio.open('profile', {navigate: true});
+  assert(views.every(function (view) { return !view.open && view.message === ''; }));
+  studio.dispose();
+  ctx.tt = {
+    addShortcut: function () { calls.push({method: 'shortcut', viewCount: views.length}); },
+    startEntranceMission: function () { calls.push({method: 'profile', viewCount: views.length}); }
+  };
+  var flow = new M(options);
+  try {
+    ['shortcut', 'profile'].forEach(function (kind) {
+      var count = views.length;
+      flow.open(kind, {navigate: true});
+      flow.open(kind, {navigate: true});
+      assert.deepStrictEqual(calls[calls.length - 1], {method: kind, viewCount: count});
+      assert.strictEqual(flow.view().canCheck, false);
+    });
+    assert.strictEqual(calls.length, 2);
+    assert(views.every(function (view) { return !view.open && view.message === ''; }));
+  } finally { flow.dispose(); }
+});
 test('loading_a_plugin_twice_keeps_the_first', function () {
   var ctx = runIn(bareContext(), NAMES);
   var first = ctx.TikTokKit.RewardedService;

@@ -36,23 +36,23 @@ function missionSDK() {
 }
 function setup(opts) {
   opts = opts || {};
-  var fake = missionSDK(), toasts = [], states = [];
+  var fake = missionSDK(), states = [];
   var store = new SaveStore({coins: 0}, {storage: memoryStorage(), key: 'he', login: false}); store.load();
   var c = new Entries.Controller({store: store, native: opts.native !== undefined ? opts.native : true,
     missions: new Mission({getSDK: function () { return fake.sdk; }, now: function () { return 0; }, autoPoll: false, timeoutMs: 10000}),
-    toast: function (t) { toasts.push(t); }, render: function (s) { states.push(s); }});
-  return {c: c, store: store, fake: fake, toasts: toasts, state: function () { return states[states.length - 1]; }};
+    render: function (s) { states.push(s); }});
+  return {c: c, store: store, fake: fake, states: states, state: function () { return states[states.length - 1]; }};
 }
 
 (async function () {
   var keepB = config.normalLevelCoins;
   config.normalLevelCoins = 12;
   try {
-    await test('unsupported_runtime_shows_available_in_tiktok_and_keeps_entries', function () {
+    await test('studio_without_sdk_keeps_both_entries_silent', function () {
       var t = setup({native: false});
       assert.strictEqual(t.c.press('shortcut'), 'unsupported');
       assert.strictEqual(t.c.press('profile'), 'unsupported');
-      assert.deepStrictEqual(t.toasts, ['Available in TikTok', 'Available in TikTok']);
+      assert(t.states.every(function (state) { return state.message === ''; }));
       assert.strictEqual(t.fake.calls.length, 0, 'no fake success, no SDK call');
       assert.strictEqual(t.state().shortcut.title, 'Add to Home');
       assert.strictEqual(t.state().profile.title, 'Profile Revisit', 'entries are not hidden');
@@ -76,15 +76,25 @@ function setup(opts) {
     });
     // 简化.11.3 (Saul 2026-11-02): until 简化.11.2 the first tap only asked for the reward and a second tap was
     // needed to navigate; on the phone (77~86, Mosslight v20) the entries looked dead.
-    await test('one_tap_goes_to_tiktok_at_once', function () {
-      var t = setup();
-      assert.strictEqual(t.c.press('shortcut'), 'start');
-      assert.strictEqual(t.fake.count('addShortcut'), 1, 'addShortcut inside the tap');
-      assert.strictEqual(t.fake.count('getShortcutMissionReward'), 0, 'no reward query in front of the jump');
-      var u = setup();
-      assert.strictEqual(u.c.press('profile'), 'start');
-      assert.strictEqual(u.fake.count('startEntranceMission'), 1);
-      assert.strictEqual(u.fake.count('getEntranceMissionReward'), 0);
+    await test('both_home_entries_dispatch_before_rendering_and_show_no_hint', async function () {
+      var methods = {shortcut: 'addShortcut', profile: 'startEntranceMission'};
+      for (var kind of Object.keys(methods)) {
+        var t = setup(), method = methods[kind];
+        var renderCount = t.states.length;
+        var original = t.fake.sdk[method], atDispatch = null;
+        t.fake.sdk[method] = function (opts) {
+          atDispatch = t.states.length;
+          original(opts);
+        };
+        assert.strictEqual(t.c.press(kind), 'start');
+        assert.strictEqual(atDispatch, renderCount, 'the SDK is called before a view renders');
+        assert.deepStrictEqual(t.fake.calls.map(function (call) { return call.method; }), [method]);
+        assert.strictEqual(t.c.flow.view().open, false, 'no in-game panel');
+        t.fake.last(method).opts.success({});
+        await flush();
+        assert(t.states.every(function (state) { return state.message === ''; }), 'no transient or success guidance');
+        assert.strictEqual(t.store.get().coins, 0, 'navigation success never pays');
+      }
     });
     await test('repeated_taps_send_one_request_and_pay_once', async function () {
       var t = setup();
@@ -123,11 +133,12 @@ function setup(opts) {
       assert.strictEqual(t.c.press('shortcut'), 'start');
       assert.strictEqual(t.fake.count('addShortcut'), 2, 'one more tap goes again');
     });
-    await test('navigation_failure_message_carries_the_platform_error', async function () {
+    await test('navigation_failure_is_silent_retryable_and_keeps_diagnostics', async function () {
       var t = setup();
       t.c.press('profile');
       t.fake.last('startEntranceMission').opts.fail({errMsg: 'startEntranceMission:fail not support', errCode: 10002}); await flush();
       assert.strictEqual(t.c.flow.phase, 'idle', 'a failed jump frees the entry');
+      assert(t.states.every(function (state) { return state.message === ''; }));
       assert.strictEqual(t.store.get().coins, 0, 'a failed jump pays nothing');
       assert.strictEqual(t.c.press('profile'), 'start', 'the next tap tries again');
       assert.strictEqual(t.fake.count('startEntranceMission'), 2);
@@ -137,6 +148,7 @@ function setup(opts) {
       assert.strictEqual(seen.errorCode, 10002);
       assert.strictEqual(seen.errMsg, 'x:fail not support');
       assert.strictEqual(seen.api, 'startEntranceMission');
+      assert.strictEqual(seen.message, '');
     });
     await test('canIUse_undefined_or_missing_still_calls_the_platform', async function () {
       var Missions = require(path.join(base, 'TikTokMissionService.js'));
@@ -222,13 +234,17 @@ function setup(opts) {
         comp.shortcutNode = new Node('a'); comp.profileNode = new Node('b');
         comp.shortcutNode.comps.Button = new Button();
         var store = new SaveStore({coins: 0}, {storage: memoryStorage(), key: 'cc', login: false}); store.load();
-        var ctrl = comp.init(store, {native: false});
+        var toasts = [];
+        var ctrl = comp.init(store, {native: false, ui: {toast: function (message) { toasts.push(message); }}});
         assert(comp.shortcutNode.active && comp.profileNode.active, 'both entries shown');
         var label = comp.shortcutNode.getChildByName('HomeEntryText').getComponent(Label);
         assert.strictEqual(label.string, 'Add to Home\n+60', 'no sprite -> text fallback');
         assert.strictEqual(typeof comp.profileNode.handlers.touchend, 'function');
+        comp.shortcutNode.handlers.touchend();
         comp.profileNode.handlers.touchend();
         assert.strictEqual(ctrl.flow.native, false);
+        assert.deepStrictEqual(toasts, []);
+        assert.strictEqual(store.get().coins, 0);
         comp.onDestroy();
       } finally { delete global.cc; }
     });

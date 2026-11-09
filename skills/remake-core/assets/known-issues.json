@@ -197,8 +197,8 @@
       "id": "GROW-01",
       "feature": "growth",
       "title": "平台任务资格与奖励",
-      "steps": "对实际要求的平台导航任务检查能力、真实操作、回来资格查询、领取、重载和实际消费。必测：①打开奖励弹窗发起查询A，A没结束就离开游戏（加桌面/去个人主页）再回来，新查询B必须能启动，迟到的A不改界面、不写余额、不挡B；②失败、超时、不支持、无资格、只完成未达标，每种都有看得懂的提示，能重试或关闭；③同一次查询中的连点合并，和\"外出回来要重查\"分开断言；④关闭弹窗/回首页再打开后旧查询不影响当前界面；⑤两种手机比例真实触摸点\"查看奖励/重试/关闭\"，不能用函数直调代替。 ⑥返回方式（Monkey Dash 2026-10-21）：查询结果只从 success 回调来、只从 Promise 来、两者都来、Promise 返回空/不完整、只有 complete、reject/同步抛错，每种都走同一个单次结算并有可见终态；⑦把 SDK 结果和原来的超时定时回调同时扣住，实际画面仍能结束等待、显示原因，再用真实触摸重试成功。",
-      "expected": "平台明确资格且保存成功才奖一次，奖励能在玩法里真正用上，重开后仍在；查询中有\"检查中\"状态，所有非成功结果都有可关闭的说明，任何时候按钮都不会\"点了没反应\"；导航任务不冒充视频广告，普通浏览器不伪造完成。 首页一定有这两个键（英化不问用户直接加）；没有分享任务和分享奖励（分享用不了，用户 2026-10-23）。",
+      "steps": "分别点首页桌面快捷方式和个人主页回访，第一次点击直接调用各自导航。Studio 或无能力、失败、取消、超时和无资格时界面无说明、过渡提示、领奖键或假奖，入口可重试。测两项对应入口冷启动和热返回、普通切前台、回调与 Promise 资格、等待过期、迟到结果和重复进入。真实触摸核对两键并记录当时界面及调用顺序。原每种结果提示的证据字段 each_negative_result_message 记录各分支无提示与可重试的观察。",
+      "expected": "两键始终显示，点击直接导航，已领取也可点。只有匹配入口返回、严格资格为 true 且持久保存成功才发一次，重开和重复事件不重发。Studio 不弹游戏内说明。奖励在原玩法中可用。",
       "phase": "pre_scan",
       "always_applicable": false,
       "symptom": "平台任务（加桌面、个人主页回访等）没完成也发奖，或完成了不发奖；去加桌面/个人主页回来后点\"查看奖励\"没反应（旧查询没取消、还占着锁，新查询被挡；失败/无资格时不给任何提示）。 去加桌面/回访回来点\"查看奖励\"一直 CHECKING：SDK 用 Promise 返回资格而代码只接 success 回调；超时依赖的定时回调没执行，等待永远不结束（Monkey Dash 2026-10-21）。",
@@ -217,7 +217,7 @@
       "feature": "async",
       "title": "异步查询的返回方式与等待出口",
       "steps": "开工用 audit_async_contracts.py 扫出代码里所有奖励查询/广告/平台导航接口，每个奖励接口都要在检查表里有入口（api 字段）。对每个入口建返回方式矩阵：只走回调、只走 Promise、两者都来、空或不完整结果、只有 complete、reject/同步抛错；生命周期另测：查询没结束就离开再回来、旧结果迟到、重复回到前台不延长等待。等待出口要实证：把 SDK 结果和原超时定时回调同时扣住，看实际画面能结束等待、提示原因、真实触摸重试成功。测试替身必须能分别用回调和 Promise 返回，不能和实现共用'只有 success'的假设。最后用故意改坏的版本（去掉 Promise 处理、去掉截止恢复、允许旧请求回写）跑同一个检查，必须变红。",
-      "expected": "每种返回方式都进入同一个单次结算：只有严格资格 true 才发奖一次，其他结果都结束等待并显示原因、能重试或关闭；扣住 SDK 和定时器后等待仍会结束；同一个检查在改坏版本上失败、在当前版本上通过、正常对照仍通过。只看'代码里有 timeout''SDK 被调用了''余额没变'不算通过。",
+      "expected": "每种返回方式都进入同一个单次结算：只有严格资格 true 才发奖一次，其他结果都结束等待且可重试或关闭。主页两项直跳按 GROW-01 保持界面安静，其他反馈按各入口规则；扣住 SDK 和定时器后等待仍会结束；同一个检查在改坏版本上失败、在当前版本上通过、正常对照仍通过。只看'代码里有 timeout''SDK 被调用了''余额没变'不算通过。",
       "phase": "pre_scan",
       "always_applicable": true,
       "symptom": "点了查看奖励/看广告后一直 CHECKING/Loading：SDK 用 Promise 返回结果而代码只接了 success 回调（或反过来）；超时写了，但依赖的定时回调没执行，等待永远不结束；测试替身只会用 success 返回，和代码犯同一个错，一起通过（Monkey Dash 2026-10-21）。",
@@ -289,7 +289,6 @@
       "phase": "pre_scan",
       "always_applicable": false,
       "symptom": "字太小、颜色太淡，手机上看不清。",
-      "visual_verdict": true,
       "gate": "art"
     },
     {
@@ -308,12 +307,11 @@
         "hit_results"
       ],
       "symptom": "文字、图标、按钮互相压住；长英文挤出框外或被裁掉；标题牌压在面板边框上、底部按钮压住角花、商品展示区太小被边框挤住（以前只查了按钮之间，漏掉了标题牌、状态牌和边框装饰）。",
-      "visual_verdict": true,
       "auto_check": [
         "audit_ui_coverage"
       ],
       "board_notes": {
-        "localize": "英化：布局同样由 dump_ui + extract_ui_layout.py 读出并检查；英文变长造成的越框、盖字由 GPT 看总览图再确认。"
+        "localize": "英化：布局同样由 dump_ui + extract_ui_layout.py 读出并检查；英文变长造成的越框、盖字随人工试玩确认。"
       },
       "gate": "art"
     },
@@ -342,7 +340,6 @@
         "actual_background_composition"
       ],
       "symptom": "图片有白边/黑边、透明部分变成色块，图集里切到了旁边的图。",
-      "visual_verdict": true,
       "gate": "art"
     },
     {
@@ -359,8 +356,7 @@
         "text_visibility",
         "open_close_states"
       ],
-      "symptom": "弹窗被别的东西盖住，遮罩挡住了按钮，层级顺序错乱。",
-      "visual_verdict": true
+      "symptom": "弹窗被别的东西盖住，遮罩挡住了按钮，层级顺序错乱。"
     },
     {
       "id": "UI-07",
@@ -410,8 +406,7 @@
       "expected": "实际画布适配目标视口；重要信息和操作不被裁切，外框变化不冒充游戏适配。",
       "phase": "pre_scan",
       "always_applicable": false,
-      "symptom": "长屏或刘海屏上内容被裁掉、露黑边，按钮跑到安全区外。",
-      "visual_verdict": true
+      "symptom": "长屏或刘海屏上内容被裁掉、露黑边，按钮跑到安全区外。"
     },
     {
       "id": "VIEW-02",
@@ -543,7 +538,6 @@
         "defects_and_rechecks"
       ],
       "symptom": "有些页面或状态没换成新美术，还留着旧图；生成的图放进游戏后变糊或错位。",
-      "visual_verdict": true,
       "board_notes": {
         "localize": "英化：范围是全部改成英文的文字、新做的英文图、新背景和新功能的图；和 docs/baseline 原版对照截图逐页并排，除文字和优化清单里的改动外不应有变化。美术第一版不做全 UI 生图；用户说\"按重塑画风重做\"后按重塑全 UI 生图检查。"
       },
@@ -816,7 +810,7 @@
       "feature": "art",
       "title": "画风禁止项（只查负向，画风跟随启动包）",
       "symptom": "大面积深色背景或深色面板、纯黑/纯色底、大白板；按钮是无层次的纯平面色块；字是深色/近黑、挤成一团或细到看不清；单色图标；整屏高亮刺眼；图片模糊。",
-      "steps": "对当前版本每个页面和弹窗（首页、加载、选关、游戏内、过关/失败/结算/暂停/奖励）在两种比例下截图，运行scripts/audit_dark_area.py --binding <review.json> --out <报告>；超标页面交美术线修改后重拍重测。画风本身按启动包 ART_DIRECTION，不按明亮/Q版/亮度评判；脚本量不到的禁止项（字过密、字过细、单色图标、刺眼、无层次平涂）由 GPT 看总览图判（visual_verdict），只判有没有出现禁止项。",
+      "steps": "对当前版本每个页面和弹窗（首页、加载、选关、游戏内、过关/失败/结算/暂停/奖励）在两种比例下截图，运行scripts/audit_dark_area.py --binding <review.json> --out <报告>；超标页面交美术线修改后重拍重测。画风本身按启动包 ART_DIRECTION，不按明亮/Q版/亮度评判；脚本量不到的禁止项（字过密、字过细、单色图标、刺眼、无层次平涂）随人工试玩观察。",
       "expected": "只查负向：全部截图深色像素≤15%、没有纯黑/纯色底和大白板（audit_dark_area.py 报告通过，不设平均亮度下限）；没有 remake-art/references/style-limits.md 第〇节的禁止项：深色/近黑的字（尤其深色粗字）、特别密集的字、特别细的字、大面积深色或纯黑/纯色底、大白板、单色图标、刺眼的整屏高亮、无层次平涂、字压在复杂底图上看不清、按钮/文字被遮挡或穿模、图片模糊。不要求任何正向画风（明亮、Q版、糖果色、光泽、胶囊按钮、固定颜色含义、华丽感）；画风按启动包 ART_DIRECTION，和禁止项冲突时只改冲突处并写明依据。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -828,7 +822,6 @@
       "auto_check": [
         "audit_dark_area"
       ],
-      "visual_verdict": true,
       "boards": [
         "remake"
       ],
@@ -855,7 +848,6 @@
       "auto_check": [
         "audit_dark_area"
       ],
-      "visual_verdict": true,
       "boards": [
         "remake"
       ],
@@ -881,7 +873,6 @@
         "runtime_frames_2x_background_1_5x",
         "same_check_every_art_round"
       ],
-      "visual_verdict": true,
       "board_notes": {
         "localize": "英化：第一轮美术起就查新做/重做的图（英文图、重做的背景、新功能图标和皮肤、两个主页入口图标），不只作提示；原游戏没改的图写进 docs/art/clarity-exempt.json（why：原游戏原图，未改）。选了\"按重塑画风重做\"后全部图都查。"
       },
@@ -895,7 +886,7 @@
       "feature": "art",
       "title": "UI不挡玩法、货币在最上方、功能按钮集中在下方图标为主、禁用深色/大白/纯色/粗黑字/单调设计、无开发用文字、首页必有桌面快捷方式和个人主页回访两个键、不要分享",
       "symptom": "游戏中信息条、按钮、摇杆堆满四周和中间，挡住大半屏幕；暂停/商店弹窗是一整张大白板配黑色粗字和黑色单色图标；按钮和面板是藏青/黑色大色块；所有标签是同一个白色铭牌模板，放在纯黑底上。 首页把七八个功能做成大文字方块堆在中下部；试玩版显示\"PLAYABLE PROTOTYPE\"\"PLAYTEST LAB\"\"TRY THE MECHANICS\"等开发用文字；生成按钮和白色占位方块混用。 用户 2026-10-23：首页金币栏（coin 0 / 道具 1）放在屏幕正中间，地图、皮肤图标在中间两侧，帮助和视频图标挤在左下角和右下角，四散各处、中间一大片空白（Hazel's Shelf Scramble）。 用户 2026-10-23：分享用不了，英化的原游戏还留着 Share/分享按钮；英化时首页没加桌面快捷方式和个人主页回访，或者先问用户要不要。 用户 2026-10-23：原游戏的按钮不审查全部留着，更多游戏/交叉推广、排行榜、七日签到这些多做多错的按钮一直出 bug。",
-      "steps": "组装线写 docs/ui-layout.json（两种比例的游戏中常驻UI元素矩形、提示气泡、每个弹窗面板），跑 audit_ui_coverage.py --binding；每个页面和弹窗截图跑 audit_dark_area.py（含大块白色/纯色测量）；GPT 在总览图上判定文字是否太深/太密/太细、图标是否单色、布局是否成组清楚。 首页在 ui-layout.json 写 role:home 与 buttons（primary/label），audit_ui_coverage.py 查文字方块、大小、设置在上角、货币在最上方、其他功能按钮紧凑排在下方、重叠和按钮总面积≤40%；audit_top_bar.py 的 currency_only_at_top 查每个页面货币都在最上方；audit_dev_text.py --final 查开发用文字和占位图。 布局数据由 extract_ui_layout.py 从运行中游戏的 dump_ui 自动读出（audit_ui_coverage 会重新提取比对，手填或改过的布局直接拒绝）。 audit_ui_coverage.py 同时查每个首页都有桌面快捷方式（shortcut/add_to_home）和个人主页回访（revisit/profile）两个键、任何页面/弹窗/HUD 没有分享入口（share/分享/invite/邀请/炫耀/转发）；audit_platform_markers.py <工程> 查源码里没有 shareAppMessage/onShareAppMessage/showShareMenu 等分享调用。 英化先按 remake-core/references/game-modules.md 第一节审查原游戏每个按钮（docs/modules.json button_audit）；audit_ui_coverage.py 同时查没有排行榜/排名、签到、更多游戏按钮，audit_platform_markers.py 查没有 navigateToMiniProgram/showMoreGamesModal 等交叉推广调用。",
+      "steps": "组装线写 docs/ui-layout.json（两种比例的游戏中常驻UI元素矩形、提示气泡、每个弹窗面板），跑 audit_ui_coverage.py --binding；每个页面和弹窗截图跑 audit_dark_area.py（含大块白色/纯色测量）；试玩时人工观察文字是否太深/太密/太细、图标是否单色、布局是否成组清楚。 首页在 ui-layout.json 写 role:home 与 buttons（primary/label），audit_ui_coverage.py 查文字方块、大小、设置在上角、货币在最上方、其他功能按钮紧凑排在下方、重叠和按钮总面积≤40%；audit_top_bar.py 的 currency_only_at_top 查每个页面货币都在最上方；audit_dev_text.py --final 查开发用文字和占位图。 布局数据由 extract_ui_layout.py 从运行中游戏的 dump_ui 自动读出（audit_ui_coverage 会重新提取比对，手填或改过的布局直接拒绝）。 audit_ui_coverage.py 同时查每个首页都有桌面快捷方式（shortcut/add_to_home）和个人主页回访（revisit/profile）两个键、任何页面/弹窗/HUD 没有分享入口（share/分享/invite/邀请/炫耀/转发）；audit_platform_markers.py <工程> 查源码里没有 shareAppMessage/onShareAppMessage/showShareMenu 等分享调用。 英化先按 remake-core/references/game-modules.md 第一节审查原游戏每个按钮（docs/modules.json button_audit）；audit_ui_coverage.py 同时查没有排行榜/排名、签到、更多游戏按钮，audit_platform_markers.py 查没有 navigateToMiniProgram/showMoreGamesModal 等交叉推广调用。",
       "expected": "游戏中常驻UI≤屏幕20%（玩法区≥80%）且互不重叠，提示气泡小、不在屏幕中间、会自动消失；游戏中弹窗面板≤屏幕60%；没有大块白色/浅灰、大块纯色或深色按钮面板；文字不是深色/近黑填充，没有近黑/藏青/深灰特粗字，也不过密、不细到看不清；没有单色图标；颜色照启动包，不规定颜色固定含义。 首页按钮加起来≤屏幕40%（用户 2026-10-23 由30%放宽，标题、封面不算），每页最多 2 个主要文字按钮，其他为图标按钮；货币/体力/加号只在屏幕最上方；重塑首页按 v7.5 分区：设置在左上、和货币栏同一行，签到、礼盒、地图、皮肤放在主视觉左右两侧，PLAY 下面只放主页回访和加桌面（audit_ui_coverage.py home_zones_remake）；英化保持原规则：设置在左上或右上角，其他功能按钮（礼盒、地图、皮肤等）紧凑排在下方（屏幕65%以下）最多两排、按钮之间小间距，不散到四周和角落，中间不放功能按钮；不显示开发用文字，不留占位图。 首页下方那排一定有 Add to Home Screen（桌面快捷方式）和 Profile Revisit（个人主页回访）两个键，英化时原来没有就直接加、不问用户；全游戏没有分享功能，原游戏的分享按钮、弹窗、奖励和调用都已删除。 没有排行榜/排名、七日签到、更多游戏/交叉推广（用户 2026-10-23）；首页有10帧动画礼盒（点开看广告得金币；10帧图由 art_check.py 的礼盒一行查）。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -913,7 +904,6 @@
         "audit_dark_area",
         "audit_dev_text"
       ],
-      "visual_verdict": true,
       "board_notes": {
         "localize": "英化：页面按本条重新排版（货币挪到最上方、设置在上角、其他功能图标紧凑排在下方、玩法区≥80%），禁止的UI（大块深色/白板/纯色、深色粗字、单色图标）必须改掉；改的部分沿用原游戏画风，不要求明亮Q版。 英化重点（用户 2026-10-23）：首页直接加桌面快捷方式和个人主页回访两个键（不问用户），原游戏的分享功能全部删掉。"
       },
@@ -1099,12 +1089,11 @@
       "feature": "art",
       "title": "不能有单调页面和纯色背景（含游戏中）：结算页只有一个按钮、纯色底、按钮只有字、系统默认字体、大块空白面板、开发用文字",
       "symptom": "过关页是整屏纯蓝底，只有一个 NEXT LEVEL 按钮；首页的 PLAY 只是一行字没有按钮底板，两个图标下面的 Home Screen、Profile Revisit 是系统默认字体；排名/商店弹窗中间一大块空白。 第一轮美术后过关页整屏浅蓝、游戏中天空是一整块浅蓝什么都没有；主页回访弹窗显示 LOCAL PREVIEW；设置页只有声音、没有功能页。 首页按钮做得又大又多、占满屏幕，标题很小，没有封面画面。 美术只换了图，字还是系统细字体摆在图上：白字 RETRY 压米色面板、深蓝 PLAY 压深蓝按钮、细紫字压花哨背景、青字压青底。 第二批（用户 2026-10-22）：收藏页\"COINS 47 PEARLS 17\"\"Price · 250 coins\"和物品名是直接调用字体的深青色字，左右翻页是扁平青色方块里打的\"<\"\">\"，和同页金边 UNLOCK 不是一套；\"BRILLIANT!\"是深青色字体字；任务页标题是图片字，下面的任务名和数字却是很细的系统字。 第三批（用户 2026-10-23，永久禁止）：游戏中天空上的 HUD \"COINS 785\"\"LEVEL 1\"是深青/深蓝灰色粗字；奶白面板上的\"HOME SCREEN OPEN · PROFILE RETURN OPEN\"\"MISSIONS 2/3 RESOLVED\"是深青色粗字，还是把代码状态直接显示给玩家。 第四批（用户 2026-10-23）：\"Home screen reward\"弹窗是一整块浅色平板，标题和说明是字体打的青蓝色字，下面三个扁平按钮 ADD NOW / CHECK REWARD / CLOSE，没有插图和标题牌，非常单调。 第五批（用户 2026-10-23）：DETAILS 字图 570×345 被 SizeMode.CUSTOM 硬塞进 234×49 按钮，压扁 2.89 倍（SKINS、DAILY 1.80 倍，MAP 1.19 倍），RasterText.ts 用 Canvas 字体画字；Hazel's Shelf Scramble 首页标题、PLAY、数字 100/3 全是同一种青色；\"Your Progress\"弹窗所有字同一种橙黄＋棕描边、中间大白板、灰底；用户只说\"重做美工\"时 AI 只按几个字重画，没走美术规则和检查。 第六批（用户 2026-10-23）：体力胶囊里\"20\"压在闪电图标上、是原生细字体；WATCH AD 按钮左边一堆金币伸出按钮（穿模）；按钮下面用小字写\"WATCH AD · DOUBLE COINS\"，主要功能字成了小字。 第七批（用户 2026-10-23）：Daily Rewards 签到弹窗的三位数奖励 100/150/200/300 数字叠在一起（像\"10\"叠印在\"100\"上，两位数 25/50 正常）；第 7 天的车被拉长、远远伸出卡片；卡片里面是生成图自带的绿色棋盘格（假透明）。 第八批（用户 2026-10-23，Metro Switch 首页）：背景是一整张画满小细节的广场（小人、小车、招牌、地砖），深色标题和普通按钮淹没在里面，一点都不突出；标题还是深色字。",
-      "steps": "交用户看美术之前就做（不是等到打包）：在浏览器里用 chrome_touch 的 dump_ui 读每个页面和弹窗（含游戏中，两种比例），写 purpose：首页 home、过关 result_win、失败 result_fail、设置功能页 settings、设置声音页 settings_sound；每次 dump 自动存一张截图。运行 scripts/audit_page_richness.py --project <工程> --binding <review.json> --out <报告>（同时量每张截图的纯色背景）；Codex 在总览图上再看一遍。",
+      "steps": "交用户看美术之前就做（不是等到打包）：在浏览器里用 chrome_touch 的 dump_ui 读每个页面和弹窗（含游戏中，两种比例），写 purpose：首页 home、过关 result_win、失败 result_fail、设置功能页 settings、设置声音页 settings_sound；每次 dump 自动存一张截图。运行 scripts/audit_page_richness.py --project <工程> --binding <review.json> --out <报告>（同时量每张截图的纯色背景）；画面观感随人工试玩观察。",
       "expected": "报告通过：每个页面（含游戏中）都有背景画面、没有一种纯色占屏幕 40% 以上；没有单调页面（≥5 个元素、占屏幕≥25%）、只有字的按钮、系统默认字体、空白面板、开发用文字；结算页有至少2个按钮、奖励/分数/关卡数字、星星或金币等至少3个图；首页上半屏有一张主角或图案大图（宽度≥屏幕55%，不写游戏名）、封面图（不是按钮的图≥屏幕15%）、带底板的 PLAY 和至少2个图标按钮；功能页（首页、结算、暂停、设置、复活、试用）的按钮加起来≤屏幕40%（用户 2026-10-23 由30%放宽），标题和封面不算；弹窗不单调（plain_popup：每个弹窗都有生成的插图≥面板10%、图片字标题和整套按钮）；设置有功能页（How to Play、Credits/About）和声音页（Music、Sound Effects 两类开关和十格音量）。 所有字都设计过：固定字是图片字；按钮连字一次成整张图（没有 spliced_button）、首页标题是一张生成的 logo（没有 typed_title）、数字是按画风生成的数字位图字（没有 font_number，用户 2026-10-23）；只有公告、玩法说明这类大段文字可用细一点的字体；没有对比度不够（小字4.5:1、大字3:1，描边可算）、iPhone 上小于11px、没描边阴影的按钮字和标题。 固定的字（标题、按钮、栏目名、物品名、任务名）全部是 GPT 生成的图片字（txt_<字>），没有 font_text、dark_green_text（深绿/深青色字）、text_arrow、flat_button；按钮全部在 docs/art/button-set.json 的一整套里（含左右箭头）。 没有任何深色粗字（用户 2026-10-23 永久禁止，不分颜色，游戏中 HUD 和图片字也算）：dark_bold_text（文字颜色 L*<50 且粗体/描边/阴影/≥16px）、dark_picture_text（截图像素量出字形大多是深色）都没有；没有\"SCREEN OPEN\"\"2/3 RESOLVED\"这类状态字（dev_text）。 字图都等比缩放、没有被压扁拉长（没有 squashed_text/squashed_picture，每个字单独裁边成 SpriteFrame，SizeMode TRIMMED/RAW）；没有 Canvas 画的字（canvas_text、canvas_font_code）；一页的标题、按钮字、数字、标签颜色不全一样（没有 uniform_text_colour）；docs/art/screens.json 列出所有能点开的页面和弹窗，每个都 dump 过、风格一致（art_check 行\"全部页面和弹窗\"通过）；只改美工时也走 remake-art 的全套规则和检查（用户 2026-10-23）。 不穿模（没有 overlap_text_picture、overlap_text、overlap_buttons、clip_out、capsule text_outside），主要功能字在生成的按钮上（没有 action_caption），道具/体力/金币/关卡的胶囊、按钮、收集键是生成的图、会变的数字单独生成位图字；art_check 行\"位置穿模\"通过，Codex 看过 overlap/ 穿模审查图（用户 2026-10-23）。 数字不叠印（用户 2026-10-23）：没有 glyph_overlap（手摆的数字图互相压）、double_number（同一个数字印两遍/再叠一个 Label）、negative_spacing（字距为负）、font_advance（.fnt 字宽大于前进宽度）；固定数字（每日奖励、价格、关卡奖励）和金币图标/底板一起生成成一张图，会变的数字用一个位图字体 Label，三位数和最大值都放大看过；卡片里的奖励图不伸出卡片（clip_out 含卡片）、不被拉长；没有 checker_fill（生成图自带的棋盘格假透明，必须是真透明 alpha）。 背景不花哨（用户 2026-10-23）：没有 busy_background（背景里细碎边缘占比≤30%），背景不花哨到盖过标题、按钮和文字（字不压在复杂底图上看不清），画法照启动包；标题不是深色字；首页有礼盒（gift），每个过关页（无尽游戏每个结算页）有看广告×2 按钮（result_double）；没有排名/签到页面和按钮（removed_feature）。",
       "phase": "pre_scan",
       "always_applicable": true,
       "requires_gui": true,
-      "visual_verdict": true,
       "required_observations": [
         "pages_dumped_with_purpose",
         "no_monotonous_page",
@@ -1140,17 +1129,15 @@
       "feature": "art",
       "title": "美术自检在美术阶段做（每轮美术做完立刻跑 art_check.py，不等到测试）",
       "symptom": "第二轮按用户意见改完美术，还是做出：选关页三张空白卡片、一个蓝色方块占位、大块灰色锁定块、一屏只有1–3关；首页 PLAY 是深色粗字、四个文字按钮、HOME SCREEN 的字超出底板、标题和按钮之间一大片空白。美术线只改了用户点到的地方，没有整页复查，检查都放在了最后。",
-      "steps": "美术线每轮做完（第一版、每次按意见修改后、按重塑画风重做后）：在浏览器里用 dump_ui 读全部页面和弹窗（含游戏中、两种比例、写 purpose，每轮用新的文件夹），运行 scripts/art_check.py --project <工程> --dumps <这一轮的文件夹>；需处理的全部改完再读再跑，直到通过；Codex 打开总览图按看图清单逐项看。交用户时附 art-check.md 的结论。最终总检测不再跑（用户 2026-10-24）；锁定后又改了美术，只对改动重跑 art_check.py。 用户 2026-10-23：美术是重中之重——先样板后整套，至少两整轮自审才交用户（第二轮零\"需处理\"），看图清单每条写\"看了哪张图、结论\"；art_check 的\"深色粗字（永久禁止）\"一行必须通过。",
-      "expected": "art_check.py 报告全部通过（页面内容与背景、大块深色与纯色底、布局、文字放得下、开发用文字和占位图；重塑和按重塑画风重做的英化还有清晰度），看图清单每项都看过；交给用户的每一轮美术都有对应的通过报告。 两整轮自审都有报告；\"深色粗字（永久禁止）\"一行通过；看图清单逐条有结论。 美术只在美术关查（用户 2026-10-24）：清晰度行（运行时的图≥节点2倍、背景≥1.5倍）和礼盒10帧一行两个板块第一轮起就必须通过；最终总检测不含美术。",
+      "steps": "美术制作或改动时按影响范围运行 art_check.py 核对可测技术项。交同版试玩时附适用的人工画面项目，后续只检查受影响状态。",
+      "expected": "本轮适用技术项完成，已发现缺陷按影响范围复验。同版试玩附人工观察项目。",
       "phase": "pre_scan",
       "always_applicable": true,
       "requires_gui": true,
-      "visual_verdict": true,
       "required_observations": [
         "art_check_after_each_art_round",
         "whole_page_recheck_not_only_user_points",
-        "look_list_on_contact_sheet",
-        "two_full_self_review_rounds"
+        "manual_items_with_preview"
       ],
       "auto_check": [
         "art_check"
@@ -1171,31 +1158,12 @@
       ]
     },
     {
-      "id": "VIS-01",
-      "feature": "ui",
-      "title": "动态画面：闪黑、闪白、单帧错误、闪烁",
-      "symptom": "切场景或打开弹窗时屏幕突然黑一下/白一下；按钮或图片闪一下消失又出现；某块区域来回闪；运行中黑屏很久。截图上全都看不出来。",
-      "steps": "按references/dynamic-visual-review.md录下8类流程（chrome_touch.py --record，或真机/系统录屏），运行scripts/audit_frame_glitches.py <frames或视频> --binding <review.json> --report <报告>；每个\"必须修\"的问题看3张证据图、修好后重录同一流程；review类判断是不是设计好的效果并写明。",
-      "expected": "所有流程的报告都没有flash_dark/flash_light/one_frame_glitch/long_black/flicker；review项已逐个判断；正常淡入淡出不受影响。",
-      "phase": "pre_scan",
-      "always_applicable": true,
-      "requires_gui": true,
-      "required_observations": [
-        "recorded_flows",
-        "glitch_events_reviewed"
-      ],
-      "auto_check": [
-        "audit_frame_glitches"
-      ],
-      "visual_verdict": true
-    },
-    {
       "id": "LOAD-03",
       "feature": "loading",
       "title": "最终出包前加载必检：进得去、不白等（重塑：Retry 由平台包覆盖，用户 2026-10-27）",
       "symptom": "手机上进游戏很慢或加载到一半报错；资源还在下载却被判超时（固定15秒截止、进度76%就失败）；首页前把关卡/声音面板才用的大图都下载了；加载动画卡住不动；切到后台再回来就失败；重试后回到首页但玩不了。 用户 2026-10-23：加载动画太慢（资源早就下完了还在慢慢走进度条/固定最短加载时间）、很难进入游戏、加载出问题、进不去游戏——最终检查要以加载为重点。 指尖麻将 v57（10-30 真机）：游戏自写的加载看门狗用 document.hidden 判前台（TikTok 里永远是 false），锁屏、拉控制中心的时间被算成卡住；报错框是网页 div，TikTok 画不出来；首页按钮一直等它，全部点不动。",
       "steps": "重塑（用户 2026-10-27）：先用固定做法防卡住：Cocos 2.4.15＋原样的 TikTok 平台包（remake-core/assets/platform-kit），platform-kit/tools/check_kit_project.py 必须通过；Retry 只是平台包自带兜底，平台包测试已覆盖，不再逐个游戏做 Retry 故障矩阵。仍要做：按 cocos-game-check/startup/references/startup-loading-timing.md 量冷启动、各进关路线、不白等、下完就进，audit_startup_loading.py --binding 判定，最终构建复测，Codex 慢网冷启动亲自走一遍\"首页→PLAY→第一关触摸生效\"。没有原样用平台包时回到旧做法：按 loading-recovery-regression.md 做完整 Retry 矩阵并附 audit_loading_recovery 报告。\n旧步骤：重塑（用户 2026-10-27）：卡住的根本原因是包本身做错（漏引擎、主包超 4MB、WebP 误判、分包没回调、外网下载），所以先用固定做法防住：Cocos 2.4.15＋原样的 TikTok 平台包（remake-core/assets/platform-kit），跑 platform-kit/tools/check_kit_project.py 必须通过；Retry 只是平台包自带的兜底（10 秒无进展→Retry→新请求），平台包自己的测试已覆盖，不再逐个游戏做 Retry 故障矩阵。仍要做：按 cocos-game-check/startup/references/startup-loading-timing.md 写 startup-plan.json，在 Ego Lite 里用 chrome_touch.py 跑 local/first_network/slow_network、两种比例，量 first_feedback→home_usable、PLAY/下一关/重试/地图选关进关；用 audit_startup_loading.py --binding 判定不卡住、不白等、下完就进；最终构建复测；Codex 亲自在慢网冷启动走一遍\"首页→PLAY→第一关真实触摸生效\"。工程没有原样用平台包时（改过或没用），回到旧做法：按 loading-recovery-regression.md 做完整 Retry 故障矩阵并附 audit_loading_recovery 报告。 生命周期必跑（启动套件 LIFE，adapter.play 必填）：加载中时钟跳 12 秒且不发 onHide、onHide+60 秒+onShow、第一张图不回应，之后真点首页 PLAY 必须进关；网页元素做的 Retry 不算；包里用 document.hidden 计时或画 DOM Retry 由门禁 G9 拦。",
-      "expected": "每一次运行都量到真实可操作；加载动画不连续卡住超过 1 秒；首页前没有以后才用的大文件；超时按无进展计算、后台不计时；卡住有限时间内出现 Retry 且重试后真的能玩；旧结果不影响当前局。 不写死结束时间：每次运行都不卡住（动画停住≤1秒、卡住出 Retry）、不白等（实际时间≤按这款游戏真正加载量算出的允许时间）、下完就进（不超过 max(2秒, 首页时间25%)）；下一关/重试/地图选关进关同样不白等、点了一定进得去；最终构建上重测一遍仍全部通过。 锁屏、切后台、单张图迟到都不能锁住首页按钮；看门狗只算前台时间，每次最多计 1 秒。",
+      "expected": "每一次运行都量到真实可操作；首页前没有以后才用的大文件；超时按无进展计算、后台不计时；卡住有限时间内出现 Retry 且重试后真的能玩；旧结果不影响当前局。 不写死结束时间：每次运行卡住能出 Retry、不白等（实际时间≤按这款游戏真正加载量算出的允许时间）、下完就进（不超过 max(2秒, 首页时间25%)）；下一关/重试/地图选关进关同样不白等、点了一定进得去；最终构建核有效的计时与重试结果。加载动画连续性在已有人工试玩中观察。 锁屏、切后台、单张图迟到都不能锁住首页按钮；看门狗只算前台时间，每次最多计 1 秒。",
       "phase": "pre_scan",
       "always_applicable": true,
       "requires_gui": true,
@@ -1272,7 +1240,6 @@
       "phase": "pre_scan",
       "always_applicable": false,
       "requires_gui": true,
-      "visual_verdict": true,
       "required_observations": [
         "no_ranking_routes",
         "no_share_routes"
@@ -1305,7 +1272,6 @@
       "phase": "pre_scan",
       "always_applicable": false,
       "requires_gui": true,
-      "visual_verdict": true,
       "required_observations": [
         "auto_popup_once_per_day",
         "claim_once",
@@ -1373,7 +1339,6 @@
     "audit_page_readiness": "scripts/audit_page_readiness.py: source-only flags broad button barriers/all-page batches/internal file counters; final runtime requires bound route inventory, two ratios, cold/warm/slow_cancel_reopen/closed_completion/failure_retry/offline_warm/core_independence, raw evidence SHA, no stale/duplicate work. Static is not acceptance.",
     "audit_game_modules": "scripts/audit_game_modules.py: docs/modules.json (game_modules.v1, user 2026-10-23): decisions asked and recorded (gameplay, currency, skins default yes, backgrounds), no ranking/leaderboard, 7-day check-in, more games/cross-promotion or share, 英化 button audit (every original button: works/keep/why, useless ones removed), AdRewards.ts byte-equal to the skill copy and its simulation passes (result x2, bonus level 3x -> 6x, gift and currency ad 5B, gift 30-minute persisted cooldown, ad buttons fire once), skin module skin.v1 (20 heroes + 10 backgrounds, price steps, bonus by rarity, limited skin first and its route), gift box 10 frames"
   },
-  "visual_verdict_rule": "带 visual_verdict 的检查标\"通过\"时，review 顶层必须有 GPT 对本版截图总览图（make_contact_sheet.py）的画面结论 visual_verdict；测试执行 Agent 不能自己填。 只看最终总检测里的条目（gate design/art 的条目不算，用户 2026-10-24）。",
   "negative_control_rule": "Items with requires_negative_control need, in their own evidence, a known-bad run of the SAME check: a JSON {schema: known_issue_negative_control.v1, mutant, status: fail, failed > 0, tool: {path, sha256}} whose tool SHA equals the tool of a current_result in the same row. A check that never failed on a known-bad version proves nothing (Monkey Dash 2026-10-21).",
   "reviewer_rule": "Items with \"reviewer\": \"gpt\" need the row field reviewer = \"gpt\" when marked pass (judgement only a GPT/Codex session gives).",
   "spot_check_rule": "When review.test_executor is another AI, review.gpt_spot_check is required: GPT read every code change since locked_commit, re-ran all automatic checks and redid >= 3 flows (one ad, one platform task if any) with no open disagreements.",

@@ -209,18 +209,6 @@ def main():
         for item in catalog['items']:
             if item.get('requires_negative_control'):
                 baseline['checks'][item['id']]['evidence'] = [deepcopy(ref)] + cal_refs()
-        # GPT verdict on this build's contact sheets (any agent runs the tests; GPT judges the screens).
-        import make_contact_sheet as cs
-        from PIL import Image
-        shots = root / 'shots'; shots.mkdir()
-        for i, colour in enumerate([(170, 215, 250), (255, 240, 200)]):
-            Image.new('RGB', (75, 162), colour).save(shots / ('page%d.png' % i))
-        sheets = root / 'sheets'; sheets.mkdir()
-        cs.build(cs.collect([shots]), sheets, 4, 8, 120, binding)
-        manifest = sheets / 'contact-sheets.json'
-        baseline['visual_verdict'] = {'reviewer': 'gpt', 'images_reviewed': 2, 'verdict': 'pass', 'open_issues': [],
-                                      'observed': 'Synthetic sheets only: two plain pages, nothing judged.',
-                                      'contact_sheets': {'path': str(manifest), 'sha256': gate.sha(manifest.read_bytes())}}
         def probe(name, change, expected='blocked'):
             current = deepcopy(baseline)
             change(current)
@@ -299,37 +287,26 @@ def main():
             observed=d['checks']['FLOW-01']['observed']))
         probe('LOAD-03 observation fields repeat one summary', lambda d: d['checks']['LOAD-03'].update(
             observations={k: 'Played normally, revive worked' for k in d['checks']['LOAD-03']['observations']}))
-        probe('VIS-01 without frame analysis report', lambda d: d['checks']['VIS-01'].update(auto_reports=[]))
         probe('AUDIO-02 cannot be waived', lambda d: d['checks']['AUDIO-02'].update(status='not_applicable', reason='Synthetic skip'))
         def bad_auto(d, change):
-            tool = 'audit_frame_glitches'
+            tool = 'audit_button_coverage'
             bad = root / ('bad-' + str(len(results)) + '.json')
             data = {'tool': tool, 'checked': 3, 'failed': 0, 'passed': True, 'checks': [], 'binding': binding}
             change(data)
             bad.write_text(json.dumps(data))
-            d['checks']['VIS-01']['auto_reports'] = [{'path': str(bad), 'sha256': gate.sha(bad.read_bytes())}]
-        probe('failed screenshot measurement blocks', lambda d: bad_auto(d, lambda x: x.update(failed=1, passed=False)))
+            d['checks']['INPUT-05']['auto_reports'] = [{'path': str(bad), 'sha256': gate.sha(bad.read_bytes())}]
+        probe('failed button measurement blocks', lambda d: bad_auto(d, lambda x: x.update(failed=1, passed=False)))
         probe('measurement of another build blocks', lambda d: bad_auto(d, lambda x: x.update(binding={**binding, 'build_tag': 'old'})))
-        probe('measurement with zero screenshots blocks', lambda d: bad_auto(d, lambda x: x.update(checked=0)))
+        probe('measurement with zero checked buttons blocks', lambda d: bad_auto(d, lambda x: x.update(checked=0)))
         probe('report from a different tool blocks', lambda d: bad_auto(d, lambda x: x.update(tool='audit_audio_sources')))
-        probe('edited report blocks', lambda d: d['checks']['VIS-01'].update(
-            auto_reports=[{**auto_ref('audit_frame_glitches'), 'sha256': '0' * 64}]))
-        vv = lambda d: d['visual_verdict']
-        probe('visual checks need a GPT verdict', lambda d: d.pop('visual_verdict'))
-        probe('test executor cannot sign the screen verdict', lambda d: vv(d).update(reviewer='executor-agent'))
-        probe('screen verdict still pending', lambda d: vv(d).update(verdict='pending'))
-        probe('open screen issues block', lambda d: vv(d).update(open_issues=['#07 coins overlap']))
-        probe('verdict must cover every screenshot', lambda d: vv(d).update(images_reviewed=1))
-        probe('verdict needs its own observation', lambda d: vv(d).update(observed='ok'))
-        probe('edited sheet manifest blocks', lambda d: vv(d)['contact_sheets'].update(sha256='0' * 64))
-        def old_sheets(d):
-            other = root / 'sheets-old'; other.mkdir(exist_ok=True)
-            for f in other.iterdir():
-                f.unlink()
-            cs.build(cs.collect([shots]), other, 4, 8, 120, {**binding, 'build_tag': 'old'})
-            m = other / 'contact-sheets.json'
-            vv(d)['contact_sheets'] = {'path': str(m), 'sha256': gate.sha(m.read_bytes())}
-        probe('sheets of another build block', old_sheets)
+        probe('edited report blocks', lambda d: d['checks']['INPUT-05'].update(
+            auto_reports=[{**auto_ref('audit_button_coverage'), 'sha256': '0' * 64}]))
+        def legacy_visual(d):
+            d['catalog_sha256'] = gate.PRE_MANUAL_VISUAL_CATALOG
+            d['checks']['VIS-01'] = {'status': 'pending'}
+            d['visual_verdict'] = {'verdict': 'pending'}
+        probe('old current technical review works without any picture or video receipt', legacy_visual, 'passed')
+        probe('unrecognized catalog still blocks', lambda d: d.update(catalog_sha256='unknown'))
         mission = lambda d: d['reward_entries'][1]['states']
         probe('declared platform task cannot waive GROW-01', lambda d: d['checks']['GROW-01'].update(
             status='not_applicable', reason='Synthetic skip'))
@@ -385,7 +362,7 @@ def main():
         probe('localize cannot waive no-ad-skip', lambda d: (localize(d), d['checks']['NOSKIP-01'].update(
             status='not_applicable', reason='Synthetic skip')))
         probe('localize cannot drop the Chinese coverage check', lambda d: (localize(d), d['checks'].pop('UI-01')))
-        probe('localize still needs the GPT screen verdict', lambda d: (localize(d), d.pop('visual_verdict')))
+        probe('English packaging passes without a GPT screen verdict', localize, 'passed')
         probe('remake review cannot drop AUDIO-02', lambda d: d['checks'].pop('AUDIO-02'))
         probe('unknown board rejected', lambda d: (localize(d), d.update(board='english')))
         a.board = 'remake'
@@ -471,7 +448,6 @@ def main():
         a.executor_exit = True
         def codex_rows_pending(d):
             d['checks']['COPY-01'] = {'status': 'pending'}
-            d['visual_verdict'] = {'reviewer': '', 'verdict': 'pending'}
             d['test_executor'] = 'grok'
         probe('test stage complete with only Codex rows left', codex_rows_pending, 'test_stage_complete')
         def one_test_left(d):

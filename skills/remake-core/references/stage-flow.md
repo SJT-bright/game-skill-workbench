@@ -97,10 +97,10 @@
 
 用户 2026-10-21：第一轮美术后出现整页纯色背景，第二轮按意见改完还是出现空白卡片、蓝色占位方块、深色粗字、字超出按钮、首页大片空白。原因是美术的检查都放在了最后，美术线只改了用户点到的地方。所以：
 
-- **美术的检查放在美术制作之后**：美术线每轮做完（第一版、**每次按用户意见修改后**、"按重塑画风重做"后），立刻按[美术自检](../../remake-art/references/page-richness.md#五美术自检每轮美术做完立刻做两个板块art-06page-01)做：完整制作/整套重做时 dump_ui 读全部页面和弹窗；局部修改读受影响整页和相关状态（含适用的游戏中及手机比例，新证据单独留存）→ `art_check.py` → 需处理的改完再读再跑，直到全部通过 → Codex 看总览图按看图清单逐项看。
+- **美术制作完成后**。按范围核对图集、裁切、节点几何和绑定。观感、动画、遮挡与闪屏在同版试玩中按[人工试玩画面清单](manual-visual-review.md)观察。只改一处就验证其影响范围。
 - **按用户意见修改也要整页复查**：局部修改复查受影响整页、相关状态及共用组件调用方；无传播证据不扩大到全部页面。
-- **美术线的完成标准就是自检通过**：没通过不交总控、不交用户；交付消息里贴 `art-check.md` 的结论和总览图。
-- **美术是重中之重（用户 2026-10-23）**：这一阶段花最多的精力；首次完整制作/整套重做至少两轮自审才交用户，第二轮零"需处理"；局部修改按范围复查，`深色粗字（永久禁止）`一行必须通过，看图清单逐条写"看了哪张图、结论"，见[美术是重中之重](../../remake-art/references/page-richness.md#美术是重中之重用户-2026-10-23两个板块)。
+- 技术自检发现的实际缺陷修完后发同版试玩，随附本轮适用的人工项目。
+- 首轮先定样板，局部改动按影响范围复查。可测缺陷在制作时修，肉眼可判断的问题随同版试玩交接。
 - **第一轮必须检查留白与功能键实际大小**：不能大面板配小图标；检查可见 Art 而非只看点击框，按明确倍数放大后重新排布整组，两种手机比例均须清楚、完整、可点。见 [第一轮留白与尺寸约束](../../remake-art/references/page-richness.md#第一轮就查留白与功能键实际大小用户-2026-10-24两个板块)。
 - 美术自检只查画面；玩法和功能留到阶段 4。
 
@@ -119,14 +119,14 @@
 **重塑**一次性交给用户三样东西：
 
 1. **试玩入口**：同上。
-2. **美术验收包**：每个页面和弹窗在两种手机比例下的实际游戏截图、关键动画短录屏、全部素材一览图。
+2. **美术交接**。附本轮受影响画面的人工试玩项目，必要时附对应单张截图。
 3. **试玩清单**：按[试玩清单模板](../assets/user-playtest-checklist-template.md)写的、本游戏专属的大白话清单：游戏怎么玩、页面怎么走、所有能点的地方、广告什么时候出现、新机制什么时候出现、一步一步的试玩路线、常见问题自查、问题记录表。
 
 用户照着清单试玩，把问题**攒在一起统一提**。AI 按条分给负责的线**批量**修改，改完再交一版（只说明改了哪几条），直到用户说**"美术玩法通过"**。这一阶段用户提的任何美术和玩法修改都正常接受。
 
 ## 测试前的人工确认（必须问，用户 2026-10-21）
 
-完整测试要跑很多关卡、截图、录屏，**消耗的 token 非常多**。所以进入测试之前，必须由用户亲自试玩确认，AI 不能自己判断"差不多了"就开始测。
+完整功能测试按游戏的实际关卡与风险选择范围。先由用户亲自试玩确认，再进入锁定后的功能验收。
 
 **交付试玩版时，总控必须用下面的话原样提问**（不能只问"满意吗""还有问题吗"）：
 
@@ -165,8 +165,8 @@
 
 完整新制作或失去完整基线时执行下面完整适用范围；已通过候选的局部维护按 `review-execution-plan.md` 只复验改动、依赖和已报告问题。有效关卡抽样、故障和页面证据不在最后重复采集。
 
-1. **测试阶段**（用户指定的 AI：其他 AI 省 Codex 额度，或 Codex 自己）：**只查玩法和功能**（美术已在美术关、设计已在设计关查完，这里不再跑 `art_check.py` 和 `design_check.py`，[检查分阶段](check-stages.md)）：一键预检 → 当前项目适用的"自动检查"脚本 → 浏览器模拟 iPhone 触摸测试（[关卡抽测](../../cocos-game-check/test/references/prepackage-mobile-review.md#关卡抽测哪些关必须真实触摸)、[重开与触摸输入](../../cocos-game-check/test/references/replay-and-input-checks.md)、**[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)，`audit_button_coverage.py` 出《按钮清单》**）→ [动态画面检查](../../remake-art/references/dynamic-visual-review.md) → [加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md)和[启动契约](../../cocos-game-check/startup/references/startup-contract.md)的故障 → 每个页面和弹窗两种比例截图并 dump_ui 读一次、拼总览图、`extract_ui_layout.py`（重塑）和 `audit_copy_quality.py --sheet` → **看图和英文做第一遍检查** → **修代码类 bug 并重测**（最小修复，不改设计；需要新图的写生图需求单）→ 填门禁非画面行、写测试报告。按下面[测试阶段必须全部测完](#测试阶段必须全部测完分段测当段修不停下一次汇报用户-2026-10-22)分 9 段测、当段修、不停下，`--executor-exit` 返回 `test_stage_complete` 才结束。不生图、不代写最终画面签收；完成本阶段后在已授权成品制作流程中继续封装证据、正式出包及交付，仅检测/评审/试玩时遵守用户边界。
-2. **最终验收与打包**（只能 Codex，新对话说"最终验收"）：查测试阶段改过的全部代码 → 核有效证据并抽查（自动门禁照常执行，其他脚本只补失效/改动/有疑点项；其他 AI 执行时按现门禁亲自重跑全部适用自动脚本并抽查至少3个流程；同一个 Codex 已亲测且无改动不固定另走3流程。慢网冷启动及各实际进关路线在功能轮形成有效证据，最终补失效项）→ 按下面[最终检查一项不漏](#最终检查一项不漏加载是重点用户-2026-10-23)的总表逐行核对 → **最终运行画面确认**（仅黑屏、闪烁、资源缺失等运行故障，写 `visual_verdict`；字号、盖字/装饰/布局等美术复核全部在试玩前完成）→ 最终英文确认（COPY-01）→ 处理生图需求单 → 门禁 → 用户说"打包"时出包。只重测改到的部分。
+1. **测试阶段**（用户指定的 AI：其他 AI 省 Codex 额度，或 Codex 自己）：**只查玩法和功能**（美术已在美术关、设计已在设计关查完，这里不再跑 `art_check.py` 和 `design_check.py`，[检查分阶段](check-stages.md)）：一键预检 → 当前项目适用的"自动检查"脚本 → 浏览器模拟 iPhone 触摸测试（[关卡抽测](../../cocos-game-check/test/references/prepackage-mobile-review.md#关卡抽测哪些关必须真实触摸)、[重开与触摸输入](../../cocos-game-check/test/references/replay-and-input-checks.md)、**[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)，`audit_button_coverage.py` 出《按钮清单》**）→ [动态画面检查](../../remake-art/references/dynamic-visual-review.md) → [加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md)和[启动契约](../../cocos-game-check/startup/references/startup-contract.md)的故障 → 必要状态的 dump_ui 和点位截图、`extract_ui_layout.py`（重塑）和 `audit_copy_quality.py --sheet` → 核对英文文案 → **修代码类 bug 并重测**（最小修复，不改设计；需要新图的写生图需求单）→ 填门禁非画面行、写测试报告。按下面[测试阶段必须全部测完](#测试阶段必须全部测完分段测当段修不停下一次汇报用户-2026-10-22)分 9 段测、当段修、不停下，`--executor-exit` 返回 `test_stage_complete` 才结束。生图需求另记。完成本阶段后在已授权成品制作流程中继续封装证据、正式出包及交付，仅检测/评审/试玩时遵守用户边界。
+2. **最终验收与打包**（只能 Codex，新对话说"最终验收"）：查测试阶段改过的全部代码 → 核有效证据并抽查（自动门禁照常执行，其他脚本只补失效/改动/有疑点项；其他 AI 执行时按现门禁亲自重跑全部适用自动脚本并抽查至少3个流程；同一个 Codex 已亲测且无改动不固定另走3流程。慢网冷启动及各实际进关路线在功能轮形成有效证据，最终补失效项）→ 按下面[最终检查一项不漏](#最终检查一项不漏加载是重点用户-2026-10-23)的总表逐行核对→ 最终英文确认（COPY-01）→ 处理生图需求单 → 门禁 → 用户说"打包"时出包。只重测改到的部分。
 
 ## 测试阶段必须全部测完：分段测、当段修、不停下、一次汇报（用户 2026-10-22）
 
@@ -183,7 +183,7 @@
 | 5 | 内置板块：结算×2、首页礼盒能领奖（10 帧动画已在美术关查）、广告按钮连点只发一次、广告前后不卡顿；皮肤板块、试用；通关型游戏的地图、奖励关 3→6 倍、限定关（奖励只发一次、限定可用金币买（价格按经济板块：新游戏 80B，冻结旧表 50B）、已有首通不重复发） | MOD-02、ECON、FEAT-01、LEVEL-02 |
 | 6 | 设置与声音 | AUDIO |
 | 7 | 切后台回来、存档、重开游戏后状态一致 | LIFE、STATE |
-| 8 | 英文文案自动检查、动态画面（黑屏、闪烁）；**不做美术回归** | COPY 的自动部分、VIS-01 |
+| 8 | 英文文案自动检查 | COPY 的自动部分 |
 | 9 | **核最终构建绑定及覆盖**：第1段报告仍有效则引用，不固定重跑；加载/资源/分包/引擎变化或工具判绑定失效时重跑实际失效矩阵 → 门禁完成检查 | LOAD-03、全部 |
 
 **每一段**：测 → 发现 bug **当段修好** → 复测这一段（修改影响到前面的段，就把受影响的部分也复测）→ 在 `docs/test/测试进度.md` 里打勾 → **直接进下一段**。中间不停下来等用户，也不先汇报。
@@ -195,7 +195,7 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
   --review docs/test/review.json --stage pre_scan --executor-exit --report docs/test/test-stage-exit.json
 ```
 
-返回 `test_stage_complete` 才算测完：除了只能由 Codex 做的几项（画面最终判定、GPT/Codex 抽查、英文语感审查），其他每一项都是"通过"或"有依据的不适用"。返回 `test_stage_incomplete` 就照 `errors` 继续测、继续修。
+返回 `test_stage_complete` 才算测完：除了只能由 Codex 做的几项（GPT/Codex 抽查、英文语感审查），其他每一项都是"通过"或"有依据的不适用"。返回 `test_stage_incomplete` 就照 `errors` 继续测、继续修。
 
 **只有这两种情况可以中途停**：
 
@@ -227,7 +227,7 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
 | # | 项目 | 怎么查（证据） |
 |---|---|---|
 | 1 | **加载：三种网络 × 两种比例 × 冷/热，每次都不卡住、不白等（`*_waste_ms` 在允许范围内，不写死秒数）** | `audit_startup_loading.py --binding`（最终构建上的新报告） |
-| 2 | **加载动画不慢不卡**：下完就进（不超过 max(2 秒, 首页时间 25%)），动画卡住 ≤1 秒，录屏里确认那是加载标志 | 同上报告的 `home_after_last_download_ms`、`*_max_freeze_ms` + 录屏 |
+| 2 | **加载完成及时可玩**。下完就进（不超过 max(2 秒, 首页时间 25%)），加载画面停顿或闪黑随人工试玩观察。 | 计时报告与原始运行 JSON |
 | 3 | **每一条进关路线都进得去**：首页 PLAY、地图选关、Next、Retry、复活后继续、切后台回来、关掉重开 | LOAD-02 观察 `every_entry_route_enters` + 每条路线的 chrome_touch 报告 |
 | 4 | **加载故障**：慢进度、后台等待、卡住重试、迟到回调、可选接口缺失、弹窗不回调、首屏图片不回调、声音失败（有后续分包加分包失败） | `audit_startup_loading.py` 故障运行 + `audit_startup_contract.py --native` |
 | 5 | 启动包大小 ≤10 MB、声音单独分包、首页前没有大文件 | `audit_startup_contract.py`、`verify_native_zip.py` |
@@ -238,9 +238,9 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
 | 10 | 广告和领奖的每种结果 | AD/CLAIM/ASYNC 报告 |
 | 11 | 内置板块功能（结算×2、礼盒领奖）、皮肤购买、试用 | MOD-02、FEAT-01 实测 |
 | 12 | 设置与声音、切后台、存档、重开后状态一致 | AUDIO/LIFE/STATE |
-| 13 | 沿用试玩前的设计/美术结论；试玩确认后的打包不补跑美术、不增加报告前置；写包入口只核对美术回执（图、文字、字体和布局都没变就不用重跑，见下面[美术回执](#美术回执v78用户-2026-10-30)） | `design-check.json`、`art-check.json` 的结论；`<工程>/.tiktok-kit/art-receipt.json` |
+| 13 | 复用已通过的设计与美术节点，打包核实际包和相关功能 | 分项原始结果、最终 ZIP 技术回执 |
 | 14 | 英文、开发用字和状态字、占位图 | `audit_copy_quality.py`、`audit_dev_text.py --final` |
-| 15 | 动态画面（黑屏、闪烁、卡顿） | VIS-01 |
+| 15 | 动态画面观察随同版试玩完成 | [人工试玩画面清单](manual-visual-review.md) |
 | 16 | 门禁 | `check_known_issues.py --executor-exit` = `test_stage_complete`；出包后 `--stage post_package` |
 | 17 | **测试用的 Ego 窗口、TaskSpace、预览都已自己关掉**（每个环节测完就关，用户 2026-10-23；Ego 只给 AI 测试，没有"等用户试玩"的 Ego 空间；新建空间从不问用户，没有闲置空间） | 每条线 `browser_slots.py check --name <线名>` 退出码 0；`browser_slots.py ego-list` 里没有"需要你处理"/等用户的空间 |
 | 18 | **首页有桌面快捷方式和个人主页回访两个按钮、全游戏没有分享**（用户 2026-10-23，英化不问用户直接加、原游戏的分享删掉） | `audit_ui_coverage.py`（缺键、分享入口）、`audit_platform_markers.py`（源码分享调用）、GROW-01 实点 |
@@ -251,16 +251,10 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
 
 阶段 4 通过后，用户说"打包"才出包：用 [`cocos-game-check/package`](../../cocos-game-check/package/README.md) 的 `make_tiktok_zip.py` 出唯一一种包（可直接上传的 TikTok 平台包，主包≤4,000,000、总包≤30,000,000，BUILD-04）；同版自动打开的 Google Chrome 试玩窗口及本地链接 + TikTok 上传 ZIP，ZIP 过 `verify_native_zip.py` 和门禁 `check_known_issues.py --stage post_package`。这就是本 Skill 的终点，不再有真机阶段。不自动打包的规则不变。v7.8 起 `make_tiktok_zip.py` 写 ZIP 前也跑激励广告回归和全部运行时套件（布局状态、按钮普查、看广告入口、dead_shell、popin、frame_rate 等，和 `build_checked_zip.py` 一样），出包命令要带 `--ad-regression <工程>/qa/ad-regression.json`：新游戏（工程标记 new 的英化游戏也算）没这个文件、缺套件要的字段或有用例没过就不写 ZIP；名单上的老游戏只警告（[运行时回归](../../cocos-game-check/package-check/references/runtime-regression.md)）。每款多几分钟。
 
-### 美术回执（v7.8，用户 2026-10-30）
+### 美术检查明细
 
-美术只在美术关查一次；打包时**只核对回执，不重跑美术检查**（用户 2026-10-24：再测一遍可能有误差）。回执只防"美术关之后改了图没人看"（丛林荡藤 v1～v6、企鹅雪道美术 v1～v6、Holly v1～v3 都是这样交出去的）。
+完整美术回执已撤销。首次制作及真实视觉改动的结果按页面和问题节点留存，原通过项按依赖复用。写包与试玩检查实际候选身份，出包核对包内资源完整性。
 
-- **谁写**：`art_check.py` 每次跑完分析，写 `<工程>/.tiktok-kit/art-receipt.json`：结论（通过 `pass` / 失败 `fail`）、对应的 `art-check.json`、工具校验值、时间，以及 `assets/` 下全部图片的指纹（png/jpg/webp 等、图集 `.plist`、3D 模型 `.fbx/.gltf/.glb`）。缺采集时 2.4 工程不动旧回执；3.x 工程（`ui_dump` 还读不了 3.x 页面）写 `not_covered_3x`，意思是"3.x 未覆盖"，不是通过。
-- **谁查**：两个写包入口（`make_tiktok_zip.py`、`build_checked_zip.py`，同一个 `finalize_for_writer`）和用户试玩 `serve_preview.py --keep`（必须给 `--project <工程>`）。重塑新游戏（board remake、policy new）没有回执、回执不是通过、或回执里的图和工程现在的对不上，就不写 ZIP、不起试玩，提示"美术改过（或没跑美术检查），重跑 art_check"并列出变了的图。旧重塑游戏按原策略告警；重塑 3.x 的 `not_covered_3x` 回执按其策略放行并如实报告。英化按[美术验收前移与试玩后锁定](../../remake-art/references/art-before-trial.md)。正式试玩须有与当前 Web 对应的通过回执。写包核对有效回执，已有明确批准的维护范围按其专用门禁执行。
-- **源码段的改图不算改美术**：`tiktok_finalize.py source` 的 `images` 步骤会把 WebP 换成 PNG/JPG、缩超大图。它在动手前先核回执，图全对得上才把回执跟到它自己写出的图（回执里 `carried` 记着改了哪些）；本来就对不上的不跟，写包入口照样警告或拒。
-- **文字、字体、布局也算美术**（生成时预防 R4M2）：回执的 `display` 还记字体文件、场景/预制体里管显示的字段（节点位置、大小、显隐、颜色，Label/Sprite/Widget/Layout 等组件）、文字表和脚本写进 label 的文字；这些变了和改图一样判过期（`display_changed`），重跑 `art_check.py`。脚本组件上的玩法数值不算。R4M2 以前的旧回执没有 `display`，只核图，下次 art_check 自动补上。
-- **不用采集的两行**（v7.8）：美术检查有两行不用页面采集：H8 底子原图原声、H10 生图记录；3.x 工程这两行不通过时回执写 fail（不是 `not_covered_3x`）。英化游戏 H8 不查、H10 只提示。
-- **和第 13 条不冲突**：图、文字、字体和布局都没变，回执一直对得上，打包不用重跑美术。试玩确认后又改了图（换图、修图、改尺寸）或文字、字体、按钮、节点位置，回到试玩前美术阶段，只对改动重跑 `art_check.py`（复制上一轮整套采集，只把改到的页面两种尺寸重新 dump 换进去；只放这几页去跑，「页面全覆盖」一行不会通过），通过后回执自动更新，别手改回执。
 - **试玩前源码检查**（`tiktok_finalize_steps/art_static.py`，新重塑拦、旧游戏和英化提示，结果进入源码记录，写包时由 K5 核对）：SIMPLE+CUSTOM 精灵的节点比例和图片比例差超过 10%（丛林荡藤 v4 四张图）；有碰撞体但图被关掉或没图（`K_art_hidden_body`）。九宫格/平铺、进度条的 bar、整行或整列同色的图（能拉伸）不算。弹窗遮罩不量透明度（Saul 10-31）：明暗跟游戏风格走，整体不要太亮，不要暗沉、没有设计图案的背景，只能人看，不做数值门禁。原游戏或运行时被代码藏起来的节点写进 `docs/art/static-exempt.json`（每条写 `why`，会列在警告里），更好的做法是改节点尺寸或删掉不用的节点。
 
 ## 最终测试补充：加载场景假通过（2026-10-25）

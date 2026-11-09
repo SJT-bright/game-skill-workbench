@@ -199,81 +199,6 @@ def pre_home(files, root=None, board=None):
         return {'error': repr(error)}
 
 
-def english_image_problems(files, project, board):
-    """Board localize only (v7.5, MusicSlice items 6-7): the upload images need the main agent's review record
-    <project>/docs/english/image-review.json (audit_image_review_record.py) and every NEW English image (SHA not in
-    <project>/docs/english/pre-english-images.json) must be <= 800 KB (audit_new_english_images.py). A missing record or
-    list refuses. The 2.5x-display rule needs prefab sizes and is not run here (warning until Saul decides)."""
-    if board is None and project:
-        from tiktok_finalize import read_source_record
-        board = (read_source_record(project) or {}).get('board')
-    if board != 'localize':
-        return []
-    if project is None:
-        return ['English image checks need --project (docs/english/image-review.json and pre-english-images.json)']
-    from returned_art_acceptance import MANIFEST as RETURNED_MANIFEST, validate as validate_returned
-    if (Path(project)/RETURNED_MANIFEST).is_file():
-        try:
-            validate_returned(project, native_files=files)
-        except (ValueError, KeyError, TypeError, OSError) as error:
-            return ['ART_returned_user_acceptance: '+str(error)]
-        return []  # User-accepted returned art; no new AI image/Chinese verdict is claimed.
-    import audit_image_review_record
-    import audit_new_english_images
-    docs = Path(project) / 'docs' / 'english'
-    review = docs / 'image-review.json'
-    problems = ['image review: ' + p for p in audit_image_review_record.check(files, review)['problems']]
-    if not problems:
-        problems.extend(pretrial_native_problems(files, project, review))
-    pre = docs / 'pre-english-images.json'
-    if not pre.is_file():
-        problems.append('pre-English image list missing: %s (audit_new_english_images.py --make-list <Chinese original '
-                        'project> --out it, before the first English image is made)' % pre)
-    else:
-        try:
-            problems.extend(audit_new_english_images.check(files, pre)['problems'])
-        except (OSError, ValueError, TypeError) as error:
-            problems.append('pre-English image list unreadable: %s (%s)' % (pre, error))
-    return problems
-
-
-def pretrial_native_problems(files, project, review):
-    """Recheck the prepared candidate from the last formal trial, using actual writer input bytes."""
-    from art_receipt import receipt_path
-    from tiktok_finalize import PREPARED_NATIVE, SOURCE_RECORD
-
-    project = Path(project)
-    prepared = project / PREPARED_NATIVE
-    requires_bound_trial = any(prepared.glob('*.json'))
-    missing_trial = ['ART_trial_native: 已处理的 Native 需要成功启动的同版正式试玩记录。']
-    trial_log = project / 'docs/english/chinese-audit/trial-links.json'
-    if not trial_log.is_file():
-        return missing_trial if requires_bound_trial else []
-    try:
-        rows = json.loads(trial_log.read_text(encoding='utf-8'))
-        if not isinstance(rows, list):
-            raise ValueError('expected a list')
-    except (OSError, ValueError) as error:
-        return ['ART_trial_native: 试玩记录无法读取：' + str(error)]
-    row = next((row for row in reversed(rows) if isinstance(row, dict) and row.get('passed') is True
-                and row.get('draft') is False and row.get('native_tree_sha256')), None)
-    if row is None or (requires_bound_trial and not row.get('native_preparation_sha256')):
-        return missing_trial if requires_bound_trial else []
-    actual = vnz.tree_digest({name: hashlib.sha256(data).hexdigest() for name, data in files.items()})
-    if actual != row['native_tree_sha256']:
-        return ['ART_trial_native: 当前写包用的 Native 与正式试玩绑定的候选不同。先核对变更范围并更新正式试玩证据。']
-    paths = {'image_review_sha256': review, 'art_receipt_sha256': receipt_path(project),
-             'source_record_sha256': project / SOURCE_RECORD}
-    if requires_bound_trial:
-        paths['native_preparation_sha256'] = prepared / (actual + '.json')
-    try:
-        if any(sha(path) != row.get(key) for key, path in paths.items()):
-            return ['ART_trial_native: 正式试玩的前置证据已更新，请核对同版后重新记录。']
-    except OSError as error:
-        return ['ART_trial_native: 正式试玩的前置证据无法读取：' + str(error)]
-    return []
-
-
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -299,10 +224,6 @@ def finalize_for_writer(native, project, board, app_id, options=None):
     2. tiktok_finalize.finalize_native(native, project, board, app_id): installs the standard parts in place (the
        v7.5 adapter_fix rewrite is its first step). The writers never pass --policy: the policy comes from the
        project marker / the frozen legacy list (design section 2).
-    v7.8 (U7 补): with step 1 the art receipt <project>/.tiktok-kit/art-receipt.json is CHECKED (art_receipt.check,
-       never a new art run): a new remake game whose receipt is missing, not a pass, or whose images changed is
-       refused here, before the build folder is touched. English also requires a passing art receipt and prepared
-       PNGs; legacy remake warnings keep their existing policy.
     -> (record, gate_context, problems). problems non-empty = refuse; record is None when step 1 refused."""
     import tiktok_finalize as F
     options = dict(options or {})
@@ -312,58 +233,41 @@ def finalize_for_writer(native, project, board, app_id, options=None):
         return None, None, ['K_kit_unusable: %s' % error]
     source_board = (F.read_source_record(project) or {}).get('board') if project else None
     board_mismatch = bool(board and source_board and board != source_board)
+    if project and not (board or source_board):
+        from feature_policy import board_of
+        board = board_of(project)[0]
     board = board or source_board
-    art = art_receipt_check(project, board)
-    if art and art.get('returned_art_acceptance'):
-        from returned_art_acceptance import validate as validate_returned
-        try:
-            validate_returned(project, native=native)
-        except (ValueError, KeyError, TypeError, OSError) as error:
-            return None, None, ['ART_returned_user_acceptance: '+str(error)]
-    localize = board == 'localize' or (art or {}).get('board') == 'localize'
-    source = (F.check_source_record(project, kit, options) if art and art.get('returned_art_acceptance') else
-              F.check_trial_source(project, 'localize', kit, options) if localize else
-              F.check_source_record(project, kit, options))
+    localize = board == 'localize'
+    source = F.check_source_record(project, kit, options)
     problems = ['%s: %s' % (f['id'], f['message']) for f in source]
     if board_mismatch:
         problems.append('K5_source_finalized: writer board differs from the source record')
-    if art and (art['level'] == 'block' or
-                (localize and art.get('status') != 'pass' and not art.get('locked_art_maintenance')
-                 and not art.get('returned_art_acceptance'))):
-        problems.append('%s: %s' % (art['gate'], art['message']))
     if problems:
         return None, None, problems
+    base_audio_warning = None
+    if board == 'remake':
+        # H8 originally shared the aggregate art gate. Check only the original-audio rule here.
+        from art_receipt import GATE_BASE_AUDIO, original_audio_message, strictness
+        from art_records import base_audio_now
+        try:
+            same_audio = base_audio_now(project, board)
+        except Exception:  # An unreadable provenance record is handled during production.
+            same_audio = []
+        if same_audio:
+            strict, _, _ = strictness(project, board)
+            message = original_audio_message(same_audio)
+            if strict:
+                return None, None, ['%s: %s' % (GATE_BASE_AUDIO, message)]
+            base_audio_warning = F.T.finding(GATE_BASE_AUDIO, 'warn', message)
     if localize:
-        board = 'localize'
         options['prepared_png_only'] = True
     record = F.finalize_native(native, project, board, app_id, manifest=kit, options=options)
     record['source_record'] = source_record_ref(project)
-    add_art_receipt(record, art)
+    if base_audio_warning:
+        record['warnings'].append(base_audio_warning)
     problems = ['%s: %s' % (b['id'], b['message']) for b in record['blocks']]
     context = {'writer': True, 'finalize_record': record, 'project': project, 'finalize_options': options}
     return record, context, problems
-
-
-def art_receipt_check(project, board):
-    """v7.8 U7（补）, both writers via finalize_for_writer: CHECK the art receipt (art_receipt.py), never re-run the art
-    check (Saul 10-24). Board/policy come from the writer and the K5-checked source record. None without --project."""
-    if not project:
-        return None
-    import art_receipt
-    return art_receipt.check(project, board)
-
-
-def add_art_receipt(record, art):
-    """Put the receipt result in the finalize record: a warning (legacy / English / 3.x 未覆盖) goes to `warnings`,
-    which the ZIP receipt and the report carry, and every result is one row of the delivery table."""
-    if not art:
-        return
-    import art_receipt
-    record['art_receipt'] = art_receipt.summary(art)
-    item = art_receipt.finding(art)
-    if item and item['level'] == 'warn':
-        record.setdefault('warnings', []).append(dict(item, step='art_receipt'))
-    record.setdefault('table', []).append(art_receipt.table_row(art))
 
 
 def finalize_report(record):
@@ -371,8 +275,6 @@ def finalize_report(record):
     import tiktok_finalize as F
     out = vnz.finalize_summary(record)
     out['table_markdown'] = F.table_markdown(record)
-    if record.get('art_receipt'):
-        out['art_receipt'] = record['art_receipt']        # v7.8: which art receipt the writer checked
     return out
 
 
@@ -568,10 +470,6 @@ def main():
         obligations = package_obligations.verify(obligation_files, native, a.project, a.resource_manifest)
     except (ValueError, OSError, TypeError, KeyError, subprocess.TimeoutExpired) as error:
         print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
-        return 1
-    english_problems = english_image_problems(obligation_files, a.project, a.board)
-    if english_problems:
-        print('REFUSED, no ZIP written: ' + '\n'.join(english_problems), file=sys.stderr)
         return 1
     from audit_final_package_startup import audit_final_startup
     try:

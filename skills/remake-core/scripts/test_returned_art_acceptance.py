@@ -51,10 +51,10 @@ class Returned(unittest.TestCase):
     def accept(self):
         return A.record(self.p,self.web,self.native,'上个测试包按钮被打回，只修这个美工然后给我测试包',self.scope,previous_zip=self.z)
     def test_old_path_blocks_but_user_acceptance_keeps_old_failure_untouched(self):
-        self.assertEqual(R.check(self.p,'localize')['level'],'block')
+        self.assertEqual(R.check_history(self.p,'localize')['level'],'block')
         old=(self.p/R.RECEIPT).read_bytes();self.accept()
         with mock.patch.object(R,'image_fingerprints',side_effect=AssertionError('no art scan')):
-            got=R.check(self.p,'localize',capture_build=self.web)
+            got=R.check_history(self.p,'localize',capture_build=self.web)
         self.assertEqual(got['status'],'user_accepted');self.assertEqual(got['level'],'ok')
         self.assertFalse(got['returned_art_acceptance']['ai_art_rechecked'])
         self.assertEqual((self.p/R.RECEIPT).read_bytes(),old)
@@ -78,7 +78,7 @@ class Returned(unittest.TestCase):
                 self.accept();path=self.p/A.MANIFEST
                 value=bad if bad is None or isinstance(bad,list) else dict(A.read(path),**bad)
                 A.write(path,value)
-                self.assertEqual(R.check(self.p,'localize')['state'],'returned_art_acceptance_invalid')
+                self.assertEqual(R.check_history(self.p,'localize')['state'],'returned_art_acceptance_invalid')
                 with contextlib.redirect_stderr(io.StringIO()),self.assertRaises(SystemExit):
                     E.gate(['--directory',str(self.web),'--project',str(self.p),'--snapshot','--keep'])
         report=self.root/'bad-prior.json';A.write(report,[])
@@ -94,13 +94,7 @@ class Returned(unittest.TestCase):
         report=self.root/'prior-delivery.json';A.write(report,{'archive':str(self.z),'sha256':A.sha(self.z)})
         A.record(self.p,self.web,self.native,'按原反馈改完图片出包',self.scope,previous_delivery=report)
         self.assertEqual(A.validate(self.p)['previous_delivery']['basis'],'existing_delivery_record')
-    def test_image_writer_uses_actual_native_bytes_and_never_rereviews_art(self):
-        self.accept();files={p.relative_to(self.native).as_posix():p.read_bytes() for p in self.native.rglob('*') if p.is_file()}
-        import audit_image_review_record as images
-        with mock.patch.object(images,'check',side_effect=AssertionError('no image review')):
-            self.assertEqual(W.english_image_problems(files,self.p,'localize'),[])
-            files['game.js']+=b'changed';self.assertTrue(W.english_image_problems(files,self.p,'localize'))
-    def test_writer_preserves_functional_refusal_and_labels_user_acceptance(self):
+    def test_writer_preserves_functional_refusal_without_collecting_art(self):
         self.accept()
         with mock.patch.object(F.T,'load_manifest',return_value={}), mock.patch.object(F,'read_source_record',return_value={'board':'localize'}), mock.patch.object(F,'check_source_record',return_value=[{'id':'K5_functional','message':'current reward code has a real error'}]), mock.patch.object(F,'finalize_native') as finalize:
             _,_,problems=W.finalize_for_writer(self.native,self.p,'localize','tt123')
@@ -108,23 +102,16 @@ class Returned(unittest.TestCase):
         with mock.patch.object(F.T,'load_manifest',return_value={}), mock.patch.object(F,'read_source_record',return_value={'board':'localize'}), mock.patch.object(F,'check_source_record',return_value=[]), mock.patch.object(F,'finalize_native',return_value={'blocks':[],'table':[],'warnings':[]}):
             with mock.patch.object(F,'check_trial_source',side_effect=AssertionError('no repeated Sprite-art gate')):
                 record,_,problems=W.finalize_for_writer(self.native,self.p,'localize','tt123')
-            self.assertEqual(problems,[]);self.assertEqual(record['art_receipt']['status'],'user_accepted')
-            self.assertFalse(record['art_receipt']['returned_art_acceptance']['functional_acceptance'])
-    def test_wrong_writer_native_refused_before_mutation(self):
-        self.accept();other=self.root/'wrong-native';shutil.copytree(self.native,other);(other/'game.js').write_text('other game')
-        with mock.patch.object(F.T,'load_manifest',return_value={}), mock.patch.object(F,'read_source_record',return_value={'board':'localize'}), mock.patch.object(F,'finalize_native') as finalize:
-            _,_,problems=W.finalize_for_writer(other,self.p,'localize','tt123')
-            self.assertTrue(any('Native' in x for x in problems));finalize.assert_not_called()
-    def test_user_acceptance_survives_zip_and_delivery_summaries(self):
+            self.assertEqual(problems,[]);self.assertNotIn('art_receipt',record)
+    def test_delivery_summary_does_not_copy_historical_art_receipt(self):
         self.accept()
         import verify_native_zip as V
         import prepare_delivery as D
-        raw={'kind':'finalize-native','decision':{},'art_receipt':R.summary(R.check(self.p,'localize'))}
+        raw={'kind':'finalize-native','decision':{},'art_receipt':R.summary(R.check_history(self.p,'localize'))}
         summary=V.finalize_summary(raw)
         receipt=self.root/'fixture.zip.receipt.json';A.write(receipt,{'finalize':summary})
         delivered=D.writer_finalize(receipt)
-        self.assertEqual(delivered['art_receipt']['status'],'user_accepted')
-        self.assertFalse(delivered['art_receipt']['returned_art_acceptance']['ai_art_rechecked'])
+        self.assertNotIn('art_receipt',delivered)
     def writer_runtime_fixture(self, fail_startup=False):
         import runtime_regression as RR
         import runtime_incremental as RI

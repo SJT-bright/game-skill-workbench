@@ -94,9 +94,9 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 `python scripts/art_check.py --project <工程> --dumps docs/test/art-round-N`：每轮美术做完立刻跑（ART-06），把画面相关的检查一次跑完：页面内容与背景（`audit_page_richness.py`，含空白卡片、占位方块、深色粗字、字超出按钮、大片空白、按钮≤40%、单调弹窗、首页上半屏大图和封面、选关≥6关）、截图颜色（`audit_dark_area.py`）、布局（`extract_ui_layout.py`＋`audit_ui_coverage.py`）、文字放得下（`audit_copy_quality.py --require-runtime`）、开发用字和占位图（`audit_dev_text.py --final`）、清晰度（ART-04：dump 里运行时的图≥节点 2 倍、背景≥1.5 倍的 `low_res`＋`audit_image_clarity.py`，两个板块第一轮起就拦；英化未改的原图写 `docs/art/clarity-exempt.json`），首页礼盒 10 帧动画（`docs/modules.json` 的 `gift_box.frames_dir`），再生成总览图和看图清单。美术只在这里查，最终总检测不再查美术（用户 2026-10-24，[检查分阶段](check-stages.md)）。结果在工程外 `<工程名>-artcheck/<时间>/art-check.md`。缺页面、缺截图都是"需处理"。见[美术自检](../../remake-art/references/page-richness.md#五美术自检每轮美术做完立刻做两个板块art-06page-01)。
 
-## 动态画面录屏分析
+## 定点短录排障
 
-`chrome_touch.py --record`（配套 chrome-mobile-testing，跑在 Ego Lite 里）把画面帧存到 `<输出>/frames/`（Ego 里每秒几帧，查不出一帧闪烁）；然后 `python scripts/audit_frame_glitches.py <frames文件夹或视频> --report <报告.json>`。视频（手机录屏、系统录屏）需要 ffmpeg，帧文件夹需要 Pillow。每个问题自动存 之前/当时/之后 三张图，只看这些图即可。详见 `remake-art/references/dynamic-visual-review.md`。
+常规观感随[人工试玩画面清单](manual-visual-review.md)观察。确定单个异常确实需要查看帧先后时，可显式使用 chrome_touch.py --record 或分析已有短片。低帧率连拍不能确认单帧闪烁。
 
 ## UI 不挡玩法
 
@@ -119,9 +119,9 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 - `tiktok_finalize.py source` 发现没有 `docs/startup/first-screen.json` 时先跑一遍 first_screen 生成它（R4F2），问题照常打印。
 - 估算借用 `audit_package_estimate.py` 的算法（引擎余量、场景按 0.15 计），只算账本，不构建；最后的体积关还是出包时的 Native ZIP 检查。
 
-## 截图总览图（给 GPT 一次看完）
+## 已有截图的可选拼图工具
 
-`python scripts/make_contact_sheet.py <截图文件夹或文件...> --out <总览图文件夹> --binding <review.json>`：把一轮测试的截图拼成编号总览图（默认每张 8 个、4 列、缩略图宽 300 像素），并写 `contact-sheets.json`（编号→原图路径和 SHA）。测试执行做完截图后跑一次，录屏证据图另拼一组；GPT 一次看完总览图，只打开可疑编号的原图，然后在 review 里写 `visual_verdict`。输出文件夹必须是空的；需要 Pillow。
+已有截图需要合并展示时可显式调用 make_contact_sheet.py。
 
 ## 重活排队与清理（不压垮电脑）
 

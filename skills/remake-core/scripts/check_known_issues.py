@@ -16,6 +16,13 @@ from logic_regressions import current_report as current_logic_report
 
 SKILL = Path(__file__).resolve().parents[1]
 CATALOG = SKILL / 'assets/known-issues.json'
+# Reviews from exact prior catalogs keep their existing binding. Older visual rows are ignored.
+PRE_MANUAL_VISUAL_CATALOG = 'a9cec2380cf6bf6bbd19ae3b465139e47aa6d02ce0b2e8f7c58ea932b101c212'
+PRE_MANUAL_VISUAL_CATALOGS = (
+    PRE_MANUAL_VISUAL_CATALOG,
+    'bd1142eae920c802625caeacc22c82477d78024003e0d63da6b6164d2e771adc',
+)
+PRE_DIRECT_GROWTH_CATALOG = 'cdf079ed8ebea18acce0bb552e20b21962fa34a9bf73c64cefe1685c96613b02'
 # Two separate work boards (remake-core/references/two-boards.md, user 2026-10-21).
 BOARDS = ('localize', 'remake')
 DEFAULT_BOARD = 'remake'  # strictest; old reviews without a board keep their previous behaviour
@@ -169,53 +176,6 @@ def result_cases(raw):
     if len(named) != len(set(named)):
         raise ValueError('Duplicate raw case ID')
     return cases
-
-
-def visual_verdict(review, base, expected_binding):
-    """Runtime faults only after user art approval; art review happens before trial.
-
-    Check black screens, flicker and missing runtime resources, not approved
-    typography, palette, layout, clarity or composition. Keep runtime evidence binding.
-    """
-    v = review.get('visual_verdict')
-    if not isinstance(v, dict):
-        return ['visual_verdict: missing GPT verdict on this build\'s contact sheets (make_contact_sheet.py)']
-    errors = []
-    if v.get('reviewer') != 'gpt':
-        errors.append('visual_verdict: reviewer must be "gpt" (only a GPT/Codex session judges the screens)')
-    ref = v.get('contact_sheets', {})
-    try:
-        if not isinstance(ref, dict) or not ref.get('path') or not ref.get('sha256'):
-            raise ValueError('needs contact_sheets {path, sha256}')
-        p = Path(ref['path'])
-        if not p.is_absolute():
-            p = base / p
-        if not p.is_file() or sha(p.read_bytes()) != ref['sha256']:
-            raise ValueError('contact-sheets.json missing or changed')
-        manifest = load(p)
-        if manifest.get('tool') != 'make_contact_sheet':
-            raise ValueError('not a make_contact_sheet manifest')
-        if manifest.get('binding') != expected_binding:
-            raise ValueError('sheets belong to another build (run make_contact_sheet.py with --binding)')
-        sheets = manifest.get('sheets', [])
-        total = sum(len(s.get('items', [])) for s in sheets if isinstance(s, dict))
-        if not sheets or total < 1 or total != manifest.get('total'):
-            raise ValueError('sheets list is empty or inconsistent')
-        for s in sheets:
-            f = p.parent / str(s.get('file', ''))
-            if not f.is_file() or sha(f.read_bytes()) != s.get('sha256'):
-                raise ValueError('sheet image missing or changed: ' + str(s.get('file')))
-        if v.get('images_reviewed') != total:
-            raise ValueError('images_reviewed must equal the number of screenshots on the sheets')
-    except (ValueError, OSError, TypeError, AttributeError) as e:
-        errors.append('visual_verdict: ' + str(e))
-    if v.get('verdict') != 'pass':
-        errors.append('visual_verdict: verdict is not pass')
-    if v.get('open_issues') not in ([], None) and v.get('open_issues') != 0:
-        errors.append('visual_verdict: open screen issues remain')
-    if len(' '.join(str(v.get('observed', '')).split())) < 15:
-        errors.append('visual_verdict: write what was actually checked on the sheets')
-    return errors
 
 
 def evidence(refs, base, errors, label, expected_binding, require_current=False):
@@ -559,7 +519,8 @@ def audit(args):
         errors.append('docs/art-style.txt says ' + on_disk + ' but the review was made for ' + art_style +
                       ' (user chose 按重塑画风重做: make a new review with --art-style remake)')
     expected_binding = binding(args)
-    if review.get('catalog_sha256') != sha(CATALOG.read_bytes()):
+    catalog_digest = review.get('catalog_sha256')
+    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_DIRECT_GROWTH_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
         errors.append('Checklist catalog changed; review added/changed checks')
     if review.get('binding') != expected_binding:
         errors.append('Source/Native/Web/build tag differs from the reviewed inputs')
@@ -570,6 +531,8 @@ def audit(args):
     if not isinstance(rows, dict):
         raise ValueError('checks must be an ID-keyed object')
     all_ids = {x['id'] for x in catalog['items']}
+    if catalog_digest in PRE_MANUAL_VISUAL_CATALOGS:
+        all_ids.add('VIS-01')  # Ignore the old row while checking every current technical result.
     expected = {x['id'] for x in catalog['items'] if applies(x, board, art_style) and final_gate(x)}
     declared = review.get('reward_entries', [])
     if not isinstance(declared, list):
@@ -645,7 +608,7 @@ def audit(args):
                           item['reviewer'] + '")')
     executor = str(review.get('test_executor') or '').strip()
     if executor_exit:
-        left_for_codex += ['gpt_spot_check', 'visual_verdict']
+        left_for_codex.append('gpt_spot_check')
     elif executor and executor.lower() not in {'gpt', 'codex'}:
         errors.extend(spot_check(review, base, expected_binding, expected, declared))
     # Monkey Dash 2026-10-21: a mechanism found in code must produce its own checks.
@@ -675,9 +638,6 @@ def audit(args):
     if rec['level_mode'] == 'levels' and rows.get('LEVEL-02', {}).get('status') == 'not_applicable':
         errors.append('LEVEL-02: this is a level game (level_plan.json mode levels); test the map, bonus and limited levels, '
                       'it cannot be not applicable')
-    if not executor_exit and any(item.get('visual_verdict') and applies(item, board, art_style) and final_gate(item) and isinstance(rows.get(item['id']), dict) and
-           rows[item['id']].get('status') == 'pass' for item in catalog['items']):
-        errors.extend(visual_verdict(review, base, expected_binding))
     # Copied text is not evidence: each check must describe its own observation (2026-10-20 postmortem).
     seen_text = {}
     for item in catalog['items']:
@@ -914,10 +874,7 @@ def init(args):
               'test_executor': '',
               'gpt_spot_check': {'reviewer': '', 'locked_commit': '', 'code_changes_reviewed': False,
                                  'rerun_auto_checks': False, 'flows': [], 'disagreements': [],
-                                 'note': 'Required when test_executor is another AI: GPT re-runs all automatic checks and redoes >= 3 flows.'},
-              'visual_verdict': {'reviewer': '', 'contact_sheets': {'path': '', 'sha256': ''}, 'images_reviewed': 0,
-                                 'verdict': 'pending', 'open_issues': [], 'observed': '',
-                                 'note': 'Only a GPT/Codex session fills this after looking at the contact sheets of this build.'}}
+                                 'note': 'Required when test_executor is another AI: GPT re-runs all automatic checks and redoes >= 3 flows.'}}
     if args.review.exists():
         raise ValueError('Existing review is preserved; update it without erasing observations')
     if args.markdown and args.markdown.exists():

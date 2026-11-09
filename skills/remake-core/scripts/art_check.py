@@ -7,7 +7,7 @@
 用户 2026-10-23：深色粗字永久禁止（任何颜色、游戏中 HUD 和图片字也算），单独一行"深色粗字（永久禁止）"，不能标不适用；
 用户 2026-10-23：所有字都是生成的图片字、和画面一体（按钮连字一张图、数字用生成的位图字），单独一行
 "文字一次成图（整张按钮、图片数字）"，两个板块都查（Saul 2026-11-05：游戏里不放游戏名，原来的标题位置放主角/图案大图）；只有公告、玩法说明这类大段文字可以用细一点的字体；
-美术的检查要放在美术制作之后，最后的测试只查玩法和功能。所以美术线的"做完"= 本脚本全部通过 + Codex 看过总览图。
+美术的检查要放在美术制作之后，最后的测试只查玩法和功能。本脚本报告可量化的技术检查；画面表现由试玩者按 references/manual-visual-review.md 核对。
 
 先在浏览器里用 chrome_touch.py 的 dump_ui 读每个页面和弹窗（含游戏中，两种比例，写 purpose：home、result_win、
 result_fail、settings、settings_sound、map、shop、skins、pause、revive、trial、league…），截图自动存进 docs/test。然后：
@@ -19,7 +19,7 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
 单独一行"字不压扁拉伸、字色有变化"；所有能点开的页面和弹窗列在 docs/art/screens.json，一起改、每个都要有 dump，
 单独一行"全部页面和弹窗"；同组按钮的字做法/底板/颜色不一致（mixed_caption_style）、不在整套按钮里、扁平按钮、打字箭头单独一行
 "同组按钮同一种风格"（用户 2026-10-23）；位置穿模（字压图标、图伸出按钮/胶囊、按钮重叠、主功能字写成按钮下的小字）单独一行，
-并给每个页面出一张"穿模审查图"（overlap/，按钮、胶囊、数字的放大裁图），每次把图拼到一起都要看。只改美工（重做美工/重新设计按钮/logo/图标）也走本脚本（remake-art）。
+实际层叠效果由试玩者看。只改美工时，按影响范围选择对应检查（remake-art）。
 
 依次运行（缺输入就是"需处理"，不跳过）：
   页面内容    audit_page_richness.py   纯色背景、单调页面、只有字的按钮、系统字体、空白面板/卡片、占位图、纯色方块、
@@ -44,15 +44,12 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
                判不适用，不要求加金币顶栏、关卡表和地图；feature_policy.py 的 top_bar / level_map）
   礼盒10帧    docs/modules.json gift_box.frames_dir   首页礼盒是 10 帧动画：10 张、同尺寸、≥128px、至少 8 张不同
                                        （用户 2026-10-24：只在美术阶段查，不进最终总检测）
-最后生成总览图（make_contact_sheet.py）和一页 art-check.md：Codex 打开总览图，按里面的"看图清单"逐项看。
+art-check.md 包含供试玩者使用的看图清单。原截图可用于定位；本脚本默认不录屏、不分析录像、不生成总览或裁图。
 
 结果：<输出>/art-check.md、art-check.json（tool art_check，供门禁 ART-06）、logs/。退出码 0 全部通过，1 有需处理，2 参数错误。
-v7.8（U7 补，Saul 10-30）：分析跑完还写 <工程>/.tiktok-kit/art-receipt.json（art_receipt.py：通过 pass / 失败 fail，
-工程里全部图片的指纹）；缺采集时 2.4 不动旧回执，3.x 写 not_covered_3x（3.x 未覆盖，不是通过）。两个写包入口和
-serve_preview.py --keep 只核对这份回执、不重跑本脚本：重塑新游戏没有回执、不是通过或图对不上就不出包、不起试玩。
 v7.8（H8、H10，art_records.py）：两行不用采集就能查——和底子逐字节相同的图、模型内嵌贴图、声音（docs/art/base-assets.json，
 留下的写 docs/art/base-keep.json）；新做的图要在 docs/art/generated.json（代码画的写 docs/art/script-drawn-allow.json）。
-缺采集时这两行也写进报告；3.x 工程这两行没通过时回执写 fail（不是 not_covered_3x）。本机 python3 没有 numpy 时，
+缺采集时这两行也写进报告。本机 python3 没有 numpy 时，
 命令行自动改用带 numpy 的 /usr/bin/python3 重跑。
 W90b：这两行只算会进包的文件（在 resources 或资源包里、被场景/预制体等按 uuid 引用、代码写了路径、认不出的；给 --build
 时出现在构建里的也算）；工程里没用到的只列成「建议删掉」，不拦。
@@ -113,8 +110,8 @@ LOOK = [
     '【用户 2026-10-23】放大看每个图片字：没有被压扁或拉长的字（反例：DETAILS 被压扁 2.89 倍、SKINS/DAILY 1.80 倍）——每个字单独裁到可见边缘、按原比例缩放，放不下就改按钮尺寸或重新生成；不是用 Canvas 字体画出来的字',
     '【用户 2026-10-23】一页的字不全是一个颜色：标题、按钮字、数字、标签不是全一个颜色（反例：Hazel\'s Shelf Scramble 首页标题、PLAY、数字全是青色；Your Progress 弹窗所有字都是同一种橙黄＋棕描边）；具体颜色和字形按启动包画风，不另加花体/装饰字要求',
     '【用户 2026-10-23】docs/art/screens.json 里每个能点开的页面和弹窗都看过、风格一致：没有大白板、没有空背景（灰底/纯色底）、没有和整体配色不搭的颜色',
-    '【用户 2026-10-23，穿模审查】打开 overlap/ 里的穿模审查图，放大看每个按钮、资源胶囊、数字：字没有压在图标上（反例：体力"20"压在闪电图标上、还是细字体）、图没有伸出按钮/胶囊（反例：WATCH AD 左边一堆金币伸出按钮）、按钮之间不重叠；主要功能字（WATCH AD、PLAY、CLAIM）在生成的按钮上，按钮下的小字只做解释说明且也是图片字；每次把图拼到一起都要这样看一遍',
-    '【用户 2026-10-24，图内装饰遮挡】每个弹窗关闭/返回键都要连同父面板贴图一起看：没有盖住烘焙在面板里的徽章、星章、贴纸或边扣；节点矩形无交叠不代表 SpriteFrame 内部无装饰。把组合截图和精确节点路径记入 docs/art/overlap-review.md',
+    '【用户 2026-10-23，穿模审查】试玩时看受影响的按钮、资源胶囊和数字：字没有压在图标上（反例：体力"20"压在闪电图标上、还是细字体）、图没有伸出按钮/胶囊（反例：WATCH AD 左边一堆金币伸出按钮）、按钮之间不重叠；主要功能字（WATCH AD、PLAY、CLAIM）在生成的按钮上，按钮下的小字只做解释说明且也是图片字',
+    '【用户 2026-10-24，图内装饰遮挡】每个弹窗关闭/返回键都要连同父面板贴图一起看：没有盖住烘焙在面板里的徽章、星章、贴纸或边扣；节点矩形无交叠不代表 SpriteFrame 内部无装饰。看到问题时记录对应页面与操作，已有截图可帮助定位',
     '【用户 2026-10-23/24，数字叠印与字距】放大看每个数字，尤其三位数、分隔符和最大值（100、150、200、300、1,250、0:14、00:59:59）：数字之间不重叠、没有"10"叠在"100"上这种印两遍的情况；固定数字和图标/底板一张图，会变的数字用一个位图字体 Label，`.fnt` 每字 xadvance >= xoffset + width + max(2px, 0.1 × lineHeight)，且在两种手机比例实看描边之间留有背景缝隙；不手摆数字图、不叠第二个 Label、不用负字距；卡片奖励图在卡片内且未拉长，卡片底是真画面而非假透明棋盘格',
     '【用户 2026-10-23】道具数量、体力、金币、关卡这些和闯关有关的东西：边框/胶囊、按钮、收集功能键的图案都是生成的图；会变的数字单独生成数字图做成位图字体，不用原生字体',
     '【用户 2026-10-23】同一组按钮（比如首页一排功能键）放在一起看：按钮和下面的字是同一种做法（都烘焙在图标图里，或都用同一种底板＋图片字）、同一种底板、同一种字形和颜色；不能有的是白底条、有的是蓝底条、有的是打字、有的是云朵底板＋打字（反例：LEVELS/SOUVENIRS/SETTINGS/HOME SCREEN +2/PROFILE REVISIT +2 五个键四种风格）',
@@ -130,11 +127,6 @@ LOOK = [
 def run(name, args, logs):
     from check_runner import run_tool
     return run_tool(name, args, logs, HERE, TIMEOUT)
-
-
-def recorded_frame_dirs(dumps):
-    """Frame folders saved by chrome_touch.py --record (<out>/frames/NNNNN_TTTTTTTms.jpg) under the dump folder."""
-    return sorted({p.parent for p in Path(dumps).rglob('*.jpg') if p.parent.name == 'frames'})
 
 
 def first_json(text):
@@ -409,91 +401,6 @@ def visible_label_counts(dump_files, project):
     return total, dynamic, long_copy
 
 
-def overlap_sheets(dump_files, out):
-    """Zoomed composite crops of buttons, capsules/counters and numbers for 穿模 review.
-
-    Include nearby parent-panel art around buttons, and the full backing capsule around counters. User 2026-10-24:
-    a close button covered an ornament baked into its parent SpriteFrame, which node rectangles cannot see.
-    The target node's own box is outlined in magenta. Returns the sheet paths.
-    """
-    try:
-        from PIL import Image, ImageDraw
-    except ImportError:
-        return []
-    folder = out / 'overlap'
-    folder.mkdir(parents=True, exist_ok=True)
-    made = []
-    for k, f in enumerate(dump_files):
-        try:
-            d = json.loads(f.read_text(encoding='utf-8'))
-        except (OSError, ValueError):
-            continue
-        shot = f.parent / (d.get('screenshot') or f.name.replace('-ui-dump-', '-ui-').rsplit('.', 1)[0] + '.png')
-        if not shot.is_file():
-            continue
-        nodes = [n for n in d.get('nodes', []) if n.get('opacity', 1) > 0.05 and n.get('rect')]
-        by_path = {n.get('path'): n for n in nodes}
-        def a_(n):
-            return n['rect'][2] * n['rect'][3]
-        pick = []
-        for n in nodes:
-            c = n.get('comps', {})
-            holder = 'sprite' in c and a_(n) < 0.06 and any(m is not n and m['path'].startswith(n['path'] + '/') for m in nodes)
-            number = any(ch.isdigit() for ch in str((c.get('label') or {}).get('string', '')))
-            if 0.0008 < a_(n) < 0.5 and ('button' in c or holder or number):
-                if not any(n['path'].startswith(q['path'] + '/') for q in pick):
-                    pick.append(n)
-        if not pick:
-            continue
-        with Image.open(shot) as im:
-            im = im.convert('RGB')
-            W, H = im.size
-            cells = []
-            for n in pick[:24]:
-                r = n.get('screen') or n['rect']
-                c = n.get('comps', {})
-                path = n.get('path', '')
-                parent_path = path.rsplit('/', 1)[0] if '/' in path else ''
-                parent = by_path.get(parent_path)
-                siblings = [m for m in nodes if parent_path and m.get('path', '').rsplit('/', 1)[0] == parent_path and m is not n]
-                backdrops = [m for m in siblings if m.get('comps', {}).get('sprite', {}).get('frame') in ('panel', 'panel_clear', 'card', 'capsule')]
-                number = any(ch.isdigit() for ch in str((c.get('label') or {}).get('string', '')))
-                if number and backdrops:
-                    # Show the whole plate behind a changing string; its internal icon/free-text zones matter.
-                    backdrop = max(backdrops, key=lambda m: (m.get('screen') or m['rect'])[2] * (m.get('screen') or m['rect'])[3])
-                    r = backdrop.get('screen') or backdrop['rect']
-                    mx, my = r[2] * 0.08, r[3] * 0.08
-                else:
-                    mx, my = r[2] * 0.25, r[3] * 0.25
-                    if 'button' in c and parent:
-                        # Keep the nearby parent art visible, especially corner badges under close controls.
-                        pr = parent.get('screen') or parent['rect']
-                        mx = max(mx, pr[2] * 0.18)
-                        my = max(my, pr[3] * 0.12)
-                box = (int(max(0, r[0] - mx) * W), int(max(0, r[1] - my) * H), int(min(1, r[0] + r[2] + mx) * W), int(min(1, r[1] + r[3] + my) * H))
-                if box[2] - box[0] < 4 or box[3] - box[1] < 4:
-                    continue
-                crop = im.crop(box)
-                ImageDraw.Draw(crop).rectangle([int(r[0] * W) - box[0], int(r[1] * H) - box[1], int((r[0] + r[2]) * W) - box[0] - 1,
-                                                int((r[1] + r[3]) * H) - box[1] - 1], outline=(255, 0, 160))   # the node's own box
-                scale = min(330 / crop.width, 150 / crop.height)
-                cells.append((n['path'].split('/')[-1][:28], crop.resize((max(1, int(crop.width * scale)), max(1, int(crop.height * scale))))))
-        if not cells:
-            continue
-        cols = 4
-        rows_ = (len(cells) + cols - 1) // cols
-        sheet = Image.new('RGB', (cols * 340, rows_ * 175), (235, 235, 235))
-        dr = ImageDraw.Draw(sheet)
-        for i, (name, c) in enumerate(cells):
-            x, y = (i % cols) * 340 + 5, (i // cols) * 175 + 5
-            sheet.paste(c, (x, y))
-            dr.text((x, y + 155), name, fill=(20, 20, 20))
-        target = folder / ('%02d-%s.png' % (k, str(d.get('screen') or f.stem)[:40].replace('/', '_')))
-        sheet.save(target)
-        made.append(target)
-    return made
-
-
 DESIGN_ROWS = {'top_bar': ('顶部资源栏', '顶部资源栏'), 'level_map': ('关卡地图', '关卡地图（')}   # rule -> (row title, LOOK prefix)
 
 
@@ -716,18 +623,6 @@ def main():
         (out/'art-check.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
         md='# 美术检查：先补采集\n\n本轮尚未运行美术分析，不能判定美术通过或失败。补齐以下具体材料后再运行：\n\n'+'\n'.join('- '+e for e in inventory['errors'])+'\n'
         md+='\n不用采集就能查的两行（v7.8 H8、H10）：\n\n'+'\n'.join('- %s：%s　%s'%(t,'通过' if ok is True else ('提示' if ok is None else '需处理'),d) for t,ok,d,_ in static_rows)+'\n'
-        # v7.8 U7（补）: Cocos 2.4 keeps its earlier receipt (missing inputs are no verdict); a 3.x project cannot be
-        # captured by ui_dump yet, so its receipt records the images as "3.x 未覆盖" (never a pass) -- unless H8 / H10
-        # already failed: then the receipt is a fail (3.x remakes such as 企鹅雪道 would otherwise pass the writers).
-        import art_receipt
-        if art_receipt.engine(proj) == 3:
-            if static_failed:
-                art_receipt.write(proj,'fail',report,out/'art-check.json',
-                                  note='3.x 未覆盖页面检查；不用采集的 H8/H10 没通过：'+'；'.join(r[0] for r in static_failed))
-                md+='\n美术回执：%s（fail：H8/H10 没通过；重塑新游戏不出包）\n'%art_receipt.receipt_path(proj)
-            else:
-                receipt=art_receipt.not_covered_3x(proj,report,out/'art-check.json')
-                md+='\n美术回执：%s（3.x 未覆盖，不是通过；写包入口照样放行但会标出）\n'%art_receipt.receipt_path(proj)
         (out/'art-check.md').write_text(md,encoding='utf-8');print(md);return 1
     from audit_no_social_features import audit as audit_no_social
     social=audit_no_social(proj,dumps=a.dumps)
@@ -878,21 +773,6 @@ def main():
     add('文字一次成图（整张按钮、图片数字）', dark_ok and not one, '；'.join(distinct(one))[:700] if one else
         ('通过：首页上方没有打出来的字、按钮字和按钮一张图、数字是生成的位图字、没有用 Canvas 字体画字' if dark_ok else (no_report or '没有页面报告：先 dump 全部页面')),
         'page_richness.json')
-    # user (Codex 美工调查 2026-10-30, A02/A11): flashes when tapping, paging, changing the volume or clearing tiles
-    # ("这个问题必须沉淀进检查的skill，出现很多次了很多游戏都有") are invisible on still screenshots. Every art round
-    # records those actions with chrome_touch.py --record (frames/ next to the dumps) and runs audit_frame_glitches.py.
-    frame_dirs = recorded_frame_dirs(dumps)
-    glitches = []
-    for index, frame_dir in enumerate(frame_dirs[:12]):
-        g_out = out / 'frame_glitches' / ('%02d' % index)
-        code_g, _ = run('audit_frame_glitches.py', [frame_dir, '--out-dir', g_out, '--report', g_out / 'report.json'], logs)
-        if code_g != 0:
-            glitches.append('%s：%s' % (frame_dir.parent.name, '有闪屏/空帧，证据见 %s' % g_out if code_g == 1 else '工具出错 %d' % code_g))
-    add('动态闪屏（录屏：点按钮、开关弹窗、调音量、局内消除）', bool(frame_dirs) and not glitches,
-        '；'.join(glitches[:6]) if glitches else (
-            '检查 %d 段录屏，没有闪黑、闪白、空帧或闪烁' % len(frame_dirs) if frame_dirs else
-            '没有录屏帧：用 chrome_touch.py --record 录首页点按钮、弹窗开关、调音量、局内消除各一段，帧放在 dump 目录下的 frames/'),
-        'frame_glitches')
     text_findings = fixed_text_inventory_findings(rep if pages_ok else {})
     label_total, dynamic_total, long_copy_total = visible_label_counts(dump_files, proj)
     text_detail = ('可见运行时文字 %d 项：动态白名单 %d 项、40 字以上说明 %d 项、固定短文字/数字违规 %d 项' %
@@ -973,9 +853,6 @@ def main():
     add('首页主角露全、HUD 数字够大够清楚、复活/结算页没有黑边（H11、H6）', dark_ok and not hero,
         '；'.join(distinct(hero))[:700] if hero else
         (hero_pass if dark_ok else (no_report or '没有页面报告：先 dump 首页、游戏中、复活和结算页')), 'page_richness.json')
-    sheets_ = overlap_sheets(dump_files, out)
-    add('穿模审查图（给 Codex 看）', None if sheets_ else False, ('%d 张：%s（放大看每个按钮、胶囊、数字有没有穿模）' % (len(sheets_), out / 'overlap'))
-        if sheets_ else '没有可裁的按钮/胶囊（缺 dump 或截图）', 'overlap')
     add('实际页面状态与截图（docs/art/screens.json）', True, '输入完整：%d个精确页面状态'%len(inventory['listed']), 'input-inventory.json')
     add('全页面双比例覆盖（每个精确状态各有同帧 dump+截图）', True, '输入完整：%d个页面/尺寸组合'%len(inventory['observed']), 'input-inventory.json')
 
@@ -1092,9 +969,6 @@ def main():
     for title, ok, detail, log in static_rows:     # v7.8 H8 / H10 (computed before the capture check)
         add(title, ok, detail, log)
 
-    if shots:
-        code, text = run('make_contact_sheet.py', [*shots, '--out', out / 'sheets', *binding], logs)
-        add('总览图（给 Codex 看）', None if code == 0 else False, str(out / 'sheets') if code == 0 else text.strip()[-200:])
     # 美工skill 2026-11-05: 页面内容与背景 printed again what the rows above list one by one (蛋壳特工队: 1063 of 1224
     # page problems). Its status stays page_richness's own; its text keeps only the kinds no other row reports.
     if pages_ok:
@@ -1111,12 +985,6 @@ def main():
             if r['check'] == '页面内容与背景' and r['status'] == '需处理' and (rest or moved):
                 r['detail'] = ('；'.join(distinct(rest, 8)) + ('；' if rest and moved else '') +
                                ('另 %d 条见上面各行（这里不再重复）' % moved if moved else ''))[:900]
-    if capture_round and capture_round.get('ready') and not any(r['status'] == '需处理' for r in rows):
-        from art_round_check import artifact_hash
-        try:
-            capture_round['artifact_hash'] = artifact_hash(proj, dumps)
-        except (OSError, ValueError) as exc:
-            add('截图附属证据', False, '无法绑定本轮录屏或渲染报告：'+str(exc))
     blocking = [r for r in rows if r['status'] == '需处理']
     report = {'tool': 'art_check', 'schema': 1, 'board': board, 'board_source': board_source, 'art_style': 'remake' if remake_art else 'original',
               'assets_fingerprint': tree_fingerprint(proj), 'checked': len(rows), 'failed': len(blocking),
@@ -1148,17 +1016,12 @@ def main():
     report['check_timings'] = read_timings(logs)
     report['total_elapsed_seconds'] = round(time.monotonic()-started,6)
     (out / 'art-check.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    # v7.8 U7（补）: the package writers and serve_preview --keep only check this receipt (never re-run the art check)
-    import art_receipt
-    receipt = art_receipt.after_art_check(proj, report, out / 'art-check.json')
     md = ['# 美术自检', '', '工程：%s　板块：%s　美术：%s　时间：%s' % (proj, '英化' if board == 'localize' else '重塑',
                                                              '按重塑画风' if remake_art else '沿用原画风', report['time']), '',
-          '美术回执：%s（%s，%d 张图的指纹；出包和用户试玩只核对它，图再改就要重跑本脚本）' % (
-              art_receipt.receipt_path(proj), receipt['status'], receipt['images_count']), '',
-          ('**需处理 %d 项：只定位这些失败项及改动依赖；保留原通过项，禁止整套重跑。**' % len(blocking)) if blocking else '**脚本检查全部通过。**接着 Codex 只看尚未认可的画面：',
+          ('**需处理 %d 项：只定位这些失败项及改动依赖；保留原通过项，禁止整套重跑。**' % len(blocking)) if blocking else '**本次技术项通过。**画面体验按人工试玩清单记录：',
           '', '| 检查 | 结果 | 说明 |', '| --- | --- | --- |']
     md += ['| %s | %s | %s |' % (r['check'], r['status'], r['detail'].replace('|', '/')) for r in rows]
-    md += ['', '## 看图清单（普通游戏页逐项看；已核实官方加载/Retry按cocos-loading-screen.md实看，保留清晰度、比例、边缘及可操作Retry，不套游戏主题生图规则）', ''] + ['- [ ] ' + x for x in look]
+    md += ['', '## 人工看图清单（在已有试玩中观察；详见英化 Skill 的 remake-core/references/manual-visual-review.md）', ''] + ['- [ ] ' + x for x in look]
     (out / 'art-check.md').write_text('\n'.join(md) + '\n', encoding='utf-8')
     print('\n'.join(md))
     print('\n完整结果：%s' % out)

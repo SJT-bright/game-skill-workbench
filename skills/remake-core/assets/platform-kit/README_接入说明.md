@@ -23,7 +23,7 @@ v1.1（2026-10-27）：卡住判定 20 秒 → 10 秒（skill 规定 10 秒无�
 | `assets/tiktok-platform/TikTokMissionService.js` | 快捷方式/回访的 4 个 TikTok 接口 | SnakeVSBlock v32，逐字节相同 | 已在 Snake 中通过 |
 | `assets/tiktok-platform/SaveStore.js` | 存档：一个 key、一个字符串、写后读回比对；v7.5：读回 true/false/undefined 或抛错时，用 `getStorageInfoSync().keys` 判断有没有这个 key，没有就是新存档（写默认值），不再报 \"Saved value is unavailable\"；读档后发一次登录（不等结果，失败或没有接口都不影响任何流程） | 平台包新写 | Node 测试通过，**待第一次扫码** |
 | `assets/tiktok-platform/MissionFlow.js` | 主页两个按钮的完整流程（不画界面）；v7.5：判断是不是真机用和 `TikTokMissionService.js` 一样的顺序（TTMinis.game / tt / wx），只有 tt 的环境不再显示 LOCAL PREVIEW；2.0：不给 `reward` 时自己按 `growthReward()`（5B）加到 `coins`，文案 `+N Coins` | 平台包新写 | Node 测试通过，**待第一次扫码** |
-| `assets/tiktok-platform/HomeGrowthEntries.js` | 2.0 新增：首页底排两个固定入口（Add to Home / Profile Revisit）。奖励只读 `growthReward()`，没有改数额的参数；没有 TikTok 运行环境时点按提示 "Available in TikTok"，入口不隐藏；图标缺失或 2 秒没加载出来就显示文字；请求中的连点合并成一次 生成时预防 N、N2 批起：init 后下一帧按首页按钮和带触摸监听的可见节点的包围盒自动摆两个入口（半屏以上的背景和遮罩不算），放不下报错不动；首页再加按钮后调一次 `placeEntries()`；`init(store, {place:false})` 关掉 | 平台包新写 | Node 测试通过，**待真机复测** |
+| `assets/tiktok-platform/HomeGrowthEntries.js` | 2.0 新增：首页底排两个固定入口（Add to Home / Profile Revisit）。奖励只读 `growthReward()`，没有改数额的参数；没有 TikTok 运行环境时入口仍可见，点按不显示说明；图标缺失或 2 秒没加载出来就显示文字；请求中的连点合并成一次 生成时预防 N、N2 批起：init 后下一帧按首页按钮和带触摸监听的可见节点的包围盒自动摆两个入口（半屏以上的背景和遮罩不算），放不下报错不动；首页再加按钮后调一次 `placeEntries()`；`init(store, {place:false})` 关掉 | 平台包新写 | Node 测试通过，**待真机复测** |
 | `build-templates/bytedance/main.js` | 启动：每一步失败或卡住都在 20 秒内出可见 Retry，10 秒没进度就提示；v7.5：包内每个文件 10 秒没结果再请求一次（先到的结果为准），30 秒算失败，切后台不计时、每帧最多计 1 秒；启动异常会被接住并显示，不会停在 \"Starting...\"；v1.3（2.0）：触摸修正之后装 `storage-guard.js`（出错不挡启动），启动时发一次静默登录（不等结果），只有包里设了 `__TIKTOK_KIT_WEBP_PROBE__ = true` 才加载 `webp-decode-probe.js`；v1.4：图片解码（小游戏里图片在解析这一步才真正解码，`downloader.downloadDomImage`，引擎没有超时）也按同一规则 10 秒重发、30 秒算失败；v1.2～v1.3 找的 `parser._parsers` 在所有 2.4 引擎里都不存在，这一半以前没生效；场景已经出来后点到迟到的 Retry，只关掉加载提示，不再盖一个一直不消失的 "Loading 95%"；v1.5：10 秒重发、30 秒失败、后台不计时这几个数字不变，单个文件重发算进度，而且有文件还在自己的 30 秒里时，10 秒总看守等它（它 10 秒重发、30 秒失败，失败会经这一步的出错回调出 Retry）：卡一个文件只在它真失败时出 Retry，重发后进了首页不会压着 "Load failed"（v1.4 两个 10 秒同时到期，宿主每秒约 1 帧时 Retry 先弹出）；v1.6：启动场景的 JSON 已经反序列化、它用的图片超时导致场景失败时，引擎把这份已被改写的 JSON 留在文件缓存（`cc.assetManager._files`）里，场景又不进解析缓存，下一次加载就拿它再反序列化一次，马上失败（调试版引擎报 \"Can not deserialize the same JSON data again\"，去掉这条调试检查的正式版报 `TypeError: Cannot read properties of undefined (reading '0')`），所以以前第一次 Retry 一定失败、第二次才进得去；Retry 重新加载场景前先从缓存里删掉这一项（2.4.4 / 2.4.6 / 2.4.13 / 2.4.15 引擎这段代码相同），计时数字不变。`main.js` 第 33 行在开关里 require `./webp-decode-probe`，静态启动依赖检查不看 `if`，所以 finalize 装平台包 `main.js` 时总是把 `webp-decode-probe.js` 一起放进包根（`KIT_MANIFEST` 的 `startup24.extra_files`，K1 查它的哈希）  | MetalMaster r5 + 1 行触摸修正，v7.5 按射击高手2048 v82 的加载守卫改写 | Node 测试通过，**待真机复测** |
 | `build-templates/bytedance/touch-coordinates.js` | TikTok 触点只有 screenX/screenY、Cocos 2.4 读 clientX/clientY：不装就按钮点不动（必装，探针校验）；v7.9 起切后台时还按着的手指在 EVENT_HIDE / EVENT_SHOW 时取消，回来后第一下不丢 | 坐标部分是 StarPop v50（`1aeb690c…`，逐字节相同，现在记为旧版本）；取消手指的部分是甜点消消乐 R48 的 `touch-lifecycle-reset.js`。注意：躲雨小鸭 v20、射击高手 pkg85 用的 `0369875d…` 是另一份代码，不是这个文件 | 坐标部分：StarPop v50 没有找到扫码确认记录，**待真机复测**；取消手指：R48 Saul 手机验收过，模拟宿主里割草 v015 从拒到过 |
 | `parts/storage-guard.js` | 2.0 新增存档层：写入一律存文字（数字、布尔转成字符串）；读到 null/undefined/''/false/true 时用 `getStorageInfoSync().keys` 判断键在不在，不在就当新玩家（返回 null）；读出对象原样给；SaveStore 的键原样读（SaveStore 自己判断坏档）。工程里放在 `build-templates/bytedance/storage-guard.js`（`KIT_MANIFEST.json` 的 `project_path`），由 `main.js` 在游戏脚本之前装上 | 射击高手2048 v85 的 `storage-guard.js` + TobinsGem/Tansys 的键列表判断 | Node 测试通过，**待真机复测** |
@@ -134,51 +134,25 @@ panelAlive = false; ads.cancelOwner('result');
 
 ### 第 5 步：主页两个按钮
 
-**2.0 起首页底排用固定组件 `HomeGrowthEntries.js`**（底排只放这两个入口，规则 U3）：在首页底排放两个按钮节点，把组件挂在它们的父节点上，两个节点拖进 `shortcutNode` / `profileNode`，首页脚本里：
+首页保留两个同风格的固定图标按钮 Add to Home Screen 和 Profile Revisit。点一下直接发起对应的平台导航。制作和迁移都移除旧任务面板、提示 Label、文字贴图、toast 和二次点击的绑定。Studio 和普通 Web 同样显示两个按钮。没有对应 SDK、失败、取消或超时都安静结束，入口可以重试。
+
+**Cocos 2.4** 使用 `HomeGrowthEntries.js`，将按钮拖给组件的 `shortcutNode` / `profileNode`。钱包可用后调 `init(save, {onGranted: refreshWallet})`。组件负责点按和冷/热进入监听。图标失效时只用入口名称和原有奖励标识作为备用。
+
+**Cocos 3.x** 使用插件，分别接两处实际触摸回调：
 
 ```js
-this.getComponent('HomeGrowthEntries').init(save, {onGranted: function (kind, data) { topBar.setCoins(data.coins); }});
-```
-
-奖励固定是 `growthReward()`（5B），组件没有改数额的参数；不支持时提示 "Available in TikTok"；图标没加载出来显示文字。需要自己画弹窗时，才按下面的写法直接用 `MissionFlow`（不传 `reward` 时它也自己发 `growthReward()`）。
-
-```js
-var MissionFlow = require('MissionFlow');
-var config = require('PlatformConfig');
-var amount = config.growthReward();   // 5B；第 2 步没填 normalLevelCoins 会在这里抛错，本地第一次打开首页就能发现
-var flow = new MissionFlow({
+var flow = new globalThis.TikTokKit.MissionFlow({
   store: save,
-  reward: function (kind, d) { d.coins += config.growthReward(); },   // 只改 d；固定 5B
-  rewardText: {shortcut: '+' + amount + ' Coins', profile: '+' + amount + ' Coins'},
-  render: function (v) {
-    panel.active = v.open;
-    if (!v.open) return;
-    titleLabel.string = v.kind === 'shortcut' ? 'ADD TO HOME SCREEN' : 'REVISIT FROM PROFILE';
-    messageLabel.string = v.message;                           // 每种结果都有字，直接显示
-    mainButton.interactable = v.action !== 'none' && !v.busy;
-    mainButtonLabel.string = v.busy ? 'PLEASE WAIT' : (v.action === 'check' ? 'CHECK REWARD' : 'GO');
-    claimedBadge.active = v.claimed;
-  },
-  onGranted: function (kind, data) { topBar.setCoins(data.coins); }
+  render: function () {},
+  onGranted: refreshWallet // (kind, data) => 用实际入账后的 data 刷新余额
 });
-
-homeShortcutIcon.on('click', function () { flow.open('shortcut'); });
-profileRevisitIcon.on('click', function () { flow.open('profile'); });
-mainButton.on('click', function () { if (flow.view().action === 'check') flow.check(); else flow.start(); });
-closeX.on('click', function () { flow.close(); });
-cc.game.on(cc.game.EVENT_SHOW, function () { flow.onShow(); });   // 从 TikTok 回来
-// 组件 update(dt) 里：flow.tick();   主页销毁时：flow.dispose();
+flow.startEntryTracking(); // 钱包可用后即初始化，不等玩家点按钮
+shortcutButton.on(cc.Node.EventType.TOUCH_END, function () { flow.open('shortcut', {navigate: true}); });
+profileButton.on(cc.Node.EventType.TOUCH_END, function () { flow.open('profile', {navigate: true}); });
+// 组件销毁时解除按钮监听，并调用 flow.dispose()。
 ```
 
-`MissionFlow` 已经处理好的事（以前每个游戏都在这里出过 bug）：
-
-- 查询中途离开 TikTok 再回来：旧查询作废，自动发新查询，旧结果迟到也不发奖。
-- 连点"检查"只发一次请求；最多 10 秒一定结束（不接 `tick` 也会结束）。
-- 失败、超时、不支持、无资格：都有英文提示，没有"点了没反应"。
-- 只有 `canReceiveReward === true` 才发奖；金币和"已领取"一次存进去；存档失败不发奖，可以再点重试。
-- 每个入口每个存档只领一次；坏存档恢复后视为已领，不会重复送。
-
-弹窗的美术（面板、插图、按钮图）还是每个游戏按 skill 的美术规则自己做，`MissionFlow` 只给文字和状态。
+两个导航请求都在原始点击回调内发出。仅从相应入口回来才自动核验资格。只有严格的 `canReceiveReward === true` 且保存成功才更新实际奖励，余额与领取标志一次提交。每项每存档只发一次。已领取仍可打开平台入口。项目配置及无金币项目的奖励替代按原规则接入。
 
 ### 第 6 步：弹窗和按钮（生成时预防 P05）
 
@@ -204,7 +178,7 @@ node tests/run-all.js
 - **工程检查**（`check-kit-project.test.js`）：19 项（模板通过；App ID 缺文件、没有 appid、空、testappId、非数字、和 PlatformConfig 不一致都拒绝；2.0 加：缺或改 storage-guard.js、缺或改 HomeGrowthEntries.js、5B 改成别的数、删掉 growthReward、B 没填、main.js 删掉存档层那一行都拒绝；build-templates 里的自写件和游戏代码直接调 `checkShortcut` 只警告）。
 - **激励广告计时**：8 项，按 v7.4 口径（请求 15 秒只算前台、开播后不计时、30 秒无回调出 X、超时/X/取消后迟到的视频不发奖）：视频 200 秒、16 秒后才开播、播放中切后台、加载中切后台、一直加载不出来、开播后没有回调、取消后迟到看完、isEnded 不是 true。旧的 v7.3 `RewardedService.js` 跑这套会失败 7 项。
 - **存档层**（`storage-guard.test.js`）：16 项（读到 null/undefined/''/false/0/true、数字和布尔写入转文字、键列表判新玩家、读出对象原样、装两次只一层、SaveStore 键原样读）。
-- **首页双入口**（`home-entries.test.js`）：7 项（不支持时提示、图标失败显示文字、奖励等于 `growthReward()`、连点只发一次）。
+- **首页双入口**（`home-entries.test.js`）：两键首击直跳、缺能力和失败时无提示、图标文字备用、回访资格及单次入账。
 - **3.x**：`touch-3x.test.js` 15 项、`plugins-3x.test.js` 21 项（第七节）。
 - **生成时预防（简化.11.13）**：`game-ui-kit.test.js`、`run-session.test.js`、`fx-pool.test.js`、`host-shim.test.js`、`boot-3x.test.js`、`home-free-slot.test.js`，每个都带照旧写法的反例，都进了 `run-all.js`。
 - **生成时预防（简化.11.14）**：`audio-service.test.js`、`res-loader.test.js`、`rewarded-guard.test.js`（D2 放行标记）、`screen-fit.test.js`、`touch-owner.test.js`、`capsule-auto.test.js`、`game-ui-pages.test.js`、`game-ui-adopt.test.js`、`home-entries-slot.test.js`、`home-entries-touch.test.js`，都带照旧写法的反例，都进了 `run-all.js`。
@@ -440,7 +414,7 @@ UI.toast('Come back tomorrow');
 - **提示只用 `UI.toast`**：每次打开弹窗、页面模板都会先清掉上一条提示；游戏自己换页（切面板、换场景节点）时调 `UI.clearToast()`。要跨页留着的提示传 `{keepOnPage: true}`。
 - **页面上从存档来的数值写进 `refresh`**：`UI.popup(parent, {keep: true, store, refresh: function (saved, page) {...}})`、`pausePage / revivePage / resultPage({store, refresh})`，每次打开都按 `store.get()` 重画（奔跑吧巨人缓存页显示第一次打开时的金币）。
 - **只在某些状态才出现的按钮用 `UI.newButton(parent, handler, {name, w, h, active: false})`**（必须给 active），或 `UI.button(node, fn, {active: false})`：节点建出来那一刻就是隐藏的，暂停键不会在首页首帧露出。
-- **首页两个入口（HomeGrowthEntries 2.4 / HomeEntrySlots 3.x）**：入口的「Available in TikTok」「打开中」等提示统一走 GameUIKit 的单实例 toast（有底板、约 2.2 秒消失、换页清掉）；没有 GameUIKit 时用 TikTok 自己的 showToast，再没有就用 messageLabel 显示 2.2 秒后藏起，离开首页（组件 onDisable）也清，绝不留一直挂着的字。排位等首页布局稳定才做：至少 3 帧、连续两帧布局签名一致（超过 90 帧还在动就按最后一帧排并打一行 [TikTokKit]）。障碍只在首页面板子树里找：2.4 传 `init(store, {homePanel})` 或让组件挂在名字含 home 的父节点下；3.x 传 `placeLater(cc, this, {root, searchRoot: homePanel, entries})`。别自己写入口坐标、别写 scheduleOnce 一帧就排。
+- **首页两个入口（HomeGrowthEntries 2.4 / HomeEntrySlots 3.x）**：点击立即发起导航，游戏内不显示前置说明、打开中或重试提示。排位等首页布局稳定才做：至少 3 帧、连续两帧布局签名一致（超过 90 帧还在动就按最后一帧排并打一行 [TikTokKit]）。障碍只在首页面板子树里找：2.4 传 `init(store, {homePanel})` 或让组件挂在名字含 home 的父节点下；3.x 传 `placeLater(cc, this, {root, searchRoot: homePanel, entries})`。别自己写入口坐标、别写 scheduleOnce 一帧就排。
 - 测试：`node tests/game-ui-row-state.test.js`、`node tests/home-entries-notice-settle.test.js`（旧零件都失败）。**待真机复测**。
 
 ## GameUIKit 1.1.7 弹窗用到已释放的图时自动换回（生成时预防 R4R4，补读第 8 组补充）

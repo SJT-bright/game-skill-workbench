@@ -6,6 +6,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import audit_value_presentation as V
 import art_receipt as R
+from test_art_receipt_fixtures import write_fixture
 from test_text_fit import TextFitCase, node, label
 
 class Values(TextFitCase):
@@ -121,21 +122,21 @@ class Values(TextFitCase):
     def proof(self):
         return {'revision':V.REVISION,'mode':'runtime','passed':True,'pages':2,'source_sha256':V.source_fingerprint(self.root)}
     def test_receipt_missing_old_fail_and_uncovered_block(self):
-        self.assertEqual(R.check(self.root,board='localize')['level'],'block')
+        self.assertEqual(R.check_history(self.root,board='localize')['level'],'block')
         for status in ['pass','fail','not_covered_3x']:
-            R.write(self.root,status)
-            self.assertEqual(R.check(self.root,board='localize')['level'],'block')
+            write_fixture(self.root,status)
+            self.assertEqual(R.check_history(self.root,board='localize')['level'],'block')
     def test_current_receipt_passes_and_code_change_blocks(self):
-        R.write(self.root,'pass',{'value_presentation':self.proof()})
-        self.assertEqual(R.check(self.root,board='localize')['level'],'ok')
+        write_fixture(self.root,'pass',{'value_presentation':self.proof()})
+        self.assertEqual(R.check_history(self.root,board='localize')['level'],'ok')
         (self.root/'assets/layout.ts').write_text('score.x=20;')
-        self.assertEqual(R.check(self.root,board='localize')['level'],'block')
+        self.assertEqual(R.check_history(self.root,board='localize')['level'],'block')
     def test_source_only_receipt_cannot_pass(self):
         proof=self.proof();proof['mode']='source'
-        R.write(self.root,'pass',{'value_presentation':proof})
-        self.assertEqual(R.check(self.root,board='localize')['level'],'block')
+        write_fixture(self.root,'pass',{'value_presentation':proof})
+        self.assertEqual(R.check_history(self.root,board='localize')['level'],'block')
     def test_remake_legacy_policy_unchanged(self):
         (self.root/'assets/a.png').write_bytes(b'fixture')
-        self.assertEqual(R.check(self.root,board='remake',policy='legacy')['level'],'warn')
+        self.assertEqual(R.check_history(self.root,board='remake',policy='legacy')['level'],'warn')
 
 if __name__=='__main__':unittest.main()

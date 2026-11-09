@@ -26,6 +26,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import art_records as AR  # noqa: E402
 import art_receipt as R  # noqa: E402
+from test_art_receipt_fixtures import write_fixture
 import art_check  # noqa: E402
 import tiktok_finalize as F  # noqa: E402
 from tiktok_finalize_steps import policy as P  # noqa: E402
@@ -210,17 +211,17 @@ class H8Writer(Tmp):
         # localize board still ignores the base sound below (English games keep the original audio)
         import audit_value_presentation as V
         proof = {'revision': V.REVISION, 'mode': 'runtime', 'passed': True, 'pages': 1, 'source_sha256': V.source_fingerprint(p)}
-        R.write(p, 'pass', {'status': 'pass', 'value_presentation': proof})
-        self.assertEqual(R.check(p, policy='new')['level'], 'ok')
+        write_fixture(p, 'pass', {'status': 'pass', 'value_presentation': proof})
+        self.assertEqual(R.check_history(p, policy='new')['level'], 'ok')
         (p / 'assets' / 'bgm.mp3').write_bytes((b / 'assets/audio/bgm.mp3').read_bytes())
-        out = R.check(p, policy='new')
+        out = R.check_history(p, policy='new')
         self.assertEqual((out['level'], out['gate']), ('block', R.GATE_BASE_AUDIO))
         self.assertIn('assets/bgm.mp3', out['message'])
         self.assertIn('底子原声', R.table_row(out)['result'])
-        self.assertEqual(R.check(p, policy='legacy')['level'], 'warn')
-        self.assertEqual(R.check(p, board='localize', policy='new')['level'], 'ok')
+        self.assertEqual(R.check_history(p, policy='legacy')['level'], 'warn')
+        self.assertEqual(R.check_history(p, board='localize', policy='new')['level'], 'ok')
         AR.record_reason(p, 'keep', ['assets/bgm.mp3'], 'Saul asked to keep the theme')
-        self.assertEqual(R.check(p, policy='new')['level'], 'ok')
+        self.assertEqual(R.check_history(p, policy='new')['level'], 'ok')
 
 
 class H10Generated(Tmp):
@@ -344,40 +345,27 @@ class ArtCheckRows(Tmp):
         report = out / 'art-check.json'
         return code, json.loads(report.read_text()) if report.exists() else None
 
-    def test_missing_capture_still_reports_h8_h10_and_3x_receipt_fails(self):
+    def test_missing_capture_still_reports_h8_h10_in_3x_without_a_receipt(self):
         p = project(self.d / 'p', engine=3)
         pil_button(p / 'assets' / 'btn.png')
         code, rep = self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
         self.assertEqual(code, 1)
         rows = {x['check']: x['status'] for x in rep['rows']}
         self.assertEqual((rows[art_check.H8_TITLE], rows[art_check.H10_TITLE]), ('需处理', '需处理'))
-        rec = json.loads(R.receipt_path(p).read_text())
-        self.assertEqual(rec['status'], 'fail')
-        self.assertEqual(rec['base_generated']['generated_ok'], False)
-        out = R.check(p, policy='new')
-        self.assertEqual(out['level'], 'block')
-        self.assertIn('没有底子记录', out['message'])
-        # Recording provenance does not erase the earlier failed acceptance.
-        # Locate the changed scope first; never rerun all art automatically.
-        AR.record_none(p, 'scratch')
-        AR.record_generated(p, [p / 'assets' / 'btn.png'], 'codex image_gen', prompt='PLAY button')
-        before = R.receipt_path(p).read_bytes()
-        code, rep = self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
-        self.assertEqual(code, 3)
-        self.assertIsNone(rep)
-        self.assertEqual(R.receipt_path(p).read_bytes(), before)
+        self.assertFalse(rep['base_generated']['generated_ok'])
+        self.assertFalse(R.receipt_path(p).exists())
 
     def test_missing_capture_keeps_a_24_receipt(self):
         p = project(self.d / 'p')
         pil_button(p / 'assets' / 'btn.png')
-        R.write(p, 'pass', {'status': 'pass'})
+        write_fixture(p, 'pass', {'status': 'pass'})
         before = R.receipt_path(p).read_bytes()
         code, rep = self.run_art_check(p, run=mock.Mock(side_effect=AssertionError('no analysis')))
         self.assertEqual(code, 3)
         self.assertIsNone(rep)
         self.assertEqual(R.receipt_path(p).read_bytes(), before)
 
-    def test_full_analysis_rows_make_the_receipt_fail(self):
+    def test_full_analysis_rows_report_provenance_failures_without_a_receipt(self):
         p = project(self.d / 'p')
         pil_button(p / 'assets' / 'btn.png')
         ready = {'ready': True, 'errors': [], 'dump_files': [], 'shots': [], 'records': [{'kind': 'gameplay'}],

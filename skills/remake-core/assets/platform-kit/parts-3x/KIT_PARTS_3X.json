@@ -39,12 +39,13 @@
       "file": {
         "src": "plugins-3x/TikTokMissionService.plugin.js",
         "dest": "assets/tiktok-platform/TikTokMissionService.plugin.js",
-        "sha256": "876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f",
+        "sha256": "adaac30615468bef658094242a97c5f4dd6caea2ebb13cba91fe5e77706d5038",
         "previous_sha256": [
+          "876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f",
           "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d"
         ],
         "from": "assets/tiktok-platform/TikTokMissionService.js",
-        "from_sha256": "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e"
+        "from_sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae"
       },
       "global": "globalThis.TikTokKit.TikTokMissionService",
       "policy": {
@@ -108,13 +109,14 @@
       "file": {
         "src": "plugins-3x/MissionFlow.plugin.js",
         "dest": "assets/tiktok-platform/MissionFlow.plugin.js",
-        "sha256": "4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae",
+        "sha256": "5d5cc5ac2171ef0b7267cbe4e795ae773764e0d2a5853c87c2da72730046f909",
         "previous_sha256": [
+          "4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae",
           "fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919",
           "9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2"
         ],
         "from": "assets/tiktok-platform/MissionFlow.js",
-        "from_sha256": "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49"
+        "from_sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706"
       },
       "global": "globalThis.TikTokKit.MissionFlow",
       "policy": {

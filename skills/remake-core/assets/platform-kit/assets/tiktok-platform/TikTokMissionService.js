@@ -1,10 +1,9 @@
 'use strict';
 var methods = {
-  shortcut: {navigate: 'addShortcut', query: 'getShortcutMissionReward'},
-  profile: {navigate: 'startEntranceMission', query: 'getEntranceMissionReward'}
+  shortcut: {navigation: 'addShortcut', query: 'getShortcutMissionReward'},
+  profile: {navigation: 'startEntranceMission', query: 'getEntranceMissionReward'}
 };
 var messages = {
-  success: 'Return through this TikTok entry, then check your reward.',
   eligible: 'Your reward is ready to claim.', ineligible: '',
   unsupported: 'This feature is available inside a supported TikTok app.',
   error: 'The request failed. Please try again.', timeout: 'The check took too long. Please try again.',
@@ -32,10 +31,10 @@ function sdk(method) {
 }
 function isCurrent(options) { try { return !options.isCurrent || options.isCurrent() === true; } catch (_) { return false; } }
 // 简化.11.3: keep what the platform said (errMsg / errorCode / errCode) so a failure on the phone can be read.
-function result(status, request, e) {
+function result(status, action, request, e) {
   var code = e ? (e.errorCode !== undefined ? e.errorCode : e.errCode !== undefined ? e.errCode : e.code) : undefined;
   var detail = e ? (e.errMsg || e.message || null) : null;
-  return {status: status, eligible: status === 'eligible', rewarded: false, message: messages[status],
+  return {status: status, eligible: status === 'eligible', rewarded: false, message: action === 'navigation' ? '' : messages[status],
     requestId: request ? request.id : null, kind: request ? request.kind : null,
     api: request ? request.method : null, errorCode: code === undefined ? null : code,
     errMsg: detail === null ? null : String(detail)};
@@ -65,13 +64,13 @@ TikTokMissionService.prototype._call = function (kind, action, options) {
   options = options || {};
   this.tick();
   var method = methods[kind] && methods[kind][action];
-  if (!method) return Promise.resolve(result('unsupported', null));
+  if (!method) return Promise.resolve(result('unsupported', action, null));
   var key = kind + ':' + action;
   if (this.pending[key]) return this.pending[key].promise;
   var api;
   try { api = this.getSDK(method); } catch (_) {}
-  if (!usable(api, method)) return Promise.resolve(result('unsupported', null));
-  if (!isCurrent(options)) return Promise.resolve(result('stale', null));
+  if (!usable(api, method)) return Promise.resolve(result('unsupported', action, null));
+  if (!isCurrent(options)) return Promise.resolve(result('stale', action, null));
   var self = this;
   var resolve;
   var promise = new Promise(function (done) { resolve = done; });
@@ -81,7 +80,7 @@ TikTokMissionService.prototype._call = function (kind, action, options) {
     if (r.settled) return;
     r.settled = true;
     if (self.pending[key] === r) delete self.pending[key];
-    resolve(result(r.epoch === self.epoch && isCurrent(options) ? status : 'stale', r, error));
+    resolve(result(r.epoch === self.epoch && isCurrent(options) ? status : 'stale', action, r, error));
   };
   this.pending[key] = r;
   function empty() {
@@ -92,7 +91,7 @@ TikTokMissionService.prototype._call = function (kind, action, options) {
   }
   function success(value) {
     if (r.settled) return;
-    if (action === 'navigate') return r.settle('success');
+    if (action === 'navigation') return r.settle('success');
     if (value && value.canReceiveReward === true) r.settle('eligible');
     else if (value && value.canReceiveReward === false) r.settle('ineligible');
     else empty();
@@ -104,7 +103,7 @@ TikTokMissionService.prototype._call = function (kind, action, options) {
   } catch (error) { fail(error); }
   return promise;
 };
-TikTokMissionService.prototype.navigate = function (kind, options) { return this._call(kind, 'navigate', options); };
+TikTokMissionService.prototype.navigate = function (kind, options) { return this._call(kind, 'navigation', options); };
 TikTokMissionService.prototype.query = function (kind, options) { return this._call(kind, 'query', options); };
 TikTokMissionService.prototype.cancel = function () {
   this.epoch++;

@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 import art_receipt
+from test_art_receipt_fixtures import write_fixture
 import art_recheck_guard
 import audit_value_presentation
 import check_ledger as C
@@ -35,7 +36,7 @@ class EvidenceTests(unittest.TestCase):
                 'value_presentation':{'revision':audit_value_presentation.REVISION,'mode':'runtime','passed':True,
                     'pages':1,'source_sha256':audit_value_presentation.source_fingerprint(self.project)}}
         file=self.root/'art.json';file.write_text(json.dumps(report))
-        art_receipt.after_art_check(self.project,report,file)
+        write_fixture(self.project,'pass' if report['passed'] else 'fail',report,file)
         args=SimpleNamespace(project=self.project,board='localize',capture_build=None,build=None,out=None,
                              maintenance_scope=None,english_visual_scope=None)
         return args,file

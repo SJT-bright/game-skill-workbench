@@ -7,7 +7,7 @@
   3 levels     legacy game: the same display change only warns
   4 old        a receipt written before R4M2 (no `display`) still passes, display_state unrecorded (projects in
                progress keep their receipts until the next art_check)
-  5 carry      tiktok_finalize source changed a prefab's layout itself -> art_receipt.carry moves the display too
+  5 carry      current preparation leaves historical display evidence intact
   6 speed      display fingerprints of 300 prefabs + 300 scripts under 1 s
   7 sync       home_entry_scan is in SYNC_SOURCE_STEPS (ui_kit_scan still last); finalize_sync on a new 3.x game with
                hand-placed entries writes K_W_home_entry_coords; the whole sync of 200 scripts stays about 1 s
@@ -27,6 +27,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import art_receipt as R  # noqa: E402
+from test_art_receipt_fixtures import write_fixture
 import tiktok_finalize as F  # noqa: E402
 import tiktok_finalize_steps as T  # noqa: E402
 from tiktok_finalize_steps import policy as P  # noqa: E402
@@ -68,14 +69,14 @@ class ReceiptDisplay(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp(prefix='r4m2_receipt_'))
         game(self.tmp)
         P.write_marker(self.tmp, 'remake', T.load_manifest().version, reason='init')
-        R.write(self.tmp, 'pass', {'passed': True, 'status': 'pass'})
-        self.assertEqual(R.check(self.tmp, 'remake')['level'], 'ok')
+        write_fixture(self.tmp, 'pass', {'passed': True, 'status': 'pass'})
+        self.assertEqual(R.check_history(self.tmp, 'remake')['level'], 'ok')
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def stale(self, policy=None):
-        out = R.check(self.tmp, 'remake', policy)
+        out = R.check_history(self.tmp, 'remake', policy)
         return out['level'], out['state'], out['message']
 
     def test_1_text_font_layout_code_text(self):
@@ -86,12 +87,12 @@ class ReceiptDisplay(unittest.TestCase):
                        lambda: (self.tmp / 'assets' / 'scripts' / 'Home.js').write_text(
                            SCRIPT.replace('Tap to start', 'Tap to begin now'), encoding='utf-8')):
             game(self.tmp)                     # back to the receipt's bytes
-            self.assertEqual(R.check(self.tmp, 'remake')['level'], 'ok')
+            self.assertEqual(R.check_history(self.tmp, 'remake')['level'], 'ok')
             change()
             level, state, message = self.stale()
             self.assertEqual((level, state), ('block', 'display_changed'), message)
             self.assertIn('重跑 art_check', message)
-            self.assertIn('display_changed', R.finding(R.check(self.tmp, 'remake'))['evidence'])
+            self.assertIn('display_changed', R.finding(R.check_history(self.tmp, 'remake'))['evidence'])
 
     def test_2_gameplay_value_is_not_layout(self):
         (self.tmp / 'assets' / 'prefabs' / 'Home.prefab').write_text(prefab(speed=9), encoding='utf-8')
@@ -110,16 +111,13 @@ class ReceiptDisplay(unittest.TestCase):
             data.pop(key, None)
         path.write_text(json.dumps(data), encoding='utf-8')
         (self.tmp / 'assets' / 'prefabs' / 'Home.prefab').write_text(prefab(text='START'), encoding='utf-8')
-        out = R.check(self.tmp, 'remake')
+        out = R.check_history(self.tmp, 'remake')
         self.assertEqual((out['level'], out['state'], out['display_state']), ('ok', 'match_pass', 'unrecorded'))
 
-    def test_5_carry_moves_display(self):
-        before = R.check(self.tmp, 'remake')
-        (self.tmp / 'assets' / 'prefabs' / 'Home.prefab').write_text(prefab(y=-280), encoding='utf-8')
-        self.assertEqual(R.check(self.tmp, 'remake')['level'], 'block')
-        R.carry(self.tmp, 'tiktok_finalize source', before)
-        self.assertEqual(R.check(self.tmp, 'remake')['level'], 'ok')
-        self.assertTrue(R.read(self.tmp)[0]['carried'][-1]['display_changed'])
+    def test_5_carry_leaves_history_intact(self):
+        before = R.receipt_path(self.tmp).read_bytes()
+        self.assertIsNone(R.carry(self.tmp, 'tiktok_finalize source', R.check_history(self.tmp, 'remake')))
+        self.assertEqual(R.receipt_path(self.tmp).read_bytes(), before)
 
     def test_6_speed(self):
         for i in range(300):

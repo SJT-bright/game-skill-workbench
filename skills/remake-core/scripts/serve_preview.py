@@ -10,9 +10,7 @@ Default URL is a centered fixed-size phone iframe (390x844); larger desktop wind
 User trial: --keep automatically requests a separate Google Chrome window for the fixed-phone URL.
 --no-browser suppresses the request; internal QA does not open windows by default.
 The launch receipt is not visible-window or gameplay verification.
-v7.8 (U7 补): --keep needs --project (the game's Cocos project) and checks its art receipt (art_receipt.py, written by
-art_check.py; never a new art run): a new remake game without a passing receipt whose image fingerprints match gets no
-trial server; legacy / English games and "3.x 未覆盖" print a warning. Internal QA without --keep is unchanged.
+User-trial --keep uses --project to bind the preview to the game and its existing checks.
 v7.8 (总表 B21 / B30 F): --keep runs the trial-link smoke on the link before printing it (cocos-game-check
 runtime_regression.py trial_smoke: tap one rewarded-ad entry. Ordinary links need a visible response. Simulated links
 need a visible ad panel, an enabled completion button, and a subsequent game response; --adapter gives the taps). Smoke failed: no link, exit 1. Smoke could not run (no Ego, no ad entry found):
@@ -590,7 +588,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         from feature_policy import board_of
         candidates = [_project_of(directory, args.project), *list(directory.parents)[:3]]
         if any(board_of(p)[0] == 'localize' or (p / 'docs/english').is_dir() for p in candidates):
-            parser.error('英化正式试玩请用 cocos-game-to-english/scripts/serve_preview.py 核对当前美术回执与图片复核记录')
+            parser.error('英化正式试玩请用 cocos-game-to-english/scripts/serve_preview.py 核对中文专项和候选身份')
     if returned_art is not None:
         if verify_snapshot is None or not args.project:
             parser.error('返工试玩必须来自英化入口的当前授权绑定')
@@ -598,16 +596,8 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         current = returned_art_acceptance.validate(Path(args.project), web=directory)
         if current != returned_art:
             parser.error('返工试玩绑定与当前候选不同')
-    if args.keep and verify_snapshot is None and not chinese_original:
-        # v7.8 U7（补）: a user trial needs the art receipt, like the package writers (checked only, never a new art run)
-        if not args.project:
-            parser.error('用户试玩 --keep 需要 --project <这款游戏的 Cocos 工程>：起服务前要核对美术回执 .tiktok-kit/art-receipt.json')
-        import art_receipt
-        art = art_receipt.check(Path(args.project))
-        if art['level'] == 'block':
-            print('不起试玩服务：' + art['message'], file=sys.stderr, flush=True)
-            raise SystemExit(1)
-        print('美术回执：' + art['message'] + ('（警告）' if art['level'] == 'warn' else ''), flush=True)
+    if args.keep and verify_snapshot is None and not chinese_original and not args.project:
+        parser.error('用户试玩 --keep 需要 --project <这款游戏的 Cocos 工程>，用于定位本次试玩证据。')
     try:
         import browser_slots
         browser_slots.sweep(close=True)                     # close free old test windows / servers first

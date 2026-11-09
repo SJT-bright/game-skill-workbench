@@ -1,6 +1,6 @@
 # 检查分阶段：设计关、美术关、最终总检测（用户 2026-10-24，两个板块）
 
-**美术验收与出包分工**。正式试玩前做美术验收并保留证据。最终阶段核对已有证据，查实际包内资源与运行故障。具体以[美术验收前移与试玩后锁定](../../remake-art/references/art-before-trial.md)为准。
+**美术验收与出包分工**。正式试玩前做美术验收并保留证据。最终阶段核对包和版本身份，查实际包内资源与运行故障。具体以[美术验收前移与试玩后锁定](../../remake-art/references/art-before-trial.md)为准。
 
 
 **范围裁定（2026-10-24）**：先按[检查范围、历史回归与停止条件](../../cocos-game-check/test/references/testing-scope-and-stop.md)选档；本页的全量步骤用于相应完整验收，局部维护只执行受影响项。质量与真实证据要求不变。
@@ -14,8 +14,8 @@
 | 关 | 英化在哪 | 重塑在哪 | 跑什么 | 查哪些（门禁 ID） |
 |---|---|---|---|---|
 | 设计关 | 默认没有（不改玩法、不补关、不加皮肤，Saul 2026-10-28）；Saul 要求创新玩法时，新加的部分在这里查 | 第一轮（玩法＋关卡表＋皮肤表＋模块写好），节点 1 交用户之前 | `scripts/design_check.py --project <工程> --board localize\|remake` | 关卡板块 LEVEL-01、内置板块 MOD-01、皮肤数值 ECON-01、排名扩展 RANK-01、可选扩展 FEAT-00 |
-| 美术关 | 英化在每轮英文试玩链接前查：第一轮覆盖实际可见的全部页面、弹窗和条件状态，两种尺寸采集；后续复查受影响整页、共享组件和新增页面，修复通过才给链接（Saul 2026-11-03）；用户要求整体换画风时执行完整检查 | 第二轮全部美术做完、节点2交用户前；之后局部修改按影响复查 | `scripts/art_check.py --project <工程> --dumps <dump目录> --board localize\|remake` ＋ Codex 看总览图 | ART-01～06、PAGE-01、UI-02、UI-03、UI-05，**首页礼盒 10 帧动画**也在这里查 |
-| 最终总检测 | 英化入口第 5 阶段：用户试玩确认后、出包前 | 阶段 4 锁定后测试＋最终验收 | `tiktok_finalize.py check-source`、`check_known_issues.py`、`preflight.py`、`logic_check.py`、打包工具 | 核对已有回执，查功能、平台兼容和最终 ZIP（见第三节） |
+| 美术关 | 制作和改动时核技术项 | 制作和改动时核技术项 | art_check.py 查资源、切片和可测布局 | 观感、遮挡与动画按[人工试玩画面清单](manual-visual-review.md)随同版试玩观察 |
+| 最终总检测 | 英化入口第 5 阶段：用户试玩确认后、出包前 | 阶段 4 锁定后测试＋最终验收 | `tiktok_finalize.py check-source`、`check_known_issues.py`、`preflight.py`、`logic_check.py`、打包工具 | 核对功能与平台证据、当前产物和最终 ZIP（见第三节） |
 
 完整美术入口先核采集输入，缺材料只报具体缺项，不启动长分析；[局部修改](../../remake-art/references/art-before-trial.md#完整与局部美术检查的执行)不强制全游戏dump，也不记完整通过。设计、美术、功能预检在原报告保留工具与总耗时；同版有效结果沿用。
 

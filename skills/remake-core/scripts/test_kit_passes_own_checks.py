@@ -62,9 +62,9 @@ class KitPassesOwnChecks(unittest.TestCase):
             project = kit_project(root)
             flow = project / 'assets' / 'tiktok-platform' / 'MissionFlow.js'
             text = flow.read_text(encoding='utf-8')
-            start = text.index("  preview: '")
-            end = text.index("'", start + len("  preview: '")) + 1
-            flow.write_text(text[:start] + "  preview: '" + OLD_PREVIEW + "'" + text[end:], encoding='utf-8')
+            self.assertIn('var TEXT = {', text)
+            flow.write_text(text.replace('var TEXT = {', "var TEXT = {\n  preview: '" + OLD_PREVIEW + "',", 1),
+                            encoding='utf-8')
             r = run('audit_dev_text.py', ['--project', '{p}', '--final'], project)
             self.assertEqual(r.returncode, 1, r.stdout[-800:])
             self.assertIn('LOCAL PREVIEW', r.stdout)

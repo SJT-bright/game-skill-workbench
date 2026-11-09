@@ -22,6 +22,7 @@ except ImportError:  # pragma: no cover
 
 import art_check  # noqa: E402
 import art_receipt  # noqa: E402
+from test_art_receipt_fixtures import write_fixture
 import feature_policy  # noqa: E402
 import raw_inputs  # noqa: E402
 
@@ -103,7 +104,7 @@ class KeepOriginalStyle(unittest.TestCase):
         report = {'status': 'fail' if any(r['status'] == '需处理' for r in rows) else 'pass', 'rows': rows,
                   'passed': not any(r['status'] == '需处理' for r in rows), 'board': 'localize',
                   'original_style': style}
-        return art_receipt.write(self.project, 'pass' if report['passed'] else 'fail', report)
+        return write_fixture(self.project, 'pass' if report['passed'] else 'fail', report)
 
     def test_receipt_reads_keep_record(self):
         # no original record at all, the only failing row is the dark one: with Saul's keep record the writer warns
@@ -114,13 +115,13 @@ class KeepOriginalStyle(unittest.TestCase):
         self.receipt_for([row], style)
         import unittest.mock as m
         with m.patch.object(art_receipt, '_value_receipt_current', return_value=True):
-            before = art_receipt.check(self.project, 'localize')
+            before = art_receipt.check_history(self.project, 'localize')
             self.assertEqual(before['level'], 'block')
             (self.project / 'docs' / 'art').mkdir(exist_ok=True)
             (self.project / 'docs/art/keep_original_style.json').write_text(json.dumps(
                 {'schema': 'keep-original-style.v1', 'decided_by': 'Saul', 'date': '2026-11-05',
                  'why': '保留原画风'}, ensure_ascii=False), encoding='utf-8')
-            after = art_receipt.check(self.project, 'localize')
+            after = art_receipt.check_history(self.project, 'localize')
         self.assertEqual(after['level'], 'warn', after['message'])
         self.assertIn('Saul', after['message'])
 
@@ -134,7 +135,7 @@ class KeepOriginalStyle(unittest.TestCase):
         self.assertEqual(rec['keep_original_style']['decided_by'], 'Saul')
         import unittest.mock as m
         with m.patch.object(art_receipt, '_value_receipt_current', return_value=True):
-            got = art_receipt.check(self.project, 'localize')
+            got = art_receipt.check_history(self.project, 'localize')
         self.assertEqual(got['level'], 'ok', got['message'])
         self.assertIn('原图保留 1 张', got['message'])
 

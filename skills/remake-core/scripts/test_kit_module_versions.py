@@ -67,7 +67,7 @@ class KitModuleVersions(unittest.TestCase):
 
     def test_display_text_only_difference_warns(self):
         current = self.cur['MissionFlow']
-        previous = current.replace('Available in TikTok.', 'Available in TikTok Preview.')
+        previous = current.replace('Reward already collected.', 'Reward previously collected.')
         self.assertNotEqual(current, previous)
         current_tokens = K.tokens(current)
         previous_tokens = K.tokens(previous)
@@ -85,7 +85,7 @@ class KitModuleVersions(unittest.TestCase):
         files = bundle(('MissionFlow', self.old('MissionFlow', 'd5e256db')))
         got = K.verify(files, self.man, 'new', 2)
         self.assertEqual(self.ids(got, 'block'), [('K6_kit_module_old', 'MissionFlow')])
-        self.assertIn('entryOp', got[0]['message'])
+        self.assertTrue(got[0]['evidence']['current_hits'].startswith('0/'))
 
     def test_edited_copy_unknown_and_other_engines(self):
         text = self.cur['RewardedService']

@@ -1,25 +1,23 @@
 'use strict';
 // TikTok Platform Kit v1 - logic of the two home entries (Add to Home Screen, Profile Revisit). Copy unchanged.
-// It draws nothing. The game owns the art and calls render(view) output into its own panel.
+// It draws nothing. The game owns the home buttons and updates its wallet display after a saved reward.
 //
 //   var flow = new MissionFlow({
 //     store: save,                                   // SaveStore of this game (coins live in the same save)
 //     reward: function (kind, draft) { draft.coins += 25; },   // edit the draft only; v7.7: omit it to pay
 //                                                    // PlatformConfig.growthReward() (5B) into draft.coins
 //     rewardText: {shortcut: '+25 Coins', profile: '+25 Coins'},
-//     render: function (view) { ...update the panel from view... },
+//     render: function (view) { ...update the entry state from view... },
 //     onGranted: function (kind, data) { ...refresh the top bar from data... }
 //   });
-//   home icon tap        -> flow.open('shortcut' | 'profile')
-//   panel main button    -> view.action === 'start' ? flow.start() : flow.check()
-//   panel close (X)      -> flow.close()
+//   home icon tap        -> flow.open('shortcut' | 'profile', {navigate: true})
 //   when the wallet is ready -> flow.startEntryTracking() (once, before waiting for any entry button)
 //   every frame          -> flow.tick()
 //   home scene destroyed -> flow.dispose()
 //
 // Guarantees (each one is a real bug from an earlier game):
 //  - Only a confirmed sidebar or shortcut entry starts a background check. A late superseded answer is dropped.
-//  - Taps during a manual check are merged; failures in a player-opened reward panel keep a visible result.
+//  - A home tap dispatches navigation before rendering. Direct entries never open a panel or show guidance.
 //  - Automatic entry checks update the wallet without opening a panel or displaying a notice.
 //  - A navigation answer never overwrites a newer check result.
 //  - Reward + "claimed" flag are saved in ONE write; a failed save pays nothing and can be retried.
@@ -27,17 +25,12 @@
 var TikTokMissionService = require('./TikTokMissionService');
 
 var TEXT = {
-  intro_shortcut: 'Add this game to your home screen, open it from the new icon, then come back for your reward.',
-  intro_profile: 'Open your TikTok Profile, open this game from the sidebar, then come back for your reward.',
-  opening: 'Opening TikTok...',
-  navigated: 'Now open the game from that entry, then tap CHECK REWARD.',
   checking: 'Checking your reward...',
   wait: 'Please wait for the current request.',
   granted: 'Reward received: ',
   claimed: 'Reward already collected.',
   saveFailed: 'Could not save your reward. Please try again.',
-  notReady: 'Your reward is not ready yet.',
-  preview: 'Available in TikTok.'
+  notReady: 'Your reward is not ready yet.'
 };
 var KINDS = {shortcut: true, profile: true};
 
@@ -120,6 +113,7 @@ function MissionFlow(options) {
   this.missions = options.missions || new TikTokMissionService(this.serviceOptions);
   this.native = options.native !== undefined ? !!options.native : hasNativeSDK();
   this.kind = null;
+  this.directEntry = false;
   this.phase = 'closed';      // closed | idle | opening | checking | done
   this.message = '';
   this.version = 0;           // changes on open / close / return from background
@@ -133,12 +127,12 @@ MissionFlow.prototype.view = function () {
   var claimed = this.kind ? this.isClaimed(this.kind) : false;
   var busy = this.phase === 'opening' || this.phase === 'checking';
   return {
-    open: this.kind !== null, kind: this.kind, phase: this.phase, busy: busy, claimed: claimed,
+    open: this.kind !== null && !this.directEntry, kind: this.kind, phase: this.phase, busy: busy, claimed: claimed,
     message: this.message, native: this.native,
     rewardText: this.kind ? (this.rewardText[this.kind] || '') : '',
-    // The single main button: go to TikTok first, check after coming back. Disabled while busy or claimed.
-    action: claimed ? 'none' : (this.phase === 'idle' && this.navigatedOnce ? 'check' : 'start'),
-    canStart: !busy && !claimed, canCheck: !busy && !claimed
+    // Older panels still read action/canCheck. Direct entries always remain usable after a claim.
+    action: this.directEntry ? 'start' : claimed ? 'none' : (this.phase === 'idle' && this.navigatedOnce ? 'check' : 'start'),
+    canStart: !busy && (this.directEntry || !claimed), canCheck: !this.directEntry && !busy && !claimed
   };
 };
 
@@ -149,43 +143,43 @@ MissionFlow.prototype._guard = function () {
   return function () { return self.version === version && self.kind === kind; };
 };
 
-// open(kind)                    panel games: show the intro and check the reward first (unchanged)
-// open(kind, {navigate: true})  简化.11.3, home-entry taps: the tap itself goes to TikTok at once (same user
-//                               gesture, no reward query in front of it); the reward is checked in onShow().
+// Bind both home buttons to open(kind, {navigate: true}) in the touch handler itself.
+// open(kind) without options is retained for older panel callers. It no longer displays introductory copy.
 MissionFlow.prototype.open = function (kind, options) {
-  if (!KINDS[kind]) return;
+  if (KINDS[kind] !== true) return;
+  var direct = !!(options && options.navigate === true);
+  if (direct && this.directEntry && this.kind === kind && this.phase === 'opening') return;
   this.missions.cancel();
   this.kind = kind;
+  this.directEntry = direct;
   this.version++; this.op++;
   this.navigatedOnce = false;
   this.phase = 'idle';
-  this.message = this.isClaimed(kind) ? TEXT.claimed : (this.native ? TEXT['intro_' + kind] : TEXT.preview);
+  this.message = '';
+  if (direct && this.native) return this.start();
+  if (!direct && this.native && this.isClaimed(kind)) this.message = TEXT.claimed;
   this._render();
-  if (!this.native) return;
-  if (options && options.navigate === true) return this.start();
-  if (!this.isClaimed(kind)) this.check();
+  if (!direct && this.native && !this.isClaimed(kind)) this.check();
 };
 
 // 简化.11.3: going to TikTok is allowed after the reward was collected too (the entry keeps working; the reward
 // is still paid once, _grant() checks platformClaims).
 MissionFlow.prototype.start = function () {
-  if (!this.kind) return;
-  if (this.phase === 'opening' || this.phase === 'checking') { this.message = TEXT.wait; this._render(); return; }
+  if (!this.kind || !this.native || this.phase === 'opening' || this.phase === 'checking') return;
   var self = this, op = ++this.op, isCurrent = this._guard();
-  this.phase = 'opening'; this.message = TEXT.opening; this._render();
-  return this.missions.navigate(this.kind, {isCurrent: isCurrent}).then(function (r) {
+  this.phase = 'opening'; this.message = '';
+  var request = this.missions.navigate(this.kind, {isCurrent: isCurrent});
+  this._render();
+  return request.then(function (r) {
     if (!isCurrent() || op !== self.op) return;
     self.phase = 'idle';
-    if (r.status === 'success') {
-      self.navigatedOnce = true;
-      self.message = self.isClaimed(self.kind) ? TEXT.claimed : TEXT.navigated;
-    } else self.message = r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;
+    if (r.status === 'success') self.navigatedOnce = true;
     self._render();
   });
 };
 
 MissionFlow.prototype.check = function () {
-  if (!this.kind) return;
+  if (!this.kind || !this.native || this.directEntry) return;
   if (this.isClaimed(this.kind)) { this.message = TEXT.claimed; this._render(); return; }
   if (this.phase === 'checking') return this.pendingCheck;   // merge taps during one check
   if (this.phase === 'opening') { this.message = TEXT.wait; this._render(); return; }
@@ -196,8 +190,7 @@ MissionFlow.prototype.check = function () {
     self.pendingCheck = null;
     if (r.eligible) { self._grant(kind); return; }
     self.phase = 'idle';
-    self.message = r.status === 'ineligible' ? TEXT.notReady
-      : r.status === 'unsupported' && !self.native ? TEXT.preview : r.message;
+    self.message = r.status === 'ineligible' ? TEXT.notReady : r.message;
     self._render();
   });
   return this.pendingCheck;
@@ -229,6 +222,7 @@ MissionFlow.prototype._grant = function (kind) {
 MissionFlow.prototype.close = function () {
   this.missions.cancel();
   this.kind = null;
+  this.directEntry = false;
   this.version++; this.op++;
   this.phase = 'closed'; this.message = ''; this.pendingCheck = null;
   this._render();

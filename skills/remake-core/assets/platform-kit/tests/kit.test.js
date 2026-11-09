@@ -222,7 +222,7 @@ function setup(options) {
     t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: false}); await flush();
     assert.strictEqual(t.view().phase, 'idle'); assert.strictEqual(t.view().message, MissionFlow.TEXT.notReady);
     t.flow.start(); t.fake.last('addShortcut').opts.success({}); await flush();
-    assert.strictEqual(t.view().message, MissionFlow.TEXT.navigated);
+    assert.strictEqual(t.view().message, '');
     t.flow.onShow({scene: 'desktop_shortcut'});
     var w = t.storage.writes;
     t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
@@ -340,9 +340,9 @@ function setup(options) {
     t.fake.supported.getShortcutMissionReward = false; t.fake.supported.addShortcut = false;
     t.flow.open('shortcut');
     assert.strictEqual(t.fake.calls.length, 0);
-    assert.strictEqual(t.view().message, MissionFlow.TEXT.preview);
+    assert.strictEqual(t.view().message, '');
     t.flow.start(); await flush();
-    assert.strictEqual(t.view().message, MissionFlow.TEXT.preview);
+    assert.strictEqual(t.view().message, '');
     assert.strictEqual(t.store.get().coins, 0);
   });
   await test('flow_check_ends_without_tick_using_default_timer', async function () {
@@ -371,7 +371,7 @@ function setup(options) {
       var flow = new MissionFlow({store: store, missionTimeoutMs: 60, reward: function () {}, render: function (v) { last = v; }});
       flow.open('profile');
       assert.strictEqual(last.native, true, 'tt-only runtime is native');
-      assert.notStrictEqual(last.message, MissionFlow.TEXT.preview);
+      assert.strictEqual(last.message, MissionFlow.TEXT.checking);
       assert.strictEqual(fake.calls.length, 1, 'opening checks the reward through tt');
       flow.dispose();
     } finally { delete globalThis.tt; }
@@ -403,7 +403,7 @@ function setup(options) {
     var flow = new MissionFlow({store: store, missionTimeoutMs: 60, reward: function () {}, render: function (v) { last = v; }});
     flow.open('shortcut');
     assert.strictEqual(last.native, false);
-    assert.strictEqual(last.message, MissionFlow.TEXT.preview);
+    assert.strictEqual(last.message, '');
     flow.dispose();
   });
   await test('flow_two_entries_paid_separately_once_each', async function () {

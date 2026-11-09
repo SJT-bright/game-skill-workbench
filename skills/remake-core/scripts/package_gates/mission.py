@@ -28,10 +28,9 @@ GROWTH_CALLS = ('addShortcut', 'checkShortcut', 'startEntranceMission', 'getShor
 G1K_LEVELS = {'new': 'block', 'legacy': 'warn'}
 RETIRED_COPY = re.compile(r'\bopen\s+this\s+game\s+from\s+the\s+tiktok\s+entry\s*,?\s*then\s+check\s+again\b', re.I)
 TEXT_ESCAPE = re.compile(r'\\(?:u00([0-7][0-9a-f])|x([0-7][0-9a-f])|([nrt]))', re.I)
-# Fallback when KIT_MANIFEST.json cannot be read: the kit 2.0 fingerprints (parts.missions.modules).
-KIT_MODULES = {'MissionFlow': r'Add this game to your home screen, open it from the new icon, then come back for '
-                              r'your reward\.',
-               'TikTokMissionService': r'Return through this TikTok entry, then check your reward\.'}
+# Fallback when KIT_MANIFEST.json cannot be read. Fingerprints do not depend on player-facing guidance.
+KIT_MODULES = {'MissionFlow': r'MissionFlow needs store, reward\(kind, draft\) and render\(view\)',
+               'TikTokMissionService': r'getShortcutMissionReward'}
 
 
 def growth_call_rx(names=GROWTH_CALLS):
@@ -83,6 +82,12 @@ def outside_kit_calls(view):
     return out
 
 
+def has_retired_copy(text):
+    decoded = TEXT_ESCAPE.sub(lambda match: chr(int(match[1] or match[2], 16))
+                              if match[1] or match[2] else ' ', text)
+    return RETIRED_COPY.search(decoded) is not None
+
+
 def retired_copy(view):
     """Find the retired player hint in shipped code and text resources."""
     hits = []
@@ -90,9 +95,7 @@ def retired_copy(view):
     for name in sorted(view.files):
         if name not in game_scripts and PurePosixPath(name).suffix.lower() not in ('.json', '.txt', '.html'):
             continue
-        text = TEXT_ESCAPE.sub(lambda match: chr(int(match[1] or match[2], 16))
-                               if match[1] or match[2] else ' ', view.text(name))
-        if RETIRED_COPY.search(text):
+        if has_retired_copy(view.text(name)):
             hits.append(name)
     return hits
 

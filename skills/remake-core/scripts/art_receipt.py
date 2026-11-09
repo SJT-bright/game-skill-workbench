@@ -1,43 +1,4 @@
-#!/usr/bin/env python3
-"""Art-check receipt (v7.8, 总表 U7（补）; Saul 10-30 agreed, his 10-24 decision stands).
-
-Art is checked once, at the art stage, by art_check.py. Packaging never re-runs it (Saul 10-24: a second run can differ);
-the package writers and the user-trial preview only CHECK this receipt, so "art changed after the art check and nobody
-looked" (丛林荡藤 v1-v6, 企鹅雪道美术 v1-v6, Holly v1-v3) cannot reach a ZIP or a trial link.
-
-  <project>/.tiktok-kit/art-receipt.json
-    kind art-receipt, schema 1
-    status   pass            art_check's full analysis ran and found nothing to fix
-             fail            the analysis ran and found something (the writers refuse it like a missing receipt)
-             not_covered_3x  Cocos 3.x project: ui_dump cannot read 3.x pages yet, so the art check could not run.
-                             Never a pass: the writers let it through and print "3.x 未覆盖" in their result/table.
-    art_check {report, report_sha256, status, checked, failed, time, board}   which art-check.json it stands for
-    tools    sha256 of art_check.py and art_receipt.py (recorded only; a Skill update does not force a re-run)
-    images   {project-relative path: sha256} of every image under assets/: .png .jpg .jpeg .webp (and .bmp .tga .psd
-             .tif .tiff .hdr), atlas .plist files, 3D model files .fbx .gltf .glb (their embedded textures are covered by
-             the file fingerprint); library/, temp/, build/, .tiktok-kit/ ... are skipped
-    images_sha256, images_count, created, engine, carried (see below)
-  Why .tiktok-kit/: the writers already read <project>/.tiktok-kit/ (finalize-source.json, policy.json); the folder is
-  outside the source digest of tiktok_finalize (K5) and outside every art scan, so writing the receipt changes nothing
-  the receipt or K5 measures. art_check's own report stays in its timestamped --out folder outside the project.
-
-Who writes it
-  art_check.py (full mode only, not --loading-only / --ui-contract): after its analysis -> pass or fail. When its
-  inputs are missing (blocked_inputs, no verdict) an existing receipt is left alone on Cocos 2.4; on Cocos 3.x the
-  receipt becomes not_covered_3x for the current images.
-  tiktok_finalize.py source: its `images` step converts WebP to PNG/JPG and shrinks oversized textures, which changes
-  image bytes the art check saw. It checks the receipt BEFORE any step and, only when every image still matched,
-  carries the receipt to the bytes it wrote itself (`carried` lists what it changed). A receipt that no longer matched
-  before the source phase is left as it is, so the writer still refuses.
-
-Who checks it (check())
-  make_tiktok_zip.finalize_for_writer (both writers: make_tiktok_zip.py and build_checked_zip.py) and
-  serve_preview.py --keep. A NEW remake game (board remake, policy new) with no receipt, a receipt that is not a pass,
-  or images that differ from the receipt is refused: "美术改过（或没跑美术检查），重跑 art_check" plus the changed
-  images. Legacy remake games get a warning; English games now block and require current value-presentation runtime evidence (score-reward-1). A project
-  without any image under assets/ has no art to check (state no_images, passes; real games never hit this).
-"""
-import datetime as dt
+"""Read historical art evidence. Current preparation hooks never validate or publish an aggregate receipt."""
 import hashlib
 import json
 import os
@@ -240,62 +201,6 @@ def _write_json(path, data):
         Path(tmp).unlink(missing_ok=True)
 
 
-def write(project, status, report=None, report_path=None, note=None):
-    """Write the receipt for the CURRENT images of `project`. report = art_check's art-check.json content."""
-    if status not in STATUSES:
-        raise ValueError('art receipt status must be one of %s' % (STATUSES,))
-    project = Path(project).resolve()
-    images = image_fingerprints(project)
-    report = report or {}
-    rpath = Path(report_path).resolve() if report_path else None
-    receipt = {
-        'kind': 'art-receipt', 'schema': SCHEMA, 'status': status, 'passed': status == 'pass',
-        'project': str(project), 'engine': engine(project),
-        'art_check': {'report': str(rpath) if rpath else None,
-                      'report_sha256': _sha(rpath.read_bytes()) if rpath and rpath.is_file() else None,
-                      'status': report.get('status'), 'checked': report.get('checked'), 'failed': report.get('failed'),
-                      'time': report.get('time'), 'board': report.get('board')},
-        'tools': _tool_hashes(),
-        'created': dt.datetime.now().astimezone().isoformat(timespec='seconds'),
-        'images_count': len(images), 'images_sha256': images_digest(images),
-        'art_check_images_sha256': images_digest(images), 'images': images, 'carried': []}
-    display = display_fingerprints(project)            # 生成时预防 R4M2: text, fonts, layout
-    receipt.update(display_schema=DISPLAY_SCHEMA, display=display, display_sha256=images_digest(display))
-    from art_production import fingerprint as production_fingerprint
-    try:
-        production = production_fingerprint(project)
-        if production is not None:
-            receipt['production_binding'] = production
-    except ValueError as exc:
-        if status == 'pass':
-            raise ValueError('cannot write a passing art receipt: ' + str(exc)) from exc
-        receipt['production_binding_error'] = str(exc)
-    if isinstance(report.get('base_generated'), dict):
-        receipt['base_generated'] = report['base_generated']      # v7.8 H8 / H10 summary (art_records.summary)
-    if report.get('capture_round', {}).get('ready'):
-        receipt['capture_round'] = {k:report['capture_round'][k] for k in ('round','version','dumps','origin_hash')}
-        if status == 'pass':
-            receipt['capture_round']['artifact_hash'] = report['capture_round']['artifact_hash']
-    if isinstance(report.get('value_presentation'), dict):
-        receipt['value_presentation'] = report['value_presentation']
-    if isinstance(report.get('maintenance_mapping'), dict):
-        receipt['maintenance_mapping'] = report['maintenance_mapping']
-        # Provenance only: status still follows all blocking rows; no blanket pass or waiver.
-    if isinstance(report.get('english_visual_scope'),dict):receipt['english_visual_scope']=report['english_visual_scope']
-    # R4Q3 (补查3 第 3 组): which rows still need fixing, the original-style verdict and Saul's keep record
-    receipt['blocking_rows'] = [r.get('check') for r in report.get('rows') or [] if isinstance(r, dict)
-                                and r.get('status') == '需处理'][:40]
-    if isinstance(report.get('original_style'), dict):
-        receipt['original_style'] = report['original_style']
-    keep = _keep_record(project)
-    if keep:
-        receipt['keep_original_style'] = keep
-    if note:
-        receipt['note'] = note
-    _write_json(receipt_path(project), receipt)
-    return receipt
-
-
 def _capture_round_current(project, receipt, capture_build=None):
     from art_round_check import matches_receipt
     try:
@@ -308,17 +213,6 @@ def _capture_round_current(project, receipt, capture_build=None):
         return matches_receipt(project, capture_build or snapshot['build'], proof)
     except (KeyError, TypeError, ValueError, OSError):
         return False
-
-
-def after_art_check(project, report, report_path):
-    """art_check.py full mode, after the analysis ran: pass -> status pass, anything else -> fail."""
-    return write(project, 'pass' if report.get('passed') is True else 'fail', report, report_path)
-
-
-def not_covered_3x(project, report, report_path):
-    """art_check.py on a Cocos 3.x project whose pages could not be captured (ui_dump has no 3.x support yet)."""
-    return write(project, 'not_covered_3x', report, report_path,
-                 note='3.x 未覆盖：ui_dump 还读不了 Cocos 3.x 页面，美术检查没有跑；只记录图片指纹，不是通过')
 
 
 def read(project):
@@ -380,7 +274,12 @@ def _list(items, n=8):
     return '、'.join(items[:n]) + ('……共 %d 张' % len(items) if len(items) > n else '')
 
 
-def check(project, board=None, policy=None, capture_build=None):
+def original_audio_message(sounds):
+    return ('和底子逐字节相同的声音 %d 个没换（H8）：%s；换成音频库里的，确实要留的写进 docs/art/base-keep.json 并写 why'
+            % (len(sounds), _list(sounds)))
+
+
+def check_history(project, board=None, policy=None, capture_build=None):
     """Read-only. -> {'state', 'level' ok|warn|block, 'gate', 'message', 'changed', 'added', 'removed', 'status',
     'board', 'policy', 'strict', 'receipt', 'images_count', 'engine', 'base_audio'}.
     state: no_images | missing | unreadable | not_pass | changed | match_pass | match_3x.
@@ -402,8 +301,7 @@ def check(project, board=None, policy=None, capture_build=None):
     out['base_audio'] = same
     if same:
         level = 'block' if out['strict'] else 'warn'
-        text = ('和底子逐字节相同的声音 %d 个没换（H8）：%s；换成音频库里的，确实要留的写进 docs/art/base-keep.json 并写 why'
-                % (len(same), _list(same)))
+        text = original_audio_message(same)
         if out['level'] == 'ok':
             out.update(level=level, gate=GATE_BASE_AUDIO, message=text)
         else:
@@ -656,45 +554,23 @@ def summary(result):
     return out
 
 
+def check(project, board=None, policy=None, capture_build=None):
+    """Compatibility hook for prepared source trees made by the existing driver."""
+    return None
+
+
 def carry(project, by, before=None):
-    """tiktok_finalize source: the receipt matched every image BEFORE the steps (`before` = check() then); move it to
-    the bytes the steps wrote. Does nothing (returns None) unless that earlier check matched."""
-    if not before or before.get('state') not in ('match_pass', 'match_3x', 'not_pass') or before.get('changed') \
-            or before.get('added') or before.get('removed'):
-        return None
-    receipt, _ = read(project)
-    if receipt is None:
-        return None
-    current = image_fingerprints(project)
-    changed, added, removed = diff(receipt['images'], current)
-    # 生成时预防 R4M2: display (text, fonts, layout) is carried only when it was recorded and matched before this run
-    display_now = display_fingerprints(project) if isinstance(receipt.get('display'), dict) and \
-        before.get('display_state') == 'match' else None
-    dmoved = diff(receipt['display'], display_now) if display_now is not None else ([], [], [])
-    if not (changed or added or removed or any(dmoved)):
-        return receipt
-    entry = {'by': by, 'time': dt.datetime.now().astimezone().isoformat(timespec='seconds'),
-             'changed': changed[:200], 'added': added[:200], 'removed': removed[:200],
-             'why': 'the receipt matched every image before this run; only this run changed these files'}
-    if any(dmoved):
-        entry.update(display_changed=dmoved[0][:200], display_added=dmoved[1][:200], display_removed=dmoved[2][:200])
-        receipt['display'] = display_now
-        receipt['display_sha256'] = images_digest(display_now)
-    receipt['carried'] = list(receipt.get('carried') or []) + [entry]
-    receipt['images'] = current
-    receipt['images_count'] = len(current)
-    receipt['images_sha256'] = images_digest(current)
-    _write_json(receipt_path(project), receipt)
-    return receipt
+    """Retain the driver's ABI without creating or changing any receipt."""
+    return None
 
 
 def main(argv=None):
     import argparse
-    ap = argparse.ArgumentParser(description='Read-only: does <project>/.tiktok-kit/art-receipt.json match the images?')
+    ap = argparse.ArgumentParser(description='Read historical art evidence for a scoped art check.')
     ap.add_argument('--project', required=True, type=Path)
     ap.add_argument('--board', choices=('remake', 'localize'))
     a = ap.parse_args(argv)
-    result = check(a.project, a.board)
+    result = check_history(a.project, a.board)
     print(json.dumps(summary(result), ensure_ascii=False, indent=1))
     return 1 if result['level'] == 'block' else 0
 

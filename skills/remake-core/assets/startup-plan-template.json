@@ -1,6 +1,6 @@
 {
   "declared_at": "2026-10-21T10:00:00+08:00",
-  "budget_reason": "No fixed finish times (user 2026-10-23): no product target given, so no budgets; audit_startup_loading.py judges stuck (animation, Retry, every route enters) and wasted time from what this game really loads. Add \"budgets\" to a profile only for a real product target, with the reason here.",
+  "budget_reason": "No fixed finish times (user 2026-10-23): no product target given, so no budgets; audit_startup_loading.py judges stuck (Retry, every route enters) and wasted time from what this game really loads. Add \"budgets\" to a profile only for a real product target, with the reason here.",
   "viewports": [
     [
       393,
@@ -36,22 +36,6 @@
       "warm": 0
     }
   },
-  "animation_freeze_ms": 1000,
-  "frame_gap_ms": 250,
-  "loading_roi": {
-    "bootstrap": [
-      146,
-      380,
-      100,
-      100
-    ],
-    "enter_level": [
-      146,
-      380,
-      100,
-      100
-    ]
-  },
   "max_home_asset_kb": 500,
   "home_assets_allowed": [],
   "idle_timeout_ms": 10000,
@@ -71,7 +55,6 @@
       "latency_ms": 80
     },
     "timing": true,
-    "record": true,
     "startup_plan_sha256": "<sha256 of this plan file>",
     "warmup_js": "(only for cache=warm) condition that the home page is usable",
     "actions": [

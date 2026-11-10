@@ -9,7 +9,7 @@ description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默�
 
 ## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
 
-所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+英化人工操作用 **Computer Use + Edge**。自动检查仍在 **Ego Lite** 独立 TaskSpace 执行原有脚本并复用有效证据。英化的 Google Chrome 只在美工试玩和最终测试包交接时打开。 其他流程的自动检查按原 Ego 路线执行。缺少对应能力时继续离线工作，记录实际未测项。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
 
 
 **浏览器规则（用户 2026-10-21，严格）**：全部浏览器测试只用 **Ego Lite**；**Ego 只给 Agent 自己测试，用户试玩由共享预览入口自动打开独立 Google Chrome（用户 2026-10-27）**，`--handoff` 已停用（直接报错），给用户用主 Skill `serve_preview.py --keep` 自动请求独立 Chrome 手机框窗口，并在回复里保留本地链接；启动回执不等于窗口已出现，按固定手机试玩参考核实。直接运行 `chrome_touch.py`（不用找地址、不加任何连接参数，见下方[Ego 连接方式](#ego-连接方式用户-2026-10-27统一)）：脚本通过 `ego-browser nodejs` 在 Ego 里新建一个**名字唯一**的测试空间跑计划，跑完只结束自己的空间，**不关 Ego、不碰用户的标签页和登录状态**。连不上或没装 Ego：按 ego-browser 的说明诊断；无法完成的项保留未测，不切到 Chrome。`--user-approved-chrome` 已停用并在启动前拒绝。Python 路径按当前系统解析。先读取配套 [手机触控流程](../mobile-touch-computer-use/SKILL.md)。脚本只对本地测试 URL 使用。第一次在一台电脑上用 Ego 时，先跑下方的[一条命令校准](#第一次用先校准一条命令)。

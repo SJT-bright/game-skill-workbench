@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.13",
+  "revision": "2026-11-10.english-simple.11.17.20",
   "skill": "chrome-mobile-testing",
-  "previous_provenance_sha256": "53f22764c3eb47c55002468838a27d4d6a91cda37b40a278e2b94bd98a675e81",
+  "previous_provenance_sha256": "dc1a58b76d7757fae482a827be11dd0976f0a74de145bcb7b9324a9dab369e0f",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "3c168e646f8222a795e183bb89a37b46a54d066f2c4f5387b5bf8c6ff17c36e5",
-      "bytes": 14968
+      "sha256": "75f57d0df3e38d794ec59c5badd2fa6af960a88b01b03236116bc866e8b38c80",
+      "bytes": 14841
     },
     {
       "path": "scripts/chrome_touch.py",

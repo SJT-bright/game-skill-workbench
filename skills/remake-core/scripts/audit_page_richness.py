@@ -2519,6 +2519,7 @@ def colour_problems(d, nodes, image_module):
     shot = screenshot_of(d) if d.get('_file') else None
     img = page_pixels(image_module, shot) if image_module is not None and shot is not None and shot.is_file() else None
     groups = {}
+    settings_text = []
     for n in nodes:
         lab = n['comps'].get('label') or n['comps'].get('richtext')
         if not text(n) or (lab and len(text(n)) > DENSE_TEXT):
@@ -2531,8 +2532,15 @@ def colour_problems(d, nodes, image_module):
             cls = ink_class(img, n.get('screen') or n['rect'])
         if cls is not None:
             groups.setdefault(n['name'], (cls, text(n)[:16]))
+            if BOARD == 'localize' and d.get('purpose') == 'settings_sound':
+                settings_text.append((n['name'], n.get('screen') or n['rect']))
     classes = {c for c, _ in groups.values()}
     if len(groups) >= 3 and len(classes) == 1:
+        titles = [rect for name, rect in settings_text if re.search(r'title|heading', name, re.I)]
+        labels = [rect for name, rect in settings_text if not re.search(r'title|heading', name, re.I)]
+        if (len(titles) == 1 and len(labels) >= 2
+                and all(titles[0][1] < rect[1] and titles[0][3] >= 1.25 * rect[3] for rect in labels)):
+            return []  # Clearly separated by visible size and order. Other readability checks still run.
         c = classes.pop()
         return ['uniform_text_colour: all %d text items are the same colour (%s: %s): give the title, buttons, numbers and labels '
                 'different fill colours (one style family, varied colours, sizes and letter shapes; user 2026-10-23: the all-teal '
@@ -2930,6 +2938,8 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     if not backdrops and coverage([n.get('screen')or n['rect']for n in composite_bg])<.85 and not (masks and len(behind) >= 8):
         problems.append('plain_backdrop: no background picture and no game scene behind (flat colour)')
     for b in buttons:
+        if purpose in ('result_win', 'result_fail') and is_claim_link(b, nodes):
+            continue
         sub = [n for n in nodes if node_under(n, b)]
         has_plate = any('sprite' in n['comps'] and area(n['rect']) >= 0.3 * area(b['rect']) for n in sub)
         if not has_plate and any(text(n) for n in sub):
@@ -3114,7 +3124,8 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             problems.append('empty_area: a band of %.0f%% of the screen height has nothing in it (needs < 18%%): fill it with cover art, '
                             'more level nodes or move things closer' % (gap * 100))
     if purpose in ('home', 'result_win', 'result_fail'):
-        texted = [b for b in buttons if texted_action_button(b, nodes)]
+        texted = [b for b in buttons if texted_action_button(b, nodes)
+                  and (purpose == 'home' or not is_claim_link(b, nodes))]
         if len(texted) > 2 and 'result_original_button_layout' not in original_rules:
             problems.append('text_buttons: %d buttons have text on the plate (max 2, e.g. PLAY/NEXT; the rest are icons with a small '
                             'caption below): %s' % (len(texted), ', '.join(text(next(n for n in nodes if node_under(n, b) and text(n)))[:16]
@@ -3235,8 +3246,9 @@ def main():
     ap.add_argument('--no-analysis-cache', action='store_true', help='recompute identical pixel inputs for comparison')
     a = ap.parse_args()
     global BOARD
-    BOARD = a.board
     proj = a.project.resolve()
+    from feature_policy import board_of
+    BOARD = board_of(proj, a.board)[0]
     folders = a.dumps or [proj / 'docs/test']
     dumps = load([f for f in folders if Path(f).is_dir()], project=proj)
     try:
@@ -3261,8 +3273,13 @@ def main():
                         rect=[sub.get('trimX',0),sub.get('trimY',0),sub.get('width',0),sub.get('height',0)]
                         GENERATED_TEXT_SOURCES[name]={'path':source,'rect':rect if min(rect[2:])>0 else None}
             except (OSError,ValueError):pass
-    from feature_policy import enabled
+    from feature_policy import enabled, read_record
     OPTIONAL = enabled(proj)
+    declared = read_record(proj, 'docs/art/screens.json')
+    declared_purposes = {item.get('purpose') for item in (declared.get('screens') or []) if isinstance(item, dict)}
+    if BOARD == 'localize':
+        OPTIONAL['checkin'] = (read_record(proj, 'docs/features.json').get('daily_checkin') is True
+                               or 'checkin' in declared_purposes or any(d.get('purpose') == 'checkin' for d in dumps))
     setup = []
     global MAINTENANCE_RULES
     MAINTENANCE_RULES = set()
@@ -3358,6 +3375,11 @@ def main():
             failed.append(row)
     analysis_cache.finish()
     need = list(REQUIRED)
+    if BOARD == 'localize' and declared.get('runtime_verified') is True:
+        for expected, existing in (('result_win', 'result_fail'), ('result_fail', 'result_win'),
+                                   ('settings', 'settings_sound')):
+            if expected not in declared_purposes and existing in declared_purposes:
+                need.remove(expected)
     if 'settings_original_switches' in MAINTENANCE_RULES:
         for mapped in ('settings', 'settings_sound'):
             if mapped in need:

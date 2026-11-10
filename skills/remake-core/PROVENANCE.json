@@ -1,15 +1,15 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.17",
+  "revision": "2026-11-10.english-simple.11.17.20",
   "skill": "remake-core",
-  "previous_provenance_sha256": "e2b10fcb3f263649ca0005f2154536de81a64d7604e0057cc99c447cfd013dd7",
+  "previous_provenance_sha256": "e60ac5d88181244f4eb2347a37383a9c3956aac5d254172f361085be58b3782d",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
-      "bytes": 13070
+      "sha256": "0b8c2b2d1e64f56732758068f2845df370e87aaf4d3b6eb8dfa2a503c590f60f",
+      "bytes": 12943
     },
     {
       "path": "agents/openai.yaml",
@@ -823,8 +823,8 @@
     },
     {
       "path": "references/browser-testing-policy.md",
-      "sha256": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71",
-      "bytes": 1879
+      "sha256": "1fab685bdbd8322cd2f43b867ff92ac9eab153fb9735c0dc724d957843ce4216",
+      "bytes": 1367
     },
     {
       "path": "references/check-stages.md",
@@ -983,8 +983,8 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "9528c572877b84fd1815ccfb58cc0a0982bf1b65318085328079d2b05113d6f2",
-      "bytes": 50949
+      "sha256": "d8f0210c2268e5082ff731688c0f8c0ca3f07e39e3cd215767aad411c102e3d3",
+      "bytes": 50883
     },
     {
       "path": "references/tiktok-home-growth.md",
@@ -1003,8 +1003,8 @@
     },
     {
       "path": "references/user-phone-preview.md",
-      "sha256": "06d98b34cbff26dfef47fd032d6f9d34737e9dccf5deb156ea201592e3760fde",
-      "bytes": 7856
+      "sha256": "2489d5d9fa4b1c5442e6142b79bc443b05e07b8594e1e46ec660861c310c34c1",
+      "bytes": 7950
     },
     {
       "path": "references/workflow-detail.md",
@@ -1048,13 +1048,13 @@
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "eeff35458ed6f422d4b9f3c4985ed4efb3bf23fe468ee9a398d0c2a680dea451",
-      "bytes": 78513
+      "sha256": "09c8eb389907a8a1bf831e14b85fda2ac7c0b242eafc50004ff5819a62ad6fed",
+      "bytes": 84231
     },
     {
       "path": "scripts/art_check_record.py",
-      "sha256": "e57c21d10a907315882cb186d34d7041151c0f7947a0e33cca5ad5d33420e383",
-      "bytes": 6786
+      "sha256": "58becf783f43947496faa0e9ccee58c0ec73dd3d25d7f617e3fc08b306ba72a3",
+      "bytes": 12459
     },
     {
       "path": "scripts/art_consumer_index.py",
@@ -1068,8 +1068,8 @@
     },
     {
       "path": "scripts/art_iteration_plan.py",
-      "sha256": "83b6458da8651ebf070371fec4148407482b9de7cf11e2dfcf134f43b1334549",
-      "bytes": 20352
+      "sha256": "0696154115913dffd14e35bf68995354cc86f5eebeab75dbcb168ba30662c7f9",
+      "bytes": 21229
     },
     {
       "path": "scripts/art_preflight.py",
@@ -1318,8 +1318,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "baf6d84c95b55b18cd10ef1b0904488688fe69ebb5993f381473130a7cec1ca3",
-      "bytes": 207684
+      "sha256": "01a65d8986871e4d50eafa99130a10a80f2f0fd827f5655688b36b310e65e77c",
+      "bytes": 209354
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1993,8 +1993,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "0b3b0c827d787568f109b7c6c779da598bc6633a32d8a5fcd2cb1e3547718804",
-      "bytes": 49115
+      "sha256": "f1516e76399fabd173793a08550b475a4c3e7d422ed6d0d95eaa50838d49aff3",
+      "bytes": 49296
     },
     {
       "path": "scripts/source_hygiene.py",
@@ -2083,8 +2083,8 @@
     },
     {
       "path": "scripts/test_art_check_inputs.py",
-      "sha256": "c69a8c5011a079616b1fe9ae322932b922353c8b618ea893fc23247ceb780257",
-      "bytes": 3690
+      "sha256": "7d95a81cfb3467a905b4985a3bc9c8b9bbfd50d22ace89213e5162f13fe54693",
+      "bytes": 8327
     },
     {
       "path": "scripts/test_art_check_record.py",
@@ -2728,8 +2728,8 @@
     },
     {
       "path": "scripts/test_preview_chrome.py",
-      "sha256": "8e1ed63d06f392e73a07d0c2ac7c140d11a867b2968d38d9459ea783512ea16f",
-      "bytes": 7846
+      "sha256": "d6dab12c406627c4567541a00085836dcfb5a9dee6c7b9aa2957412d45ce64f2",
+      "bytes": 8360
     },
     {
       "path": "scripts/test_preview_fresh_save.py",

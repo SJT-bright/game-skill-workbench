@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-10T16:37:59.519Z",
-  "treeHash": "e5a8d32153bfdfb7e9f4170c2d6ea421b4e61a94139675a12c12f856bd4ef3dc",
+  "createdAt": "2026-11-10T16:39:29.405Z",
+  "treeHash": "f2371092365939a669790c0601d0b7543f4c8ddd2e6b666503a92b36213d9543",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3585,20 +3585,20 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "92ec7730aaa9651a6c3cec38a3306cf823fb60f5c0efdc6dd13a89649ebcac4d",
-      "fileCount": 665,
-      "bytes": 12831850,
+      "treeHash": "845ec5cf8fe887952b9ee6edf5e727f23564c78dd4a5fc03627f251b8d32d477",
+      "fileCount": 667,
+      "bytes": 12860645,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "aab4d955cbc902a6631f61898f8c1a9a5f7a9fe75c4a21cd816c59842e508424",
-          "size": 161429,
+          "hash": "adf8ad6875897b93b804872705abb0110c92ebdbebff1d284fed0255bc2447dd",
+          "size": 161430,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
-          "size": 13070,
+          "hash": "0b8c2b2d1e64f56732758068f2845df370e87aaf4d3b6eb8dfa2a503c590f60f",
+          "size": 12943,
           "executable": false
         },
         {
@@ -4575,8 +4575,8 @@
         },
         {
           "path": "references/browser-testing-policy.md",
-          "hash": "d5d2ea3e2273cb4146203be8fef1579a3d359ba938847714815a0653d42d3c71",
-          "size": 1879,
+          "hash": "1fab685bdbd8322cd2f43b867ff92ac9eab153fb9735c0dc724d957843ce4216",
+          "size": 1367,
           "executable": false
         },
         {
@@ -4653,8 +4653,8 @@
         },
         {
           "path": "references/incremental-checks.md",
-          "hash": "6ec41874645ae7c2773a5489a36f425ed30cfd34a97aee050733bb141032d2f5",
-          "size": 9934,
+          "hash": "6348014789393cd8fbae89beed5c2938f93e3eb64b10362571a0d4e7bac79539",
+          "size": 10177,
           "executable": false
         },
         {
@@ -4697,6 +4697,12 @@
           "path": "references/method-provenance.md",
           "hash": "1e5a6835d774e34d38e3f226be2db24af6f6b5a42d2a0582619e6545431d4182",
           "size": 1871,
+          "executable": false
+        },
+        {
+          "path": "references/native-startup-ledger.md",
+          "hash": "e2040e8f07ec7f42a097f2c257d1fa232eeb3e7dadb5770fae0fff05d4384f44",
+          "size": 1673,
           "executable": false
         },
         {
@@ -4767,8 +4773,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "9528c572877b84fd1815ccfb58cc0a0982bf1b65318085328079d2b05113d6f2",
-          "size": 50949,
+          "hash": "d8f0210c2268e5082ff731688c0f8c0ca3f07e39e3cd215767aad411c102e3d3",
+          "size": 50883,
           "executable": false
         },
         {
@@ -4791,8 +4797,8 @@
         },
         {
           "path": "references/user-phone-preview.md",
-          "hash": "06d98b34cbff26dfef47fd032d6f9d34737e9dccf5deb156ea201592e3760fde",
-          "size": 7856,
+          "hash": "2489d5d9fa4b1c5442e6142b79bc443b05e07b8594e1e46ec660861c310c34c1",
+          "size": 7950,
           "executable": false
         },
         {
@@ -4845,14 +4851,14 @@
         },
         {
           "path": "scripts/art_check.py",
-          "hash": "eeff35458ed6f422d4b9f3c4985ed4efb3bf23fe468ee9a398d0c2a680dea451",
-          "size": 78513,
+          "hash": "09c8eb389907a8a1bf831e14b85fda2ac7c0b242eafc50004ff5819a62ad6fed",
+          "size": 84231,
           "executable": false
         },
         {
           "path": "scripts/art_check_record.py",
-          "hash": "e57c21d10a907315882cb186d34d7041151c0f7947a0e33cca5ad5d33420e383",
-          "size": 6786,
+          "hash": "58becf783f43947496faa0e9ccee58c0ec73dd3d25d7f617e3fc08b306ba72a3",
+          "size": 12459,
           "executable": false
         },
         {
@@ -4869,8 +4875,8 @@
         },
         {
           "path": "scripts/art_iteration_plan.py",
-          "hash": "83b6458da8651ebf070371fec4148407482b9de7cf11e2dfcf134f43b1334549",
-          "size": 20352,
+          "hash": "0696154115913dffd14e35bf68995354cc86f5eebeab75dbcb168ba30662c7f9",
+          "size": 21229,
           "executable": false
         },
         {
@@ -5019,8 +5025,8 @@
         },
         {
           "path": "scripts/audit_final_package_startup.py",
-          "hash": "96c867e4a596bcd4d57a297752956ae8f362430fc95ce7fcf0784427c73694ae",
-          "size": 8375,
+          "hash": "4cc7a938e4de830df9cf392c6cd17c42d1909c22b32306ed8d5b3c5f4e7f14be",
+          "size": 9354,
           "executable": false
         },
         {
@@ -5097,8 +5103,8 @@
         },
         {
           "path": "scripts/audit_native_startup_renderer.py",
-          "hash": "73aeb29629c133b3fc525408276dd8c9c9a8b09b241461b0c2891ca59ed7120f",
-          "size": 15758,
+          "hash": "e041fb43e87104eab9bbea2d4a984ef1f30ee0477b242ff829dd738432d3cc2c",
+          "size": 16113,
           "executable": false
         },
         {
@@ -5169,8 +5175,8 @@
         },
         {
           "path": "scripts/audit_page_richness.py",
-          "hash": "baf6d84c95b55b18cd10ef1b0904488688fe69ebb5993f381473130a7cec1ca3",
-          "size": 207684,
+          "hash": "01a65d8986871e4d50eafa99130a10a80f2f0fd827f5655688b36b310e65e77c",
+          "size": 209354,
           "executable": false
         },
         {
@@ -5223,8 +5229,8 @@
         },
         {
           "path": "scripts/audit_startup_contract.py",
-          "hash": "38298cc4870fd650183d052b8f19705f51905abb8291eadbbbe7d36c36dbdc22",
-          "size": 13304,
+          "hash": "6e174e2dfb1124dde045b273f52458839b4c7cfd7d8c7eea4accf2e075a78f41",
+          "size": 13692,
           "executable": false
         },
         {
@@ -5637,14 +5643,20 @@
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "de2a8d6131444daeee56b0aa48989d3cb02e7ebbf5fe97bb03e07f7ea05fe5a0",
-          "size": 43904,
+          "hash": "6f9babe84b8512954dc97f26413ea0b784b8faf2a1db2bb8c74ccd44c1153393",
+          "size": 43950,
           "executable": false
         },
         {
           "path": "scripts/modules_harness.mjs",
           "hash": "f4470312aa17e659d17b43230e63c83a113c2dbce26c026d9494824501cd3c56",
           "size": 6972,
+          "executable": false
+        },
+        {
+          "path": "scripts/native_startup_ledger.py",
+          "hash": "9cdd611513e38a605592fdfb19fbb77fea418c03ba06724ade875ce5585b069b",
+          "size": 6451,
           "executable": false
         },
         {
@@ -5979,8 +5991,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "0b3b0c827d787568f109b7c6c779da598bc6633a32d8a5fcd2cb1e3547718804",
-          "size": 49115,
+          "hash": "f1516e76399fabd173793a08550b475a4c3e7d422ed6d0d95eaa50838d49aff3",
+          "size": 49296,
           "executable": false
         },
         {
@@ -6087,8 +6099,8 @@
         },
         {
           "path": "scripts/test_art_check_inputs.py",
-          "hash": "c69a8c5011a079616b1fe9ae322932b922353c8b618ea893fc23247ceb780257",
-          "size": 3690,
+          "hash": "7d95a81cfb3467a905b4985a3bc9c8b9bbfd50d22ace89213e5162f13fe54693",
+          "size": 8327,
           "executable": false
         },
         {
@@ -6861,8 +6873,8 @@
         },
         {
           "path": "scripts/test_preview_chrome.py",
-          "hash": "8e1ed63d06f392e73a07d0c2ac7c140d11a867b2968d38d9459ea783512ea16f",
-          "size": 7846,
+          "hash": "d6dab12c406627c4567541a00085836dcfb5a9dee6c7b9aa2957412d45ce64f2",
+          "size": 8360,
           "executable": false
         },
         {

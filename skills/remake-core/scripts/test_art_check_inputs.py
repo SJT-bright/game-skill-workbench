@@ -3,6 +3,7 @@ import contextlib,copy,io,json,sys,tempfile,unittest
 from pathlib import Path
 from unittest.mock import patch
 import art_check
+import art_check_record
 
 class ArtInputTests(unittest.TestCase):
     def setUp(self):
@@ -43,4 +44,74 @@ class ArtInputTests(unittest.TestCase):
              patch.object(art_check,'run',side_effect=RuntimeError('analysis reached')),contextlib.redirect_stdout(io.StringIO()):
             with self.assertRaisesRegex(RuntimeError,'analysis reached'):art_check.main()
         self.assertFalse((out/'art-check.json').exists())
+
+    def test_resume_rechecks_only_failed_group_and_publishes_covered_record(self):
+        capture = {'ready': True, 'round': 'test', 'version': 'one', 'cases': []}
+        from art_round_check import origin_hash
+        captured = dict(capture, origin_hash=origin_hash(capture))
+        rows = [{'check': '读到的页面', 'status': '通过', 'log': ''}]
+        for group, logs in art_check_record.TRIAL_GROUPS.items():
+            if group == 'slots':
+                continue
+            layout = group == 'layout'
+            rows.append({'check': '布局（玩法区、弹窗、按钮分布）' if layout else group,
+                         'status': '需处理' if layout else '通过', 'detail': 'original',
+                         'log': logs[0]})
+        raw = {'tool': 'art_check', 'board': 'localize', 'checked': len(rows), 'failed': 1,
+               'status': 'fail', 'passed': False, 'rows': rows, 'capture_round': captured,
+               'assets_fingerprint': art_check.tree_fingerprint(self.project), 'base_generated': {}}
+        report_path = self.root/'old.json'
+        report_path.write_text(json.dumps(raw))
+        previous = art_check_record.write(self.project, 'fail', raw, report_path, 'localize')
+        refused = art_check_record.check(self.project)
+        self.assertEqual(refused['level'], 'block')
+        self.assertIn('--plan-trial', refused['message'])
+        self.assertIn('--resume-trial', refused['message'])
+        out = self.root/'out'
+        argv = ['art_check.py','--project',str(self.project),'--out',str(out),'--board','localize',
+                '--dumps',str(self.dumps),'--build',str(self.root/'web'),'--resume-trial']
+        moved_report = self.root/'moved folder'/'old.json'
+        moved_report.parent.mkdir()
+        report_path.rename(moved_report)
+        argv += ['--prior-report',str(moved_report)]
+        stale = dict(capture, version='changed')
+        stale_args = argv.copy()
+        stale_args[stale_args.index('--out')+1] = str(self.root/'stale')
+        with patch.object(sys,'argv',stale_args), patch('art_input_check.verify_capture',return_value=stale), \
+             patch.object(art_check,'run',side_effect=AssertionError('quality replay started')), \
+             contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as refused:
+            art_check.main()
+        self.assertEqual(refused.exception.code,3)
+        with patch.object(sys,'argv',argv), patch('art_input_check.verify_capture',return_value=dict(capture)), \
+             patch.object(art_check,'run',return_value=(0,'{}')) as called, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(art_check.main(),0)
+        self.assertEqual([c.args[0] for c in called.call_args_list], ['extract_ui_layout.py','audit_ui_coverage.py'])
+        result = json.loads((out/'art-check.json').read_text())
+        self.assertEqual(result['trial_recheck']['rechecked_groups'], ['layout'])
+        self.assertIn('atlas', result['trial_recheck']['reused_rows'])
+        self.assertEqual(art_check_record.check(self.project)['level'], 'ok')
+        with self.assertRaisesRegex(ValueError, '另一轮'):
+            art_check_record.write(self.project, 'fail', raw, report_path, 'localize',
+                                   previous_sha=previous['last']['report_sha256'])
+
+    def test_failed_partial_report_points_to_actual_work(self):
+        rows = [{'check': '制作素材', 'status': '需处理'}]
+        report = {'tool': 'art_check', 'board': 'localize', 'status': 'blocked_inputs',
+                  'failed': 1, 'checked': 0, 'rows': rows}
+        path = self.root/'blocked.json'
+        path.write_text(json.dumps(report))
+        for scope, expected in ((None, '采集缺口'), (['english_visual_scope'], '原局部检查范围')):
+            with self.subTest(scope=scope):
+                art_check_record.write(self.project, 'fail', report, path, 'localize', scoped=scope)
+                result = art_check_record.check(self.project)
+                self.assertEqual(result['level'], 'block')
+                self.assertIn(expected, result['message'])
+                self.assertNotIn('--resume-trial', result['message'])
+
+    def test_missing_pending_row_cannot_be_merged_into_a_pass(self):
+        old = {'check':'旧图集','status':'需处理','log':'atlas_slices/report.json'}
+        rows = []
+        art_check_record.merge_trial_rows({'rows':[old]}, rows,
+                                          {'rechecked_groups':['atlas'],'from_report':'old.json'})
+        self.assertEqual(rows, [dict(old,origin_report='old.json')])
 if __name__=='__main__':unittest.main()

@@ -278,7 +278,20 @@ def plan(project, build=None, dumps=None, first_piece=None, diagnostics=(), prev
             add('capture_required_cases', 'Only the original collector decides fresh/reuse/recapture; shared changes may invalidate all states.',
                 capture_cases=todo, groups=capture_groups(policy['cases'], todo))
         elif capture.get('ready') is True:
-            add('run_input_then_full_art_check', 'Run the original input preflight and full art gate. This plan is not visual approval.')
+            from art_check_record import read as read_trial_art, trial_recheck_plan
+            from feature_policy import board_of
+            recorded = read_trial_art(project) if board_of(project, board)[0] == 'localize' else None
+            if recorded and (recorded.get('last') or {}).get('status') in ('pass', 'fail'):
+                try:
+                    _, followup = trial_recheck_plan(project)
+                except (ValueError, OSError, KeyError) as exc:
+                    add('restore_trial_art_evidence', str(exc))
+                else:
+                    add('resume_trial_art', 'Resolve the recorded findings and run --resume-trial for pending and affected groups. '
+                        'When the previous evidence remains current and no findings are open, continue to the formal preview.',
+                        **followup)
+            else:
+                add('run_input_then_full_art_check', 'Run the original input preflight and full art gate. This plan is not visual approval.')
         else:
             add('repair_capture_contract', 'Capture readiness is incomplete or unknown.')
     symptom = hashlib.sha256(encoded(problems)).hexdigest() if problems else None

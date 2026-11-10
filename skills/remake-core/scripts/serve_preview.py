@@ -582,7 +582,8 @@ def make_snapshot(directory, project=None, slots=None):
     return dest, 'project', True
 
 
-def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_art=None, on_ready=None):
+def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_art=None, on_ready=None,
+         english_preview=False):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', required=True, type=Path)
     parser.add_argument('--port', type=int, default=0)
@@ -606,6 +607,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
     parser.add_argument('--home-shot-timeout', type=float, default=90, help='headless home screenshot: give up after this '
                         'many seconds (default 90; then the link says 没截图)')
     args = parser.parse_args(argv)
+    internal_window = english_preview or chinese_original or args.raw
     setup_bytes = None
     if args.ad_simulator_setup:
         if not args.ad_simulator or not args.ad_simulator_setup.is_file():
@@ -678,6 +680,8 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
             slot = browser_slots.register('preview', args.name or directory.name, os.getpid(), args.project,
                                           port=server.server_port, url=url, directory=directory if args.snapshot else None,
                                           keep=args.keep or args.idle_minutes == 0)
+            if slot and english_preview:
+                browser_slots.heartbeat(slot, phone_size=list(phone_size))
         except Exception:
             slot = None
     serving = None
@@ -693,7 +697,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
             import shutil
             shutil.rmtree(directory, ignore_errors=True)
 
-    for_person = args.keep or args.open or args.idle_minutes == 0
+    for_person = not args.raw and (args.keep or args.open or args.idle_minutes == 0)
     if for_person:
         serving = threading.Thread(target=server.serve_forever, daemon=True)
         serving.start()
@@ -757,7 +761,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
     elif for_person and returned_art is not None:
         print('返工交付：已读回同版入口；按用户授权免重复美术截图，不重跑无关广告试玩。', flush=True)
     elif for_person and chinese_original:
-        print('中文原版：已核准导出与链接身份，交 Google Chrome 供用户试玩；未启动自动浏览器验收。', flush=True)
+        print('中文原版：已核准内部基线的导出与入口。', flush=True)
     if record_ready_trial is not None:
         try:
             record_ready_trial()
@@ -770,8 +774,13 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         except Exception as error:
             print('用时没记上（服务已就绪）：' + str(error), file=sys.stderr, flush=True)
     lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
-    entry_kind = '内部QA入口（禁止交给用户试玩）' if args.raw else f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
-    print(f'{entry_kind}：{url}\n（用户试玩会自动请求独立 Google Chrome 窗口；同时在回复中保留此本地链接。须读回实际窗口，不能把启动请求当作已显示。）\n保持窗口打开；按 Control+C 结束。{lifetime}'
+    if internal_window:
+        entry_kind = '内部检测入口'
+        use = '供本轮检测。英化正式交接由 handoff_preview.py 核准。'
+    else:
+        entry_kind = f'手机尺寸本地试玩（内部 {phone_size[0]}×{phone_size[1]}，只缩小不放大）'
+        use = '用户试玩窗口的实际显示须读回核对。'
+    print(f'{entry_kind}：{url}\n{use}\n按 Control+C 结束。{lifetime}'
           + (f'\n（独立副本：{directory}）' if args.snapshot else ''), flush=True)
     if slot:
         def beat():
@@ -805,7 +814,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
                 pass
     try:
         launch = browser_request(url, keep=args.keep, explicit_open=args.open,
-                                 no_browser=args.no_browser, phone_size=phone_size)
+                                 no_browser=args.no_browser or internal_window, phone_size=phone_size)
         print('PREVIEW_BROWSER ' + json.dumps(launch, ensure_ascii=False), flush=True)
         if serving is None:
             server.serve_forever()

@@ -14,6 +14,12 @@ from audit_startup_contract import validate_runtime_report
 KIT_DIR = Path(__file__).resolve().parent.parent / 'assets' / 'platform-kit'
 
 
+class StartupRefused(ValueError):
+    def __init__(self, check_id, message):
+        super().__init__(message)
+        self.check_id = check_id
+
+
 def platform_kit_covers_retry(native, project):
     """Remake (user 2026-10-27): a game that ships the TikTok Platform Kit unchanged gets the kit's tested boot
     (stall -> visible Retry -> new request, old callbacks ignored, background not counted). Then the per-game Retry
@@ -30,7 +36,7 @@ def platform_kit_covers_retry(native, project):
     return True, '%s v%s unchanged' % (manifest['name'], manifest['version'])
 
 
-def audit_final_startup(native, project, startup_contract, recovery_runtime, replay=True):
+def audit_final_startup(native, project, startup_contract, recovery_runtime):
     if not project or not startup_contract:
         raise ValueError('final Native startup evidence required: --project and --startup-contract; file/Web checks cannot prove HOME')
     native, project = Path(native).resolve(), Path(project).resolve()
@@ -40,7 +46,8 @@ def audit_final_startup(native, project, startup_contract, recovery_runtime, rep
     if not recovery_runtime:
         covered, why = platform_kit_covers_retry(native, project)
         if not covered:
-            raise ValueError('--loading-recovery-runtime required unless the unchanged TikTok Platform Kit covers Retry: ' + why)
+            raise StartupRefused('startup.native.retry',
+                                 '--loading-recovery-runtime required unless the unchanged TikTok Platform Kit covers Retry: ' + why)
         kit_retry = why
     contract_path = Path(startup_contract).resolve()
     recovery_path = Path(recovery_runtime).resolve() if recovery_runtime else None
@@ -93,15 +100,18 @@ def audit_final_startup(native, project, startup_contract, recovery_runtime, rep
     recovery = json.loads(recovery_bytes)
     if not isinstance(recovery, dict):
         raise ValueError('final loading-recovery runtime must be an object')
-    if recovery_path:
-        errors += validate_recovery(recovery, binding, recovery_path.parent)
     if errors:
         raise ValueError('final Native startup/Retry refused: ' + '; '.join(errors))
-    if replay:
-        # Calls only the existing reviewed runner registry; never report-supplied argv.
-        errors = validate_runtime_report(contract, binding)
+    if recovery_path:
+        errors = validate_recovery(recovery, binding, recovery_path.parent)
         if errors:
-            raise ValueError('final Native startup replay refused: ' + '; '.join(errors))
+            raise StartupRefused('startup.native.retry', 'final Native startup/Retry refused: ' + '; '.join(errors))
+    replay = {}
+    # All official callers use the same checked ledger. Passing raw reports alone
+    # is never a substitute for a successful, still-valid registered execution.
+    errors = validate_runtime_report(contract, binding, detail=replay)
+    if errors:
+        raise StartupRefused('startup.native.renderer', 'final Native startup replay refused: ' + '; '.join(errors))
     # Runtime execution and other tasks may touch the candidate/evidence.
     # Rechecking identity is cheap; re-running the browser a second time is not.
     if (renderer.digest(renderer.tree(native)) != binding['native_tree_sha256'] or
@@ -118,9 +128,19 @@ def audit_final_startup(native, project, startup_contract, recovery_runtime, rep
         errors.append('platform kit changed during validation')
     if errors:
         raise ValueError('final Native startup raw evidence changed during validation: ' + '; '.join(errors))
+    checks = [
+        {'id': 'startup.native.current_evidence', 'action': 'rejudged',
+         'reason': '本版 Native、启动合同、加载遮罩和真实触控结果已核对',
+         'evidence': [str(contract_path), str(proof_path)]},
+        replay,
+        {'id': 'startup.native.retry', 'action': 'rejudged',
+         'reason': '核对本版 Retry 原始证据' if recovery_path else kit_retry,
+         'evidence': [str(recovery_path)] if recovery_path else [str(KIT_DIR / 'KIT_MANIFEST.json')]},
+    ]
     return {'passed': True, 'native_tree_sha256': binding['native_tree_sha256'],
-            'startup_contract_sha256': hashlib.sha256(contract_path.read_bytes()).hexdigest(),
-            'loading_recovery_runtime_sha256': hashlib.sha256(recovery_path.read_bytes()).hexdigest() if recovery_path else None,
+            'startup_contract_sha256': hashlib.sha256(contract_bytes).hexdigest(),
+            'loading_recovery_runtime_sha256': hashlib.sha256(recovery_bytes).hexdigest() if recovery_path else None,
             'retry_covered_by_platform_kit': kit_retry,
-            'registered_renderer_replayed': bool(replay),
+            'registered_renderer_replayed': replay.get('action') == 'rerun',
+            'checks': checks,
             'scope': 'local actual Native entry/adapter/renderer, HOME/input and loading recovery; no physical scan claim'}

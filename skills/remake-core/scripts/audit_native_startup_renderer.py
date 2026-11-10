@@ -163,42 +163,50 @@ def validate(report, native, binding, project):
  return errors
 
 
-def execute_registered(report, native, binding, project):
+def registered_execution(report, native, project):
+ """Resolve and verify the same runner, dependencies and path on replay and reuse."""
+ project=Path(project).resolve();native=Path(native).resolve()
+ import project_qa
+ key=report['execution']['registered_runner'];policy=project_qa.lookup(project,'runners',key)
+ if policy['project']!=str(project):raise ValueError('registered project mismatch')
+ expected_profile=policy.get('control_profile','canvas_context_conflict_v1')
+ if report.get('control_profile') not in (None,expected_profile):raise ValueError('control profile differs from trusted runner registration')
+ if not policy.get('allow_legacy_missing_profile') and report.get('control_profile')!=expected_profile:raise ValueError('trusted runner control profile is required')
+ scope=policy.get('runner_scope','project')
+ allowed_root=Path(policy.get('allowed_root',project)).resolve()
+ excluded_root=Path(policy['excluded_root']).resolve() if policy.get('excluded_root') else None
+ native_binding=policy.get('native_binding')
+ if native_binding is not None:
+  if not isinstance(native_binding,dict) or native_binding.get('kind')!='fixed_project_path':raise ValueError('unknown registered Native binding')
+  relative=native_binding.get('relative_path')
+  if not isinstance(relative,str) or not relative or relative.startswith('/') or '\\' in relative or any(part in ('','.', '..') for part in relative.split('/')):raise ValueError('invalid registered Native relative path')
+  served_native=(allowed_root/relative).resolve()
+  if not served_native.is_relative_to(allowed_root) or not served_native.is_dir():raise ValueError('registered served Native directory missing or outside project')
+  if native!=served_native:raise ValueError('registered runner serves a different Native directory; candidate binding mismatch')
+ def registered_file(raw_path, expected_sha, label):
+  path=Path(raw_path).resolve()
+  if not path.is_relative_to(allowed_root) or (excluded_root is not None and path.is_relative_to(excluded_root)):
+   raise ValueError(label+' outside registered '+scope+' scope')
+  if not path.is_file() or not isinstance(expected_sha,str) or len(expected_sha)!=64 or sha(path)!=expected_sha:
+   raise ValueError(label+' changed or SHA-256 mismatch')
+  return path
+ runner=registered_file(policy['path'],policy['sha256'],'trusted runner')
+ if report.get('runner')!={'path':str(runner),'sha256':policy['sha256']}:raise ValueError('reported runner differs from trusted registration')
+ dependencies=policy.get('dependencies',{})
+ if not isinstance(dependencies,dict):raise ValueError('trusted runner dependencies must be an exact path-to-SHA map')
+ for dependency,expected_sha in dependencies.items():
+  path=registered_file(dependency,expected_sha,'trusted runner dependency')
+ timeout=policy['timeout_seconds']
+ if not isinstance(timeout,int) or not 1<=timeout<=120:raise ValueError('trusted timeout out of bounds')
+ return key,policy,runner,timeout
+
+
+def execute_registered(report, native, binding, project, *, capture=None):
  """Only Skill-reviewed fixed Python runners; never execute report-supplied argv."""
  errors=[];project=Path(project).resolve();native=Path(native).resolve()
- import project_qa
  try:
-  key=report['execution']['registered_runner'];policy=project_qa.lookup(project,'runners',key)
-  if policy['project']!=str(project):raise ValueError('registered project mismatch')
-  expected_profile=policy.get('control_profile','canvas_context_conflict_v1')
-  if report.get('control_profile') not in (None,expected_profile):raise ValueError('control profile differs from trusted runner registration')
-  if not policy.get('allow_legacy_missing_profile') and report.get('control_profile')!=expected_profile:raise ValueError('trusted runner control profile is required')
-  scope=policy.get('runner_scope','project')
-  allowed_root=Path(policy.get('allowed_root',project)).resolve()
-  excluded_root=Path(policy['excluded_root']).resolve() if policy.get('excluded_root') else None
-  native_binding=policy.get('native_binding')
-  if native_binding is not None:
-   if not isinstance(native_binding,dict) or native_binding.get('kind')!='fixed_project_path':raise ValueError('unknown registered Native binding')
-   relative=native_binding.get('relative_path')
-   if not isinstance(relative,str) or not relative or relative.startswith('/') or '\\' in relative or any(part in ('','.', '..') for part in relative.split('/')):raise ValueError('invalid registered Native relative path')
-   served_native=(allowed_root/relative).resolve()
-   if not served_native.is_relative_to(allowed_root) or not served_native.is_dir():raise ValueError('registered served Native directory missing or outside project')
-   if native!=served_native:raise ValueError('registered runner serves a different Native directory; candidate binding mismatch')
-  def registered_file(raw_path, expected_sha, label):
-   path=Path(raw_path).resolve()
-   if not path.is_relative_to(allowed_root) or (excluded_root is not None and path.is_relative_to(excluded_root)):
-    raise ValueError(label+' outside registered '+scope+' scope')
-   if not path.is_file() or not isinstance(expected_sha,str) or len(expected_sha)!=64 or sha(path)!=expected_sha:
-    raise ValueError(label+' changed or SHA-256 mismatch')
-   return path
-  runner=registered_file(policy['path'],policy['sha256'],'trusted runner')
-  if report.get('runner')!={'path':str(runner),'sha256':policy['sha256']}:raise ValueError('reported runner differs from trusted registration')
-  dependencies=policy.get('dependencies',{})
-  if not isinstance(dependencies,dict):raise ValueError('trusted runner dependencies must be an exact path-to-SHA map')
-  for dependency,expected_sha in dependencies.items():
-   path=registered_file(dependency,expected_sha,'trusted runner dependency')
-  expected=digest(tree(native));timeout=policy['timeout_seconds']
-  if not isinstance(timeout,int) or not 1<=timeout<=120:raise ValueError('trusted timeout out of bounds')
+  key,_,runner,timeout=registered_execution(report,native,project)
+  expected=digest(tree(native))
   with tempfile.TemporaryDirectory(prefix='native-startup-replay-') as td:
    output=Path(td)/'report.json'
    command=[sys.executable,str(runner),'--native',str(native),'--expected-native-hash',expected,'--report',str(output),'--binding-json',json.dumps(binding,sort_keys=True)]
@@ -210,5 +218,6 @@ def execute_registered(report, native, binding, project):
     actual=json.loads(output.read_text());errors+=validate(actual,native,binding,project)
     if actual.get('execution',{}).get('registered_runner')!=key:errors.append('STARTUP-RENDERER replay runner identity differs')
    if digest(tree(native))!=expected:errors.append('STARTUP-RENDERER Native changed during replay')
+   if not errors and capture is not None:capture(output,actual)
  except (KeyError,TypeError,ValueError,OSError,subprocess.TimeoutExpired) as e:errors.append('STARTUP-RENDERER trusted execution refused: '+str(e))
  return errors

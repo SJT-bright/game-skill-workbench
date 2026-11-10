@@ -69,7 +69,7 @@ class ChromeRequest(unittest.TestCase):
 
 
 class PreviewProcess(unittest.TestCase):
-    def check_process(self, flags, expected_status, expected_launches, *, missing=False):
+    def check_process(self, flags, expected_status, expected_launches, *, missing=False, english=False, chinese=False):
         with tempfile.TemporaryDirectory(prefix='preview Chrome 中文 ') as folder:
             root = Path(folder)
             web = root / 'web'; web.mkdir()
@@ -94,12 +94,12 @@ def find():
 chrome.find_chrome=find
 sys.modules['browser_slots']=types.SimpleNamespace(sweep=lambda **kw:None,register=lambda *a,**kw:None)
 import serve_preview
-sys.argv=['serve_preview.py',*sys.argv[4:]]
-serve_preview.main()
+english, original = sys.argv[4] == 'yes', sys.argv[5] == 'yes'
+serve_preview.main(sys.argv[6:], english_preview=english, chinese_original=original)
 ''', encoding='utf-8')
             log = root / 'server.log'; calls = root / 'calls.jsonl'
             with log.open('wb') as out:
-                child = subprocess.Popen([sys.executable, '-B', str(runner), str(HERE), str(calls), 'yes' if missing else 'no', '--directory', str(web), *flags], stdout=out, stderr=out)
+                child = subprocess.Popen([sys.executable, '-B', str(runner), str(HERE), str(calls), 'yes' if missing else 'no', 'yes' if english else 'no', 'yes' if chinese else 'no', '--directory', str(web), *flags], stdout=out, stderr=out)
             port = None
             try:
                 deadline = time.monotonic() + 6
@@ -138,8 +138,14 @@ serve_preview.main()
     def test_no_browser_preserves_server_without_launch(self):
         self.check_process(['--keep', '--no-browser'], 'not_requested', 0)
 
-    def test_raw_internal_qa_stays_silent(self):
-        self.check_process(['--raw'], 'not_requested', 0)
+    def test_raw_internal_qa_stays_silent_even_with_the_old_open_flag(self):
+        self.check_process(['--raw', '--open'], 'not_requested', 0)
+
+    def test_english_candidate_keep_and_open_are_not_user_handoffs(self):
+        self.check_process(['--keep', '--open'], 'not_requested', 0, english=True)
+
+    def test_chinese_baseline_does_not_open_a_user_window(self):
+        self.check_process(['--keep', '--open'], 'not_requested', 0, chinese=True)
 
     def test_missing_browser_keeps_preview_available_and_reports_failure(self):
         self.check_process(['--keep'], 'launch_failed', 0, missing=True)

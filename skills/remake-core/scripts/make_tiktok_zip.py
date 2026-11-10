@@ -511,7 +511,7 @@ def main():
         return 1
     from audit_final_package_startup import audit_final_startup
     try:
-        audit_final_startup(native, a.project, a.startup_contract, a.loading_recovery_runtime, replay=False)
+        startup_runtime = audit_final_startup(native, a.project, a.startup_contract, a.loading_recovery_runtime)
     except (ValueError, OSError, TypeError, KeyError) as error:
         print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
         return 1
@@ -645,7 +645,7 @@ def main():
     result['archive'] = str(out)
     result.update(vnz.receipt_status(out, sha(out), result['file_sha256']))
     report = {'tool': 'make_tiktok_zip', 'status': 'tiktok_upload_zip_ready', 'passed': True, 'failed': 0,
-              'package_obligations': obligations,
+              'package_obligations': obligations, 'final_startup_runtime': startup_runtime,
               'checked': result['files'], 'zip': str(out), 'zip_sha256': sha(out),
               'zip_bytes': out.stat().st_size, 'native': str(native), 'appId': a.app_id, 'gate': gate,
               'sizes': {'main_bytes': info['main'], 'main_limit': vnz.TIKTOK_MAIN, 'total_bytes': info['total'],

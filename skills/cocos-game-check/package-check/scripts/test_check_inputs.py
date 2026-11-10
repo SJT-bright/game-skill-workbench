@@ -205,7 +205,7 @@ class EmptyInputs(unittest.TestCase):
 
 
 class WriterInputs(unittest.TestCase):
-    def test_writer_no_adapter_is_not_run(self):
+    def test_writer_without_scope_and_adapter_is_not_run(self):
         import check_package
         files = {'game.js': b'tt.createRewardedVideoAd({})'}
         old = os.environ.pop(ad_regression.ENV_ADAPTER, None)
@@ -215,8 +215,9 @@ class WriterInputs(unittest.TestCase):
             if old is not None:
                 os.environ[ad_regression.ENV_ADAPTER] = old
         self.assertTrue(out['blocked'])
-        self.assertEqual(out['rewarded_ad_regression']['status'], 'not_run', out['rewarded_ad_regression'])
-        self.assertEqual(out['runtime_regression']['status'], 'not_run', out['runtime_regression'])
+        self.assertEqual(out['status'], 'scope_required')
+        self.assertIsNone(out['rewarded_ad_regression'])
+        self.assertIsNone(out['runtime_regression'])
         self.assertIsNone(check_package.regression_record(out['rewarded_ad_regression'], out['runtime_regression']))
 
     def test_unknown_status_is_not_reused(self):

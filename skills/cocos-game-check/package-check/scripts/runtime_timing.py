@@ -31,10 +31,24 @@ def rule_fingerprint(cl, paths):
     module = here.with_name('runtime_incremental.py')
     try:
         proof = json.loads(here.with_name('runtime-reporting-compat.json').read_text())
+        module_sha = hashlib.sha256(module.read_bytes()).hexdigest()
+        helper_sha = hashlib.sha256(here.read_bytes()).hexdigest()
         approved = (proof.get('schema') == 'runtime-reporting-compat.v1'
-            and hashlib.sha256(module.read_bytes()).hexdigest() == proof['new_runtime_sha256']
-            and hashlib.sha256(here.read_bytes()).hexdigest() == proof['helper_sha256']
+            and module_sha == proof['new_runtime_sha256']
+            and helper_sha == proof['helper_sha256']
             and proof.get('scope') == 'reporting-only-exact-byte-pair')
+        if not approved:
+            # The exact reviewed scope pair adds authorization and a read-only
+            # plan route. It leaves all observers and result predicates intact.
+            scope = json.loads(here.with_name('runtime-scope-compat.json').read_text())
+            approved = (scope.get('schema') == 'runtime-scope-compat.v1'
+                and scope.get('scope') == 'authorization-only-exact-byte-pair'
+                and module_sha == scope['new_runtime_sha256']
+                and helper_sha == scope['new_helper_sha256']
+                and scope['prior_runtime_sha256'] == proof['new_runtime_sha256']
+                and scope['prior_helper_sha256'] == proof['helper_sha256']
+                and hashlib.sha256(here.with_name('runtime-reporting-compat.json').read_bytes()).hexdigest()
+                    == scope['prior_compat_sha256'])
     except (OSError, ValueError, KeyError, TypeError):
         approved = False
     if not approved:

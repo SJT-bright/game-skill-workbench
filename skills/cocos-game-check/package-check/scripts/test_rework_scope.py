@@ -356,7 +356,7 @@ class Gates(Base):
         self.assertEqual(row['cases'],original['cases'])
         self.assertEqual(row['evidence'],'original-runtime.json')
 
-    def test_receipt_record_keeps_the_reuse_and_delivery_still_reuses_it(self):
+    def test_receipt_with_incomplete_legacy_cases_cannot_be_delivered(self):
         calls = []
         with mock.patch.object(RR, 'run', self.fake_run(calls)):
             rt = C.runtime_gate(self.new, self.folder, str(self.adapter), policy='new', board='localize', rework=self.p)
@@ -369,29 +369,28 @@ class Gates(Base):
         receipt = self.root / 'new.zip.receipt.json'
         receipt.write_text(json.dumps({'regressions': record}), encoding='utf-8')
         reuse = C.reusable_regressions(receipt, self.new, str(self.adapter), 'new')
-        self.assertTrue(reuse['reused'], reuse.get('why'))
+        self.assertFalse(reuse['reused'])
+        self.assertIn('every required case', reuse['why'])
 
-    def test_writer_regressions_with_rework_of(self):
-        calls = []
-        with mock.patch.object(RR, 'run', self.fake_run(calls)):
-            out = C.writer_regressions(self.new, self.folder, str(self.adapter), policy='new', board='localize',
-                                       rework_of=str(self.old))
-        self.assertFalse(out['blocked'], out['problems'])
-        self.assertTrue(out['rework']['reuse'])
-        self.assertNotIn('records', out['rework'])
-        self.assertEqual(calls, [self.p['rerun']])
-        with mock.patch.object(RR, 'run', self.fake_run(calls)), \
-                mock.patch.object(AD, 'run', return_value={'id': 'rewarded_ad_regression', 'passed': True}):
-            out = C.writer_regressions(self.new, self.folder, str(self.adapter), policy='new', board='localize')
-        self.assertNotIn('rework', out)
-        self.assertEqual(calls[-1], self.names)
+    def test_writer_regressions_requires_plan_even_with_rework_of(self):
+        with mock.patch.dict(os.environ, {}, clear=True), \
+                mock.patch.object(RR, 'run') as runtime, mock.patch.object(AD, 'run') as ads:
+            for prior in (str(self.old), None):
+                out = C.writer_regressions(self.new, self.folder, str(self.adapter),
+                                           policy='new', board='localize', rework_of=prior)
+                self.assertTrue(out['blocked'])
+                self.assertEqual(out['status'], 'scope_required')
+            runtime.assert_not_called()
+            ads.assert_not_called()
 
     def test_a_failing_rerun_still_refuses(self):
         def failing(folder, adapter, names, **kw):
             error = RR.RuntimeRefused('runtime regression failed: button_sweep: PLAY does not react')
             error.summary = {'id': 'runtime_regression', 'passed': False, 'required': list(names)}
             raise error
-        with mock.patch.object(RR, 'run', failing):
+        with mock.patch.object(RR, 'run', failing), \
+                mock.patch.object(C, 'verify_regression_scope', return_value={'plan_sha256': 'test-plan'}), \
+                mock.patch.object(AD, 'run', return_value={'passed': True}):
             out = C.writer_regressions(self.new, self.folder, str(self.adapter), policy='new', board='localize',
                                        rework_of=str(self.old))
         self.assertTrue(out['blocked'])

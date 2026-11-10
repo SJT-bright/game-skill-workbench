@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-10.english-simple.11.17.20",
+  "revision": "2026-11-10.english-simple.11.17.21",
   "files": [
     {
       "path": "SKILL.md",
@@ -156,8 +156,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "6362e9fc616120bb0f93d2994121f786ef327ca721aadd25b5f3e71ce282397e",
-      "bytes": 21986
+      "sha256": "7cccdbb335867d05b35d7a411c592c7818bbec8ae33b7b7b91ab1650c836307d",
+      "bytes": 21996
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -945,7 +945,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "825ae315c61b94c5c8240813ed7848e940cd88fe64593118ea94187db860be40",
+  "previous_provenance_sha256": "bab7cd4da43cddde398339d11a932a73caa5561b53bf8e301f08e829a5a397af",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

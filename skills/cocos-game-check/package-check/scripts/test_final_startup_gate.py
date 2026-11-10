@@ -8,6 +8,7 @@ from test_package_checks import fixture, APP, fixture_project
 from build_checked_zip import build
 import audit_final_package_startup as gate
 import native_startup_ledger as startup
+import regression_scope_gate as scope
 
 class FinalStartupGate(unittest.TestCase):
     def setUp(self):
@@ -29,7 +30,8 @@ class FinalStartupGate(unittest.TestCase):
     def call(self):return gate.audit_final_startup(self.native,self.project,self.contract,self.recovery)
     def test_no_runtime_proof_no_zip(self):
         out=self.root/'test.zip'
-        with self.assertRaisesRegex(ValueError,'startup evidence required'):
+        with patch('upload_size_gate.enforce_tiktok_host'), \
+                self.assertRaisesRegex(ValueError,'scope_required'):
             build(self.native,APP,out,resource_manifest=self.manifest,project=self.project)
         self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))
     def test_failed_contract_rejected(self):
@@ -95,7 +97,18 @@ class FinalStartupGate(unittest.TestCase):
                 self.call()
             self.binding['native_tree_sha256']=gate.renderer.digest(gate.renderer.tree(self.native))
             self.save()
-            changed = self.call()['checks'][1]
+            with self.assertRaisesRegex(ValueError, '正式交付只能回读启动证据'):
+                gate.audit_final_startup(self.native,self.project,self.contract,self.recovery,reuse_only=True)
+            with self.assertRaisesRegex(ValueError, '写包前未核准'):
+                self.call()
+            self.assertEqual((self.project/'calls').read_text(), '1')
+            plan = {'mode': 'scoped', 'startup_run': True, 'native_tree': scope.ledger.sha(scope.ledger.manifest(self.native))}
+            token = scope._active_plan.set('test-plan')
+            try:
+                with patch.object(scope, '_load_plan', return_value=(plan, 'test-plan')):
+                    changed = self.call()['checks'][1]
+            finally:
+                scope._active_plan.reset(token)
             self.assertEqual(changed['action'], 'rerun')
             self.assertIn('Native 内容', changed['reason'])
             self.assertEqual((self.project/'calls').read_text(), '11')

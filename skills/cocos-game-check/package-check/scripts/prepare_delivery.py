@@ -247,21 +247,21 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
     before = hashlib.sha256(archive.read_bytes()).hexdigest()
     if before != size_check['sha256']:
         raise ValueError('ZIP changed after the fresh size check; retry with a new delivery record')
-    # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
-    # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
+    # Delivery can verify existing writer evidence only. Read it before even asking for the startup ledger;
+    # missing, changed or incomplete evidence never launches a browser from this command.
     files = native_files(native)
     board = writer_board(archive, app_id, project, files=files)
     state.update(stage='package.obligations', evidence=[str(resource_manifest)] if resource_manifest else [])
     obligations = package_obligations.verify(files, native, project, resource_manifest)
     checks.append({'id': 'package.obligations', 'action': 'rejudged', 'reason': '核对最终资源和已知问题证据', 'evidence': state['evidence']})
+    state.update(stage='package.regressions', evidence=[str(archive) + '.receipt.json'])
+    result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True, project=project)
+    checks.extend(regression_checks(result))
     state.update(stage='startup.native.current_evidence', evidence=[str(p) for p in (startup_contract, loading_recovery_runtime) if p])
-    startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime)
+    startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
     checks.extend(startup_runtime.get('checks') or [])
     if native_files(native) != files:
         raise ValueError('Native changed during startup verification; no delivery record written')
-    state.update(stage='package.regressions', evidence=[str(archive) + '.receipt.json'])
-    result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True)
-    checks.extend(regression_checks(result))
     state.update(stage='package.identity', evidence=[str(size_record), str(result.get('receipt') or archive)])
     after = hashlib.sha256(archive.read_bytes()).hexdigest()
     if before != after or result['sha256'] != after:
@@ -288,7 +288,8 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
                'markdown_link': '[' + archive.name + '](<' + str(archive) + '>)',
                'runtime_execution': result['runtime_execution'],
-               'regression_reuse': result.get('regression_reuse'),     # v7.9: reused from the writer receipt, or why not
+               'regression_reuse': result.get('regression_reuse'),
+               'regression_scope': result.get('regression_scope'),
                'fresh_size_check': {'report': str(size_record), 'run_id': size_check['run_id'],
                                     'sha256': size_check['sha256'], 'main_bytes': size_check['main_bytes'],
                                     'total_bytes': size_check['total_bytes'], 'reused': False},

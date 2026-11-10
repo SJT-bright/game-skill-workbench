@@ -61,7 +61,8 @@ def _unit_row(row,unit):
                 warnings=row.get('warnings',[]),evidence=row.get('evidence'),raw_files=row.get('raw_files',[]),seconds=row.get('seconds',0))
 
 def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_dir=None,policy=None,board=None,
-        trial_url=None,capabilities=None):
+        trial_url=None,capabilities=None,*,plan_only=False):
+    """Plan with the production ledger, or execute that exact validated scope."""
     started=time.monotonic();package=Path(package_dir).resolve()
     if not (package/'game.js').is_file():raise rr.RuntimeRefused('runtime regression: no game.js at package root '+str(package))
     if board is not None and board not in rr.BOARDS:raise rr.RuntimeRefused('runtime regression board must be remake or localize, not %r'%(board,))
@@ -117,6 +118,11 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                         raise CL.NeedsScope(cid+'：历史判定器版本不同，先核对具体规则变化/等价证据，不自动重跑所有功能')
                 index[cid]=(name,unit)
                 if name in selected or p['action']=='reuse':plans.append(p)
+        if plan_only:
+            return plans
+        from regression_scope_gate import authorize_batch
+        plan_sha = authorize_batch(project,roots,plans,operation='runtime',
+                                   native=package,adapter=adapter_path)
         blocked=[p for p in plans if p['action'] not in ('run','reuse')]
         if blocked:raise CL.NeedsScope('；'.join(p['check_id']+'：'+p['why'] for p in blocked))
         cached_evidence={}
@@ -129,6 +135,9 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
             selections={}
             for cid in ids:
                 name,unit=index[cid];selections.setdefault(name,[]).append(unit)
+            if not selections or root()!=roots:
+                raise CL.NeedsScope('运行回归没有明确用例，或候选输入已变化，重新生成检查计划')
+            authorize_batch(project,roots,plans,operation='runtime',expected_sha256=plan_sha)
             try:
                 run_work=work or ledger.home/'runs'/uuid.uuid4().hex
                 result=rr._run_uncached(package,adapter_path,list(selections),run_work,timeout,suites_dir,policy,board,

@@ -79,6 +79,10 @@ def rewarded_ad_gate(files, folder, adapter=None, rework=None):
                 'reason': 'no createRewardedVideoAd call in package JavaScript'}
     adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
     input_gate('rewarded_ad_regression', adapter)
+    from regression_scope_gate import needs_ad_suite
+    if not needs_ad_suite(files, adapter, ad_regression_gate, runtime_regression_gate):
+        return {'id': 'rewarded_ad_regression', 'status': 'not_applicable',
+                'reason': 'configured revive-only probe is covered by the manual playtest'}
     if isinstance(rework, dict) and rework.get('reuse') and rework.get('ad') == 'reuse':
         import rework_scope
         return rework_scope.reused_ad(rework)
@@ -184,12 +188,99 @@ def input_gate(key, adapter):
 REUSE_SCHEMA = 'writer-regressions.v1'
 
 
+def regression_context(files, folder, adapter, board, policy, project=None):
+    """Use the project and package identity in both planning and actual checks."""
+    from check_ledger import project_of
+    from feature_policy import board_of
+    adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER) or None
+    project = Path(project).resolve() if project else project_of(folder, adapter)
+    declared_board = board_of(project)[0]
+    if board and declared_board and board != declared_board:
+        raise ValueError('scope_required: regression board differs from project board')
+    board = board or declared_board
+    policy = runtime_regression_gate.package_policy(files, policy)[0]
+    return project, adapter, board, policy
+
+
+def verify_regression_scope(files, folder, adapter, board, policy, prior, *,
+                            project=None, expected_scope_sha256=None, operation='check'):
+    """Check authorization on these exact bytes before a package check can open Ego."""
+    if 'game.js' not in files and not ad_regression_gate.needs_regression(files):
+        return None
+    from regression_scope_gate import preflight
+    project, adapter, board, policy = regression_context(files, folder, adapter, board, policy, project)
+    audit = preflight(project, files, adapter, board=board, policy=policy, prior=prior, operation=operation)
+    if expected_scope_sha256 is not None and audit.get('plan_sha256') != expected_scope_sha256:
+        raise ValueError('scope_required: regression plan changed after writer preflight')
+    return audit
+
+
+def regression_coverage_problem(ad, runtime, files, adapter, policy=None):
+    """A diagnostic subset may pass without establishing full delivery coverage."""
+    from regression_scope_gate import needs_ad_suite
+    adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER) or None
+    if needs_ad_suite(files, adapter, ad_regression_gate, runtime_regression_gate):
+        expected = ad_regression_gate.default_cases(ad_regression_gate.load_adapter(adapter))
+        rows = ad.get('cases') or []
+        actual = [row.get('case') if isinstance(row, dict) else row for row in rows]
+        if (not all(isinstance(case, str) for case in actual)
+                or sorted(actual) != sorted(expected)):
+            return 'rewarded-ad evidence does not cover every required case'
+    if 'game.js' in files:
+        rr = runtime_regression_gate
+        adapter = adapter or os.environ.get(rr.ENV_ADAPTER) or None
+        from runtime_incremental import unit_ids
+        catalog = rr.load_suites()
+        adapter_data = rr.load_adapter(adapter, catalog)
+        names = rr.required_suites(files, adapter_data, catalog)
+        engine = rr.detect_engine(files, adapter_data)
+        judged = rr.package_policy(files, policy)[0]
+        required = runtime.get('required') or []
+        if (not isinstance(required, list) or not all(isinstance(name, str) for name in required)
+                or sorted(required) != sorted(names)):
+            return 'runtime evidence does not enumerate the required suites'
+        rows = runtime.get('suites') or []
+        covered = [row.get('suite') for row in rows if isinstance(row, dict) and (
+            row.get('passed') is True or (
+                row.get('visual_status') == 'user_accepted' and row.get('functional_passed') is True
+                and row.get('accepted_for_delivery') is True))]
+        if len(covered) != len(rows) or not all(isinstance(name, str) for name in covered):
+            return 'runtime evidence contains an unverified suite'
+        if not set(names).issubset(covered) or len(set(covered)) != len(covered):
+            return 'runtime evidence does not cover every required suite'
+        rows_by_name = {row['suite']: row for row in rows}
+        for name in names:
+            row = rows_by_name[name]
+            meta = catalog[name]
+            prechecked = rr.precheck(name, meta, adapter_data, engine, judged) is not None
+            expected = set(unit_ids(name, meta, adapter_data, prechecked))
+            if row.get('visual_status') == 'user_accepted':
+                if (name != 'layout_state' or set(row.get('accepted_visual_units') or []) != expected
+                        or 'runtime.layout_state/@startup' not in (row.get('incremental') or {})):
+                    return 'runtime visual acceptance does not cover the required units and startup'
+                continue
+            if expected == {'@suite'}:
+                continue
+            prefix = 'runtime.' + name + '/'
+            actual = {key[len(prefix):] for key in (row.get('incremental') or {}) if key.startswith(prefix)}
+            actual.update(case.get('id') for case in row.get('cases') or []
+                          if isinstance(case, dict) and case.get('passed') is True)
+            if not expected or not expected.issubset(actual):
+                return 'runtime evidence is missing required units: ' + name
+    for summary in (ad, runtime):
+        if summary.get('complete') is False or summary.get('planned_not_run') or summary.get('proof_error'):
+            return 'writer regression evidence is incomplete'
+    return None
+
+
 def regression_record(ad, runtime):
     """v7.9 (出包检查提速 S1, 总表 19 ①): what an official writer keeps in its receipt of the two regressions it just
     passed on the bytes it publishes, so prepare_delivery can reuse them instead of running them again on the same ZIP
-    (7.5-15 minutes per delivery). None when either did not pass (nothing to reuse: delivery runs them again)."""
+    (7.5-15 minutes per delivery). None when either did not pass or is incomplete; delivery refuses."""
     def part(summary, runtime_part):
         if not isinstance(summary, dict):
+            return None
+        if summary.get('complete') is False or summary.get('planned_not_run') or summary.get('proof_error'):
             return None
         # 总表 P19 ③: a status outside references/check-status.json, or one that is not a pass, is nothing to reuse
         if 'status' in summary and summary['status'] not in check_guard.status_values():
@@ -236,7 +327,7 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
     Called only for an official entry (receipt_status already matched the receipt to these ZIP bytes, this Native tree
     and a passed finalize). It holds when each regression passed (or did not apply) as this package needs, the adapter
     file and both check tools are byte-equal to the ones the writer ran, the same runtime suites are required, and the
-    writer judged the game at least as strictly. Anything else: the regressions run again, as before v7.9.
+    writer judged the game at least as strictly. Anything else: delivery stops without a browser fallback.
     -> {reused: True, note, rewarded_ad_regression, runtime_regression} or {reused: False, why}."""
     def no(why):
         return {'reused': False, 'why': why}
@@ -304,9 +395,10 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             tool_equivalence = ad.get('tool_sha256') == inherited['original_tool_sha256']
         except Exception as error:
             return no('debrand inherited ad identity refused: %s' % error)
-    if ad_regression_gate.needs_regression(files):
-        if ad.get('status') != 'passed':
-            return no('the writer did not run the rewarded-ad regression on a package that needs it')
+    from regression_scope_gate import needs_ad_suite
+    if needs_ad_suite(files, adapter, ad_regression_gate, runtime_regression_gate):
+        if ad.get('status') != 'passed' or ad.get('passed') is not True:
+            return no('the writer did not prove the rewarded-ad regression on a package that needs it')
         if adapter_sha is None or (ad.get('adapter_sha256') != adapter_sha and not adapter_equivalence):
             return no('adapter differs from the one the writer ran (rewarded-ad regression)')
         if ad.get('tool_sha256') != ad_regression_gate.tool_digest() and not tool_equivalence:
@@ -315,55 +407,63 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
         return no('rewarded-ad record does not fit this package')
     rr = runtime_regression_gate
     if 'game.js' in files:
-        if rt.get('status') != 'passed':
-            return no('the writer did not run the runtime regression')
+        if rt.get('status') != 'passed' or rt.get('passed') is not True:
+            return no('the writer did not prove the runtime regression')
         if adapter_sha is None or rt.get('adapter_sha256') != adapter_sha:
             return no('adapter differs from the one the writer ran (runtime regression)')
         try:
             catalog = rr.load_suites()
-            names = rr.required_suites(files, adapter, catalog)
             judged = rr.package_policy(files, policy)[0]
         except rr.RuntimeRefused as error:
             return no(str(error))
         if rt.get('tool_sha256') != rr.tool_digest(catalog):
             return no('runtime regression tools differ from the ones the writer ran')
-        if sorted(rt.get('required') or []) != sorted(names):
-            return no('the runtime suites this package needs differ from the ones the writer ran')
         if rt.get('policy') not in ('new', judged):
             return no('the writer ran the runtime suites as a %s game; this check judges it %s'
                       % (rt.get('policy'), judged))
     elif rt.get('status') != 'not_applicable':
         return no('runtime record does not fit this package')
+    try:
+        coverage_problem = regression_coverage_problem(ad, rt, files, adapter, policy)
+    except (ValueError, OSError, TypeError) as error:
+        return no('writer regression coverage cannot be verified: %s' % error)
+    if coverage_problem:
+        return no(coverage_problem)
     source = str(receipt_file)
     return {'reused': True, 'receipt': source,
+            'regression_scope': receipt.get('regression_scope'),
             'note': 'reused from the writer receipt %s: same ZIP bytes, adapter and check tools, not run again '
                     '(总表 19 ①)' % Path(source).name,
             'rewarded_ad_regression': dict(ad, reused_from=source),
             'runtime_regression': dict(rt, reused_from=source)}
 
 
-def writer_regressions(files, folder, adapter=None, policy=None, board=None, rework_of=None):
+def writer_regressions(files, folder, adapter=None, policy=None, board=None, rework_of=None, *,
+                       project=None, expected_scope_sha256=None):
     """v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions for make_tiktok_zip.py, which does not call
     check(). Same two gates as check() (rewarded_ad_gate, then runtime_gate with the same adapter, policy and board) on
     the staged bytes of the ZIP about to be published. Never raises: -> {blocked, problems, warnings, policy, adapter,
-    rewarded_ad_regression, runtime_regression, seconds}. policy 'legacy' (the writer's finalize record: a game on the
-    frozen legacy list) turns every refusal into a warning; anything else (new, or None judged from the bytes as new
-    when the bytes cannot decide) refuses. check() and build_checked_zip are unchanged.
+    rewarded_ad_regression, runtime_regression, seconds}. Scope errors and missing evidence refuse publication
+    even on the legacy list; the legacy policy still applies to individual suite verdicts and warnings.
     rework_of (简化.11.15): the last passed package (make_tiktok_zip --rework-of); out['rework'] is the plan."""
     import time
     started = time.monotonic()
-    adapter = adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER) or None
+    out = {'id': 'writer_regressions', 'rewarded_ad_regression': None, 'runtime_regression': None,
+           'problems': [], 'warnings': []}
+    try:
+        project, adapter, board, policy = regression_context(files, folder, adapter, board, policy, project)
+        out.update(policy=policy, board=board, adapter=str(adapter) if adapter else None)
+        out['regression_scope'] = verify_regression_scope(
+            files, folder, adapter, board, policy, rework_of, project=project,
+            expected_scope_sha256=expected_scope_sha256, operation='writer')
+    except (ValueError, OSError, TypeError) as error:
+        out.update(status='scope_required', blocked=True, problems=[str(error)],
+                   seconds=round(time.monotonic() - started, 1))
+        return out
     legacy = policy == 'legacy'
-    out = {'id': 'writer_regressions', 'policy': policy, 'board': board, 'adapter': str(adapter) if adapter else None,
-           'rewarded_ad_regression': None, 'runtime_regression': None, 'problems': [], 'warnings': []}
-    rework = rework_plan(rework_of, files, adapter, policy, board)
-    if rework is not None:
-        import rework_scope
-        out['rework'] = rework_scope.public(rework)
     reasons = []
-    for key, gate in (('rewarded_ad_regression', lambda: rewarded_ad_gate(files, folder, adapter, rework=rework)),
-                      ('runtime_regression', lambda: runtime_gate(files, folder, adapter, policy=policy, board=board,
-                                                                  rework=rework))):
+    for key, gate in (('rewarded_ad_regression', lambda: rewarded_ad_gate(files, folder, adapter)),
+                      ('runtime_regression', lambda: runtime_gate(files, folder, adapter, policy=policy, board=board))):
         try:
             out[key] = gate()
         except Exception as error:  # noqa: BLE001 - fail closed: a crash refuses a new game like a failed case
@@ -393,6 +493,16 @@ def writer_regressions(files, folder, adapter=None, policy=None, board=None, rew
                 out['problems'].append('growth_entry: the sidebar and shortcut runtime check must pass on this build')
     else:
         out['problems'] = reasons
+    if not out['problems']:
+        try:
+            ad, runtime = out['rewarded_ad_regression'], out['runtime_regression']
+            problem = ('writer did not produce complete passing regression evidence'
+                       if regression_record(ad, runtime) is None else
+                       regression_coverage_problem(ad, runtime, files, adapter, policy))
+        except (ValueError, OSError, TypeError) as error:
+            problem = str(error)
+        if problem:
+            out['problems'].append(problem)
     out['blocked'] = bool(out['problems'])
     out['seconds'] = round(time.monotonic() - started, 1)
     return out
@@ -417,7 +527,7 @@ def _fallback_entries(archive):
 
 
 def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None,
-          reuse_writer_regressions=False, rework_of=None):
+          reuse_writer_regressions=False, rework_of=None, *, expected_scope_sha256=None, project=None):
     # 简化.11.15 (出包后返工): rework_of (build_checked_zip --rework-of) is the last passed package; when only pictures,
     # sounds or fonts changed since it, the browser suites that cannot see the change keep its passes (rework_scope).
     # v7.9 (出包检查提速 S1, 总表 19 ①): reuse_writer_regressions (prepare_delivery only) takes an official writer
@@ -467,6 +577,9 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
             reasons.append('final ZIP differs from actual Native input paths/bytes')
         else:
             result['expected_tree_exact'] = True
+    project = project or (context or {}).get('project')
+    project, ad_regression, board, policy = regression_context(
+        verified_files, tree or Path(archive).parent, ad_regression, board, policy, project)
     gates = package_gates.run(verified_files, None, board, policy=policy, context=context)
     reasons.extend(package_gates.messages(gates['blocks']))
     regression = runtime = None
@@ -478,8 +591,9 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
                  if result is not None and result.get('entry') == 'official'
                  else {'reused': False, 'why': 'not a ZIP an official writer wrote (no matching receipt)'})
     reused = bool(reuse and reuse.get('reused'))
-    rework = None if reuse_writer_regressions else rework_plan(rework_of, verified_files, ad_regression,
-                                                               gates.get('policy'), board)
+    if reuse_writer_regressions and not reused:
+        reasons.append('scope_required: delivery can only verify matching writer evidence: ' + reuse['why'])
+    scope_audit = reuse.get('regression_scope') if reused else None
     browser_skipped = False
     with tempfile.TemporaryDirectory(prefix='TikTok package extract ') as folder:
         # Paths and CRC were validated above; stage those exact bytes, not a second ZIP read.
@@ -495,15 +609,26 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
         if reused:
             regression, runtime = reuse['rewarded_ad_regression'], reuse['runtime_regression']
         elif not browser_skipped:
+            scope_audit = verify_regression_scope(
+                verified_files, tree or folder, ad_regression, board, gates.get('policy'), rework_of,
+                project=project, expected_scope_sha256=expected_scope_sha256,
+                operation='writer' if expected_scope_sha256 is not None else 'check')
             try:
-                regression = rewarded_ad_gate(verified_files, folder, ad_regression, rework=rework)
+                regression = rewarded_ad_gate(verified_files, folder, ad_regression)
             except ValueError as error:
                 reasons.append(str(error))
             try:
-                runtime = runtime_gate(verified_files, folder, ad_regression, policy=gates.get('policy'), board=board,
-                                       rework=rework)
+                runtime = runtime_gate(verified_files, folder, ad_regression, policy=gates.get('policy'), board=board)
             except ValueError as error:
                 reasons.append(str(error))
+            if not reasons:
+                if regression_record(regression, runtime) is None:
+                    reasons.append('writer did not produce complete passing regression evidence')
+                else:
+                    problem = regression_coverage_problem(regression, runtime, verified_files, ad_regression,
+                                                          gates.get('policy'))
+                    if problem:
+                        reasons.append(problem)
     if hashlib.sha256(Path(archive).read_bytes()).hexdigest() != (result['sha256'] if result else start_sha):
         raise ValueError('ZIP changed during package checks')
     if reasons:
@@ -514,11 +639,9 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     result['packed_resource_check'] = assets
     result['rewarded_ad_regression'] = regression
     result['runtime_regression'] = runtime
+    result['regression_scope'] = scope_audit
     if reuse is not None:
         result['regression_reuse'] = {k: reuse[k] for k in ('reused', 'why', 'note', 'receipt') if k in reuse}
-    if rework is not None:
-        import rework_scope
-        result['rework'] = rework_scope.public(rework)
     result['package_gates'] = package_gates.summary(gates)
     from make_tiktok_zip import pre_home
     result['pre_home_bytes'] = pre_home(verified_files, None, board)

@@ -27,10 +27,9 @@ import package_obligations
 
 def build(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None, project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None, board=None, keep_webp_exception=None, keep_old_packages=False, rework_of=None):
     """rework_of (简化.11.15, --rework-of; Saul 2026-11-04「出包后的返工修改，就只检查修改涉及的那些部分」): the last
-    passed package, a folder with 最新.txt, 'auto' (the --out folder's 最新.txt) or None/'none' (every check runs). When
-    only pictures, sounds or fonts changed since it, check() keeps its passes for the browser suites that cannot see the
-    change (rework_scope.py); every static check runs either way. After publishing, the plan, the pages that use the
-    change and the AI's hand checks go to <project>/docs/checks/rework-<time>.json (result['rework_record'])."""
+    passed package, a folder with 最新.txt, or 'auto' (the --out folder's 最新.txt). The shared scope preflight
+    must authorize the exact build before a browser starts. Missing predecessor or scope does not authorize a full run.
+    Every static check still runs. After publishing, the historical comparison is recorded in docs/checks/rework-*.json."""
     started = time.monotonic()
     native, out = Path(native).resolve(), Path(out).resolve()
     if not native.is_dir():
@@ -63,6 +62,7 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
     if finalize_problems:
         raise ValueError('tiktok_finalize: ' + '; '.join(finalize_problems))
     gate_policy = finalized['policy']
+    board = finalized.get('board') or board
     # finalize wrote the App ID (appid step); the build must now carry exactly the requested target.
     config = json.loads((native / 'project.config.json').read_text(encoding='utf-8-sig'))
     if not isinstance(config, dict) or config.get('appid') != app_id:
@@ -98,6 +98,10 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
         observed = audit(interaction_audio_trace, native)
         if not observed['passed']:
             raise ValueError('interaction/audio: ' + '; '.join(observed['errors']))
+    import rework_scope
+    rework_path, rework_note = rework_scope.resolve(rework_of, out)
+    scope_audit = package_checks.verify_regression_scope(
+        files, native, ad_regression, board, gate_policy, rework_path, project=project, operation='writer')
     static_seconds = time.monotonic() - started
     runtime_started = time.monotonic()
     startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime)
@@ -113,10 +117,9 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
     try:
         archive_started = time.monotonic()
         write_archive(temporary, files)
-        import rework_scope
-        rework_path, rework_note = rework_scope.resolve(rework_of, out)
         result = check(temporary, app_id, native, ad_regression, board, policy=gate_policy, context=gate_context,
-                       rework_of=str(rework_path) if rework_path else None)
+                       rework_of=str(rework_path) if rework_path else None,
+                       expected_scope_sha256=(scope_audit or {}).get('plan_sha256'))
         result.setdefault('rework', {'reuse': False, 'why': rework_note})
         result['archive'] = str(out)
         result['finalize'] = finalize_report(finalized)
@@ -125,6 +128,7 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
         receipt = verifier.make_receipt('build_checked_zip', temporary, result['sha256'], result['file_sha256'],
                                         result['package_gates'], board,
                                         {'tool_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                                         'regression_scope': result.get('regression_scope'),
                                          # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses these for the same bytes
                                          'regressions': package_checks.regression_record(
                                              result.get('rewarded_ad_regression'), result.get('runtime_regression'))},
@@ -194,7 +198,7 @@ def main():
     parser.add_argument('--resource-manifest', type=Path, help='expanded business load requests for final bundle path/type validation')
     parser.add_argument('--interaction-audio-trace', type=Path, help='required by workflow for reported drag/audio defects; checked before ZIP creation')
     parser.add_argument('--rework-of', default='auto', help='简化.11.15 出包后返工: the last passed package (a ZIP, or a folder '
-                        'with 最新.txt; default auto = the 最新.txt of the --out folder; none = run every check). When '
+                        'with 最新.txt; default auto = the 最新.txt of the --out folder). Missing scope refuses. When '
                         'only pictures, sounds or fonts changed since it, only the browser checks that can see the change '
                         'run again (rework_scope.py); static checks always run')
     parser.add_argument('--project', type=Path, required=True, help='the Cocos project (v7.7: its tiktok_finalize source record is checked)')

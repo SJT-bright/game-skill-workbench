@@ -238,6 +238,9 @@ def engine_check(project, kit_dir=None):
 
 def engine_text(e):
     lines = ['引擎路线：' + e['say']]
+    if e['route'] == 'upgrade_copy_to_2.4.15':
+        lines.append('开工迁移专检：升级前用 creator_migration.py prepare 登记原工程和工作副本。'
+                     '用 2.4.15 保存后执行 build 和 Ego Lite smoke。迁移专检使用本机 Node.js 和随包解析器。')
     if e['install'] or e['skip']:
         lines.append('零件清单（按 %s）：装 %s' % (e['build_as'], '、'.join(
             p['part'] + ('（这个版本没测过）' if p['untested'] else '') for p in e['install']) or '无'))

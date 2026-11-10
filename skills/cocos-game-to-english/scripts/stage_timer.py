@@ -902,6 +902,14 @@ def _main(argv=None):
         if tl.cur and tl.cur['n'] == a.n and not tl.cur.get('implied'):
             out.append('第 %d 阶段 %s 已经开始了，不用再记。' % (a.n, clock(tl.cur['start'])))
         else:
+            route = next((e.get('route') for e in tl.events if e['ev'] == 'run_start'), 'source')
+            if a.n == 2 and route == 'source':
+                from creator_migration import require_ready
+                try:
+                    require_ready(project.resolve())
+                except (OSError, ValueError, KeyError) as error:
+                    print(str(error), file=sys.stderr)
+                    return 2
             before = tl.entry() if tl.cur and tl.cur['n'] != a.n else None
             record('stage', stage=a.n)
             if before is not None:

@@ -6,7 +6,7 @@
 
 - 原首页所有按钮的位置、大小、图片保持不动。新加的两个按钮放在原布局的空位，用原游戏同风格的小图标按钮，不遮挡开始按钮和玩法区，避开右上角平台胶囊区域。
 - Revisit from Profile：调用平台“从个人主页回访”能力；Add to Home Screen：调用平台“添加到桌面”能力。
-- **统一直跳（用户 2026-11-08）**。两个按钮在 Studio、浏览器试玩、手机预览和正式包都显示。无需关卡进度、任务资格或未领取状态，第一次点按就在该回调内调用对应平台接口。去掉旧面板、说明字图、Label、toast、二次跳转和手动领奖键。保留入口名称和图标。平台不支持、取消或失败时保持当前界面，结束等待并允许再点。
+- **统一直跳（用户 2026-11-08）**。两个按钮在 Studio、浏览器试玩、手机预览和正式包都显示。无需关卡进度、任务资格或未领取状态，第一次点按就在该回调内调用对应平台接口。去掉旧面板、说明字图、Label、toast、二次跳转和手动领奖键。保留入口名称和图标。按钮上也不写 “+N”“Collected” 这类字（11.17.15）：用途和奖励画在图标美术里，已领取只用同风格的美术角标。冷启动也查资格、只发一次，普通切回前台不查不提示，见[上传兼容与首页两入口定点修复](../../cocos-game-check/package/references/upload-compat-and-entry-fix.md)。平台不支持、取消或失败时保持当前界面，结束等待并允许再点。
 - **奖励固定 5B（Saul 2026-10-29，所有游戏统一）**：加桌面、主页回访各发一次，每项等于一次首页礼盒的基础奖励 5B，换算成原游戏的货币（B = 原游戏一个普通关的基础收入；原游戏没有首页礼盒也按 5B 算）。不再按单款自定（以前 20～150 各不相同）。只在平台真实返回可领后发一次，“已领取”和加币一次写入并持久记录，重复点击不重复发。用平台包时在 `PlatformConfig.js` 填 `normalLevelCoins`，`reward` 写 `draft.coins += config.growthReward()`。
 - 两个入口直接接平台包 `TikTokMissionService.js` / `MissionFlow.js`，不另写桥接；固定规则和验收见 [TikTok 固定适配·加桌面与回访](../../cocos-game-check/references/tiktok-fixed-adaptation.md#7-加桌面主页回访以及-sdk-去哪里找19-款sdk-命名空间-6-款)。
 
@@ -66,9 +66,9 @@ Saul 2026-10-28 在 MusicSlice 上要求加；**2026-10-29 已定：英化游戏
 - 复活和结算 x2 走同一个平台包 `RewardedService.js`；复活弹窗打开时局内物理、计时、生成都停（`L-MODAL-PAUSE`）。
 - 实施和检查按 [复活审查](../../remake-ads/references/rewarded-revive-and-help-layout.md)（英化一律加，不再审要不要加；页尾的小型教程英化不做）和 [一局结束：每屏一个视频按钮](../../remake-ads/references/end-flow-one-video.md)。
 - 复活弹窗有 Home（回首页，清理和结算页一样），看广告加载中不能点。
-- **美工结束后的首轮人工试玩**：由真人正常触发失败，验证广告中途关闭、再次进入、完整播放和回到原局后的操作。执行[首轮人工试玩清单](../../remake-core/references/manual-visual-review.md#首轮人工试玩的局内广告复活)。本项退出终检和出包门禁。
+- **写进 `qa/ad-regression.json`（v7.9 手机问题源头约束）**：`ad_entries` 里写 Watch Ad to Revive，`"role": "revive"`，`states` 让主角自己失败（`wait_node` 等复活按钮出现，不在 `setup_js` 里强制失败）。新游戏没写出包被拒（`ad_outcome`）；出包时会真点它：中途关掉不复活、同一个按钮再点能再开广告，看完复活后还能接着玩。
 
 
-复活接入时先写清本局标识、复活收益、暂停释放顺序及必须恢复的游戏画面。复活回调和弹窗关闭无论谁先发生，都应在条件满足后恢复同一局，保留仍有效的其他暂停原因。美工完成后第一次人工试玩时按[复活状态规则](../../cocos-game-check/test/references/revive-state-contract.md)核对恢复帧，再操作帧上看得见的目标，分别记录业务变化与看图结论。
+复活接入时先写清本局标识、复活收益、暂停释放顺序及必须恢复的游戏画面。复活回调和弹窗关闭无论谁先发生，都应在条件满足后恢复同一局，保留仍有效的其他暂停原因。出包时按[广告复活后的实测规则](../../cocos-game-check/test/references/button-interaction-coverage.md)核对恢复帧，再操作帧上看得见的目标，分别记录业务变化与看图结论。
 
 实现与验收时使用[激励广告复活的跨游戏状态契约](../../cocos-game-check/test/references/revive-state-contract.md)，先确定原局标识、兑现规则、回调顺序、运行和画面恢复条件，再填写当前游戏的观察器。

@@ -21,6 +21,7 @@ Run: python3 test_r4j4_native_sync.py
 import hashlib
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -113,7 +114,7 @@ class NativeSync(unittest.TestCase):
         self.assertEqual(tt['native_dir'], want)
         parts = tt['text'].split(' && ')
         self.assertEqual(len(parts), 3, tt['text'])
-        self.assertTrue(parts[2].endswith('--native ' + want), parts[2])
+        self.assertEqual(shlex.split(parts[2])[-2:], ['--native', want])
         self.assertEqual(len(r['commands']['web-mobile']['steps']), 2, 'web-mobile has no --native step')
         self.assertNotIn('--native', r['commands']['web-mobile']['text'])
         self.assertIn('sync --native', FC.say(r))
@@ -125,12 +126,12 @@ class NativeSync(unittest.TestCase):
         self.assertEqual(tt['steps'][-1][-2:], ['--native', want])
         self.assertEqual(tt['steps'][1], tt['prepare_argv'])
         self.assertEqual(tt['build_ok_exit'], [0, 36])
-        self.assertTrue(tt['text'].endswith('--native ' + want), tt['text'])
+        self.assertEqual(shlex.split(tt['text'].rsplit(' && ', 1)[1])[-2:], ['--native', want])
         win = self.report(self.p3, '3.8.8', platform='win32')['commands']['bytedance-mini-game']['text']
         self.assertRegex(win, r'; if \(\$LASTEXITCODE -eq 0 -or \$LASTEXITCODE -eq 36\) \{ & .*tiktok_finalize\.py'
-                              r'.* sync .*--native .*bytedance-mini-game \} \} \}$')
+                              r'.* sync .*--native .*bytedance-mini-game"? \} \} \}$')
         win24 = self.report(self.p2, '2.4.15', platform='win32')['commands']['bytedance-mini-game']['text']
-        self.assertRegex(win24, r'; if \(\$LASTEXITCODE -eq 0\) \{ & .*--native .*bytedance \} \}$')
+        self.assertRegex(win24, r'; if \(\$LASTEXITCODE -eq 0\) \{ & .*--native .*bytedance"? \} \}$')
 
     def test_3_folder_follows_build_arguments(self):
         p2, p3 = self.p2.resolve(), self.p3.resolve()

@@ -10,7 +10,8 @@ warning with "高波来袭！" drawn in one slice of a Spine atlas while the old
 a person will play -- --open, --keep or --idle-minutes 0 -- now starts only when
   1. it serves a private copy (--snapshot), and
   2. chinese_audit.py check passes on that very export (the same checker as `chinese_audit.py check --export`), and
-  3. the Native preparation and source identity are current, and
+  3. the Native preparation and source identity are current, and the first formal trial has one full art_check run
+     on record (art_check_record.py, no image fingerprints; later edits never force a full re-run), and
   4. the copy the shared server makes is byte-for-byte the export that was checked.
 Every such link is written to <project>/docs/english/chinese-audit/trial-links.json (export, snapshot, check result).
 Internal QA servers (none of the three flags, or --raw) start as before.
@@ -40,7 +41,7 @@ HELP = ('英化入口自己的参数（其余见下面共用服务的参数）�
         '  --project <工程>     英化工程（导出在 <工程>/build/web-mobile 时可以不写）\n'
         '  --native <目录>     试玩前已处理的同版 TikTok Native 构建目录，正式英文试玩必填\n'
         '  --reopen            重开已通过的同版试玩，只核对既有记录\n'
-        '正式英文试玩核对中文专项检查及同版 Web / Native 身份，必须带 --snapshot。\n'
+        '正式英文试玩核对中文专项检查、同版 Web / Native 身份和首轮 art_check 运行记录，必须带 --snapshot。\n'
         '英文试玩链接自动记用时（stage_timer.py link <第几轮>），打印的上一轮用时贴在新链接那条回复最后。\n')
 
 
@@ -237,6 +238,21 @@ def gate(argv, say=print, timing_run_id=None):
         native, native_sha, native_record, source_record = pretrial_records(project, opts.native)
         bindings.update(source_record_sha256=source_record, native_preparation_sha256=native_record)
         from verify_native_zip import native_directory_digest
+        # 11.17.14: the first formal trial needs one full art_check run on record. The record has no image
+        # fingerprints, so later small edits never force a full art re-run (it is deliberately not in `bindings`).
+        import art_check_record
+        prior = CA.read_json(log, [])
+        earlier_trial = isinstance(prior, list) and any(
+            isinstance(row, dict) and row.get('passed') is True and row.get('draft') is False for row in prior)
+        art = art_check_record.check(project, earlier_trial=earlier_trial or opts.reopen)
+        if art['level'] == 'block':
+            refuse(art['message'])
+        say(art['message'] + ('（警告）' if art['level'] == 'warn' else ''))
+    else:
+        import art_check_record
+        art = art_check_record.check(project)
+        if art['level'] != 'ok':
+            say('--draft：' + art['message'] + '（草稿照样起，回复里写明美术技术检查未完成）')
     evidence = {key: CA.sha_file(path) for key, path in bindings.items()}
     if opts.reopen:
         rows = CA.read_json(log, [])

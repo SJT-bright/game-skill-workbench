@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-08.english-simple.11.17.13",
+  "revision": "2026-11-10.english-simple.11.17.18",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "680b1770bf1849fb07d497de4c1585dfdaa2e0ce3ec9df34cba0739a13adb819",
-      "bytes": 91462
+      "sha256": "597c9de6eb4bb84c3286d95904971e1c7fbe9adac085604751ad04f0645b3b2c",
+      "bytes": 94134
     },
     {
       "path": "agents/openai.yaml",
@@ -30,9 +30,19 @@
       "bytes": 176
     },
     {
+      "path": "assets/playtest-checklist.html",
+      "sha256": "f5634dec5b9dc86b3353728d9125534ccd4680ad066d9f709d560e5694e2a489",
+      "bytes": 12372
+    },
+    {
       "path": "examples/MusicSlice_ad-regression.json",
       "sha256": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
       "bytes": 1380
+    },
+    {
+      "path": "references/creator-migration.md",
+      "sha256": "4252847f2742d0f84b284df4840c38fe93f53839b6b82469742d226f13737227",
+      "bytes": 3603
     },
     {
       "path": "references/dynamic-text-glyph-review.md",
@@ -51,13 +61,13 @@
     },
     {
       "path": "references/fixed-entries.md",
-      "sha256": "d95dec2b6012c238c3a2aaadf99e308b17d6afe2f5f3ae5bd1a24cfc273d4498",
-      "bytes": 13402
+      "sha256": "e6fe5f1656e7f73773740e3fe61038fedf3c0f7e755bafab1c32fef2603f68e0",
+      "bytes": 13751
     },
     {
       "path": "references/local-creator-versions.md",
-      "sha256": "0b163a4480dea5d28a23841fb68fceeb65705fadc2c263f878f801796360c8ca",
-      "bytes": 5369
+      "sha256": "a52df302d15046e87dc9d38492acd24250fba5fd1fe4a787f2c84224a613590d",
+      "bytes": 5527
     },
     {
       "path": "references/phase-timing.md",
@@ -65,9 +75,19 @@
       "bytes": 5600
     },
     {
+      "path": "references/playtest-h5.md",
+      "sha256": "0d43b330f379330b581c77e69198d8275f077ec6d38370f5d4c45acbf575be86",
+      "bytes": 4465
+    },
+    {
       "path": "scripts/browser_env.py",
       "sha256": "87781db5398ed7aa715fc22f571b842263f60d5072c044b6606bcac51c00f571",
       "bytes": 15575
+    },
+    {
+      "path": "scripts/build_playtest_h5.py",
+      "sha256": "35df301e4d2d9763827fbbf8ef26eb1c56efd2fe63e883615a27f98ee1ecd61c",
+      "bytes": 12077
     },
     {
       "path": "scripts/check_export_images.py",
@@ -76,13 +96,23 @@
     },
     {
       "path": "scripts/check_machine.py",
-      "sha256": "e6d36022e2cd490a079121a813110b389b6ea82a2604e0f748b92f4ec1dc27cd",
-      "bytes": 14756
+      "sha256": "5adc7ee1afe32ecb1c2ee2ab4252f54dc243bcd8356b09bb7dc3c641f2b23fae",
+      "bytes": 15056
     },
     {
       "path": "scripts/chinese_audit.py",
       "sha256": "251e602a6f8ecb766de1d5962caf4a4fb2b6164b3a5c000e8e85bbcdfb7a7758",
       "bytes": 103032
+    },
+    {
+      "path": "scripts/creator_migration.py",
+      "sha256": "a911372ee1404d7cf554e1c8ad6cc7a5abb98670b737563b47f51f4f1b5ee436",
+      "bytes": 15903
+    },
+    {
+      "path": "scripts/creator_migration_smoke.mjs",
+      "sha256": "3f95f90f02adf400e73846c9c534f6b3e9225ba29c7c72bf9255b4a753473551",
+      "bytes": 2906
     },
     {
       "path": "scripts/english_copy_guard.py",
@@ -105,6 +135,11 @@
       "bytes": 8620
     },
     {
+      "path": "scripts/inspect_creator_migration.cjs",
+      "sha256": "6cd06b6ac80828d6f31e84cea1e69d9fdae09cfd80556098ba1aca7d6d358e82",
+      "bytes": 9074
+    },
+    {
       "path": "scripts/ocr_vision.swift",
       "sha256": "0e9e8100c5338c6c77fe6c142be1745402786fa00eb238c629d6b447740d0850",
       "bytes": 2854
@@ -116,13 +151,13 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "ab1b35ff1e402a1b2a95e66992cbbacc40fc3cce10563e3c9d603e776f385900",
-      "bytes": 19511
+      "sha256": "3ea91572bcc96df494e3a9ba6f2a2299a7d453787b6d04d0b5e16eb8b4b7b064",
+      "bytes": 20639
     },
     {
       "path": "scripts/stage_timer.py",
-      "sha256": "8bf3c91c552959b485d483ec5c3d13840a126f553030ab4389adb324b89fe0f2",
-      "bytes": 60221
+      "sha256": "5eacbfade699370f175b4541d31e8b2eed041e886d3a918c5bda38a54e8e1e11",
+      "bytes": 60649
     },
     {
       "path": "scripts/test_check_export_images.py",
@@ -133,6 +168,11 @@
       "path": "scripts/test_chinese_audit.py",
       "sha256": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
       "bytes": 31960
+    },
+    {
+      "path": "scripts/test_creator_migration.py",
+      "sha256": "01bc80bd541796e596c22e0d63f868e92a6aed53cbc9cbb8fd68358c2cf724dc",
+      "bytes": 6160
     },
     {
       "path": "scripts/test_creator_typed_config.py",
@@ -151,8 +191,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "8547384145d415f936b4a83f196b730094bad30291eca1cac17144650ade38aa",
-      "bytes": 78452
+      "sha256": "38b05207dcd246124c018b7c806f6a90ddc77e4b2fd7e4da80a4baa2cbac9c1e",
+      "bytes": 78640
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -161,8 +201,13 @@
     },
     {
       "path": "scripts/test_p21_browser_env.py",
-      "sha256": "819843f1b9d1a07a412db13e465505de711aaf459d76ff75d25a5ed1d1ab6960",
-      "bytes": 19321
+      "sha256": "33b8408a7d8350d2a4922bc913022d955ccaef42b38417aec19d8acbcbaac482",
+      "bytes": 19895
+    },
+    {
+      "path": "scripts/test_playtest_h5.py",
+      "sha256": "6272042806c9fb16c21dd5da5fb0f3d779ebdbc89da68ebf4b3cea15f28cd85b",
+      "bytes": 7323
     },
     {
       "path": "scripts/test_portable_tools.py",
@@ -186,8 +231,8 @@
     },
     {
       "path": "scripts/test_r4j4_native_sync.py",
-      "sha256": "b95e5d4a920a3b2966b66296493fd56eacef259611a156bbb10c978d6a66913a",
-      "bytes": 11033
+      "sha256": "a65c14c0f889298645006fe3363e255bc5b314df2c4a65ce52eca4c3ffb48602",
+      "bytes": 11069
     },
     {
       "path": "scripts/test_r4n3_env_stuck.py",
@@ -206,13 +251,13 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "cda7966d75c2979a02ebb4a0c88b412930f1b63df860d57efb0d6bf7f43a93f2",
-      "bytes": 23771
+      "sha256": "6f7300e8c2bb3bfb60beab94bbe587f564394cc9b49f0ed0bc1a91fceae95e12",
+      "bytes": 27309
     },
     {
       "path": "scripts/test_stage_timer.py",
-      "sha256": "f457daea7ad2d5030337e37dd03931565f370695497554af5eac29c95d8f4598",
-      "bytes": 18165
+      "sha256": "51beb40b5b241c143cfd74288b8d04819c2712c549ed8933d5f87f68668febc2",
+      "bytes": 18335
     },
     {
       "path": "scripts/test_stage_timer_runs.py",
@@ -241,11 +286,11 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "225357f52de172e2d140fd41c585ea5ae801db3b18114b8c2d7f4c7e95a94a22",
-      "bytes": 13134
+      "sha256": "54afdbe4e2007058455cf909f324b35c9eaa374b1c84d0703d3d72df77bba853",
+      "bytes": 14176
     }
   ],
-  "previous_provenance_sha256": "a691803646dfdbfd3be6543bd1d10b648dac5bf11cf4969c7a42b19ee6bfe6b5",
+  "previous_provenance_sha256": "b394759f80a6d625a116b05db5b11296d808ac7b200d7ac8f934e173c0da74ed",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -493,17 +538,113 @@
       ]
     },
     {
-      "id": "2026-11-09.production-baseline",
-      "scope": "Apply shared release regression design rules at game production entry points",
+      "id": "2026-11-08.english-simple.11.17.14",
+      "scope": "Only English release delta files",
       "files": [
         {
           "path": "SKILL.md",
           "before_sha256": "b6234c926065f875df11f15f50547fbc380ffc9fe9b8d81b9f9290d7107c507e",
-          "after_sha256": "680b1770bf1849fb07d497de4c1585dfdaa2e0ce3ec9df34cba0739a13adb819",
-          "after_bytes": 91462
+          "after_sha256": "1c9fdfa026ee860325c8bd2b943a0c26885edfc487010e2fbbd66d979dbd115f",
+          "after_bytes": 92295,
+          "method": "release"
+        },
+        {
+          "path": "scripts/serve_preview.py",
+          "before_sha256": "ab1b35ff1e402a1b2a95e66992cbbacc40fc3cce10563e3c9d603e776f385900",
+          "after_sha256": "3ea91572bcc96df494e3a9ba6f2a2299a7d453787b6d04d0b5e16eb8b4b7b064",
+          "after_bytes": 20639,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_serve_preview_gate.py",
+          "before_sha256": "cda7966d75c2979a02ebb4a0c88b412930f1b63df860d57efb0d6bf7f43a93f2",
+          "after_sha256": "6f7300e8c2bb3bfb60beab94bbe587f564394cc9b49f0ed0bc1a91fceae95e12",
+          "after_bytes": 27309,
+          "method": "release"
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "225357f52de172e2d140fd41c585ea5ae801db3b18114b8c2d7f4c7e95a94a22",
+          "after_sha256": "8676b196d3851643e150eefac7859d299d8d05f01be65a1f8d7d69c38ccf45c3",
+          "after_bytes": 13252,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-08.english-simple.11.17.15",
+      "scope": "Only English release delta files",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "1c9fdfa026ee860325c8bd2b943a0c26885edfc487010e2fbbd66d979dbd115f",
+          "after_sha256": "a95ecf170637ba557d69285c889d35d2da14db16a6909dc3bf27bebc3596fa5d",
+          "after_bytes": 92884,
+          "method": "release"
+        },
+        {
+          "path": "references/fixed-entries.md",
+          "before_sha256": "d95dec2b6012c238c3a2aaadf99e308b17d6afe2f5f3ae5bd1a24cfc273d4498",
+          "after_sha256": "e6fe5f1656e7f73773740e3fe61038fedf3c0f7e755bafab1c32fef2603f68e0",
+          "after_bytes": 13751,
+          "method": "release"
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "8676b196d3851643e150eefac7859d299d8d05f01be65a1f8d7d69c38ccf45c3",
+          "after_sha256": "51c0b927cf566d734c37e87f55a82b897f98335b5250aec7e9642ba39e4c7a5d",
+          "after_bytes": 13436,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-08.english-simple.11.17.15",
+      "scope": "Only English release delta files",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "1c9fdfa026ee860325c8bd2b943a0c26885edfc487010e2fbbd66d979dbd115f",
+          "after_sha256": "a95ecf170637ba557d69285c889d35d2da14db16a6909dc3bf27bebc3596fa5d",
+          "after_bytes": 92884,
+          "method": "release"
+        },
+        {
+          "path": "references/fixed-entries.md",
+          "before_sha256": "d95dec2b6012c238c3a2aaadf99e308b17d6afe2f5f3ae5bd1a24cfc273d4498",
+          "after_sha256": "e6fe5f1656e7f73773740e3fe61038fedf3c0f7e755bafab1c32fef2603f68e0",
+          "after_bytes": 13751,
+          "method": "release"
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "8676b196d3851643e150eefac7859d299d8d05f01be65a1f8d7d69c38ccf45c3",
+          "after_sha256": "51c0b927cf566d734c37e87f55a82b897f98335b5250aec7e9642ba39e4c7a5d",
+          "after_bytes": 13436,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-09.english-simple.11.17.16",
+      "scope": "Only English release delta files",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "a95ecf170637ba557d69285c889d35d2da14db16a6909dc3bf27bebc3596fa5d",
+          "after_sha256": "76af65ae0ed1cf2944851c097d3863f485c16a117e3a6ee7521c2b3d06d9f1f6",
+          "after_bytes": 93384,
+          "method": "release"
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "51c0b927cf566d734c37e87f55a82b897f98335b5250aec7e9642ba39e4c7a5d",
+          "after_sha256": "b1aac3c103dbcd5b2f2972330867de29575ab2fa900ac12ddb1ac7ee9a9a2140",
+          "after_bytes": 13557,
+          "method": "release"
         }
       ]
     }
   ],
-  "previous_local_provenance_sha256": "a9bbe686fffffc788f9358a3d7b29c99d62c7defb4dad52d6c9f8917c8af2147"
+  "previous_local_provenance_sha256": "8d0c6a78efab79340c10f0abccbaf721ea1bd07f9cf9caa87d2f2d91a3ca4660"
 }

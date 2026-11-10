@@ -313,7 +313,10 @@ class Robustness(Base):
         tree = ast.parse(src)
         names = {a.name.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         names |= {n.module.split('.')[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
-        self.assertLessEqual(names, {'argparse', 'json', 'os', 'sys', 'time', 'datetime', 'pathlib', 'contextlib', 'io', 'uuid', 'subprocess'})   # 11.9 call()
+        bundled = {'creator_migration'}
+        self.assertTrue(all(TOOL.with_name(name + '.py').is_file() for name in bundled))
+        self.assertLessEqual(names - bundled, {'argparse', 'json', 'os', 'sys', 'time', 'datetime',
+                                               'pathlib', 'contextlib', 'io', 'uuid', 'subprocess'})
         for gone in ('fcntl', '/usr/bin/python3', 'pgrep', 'cp -c', 'open -R'):
             self.assertNotIn(gone, src.split('"""', 2)[2], gone)
 

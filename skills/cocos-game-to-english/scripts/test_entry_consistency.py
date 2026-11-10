@@ -410,15 +410,16 @@ class TrialFirstThenFullChecks(unittest.TestCase):
         self.assertNotIn('--snapshot --keep', st[3])
         self.assertIn('--snapshot --keep --project', st[5])
 
-    def test_manual_checklist_is_typed_in_the_reply(self):
+    def test_h5_checklist_accompanies_the_same_version_preview_and_package(self):
         _, st = self.stages()
         # 11.17.11: an actionable, scoped quick-check replaces the fixed whole-game
         # checklist. Returned art delivery does not wait for another human approval.
-        for phrase in ('回复里随同版 Native 试玩给出**人工快查清单**',
-                       '3–5 条以内', '只改一处就一条', '不要照抄全游戏清单',
-                       '交包后可选快看', '不再等一轮人工批准',
-                       '不把未回复记成人工实测通过'):
+        for phrase in ('回复里随同版 Native 试玩附[人工快查 H5](references/playtest-h5.md)',
+                       '3–5 条以内', '只改一处就一条', '不要照抄全游戏清单', '可选快看',
+                       'Saul 说没问题即整份清单确认'):
             self.assertIn(phrase, st[3], phrase)
+        self.assertIn('同发新候选的 H5，只列和这几处有关的检查', st[4])
+        self.assertIn('已有同版最终验收和交付回执时用双栏，局部返工用单栏可选快查', st[5])
         self.assertIn('../remake-core/references/returned-art-delivery.md', st[3])
         for phrase in ('奖励去重', '存档读回', '冷启动', '异步回调',
                        '仍由 AI 按真实依赖计划处理'):

@@ -32,8 +32,11 @@ GATE = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(GATE)
 
 
-def make_game(td, colour=(200, 120, 40, 255)):
-    """A tiny English project with one picture, and a web export carrying the same bytes."""
+def make_game(td, colour=(200, 120, 40, 255), art='pass'):
+    """A tiny English project with one picture, and a web export carrying the same bytes.
+
+    art: 'pass' writes a passing full art_check record (11.17.14 first-trial requirement), 'fail' a failing one,
+    None writes nothing."""
     from PIL import Image
     root = Path(td) / 'Game'
     (root / 'assets' / 'tex').mkdir(parents=True)
@@ -52,6 +55,10 @@ def make_game(td, colour=(200, 120, 40, 255)):
     import tiktok_finalize as F
     assert not F.finalize_source(root, 'localize', steps=())['blocks']
     F.record_prepared_native(root, native, F.prepared_source_identity(root))
+    if art:
+        import art_check_record
+        rows = [{'check': '深色粗字（永久禁止）', 'status': '需处理' if art == 'fail' else '通过'}]
+        art_check_record.write(root, art, {'rows': rows, 'failed': int(art == 'fail')}, None, 'localize')
     return root, web
 
 
@@ -280,6 +287,64 @@ class GateDecisions(unittest.TestCase):
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual((log[0]['passed'], log[0]['draft']), (False, True))
             self.assertGreater(log[0]['open_problems'], 0)
+
+
+class FirstTrialArtRecord(unittest.TestCase):
+    """11.17.14: one full art_check run before the first formal trial; no image fingerprints, no forced re-runs."""
+
+    def args(self, root, web):
+        return ['--directory', str(web), '--native', str(native_dir(root)), '--snapshot', '--open']
+
+    def test_first_formal_trial_without_art_check_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td, art=None)
+            scan(root, web, env_for(td))
+            with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                GATE.gate(self.args(root, web), say=quiet()[1])
+            self.assertIn('art_check', err.getvalue())
+
+    def test_latest_run_with_blocking_rows_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td, art='fail')
+            scan(root, web, env_for(td))
+            with self.assertRaises(SystemExit), _stderr(io.StringIO()) as err:
+                GATE.gate(self.args(root, web), say=quiet()[1])
+            self.assertIn('深色粗字', err.getvalue())
+
+    def test_changed_images_after_a_pass_do_not_force_a_rerun(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td)
+            from PIL import Image
+            import tiktok_finalize as F
+            # A small art fix after the full art_check: new button bytes, normal source preparation, no art re-run.
+            Image.new('RGBA', (48, 32), (10, 200, 90, 255)).save(str(root / 'assets' / 'tex' / 'btn.png'))
+            shutil.copy2(str(root / 'assets' / 'tex' / 'btn.png'), str(web / 'assets' / 'btn.png'))
+            assert not F.finalize_source(root, 'localize', steps=())['blocks']
+            F.record_prepared_native(root, native_dir(root), F.prepared_source_identity(root))
+            scan(root, web, env_for(td))
+            _, verify = GATE.gate(self.args(root, web), say=quiet()[1])
+            self.assertTrue(callable(verify))
+
+    def test_project_that_already_had_a_formal_trial_only_gets_a_warning(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td, art=None)
+            scan(root, web, env_for(td))
+            log = root / 'docs/english/chinese-audit/trial-links.json'
+            log.parent.mkdir(parents=True, exist_ok=True)
+            log.write_text(json.dumps([{'passed': True, 'draft': False}]), encoding='utf-8')
+            said, say = quiet()
+            _, verify = GATE.gate(self.args(root, web), say=say)
+            self.assertTrue(callable(verify))
+            self.assertTrue(any('警告' in line for line in said))
+
+    def test_draft_starts_without_art_check_and_says_so(self):
+        with tempfile.TemporaryDirectory() as td:
+            root, web = make_game(td, art=None)
+            scan(root, web, env_for(td))
+            said, say = quiet()
+            _, verify = GATE.gate(['--directory', str(web), '--snapshot', '--open', '--draft'], say=say)
+            self.assertTrue(callable(verify))
+            self.assertTrue(any('美术技术检查未完成' in line for line in said))
 
 
 def timing_events(root):

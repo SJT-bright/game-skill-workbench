@@ -370,10 +370,20 @@ class PreviewReadback(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn('index.html', problem)
 
-    def test_ad_simulator_pages_compare_scripts_only(self):
+    def test_ad_simulator_readback_verifies_html_and_script(self):
         ok, rows, problem = self.SP.entry_readback(self.serve(self.export, injected=True), self.export, html_injected=True)
         self.assertTrue(ok, problem)
-        self.assertNotIn('index.html', [r['file'] for r in rows])
+        compared = {r['file']: r['same'] for r in rows}
+        self.assertTrue(compared['index.html'])
+        self.assertTrue(compared[self.SP.AD_SIMULATOR_PATH])
+        self.assertTrue(compared['main.js'])
+        current = self.export / 'index.html'
+        served = self.old_copy()
+        shutil.copy2(self.export / 'main.js', served / 'main.js')
+        (served / 'index.html').write_bytes(current.read_bytes() + b'<!-- old page -->')
+        ok, _, problem = self.SP.entry_readback(self.serve(served, injected=True), self.export, html_injected=True)
+        self.assertFalse(ok)
+        self.assertIn('index.html', problem)
 
     def test_dead_link_is_refused(self):
         ok, _, problem = self.SP.entry_readback('http://127.0.0.1:9/', self.export)

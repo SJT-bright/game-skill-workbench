@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.17",
+  "revision": "2026-11-10.english-simple.11.17.20",
   "skill": "remake-art",
-  "previous_provenance_sha256": "f92c3049a20310499c789c20e176f6699d8d5688c396470755776a4227463866",
+  "previous_provenance_sha256": "aec6663f3f1575cfce676f6531b4ec9750be3564d61f9a094872bbbb30c931de",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "622d7495c9731d458272ec035de694ab4b9e894964db1c21f74300e0612d52c2",
-      "bytes": 24026
+      "sha256": "14f4745cdd37e1e4966b5a9546b9aaff41f2e288815f9189432d8074c82b1e02",
+      "bytes": 24436
     },
     {
       "path": "agents/openai.yaml",
@@ -134,6 +134,11 @@
       "path": "references/mobile-button-size-and-home-layout.md",
       "sha256": "e42da7ddfcb9f20c1533d7a39a02fd7919d205bcd19b6f8f2b94b41ae6420851",
       "bytes": 7922
+    },
+    {
+      "path": "references/new-feature-ui.md",
+      "sha256": "1f5d12d6580fe6242c3fccac57f5209f691d3e0907dee7d9a82a2ef0bb0ef9c8",
+      "bytes": 3215
     },
     {
       "path": "references/page-richness.md",

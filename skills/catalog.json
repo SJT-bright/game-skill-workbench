@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-10T16:39:29.405Z",
-  "treeHash": "f2371092365939a669790c0601d0b7543f4c8ddd2e6b666503a92b36213d9543",
+  "createdAt": "2026-11-10T16:39:59.681Z",
+  "treeHash": "26f635f63a8ce0d83b106282d6ad981b72151a6a74da23fbd5399f0f5781f1d7",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3187,20 +3187,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "d83316a9986035cc0db5d81aa37c9c600bc49793f7d817c5ed41b6e016865b47",
-      "fileCount": 65,
-      "bytes": 1454555,
+      "treeHash": "c97159615ad0ee60dfd33f9581493e15fc271253667a48c003c724667bdceef9",
+      "fileCount": 66,
+      "bytes": 1458343,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "aec6663f3f1575cfce676f6531b4ec9750be3564d61f9a094872bbbb30c931de",
-          "size": 17814,
+          "hash": "a3c4a9eaa43dbe2c4bf38abc2d532cfc0358cab7146a5cd2eee025839bf90bb5",
+          "size": 17977,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "622d7495c9731d458272ec035de694ab4b9e894964db1c21f74300e0612d52c2",
-          "size": 24026,
+          "hash": "14f4745cdd37e1e4966b5a9546b9aaff41f2e288815f9189432d8074c82b1e02",
+          "size": 24436,
           "executable": false
         },
         {
@@ -3351,6 +3351,12 @@
           "path": "references/mobile-button-size-and-home-layout.md",
           "hash": "e42da7ddfcb9f20c1533d7a39a02fd7919d205bcd19b6f8f2b94b41ae6420851",
           "size": 7922,
+          "executable": false
+        },
+        {
+          "path": "references/new-feature-ui.md",
+          "hash": "1f5d12d6580fe6242c3fccac57f5209f691d3e0907dee7d9a82a2ef0bb0ef9c8",
+          "size": 3215,
           "executable": false
         },
         {

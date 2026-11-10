@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 import tempfile
 from check_package import check, native_files
-from audit_final_package_startup import audit_final_startup
+from audit_final_package_startup import audit_final_startup, StartupRefused
 import package_obligations
 from verify_delivery_preview import verify_preview
 
@@ -25,12 +25,14 @@ from verify_delivery_preview import verify_preview
 KIT_PARTS_PHONE_RETEST = '标准件待真机复测'
 
 
-def writer_board(archive, app_id, project=None):
+def writer_board(archive, app_id, project=None, *, files=None):
     """Retain the board of the byte-verified official writer, never a CLI waiver."""
     from verify_native_zip import verify
     verified = verify(archive, expected_app_id=app_id)
     if verified.get('entry') != 'official':
         raise ValueError('delivery requires a byte-matching official writer receipt')
+    if files is not None and verified['file_sha256'] != {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}:
+        raise ValueError('final ZIP differs from actual Native input paths/bytes')
     receipt = json.loads(Path(verified['receipt']).read_text(encoding='utf-8'))
     board = receipt.get('board')
     if board not in ('localize', 'remake'):
@@ -135,7 +137,69 @@ def logic_source_binding(logic_report, source, project=None):
             'validation': validation, 'browser_executed': False}
 
 
+def regression_checks(result):
+    """Expose per-case execution where recorded; older receipts keep their proven granularity."""
+    reuse = result.get('regression_reuse') or {}
+    rows = []
+    for group, key in (('ads', 'rewarded_ad_regression'), ('runtime', 'runtime_regression')):
+        summary = result.get(key) or {}
+        if not summary:
+            continue
+        source = summary.get('reused_from') or result.get('receipt')
+        def add(check_id, detail=None, evidence=None):
+            detail = detail or {}
+            reused = reuse.get('reused') or detail.get('reused') or summary.get('reused_from')
+            action = ('not_applicable' if summary.get('status') == 'not_applicable' else
+                      'reused' if reused else 'rerun')
+            reason = (summary.get('reason') if action == 'not_applicable' else
+                      '当前 ZIP 与已验证 writer 记录一致' if reuse.get('reused') else
+                      '输入未变，沿用逐项账本' if reused else
+                      reuse.get('why') or '本次回归执行通过')
+            rows.append({'id': check_id, 'action': action, 'reason': reason,
+                         'evidence': evidence or ([source] if source else []),
+                         **{k: detail[k] for k in ('key', 'source_key', 'original_at', 'seconds') if k in detail}})
+        if summary.get('status') == 'not_applicable':
+            add(group)
+        elif group == 'ads':
+            for case in summary.get('cases') or []:
+                name = case if isinstance(case, str) else case.get('case')
+                if name:
+                    cid = 'ads.' + name
+                    add(cid, (summary.get('incremental') or {}).get(cid), summary.get('raw_files'))
+        else:
+            for suite in summary.get('suites') or []:
+                for cid, detail in (suite.get('incremental') or {}).items():
+                    add(cid, detail, suite.get('raw_files'))
+                if suite.get('suite') and not suite.get('incremental'):
+                    add('runtime.' + suite['suite'], {'reused': bool(suite.get('reused_from'))}, suite.get('raw_files'))
+        if not any(row['id'] == group or row['id'].startswith(group + '.') for row in rows):
+            add(group)
+    return rows
+
+
 def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None, platform_feedback=None):
+    checks, state = [], {}
+    try:
+        return _prepare(archive, native, app_id, record, project, startup_contract, loading_recovery_runtime,
+                        resource_manifest, ad_regression, logic_report, source, preview_url, platform_feedback, checks, state)
+    except (ValueError, OSError, RuntimeError) as error:
+        if 'record' in state:
+            path = Path(str(state['record']) + '.blocked.json')
+            blocked = {'status': 'delivery_blocked', 'archive': state['archive'], 'sha256': state.get('sha256'),
+                       'checks': checks + [{'id': error.check_id if isinstance(error, StartupRefused) else state['stage'],
+                                            'action': 'blocked',
+                                            'reason': str(error), 'evidence': state.get('evidence', [])}]}
+            try:
+                with path.open('x', encoding='utf-8') as stream:
+                    json.dump(blocked, stream, ensure_ascii=False, indent=2)
+                    stream.write('\n')
+            except OSError:
+                pass  # Keep the original refusal if the failure record cannot be written.
+        raise
+
+
+def _prepare(archive, native, app_id, record, project, startup_contract, loading_recovery_runtime,
+             resource_manifest, ad_regression, logic_report, source, preview_url, platform_feedback, checks, state):
     archive, native, record = (Path(p).resolve() for p in (archive, native, record))
     temporary = Path(tempfile.gettempdir()).resolve()
     if archive.is_relative_to(temporary) or any(x.casefold() in ('temp', 'rwtemp') for x in archive.parts):
@@ -144,7 +208,8 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
         raise ValueError('delivery ZIP is missing or not a ZIP file')
     if record == archive or record.is_relative_to(native):
         raise ValueError('delivery record must be outside Native and distinct from ZIP')
-    if record.exists() or record.is_symlink():
+    blocked_record = Path(str(record) + '.blocked.json')
+    if record.exists() or record.is_symlink() or blocked_record.exists() or blocked_record.is_symlink():
         raise ValueError('delivery record already exists; choose a new record path')
     # Every delivery (even identical bytes / renamed or imported ZIPs) gets a fresh,
     # independent size receipt BEFORE startup/gameplay checks can fail or reuse CI.
@@ -157,27 +222,47 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     with size_record.open('x', encoding='utf-8') as stream:
         json.dump(size_check, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
+    state.update(record=record, archive=str(archive), sha256=size_check['sha256'],
+                 stage='package.size_crc' if not size_check.get('size_passed') else 'package.tiktok_cli',
+                 evidence=[str(size_record)])
+    if size_check.get('size_passed') or size_check['passed']:
+        checks.append({'id': 'package.size_crc', 'action': 'rerun', 'reason': '逐次核对最终 ZIP 体积、分包和 CRC',
+                       'evidence': [str(size_record)], 'run_id': size_check['run_id']})
     if not size_check['passed']:
         phase = 'TikTok CLI' if size_check.get('size_passed') else 'size'
         raise ValueError(f'fresh delivery {phase} check failed: ' + '; '.join(size_check['errors']))
+    checks.append({'id': 'package.tiktok_cli', 'action': 'rerun', 'reason': '本次对最终 ZIP 执行官方 check/build',
+                   'evidence': [str(size_record)], 'run_id': size_check['run_id']})
     # 简化.11.6 (Saul 2026-11-04, 91 SLS11): a delivered source never carries .git / .svn / .idea or credential files
     hygiene = None
     if source is not None:
+        state.update(stage='source.hygiene', evidence=[str(source)])
         from source_hygiene import audit as audit_source_hygiene
         hygiene = audit_source_hygiene(source)
         if not hygiene['passed']:
             raise ValueError('delivered source is not clean (source_hygiene.py): ' + '; '.join(hygiene['problems'][:8]) +
                              ' - make the source ZIP with remake-core/scripts/make_source_zip.py; no delivery record written')
+        checks.append({'id': 'source.hygiene', 'action': 'rerun', 'reason': '核查本次交付源码', 'evidence': [str(source)]})
+    state.update(stage='package.identity', evidence=[str(size_record)])
     before = hashlib.sha256(archive.read_bytes()).hexdigest()
     if before != size_check['sha256']:
         raise ValueError('ZIP changed after the fresh size check; retry with a new delivery record')
     # v7.9 (出包检查提速 S1, 总表 19 ①): the writer already ran both regressions on exactly these bytes; check() reuses
     # its receipt's record when the adapter and the check tools are unchanged, otherwise runs them again.
-    board = writer_board(archive, app_id, project)
-    result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True)
     files = native_files(native)
+    board = writer_board(archive, app_id, project, files=files)
+    state.update(stage='package.obligations', evidence=[str(resource_manifest)] if resource_manifest else [])
     obligations = package_obligations.verify(files, native, project, resource_manifest)
-    startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, replay=False)
+    checks.append({'id': 'package.obligations', 'action': 'rejudged', 'reason': '核对最终资源和已知问题证据', 'evidence': state['evidence']})
+    state.update(stage='startup.native.current_evidence', evidence=[str(p) for p in (startup_contract, loading_recovery_runtime) if p])
+    startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime)
+    checks.extend(startup_runtime.get('checks') or [])
+    if native_files(native) != files:
+        raise ValueError('Native changed during startup verification; no delivery record written')
+    state.update(stage='package.regressions', evidence=[str(archive) + '.receipt.json'])
+    result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True)
+    checks.extend(regression_checks(result))
+    state.update(stage='package.identity', evidence=[str(size_record), str(result.get('receipt') or archive)])
     after = hashlib.sha256(archive.read_bytes()).hexdigest()
     if before != after or result['sha256'] != after:
         raise ValueError('delivery ZIP changed while checking; retry against the final file')
@@ -188,11 +273,16 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     if result.get('entry') != 'official':
         raise ValueError('unofficial entry (非官方入口): ' + str(result.get('entry_reason')) +
                          ' - write the ZIP with build_checked_zip.py or make_tiktok_zip.py; no delivery record written')
+    checks.append({'id': 'package.identity', 'action': 'rejudged', 'reason': 'ZIP、Native 树和正式 writer 记录一致',
+                   'evidence': state['evidence']})
     logic = None
     if logic_report is not None:
+        state.update(stage='source.logic', evidence=[str(logic_report)])
         if source is None:
             raise ValueError('--logic-report needs --source (the delivered source folder or ZIP)')
         logic = logic_source_binding(logic_report, source, project)
+        checks.append({'id': 'source.logic', 'action': 'rejudged', 'reason': '核对已有逐项玩法证据和本次源码身份',
+                       'evidence': [str(logic_report)]})
     receipt = {'status': 'delivery_file_verified', 'archive': str(archive),
                'sha256': after, 'bytes': archive.stat().st_size,
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
@@ -211,8 +301,10 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
                'kit_parts_status': KIT_PARTS_PHONE_RETEST,
                'reply_lines': [KIT_PARTS_PHONE_RETEST],
                'logic_source_binding': logic,
+               'check_schema': 'delivery-checks.v1', 'checks': checks,
                'boundary': 'Local file/link identity only; include markdown_link, reply_lines and the finalize '
                            'table_markdown and preview.markdown_link in the actual reply. No upload performed.'}
+    state.update(stage='preview.same_build', evidence=[str(startup_contract)] if startup_contract else [])
     contract_bytes = Path(startup_contract).read_bytes() if startup_contract else b''
     if not preview_url:
         raise ValueError('缺同版试玩链接：只有 ZIP，交付未完成。')
@@ -222,6 +314,9 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     record.parent.mkdir(parents=True, exist_ok=True)
     with package_obligations.publication_guard(files, native, project, resource_manifest, obligations):
         receipt['preview'] = verify_preview(preview_url, web_sha)
+        checks.append({'id': 'preview.same_build', 'action': 'rerun', 'reason': '实际访问试玩并核对本版 Web 快照',
+                       'evidence': [preview_url, str(startup_contract)], 'web_tree_sha256': web_sha})
+        state.update(stage='delivery.publication', evidence=[str(size_record)])
         if hashlib.sha256(archive.read_bytes()).hexdigest() != after:
             raise ValueError('ZIP changed while checking the preview; no delivery record written')
         with record.open('x', encoding='utf-8') as stream:

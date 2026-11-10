@@ -206,11 +206,15 @@ def regression_record(ad, runtime):
         # 简化.11.15 (出包后返工): which passes were kept from an earlier package, and from which receipt
         if summary.get('reused_from'):
             keep['reused_from'] = summary['reused_from']
+        if isinstance(summary.get('incremental'), dict):
+            keep['incremental'] = summary['incremental']
+        if isinstance(summary.get('raw_files'), list):
+            keep['raw_files'] = summary['raw_files']
         if runtime_part:
             keep.update(required=list(summary.get('required') or []), engine=summary.get('engine'),
                         policy=summary.get('policy'), board=summary.get('board'),
                         suites=[{key:r[key] for key in ('suite','passed','cases','warnings','evidence','raw_files',
-                                                       'units','seconds','original_seconds','original_at','reused_from',
+                                                       'units','seconds','original_seconds','original_at','reused_from','incremental',
                                                        'functional_passed','accepted_for_delivery','visual_status',
                                                        'visual_checks_executed','visual_acceptance','accepted_visual_units') if key in r}
                                 for r in summary.get('suites') or [] if isinstance(r, dict)],

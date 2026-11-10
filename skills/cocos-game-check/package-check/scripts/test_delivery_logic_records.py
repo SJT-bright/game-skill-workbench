@@ -105,14 +105,30 @@ class DeliveryLogicRecords(unittest.TestCase):
                 patch.object(P.package_obligations, 'verify', return_value={}), \
                 patch.object(P.package_obligations, 'publication_guard', return_value=contextlib.nullcontext()), \
                 patch.object(P, 'audit_final_startup', return_value={'startup_contract_sha256': hashlib.sha256(contract.read_bytes()).hexdigest()}), \
-                patch.object(P, 'verify_preview', return_value={'synthetic': True}), \
+                patch.object(P, 'verify_preview', side_effect=[{'synthetic': True}, ValueError('mismatched Web')]), \
                 patch.object(C.Ledger, 'execute', side_effect=AssertionError('delivery executed a node')):
             result = P.prepare(archive, native, '123', record, project=self.root, startup_contract=contract,
                                logic_report=self.report, source=self.source_zip(), preview_url='http://127.0.0.1/synthetic')
+            failed = record.with_name('failed.json')
+            with self.assertRaisesRegex(ValueError, 'mismatched Web'):
+                P.prepare(archive, native, '123', failed, project=self.root, startup_contract=contract,
+                          preview_url='http://127.0.0.1/other')
+            self.assertFalse(failed.exists())
+            blocked = json.loads(Path(str(failed) + '.blocked.json').read_text())
+            self.assertEqual(blocked['checks'][-1]['id'], 'preview.same_build')
+            self.assertEqual(blocked['checks'][-1]['action'], 'blocked')
+            self.assertNotIn('markdown_link', blocked)
+            self.assertEqual(blocked['sha256'], verified['sha256'])
+        states = {row['id']: row['action'] for row in result['checks']}
+        self.assertEqual(states['package.size_crc'], 'rerun')
+        self.assertEqual(states['package.tiktok_cli'], 'rerun')
+        self.assertEqual(states['package.identity'], 'rejudged')
+        self.assertEqual(states['preview.same_build'], 'rerun')
         self.assertEqual(result['logic_source_binding']['validation'], 'existing_case_records')
         self.assertEqual(result['logic_source_binding']['current_source_sha256'], R.source_digest(self.root))
         self.assertTrue(record.is_file())
-        cli.assert_called_once_with(str(archive.resolve()), verified['sha256'])
+        self.assertEqual(cli.call_count, 2)
+        cli.assert_called_with(str(archive.resolve()), verified['sha256'])
         size = json.loads(Path(str(record.resolve()) + '.size.json').read_text())
         self.assertTrue(size['size_passed'])
         self.assertEqual(size['sha256'], verified['sha256'])

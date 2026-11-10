@@ -142,7 +142,7 @@ class StartupIdentity(unittest.TestCase):
     call = startup_cases.FinalStartupGate.call
     def test_runtime_cannot_replace_native_after_binding_check(self):
         import audit_final_package_startup as gate
-        def mutate(*args):
+        def mutate(*args, **kwargs):
             (self.native / 'child.js').write_text('modified during execution;')
             return []
         with patch.object(gate.renderer, 'validate', return_value=[]), \
@@ -153,7 +153,7 @@ class StartupIdentity(unittest.TestCase):
 
     def test_runtime_cannot_replace_recovery_evidence(self):
         import audit_final_package_startup as gate
-        def mutate(*args):
+        def mutate(*args, **kwargs):
             self.recovery.write_text('{"replacement": true}')
             return []
         with patch.object(gate.renderer, 'validate', return_value=[]), \

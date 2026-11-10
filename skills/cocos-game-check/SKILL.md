@@ -5,6 +5,8 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 **当前检查执行规则（用户 2026-11-08）**：先读[一次通过、按改动复验](../remake-core/references/incremental-checks.md)。图片、文字/字幕、音效、玩法、关卡、平台检查均按命名节点留存真实记录；已通过且依赖未变的项禁止重复执行，代码或配置变化也不触发全量。浏览器和写包读取同一计划；旧文中的“每次必跑/全量检查”改按完整覆盖核对解释。最终 ZIP 的本次体积与分包核对按用户单独要求保留。
 
+**正式 Native 启动与交付记录**：启动合同、两个写包入口和正式交付共用 `startup.native.renderer` 实跑账本。先核本版启动、遮罩消失、真实触控及 Retry 证据，再按 Native 内容、运行器、环境和规则决定沿用或只补跑启动项。交付记录逐项写明执行方式及证据；阻断写独立拒绝回执。[复用边界](../remake-core/references/native-startup-ledger.md)
+
 **完整美术回执已撤销（用户 2026-11-08）**。美术制作和实际画面问题按首次制作或受影响的节点处理，保留各项实际结果。常规与轻量写包、正式试玩、最终交付均不得生成、补齐、更新或要求完整美术回执，也不以全量图片复核或截图汇总作为替代条件。已通过的游戏局部返工只检查该改动影响的节点。**保留的三条轻量保障（11.17.14）**：① 首轮正式英文试玩前要有一次完整 `art_check.py` 运行记录（`.tiktok-kit/art-check-record.json`，不绑图片指纹，之后小改不用重跑，最近一次运行有需处理项时先修这些行）；② 两个写包入口只读包内字节，查英化新做的图不超过 800 KB（`docs/english/pre-english-images.json` 里的中文原图不查）；③ 首次英化的人工画面清单并入 Saul“试玩没问题”这一步，返工时清单只是可选快看。最终 ZIP 分包、体积、配置和同版链接核对按原规则执行。
 
 **画面随人工试玩检查（用户 2026-11-08）**。同版试玩附[人工试玩画面清单](../remake-core/references/manual-visual-review.md)的适用项。常规检查走技术日志及必要点位图，偶发画面故障才定点录制。
@@ -18,7 +20,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 ## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
 
-所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+英化人工操作用 **Computer Use + Edge**。自动检查仍在 **Ego Lite** 独立 TaskSpace 执行原有脚本并复用有效证据。英化的 Google Chrome 只在美工试玩和最终测试包交接时打开。 其他流程的自动检查按原 Ego 路线执行。缺少对应能力时继续离线工作，记录实际未测项。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
 
 
 修订：`2026-10-28.check-unified.4`。英化包和重塑包内这个 Skill 字节相同。检查规则以重塑包 v7.1 的检查板块为准（`startup/`、`test/`、`package/`、`package-check/`），评审沿用原评审入口（`review/`）。检查脚本与规则库用同包的共享库 [remake-core](../remake-core/SKILL.md)，美术检查用同包的 [remake-art](../remake-art/SKILL.md)；本 Skill 不再自带它们的副本（v7.3.2 去重）。

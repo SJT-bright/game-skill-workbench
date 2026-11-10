@@ -7,6 +7,7 @@ from unittest.mock import patch
 from test_package_checks import fixture, APP, fixture_project
 from build_checked_zip import build
 import audit_final_package_startup as gate
+import native_startup_ledger as startup
 
 class FinalStartupGate(unittest.TestCase):
     def setUp(self):
@@ -17,7 +18,8 @@ class FinalStartupGate(unittest.TestCase):
         for name,data in files.items():
             p=self.native/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
         self.manifest=self.root/'resources.json';self.manifest.write_text(json.dumps({'resources':[{'bundle':'main','path':'fixture','type':'cc.JsonAsset'}]}))
-        self.binding={'native_tree_sha256':gate.renderer.digest(gate.renderer.tree(self.native))}
+        self.binding={'native_tree_sha256':gate.renderer.digest(gate.renderer.tree(self.native)),
+                      'source_sha256':'source-one', 'web_tree_sha256':'web-one', 'build_tag':'one'}
         self.proof=self.root/'proof.json';self.proof.write_text('{}')
         self.contract=self.root/'contract.json';self.recovery=self.root/'recovery.json';self.recovery.write_text('{}')
         self.data={'tool':'audit_startup_contract','passed':True,'policy_version':2,'runtime_required':True,'native':str(self.native),'project':str(self.project),'binding':self.binding,'startup_renderer_report':{'path':str(self.proof),'sha256':gate.renderer.sha(self.proof)}}
@@ -59,8 +61,48 @@ class FinalStartupGate(unittest.TestCase):
         with patch.object(gate.renderer,'validate',return_value=[]),patch.object(gate,'validate_recovery',return_value=[]),patch.object(gate,'validate_runtime_report',return_value=['trusted replay failed']):
             with self.assertRaisesRegex(ValueError,'replay refused'):self.call()
     def test_success_calls_registered_replay_and_delivery_reuses_validation(self):
-        with patch.object(gate.renderer,'validate',return_value=[]),patch.object(gate,'validate_recovery',return_value=[]),patch.object(gate,'validate_runtime_report',return_value=[]) as execute:
-            self.assertTrue(self.call()['registered_renderer_replayed']);execute.assert_called_once()
-            self.assertFalse(gate.audit_final_startup(self.native,self.project,self.contract,self.recovery,replay=False)['registered_renderer_replayed']);execute.assert_called_once()
+        runner = self.project/'probe.py'
+        runner.write_text(
+            'import argparse, json\nfrom pathlib import Path\n'
+            'p=argparse.ArgumentParser()\n'
+            'for n in ("native","expected-native-hash","report","binding-json"): p.add_argument("--"+n)\n'
+            'a=p.parse_args()\n'
+            'c=Path("calls");c.write_text(c.read_text()+"1" if c.exists() else "1")\n'
+            'Path(a.report).write_text(json.dumps(dict(execution={"registered_runner":"fixture"}, binding=json.loads(a.binding_json))))\n')
+        self.proof.write_text(json.dumps({'execution':{'registered_runner':'fixture'},
+                                          'control_profile':'canvas_context_conflict_v1',
+                                          'runner':{'path':str(runner.resolve()), 'sha256':gate.renderer.sha(runner)}}))
+        self.data['startup_renderer_report']['sha256']=gate.renderer.sha(self.proof)
+        self.save()
+        policy={'project':str(self.project.resolve()), 'path':str(runner.resolve()), 'sha256':gate.renderer.sha(runner), 'timeout_seconds':5}
+        with patch.object(gate.renderer,'validate',return_value=[]),patch.object(gate,'validate_recovery',return_value=[]),patch.object(startup.project_qa,'lookup',return_value=policy):
+            # The LOAD contract is the first entry; the writer and delivery share its actual execution.
+            first = {}
+            self.assertEqual(gate.validate_runtime_report(self.data, self.binding, detail=first), [])
+            self.assertEqual(first['action'], 'rerun')
+            cached = self.call()['checks'][1]
+            self.assertEqual(cached['action'], 'reused')
+            self.assertEqual(cached['source_key'], first['key'])
+            self.assertEqual((self.project/'calls').read_text(), '1')
+            # Source/Web/build labels alone do not cause a second Native replay.
+            self.binding.update(web_tree_sha256='web-two', source_sha256='source-two', build_tag='two')
+            self.save()
+            self.assertEqual(self.call()['checks'][1]['original_build_tag'], 'one')
+            self.assertEqual((self.project/'calls').read_text(), '1')
+            # A changed adapter cannot use the old successful observation even if the same folder is used.
+            (self.native/'adapter-min.js').write_text('changed = true;')
+            with self.assertRaisesRegex(ValueError, 'stale'):
+                self.call()
+            self.binding['native_tree_sha256']=gate.renderer.digest(gate.renderer.tree(self.native))
+            self.save()
+            changed = self.call()['checks'][1]
+            self.assertEqual(changed['action'], 'rerun')
+            self.assertIn('Native 内容', changed['reason'])
+            self.assertEqual((self.project/'calls').read_text(), '11')
+            # A pass flag without the actual preserved replay cannot be reused.
+            Path(changed['evidence'][0]).unlink()
+            with self.assertRaisesRegex(ValueError, '原通过证据丢失'):
+                self.call()
+            self.assertEqual((self.project/'calls').read_text(), '11')
 
 if __name__=='__main__':unittest.main()

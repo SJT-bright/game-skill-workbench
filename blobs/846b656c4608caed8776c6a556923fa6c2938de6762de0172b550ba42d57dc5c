@@ -1,0 +1,10 @@
+{
+  "schema": "runtime-scope-compat.v1",
+  "scope": "authorization-only-exact-byte-pair",
+  "prior_runtime_sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
+  "prior_helper_sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
+  "prior_compat_sha256": "5b2106bfccb91e54a6859a4b638a2c1951bbfaef10b8e594a638a42108980f76",
+  "new_runtime_sha256": "34ebad6c52b7fc8be00affd85e7532bc53e6bd99033c707854f81a895b2e5447",
+  "new_helper_sha256": "7b5a164c6775f5a6ae10473f3625634a23dfd603dcdc7d03b75bb9f9313d84e8",
+  "basis": "Plan-only returns the original ledger actions; a guard refuses unauthorized execution before the original browser invocation. Case selection, host and success predicates are unchanged. An unrecognized byte pair uses normal tool fingerprinting."
+}

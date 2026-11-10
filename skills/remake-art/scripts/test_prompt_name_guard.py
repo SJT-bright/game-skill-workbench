@@ -88,6 +88,23 @@ class PromptNameGuard(unittest.TestCase):
                     'Big ROCKET MATCH letters over the rocket'):
             self.assertTrue(g.scan(bad, names), bad)
 
+    def test_absolute_paths_with_spaces_are_metadata_but_prompt_text_is_checked(self):
+        import prompt_name_guard as g
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / 'prompts.json'
+            data = {'mac': '/Volumes/Another User/SushiDash/art ref.png',
+                    'win': r'D:\新电脑 游戏\其他账号\SushiDash\art ref.png',
+                    'prompt': 'Draw SushiDash as a title logo'}
+            config.write_text(json.dumps(data), encoding='utf-8')
+            hits = g.scan_file(config, ['SushiDash'])
+            self.assertTrue(hits)
+            self.assertTrue(all(hit['where'].endswith('#2') for hit in hits))
+            changes = []
+            fixed = g._fix_data(data, ['SushiDash'], changes, 'test')
+            self.assertEqual(fixed['mac'], data['mac'])
+            self.assertEqual(fixed['win'], data['win'])
+            self.assertNotIn('SushiDash', fixed['prompt'])
+
     def test_greybox_legend_has_no_game_name(self):
         from PIL import Image
         with tempfile.TemporaryDirectory() as tmp:

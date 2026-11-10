@@ -47,6 +47,7 @@ TITLE_ASK = re.compile(r"(?i)\bthe\s+game(['’]s)?\s+(title|name)\b|\bgame(['�
 NEGATED = re.compile(r"(?i)(\b(no|not|without|never|avoid|exclude|excluding|don['’]?t|do\s+not)\b[^.;,:!?\n]{0,24}"
                      r"|(不|不要|别|无|没有|禁止|不能)[^。；，：！？.;,:!?\n]{0,8})$")
 PATHLIKE = re.compile(r'^\S*([/\\]\S*|\.(png|webp|jpg|jpeg|json|meta))$', re.I)
+ABSOLUTE_PATH = re.compile(r'^(?:/[^/"<>|\r\n]+/|[A-Za-z]:[\\/]|\\\\[^\\/"<>|\r\n]+[\\/])[^"<>|\r\n]+$')
 FIX = 'use the protagonist, characters, props, a pattern or the scene instead of the game name / title logo'
 
 
@@ -217,7 +218,7 @@ def scan_file(path, names):
         except ValueError:
             data = None
         if data is not None:   # file paths and ids in a receipt are not prompt text
-            return [h for i, s in enumerate(strings(data)) if not PATHLIKE.match(s)
+            return [h for i, s in enumerate(strings(data)) if not PATHLIKE.match(s) and not ABSOLUTE_PATH.fullmatch(s)
                     for h in scan(s, names, '%s#%d' % (p.name, i))]
     return scan(text, names, p.name)
 
@@ -281,7 +282,7 @@ def fix_text(text, names):
 
 def _fix_data(data, names, changes, where):
     if isinstance(data, str):
-        if PATHLIKE.match(data):
+        if PATHLIKE.match(data) or ABSOLUTE_PATH.fullmatch(data):
             return data
         new, ch = fix_text(data, names)
         changes += [dict(c, where=where) for c in ch]

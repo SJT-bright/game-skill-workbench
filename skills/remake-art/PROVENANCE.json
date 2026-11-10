@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.13",
+  "revision": "2026-11-10.english-simple.11.17.17",
   "skill": "remake-art",
-  "previous_provenance_sha256": "d2d0b832290b8472e16010442057f4ba8721eed3075dbc71040ce330bf0b685c",
+  "previous_provenance_sha256": "f92c3049a20310499c789c20e176f6699d8d5688c396470755776a4227463866",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "517ad2196e796d18b931c1e236040cc98cb10677860d70d9759f82c3c0cf66c9",
-      "bytes": 24108
+      "sha256": "622d7495c9731d458272ec035de694ab4b9e894964db1c21f74300e0612d52c2",
+      "bytes": 24026
     },
     {
       "path": "agents/openai.yaml",
@@ -47,8 +47,8 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "0bd3561225aabdad002a43f6cddc2bfdc1e86de353ef02a5604efe5a310e2935",
-      "bytes": 5386
+      "sha256": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+      "bytes": 5543
     },
     {
       "path": "references/art-iteration-workflow.md",
@@ -252,8 +252,8 @@
     },
     {
       "path": "scripts/prompt_name_guard.py",
-      "sha256": "621e00e8568bdb15e515540e6753087637afdeae60f6e64da7ecbfa9d76fb3f5",
-      "bytes": 21382
+      "sha256": "9fbeb6fd1830b1043bd8fa09d92d052fc3dc565cdef6c154ee25cf471855a081",
+      "bytes": 21555
     },
     {
       "path": "scripts/test_bind_art.py",
@@ -292,8 +292,8 @@
     },
     {
       "path": "scripts/test_prompt_name_guard.py",
-      "sha256": "426ab51d629de1ce5df18b96cc47166e27173777f5e5ddb1d4c88f695f376a59",
-      "bytes": 6766
+      "sha256": "678f89ebf5c1d2dffda1dd1651a679008f5de5359fcaf9473becbdbbfdb8c1f5",
+      "bytes": 7713
     },
     {
       "path": "scripts/test_prompt_name_guard_fix.py",
@@ -445,17 +445,25 @@
       ]
     },
     {
-      "id": "2026-11-09.production-baseline",
-      "scope": "Apply shared release regression design rules at game production entry points",
+      "id": "2026-11-08.english-simple.11.17.14",
+      "scope": "Only English release delta files",
       "files": [
         {
           "path": "SKILL.md",
           "before_sha256": "a7244c3c013d5cb7a131e7914b04bc7804b64bbba7e0b1f4ba7d98a9c2b5a900",
-          "after_sha256": "517ad2196e796d18b931c1e236040cc98cb10677860d70d9759f82c3c0cf66c9",
-          "after_bytes": 24108
+          "after_sha256": "622d7495c9731d458272ec035de694ab4b9e894964db1c21f74300e0612d52c2",
+          "after_bytes": 24026,
+          "method": "release"
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "0bd3561225aabdad002a43f6cddc2bfdc1e86de353ef02a5604efe5a310e2935",
+          "after_sha256": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+          "after_bytes": 5543,
+          "method": "release"
         }
       ]
     }
   ],
-  "previous_local_provenance_sha256": "b3b5c3a925764cd615d9bb947e7b6b765a2c86755083e4728eda3761c4095d90"
+  "previous_local_provenance_sha256": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928"
 }

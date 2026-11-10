@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-10T13:35:27.426Z",
-  "treeHash": "fb623a8e1eca87602a7ebd2c71aa24c1da5bce77fe2bbbb07deeb840bc8b307c",
+  "createdAt": "2026-11-10T13:35:58.530Z",
+  "treeHash": "4e12f61c44a8a182f94f3a92961df4b4594334b06d468519d5c530b215711d1f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3133,20 +3133,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "0d4fd752ce6b8840fe0c00fa0787aaf0498251528bb6157bd2938788e513a19f",
+      "treeHash": "d83316a9986035cc0db5d81aa37c9c600bc49793f7d817c5ed41b6e016865b47",
       "fileCount": 65,
-      "bytes": 1453477,
+      "bytes": 1454555,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "8d7b4c3ae0cbb669eb96320ed643eec93b678e7908ab5506903ba272442837e7",
-          "size": 17500,
+          "hash": "aec6663f3f1575cfce676f6531b4ec9750be3564d61f9a094872bbbb30c931de",
+          "size": 17814,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "d7b7d0409ff54c790dae536e2aee16e80d710a32a249413996a2f476b6020b23",
-          "size": 24539,
+          "hash": "622d7495c9731d458272ec035de694ab4b9e894964db1c21f74300e0612d52c2",
+          "size": 24026,
           "executable": false
         },
         {
@@ -3193,8 +3193,8 @@
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "0bd3561225aabdad002a43f6cddc2bfdc1e86de353ef02a5604efe5a310e2935",
-          "size": 5386,
+          "hash": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+          "size": 5543,
           "executable": false
         },
         {
@@ -3439,8 +3439,8 @@
         },
         {
           "path": "scripts/prompt_name_guard.py",
-          "hash": "621e00e8568bdb15e515540e6753087637afdeae60f6e64da7ecbfa9d76fb3f5",
-          "size": 21382,
+          "hash": "9fbeb6fd1830b1043bd8fa09d92d052fc3dc565cdef6c154ee25cf471855a081",
+          "size": 21555,
           "executable": false
         },
         {
@@ -3487,8 +3487,8 @@
         },
         {
           "path": "scripts/test_prompt_name_guard.py",
-          "hash": "426ab51d629de1ce5df18b96cc47166e27173777f5e5ddb1d4c88f695f376a59",
-          "size": 6766,
+          "hash": "678f89ebf5c1d2dffda1dd1651a679008f5de5359fcaf9473becbdbbfdb8c1f5",
+          "size": 7713,
           "executable": false
         },
         {

@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-06.english-simple.11.17.6",
+  "revision": "2026-11-10.english-simple.11.17.20",
   "skill": "ego-browser",
-  "previous_provenance_sha256": "dc80661576f097b566fe4768ab98df55850f0719aad8d84e9e66b6f7881b9254",
+  "previous_provenance_sha256": "bf5a3a32ab23db678c6a8e318da89652a952e7a1881aa62358d4ccf4e30ed715",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "d6a82ebf835e9ed93db36568af9571cac70dbb750edd73e46dacc13cc8368d2a",
-      "bytes": 2207
+      "sha256": "e98050a765e98a443f2686d199e16166eb149b498a2d1ea41b4c5e1d00d89bcc",
+      "bytes": 2080
     },
     {
       "path": "agents/openai.yaml",

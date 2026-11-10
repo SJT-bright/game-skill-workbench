@@ -324,7 +324,8 @@ def adapter_step(record):
 CHECK_SCRIPTS = HERE.parents[1] / 'cocos-game-check' / 'package-check' / 'scripts'
 
 
-def writer_regressions(folder, adapter, policy, board, rework_of=None):
+def writer_regressions(folder, adapter, policy, board, rework_of=None, *,
+                       project=None, expected_scope_sha256=None):
     """v7.8 (W97): check_package.writer_regressions on the files of `folder` (the independent extraction of the ZIP
     about to be published). The import or a crash is a refusal for a new game, never a skip.
     rework_of (简化.11.15, --rework-of): the last passed package; see check_package.rework_plan."""
@@ -336,24 +337,24 @@ def writer_regressions(folder, adapter, policy, board, rework_of=None):
         import check_package
     except Exception as error:  # noqa: BLE001
         text = 'rewarded-ad / runtime regression not run: cocos-game-check package-check unusable (%r)' % (error,)
-        legacy = policy == 'legacy'
-        return {'id': 'writer_regressions', 'policy': policy, 'board': board, 'blocked': not legacy,
-                'problems': [] if legacy else [text], 'warnings': [text + ' [legacy game: warning]'] if legacy else [],
+        return {'id': 'writer_regressions', 'policy': policy, 'board': board, 'blocked': True,
+                'problems': [text], 'warnings': [],
                 'rewarded_ad_regression': None, 'runtime_regression': None, 'adapter': str(adapter) if adapter else None}
     return check_package.writer_regressions(files, folder, str(adapter) if adapter else None, policy=policy, board=board,
-                                            rework_of=str(rework_of) if rework_of else None)
+                                            rework_of=str(rework_of) if rework_of else None, project=project,
+                                            expected_scope_sha256=expected_scope_sha256)
 
 
 def resolve_rework(value, out):
-    """简化.11.15 (出包后返工): --rework-of -> (the last passed package or None, note). A problem only means every check
-    runs (rework_scope.resolve; auto = the 最新.txt of the folder the new ZIP is written into)."""
+    """简化.11.15 (出包后返工): --rework-of -> (the last passed package or None, note). A missing predecessor
+    is blocked by scope preflight (rework_scope.resolve; auto = the 最新.txt of the new ZIP folder)."""
     try:
         if str(CHECK_SCRIPTS) not in sys.path:
             sys.path.insert(0, str(CHECK_SCRIPTS))
         import rework_scope
         return rework_scope.resolve(value, out)
     except Exception as error:  # noqa: BLE001
-        return None, 'rework reuse unavailable (%r): every check runs' % (error,)
+        return None, 'scope_required: rework baseline unavailable (%r)' % (error,)
 
 
 def rework_record(project, plan):
@@ -382,12 +383,12 @@ def rework_lines(plan, record=None):
 def regression_receipt(regressions):
     """v7.9 (出包检查提速 S1, 总表 19 ①): the receipt's record of the two regressions this writer passed
     (check_package.regression_record), so prepare_delivery reuses them for the same bytes instead of running them
-    again. None when there is nothing to reuse (prepare_delivery then runs them, as before v7.9)."""
+    again. None when there is nothing to reuse; delivery refuses instead of starting a browser."""
     try:
         import check_package
         return check_package.regression_record(regressions.get('rewarded_ad_regression'),
                                                regressions.get('runtime_regression'))
-    except Exception:  # noqa: BLE001 - no record only means prepare_delivery runs the regressions again
+    except Exception:  # noqa: BLE001 - missing evidence refuses publication
         return None
 
 
@@ -429,9 +430,9 @@ def main():
                     'output folder and do not write 最新.txt (e.g. a writer-refusal test ZIP); default: they go into 旧包/')
     ap.add_argument('--ad-regression', type=Path, help='v7.8: adapter JSON for the rewarded-ad and runtime regressions, '
                     'as build_checked_zip.py (default $TIKTOK_AD_REGRESSION_ADAPTER; usually <project>/qa/'
-                    'ad-regression.json). A new game is refused without it; a legacy game gets a warning')
+                    'ad-regression.json). Required regression coverage is enforced for delivery.')
     ap.add_argument('--rework-of', default='auto', help='简化.11.15 出包后返工: the last passed package (a ZIP, or a folder '
-                    'with 最新.txt; default auto = the 最新.txt of the --out folder; none = run every check). When only '
+                    'with 最新.txt; default auto = the 最新.txt of the --out folder). Missing scope refuses. When only '
                     'pictures, sounds or fonts changed since it (same code, settings, adapter and check tools), only the '
                     'browser checks that can see the change run again; static checks always run '
                     '(cocos-game-check/package-check/scripts/rework_scope.py)')
@@ -474,6 +475,7 @@ def main():
         print('REFUSED, no ZIP written (tiktok_finalize):\n- ' + '\n- '.join(finalize_problems), file=sys.stderr)
         return 1
     gate_policy = finalized['policy']
+    a.board = finalized.get('board') or a.board
     # Cocos bundle URLs can contain ../ even when every ZIP entry is safe.
     try:
         from audit_native_resource_paths import audit as audit_resource_paths
@@ -511,6 +513,12 @@ def main():
         return 1
     from audit_final_package_startup import audit_final_startup
     try:
+        if str(CHECK_SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(CHECK_SCRIPTS))
+        from check_package import verify_regression_scope
+        scope_audit = verify_regression_scope(
+            obligation_files, native, a.ad_regression, a.board, gate_policy, rework_of,
+            project=a.project, operation='writer')
         startup_runtime = audit_final_startup(native, a.project, a.startup_contract, a.loading_recovery_runtime)
     except (ValueError, OSError, TypeError, KeyError) as error:
         print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
@@ -616,18 +624,23 @@ def main():
         # v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions build_checked_zip runs through
         # check_package.check(), here on the extracted bytes of the ZIP about to be published (same adapter, policy
         # and board). A new game is refused; a game on the frozen legacy list gets warnings.
-        regressions = writer_regressions(check, a.ad_regression, gate_policy, a.board, rework_of=rework_of)
+        regressions = writer_regressions(
+            check, a.ad_regression, gate_policy, a.board, rework_of=rework_of, project=a.project,
+            expected_scope_sha256=(scope_audit or {}).get('plan_sha256'))
         if regressions['blocked']:
             print('REFUSED, no ZIP written (rewarded-ad / runtime regression, policy %s):\n- %s'
                   % (gate_policy, '\n- '.join(regressions['problems'])), file=sys.stderr)
             return 1
         if hashlib.sha256(tmp.read_bytes()).hexdigest() != result['sha256']:
             raise ValueError('ZIP changed during the runtime regression')
+        verified_regressions = regression_receipt(regressions)
+        if verified_regressions is None:
+            raise ValueError('writer did not produce complete passing regression evidence')
         receipt = vnz.make_receipt('make_tiktok_zip', tmp, result['sha256'], result['file_sha256'],
                                    info['package_gates'], a.board,
                                    {'tool_sha256': sha(Path(__file__)),
-                                    # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses these for the same bytes
-                                    'regressions': regression_receipt(regressions)}, finalize=finalized)
+                                    'regression_scope': regressions.get('regression_scope'),
+                                    'regressions': verified_regressions}, finalize=finalized)
         receipt_tmp = tmpdir / receipt_file.name
         receipt_tmp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         with package_obligations.publication_guard(obligation_files, native, a.project, a.resource_manifest, obligations):
@@ -665,6 +678,7 @@ def main():
               # v7.8 (W97): same keys as check_package.check() / build_checked_zip reports
               'rewarded_ad_regression': regressions['rewarded_ad_regression'],
               'runtime_regression': regressions['runtime_regression'],
+              'regression_scope': regressions.get('regression_scope'),
               'regressions': {k: regressions.get(k) for k in ('policy', 'board', 'adapter', 'problems', 'warnings',
                                                               'seconds')},
               # 简化.11.15 (出包后返工): what was compared with which package, what ran again, what was kept

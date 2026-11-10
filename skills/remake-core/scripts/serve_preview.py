@@ -417,6 +417,9 @@ function fit(){const scale=Math.min(1,Math.max(1,innerWidth-32)/width,Math.max(1
 addEventListener('resize',fit);fit();})();</script></body></html>""".replace('__WIDTH__',str(width)).replace('__HEIGHT__',str(height)).replace('__PREVIEW_ENTRY__',entry)).encode('utf-8')
 
 
+PLAYTEST_PATH = '/__playtest/'
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, phone_size=None, preview_token=None, ad_simulator=False, ad_simulator_setup=None,
                  touch_bridge=False, **kwargs):
@@ -430,6 +433,15 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         LAST[0] = time.time()
         request = urlsplit(self.path)
+        checklist = getattr(self.server, 'playtest_html', None)
+        if request.path == PLAYTEST_PATH and checklist is not None:
+            try:
+                content = checklist.read_bytes()
+            except OSError:
+                self.send_error(404, 'Playtest handoff is not ready')
+                return
+            self.send_bytes(content, 'text/html; charset=utf-8')
+            return
         if request.path == AD_SIMULATOR_PATH:
             if not self.ad_simulator:
                 self.send_error(404)
@@ -682,6 +694,8 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
                                           keep=args.keep or args.idle_minutes == 0)
             if slot and english_preview:
                 browser_slots.heartbeat(slot, phone_size=list(phone_size))
+                if verify_snapshot is not None and not args.raw and args.snapshot:
+                    server.playtest_html = browser_slots.playtest_html_path(slot)
         except Exception:
             slot = None
     serving = None
@@ -773,7 +787,8 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
             on_ready(directory)
         except Exception as error:
             print('用时没记上（服务已就绪）：' + str(error), file=sys.stderr, flush=True)
-    lifetime = '用户试玩保留中；不因空闲时间自动关闭。' if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
+    retained = '内部候选服务保留中。' if internal_window else '用户试玩保留中。'
+    lifetime = retained if args.keep or args.idle_minutes == 0 else f'{args.idle_minutes:g} 分钟没人访问会自动关闭。'
     if internal_window:
         entry_kind = '内部检测入口'
         use = '供本轮检测。英化正式交接由 handoff_preview.py 核准。'

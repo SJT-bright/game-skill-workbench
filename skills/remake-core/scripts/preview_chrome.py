@@ -27,13 +27,14 @@ def find_chrome():
     raise FileNotFoundError('未找到 Google Chrome；预览服务仍可用，请安装 Chrome 后重试。')
 
 
-def open_chrome_window(url, phone_size=(390, 844)):
+def open_chrome_window(url, phone_size=(390, 844), *, window_size=None):
     parsed = urlsplit(url)
     if parsed.scheme != 'http' or parsed.hostname not in ('127.0.0.1', 'localhost', '::1') or parsed.username or parsed.password:
         raise ValueError('用户试玩启动器只接受本机 HTTP 预览地址')
     executable = find_chrome()
-    width, height = phone_size
-    window_size = (max(480, width + 80), max(560, height + 116))
+    if window_size is None:
+        width, height = phone_size
+        window_size = (max(480, width + 80), max(560, height + 116))
     command = [str(executable), '--new-window',
                '--window-size=' + ','.join(map(str, window_size)), url]
     child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
@@ -43,11 +44,12 @@ def open_chrome_window(url, phone_size=(390, 844)):
             'launcher_pid': child.pid, 'visible_window_verified': False}
 
 
-def browser_request(url, *, keep=False, explicit_open=False, no_browser=False, phone_size=(390, 844)):
+def browser_request(url, *, keep=False, explicit_open=False, no_browser=False,
+                    phone_size=(390, 844), window_size=None):
     if no_browser or not (keep or explicit_open):
         return {'browser': 'google_chrome', 'status': 'not_requested', 'url': url}
     try:
-        return open_chrome_window(url, phone_size)
+        return open_chrome_window(url, phone_size, window_size=window_size)
     except (OSError, ValueError) as error:
         return {'browser': 'google_chrome', 'status': 'launch_failed', 'url': url,
                 'error': str(error), 'visible_window_verified': False}

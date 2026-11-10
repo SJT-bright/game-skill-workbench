@@ -107,7 +107,7 @@ def native_sizes(native, startup_subs):
 
 
 
-def validate_runtime_report(report, binding, *, detail=None):
+def validate_runtime_report(report, binding, *, detail=None, replay_runner=None):
     """Rejudge exact evidence; use the ledger for the reviewed real browser replay."""
     import audit_native_startup_renderer as renderer
     import native_startup_ledger
@@ -121,7 +121,7 @@ def validate_runtime_report(report, binding, *, detail=None):
         errors = renderer.validate(proof,native,binding,project)
         if errors:
             return errors
-        replay = native_startup_ledger.replay(proof,native,binding,project)
+        replay = (replay_runner or native_startup_ledger.replay)(proof,native,binding,project)
         if detail is not None:
             detail.update(replay)
         return []

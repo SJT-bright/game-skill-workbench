@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.20",
+  "revision": "2026-11-10.english-simple.11.17.21",
   "skill": "remake-core",
-  "previous_provenance_sha256": "e60ac5d88181244f4eb2347a37383a9c3956aac5d254172f361085be58b3782d",
+  "previous_provenance_sha256": "adf8ad6875897b93b804872705abb0110c92ebdbebff1d284fed0255bc2447dd",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -1403,8 +1403,8 @@
     },
     {
       "path": "scripts/browser_slots.py",
-      "sha256": "af523f5341d58ba98700bbeb2f9915b995176012bd243c85e748a6330692bdb1",
-      "bytes": 26277
+      "sha256": "782f2bf6b345d8f328b82c7066e7d7efdd4d083426c5c067eafbe95cde525e9a",
+      "bytes": 26661
     },
     {
       "path": "scripts/button_state_check.py",
@@ -1863,8 +1863,8 @@
     },
     {
       "path": "scripts/preview_chrome.py",
-      "sha256": "0189976d1c43d7b6c56080ec18fa734a0927fd6d2161b494c64ff1e6e1c09879",
-      "bytes": 2618
+      "sha256": "11fc42899beec52c4d3d78fa3edb804adbc9712afa12ea0aaf7f31e295118437",
+      "bytes": 2738
     },
     {
       "path": "scripts/preview_touch_fakedom.cjs",
@@ -1993,8 +1993,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "f1516e76399fabd173793a08550b475a4c3e7d422ed6d0d95eaa50838d49aff3",
-      "bytes": 49296
+      "sha256": "e9c164498a2d73f88294e80e7630d3bc689ccb792ad18f609dec95ca7306bbdf",
+      "bytes": 49945
     },
     {
       "path": "scripts/source_hygiene.py",

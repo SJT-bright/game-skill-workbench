@@ -175,6 +175,12 @@ def heartbeat(sid, **fields):
     return True
 
 
+def playtest_html_path(sid):
+    if not re.fullmatch(r'\d{4}-\d{6}-preview-[0-9a-f]{6}', sid):
+        raise ValueError('Invalid preview slot for a playtest checklist')
+    return SLOTS / (sid + '.playtest.html')
+
+
 def release(sid):
     d = _read(SLOTS / (sid + '.json'))
     if d and d.get('dir') and _is_snapshot(d['dir']):
@@ -183,6 +189,11 @@ def release(sid):
         (SLOTS / (sid + '.json')).unlink()
     except OSError:
         pass
+    if d and d.get('kind') == 'preview':
+        try:
+            playtest_html_path(sid).unlink(missing_ok=True)
+        except (OSError, ValueError):
+            pass
     return bool(d)
 
 

@@ -36,7 +36,7 @@ def platform_kit_covers_retry(native, project):
     return True, '%s v%s unchanged' % (manifest['name'], manifest['version'])
 
 
-def audit_final_startup(native, project, startup_contract, recovery_runtime):
+def audit_final_startup(native, project, startup_contract, recovery_runtime, *, reuse_only=False):
     if not project or not startup_contract:
         raise ValueError('final Native startup evidence required: --project and --startup-contract; file/Web checks cannot prove HOME')
     native, project = Path(native).resolve(), Path(project).resolve()
@@ -109,7 +109,10 @@ def audit_final_startup(native, project, startup_contract, recovery_runtime):
     replay = {}
     # All official callers use the same checked ledger. Passing raw reports alone
     # is never a substitute for a successful, still-valid registered execution.
-    errors = validate_runtime_report(contract, binding, detail=replay)
+    from functools import partial
+    from regression_scope_gate import startup_replay
+    runner = partial(startup_replay, reuse_only=reuse_only, plan_project=project)
+    errors = validate_runtime_report(contract, binding, detail=replay, replay_runner=runner)
     if errors:
         raise StartupRefused('startup.native.renderer', 'final Native startup replay refused: ' + '; '.join(errors))
     # Runtime execution and other tasks may touch the candidate/evidence.

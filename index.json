@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "3fabcbe8-94fb-46fc-85cd-e52b09c73b53",
+      "skillId": "s-5a9f8b608f84c10c43c3",
+      "directory": "ego-browser",
+      "name": "ego-browser",
+      "version": "v8",
+      "createdAt": "2026-11-10T16:43:06.013Z",
+      "summary": "文件变更：新增 0，修改 2，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 2,
+        "deleted": 0
+      },
+      "treeHash": "f4627066941fb27e7754ed96b53dcc9e9637cfd330b2315c57460168d554555d",
+      "bytes": 30967,
+      "fileCount": 8
+    },
+    {
       "id": "dcf0c547-ed99-4ad8-b5cd-b4dd99c04c09",
       "skillId": "s-a5a5d4cc5c2308178580",
       "directory": "chrome-mobile-testing",

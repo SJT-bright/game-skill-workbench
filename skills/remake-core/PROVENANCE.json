@@ -948,8 +948,8 @@
     },
     {
       "path": "references/production-baseline.md",
-      "sha256": "5cbaecb34d2c01343598737008d6a37d9c3a9b90a1cbdec9b71dd6a0c41672e2",
-      "bytes": 7586
+      "sha256": "8398cd60fb7d76409fb6347cf6535540739ae16e2b88cf449134d8a716a4a9cf",
+      "bytes": 8087
     },
     {
       "path": "references/production-plan.md",
@@ -988,8 +988,8 @@
     },
     {
       "path": "references/tiktok-home-growth.md",
-      "sha256": "fca0c3f8095d977764b8cf52ca61625d855dddd35abcfa10f5e5cdb5c3938e12",
-      "bytes": 15524
+      "sha256": "d6da8732d120acec1b11cc5afe9c5f345dbcfb1dfcf8f597a1f3e5c56a086405",
+      "bytes": 18717
     },
     {
       "path": "references/token-economy.md",
@@ -3963,7 +3963,16 @@
           "after_bytes": 7586
         }
       ]
+    },
+    {
+      "id": "tiktok-sidebar-entry-readiness-20261109",
+      "revision": "2026-11-09.sidebar-entry-design",
+      "scope": "Direct entry, cold-start readiness observed at the native SDK call, warm entry, saved and visible claim; scoped component backport where needed.",
+      "files": [
+        "references/production-baseline.md",
+        "references/tiktok-home-growth.md"
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "d6c379b5761571388cca6b7fb54a79063591dda72dcdbd041e8ff4e94b94748e"
+  "previous_local_provenance_sha256": "9aba2f49ebbb707f3719fa34823ad93af27839ec80b9749d59ce1e075c175e8c"
 }

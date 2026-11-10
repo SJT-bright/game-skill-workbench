@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-10T07:29:57.389Z",
-  "treeHash": "1204065bca04ff070cf15b6fddc020a297306b01aa3974652a08cf6aca17e3f7",
+  "createdAt": "2026-11-10T07:30:23.866Z",
+  "treeHash": "40b41d0d6199f52310c280413ba3e283d0a953c49cf50deaf8d0a071a285ae25",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3507,14 +3507,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "418d93872f1de869e9acf525b52241922bf1d5233e7b402f36bd6f01b5c8cb9c",
+      "treeHash": "21442cdde11f10e80532d7b53d4f6714d1c6d2a350ae8ea1e55a483b24c95034",
       "fileCount": 661,
-      "bytes": 12755386,
+      "bytes": 12759477,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "9aba2f49ebbb707f3719fa34823ad93af27839ec80b9749d59ce1e075c175e8c",
-          "size": 150169,
+          "hash": "0d42461fa9e84654fcd93ca627e7c7ba028cc312f659f89953c09589ef81c2de",
+          "size": 150566,
           "executable": false
         },
         {
@@ -4647,8 +4647,8 @@
         },
         {
           "path": "references/production-baseline.md",
-          "hash": "5cbaecb34d2c01343598737008d6a37d9c3a9b90a1cbdec9b71dd6a0c41672e2",
-          "size": 7586,
+          "hash": "8398cd60fb7d76409fb6347cf6535540739ae16e2b88cf449134d8a716a4a9cf",
+          "size": 8087,
           "executable": false
         },
         {
@@ -4695,8 +4695,8 @@
         },
         {
           "path": "references/tiktok-home-growth.md",
-          "hash": "fca0c3f8095d977764b8cf52ca61625d855dddd35abcfa10f5e5cdb5c3938e12",
-          "size": 15524,
+          "hash": "d6da8732d120acec1b11cc5afe9c5f345dbcfb1dfcf8f597a1f3e5c56a086405",
+          "size": 18717,
           "executable": false
         },
         {

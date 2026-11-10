@@ -1,0 +1,795 @@
+{
+ "schema": "tiktok_package_check.calibration.v2",
+ "date": "2026-11-10",
+ "release_label": "v7.9-en11.17.18-creator-migration",
+ "selftest_report_sha256": "ff97593f0ae460dde487065ad27e47ce3bbc584b44a5963869878807331114ba",
+ "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
+ "checker_sha256": {
+  "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
+  "remake-core/scripts/package_gates/adapter_fix.py": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19",
+  "remake-core/scripts/package_gates/ads_static.py": "0e458cd6e9d1301bfc38822ae51a659c9c3feae9d1d0031cb7bceb92b5095207",
+  "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
+  "remake-core/scripts/package_gates/kit_parts.py": "1e771575f90f31673008921ebd01772be803bbb381e2f1a6bc8c28bffee19693",
+  "remake-core/scripts/package_gates/kit_versions.py": "a3c9306c7f0309493123cb06c5afafe6c135395934013dd88bfd2a9785db6ffd",
+  "remake-core/scripts/package_gates/mission.py": "78a2749ce1425c6bb5f131f84240dd06a87dc5e1b20c5fdbe0f9485658f6bf7b",
+  "remake-core/scripts/package_gates/network.py": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
+  "remake-core/scripts/package_gates/portrait.py": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
+  "remake-core/scripts/package_gates/secrets.py": "c7998974bfbd2f4971e2ce9a737660ba4f799ace9e3b40532de42433f0600b7c",
+  "remake-core/scripts/package_gates/sound.py": "12c34267f17d582ef2f6ee214dd5e74b466837bdadadd158e023de970d6b6d29",
+  "remake-core/scripts/package_gates/startup.py": "1cf45b50c1dd0c471d0aadbee033d134a1f9b2aacf69f9276059a762a91dd356",
+  "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
+  "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
+  "remake-core/scripts/verify_native_zip.py": "0a9bc30ca065ee27ae90be43994bc4b15ba699f40c7ab19fb722f62563f5aa2d",
+  "remake-core/scripts/upload_size_gate.py": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
+  "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
+  "remake-core/scripts/tiktok_finalize.py": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
+  "remake-core/scripts/tiktok_finalize_steps/__init__.py": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
+  "remake-core/scripts/tiktok_finalize_steps/adapter.py": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7",
+  "remake-core/scripts/tiktok_finalize_steps/appid.py": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76",
+  "remake-core/scripts/tiktok_finalize_steps/art_static.py": "5e11c1c62091b225e5294dc32d4d133693c79f4a472e765cb0e2a31fd5174e5a",
+  "remake-core/scripts/tiktok_finalize_steps/bg_cover.py": "b4bbd70b143d2a86a7e6318640d0eb8e8ef7b9047a688438d2ab299cb62e644d",
+  "remake-core/scripts/tiktok_finalize_steps/build_templates.py": "d690f00b2d05eb9001cf671583191396a5157abba7be7aea2b4fbf9f10dffc55",
+  "remake-core/scripts/tiktok_finalize_steps/capsule_auto.py": "0ff1a2e18435b87a9f010d768ae0f8ef7bc17a039932731055c0e2ac76288aeb",
+  "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py": "6bd18137315c9b1293d799a807274028982ea90eb3b3101c181d781ab660dfc0",
+  "remake-core/scripts/tiktok_finalize_steps/frame_scan.py": "1a7c1479a17dc29384bc89b675e235fe1fd401327a8a8b6338086cd644e9de84",
+  "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py": "7cf255052c11f80872ca5c10b8537f5e2b720c49ab5313738051d9f2cd211d34",
+  "remake-core/scripts/tiktok_finalize_steps/home_entry_scan.py": "f32167dd264b90a89d6addd5dc1591776ec35e8411d293447e1a6b5aea59fe47",
+  "remake-core/scripts/tiktok_finalize_steps/images.py": "f5b9e52a090f458104d3a861039310060b800ac2015153cfd1706a9ac023185e",
+  "remake-core/scripts/tiktok_finalize_steps/kit_sources.py": "99e795cfecabe96c62c63c42ba159e59758acaddfd8a0ba19a74052d9606899a",
+  "remake-core/scripts/tiktok_finalize_steps/login.py": "350b6d31fc74b4c86fef7e1a4cee51c580ab6c816111d3fc25d855b77b90d4b2",
+  "remake-core/scripts/tiktok_finalize_steps/orientation.py": "43692def64c653d32d818d5c8ebb672576f375db0e904342ad5d628b4509e409",
+  "remake-core/scripts/tiktok_finalize_steps/physics_clock.py": "8e36d901cab216e3f879d0fde35b24eee97a5bb0fb81646264186f6a20cc1f7d",
+  "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac",
+  "remake-core/scripts/tiktok_finalize_steps/png.py": "806c3c158f5bad9ce5209a90a3f7e78fc0f21b6cc4efd2ef85624ab3591f5165",
+  "remake-core/scripts/tiktok_finalize_steps/policy.py": "46c08e93a3b90ca5f9a7f8e2e28ed3d2d1136dbeb49d0cf0f81bed848b6e8a2a",
+  "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py": "6d765a7b9f404a38d17b17ac35b8e508e4d5546aabe4cf8179d907a4f42e3498",
+  "remake-core/scripts/tiktok_finalize_steps/rewarded.py": "a978d0ae5c74589ea9f2f932ae8614844f7d7942f2395a3b15adfd5ccda14021",
+  "remake-core/scripts/tiktok_finalize_steps/save_read_scan.py": "991fb2e8a72a58df39858431edda4720b42b30f990aedb81edac304815361a1f",
+  "remake-core/scripts/tiktok_finalize_steps/settings.py": "aa48a660755474b126847852129f0acac8cdaeafcbbb90f424fcfe51af58f5ff",
+  "remake-core/scripts/tiktok_finalize_steps/skin_preview_scan.py": "f9181de056a0ec4f45e44d8e76be03ff5357f7ccad486a97645d4a0d68bc8034",
+  "remake-core/scripts/tiktok_finalize_steps/slot_overlap_scan.py": "9a1414b8d2b0690a718f429fd1184e9be5f04ff2abe692cfb1b276d040d0b941",
+  "remake-core/scripts/tiktok_finalize_steps/startup.py": "8171f4ef3c84da954f0f1fe7aa42ef2376a02d4495eee44aa43f4a4436ec637a",
+  "remake-core/scripts/tiktok_finalize_steps/storage.py": "9249db688a94b58e29ccf228893d6679609e21a4e16855d2cf1df3169bb5dd1a",
+  "remake-core/scripts/tiktok_finalize_steps/structure.py": "a303704fbe79da829b0ee5da4ef76223c63a04b11b0a81117d125a28a076be8f",
+  "remake-core/scripts/tiktok_finalize_steps/touch.py": "fab070f35c3dd59ec9919131322846953b04a779406e1fb12be318131ee26004",
+  "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581",
+  "remake-core/scripts/tiktok_finalize_steps/upload_compat.py": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29",
+  "cocos-game-check/package-check/scripts/check_package.py": "0292ec6f364a7c6d1cffe0e63337afd278aa66e764fb3b4becc125670dcbb25e",
+  "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
+  "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "66b3faf8e5f300c34257d48560b287ef60a5ddb0ac3459170211c202e45496cc",
+  "remake-core/scripts/audit_image_review_record.py": "631387e5efde7676733adfd2be68e06224282e30b4bb494ccc1553e0ba787471",
+  "remake-core/scripts/audit_atlas_slices.py": "5b7d85a3b2b5050986917d0d2a289f127c4e211f2985071d1360f370236822ca",
+  "remake-core/scripts/spine_atlas_binding.py": "4169014911f9b33ac95f4c291bad14ba1d0f270844d110b0b55a5bbe14c904f4"
+ },
+ "release_checks": {
+  "C1": "pass",
+  "C10": "pass",
+  "C11": "pass",
+  "C12": "pass",
+  "C13": "pass",
+  "C2": "pass",
+  "C3": "pass",
+  "C4": "pass",
+  "C5": "pass",
+  "C6": "pass",
+  "C7": "pass",
+  "C8": "pass",
+  "C9": "pass"
+ },
+ "real_artifact_controls": [
+  {
+   "id": "driftracer-v2",
+   "game": "全民飞车漂移",
+   "role": "bad",
+   "check": "verify_native_zip",
+   "item": "B17",
+   "expect": {
+    "exit": 3
+   },
+   "ok": true,
+   "since": "v7.7.4"
+  },
+  {
+   "id": "driftracer-v2",
+   "game": "全民飞车漂移",
+   "role": "bad",
+   "check": "upload_preflight",
+   "item": "B17",
+   "expect": {
+    "status": "refuse"
+   },
+   "ok": true,
+   "since": "v7.7.4"
+  },
+  {
+   "id": "driftracer-v3",
+   "game": "全民飞车漂移",
+   "role": "good",
+   "check": "verify_native_zip",
+   "item": "B17",
+   "expect": {
+    "exit": 0,
+    "status": "local_structure_checks_passed"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "driftracer-v3",
+   "game": "全民飞车漂移",
+   "role": "good",
+   "check": "upload_preflight",
+   "item": "B17",
+   "expect": {
+    "status": "pass"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "foxdendash-v1",
+   "game": "狐狸回窝",
+   "role": "good",
+   "check": "gates",
+   "item": "B18",
+   "expect": {
+    "blocks_include": [
+     "A1_audio_loudness",
+     "A2_fail_sound_length"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "foxdendash-v1",
+   "game": "狐狸回窝",
+   "role": "good",
+   "check": "gates",
+   "item": "B18；简化.11.3 平台包；手机问题源头约束触摸件",
+   "expect": {
+    "blocks": [
+     "A1_audio_loudness",
+     "A2_fail_sound_length",
+     "G1_retired_revisit_copy",
+     "K1_kit_bytes",
+     "K6_kit_module_old",
+     "K_rewarded_guard"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "foxdendash-v1",
+   "game": "狐狸回窝",
+   "role": "good",
+   "check": "verify_native_zip",
+   "item": "B17",
+   "expect": {
+    "exit": 0
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "foxdendash-v1",
+   "game": "狐狸回窝",
+   "role": "good",
+   "check": "upload_preflight",
+   "item": "B17",
+   "expect": {
+    "status": "pass"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mahjong-v56",
+   "game": "指尖麻将",
+   "role": "bad",
+   "check": "gates",
+   "item": "LIFE G9",
+   "expect": {
+    "blocks_include": [
+     "G9_dom_retry"
+    ]
+   },
+   "ok": true,
+   "since": "v7.7.4"
+  },
+  {
+   "id": "mahjong-v57",
+   "game": "指尖麻将",
+   "role": "bad",
+   "check": "gates",
+   "item": "LIFE G9",
+   "expect": {
+    "blocks_include": [
+     "G9_dom_retry"
+    ]
+   },
+   "ok": true,
+   "since": "v7.7.4"
+  },
+  {
+   "id": "mahjong-v58",
+   "game": "指尖麻将",
+   "role": "good",
+   "check": "gates",
+   "item": "LIFE G9",
+   "expect": {
+    "no_blocks": true,
+    "warnings_exclude": [
+     "G9_doc_hidden_clock",
+     "G9_dom_retry"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mergeshot-v81",
+   "game": "射击高手2048",
+   "role": "bad",
+   "check": "gates",
+   "item": "H14",
+   "expect": {
+    "blocks_include": [
+     "H14_cross_promo"
+    ]
+   },
+   "ok": true,
+   "since": "v7.5"
+  },
+  {
+   "id": "mergeshot-v82",
+   "game": "射击高手2048",
+   "role": "bad",
+   "check": "gates",
+   "item": "H14",
+   "expect": {
+    "blocks_include": [
+     "H14_cross_promo"
+    ]
+   },
+   "ok": true,
+   "since": "v7.5"
+  },
+  {
+   "id": "dots-v40",
+   "game": "DotsDelivery",
+   "role": "good",
+   "check": "gates",
+   "item": "B20",
+   "expect": {
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mergeshot-v84",
+   "game": "射击高手2048",
+   "role": "bad",
+   "check": "upload_preflight",
+   "item": "B17",
+   "expect": {
+    "status": "refuse"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mergeshot-v84",
+   "game": "射击高手2048",
+   "role": "bad",
+   "check": "decide_zip",
+   "item": "B27",
+   "expect": {
+    "policy": "legacy"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mergeshot-v84",
+   "game": "射击高手2048",
+   "role": "bad",
+   "check": "gates",
+   "item": "B20",
+   "expect": {
+    "policy": "legacy",
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mergeshot-v85",
+   "game": "射击高手2048",
+   "role": "good",
+   "check": "decide_zip",
+   "item": "B27",
+   "expect": {
+    "policy": "legacy"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "mergeshot-v85",
+   "game": "射击高手2048",
+   "role": "good",
+   "check": "gates",
+   "item": "B20",
+   "expect": {
+    "policy": "legacy",
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "junos-20261027-v1",
+   "game": "Junos Reef Drift",
+   "role": "bad",
+   "check": "verify_native_zip",
+   "item": "B20",
+   "expect": {
+    "exit": 2
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "junos-20261027-v1",
+   "game": "Junos Reef Drift",
+   "role": "bad",
+   "check": "upload_preflight",
+   "item": "B17",
+   "expect": {
+    "status": "refuse"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "junos-20261027-v1",
+   "game": "Junos Reef Drift",
+   "role": "bad",
+   "check": "decide_zip",
+   "item": "B27",
+   "expect": {
+    "policy": "legacy"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "nanas-tiktok-test-v1",
+   "game": "Nanas Sock Drawer",
+   "role": "good",
+   "check": "verify_native_zip",
+   "item": "B20",
+   "expect": {
+    "exit": 3,
+    "status": "unofficial_not_deliverable"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "nanas-tiktok-test-v1",
+   "game": "Nanas Sock Drawer",
+   "role": "good",
+   "check": "gates",
+   "item": "B20",
+   "expect": {
+    "policy": "legacy",
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "meteorblaster-r3",
+   "game": "MeteorBlaster",
+   "role": "good",
+   "check": "verify_native_zip",
+   "item": "B20",
+   "expect": {
+    "exit": 3,
+    "status": "unofficial_not_deliverable"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "meteorblaster-r3",
+   "game": "MeteorBlaster",
+   "role": "good",
+   "check": "decide_zip",
+   "item": "B27",
+   "expect": {
+    "policy": "legacy"
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "meteorblaster-r3",
+   "game": "MeteorBlaster",
+   "role": "good",
+   "check": "gates",
+   "item": "B20",
+   "expect": {
+    "policy": "legacy",
+    "blocks": [
+     "G1_retired_revisit_copy"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "scissors-v30-source",
+   "game": "剪刀达人",
+   "role": "good",
+   "check": "decide_project",
+   "item": "B27",
+   "expect": {
+    "policy": "legacy"
+   },
+   "ok": true,
+   "since": "v7.8"
+  },
+  {
+   "id": "cubedigits-371-clean",
+   "game": "Cube Digits",
+   "role": "good",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": true,
+    "rows": "8/8",
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "cubedigits-371-clean",
+   "game": "Cube Digits",
+   "role": "good",
+   "check": "no_social",
+   "item": "第 25 条",
+   "expect": {
+    "social_passed": true,
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "cubedigits-371-notouchfix",
+   "game": "Cube Digits",
+   "role": "bad",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": false,
+    "blocks_include": [
+     "T3_wrong_coordinates"
+    ]
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "cubedigits-371-swapxy",
+   "game": "Cube Digits",
+   "role": "bad",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": false,
+    "blocks_include": [
+     "T3_wrong_coordinates"
+    ]
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "cubedigits-371-gameopendata",
+   "game": "Cube Digits",
+   "role": "bad",
+   "check": "no_social",
+   "item": "第 25 条",
+   "expect": {
+    "social_passed": false,
+    "blocks_include": [
+     "business_api:assets/main/index.js"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "streetbreakout-361-r36",
+   "game": "StreetBreakout",
+   "role": "good",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": true,
+    "rows": "8/8",
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "streetbreakout-361-r36",
+   "game": "StreetBreakout",
+   "role": "good",
+   "check": "no_social",
+   "item": "第 25 条",
+   "expect": {
+    "social_passed": true,
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "streetbreakout-361-notouchfix",
+   "game": "StreetBreakout",
+   "role": "bad",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": false,
+    "blocks_include": [
+     "T3_wrong_coordinates"
+    ]
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "marlows-388-r6",
+   "game": "Marlows",
+   "role": "good",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": true,
+    "rows": "8/8",
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "marlows-388-r6",
+   "game": "Marlows",
+   "role": "good",
+   "check": "no_social",
+   "item": "第 25 条",
+   "expect": {
+    "social_passed": true,
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": "v7.8.2"
+  },
+  {
+   "id": "marlows-388-notouchfix",
+   "game": "Marlows",
+   "role": "bad",
+   "check": "touch_coordinates",
+   "item": "第 25 条",
+   "expect": {
+    "touch_passed": false,
+    "blocks_include": [
+     "T3_wrong_coordinates"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "dessertmatch-r47-pause",
+   "game": "甜点消消乐",
+   "role": "bad",
+   "check": "mobile_input",
+   "item": "第 30 条",
+   "expect": {
+    "mobile_input_passed": false,
+    "blocks_include": [
+     "pause_close_restores_saved_pause_flag"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9"
+  },
+  {
+   "id": "dessertmatch-r48-fixed",
+   "game": "甜点消消乐",
+   "role": "good",
+   "check": "mobile_input",
+   "item": "第 30 条",
+   "expect": {
+    "mobile_input_passed": true,
+    "no_blocks": true
+   },
+   "ok": true,
+   "since": "v7.9"
+  },
+  {
+   "id": "cubedigits-371-sound-missing",
+   "game": "Cube Digits",
+   "role": "bad",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_include": [
+     "S1_sound_no_audio_files",
+     "S3_sound_engine_no_audio"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "cubedigits-371-sound-fixed",
+   "game": "Cube Digits",
+   "role": "good",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_exclude": [
+     "S1_sound_no_audio_files",
+     "S2_sound_no_play_call",
+     "S3_sound_engine_no_audio",
+     "S4_sound_silent_record_contradicted"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "grasscutter-v011-sound-missing",
+   "game": "割草小能手",
+   "role": "bad",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_include": [
+     "S1_sound_no_audio_files"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "grasscutter-v012-sound-ok",
+   "game": "割草小能手",
+   "role": "good",
+   "check": "gates",
+   "item": "简化.11.3 声音第1步（CubeDigits 11-02 声音检测要求 8.1/8.2/8.17）",
+   "expect": {
+    "blocks_exclude": [
+     "S1_sound_no_audio_files",
+     "S2_sound_no_play_call",
+     "S3_sound_engine_no_audio",
+     "S4_sound_silent_record_contradicted"
+    ]
+   },
+   "ok": true,
+   "since": "v7.9-en11.3"
+  },
+  {
+   "id": "monkeymarket-v5-spine-image-review",
+   "game": "猴子集市",
+   "role": "good",
+   "check": "spine_image_review",
+   "item": "ART_spine_runtime_atlas",
+   "expect": {
+    "clean_write_exit": 0,
+    "clean_check_exit": 0,
+    "marker_write_exit": 1,
+    "marker_check_exit": 1,
+    "exact_slices": {
+     "e98570bc-2d9c-4592-9a89-c15bd7680a77.3da8a.png": 284,
+     "374feeaa-0867-423d-b607-a9c1c1d6a1d5.a816c.png": 32
+    },
+    "marker_textures": [
+     "374feeaa-0867-423d-b607-a9c1c1d6a1d5.a816c.png",
+     "e98570bc-2d9c-4592-9a89-c15bd7680a77.3da8a.png"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "carescape-trailing-root",
+   "game": "CarEscape",
+   "role": "good",
+   "check": "upload_size_zip",
+   "item": "2026-11-08 分包尾斜杠兼容",
+   "expect": {
+    "passed": true,
+    "main_bytes": 1416361,
+    "total_bytes": 5378169,
+    "normal_subpackages": {
+     "subpackages/resources/": 3961808
+    },
+    "independent_subpackages": {},
+    "crc_verified": true,
+    "errors": [],
+    "warnings": [
+     "Trailing slash accepted; directory prefix normalized for checks only: subpackages/resources/"
+    ]
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "sheep-platform-rejected-exact-zip",
+   "game": "鸽鸽小羊",
+   "role": "bad",
+   "check": "upload_size_zip",
+   "item": "2026-11-05 同字节平台拒绝",
+   "expect": {
+    "passed": false,
+    "main_bytes": 1224175,
+    "total_bytes": 7797255,
+    "normal_subpackages": {
+     "subpackages/MainScene/": 5841472,
+     "subpackages/AudioAssets/": 731608
+    },
+    "independent_subpackages": {},
+    "crc_verified": true,
+    "errors": [
+     "This exact ZIP was rejected by the platform; local arithmetic cannot clear the rejection"
+    ],
+    "platform_feedback": {
+     "sha256": "9d9fbd545795eb32cceac66243749f4dd1632a81c246df841d7865f83159cacd",
+     "same_rejected_archive": true
+    }
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "returned-delivery-control-evidence",
+   "game": "返工交付控制路径（隔离用例）",
+   "role": "control",
+   "check": "returned_control_proof",
+   "item": null,
+   "expect": {
+    "control_evidence_current": true,
+    "recorded_tests": 14,
+    "ai_visual_pass_claimed": false,
+    "whole_game_acceptance": false
+   },
+   "ok": true,
+   "since": null
+  }
+ ],
+ "test_inventory": {
+  "files": 721,
+  "failing_known": [
+   "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
+   "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",
+   "game-audio-library/scripts/test_audio_manager_contracts.cjs",
+   "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js",
+   "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
+   "remake-core/scripts/test_writer_refusal.py"
+  ],
+  "new_failures": 0
+ }
+}

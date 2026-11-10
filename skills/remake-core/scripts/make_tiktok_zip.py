@@ -110,6 +110,11 @@ def native_problems(native, board=None, policy=None, context=None):
         if not sizes.get(name):
             out.append('empty root file: %s' % name)
     files = {name: (native / name).read_bytes() for name in sizes}
+    from upload_size_gate import enforce_tiktok_host
+    try:
+        enforce_tiktok_host(files)
+    except ValueError as error:
+        return out + [str(error)], sizes, {}
     info = {'independent': {}, 'normal': {}}
     try:
         game = json.loads(files.get('game.json', b'{}').decode('utf-8-sig'))
@@ -359,12 +364,13 @@ def regression_receipt(regressions):
 
 
 def write_zip(native, files, target, *, reviewed_files=None):
-    from upload_size_gate import enforce
+    from upload_size_gate import enforce, enforce_tiktok_host
     from audit_no_ad_simulator import enforce_files
     payload = reviewed_files if reviewed_files is not None else {rel: (native / rel).read_bytes() for rel in files}
     if set(payload) != set(files):
         raise ValueError('Native file list changed after review')
     enforce({rel: len(data) for rel, data in payload.items()}, json.loads(payload['game.json'].decode('utf-8-sig')))
+    enforce_tiktok_host(payload)
     enforce_files(payload)
     with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for rel in sorted(payload):

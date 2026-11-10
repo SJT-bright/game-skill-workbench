@@ -20,6 +20,21 @@ def payload():
 
 
 class SizeGate(unittest.TestCase):
+
+    def test_tiktok_writer_and_zip_inspection_reject_wechat_host_references(self):
+        for code in (b'wx.showShareMenu()', b'wx["getUpdateManager"]()', b'wx?.vibrateShort()',
+                     b'globalThis["wx"]', b'typeof wx'):
+            with self.subTest(code=code):
+                files = payload()
+                files['subpackages/res/game.js'] = code
+                for inspect in (enforce_files, inspect_files):
+                    with self.assertRaisesRegex(ValueError, r'legacy WeChat.*subpackages/res/game.js:1'):
+                        inspect(files)
+        files = payload()
+        files['cocos/cocos2d-js-min.js'] = b'wx.getSystemInfoSync()'
+        files['subpackages/res/game.js'] = b'tt.vibrateShort({})'
+        self.assertGreater(inspect_files(files)['total_bytes'], 0)
+
     def test_trailing_slash_has_identical_partition_without_mutating_configuration(self):
         sizes={'game.js':12,'subpackages/res/file':50,'subpackages/resources/file':8}
         results=[]

@@ -73,11 +73,40 @@ def enforce(sizes, game, platform='tiktok'):
         raise ValueError(f'Uncompressed Douyin total {total} bytes exceeds conservative 20000000 limit')
     return {'total_bytes':total,'main_bytes':main,'normal_subpackages':normal,'independent_subpackages':independent}
 
+
+# The stock engine contains multi-platform branches. Only its exact shipped
+# paths are exempt; application code and adapters, including subpackages, are scanned.
+_ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
+_WECHAT_HOST_REFERENCE = re.compile(
+    r"""(?<![\w$])wx\s*(?:\?\.|\.|\[)|"""
+    r"""\btypeof\s+wx\b|"""
+    r"""\b(?:window|globalThis|global|root|self)\s*(?:(?:\?\.|\.)\s*wx\b|"""
+    r"""(?:\?\.)?\s*\[\s*['"]wx['"]\s*\])"""
+)
+
+
+def enforce_tiktok_host(files):
+    findings = []
+    for name, data in sorted(files.items()):
+        if name in _ENGINE_MULTIPLATFORM_FILES or not name.lower().endswith(('.js', '.mjs', '.cjs')):
+            continue
+        source = data.decode('utf-8-sig')
+        for match in _WECHAT_HOST_REFERENCE.finditer(source):
+            findings.append(f"{name}:{source.count(chr(10), 0, match.start()) + 1} {match.group().strip()}")
+            if len(findings) == 12:
+                break
+        if len(findings) == 12:
+            break
+    if findings:
+        raise ValueError('TikTok Native contains legacy WeChat host references: ' + '; '.join(findings))
+
+
 def enforce_files(files):
     # Reject total before parsing config or opening an output file.
     total=sum(len(data) for data in files.values())
     if total>TIKTOK_TOTAL:
         raise ValueError(f'Uncompressed total package {total} bytes exceeds the limit {TIKTOK_TOTAL} bytes')
+    enforce_tiktok_host(files)
     return enforce({p:len(data) for p,data in files.items()},json.loads(files['game.json'].decode('utf-8-sig')))
 
 
@@ -99,6 +128,8 @@ def inspect_files(files, platform='tiktok'):
             raise ValueError('Missing/empty root entry: '+name+' (do not upload an outer folder)')
     game=json_object(files['game.json'])
     result=enforce({p:len(b) for p,b in files.items()},game,platform)
+    if platform == 'tiktok':
+        enforce_tiktok_host(files)
     key='subpackages' if platform=='tiktok' else 'subPackages'
     subs=game.get(key,[])
     roots=[s['root'].rstrip('/')+'/' for s in subs]

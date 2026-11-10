@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-10T10:30:46.974Z",
-  "treeHash": "23e16ed9dc45cb10c6817a8d7712dbbb3ac60bbf520b313a5b984f451ac5b912",
+  "createdAt": "2026-11-10T10:31:12.961Z",
+  "treeHash": "ace67d60c6ffba546b50a36f7cd9a2f6f85d146cdbe5f74d3452c7c622e21600",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3507,9 +3507,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "21442cdde11f10e80532d7b53d4f6714d1c6d2a350ae8ea1e55a483b24c95034",
+      "treeHash": "bad42a39958bf711c231d76a574e2964a74063aa24c804443e19f8b41ae73c0d",
       "fileCount": 661,
-      "bytes": 12759477,
+      "bytes": 12761747,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -5553,8 +5553,8 @@
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "e4d8c877bb8a8934fb78aca91e29bc20551082370d51f78077ceaac3ef7ec90e",
-          "size": 41963,
+          "hash": "6e3a3b8f539153c565258cc9079af322a2a0e040ca8f059e4b4ded047efca5fb",
+          "size": 42191,
           "executable": false
         },
         {
@@ -7161,8 +7161,8 @@
         },
         {
           "path": "scripts/test_upload_size_gate.py",
-          "hash": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c",
-          "size": 10647,
+          "hash": "c77dcf4f02c5e4e51db82f2e9a5dfc36bc7bce4711014474f43be9f7e399bec7",
+          "size": 11453,
           "executable": false
         },
         {
@@ -7437,8 +7437,8 @@
         },
         {
           "path": "scripts/upload_size_gate.py",
-          "hash": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
-          "size": 13873,
+          "hash": "16c4105ec5d5b419524157c7e5a556f222e374f38ebe1a51542cf267b84e3ef5",
+          "size": 15109,
           "executable": false
         },
         {

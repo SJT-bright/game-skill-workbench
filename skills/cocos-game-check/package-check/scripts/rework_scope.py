@@ -31,7 +31,7 @@ Everything else keeps the old pass, with its receipt named (reused_from): the re
 ad_outcome, save_restart, resume_play, frame_rate, popin. A suite that runs again also runs the suites its sidecar names
 in "after". Anything else (code, config, structure, data, other, a different adapter or tool, no official old package):
 scope_required: declare affected checks; never run all by default, as before, and the reason is printed. Static checks (package gates, ZIP verifier, startup
-closure, packed assets, finalize, art receipt) always run: they take seconds.
+closure, packed assets, finalize, English new-image size) always run: they take seconds.
 
 What the AI itself re-checks is in the same plan (ai.todo / ai.skip): a picture change re-checks the pages that use it,
 the Chinese check (incremental) and the image review of those pictures; it does not re-listen to sound, re-test saves,

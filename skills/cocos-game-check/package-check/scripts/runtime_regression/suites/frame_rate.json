@@ -1,7 +1,7 @@
 {
   "name": "frame_rate",
-  "about": "Optional 60 Hz and 120 Hz trajectory diagnostic for suspected frame-rate-dependent motion; differences are observations, never a package gate.",
-  "applies": ["explicit"],
+  "about": "v7.8 总表 P16 第 3 步: the same operation at a 60 Hz and a 120 Hz display clock; the tracked node's position at the same real time may differ by at most 5 % (new game blocks, legacy warns; a run whose clock missed its rate is invalid and always refused; adapter.frame_rate {\"n/a\": reason} passes without a browser; Cocos 3.x not covered: warning)",
+  "applies": ["tiktok"],
   "needs": [],
   "needs_new": ["frame_rate"],
   "na_field": "frame_rate",

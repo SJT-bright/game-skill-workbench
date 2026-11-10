@@ -5,6 +5,7 @@
 // Sources: Mabel r7/r8 (D4 2.2), MergeShot2048 v81-v84 (D6 items 3, 4, 8), MusicSlice v29b/v30 (D5 5.3).
 const L = await import(globalThis.CFG.lib);
 const { C, A, sleep } = L;
+const SCREEN = await import(new URL('../screen.mjs', import.meta.url).href);   // 11.17.16: log says home, screen still loading
 const fs = await import('node:fs');
 const path = await import('node:path');
 
@@ -98,7 +99,10 @@ const LIFE = [
 // phone; the hosts now draw it too (window.__hostState().loading / .loadingMask).
 async function loadingLeft(page) {
   const st = await L.hostState(page).catch(() => null);
-  return st && st.loading !== null && st.loading !== undefined ? { title: st.loading, mask: !!st.loadingMask } : null;
+  if (!st || (st.loading !== null && typeof st.loading !== 'string') || typeof st.loadingMask !== 'boolean') {
+    return { unavailable: true };
+  }
+  return st.loading !== null || st.loadingMask ? { title: st.loading, mask: st.loadingMask } : null;
 }
 async function runLife(page, out, [id, fault, query, maxRetries]) {
   if (!A.play) { out.add(id, false, { problems: ['adapter.play is missing: a locator for the home PLAY button (return CSS {x, y} on Cocos 2.4)'] }); return; }
@@ -147,7 +151,8 @@ async function runLife(page, out, [id, fault, query, maxRetries]) {
       how = 'home shown, onHide + 3 s + onShow';
     }
     loading = await loadingLeft(page);
-    if (loading) problems.push(`a loading box "${loading.title}"${loading.mask ? ' (mask: true, it takes every touch)' : ''} is still up on the home page` +
+    if (loading?.unavailable) problems.push('Native host loading-overlay telemetry missing after home; cannot verify dismissal');
+    else if (loading) problems.push(`a loading box "${loading.title}"${loading.mask ? ' (mask: true, it takes every touch)' : ''} is still up on the home page` +
       (fault === 'after_home' ? ' after the game came back from the background' : '') +
       ': tt.showLoading without hideLoading; on the phone this looks like loading stuck at that number');
     const p = await L.locate(page, A.play);
@@ -173,9 +178,10 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
   if (skip) { out.add(id, true, { skipped: skip }); return; }
   lastTapHost = -1;
   const q = ['reset=1', query].filter(Boolean).join('&');
+  const sw = SCREEN.watch(C.evidenceDir, 'startup-' + id);
   await page.goto(L.url(q));
   const t0 = Date.now(), timeline = [];
-  let home = false, retries = 0, lastRetryText = null, problems = [], firstFault = null;
+  let home = false, retries = 0, lastRetryText = null, problems = [], firstFault = null, screen = null;
   while (Date.now() - t0 < limitMs) {
     await sleep(500);
     let st = null;
@@ -186,7 +192,8 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
       if (f) firstFault = Math.max(f.t, lastTapHost);
     }
     try { home = await isHome(page); } catch (_) { home = false; }
-    if (home) { timeline.push({ ms: Date.now() - t0, k: 'home' }); break; }
+    if (home) { sw.home(); timeline.push({ ms: Date.now() - t0, k: 'home' }); break; }
+    await sw.loading(page);
     const r = await findRetry(page).catch(() => null);
     if (r) {
       const hostMs = st ? st.t : null;
@@ -218,8 +225,11 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
   if (!home && !problems.length) problems.push(`home not reached within ${Math.round(limitMs / 1000)} s` + (retries ? ` (after ${retries} Retry tap)` : ''));
   if (home) {
     await sleep(1500);
+    screen = await sw.judge(page);
+    if (screen.problem) problems.push(screen.problem);
     const left = await loadingLeft(page);
-    if (left) problems.push(`home reached but a loading box "${left.title}"${left.mask ? ' (mask: true)' : ''} is still up: tt.showLoading without hideLoading`);
+    if (left?.unavailable) problems.push('Native host loading-overlay telemetry missing after home; cannot verify dismissal');
+    else if (left) problems.push(`home reached but a loading box "${left.title}"${left.mask ? ' (mask: true)' : ''} is still up: tt.showLoading without hideLoading`);
   }
   if (id === 'storage_missing_true') {
     const bad = warns.filter(w => /saved value is unavailable/i.test(w));
@@ -229,7 +239,7 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
   let shot = null;
   try { shot = path.join(C.evidenceDir, `startup-${id}.png`); await page.screenshot({ path: shot }); } catch (_) { shot = null; }
   out.add(id, problems.length === 0, {
-    query: q, home, ms: Date.now() - t0, retries, problems, timeline,
+    query: q, home, ms: Date.now() - t0, retries, problems, timeline, screen,
     subpackageAttempts: st && st.faults && st.faults.pkg, faultHits: st && st.faults && st.faults.hits,
     errors: errs.slice(0, 4), savedValueWarnings: warns, screenshot: shot });
 }

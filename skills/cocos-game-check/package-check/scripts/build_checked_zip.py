@@ -76,6 +76,10 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
     manifest_path = Path(resource_manifest).resolve()
     manifest_bytes = manifest_path.read_bytes()
     obligations = package_obligations.verify(files, native, project, manifest_path)
+    from make_tiktok_zip import english_new_image_problems
+    english_problems = english_new_image_problems(files, project, board)
+    if english_problems:
+        raise ValueError('; '.join(english_problems))
     # native_problems already enforces the shared startup-dependency audit.
     # Do not run that identical check twice before runtime. Packed assets,
     # however, were previously only checked after the expensive runner.

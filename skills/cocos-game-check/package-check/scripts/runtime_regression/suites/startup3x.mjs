@@ -5,6 +5,7 @@
 // Every case records the page rAF rate; a run below 30 fps is INVALID and refuses (D3 problem 4).
 const L = await import(globalThis.CFG.lib);
 const { C, A, sleep } = L;
+const SCREEN = await import(new URL('../screen.mjs', import.meta.url).href);   // 11.17.16: log says home, screen still loading
 const path = await import('node:path');
 
 const FIRST_FRAME_MS = (A.first_frame_ms || 5000);
@@ -18,16 +19,18 @@ const CASES = [
 
 async function runCase(page, out, [id, query, limitMs, want]) {
   await page.goto('about:blank');
+  const sw = SCREEN.watch(C.evidenceDir, 'startup3x-' + id);
   await page.goto(L.url([SIZE, 'store=' + id, query].join('&')));
   await L.keepFrames(page);
   const t0 = Date.now(), fpsSamples = [];
-  let home = false, st = null;
+  let home = false, st = null, screen = null;
   while (Date.now() - t0 < limitMs) {
     await sleep(1000);
     const f = await L.fps(page).catch(() => null);
     if (typeof f === 'number') fpsSamples.push(f);
     try { home = (await L.adapterCall(page, A.home)) === true; } catch (_) { home = false; }
-    if (home) { await sleep(1500); break; }
+    if (home) { sw.home(); await sleep(1500); screen = await sw.judge(page); break; }
+    await sw.loading(page);
   }
   st = await L.hostState(page).catch(() => null);
   const sprites = await L.ev(page, () => window.__H && __H.sprites && __H.sprites()).catch(() => null);
@@ -38,6 +41,7 @@ async function runCase(page, out, [id, query, limitMs, want]) {
   const problems = [];
   if (medianFps === null || medianFps < L.MIN_FPS) problems.push(`run invalid: page ran at ${medianFps} fps (< ${L.MIN_FPS}); timing cannot be used, re-run with the window visible`);
   if (!home) problems.push(`home not reached within ${Math.round(limitMs / 1000)} s`);
+  if (screen && screen.problem) problems.push(screen.problem);
   if (want.firstFrame) {
     if (firstDraw === undefined) problems.push('no first frame (the package never drew)');
     else if (firstDraw > FIRST_FRAME_MS) problems.push(`first frame at ${(firstDraw / 1000).toFixed(1)} s (limit ${FIRST_FRAME_MS / 1000} s)`);
@@ -47,7 +51,7 @@ async function runCase(page, out, [id, query, limitMs, want]) {
   try { shot = path.join(C.evidenceDir, `startup3x-${id}.png`); await page.screenshot({ path: shot }); } catch (_) { shot = null; }
   out.add(id, problems.length === 0, { query, home, ms: Date.now() - t0, firstDrawMs: firstDraw === undefined ? null : firstDraw,
     sprites, webp: st && st.webp, medianFps, fpsSamples: fpsSamples.slice(0, 40), marks: st && st.marks, subpackages: st && st.sub,
-    problems, errors: errs.slice(0, 4), screenshot: shot });
+    problems, errors: errs.slice(0, 4), screenshot: shot, screen });
 }
 
 await L.suite(async ({ out, page }) => {

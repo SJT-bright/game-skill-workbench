@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Behavioral calibration: defect fixtures + real missing-engine regression."""
+import re
 import copy
 import os
 import shutil
@@ -349,7 +350,8 @@ class KitMainFixture(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'K1_kit_bytes'):
             check(path, APP)
     def test_kit_main_not_loaded_refused(self):
-        self.files['game.js'] = self.files['game.js'].replace(b"require('./main');", b'')
+        # 11.17.15: upload_compat writes require('./main.js'); remove either spelling
+        self.files['game.js'] = re.sub(rb"require\('\./main(\.js)?'\);", b'', self.files['game.js'])
         with self.assertRaisesRegex(ValueError, 'K2_kit_wiring'):
             check(self.archive(), APP)
 

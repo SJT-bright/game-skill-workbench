@@ -29,7 +29,6 @@
 const L = await import(globalThis.CFG.lib);
 const G = await import(new URL('gates.mjs', globalThis.CFG.lib).href);
 const P = await import(new URL('phone.mjs', globalThis.CFG.lib).href);
-const R = await import(new URL('layout_rules.mjs', globalThis.CFG.lib).href);
 const path = await import('node:path');
 const C = L.C, A = L.A;
 const POLICY = C.policy === 'legacy' ? 'legacy' : 'new';
@@ -37,6 +36,7 @@ const POLICY = C.policy === 'legacy' ? 'legacy' : 'new';
 // with a warning (as before 手机检查补全)
 const LEGACY = POLICY === 'legacy';
 const B = A.resume_play || {};
+const FACTS = C.facts || {};
 const KEYS = new Set(['start', 'probe', 'state_js', 'clock_js', 'pause_button', 'continue_button', 'ad', 'settle_ms', 'background_ms', 'query', 'note', 'cases']);
 const isNone = (v) => !!v && typeof v === 'object' && !Array.isArray(v) && typeof v.none === 'string' && !!v.none.trim();
 
@@ -64,7 +64,7 @@ await L.suite(async ({ out, page }) => {
 
   // ---- where the pause control and the in-level ad are (adapter, else found) ----
   const prior = LEGACY ? null : await P.priorAdEntries();
-  const inLevel = (prior || []).filter((e) => e.taps[0] === '<play>' && e.taps.length >= 2 && !R.isManualRevive(e.taps.at(-1), e.sig, A));
+  const inLevel = (prior || []).filter((e) => e.taps[0] === '<play>' && e.taps.length >= 2);
   let ad = null, adWhy = null;
   if (isNone(B.ad)) adWhy = 'declared none: ' + B.ad.none;
   else if (B.ad) ad = B.ad;
@@ -191,7 +191,8 @@ await L.suite(async ({ out, page }) => {
       if (!ad && adWhy) return { skip: adWhy };
       if (!ad && LEGACY) return { warnSkip: 'no in-level ad entry given (resume_play.ad) - the case "a rewarded ad sends the game to the background" did not run [legacy game: the entries button_sweep found are not used]' };
       if (!ad && prior === null) return { warnSkip: 'no in-level ad entry known: button_sweep did not run before this suite (it runs first in a full run) and resume_play.ad is not written' };
-      if (!ad) return { skip: 'no non-revive in-level rewarded entry was declared or discovered. Rewarded revive is covered in the first manual playtest after art.' };
+      if (!ad && FACTS.rewarded_ads === false) return { skip: 'the package shows no rewarded ads' };
+      if (!ad) return { fail: 'no in-level rewarded ad entry known: button_sweep found none in the level and resume_play.ad is not written. Write resume_play.ad (an in-level prop, hint or revive button that shows a rewarded ad) or {"none": "why the level has no rewarded ad"}' };
     }
     return null;
   }

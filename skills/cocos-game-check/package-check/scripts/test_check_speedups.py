@@ -92,7 +92,7 @@ class AdapterPreflight(Tmp):
 
     def test_every_missing_field_is_listed_at_once_for_a_new_game(self):
         text = ' | '.join(self.problems(PARTIAL, 'new'))
-        for item in ('runtime suite startup needs adapter field(s) play',
+        for item in ('runtime suite startup needs adapter field(s) play', 'frame_rate/adapter: adapter has no "frame_rate"',
                      'popin/adapter: adapter has no "popin"'):
             self.assertIn(item, text, item)
 
@@ -106,7 +106,7 @@ class AdapterPreflight(Tmp):
         with self.assertRaises(runtime_regression.RuntimeRefused) as caught:
             runtime_regression.run(self.package, self.adapter(PARTIAL), policy='new', work=self.root / 'work')
         text = str(caught.exception)
-        for item in ('before the browser', 'startup needs adapter field(s) play', 'popin/adapter'):
+        for item in ('before the browser', 'startup needs adapter field(s) play', 'popin/adapter', 'frame_rate/adapter'):
             self.assertIn(item, text, item)
         self.assertTrue(caught.exception.summary['stopped_before_browser'])
         self.assertFalse(self.mark.exists(), 'a browser was started')

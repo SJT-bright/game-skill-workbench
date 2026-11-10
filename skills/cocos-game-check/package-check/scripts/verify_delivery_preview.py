@@ -12,10 +12,10 @@ from urllib.parse import urlsplit
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'remake-core' / 'scripts'))
 from browser_slots import process_identity, slots
 from check_known_issues import tree_sha
-from serve_preview import entry_readback
+from serve_preview import AD_SIMULATOR_PATH, entry_readback
 
 
-def verify_preview(url, web_sha256):
+def verify_preview(url, web_sha256, *, require_ad_simulator=False):
     if not url:
         raise ValueError('缺同版试玩链接：只有 ZIP，交付未完成。先启动手机试玩并传入 --preview-url。')
     parts = urlsplit(url)
@@ -53,21 +53,27 @@ def verify_preview(url, web_sha256):
             raise ValueError('链接未打开固定手机试玩入口。')
         return body
 
-    ok, files, problem = entry_readback(url, snapshot, fetch=fetch)
+    ok, files, problem = entry_readback(url, snapshot, html_injected=None, fetch=fetch)
     if not ok:
         raise ValueError(problem)
+    simulated = any(row['file'] == AD_SIMULATOR_PATH and row['same'] for row in files)
+    if require_ad_simulator and not simulated:
+        raise ValueError('本轮检查需要模拟广告。用当前候选开启模拟广告后核对同版试玩。')
     return {'url': url, 'web_tree_sha256': web_sha256, 'slot_id': slot['id'],
             'checked_at': datetime.now(timezone.utc).isoformat(), 'entry_files': files,
-            'markdown_link': f'[同版手机试玩]({url})'}
+            'ad_simulator': simulated,
+            'markdown_link': f'[同版手机试玩（模拟广告）]({url})' if simulated else f'[同版手机试玩]({url})'}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--preview-url', required=True)
     parser.add_argument('--web-sha256', required=True, help='Web tree SHA-256 from the matching build evidence')
+    parser.add_argument('--require-ad-simulator', action='store_true', help='require the local manual reward simulator')
     args = parser.parse_args()
     try:
-        print(json.dumps(verify_preview(args.preview_url, args.web_sha256), ensure_ascii=False))
+        print(json.dumps(verify_preview(args.preview_url, args.web_sha256,
+                                        require_ad_simulator=args.require_ad_simulator), ensure_ascii=False))
     except (ValueError, OSError) as error:
         print(json.dumps({'status': 'refuse', 'error': str(error)}, ensure_ascii=False))
         return 1

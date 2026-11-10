@@ -187,11 +187,11 @@
       "id": "GAME-AD-01",
       "feature": "game_ad_effect",
       "title": "广告触发的游戏状态变更",
-      "steps": "对实际存在的非复活开局、继续、局内道具或其他激励广告效果，检查局次、进度、目标、次数，以及取消、重新触发、迟到回调和新局。局内广告复活由美工结束后的首轮人工试玩核对。",
-      "expected": "适用的非复活效果仅作用于有效目标并按规则兑现一次。取消不发奖，旧结果不进入新局。",
+      "steps": "先审查是否已有正确的看广告复活，缺少则按当前玩法补齐并接用户广告位；保留独立免费TRY AGAIN。仅对实际存在的开局、继续、复活或局内广告效果，核广告前后局/分数/进度/目标对象与次数；让等待跨过旧对象原定销毁时间，覆盖取消、再触发、新局及既有保护或效果的暂停/到期。 存在安全点位移或跟随镜头时核角色即时可见与输入恢复；物理回调按实际引擎的锁定/结束阶段处理。",
+      "expected": "效果只作用预定有效目标并按真实规则一次执行；取消不改局，旧结果不作用新局。继续所需对象仍有效；对象清理及几何范围不误含装饰/技能子节点，已有正确机制不重复添加；复活次数、保护时长和技能按当前游戏，不复制其他游戏固定规则。",
       "phase": "pre_scan",
       "always_applicable": false,
-      "symptom": "看广告加步数或领局内道具后，游戏状态没变或变错。"
+      "symptom": "看广告复活/加步数后，游戏状态没变或变错（复活后立刻又死）。"
     },
     {
       "id": "GROW-01",
@@ -637,7 +637,7 @@
       "id": "DEVICE-01",
       "feature": "device",
       "title": "目标真机与真实广告",
-      "steps": "按当前目标设备和平台范围，使用绑定版本的Native包逐个非复活入口检查真实视频、奖励、回访及后台恢复，记录设备与版本。 正式交付完成前使用同版Native与实际上传ZIP，在TikTok物理手机冷开、连续三次重开、实际操作和前后台恢复。",
+      "steps": "按当前目标设备和平台范围，使用绑定版本的Native包逐入口检查真实视频、奖励、回访及后台恢复，记录设备与版本。 正式交付完成前使用同版Native与实际上传ZIP，在TikTok物理手机冷开、连续三次重开、实际操作和前后台恢复；有复活再验真实视频后的同局恢复、再次结束及免费重开。",
       "expected": "真实手机/IAA结果有来源；浏览器Mock、离线检查或别的应用结果不能替代。 手机记录绑定实际Native树/上传ZIP SHA、设备、App与平台测试版本；缺真机或IAA证据保持待验并阻止正式完成，测试输入候选单列。",
       "phase": "device",
       "always_applicable": false,
@@ -661,7 +661,7 @@
       "id": "LOAD-02",
       "feature": "loading",
       "title": "启动及加载阻塞排查",
-      "steps": "冷启动、刷新与再次打开时记录卡住阶段、资源/分包请求和运行异常；本地Web核服务归属、目标目录与HTTP字节，再复现一次失败→恢复→实际可玩。 重开链须真实触屏连续三轮、两种视口，逐轮观察新局、实际进展及后续输入效果；不能只断言发起加载。 用户 2026-10-23：最终检查以加载为重点——在最终构建上把每一条进入游戏的路线都实际走一遍（冷启动首页 PLAY、地图点关卡、过关后 Next、失败后 Retry、切后台回来、重新打开游戏），每条都要真实进到可操作的关卡，不能有一条卡在加载、黑屏或点了没反应。",
+      "steps": "冷启动、刷新与再次打开时记录卡住阶段、资源/分包请求和运行异常；本地Web核服务归属、目标目录与HTTP字节，再复现一次失败→恢复→实际可玩。 重开链须真实触屏连续三轮、两种视口，逐轮观察新局、实际进展及后续输入效果；不能只断言发起加载。 用户 2026-10-23：最终检查以加载为重点——在最终构建上把每一条进入游戏的路线都实际走一遍（冷启动首页 PLAY、地图点关卡、过关后 Next、失败后 Retry、复活后继续、切后台回来、重新打开游戏），每条都要真实进到可操作的关卡，不能有一条卡在加载、黑屏或点了没反应。",
       "expected": "真实目标界面可到达；缺资源、初始化中断或服务不可达不会永远只显示Loading。失败反馈和恢复动作实际有效；HTTP200、加载图、旧健康报告或重启后截图不能单独判通过。 场景已进入不等于可玩，必须有实际计分/棋盘进展和输入响应证据。 每一条进入游戏的路线都能进去、能玩；没有一条只停在加载画面。",
       "phase": "pre_scan",
       "always_applicable": true,
@@ -1601,7 +1601,7 @@
       "id": "L-FPS",
       "symptom": "120 帧的屏幕上物理和推力跑成两倍速，电脑上测的手感不代表手机（全民飞车漂移 schedule(run_time, 0.01) 每次推固定的力、物理没开 enabledAccumulator；Pizza Drift 第 1 到 5 关第一个弯就掉下去）",
       "intercept": "remake-core/scripts/logic_check.py L-FPS-ACCUM（开了 2.4 物理却没开 enabledAccumulator）、L-FPS-SCHEDULE（schedule 间隔小于 1/60 秒且回调不用 dt）、L-FPS-DT（update / 每帧 schedule 里施力、冲量、改速度或位置却不乘 dt）",
-      "level": "preflight（保留源码时间步检查）；运行时 frame_rate 可显式运行做轨迹诊断",
+      "level": "preflight（新游戏需处理；LEGACY_GAMES 名单上的老游戏只提示）；只静态，60/120 帧手感对比（FRAME-RATE-FEEL，runtime_regression frame_rate）是最终裁判",
       "source": "总表 22 P16 / FW 2.3"
     },
     {
@@ -1676,7 +1676,7 @@
     },
     {
       "id": "POPIN",
-      "symptom": "宽屏普通对局中，障碍在屏幕中间凭空出现、右半边一直空着（BreezyBalloon v2.1 按设计宽度 750 回收柱子）",
+      "symptom": "宽屏下障碍在屏幕中间凭空出现、右半边一直空着，复活时看得见的障碍一帧挪走（BreezyBalloon v2.1 按设计宽度 750 回收柱子）",
       "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/popin.mjs appeared_on_screen / vanished_on_screen / jumped_on_screen（写包入口必跑，四种屏幕；修法：remake-core/assets/platform-kit/parts/CourseLane.js）",
       "level": "block（新游戏；名单上的老游戏警告；3.x 未覆盖只警告；没有滚动障碍写 n/a）",
       "source": "总表 22 P2 补 / W89"
@@ -1698,8 +1698,8 @@
     {
       "id": "FRAME-RATE-FEEL",
       "symptom": "同一段操作在 120 帧的屏幕上跑得更快、更远，电脑上调的手感到手机上不一样（全民飞车漂移 v3.1：起步 1 秒时 120 帧多跑 19.9%；Pizza Drift 第 1 到 5 关第一个弯就掉下去）",
-      "intercept": "按需运行 frame_rate 做 60/120 Hz 位移对照。5% 仅作诊断提示，按支持设备上的可复现玩法后果判断。",
-      "level": "diagnostic（默认回归和出包不运行）",
+      "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/frame_rate.mjs same_motion（60 帧和 120 帧按真实时间比位置，差超过 5% 不通过；用了 2.4 物理的新游戏由 remake-core/scripts/tiktok_finalize_steps/physics_clock.py 自动装 remake-core/assets/platform-kit/parts/PhysicsClock.js 打开 enabledAccumulator，推力仍要乘 dt）",
+      "level": "block（新游戏；名单上的老游戏警告；3.x 未覆盖只警告；没有物理、没有自己会动的东西写 n/a）",
       "source": "总表 22 P16 / W92"
     },
     {

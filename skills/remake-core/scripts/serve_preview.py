@@ -106,12 +106,12 @@ SCRIPT_SRC = re.compile(r'<script\b[^>]*\bsrc\s*=\s*["\']([^"\']+)["\']', re.I)
 SHELL_ENTRY = re.compile(r"new URL\('([^']+)'")
 
 
-def entry_readback(url, export_dir, *, html_injected=False, fetch=None):
+def entry_readback(url, export_dir, *, html_injected=False, setup_bytes=None, fetch=None):
     """生成时预防 P21 ⑤ (MabelsMeadow / Meadow Match: the link still loaded an old build; 普查 stale_preview 10 次):
     read the link back over HTTP exactly as a browser opens it (phone shell -> game entry page -> its <script src>
     files) and compare every entry file byte for byte with the CURRENT export folder. Returns (ok, rows, problem).
-    html_injected: the server adds preview-only scripts to HTML (--ad-simulator), so the entry page itself is not
-    compared, only its scripts. Scripts the engine loads later are not read here."""
+    With html_injected=None detect the simulator from the served entry. Verify the approved host
+    additions at the insertion point and compare the remaining HTML and game scripts byte for byte."""
     import hashlib
     from urllib.parse import urljoin
     from urllib.request import Request, urlopen
@@ -143,8 +143,36 @@ def entry_readback(url, export_dir, *, html_injected=False, fetch=None):
             return
         rows.append({'file': rel, 'served_sha256': sha(served), 'export_sha256': sha(want), 'same': served == want})
 
-    if not html_injected:
-        compare('index.html', page.replace(TOUCH_BRIDGE_TAG, b'', 1))   # P13 ④: the preview-only touch bridge tag
+    if html_injected is None:
+        html_injected = AD_SIMULATOR_TAG in page
+    if html_injected:
+        try:
+            pos = preview_script_position((export_dir / 'index.html').read_bytes())
+            offset = pos
+            if page.startswith(TOUCH_BRIDGE_TAG, offset):
+                offset += len(TOUCH_BRIDGE_TAG)
+            if not page.startswith(AD_SIMULATOR_TAG, offset):
+                return False, rows, '试玩入口缺少模拟广告脚本'
+            offset += len(AD_SIMULATOR_TAG)
+            has_setup = page.startswith(AD_SIMULATOR_SETUP_TAG, offset)
+            if setup_bytes is not None and not has_setup:
+                return False, rows, '试玩入口缺少本作的广告模拟接线'
+            if has_setup:
+                offset += len(AD_SIMULATOR_SETUP_TAG)
+                actual = get(urljoin(url, '/__local_ad_simulator_setup.js'))
+                if setup_bytes is not None and actual != setup_bytes:
+                    return False, rows, '试玩服务上的模拟广告接线文件已变化'
+            actual = get(urljoin(url, AD_SIMULATOR_PATH))
+            expected = AD_SIMULATOR_ASSET.read_bytes()
+            if actual != expected:
+                return False, rows, '试玩服务上的模拟广告脚本不是当前版本'
+            rows.append({'file': AD_SIMULATOR_PATH, 'served_sha256': sha(actual),
+                         'export_sha256': sha(expected), 'same': True})
+            compare('index.html', page[:pos] + page[offset:])
+        except Exception as error:  # noqa: BLE001
+            return False, rows, '读不回试玩广告模拟脚本（%s）' % error
+    else:
+        compare('index.html', page.replace(TOUCH_BRIDGE_TAG, b'', 1))
     for src in SCRIPT_SRC.findall(page.decode('utf-8', 'replace')):
         full = urljoin(entry_url, src)
         parts = urlsplit(full)
@@ -165,6 +193,16 @@ def entry_readback(url, export_dir, *, html_injected=False, fetch=None):
 
 TOUCH_BRIDGE_TAG = b'<script src="/__local_touch_bridge.js"></script>'
 HOME_PROBE_TAG = b'<script src="/__local_home_probe.js"></script>'
+AD_SIMULATOR_PATH = '/__local_ad_simulator.js'
+AD_SIMULATOR_TAG = b'<script src="/__local_ad_simulator.js"></script>'
+AD_SIMULATOR_SETUP_TAG = b'<script src="/__local_ad_simulator_setup.js"></script>'
+AD_SIMULATOR_ASSET = Path(__file__).resolve().parent.parent / 'assets' / 'ad-simulator.js'
+
+
+def preview_script_position(content):
+    match = re.search(br'<head\b[^>]*>', content, re.I)
+    return match.end() if match else 0
+
 # 生成时预防 P21 ⑤ (后半): preview-only probe in the headless home screenshot page (query __home_shot=1). It reports
 # uncaught errors, unhandled rejections, console.error, the Cocos splash and whether a scene runs back to this server.
 HOME_PROBE_JS = br"""(function(w){if(w.__homeProbe)return;var s={errors:[],t0:Date.now()};w.__homeProbe=s;
@@ -392,11 +430,11 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         LAST[0] = time.time()
         request = urlsplit(self.path)
-        if request.path == '/__local_ad_simulator.js':
+        if request.path == AD_SIMULATOR_PATH:
             if not self.ad_simulator:
                 self.send_error(404)
                 return
-            self.send_bytes((Path(__file__).resolve().parent.parent / 'assets' / 'ad-simulator.js').read_bytes(), 'application/javascript; charset=utf-8')
+            self.send_bytes(AD_SIMULATOR_ASSET.read_bytes(), 'application/javascript; charset=utf-8')
             return
         if request.path == '/__local_ad_simulator_setup.js':
             if not self.ad_simulator or not self.ad_simulator_setup:
@@ -439,16 +477,15 @@ class Handler(SimpleHTTPRequestHandler):
         if self.touch_bridge and self.phone_size and query.get('__phone_game') == ['1']:
             script += TOUCH_BRIDGE_TAG              # P13 ④: only the game page inside the phone frame
         if self.ad_simulator:
-            script += b'<script src="/__local_ad_simulator.js"></script>'
+            script += AD_SIMULATOR_TAG
             if self.ad_simulator_setup:
-                script += b'<script src="/__local_ad_simulator_setup.js"></script>'
+                script += AD_SIMULATOR_SETUP_TAG
         if script:
             path = Path(self.translate_path(self.path))
             # Apply to nested HTML exports as well. Only HTTP response bytes change.
             if path.suffix.lower() in ('.html', '.htm') and path.is_file():
                 content = path.read_bytes()
-                match = re.search(br'<head\b[^>]*>', content, re.I)
-                pos = match.end() if match else 0
+                pos = preview_script_position(content)
                 content = content[:pos] + script + content[pos:]
                 self.send_bytes(content, 'text/html; charset=utf-8')
                 return
@@ -569,10 +606,15 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
     parser.add_argument('--home-shot-timeout', type=float, default=90, help='headless home screenshot: give up after this '
                         'many seconds (default 90; then the link says 没截图)')
     args = parser.parse_args(argv)
+    setup_bytes = None
     if args.ad_simulator_setup:
         if not args.ad_simulator or not args.ad_simulator_setup.is_file():
             parser.error('--ad-simulator-setup requires --ad-simulator and an existing JavaScript file')
         args.ad_simulator_setup = args.ad_simulator_setup.resolve()
+        try:
+            setup_bytes = args.ad_simulator_setup.read_bytes()
+        except OSError as error:
+            parser.error(str(error))
     if (args.phone_width is None) != (args.phone_height is None):
         parser.error('--phone-width and --phone-height must be supplied together')
     phone_size = (args.phone_width, args.phone_height) if args.phone_width is not None else ((844, 390) if args.orientation == 'landscape' else (390, 844))
@@ -656,7 +698,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         serving = threading.Thread(target=server.serve_forever, daemon=True)
         serving.start()
         # 生成时预防 P21 ⑤: a link a person opens is read back first; it must serve the current export's entry files
-        ok, rows, problem = entry_readback(url, current_export, html_injected=args.ad_simulator)
+        ok, rows, problem = entry_readback(url, current_export, html_injected=args.ad_simulator, setup_bytes=setup_bytes)
         if not ok:
             print('不给试玩链接：%s。重新导出完、确认导出目录对了，再起一个新的预览服务。' % problem, file=sys.stderr, flush=True)
             abort_start()

@@ -623,6 +623,10 @@ def main():
         (out/'art-check.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
         md='# 美术检查：先补采集\n\n本轮尚未运行美术分析，不能判定美术通过或失败。补齐以下具体材料后再运行：\n\n'+'\n'.join('- '+e for e in inventory['errors'])+'\n'
         md+='\n不用采集就能查的两行（v7.8 H8、H10）：\n\n'+'\n'.join('- %s：%s　%s'%(t,'通过' if ok is True else ('提示' if ok is None else '需处理'),d) for t,ok,d,_ in static_rows)+'\n'
+        # 11.17.14: Cocos 3.x pages cannot be captured yet; record "not covered" (never a pass) for the trial entry.
+        import art_check_record
+        if art_check_record._engine(proj) == 3:
+            art_check_record.write(proj, 'fail' if static_failed else 'not_covered_3x', report, out/'art-check.json', board)
         (out/'art-check.md').write_text(md,encoding='utf-8');print(md);return 1
     from audit_no_social_features import audit as audit_no_social
     social=audit_no_social(proj,dumps=a.dumps)
@@ -1016,6 +1020,10 @@ def main():
     report['check_timings'] = read_timings(logs)
     report['total_elapsed_seconds'] = round(time.monotonic()-started,6)
     (out / 'art-check.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    # 11.17.14: lightweight record (no image fingerprints) so the first English trial knows a full run happened.
+    import art_check_record
+    scoped = [name for name, on in (('maintenance', a.maintenance_scope), ('english_visual_scope', a.english_visual_scope)) if on]
+    art_check_record.write(proj, 'fail' if blocking else 'pass', report, out / 'art-check.json', board, scoped)
     md = ['# 美术自检', '', '工程：%s　板块：%s　美术：%s　时间：%s' % (proj, '英化' if board == 'localize' else '重塑',
                                                              '按重塑画风' if remake_art else '沿用原画风', report['time']), '',
           ('**需处理 %d 项：只定位这些失败项及改动依赖；保留原通过项，禁止整套重跑。**' % len(blocking)) if blocking else '**本次技术项通过。**画面体验按人工试玩清单记录：',

@@ -162,7 +162,7 @@ class OwnStartupFileStillRequired(unittest.TestCase):
         rec = finalize(root)
         self.assertEqual(rec['blocks'], [])
         self.assertTrue((root / 'native-load-guard.js').is_file(), 'kept: native-helper.js still loads it')
-        self.assertIn("\nrequire('./native-load-guard')(cc, tt);\n", (root / 'game.js').read_text(),
+        self.assertRegex((root / 'game.js').read_text(), r"\nrequire\('\./native-load-guard(\.js)?'\)\(cc, tt\);\n",
                       'its game.js line is left as it was')
         kept = [w for w in step(rec, 'startup')['warnings'] if w['id'] == 'K_W_own_startup_kept'
                 and (w.get('evidence') or {}).get('file') == 'native-load-guard.js']

@@ -88,5 +88,33 @@ class NewImages(unittest.TestCase):
         self.assertEqual(newimg.pixels(png(33, 44)), (33, 44))
 
 
+class WriterNewImageGate(unittest.TestCase):
+    """11.17.14: both writers check the bytes about to be zipped; no art re-run, no image review, no recording."""
+
+    def gate(self, files, board='localize', pre=None):
+        import make_tiktok_zip
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            if pre is not None:
+                target = project / make_tiktok_zip.PRE_ENGLISH_LIST
+                target.parent.mkdir(parents=True)
+                target.write_text(json.dumps({'images': {s: 'x.png' for s in pre}}), encoding='utf-8')
+            return make_tiktok_zip.english_new_image_problems(files, project, board)
+
+    def test_oversized_new_image_refused_original_kept(self):
+        big = png(10, 10, newimg.MAX_BYTES + 10)
+        self.assertTrue(any('800' in p or 'bytes' in p or 'KB' in p for p in
+                            self.gate({'assets/new.png': big}, pre=[sha(OLD)])))
+        self.assertEqual(self.gate({'assets/old.png': big}, pre=[sha(big)]), [])
+        self.assertEqual(self.gate({'assets/new.png': NEW}, pre=[sha(OLD)]), [])
+
+    def test_missing_pre_english_list_refused_with_the_command(self):
+        problems = self.gate({'assets/new.png': NEW})
+        self.assertTrue(problems and '--make-list' in problems[0])
+
+    def test_remake_board_not_judged(self):
+        self.assertEqual(self.gate({'assets/new.png': png(10, 10, newimg.MAX_BYTES + 10)}, board='remake'), [])
+
+
 if __name__ == '__main__':
     unittest.main()

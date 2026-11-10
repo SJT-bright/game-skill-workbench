@@ -142,7 +142,7 @@
 ## 加载（最终检查重点，用户 2026-10-23）
 | 条件 | 比例 | 冷/热 | 首次有画面 | 首页可点 | 下载完→首页可点 | PLAY→能玩 | 地图选关/Next/Retry→能玩 | 动画最长卡住 | 结果 |
 |---|---|---|---|---|---|---|---|---|---|
-- 每条进关路线（首页 PLAY、地图选关、Next、Retry、切后台回来、关掉重开）：每条一行写"进到了能玩 / 卡在哪"
+- 每条进关路线（首页 PLAY、地图选关、Next、Retry、复活后继续、切后台回来、关掉重开）：每条一行写"进到了能玩 / 卡在哪"
 - 故障：slow_progress / background_wait / stall_retry / late_callback / optional_api_missing / native_modal_no_callback / image_no_callback / audio_fail（/ deferred_bundle_fail）每个一行
 - 最终构建上的重测报告：
 

@@ -64,45 +64,73 @@
     "p:onShow",
     "p:open"
    ],
-   "current_only": [],
-   "current_sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+   "current_only": [
+    "p:profileClaimedNode",
+    "p:shortcutClaimedNode",
+    "s:ClaimedNode"
+   ],
+   "current_sha256": "6f5f5874e28b07d0842113b7e4bbea6014b64661d699479f659682d5db7ff316",
    "editable": false,
    "previous": {
+    "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d": [
+     "s:)) :",
+     "s:+ TEXT.collected : (label ?",
+     "s:+ e.reward :",
+     "s:+ label :"
+    ],
     "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122": [
      "p:EVENT_SHOW",
      "p:_onShow",
      "p:unsupported",
+     "s:)) :",
      "s:+ TEXT.collected : (amount > 0 ?",
+     "s:+ e.reward :",
      "s:Available in TikTok"
     ],
     "632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c": [
      "p:EVENT_SHOW",
      "p:_onShow",
      "p:unsupported",
+     "s:)) :",
      "s:+ TEXT.collected : (amount > 0 ?",
+     "s:+ e.reward :",
      "s:Available in TikTok"
     ],
     "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab": [
      "p:EVENT_SHOW",
      "p:_onShow",
      "p:unsupported",
+     "s:)) :",
+     "s:+ TEXT.collected : (label ?",
+     "s:+ e.reward :",
+     "s:+ label :",
      "s:Available in TikTok"
     ],
     "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc": [
      "p:EVENT_SHOW",
      "p:_onShow",
      "p:unsupported",
+     "s:)) :",
      "s:+ TEXT.collected : (amount > 0 ?",
+     "s:+ e.reward :",
      "s:Available in TikTok"
     ],
     "c3dbfcb6262976ddba7f719e66f6ef6940bb3fb796a96b696053464ffa70af77": [
      "p:EVENT_SHOW",
      "p:_onShow",
      "p:unsupported",
+     "s:)) :",
+     "s:+ TEXT.collected : (label ?",
+     "s:+ e.reward :",
+     "s:+ label :",
      "s:Available in TikTok"
     ],
     "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963": [
      "p:unsupported",
+     "s:)) :",
+     "s:+ TEXT.collected : (label ?",
+     "s:+ e.reward :",
+     "s:+ label :",
      "s:Available in TikTok"
     ],
     "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474": [
@@ -111,7 +139,9 @@
      "p:action",
      "p:check",
      "p:unsupported",
+     "s:)) :",
      "s:+ TEXT.collected : (amount > 0 ?",
+     "s:+ e.reward :",
      "s:Available in TikTok",
      "s:check",
      "s:claimed",

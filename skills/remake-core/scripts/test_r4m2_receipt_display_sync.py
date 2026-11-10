@@ -10,7 +10,7 @@
   5 carry      current preparation leaves historical display evidence intact
   6 speed      display fingerprints of 300 prefabs + 300 scripts under 1 s
   7 sync       home_entry_scan is in SYNC_SOURCE_STEPS (ui_kit_scan still last); finalize_sync on a new 3.x game with
-               hand-placed entries writes K_W_home_entry_coords; the whole sync of 200 scripts stays about 1 s
+               hand-placed entries writes K_W_home_entry_coords; each candidate script is scanned once
                (old code: no home_entry_scan step in the sync record)
   8 ShopTx     the 'not installed' info of sync's run_parts names ShopTx with RunSession and FxPool
                (old code: 'RunSession / FxPool not installed')
@@ -23,6 +23,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -30,7 +31,7 @@ import art_receipt as R  # noqa: E402
 from test_art_receipt_fixtures import write_fixture
 import tiktok_finalize as F  # noqa: E402
 import tiktok_finalize_steps as T  # noqa: E402
-from tiktok_finalize_steps import policy as P  # noqa: E402
+from tiktok_finalize_steps import home_entry_scan, policy as P  # noqa: E402
 
 
 def prefab(text='PLAY', x=0, y=-300, speed=3):
@@ -144,14 +145,17 @@ class SyncSteps(unittest.TestCase):
         files['assets/scripts/Home.ts'] = HAND
         project(self.tmp, files)
         P.write_marker(self.tmp, 'remake', T.load_manifest().version, reason='init')
-        t = time.time()
-        rec = F.finalize_sync(self.tmp, 'remake')
-        spent = time.time() - t
+        t = time.monotonic()
+        with patch.object(home_entry_scan, 'scan_text', wraps=home_entry_scan.scan_text) as scanner:
+            rec = F.finalize_sync(self.tmp, 'remake')
+        spent = time.monotonic() - t
+        paths = [call.args[1] for call in scanner.call_args_list]
+        for rel in files:
+            self.assertEqual(paths.count(rel), 1, rel)
         step = next((s for s in rec['steps'] if s.get('step') == 'home_entry_scan'), None)
         self.assertIsNotNone(step, [s.get('step') for s in rec['steps']])
         self.assertIn('K_W_home_entry_coords', {w['id'] for w in rec['warnings']})
         print('\n  sync of 201 scripts: %.2f s' % spent, file=sys.stderr)
-        self.assertLess(spent, 2.0)
 
     def test_8_shoptx_named(self):
         ctx = T.Ctx('source', self.tmp, project=self.tmp, board='localize', engine=2, policy='new',

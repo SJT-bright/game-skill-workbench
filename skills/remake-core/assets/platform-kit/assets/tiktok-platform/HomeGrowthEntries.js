@@ -27,6 +27,10 @@
 // tools/home_free_slot.js (parity: tests/home-entries-slot.test.js). init(store, {place: false}) turns it off.
 var MissionFlow = require('./MissionFlow');
 
+// 11.17.15 (Saul 2026-11-08): a tap goes straight to TikTok and the kit draws no words on or around the entries
+// (no reward amount, no "Collected", no notice). Purpose and reward are part of the icon art. The claimed state is
+// shown only by the game's own art-style badge (shortcutClaimedNode / profileClaimedNode), switched on after the
+// reward is saved. The entry title is drawn as text only when its icon failed to load (never an empty box).
 var TEXT = {
   shortcut: 'Add to Home',
   profile: 'Profile Revisit',
@@ -153,11 +157,11 @@ Controller.prototype.state = function () {
   function entry(kind) {
     var claimed = flow.isClaimed(kind), label = rewardLabel(kind);
     return {
-      kind: kind, title: TEXT[kind], claimed: claimed,
-      reward: claimed ? TEXT.collected : label,
+      kind: kind, title: TEXT[kind], claimed: claimed, rewardText: label,
+      reward: '',
       busy: !!(view && view.kind === kind && view.busy),
       iconFallback: self.iconFallback[kind],
-      text: self.iconFallback[kind] ? TEXT[kind] + (claimed ? '\n' + TEXT.collected : (label ? '\n' + label : '')) : ''
+      text: self.iconFallback[kind] ? TEXT[kind] : ''
     };
   }
   var message = view ? view.message : '';
@@ -518,6 +522,8 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
     properties: {
       shortcutNode: {default: null, type: cc.Node},
       profileNode: {default: null, type: cc.Node},
+      shortcutClaimedNode: {default: null, type: cc.Node},
+      profileClaimedNode: {default: null, type: cc.Node},
       messageLabel: {default: null, type: cc.Label}
     },
     statics: {Controller: Controller, TEXT: TEXT, findFreeSlots: findFreeSlots, placeEntries: placeEntries,
@@ -603,9 +609,11 @@ if (typeof cc !== 'undefined' && cc && typeof cc.Class === 'function') {
       ['shortcut', 'profile'].forEach(function (kind) {
         var node = self[kind + 'Node'];
         if (!node) return;
-        var e = state[kind], label = self._label(node);
+        var e = state[kind], label = self._label(node), badge = self[kind + 'ClaimedNode'];
+        // 11.17.15: the claimed state is the game's art badge only; the kit adds no words to the entry.
+        if (badge && cc.isValid(badge)) badge.active = !!e.claimed;
         // Icon missing or not loaded: the entry title is drawn as text, so the slot is never an empty box.
-        label.string = e.iconFallback ? e.title + (e.reward ? '\n' + e.reward : '') : e.reward;
+        label.string = e.iconFallback ? e.title : '';
         label.node.active = label.string !== '';
         var button = node.getComponent(cc.Button);
         if (button) button.interactable = !e.busy;

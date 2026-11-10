@@ -57,6 +57,7 @@ SKIP = {'library', 'temp', 'build', 'local', 'node_modules', '.git', '.tiktok-ki
 SOURCE_STEPS = T.SOURCE_STEPS        # images, kit_sources, build_templates, settings, orientation, art_static
 # startup runs before touch/storage: whether main.js is the kit main.js decides where their load lines go.
 NATIVE_STEPS = ('adapter', 'startup', 'touch', 'storage', 'rewarded', 'login', 'appid', 'png', 'structure')  # rewarded: R4F1
+NATIVE_STEPS += ('upload_compat',)   # 11.17.15 (Saul 11-08, 鸽鸽小羊 upload fix): subpackage root '/', game.js './x.js', project.config options; last
 JUNK = ('.DS_Store', 'Thumbs.db')
 
 

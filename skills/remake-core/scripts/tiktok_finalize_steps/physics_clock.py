@@ -8,13 +8,13 @@ load and before every scene launch, and gives Clock.scale(dt) / Clock.force(v, d
     new game, 2.4, a script switches physics on (logic_check PHYS_ON / alias), no enabledAccumulator = true in the game:
         assets/tiktok-platform/PhysicsClock.js added (or restored to the kit bytes; an own copy moves to
         .tiktok-kit/removed/); info: the pushes are still the game's code (logic_check L-FPS-DT lists them, the runtime
-        suite frame_rate is available for diagnosis).
+        suite frame_rate decides).
     legacy game: nothing is written (its feel was tuned and tested the old way); warning K_W_physics_clock_legacy when
         the same condition holds.
     game sets enabledAccumulator itself, no physics, or Cocos 3.x (fixed-step physics): n/a, nothing written.
     a game script of its own named PhysicsClock (2.4 module names are global): not installed, warning
-        K_W_physics_clock_name (frame_rate is available for diagnosis).
-Never blocks. The optional frame_rate suite is a diagnostic.
+        K_W_physics_clock_name (the frame_rate suite still judges the game).
+Never blocks: the runtime suite frame_rate is the final judge (new game blocks there).
 """
 from . import KitError, Result, sha256
 
@@ -98,7 +98,7 @@ def apply(ctx):
         r.state = 'conflict'
         r.warn('K_W_physics_clock_name', 'game script %s is named PhysicsClock (Cocos 2.4 module names are global): the '
                'kit physics clock was not added. Set cc.director.getPhysicsManager().enabledAccumulator = true yourself '
-               'and scale the pushes by dt; the optional frame_rate suite can help diagnose differences' % ', '.join(found['own_name']))
+               'and scale the pushes by dt; the runtime suite frame_rate decides' % ', '.join(found['own_name']))
         return r.as_dict()
     try:
         kit = kit_bytes(ctx.manifest)
@@ -119,7 +119,7 @@ def apply(ctx):
             r.block('K1_kit_bytes', 'kit file did not verify after install: %s' % DEST)
     r.info.append('2.4 physics on in %s: enabledAccumulator now comes from %s. The pushes are still the game\'s code: '
                   'scale each per-call push by dt (Clock.force(v, dt), Clock.scale(dt)); logic_check L-FPS-DT lists them, '
-                  'the optional frame_rate suite compares 60 Hz vs 120 Hz' % (where, DEST))
+                  'the runtime suite frame_rate (60 Hz vs 120 Hz, 5 %%) decides' % (where, DEST))
     return r.as_dict()
 
 

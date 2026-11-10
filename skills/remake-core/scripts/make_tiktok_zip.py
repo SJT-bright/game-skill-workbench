@@ -208,6 +208,34 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+PRE_ENGLISH_LIST = Path('docs/english/pre-english-images.json')
+
+
+def english_new_image_problems(files, project, board):
+    """Board localize only (11.17.14): byte limits of images made during localisation, both writers.
+
+    Reads only the bytes about to be zipped and the pre-English list; it never re-runs art checks, image reviews or
+    recordings, so a small fix does not trigger a full re-test. Original Chinese images (SHA in the list) are never
+    judged. Restores the v7.5 MusicSlice rule that 11.17.13 dropped together with the aggregate art receipt.
+    """
+    if board is None and project:
+        from tiktok_finalize import read_source_record
+        board = (read_source_record(project) or {}).get('board')
+    if board != 'localize':
+        return []
+    if not project:
+        return ['english_new_images: 英化写包需要 --project，用来读取 %s' % PRE_ENGLISH_LIST]
+    pre = Path(project) / PRE_ENGLISH_LIST
+    if not pre.is_file():
+        return ['english_new_images: 缺少中文原版图片清单 %s（开工时用 audit_new_english_images.py --make-list '
+                '<中文原版工程> --out 这个文件生成；只需一次）' % pre]
+    import audit_new_english_images
+    try:
+        return ['english_new_images: ' + p for p in audit_new_english_images.check(files, pre)['problems']]
+    except (OSError, ValueError, TypeError) as error:
+        return ['english_new_images: 中文原版图片清单读不了：%s（%s）' % (pre, error)]
+
+
 def source_record_ref(project):
     """Which source record the writer accepted (path, file sha256, recorded source digest), for report/receipt."""
     import tiktok_finalize as F
@@ -476,6 +504,10 @@ def main():
         obligations = package_obligations.verify(obligation_files, native, a.project, a.resource_manifest)
     except (ValueError, OSError, TypeError, KeyError, subprocess.TimeoutExpired) as error:
         print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
+        return 1
+    english_problems = english_new_image_problems(obligation_files, a.project, a.board)
+    if english_problems:
+        print('REFUSED, no ZIP written: ' + '\n'.join(english_problems), file=sys.stderr)
         return 1
     from audit_final_package_startup import audit_final_startup
     try:

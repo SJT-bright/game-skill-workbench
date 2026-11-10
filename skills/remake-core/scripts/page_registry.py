@@ -54,7 +54,7 @@ ID = re.compile(r'^(?:ad-boost:)?[A-Za-z][A-Za-z0-9_.-]{0,60}$')
 PAGE_KEYS = {'id', 'name', 'kind', 'purpose', 'node', 'prefab', 'buttons', 'close', 'pause', 'ad_entries', 'why',
              'seen_at_runtime', 'note'}
 TOP_KEYS = {'schema', 'game', 'required_viewports', 'pages', 'no_ad_roles', 'adapter_js', 'note'}
-ADAPTER_JS = {'request', 'request_role', 'state', 'ready', 'exit', 'exit_label', 'home', 'no_music', 'boot_timeout_s', 'home_scene',
+ADAPTER_JS = {'request', 'state', 'ready', 'exit', 'exit_label', 'home', 'no_music', 'boot_timeout_s', 'home_scene',
               'after_home_js', 'enter_level'}
 DEFAULT_VIEWPORTS = [{'name': 'iphone14', 'width': 390, 'height': 844}, {'name': 'iphone-se', 'width': 375, 'height': 667}]
 
@@ -225,8 +225,7 @@ def uses_gameuikit(project):
 
 def emit_click_keys(adapter):
     """Adapter page-JavaScript fields (ADAPTER_JS names) that still click with emit('click')."""
-    return sorted(k for k in ADAPTER_JS if isinstance(adapter.get(k), str) and EMIT_CLICK.search(adapter[k])
-                  and not (k == 'request' and adapter.get('request_role') == 'revive'))
+    return sorted(k for k in ADAPTER_JS if isinstance(adapter.get(k), str) and EMIT_CLICK.search(adapter[k]))
 
 
 def adapter_doc(project, doc, caps_record, adapter_in=None, policy='new', force_body=False):

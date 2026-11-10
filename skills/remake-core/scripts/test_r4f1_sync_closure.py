@@ -13,6 +13,7 @@
                    second line; a kit-main build (2.4.15) gets no game.js line (main.js v1.7 loads it); legacy: nothing.
 Run: python3 test_r4f1_sync_closure.py
 """
+import re
 import hashlib
 import json
 import shutil
@@ -182,7 +183,7 @@ class RewardedGuardOwnMain(unittest.TestCase):
         self.assertEqual(game.count(GUARD_MARK), 1)
         at = game.index(GUARD_MARK)
         self.assertLess(game.index('__globalAdapter.adaptEngine()'), at)
-        self.assertLess(at, game.index("require('./main')"))
+        self.assertLess(at, re.search(r"require\('\./main(\.js)?'\)", game).start())   # 11.17.15: './main.js' after upload_compat
         F.finalize_native(b, p, 'localize')
         self.assertEqual((b / 'game.js').read_text().count(GUARD_MARK), 1, 'second run adds no second line')
 

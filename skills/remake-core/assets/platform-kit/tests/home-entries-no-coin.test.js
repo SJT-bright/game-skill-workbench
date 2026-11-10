@@ -61,7 +61,8 @@ var energy = function (kind, draft) { draft.energy = (Number(draft.energy) || 0)
   try {
     await test('no_coin_game_reward_option_pays_energy_once_each', async function () {
       var t = setup({reward: energy, rewardText: '+3 Energy'});
-      assert.strictEqual(t.state().shortcut.reward, '+3 Energy', 'entry shows the replacement, not an empty label');
+      assert.strictEqual(t.state().shortcut.rewardText, '+3 Energy', 'the replacement is known to the entry');
+      assert.strictEqual(t.state().shortcut.reward, '', '11.17.15: no reward words drawn on the entry');
       await visit(t, 'shortcut');
       assert.strictEqual(t.store.get().energy, 8, 'add-to-home pays +3 energy (ECON-SHORTCUT no_coin_with_energy)');
       assert.strictEqual(t.store.isClaimed('shortcut'), true);
@@ -74,7 +75,7 @@ var energy = function (kind, draft) { draft.energy = (Number(draft.energy) || 0)
     });
     await test('reward_text_per_entry_and_cocos_init_forwarding', async function () {
       var t = setup({reward: energy, rewardText: {shortcut: '+3 Energy', profile: '+3 Energy!'}});
-      assert.strictEqual(t.state().profile.reward, '+3 Energy!');
+      assert.strictEqual(t.state().profile.rewardText, '+3 Energy!');
       assert.strictEqual(t.state().rewardSource, 'game');
       var src = fs.readFileSync(entriesPath, 'utf8');
       assert(/reward:\s*options\.reward/.test(src), 'the Cocos component init(store, {reward}) passes the option on');

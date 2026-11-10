@@ -24,6 +24,7 @@ SOURCE_STEPS = ('images', 'kit_sources', 'physics_clock',   # physics_clock: v7.
                 'settings', 'orientation',   # orientation: v7.8 B31
                 'capsule_auto', 'bg_cover')   # 生成时预防 I3: P06-4 CapsuleAuto by default (new 2.4), P07-3 ScreenFit.cover on page backgrounds
 NATIVE_STEPS = ('adapter', 'touch', 'storage', 'startup', 'rewarded', 'login', 'appid', 'png', 'structure')  # rewarded: R4F1
+NATIVE_STEPS += ('upload_compat',)   # 11.17.15: upload compatibility, runs last
 SOURCE_STEPS += ('frame_scan', 'ui_kit_scan')   # 生成时预防 R4F3: #43 frame_scan also refuses at source (K5); #36 + 补查4 hand-built popups, mask values, dev text
 SOURCE_STEPS += ('home_entry_scan',)   # 生成时预防 R4L1 (R4G1 leftover): 3.x home entries given coordinates by hand while HomeEntrySlots is installed (warning)
 SOURCE_STEPS += ('save_read_scan', 'plugin3x_scan')   # 生成时预防 R4N6: `x || default` save reads, split ad receipts, level cap vs level files (warning); 3.x kit plugin imported by path / plugin .meta flags

@@ -61,18 +61,20 @@ function setup(opts) {
       var t = setup();
       assert.strictEqual(t.state().shortcut.text, '');
       t.c.iconFailed('shortcut');
-      assert.strictEqual(t.state().shortcut.text, 'Add to Home\n+60');
+      assert.strictEqual(t.state().shortcut.text, 'Add to Home', '11.17.15: title only, no reward words');
       assert.strictEqual(t.state().profile.text, '', 'only the failed entry');
     });
     await test('reward_is_platformconfig_growth_reward', async function () {
       var t = setup();
-      assert.strictEqual(t.state().shortcut.reward, '+60', '5B with B = 12');
+      assert.strictEqual(t.state().shortcut.rewardText, '+60', '5B with B = 12');
+      assert.strictEqual(t.state().shortcut.reward, '', '11.17.15: no reward words drawn on the entry');
       t.c.press('shortcut');
       t.fake.last('addShortcut').opts.success({}); await flush();
       t.c.onShow({scene: 'desktop_shortcut'}); await flush();                                       // back from the new icon
       t.fake.last('getShortcutMissionReward').opts.success({canReceiveReward: true}); await flush();
       assert.strictEqual(t.store.get().coins, 60);
-      assert.strictEqual(t.state().shortcut.reward, 'Collected');
+      assert.strictEqual(t.state().shortcut.claimed, true);
+      assert.strictEqual(t.state().shortcut.reward, '', '11.17.15: claimed state is the game badge, no Collected text');
     });
     // 简化.11.3 (Saul 2026-11-02): until 简化.11.2 the first tap only asked for the reward and a second tap was
     // needed to navigate; on the phone (77~86, Mosslight v20) the entries looked dead.
@@ -238,7 +240,7 @@ function setup(opts) {
         var ctrl = comp.init(store, {native: false, ui: {toast: function (message) { toasts.push(message); }}});
         assert(comp.shortcutNode.active && comp.profileNode.active, 'both entries shown');
         var label = comp.shortcutNode.getChildByName('HomeEntryText').getComponent(Label);
-        assert.strictEqual(label.string, 'Add to Home\n+60', 'no sprite -> text fallback');
+        assert.strictEqual(label.string, 'Add to Home', 'no sprite -> title only (11.17.15: no reward words)');
         assert.strictEqual(typeof comp.profileNode.handlers.touchend, 'function');
         comp.shortcutNode.handlers.touchend();
         comp.profileNode.handlers.touchend();

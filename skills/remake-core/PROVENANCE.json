@@ -1,15 +1,15 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.13",
+  "revision": "2026-11-10.english-simple.11.17.17",
   "skill": "remake-core",
-  "previous_provenance_sha256": "ce62ef0a1507b54b9483b3187389ee80de689a8cb39e566165e162cfe65649de",
+  "previous_provenance_sha256": "e2b10fcb3f263649ca0005f2154536de81a64d7604e0057cc99c447cfd013dd7",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "a6724456bde6a65b3222c7546cb29465d172675b5a39f227b772b360bed1a265",
-      "bytes": 13273
+      "sha256": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
+      "bytes": 13070
     },
     {
       "path": "agents/openai.yaml",
@@ -73,13 +73,13 @@
     },
     {
       "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-      "sha256": "4d5b77f357158953405b0bcc41a2eb2df69f157ba4b08aa39ac776fadb3dbd10",
-      "bytes": 14119
+      "sha256": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
+      "bytes": 14816
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "5f7429256e6d2517496b095ed5522138959a9e5253f5ec74912c4666808460ab",
-      "bytes": 59685
+      "sha256": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
+      "bytes": 60120
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -93,8 +93,8 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
-      "sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
-      "bytes": 34385
+      "sha256": "6f5f5874e28b07d0842113b7e4bbea6014b64661d699479f659682d5db7ff316",
+      "bytes": 35044
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
@@ -122,11 +122,6 @@
       "bytes": 5832
     },
     {
-      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
-      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
-      "bytes": 5603
-    },
-    {
       "path": "assets/platform-kit/build-templates/bytedance/main.js",
       "sha256": "2cc6f5fab1970e3f156399a4d4bc01c75d0ac16770102b985038601b28651215",
       "bytes": 23385
@@ -137,24 +132,9 @@
       "bytes": 2593
     },
     {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
-      "bytes": 14203
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-      "bytes": 88164
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
-      "bytes": 15103
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
-      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
-      "bytes": 17006
+      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
+      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
+      "bytes": 5603
     },
     {
       "path": "assets/platform-kit/parts/AudioService.js",
@@ -235,6 +215,26 @@
       "path": "assets/platform-kit/parts/storage-guard.js",
       "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
       "bytes": 4483
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
+      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "bytes": 14203
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
+      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+      "bytes": 88164
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+      "sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
+      "bytes": 15103
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
+      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
+      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/plugins-3x/CapsuleAuto.plugin.js",
@@ -388,8 +388,8 @@
     },
     {
       "path": "assets/platform-kit/tests/home-entries-no-coin.test.js",
-      "sha256": "af0f86db809c8c31a74e0119f35f81cbc44cce443479eac8ad1534b59bfa810a",
-      "bytes": 6805
+      "sha256": "9a7404885b85e6539a19832b1dcb7525fa65f3e01ba8caffda23c69de628d5d5",
+      "bytes": 6908
     },
     {
       "path": "assets/platform-kit/tests/home-entries-notice-settle.test.js",
@@ -408,8 +408,8 @@
     },
     {
       "path": "assets/platform-kit/tests/home-entries.test.js",
-      "sha256": "c4ebe59e06c1389edad8b9716d49ce8a74f025e4a563d0f4eee6be8886cd2839",
-      "bytes": 16530
+      "sha256": "6ede9ce1c73070fbf77666deb42d3a7a806bad68e6b84d795d5c4136a9b657b4",
+      "bytes": 16810
     },
     {
       "path": "assets/platform-kit/tests/home-free-slot.test.js",
@@ -545,6 +545,11 @@
       "path": "assets/platform-kit/tools/home_free_slot.js",
       "sha256": "83a4ef695e38b09e4173c70263136a2abeec9dc3106d48ea94d20bdc32e8137a",
       "bytes": 11187
+    },
+    {
+      "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d.txt",
+      "sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+      "bytes": 34385
     },
     {
       "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122.txt",
@@ -843,8 +848,8 @@
     },
     {
       "path": "references/executable-regression-retention.md",
-      "sha256": "6e47e1a7bc1aecc72159f401b036d3f9f214b410f5d616c64e72491c853a63eb",
-      "bytes": 1610
+      "sha256": "e39938a3a0c4d1204b556c5dae1bee606ad5a4c13566def19a8abba6f1f8e6dc",
+      "bytes": 3933
     },
     {
       "path": "references/execution-budget.md",
@@ -913,8 +918,8 @@
     },
     {
       "path": "references/manual-visual-review.md",
-      "sha256": "e7458e392dfe7778c182c5f766f2a4dc4f97cac84277fc88195be5e3dd4396a6",
-      "bytes": 3977
+      "sha256": "79990941e48a0abdb76f7fca82ffa3588d35e82505f59247940d75b4d7895962",
+      "bytes": 4701
     },
     {
       "path": "references/method-provenance.md",
@@ -947,11 +952,6 @@
       "bytes": 9126
     },
     {
-      "path": "references/production-baseline.md",
-      "sha256": "8398cd60fb7d76409fb6347cf6535540739ae16e2b88cf449134d8a716a4a9cf",
-      "bytes": 8087
-    },
-    {
       "path": "references/production-plan.md",
       "sha256": "d6e21bfd24090c90f46f231d66ed7efcc1107edc4a9d890ca5fe03babedb2148",
       "bytes": 4671
@@ -968,8 +968,8 @@
     },
     {
       "path": "references/returned-art-delivery.md",
-      "sha256": "1537bdafaafe6ac819c2c2081382a9e9a764a3212414e03b88bbe3b9bf9eec85",
-      "bytes": 11931
+      "sha256": "b9bc11a53024feb3c3f6b56aec70aeb8cece127f3faf523006f6d8dfa29c0b0a",
+      "bytes": 12057
     },
     {
       "path": "references/rewire-ads.md",
@@ -983,13 +983,13 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "ead92dea6267417fb257a403595b6990f198d4fb29e3b70c99714acfc90e3255",
-      "bytes": 50816
+      "sha256": "9528c572877b84fd1815ccfb58cc0a0982bf1b65318085328079d2b05113d6f2",
+      "bytes": 50949
     },
     {
       "path": "references/tiktok-home-growth.md",
-      "sha256": "d6da8732d120acec1b11cc5afe9c5f345dbcfb1dfcf8f597a1f3e5c56a086405",
-      "bytes": 18717
+      "sha256": "218bac709e41b557728b91ea1412516a01bb3e499710359ae2bddf6ffa2ae934",
+      "bytes": 15697
     },
     {
       "path": "references/token-economy.md",
@@ -1048,8 +1048,13 @@
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "456fa06d8904e78f755b47cc55881c0b8782b88989762c842cbc38fe759e5839",
-      "bytes": 77807
+      "sha256": "eeff35458ed6f422d4b9f3c4985ed4efb3bf23fe468ee9a398d0c2a680dea451",
+      "bytes": 78513
+    },
+    {
+      "path": "scripts/art_check_record.py",
+      "sha256": "e57c21d10a907315882cb186d34d7041151c0f7947a0e33cca5ad5d33420e383",
+      "bytes": 6786
     },
     {
       "path": "scripts/art_consumer_index.py",
@@ -1703,8 +1708,8 @@
     },
     {
       "path": "scripts/make_tiktok_zip.py",
-      "sha256": "e4d8c877bb8a8934fb78aca91e29bc20551082370d51f78077ceaac3ef7ec90e",
-      "bytes": 41963
+      "sha256": "03655f5e4e4382c9bb4437bc82a8af3d6781e326f536c5f352760c933ab4208b",
+      "bytes": 43676
     },
     {
       "path": "scripts/modules_harness.mjs",
@@ -1988,8 +1993,8 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "4ec281060f294f880faeaa495741603b8116f8f0c226dccacfaa51038298c592",
-      "bytes": 47095
+      "sha256": "0b3b0c827d787568f109b7c6c779da598bc6633a32d8a5fcd2cb1e3547718804",
+      "bytes": 49115
     },
     {
       "path": "scripts/source_hygiene.py",
@@ -2080,6 +2085,11 @@
       "path": "scripts/test_art_check_inputs.py",
       "sha256": "c69a8c5011a079616b1fe9ae322932b922353c8b618ea893fc23247ceb780257",
       "bytes": 3690
+    },
+    {
+      "path": "scripts/test_art_check_record.py",
+      "sha256": "828d9deff383550e1ad7d875ff69268119521903c857ad35ca83f94b71dc6254",
+      "bytes": 3442
     },
     {
       "path": "scripts/test_art_check_text_coverage.py",
@@ -2293,8 +2303,8 @@
     },
     {
       "path": "scripts/test_english_image_gates.py",
-      "sha256": "399218b02eef961a5cca3302e5c411a287d83b1896bbe1cb41d40f92fe0ec4ed",
-      "bytes": 3926
+      "sha256": "ceea5764b44a819c39c9470a35daea5c93442caa3fab9541e21fd243f8e99186",
+      "bytes": 5377
     },
     {
       "path": "scripts/test_english_scan_at_start.py",
@@ -2318,8 +2328,8 @@
     },
     {
       "path": "scripts/test_finalize_native_fixes.py",
-      "sha256": "a3b366c2e441849b3de7aad58791efc9d1d9ec7c758e919cbbbb4782efea5995",
-      "bytes": 16601
+      "sha256": "6af0a15c288d3d365015b7eff9888db81a29d578d0f5e7c5893424a396352825",
+      "bytes": 16617
     },
     {
       "path": "scripts/test_finalize_policy.py",
@@ -2758,8 +2768,8 @@
     },
     {
       "path": "scripts/test_r4f1_sync_closure.py",
-      "sha256": "20b7d7299cba6e7c44fbd2908a362028589fa43ca265474d8a866f3b54309e0e",
-      "bytes": 10585
+      "sha256": "6321ac6dcfd3e8f2c0e450aba2a4e243a58bdc55fcd9c2f69476c9c2fbadabf9",
+      "bytes": 10665
     },
     {
       "path": "scripts/test_r4i1_checker_selfcheck.py",
@@ -2788,8 +2798,8 @@
     },
     {
       "path": "scripts/test_r4m2_receipt_display_sync.py",
-      "sha256": "beb6befbaadbb0c4982bde1614b34786515114fcdbba6c5357610b9e624c5511",
-      "bytes": 8823
+      "sha256": "56ef4575c5776aaccb2bb3e053310f199132e40908aa46b2ba0bb336aca990ad",
+      "bytes": 9090
     },
     {
       "path": "scripts/test_r4n3_engine_adapter.js",
@@ -3042,6 +3052,11 @@
       "bytes": 8211
     },
     {
+      "path": "scripts/test_upload_compat.py",
+      "sha256": "c10c88236d60bd44c088a76e08a45c51cc2ffcf8fb7978132eb941fd824d9e58",
+      "bytes": 6871
+    },
+    {
       "path": "scripts/test_upload_size_gate.py",
       "sha256": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c",
       "bytes": 10647
@@ -3103,13 +3118,13 @@
     },
     {
       "path": "scripts/tiktok_finalize.py",
-      "sha256": "7b3723d1bb816ad01036643117668ddf90396da87b0db49b655839f4ff9ac16d",
-      "bytes": 52045
+      "sha256": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
+      "bytes": 52200
     },
     {
       "path": "scripts/tiktok_finalize_steps/__init__.py",
-      "sha256": "9f4b0ce398692e8165b35567dd68f2c893728718d894c80c4d0574ce3eea81e8",
-      "bytes": 31870
+      "sha256": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
+      "bytes": 31951
     },
     {
       "path": "scripts/tiktok_finalize_steps/adapter.py",
@@ -3255,6 +3270,11 @@
       "path": "scripts/tiktok_finalize_steps/ui_kit_scan.py",
       "sha256": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581",
       "bytes": 25776
+    },
+    {
+      "path": "scripts/tiktok_finalize_steps/upload_compat.py",
+      "sha256": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29",
+      "bytes": 8828
     },
     {
       "path": "scripts/tiktok_rewire.py",
@@ -3947,32 +3967,260 @@
       ]
     },
     {
-      "id": "2026-11-09.production-baseline",
-      "scope": "Apply shared release regression design rules at game production entry points",
+      "id": "2026-11-08.english-simple.11.17.14",
+      "scope": "Only English release delta files",
       "files": [
         {
-          "path": "SKILL.md",
-          "before_sha256": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
-          "after_sha256": "a6724456bde6a65b3222c7546cb29465d172675b5a39f227b772b360bed1a265",
-          "after_bytes": 13273
+          "path": "references/manual-visual-review.md",
+          "before_sha256": "e7458e392dfe7778c182c5f766f2a4dc4f97cac84277fc88195be5e3dd4396a6",
+          "after_sha256": "79990941e48a0abdb76f7fca82ffa3588d35e82505f59247940d75b4d7895962",
+          "after_bytes": 4701,
+          "method": "release"
         },
         {
-          "path": "references/production-baseline.md",
+          "path": "references/returned-art-delivery.md",
+          "before_sha256": "1537bdafaafe6ac819c2c2081382a9e9a764a3212414e03b88bbe3b9bf9eec85",
+          "after_sha256": "83f50c5f767aa11f0244a59405388de4e6bed22a7425069abb28bfe0e46791d3",
+          "after_bytes": 12057,
+          "method": "release"
+        },
+        {
+          "path": "references/stage-flow.md",
+          "before_sha256": "ead92dea6267417fb257a403595b6990f198d4fb29e3b70c99714acfc90e3255",
+          "after_sha256": "9528c572877b84fd1815ccfb58cc0a0982bf1b65318085328079d2b05113d6f2",
+          "after_bytes": 50949,
+          "method": "release"
+        },
+        {
+          "path": "scripts/art_check.py",
+          "before_sha256": "456fa06d8904e78f755b47cc55881c0b8782b88989762c842cbc38fe759e5839",
+          "after_sha256": "eeff35458ed6f422d4b9f3c4985ed4efb3bf23fe468ee9a398d0c2a680dea451",
+          "after_bytes": 78513,
+          "method": "release"
+        },
+        {
+          "path": "scripts/art_check_record.py",
           "before_sha256": null,
-          "after_sha256": "5cbaecb34d2c01343598737008d6a37d9c3a9b90a1cbdec9b71dd6a0c41672e2",
-          "after_bytes": 7586
+          "after_sha256": "e57c21d10a907315882cb186d34d7041151c0f7947a0e33cca5ad5d33420e383",
+          "after_bytes": 6786,
+          "method": "release"
+        },
+        {
+          "path": "scripts/make_tiktok_zip.py",
+          "before_sha256": "e4d8c877bb8a8934fb78aca91e29bc20551082370d51f78077ceaac3ef7ec90e",
+          "after_sha256": "03655f5e4e4382c9bb4437bc82a8af3d6781e326f536c5f352760c933ab4208b",
+          "after_bytes": 43676,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_art_check_record.py",
+          "before_sha256": null,
+          "after_sha256": "828d9deff383550e1ad7d875ff69268119521903c857ad35ca83f94b71dc6254",
+          "after_bytes": 3442,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_english_image_gates.py",
+          "before_sha256": "399218b02eef961a5cca3302e5c411a287d83b1896bbe1cb41d40f92fe0ec4ed",
+          "after_sha256": "ceea5764b44a819c39c9470a35daea5c93442caa3fab9541e21fd243f8e99186",
+          "after_bytes": 5377,
+          "method": "release"
         }
       ]
     },
     {
-      "id": "tiktok-sidebar-entry-readiness-20261109",
-      "revision": "2026-11-09.sidebar-entry-design",
-      "scope": "Direct entry, cold-start readiness observed at the native SDK call, warm entry, saved and visible claim; scoped component backport where needed.",
+      "id": "2026-11-08.english-simple.11.17.15",
+      "scope": "Only English release delta files",
       "files": [
-        "references/production-baseline.md",
-        "references/tiktok-home-growth.md"
+        {
+          "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
+          "before_sha256": "4d5b77f357158953405b0bcc41a2eb2df69f157ba4b08aa39ac776fadb3dbd10",
+          "after_sha256": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
+          "after_bytes": 14816,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/KIT_MANIFEST.json",
+          "before_sha256": "5f7429256e6d2517496b095ed5522138959a9e5253f5ec74912c4666808460ab",
+          "after_sha256": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
+          "after_bytes": 60120,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
+          "before_sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+          "after_sha256": "6f5f5874e28b07d0842113b7e4bbea6014b64661d699479f659682d5db7ff316",
+          "after_bytes": 35044,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/home-entries-no-coin.test.js",
+          "before_sha256": "af0f86db809c8c31a74e0119f35f81cbc44cce443479eac8ad1534b59bfa810a",
+          "after_sha256": "9a7404885b85e6539a19832b1dcb7525fa65f3e01ba8caffda23c69de628d5d5",
+          "after_bytes": 6908,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/home-entries.test.js",
+          "before_sha256": "c4ebe59e06c1389edad8b9716d49ce8a74f025e4a563d0f4eee6be8886cd2839",
+          "after_sha256": "6ede9ce1c73070fbf77666deb42d3a7a806bad68e6b84d795d5c4136a9b657b4",
+          "after_bytes": 16810,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d.txt",
+          "before_sha256": null,
+          "after_sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+          "after_bytes": 34385,
+          "method": "release"
+        },
+        {
+          "path": "references/tiktok-home-growth.md",
+          "before_sha256": "fca0c3f8095d977764b8cf52ca61625d855dddd35abcfa10f5e5cdb5c3938e12",
+          "after_sha256": "218bac709e41b557728b91ea1412516a01bb3e499710359ae2bddf6ffa2ae934",
+          "after_bytes": 15697,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_upload_compat.py",
+          "before_sha256": null,
+          "after_sha256": "f813694058348e42e9bcccb58df8ffad4875b01102082e1d9dda0e404294874e",
+          "after_bytes": 6367,
+          "method": "release"
+        },
+        {
+          "path": "scripts/tiktok_finalize.py",
+          "before_sha256": "7b3723d1bb816ad01036643117668ddf90396da87b0db49b655839f4ff9ac16d",
+          "after_sha256": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
+          "after_bytes": 52200,
+          "method": "release"
+        },
+        {
+          "path": "scripts/tiktok_finalize_steps/__init__.py",
+          "before_sha256": "9f4b0ce398692e8165b35567dd68f2c893728718d894c80c4d0574ce3eea81e8",
+          "after_sha256": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
+          "after_bytes": 31951,
+          "method": "release"
+        },
+        {
+          "path": "scripts/tiktok_finalize_steps/upload_compat.py",
+          "before_sha256": null,
+          "after_sha256": "c2c283af05e276396e585cd476f14ddcd033c9b4aa5efbfdf53544fecd866178",
+          "after_bytes": 8590,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-08.english-simple.11.17.15",
+      "scope": "Only English release delta files",
+      "files": [
+        {
+          "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
+          "before_sha256": "4d5b77f357158953405b0bcc41a2eb2df69f157ba4b08aa39ac776fadb3dbd10",
+          "after_sha256": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
+          "after_bytes": 14816,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/KIT_MANIFEST.json",
+          "before_sha256": "5f7429256e6d2517496b095ed5522138959a9e5253f5ec74912c4666808460ab",
+          "after_sha256": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
+          "after_bytes": 60120,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
+          "before_sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+          "after_sha256": "6f5f5874e28b07d0842113b7e4bbea6014b64661d699479f659682d5db7ff316",
+          "after_bytes": 35044,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/home-entries-no-coin.test.js",
+          "before_sha256": "af0f86db809c8c31a74e0119f35f81cbc44cce443479eac8ad1534b59bfa810a",
+          "after_sha256": "9a7404885b85e6539a19832b1dcb7525fa65f3e01ba8caffda23c69de628d5d5",
+          "after_bytes": 6908,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tests/home-entries.test.js",
+          "before_sha256": "c4ebe59e06c1389edad8b9716d49ce8a74f025e4a563d0f4eee6be8886cd2839",
+          "after_sha256": "6ede9ce1c73070fbf77666deb42d3a7a806bad68e6b84d795d5c4136a9b657b4",
+          "after_bytes": 16810,
+          "method": "release"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/HomeGrowthEntries/2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d.txt",
+          "before_sha256": null,
+          "after_sha256": "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d",
+          "after_bytes": 34385,
+          "method": "release"
+        },
+        {
+          "path": "references/tiktok-home-growth.md",
+          "before_sha256": "fca0c3f8095d977764b8cf52ca61625d855dddd35abcfa10f5e5cdb5c3938e12",
+          "after_sha256": "218bac709e41b557728b91ea1412516a01bb3e499710359ae2bddf6ffa2ae934",
+          "after_bytes": 15697,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_finalize_native_fixes.py",
+          "before_sha256": "a3b366c2e441849b3de7aad58791efc9d1d9ec7c758e919cbbbb4782efea5995",
+          "after_sha256": "6af0a15c288d3d365015b7eff9888db81a29d578d0f5e7c5893424a396352825",
+          "after_bytes": 16617,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_r4f1_sync_closure.py",
+          "before_sha256": "20b7d7299cba6e7c44fbd2908a362028589fa43ca265474d8a866f3b54309e0e",
+          "after_sha256": "6321ac6dcfd3e8f2c0e450aba2a4e243a58bdc55fcd9c2f69476c9c2fbadabf9",
+          "after_bytes": 10665,
+          "method": "release"
+        },
+        {
+          "path": "scripts/test_upload_compat.py",
+          "before_sha256": null,
+          "after_sha256": "c10c88236d60bd44c088a76e08a45c51cc2ffcf8fb7978132eb941fd824d9e58",
+          "after_bytes": 6871,
+          "method": "release"
+        },
+        {
+          "path": "scripts/tiktok_finalize.py",
+          "before_sha256": "7b3723d1bb816ad01036643117668ddf90396da87b0db49b655839f4ff9ac16d",
+          "after_sha256": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
+          "after_bytes": 52200,
+          "method": "release"
+        },
+        {
+          "path": "scripts/tiktok_finalize_steps/__init__.py",
+          "before_sha256": "9f4b0ce398692e8165b35567dd68f2c893728718d894c80c4d0574ce3eea81e8",
+          "after_sha256": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
+          "after_bytes": 31951,
+          "method": "release"
+        },
+        {
+          "path": "scripts/tiktok_finalize_steps/upload_compat.py",
+          "before_sha256": null,
+          "after_sha256": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29",
+          "after_bytes": 8828,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-09.english-simple.11.17.16",
+      "scope": "Only English release delta files",
+      "files": [
+        {
+          "path": "references/executable-regression-retention.md",
+          "before_sha256": "6e47e1a7bc1aecc72159f401b036d3f9f214b410f5d616c64e72491c853a63eb",
+          "after_sha256": "e39938a3a0c4d1204b556c5dae1bee606ad5a4c13566def19a8abba6f1f8e6dc",
+          "after_bytes": 3933,
+          "method": "release"
+        }
       ]
     }
   ],
-  "previous_local_provenance_sha256": "9aba2f49ebbb707f3719fa34823ad93af27839ec80b9749d59ce1e075c175e8c"
+  "previous_local_provenance_sha256": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8"
 }

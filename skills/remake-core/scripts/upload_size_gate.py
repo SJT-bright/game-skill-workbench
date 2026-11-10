@@ -74,25 +74,25 @@ def enforce(sizes, game, platform='tiktok'):
     return {'total_bytes':total,'main_bytes':main,'normal_subpackages':normal,'independent_subpackages':independent}
 
 
-# The stock engine contains multi-platform branches. Only its exact shipped
-# paths are exempt; application code and adapters, including subpackages, are scanned.
+# Only the shipped multiplatform Cocos engine paths carry supported wx branches.
 _ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
 _WECHAT_HOST_REFERENCE = re.compile(
-    r"""(?<![\w$])wx\s*(?:\?\.|\.|\[)|"""
-    r"""\btypeof\s+wx\b|"""
+    r"""(?<![\w$])wx\s*(?:\?\.|\.|\[)|\btypeof\s+wx\b|"""
     r"""\b(?:window|globalThis|global|root|self)\s*(?:(?:\?\.|\.)\s*wx\b|"""
     r"""(?:\?\.)?\s*\[\s*['"]wx['"]\s*\])"""
 )
 
 
 def enforce_tiktok_host(files):
+    """Report legacy host access in the main package, adapters and subpackages."""
     findings = []
     for name, data in sorted(files.items()):
         if name in _ENGINE_MULTIPLATFORM_FILES or not name.lower().endswith(('.js', '.mjs', '.cjs')):
             continue
         source = data.decode('utf-8-sig')
         for match in _WECHAT_HOST_REFERENCE.finditer(source):
-            findings.append(f"{name}:{source.count(chr(10), 0, match.start()) + 1} {match.group().strip()}")
+            line = source.count('\n', 0, match.start()) + 1
+            findings.append(f"{name}:{line} {match.group().strip()}")
             if len(findings) == 12:
                 break
         if len(findings) == 12:

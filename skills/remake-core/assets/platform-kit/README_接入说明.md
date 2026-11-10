@@ -296,10 +296,10 @@ node tests/run-all.js
   logic_check 的 L-FPS-DT、L-FPS-SCHEDULE 会列出没乘 dt 的地方。实测：飞车 v3.1 的 `schedule(run_time, 0.01)` 在 120 帧时隔一帧才触发一次，
   正好每 1/60 秒推一次，所以只装这个时钟就过了（差 1.39%）；BreezyBalloon v2.2 的障碍靠 `linearVelocity` 走，只装时钟也过（差 1.08%，不装 49.9%）。
   写在 `update` 里每帧推一次的游戏只装时钟不够（Node 测试里「只开 accumulator」那个反例），推力必须乘 dt。
-- **最终裁判**是写包入口必跑的运行时套件 `frame_rate`（`cocos-game-check/package-check/references/runtime-regression.md`）：同一段操作在 60 Hz 和 120 Hz 的显示时钟下各跑一次，按真实时间比位置，差超过 5% 新游戏拦、老游戏警告。
+- 怀疑物理对显示时钟敏感时，可显式跑 `frame_rate` 做 60/120 Hz 位移对照。5% 只提示差异，实际玩法在支持的设备条件下核验。
 - 测试：`node tests/physics-clock.test.js`（载入时和切场景前打开 accumulator；引擎还没好时等 EVENT_GAME_INITED；按 2.4 PhysicsManager 的步进算 2 秒距离：
   accumulator + 按时间推 60/120 帧相同，飞车 v3.1 的写法差 57%、只开 accumulator 不改推力差 50%，两个反例都必须被抓到）。运行时：全民飞车漂移 v3.1
-  在运行时打开 accumulator、把 `run_time` 里的推力和扭矩乘 dt×60（和 `Clock.force` 同一个算法）后 `frame_rate` 过（最大差 1.05%），原包拒（19.9%）
+  在运行时打开 accumulator、把 `run_time` 里的推力和扭矩乘 dt×60（和 `Clock.force` 同一个算法）后 `frame_rate` 最大位移差从 19.9% 降为 1.05%
   （`briefs/out/W92/RESULT.md`）。**待真机复测**。
 
 ## 十一、开工就装、每次构建前同步（P02）和弹窗按钮零件 `parts/GameUIKit.js`（P05，生成时预防 2026-11-04）

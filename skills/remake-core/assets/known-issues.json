@@ -1601,7 +1601,7 @@
       "id": "L-FPS",
       "symptom": "120 帧的屏幕上物理和推力跑成两倍速，电脑上测的手感不代表手机（全民飞车漂移 schedule(run_time, 0.01) 每次推固定的力、物理没开 enabledAccumulator；Pizza Drift 第 1 到 5 关第一个弯就掉下去）",
       "intercept": "remake-core/scripts/logic_check.py L-FPS-ACCUM（开了 2.4 物理却没开 enabledAccumulator）、L-FPS-SCHEDULE（schedule 间隔小于 1/60 秒且回调不用 dt）、L-FPS-DT（update / 每帧 schedule 里施力、冲量、改速度或位置却不乘 dt）",
-      "level": "preflight（新游戏需处理；LEGACY_GAMES 名单上的老游戏只提示）；只静态，60/120 帧手感对比（FRAME-RATE-FEEL，runtime_regression frame_rate）是最终裁判",
+      "level": "preflight（保留源码时间步检查）；运行时 frame_rate 可显式运行做轨迹诊断",
       "source": "总表 22 P16 / FW 2.3"
     },
     {
@@ -1698,8 +1698,8 @@
     {
       "id": "FRAME-RATE-FEEL",
       "symptom": "同一段操作在 120 帧的屏幕上跑得更快、更远，电脑上调的手感到手机上不一样（全民飞车漂移 v3.1：起步 1 秒时 120 帧多跑 19.9%；Pizza Drift 第 1 到 5 关第一个弯就掉下去）",
-      "intercept": "cocos-game-check/package-check/scripts/runtime_regression/suites/frame_rate.mjs same_motion（60 帧和 120 帧按真实时间比位置，差超过 5% 不通过；用了 2.4 物理的新游戏由 remake-core/scripts/tiktok_finalize_steps/physics_clock.py 自动装 remake-core/assets/platform-kit/parts/PhysicsClock.js 打开 enabledAccumulator，推力仍要乘 dt）",
-      "level": "block（新游戏；名单上的老游戏警告；3.x 未覆盖只警告；没有物理、没有自己会动的东西写 n/a）",
+      "intercept": "按需运行 frame_rate 做 60/120 Hz 位移对照。5% 仅作诊断提示，按支持设备上的可复现玩法后果判断。",
+      "level": "diagnostic（默认回归和出包不运行）",
       "source": "总表 22 P16 / W92"
     },
     {

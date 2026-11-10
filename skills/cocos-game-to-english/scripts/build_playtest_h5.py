@@ -140,7 +140,7 @@ def validate_acceptance(report, delivery, plan):
     if (report.get('status') != 'passed' or report.get('board') != 'localize'
             or report.get('stage') != 'device' or report.get('errors') != []
             or type(report.get('catalog_checks')) is not int or report['catalog_checks'] < 1):
-        raise ValueError('正式双栏需要本版英化 device 阶段通过报告。已有局部验收可用单栏试玩。')
+        raise ValueError('所附 device 报告须是本版英化最终验收通过记录。')
     accepted = object_of(report.get('binding'), '最终验收构建绑定')
     startup = object_of(delivery.get('final_startup_runtime'), '正式交付 Native 启动回执')
     native_sha = required_text(startup, 'native_tree_sha256', '正式交付 Native 启动回执')
@@ -150,20 +150,31 @@ def validate_acceptance(report, delivery, plan):
         raise ValueError('最终验收的 Native 或 Web 与这次正式交付不同')
 
 
-def render(plan, package=None, *, split_preview=False, ad_simulator=False):
+def render(plan, package=None, *, ad_simulator=False):
     data = dict(plan, package=package, ad_simulator=ad_simulator)
     stable = {k: plan[k] for k in ('game', 'version', 'web_tree_sha256', 'steps', 'require_ad_simulator')}
     data['progress_key'] = 'cocos-playtest-' + hashlib.sha256(
         json.dumps(stable, ensure_ascii=False, sort_keys=True).encode('utf-8')
     ).hexdigest()
-    if split_preview:
-        data['split_preview'] = True
     # Keep game labels as data even when they contain HTML-looking characters.
     encoded = json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
     template = TEMPLATE.read_text(encoding='utf-8')
     if template.count(MARKER) != 1:
         raise ValueError('H5 模板数据槽不正确')
     return template.replace(MARKER, encoded, 1)
+
+
+def write_html(destination, html):
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', prefix='.playtest-', dir=destination.parent,
+                                     delete=False) as stream:
+        temp = Path(stream.name)
+        try:
+            stream.write(html)
+            stream.close()
+            os.replace(temp, destination)
+        finally:
+            temp.unlink(missing_ok=True)
 
 
 def main(argv=None):
@@ -173,7 +184,7 @@ def main(argv=None):
     parser.add_argument('--zip', type=Path)
     parser.add_argument('--delivery-record', type=Path)
     parser.add_argument('--acceptance-report', type=Path, help='passed device-stage report for the delivered build')
-    parser.add_argument('--demo-split', action='store_true', help='render a clearly marked split trial sample')
+    parser.add_argument('--demo-split', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     try:
         if args.out.suffix.lower() != '.html':
@@ -186,8 +197,10 @@ def main(argv=None):
         native = None
         if bool(args.zip) != bool(args.delivery_record):
             raise ValueError('标注测试包时须同时提供实际 ZIP 与本次交付回执')
-        if plan['mode'] == 'package' and (args.demo_split or not (args.zip and args.acceptance_report)):
-            raise ValueError('正式双栏交付需要实际 ZIP、本次交付回执和本版最终验收通过报告')
+        if plan['mode'] == 'package' and not args.zip:
+            raise ValueError('测试包模式需要实际 ZIP 和本次交付回执')
+        if args.acceptance_report and not args.delivery_record:
+            raise ValueError('校对最终验收报告时需提供本次测试包回执')
         if plan['mode'] == 'trial' and args.acceptance_report:
             raise ValueError('绑定最终验收报告时请选择 package 模式')
         if plan['mode'] == 'share' and (args.zip or args.acceptance_report or args.demo_split):
@@ -214,17 +227,8 @@ def main(argv=None):
             if destination.is_relative_to(Path(slot['dir']).resolve()):
                 raise ValueError('H5 须单独交付，请放在试玩快照外')
             ad_simulator = preview['ad_simulator']
-        html = render(plan, package, split_preview=args.demo_split, ad_simulator=ad_simulator)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', prefix='.playtest-', dir=destination.parent,
-                                         delete=False) as stream:
-            temp = Path(stream.name)
-            try:
-                stream.write(html)
-                stream.close()
-                os.replace(temp, destination)
-            finally:
-                temp.unlink(missing_ok=True)
+        html = render(plan, package, ad_simulator=ad_simulator)
+        write_html(destination, html)
         print(json.dumps({'html': str(destination), 'pages': len(plan['steps']),
                           'web_tree_sha256': plan['web_tree_sha256'], 'package': package}, ensure_ascii=False))
     except (OSError, ValueError) as error:

@@ -46,6 +46,24 @@ class Runs(unittest.TestCase):
         old = T.Timeline(allrows, BASE+87600, run_id='initial')
         self.assertEqual(old.metrics()['wall_seconds'], 600)
 
+    def test_stage_close_writes_explanation_and_keeps_original_end_on_retry(self):
+        self.call(0, 'start', '--run-id', 'phase', '--route', 'handoff')
+        self.call(0, 'stage', '5')
+        self.call(12, 'begin', '包与试玩绑定', '--span-id', 'check')
+        self.call(32, 'end', '包与试玩绑定', '--span-id', 'check')
+        out = self.call(45, 'done', '--summary', '已核 ZIP，沿用适用记录', '--next', '交付同页清单')
+        self.assertIn('阶段结算 · 请发到当前聊天', out)
+        self.assertIn('45.000 秒', out)
+        self.assertIn('已核 ZIP，沿用适用记录', out)
+        self.assertIn('交付同页清单', out)
+        self.call(120, 'done', '--stage', '5', '--summary', '已核 ZIP 和实际 H5')
+        summary = json.loads((self.root / 'docs/timing/timing-summary.json').read_text())
+        phase = summary['stages'][0]
+        self.assertEqual(phase['wall_seconds'], 45)
+        self.assertEqual(phase['completed_work_interval_union_seconds'], 20)
+        self.assertEqual(phase['summary'], '已核 ZIP 和实际 H5')
+        self.assertEqual(phase['next_step'], '交付同页清单')
+
     def test_pause_does_not_become_work(self):
         self.call(0, 'start', '--run-id', 'pause')
         self.call(0, 'begin', '制作', '--span-id', 'a')

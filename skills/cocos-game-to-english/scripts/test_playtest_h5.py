@@ -96,7 +96,8 @@ class Playtest(unittest.TestCase):
         package_args = ('--zip', archive, '--delivery-record', receipt_path)
         self.assertEqual(self.run_cli('scoped.html', *package_args).returncode, 0)
         self.plan['mode'] = 'package'
-        self.assertNotEqual(self.run_cli('unverified.html', *package_args).returncode, 0)
+        self.assertEqual(self.run_cli('scoped-dual.html', *package_args).returncode, 0)
+        self.assertIn('const split = Boolean(plan.preview_url)', (self.root/'scoped-dual.html').read_text())
         package_args += ('--acceptance-report', acceptance_path)
         result = self.run_cli('final.html', *package_args)
         self.assertEqual(result.returncode, 0, result.stderr)

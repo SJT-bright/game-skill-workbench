@@ -278,7 +278,14 @@ class Timeline:
 
     def _on_done(self, e):
         if self.cur:
+            self.cur.update({key: e[key] for key in ('summary', 'next_step') if e.get(key)})
             self._close(e['t'])
+
+    def _on_stage_note(self, e):
+        stage = next((s for s in reversed(self.stages) if s['n'] == e['stage']
+                      and s['start'] == e['started_at_epoch'] and s['end'] is not None), None)
+        if stage is not None:
+            stage.update({key: e[key] for key in ('summary', 'next_step') if e.get(key)})
 
     def _on_begin(self, e):
         if not self.cur:
@@ -430,7 +437,8 @@ class Timeline:
                            'wall_seconds': max(0.0, b-a), 'completed_work_interval_union_seconds': seconds(work),
                            'tool_interval_union_seconds': seconds(tool_intervals), 'user_wait_seconds': seconds(waits),
                            'external_wait_seconds': seconds(external), 'paused_seconds': seconds(paused),
-                           'unrecorded_seconds': max(0.0, b-a-seconds(known))})
+                           'unrecorded_seconds': max(0.0, b-a-seconds(known)),
+                           'summary': stage.get('summary'), 'next_step': stage.get('next_step')})
         return {'schema': 'stage-timing-summary.v2', 'run_id': self.run_id,
                 'started_at_epoch': self.start, 'ended_at_epoch': end,
                 'wall_seconds': max(0.0, end-self.start),
@@ -496,6 +504,9 @@ class Timeline:
             head += '，其中等你%s %s' % ('试玩和回复' if st['n'] in (3, 4) else '回复', fmt(wait))
         head += '；从开工算起共 %s；本阶段墙钟 %.3f 秒' % (fmt(b - self.start), max(0.0, wall))
         lines = [head]
+        if st['end'] is not None:
+            lines.append('- **完成与沿用** ' + (st.get('summary') or '本阶段未记录说明，汇报时按实际结果补充。'))
+            lines.append('- **下一步** ' + (st.get('next_step') or '本阶段未记录下一步。'))
         groups = self.group(self.steps, a, b)
         lines += [step_line(n, g) for n, g in groups]
         if len(groups) > 1 and sum(g['sec'] for _, g in groups) > wall + 60:
@@ -776,7 +787,9 @@ def parser():
     s = sub.add_parser('stage', parents=[common], help='开始第 N 阶段（1-5）')
     s.add_argument('n', type=int, choices=sorted(STAGES))
     s = sub.add_parser('done', parents=[common], help='结束当前阶段，打印它的用时')
-    s.add_argument('--stage', type=int, choices=sorted(STAGES), help='仅在指定阶段正开放时结束')
+    s.add_argument('--stage', type=int, choices=sorted(STAGES), help='只处理指定阶段')
+    s.add_argument('--summary', default='', help='本阶段完成、沿用、未完成的实际范围')
+    s.add_argument('--next', dest='next_step', default='', help='下一步或用户需要知道的交接事项')
     s = sub.add_parser('begin', parents=[common], help='开始一步')
     s.add_argument('step')
     s.add_argument('--span-id'); s.add_argument('--parent-id')
@@ -917,16 +930,18 @@ def _main(argv=None):
                 out += [tl.stage_report(before), '（上面是第 %d 阶段的用时，发给用户）' % tl.stages[before]['n'], '']
             out.append('记下：%s 开始第 %d 阶段「%s」' % (clock(now), a.n, STAGES[a.n]))
     elif a.cmd == 'done':
-        if a.stage is not None and (not tl.cur or tl.cur['n'] != a.stage):
-            out.append('第 %d 阶段当前未开放，用时记录沿用。' % a.stage)
-        elif tl.cur:
-            idx = tl.entry()
-            record('done')
-            out.append(tl.stage_report(idx))
-        elif tl.stages:
-            out += ['第 %d 阶段已经结束过，下面是它的用时：' % tl.stages[-1]['n'], tl.stage_report(tl.entry())]
+        stage = tl.stages[-1] if tl.stages else None
+        if not stage or (a.stage is not None and stage['n'] != a.stage):
+            out.append('该阶段没有当前结算记录。已知结果照实说明，缺少的用时记未记录。')
         else:
-            out.append('还没开始任何阶段（先跑 stage 1），没有可结束的。')
+            notes = {'summary': a.summary.strip(), 'next_step': a.next_step.strip()}
+            if tl.cur:
+                record('done', **notes)
+            elif any(notes.values()):
+                record('stage_note', stage=stage['n'], started_at_epoch=stage['start'], **notes)
+            out += ['阶段结算 · 请发到当前聊天', tl.stage_report(tl.entry())]
+            if write_report(project, tl):
+                out.append('计时记录已写入 %s' % (project / REPORT))
     elif a.cmd == 'begin':
         same = next((s for s in tl.steps if s['end'] is None and ((a.span_id and s.get('span_id') == a.span_id) or (not a.span_id and s['name'] == a.step and s['who'] == a.who))), None)
         if same:

@@ -44,24 +44,14 @@ class Hooks(unittest.TestCase):
         ready(self.web)
         self.assertEqual(len([e for e in events(self.root) if e['ev']=='mark']),2)
 
-    def test_returned_ready_counts_identity_not_log_length_or_authorization_timestamp(self):
+    def test_returned_candidate_readiness_does_not_report_user_handoff(self):
         accepted={'web':{'sha256':'web1'},'native':{'sha256':'native1'},'manifest_sha256':'auth1'}
-        fake=types.SimpleNamespace(validate=lambda *a,**kw:json.loads(json.dumps(accepted)),web_hash=lambda p:'web1',
+        fake=types.SimpleNamespace(validate=lambda *a,**kw:accepted,web_hash=lambda p:'web1',
             read=lambda p:json.loads(p.read_text()),write=lambda p,v:(p.parent.mkdir(parents=True,exist_ok=True),p.write_text(json.dumps(v))))
         with patch.dict(sys.modules,{'returned_art_acceptance':fake}):
-            for idx in range(2):
-                _,verify=G.returned_preview([],self.root,self.web,self.root/'native',lambda s:None)
-                before=events(self.root)
-                ready=verify(self.web)
-                self.assertEqual(events(self.root),before)
-                ready()
-            self.assertEqual([e['n'] for e in events(self.root) if e['ev']=='link'],[1])
-            accepted['manifest_sha256']='auth2'  # timestamp/evidence changes alone are not a new rendered build
             G.returned_preview([],self.root,self.web,self.root/'native',lambda s:None)[1](self.web)()
-            self.assertEqual([e['n'] for e in events(self.root) if e['ev']=='link'],[1])
-            accepted['native']['sha256']='native2'
-            G.returned_preview([],self.root,self.web,self.root/'native',lambda s:None)[1](self.web)()
-            self.assertEqual([e['n'] for e in events(self.root) if e['ev']=='link'],[1,2])
+        self.assertEqual(events(self.root),[])
+        self.assertTrue((self.root/'docs/english/returned-trial-links.json').is_file())
 
     def test_returned_failed_snapshot_never_records_ready(self):
         fake=types.SimpleNamespace(validate=lambda *a,**kw:{'web':{'sha256':'a'},'native':{'sha256':'n'},'manifest_sha256':'m'},web_hash=lambda p:'wrong')
@@ -126,15 +116,14 @@ class Hooks(unittest.TestCase):
         self.assertEqual([e['ev'] for e in rows],['begin','end'])
         self.assertEqual(rows[-1]['state'],'failed')
 
-    def test_first_formal_ready_closes_stage_3_and_reports_stages(self):
+    def test_candidate_ready_keeps_stage_3_open_until_handoff(self):
         args = ['--directory',str(self.web),'--project',str(self.root),'--keep']
         G.timing(self.root,'start','--run-id','trial','--route','source')
         for stage in (1,2,3):
             G.timing(self.root,'stage',str(stage))
         def verify(snapshot):
-            return lambda: G.timing(self.root,'publish','english:fixture')
+            return lambda: None
         verify.report_phase_times = True
-        verify.close_first_trial_phase = True
         def service(argv,**kwargs):
             self.assertNotIn('link',[row['ev'] for row in events(self.root)])
             kwargs['verify_snapshot'](self.web)()
@@ -143,15 +132,15 @@ class Hooks(unittest.TestCase):
         with patch.object(G,'gate',return_value=(args,verify)), \
              patch.object(G.runpy,'run_path',return_value={'main':service}),contextlib.redirect_stdout(output):
             G.main(args)
-        self.assertEqual([e['ev'] for e in events(self.root)][-3:],['link','end','done'])
-        self.assertIn('用时总表',output.getvalue())
-        self.assertTrue((self.root/'docs/timing/timing-summary.json').is_file())
+        self.assertEqual([e['ev'] for e in events(self.root)][-2:],['begin','end'])
+        self.assertIn('内部候选已就绪',output.getvalue())
+        self.assertNotIn('done',[e['ev'] for e in events(self.root)])
 
 
     def test_first_formal_stage_report_continues_after_observation_failure(self):
         args = ['--directory', str(self.web), '--project', str(self.root), '--keep']
         G.timing(self.root, 'stage', '3')
-        verify = types.SimpleNamespace(report_phase_times=True, close_first_trial_phase=True)
+        verify = types.SimpleNamespace(report_phase_times=True)
         def service(argv, **kwargs):
             kwargs['on_ready'](self.web)
 
@@ -163,8 +152,8 @@ class Hooks(unittest.TestCase):
              contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
             G.main(args)
         self.assertIn('fixture log error', errors.getvalue())
-        self.assertIn('用时总表', output.getvalue())
-        self.assertEqual(events(self.root)[-1]['ev'], 'done')
+        self.assertIn('内部候选已就绪', output.getvalue())
+        self.assertNotIn('done', [event['ev'] for event in events(self.root)])
 
 
 if __name__=='__main__':unittest.main()

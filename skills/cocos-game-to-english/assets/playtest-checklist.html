@@ -19,7 +19,6 @@ h3 { font-size: 1rem; }
 header p, .muted { font-size: .9rem; }
 .muted { color: #4d676e; }
 header .muted { color: #c4e2dc; }
-header a { color: #122f32; background: #d4f5e6; display: inline-block; margin-top: 1rem; text-decoration: none; border-radius: .55rem; padding: .55rem .8rem; font-weight: 650; }
 .meter { margin: 1.1rem .15rem .75rem; }
 .meter { font-size: .9rem; font-weight: 650; }
 section { margin-top: .7rem; }
@@ -64,7 +63,6 @@ nav { display: flex; justify-content: space-between; gap: .6rem; margin-top: .9r
   .split header, .split section { padding: .6rem; border-radius: .65rem; }
   .split h2 { font-size: 1.05rem; }
   .split h3, .split .enter, .split .observation, .split .step-actions { font-size: .86rem; }
-  .split header a { padding: .35rem .45rem; font-size: .82rem; }
   .split ol { padding-left: .9rem; }
   .game-head { padding: .4rem; }
 }
@@ -88,7 +86,6 @@ nav { display: flex; justify-content: space-between; gap: .6rem; margin-top: .9r
       <p id="version"></p>
       <p class="muted" id="scope" hidden></p>
       <p class="muted version" id="archive" hidden></p>
-      <a id="play" target="_blank" rel="noopener">打开同版试玩</a>
     </header>
     <div class="meter">
       <p id="meter-label" aria-live="polite"></p>
@@ -105,7 +102,7 @@ const byId = id => document.getElementById(id);
 const plan = JSON.parse(byId('checklist-data').textContent);
 const pages = plan.steps;
 const screen = byId('screen');
-const split = plan.mode === 'package' || plan.split_preview === true;
+const split = Boolean(plan.preview_url);
 let results = Object.create(null);
 let cursor = 0;
 try {
@@ -120,9 +117,9 @@ try {
 } catch { byId('storage-note').hidden = false; }
 
 byId('kind').textContent = plan.mode === 'demo' ? '清单交互示例' :
-  plan.mode === 'package' ? '本版验收通过 · 最终交付' :
+  plan.mode === 'package' ? '测试包同版试玩 · 可选快查' :
   plan.mode === 'share' ? '可转发清单 · 在本机启动同版游戏' :
-  plan.split_preview ? '双栏样稿 · 试玩版' : '本轮逐页试玩清单';
+  '本轮逐页试玩清单';
 const scope = byId('scope');
 if (plan.mode === 'trial' || plan.mode === 'package') {
   scope.hidden = false;
@@ -134,27 +131,22 @@ byId('title').textContent = plan.game;
 document.title = plan.game + ' · 试玩清单';
 byId('version').textContent = plan.version;
 byId('version').title = 'Web SHA-256 ' + plan.web_tree_sha256;
-if (plan.preview_url) {
-  const play = byId('play');
-  play.href = plan.preview_url;
-  if (plan.ad_simulator) play.textContent += '（模拟广告）';
-  if (split) {
-    byId('layout').classList.add('split');
-    byId('game-panel').hidden = false;
-    const frame = byId('game-frame');
-    const toggle = byId('toggle-game');
-    frame.src = plan.preview_url;
-    toggle.onclick = () => {
-      const reopen = frame.hidden;
-      if (reopen) frame.src = plan.preview_url;
-      else frame.removeAttribute('src');
-      frame.hidden = !reopen;
-      byId('game-idle').hidden = reopen;
-      toggle.textContent = reopen ? '退出试玩' : '重新打开游戏';
-    };
-    play.textContent = '在新标签页打开游戏' + (plan.ad_simulator ? '（模拟广告）' : '');
-  }
-} else byId('play').hidden = true;
+if (split) {
+  byId('layout').classList.add('split');
+  byId('game-panel').hidden = false;
+  const frame = byId('game-frame');
+  const toggle = byId('toggle-game');
+  frame.src = plan.preview_url;
+  if (plan.ad_simulator) byId('game-panel-title').textContent = '游戏试玩（模拟广告）';
+  toggle.onclick = () => {
+    const reopen = frame.hidden;
+    if (reopen) frame.src = plan.preview_url;
+    else frame.removeAttribute('src');
+    frame.hidden = !reopen;
+    byId('game-idle').hidden = reopen;
+    toggle.textContent = reopen ? '退出试玩' : '重新打开游戏';
+  };
+}
 if (plan.package) {
   byId('archive').hidden = false;
   byId('archive').textContent = plan.package.name + ' · SHA-256 ' + plan.package.sha256.slice(0, 12);

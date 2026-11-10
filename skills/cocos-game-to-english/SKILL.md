@@ -1,13 +1,15 @@
 ---
 name: cocos-game-to-english
-description: "英化（触发词：英化、英化skill、中文源码、翻译成英文、英化这个游戏）。拿到能运行的中文Cocos完整游戏时用：开工核中文原版的内部基线；把中文美工和文字改成英文（第一轮按美工板块 remake-art 照原画风重新生成所有按钮和文字）；补齐固定入口（个人主页回访、添加桌面、音效/BGM音量、关内暂停键、结算页看广告双倍与Retry、看广告复活），删除分享/更多游戏/联网排行榜；看广告的几项按包里的 remake-ads、remake-economy 做，看广告的板块默认按包里的 ad-boost 诊断后按推荐加，不问 Saul；先过美工检查和中文专项检查，再给英文试玩链接和同版 H5 清单；Saul 试玩没问题后核对覆盖、只补缺项并出包；也接收已完成源码和测试包，沿用可核验记录；macOS、Windows 都能用；手动检查使用 Computer Use + Edge，自动回归使用 Ego，Chrome 只在美工试玩和最终测试包交接时打开。默认不改玩法、不加关卡、不加新系统。"
+description: "英化（触发词：英化、英化skill、中文源码、翻译成英文、英化这个游戏）。拿到能运行的中文Cocos完整游戏时用：开工核中文原版的内部基线；把中文美工和文字改成英文（第一轮按美工板块 remake-art 照原画风重新生成所有按钮和文字）；补齐固定入口（个人主页回访、添加桌面、音效/BGM音量、关内暂停键、结算页看广告双倍与Retry、看广告复活），删除分享/更多游戏/联网排行榜；看广告的几项按包里的 remake-ads、remake-economy 做，看广告的板块默认按包里的 ad-boost 诊断后按推荐加，不问 Saul；先过美工检查和中文专项检查，再给左侧同版试玩、右侧清单的 H5；Saul 试玩没问题后核对覆盖、只补缺项并出包；也接收已完成源码和测试包，沿用可核验记录；macOS、Windows 都能用；手动检查使用 Computer Use + Edge，自动回归使用 Ego，Chrome 只在美工试玩和最终测试包交接时打开。默认不改玩法、不加关卡、不加新系统。"
 ---
+
+**返工写包硬门禁（2026-11-10）**。先按[执行范围计划](../remake-core/references/regression-scope-gate.md)核对本次真实改动与沿用证据。执行器只接受同版计划中的具体检查项。漏传计划、范围含整包通配、交付回执失配时先停，不自动启动全量。最终 ZIP 体积、分包和 TikTok CLI 仍按每次交付规则检查。
 
 **当前检查执行规则（用户 2026-11-08）**：先读[一次通过、按改动复验](../remake-core/references/incremental-checks.md)。图片、文字/字幕、音效、玩法、关卡、平台检查均按命名节点留存真实记录；已通过且依赖未变的项禁止重复执行，代码或配置变化也不触发全量。浏览器和写包读取同一计划；旧文中的“每次必跑/全量检查”改按完整覆盖核对解释。最终 ZIP 的本次体积与分包核对按用户单独要求保留。
 
 **完整美术回执已撤销（用户 2026-11-08）**。美术制作和实际画面问题按首次制作或受影响的节点处理，保留各项实际结果。常规与轻量写包、正式试玩、最终交付均不得生成、补齐、更新或要求完整美术回执，也不以全量图片复核或截图汇总作为替代条件。已通过的游戏局部返工只检查该改动影响的节点。**保留的三条轻量保障（11.17.14）**：① 首轮正式英文试玩前要有一次完整 `art_check.py` 运行记录（`.tiktok-kit/art-check-record.json`，不绑图片指纹，之后小改不用重跑，最近一次运行有需处理项时先修这些行）；② 两个写包入口只读包内字节，查英化新做的图不超过 800 KB（`docs/english/pre-english-images.json` 里的中文原图不查）；③ 首次英化的人工画面清单并入 Saul“试玩没问题”这一步，返工时清单只是可选快看。最终 ZIP 分包、体积、配置和同版链接核对按原规则执行。
 
-**人工画面检查（用户 2026-11-08）**。发正式英文试玩和测试包时随同版链接附[逐页 H5 清单](references/playtest-h5.md)。从[人工试玩画面清单](../remake-core/references/manual-visual-review.md)挑本轮适用项目。常规美工、启动计时及写包取消默认录屏和 AI 总览图签收，偶发问题按需短录。原资源中文专项、技术检查和版本核对按对应规则执行。
+**人工画面检查（用户 2026-11-08）**。正式英文试玩和测试包随[同页试玩 H5](references/playtest-h5.md)交接，左侧同版游戏，右侧逐页清单。从[人工试玩画面清单](../remake-core/references/manual-visual-review.md)挑本轮适用项目。常规美工、启动计时及写包取消默认录屏和 AI 总览图签收，偶发问题按需短录。原资源中文专项、技术检查和版本核对按对应规则执行。
 
 已交付后用户指定改完即出包时，按[返工交付与人工快查](../remake-core/references/returned-art-delivery.md)处理这次改动，实际记录与用户验收分开。
 
@@ -20,7 +22,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 英化人工操作用 **Computer Use + Edge**。自动检查仍在 **Ego Lite** 独立 TaskSpace 执行原有脚本并复用有效证据。英化的 Google Chrome 只在美工试玩和最终测试包交接时打开。详见[浏览器测试规则](../remake-core/references/browser-testing-policy.md)及[试玩交接](references/preview-handoff.md)。
 
-修订：`2026-11-10.english-simple.11.17.20`（新增界面先走美工 Skill，Chrome 只在两次正式交接时打开。历次改动见[版本历史](版本历史.md)。）
+修订：`2026-11-10.english-simple.11.17.21`（每阶段结算并在聊天报告，同版试玩和清单在同一页。历次改动见[版本历史](版本历史.md)。）
 
 在新电脑上使用本包时，先核对该机的依赖和 Cocos 版本。共享检查依据用项目相对路径和内容指纹，试玩链接在接收电脑重新绑定。跨机 H5 使用[转发清单](references/playtest-h5.md#换电脑接手)。
 
@@ -60,7 +62,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 - ① 盘点：拿到的源码或包先跑 `python3 <skills>/remake-core/scripts/which_package.py --project <工程或包> --roots <游戏文件夹> --roots <工作区里放这款游戏的文件夹>`（按字节和 Cocos 资源 uuid 找同一款游戏的全部包）；它说「放在 N 个地方 / 可能有两条以上的版本线」时，先用一句话问 Saul 在哪条线上接着做，不要另起一条（音乐消消乐 11-05：Kiro、Codex 各从 v29b 做到 v30、v31、v32，修过的问题互相没带上）。中文源码用 `unpack_source.py` 放进工作目录（不带 .git，Saul 2026-11-04）；先查电脑（`check_machine.py`，见「换电脑也能用」），再给 Saul 中文原版的试玩链接，不等回复；接着写新游戏标记、列清单。
 - ② 修改：做下面「只做这几件事」的 9 项。第一轮美工照原画风重新生成所有按钮和文字，第一个英文链接前完成实际可见的全部中文图文及相应美术覆盖，已通过项直接沿用；第 8 项 ad-boost 按诊断完成本轮计划的接入和美工；全部新增界面在设计前走[新增界面制作](../remake-art/references/new-feature-ui.md)。
-- ③ 英文试玩链接：按第 3 阶段完成美工和 `chinese_audit.py` 中文专项检查，确认能进首页、能玩一局、没有导致卡死的报错。候选已构建、检查有待处理项、入口启动失败都属于进行中。用过程消息报节点与实耗，报完立即按[首轮试玩修复](references/first-trial-repair.md)核实、修正和定点补验。继续到同版 Native 试玩实际可打开，检查通过才发同版正式链接。链接、H5 和阶段用时同发。交付前只有用户明确暂停、取消或确有只能由用户补齐的输入时才结束执行。
+- ③ 英文试玩链接：按第 3 阶段完成美工和 `chinese_audit.py` 中文专项检查，确认能进首页、能玩一局、没有导致卡死的报错。候选已构建、检查有待处理项、入口启动失败都属于进行中。用过程消息报节点与实耗，报完立即按[首轮试玩修复](references/first-trial-repair.md)核实、修正和定点补验。继续到同版 Native 试玩实际可打开，检查通过才发同版正式链接。交同页试玩 H5 和阶段用时。交付前只有用户明确暂停、取消或确有只能由用户补齐的输入时才结束执行。
 - ④ 试玩改进：修反馈时只核受影响的页面、共享素材和功能。中文专项检查只识新加和改过的图。同版候选留在内部，用 Computer Use 操作 Edge 核实，聊天报告问题、结果和实耗。
 - ⑤ 补缺与出包：Saul 说没问题后核对适用项覆盖，只执行缺项及真实改动项，用写包入口出包。测试包交了以后再改（返工），只查改到的部分，不从头再查（见第 5 阶段「出包后返工」）。
 
@@ -144,7 +146,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 **先查美工，再给英文试玩链接**。开工核中文原版内部基线。第一轮全部美工及 ad-boost 诊断和接入在制作时完成。第 3 阶段完成中文专项检查、制作范围内的技术美工检查，修复并复查通过后给英文试玩链接。ad-boost 板块也先查再带入链接。制作节点核对适用技术项，画面观感按同版人工快查。反馈与最终验收的候选在内部点检。广告回归 10 例按适用项执行，已知问题与平台兼容仍须完整覆盖，各项在对应制作节点执行一次。第 5 阶段和写包入口读取同一记录。英化的交接以本页为准。
 
-**用时（10.2.12）**：每个阶段开始跑 `T stage <N>`、做完跑 `T done`，中间每一步记 `T begin`／`T end`，`done` 打印的用时发给 Saul。`T` 是 `python3 <skills>/cocos-game-to-english/scripts/stage_timer.py --project <工程>`；什么时候跑哪一条、步骤叫什么名字，见下面「用时汇报」。
+**每阶段结束都发结算（用户 2026-11-10）**。开始跑 `T stage <N>`，执行中按节点计时。结束跑 `T done --summary "<完成、沿用或未覆盖的内容>" --next "<下一步>"`，把工具生成的阶段记录和说明发到当前聊天，再进下一阶段。第 3 和第 5 阶段由正式交接入口结算，当前交接回复附该阶段记录。无实测计时的范围标未记录，未走的阶段标不适用。`T` 是 `python3 <skills>/cocos-game-to-english/scripts/stage_timer.py --project <工程>`。
 
 1. **盘点**：**中文源码不带 .git（Saul 2026-11-04，91 SLS11）**：91 卖家给的 SLS11.zip 带着完整的 `.git`，提交记录里有上架文案 `app_desc.txt`（开发者账号和密码）。中文源码一律用 `python3 scripts/unpack_source.py --source <中文源码.zip 或文件夹> --out <新的工作目录>` 放进工作目录，不要直接 unzip / cp：`.git` `.svn` `.hg` `.idea` `.vscode` `__MACOSX` 不拷，`app_desc.txt`、`.env`、签名证书和私钥不拷，文本里像账号密码的行（比如 `settings/project.json` 的 `appSecret`）列在 `docs/source-intake.json`，交源码前把值清空。原 ZIP / 原文件夹不动；`unpack_source.py` 还会先把原包复制进游戏文件夹的只读 `_原始输入/`（只有 Saul 自己能删）。清理旧版本只用 `python3 <skills>/remake-core/scripts/clean_old_versions.py`，不手写 `rm -rf`。开工打印「已装 Skill 被改过，请走补丁」时，把列出的改动写成补丁交 Skill 会话，不要接着直接改已装文件。要交源码时用 `python3 <skills>/remake-core/scripts/make_source_zip.py --project <工程> --out <游戏_Source.zip>`（不带上面这些，带凭据就拒绝），`prepare_delivery.py --source` 和两个写包入口按同一规则拦（`source_hygiene.py`、出包门禁 `H1_vcs_ide_in_package` / `H2_credentials_in_package`）。
    **开工先核中文原版内部基线，核准后继续制作**（Saul 2026-10-31）。在中文原工程的一份副本上导出 Web（复制到工程外再导出，原工程一个文件都不动；用原游戏对应版本的 Creator 命令行：先跑 `check_machine.py --project <中文原工程>` 查电脑，再用 `find_creator.py --project <副本>` 找本机的编辑器、拿构建命令（见上面「换电脑也能用」和 [Cocos Creator 版本和已知问题](references/local-creator-versions.md)：没装那个版本先用同一小版本里最近的；2.4.3 要先放进本包的构建扩展再加 `--use-gl=desktop`；3.x 导出缺入口页时用 `fix_web_entry_3x.py` 补），其他写法见[真实 Cocos 运行](../remake-core/references/cocos-runtime.md)：2.4 是 `--path <副本> --build "platform=web-mobile"`，3.x 是 `--project <副本> --build "platform=web-mobile"`；macOS 命令行卡在导入资源时加 `--no-sandbox --disable-gpu-sandbox --disable-gpu`；原工程里已经有没改过的 `build/web-mobile` 也可以直接用），把导出的 `web-mobile` 整个复制到游戏文件夹的 `本地试玩_中文原版（不用上传）/`，再在后台起链接：`python3 <skills>/cocos-game-to-english/scripts/serve_preview.py --directory "<游戏文件夹>/本地试玩_中文原版（不用上传）" --snapshot --chinese-original --name "<游戏> 中文原版"`（`--chinese-original`：这是中文原版，不做中文专项检查；不加它，英化入口的 `serve_preview.py` 会当成英文链接去查，找不到英化工程就不起）。服务作为内部基线。需要实际点按时由 Computer Use 在 Edge 打开。中文原版不用英文广告冒烟。导不出 Web 时（引擎版本不对、构建报错、只有小游戏包没有源码），把原因写给 Saul，同样接着做。这份导出后面截中英对照图（`docs/baseline/`）也用。然后跑 `python3 <skills>/remake-core/scripts/tiktok_finalize.py init --project <中文原工程> --board localize`（写新游戏标记 `.tiktok-kit/policy.json`），再跑 `tiktok_finalize.py inventory --project <中文原工程>`，它把原版里的广告、加桌面/回访、触摸、启动、存档、分享/跳转/统计、登录代码逐项列到 `docs/english/platform-inventory.json`，第 2 阶段按它逐项改。inventory 之后马上跑 `tiktok_finalize.py rewire-ads --project <英化工程>`，再跑 sync；原版广告和加桌面/回访奖励由它改线，别手写桥；剩下的按 platform-inventory.json 的 rewire_todo 手改，delete_list 照单删（见 [rewire-ads](../remake-core/references/rewire-ads.md)）。3.x 游戏也一样跑 rewire-ads；`rewire_todo` 里 ad / ad_call / ad_handler 的行清零才往下做，别自己写浏览器里直接发奖的分支。和 `audit_new_english_images.py --make-list <工程> --out <工程>/docs/art/original-images.json` 放在同一步做。然后列出全部中文（文字和图片字）、首页现有按钮、设置项、结算页、分享/更多游戏/排行榜入口、已知的操作问题。存档也在这一步盘点：跑 `python3 <skills>/remake-core/scripts/make_save_schema.py --project <工程> --inventory`，把原游戏所有存档键写进 `docs/save/save_keys.json`，关卡进度、金币、已买皮肤没存档的写进待改清单；原游戏有关卡文件时跑 `make_level_plan.py --project <工程> --record-level-files '<关卡文件 glob>'`。再跑一次 `fit_english_labels.py --project <工程> --dry-run`，哪些槽放不下最长的译文、要多宽，写进首件清单。把中文原名和英文名都写进 `docs/copy/glossary.json` 的 `"game_name"`（一定要写）：出包时 `game_name_scan` 用它比对 Label 文字和中文专项检查已经识出的图片文字，11-05 起开工的英化游戏有命中就拦，更早的只警告（见第 2 阶段「游戏里不放游戏名」）。`audit_new_english_images.py --make-list` 写出的 `art-replace-round1.json` 里，`regenerate` 带 `title_logo` 的那张是原游戏的标题 logo：第一轮按它的 prompt 画成主角、图案或场景，不写游戏名，也不要译成英文 logo。`platform-inventory.json` 的 `audio_todo` 列的是原游戏自己的声音入口（播放调用、平台音频对象、音乐和音效开关读写）：英化时把它们全部改走平台包 `AudioService`（音乐和音效分开开关），`audio_todo` 清零；`audio_summary` 有 `one_switch_suspect` 时，先确认音乐开关有没有连音效一起管，设置页两个开关各试一次。`reward_todo` 列的是原游戏自己加钱、扣钱、改道具的地方：英化时每条改走 SaveStore `grant`（发奖）或 `ShopTx`（扣费换东西），只改发奖和存档的写法，玩法不动；顺序固定为「凭证 → 保存读回 → 刷新界面 → 播动画」，动画回调里不发奖、不存档；x2 只算一次基础整数，显示和到账都读它的 2 倍；局内已进钱包的收益，结算时不再发一次。sync 报 `K_W_reward_*` / `K_W_x2_rounding_mismatch` 时照提示改。盘点原版时顺手查调试和别家残留：跑一次 `tiktok_finalize.py source`（会跑 `debug_leftover_scan`），把开着的 debug/cheat/test 按钮设成 inactive 或删掉，删掉能打开 FPS 统计的代码，原工作室开屏（启动场景里开局计时后自己淡出的节点、写着某某 Games/Studio 的字）直接去掉，让首页一出来就能点；平台配置的 App ID 和广告位只用平台包模板里的共用测试 App 或本游戏 `docs/platform/platform_ids.json` 记的，不留原游戏或别的游戏的。遗留名单上的旧英化游戏（射击高手、音乐消消乐等）继续做新版本时不跑 `init`，按旧游戏出包（拿不准就先跑 `tiktok_finalize.py decide --project <工程>` 看判定）；要改用标准件才跑 `tiktok_finalize.py adopt --project <工程>`。用时：开工第一件事先 `T start --run-id <本轮唯一ID> --route source` 再跑 `T stage 1`，中文原版基线用 `serve_preview.py --chinese-original --project <工程>` 起内部服务，它自动记「中文原版链接」（没带 `--project` 或没记上时手动跑 `T mark 中文原版链接`），盘点做完跑 `T done`，用时发给 Saul，不等回复，接着做第 2 阶段。
@@ -177,11 +179,11 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
    **改图后的重拍清单**。登记受影响状态、共享资源、视口和复现数据，按[按状态补拍](../remake-art/references/capture-rounds.md)复用旧证据，只采改动涉及的状态。
 
    **制作阶段核对画面**。按本次制作和改动范围核对资源、图集、可测布局等技术项。第一个英文试玩链接前用 `art_check.py --project <工程> --board localize --dumps <本轮采集目录> --build <Web 导出>` 建立首轮技术覆盖。报告有待处理项时立即按[首轮试玩修复](references/first-trial-repair.md)继续。证据有效的通过项沿用，同一原因合批处理，修好后只补验失败组和实际受影响的检查组。技术问题由 AI 在试玩前处理，观感、动画和闪烁随同版链接交接人工快查。
-   **美工试玩交接**。使用同版已处理的 Native。英化入口把同版准备记录写到 `trial-links.json`。需要内部草稿时用 `--draft`。完成当前美工、中文专项和适用的启动与输入检查后，按[两次正式试玩交接](references/preview-handoff.md)准备同版服务。准备成功会结束第 3 阶段并打印用时。再调用 `handoff_preview.py --kind art` 打开 Chrome，并发同版美工试玩和 H5。候选、草稿和失败重试期间在内部操作。
+   **美工试玩交接**。使用同版已处理的 Native。英化入口把同版准备记录写到 `trial-links.json`，内部草稿用 `--draft`。当前美工、中文专项及适用启动与输入检查通过后，按[两次正式试玩交接](references/preview-handoff.md)准备同版服务和 H5 计划。调用 `handoff_preview.py --kind art --plan <计划>`。同页 H5 实际读回通过后结算第 3 阶段，再打开 Chrome。
    顶栏不手算胶囊位置：新游戏 source 自动装 CapsuleAuto。页面背景一律用 `ScreenFit.cover(cc, bg, {watch:true})`，别按设计尺寸铺，source 会查首页、局内、结算的背景（新游戏拦，英化警告）。update 里移动一律乘 dt（或 RunSession.move），节点在 onLoad 建好或从 FxPool 取，别在 update 里 new；sync 每次构建前会扫（新游戏拦，英化只提示）。
-   用本轮同版启动记录或 Computer Use + Edge 确认能进首页、能开始一局，控制台没有导致卡死的报错。复用本轮已经采到的同版证据。正式试玩服务实际就绪后自动结束开放的第 3 阶段并打印总表。链接交付回复附第 1～3 阶段的实测用时，H5 整理另记节点。接力先读 `T status`，未知空档单列。
+   用本轮同版启动记录或 Computer Use + Edge 确认能进首页、能开始一局，控制台没有导致卡死的报错。复用本轮已经采到的同版证据。第 3 阶段包含 H5 整理与入口读回。链接交付回复附第 1～3 阶段的实测用时。接力先读 `T status`，未知空档单列。
    回复里先用一句话说：这款原来有几个看广告的地方，第 8 项默认加哪几个板块（Saul 2026-10-31 定的默认做法，不用他选），本轮已完成接入与美工，不要哪个直接说。按实际候选列明已完成的页面和板块，不能把未完成的计划美工留到第二轮。
-   回复里随同版 Native 试玩附[人工快查 H5](references/playtest-h5.md)。按[人工试玩画面清单](../remake-core/references/manual-visual-review.md)列本轮实际改到的画风、英文可读性、遮挡裁切、首次打开弹窗和转场观感。让用户按游戏实际入口短走一遍。奖励去重、存档读回、冷启动、异步回调和平台回归仍由 AI 按真实依赖计划处理。用户直接指出问题或说没问题即可。
+   交接回复给一个[同页试玩 H5](references/playtest-h5.md)。左侧固定手机尺寸的同版游戏，右侧清单。按[人工试玩画面清单](../remake-core/references/manual-visual-review.md)列实际改到的画风、英文可读性、遮挡裁切、首次打开弹窗和转场观感。奖励去重、存档读回、冷启动、异步回调和平台回归仍由 AI 按真实依赖计划处理。用户直接指出问题或说没问题即可。
    用户指出一项就进入对应节点；已交付返工并要求改完出包时，这份清单仅供交包后可选快看，不再等一轮人工批准，不把未回复记成人工实测通过。
 
 4. **试玩改进（Saul 反馈，AI 定点修改）**：美工试玩交接后跑 `T stage 4`。Saul 回复时先跑 `T back`。修正反馈并按影响复查对应中文、画面或功能，保留同版有效证据。接入的新增界面先按[新增界面制作](../remake-art/references/new-feature-ui.md)定稿。反馈修复与回归的候选供内部测试，处理完报告结果和实耗。本轮功能的局部验证随实现完成，未覆盖的检查在相应制作节点执行一次，第 5 阶段只核对旧证据和补缺。一次全部改完，同批导出 Web 和 Native 各一次。复查受影响整页、共享组件和新增页面，后续只处理 Saul 的反馈和明确新增要求。Saul 说试玩没问题或要求出包时跑 `T done`，进入第 5 阶段。已交付后指定美工返工按[返工交付](../remake-core/references/returned-art-delivery.md)使用本轮授权。
@@ -195,9 +197,9 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
    - 按[统一检查](../cocos-game-check/SKILL.md)的英化档执行功能、启动、平台兼容与最终 ZIP 检查。写包入口核对当前源码记录；排查缺失或过期记录时可先用 `tiktok_finalize.py check-source --project <工程> --board localize`。其余执行 `check_known_issues.py` 和 `preflight.py`，逻辑结果读取预检生成的 `logic.json`。按 [TikTok 固定适配](../cocos-game-check/references/tiktok-fixed-adaptation.md) 核对平台项。3.x 完整 TS 检查用 `ts_full_check.py --project <工程>`。
    - 平台标准件、素材转换和 Native PNG 处理随第 3 阶段候选完成。第 5 阶段用通过试玩核验的同版 Native；写包工具继续执行需要的 Native 平台接入和包结构检查。
    - 广告加量（第 8 项 ad-boost 加的板块）：按 ad-boost 各板块 `modules/<板块>/README.md` 第 8 节验收功能。每个新的看广告按钮真实点击测看完、取消、失败、超时、连点；`qa/ad-regression.json` 照 ad-boost 的例子写（签到、转盘结果、礼包领奖窗这种带勾选框的写 `double_claim`）。
-   - 用 `make_tiktok_zip.py` 或 `build_checked_zip.py` 对已验收候选出包，带上 `--project`。在内部保留同版预览服务，用 `prepare_delivery.py` 核最终 ZIP、适用回归、分包体积和同版入口。正式写包按同一 ledger 只补缺项和真实受影响项，已通过项直接沿用。重新复查最终 ZIP 的分包体积。现有同版服务经核实可以沿用。已有同版最终验收和交付回执时用双栏，局部返工用单栏可选快查，只改一处就一条，3–5 条以内。待实际 ZIP 回执和[本版 H5](references/playtest-h5.md)就绪，按[最终交接](references/preview-handoff.md#最终测试包交接)打开 Chrome，测试包与同版可用的手机试玩链接同发。
+   - 用 `make_tiktok_zip.py` 或 `build_checked_zip.py` 对已验收候选出包，带上 `--project`。用 `prepare_delivery.py` 核最终 ZIP、适用回归、分包体积和同版入口。正式写包按同一 ledger 只补缺项和真实受影响项，已通过项直接沿用。重新复查最终 ZIP 的分包体积。现有同版服务经核实可以沿用。完整与局部交付均用[同页试玩 H5](references/playtest-h5.md)，局部可选快查只改一处就一条，3–5 条以内。按[最终交接](references/preview-handoff.md#最终测试包交接)打开 Chrome。测试包与同版可用的手机试玩链接同发，链接直接进入同页 H5。
    - 手机上看到的问题（v7.9）：Saul 在手机上报过问题的，登记时写 `--source device` 和手机上跑的那个 ZIP；问题门禁 `check` 的结果有 `device_issues` 时，每条的 `line`（「复现了手机上的画面和同一行报错」「不能完全确定是同一个原因」「电脑上没复现，不能说修好了」）原样贴进交付回复，不改成「已修复」。做法见统一检查的[手机上看到的问题](../cocos-game-check/package-check/references/resource-and-reported-issues.md)。
-   - 用时：这一阶段开始跑 `T stage 5`；交付时依次跑 `T mark 交付`、`T done`、`T report --all`，第 5 阶段用时和全程总表都放进交付回复。
+   - 用时：这一阶段开始跑 `T stage 5`。交接入口完成同页读回后记录 `T mark 交付`、`T done` 和 `T report --all`。第 5 阶段结算和全程总表放进交付回复。
    - **真机反馈修好以后（11.17.16）**：之前的检测、构建、出包都没拦住的问题，修完按[真机反馈补模拟差距](../remake-core/references/executable-regression-retention.md#真机反馈修好后补上模拟环境和真机的差距111716saul-2026-11-09)补一步：找出是检查判错还是模拟环境和真机不一样；判错的改判定，模拟环境不一样的给宿主加可选模式并留反例；没经真机确认的假设只当警告，确认后再拦截。
    - **上传兼容或首页两入口的定点修复（11.17.15）**：平台上传/审核退回、要求“参照鸽鸽小羊的修复方式处理上传兼容”或修回访/桌面入口时，按[上传兼容与首页两入口定点修复](../cocos-game-check/package/references/upload-compat-and-entry-fix.md)：写包时 `upload_compat` 自动补分包 root、`game.js` 引用和编译选项；入口点一下直接跳、不出多余文字、冷启动也查资格、不重复发奖、普通切回前台不提示；只查这些改动、必要启动和最终 ZIP 分包体积，不重跑美工；交付修改清单、测试包和同版试玩链接。
    - **出包后返工（简化.11.15，Saul 2026-11-04：「出包后的返工修改，就只检查修改涉及的那些部分」「比如我修改了贴图，之后出包甚至又要检查一遍音频，这种情况不要发生」）**：测试包交给 Saul 以后又要改，只处理指定部分，不从头再查一遍。用户明确要求“改完美工出测试包”时，本次指定视觉部分默认免 AI 美工复验，先按[返工授权记录](../remake-core/references/returned-art-delivery.md#2-用单独的授权记录不改写测试历史)完成当前候选绑定，下面第 2 步只用于未豁免的实际改动项：
@@ -214,7 +216,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 - 命令用 `T run --span-id 节点ID --cwd 工程 --log 日志 名称 -- 实际命令 参数`：保留真实退出码、单调时钟秒数和实时输出，不自动重试。构建每一次均有记录，重试前先说明输入或原因发生什么变化。外部生成的提交至完成另用 `external-begin ID 名称` / `external-end ID`；不把服务等待当成纯工作。
 - 暂停用 `pause 原因`，继续用 `resume`；取消用 `abort 原因`。等待用户用 `ask 原因` / `back`，不等待用户的中文原版试玩不记等待。中断保留未完成状态，不把隔夜空闲算成连续制作，也不倒填估计秒数。
 - 预览入口在真实 ready 后自动记录“启动请求到入口就绪”，Web＋Native 内容共同确定轮次；相同内容重开沿用。不要用外层 `run` 包住常驻预览服务，否则会把用户试玩期间当制作耗时。中文入口也带 `--project`；入口未就绪不写已发布。
-- 阶段结束 `T done`，试玩交付与最终交付用 `T report --all`。报告区分整轮墙钟、已完成执行区间并集、工具区间、外部等待、用户等待、暂停、未记录空档。并行项和父子任务不能直接相加；开放节点不是已完成准确实耗。底层 suite 缺单项计时就写未知，不能把整个批次秒数复制给每项。
+- 阶段结束 `T done` 时附 `--summary` 和 `--next` 并在当前聊天发结算。试玩交付与最终交付用 `T report --all`。报告区分整轮墙钟、已完成执行区间并集、工具区间、外部等待、用户等待、暂停、未记录空档。并行项和父子任务不能直接相加；开放节点不是已完成准确实耗。底层 suite 缺单项计时就写未知，不能把整个批次秒数复制给每项。
 - 预算在盘点后按实际页面状态、中文素材量、引擎/环境、外部生成队列填写，作为发现卡点的参考。超过预算先定位当前进程、输入和依赖，不因超时自动全测、重启浏览器或重复构建；也不能单凭耗时判断模型出错。优化比较须同输入同范围，不能把几秒脚本差异说成整轮节省几小时。
 
 | 阶段 | 必须分别记录的节点 |

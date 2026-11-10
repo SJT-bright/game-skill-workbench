@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-10.english-simple.11.17.20",
+  "revision": "2026-11-10.english-simple.11.17.21",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "57c8e838044a2d6cf97bba70a522777a520db89ce5f3c7ddabb586efa61109b9",
-      "bytes": 92294
+      "sha256": "495b813279a55333c1b09806719e6013d86c94823fdbde0f1fe5475e63eb7ca0",
+      "bytes": 92388
     },
     {
       "path": "agents/openai.yaml",
@@ -31,8 +31,8 @@
     },
     {
       "path": "assets/playtest-checklist.html",
-      "sha256": "5309174854ea4d474f7d588a88f4997dfb249f38a6092a14e6c1d1c104df8449",
-      "bytes": 12763
+      "sha256": "88ea2e6f2798bde6a8261ce0871a7383eaaaad5d2cbf34f8d75b3fd01f60dc29",
+      "bytes": 12147
     },
     {
       "path": "examples/MusicSlice_ad-regression.json",
@@ -81,13 +81,13 @@
     },
     {
       "path": "references/playtest-h5.md",
-      "sha256": "556b25d0ed2000bdb4fbb1a4bab3c349492535fb1456245d0aea4c2a319765dc",
-      "bytes": 4760
+      "sha256": "e476d2ae45b7db0c20df6fa2b6ff5af84c04335a6bc0e82051b68fc3a95d15eb",
+      "bytes": 4440
     },
     {
       "path": "references/preview-handoff.md",
-      "sha256": "e4a01f61994c68a6c638c2b4ee85730ddf3636ba1ca1343aef15226e5895b713",
-      "bytes": 2582
+      "sha256": "25a73bb594df285001fb30409aa18aca056025a506f9736d15103389af7ed55a",
+      "bytes": 2720
     },
     {
       "path": "scripts/browser_env.py",
@@ -96,8 +96,8 @@
     },
     {
       "path": "scripts/build_playtest_h5.py",
-      "sha256": "35df301e4d2d9763827fbbf8ef26eb1c56efd2fe63e883615a27f98ee1ecd61c",
-      "bytes": 12077
+      "sha256": "1523c3cfbfdc814b237e8b6da44e80a73c7bbc67ce0e451bfcdd244ec8329fb9",
+      "bytes": 12010
     },
     {
       "path": "scripts/check_export_images.py",
@@ -146,8 +146,8 @@
     },
     {
       "path": "scripts/handoff_preview.py",
-      "sha256": "c3e48046c1a7a96d7c0a05f89bb119e0f7f496044557eed2c6b21cd2f7357b16",
-      "bytes": 7089
+      "sha256": "7762e3decabf8cea8c2df0a5026e93709404fe7459b36c1ef2e8e2726d61fe53",
+      "bytes": 11391
     },
     {
       "path": "scripts/inspect_creator_migration.cjs",
@@ -166,13 +166,13 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "81fcf1b0508f1f370d6d176a4a7e193af8fce3177aa259b14f03edb6e638b66b",
-      "bytes": 21416
+      "sha256": "7808ad251658d50e5f74bb295a582480176cb1c737616e1e430a83c588b0a3f2",
+      "bytes": 20972
     },
     {
       "path": "scripts/stage_timer.py",
-      "sha256": "69e575baa1ba95839632782e7d63c631e34c91541407261286bcbd942b4824ed",
-      "bytes": 60928
+      "sha256": "68122666aea309b4a528c47e9f47f61667fe5d241bb001ab0bb4da155c4bd072",
+      "bytes": 62129
     },
     {
       "path": "scripts/test_check_export_images.py",
@@ -206,8 +206,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "ac41c9b6cfb38706ea70bb4f8fcff702a8f0bd76881a32cac5cde2681c6cd9a0",
-      "bytes": 77439
+      "sha256": "58e2026d4022f1a51fe4cf8174e0ae60211dee42e0c17f170c4a2181a143718b",
+      "bytes": 77413
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -221,8 +221,8 @@
     },
     {
       "path": "scripts/test_playtest_h5.py",
-      "sha256": "6272042806c9fb16c21dd5da5fb0f3d779ebdbc89da68ebf4b3cea15f28cd85b",
-      "bytes": 7323
+      "sha256": "0003f627faa81be3034d3076e462347f2193cbaa487af9faf575048365c57cf1",
+      "bytes": 7430
     },
     {
       "path": "scripts/test_portable_tools.py",
@@ -231,8 +231,8 @@
     },
     {
       "path": "scripts/test_preview_timing_hooks.py",
-      "sha256": "cd967dc55636de377164ae2cbb5643fee4e5ef29d740d08e5ab3fa309bb21ef4",
-      "bytes": 9271
+      "sha256": "07584aab3b05d2bb7c4f05ca2b947dde3cda9243e1ae20b2b27e4791a3fd7816",
+      "bytes": 8431
     },
     {
       "path": "scripts/test_r4d_raw_input_intake.py",
@@ -266,8 +266,8 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "152c08242ef4d400f5b77123b48e094058ef58ea8b042537c6d70d4cbaa2c317",
-      "bytes": 32530
+      "sha256": "f4dc15efc87b473dca9e868b2618817542fc119172b12afa95dce111b5d67dc2",
+      "bytes": 33640
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -276,8 +276,8 @@
     },
     {
       "path": "scripts/test_stage_timer_runs.py",
-      "sha256": "7431bba2b0166db4fe224dd31c53551a44cde2183c46f5256825395aebaedab1",
-      "bytes": 13737
+      "sha256": "536dc7db879e33161c19bec6cd51f2179175fb1cf072acda7a5bd52cf2c571dd",
+      "bytes": 14893
     },
     {
       "path": "scripts/test_ts_full_check.py",
@@ -301,11 +301,11 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "d344ee6c3b671ed0cf361b8ecf4e820ec390d5dc44e2972304aaa9a858406d59",
-      "bytes": 14662
+      "sha256": "59897a397af39f2e45fcc3c03b63ff8bc1c9a54e17e8cf5ca73b511f18c42e84",
+      "bytes": 14871
     }
   ],
-  "previous_provenance_sha256": "49400994bd92dc22e7730e6f482d3db5745df2efb0db32c1cd85adcf137b0b59",
+  "previous_provenance_sha256": "d18de9d4612ea6b875d17a1fb6d74f09e1549f527737b2c6d08817e88454e234",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

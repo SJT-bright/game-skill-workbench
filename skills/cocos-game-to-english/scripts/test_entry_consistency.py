@@ -413,11 +413,11 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_h5_checklist_accompanies_the_same_version_preview_and_package(self):
         _, st = self.stages()
-        for phrase in ('回复里随同版 Native 试玩附[人工快查 H5](references/playtest-h5.md)',
+        for phrase in ('交接回复给一个[同页试玩 H5](references/playtest-h5.md)',
                        '奖励去重', '存档读回', '冷启动', '异步回调', '仍由 AI 按真实依赖计划处理'):
             self.assertIn(phrase, st[3], phrase)
         self.assertIn('候选供内部测试', st[4])
-        for phrase in ('已有同版最终验收和交付回执时用双栏，局部返工用单栏可选快查',
+        for phrase in ('完整与局部交付均用[同页试玩 H5](references/playtest-h5.md)',
                        '只改一处就一条', '3–5 条以内', '测试包与同版可用的手机试玩链接同发'):
             self.assertIn(phrase, st[5], phrase)
 
@@ -909,7 +909,7 @@ class TimingReport(unittest.TestCase):
         lead = self.text().split('\n## 阶段', 1)[1].split('1. **盘点**', 1)[0]
         self.assertIn('`T` 是 `python3 <skills>/cocos-game-to-english/scripts/stage_timer.py --project <工程>`', lead)
         for n, phrases in ((1, ('`T stage 1`', '`T mark 中文原版链接`', '`T done`')), (2, ('`T stage 2`', '`T done`')),
-                           (3, ('`T stage 3`', '正式试玩服务实际就绪后自动结束', '链接交付回复附第 1～3 阶段')),
+                           (3, ('`T stage 3`', '同页 H5 实际读回通过后结算第 3 阶段', '链接交付回复附第 1～3 阶段')),
                            (4, ('`T stage 4`', '`T back`', '候选供内部测试', '`T done`')),
                            (5, ('`T stage 5`', '`T mark 交付`', '`T report --all`'))):
             for phrase in phrases:

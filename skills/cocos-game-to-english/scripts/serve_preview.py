@@ -43,7 +43,7 @@ HELP = ('英化入口自己的参数（其余见下面共用服务的参数）�
         '  --reopen            重开已通过的同版试玩，只核对既有记录\n'
         '同版候选核对中文专项、Web / Native 与首轮 art_check 记录。用 --snapshot --keep 保留服务；英化入口不弹 Chrome。\n'
         '正式交接由 handoff_preview.py 完成。\n'
-        '正式英文试玩实际就绪后打印本轮阶段用时，同版链接回复附该总表。\n')
+        '内部候选就绪时记录服务用时。阶段结算由正式试玩清单交接入口打印。\n')
 
 
 def timing(project, *args, run_id=None):
@@ -154,7 +154,6 @@ def returned_preview(argv, project, export, native, say, timing_run_id=None):
                          'native_tree_sha256': accepted['native']['sha256'],
                          'acceptance_sha256': accepted['manifest_sha256']})
             returned.write(log, rows)
-            say(timing(project, 'publish', 'english:' + accepted['web']['sha256'] + ':' + accepted['native']['sha256'], run_id=timing_run_id))
             say('返工试玩身份一致；美术按用户授权接受，未生成新的 AI 美术通过记录。')
         return ready
     verify.returned_art = accepted
@@ -293,11 +292,9 @@ def gate(argv, say=print, timing_run_id=None):
                          'open_problems': len(problems), 'timing_run_id': timing_run_id, **evidence})
             CA.write_json(log, rows)
             say('试玩快照和查过的导出一字不差，记在 %s。' % log)
-            say(timing(project, 'publish', 'english:' + export_sha + ':' + str(native_sha or ''), run_id=timing_run_id))
 
         return record_ready_trial
     verify.report_phase_times = not opts.draft
-    verify.close_first_trial_phase = not opts.draft
     return argv, verify
 
 
@@ -357,9 +354,7 @@ def main(argv):
                 except Exception as exc:
                     print('试玩启动用时未记全（服务已就绪）：' + str(exc), file=sys.stderr, flush=True)
             if getattr(verify, 'report_phase_times', False):
-                if verify.close_first_trial_phase:
-                    print(timing(project, 'done', '--stage', '3', run_id=timing_run_id), flush=True)
-                print(timing(project, 'report', '--all', run_id=timing_run_id), flush=True)
+                print('内部候选已就绪。阶段用时在同版试玩清单交接时结算。', flush=True)
         shared['main'](argv, verify_snapshot=verify, chinese_original=original,
                        returned_art=getattr(verify, 'returned_art', None), on_ready=on_ready,
                        english_preview=True)

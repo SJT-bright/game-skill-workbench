@@ -215,6 +215,8 @@ await L.suite(async ({ out, page }) => {
     rep.cases.push(c);
     const reward = async () => (spec.reward_js ? P.js(page, spec.reward_js) : undefined);
     const fresh = async () => { await G.openGame(page, 'iphone14', 'capsule=pt&ad=cancel&adhide=1&adms=900' + (baseQuery ? '&' + baseQuery : '')); return reach(page, en); };
+    const res = { cancel: null, complete: null }, note = { cancel: '', complete: '' };
+    let soft = null;
     let base;
     run: {
       const f0 = await fresh();

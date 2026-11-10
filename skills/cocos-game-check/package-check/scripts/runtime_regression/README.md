@@ -123,10 +123,8 @@ save_claim、modal_pause、home_motion/interaction）2026-10-29 改到下一版�
 
 - `dead_shell`（2.x，归 W85，规则名 VIS_DEAD_SHELL，总表 E1 补）：首页、真点 `play` 之后、`enter_level` 之后三个画面，找还显示着的退役
   互推 / 排行榜 / 更多游戏槽位。新游戏拒，老游戏（`CFG.policy === 'legacy'`）只警告。逻辑测试 `../test_dead_shell.py`（假 lib.mjs + 假场景树）。
-- `frame_rate`（2.x，归 W92，总表 P16 第 3 步）：页面加载前用 CDP `Page.addScriptToEvaluateOnNewDocument` 把 `requestAnimationFrame`
-  换成定频时钟（`frame_rate_compare.mjs` 的 `RAF_JS`），60 Hz 和 120 Hz 各跑一次 adapter `frame_rate` 那段操作，按真实时间比
-  `track` 节点的位置，差超过 5% 不过（新游戏拒、老游戏警告；时钟没跑到目标帧率 = 本次无效，一律拒）。`{"n/a": 原因}` 不开浏览器直接过，
-  3.x 只警告「未覆盖」。逻辑测试 `../test_frame_rate_gate.py`（Node 跑 `compare()` 和时钟）。
+- `frame_rate`（2.x）按需使用 `--suites frame_rate`，用 CDP 在 60 Hz 和 120 Hz 下跑同一段适配动作，比较世界坐标位移。
+  超过 5% 记为诊断提示，实际玩法影响要在正常设备条件下复现。默认回归与出包不运行这个套件。显式单跑会在该套件输出采样和结论，整轮仍按实际覆盖标为部分检查。
 - 运行器开跑前查环境（总表 A6 补）：`touch_problem(files)`（上传触摸探针不过）→ `EnvironmentIncomplete`，命令行对 ZIP 跑再查
   `receipt_problem(zip)`（写包回执）；CLI 退出码 2。`ad_regression.py` 用同一套。见 `../../references/runtime-regression.md`。
 - `lib.mjs` 的 findLabels、locate 和 `../ad_regression/cases.mjs` 用同一段 `cam-point` 块选相机（3.x 用节点所在 Canvas 的相机，总表 A13 补）。

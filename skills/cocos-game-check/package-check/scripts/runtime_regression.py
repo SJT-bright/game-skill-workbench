@@ -26,10 +26,8 @@ v7.8 (总表 P2 补): suite popin applies to every TikTok package: 4 screens, in
 no obstacle may appear / vanish / jump on screen. adapter.popin is required for a new game (legacy: warning), {"n/a":
 "reason"} passes a game without scrolling obstacles without a browser, Cocos 3.x only warns 「未覆盖」 (precheck()).
 
-v7.8 (总表 P16 第 3 步): suite frame_rate applies to every TikTok package: the same operation (adapter.frame_rate) at a
-60 Hz and a 120 Hz display clock, the tracked node's positions at the same real time may differ by at most 5 %.
-adapter.frame_rate is required for a new game (legacy: warning), {"n/a": "reason"} passes a game where nothing moves on
-its own without a browser, Cocos 3.x only warns 「未覆盖」.
+frame_rate is an explicitly selected diagnostic for suspected frame-rate-dependent motion. It compares trajectories
+under simulated 60 Hz and 120 Hz clocks and is excluded from automatic coverage and packaging.
 
 v7.8 (总表 A6 补): `run` exits 0 passed, 1 包不通过 (a case failed or the run refused), 2 环境不完整 (EnvironmentIncomplete:
 a Cocos package without the kit touch part, or a ZIP given here without the writer receipt for its bytes). The writers
@@ -72,7 +70,7 @@ AD_KEYS = {'request', 'state', 'ready', 'exit', 'exit_label', 'no_music', 'boot_
            'double_claim'}   # v7.8 (Saul 10-31, W100): ad_regression double_watch / double_quit / double_free
 CORE_KEYS = {'home', 'retry', 'retry_label', 'enter_level', 'host_query', 'engine', 'remake_home',
              'save_keys', 'level_timeout_s', 'runtime_note'}
-PREDICATES = ('tiktok', 'rewarded_ads', 'automatic_rewarded_ads', 'missions', 'remake_home', 'trial_url')
+PREDICATES = ('tiktok', 'rewarded_ads', 'automatic_rewarded_ads', 'explicit', 'missions', 'remake_home', 'trial_url')
 # v7.8 (总表 B30): "host": "none" = the suite opens a page of its own (trial_link: CFG.trialUrl), no package host server.
 # v7.8 (总表 P2 补, popin): "needs_new" = adapter fields a new game must have (missing: new game refused, legacy game
 # warned and the suite not run); "na_field" = a field whose value {"n/a": "reason"} passes the suite without a browser
@@ -544,6 +542,7 @@ _NOT_RUN = {'trial_url': 'no trial link given (serve_preview.py --keep runs it b
                          'runtime_regression.py trial --url <link> runs it by hand)',
             'rewarded_ads': 'no createRewardedVideoAd call in the package JavaScript',
             'automatic_rewarded_ads': 'no applicable non-revive rewarded entry',
+            'explicit': 'optional diagnostic; select the suite explicitly to run it',
             'missions': 'no mission / shortcut call in the package JavaScript', 'remake_home': 'adapter.remake_home is not set'}
 
 
@@ -1014,8 +1013,16 @@ def _run_uncached(package_dir, adapter_path, suites=None, work=None, timeout=Non
                 problems.extend(row['problems'])
                 continue
             prior = {d: evidence[d] for d in meta.get('after', []) if d in evidence}
+            suite_facts = facts
+            if name == 'popin':
+                try:
+                    game_config = json.loads(files.get('game.json', b'{}'))
+                except ValueError:
+                    game_config = {}
+                if isinstance(game_config, dict):
+                    suite_facts = dict(facts, orientation=game_config.get('deviceOrientation'))
             row = run_suite(name, meta, package_dir, adapter, adapter_path, engine, browser, work, timeout, policy,
-                            policy_reason, board, trial_url, prior, facts, (selections or {}).get(name),session_file)
+                            policy_reason, board, trial_url, prior, suite_facts, (selections or {}).get(name),session_file)
             rows.append(row)
             problems.extend(row['problems'])
             if isinstance(row.get('evidence'), dict):

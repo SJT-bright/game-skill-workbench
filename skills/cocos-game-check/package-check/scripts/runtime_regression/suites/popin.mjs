@@ -1,7 +1,7 @@
 // popin (v7.8, 总表 P2 补): obstacles may not appear, vanish or jump while the player can see them.
 // From the BreezyBalloon prototype 热气球/_skill反馈_障碍生成/popin_gate.mjs (2026-10-30); the 潜艇冲冲 node names it
 // hard-coded (submarineItem, LevelView, HomeView) are adapter fields now (adapter.popin, references/runtime-regression.md).
-// Per screen 390x844, 375x667, 768x1024, 1115x791 (CSS px, deviceScaleFactor 2, fresh save): home (adapter.home), start a
+// Per screen (rotated to the declared package orientation, deviceScaleFactor 2, fresh save): home (adapter.home), start a
 // run (popin.start real actions, else a real tap on adapter.play), wait for popin.game_node, make the player invincible
 // (popin.invincible_js), first touch, watch normal gameplay for popin.fly_s (18 s).
 // Every drawn frame (EVENT_AFTER_DRAW), every node with a collider (cc.PhysicsCollider / cc.Collider) that draws something
@@ -92,7 +92,11 @@ async function oneScreen(page, w, h, rep) {
 
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'popin', policy: POLICY, adapter: P, screens: [], findings: [], warnings: [] };
-  for (const [w, h] of SCREENS) await oneScreen(page, w, h, rep);
+  const orientation = C.facts && C.facts.orientation;
+  for (const [w, h] of SCREENS) {
+    const swap = (orientation === 'portrait' && w > h) || (orientation === 'landscape' && h > w);
+    await oneScreen(page, swap ? h : w, swap ? w : h, rep);
+  }
   for (const m of rep.warnings) out.warn('popin: ' + m);
   const codes = ['setup', 'obstacles_seen'].concat(KINDS, ['invalid_run']);
   const setupCodes = new Set(['home', 'start', 'game_node', 'invincible', 'watch']);

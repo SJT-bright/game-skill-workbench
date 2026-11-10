@@ -40,7 +40,11 @@ await L.suite(async ({out, page}) => {
     return observe();
   }
   async function tap(spec) {
-    const point = await P.point(page, spec);
+    let point;
+    await poll(async () => {
+      point = await P.point(page, spec);
+      return !!point;
+    });
     if (!point) throw Error('Required control not visible: ' + spec);
     await L.touchTap(page, point.x, point.y);
   }

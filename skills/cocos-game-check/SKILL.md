@@ -20,6 +20,10 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 **测试包与同版试玩链接同发（用户 2026-11-07）**。只要交付含游戏测试包，同一回复须给出 ZIP 和已启动、可打开的同版手机试玩链接。跳过美术、重发、改名同样适用，用户明确说本次不用链接时按其指示。仅有 ZIP 只算出包，交付未完成。正式交付用 `prepare_delivery.py --preview-url` 回读手机入口与脚本，并用启动合同的 Web 指纹校验正在服务的快照，任何一项失败都不写交付回执。
 
+**画面问题当轮修复（用户 2026-11-09）**。制作、修复和出包任务中，发现可复现且在当前授权内的遮挡、裁切、重叠、缺图、错层或假按钮，直接修源码或素材、重建并在受影响的正常手机尺寸及操作状态复验，再汇报结果。采集或探针无效时先修测试并重跑。只读评审、超出授权范围或缺少可复现条件时按实际边界记录。
+
+**正常游玩优先（用户 2026-11-09）**。默认在原生时钟和支持的手机视口试玩，检查输入、镜头、运动、碰撞及可见卡顿。怀疑帧率影响玩法或接到高刷问题时，才显式选 `frame_rate` 做 60/120 Hz 对照。5% 仅提示轨迹可能分岔，体验结论按真实操作和可复现的玩法后果判断。该诊断不进入默认回归或出包门禁。
+
 ## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
 
 所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
@@ -76,7 +80,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 关卡、经济、皮肤、签到、教程、模块 | 默认不查；创新玩法新加的部分要查 | 必查 | `remake-core/scripts/audit_level_plan.py`、`audit_game_modules.py`、`audit_acquisition_progression.py` 等 |
 | 出包与最终包检查 | 必查 | 必查 | [package](package/README.md)、[package-check](package-check/README.md) |
 | 出包时的布局状态、按钮普查（v7.8，总表 B30，Saul 10-30 定必跑）：iPhone 14 和 SE、胶囊按点 / 按像素，查按钮伸出屏幕、压胶囊、压底部横条、被 3D 盖住、胶囊单位一变就移位、开局下载超过 10 MiB 或带声音；首页每个按钮和一层弹窗按钮真点一次，没反应就拦。首页规则：重塑查设置在左上、最下面一排只放主页回访和加桌面；英化原按钮不动，只查两个入口在首页、能点、不压原按钮。新游戏拦、老游戏只警告；3.x 只有开局下载会拦 | 必查 | 必查 | 写包入口自动跑（运行时套件 `layout_state`、`button_sweep`，[运行时回归](package-check/references/runtime-regression.md)），每款多 6～10 分钟；要测「展台上有车」这类首页一层点不到的状态，在 adapter 写 `layout_states`。顶栏、设置钮贴着胶囊放的，用平台包 `parts/CapsuleLayout.js` 读胶囊位置 |
-| 物理和推力不许跟着屏幕帧率走（v7.8，总表 P16）：同一段操作在 60 Hz 和 120 Hz 的显示时钟下各跑一次，按真实时间比位置，差超过 5% 就拦（这一条是最终裁判，logic_check 的 L-FPS 只是提示）。新游戏拦、老游戏只警告；3.x 只警告「未覆盖」 | 必查 | 必查 | 写包入口自动跑（运行时套件 `frame_rate`）；adapter 要写 `frame_rate` 块（跟踪的节点、那段操作），没有物理、没有自己会动的东西写 `{"n/a": "原因"}`。用了 2.4 物理的新游戏，`tiktok_finalize.py source` 自动装平台包 `parts/PhysicsClock.js`（打开 enabledAccumulator），推力自己乘 dt（`Clock.force(v, dt)`） |
+| 正常游玩手感 | 按实际玩法核输入、运动和流畅度 | 同左 | 怀疑帧率相关时显式运行 `frame_rate` 对照诊断，5% 只提示位移差，默认终检和出包不跑 |
 | 出包流程（v7.8，总表 B32）：出包后同款旧包连同回执挪进「旧包/」，交付文件夹只留这一个包和「最新.txt」（上传用哪个包、sha256、时间）；检查用的工具不是安装版（自己复制改过的）报「改过的工具」并写反馈草稿到 ！Skill更新/；Saul 改了设计、旧问题的用例不再适用时，按新设计登记新问题再用 `package_issue_gate.py supersede` 作废旧的（要 Saul 原话、日期、新问题编号）；旧笔记里的 `cocos-game-check/core/scripts/<脚本>.py` 转到 `remake-core/scripts/` | 自动 | 自动 | 两个写包入口自动挪包、写 最新.txt（不想挪加 `--keep-old-packages`）；`check_package` 报告的 `modified_tools`；作废见 [已报告问题](package-check/references/resource-and-reported-issues.md)「按新设计作废旧问题」 |
 | 障碍不许在屏幕里凭空出现、消失、瞬移（v7.8，总表 P2 补）：四种屏幕（390×844、375×667、768×1024、1115×791）上主角无敌飞 18 秒，带碰撞体的障碍在看得见的地方新出现、消失、一帧跳 40 以上就拦。新游戏拦、老游戏只警告；3.x 只警告「未覆盖」 | 必查 | 必查 | 写包入口自动跑（运行时套件 `popin`）；adapter 要写 `popin` 块（主角、无敌、游戏节点），没有滚动障碍的写 `{"n/a": "原因"}`。跑酷、飞行类用平台包 `parts/CourseLane.js` 算出生、回收和复活清障 |
 | 看广告入口真点（局内广告复活在首轮人工试玩）、试玩链接点看广告 | 有 adapter `ad_entries` 时必查；给 Saul 试玩链接前必查 | 同左 | 运行时套件 `ad_entries`（只执行适用的自动广告入口）；`serve_preview.py --keep` 给链接前自动跑 `trial_link`（模拟广告窗要在最上层、点「看完」游戏要变），不过就不给链接，也能 `runtime_regression.py trial --url <链接>` 手动跑 |

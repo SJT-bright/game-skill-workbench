@@ -36,13 +36,14 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 HELP = ('英化入口自己的参数（其余见下面共用服务的参数）：\n'
-        '  --chinese-original  第 1 阶段的中文原版链接，不做中文专项检查；带 --project 时记下用时「中文原版链接」\n'
+        '  --chinese-original  第 1 阶段的中文原版内部基线，不做中文专项检查；带 --project 时记下用时「中文原版链接」\n'
         '  --draft             Saul 要先看没做完的英文版：中文专项检查没过也起，列出没处理的问题，不能叫「检查过」\n'
         '  --project <工程>     英化工程（导出在 <工程>/build/web-mobile 时可以不写）\n'
         '  --native <目录>     试玩前已处理的同版 TikTok Native 构建目录，正式英文试玩必填\n'
         '  --reopen            重开已通过的同版试玩，只核对既有记录\n'
-        '正式英文试玩核对中文专项检查、同版 Web / Native 身份和首轮 art_check 运行记录，必须带 --snapshot。\n'
-        '英文试玩链接自动记用时（stage_timer.py link <第几轮>），打印的上一轮用时贴在新链接那条回复最后。\n')
+        '同版候选核对中文专项、Web / Native 与首轮 art_check 记录。用 --snapshot --keep 保留服务；英化入口不弹 Chrome。\n'
+        '正式交接由 handoff_preview.py 完成。\n'
+        '正式英文试玩实际就绪后打印本轮阶段用时，同版链接回复附该总表。\n')
 
 
 def timing(project, *args, run_id=None):
@@ -246,7 +247,7 @@ def gate(argv, say=print, timing_run_id=None):
             isinstance(row, dict) and row.get('passed') is True and row.get('draft') is False for row in prior)
         art = art_check_record.check(project, earlier_trial=earlier_trial or opts.reopen)
         if art['level'] == 'block':
-            refuse(art['message'])
+            refuse(art['message'] + ' 修复和补验留在当前任务内，报告进度后接着执行。')
         say(art['message'] + ('（警告）' if art['level'] == 'warn' else ''))
     else:
         import art_check_record
@@ -289,12 +290,14 @@ def gate(argv, say=print, timing_run_id=None):
                          'snapshot': str(snapshot_dir), 'snapshot_manifest_sha256': got, 'native': str(native) if native else None,
                          'native_tree_sha256': native_sha,
                          'passed': not problems and not opts.draft, 'draft': opts.draft,
-                         'open_problems': len(problems), **evidence})
+                         'open_problems': len(problems), 'timing_run_id': timing_run_id, **evidence})
             CA.write_json(log, rows)
             say('试玩快照和查过的导出一字不差，记在 %s。' % log)
             say(timing(project, 'publish', 'english:' + export_sha + ':' + str(native_sha or ''), run_id=timing_run_id))
 
         return record_ready_trial
+    verify.report_phase_times = not opts.draft
+    verify.close_first_trial_phase = not opts.draft
     return argv, verify
 
 
@@ -349,9 +352,17 @@ def main(argv):
             if chinese_hook:
                 chinese_hook(directory)
             if observation:
-                timer.finish_observation(observation, note='真实入口与候选已核准，服务就绪')
+                try:
+                    timer.finish_observation(observation, note='真实入口与候选已核准，服务就绪')
+                except Exception as exc:
+                    print('试玩启动用时未记全（服务已就绪）：' + str(exc), file=sys.stderr, flush=True)
+            if getattr(verify, 'report_phase_times', False):
+                if verify.close_first_trial_phase:
+                    print(timing(project, 'done', '--stage', '3', run_id=timing_run_id), flush=True)
+                print(timing(project, 'report', '--all', run_id=timing_run_id), flush=True)
         shared['main'](argv, verify_snapshot=verify, chinese_original=original,
-                       returned_art=getattr(verify, 'returned_art', None), on_ready=on_ready)
+                       returned_art=getattr(verify, 'returned_art', None), on_ready=on_ready,
+                       english_preview=True)
     except BaseException as exc:
         if observation:
             try:

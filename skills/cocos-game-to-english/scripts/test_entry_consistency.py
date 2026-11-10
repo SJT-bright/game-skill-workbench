@@ -150,17 +150,18 @@ class ReadmeMatchesEntry(unittest.TestCase):
     def test_readme_agrees_with_entry(self):
         text = README.read_text(encoding='utf-8')
         self.assertNotIn('不需要安装重塑包', text)
-        self.assertIn('中文原版的手机试玩链接', text)
+        self.assertIn('中文原版的内部基线', text)
 
 
 class EnglishDocsAgree(unittest.TestCase):
-    def test_entry_stage1_gives_the_chinese_original_link_first(self):
+    def test_entry_stage1_prepares_the_chinese_original_internally(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
         stage1 = text.split('1. **盘点**', 1)[1].split('\n2. ', 1)[0]
-        for phrase in ('中文原版的手机试玩链接', '不等回复', 'serve_preview.py', '--open --idle-minutes 0',
-                       '本地试玩_中文原版（不用上传）', '原工程一个文件都不动', '同样接着做'):
+        for phrase in ('中文原版内部基线', 'serve_preview.py', '--chinese-original',
+                       '本地试玩_中文原版（不用上传）', '原工程一个文件都不动', 'Computer Use 在 Edge'):
             self.assertIn(phrase, stage1)
-        self.assertLess(stage1.index('中文原版的手机试玩链接'), stage1.index('tiktok_finalize.py init'))
+        self.assertNotIn('--open', stage1)
+        self.assertLess(stage1.index('中文原版内部基线'), stage1.index('tiktok_finalize.py init'))
 
     def test_entry_does_not_contradict_innovation(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -187,7 +188,7 @@ class EnglishDocsAgree(unittest.TestCase):
         flow = read('remake-core', 'references', 'stage-flow.md')
         self.assertNotIn('英化的优化清单', flow)
         self.assertNotIn('→ 写优化清单 →', flow)
-        self.assertIn('先给中文原版试玩链接（不等回复', flow)
+        self.assertIn('先核中文原版内部基线', flow)
 
 
 class AdBoardsUsedWithoutAsking(unittest.TestCase):
@@ -403,39 +404,30 @@ class TrialFirstThenFullChecks(unittest.TestCase):
 
     def test_trial_link_requires_language_art_and_playable_start(self):
         _, st = self.stages()
-        # Formal preview requires the language check, current build identity and an interactive startup check.
-        for phrase in ('通过后启动正式英文试玩', '能进首页', '能开始一局', '没有导致卡死的报错', '--ad-simulator',
-                       '--idle-minutes 0'):
+        for phrase in ('美工试玩交接', '能进首页', '能开始一局', '没有导致卡死的报错',
+                       '中文专项', 'handoff_preview.py --kind art'):
             self.assertIn(phrase, st[3], phrase)
-        self.assertNotIn('--snapshot --keep', st[3])
-        self.assertIn('--snapshot --keep --project', st[5])
+        self.assertNotIn('--open', st[3])
+        self.assertIn('prepare_delivery.py', st[5])
+        self.assertIn('最终测试包交接', read('cocos-game-to-english', 'references', 'preview-handoff.md'))
 
     def test_h5_checklist_accompanies_the_same_version_preview_and_package(self):
         _, st = self.stages()
-        # 11.17.11: an actionable, scoped quick-check replaces the fixed whole-game
-        # checklist. Returned art delivery does not wait for another human approval.
         for phrase in ('回复里随同版 Native 试玩附[人工快查 H5](references/playtest-h5.md)',
-                       '3–5 条以内', '只改一处就一条', '不要照抄全游戏清单', '可选快看',
-                       'Saul 说没问题即整份清单确认'):
+                       '奖励去重', '存档读回', '冷启动', '异步回调', '仍由 AI 按真实依赖计划处理'):
             self.assertIn(phrase, st[3], phrase)
-        self.assertIn('同发新候选的 H5，只列和这几处有关的检查', st[4])
-        self.assertIn('已有同版最终验收和交付回执时用双栏，局部返工用单栏可选快查', st[5])
-        self.assertIn('../remake-core/references/returned-art-delivery.md', st[3])
-        for phrase in ('奖励去重', '存档读回', '冷启动', '异步回调',
-                       '仍由 AI 按真实依赖计划处理'):
-            self.assertIn(phrase, st[3], phrase)
-        for obsolete in ('从第 1 关玩到第 N 关', '每个模式都能暂停、继续、重来、回首页'):
-            self.assertNotIn(obsolete, st[3], obsolete)
+        self.assertIn('候选供内部测试', st[4])
+        for phrase in ('已有同版最终验收和交付回执时用双栏，局部返工用单栏可选快查',
+                       '只改一处就一条', '3–5 条以内', '测试包与同版可用的手机试玩链接同发'):
+            self.assertIn(phrase, st[5], phrase)
 
-    def test_trial_improve_rechecks_changed_art_before_next_link(self):
+    def test_trial_improve_checks_affected_art_on_internal_candidates(self):
         _, st = self.stages()
         for phrase in ('本轮功能的局部验证随实现完成', '未覆盖的检查在相应制作节点执行一次',
-                       '第 5 阶段只核对旧证据和补缺', '不在第 5 阶段重跑已有通过项',
-                       '一次全部改完', '同批导出 Web 和 Native 各一次',
-                       '复查受影响整页、共享组件和新增页面', 'Saul 点名', '直到 Saul 说试玩没问题',
-                       '先停掉上一轮的试玩服务', '不能只叫他刷新'):
+                       '第 5 阶段只核对旧证据和补缺', '一次全部改完', '同批导出 Web 和 Native 各一次',
+                       '复查受影响整页、共享组件和新增页面', '候选供内部测试'):
             self.assertIn(phrase, st[4], phrase)
-        self.assertNotIn('刷新同一个链接', (ENTRY / 'SKILL.md').read_text(encoding='utf-8'))
+        self.assertNotIn('每轮起新链接', st[4])
 
     def test_final_coverage_keeps_every_gate_and_reuses_valid_records(self):
         _, st = self.stages()
@@ -565,11 +557,10 @@ class FasterFirstLink(unittest.TestCase):
                        'ad-boost 板块的图', '不能把未完成页面、中文图片字或本轮已计划的板块留到第二轮再补',
                        '已有有效证据直接沿用', '第一轮所有按钮都重新生成'):
             self.assertIn(phrase, art, phrase)
-        for phrase in ('本次制作和改动范围', '资源、图集、可测布局等技术项', '通过后启动正式英文试玩',
+        for phrase in ('本次制作和改动范围', '资源、图集、可测布局等技术项', '美工试玩交接',
                        '不能把未完成的计划美工留到第二轮', '人工试玩画面清单'):
             self.assertIn(phrase, st[3], phrase)
-        for phrase in ('首次正式试玩前已完成全部计划美工', '后续只处理 Saul 的反馈和明确新增要求',
-                       '新增页面、板块及其素材在该轮正式链接前完成制作并通过受影响项检查'):
+        for phrase in ('新增界面制作', '后续只处理 Saul 的反馈和明确新增要求', '复查受影响整页、共享组件和新增页面'):
             self.assertIn(phrase, st[4], phrase)
         for obsolete in ('第一个链接只等主要页面', '这几页的按钮这轮不用看', '等的时候接着做第一个链接没等的部分'):
             self.assertNotIn(obsolete, ''.join(st.values()))
@@ -770,17 +761,16 @@ class PortableOnAnyComputer(unittest.TestCase):
             self.assertIn(phrase, part, phrase)
 
         policy = text.split('\n## 浏览器测试路线', 1)[1].split('\n## ', 1)[0]
-        for phrase in ('**Ego Lite** 独立 TaskSpace', 'Google Chrome 只用于交给用户亲自试玩',
-                       '不用 Playwright', '保留未测'):
+        for phrase in ('**Ego Lite** 独立 TaskSpace', '**Computer Use + Edge**',
+                       'Google Chrome 只在美工试玩和最终测试包交接时打开'):
             self.assertIn(phrase, policy)
 
         browser = next(line for line in part.splitlines() if line.startswith('- **浏览器**'))
-        for phrase in ('browser_env.py -- <命令>', '只选官方 Ego', '不回退 Chrome', '保留未测',
-                       '用户试玩由 `serve_preview.py --keep` 另开独立 Chrome 手机框'):
+        for phrase in ('browser_env.py -- <命令>', 'Computer Use 在 Edge', '隔离 Ego 会话', '试玩交接'):
             self.assertIn(phrase, browser)
         visual = next(line for line in part.splitlines() if line.startswith('- **自己看画面**'))
-        self.assertIn('均在 Ego 中完成', visual)
-        self.assertIn('不使用 Chrome 补验', visual)
+        self.assertIn('Computer Use + Edge', visual)
+        self.assertIn('未测', visual)
         diagnostics = next(line for line in part.splitlines() if line.startswith('- **浏览器卡住和构建沙箱'))
         self.assertIn('在 Ego 内排查', diagnostics)
         self.assertIn('不能自动换 Chrome', diagnostics)
@@ -799,9 +789,9 @@ class PortableOnAnyComputer(unittest.TestCase):
             self.assertIn(phrase, st[1], phrase)
         self.assertIn('fix_web_entry_3x.py --export <这轮的 Web 导出>', st[3])
         self.assertIn('scripts/browser_env.py --`', st[5])
-        self.assertIn('服务先读回实际入口字节，再用 Chrome 交给 Saul 亲自试玩', st[1])
-        self.assertIn('中文原版不启动 AI 自动截图、广告冒烟或反复浏览器检查', st[1])
-        self.assertIn('用 Ego Lite 确认本轮导出', st[3])
+        self.assertIn('作为内部基线', st[1])
+        self.assertIn('中文原版不用英文广告冒烟', st[1])
+        self.assertIn('Computer Use + Edge 确认能进首页', st[3])
 
     def test_no_saul_only_instruction_left_in_the_entry(self):
         text = self.text()
@@ -919,8 +909,8 @@ class TimingReport(unittest.TestCase):
         lead = self.text().split('\n## 阶段', 1)[1].split('1. **盘点**', 1)[0]
         self.assertIn('`T` 是 `python3 <skills>/cocos-game-to-english/scripts/stage_timer.py --project <工程>`', lead)
         for n, phrases in ((1, ('`T stage 1`', '`T mark 中文原版链接`', '`T done`')), (2, ('`T stage 2`', '`T done`')),
-                           (3, ('`T stage 3`', '`T link 1`', '`T done`', '贴在这条回复最后')),
-                           (4, ('`T stage 4`', '`T back`', '`T link <第几轮>`', '`T done`')),
+                           (3, ('`T stage 3`', '正式试玩服务实际就绪后自动结束', '链接交付回复附第 1～3 阶段')),
+                           (4, ('`T stage 4`', '`T back`', '候选供内部测试', '`T done`')),
                            (5, ('`T stage 5`', '`T mark 交付`', '`T report --all`'))):
             for phrase in phrases:
                 self.assertIn(phrase, st[n], (n, phrase))
@@ -958,7 +948,8 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
         three = [l for l in summary.splitlines() if l.startswith('- ③')][0]
         four = [l for l in summary.splitlines() if l.startswith('- ④')][0]
         self.assertIn('chinese_audit.py', three)
-        self.assertIn('不过不给链接', three)
+        self.assertIn('通过才发同版正式链接', three)
+        self.assertIn('首轮试玩修复', three)
         self.assertLess(three.index('中文专项检查'), three.index('能进首页'))
         self.assertIn('中文专项检查', four)
         self.assertNotIn('④ 试玩改进：不跑检查', summary)
@@ -975,22 +966,22 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
                        '`check --project <工程> --export <这轮的 Web 导出>`', 'isolated_render', '不能当成没有字',
                        'trial-links.json', '--draft', '已处理的 Native', '手写的记录不算'):
             self.assertIn(phrase, three, phrase)
-        link = next(l for l in three.splitlines() if l.startswith('   **通过后启动正式英文试玩'))
-        self.assertIn('serve_preview.py --directory <本轮 Web> --project <工程> --snapshot --open --idle-minutes 0', link)
-        self.assertIn('--native <已处理的 Native>', link)
-        self.assertLess(three.index('**中文专项检查'), three.index('**通过后启动正式英文试玩'))
+        link = next(l for l in three.splitlines() if l.startswith('   **美工试玩交接'))
+        self.assertIn('handoff_preview.py --kind art', link)
+        self.assertNotIn('--open', link)
+        self.assertLess(three.index('**中文专项检查'), three.index('**美工试玩交接'))
 
     def test_stage_one_link_is_marked_chinese_original(self):
         _, st = self.stages()
-        self.assertIn('--idle-minutes 0 --chinese-original --name "<游戏> 中文原版"', st[1])
+        self.assertIn('--chinese-original --name "<游戏> 中文原版"', st[1])
 
     def test_later_rounds_recheck_and_delivery_reopens_the_verified_build(self):
         _, st = self.stages()
-        self.assertIn('每轮起新链接前做中文专项检查和受影响范围的定点美工复查', st[4])
-        self.assertIn('scan 只识新加和改过的图', st[4])
+        self.assertIn('修正反馈并按影响复查对应中文、画面或功能', st[4])
+        self.assertIn('候选供内部测试', st[4])
         self.assertIn('已通过项直接沿用', st[5])
         self.assertIn('现有同版服务经核实可以沿用', st[5])
-        self.assertIn('--native <已处理的 Native> --reopen', st[5])
+        self.assertIn('最终交接', st[5])
         self.assertNotIn('chinese_audit.py scan', st[5])
 
     def test_image_localization_and_chinese_evidence_are_bound_to_the_candidate(self):
@@ -998,7 +989,7 @@ class ChineseAuditBeforeTrial(unittest.TestCase):
         self.assertIn('图片字和切片在实际制作范围内复核', st[2])
         for phrase in ('图集切片', 'Web 与 Native 导出的差别', '手写的记录不算'):
             self.assertIn(phrase, st[3], phrase)
-        self.assertLess(st[3].index('**核实际图片和切片**'), st[3].index('**通过后启动正式英文试玩'))
+        self.assertLess(st[3].index('**核实际图片和切片**'), st[3].index('**美工试玩交接'))
 
     def test_any_computer_section_names_the_recognizers(self):
         part = self.text().split('\n## 换电脑也能用', 1)[1].split('\n## ', 1)[0]

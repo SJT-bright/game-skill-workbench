@@ -126,5 +126,45 @@ class Hooks(unittest.TestCase):
         self.assertEqual([e['ev'] for e in rows],['begin','end'])
         self.assertEqual(rows[-1]['state'],'failed')
 
+    def test_first_formal_ready_closes_stage_3_and_reports_stages(self):
+        args = ['--directory',str(self.web),'--project',str(self.root),'--keep']
+        G.timing(self.root,'start','--run-id','trial','--route','source')
+        for stage in (1,2,3):
+            G.timing(self.root,'stage',str(stage))
+        def verify(snapshot):
+            return lambda: G.timing(self.root,'publish','english:fixture')
+        verify.report_phase_times = True
+        verify.close_first_trial_phase = True
+        def service(argv,**kwargs):
+            self.assertNotIn('link',[row['ev'] for row in events(self.root)])
+            kwargs['verify_snapshot'](self.web)()
+            kwargs['on_ready'](self.web)
+        output = io.StringIO()
+        with patch.object(G,'gate',return_value=(args,verify)), \
+             patch.object(G.runpy,'run_path',return_value={'main':service}),contextlib.redirect_stdout(output):
+            G.main(args)
+        self.assertEqual([e['ev'] for e in events(self.root)][-3:],['link','end','done'])
+        self.assertIn('用时总表',output.getvalue())
+        self.assertTrue((self.root/'docs/timing/timing-summary.json').is_file())
+
+
+    def test_first_formal_stage_report_continues_after_observation_failure(self):
+        args = ['--directory', str(self.web), '--project', str(self.root), '--keep']
+        G.timing(self.root, 'stage', '3')
+        verify = types.SimpleNamespace(report_phase_times=True, close_first_trial_phase=True)
+        def service(argv, **kwargs):
+            kwargs['on_ready'](self.web)
+
+        output = io.StringIO()
+        errors = io.StringIO()
+        with patch.object(G, 'gate', return_value=(args, verify)), \
+             patch.object(G.runpy, 'run_path', return_value={'main': service}), \
+             patch('stage_timer.finish_observation', side_effect=OSError('fixture log error')), \
+             contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+            G.main(args)
+        self.assertIn('fixture log error', errors.getvalue())
+        self.assertIn('用时总表', output.getvalue())
+        self.assertEqual(events(self.root)[-1]['ev'], 'done')
+
 
 if __name__=='__main__':unittest.main()

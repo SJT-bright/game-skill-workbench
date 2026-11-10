@@ -86,6 +86,7 @@ nav { display: flex; justify-content: space-between; gap: .6rem; margin-top: .9r
       <p class="muted" id="kind"></p>
       <h1 id="title"></h1>
       <p id="version"></p>
+      <p class="muted" id="scope" hidden></p>
       <p class="muted version" id="archive" hidden></p>
       <a id="play" target="_blank" rel="noopener">打开同版试玩</a>
     </header>
@@ -122,6 +123,13 @@ byId('kind').textContent = plan.mode === 'demo' ? '清单交互示例' :
   plan.mode === 'package' ? '本版验收通过 · 最终交付' :
   plan.mode === 'share' ? '可转发清单 · 在本机启动同版游戏' :
   plan.split_preview ? '双栏样稿 · 试玩版' : '本轮逐页试玩清单';
+const scope = byId('scope');
+if (plan.mode === 'trial' || plan.mode === 'package') {
+  scope.hidden = false;
+  scope.textContent = plan.mode === 'package'
+    ? '可选快查。选你关心的几项体验，功能和平台回归结果由 AI 核对。'
+    : '按本轮路线看画面和操作感受。遇到异常可直接标记并继续。';
+}
 byId('title').textContent = plan.game;
 document.title = plan.game + ' · 试玩清单';
 byId('version').textContent = plan.version;

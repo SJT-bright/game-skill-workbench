@@ -775,7 +775,8 @@ def parser():
     s.add_argument('step'); s.add_argument('command', nargs=argparse.REMAINDER)
     s = sub.add_parser('stage', parents=[common], help='开始第 N 阶段（1-5）')
     s.add_argument('n', type=int, choices=sorted(STAGES))
-    sub.add_parser('done', parents=[common], help='结束当前阶段，打印它的用时')
+    s = sub.add_parser('done', parents=[common], help='结束当前阶段，打印它的用时')
+    s.add_argument('--stage', type=int, choices=sorted(STAGES), help='仅在指定阶段正开放时结束')
     s = sub.add_parser('begin', parents=[common], help='开始一步')
     s.add_argument('step')
     s.add_argument('--span-id'); s.add_argument('--parent-id')
@@ -916,7 +917,9 @@ def _main(argv=None):
                 out += [tl.stage_report(before), '（上面是第 %d 阶段的用时，发给用户）' % tl.stages[before]['n'], '']
             out.append('记下：%s 开始第 %d 阶段「%s」' % (clock(now), a.n, STAGES[a.n]))
     elif a.cmd == 'done':
-        if tl.cur:
+        if a.stage is not None and (not tl.cur or tl.cur['n'] != a.stage):
+            out.append('第 %d 阶段当前未开放，用时记录沿用。' % a.stage)
+        elif tl.cur:
             idx = tl.entry()
             record('done')
             out.append(tl.stage_report(idx))

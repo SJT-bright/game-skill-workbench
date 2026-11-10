@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-10T04:29:24.350Z",
-  "treeHash": "2ea47eda7c45da6a68b708bba1f14c4a5bdf13755aa6015eacb37bc15e46db90",
+  "createdAt": "2026-11-10T07:29:57.389Z",
+  "treeHash": "1204065bca04ff070cf15b6fddc020a297306b01aa3974652a08cf6aca17e3f7",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,14 +245,14 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "da2acf15ac1af5269bdc0a79bb46df1f84aeb746c762f1c9071bb3612460f238",
+      "treeHash": "2dab308a1e59c94ebcb5e03fceab233a6adaa78ee5fde0588844b17a569c30ab",
       "fileCount": 185,
-      "bytes": 1955513,
+      "bytes": 1960388,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "e1bd2402c54e08c5b3d071bf9905d54a8fdf7037546620a3a1d00a66ebc4e344",
-          "size": 52089,
+          "hash": "8ed69896f81b01acb10d8640b619120659bb3da2f62abbf4a3118add26b73b00",
+          "size": 52657,
           "executable": false
         },
         {
@@ -503,8 +503,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "dd1c0c1ab57151362d1d75bd84854b58841e3d6029c594b7b3ac53bc6963a207",
-          "size": 56800,
+          "hash": "76d61fcd993b3498826af5ea7f16ad7ac37d2351be9246eb5ca71274e3db878a",
+          "size": 57423,
           "executable": false
         },
         {
@@ -809,14 +809,14 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/growth_entry.json",
-          "hash": "58b9489ed474fbe203b71ce2a37b0944b115ff6445a9d2262e591494ec3bdb71",
-          "size": 337,
+          "hash": "a746d8d48fb89dc2156a33645b53594dd223a8ecfcd6df89c87719fbd82e9765",
+          "size": 411,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
-          "hash": "e1c68f9a00880d5086ae4da2c7e147d1cfcb80b7054c640dbd5537330e922037",
-          "size": 10645,
+          "hash": "296bea6462515c1d4dba3f849427d160655a30650c92efab218ec745e6296147",
+          "size": 14000,
           "executable": false
         },
         {
@@ -1175,8 +1175,8 @@
         },
         {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "3bcbd7c6c3e4f6ed521fdd305010526c8eb26556ae159b834c95dd992e9857e6",
-          "size": 109706,
+          "hash": "349c5ed90a4172ed919c22a8bd8c64eed5442fda95c2213183a02f9b4ade2249",
+          "size": 109961,
           "executable": false
         },
         {

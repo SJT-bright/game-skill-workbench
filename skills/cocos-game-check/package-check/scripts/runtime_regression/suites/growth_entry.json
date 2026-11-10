@@ -1,9 +1,17 @@
 {
   "name": "growth_entry",
-  "about": "Each growth button navigates on its first tap without a hint. Confirm eligible launch sources and quiet regular returns.",
-  "applies": ["missions"],
-  "needs": ["home", "growth_entry"],
-  "engines": ["2.x", "3.x"],
+  "about": "Real first tap and warm return for each entry; cold eligibility after mounted home and loaded save, verified at the SDK call; persisted payout and rendered claim.",
+  "applies": [
+    "missions"
+  ],
+  "needs": [
+    "home",
+    "growth_entry"
+  ],
+  "engines": [
+    "2.x",
+    "3.x"
+  ],
   "timeout_s": 180,
   "owner": "G3 / TikTok profile sidebar and home shortcut"
 }

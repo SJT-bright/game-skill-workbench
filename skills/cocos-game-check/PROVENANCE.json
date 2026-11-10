@@ -181,8 +181,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "e352d97a0247191088989f1d7768726c650af636fd432d85f16a7761318ad417",
-      "bytes": 70615
+      "sha256": "76d61fcd993b3498826af5ea7f16ad7ac37d2351be9246eb5ca71274e3db878a",
+      "bytes": 57423
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -446,13 +446,13 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/growth_entry.json",
-      "sha256": "58b9489ed474fbe203b71ce2a37b0944b115ff6445a9d2262e591494ec3bdb71",
-      "bytes": 337
+      "sha256": "a746d8d48fb89dc2156a33645b53594dd223a8ecfcd6df89c87719fbd82e9765",
+      "bytes": 411
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
-      "sha256": "951b62158ce03949efffef1ec990dc9b089bf45a0abb9bb0ebcf43c7f5e42ce4",
-      "bytes": 10575
+      "sha256": "296bea6462515c1d4dba3f849427d160655a30650c92efab218ec745e6296147",
+      "bytes": 14000
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/image_stall.json",
@@ -776,8 +776,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "4ce518fb9cf6cf93b1d43f4728e1257c3de1faa59b5ce95e06177f2926a72ebe",
-      "bytes": 111216
+      "sha256": "349c5ed90a4172ed919c22a8bd8c64eed5442fda95c2213183a02f9b4ade2249",
+      "bytes": 109961
     },
     {
       "path": "review/README.md",
@@ -1275,7 +1275,18 @@
           "after_bytes": 21834
         }
       ]
+    },
+    {
+      "id": "tiktok-sidebar-entry-readiness-20261109",
+      "revision": "2026-11-09.sidebar-entry-design",
+      "scope": "Direct entry, cold-start readiness observed at the native SDK call, warm entry, saved and visible claim; scoped component backport where needed.",
+      "files": [
+        "package-check/references/runtime-regression.md",
+        "package-check/scripts/runtime_regression/suites/growth_entry.json",
+        "package-check/scripts/runtime_regression/suites/growth_entry.mjs",
+        "references/tiktok-fixed-adaptation.md"
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "a155fde8a6538d231d86cc6a4c6d84477ee9c96552e04f38746493bb929cad46"
+  "previous_local_provenance_sha256": "b806b5559fa1b91631a604217aa76b82d1d328c8e63364a0c4326193f6dc1956"
 }

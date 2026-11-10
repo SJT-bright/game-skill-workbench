@@ -18,7 +18,7 @@ python3 -B runtime_regression.py required --package <解压包或.zip> --adapter
 python3 -B runtime_regression.py run --package <解压包或.zip> --adapter <adapter.json> [--suites a,b] [--board remake|localize] [--trial <试玩链接>] [--out r.json] [--work 目录]
 ```
 
-TikTok `growth_entry` 检查含回访任务的 2.x 和 3.x 包，已有证据按本页增量规则沿用。Adapter 的 `home` 等到真实首页，`growth_entry.profile_button` / `shortcut_button` 分别指向两个真实入口。新游戏两项都填，旧项目缺 `shortcut_button` 时会明确记录首次点按覆盖缺口。套件在同一次首页会话里核对每项第一次点按只发出对应导航，期间无说明、第二个操作键、资格查询或奖励。现有冷启动、热返回、普通切前台和延迟资格用例继续核对账本。
+TikTok `growth_entry` 检查含回访任务的 2.x 和 3.x 包。Adapter 的 `home` 等到真实首页；`growth_entry.profile_button` / `shortcut_button` 指向真实入口，新游戏两项都填，旧项目缺桌面按钮定位时明确记录首次点按覆盖缺口。`growth_entry.entry_ready_js` 是在模拟宿主记录实际查奖 SDK 调用时同步执行的只读代码，返回 `{home: boolean, store: boolean}`：`home` 读取真实已挂载且退出 loading 的首页；`store` 读取已经成功加载的游戏存档，不能写常量、用时间猜测、等事后再读，也不能调用会补建存档的方法。`observe_js` 同时分别读 `claimed`（实际存档中的领取记录）和 `claimed_visible`（实际渲染的已领角标）；两者均含 `profile`、`shortcut` 布尔值。`reward_delta` 可填共同奖励，或分别填 `{profile, shortcut}`。每个入口分别检查真实首次点按、保活返回和独立冷启动；冷启动资格调用要见到两项就绪，覆盖无资格、到账和重开不重复，已领后仍可导航。正常切前台与延迟资格等用例继续沿用。已有合格证据仍按本页的局部返工规则处理。
 
 `covered_steps` 用真实触摸打开商店、设置或局内覆盖层。`observe_js` 读取实际的 `{wallet, claimed:{profile, shortcut}, covered, hints}`，其中 `hints` 包含当前可见的任务说明或旧任务面板控件，图片字也从实际可见节点读取。`reward_delta` 取本作可量化的真实奖励数值。SDK 由宿主模拟，TikTok 实机用各自入口另行验证。
 

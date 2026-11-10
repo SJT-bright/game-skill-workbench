@@ -1,20 +1,20 @@
 ---
 name: mobile-touch-computer-use
-description: 用户要求游戏本地预览、试玩、游玩或打开游戏时，先自动弹出 Google Chrome 固定手机尺寸试玩窗口并轻量交接，不启动全量验收；需要代测时仅用 Ego Lite（ego-browser）自动验收游戏或网页的手机触控模拟、长屏布局、按钮和手势。适用于“替我测试手机端”“电脑模拟手机点击”“按钮手机点不动”等请求；通过 Ego Lite 官方 CLI 操作页面、手机视口和触摸输入，必要时操作已安装的系统模拟器，记录实际输入与界面变化，区分模拟结果与平台真机结果。
+description: 用户要求游戏本地预览、试玩、游玩或打开游戏时，按项目的用户试玩交接规则启动 Google Chrome 固定手机窗口，不启动全量验收；代测的脚本用 Ego Lite（ego-browser）自动验收游戏或网页的手机触控模拟、长屏布局、按钮和手势。适用于“替我测试手机端”“电脑模拟手机点击”“按钮手机点不动”等请求；通过 Ego Lite 官方 CLI 操作页面、手机视口和触摸输入，必要时操作已安装的系统模拟器，记录实际输入与界面变化，区分模拟结果与平台真机结果。
 ---
 
 # 手机触控模拟验收
 
 ## 浏览器测试路线（用户 2026-11-06，取代旧回退规则）
 
-所有 Agent 浏览器测试必须在 **Ego Lite** 独立 TaskSpace 中执行，包括截图、美术、手机触摸、声音、存档、广告、回归、链接冒烟和出包验收。**Google Chrome 只用于交给用户亲自试玩的本地链接。** Ego 故障先在 Ego 内排查；能力不足保留未测，不自动或沿用旧授权切换 Chrome/Edge/Chromium，不用 Playwright 或伪装 Ego 的启动器补测。离线检查继续使用本地工具。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
+英化人工操作用 **Computer Use + Edge**。自动检查仍在 **Ego Lite** 独立 TaskSpace 执行原有脚本并复用有效证据。英化的 Google Chrome 只在美工试玩和最终测试包交接时打开。 其他流程的自动检查按原 Ego 路线执行。缺少对应能力时继续离线工作，记录实际未测项。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
 
 
-**用户亲自试玩先走轻量入口**：预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读固定手机尺寸试玩（英化包 `remake-core/references/user-phone-preview.md`；重塑包 `remake-core/references/user-phone-preview.md`）。共享预览脚本用 `--keep` 默认自动弹出独立 Google Chrome 窗口，保留390×844同源手机框、只缩小不放大；只读核对用户试玩窗口与 URL 后交接；首页/开始的自动验收在 Ego 完成；仅试玩不执行下面的完整代测流程。
+**英化项目先按[英化试玩交接](../remake-core/references/user-phone-preview.md)**。内部点检用 Computer Use + Edge。在其他项目，**用户亲自试玩先走轻量入口**。预览/试玩/游玩/打开游戏/恢复链接，以及美化、重塑交接前，必读固定手机尺寸试玩（英化包 `remake-core/references/user-phone-preview.md`；重塑包 `remake-core/references/user-phone-preview.md`）。共享预览脚本用 `--keep` 默认自动弹出独立 Google Chrome 窗口，保留390×844同源手机框、只缩小不放大；只读核对用户试玩窗口与 URL 后交接；首页/开始的自动验收在 Ego 完成；仅试玩不执行下面的完整代测流程。
 
-让 Agent 直接操作界面完成测试，用户不必自己切设备模式、逐个点击或抄日志。**浏览器严格用 Ego Lite（用户 2026-10-21）**：自动测试（触摸计划、必要截图与定点录像）在 Ego Lite 里做；**Ego 只给 Agent 自己测试，用户试玩按上述入口自动打开独立 Google Chrome（用户 2026-10-27）**。先运行 `ego-browser skill` 按它的说明操作；触摸计划、必要截图与定点录像、加载计时直接用 `chrome_touch.py`（不加连接参数），它通过 `ego-browser nodejs` 在 Ego 里新建名字唯一的空间，设手机尺寸和触摸、跑计划，跑完只结束自己的空间，不关 Ego。**统一连接方式（用户 2026-10-27）**：只走 Ego 官方 `ego-browser nodejs`，没有 CDP 地址、不接 Playwright；空间名必须唯一（`<用途> <线名> <年月日-时分秒> <6位随机>`），同名会恢复成同一个空间，一个结束就把另一个关掉——这就是"测试空间反复失效"的原因。测试记录统一写 `browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=数字 spaceId、`space_name`。详见 [chrome-mobile-testing 的 Ego 连接方式](../chrome-mobile-testing/SKILL.md#ego-连接方式用户-2026-10-27统一)。Ego 没装就按 ego-browser 的安装说明处理；连不上或尺寸异常时在 Ego 内排查，不能改用 Chrome 测试。本 Skill 不做 TikTok 真机测试，不需要 DevTool；浏览器结果不能标成平台手机通过。第一次在一台电脑上用 Ego 跑脚本时，先按 [一条命令校准](../chrome-mobile-testing/SKILL.md#第一次用先校准一条命令) 跑通再批量跑。
+让 Agent 直接操作界面完成测试，用户不必自己切设备模式、逐个点击或抄日志。**脚本自动测试用 Ego Lite**：自动测试（触摸计划、必要截图与定点录像）在 Ego Lite 里做；**Ego 只给 Agent 自己测试，用户试玩按上述入口自动打开独立 Google Chrome（用户 2026-10-27）**。先运行 `ego-browser skill` 按它的说明操作；触摸计划、必要截图与定点录像、加载计时直接用 `chrome_touch.py`（不加连接参数），它通过 `ego-browser nodejs` 在 Ego 里新建名字唯一的空间，设手机尺寸和触摸、跑计划，跑完只结束自己的空间，不关 Ego。**统一连接方式（用户 2026-10-27）**：只走 Ego 官方 `ego-browser nodejs`，没有 CDP 地址、不接 Playwright；空间名必须唯一（`<用途> <线名> <年月日-时分秒> <6位随机>`），同名会恢复成同一个空间，一个结束就把另一个关掉——这就是"测试空间反复失效"的原因。测试记录统一写 `browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=数字 spaceId、`space_name`。详见 [chrome-mobile-testing 的 Ego 连接方式](../chrome-mobile-testing/SKILL.md#ego-连接方式用户-2026-10-27统一)。Ego 没装就按 ego-browser 的安装说明处理；连不上或尺寸异常时在 Ego 内排查，不能改用 Chrome 测试。本 Skill 不做 TikTok 真机测试，不需要 DevTool；浏览器结果不能标成平台手机通过。第一次在一台电脑上用 Ego 跑脚本时，先按 [一条命令校准](../chrome-mobile-testing/SKILL.md#第一次用先校准一条命令) 跑通再批量跑。
 
-**禁止在 Ego 里让用户试玩（用户 2026-10-23，取代旧的"在 Ego 置前交接手机模拟页"）**：Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用remake-core 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，脚本自动请求独立 Chrome 窗口，Agent 核实实际可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
+**测试和用户试玩使用独立窗口**。英化按上文交接。在其他项目，Agent 在 Ego 里完成设备/触摸配置和实际交互检查，测完关掉自己的空间；给用户试玩时，用remake-core 的 `serve_preview.py --keep` 起本地服务，把本地预览链接写在 Codex 回复里，脚本自动请求独立 Chrome 窗口，Agent 核实实际可见，并写清横/竖屏、建议尺寸和操作。不开给用户的 Ego 窗口，不置前、不 `handOff()`，不说"已在 Ego 里打开交给你"；Ego 里显示"需要你处理"/等用户的空间，先用 `browser_slots.py ego-list` 只读列出；核实归属和用途后由拥有者结束已有绑定，再用 `ego-finish --space-id <ID>` 确认消失。细节见[用户试玩交接](references/computer-use.md#用户试玩交接)。
 
 文档命令中的 `<SKILLS_DIR>` 取本次实际加载的 skills 目录，先解析再执行，不沿用其他电脑的用户名或盘符。Windows使用已安装的 `py -3 -X utf8 -B`，macOS使用实际 `python3 -B`；不为示例路径重新安装解释器。
 
@@ -28,7 +28,7 @@ description: 用户要求游戏本地预览、试玩、游玩或打开游戏时�
 
 先查找并读取 `ego-browser` Skill；本机入口为 `<SKILLS_DIR>/ego-browser/SKILL.md`。先通过官方 `ego-browser nodejs` 执行测试，失败时按实际错误排查 Ego。**被占就开新的，绝不等待（用户 2026-10-23）**：每个会话、每次测试用**自己新建的、名字唯一的** TaskSpace（`taskSpace("<用途> <线名> <时间> <随机>")`，绝不复用固定名字），记录数字 spaceId 并登记（`<SKILLS_DIR>/remake-core/scripts/browser_slots.py register --kind ego_space --space-id <ID> --name "<线名+做什么>"`），本次测试内以同一 ID 恢复、复用 Page；遇到空间被别的会话/别的测试占用、正在被用、排队、还没轮到，**不等待、不接管别人的空间，立刻新建一个**。每次新建前先跑 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；旧 Ego 空间和仅心跳超时的活资源先核当前归属与用途，别人还在用的不动；**测试用完马上自己关（用户 2026-10-23，所有环节）**：`browser_slots.py close --name "<线名>"`（Ego 先由拥有者用已绑定的官方 API 结束，再核空间消失并注销；退出码 2 保留待处理记录），汇报前 `browser_slots.py check --name "<线名>"` 通过。不选择或检查用户未指定的 profile。
 
-全部页面导航、截图、点击、拖动和键盘输入优先走 Ego Lite 官方 CLI 的 Page API。Canvas 用当前截图确定 CSS 坐标。手机 UA、触摸模拟、移动端鼠标转触摸配置和设备尺寸必须在游戏脚本启动前设置；已经加载过游戏时，在同一 Page 配好后完整 reload，再核对 DOM、实际引擎触控能力和 Canvas 触摸监听，详见 [启动与触控核验](references/computer-use.md)。需要触摸阶段时用该 Page 的 `Input.dispatchTouchEvent`，记录 `input_transport=ego_page_cdp`；普通 `page.mouse` 不自动算触摸。
+下述脚本自动化通过 Ego Lite 官方 CLI 的 Page API。英化的可见点检按上文用 Computer Use + Edge。Canvas 用当前截图确定 CSS 坐标。手机 UA、触摸模拟、移动端鼠标转触摸配置和设备尺寸必须在游戏脚本启动前设置；已经加载过游戏时，在同一 Page 配好后完整 reload，再核对 DOM、实际引擎触控能力和 Canvas 触摸监听，详见 [启动与触控核验](references/computer-use.md)。需要触摸阶段时用该 Page 的 `Input.dispatchTouchEvent`，记录 `input_transport=ego_page_cdp`；普通 `page.mouse` 不自动算触摸。
 
 所有流程都不引入外部 Playwright、不找 CDP 地址；需要 `chrome-mobile-testing` 的计划、录屏或加载计时时直接跑 `chrome_touch.py`，它同样走 `ego-browser nodejs` + `page.cdp()`，记录标识与手写 Page API 流程一致（`browser_route=ego_taskspace`、`input_transport=ego_page_cdp`、`session_id`=spaceId）。不用 AppleScript、系统鼠标脚本或 DOM `dispatchEvent` 代替操作。`page.evaluate()` 可只读观察 DOM/引擎公开状态和被动事件，不能调用游戏控制器、按钮回调、改余额、强制通关或造点击。文件工具可准备隔离副本、服务、日志和报告。
 

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>试玩清单</title>
+<style>
+:root { color-scheme: light; font: 16px/1.55 system-ui, sans-serif; color: #142d35; background: #edf3f3; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+main { max-width: 44rem; margin: auto; padding: clamp(1rem, 5vw, 2.5rem); }
+header, section { border: 1px solid #d3e1e1; background: #fff; border-radius: 1.1rem; padding: clamp(1rem, 4vw, 1.55rem); }
+header { background: #143d42; color: #fff; border-color: #143d42; }
+h1, h2, h3, p { margin: 0; overflow-wrap: anywhere; }
+h1 { font-size: clamp(1.55rem, 5vw, 2.15rem); line-height: 1.25; margin: .25rem 0 .5rem; }
+h2 { font-size: 1.4rem; line-height: 1.35; }
+h3 { font-size: 1rem; }
+header p, .muted { font-size: .9rem; }
+.muted { color: #4d676e; }
+header .muted { color: #c4e2dc; }
+.meter { margin: 1.1rem .15rem .75rem; }
+.meter { font-size: .9rem; font-weight: 650; }
+section { margin-top: .7rem; }
+.eyebrow { color: #146955; font-size: .78rem; font-weight: 750; letter-spacing: .07em; margin-bottom: .25rem; }
+.enter { margin: .65rem 0 1.1rem; color: #39535b; }
+ol { padding-left: 1.3rem; margin: .25rem 0 1rem; }
+li { padding-left: .15rem; }
+li + li { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid #e0eaea; }
+.observations { display: grid; gap: .35rem; margin-top: .4rem; }
+.observation { padding: .48rem .62rem; border-radius: .45rem; font-size: .92rem; }
+.good { background: #e6f4ea; color: #164932; }
+.bad { background: #fff1e8; color: #723914; }
+.observation b { margin-right: .42rem; white-space: nowrap; }
+button, summary, label { cursor: pointer; }
+button { min-height: 2.55rem; border: 1px solid #bfd3d3; padding: .45rem .7rem; border-radius: .48rem; background: #f4f8f8; color: inherit; font: inherit; }
+.finish { display: flex; align-items: center; gap: .55rem; border-radius: .55rem; background: #176950; color: white; font-weight: 650; padding: .65rem .8rem; }
+.finish input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: #f5fff7; }
+details { margin-top: .85rem; }
+details label { display: block; }
+textarea { display: block; width: 100%; min-height: 5rem; margin: .4rem 0; padding: .5rem; border: 1px solid #bfd3d3; border-radius: .45rem; font: inherit; color: inherit; }
+nav { display: flex; justify-content: space-between; gap: .6rem; margin-top: .9rem; }
+.version { margin-top: .6rem; }
+.issues { white-space: pre-wrap; margin-top: .8rem; overflow-wrap: anywhere; }
+:focus-visible { outline: 3px solid #d27223; outline-offset: 3px; }
+#page-title:focus { outline: none; }
+.step-actions { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
+.step-actions .finish { padding: .45rem .65rem; }
+/* In split mode only the checklist scrolls. The game stays mounted across checks. */
+.split { max-width: 83rem; height: 100vh; height: 100dvh; display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: clamp(.35rem, 1.8vw, 1.4rem); padding: clamp(.35rem, 1.5vw, 1.2rem); overflow: hidden; }
+.split .game-panel { min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); border-radius: .9rem; overflow: hidden; background: #20242c; color: #fff; border: 1px solid #33404b; }
+.game-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .25rem .55rem; padding: .45rem .7rem; background: #29313d; }
+.game-head h2 { font-size: .95rem; }
+.game-head button { color: #fff; background: transparent; border-color: #6e7b88; min-height: 2rem; padding: .25rem .5rem; font-size: .82rem; }
+.game-panel iframe { width: 100%; height: 100%; display: block; border: 0; background: #20242c; }
+.game-idle { place-self: center; padding: .65rem; text-align: center; font-size: .9rem; color: #cbd7e0; }
+.checklist { min-width: 0; }
+.split .checklist { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 .2rem .4rem; }
+.split h1 { font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.split #kind { font-weight: 650; }
+@media (max-width: 43rem) {
+  .split { grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr); }
+  .split header, .split section { padding: .6rem; border-radius: .65rem; }
+  .split h2 { font-size: 1.05rem; }
+  .split h3, .split .enter, .split .observation, .split .step-actions { font-size: .86rem; }
+  .split ol { padding-left: .9rem; }
+  .game-head { padding: .4rem; }
+}
+@media print { header { background: white; color: #142d35; } header .muted { color: #4d676e; } button, nav, .game-panel { display: none; } main.split { display: block; height: auto; } .split .checklist { overflow: visible; } }
+</style>
+</head>
+<body>
+<main id="layout">
+  <aside class="game-panel" id="game-panel" aria-labelledby="game-panel-title" hidden>
+    <div class="game-head">
+      <h2 id="game-panel-title">游戏试玩</h2>
+      <button type="button" id="toggle-game">退出试玩</button>
+    </div>
+    <iframe id="game-frame" title="同版游戏试玩" allow="autoplay; gamepad; fullscreen 'none'"></iframe>
+    <p id="game-idle" class="game-idle" hidden>本次试玩已结束，右侧记录已保留。</p>
+  </aside>
+  <div class="checklist">
+    <header>
+      <p class="muted" id="kind"></p>
+      <h1 id="title"></h1>
+      <p id="version"></p>
+      <p class="muted" id="scope" hidden></p>
+      <p class="muted version" id="archive" hidden></p>
+    </header>
+    <div class="meter">
+      <p id="meter-label" aria-live="polite"></p>
+    </div>
+    <section id="screen" aria-labelledby="page-title"></section>
+    <p id="storage-note" class="muted" hidden>当前浏览器只在这个标签页保留勾选。</p>
+    <noscript>开启浏览器 JavaScript 后即可使用逐页勾选。</noscript>
+  </div>
+</main>
+<script type="application/json" id="checklist-data">/* CHECKLIST_DATA */</script>
+<script>
+'use strict';
+const byId = id => document.getElementById(id);
+const plan = JSON.parse(byId('checklist-data').textContent);
+const pages = plan.steps;
+const screen = byId('screen');
+const split = Boolean(plan.preview_url);
+let results = Object.create(null);
+let cursor = 0;
+try {
+  const saved = JSON.parse(localStorage.getItem(plan.progress_key) || '{}');
+  for (const page of pages) {
+    const result = saved.results?.[page.id];
+    if (result?.status === 'pass' || (result?.status === 'issue' && typeof result.note === 'string')) {
+      results[page.id] = result;
+    }
+  }
+  if (Number.isInteger(saved.cursor)) cursor = Math.max(0, saved.cursor);
+} catch { byId('storage-note').hidden = false; }
+
+byId('kind').textContent = plan.mode === 'demo' ? '清单交互示例' :
+  plan.mode === 'package' ? '测试包同版试玩 · 可选快查' :
+  plan.mode === 'share' ? '可转发清单 · 在本机启动同版游戏' :
+  '本轮逐页试玩清单';
+const scope = byId('scope');
+if (plan.mode === 'trial' || plan.mode === 'package') {
+  scope.hidden = false;
+  scope.textContent = plan.mode === 'package'
+    ? '可选快查。选你关心的几项体验，功能和平台回归结果由 AI 核对。'
+    : '按本轮路线看画面和操作感受。遇到异常可直接标记并继续。';
+}
+byId('title').textContent = plan.game;
+document.title = plan.game + ' · 试玩清单';
+byId('version').textContent = plan.version;
+byId('version').title = 'Web SHA-256 ' + plan.web_tree_sha256;
+if (split) {
+  byId('layout').classList.add('split');
+  byId('game-panel').hidden = false;
+  const frame = byId('game-frame');
+  const toggle = byId('toggle-game');
+  frame.src = plan.preview_url;
+  if (plan.ad_simulator) byId('game-panel-title').textContent = '游戏试玩（模拟广告）';
+  toggle.onclick = () => {
+    const reopen = frame.hidden;
+    if (reopen) frame.src = plan.preview_url;
+    else frame.removeAttribute('src');
+    frame.hidden = !reopen;
+    byId('game-idle').hidden = reopen;
+    toggle.textContent = reopen ? '退出试玩' : '重新打开游戏';
+  };
+}
+if (plan.package) {
+  byId('archive').hidden = false;
+  byId('archive').textContent = plan.package.name + ' · SHA-256 ' + plan.package.sha256.slice(0, 12);
+  byId('archive').title = plan.package.sha256;
+}
+
+function add(parent, tag, content, className) {
+  const node = document.createElement(tag);
+  if (content) node.textContent = content;
+  if (className) node.className = className;
+  parent.append(node);
+  return node;
+}
+
+function save() {
+  try { localStorage.setItem(plan.progress_key, JSON.stringify({cursor, results})); }
+  catch { byId('storage-note').hidden = false; }
+}
+
+function go(index) {
+  cursor = index;
+  save();
+  render(true);
+}
+
+function complete(page, status, note = '') {
+  results[page.id] = {status, note};
+  go(cursor + 1);
+}
+
+function observation(parent, className, label, text) {
+  const row = add(parent, 'div', '', 'observation ' + className);
+  add(row, 'b', label);
+  add(row, 'span', text);
+}
+
+function render(focus = false) {
+  screen.replaceChildren();
+  const firstOpen = pages.findIndex(page => !results[page.id]);
+  const lastOpen = firstOpen < 0 ? pages.length : firstOpen;
+  cursor = Math.min(cursor, lastOpen);
+  const count = Object.keys(results).length;
+  const issues = pages.filter(page => results[page.id]?.status === 'issue');
+  byId('meter-label').textContent = '通过 ' + (count - issues.length)
+    + ' · 有异常 ' + issues.length + ' · 待测 ' + (pages.length - count);
+
+  let title;
+  if (cursor === pages.length) {
+    title = add(screen, 'h2', '试玩路线已走完');
+    if (issues.length) {
+      const report = add(screen, 'textarea', '', 'issues');
+      report.readOnly = true;
+      report.setAttribute('aria-label', '异常汇总');
+      report.value = issues.map(page => '第 ' + (pages.indexOf(page) + 1) + ' 步 · ' + page.page
+        + '\n' + (results[page.id].note || '已标记异常')).join('\n\n');
+      const copy = add(screen, 'button', '复制异常');
+      copy.onclick = async () => {
+        try { await navigator.clipboard.writeText(report.value); copy.textContent = '已复制'; }
+        catch { report.focus(); report.select(); }
+      };
+    }
+  } else {
+    const page = pages[cursor];
+    const result = results[page.id];
+    add(screen, 'p', '第 ' + (cursor + 1) + ' / ' + pages.length + ' 步', 'eyebrow');
+    title = add(screen, 'h2', page.page);
+    add(screen, 'p', page.enter, 'enter');
+    const list = add(screen, 'ol');
+    for (const check of page.checks) {
+      const item = add(list, 'li');
+      add(item, 'h3', check.action);
+      const observations = add(item, 'div', '', 'observations');
+      observation(observations, 'good', '通过', check.expected);
+      if (check.problem) observation(observations, 'bad', '曾出现', check.problem);
+    }
+    const actions = add(screen, 'div', '', 'step-actions');
+    const finish = add(actions, 'label', '', 'finish');
+    const box = add(finish, 'input');
+    box.type = 'checkbox';
+    box.checked = result?.status === 'pass';
+    add(finish, 'span', '通过');
+    box.onchange = () => {
+      if (box.checked) complete(page, 'pass');
+      else {
+        delete results[page.id];
+        save();
+        render();
+      }
+    };
+    const issue = add(screen, 'details');
+    issue.open = Boolean(result?.note);
+    const noteLabel = add(issue, 'summary', '补充异常说明（可选）');
+    const note = add(issue, 'textarea');
+    note.setAttribute('aria-label', noteLabel.textContent);
+    note.value = result?.note || '';
+    const issueNext = add(actions, 'button', '有异常，继续');
+    issueNext.onclick = () => complete(page, 'issue', note.value.trim());
+  }
+  title.id = 'page-title';
+  title.tabIndex = -1;
+  if (cursor > 0 || cursor < lastOpen) {
+    const nav = add(screen, 'nav');
+    if (cursor > 0) add(nav, 'button', '上一步').onclick = () => go(cursor - 1);
+    if (cursor < lastOpen) add(nav, 'button', '下一步').onclick = () => go(cursor + 1);
+  }
+  if (focus) {
+    title.focus({preventScroll: true});
+    if (split) screen.closest('.checklist').scrollTop = 0;
+    else screen.scrollIntoView({block: 'start'});
+  }
+}
+render();
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T11:26:26.346Z",
-  "treeHash": "7578b34d4cf5cdba9f4355d5f4060869137dfc63cd48c950c73141f5c4ef4a7d",
+  "createdAt": "2026-11-11T11:27:18.305Z",
+  "treeHash": "11e079964a09c2aa4cf9e042b02af51d095c85280b9879b449e7dea22905b361",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3247,20 +3247,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "c97159615ad0ee60dfd33f9581493e15fc271253667a48c003c724667bdceef9",
-      "fileCount": 66,
-      "bytes": 1458343,
+      "treeHash": "184cae43687e06f14700586e7168a8553d770605ea07d5ac321f377899ad2487",
+      "fileCount": 67,
+      "bytes": 1466531,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a3c4a9eaa43dbe2c4bf38abc2d532cfc0358cab7146a5cd2eee025839bf90bb5",
-          "size": 17977,
+          "hash": "adfa3de30555a1e3203697632bf08068b36a36c35e793beca1072f061e9b2578",
+          "size": 18992,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "14f4745cdd37e1e4966b5a9546b9aaff41f2e288815f9189432d8074c82b1e02",
-          "size": 24436,
+          "hash": "71a2d2f7c7e53913d12f95f5e669e0c51bf5111acac441ba89ff1d350f785cbc",
+          "size": 24951,
           "executable": false
         },
         {
@@ -3367,14 +3367,20 @@
         },
         {
           "path": "references/common-game-components.md",
-          "hash": "daa5d4ce51e44595c93d9a155bc9aa20d88fcdb66f8b81496049ee90417fcb06",
-          "size": 15549,
+          "hash": "1763a697e7c194a0ec62bf3c69af53bcb41238c5461670192580843676b02ffa",
+          "size": 15615,
           "executable": false
         },
         {
           "path": "references/dynamic-visual-review.md",
           "hash": "049ca273053e724706a0ebfae87cc4da73ba78fe11312563569af9d2c696a431",
           "size": 2052,
+          "executable": false
+        },
+        {
+          "path": "references/english-home-layout.md",
+          "hash": "22e79fa2fafa2cbc1053779a43da7e5aae35f76680d1d11a4f3194eb6dcc4a7a",
+          "size": 2943,
           "executable": false
         },
         {
@@ -3391,8 +3397,8 @@
         },
         {
           "path": "references/home-by-gameplay.md",
-          "hash": "30149a2194f52732523d6588b55d2f9caea20e9a58035e782a6e7e0d2f5ff3de",
-          "size": 5706,
+          "hash": "0780410af884292744cb7048b227049910c58ebff38e6416d2ab7710e8104781",
+          "size": 5876,
           "executable": false
         },
         {
@@ -3403,20 +3409,20 @@
         },
         {
           "path": "references/local-ui-contract.md",
-          "hash": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
-          "size": 12503,
+          "hash": "71f78ae7d8c51ffd47ca214ac3f9c716b0f33417c38832ece3ca3399632100f2",
+          "size": 12972,
           "executable": false
         },
         {
           "path": "references/mobile-button-size-and-home-layout.md",
-          "hash": "e42da7ddfcb9f20c1533d7a39a02fd7919d205bcd19b6f8f2b94b41ae6420851",
-          "size": 7922,
+          "hash": "3c40fadafada8420aafc73d061d77c4144ca2c125fe09a93091007728a720e18",
+          "size": 8518,
           "executable": false
         },
         {
           "path": "references/new-feature-ui.md",
-          "hash": "1f5d12d6580fe6242c3fccac57f5209f691d3e0907dee7d9a82a2ef0bb0ef9c8",
-          "size": 3215,
+          "hash": "67c5e86727ab48f2663549661c4c8bd81876e49c33a4728c13adf6c32028a30e",
+          "size": 3306,
           "executable": false
         },
         {
@@ -3445,8 +3451,8 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "592540f8849cc2007e58bbb56e9db30e3388c2a0f6582e2440fc9a02b3f70836",
-          "size": 32758,
+          "hash": "b0e83698b71b346477d8dfcc0ec437e417c80f920dfdd7eb821839a034d668ad",
+          "size": 34902,
           "executable": false
         },
         {
@@ -3493,8 +3499,8 @@
         },
         {
           "path": "references/ui-style-and-samples.md",
-          "hash": "d19e763eca02c8658c501885cc5f039a8085dc0fa6300861a41d10c11826ee87",
-          "size": 16498,
+          "hash": "927941abd8ab3820337f3e8104464bec19c04cd2b41f2881a26d8b6ad3b2d907",
+          "size": 16677,
           "executable": false
         },
         {

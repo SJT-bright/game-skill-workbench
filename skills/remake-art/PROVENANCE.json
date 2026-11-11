@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.20",
+  "revision": "2026-11-10.english-simple.11.17.23",
   "skill": "remake-art",
-  "previous_provenance_sha256": "aec6663f3f1575cfce676f6531b4ec9750be3564d61f9a094872bbbb30c931de",
+  "previous_provenance_sha256": "68310013e9a2031cf6c352d9bc7898778c5960c20d4d068efe09a8fdc08678cf",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "14f4745cdd37e1e4966b5a9546b9aaff41f2e288815f9189432d8074c82b1e02",
-      "bytes": 24436
+      "sha256": "71a2d2f7c7e53913d12f95f5e669e0c51bf5111acac441ba89ff1d350f785cbc",
+      "bytes": 24951
     },
     {
       "path": "agents/openai.yaml",
@@ -97,13 +97,18 @@
     },
     {
       "path": "references/common-game-components.md",
-      "sha256": "daa5d4ce51e44595c93d9a155bc9aa20d88fcdb66f8b81496049ee90417fcb06",
-      "bytes": 15549
+      "sha256": "1763a697e7c194a0ec62bf3c69af53bcb41238c5461670192580843676b02ffa",
+      "bytes": 15615
     },
     {
       "path": "references/dynamic-visual-review.md",
       "sha256": "049ca273053e724706a0ebfae87cc4da73ba78fe11312563569af9d2c696a431",
       "bytes": 2052
+    },
+    {
+      "path": "references/english-home-layout.md",
+      "sha256": "22e79fa2fafa2cbc1053779a43da7e5aae35f76680d1d11a4f3194eb6dcc4a7a",
+      "bytes": 2943
     },
     {
       "path": "references/fixed-caption-button.md",
@@ -117,8 +122,8 @@
     },
     {
       "path": "references/home-by-gameplay.md",
-      "sha256": "30149a2194f52732523d6588b55d2f9caea20e9a58035e782a6e7e0d2f5ff3de",
-      "bytes": 5706
+      "sha256": "0780410af884292744cb7048b227049910c58ebff38e6416d2ab7710e8104781",
+      "bytes": 5876
     },
     {
       "path": "references/large-background-static-review.md",
@@ -127,18 +132,18 @@
     },
     {
       "path": "references/local-ui-contract.md",
-      "sha256": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
-      "bytes": 12503
+      "sha256": "71f78ae7d8c51ffd47ca214ac3f9c716b0f33417c38832ece3ca3399632100f2",
+      "bytes": 12972
     },
     {
       "path": "references/mobile-button-size-and-home-layout.md",
-      "sha256": "e42da7ddfcb9f20c1533d7a39a02fd7919d205bcd19b6f8f2b94b41ae6420851",
-      "bytes": 7922
+      "sha256": "3c40fadafada8420aafc73d061d77c4144ca2c125fe09a93091007728a720e18",
+      "bytes": 8518
     },
     {
       "path": "references/new-feature-ui.md",
-      "sha256": "1f5d12d6580fe6242c3fccac57f5209f691d3e0907dee7d9a82a2ef0bb0ef9c8",
-      "bytes": 3215
+      "sha256": "67c5e86727ab48f2663549661c4c8bd81876e49c33a4728c13adf6c32028a30e",
+      "bytes": 3306
     },
     {
       "path": "references/page-richness.md",
@@ -162,8 +167,8 @@
     },
     {
       "path": "references/production-prevention.md",
-      "sha256": "592540f8849cc2007e58bbb56e9db30e3388c2a0f6582e2440fc9a02b3f70836",
-      "bytes": 32758
+      "sha256": "b0e83698b71b346477d8dfcc0ec437e417c80f920dfdd7eb821839a034d668ad",
+      "bytes": 34902
     },
     {
       "path": "references/saul-art-rules.md",
@@ -202,8 +207,8 @@
     },
     {
       "path": "references/ui-style-and-samples.md",
-      "sha256": "d19e763eca02c8658c501885cc5f039a8085dc0fa6300861a41d10c11826ee87",
-      "bytes": 16498
+      "sha256": "927941abd8ab3820337f3e8104464bec19c04cd2b41f2881a26d8b6ad3b2d907",
+      "bytes": 16677
     },
     {
       "path": "scripts/bind_art.py",
@@ -468,7 +473,25 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "ui-structure.20261111.1",
+      "authority": "User requested merging general UI lessons, preserving check scope and cross-Skill compatibility",
+      "scope": "UI production guidance and existing-rule routing only",
+      "files": [
+        {
+          "path": "references/local-ui-contract.md",
+          "before_sha256": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
+          "after_sha256": "71f78ae7d8c51ffd47ca214ac3f9c716b0f33417c38832ece3ca3399632100f2"
+        },
+        {
+          "path": "references/production-prevention.md",
+          "before_sha256": "4f245a1bc9397cf2f5355523f0a45aae082edd80b116a31301c159534b52c7ab",
+          "after_sha256": "b0e83698b71b346477d8dfcc0ec437e417c80f920dfdd7eb821839a034d668ad"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928"
+  "previous_local_provenance_sha256": "7e07b07f42ab4d894e9c8c76835878bf93e5d01fb47aed23a23e1956d1b96cf5",
+  "maintenance_revision": "ui-structure.20261111.1"
 }

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T04:48:15.020Z",
-  "treeHash": "fdfc0176f25c233651a1f5206a6afe69a394e97680f7e6eb89efa93e29cb9c5a",
+  "createdAt": "2026-11-11T04:51:02.172Z",
+  "treeHash": "c15c915ad7195b178c405792f38d112d758d1df1b8f2a8f5750303aecbfd00db",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3621,9 +3621,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "138ec32333b8946a22b60a34bf80bbb2c311ee1f00b5c890903b33d857a66a64",
-      "fileCount": 671,
-      "bytes": 12920021,
+      "treeHash": "9e3cc26040115ad355bf287f56863834d4395d346acb06727a2099d33e5e0837",
+      "fileCount": 674,
+      "bytes": 12939095,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -4791,8 +4791,8 @@
         },
         {
           "path": "references/regression-scope-gate.md",
-          "hash": "148b03d0043081895df171d7e16cbd38a18eb365636b866b64cb3b5669e4f4da",
-          "size": 7584,
+          "hash": "9b8bd25c0731a84fabea078b9680acf4d26c1900c128e26413dc45d496bf2ea8",
+          "size": 8247,
           "executable": false
         },
         {
@@ -5745,8 +5745,8 @@
         },
         {
           "path": "scripts/package_gates/ads_static.py",
-          "hash": "0e458cd6e9d1301bfc38822ae51a659c9c3feae9d1d0031cb7bceb92b5095207",
-          "size": 12235,
+          "hash": "eed747c38289b7498979c09c842588b2cafcf196109095de80301c55d1c213d2",
+          "size": 14460,
           "executable": false
         },
         {
@@ -5967,8 +5967,8 @@
         },
         {
           "path": "scripts/regression_scope_gate.py",
-          "hash": "58c25af1bdb321ef06dded4420b4d3f3be80a5bd6563179f1f515a664209f83d",
-          "size": 28562,
+          "hash": "d13e9c62fbf9fd84caa87cca09252aa883ed68798c685123d7d85aff37fd4895",
+          "size": 28320,
           "executable": false
         },
         {
@@ -6005,6 +6005,12 @@
           "path": "scripts/scan_cocos2_finite_art.cjs",
           "hash": "9e6a31a299829570f2b96b8628fa7328eafe9922f582c01a6da5f6b8f3bb0253",
           "size": 9571,
+          "executable": false
+        },
+        {
+          "path": "scripts/scan_free_claim_ad_lock.cjs",
+          "hash": "3be678e6002a12ba7bd0c99fc9a89643249b6be3ee37ac93476cd4d75fdff656",
+          "size": 10102,
           "executable": false
         },
         {
@@ -6497,6 +6503,18 @@
           "path": "scripts/test_frame_scan.py",
           "hash": "1e20fadf20d204f4eb7d54c89818c7128cd2cf30fb02d318b20a5169ad860298",
           "size": 6649,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_free_claim_ad_lock.cjs",
+          "hash": "58cc2a5613a5901a840c16fe478dc5c7b7e68ca2cb56242457661c6d893dd8f9",
+          "size": 2369,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_free_claim_ad_lock.py",
+          "hash": "bfb7f24c585bb89a1734e64b76481d11a88e71c522371a118f06fe510ae87894",
+          "size": 3957,
           "executable": false
         },
         {

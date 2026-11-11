@@ -21,6 +21,8 @@ An unreadable KIT_MANIFEST recognises nothing (stricter, never looser).
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 from . import finding
@@ -205,6 +207,35 @@ def nonplatform_grants(mods):
     return sorted(set(out))
 
 
+def free_claim_ad_locks(view):
+    """A4: an optional-ad handler's unconditional busy guard blocks its other reward button.
+
+    One AST pass per candidate bundle. Missing runtime coverage is handled by the
+    normal per-entry contract; this structural check does not replace it.
+    """
+    candidates = []
+    for name in view.game_js():
+        text = view.text(name)
+        if 'setButtonClickEvents' in text and re.search(
+                r'showVideoAd|showRewardedAd|showRewardedVideo|showRewardVideo|showRewardAd|'
+                r'playRewardedVideo|watchRewardedVideo|runAd', text):
+            candidates.append({'file': name, 'code': text})
+    if not candidates:
+        return []
+    node = shutil.which('node')
+    if not node:
+        raise RuntimeError('free-claim ad-lock AST check needs Node.js')
+    scanner = Path(__file__).resolve().parent.parent / 'scan_free_claim_ad_lock.cjs'
+    result = subprocess.run([node, str(scanner)], input=json.dumps({'files': candidates}),
+                            capture_output=True, text=True, timeout=30)
+    if result.returncode not in (0, 1):
+        raise RuntimeError('free-claim ad-lock AST check did not run: ' + (result.stdout or result.stderr)[-500:])
+    report = json.loads(result.stdout)
+    if report.get('status') not in ('checked', 'failed') or report.get('checked') != len(candidates):
+        raise RuntimeError('free-claim ad-lock AST check returned incomplete evidence')
+    return report['findings']
+
+
 def check(view):
     mods = modules(view)
     out = []
@@ -245,4 +276,13 @@ def check(view):
                            'an EVENT_HIDE/onHide handler ends the playing rewarded ad, so a video watched while '
                            'TikTok backgrounds the game grants nothing: %s' % '; '.join(sorted(set(hits))[:4]),
                            {'hits': sorted(set(hits))}))
+    claim_locks = free_claim_ad_locks(view)
+    if claim_locks:
+        out.append(finding('A4_free_claim_ad_lock', 'block',
+                           'an optional-ad busy guard also blocks a non-ad reward button: %s; '
+                           'keep the earned base reward claimable, isolate the cancelled request and its late result, '
+                           'then verify this entry with a missing callback'
+                           % '; '.join('%s/%s (%s:%s)' % (row['module'], row['handler'], row['file'], row['line'])
+                                       for row in claim_locks[:6]),
+                           {'hits': claim_locks, 'scope': 'supported shared-handler/button-binding structure'}))
     return out

@@ -61,10 +61,6 @@ def adapter_file(adapter):
 
 def scope_digest(project):
     path = scope_path(project)
-    inheritance = project / 'docs/checks/runtime-unit-inheritance.json'
-    if inheritance.is_file():
-        return sha({'dependencies': digest(path) if path.is_file() else None,
-                    'unit_inheritance': digest(inheritance)})
     return digest(path) if path.is_file() else None
 
 

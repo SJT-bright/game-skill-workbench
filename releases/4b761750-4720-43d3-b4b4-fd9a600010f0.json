@@ -1,0 +1,391 @@
+{
+  "id": "4b761750-4720-43d3-b4b4-fd9a600010f0",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v73",
+  "createdAt": "2026-11-11T07:58:28.898Z",
+  "summary": "文件变更：新增 1，修改 4，移除 0。",
+  "changes": {
+    "added": 1,
+    "modified": 4,
+    "deleted": 0
+  },
+  "treeHash": "a26a097949525e26e29a4b9c22baf63f74f3023bbd90fb6d88f6984be0593582",
+  "bytes": 974920,
+  "fileCount": 62,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "d9b2a941e0b214191b53a24cd8c6e7b700f9dff3056989b7050fd69326e0fdc3",
+      "size": 27256,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "0f9fc1f741ba3936d431e6741d8971dd694a5c818b4935807ede67bc13df5801",
+      "size": 93677,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/README.md",
+      "hash": "6308ef3ac51b7339e333e20c6dd156ba2521a50d2e0a5eb90028fa2ecdc89af2",
+      "size": 1824,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/main.js",
+      "hash": "a00ae9866bab67708122c6c567b677bad046aa91e75a07b5dac462353d3525f0",
+      "size": 4190,
+      "executable": false
+    },
+    {
+      "path": "assets/build-worker-canvas-compat/package.json",
+      "hash": "9fa38054d0cb490c108c6ce1f45967b05ac7141d939e2fa03aef3ded17e8689a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "assets/playtest-checklist.html",
+      "hash": "88ea2e6f2798bde6a8261ce0871a7383eaaaad5d2cbf34f8d75b3fd01f60dc29",
+      "size": 12147,
+      "executable": false
+    },
+    {
+      "path": "examples/MusicSlice_ad-regression.json",
+      "hash": "b619265e11b07b4105829aaef9c4826931c922ffacb32e0a2928b97c4e20e05c",
+      "size": 1380,
+      "executable": false
+    },
+    {
+      "path": "references/creator-migration.md",
+      "hash": "4252847f2742d0f84b284df4840c38fe93f53839b6b82469742d226f13737227",
+      "size": 3603,
+      "executable": false
+    },
+    {
+      "path": "references/dynamic-text-glyph-review.md",
+      "hash": "a8a75cdffd9d7f89490f61dc559a0704f77ef3ddc635382a51b9bf3654e004e8",
+      "size": 1479,
+      "executable": false
+    },
+    {
+      "path": "references/early-prevention.md",
+      "hash": "d4a8c8ddf6b186d36636fdb8311c0bf1abb24fcab12ff2b2129ade37c6323701",
+      "size": 6875,
+      "executable": false
+    },
+    {
+      "path": "references/english-ui-rebuild.md",
+      "hash": "53cbbf322c00e6b7486cade99db307f8c86c86485b900824e6591c52df1290d9",
+      "size": 33970,
+      "executable": false
+    },
+    {
+      "path": "references/first-trial-repair.md",
+      "hash": "d86616f3823832abd1a229ed9a0dccca08180a668eadf949e01e03230278aa2e",
+      "size": 3558,
+      "executable": false
+    },
+    {
+      "path": "references/fixed-entries.md",
+      "hash": "fa4ce7f16d64170597d0b5f13ec007114366b136d78043dafaa04fb0641b59fa",
+      "size": 14137,
+      "executable": false
+    },
+    {
+      "path": "references/local-creator-versions.md",
+      "hash": "a52df302d15046e87dc9d38492acd24250fba5fd1fe4a787f2c84224a613590d",
+      "size": 5527,
+      "executable": false
+    },
+    {
+      "path": "references/phase-timing.md",
+      "hash": "aa070b432a43bbc43926a7b47be132b6b9f8868dd4e3481522463c31277261b9",
+      "size": 6058,
+      "executable": false
+    },
+    {
+      "path": "references/playtest-h5.md",
+      "hash": "e476d2ae45b7db0c20df6fa2b6ff5af84c04335a6bc0e82051b68fc3a95d15eb",
+      "size": 4440,
+      "executable": false
+    },
+    {
+      "path": "references/preview-handoff.md",
+      "hash": "25a73bb594df285001fb30409aa18aca056025a506f9736d15103389af7ed55a",
+      "size": 2720,
+      "executable": false
+    },
+    {
+      "path": "references/sidebar-retrofit.md",
+      "hash": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
+      "size": 6332,
+      "executable": false
+    },
+    {
+      "path": "scripts/browser_env.py",
+      "hash": "87781db5398ed7aa715fc22f571b842263f60d5072c044b6606bcac51c00f571",
+      "size": 15575,
+      "executable": false
+    },
+    {
+      "path": "scripts/build_playtest_h5.py",
+      "hash": "1523c3cfbfdc814b237e8b6da44e80a73c7bbc67ce0e451bfcdd244ec8329fb9",
+      "size": 12010,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "hash": "21fda56bc9ed0cd548c5cd8be4190294cbcb45888a9ad38f3a27b9367d365321",
+      "size": 7959,
+      "executable": false
+    },
+    {
+      "path": "scripts/check_machine.py",
+      "hash": "5adc7ee1afe32ecb1c2ee2ab4252f54dc243bcd8356b09bb7dc3c641f2b23fae",
+      "size": 15056,
+      "executable": false
+    },
+    {
+      "path": "scripts/chinese_audit.py",
+      "hash": "251e602a6f8ecb766de1d5962caf4a4fb2b6164b3a5c000e8e85bbcdfb7a7758",
+      "size": 103032,
+      "executable": false
+    },
+    {
+      "path": "scripts/creator_migration.py",
+      "hash": "a911372ee1404d7cf554e1c8ad6cc7a5abb98670b737563b47f51f4f1b5ee436",
+      "size": 15903,
+      "executable": false
+    },
+    {
+      "path": "scripts/creator_migration_smoke.mjs",
+      "hash": "3f95f90f02adf400e73846c9c534f6b3e9225ba29c7c72bf9255b4a753473551",
+      "size": 2906,
+      "executable": false
+    },
+    {
+      "path": "scripts/english_copy_guard.py",
+      "hash": "bca2c42d32db819b7d055058e52f030a685e1846963b73ddd730bef79a600033",
+      "size": 26255,
+      "executable": false
+    },
+    {
+      "path": "scripts/find_creator.py",
+      "hash": "cd8d4c1d93716dbf49c67e6f5b7d5c6132b5c914da14ecf02d5705b2d854950d",
+      "size": 38436,
+      "executable": false
+    },
+    {
+      "path": "scripts/fit_english_labels.py",
+      "hash": "a3f7d2e63df871ec10731de3d99fac4c51584253d5d2a4a483fcb2e73d40dfbc",
+      "size": 36072,
+      "executable": false
+    },
+    {
+      "path": "scripts/fix_web_entry_3x.py",
+      "hash": "25db43d136f17f2ea0872e13d9f906cbcd04556d48b5187337320f6f9f7f5b71",
+      "size": 8620,
+      "executable": false
+    },
+    {
+      "path": "scripts/handoff_preview.py",
+      "hash": "7762e3decabf8cea8c2df0a5026e93709404fe7459b36c1ef2e8e2726d61fe53",
+      "size": 11391,
+      "executable": false
+    },
+    {
+      "path": "scripts/inspect_creator_migration.cjs",
+      "hash": "6cd06b6ac80828d6f31e84cea1e69d9fdae09cfd80556098ba1aca7d6d358e82",
+      "size": 9074,
+      "executable": false
+    },
+    {
+      "path": "scripts/ocr_vision.swift",
+      "hash": "0e9e8100c5338c6c77fe6c142be1745402786fa00eb238c629d6b447740d0850",
+      "size": 2854,
+      "executable": false
+    },
+    {
+      "path": "scripts/ocr_windows.ps1",
+      "hash": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
+      "size": 4615,
+      "executable": false
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "7808ad251658d50e5f74bb295a582480176cb1c737616e1e430a83c588b0a3f2",
+      "size": 20972,
+      "executable": false
+    },
+    {
+      "path": "scripts/stage_timer.py",
+      "hash": "68122666aea309b4a528c47e9f47f61667fe5d241bb001ab0bb4da155c4bd072",
+      "size": 62129,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_check_export_images.py",
+      "hash": "b1bcaf2de070c1c4d6782d0cd39c5fa350d6632f95674d9d77adf3b8c09dda4d",
+      "size": 5626,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_chinese_audit.py",
+      "hash": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
+      "size": 31960,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_creator_migration.py",
+      "hash": "01bc80bd541796e596c22e0d63f868e92a6aed53cbc9cbb8fd68358c2cf724dc",
+      "size": 6160,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_creator_typed_config.py",
+      "hash": "1e3ed6e209bc6543613d1b8098a91840ad6e2279661dcfc448e85f05b4fe21fe",
+      "size": 7221,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_engine_route.py",
+      "hash": "6cbceaa7637f18b109e10bf7a2c9fe4ddb5d53e1ecaeada6b57d6ae2fafd1105",
+      "size": 4834,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_english_copy_guard.py",
+      "hash": "579cd2ee96ada2866bee6e205d10951285eaed1c2bb70d9ad2524603cdfecdb1",
+      "size": 11926,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "hash": "58e2026d4022f1a51fe4cf8174e0ae60211dee42e0c17f170c4a2181a143718b",
+      "size": 77413,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_fit_english_labels.py",
+      "hash": "4c64148cdd1fb7b69ccd189c953830ba72ffeaaa9621840d085d4149f804dccc",
+      "size": 22361,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_p21_browser_env.py",
+      "hash": "33b8408a7d8350d2a4922bc913022d955ccaef42b38417aec19d8acbcbaac482",
+      "size": 19895,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_playtest_h5.py",
+      "hash": "0003f627faa81be3034d3076e462347f2193cbaa487af9faf575048365c57cf1",
+      "size": 7430,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_portable_tools.py",
+      "hash": "35e6a043148b4421464aa405471cc496e558b101dbbda7593d8cac03dbefae35",
+      "size": 14507,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_preview_timing_hooks.py",
+      "hash": "07584aab3b05d2bb7c4f05ca2b947dde3cda9243e1ae20b2b27e4791a3fd7816",
+      "size": 8431,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_r4d_raw_input_intake.py",
+      "hash": "cee4e16005b0f39d42767adeb230650cea45e0fdc93ba0ab3d91d79e84fe631c",
+      "size": 3639,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_r4f1_build_sync.py",
+      "hash": "3386c5910582dd13189fc14221ccd7278c0ec6fb1b4bd9cce517880c9bb685f0",
+      "size": 4333,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_r4j4_native_sync.py",
+      "hash": "a65c14c0f889298645006fe3363e255bc5b314df2c4a65ce52eca4c3ffb48602",
+      "size": 11069,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_r4n3_env_stuck.py",
+      "hash": "a8051bd16b0cdefcef3950035f303ab7c0c2267690c6d878770643fd27c77a09",
+      "size": 1843,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_r4q7_editor_config.py",
+      "hash": "d54e24a72673de1bfff64f27844220d065cee524a0826d8cc5ad6b024405690d",
+      "size": 1984,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_r4q7_export_not_this_source.py",
+      "hash": "27abd382487b06774721e61137806dbdeaca2b9d8a0396784cf1defe9b11834e",
+      "size": 2614,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_serve_preview_gate.py",
+      "hash": "f4dc15efc87b473dca9e868b2618817542fc119172b12afa95dce111b5d67dc2",
+      "size": 33640,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_stage_timer.py",
+      "hash": "51beb40b5b241c143cfd74288b8d04819c2712c549ed8933d5f87f68668febc2",
+      "size": 18335,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_stage_timer_runs.py",
+      "hash": "536dc7db879e33161c19bec6cd51f2179175fb1cf072acda7a5bd52cf2c571dd",
+      "size": 14893,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_ts_full_check.py",
+      "hash": "f223220cd2b203f566977032df60ae603ba7fc360f65c1bee1ce8f0d2f09611d",
+      "size": 4744,
+      "executable": false
+    },
+    {
+      "path": "scripts/test_unpack_source.py",
+      "hash": "5122a1bfd703635757dcacb4886c9e7867b5f3db427a3cfa4c3a934aa07073e3",
+      "size": 4187,
+      "executable": false
+    },
+    {
+      "path": "scripts/ts_full_check.py",
+      "hash": "d9dd0e003800af7fda4fecb276e650e02b6b26808e579e5cc1f3cc48e85a9e38",
+      "size": 9332,
+      "executable": false
+    },
+    {
+      "path": "scripts/unpack_source.py",
+      "hash": "940291f4c1a881691fc5857837b84cc62c3f44909cd4ac304da03bbeb318ff27",
+      "size": 9004,
+      "executable": false
+    },
+    {
+      "path": "版本历史.md",
+      "hash": "80107a6811783cc02b397608cb5f437c7f13e106e567e720978fc9c5ce7a56bc",
+      "size": 15155,
+      "executable": false
+    }
+  ]
+}

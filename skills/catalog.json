@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T07:56:34.646Z",
-  "treeHash": "c2d6e2de2984f2b1f95cfb4a7fb3cc08b2845dc8016a3f6a9503a82d48b9c211",
+  "createdAt": "2026-11-11T07:57:39.615Z",
+  "treeHash": "4dfd91235b7025b208181d2d7edfaa8c8eb4c54d84558cf4fa14014f7ad8d46b",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2095,20 +2095,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "6e25c0df7c846ad3e0dc4c4bf978c1ab2041fd0e9b9136d93ccd0aa138dddf9a",
-      "fileCount": 61,
-      "bytes": 967103,
+      "treeHash": "a26a097949525e26e29a4b9c22baf63f74f3023bbd90fb6d88f6984be0593582",
+      "fileCount": 62,
+      "bytes": 974920,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "f0103d19c6c9cdcda82d5db6dc08ad08d1edc61d8cdd235d4ed6e97021d86ba6",
-          "size": 27091,
+          "hash": "d9b2a941e0b214191b53a24cd8c6e7b700f9dff3056989b7050fd69326e0fdc3",
+          "size": 27256,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "ed6c491f38f8c387ae488df51a0f87e96670aae5ce024ac99b9bdeb2caeb5a8f",
-          "size": 93027,
+          "hash": "0f9fc1f741ba3936d431e6741d8971dd694a5c818b4935807ede67bc13df5801",
+          "size": 93677,
           "executable": false
         },
         {
@@ -2179,8 +2179,8 @@
         },
         {
           "path": "references/fixed-entries.md",
-          "hash": "e6fe5f1656e7f73773740e3fe61038fedf3c0f7e755bafab1c32fef2603f68e0",
-          "size": 13751,
+          "hash": "fa4ce7f16d64170597d0b5f13ec007114366b136d78043dafaa04fb0641b59fa",
+          "size": 14137,
           "executable": false
         },
         {
@@ -2205,6 +2205,12 @@
           "path": "references/preview-handoff.md",
           "hash": "25a73bb594df285001fb30409aa18aca056025a506f9736d15103389af7ed55a",
           "size": 2720,
+          "executable": false
+        },
+        {
+          "path": "references/sidebar-retrofit.md",
+          "hash": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
+          "size": 6332,
           "executable": false
         },
         {
@@ -2461,8 +2467,8 @@
         },
         {
           "path": "版本历史.md",
-          "hash": "59897a397af39f2e45fcc3c03b63ff8bc1c9a54e17e8cf5ca73b511f18c42e84",
-          "size": 14871,
+          "hash": "80107a6811783cc02b397608cb5f437c7f13e106e567e720978fc9c5ce7a56bc",
+          "size": 15155,
           "executable": false
         }
       ]

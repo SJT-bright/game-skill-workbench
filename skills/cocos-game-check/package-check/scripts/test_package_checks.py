@@ -15,12 +15,17 @@ from build_checked_zip import build
 from audit_upload_startup import audit_files
 
 
-# v7.5: check() runs the mandatory runtime regression (Ego browser) on every package with game.js. These fixtures
-# test the static checks, so the runtime gate is patched (as test_ad_regression patches rewarded_ad_gate); its
-# fail-closed behaviour is tested in test_ad_regression.RuntimeGateFailClosed and test_runtime_regression.py.
+# These synthetic fixtures test static package checks and archive orchestration.
+# They do not provide a real execution plan or browser evidence. Isolate those
+# public boundaries together, keeping every actual static validator in scope.
+# Missing-plan refusal and complete evidence requirements remain real in
+# test_regression_scope_entrypoints.py, test_check_inputs.py and runtime tests.
 def runtime_patch():
-    return patch('check_package.runtime_gate',
-                 return_value={'id': 'runtime_regression', 'status': 'patched_in_unit_test'})
+    return patch.multiple('check_package',
+        runtime_gate=lambda *a, **k: {'id': 'runtime_regression', 'status': 'patched_in_unit_test'},
+        verify_regression_scope=lambda *a, **k: {'unit_test': 'synthetic static fixture authorization'},
+        regression_record=lambda *a, **k: {'unit_test': 'synthetic static fixture; runtime not executed'},
+        regression_coverage_problem=lambda *a, **k: None)
 
 
 _RUNTIME = runtime_patch()

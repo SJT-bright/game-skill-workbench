@@ -254,6 +254,16 @@ export function dropPress(d, target, before, after) {
 // A button found by the sweep that leads to a rewarded ad (for the trial-link smoke and an ad_entries adapter).
 export const AD_WORDS = /watch|video|\bads?\b|_ad\b|\bad_|free|double|x ?2\b|revive|广告|免费|复活|双倍/i;
 
+// Rewarded revive is exercised in the first manual playtest after art.
+export function isManualRevive(path, signature, adapter) {
+  const value = strip(path);
+  const leaf = value.split('/').at(-1);
+  const revive = /reviv|relive|fuhuo|second[ _-]*chance|复活/i;
+  const ad = /watch|video|reward|ad(?:button|btn|entry|$)|(?:^|[_ -])ad(?:[_ -]|$)|广告|视频/i;
+  return (adapter?._manual_revive_paths || []).some(p => value === p || (p.startsWith('*/') && value.endsWith(p.slice(1))))
+    || (revive.test(value + ' ' + (signature || '')) && ad.test(leaf + ' ' + (signature || '')));
+}
+
 // ---------- ad entries (B) ----------
 // Validate the adapter's ad_entries list: [{id, button, states: [{name, why, actions?, setup_js?, settle_ms?}]}].
 export function adEntriesProblems(entries) {
@@ -265,18 +275,13 @@ export function adEntriesProblems(entries) {
     if (typeof e.id !== 'string' || !e.id) out.push('ad_entries[' + i + '].id must be a string');
     else if (ids.has(e.id)) out.push('ad_entries id ' + e.id + ' twice'); else ids.add(e.id);
     if (typeof e.button !== 'string' || !e.button) out.push('ad_entries[' + i + '].button must be a node path');
-    // v7.9 (手机问题源头约束): what the entry is; a new game must list role "double" (result-page Watch Ad x2) and
-    // "revive" (runtime_regression.ad_roles_problems). Other entries: any lower-case word (home_gift, checkin, spin ...)
+    // v7.9 (手机问题源头约束): what the entry is; a new game must list role "double" (result-page Watch Ad x2) (runtime_regression.ad_roles_problems). Other entries: any lower-case word (home_gift, checkin, spin ...)
     if ('role' in e && !(typeof e.role === 'string' && /^[a-z][a-z0-9_]{1,30}$/.test(e.role))) out.push('ad_entries[' + i + '].role must be a lower-case word: "double" (result-page Watch Ad x2), "revive", or what the entry is (home_gift, checkin, spin ...)');
     if (!Array.isArray(e.states) || !e.states.length) out.push('ad_entries[' + i + '].states must be a nonempty list');
     else e.states.forEach((s, j) => {
       if (!s || typeof s.name !== 'string' || !s.name) out.push('ad_entries[' + i + '].states[' + j + '].name must be a string');
       if (s && s.setup_js != null && typeof s.setup_js !== 'string') out.push('ad_entries[' + i + '].states[' + j + '].setup_js must be a string');
       if (s && s.actions != null && !Array.isArray(s.actions)) out.push('ad_entries[' + i + '].states[' + j + '].actions must be a list');
-      // the revive case waits for the hero to fail by itself (A12 补: a forced fail 3 s in comes before the first
-      // point where the game rightly offers a revive, so it reports a missing revive that is not missing)
-      if (s && /revive|复活/i.test(e.id + ' ' + s.name) && typeof s.setup_js === 'string' && /finish\s*\(\s*false|gameOver\s*\(|\.fail\s*\(|die\s*\(/i.test(s.setup_js) && !(s.actions || []).some((a) => a && a.wait_node))
-        out.push('ad_entries ' + e.id + '/' + s.name + ': a revive state must let the hero fail by itself (actions with wait_node on the revive button), not force the fail in setup_js');
     });
   });
   return out;

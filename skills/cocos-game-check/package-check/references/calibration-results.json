@@ -1,13 +1,13 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-10",
- "release_label": "v7.9-en11.17.22-sidebar-retrofit",
- "selftest_report_sha256": "5fafe3d7c8ff2283e6b0d15504988132aa47c28f4dfba6be57a79fc28d0d05f7",
+ "release_label": "v7.9-en11.17.23-home-layout-unified",
+ "selftest_report_sha256": "f5fcdcc2493e1d03a8b245295670fe823be3bb7d6ef89415dfb429789c609b49",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",
   "remake-core/scripts/package_gates/adapter_fix.py": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19",
-  "remake-core/scripts/package_gates/ads_static.py": "0e458cd6e9d1301bfc38822ae51a659c9c3feae9d1d0031cb7bceb92b5095207",
+  "remake-core/scripts/package_gates/ads_static.py": "ed7f1225f8e7133da01695b668b9ec22a347677a5022bb5c8f179e80d9902de2",
   "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
   "remake-core/scripts/package_gates/kit_parts.py": "1e771575f90f31673008921ebd01772be803bbb381e2f1a6bc8c28bffee19693",
   "remake-core/scripts/package_gates/kit_versions.py": "a3c9306c7f0309493123cb06c5afafe6c135395934013dd88bfd2a9785db6ffd",
@@ -20,7 +20,7 @@
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
   "remake-core/scripts/verify_native_zip.py": "0a9bc30ca065ee27ae90be43994bc4b15ba699f40c7ab19fb722f62563f5aa2d",
-  "remake-core/scripts/upload_size_gate.py": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
+  "remake-core/scripts/upload_size_gate.py": "100da39c1185a5b54fd141e506fdc5350dff8ccbbe03130b1cf8d4f2aeee05a1",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
   "remake-core/scripts/tiktok_finalize.py": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
   "remake-core/scripts/tiktok_finalize_steps/__init__.py": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
@@ -54,7 +54,7 @@
   "remake-core/scripts/tiktok_finalize_steps/touch.py": "fab070f35c3dd59ec9919131322846953b04a779406e1fb12be318131ee26004",
   "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581",
   "remake-core/scripts/tiktok_finalize_steps/upload_compat.py": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29",
-  "cocos-game-check/package-check/scripts/check_package.py": "0292ec6f364a7c6d1cffe0e63337afd278aa66e764fb3b4becc125670dcbb25e",
+  "cocos-game-check/package-check/scripts/check_package.py": "6ab5c09b8ca0e81353b6c211631e7a03c862400bdadb68b69378cac7542aa020",
   "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
   "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "66b3faf8e5f300c34257d48560b287ef60a5ddb0ac3459170211c202e45496cc",
   "remake-core/scripts/audit_image_review_record.py": "631387e5efde7676733adfd2be68e06224282e30b4bb494ccc1553e0ba787471",
@@ -738,11 +738,26 @@
    "since": null
   },
   {
-   "id": "sheep-platform-rejected-exact-zip",
-   "game": "鸽鸽小羊",
+   "id": "returned-delivery-control-evidence",
+   "game": "返工交付控制路径（隔离用例）",
+   "role": "control",
+   "check": "returned_control_proof",
+   "item": null,
+   "expect": {
+    "control_evidence_current": true,
+    "recorded_tests": 14,
+    "ai_visual_pass_claimed": false,
+    "whole_game_acceptance": false
+   },
+   "ok": true,
+   "since": null
+  },
+  {
+   "id": "controlled-platform-refused-identical-zip",
+   "game": "鸽鸽小羊（真实ZIP；新构造平台拒绝控制输入）",
    "role": "bad",
    "check": "upload_size_zip",
-   "item": "2026-11-05 同字节平台拒绝",
+   "item": "new controlled exact-ZIP refusal fixture",
    "expect": {
     "passed": false,
     "main_bytes": 1224175,
@@ -757,31 +772,16 @@
      "This exact ZIP was rejected by the platform; local arithmetic cannot clear the rejection"
     ],
     "platform_feedback": {
-     "sha256": "9d9fbd545795eb32cceac66243749f4dd1632a81c246df841d7865f83159cacd",
+     "sha256": "97d9c86a55593ed9f8bff445586ab0ed87b7e1967fee6f485f703f093127a20a",
      "same_rejected_archive": true
     }
-   },
-   "ok": true,
-   "since": null
-  },
-  {
-   "id": "returned-delivery-control-evidence",
-   "game": "返工交付控制路径（隔离用例）",
-   "role": "control",
-   "check": "returned_control_proof",
-   "item": null,
-   "expect": {
-    "control_evidence_current": true,
-    "recorded_tests": 14,
-    "ai_visual_pass_claimed": false,
-    "whole_game_acceptance": false
    },
    "ok": true,
    "since": null
   }
  ],
  "test_inventory": {
-  "files": 721,
+  "files": 733,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",

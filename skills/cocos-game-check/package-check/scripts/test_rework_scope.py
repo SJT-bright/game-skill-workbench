@@ -142,14 +142,15 @@ class WhatChanged(Base):
 
 
 class Plans(Base):
-    def test_revive_picture_change_reruns_ad_return(self):
+    def test_revive_picture_change_keeps_ad_return_in_manual_playtest(self):
         self.adapter.write_text(json.dumps({**ADAPTER, 'ad_entries': [{'role': 'revive'}]}), encoding='utf-8')
         old, names = self.official(package(), before_home=('internal',))
         new = package(**{'subpackages/resources/native/5b/%s.png' % PNG_UUID: b'\x89PNG revived board'})
         plan = self.plan(old, new)
         self.assertTrue(plan['reuse'], plan['why'])
-        self.assertIn('ad_outcome', names)
-        self.assertIn('ad_outcome', plan['rerun'])
+        self.assertNotIn('ad_outcome', names)
+        self.assertNotIn('ad_outcome', plan['rerun'])
+        self.assertEqual(plan['rerun'], [n for n in names if n in RS.VISUAL])
 
     def test_picture_in_a_later_bundle_reruns_only_the_visual_suites(self):
         old, names = self.official(package(), before_home=('internal',))

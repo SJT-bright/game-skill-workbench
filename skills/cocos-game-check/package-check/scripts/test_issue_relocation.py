@@ -199,10 +199,18 @@ class RelocatedWriterDelivery(unittest.TestCase):
             contract=self.root/'startup-fixture.json'
             contract.write_text(json.dumps({'binding': {'web_tree_sha256': 'a'*64}}))
             startup={'passed':True,'startup_contract_sha256':hashlib.sha256(contract.read_bytes()).hexdigest()}
+            # This case exercises the real issue-evidence relocation/obligation
+            # consumers. Its runtime_patch writer used synthetic regression proof;
+            # isolate only that unrelated delivery receipt boundary.
+            reuse={'reused':True,'why':'unit-test regression boundary',
+                   'rewarded_ad_regression':{'status':'not_applicable','reason':'synthetic fixture'},
+                   'runtime_regression':{'status':'patched_in_unit_test'}}
             with patch('prepare_delivery.audit_final_startup',return_value=startup), \
+                    patch('check_package.reusable_regressions',return_value=reuse) as regressions, \
                     patch('prepare_delivery.verify_preview',return_value={'url':url}) as preview:
                 receipt=prepare(archive,moved,APP,self.root/'delivery.json',project=self.project,
                                 resource_manifest=manifest,startup_contract=contract,preview_url=url)
+            regressions.assert_called_once()
             preview.assert_called_once_with(url,'a'*64)
             self.assertEqual(receipt['preview']['url'],url)
         self.assertTrue(receipt['expected_tree_exact'])

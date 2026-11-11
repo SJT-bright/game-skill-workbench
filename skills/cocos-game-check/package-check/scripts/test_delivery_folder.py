@@ -131,9 +131,12 @@ class Writer(unittest.TestCase):
         import check_package
         from build_checked_zip import build
         manifest = self.case.setup_package()
-        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True, 'patched': True}), \
-                patch.object(check_package, 'rewarded_ad_gate', return_value={'status': 'patched_in_unit_test'}), \
-                patch('check_package.runtime_gate', return_value={'id': 'runtime_regression', 'status': 'patched'}):
+        from test_package_checks import runtime_patch
+        # Folder publication uses synthetic regression evidence; actual authorization
+        # and coverage are tested at the public scope/evidence entrypoints.
+        with runtime_patch(), \
+                patch('build_checked_zip.audit_final_startup', return_value={'passed': True, 'patched': True}), \
+                patch.object(check_package, 'rewarded_ad_gate', return_value={'status': 'patched_in_unit_test'}):
             return build(self.case.native, APP, out, resource_manifest=manifest, project=self.case.project, **kw)
 
     def test_writer_moves_the_older_package(self):

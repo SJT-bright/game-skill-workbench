@@ -161,15 +161,19 @@ class Sweep(unittest.TestCase):
 
 
 class AdEntries(unittest.TestCase):
-    def test_adapter_shape_and_natural_revive(self):
+    def test_adapter_shape_and_manual_revive_scope(self):
         good = [{'id': 'revive', 'button': 'Canvas/__revive/btn_watch_ad', 'states': [{'name': 'natural_fall', 'actions': [
             {'tap': 'Canvas/btnks'}, {'wait_node': 'Canvas/__revive/btn_watch_ad', 'timeout': 45000, 'optional': True}]}]},
                 {'id': 'offline_x2', 'button': 'Canvas/loading/anim/btnwj', 'states': [{'name': 'reward_zero', 'setup_js': 'return 1;'}]}]
         forced = [{'id': 'revive', 'button': 'Canvas/__revive/btn_watch_ad', 'states': [{'name': 'forced', 'setup_js': "comp('pysTouchEvent').finish(false);"}]}]
-        got = node('return [R.adEntriesProblems(%s), R.adEntriesProblems(%s), R.adEntriesProblems([]), R.adEntriesProblems([{id: "a", states: []}])];'
-                   % (json.dumps(good), json.dumps(forced)))
+        got = node('return [R.adEntriesProblems(%s), R.adEntriesProblems(%s), R.adEntriesProblems([]), R.adEntriesProblems([{id: "a", states: []}]), R.isManualRevive(%s), R.isManualRevive(%s)];'
+                   % (json.dumps(good), json.dumps(forced), json.dumps(forced[0]['button']), json.dumps(good[1]['button'])))
         self.assertEqual(got[0], [])
-        self.assertIn('must let the hero fail by itself', got[1][0])
+        # The whole revive route is excluded from automatic execution; it does
+        # not reintroduce a natural-failure prerequisite into this auto gate.
+        self.assertEqual(got[1], [])
+        self.assertTrue(got[4])
+        self.assertFalse(got[5])
         self.assertTrue(got[2] and got[3])
 
 

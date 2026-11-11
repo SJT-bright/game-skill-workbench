@@ -55,7 +55,7 @@ class Sidecars(unittest.TestCase):
         # v7.9 手机检查补全: every package with rewarded ads, entries from ad_entries / resume_play.ad / button_sweep
         ao = cat['ad_outcome']
         self.assertEqual((ao['applies'], ao['needs'], ao['needs_new'], ao['na_field'], ao['after']),
-                         (['rewarded_ads', 'adapter:ad_entries'], [], [], 'ad_outcome', ['button_sweep', 'resume_play']))
+                         (['automatic_rewarded_ads', 'adapter:ad_entries'], [], [], 'ad_outcome', ['button_sweep', 'resume_play']))
         self.assertNotIn('ad_outcome', rr.required_suites({'game.js': b'x'}, {}, cat))
         self.assertIn('ad_outcome', rr.required_suites({'game.js': b'x'}, {'ad_entries': []}, cat))
         self.assertIn('ad_outcome', rr.required_suites({'game.js': b'x', 'main.js': b'tt.createRewardedVideoAd({})'}, {}, cat))
@@ -137,22 +137,64 @@ class AfterPrior(Base):
 
 
 class AdRoles(Base):
-    """v7.9 手机问题源头约束: a new game lists its result-page x2 (role double) and revive (role revive) in ad_entries;
+    """v7.9 手机问题源头约束: a new game lists its result-page x2 (role double) in ad_entries;
     refused before any browser opens. Legacy games, ad_outcome {"n/a"} and ad_outcome.none.<role> pass."""
     ENTRY = {'id': 'x', 'button': 'Canvas/b', 'states': [{'name': 's'}]}
 
     def test_rule(self):
         self.assertEqual(len(rr.ad_roles_problems({})), 1)
         self.assertIn('role "double"', rr.ad_roles_problems({})[0])
-        self.assertIn('role "revive"', rr.ad_roles_problems({})[0])
+        self.assertNotIn('role "revive"', rr.ad_roles_problems({})[0])
         both = {'ad_entries': [dict(self.ENTRY, role='double'), dict(self.ENTRY, id='y', role='revive')]}
         self.assertEqual(rr.ad_roles_problems(both), [])
         one = {'ad_entries': [dict(self.ENTRY, role='revive')]}
         self.assertIn('ad_outcome.none.double', rr.ad_roles_problems(one)[0])
         self.assertEqual(rr.ad_roles_problems(dict(one, ad_outcome={'none': {'double': 'no level end: an endless runner'}})), [])
         self.assertEqual(rr.ad_roles_problems({'ad_outcome': {'n/a': 'no rewarded ad a player can start'}}), [])
-        self.assertIn('ad_outcome.none must map', rr.ad_roles_problems(dict(one, ad_outcome={'none': {'double': ' '}}))[0])
-        self.assertIn('ad_outcome.none must map', rr.ad_roles_problems(dict(one, ad_outcome={'none': {'shop': 'x'}}))[0])
+        self.assertIn('ad_outcome.none.double must explain', rr.ad_roles_problems(dict(one, ad_outcome={'none': {'double': ' '}}))[0])
+        self.assertIn('ad_outcome.none.double must explain', rr.ad_roles_problems(dict(one, ad_outcome={'none': {'shop': 'x'}}))[0])
+
+    def test_final_adapter_omits_only_the_revive_route(self):
+        button = 'Canvas/Defeat/BtnVideo'
+        revive = dict(self.ENTRY, id='revive_here', role='revive', button=button)
+        gift = dict(self.ENTRY, id='gift', role='home_gift', button='Canvas/Gift/BtnVideo')
+        raw = {
+            'ad_entries': [revive, gift],
+            'ad_outcome': {'entries': {'revive_here': {}, 'gift': {}, 'resume_play.ad': {}}},
+            'resume_play': {'ad': {'tap_js': 'return cc.find(' + repr(button) + ');'}, 'probe': {'tap': 'Canvas/Right'}},
+            'trial': {'taps': [button]},
+            'layout_states': [{'name': 'home'}, {'name': 'revive'}],
+            'popin': {'revive_js': 'throw Error("must not execute")'},
+        }
+        effective = rr.automatic_adapter(raw)
+        self.assertEqual(effective['ad_entries'], [gift])
+        self.assertEqual(effective['ad_outcome']['entries'], {'gift': {}})
+        self.assertEqual(effective['resume_play'], {'probe': {'tap': 'Canvas/Right'}})
+        self.assertEqual(effective['layout_states'], [{'name': 'home'}])
+        self.assertNotIn('trial', effective)
+        self.assertNotIn('revive_js', effective['popin'])
+        self.assertEqual(raw['ad_entries'], [revive, gift])
+        self.assertFalse(rr.manual_revive_request(dict(effective, request='watchHomeGift()')))
+        self.assertTrue(rr.manual_revive_request(dict(effective, request="run({placementKey: 'revive'})")))
+        self.assertTrue(rr.manual_revive_request(dict(effective, request_role='revive', request='openVideo()')))
+        self.assertFalse(rr.manual_revive_request(dict(effective, request_role='home_gift', request='openVideo()')))
+        self.assertFalse(rr.revive_target('Canvas/RevivePopup/FreeRetry'))
+        self.assertTrue(rr.revive_target('Canvas/RevivePopup/WatchAd'))
+
+    def test_revive_only_uses_manual_disposition_without_claiming_an_auto_result(self):
+        cat = rr.load_suites()
+        adapter = rr.automatic_adapter({'ad_entries': [dict(self.ENTRY, role='revive')],
+                                        'request': 'return runRewardedAd()'})
+        files = {'game.js': b'x', 'main.js': b'tt.createRewardedVideoAd({})'}
+        suites = rr.required_suites(files, adapter, cat)
+        self.assertNotIn('ad_outcome', suites)
+        self.assertNotIn('ad_entries', suites)
+        self.assertIn('resume_play', suites)
+        self.assertIsNone(rr.input_report(files, adapter, suites, cat, 'new'))
+        self.assertFalse(rr.manual_revive_request(adapter))
+        import ad_regression as ar
+        self.assertEqual(len(ar.default_cases(adapter)), 10)
+        self.assertEqual(ar.default_cases(dict(adapter, request_role="revive")), [])
 
     def test_refused_before_the_browser_for_a_new_game_only(self):
         (self.suites / 'fake.json').unlink()
@@ -199,7 +241,7 @@ class PhoneParts(unittest.TestCase):
             self.assertIn(s, rp)
         ao = (RT / 'suites' / 'ad_outcome.mjs').read_text(encoding='utf-8')
         for s in ("from: 'button_sweep'", "id: 'resume_play.ad'", "await adTap(page, en, 'cancel')", "await adTap(page, en, 'complete')",
-                  "if (POLICY === 'legacy') return { list: A.ad_outcome ? list : list.filter(e => e.role === 'revive')"):
+                  "if (POLICY === 'legacy') return { list: A.ad_outcome ? list : []"):
             self.assertIn(s, ao)
         sr = (RT / 'suites' / 'save_restart.mjs').read_text(encoding='utf-8')
         self.assertIn("const KINDS = ['level', 'buy', 'claim', 'other'];", sr)

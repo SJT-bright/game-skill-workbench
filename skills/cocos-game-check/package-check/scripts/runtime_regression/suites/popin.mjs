@@ -1,9 +1,9 @@
 // popin (v7.8, 总表 P2 补): obstacles may not appear, vanish or jump while the player can see them.
 // From the BreezyBalloon prototype 热气球/_skill反馈_障碍生成/popin_gate.mjs (2026-10-30); the 潜艇冲冲 node names it
 // hard-coded (submarineItem, LevelView, HomeView) are adapter fields now (adapter.popin, references/runtime-regression.md).
-// Per screen 390x844, 375x667, 768x1024, 1115x791 (CSS px, deviceScaleFactor 2, fresh save): home (adapter.home), start a
+// Per screen (rotated to the declared package orientation, deviceScaleFactor 2, fresh save): home (adapter.home), start a
 // run (popin.start real actions, else a real tap on adapter.play), wait for popin.game_node, make the player invincible
-// (popin.invincible_js), first touch, fly popin.fly_s (18 s), call the revive path (popin.revive_js), watch 4 s more.
+// (popin.invincible_js), first touch, watch normal gameplay for popin.fly_s (18 s).
 // Every drawn frame (EVENT_AFTER_DRAW), every node with a collider (cc.PhysicsCollider / cc.Collider) that draws something
 // (a render component on it or below it), except the player and its children, popin.ignore / popin.ignore_groups:
 //   appeared_on_screen  not shown (or opacity < 5 %) the frame before, shown (>= 25 %) inside the visible area now
@@ -21,7 +21,7 @@ const path = await import('node:path');
 const C = L.C, A = L.A, P = A.popin || {};
 const POLICY = C.policy === 'legacy' ? 'legacy' : 'new';
 export const SCREENS = [[390, 844], [375, 667], [768, 1024], [1115, 791]];
-const FLY_S = +P.fly_s || 18, AFTER_S = 4;
+const FLY_S = +P.fly_s || 18;
 const KINDS = ['appeared_on_screen', 'vanished_on_screen', 'jumped_on_screen'];
 
 const { WATCH_JS } = await import(new URL('popin_watch.mjs', globalThis.CFG.lib).href);
@@ -72,12 +72,6 @@ async function oneScreen(page, w, h, rep) {
     await page.cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: c.x, y: c.y - 24, button: 'left', buttons: 0, clickCount: 1 });
   }
   for (let t = 0; t < FLY_S; t += 3) await G.sleep(Math.min(3, FLY_S - t) * 1000);
-  row.flight = await page.evaluate(SNAP);
-  await page.evaluate(() => { if (window.__popin) window.__popin.phase = 'revive'; });
-  const rv = await L.adapterCall(page, P.revive_js).catch((e) => ({ adapterError: String(e) }));
-  if (rv && rv.adapterError) return fail('revive', 'popin.revive_js threw: ' + rv.adapterError);
-  row.revive = rv;
-  await G.sleep(AFTER_S * 1000);
   const s = await page.evaluate(SNAP);
   await page.evaluate(() => { const W = window.__popin, cc = window.cc || window.__tiktokKitCc; if (W && W.fn && cc) cc.director.off(cc.Director.EVENT_AFTER_DRAW, W.fn); }).catch(() => {});
   Object.assign(row, s || {});
@@ -98,10 +92,14 @@ async function oneScreen(page, w, h, rep) {
 
 await L.suite(async ({ out, page }) => {
   const rep = { suite: 'popin', policy: POLICY, adapter: P, screens: [], findings: [], warnings: [] };
-  for (const [w, h] of SCREENS) await oneScreen(page, w, h, rep);
+  const orientation = C.facts && C.facts.orientation;
+  for (const [w, h] of SCREENS) {
+    const swap = (orientation === 'portrait' && w > h) || (orientation === 'landscape' && h > w);
+    await oneScreen(page, swap ? h : w, swap ? w : h, rep);
+  }
   for (const m of rep.warnings) out.warn('popin: ' + m);
   const codes = ['setup', 'obstacles_seen'].concat(KINDS, ['invalid_run']);
-  const setupCodes = new Set(['home', 'start', 'game_node', 'invincible', 'revive', 'watch']);
+  const setupCodes = new Set(['home', 'start', 'game_node', 'invincible', 'watch']);
   for (const code of codes) {
     const fs2 = rep.findings.filter((f) => (code === 'setup' ? setupCodes.has(f.code) : f.code === code));
     if (code === 'invalid_run' && !fs2.length) continue;

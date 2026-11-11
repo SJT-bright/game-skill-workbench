@@ -71,7 +71,7 @@ class Base(unittest.TestCase):
 
     def run_fake(self, adapter, **kw):
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=self.browser):
-            return rr.run(self.package, self.adapter(adapter), suites_dir=self.suites, work=self.root / 'work', **kw)
+            return rr._run_uncached(self.package, self.adapter(adapter), suites_dir=self.suites, work=self.root / 'work', **kw)
 
 
 class Contract(Base):
@@ -153,14 +153,14 @@ class FailClosed(Base):
     def test_no_browser_refuses(self):
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('runtime_regression._which', return_value=None):
             with self.assertRaisesRegex(rr.RuntimeRefused, 'Ego CLI 不可用'):
-                rr.run(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
+                rr._run_uncached(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
 
     def test_nonofficial_browser_override_refuses_before_serving(self):
         with patch.dict(os.environ, {'EGO_BROWSER': str(self.root / 'desktop-browser')}), \
                 patch.object(rr, '_which', return_value=self.browser), \
                 patch.object(rr, '_free_port', side_effect=AssertionError('served')):
             with self.assertRaisesRegex(rr.RuntimeRefused, 'EGO_BROWSER'):
-                rr.run(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
+                rr._run_uncached(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
 
     def test_missing_needed_field_refuses(self):
         with self.assertRaisesRegex(rr.RuntimeRefused, r'fake needs adapter field\(s\) home'):
@@ -219,12 +219,13 @@ class FailClosed(Base):
         missing = next(row for row in summary['not_run'] if row['suite'] == 'fake2')
         self.assertEqual(missing['status'], 'not_run')
         self.assertIn('fatal', missing['reason'])
-        self.assertTrue(summary['proof_error'])
+        self.assertIn('EGO_HARD_STOP', summary['suites'][0]['fatal'])
 
     def test_cli_writes_out_and_exit_code(self):
         out = self.root / 'out.json'
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=self.browser), \
-                patch.object(rr, 'SUITES_DIR', self.suites):
+                patch.object(rr, 'SUITES_DIR', self.suites), \
+                patch.object(rr, 'run', side_effect=rr._run_uncached):
             code = rr.main(['run', '--package', str(self.package), '--adapter',
                             str(self.adapter({'home': 'return true', 'fake_mode': 'fail'})), '--out', str(out)])
         self.assertEqual(code, 1)
@@ -308,7 +309,7 @@ class Environment(Base):
         with self.probe(['Cocos2 native touch coordinates rejected']), patch.dict(os.environ, {'EGO_BROWSER': ''}), \
                 patch('runtime_regression._which', return_value=None):
             with self.assertRaises(rr.EnvironmentIncomplete) as ctx:
-                rr.run(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
+                rr._run_uncached(self.package, self.adapter({'home': 'return true'}), suites_dir=self.suites)
         self.assertIsInstance(ctx.exception, rr.RuntimeRefused)               # still a refusal for the writers
         self.assertTrue(str(ctx.exception).startswith('环境不完整：'))
 
@@ -322,7 +323,8 @@ class Environment(Base):
     def cli(self, package, adapter):
         out = self.root / 'cli.json'
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch.object(rr, '_which', return_value=self.browser), \
-                patch.object(rr, 'SUITES_DIR', self.suites):
+                patch.object(rr, 'SUITES_DIR', self.suites), \
+                patch.object(rr, 'run', side_effect=rr._run_uncached):
             code = rr.main(['run', '--package', str(package), '--adapter', str(self.adapter(adapter)), '--out', str(out)])
         return code, json.loads(out.read_text())
 

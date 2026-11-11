@@ -127,10 +127,17 @@ class WriterOrder(unittest.TestCase):
         def mutate(*args, **kwargs):
             (self.native / 'child.js').write_text('changed = true;')
             return {'passed': True}
+        # Reach the mutation guard with a synthetic writer fixture. Fresh CLI and
+        # writer-evidence validation have separate tests; neither is live evidence here.
         with patch('prepare_delivery.tempfile.gettempdir', return_value=str(self.root / 'other-temp')), \
-                patch('prepare_delivery.audit_final_startup', side_effect=mutate):
+                patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': []}), \
+                patch('prepare_delivery.check', return_value={'unit_test': 'writer evidence boundary'}) as checked, \
+                patch('prepare_delivery.audit_final_startup', side_effect=mutate) as startup:
             with self.assertRaisesRegex(ValueError, 'Native changed'):
                 prepare(archive, self.native, APP, record, project=self.project, resource_manifest=self.manifest)
+        checked.assert_called_once()
+        startup.assert_called_once()
+        self.assertTrue(startup.call_args.kwargs['reuse_only'])
         self.assertFalse(record.exists())
 
 

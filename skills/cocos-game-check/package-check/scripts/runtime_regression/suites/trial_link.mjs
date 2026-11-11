@@ -151,7 +151,7 @@ await L.suite(async ({ out, page }) => {
   let plans = null;
   if (T.taps) plans = [T.taps];
   else if (T.open || T.ad_button) plans = [(T.open || []).filter((s) => s.tap).map((s) => s.tap).concat(T.ad_button ? [T.ad_button] : [])];
-  else plans = (await adCandidates(page)).slice(0, 3).map((c) => [c.path]);
+  else plans = (await adCandidates(page)).filter(c => !R.isManualRevive(c.path, c.sig, A)).slice(0, 3).map((c) => [c.path]);
   if (!plans.length) { rep.notRun = 'no ad entry known (adapter trial.taps) and no home button reads like one'; out.warn('trial_link: not run: ' + rep.notRun); out.add('ran', true, 'not run: ' + rep.notRun); return finish(); }
   const initial = await page.evaluate(SEEN);
   const simulated = initial.simulation;

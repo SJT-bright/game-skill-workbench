@@ -51,6 +51,10 @@ def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_onl
             tool_sha256=ar.tool_digest(),adapter_sha256=hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
             seconds=round(time.monotonic()-started,3),incremental=proofs,
             executed_units=sum(not p['reused'] for p in proofs.values()),reused_units=sum(p['reused'] for p in proofs.values()))
+        if not required:
+            summary.update(applicable=False, disposition='manual_revive_only',
+                manual_playtest_required=True,
+                not_run=[{'role':'revive','reason':'The configured request exclusively exercises rewarded revive; cover it in the first manual playtest after art, not final automation.'}])
         if not ok:
             error=ar.RegressionRefused('rewarded-ad regression failed: '+' | '.join(problems));error.summary=summary;raise error
         return summary

@@ -8,12 +8,13 @@ only work that could not change them is skipped:
 2. S8 (D7): build_checked_zip compares the finalize record with the bytes before the startup runtime check and the
    regressions (until v7.8 only after check() had run them all).
 3. S1: an official writer's receipt keeps a record of the two regressions it passed; prepare_delivery's check() reuses
-   it for the same bytes, adapter and check tools and runs them again otherwise.
+   it for the same bytes, adapter and check tools; mismatch refuses delivery without a live fallback.
 4. S7: a browser step with no output line and no file change for the stall window is stopped and refused instead of
    waiting for the suite limit (startup / ad_entries 1500 s); lib.mjs and gates.mjs touch the progress file after
    every page round trip, so a slow suite is not mistaken for a stuck one.
 Run: PYTHONDONTWRITEBYTECODE=1 python3 -B test_check_speedups.py
 """
+import ast
 import hashlib
 import json
 import os
@@ -92,9 +93,10 @@ class AdapterPreflight(Tmp):
 
     def test_every_missing_field_is_listed_at_once_for_a_new_game(self):
         text = ' | '.join(self.problems(PARTIAL, 'new'))
-        for item in ('runtime suite startup needs adapter field(s) play', 'frame_rate/adapter: adapter has no "frame_rate"',
-                     'popin/adapter: adapter has no "popin"'):
+        for item in ('runtime suite startup needs adapter field(s) play', 'popin/adapter: adapter has no "popin"',
+                     'resume_play/adapter', 'save_restart/adapter'):
             self.assertIn(item, text, item)
+        self.assertNotIn('frame_rate/adapter', text)  # explicit diagnostic, not a default gate
 
     def test_a_legacy_game_only_keeps_the_hard_needs(self):
         self.assertEqual(self.problems(PARTIAL, 'legacy'), ['runtime suite startup needs adapter field(s) play'])
@@ -106,14 +108,16 @@ class AdapterPreflight(Tmp):
         with self.assertRaises(runtime_regression.RuntimeRefused) as caught:
             runtime_regression.run(self.package, self.adapter(PARTIAL), policy='new', work=self.root / 'work')
         text = str(caught.exception)
-        for item in ('before the browser', 'startup needs adapter field(s) play', 'popin/adapter', 'frame_rate/adapter'):
+        for item in ('before the browser', 'startup needs adapter field(s) play', 'popin/adapter', 'resume_play/adapter', 'save_restart/adapter'):
             self.assertIn(item, text, item)
+        self.assertNotIn('frame_rate/adapter', text)
         self.assertTrue(caught.exception.summary['stopped_before_browser'])
         self.assertFalse(self.mark.exists(), 'a browser was started')
 
     def test_writer_regressions_and_check_stop_there_too(self):
         ad = mock.Mock(return_value={'id': 'rewarded_ad_regression', 'passed': True, 'warnings': []})
-        with mock.patch.object(check_package, 'rewarded_ad_gate', ad):
+        with mock.patch.object(check_package, 'rewarded_ad_gate', ad), \
+                mock.patch.object(check_package, 'verify_regression_scope', return_value={'unit_test': 'synthetic authorization'}):
             out = check_package.writer_regressions(GAME, str(self.package), str(self.adapter(PARTIAL)), policy='new')
             self.assertTrue(out['blocked'])
             self.assertIn('startup needs adapter field(s) play', out['problems'][0])
@@ -144,7 +148,10 @@ def fake_static(files, archive, entry='unofficial', receipt=None, policy='new', 
     stack = mock.patch.multiple(check_package, packed_assets=mock.Mock(return_value={'passed': True, 'errors': []}),
                                 tools_in_use=mock.Mock(return_value={'status': 'release'}))
     patches = [mock.patch.object(check_package.verifier, 'verify', verify), mock.patch.dict(sys.modules, {'package_gates': gates}),
-               stack, mock.patch('make_tiktok_zip.pre_home', return_value=None)]
+               stack, mock.patch('make_tiktok_zip.pre_home', return_value=None),
+               # Static orchestration fixtures cannot authorize a real project plan.
+               mock.patch.object(check_package, 'verify_regression_scope',
+                                 return_value={'unit_test': 'synthetic static fixture authorization'})]
 
     class All:
         def __enter__(self):
@@ -194,6 +201,17 @@ def passed_summaries(files, adapter_path):
           runtime_regression.required_suites(files, str(adapter_path), catalog), 'policy': 'new', 'board': 'localize',
           'suites': [], 'warnings': [], 'startup_measured': None, 'tool_sha256': runtime_regression.tool_digest(catalog),
           'adapter_sha256': adapter_sha, 'seconds': 600.0}
+    # Complete synthetic evidence tests receipt coverage/identity without claiming
+    # a real browser execution. Every required suite and independently checked unit
+    # must be represented; an empty suites array is no longer a passing fixture.
+    from runtime_incremental import unit_ids
+    data = runtime_regression.load_adapter(adapter_path, catalog)
+    for name in rt['required']:
+        prechecked = runtime_regression.precheck(name, catalog[name], data, '2.x', 'new') is not None
+        units = unit_ids(name, catalog[name], data, prechecked)
+        rt['suites'].append({'suite': name, 'passed': True,
+            'cases': [{'id': unit, 'passed': True} for unit in units],
+            'incremental': {'runtime.' + name + '/' + unit: {'unit_test': 'synthetic receipt unit'} for unit in units}})
     return ad, rt
 
 
@@ -217,7 +235,7 @@ class WriterReceiptReuse(Tmp):
         self.assertTrue(out['reused'], out)
         self.assertEqual(out['runtime_regression']['reused_from'], str(receipt))
 
-    def test_any_difference_runs_them_again(self):
+    def test_any_difference_refuses_receipt_reuse(self):
         adapter = self.adapter(COMPLETE)
         record = check_package.regression_record(*passed_summaries(GAME, adapter))
         changed = self.adapter(dict(COMPLETE, home='return 1 === 1'), 'changed.json')
@@ -250,26 +268,60 @@ class WriterReceiptReuse(Tmp):
         rt.assert_not_called()
         self.assertTrue(result['regression_reuse']['reused'])
         self.assertEqual(result['runtime_regression']['reused_from'], str(receipt))
-        ok = {'id': 'x', 'passed': True, 'warnings': []}
-        ad, rt = mock.Mock(return_value=ok), mock.Mock(return_value=ok)
+        ad_summary, rt_summary = passed_summaries(GAME, adapter)
+        ad, rt = mock.Mock(return_value=ad_summary), mock.Mock(return_value=rt_summary)
         with fake_static(GAME, archive, entry='unofficial', receipt=receipt), \
                 mock.patch.object(check_package, 'rewarded_ad_gate', ad), mock.patch.object(check_package, 'runtime_gate', rt):
-            result = check_package.check(archive, ad_regression=str(adapter), reuse_writer_regressions=True)
-        ad.assert_called_once()
-        rt.assert_called_once()
-        self.assertFalse(result['regression_reuse']['reused'])
+            with self.assertRaisesRegex(ValueError, 'delivery can only verify matching writer evidence'):
+                check_package.check(archive, ad_regression=str(adapter), reuse_writer_regressions=True)
+        # Delivery cannot turn a missing official receipt into a fresh browser run.
+        ad.assert_not_called()
+        rt.assert_not_called()
         with fake_static(GAME, archive, entry='official', receipt=receipt), \
                 mock.patch.object(check_package, 'rewarded_ad_gate', ad), mock.patch.object(check_package, 'runtime_gate', rt):
             result = check_package.check(archive, ad_regression=str(adapter))         # writers: never reuse
-        self.assertEqual(ad.call_count, 2)
+        ad.assert_called_once()
+        rt.assert_called_once()
         self.assertNotIn('regression_reuse', result)
 
     def test_writers_keep_the_record_and_delivery_asks_for_it(self):
         src = (HERE / 'build_checked_zip.py').read_text(encoding='utf-8')
         self.assertIn("'regressions': package_checks.regression_record(", src)
-        mtz = (SHARED / 'make_tiktok_zip.py').read_text(encoding='utf-8')
-        self.assertIn("'regressions': regression_receipt(regressions)", mtz)
-        self.assertIn('reuse_writer_regressions=True', (HERE / 'prepare_delivery.py').read_text(encoding='utf-8'))
+        import make_tiktok_zip
+        regressions = {'rewarded_ad_regression': object(), 'runtime_regression': object()}
+        sentinel = {'unit_test': 'verified regression record'}
+        with mock.patch.object(check_package, 'regression_record', return_value=sentinel) as record:
+            self.assertIs(make_tiktok_zip.regression_receipt(regressions), sentinel)
+        record.assert_called_once_with(regressions['rewarded_ad_regression'], regressions['runtime_regression'])
+        with mock.patch.object(check_package, 'regression_record', return_value=None):
+            self.assertIsNone(make_tiktok_zip.regression_receipt(regressions))
+        # The writer now checks the result before passing it to make_receipt.
+        # Inspect the binding/order instead of requiring an obsolete inline call.
+        tree = ast.parse((SHARED / 'make_tiktok_zip.py').read_text(encoding='utf-8'))
+        main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+        assignment = next(n for n in ast.walk(main) if isinstance(n, ast.Assign)
+                          and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Name)
+                          and n.value.func.id == 'regression_receipt')
+        target = assignment.targets[0].id
+        guards = [n for n in ast.walk(main) if isinstance(n, ast.If)
+                  and isinstance(n.test, ast.Compare) and isinstance(n.test.left, ast.Name)
+                  and n.test.left.id == target and isinstance(n.test.ops[0], ast.Is)
+                  and isinstance(n.test.comparators[0], ast.Constant) and n.test.comparators[0].value is None
+                  and any(isinstance(x, ast.Raise) for x in ast.walk(n))]
+        self.assertTrue(guards, 'missing evidence must still refuse publication')
+        receipts = [n for n in ast.walk(main) if isinstance(n, ast.Call)
+                    and isinstance(n.func, ast.Attribute) and n.func.attr == 'make_receipt']
+        self.assertEqual(len(receipts), 1)
+        fields = [(k, v) for n in ast.walk(receipts[0]) if isinstance(n, ast.Dict)
+                  for k, v in zip(n.keys, n.values)]
+        self.assertTrue(any(isinstance(k, ast.Constant) and k.value == 'regressions'
+                            and isinstance(v, ast.Name) and v.id == target for k, v in fields))
+        self.assertLess(assignment.lineno, guards[0].lineno)
+        self.assertLess(guards[0].lineno, receipts[0].lineno)
+        delivery = ast.parse((HERE / 'prepare_delivery.py').read_text(encoding='utf-8'))
+        self.assertTrue(any(isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == 'check'
+                            and any(k.arg == 'reuse_writer_regressions' and isinstance(k.value, ast.Constant)
+                                    and k.value.value is True for k in n.keywords) for n in ast.walk(delivery)))
 
 
 # ---------------------------------------------------------------- 5. 总表 19 ④: static refusal, no browser suites
@@ -284,8 +336,12 @@ class StaticRefusalSkipsBrowser(Tmp):
     def run_check(self, blocks, ad, rt):
         adapter = self.adapter(COMPLETE)
         archive = write(self.root / 'Game.zip', b'zip bytes')
+        # This class targets static-refusal scheduling, not completeness of its
+        # minimal synthetic regression summaries (covered by WriterReceiptReuse).
         with fake_static(GAME, archive, blocks=blocks), mock.patch.object(check_package, 'rewarded_ad_gate', ad), \
-                mock.patch.object(check_package, 'runtime_gate', rt):
+                mock.patch.object(check_package, 'runtime_gate', rt), \
+                mock.patch.object(check_package, 'regression_record', return_value={'unit_test': 'scheduling only'}), \
+                mock.patch.object(check_package, 'regression_coverage_problem', return_value=None):
             return check_package.check(archive, ad_regression=str(adapter))
 
     def test_static_reasons_listed_and_browser_suites_skipped(self):

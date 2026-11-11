@@ -203,7 +203,7 @@ class PopinWiring(Base):
 
     def test_complete_popin_runs_the_suite(self):
         self.pp()
-        popin = {'player': 'hero', 'invincible_js': 'return true', 'revive_js': 'return true', 'game_node': 'Level'}
+        popin = {'player': 'hero', 'invincible_js': 'return true', 'game_node': 'Level'}
         summary = self.run_fake({'home': 'return true', 'popin': popin})
         self.assertTrue(summary['passed'])
         self.assertIn('"game_node": "Level"', (self.root / 'work' / 'pp' / 'entry.mjs').read_text())

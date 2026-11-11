@@ -105,7 +105,7 @@ class Compare(unittest.TestCase):
 
 
 class Wiring(Base):
-    """The runner: frame_rate is required for every TikTok package; a new game needs adapter.frame_rate, a legacy game
+    """The runner: frame_rate is an explicitly selected diagnostic; a new game needs adapter.frame_rate to run it, a legacy game
     warns; {"n/a": reason} and Cocos 3.x are decided without the browser."""
 
     def fr(self):
@@ -118,22 +118,26 @@ class Wiring(Base):
         catalog = rr.load_suites()
         meta = catalog['frame_rate']
         self.assertEqual((meta['applies'], meta['needs'], meta['needs_new'], meta['na_field'], meta['engines']),
-                         (['tiktok'], [], ['frame_rate'], 'frame_rate', ['2.x', '3.x']))
+                         (['explicit'], [], ['frame_rate'], 'frame_rate', ['2.x', '3.x']))
         self.assertIn('3.x', meta['uncovered'])
-        self.assertIn('frame_rate', rr.required_suites({'game.js': b'x'}, {}, catalog))
+        self.assertNotIn('frame_rate', rr.required_suites({'game.js': b'x'}, {}, catalog))
+        self.assertNotIn('frame_rate', rr.required_suites({'game.js': b'x'}, {'frame_rate': {'track': 'return n', 'drive_js': 'go()'}}, catalog))
         self.assertIn('frame_rate', rr.adapter_keys(catalog))
         import check_package
         seen = {}
         with patch.object(rr, 'run', side_effect=lambda folder, adapter, names, **k: seen.update(names=names) or {}):
             check_package.runtime_gate({'game.js': b'x'}, self.package, self.adapter({'home': 'return true'}), policy='new')
-        self.assertIn('frame_rate', seen['names'])                    # the writers run it (check_package.runtime_gate)
+        self.assertNotIn('frame_rate', seen['names'])
 
     def test_na_passes_without_the_browser(self):
         self.fr()
         adapter = {'home': 'return true', 'frame_rate': {'n/a': 'match-3 board, nothing moves on its own'}}
-        with patch.object(rr, 'find_browser', side_effect=AssertionError('n/a must not need a browser')):
-            summary = self.run_fake(adapter)
-            reused = self.run_fake(adapter)
+        # Isolate ledger reuse from the separately tested public plan boundary.
+        import regression_scope_gate as scope
+        with patch.object(rr, 'find_browser', side_effect=AssertionError('n/a must not need a browser')), \
+                patch.object(scope, 'authorize_batch', return_value='unit-authorized'):
+            summary = rr.run(self.package, self.adapter(adapter), suites_dir=self.suites, work=self.root / 'work')
+            reused = rr.run(self.package, self.adapter(adapter), suites_dir=self.suites, work=self.root / 'work')
         row = summary['suites'][0]
         self.assertTrue(summary['passed'])
         self.assertEqual((row['cases'][0]['id'], row['browser']), ('n_a', False))

@@ -39,14 +39,17 @@ class RuntimeHalfRun(Base):
         super().tearDown()
 
     def cli(self, mod, suites):
+        # Fake-suite CLI coverage tests use the raw runner; real scope authorization
+        # has separate entrypoint tests and needs actual project/plan inputs.
         argv = ['run', '--package', str(self.package), '--adapter', str(self.adapter({'home': 'return true'})), '--work', str(self.root / 'w')]
         if suites:
             argv += ['--suites', suites]
         err = io.StringIO()
         with patch.dict(os.environ, {'EGO_BROWSER': '', 'COCOS_SKILL_FEEDBACK_DIR': self.feedback.name}), \
                 patch.object(mod, '_which', return_value=self.browser), \
-                patch.object(mod, 'SUITES_DIR', self.suites), contextlib.redirect_stdout(io.StringIO()) as out, \
-                contextlib.redirect_stderr(err):
+                patch.object(mod, 'SUITES_DIR', self.suites), \
+                (patch.object(mod, 'run', side_effect=mod._run_uncached) if mod is rr else contextlib.nullcontext()), \
+                contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(err):
             code = mod.main(argv)
         return code, json.loads(out.getvalue().splitlines()[0]), err.getvalue()
 

@@ -91,9 +91,12 @@ class PagesRegistry(unittest.TestCase):
         rt = rr.load_adapter(path)
         self.assertEqual(rt['resume_play']['pause_button'], 'Canvas/Level/HUD/btn_pause')
         self.assertEqual([e['id'] for e in rt['ad_entries']], ['result_x2'])
-        self.assertEqual(rt['ad_outcome']['none']['revive'][:19], 'capability record: ')
+        # Revival is manual-playtest scope, so no automatic ad_outcome absence
+        # requirement is synthesized. Its capability provenance still survives.
+        self.assertNotIn('revive', rt.get('ad_outcome', {}).get('none', {}))
         caps = json.loads((proj / 'docs' / 'game_capabilities.json').read_text(encoding='utf-8'))
         self.assertEqual(caps['pause_button'], 'Canvas/Level/HUD/btn_pause')
+        self.assertEqual(caps['no_ad_roles']['revive'], PAGES['no_ad_roles']['revive'])
         flows = json.loads((proj / 'docs' / 'logic' / 'flows.json').read_text(encoding='utf-8'))
         self.assertEqual(len(flows['flows']), 20)       # F01-F20 template for a new file
         self.assertIn('P:result:close', [f['id'] for f in flows['page_flows']])
@@ -156,7 +159,9 @@ class EmptyInputs(unittest.TestCase):
 
     def run_rr(self, adapter, suites, policy='new'):
         adapter = dict({'home': 'return true;', 'play': 'Canvas/Home/btn_play'}, **adapter)   # what startup needs
-        return rr.run(package(), adapter_file(adapter), suites, policy=policy, capabilities='')
+        # These fake suites test input validation, not public plan authorization.
+        # The latter remains real in WriterInputs and scope-entrypoint tests.
+        return rr._run_uncached(package(), adapter_file(adapter), suites, policy=policy, capabilities='')
 
     def assert_not_run(self, adapter, suites, word):
         with self.assertRaises(rr.RuntimeRefused) as ctx:
@@ -224,7 +229,9 @@ class WriterInputs(unittest.TestCase):
         import check_package
         good = {'status': 'passed', 'passed': True, 'tool_sha256': 'a', 'adapter_sha256': 'b'}
         self.assertIsNotNone(check_package.regression_record(good, dict(good, required=[])))
-        self.assertIsNone(check_package.regression_record(dict(good, status='ok'), good))
+        for status in ('ok', 'scope_required'):
+            with self.subTest(status=status):
+                self.assertIsNone(check_package.regression_record(dict(good, status=status), good))
 
 
 class StatusSchema(unittest.TestCase):
@@ -244,6 +251,9 @@ class StatusSchema(unittest.TestCase):
         self.assertIn(check_guard.not_run('t', 'r')['status'], check_guard.status_values())
         self.assertIn('not_run', check_guard.status_values())
         self.assertNotIn('not_run', check_guard.status_passing())
+        self.assertEqual(check_guard.status_values('execution_scope'), ('scope_required',))
+        self.assertNotIn('scope_required', check_guard.status_values())
+        self.assertEqual(check_guard.status_passing('execution_scope'), ())
 
     def test_every_check_package_status_is_listed(self):
         """R4H 批 (Round4 #21): every status word check_package.py writes is in check-status.json (it used to list only

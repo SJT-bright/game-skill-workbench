@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T17:38:36.047Z",
-  "treeHash": "e4964ffdf4647cfb160d14d22d88f71d47862c6e4b42c96ad1f8542ead16f3a8",
+  "createdAt": "2026-11-11T20:39:12.192Z",
+  "treeHash": "783a06850e1de9cf6af7940d43cd7bfb27c2a5ef866c7ef7746a12712b3d746d",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,13 +245,13 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "d096a4a8222669e15340220de76041a46c214b3fa783351191dce63c159428d1",
+      "treeHash": "69d1ad52f1586b531ea59c3786332855997f268f3a286942244498fd44f1c24f",
       "fileCount": 195,
-      "bytes": 2057363,
+      "bytes": 2058003,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "c15c5e0312576c6da0f158ebae0bb49995555acee5b32304ce53ae85122f4021",
+          "hash": "7a7d0b09fcb3e4a377fa7a24e96f18e38a0974cf55ed1e430a09d33072df7b9b",
           "size": 59969,
           "executable": false
         },
@@ -383,8 +383,8 @@
         },
         {
           "path": "package/README.md",
-          "hash": "845f5bd47ccdf376ccfd767d2181ead4c9df88dd8038e7e516f1c1ee5f3cdadb",
-          "size": 6210,
+          "hash": "ba70a83595114ae4062d178a0141af1b88ac418f8bb86abaa53ab91549b2e621",
+          "size": 6524,
           "executable": false
         },
         {
@@ -425,8 +425,8 @@
         },
         {
           "path": "package-check/README.md",
-          "hash": "8b0d6bbcaceb17a256ef67fe547ce280177c156583c7ad5d0814d2e483abeb4b",
-          "size": 4381,
+          "hash": "56a958fba145356659a9de21de913794529d6a19b803d7cfd4ec0e17f06056b0",
+          "size": 4695,
           "executable": false
         },
         {
@@ -437,8 +437,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "60c00bd73dea595163df51637ba9d3b719f6a9d0dea82a892d17926f250216a7",
-          "size": 22065,
+          "hash": "a0d2cb782d44ce06a48d6af4663d23f781856b594ccb5bc1c14c677e0a4a3989",
+          "size": 22067,
           "executable": false
         },
         {
@@ -581,8 +581,8 @@
         },
         {
           "path": "package-check/scripts/build_checked_zip.py",
-          "hash": "d1a23879e0ef650ce2c0a4d0b6d0bccb268f8823d062622b536fafc647dc56d5",
-          "size": 15814,
+          "hash": "c7e993b3b509a103f75a9d83ae7bb4bc68a369dcf9d6c1edbbfc2c1db590b54d",
+          "size": 15747,
           "executable": false
         },
         {
@@ -599,8 +599,8 @@
         },
         {
           "path": "package-check/scripts/check_package.py",
-          "hash": "6ab5c09b8ca0e81353b6c211631e7a03c862400bdadb68b69378cac7542aa020",
-          "size": 48128,
+          "hash": "8767121c8894bc8a2df1b8addf9e3cdfc37639bc4fd58f2bca48aca4815b9c6b",
+          "size": 48324,
           "executable": false
         },
         {
@@ -647,8 +647,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "9f4f32b15ca0c064d59f605a4ce0c27b6574c21364dcb4fbf67831e8783b9201",
-          "size": 23633,
+          "hash": "88626d1128157d244d510bc472ad25885f08341e8ecbb3c3d7a971904ef17886",
+          "size": 23514,
           "executable": false
         },
         {

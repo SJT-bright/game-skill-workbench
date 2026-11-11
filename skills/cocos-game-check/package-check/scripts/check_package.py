@@ -26,6 +26,7 @@ import check_guard  # J1 批 / 总表 P19: one not_run shape and the status list
 SHARED = Path(__file__).resolve().parents[3] / 'remake-core' / 'scripts'
 sys.path.insert(0, str(SHARED))
 import verify_native_zip as verifier
+from delivery_continuation import repair_context
 from audit_packed_assets import audit as packed_assets
 
 
@@ -743,6 +744,8 @@ def main():
             else:
                 refused = UNOFFICIAL_CLI % result.get('entry_reason')
                 result.update(status='unofficial_not_deliverable', verdict=READ_ONLY_VERDICT, refused=refused)
+        if refused or result.get('passed') is False:
+            result.update(repair_context('package_check'))
         # v7.8 (总表 B32 d): changed tools get a feedback draft for the Skill session (new file in ！Skill更新/).
         draft = feedback_draft(result.get('tool_identity'), args.input.stem)
         if draft:
@@ -757,7 +760,7 @@ def main():
         print('结论: %s' % result['verdict'], file=sys.stderr)
     except (ValueError, OSError, RuntimeError, zipfile.BadZipFile) as error:
         identity = tools_in_use()       # a refusal made with changed tools is reported the same way
-        out = {'status': 'refuse', 'error': str(error)}
+        out = {'status': 'refuse', 'error': str(error), **repair_context('package_check')}
         if identity.get('status') == 'modified':
             out.update(modified_tools=identity['summary'], tool_feedback_draft=feedback_draft(identity, args.input.stem))
         print(json.dumps(out, ensure_ascii=False))

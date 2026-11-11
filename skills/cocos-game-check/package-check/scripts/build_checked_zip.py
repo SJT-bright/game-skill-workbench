@@ -189,6 +189,9 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
             receipt_temp.unlink(missing_ok=True)
 
 
+from delivery_continuation import failure
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--native', required=True, type=Path)
@@ -227,8 +230,7 @@ def main():
                                      '（反馈草稿：%s）' % result['tool_feedback_draft'] if result.get('tool_feedback_draft') else ''))
         return 0
     except (ValueError, OSError, RuntimeError) as error:
-        print(json.dumps({'status':'refuse', 'error':str(error), 'task_terminal':False,
-                          'next_action':'repair_exact_gap_then_resume_writer'}, ensure_ascii=False))
+        print(json.dumps(failure(error, stage='writer'), ensure_ascii=False))
         return 1
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed before any package browser regression. Use real ledger actions."""
+"""Authorize scoped regressions and return recoverable gaps to the repair workflow."""
 import argparse
 from contextvars import ContextVar
 import hashlib
@@ -22,8 +22,16 @@ ADAPTER_ENV = 'TIKTOK_AD_REGRESSION_ADAPTER'
 _active_plan = ContextVar('active_regression_scope', default=None)
 
 
+class ScopeRepairRequired(ledger.NeedsScope):
+    """The attempted operation needs repair while the authorized task continues."""
+
+    def __init__(self, message):
+        self.reason = message
+        super().__init__('scope_required: ' + message + '；继续修复此缺口，再回原节点续跑')
+
+
 def fail(message):
-    raise ledger.NeedsScope('scope_required: ' + message)
+    raise ScopeRepairRequired(message)
 
 
 def sha(data):
@@ -53,6 +61,10 @@ def adapter_file(adapter):
 
 def scope_digest(project):
     path = scope_path(project)
+    inheritance = project / 'docs/checks/runtime-unit-inheritance.json'
+    if inheritance.is_file():
+        return sha({'dependencies': digest(path) if path.is_file() else None,
+                    'unit_inheritance': digest(inheritance)})
     return digest(path) if path.is_file() else None
 
 
@@ -252,7 +264,10 @@ def _check_impact(project, groups, proposed, mode, baseline, files):
                 continue  # Explicitly proposed new case with a declared dependency.
             before = ledger.select_inputs(passed[0].get('roots', {}), row['scope'])
             current = row['binding']['inputs']
-            if before == current and passed[0]['binding']['conditions'] == row['binding']['conditions']:
+            recovery = row.get('evidence_recheck')
+            recollect = (recovery and recovery.get('prior_key') == ledger.sha(passed[0]['binding'])
+                         and not store._evidence_valid(passed[0]))
+            if before == current and passed[0]['binding']['conditions'] == row['binding']['conditions'] and not recollect:
                 fail(cid + ' 的实际输入未变。先核对旧证据或判定器变化，不能以工具版本解释重跑')
             if _only_bundle_changed(before, current):
                 fail(cid + ' 只匹配到合并脚本字节变化，先核对受影响的真实模块')
@@ -394,9 +409,61 @@ def directory_files(native):
             for p in native.rglob('*') if p.is_file()}
 
 
+def repair_report(project, files, adapter, *, board, policy, prior, mode, proposed, authorization=None):
+    """Collect actionable gaps offline. Only a fully validated plan can resume execution."""
+    project = Path(project).resolve()
+    issues = []
+    preserved = []
+    try:
+        groups = _observe(project, files, adapter_file(adapter), board, policy)
+    except (ValueError, OSError, zipfile.BadZipFile) as error:
+        groups = {}
+        issues.append({'id': 'inspection', 'kind': 'input_repair', 'reason': str(error),
+                       'remedy': '修复具体路径、依赖声明或适配器格式，再重新读取实际计划。'})
+    for rows in groups.values():
+        for row in rows:
+            cid = row['check_id']
+            if row['action'] == 'reuse':
+                preserved.append(cid)
+                continue
+            if row['action'] != 'run':
+                remedy = {
+                    'evidence_missing': '从原证据目录、交接记录或备份恢复并验证原始字节；无法恢复时只为该独立项补验。',
+                    'needs_scope': '读取实际消费者和调用关系，补齐依赖与新增删除归属，再重新规划。',
+                    'blocked_failed': '核对失败原始输出，修复产品、操作路径或已确认的运行环境，再只重试该项。',
+                }.get(row['action'], '读取此项原始结果并修复具体缺口，再重新规划。')
+                issues.append({'id': cid, 'kind': row['action'], 'reason': row['why'], 'remedy': remedy})
+            if mode == 'scoped':
+                try:
+                    _specific_run(cid, row)
+                except ledger.NeedsScope as error:
+                    issues.append({'id': cid, 'kind': 'dependency_or_execution_unit', 'reason': str(error),
+                                   'remedy': '补准实际依赖。包含多个功能的执行器拆成可独立核验的单元，按原报告恢复未受影响项。'})
+    plan = None
+    try:
+        plan = create_plan(project, files, adapter, board=board, policy=policy, prior=prior,
+                           mode=mode, proposed=proposed, authorization=authorization)
+    except (ValueError, OSError, zipfile.BadZipFile) as error:
+        issues.append({'id': 'plan', 'kind': 'plan_repair', 'reason': str(error),
+                       'remedy': '修复所列计划、基线或归属问题，保留原执行证据，再调用 repair 生成核准计划。'})
+    return {
+        'schema': 'cocos-regression-repair.v1',
+        'status': 'plan_ready' if plan is not None else 'repair_required',
+        'task_terminal': False, 'browser_launches': 0,
+        'project': str(project), 'native_tree': ledger.sha(package_manifest(files)),
+        'scope_sha256': scope_digest(project), 'preserved': sorted(preserved),
+        'issues': issues if plan is None else [],
+        'continuation': {
+            'action': 'resume_authorized_step' if plan is not None else 'repair_and_replan',
+            'owner': 'current_agent',
+            'instruction': '在现有授权内持续修复并续跑。仅有真实外部文件、权限、决定缺失或用户明确暂停时才交回用户。',
+        },
+    }, plan
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('inspect', 'plan'))
+    parser.add_argument('command', choices=('inspect', 'plan', 'repair'))
     parser.add_argument('--project', required=True, type=Path)
     parser.add_argument('--native', required=True, type=Path, help='Already prepared actual Native files')
     parser.add_argument('--adapter', required=True, type=Path)
@@ -407,11 +474,13 @@ def main():
     parser.add_argument('--proposed', type=Path, help='JSON object of case IDs to reasons')
     parser.add_argument('--authorization', help='Explicit current user instruction to run the full matrix')
     parser.add_argument('--out', type=Path)
+    parser.add_argument('--plan-out', type=Path, help='For repair, write a validated executable plan if ready')
     args = parser.parse_args()
     try:
         if args.command == 'plan' and not args.out:
             fail('plan 需要 --out；inspect 可以只打印')
-        if args.out and args.out.resolve().is_relative_to(args.native.resolve()):
+        if any(path and path.resolve().is_relative_to(args.native.resolve())
+               for path in (args.out, args.plan_out)):
             fail('计划必须写在 Native 目录之外')
         files = directory_files(args.native)
         if 'game.js' not in files:
@@ -432,6 +501,27 @@ def main():
                 print(report)
             return
         proposed = json.loads(args.proposed.read_text()) if args.proposed else {}
+        if args.command == 'repair':
+            if not args.out or not args.plan_out:
+                fail('repair 需要 --out 和 --plan-out，分别保存修复记录与核准计划')
+            if args.out.resolve() == args.plan_out.resolve():
+                fail('修复记录与执行计划需要不同文件')
+            if args.out.exists() or args.plan_out.exists():
+                fail('保留既有修复记录和计划，请为本次修复使用新路径')
+            report, plan = repair_report(args.project, files, args.adapter, board=args.board,
+                                         policy=args.policy, prior=args.prior, mode=args.mode,
+                                         proposed=proposed, authorization=args.authorization)
+            if plan is not None:
+                with args.plan_out.open('x', encoding='utf-8') as stream:
+                    json.dump(plan, stream, ensure_ascii=False, indent=2)
+                    stream.write('\n')
+                report['plan_path'] = str(args.plan_out.resolve())
+            args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+            print(json.dumps({'status': report['status'], 'task_terminal': False,
+                              'report': str(args.out.resolve()), 'browser_launches': 0,
+                              'issues': len(report['issues']), 'preserved': len(report['preserved']),
+                              'next_action': report['continuation']['action']}, ensure_ascii=False))
+            return
         plan = create_plan(args.project, files, args.adapter, board=args.board, policy=args.policy,
                            prior=args.prior, mode=args.mode, proposed=proposed, authorization=args.authorization)
         with args.out.open('x', encoding='utf-8') as stream:
@@ -439,8 +529,14 @@ def main():
             stream.write('\n')
         print(json.dumps({'status': 'plan_ready', 'path': str(args.out.resolve()),
                           'browser_launches': 0, 'mode': plan['mode']}, ensure_ascii=False))
+    except ScopeRepairRequired as error:
+        parser.exit(2, json.dumps({'status': 'repair_required', 'task_terminal': False,
+                                  'reason': error.reason, 'next_action': 'repair_and_replan',
+                                  'owner': 'current_agent'}, ensure_ascii=False) + '\n')
     except (ValueError, OSError, zipfile.BadZipFile) as error:
-        parser.exit(2, str(error) + '\n')
+        parser.exit(2, json.dumps({'status': 'repair_required', 'task_terminal': False,
+                                  'reason': str(error), 'next_action': 'diagnose_and_repair_input',
+                                  'owner': 'current_agent'}, ensure_ascii=False) + '\n')
 
 
 if __name__ == '__main__':

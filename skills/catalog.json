@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T01:45:55.924Z",
-  "treeHash": "e7d6dc2ccb30df87c55e6fb63a44281d7601d21af29ae397fd3347041331d4e5",
+  "createdAt": "2026-11-11T01:46:34.915Z",
+  "treeHash": "d7a8607a6e88a0d8111886907a6719bb403cfa056be1845c130ba39cb09d6deb",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3651,9 +3651,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "ea62ad47e605d8a7f1d880df6271d348a45bb280ab58177077fd6b103010b66d",
-      "fileCount": 670,
-      "bytes": 12902051,
+      "treeHash": "138ec32333b8946a22b60a34bf80bbb2c311ee1f00b5c890903b33d857a66a64",
+      "fileCount": 671,
+      "bytes": 12920021,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -4719,8 +4719,8 @@
         },
         {
           "path": "references/incremental-checks.md",
-          "hash": "5a8b7219c1d18f30bda11260e3d0e220eeed2a47b18995492bb7008207b4301c",
-          "size": 10676,
+          "hash": "dc3a4abe9002e46c7e778fc2c133154b329847d3b340957731778819dd9bcf7e",
+          "size": 10848,
           "executable": false
         },
         {
@@ -4821,8 +4821,8 @@
         },
         {
           "path": "references/regression-scope-gate.md",
-          "hash": "d7330c77435bc897d6e415bb7cbb52905c0dd5feecc3e693072f94367d71b1c9",
-          "size": 4079,
+          "hash": "148b03d0043081895df171d7e16cbd38a18eb365636b866b64cb3b5669e4f4da",
+          "size": 7584,
           "executable": false
         },
         {
@@ -5366,6 +5366,12 @@
           "executable": false
         },
         {
+          "path": "scripts/check-ledger-rule-compat.json",
+          "hash": "51d6ac2590015245b1a9ebb83acf4ad2c2c1c6345f940872331cd9f466d257b4",
+          "size": 530,
+          "executable": false
+        },
+        {
           "path": "scripts/check_hint_presentations.py",
           "hash": "27cae969cee2c3654baee3026cf938cffab512736d3e2abd2416533ed308de03",
           "size": 5600,
@@ -5385,8 +5391,8 @@
         },
         {
           "path": "scripts/check_ledger.py",
-          "hash": "05b1daa81d4bd834754b72f0f546a8a3fc6e955ffcc8fc0bd48c931ff7872ca5",
-          "size": 23186,
+          "hash": "2f1318c7731f5551d74cdd2ff59f2582cf9e734634bd7aaddd986921c9482825",
+          "size": 25397,
           "executable": false
         },
         {
@@ -5715,8 +5721,8 @@
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "7664a4de106584053d95687eb1d8d086ae2c2a62da7e000e131c42b9ae0ef59d",
-          "size": 44683,
+          "hash": "b6f1bdbc9d29d322c023bbb3bc4c4dcc9bfcc8b43a045d78238eaabb8d2b10f2",
+          "size": 44895,
           "executable": false
         },
         {
@@ -5991,8 +5997,8 @@
         },
         {
           "path": "scripts/regression_scope_gate.py",
-          "hash": "50abefc88053f20a90dd8d1ba944ced30077b9aeb886f35af88053f45aab06a5",
-          "size": 22313,
+          "hash": "58c25af1bdb321ef06dded4420b4d3f3be80a5bd6563179f1f515a664209f83d",
+          "size": 28562,
           "executable": false
         },
         {
@@ -7089,8 +7095,8 @@
         },
         {
           "path": "scripts/test_regression_scope_gate.py",
-          "hash": "07c63b24644999b2e611a2168c403d3b4bb02291c6ab4ce53874337ac8def0cc",
-          "size": 12378,
+          "hash": "c56334fdedb0a3861921866b562649aa8c81815f996c7e996bb11cbd019dcf70",
+          "size": 17469,
           "executable": false
         },
         {

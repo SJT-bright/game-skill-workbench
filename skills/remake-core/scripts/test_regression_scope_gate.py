@@ -172,6 +172,79 @@ class ScopeGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ledger.NeedsScope, '纯沿用计划禁止启动浏览器'):
             self.authorize([row])
 
+    def test_repair_reports_all_gaps_and_preserves_valid_evidence_without_execution(self):
+        groups = {'ads': [self.row('ads.normal', action='reuse')], 'runtime': [
+            self.row('runtime.ad_entries/skin/unowned', action='blocked_failed', paths=('*',)),
+            self.row('runtime.save_restart/@suite', paths=('skin.png',)),
+        ]}
+        with patch.object(gate, '_observe', return_value=groups), \
+             patch.object(gate, 'create_plan', side_effect=gate.ScopeRepairRequired('missing mapping')):
+            report, plan = gate.repair_report(self.project, self.files, self.adapter, board='localize',
+                                              policy='new', prior=None, mode='scoped', proposed={})
+        self.assertIsNone(plan)
+        self.assertEqual(report['status'], 'repair_required')
+        self.assertFalse(report['task_terminal'])
+        self.assertEqual(report['browser_launches'], 0)
+        self.assertEqual(report['preserved'], ['ads.normal'])
+        self.assertEqual({issue['kind'] for issue in report['issues']},
+                         {'blocked_failed', 'dependency_or_execution_unit', 'plan_repair'})
+        self.assertEqual(report['continuation']['action'], 'repair_and_replan')
+
+    def test_repair_returns_executable_plan_only_after_the_original_gate_passes(self):
+        groups = {'ads': [self.row('ads.normal', action='reuse')], 'runtime': []}
+        verified = {'schema': gate.SCHEMA, 'actions': {'ads': {}, 'runtime': {}}}
+        with patch.object(gate, '_observe', return_value=groups), \
+             patch.object(gate, 'create_plan', side_effect=[gate.ScopeRepairRequired('prior receipt missing'), verified]) as create:
+            failed, plan = gate.repair_report(self.project, self.files, self.adapter, board='localize',
+                                              policy='new', prior=None, mode='scoped', proposed={})
+            self.assertIsNone(plan)
+            ready, plan = gate.repair_report(self.project, self.files, self.adapter, board='localize',
+                                             policy='new', prior=None, mode='scoped', proposed={})
+        self.assertEqual(create.call_count, 2)
+        self.assertEqual(failed['status'], 'repair_required')
+        self.assertEqual(ready['status'], 'plan_ready')
+        self.assertIs(plan, verified)
+        self.assertEqual(ready['issues'], [])
+        self.assertEqual(ready['continuation']['action'], 'resume_authorized_step')
+
+    def test_repairing_plan_cannot_bypass_wildcard_validation(self):
+        groups = {'ads': [self.row('ads.normal', paths=('*',))], 'runtime': []}
+        with patch.object(gate, '_observe', return_value=groups), \
+             patch.object(gate, 'baseline_identity', return_value={'path': 'old.zip'}):
+            report, plan = gate.repair_report(self.project, self.files, self.adapter, board='localize',
+                                              policy='new', prior='old.zip', mode='scoped',
+                                              proposed={'ads.normal': 'attempt to approve full wildcard'})
+        self.assertIsNone(plan)
+        self.assertEqual(report['status'], 'repair_required')
+        self.assertTrue(any('整包' in issue['reason'] for issue in report['issues']))
+
+    def test_lost_evidence_recollects_one_node_and_retains_the_original_record(self):
+        cid = 'ads.normal'
+        scope = {'basis': 'skin consumer', 'inputs': {'package': ['skin.png']}}
+        self.scope_path.write_text(json.dumps({'schema': ledger.SCOPE_SCHEMA, 'checks': {cid: scope}}))
+        store = ledger.Ledger(self.project)
+        self.addCleanup(store.close)
+        first = store.prepare(cid, self.roots, {}, 'tool', domain='platform')
+        original = self.project/'original-evidence.json'
+        original.write_text('{"actual_observation": true}')
+        result, _ = store.execute(first, lambda: {'passed': True, 'evidence': str(original)},
+                                  lambda value: value['passed'])
+        frozen = Path(result['evidence'])
+        frozen.unlink()
+        self.assertEqual(store.prepare(cid, self.roots, {}, 'tool')['action'], 'evidence_missing')
+        request = {'prior_key': first['key'], 'reason': 'Original capture and backup no longer exist',
+                   'searched_locations': [str(frozen), str(self.project/'backup')]}
+        self.scope_path.write_text(json.dumps({'schema': ledger.SCOPE_SCHEMA, 'checks': {cid: scope},
+                                               'evidence_rechecks': {cid: request}}))
+        retry = store.prepare(cid, self.roots, {}, 'tool', domain='platform')
+        self.assertEqual(retry['action'], 'run')
+        self.assertNotEqual(retry['key'], first['key'])
+        self.assertEqual(retry['evidence_recheck'], request)
+        original.write_text('{"new_actual_observation": true}')
+        store.execute(retry, lambda: {'passed': True, 'evidence': str(original)}, lambda value: value['passed'])
+        self.assertEqual(len(store.previous(cid)), 2)
+        self.assertEqual(store.prepare(cid, self.roots, {}, 'tool')['action'], 'reuse')
+
     def test_bundle_digest_alone_does_not_identify_a_feature_change(self):
         path = 'assets/main/index.js'
         before = {'package': {path: 'old'}, 'adapter': {'/skin': 'same'}}

@@ -1,0 +1,7 @@
+{
+  "schema": "check-ledger-rule-compat.v1",
+  "scope": "evidence-recovery-scheduling-only",
+  "prior_sha256": "05b1daa81d4bd834754b72f0f546a8a3fc6e955ffcc8fc0bd48c931ff7872ca5",
+  "current_sha256": "2f1318c7731f5551d74cdd2ff59f2582cf9e734634bd7aaddd986921c9482825",
+  "basis": "The exact reviewed pair adds opt-in lost-evidence recollection for one named node, retains the original record under its original key and changes no observer, assertion, source scan or game execution. Unknown bytes retain their normal fingerprint."
+}

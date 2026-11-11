@@ -652,6 +652,8 @@ def main():
                 raise
     except (ValueError, OSError, zipfile.BadZipFile, RuntimeError) as e:
         print('REFUSED, no ZIP written: the written ZIP failed its own check: %s' % e, file=sys.stderr)
+        print(json.dumps({'status':'repair_required', 'task_terminal':False, 'reason':str(e),
+                          'next_action':'repair_exact_gap_then_resume_writer'}, ensure_ascii=False), file=sys.stderr)
         return 1
     finally:
         shutil.rmtree(tmpdir, True)

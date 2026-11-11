@@ -94,7 +94,18 @@ def tool_fingerprint(paths):
             continue
         if not p.is_file():
             rows.append((p.name,'missing')); continue
-        raw=p.read_bytes();rows.append((p.name,sha(raw)))
+        raw=p.read_bytes()
+        identity = sha(raw)
+        if p == Path(__file__).resolve():
+            try:
+                compatibility = json.loads(p.with_name('check-ledger-rule-compat.json').read_text())
+                if (compatibility.get('schema') == 'check-ledger-rule-compat.v1'
+                        and compatibility.get('current_sha256') == identity
+                        and compatibility.get('scope') == 'evidence-recovery-scheduling-only'):
+                    identity = compatibility['prior_sha256']
+            except (OSError, ValueError, KeyError, TypeError):
+                pass
+        rows.append((p.name,identity))
         if p.suffix=='.py':
             try:
                 tree=ast.parse(raw)
@@ -224,6 +235,22 @@ class Ledger:
             if digest!=item['sha256']:return False
         return True
 
+    def evidence_recheck(self, check_id, row):
+        """An explicit per-node recovery record permits recollecting lost raw evidence."""
+        file = self.project/'docs/checks/check-inputs.json'
+        if not file.is_file():
+            return None
+        request = json.loads(file.read_text()).get('evidence_rechecks', {}).get(check_id)
+        if not isinstance(request, dict) or not row or self._evidence_valid(row):
+            return None
+        searches = request.get('searched_locations')
+        if (request.get('prior_key') != sha(row['binding'])
+                or not isinstance(request.get('reason'), str) or not request['reason'].strip()
+                or not isinstance(searches, list) or not searches
+                or not all(isinstance(path, str) and Path(path).is_absolute() for path in searches)):
+            raise NeedsScope(check_id+'：证据补采需要原记录key、恢复失败原因和已查找的绝对路径')
+        return request
+
     def prepare(self, check_id, roots, conditions, tools, *, label=None, domain='gameplay'):
         if not check_id or domain not in DOMAINS:raise NeedsScope('检查节点必须有稳定 ID 和有效类别')
         scope=scope_for(self.project,check_id)
@@ -234,11 +261,20 @@ class Ledger:
         found=self.db.execute('SELECT data FROM records WHERE key=?',(key,)).fetchone()
         cached=json.loads(found[0]) if found else None
         previous=self.previous(check_id)
+        evidence_recheck = self.evidence_recheck(check_id, cached) if cached and cached.get('passed') else None
+        if evidence_recheck:
+            value['evidence_recheck'] = sha(evidence_recheck)
+            key = sha(value)
+            recovered = self.db.execute('SELECT data FROM records WHERE key=?', (key,)).fetchone()
+            if recovered:
+                cached = json.loads(recovered[0])
         unmapped=unmapped_changes(self.project,previous[0].get('roots',{}),roots) if scope and previous else []
         if unmapped:
             action='needs_scope';why='这些变化尚未关联到检查节点：'+', '.join(unmapped[:12])
         elif cached and cached.get('passed') and self._evidence_valid(cached):
             action='reuse';why='输入、相关规则、条件及原证据一致'
+        elif cached and cached.get('passed') and evidence_recheck:
+            action='run';why='原始证据无法恢复，仅重新采集此独立项：'+evidence_recheck['reason']
         elif cached and cached.get('passed'):
             action='evidence_missing';why='原通过证据丢失或变化；先恢复证据或定位该项，不自动重测整套'
         elif cached and not os.environ.get('CHECK_RETRY_REASON'):
@@ -256,7 +292,8 @@ class Ledger:
                         and select_inputs(row.get('roots',{}),scope)==inputs and self._evidence_valid(row)):
                     cached=row;action='reuse';why='已通过的原执行覆盖此精确范围；只补依赖登记，不重测';break
         return dict(check_id=check_id,key=key,binding=value,action=action,why=why,record=cached,
-                    label=label or check_id,domain=domain,roots=roots,scope=scope)
+                    label=label or check_id,domain=domain,roots=roots,scope=scope,
+                    evidence_recheck=evidence_recheck)
 
     def _claim(self, plan):
         token=uuid.uuid4().hex

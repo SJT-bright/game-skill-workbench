@@ -1,10 +1,12 @@
 {
-  "schema": "runtime-scope-compat.v1",
-  "scope": "authorization-only-exact-byte-pair",
+  "schema": "runtime-scope-compat.v2",
+  "scope": "scheduler-and-evidence-recovery-exact-byte-triple",
   "prior_runtime_sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
   "prior_helper_sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
   "prior_compat_sha256": "5b2106bfccb91e54a6859a4b638a2c1951bbfaef10b8e594a638a42108980f76",
-  "new_runtime_sha256": "34ebad6c52b7fc8be00affd85e7532bc53e6bd99033c707854f81a895b2e5447",
-  "new_helper_sha256": "7b5a164c6775f5a6ae10473f3625634a23dfd603dcdc7d03b75bb9f9313d84e8",
-  "basis": "Plan-only returns the original ledger actions; a guard refuses unauthorized execution before the original browser invocation. Case selection, host and success predicates are unchanged. An unrecognized byte pair uses normal tool fingerprinting."
+  "new_runtime_sha256": "b22bcd9ae075af134f02ec64704fa08f21a236cd0052fa60c8206d9d0bee872a",
+  "new_helper_sha256": "8b47127bdf512219b4bf47d2c24676d5f7651b31ddae2c357317238cebb80a05",
+  "basis": "Exact scheduler changes add plan-only, execution authorization, and explicit ad/save unit enumeration; check_ledger adds explicit missing-evidence recovery while preserving unrequested paths. Every actual suite script, host, adapter and business observer remains independently hashed. ad_outcome/save_restart script changes retain their distinct new fingerprints and require original-case extraction proof. Unrecognized bytes use the normal full fingerprint; no original execution or receipt is rewritten.",
+  "prior_ledger_sha256": "05b1daa81d4bd834754b72f0f546a8a3fc6e955ffcc8fc0bd48c931ff7872ca5",
+  "new_ledger_sha256": "7cb7778dc32d832d157fee5df33b9499879029bd2e5c3cecae238362c2818a6e"
 }

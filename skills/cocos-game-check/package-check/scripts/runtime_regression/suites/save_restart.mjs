@@ -42,6 +42,29 @@ function problems(b) {
     if (!s || typeof s.read_js !== 'string' || !s.read_js.trim()) out.push('save_restart.steps[' + i + '].read_js must return what the player sees (level reached, coins, owned item ...)');
     if (s && 'kind' in s ? !KINDS.includes(s.kind) : POLICY === 'new') out.push('save_restart.steps[' + i + '].kind must be ' + KINDS.join(' / ') + ' (what the step earns)');
   });
+  const names = (b.steps || []).map(step => step && step.name);
+  if (new Set(names).size !== names.length) out.push('save_restart.steps names must be unique');
+  const explicit = (b.steps || []).filter(step => step && 'requires' in step);
+  if (explicit.length && explicit.length !== (b.steps || []).length)
+    out.push('save_restart split steps must all declare requires (use [] for an independent step)');
+  for (const step of explicit) {
+    if (!Array.isArray(step.requires) || !step.requires.every(name => typeof name === 'string' && names.includes(name) && name !== step.name)
+        || new Set(step.requires || []).size !== (step.requires || []).length)
+      out.push('save_restart step ' + step.name + ' has invalid prerequisite names');
+  }
+  if (explicit.length && !out.length) {
+    const visiting = new Set(), visited = new Set();
+    const visit = name => {
+      if (visiting.has(name)) throw new Error('save_restart prerequisites contain a cycle');
+      if (visited.has(name)) return;
+      visiting.add(name);
+      const step = b.steps.find(item => item.name === name);
+      step.requires.forEach(visit);
+      visiting.delete(name);
+      visited.add(name);
+    };
+    try { names.forEach(visit); } catch (error) { out.push(error.message); }
+  }
   if ('none' in b && !(b.none && typeof b.none === 'object' && !Array.isArray(b.none) && Object.entries(b.none).every(([k, v]) => KINDS.includes(k) && typeof v === 'string' && v.trim())))
     out.push('save_restart.none must map a kind (' + KINDS.join(' / ') + ') to why the game has nothing of that kind');
   return out;
@@ -68,25 +91,41 @@ async function home(page) {
   return null;
 }
 
-await L.suite(async ({ out, page }) => {
-  const rep = { suite: 'save_restart', policy: POLICY, storage: PHONE, steps: [] };
-  const bad = problems(B);
-  if (bad.length) { out.add('adapter', POLICY === 'legacy', bad.join('; ')); if (POLICY === 'legacy') out.warn('save_restart adapter: ' + bad.join('; ') + ' [legacy game: warning]'); return; }
+const safe = value => String(value).replace(/[^\w.-]+/g, '_').slice(0, 60);
+const independentSteps = Array.isArray(B.steps) && B.steps.length > 0 &&
+  B.steps.every(step => step && Array.isArray(step.requires));
+const chosen = C.selection == null || C.selection.includes('@suite') ? null : new Set(C.selection);
+
+function prerequisites(target) {
+  const ordered = [], visited = new Set();
+  const visit = name => {
+    if (visited.has(name)) return;
+    const step = B.steps.find(item => item.name === name);
+    for (const dependency of step.requires || []) visit(dependency);
+    visited.add(name);
+    ordered.push(step);
+  };
+  visit(target.name);
+  return ordered;
+}
+
+async function runRestart(page, out, steps, unit, rep, verifyKinds = false) {
   const q = 'capsule=pt&ad=complete&adms=600&' + PHONE + (B.query ? '&' + B.query : '');
   await G.openGame(page, 'iphone14', q);
   let fail = await home(page);
-  // v7.9 手机检查补全: the kinds this home asks for (new game)
-  if (!fail && POLICY === 'new') {
+  if (!fail && verifyKinds && POLICY === 'new') {
     const miss = needed(P.buttonsOf(await P.snap(page)));
-    rep.kinds = { steps: (B.steps || []).map((s) => s.kind), none: B.none || null, missing: miss };
+    rep.kinds = { steps: B.steps.map(step => step.kind), none: B.none || null, missing: miss };
     if (miss.length) {
-      out.add('kinds', false, 'save_restart.steps has no step of kind ' + miss.map((m) => '"' + m.kind + '" (' + m.why + ')').join(', ') + '. Write the step (real actions, read_js) or save_restart.none.' + miss[0].kind + ' = "why the game has none"');
-      out.evidence.report = L.evidence('save_restart.json', rep);
+      fail = 'save_restart.steps has no step of kind ' + miss.map(m => '"' + m.kind + '" (' + m.why + ')').join(', ') +
+        '. Write the step (real actions, read_js) or save_restart.none.' + miss[0].kind + ' = "why the game has none"';
+      out.add('kinds', false, fail);
+      rep.result = 'fail';
       return;
     }
   }
   const done = [];
-  for (const s of B.steps) {
+  for (const s of steps) {
     if (fail) break;
     const row = { name: s.name, kind: s.kind || null, why: s.why || null };
     rep.steps.push(row);
@@ -109,7 +148,7 @@ await L.suite(async ({ out, page }) => {
   if (stuck) {
     await G.openGame(page, 'iphone14', 'capsule=pt&ad=complete&adms=600' + (B.query ? '&' + B.query : ''));
     let why = await home(page), earned = null;
-    for (const s of B.steps) {
+    for (const s of steps) {
       if (why) break;
       const before = await P.js(page, s.read_js);
       const r = await P.steps(page, s.actions);
@@ -121,7 +160,7 @@ await L.suite(async ({ out, page }) => {
     if (earned) fail = 'with TikTok phone storage (a key never written reads false, 0/1 read back as false/true) step ' + stuck.name + (stuck.why ? ' cannot run (' + stuck.why + ')' : ' earns nothing (' + JSON.stringify(stuck.after) + ')') + '; with browser storage the same steps give ' + JSON.stringify(stuck.browser_storage[0]) + ' -> ' + JSON.stringify(stuck.browser_storage[1]) + ': the game breaks on a phone';
   }
   if (!fail) {
-    rep.before_png = await G.shot(page, path.join(C.evidenceDir, 'save-before-restart.png'));
+    rep.before_png = await G.shot(page, path.join(C.evidenceDir, 'save-' + safe(unit) + '-before-restart.png'));
     rep.store_before = await page.evaluate(() => (window.__storeDump ? Object.keys(window.__storeDump()).length : null)).catch(() => null);
     // cold restart: the same host page, storage kept (no reset=1)
     await page.goto(L.url('dev=iphone14&' + q + '&r=' + Date.now()));
@@ -132,18 +171,72 @@ await L.suite(async ({ out, page }) => {
   const lost = [];
   if (!fail) {
     for (const row of done) {
-      let now = await P.js(page, B.steps.find((s) => s.name === row.name).read_js);
+      let now = await P.js(page, steps.find((s) => s.name === row.name).read_js);
       const t0 = Date.now();
-      while (!P.same(now, row.after) && Date.now() - t0 < 3000) { await P.sleep(400); now = await P.js(page, B.steps.find((s) => s.name === row.name).read_js); }
+      while (!P.same(now, row.after) && Date.now() - t0 < 3000) { await P.sleep(400); now = await P.js(page, steps.find((s) => s.name === row.name).read_js); }
       row.after_restart = now;
       if (!P.same(now, row.after)) lost.push(row.name + ': ' + JSON.stringify(row.after) + ' before the restart, ' + JSON.stringify(now) + ' after it');
     }
-    rep.after_png = await G.shot(page, path.join(C.evidenceDir, 'save-after-restart.png'));
+    rep.after_png = await G.shot(page, path.join(C.evidenceDir, 'save-' + safe(unit) + '-after-restart.png'));
     if (lost.length) fail = 'lost after closing and reopening the game (TikTok phone storage): ' + lost.join('; ');
   }
   rep.result = fail ? 'fail' : 'pass';
   const blocks = !!fail && (POLICY === 'new' || /^invalid run/.test(fail));
   if (fail && !blocks) out.warn('save_restart: ' + fail + ' [legacy game: warning]');
-  out.add('restart', !blocks, fail || ('kept after a restart: ' + done.map((r) => r.name + (r.kind ? ' (' + r.kind + ')' : '') + ' = ' + JSON.stringify(r.after)).join(', ')));
-  out.evidence.report = L.evidence('save_restart.json', rep);
+  out.add(unit, !blocks, fail || ('kept after a restart: ' + done.map((r) => r.name + (r.kind ? ' (' + r.kind + ')' : '') + ' = ' + JSON.stringify(r.after)).join(', ')));
+}
+
+await L.suite(async ({ out, page }) => {
+  const rep = { suite: 'save_restart', policy: POLICY, storage: PHONE, steps: [], units: [] };
+  const bad = problems(B);
+  if (bad.length) {
+    out.add('adapter', POLICY === 'legacy', bad.join('; '));
+    if (POLICY === 'legacy') out.warn('save_restart adapter: ' + bad.join('; ') + ' [legacy game: warning]');
+    return;
+  }
+  const save = () => {
+    out.evidence.report = L.evidence('save_restart.json', rep);
+    out.units = {};
+    for (const row of rep.units) {
+      const cases = out.cases.filter(item => item.id === row.unit);
+      out.units[row.unit] = { passed: cases.length === 1 && cases[0].passed === true, cases };
+    }
+    out.save();
+  };
+  if (!independentSteps) {
+    if (chosen && (chosen.size !== 1 || !chosen.has('@suite'))) {
+      out.add('selection', false, 'legacy save_restart steps need explicit requires before selecting a single step');
+      save();
+      return;
+    }
+    await runRestart(page, out, B.steps, 'restart', rep, true);
+    save();
+    return;
+  }
+  const known = new Set(['@kinds', ...B.steps.map(step => 'step/' + step.name)]);
+  if (chosen && (!chosen.size || [...chosen].some(unit => !known.has(unit)))) {
+    out.add('selection', false, 'save_restart selection contains an unknown step or is empty');
+    save();
+    return;
+  }
+  if (!chosen || chosen.has('@kinds')) {
+    await G.openGame(page, 'iphone14', 'capsule=pt&ad=complete&adms=600&' + PHONE + (B.query ? '&' + B.query : ''));
+    const fail = await home(page);
+    const miss = !fail && POLICY === 'new' ? needed(P.buttonsOf(await P.snap(page))) : [];
+    rep.kinds = { steps: B.steps.map(step => step.kind), none: B.none || null, missing: miss };
+    rep.units.push({ unit: '@kinds', missing: miss });
+    out.add('@kinds', !fail && !miss.length,
+      fail || (miss.length ? 'save_restart.steps lacks required kinds: ' + miss.map(item => item.kind).join(', ')
+        : 'complete declared level, buy and claim coverage checked against the actual home'));
+    save();
+  }
+  for (const step of B.steps) {
+    const unit = 'step/' + step.name;
+    if (chosen && !chosen.has(unit)) continue;
+    const row = { unit, name: step.name, prerequisites: step.requires, steps: [] };
+    rep.units.push(row);
+    await runRestart(page, out, prerequisites(step), unit, row);
+    save();
+  }
+  save();
 }, { w: 390, h: 844 });

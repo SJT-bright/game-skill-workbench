@@ -186,6 +186,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
         if 'record' in state:
             path = Path(str(state['record']) + '.blocked.json')
             blocked = {'status': 'delivery_blocked', 'archive': state['archive'], 'sha256': state.get('sha256'),
+                       'task_terminal': False, 'next_action': 'repair_exact_evidence_or_writer_then_resume',
                        'checks': checks + [{'id': error.check_id if isinstance(error, StartupRefused) else state['stage'],
                                             'action': 'blocked',
                                             'reason': str(error), 'evidence': state.get('evidence', [])}]}
@@ -345,7 +346,8 @@ def main():
     try:
         print(json.dumps(prepare(args.zip, args.native, args.expected_app_id, args.record, args.project, args.startup_contract, args.loading_recovery_runtime, args.resource_manifest, args.ad_regression, args.logic_report, args.source, args.preview_url, args.platform_feedback), ensure_ascii=False))
     except (ValueError, OSError, RuntimeError) as error:
-        print(json.dumps({'status': 'refuse', 'error': str(error)}, ensure_ascii=False))
+        print(json.dumps({'status': 'refuse', 'error': str(error), 'task_terminal': False,
+                          'next_action': 'repair_exact_evidence_or_writer_then_resume'}, ensure_ascii=False))
         return 1
     return 0
 

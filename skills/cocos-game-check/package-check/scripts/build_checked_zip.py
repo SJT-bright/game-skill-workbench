@@ -227,7 +227,8 @@ def main():
                                      '（反馈草稿：%s）' % result['tool_feedback_draft'] if result.get('tool_feedback_draft') else ''))
         return 0
     except (ValueError, OSError, RuntimeError) as error:
-        print(json.dumps({'status':'refuse', 'error':str(error)}, ensure_ascii=False))
+        print(json.dumps({'status':'refuse', 'error':str(error), 'task_terminal':False,
+                          'next_action':'repair_exact_gap_then_resume_writer'}, ensure_ascii=False))
         return 1
 
 

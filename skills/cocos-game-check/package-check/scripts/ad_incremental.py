@@ -56,5 +56,6 @@ def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_onl
         return summary
     except CL.NeedsScope as exc:
         error=ar.RegressionRefused(str(exc));error.summary={'id':'rewarded_ad_regression','passed':False,'status':'scope_required',
-            'problems':[str(exc)],'stopped_before_browser':True,'proof_error':True,'ledger':str(ledger.home)};raise error
+            'problems':[str(exc)],'stopped_before_browser':True,'proof_error':True,'ledger':str(ledger.home),
+            'task_terminal':False,'next_action':'repair_and_replan'};raise error
     finally:ledger.close()

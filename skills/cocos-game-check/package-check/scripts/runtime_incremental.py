@@ -23,7 +23,7 @@ DOMAINS={'layout_state':'image','dead_shell':'image','image_stall':'image','popi
          'startup':'startup','startup3x':'startup','network':'platform','growth_entry':'platform',
          'ad_entries':'platform','ad_outcome':'platform','resume_play':'gameplay','save_restart':'gameplay'}
 
-def unit_ids(name, meta, adapter, prechecked=False):
+def unit_ids(name, meta, adapter, prechecked=False, policy=None):
     if prechecked:return ['@suite']
     if name in ('startup','startup3x'):
         text=meta['script'].read_text()
@@ -35,6 +35,32 @@ def unit_ids(name, meta, adapter, prechecked=False):
         return [str(e['id'])+'/'+str(s['name']) for e in adapter.get('ad_entries',[]) for s in e['states']]
     if name=='layout_state':
         return [d+'/'+str(s['name']) for d in ('iphone14','se') for s in (adapter.get('layout_states') or [{'name':'home'}])]
+    if name=='ad_outcome':
+        # These explicit suite constants describe installation variants without
+        # interpreting or changing the suite's assertions.
+        script=meta.get('script')
+        text=Path(script).read_text() if script is not None else ''
+        flag=lambda name,default: {'true':True,'false':False}.get(
+            (re.search(r'const '+name+r' = (true|false);',text) or [None,None])[1],default)
+        revive_legacy=flag('LEGACY_REVIVE_ENTRY',True)
+        dedup_resume=flag('RESUME_ENTRY_DEDUP',False)
+        rows=[str(e['id'])+'/'+str(state['name']) for e in adapter.get('ad_entries',[])
+              if policy!='legacy' or adapter.get('ad_outcome') or revive_legacy and e.get('role')=='revive'
+              for state in e['states']]
+        resume=adapter.get('resume_play')
+        if policy!='legacy' and isinstance(resume,dict) and isinstance(resume.get('ad'),dict):
+            ad=resume['ad']
+            duplicate=dedup_resume and ad.get('tap') and any(e.get('button') and
+                re.sub(r'#\d+$','',str(e['button']))==re.sub(r'#\d+$','',str(ad['tap']))
+                for e in adapter.get('ad_entries',[]))
+            if not (isinstance(ad.get('none'),str) and ad['none'].strip()) and isinstance(resume.get('start'),list) and not duplicate:
+                rows.append('resume_play.ad')
+        return rows+['@discovered']
+    if name=='save_restart':
+        settings=adapter.get('save_restart')
+        steps=settings.get('steps',[]) if isinstance(settings,dict) else []
+        if steps and all(isinstance(step,dict) and isinstance(step.get('requires'),list) for step in steps):
+            return ['@kinds']+['step/'+str(step['name']) for step in steps]
     return ['@suite']
 
 def _rule(rr,meta,engine):
@@ -90,7 +116,7 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
     def runtime_units(name, meta, prechecked):
         if returned_art and name == 'layout_state' and not prechecked:
             return ['@startup']  # Hidden startup bytes/audio remain real checks, not visual acceptance.
-        return unit_ids(name, meta, adapter, prechecked)
+        return unit_ids(name, meta, adapter, prechecked, policy)
     root=lambda:{'package':CL.manifest(package),'adapter':CL.json_manifest(json.loads(Path(adapter_path).read_text()))}
     roots=root(); plans=[];index={};pre={};selected=set(names)
     # Resolve all needed evidence first. A manually requested subset may reuse prior
@@ -112,6 +138,8 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                     'trial_url':trial_url if name=='trial_link' else None,
                     'capabilities':caps if name in ('ad_outcome','ad_entries') else None},rules,
                     label=name+' / '+unit,domain='startup' if unit=='@startup' else DOMAINS.get(name,'gameplay'))
+                from runtime_split_migration import prepare_inherited_unit
+                p = prepare_inherited_unit(ledger, p, name, unit)
                 if returned_art and p['action']=='run' and unit!='@startup':
                     previous=ledger.previous(cid)
                     if previous and all(r['binding']['tool_sha256']!=rules for r in previous):
@@ -180,7 +208,7 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                            passed=None if row['passed'] else False,
                            visual_status='user_accepted', visual_checks_executed=False,
                            visual_acceptance=returned_art,
-                           accepted_visual_units=unit_ids(name,catalog[name],adapter))
+                           accepted_visual_units=unit_ids(name,catalog[name],adapter,policy=policy))
             rows.append(row)
         have={r['suite'] for r in rows if r['passed'] or r.get('accepted_for_delivery') is True}
         missing=[n for n in required if n not in have]
@@ -199,5 +227,6 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
         return summary
     except CL.NeedsScope as exc:
         error=rr.RuntimeRefused(str(exc));error.summary={'id':'runtime_regression','passed':False,'status':'scope_required',
+            'task_terminal':False,'next_action':'repair_and_replan',
             'problems':[str(exc)],'stopped_before_browser':True,'proof_error':True,'ledger':str(ledger.home)};raise error
     finally:ledger.close()

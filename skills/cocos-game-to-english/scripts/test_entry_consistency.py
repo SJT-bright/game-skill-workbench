@@ -338,7 +338,7 @@ class AdBoostAndRedesign(unittest.TestCase):
         part = block.split(mark, 1)[1]
         for phrase in ('](../ad-boost/SKILL.md)', '--mode localize', '不出选择题、不问 Saul', '「缺必备」或「少」加前 3 个',
                        '「一般」加前 2 个', '「多」加第 1 个', '只在原游戏本来就有这个系统时才加', '奖励关会动原关卡，不加',
-                       '原首页按钮一个都不动', '新入口只放空位', '没有空位时不问', '跟原游戏画风走', 'CHANGELOG.md',
+                       '首次英化按[默认主页排版]', '把原有功能和本轮广告入口一并设计', '已交付后的局部加广告沿用当前已确认布局', '局部空间不足时选择不新增首页入口的推荐板块', '不擅自扩大为整页重做', '跟原游戏画风走', 'CHANGELOG.md',
                        '接入时先验证本次操作的奖励、保存和防重复结果',
                        '各板块 README 第 8 节的验收及广告回归按命名节点随接入完成一次',
                        '第 5 阶段只核对完整覆盖并补缺或复验真实受影响项',
@@ -354,14 +354,16 @@ class AdBoostAndRedesign(unittest.TestCase):
         section = '\n'.join(lines).split('## 加广告载体用 ad-boost', 1)[1].split('\n## ', 1)[0]
         self.assertIn('英化游戏默认由英化入口跑 ad-boost', section)
         self.assertNotIn('英化游戏只在 Saul 说广告太少', section)
-        self.assertIn('原首页按钮不动', section)
+        self.assertIn('首次英化主页按[默认主页排版]', section)
+        self.assertIn('把原有与新增入口统一设计，保留原画风和真实业务', section)
+        self.assertIn('已交付后的局部接入只处理受影响区域', section)
         self.assertIn('21 个板块', section)                      # ad-boost v1.2.11 battle-pass (11.8); 20 from v1.2.0, 15 until 10.2.10
         self.assertNotIn('15 个板块', section)
 
     def test_redesign_keeps_the_original_art_style(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
         section = text.split(ART_HEADING, 1)[1].split('\n## ', 1)[0]
-        for phrase in ('“重新设计”英化游戏时，画风也照原游戏', '原图能用就用', '按钮底色不用深色', '图标后面不另加底板',
+        for phrase in ('默认主页重排或额外要求重新设计时，画风都照原游戏', '原图能用就用', '按钮底色不用深色', '图标后面不另加底板',
                        '只有他明说换画风'):
             self.assertIn(phrase, section)
 
@@ -452,7 +454,11 @@ class TrialFirstThenFullChecks(unittest.TestCase):
             self.assertIn(phrase, art[0], phrase)
         self.assertNotIn('好的照用', art[0])          # 10.2.4 kept good icon buttons; 10.2.5 regenerates every button
         self.assertNotIn('## 美工 Skill 只在点名时用', text)
-        self.assertIn('仍只在 Saul 点名时做', text.split(ART_HEADING, 1)[1].split('\n## ', 1)[0])
+        section = text.split(ART_HEADING, 1)[1].split('\n## ', 1)[0]
+        self.assertIn('首次主页先按[默认主页排版]', section)
+        self.assertIn('其他未受影响页面保留当前已批准布局', section)
+        self.assertIn('除首次主页和本轮明确重做范围外', section)
+        self.assertIn('仍按当前任务授权', section)
         art_skill = (PACK / 'remake-art' / 'SKILL.md').read_text(encoding='utf-8')
         self.assertNotIn('英化流程不自动调用', art_skill)
         self.assertIn('英化第一轮由英化入口调用', art_skill.split('\n---', 1)[0])
@@ -494,7 +500,14 @@ class TrialFirstThenFullChecks(unittest.TestCase):
             self.assertIn(phrase, section, phrase)
         samples = (PACK / 'remake-art' / 'references' / 'ui-style-and-samples.md').read_text(encoding='utf-8')
         step4 = [l for l in samples.splitlines() if '样板阶段不停下等用户' in l]
-        self.assertTrue(step4 and all('英化' in l for l in step4), step4)   # the English copy says English games wait for Saul
+        self.assertTrue(step4 and all('英化' in l for l in step4), step4)   # default first-home layout proceeds after self-review; explicit multi-style work keeps selection
+        for phrase in ('首次英化主页也按一个原画风布局样板自审后继续', '用户明确要求更换画风或多套方案时', '2～3套小样供选择'):
+            self.assertIn(phrase, samples)
+        home = (PACK / 'remake-art' / 'references' / 'english-home-layout.md').read_text(encoding='utf-8')
+        for phrase in ('已经交付后的纯上传兼容、广告逻辑、存档修复或局部美工返工', '不追溯重做整页',
+                       '只有正在制作 Skill 的任务时', '不自动改任何已有游戏', '保留现有玩法、关卡、经济、奖励、平台能力和存档规则',
+                       '不强行增加菜单、PLAY 按钮或第二个开局流程'):
+            self.assertIn(phrase, home)
 
 
 class AdBoostBundled(unittest.TestCase):
@@ -511,9 +524,59 @@ class AdBoostBundled(unittest.TestCase):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
         row8 = [l for l in text.splitlines() if l.startswith('| 8 |')]
         self.assertEqual(len(row8), 1)
-        for phrase in ('广告加量', '](../ad-boost/SKILL.md)', '不问 Saul', '原首页按钮不动'):
+        for phrase in ('广告加量', '](../ad-boost/SKILL.md)', '不问 Saul', '首次英化主页将新旧入口纳入同一美工排版', '画风跟原游戏', '已交付后的局部接入只处理受影响区域'):
             self.assertIn(phrase, row8[0], phrase)
         self.assertIn('按上表 1–8 做', text)
+        for module in ('battle-pass', 'key-chest', 'shop-free', 'quest-x2', 'coin-ad'):
+            with self.subTest(other_homepage_acceptance_consumer=module):
+                body = (PACK / 'ad-boost' / 'modules' / module / 'README.md').read_text(encoding='utf-8')
+                checks = [line for line in body.splitlines() if line.startswith('- [ ]') and '英化' in line]
+                self.assertTrue(any('首次主页按本轮美工方案' in line and '局部接入保留未受影响布局' in line for line in checks))
+                self.assertNotIn('原首页按钮一个不挪', body)
+                self.assertNotIn('原首页和原页面的按钮一个不挪', body)
+        for relative in ('ad-boost/SKILL.md', 'ad-boost/references/问Saul话术.md', 'remake-economy/SKILL.md',
+                         'remake-economy/references/economy-rules.md', 'remake-core/references/two-boards.md',
+                         'ad-boost/modules/checkin/README.md', 'ad-boost/modules/quest-x2/README.md',
+                         'ad-boost/modules/coin-ad/README.md', 'ad-boost/ui-kit/README.md',
+                         'ad-boost/modules/online-ladder/README.md', 'ad-boost/modules/offline/README.md'):
+            with self.subTest(homepage_scope_consumer=relative):
+                body = (PACK / relative).read_text(encoding='utf-8')
+                self.assertTrue('首次主页' in body or '首次英化主页' in body)
+                self.assertIn('保留未受影响布局', body)
+                for old in ('原按钮一个没动', '原首页和原页面的按钮一个不挪、不缩放、不重排',
+                            '英化首页原有按钮不动，只在空位', '原货币的名字、图标、原首页按钮位置都不动',
+                            '英化游戏首页**没有空位**放新入口：问'):
+                    self.assertNotIn(old, body)
+        # Final automatic coverage excludes the in-match ad-revive route; ordinary ad coverage remains required.
+        entry = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
+        fixed = (ENTRY / 'references' / 'fixed-entries.md').read_text(encoding='utf-8')
+        adaptation = (PACK / 'cocos-game-check' / 'references' / 'tiktok-fixed-adaptation.md').read_text(encoding='utf-8')
+        kit = (PACK / 'remake-core' / 'assets' / 'platform-kit' / 'README_接入说明.md').read_text(encoding='utf-8')
+        revive = (PACK / 'remake-ads' / 'references' / 'rewarded-revive-and-help-layout.md').read_text(encoding='utf-8')
+        fixed_revive = fixed.split('## 看广告复活', 1)[1].split('\n## ', 1)[0]
+        for consumer, body in (('entry', entry), ('fixed', fixed_revive), ('adaptation', adaptation), ('kit', kit), ('revive', revive)):
+            with self.subTest(revive_scope_consumer=consumer):
+                self.assertNotIn('新游戏没写出包被拒（`ad_outcome`）', body)
+                self.assertNotIn('没有复活页都拦', body)
+                self.assertNotIn('必填 `player`、`invincible_js`、`revive_js`、`game_node`', body)
+                self.assertNotIn('无敌飞 18 秒再复活一次', body)
+                self.assertNotIn('漏切扣 8，切到炸弹扣 12，切中回 3', body)
+        self.assertIn('自动回归排除该路线，不因缺少复活自动路径拒包', entry)
+        self.assertIn('通用 SDK 回调与非复活广告继续自动检查', fixed)
+        self.assertIn('新游戏没写出包被拒（`ad_outcome`）', fixed.split('## 看广告复活', 1)[0])
+        self.assertIn('结算 x2 在 `ad_entries` 写', adaptation)
+        self.assertIn('旧 `revive_js` 可读但自动检查不执行', adaptation)
+        self.assertIn('不作为最终自动回归或 writer 的必过回执', revive)
+        # Every ad-boost consumer carries the first-home/local-rework boundary, including acceptance checkboxes.
+        for module in ('offline', 'checkin', 'wheel', 'base-check', 'prestart-boost', 'hint', 'booster-refill', 'energy', 'skin-ad', 'gift'):
+            with self.subTest(homepage_consumer=module):
+                body = (PACK / 'ad-boost' / 'modules' / module / 'README.md').read_text(encoding='utf-8')
+                checks = [l for l in body.splitlines() if l.startswith('- [ ] 英化游戏：')]
+                self.assertEqual(len(checks), 1)
+                for phrase in ('首次主页按本轮美工方案', '已交付后的局部接入保留未受影响布局', '真实点击', '不重叠'):
+                    self.assertIn(phrase, checks[0])
+                self.assertNotIn('原首页和原页面的按钮一个不挪、不缩放、不重排', body)
+                self.assertNotIn('两张里原按钮的位置和大小一样', body)
 
     def test_stages_carry_the_ad_boards(self):
         text = (ENTRY / 'SKILL.md').read_text(encoding='utf-8')
@@ -821,7 +884,8 @@ class PortableOnAnyComputer(unittest.TestCase):
         codex = CODEX_TEXT.read_text(encoding='utf-8')
         self.assertIn('check_machine.py', codex)
         for text in (readme, codex):
-            for phrase in ('Ego Lite', '保留未测', 'Chrome 只供用户亲自试玩'):
+            for phrase in ('Computer Use 操作 Edge', '结构化脚本继续使用已有隔离运行器和有效记录',
+                           'Ego Lite', '保留未测', 'Chrome 只在正式用户试玩交接使用'):
                 self.assertIn(phrase, text)
             for legacy in ('不用装 Ego', '用 Chrome 或 Edge', '--browser chrome'):
                 self.assertNotIn(legacy, text)

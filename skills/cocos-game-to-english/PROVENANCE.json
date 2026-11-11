@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-10.english-simple.11.17.22",
+  "revision": "2026-11-10.english-simple.11.17.23",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "8d2f7503e0bfaaed45286180e402afa135a3066026a5933bd39c2c314ba53048",
-      "bytes": 93038
+      "sha256": "fb8e6e1a707c68a343269f21bb92c0c733dc60e5103f3b334577dd797f5b3f52",
+      "bytes": 94986
     },
     {
       "path": "agents/openai.yaml",
@@ -56,8 +56,8 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "53cbbf322c00e6b7486cade99db307f8c86c86485b900824e6591c52df1290d9",
-      "bytes": 33970
+      "sha256": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
+      "bytes": 34394
     },
     {
       "path": "references/first-trial-repair.md",
@@ -66,8 +66,8 @@
     },
     {
       "path": "references/fixed-entries.md",
-      "sha256": "fa4ce7f16d64170597d0b5f13ec007114366b136d78043dafaa04fb0641b59fa",
-      "bytes": 14137
+      "sha256": "8ad6d8fc4d2260be07276b5cd4a19fcfffd876fc8e3a0c791107306ee13cc680",
+      "bytes": 14264
     },
     {
       "path": "references/local-creator-versions.md",
@@ -91,8 +91,8 @@
     },
     {
       "path": "references/sidebar-retrofit.md",
-      "sha256": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
-      "bytes": 6332
+      "sha256": "2e12fa08445709f62c8a737eaca855b29dae33b5246657bfd10b8517b8309511",
+      "bytes": 6588
     },
     {
       "path": "scripts/browser_env.py",
@@ -211,8 +211,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "58e2026d4022f1a51fe4cf8174e0ae60211dee42e0c17f170c4a2181a143718b",
-      "bytes": 77413
+      "sha256": "b869b758dd1f917f3356898f335cb4353d5357ede84665f993b419d08b54fc1e",
+      "bytes": 83853
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -310,7 +310,7 @@
       "bytes": 15155
     }
   ],
-  "previous_provenance_sha256": "f0103d19c6c9cdcda82d5db6dc08ad08d1edc61d8cdd235d4ed6e97021d86ba6",
+  "previous_provenance_sha256": "73f48608812039273f6dfd213ecfafe1e922ad2abc937ab8eb93c6213399ec62",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -664,7 +664,20 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "ui-structure.20261111.1",
+      "authority": "User requested merging general UI lessons, preserving check scope and cross-Skill compatibility",
+      "scope": "UI production guidance and existing-rule routing only",
+      "files": [
+        {
+          "path": "references/sidebar-retrofit.md",
+          "before_sha256": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
+          "after_sha256": "2e12fa08445709f62c8a737eaca855b29dae33b5246657bfd10b8517b8309511"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "8d0c6a78efab79340c10f0abccbaf721ea1bd07f9cf9caa87d2f2d91a3ca4660"
+  "previous_local_provenance_sha256": "165717d70427bf23dfa68f9db5a7b4a98d16404591c9889a72d5dc8a056bb929",
+  "maintenance_revision": "ui-structure.20261111.1"
 }

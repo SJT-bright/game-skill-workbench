@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T11:27:18.305Z",
-  "treeHash": "11e079964a09c2aa4cf9e042b02af51d095c85280b9879b449e7dea22905b361",
+  "createdAt": "2026-11-11T11:28:00.434Z",
+  "treeHash": "ce595839ccbfafe84b415253de2b7cb7d3c3774adce4c1d825c7b9e11b4d91a2",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2107,20 +2107,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "a26a097949525e26e29a4b9c22baf63f74f3023bbd90fb6d88f6984be0593582",
+      "treeHash": "07e7e7e0d722a45db790762f98eaf39e6518378f8e11c66269a7b8e92ca480c0",
       "fileCount": 62,
-      "bytes": 974920,
+      "bytes": 984056,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d9b2a941e0b214191b53a24cd8c6e7b700f9dff3056989b7050fd69326e0fdc3",
-          "size": 27256,
+          "hash": "1f1d94f32fbcfe93a0a2937e6c0ace0f6be730e8651b51c0ba78d01e66400f56",
+          "size": 27836,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "0f9fc1f741ba3936d431e6741d8971dd694a5c818b4935807ede67bc13df5801",
-          "size": 93677,
+          "hash": "fb8e6e1a707c68a343269f21bb92c0c733dc60e5103f3b334577dd797f5b3f52",
+          "size": 94986,
           "executable": false
         },
         {
@@ -2179,8 +2179,8 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "53cbbf322c00e6b7486cade99db307f8c86c86485b900824e6591c52df1290d9",
-          "size": 33970,
+          "hash": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
+          "size": 34394,
           "executable": false
         },
         {
@@ -2191,8 +2191,8 @@
         },
         {
           "path": "references/fixed-entries.md",
-          "hash": "fa4ce7f16d64170597d0b5f13ec007114366b136d78043dafaa04fb0641b59fa",
-          "size": 14137,
+          "hash": "8ad6d8fc4d2260be07276b5cd4a19fcfffd876fc8e3a0c791107306ee13cc680",
+          "size": 14264,
           "executable": false
         },
         {
@@ -2221,8 +2221,8 @@
         },
         {
           "path": "references/sidebar-retrofit.md",
-          "hash": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
-          "size": 6332,
+          "hash": "2e12fa08445709f62c8a737eaca855b29dae33b5246657bfd10b8517b8309511",
+          "size": 6588,
           "executable": false
         },
         {
@@ -2365,8 +2365,8 @@
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "58e2026d4022f1a51fe4cf8174e0ae60211dee42e0c17f170c4a2181a143718b",
-          "size": 77413,
+          "hash": "b869b758dd1f917f3356898f335cb4353d5357ede84665f993b419d08b54fc1e",
+          "size": 83853,
           "executable": false
         },
         {

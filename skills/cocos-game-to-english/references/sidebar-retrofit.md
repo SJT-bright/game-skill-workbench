@@ -33,7 +33,7 @@ python3 <skills>/remake-core/scripts/fix_game_name.py --project <工程> --force
 
 ### 侧栏布局
 
-按[手机按钮尺寸与首页布局](../../remake-art/references/mobile-button-size-and-home-layout.md)处理本轮侧边功能区，沿用已确认尺寸基准，首次调整记录真实基准与目标。依原有真实功能分配左右位置、间距与安全区，保持主视觉、PLAY 和入口可见可点；图案与点击区对齐，处理遮挡、裁切、越框和残留旧层。空间不足直接在侧栏及必要邻接区域重排，未涉及区域沿用原布局。新增或重建控件在设计时执行[新增界面制作](../../remake-art/references/new-feature-ui.md)。
+按[手机按钮尺寸与首页布局](../../remake-art/references/mobile-button-size-and-home-layout.md)处理本轮侧边功能区，沿用已确认尺寸基准，首次调整记录真实基准与目标。依原有真实功能分配左右位置、间距与安全区，保持主视觉、PLAY 和入口可见可点；图案与点击区对齐，处理遮挡、裁切、越框和残留旧层。空间不足直接在侧栏及必要邻接区域重排，未涉及区域沿用原布局。迁移原按钮或改变容器结构时，先按[统一坐标与绘制职责](../../remake-art/references/production-prevention.md#接入前统一坐标与绘制职责2026-11-03)处理旧容器剩余子项与图文价格组合，并接入原页面层级。新增或重建控件在设计时执行[新增界面制作](../../remake-art/references/new-feature-ui.md)。
 
 ### 个人主页回访与桌面快捷方式
 

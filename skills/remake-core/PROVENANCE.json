@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.23",
+  "revision": "2026-11-11.english-simple.11.17.24",
   "skill": "remake-core",
-  "previous_provenance_sha256": "7c76790a14dd087b54bca5196f56127bbd3e1dc951ead7d40c4e6f704443e145",
+  "previous_provenance_sha256": "239a579d4088849be278746974f055fbd3b6d2c8bf698aad5bf01db51db67bcf",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -958,8 +958,8 @@
     },
     {
       "path": "references/production-baseline.md",
-      "sha256": "cc2c4436f535afe2fded4e4149638ebd4fbbf138b0c0ba310cc44adad871e9aa",
-      "bytes": 9441
+      "sha256": "18c1dd39748b208537c639b1f2e32430fbe632db28a5c8c6a5aaf23a97204c8f",
+      "bytes": 9151
     },
     {
       "path": "references/production-plan.md",
@@ -978,8 +978,8 @@
     },
     {
       "path": "references/regression-scope-gate.md",
-      "sha256": "9b8bd25c0731a84fabea078b9680acf4d26c1900c128e26413dc45d496bf2ea8",
-      "bytes": 8247
+      "sha256": "8a7611b36e3694d915bfd8d3f19094ade919db20d722f39a70314bf5fff25821",
+      "bytes": 8584
     },
     {
       "path": "references/returned-art-delivery.md",
@@ -1532,6 +1532,11 @@
       "bytes": 12031
     },
     {
+      "path": "scripts/delivery_continuation.py",
+      "sha256": "cbfb376aa4a60571307beeb0182ecf41c2a130a61468439e5a53a401609153cb",
+      "bytes": 1692
+    },
+    {
       "path": "scripts/delivery_folder.py",
       "sha256": "30bc993cf65c68f323646cddd1b89f998e3f625476943e1ccbb6ae65fbdb8839",
       "bytes": 10503
@@ -1733,8 +1738,8 @@
     },
     {
       "path": "scripts/make_tiktok_zip.py",
-      "sha256": "b6f1bdbc9d29d322c023bbb3bc4c4dcc9bfcc8b43a045d78238eaabb8d2b10f2",
-      "bytes": 44895
+      "sha256": "6a890f078164389854923393ce25ffa99c92bb29b5dced323b2a5b34ae4974b4",
+      "bytes": 44759
     },
     {
       "path": "scripts/modules_harness.mjs",
@@ -1963,8 +1968,8 @@
     },
     {
       "path": "scripts/regression_scope_gate.py",
-      "sha256": "d13e9c62fbf9fd84caa87cca09252aa883ed68798c685123d7d85aff37fd4895",
-      "bytes": 28320
+      "sha256": "d256c716031291b1743f7e11a8e75df087ca14a831527753226c4a8b107b3ffa",
+      "bytes": 28196
     },
     {
       "path": "scripts/returned_art_acceptance.py",
@@ -2918,8 +2923,8 @@
     },
     {
       "path": "scripts/test_regression_scope_gate.py",
-      "sha256": "c56334fdedb0a3861921866b562649aa8c81815f996c7e996bb11cbd019dcf70",
-      "bytes": 17469
+      "sha256": "360bda2b068521bca109f324cb48da646256f784e64eca8e156a635196f48746",
+      "bytes": 18835
     },
     {
       "path": "scripts/test_res_keys.py",
@@ -4300,20 +4305,7 @@
           "method": "release"
         }
       ]
-    },
-    {
-      "id": "ui-structure.20261111.1",
-      "authority": "User requested merging general UI lessons, preserving check scope and cross-Skill compatibility",
-      "scope": "UI production guidance and existing-rule routing only",
-      "files": [
-        {
-          "path": "references/production-baseline.md",
-          "before_sha256": "18c1dd39748b208537c639b1f2e32430fbe632db28a5c8c6a5aaf23a97204c8f",
-          "after_sha256": "cc2c4436f535afe2fded4e4149638ebd4fbbf138b0c0ba310cc44adad871e9aa"
-        }
-      ]
     }
   ],
-  "previous_local_provenance_sha256": "239a579d4088849be278746974f055fbd3b6d2c8bf698aad5bf01db51db67bcf",
-  "maintenance_revision": "ui-structure.20261111.1"
+  "previous_local_provenance_sha256": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8"
 }

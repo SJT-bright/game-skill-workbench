@@ -45,6 +45,7 @@ legacy list gets warnings and its ZIP. Results go into the report (rewarded_ad_r
 suites take minutes; for test_writer_refusal give the same --ad-regression in the writer command (its normal case).
 """
 import argparse
+from delivery_continuation import continuing_cli
 import hashlib
 import json
 import os
@@ -409,6 +410,7 @@ def write_zip(native, files, target, *, reviewed_files=None):
             z.writestr(zi, payload[rel])
 
 
+@continuing_cli('writer')
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--native', type=Path, required=True, help='the Cocos Native (mini-game) build output folder')
@@ -652,8 +654,6 @@ def main():
                 raise
     except (ValueError, OSError, zipfile.BadZipFile, RuntimeError) as e:
         print('REFUSED, no ZIP written: the written ZIP failed its own check: %s' % e, file=sys.stderr)
-        print(json.dumps({'status':'repair_required', 'task_terminal':False, 'reason':str(e),
-                          'next_action':'repair_exact_gap_then_resume_writer'}, ensure_ascii=False), file=sys.stderr)
         return 1
     finally:
         shutil.rmtree(tmpdir, True)
@@ -718,6 +718,7 @@ def main():
     print('report: %s' % report_path)
     print('\n'.join(delivery_folder.describe(report['delivery_folder'])))
     return 0
+
 
 
 if __name__ == '__main__':

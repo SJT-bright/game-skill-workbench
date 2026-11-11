@@ -165,6 +165,28 @@ class ScopeGateTests(unittest.TestCase):
         self.assertTrue(evidence['ads.cancel']['reused'])
         self.assertEqual(evidence['ads.cancel']['source_key'], ledger.sha(plans[1]['record']['binding']))
 
+    def test_independently_changed_cases_are_not_rejected_by_their_count(self):
+        previous=self.project/'previous.zip'
+        with zipfile.ZipFile(previous,'w') as archive:
+            archive.writestr('game.js',b'old game')
+            archive.writestr('skin.png',b'old skin')
+        baseline={'path':str(previous),'sha256':gate.digest(previous)}
+        groups={'ads':[self.row('ads.normal',paths=('game.js',)),
+                       self.row('ads.cancel',paths=('skin.png',))],'runtime':[]}
+        proposed={'ads.normal':'game module changed','ads.cancel':'skin consumer changed'}
+        gate._check_impact(self.project,groups,proposed,'scoped',baseline,self.files)
+
+    def test_two_changed_cases_still_require_individual_approval(self):
+        previous=self.project/'previous.zip'
+        with zipfile.ZipFile(previous,'w') as archive:
+            archive.writestr('game.js',b'old game')
+            archive.writestr('skin.png',b'old skin')
+        groups={'ads':[self.row('ads.normal',paths=('game.js',)),
+                       self.row('ads.cancel',paths=('skin.png',))],'runtime':[]}
+        with self.assertRaisesRegex(ledger.NeedsScope,'执行范围之外'):
+            gate._check_impact(self.project,groups,{'ads.normal':'changed'},'scoped',
+                               {'path':str(previous),'sha256':gate.digest(previous)},self.files)
+
     def test_reuse_only_rejects_any_actual_run(self):
         row = self.row('ads.normal')
         self.plan([row], mode='reuse-only')

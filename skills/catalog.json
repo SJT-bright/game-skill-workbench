@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T20:39:12.192Z",
-  "treeHash": "783a06850e1de9cf6af7940d43cd7bfb27c2a5ef866c7ef7746a12712b3d746d",
+  "createdAt": "2026-11-11T20:39:46.603Z",
+  "treeHash": "ab01ebab73ed8ab18b88beda0b2677a33b52c0e33e7806457b6d8882a98ef0ec",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3657,14 +3657,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "238b41e3814b63c3329cf72b2da9b901a4df7ad3a85e5f405a19c4fddb764d38",
-      "fileCount": 682,
-      "bytes": 13037384,
+      "treeHash": "3266ca28739ec8b147f28b9ec0be9710881fcce2fddc1b118a6272ea8abff602",
+      "fileCount": 683,
+      "bytes": 13040103,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7bf124cbdb7fbe4e8449ef4d03facaac081c6abf9eccbb78b2e730ef6fd86fb1",
-          "size": 164737,
+          "hash": "0c601c3a0e47d21f35d4aea8b87b3a35f5b882066cadd306e4614a770eb71109",
+          "size": 164321,
           "executable": false
         },
         {
@@ -4833,8 +4833,8 @@
         },
         {
           "path": "references/regression-scope-gate.md",
-          "hash": "9b8bd25c0731a84fabea078b9680acf4d26c1900c128e26413dc45d496bf2ea8",
-          "size": 8247,
+          "hash": "8a7611b36e3694d915bfd8d3f19094ade919db20d722f39a70314bf5fff25821",
+          "size": 8584,
           "executable": false
         },
         {
@@ -5504,6 +5504,12 @@
           "executable": false
         },
         {
+          "path": "scripts/delivery_continuation.py",
+          "hash": "cbfb376aa4a60571307beeb0182ecf41c2a130a61468439e5a53a401609153cb",
+          "size": 1692,
+          "executable": false
+        },
+        {
           "path": "scripts/delivery_folder.py",
           "hash": "30bc993cf65c68f323646cddd1b89f998e3f625476943e1ccbb6ae65fbdb8839",
           "size": 10503,
@@ -5745,8 +5751,8 @@
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "b6f1bdbc9d29d322c023bbb3bc4c4dcc9bfcc8b43a045d78238eaabb8d2b10f2",
-          "size": 44895,
+          "hash": "6a890f078164389854923393ce25ffa99c92bb29b5dced323b2a5b34ae4974b4",
+          "size": 44759,
           "executable": false
         },
         {
@@ -6021,8 +6027,8 @@
         },
         {
           "path": "scripts/regression_scope_gate.py",
-          "hash": "d13e9c62fbf9fd84caa87cca09252aa883ed68798c685123d7d85aff37fd4895",
-          "size": 28320,
+          "hash": "d256c716031291b1743f7e11a8e75df087ca14a831527753226c4a8b107b3ffa",
+          "size": 28196,
           "executable": false
         },
         {
@@ -7167,8 +7173,8 @@
         },
         {
           "path": "scripts/test_regression_scope_gate.py",
-          "hash": "c56334fdedb0a3861921866b562649aa8c81815f996c7e996bb11cbd019dcf70",
-          "size": 17469,
+          "hash": "360bda2b068521bca109f324cb48da646256f784e64eca8e156a635196f48746",
+          "size": 18835,
           "executable": false
         },
         {

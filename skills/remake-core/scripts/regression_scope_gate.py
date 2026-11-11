@@ -273,8 +273,6 @@ def _check_impact(project, groups, proposed, mode, baseline, files):
         fail('执行范围之外仍有待跑项：' + ', '.join(sorted(pending - proposed.keys())))
     if proposed.keys() - pending - {STARTUP}:
         fail('申请了当前无需重跑或未知的检查：' + ', '.join(sorted(proposed.keys() - pending - {STARTUP})))
-    if len(pending) > 1 and pending == eligible.keys():
-        fail('局部模式不能把全部适用回归排入重跑')
     old_path = Path(baseline['path'])
     with zipfile.ZipFile(old_path) as archive:
         old = package_manifest({i.filename: archive.read(i) for i in archive.infolist() if not i.is_dir()})

@@ -5,6 +5,14 @@
 
 完整验收开跑及返修按[稳定候选上的检查调度](../../test/references/candidate-execution.md)。先校准 adapter 的实际引擎、准备路径和业务读数，集中修复并固定产物后再跑长矩阵。`--suites` 只作局部定位；报告 incomplete 原样保留，不手工拼接完整通过。正式 writer 是否可复用由现有入口裁定，本文不新增缓存或减少必跑项。
 
+## 测试输入先校准（2026-11-10）
+
+长矩阵前，先用同一正式宿主和手机配置完成一次真实点击与业务读数。点击点取控件自身矩形中心；子节点文字、描边或粒子的递归视觉边界仍用于布局测量，不用于确定点击中心。浏览器真实 DPR 必须与 SDK 手机 profile 一致，并同时读 CSS 尺寸、Canvas backing、drawingBuffer、viewport 和实际截图；只看引擎 viewport 数字不能确认画面比例。
+
+Native 镜像的本地鼠标桥须在 adapter 加载前保留原生 DOM dispatcher、Touch、TouchEvent 和 createEvent，防止 adapter 替换后吞事件或构造出非 DOM Event。验证要看到真实 DOM → SDK → 引擎以及业务变化，单独记录“发出触摸”不算按钮通过。普通 Web、真实触摸、非 Canvas 和广告面板的原输入须保留。试玩复用账本绑定实际注入脚本的内容指纹；桥变化后只让对应失败项重试或使旧证据失效，不重写旧记录，不靠重命名端口绕过失败。
+
+维护这些测试输入代码时，执行 `test_hit_center.mjs`、`test_runtime_phone_profile.mjs`、`test_preview_touch_bridge.cjs`、`test_preview_check_once.py` 及实际手机比例的定点业务校准。测试层不一致时保留无效批次，先修工具再生成当前执行计划；已有输入与规则未变的有效结果按正式门禁沿用，不把业务回调调用当作真实点击的替代。
+
 ## button_sweep 与完整按钮覆盖的边界（2026-11-03）
 
 button_sweep 的自动候选发现及默认页面范围见下表；它会漏掉没有点击绑定的按钮图片，也不能证明失败、胜利、复活后再次失败等页面已经逐项实点。passed=true、notRun=[] 只说明该套件记录的范围，不代表全游戏按钮验收。执行者须按[逐按钮覆盖规则](../../test/references/button-interaction-coverage.md)查看实际画面、补齐入口和状态、真实点击并验证业务结果，汇总应测/实点/有效复用/失败/未测。未完成清单不得汇报完整功能验收通过；本段是执行与验收要求，不声称现有脚本已自动强制视觉盘点。

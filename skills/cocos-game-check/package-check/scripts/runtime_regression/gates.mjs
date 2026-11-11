@@ -13,8 +13,8 @@ const pe = (page, ...a) => L.track(page.evaluate(...a));
 
 // Real phone numbers in points (Saul's iPhone 14 TikTok, 2026-10-29). SE capsule x is derived, not measured: warn only.
 export const DEVICES = {
-  iphone14: { W: 390, H: 844, cap: { x0: 293, y0: 51, x1: 380, y1: 83 }, safeBottom: 810 },
-  se: { W: 375, H: 667, cap: { x0: 278, y0: 24, x1: 365, y1: 56 }, safeBottom: 667, capXUnmeasured: true },
+  iphone14: { W: 390, H: 844, dpr: 3, cap: { x0: 293, y0: 51, x1: 380, y1: 83 }, safeBottom: 810 },
+  se: { W: 375, H: 667, dpr: 2, cap: { x0: 278, y0: 24, x1: 365, y1: 56 }, safeBottom: 667, capXUnmeasured: true },
 };
 export const MiB = 1048576;
 // Pages below this frame rate are a throttled Ego tab (window covered), not a game fault: the run is invalid.
@@ -23,7 +23,7 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function setViewport(page, dev) {
   const d = DEVICES[dev];
-  await page.cdp('Emulation.setDeviceMetricsOverride', { width: d.W, height: d.H, deviceScaleFactor: 1, mobile: false });
+  await page.cdp('Emulation.setDeviceMetricsOverride', { width: d.W, height: d.H, deviceScaleFactor: d.dpr, mobile: false });
   await page.cdp('Emulation.setTouchEmulationEnabled', { enabled: false });
   await sleep(200);
 }
@@ -190,7 +190,8 @@ export const HELPERS = GEOM_JS + `
     var b = cssBox(n); if (!b) return null;
     var w = b.x1 - b.x0, h = b.y1 - b.y0;
     if (w < 2 || h < 2) return null;
-    return { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2, w: w, h: h, path: pathOf(n) };
+    var point = cssHitPoint(n);
+    return { x: point ? point.x : (b.x0 + b.x1) / 2, y: point ? point.y : (b.y0 + b.y1) / 2, w: w, h: h, path: pathOf(n) };
   }
 `;
 

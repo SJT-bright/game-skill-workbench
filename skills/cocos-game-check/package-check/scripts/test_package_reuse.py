@@ -16,7 +16,13 @@ class PackageReadReuse(unittest.TestCase):
         def read(z,name,*a,**kw):
             calls[name.filename if isinstance(name,zipfile.ZipInfo) else name]+=1
             return original(z,name,*a,**kw)
-        with patch.object(zipfile.ZipFile,'read',read):result=check(self.archive,APP)
+        # This case counts archive reads. Authorization and regression evidence are
+        # separate boundaries with their own fail-closed tests.
+        with patch.object(zipfile.ZipFile,'read',read), \
+                patch('check_package.verify_regression_scope', return_value={'unit_test': 'authorized'}), \
+                patch('check_package.regression_record', return_value={'unit_test': 'regression boundary'}), \
+                patch('check_package.regression_coverage_problem', return_value=None):
+            result=check(self.archive,APP)
         self.assertTrue(result['packed_resource_check']['passed']);self.assertEqual(calls,collections.Counter({name:1 for name in self.files}))
     def test_wrong_target_or_nonempty_payload_output_refused(self):
         payload={}
@@ -47,7 +53,8 @@ class PackageReadReuse(unittest.TestCase):
             seen.append(Path(folder))
             with self.archive.open('ab') as stream:stream.write(b'changed')
             return {'passed':True}
-        with patch('check_package.packed_assets',side_effect=assets):
+        with patch('check_package.packed_assets',side_effect=assets), \
+                patch('check_package.verify_regression_scope', return_value={'unit_test': 'authorized'}):
             with self.assertRaisesRegex(ValueError,'changed during package checks'):check(self.archive,APP)
         self.assertTrue(seen);self.assertTrue(all(not folder.exists() for folder in seen))
     def test_original_native_mismatch_still_refused(self):
@@ -71,7 +78,20 @@ class PackageReadReuse(unittest.TestCase):
         self.assertEqual(finalize['blocks'],[])
         self.assertEqual({n:hashlib.sha256(d).hexdigest() for n,d in self.files.items()},
                          {p.relative_to(native).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in native.rglob('*') if p.is_file()})
-        with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)), patch('prepare_delivery.audit_final_startup',return_value={'passed':True}):
+        # Exercise the final ZIP/Native comparison and real size/CRC readback.
+        # The fixture engine is a stub; isolate the external CLI and prior-regression
+        # proof boundaries rather than treating it as a runnable official build.
+        def cli_boundary(actual_archive, expected_sha):
+            self.assertEqual(Path(actual_archive).resolve(),self.archive.resolve())
+            self.assertEqual(hashlib.sha256(self.archive.read_bytes()).hexdigest(),expected_sha)
+            return {'passed':True,'errors':[],'version':'synthetic-cli-boundary'}
+        prior_regressions={'reused':True,'why':'synthetic prior-regression boundary',
+                           'rewarded_ad_regression':{'status':'not_applicable'},
+                           'runtime_regression':{'status':'passed','passed':True}}
+        with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)), \
+                patch('prepare_delivery.audit_final_startup',return_value={'passed':True}), \
+                patch('tiktok_cli_gate.verify',side_effect=cli_boundary) as cli, \
+                patch('check_package.reusable_regressions',return_value=prior_regressions):
             # v7.5: a hand-written ZIP without a writer receipt is an unofficial entry and is refused first.
             with self.assertRaisesRegex(ValueError,'unofficial entry|official writer receipt'):prepare(self.archive,native,APP,self.root/'no-receipt.json',project=project,resource_manifest=manifest)
             self.assertFalse((self.root/'no-receipt.json').exists())
@@ -94,6 +114,8 @@ class PackageReadReuse(unittest.TestCase):
             preview.assert_called_once_with(url,'a'*64)
             self.assertEqual(receipt['preview']['url'],url)
             self.assertEqual(receipt['sha256'],hashlib.sha256(self.archive.read_bytes()).hexdigest())
+            self.assertFalse(receipt['fresh_size_check']['reused'])
+            self.assertGreaterEqual(cli.call_count,3)
             (native/'child.js').write_bytes(b'changed')
             with self.assertRaisesRegex(ValueError,'differs from actual Native'):prepare(self.archive,native,APP,self.root/'bad-delivery.json',project=project,resource_manifest=manifest)
         self.assertFalse((self.root/'bad-delivery.json').exists())

@@ -82,7 +82,52 @@ class FailClosed(unittest.TestCase):
         (package / 'game.js').write_text('')
         with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None):
             with self.assertRaisesRegex(ad_regression.RegressionRefused, 'Ego CLI 不可用'):
-                ad_regression.run(package, self.adapter({'request': 'grant();'}))
+                ad_regression._run_uncached(package, self.adapter({'request': 'grant();'}))
+
+    def test_public_run_without_scope_refuses_before_executor(self):
+        package = self.root / 'unplanned'
+        package.mkdir()
+        (package / 'game.js').write_text('')
+        adapter = self.adapter({'request': 'grant();'})
+        with patch.dict(os.environ, {}, clear=True), \
+                patch('ad_regression._run_uncached') as execute:
+            with self.assertRaisesRegex(ad_regression.RegressionRefused, 'scope_required.*执行计划'):
+                ad_regression.run(package, adapter)
+        execute.assert_not_called()
+
+    def test_public_run_accepts_its_validated_synthetic_plan(self):
+        import regression_scope_gate as scope
+
+        # This synthetic fixture exercises authorization and dispatch only. The raw
+        # executor is mocked before it can open a browser or inspect a real game.
+        package = self.root / 'planned'
+        package.mkdir()
+        files = {'reward-entry.js': AD_JS, 'unrelated.json': b'{}'}
+        for name, data in files.items():
+            (package / name).write_bytes(data)
+        adapter = self.adapter({'request': 'grant();'})
+        dependency = self.root / 'docs/checks/check-inputs.json'
+        dependency.parent.mkdir(parents=True)
+        dependency.write_text(json.dumps({'schema': 'check-inputs.v1', 'checks': {
+            'ads.' + case: {'basis': 'synthetic reward entry for ' + case,
+                           'inputs': {'package': ['reward-entry.js'], 'adapter': ['/request']}}
+            for case in ad_regression.CASES}}))
+        token = scope._active_plan.set(None)
+        self.addCleanup(scope._active_plan.reset, token)
+        with patch.dict(os.environ, {'ENGLISH_CHECK_PROJECT': str(self.root)}, clear=True):
+            plan = scope.create_plan(self.root, files, adapter, board='localize', policy='new',
+                                     prior=None, mode='full', proposed={},
+                                     authorization='Unit test owns this synthetic callback fixture only')
+            plan_file = self.root / 'plan.json'
+            plan_file.write_text(json.dumps(plan))
+            os.environ[scope.ENV_PLAN] = str(plan_file)
+            with patch('ad_regression._run_uncached', side_effect=ad_regression.RegressionRefused(
+                    'synthetic executor reached')) as execute:
+                with self.assertRaisesRegex(ad_regression.RegressionRefused, '^synthetic executor reached$'):
+                    ad_regression.run(package, adapter)
+        execute.assert_called_once()
+        self.assertEqual(execute.call_args[0][:2], (package.resolve(), adapter))
+        self.assertEqual(execute.call_args[0][2], ad_regression.CASES)
 
     def test_nonofficial_browser_override_refuses(self):
         with patch.dict(os.environ, {'EGO_BROWSER': str(self.root / 'desktop-browser')}), \
@@ -109,7 +154,10 @@ class FailClosed(unittest.TestCase):
     def test_gate_refuses_when_browser_missing(self):
         files, folder = self.staged()
         adapter = self.adapter({'request': 'grant();'})
-        with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None):
+        # This test targets error propagation from the executor. Scope authorization
+        # is tested through the public run() entry separately below.
+        with patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None), \
+                patch('ad_regression.run', side_effect=ad_regression._run_uncached):
             with self.assertRaisesRegex(ValueError, 'Ego CLI 不可用'):
                 rewarded_ad_gate(files, folder, adapter)
 
@@ -126,7 +174,11 @@ class FailClosed(unittest.TestCase):
     def test_check_wires_the_gate_on_verified_bytes(self):
         archive = self.root / 'plain.zip'
         write_archive(archive, fixture())
-        with patch('check_package.rewarded_ad_gate', side_effect=ValueError('rewarded-ad regression required')) as gate:
+        # Test the gate wiring after authorization; the public scope boundary has
+        # its own fail-closed tests and must not mask this callback assertion.
+        with patch('check_package.verify_regression_scope', return_value={'unit_test': 'authorized'}), \
+                patch('check_package.runtime_gate', return_value={'status': 'not_applicable'}), \
+                patch('check_package.rewarded_ad_gate', side_effect=ValueError('rewarded-ad regression required')) as gate:
             with self.assertRaisesRegex(ValueError, 'rewarded-ad regression required'):
                 check(archive, APP, ad_regression='adapter.json')
         files, folder, adapter = gate.call_args[0]
@@ -134,11 +186,9 @@ class FailClosed(unittest.TestCase):
         self.assertEqual(adapter, 'adapter.json')
 
     def test_package_without_rewarded_ads_is_not_applicable(self):
-        archive = self.root / 'plain.zip'
-        write_archive(archive, fixture())
-        # The runtime regression is mandatory for every package with game.js; patched here like rewarded_ad_gate.
-        with patch('check_package.runtime_gate', return_value={'id': 'runtime_regression', 'status': 'patched'}):
-            self.assertEqual(check(archive, APP)['rewarded_ad_regression']['status'], 'not_applicable')
+        # Applicability belongs to this gate and does not require a successful
+        # archive delivery, a runtime adapter or fabricated regression evidence.
+        self.assertEqual(rewarded_ad_gate(fixture(), self.root)['status'], 'not_applicable')
 
 
 class RuntimeGateFailClosed(unittest.TestCase):
@@ -174,7 +224,8 @@ class RuntimeGateFailClosed(unittest.TestCase):
     def test_check_wires_runtime_gate_on_verified_bytes(self):
         archive = self.root / 'plain.zip'
         write_archive(archive, fixture())
-        with patch('check_package.runtime_gate', side_effect=ValueError('runtime regression required')) as gate:
+        with patch('check_package.verify_regression_scope', return_value={'unit_test': 'authorized'}), \
+                patch('check_package.runtime_gate', side_effect=ValueError('runtime regression required')) as gate:
             with self.assertRaisesRegex(ValueError, 'runtime regression required'):
                 check(archive, APP, ad_regression='adapter.json')
         files, folder, adapter = gate.call_args[0]
@@ -195,7 +246,8 @@ class RuntimeGateFailClosed(unittest.TestCase):
         archive = self.root / 'plain.zip'
         write_archive(archive, fixture())
         for policy in ('new', 'legacy'):
-            with patch('check_package.runtime_gate', side_effect=ValueError('runtime regression required')) as gate:
+            with patch('check_package.verify_regression_scope', return_value={'unit_test': 'authorized'}), \
+                    patch('check_package.runtime_gate', side_effect=ValueError('runtime regression required')) as gate:
                 with self.assertRaisesRegex(ValueError, 'runtime regression required'):
                     check(archive, APP, ad_regression='adapter.json', policy=policy)
             self.assertEqual(gate.call_args.kwargs.get('policy'), policy)
@@ -229,14 +281,14 @@ class Environment(unittest.TestCase):
     def test_run_without_touch_part_is_environment_incomplete(self):
         with self.probe, patch.dict(os.environ, {'EGO_BROWSER': ''}), patch('ad_regression._which', return_value=None):
             with self.assertRaises(ad_regression.EnvironmentIncomplete) as ctx:
-                ad_regression.run(self.package, self.adapter)
+                ad_regression._run_uncached(self.package, self.adapter)
         self.assertTrue(str(ctx.exception).startswith('环境不完整：'))
         self.assertIn('tiktok-touch-3x.js', str(ctx.exception))
         self.assertIsInstance(ctx.exception, ad_regression.RegressionRefused)
 
     def test_writer_gate_still_refuses_and_names_the_environment(self):
         files = {'game.js': b'', 'assets/index.js': AD_JS}
-        with self.probe:
+        with self.probe, patch('ad_regression.run', side_effect=ad_regression._run_uncached):
             with self.assertRaisesRegex(ValueError, '^环境不完整：'):
                 rewarded_ad_gate(files, self.package, self.adapter)
 
@@ -250,7 +302,7 @@ class Environment(unittest.TestCase):
         return code, json.loads(report.read_text())
 
     def test_cli_exit_codes(self):
-        with self.probe:
+        with self.probe, patch('ad_regression.run', side_effect=ad_regression._run_uncached):
             code, doc = self.main(self.package)                     # a folder: only the touch part is checked
         self.assertEqual((code, doc['status']), (2, 'environment_incomplete'))
         archive = self.root / 'Game.zip'

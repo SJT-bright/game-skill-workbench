@@ -112,6 +112,23 @@ export const GEOM_JS = ENGINE_INSTALL + `
     var a = cssPoint3(camPoint3(n, new cc.Vec3(r.x, r.y, z))), b = cssPoint3(camPoint3(n, new cc.Vec3(r.x + r.width, r.y + r.height, z)));
     return { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) };
   }
+  // Input belongs to this node's own rectangle. getBoundingBoxToWorld() also
+  // includes decorative children (captions, outlines, particles), whose visual
+  // centre is not a reliable hit point. Keep cssBox() unchanged for layout.
+  function cssHitPoint(n) {
+    if (!n || !ENGINE_READY || !ENGINE.size || !ENGINE.toWorld) return null;
+    var size = ENGINE.size(n);
+    if (!size || !(size.w > 0 && size.h > 0)) return null;
+    var w = ENGINE.toWorld(n, (0.5 - size.ax) * size.w, (0.5 - size.ay) * size.h);
+    if (!w) return null;
+    if (!V3) {
+      var m = map2(), p = camPoint2(n, w[0], w[1]);
+      if (!p) p = { x: w[0], y: w[1] };
+      return { x: m.ox + p.x * m.kx, y: m.fh - (m.oy + p.y * m.ky) };
+    }
+    var z = n.worldPosition ? n.worldPosition.z : 0;
+    return cssPoint3(camPoint3(n, new cc.Vec3(w[0], w[1], z)));
+  }
   function hideNode(n) {
     if (!V3) { var op = n.opacity; n.opacity = 0; return function () { n.opacity = op; }; }
     var u = n.getComponent(cc.UIOpacity), added = false;

@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-10",
- "release_label": "v7.9-en11.17.21-combined-playtest",
- "selftest_report_sha256": "074c49f266c9665eef9d4475dc9a970d2ef41de6682500f0982a7c6c151f207d",
+ "release_label": "v7.9-en11.17.22-sidebar-retrofit",
+ "selftest_report_sha256": "5fafe3d7c8ff2283e6b0d15504988132aa47c28f4dfba6be57a79fc28d0d05f7",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "3070c80555600929370d82e88c78b567313df72e000936d983e854e60522a186",

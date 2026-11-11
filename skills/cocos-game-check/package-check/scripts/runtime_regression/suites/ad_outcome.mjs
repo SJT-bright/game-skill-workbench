@@ -37,20 +37,6 @@ const isNone = (v) => !!v && typeof v === 'object' && !Array.isArray(v) && typeo
 const strip = (p) => String(p).replace(/#\d+$/, '');
 const short = (p) => p === '<play>' ? p : strip(p).split('/').slice(-2).join('/');
 const J = (v) => JSON.stringify(v === undefined ? null : v).slice(0, 80);
-// Explicit catalogue variants. Mirrors expose their existing policy through the same constants.
-const RESUME_ENTRY_DEDUP = false;
-const LEGACY_REVIVE_ENTRY = true;
-const hasResumeEntry = RP && RP.ad && !isNone(RP.ad) && Array.isArray(RP.start) &&
-  (!RESUME_ENTRY_DEDUP || !(A.ad_entries || []).some(e => e.button && RP.ad.tap && strip(e.button) === strip(RP.ad.tap)));
-
-// Cancellation and completion share the same button and entitlement. They remain one atomic entry/state unit.
-const DECLARED = new Set((A.ad_entries || [])
-  .filter(e => POLICY !== 'legacy' || A.ad_outcome || LEGACY_REVIVE_ENTRY && e.role === 'revive')
-  .flatMap(e => (e.states || []).map(state => e.id + '/' + state.name)));
-if (POLICY !== 'legacy' && hasResumeEntry) DECLARED.add('resume_play.ad');
-const SELECTED = C.selection == null || C.selection.includes('@suite') ? null : new Set(C.selection);
-const wants = id => SELECTED === null || SELECTED.has(id);
-
 
 function problems() {
   const out = A.ad_entries !== undefined ? R.adEntriesProblems(A.ad_entries) : [];
@@ -76,8 +62,8 @@ function problems() {
 async function entries() {
   const list = [], skipped = [];
   for (const e of A.ad_entries || []) for (const s of e.states) list.push({ id: e.id + '/' + s.name, key: e.id, button: e.button, state: s, from: 'ad_entries', role: e.role || null });
-  if (POLICY === 'legacy') return { list: A.ad_outcome ? list : LEGACY_REVIVE_ENTRY ? list.filter(e => e.role === 'revive') : [], skipped, prior: null };   // preserve this installation's legacy policy
-  if (hasResumeEntry)
+  if (POLICY === 'legacy') return { list: A.ad_outcome ? list : list.filter(e => e.role === 'revive'), skipped, prior: null };   // as before: ad_entries + ad_outcome
+  if (RP && RP.ad && !isNone(RP.ad) && Array.isArray(RP.start))
     list.push({ id: 'resume_play.ad', key: 'resume_play.ad', button: RP.ad.tap || null, tap_js: RP.ad.tap_js || null, level: true, from: 'resume_play.ad',
       state: { name: 'level', actions: RP.start.concat(RP.ad.actions || []), settle_ms: RP.settle_ms || 1500 } });
   const prior = await P.priorAdEntries();
@@ -201,32 +187,7 @@ await L.suite(async ({ out, page }) => {
   const disc = ((C.prior || {}).resume_play || {}).discovery || {};
   rep.entries = list.map((e) => ({ id: e.id, from: e.from, role: e.role || null, button: e.button || 'tap_js', sig: e.sig || null, taps: e.taps || null }));
   rep.skipped = skipped;
-  const done = () => {
-    out.units = {};
-    for (const id of DECLARED) {
-      if (!wants(id)) continue;
-      const cases = out.cases.filter(row => row.id === id || row.id === id + '/cancel' || row.id === id + '/complete');
-      out.units[id] = { passed: cases.length === 2 && cases.every(row => row.passed === true), cases };
-    }
-    if (wants('@discovered')) {
-      const cases = out.cases.filter(row => ![...DECLARED].some(id =>
-        row.id === id || row.id === id + '/cancel' || row.id === id + '/complete'));
-      if (!cases.length) {
-        out.add('@discovered', true, 'the known catalogue contains no additional discovered ad routes');
-        cases.push(out.cases[out.cases.length - 1]);
-      }
-      out.units['@discovered'] = { passed: cases.every(row => row.passed === true), cases };
-    }
-    rep.selected = SELECTED ? [...SELECTED] : null;
-    out.evidence.report = L.evidence('ad_outcome.json', rep);
-    out.evidence.entries = rep.entries.map(e => e.id);
-    out.save();
-  };
-  const unknown = SELECTED && [...SELECTED].filter(id => id !== '@discovered' && !DECLARED.has(id));
-  if (unknown && (unknown.length || !SELECTED.size)) {
-    out.add('selection', false, 'ad_outcome selection must contain declared entry/state units or @discovered: ' + unknown.join(', '));
-    return done();
-  }
+  const done = () => { out.evidence.report = L.evidence('ad_outcome.json', rep); out.evidence.entries = rep.entries.map((e) => e.id); };
   if (!list.length) {
     if (POLICY === 'legacy') {
       if (A.ad_entries && !A.ad_outcome) { out.warn('ad_outcome not run: adapter has no "ad_outcome" [legacy game: warning]'); out.add('adapter', true, 'legacy game: warning'); }
@@ -248,13 +209,7 @@ await L.suite(async ({ out, page }) => {
   const other = list.filter(e => e.role !== 'revive');
   const room = Math.max(0, MAX_ENTRIES - required.length);
   if (other.length > room) out.warn('ad_outcome: omitted entries: ' + other.slice(room).map(e => e.id).join(', '));
-  const ordered = [...required, ...other.slice(0, room)];
-  const omittedDeclared = [...DECLARED].filter(id => wants(id) && !ordered.some(en => en.id === id));
-  if (omittedDeclared.length) {
-    out.add('catalogue', false, 'ad_outcome cannot omit planned declared routes: ' + omittedDeclared.join(', '));
-    return done();
-  }
-  for (const en of ordered.filter(en => wants(DECLARED.has(en.id) ? en.id : '@discovered'))) {
+  for (const en of [...required, ...other.slice(0, room)]) {
     const spec = (O.entries || {})[en.key] || (O.entries || {})[en.id] || {};
     const cont = spec.continue_button || O.continue_button || (RP && RP.continue_button) || disc.continue || null;
     const c = { id: en.id, from: en.from, button: en.button || 'tap_js' };

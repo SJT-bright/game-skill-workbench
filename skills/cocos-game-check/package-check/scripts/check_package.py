@@ -143,7 +143,7 @@ def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
             engine=rr.detect_engine(files,a);resolved_policy,_=rr.package_policy(files,policy)
             ids=[]
             for name in rr.required_suites(files,a,catalog):
-                units=runtime_incremental.unit_ids(name,catalog[name],a,rr.precheck(name,catalog[name],a,engine,resolved_policy) is not None,policy=resolved_policy)
+                units=runtime_incremental.unit_ids(name,catalog[name],a,rr.precheck(name,catalog[name],a,engine,resolved_policy) is not None)
                 ids.extend('runtime.'+name+'/'+unit for unit in units)
             if ad_regression_gate.needs_regression(files):ids.extend('ads.'+c for c in ad_regression_gate.default_cases(a))
             # Returned visual acceptance is a disposition, not a missing art test.
@@ -258,7 +258,7 @@ def regression_coverage_problem(ad, runtime, files, adapter, policy=None):
             row = rows_by_name[name]
             meta = catalog[name]
             prechecked = rr.precheck(name, meta, adapter_data, engine, judged) is not None
-            expected = set(unit_ids(name, meta, adapter_data, prechecked, policy=judged))
+            expected = set(unit_ids(name, meta, adapter_data, prechecked))
             if row.get('visual_status') == 'user_accepted':
                 if (name != 'layout_state' or set(row.get('accepted_visual_units') or []) != expected
                         or 'runtime.layout_state/@startup' not in (row.get('incremental') or {})):

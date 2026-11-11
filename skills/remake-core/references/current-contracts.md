@@ -6,6 +6,7 @@
 |---|---|
 | 新制作的默认模块、货币、皮肤、广告 | [融合边界](fusion-policy.md)、[模块](game-modules.md)、关卡与顶部栏（重塑包 remake-levels 板块，英化包不含） |
 | 新制作/处理原有入口 | [分享与联网排行榜禁用（局内本地名次可以留）](no-social-features.md)、禁止广告跳关与教程（重塑包 remake-onboarding 板块，英化包不含） |
+| 首次制作/适配，或玩法空间、坐标、运动/碰撞、操作锁受影响 | [跨视口玩法的坐标与完成结果](viewport-gameplay.md)，并入已有核心操作与第二比例检查 |
 | 设计确认前、玩法确认后、功能验收与增量维护 | [阶段与执行范围](../../cocos-game-check/test/references/review-execution-plan.md)、[停止条件](../../cocos-game-check/test/references/testing-scope-and-stop.md) |
 | 美术制作或受影响页面 | [美术前移与锁定](../../remake-art/references/art-before-trial.md)、[UI规范与样板](../../remake-art/references/ui-style-and-samples.md)、[图片字与布局](../../remake-art/references/page-richness.md)、[按钮分区](../../remake-art/references/mobile-button-size-and-home-layout.md) |
 | 遮字、灰格、列表首尾、关闭/返回压装饰 | [集合预览](../../remake-art/references/collection-preview-review.md)、[字底与字形](../../remake-art/references/text-backplate-review.md)、[局部UI契约](../../remake-art/references/local-ui-contract.md) |

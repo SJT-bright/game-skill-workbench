@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T17:37:49.371Z",
-  "treeHash": "775741445d177e1d34c6684d2cb2be843c5b40411f64d986a1edbdd60c9229c3",
+  "createdAt": "2026-11-11T17:38:15.345Z",
+  "treeHash": "660c132720d57e0d9c3dec2e7c04f51e9cd22945f477837aaa6f227cfeeaa893",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3657,9 +3657,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "b58633421ea689a762c313933e38410833e4434199b978a5fa8c31ce489e5cc1",
-      "fileCount": 681,
-      "bytes": 13030495,
+      "treeHash": "238b41e3814b63c3329cf72b2da9b901a4df7ad3a85e5f405a19c4fddb764d38",
+      "fileCount": 682,
+      "bytes": 13037384,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -4665,8 +4665,8 @@
         },
         {
           "path": "references/current-contracts.md",
-          "hash": "ef2147d75fa2a87c52b6d7c3c93b8318e505711a56ba7d9e3bf242c647a32ea6",
-          "size": 7051,
+          "hash": "3c3deca3db3b7ac5b12b633c69b1facb58190b743b76428d4cf187ab449b7ff7",
+          "size": 7253,
           "executable": false
         },
         {
@@ -4809,8 +4809,8 @@
         },
         {
           "path": "references/production-baseline.md",
-          "hash": "cc2c4436f535afe2fded4e4149638ebd4fbbf138b0c0ba310cc44adad871e9aa",
-          "size": 9441,
+          "hash": "e2abbd58d040fb8235ca35294acdd4e4de2d6fc107548d5a3d558133d164730e",
+          "size": 9629,
           "executable": false
         },
         {
@@ -4883,6 +4883,12 @@
           "path": "references/user-phone-preview.md",
           "hash": "2489d5d9fa4b1c5442e6142b79bc443b05e07b8594e1e46ec660861c310c34c1",
           "size": 7950,
+          "executable": false
+        },
+        {
+          "path": "references/viewport-gameplay.md",
+          "hash": "28e3ad48cc7ebb83cf2ea5d1d9b7cc4c4e428668a629b232e41cd9255cc9c230",
+          "size": 6499,
           "executable": false
         },
         {

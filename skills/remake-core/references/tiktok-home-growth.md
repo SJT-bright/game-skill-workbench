@@ -1,5 +1,7 @@
 # TikTok 主页快捷方式与个人主页回访
 
+英化旧游戏请求“整改侧栏”时，执行[四项局部整改](../../cocos-game-to-english/references/sidebar-retrofit.md)，同时处理去游戏名和侧栏布局。旧游戏维护沿用原奖励和存档，只复验真实变化的入口。
+
 2026-10-13 核对官方 [Home Screen Shortcut](https://developers.tiktok.com/docs/en/home-screen-shortcut)、[Revisit From Profile](https://developers.tiktok.com/docs/en/revisit-from-profile) 和 [Revisit Incentives SDK](https://developers.tiktok.com/docs/en/mini-games-sdk-revisit-incentives)。这两项是官方必需能力；具体兼容版本和调试方式会变化，实施时重核。不能只用静态按钮、HTML 书签或返回游戏主页代替。
 
 ## 共用展示与任务流程（用户 2026-11-08）

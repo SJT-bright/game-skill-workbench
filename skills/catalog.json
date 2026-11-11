@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T07:53:17.875Z",
-  "treeHash": "0c96891a48f18a3e9bf2de4959f20dc8719f7a45a3d076af636a1c9e572eaab7",
+  "createdAt": "2026-11-11T07:56:34.646Z",
+  "treeHash": "c2d6e2de2984f2b1f95cfb4a7fb3cc08b2845dc8016a3f6a9503a82d48b9c211",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3633,13 +3633,13 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "9e3cc26040115ad355bf287f56863834d4395d346acb06727a2099d33e5e0837",
-      "fileCount": 674,
-      "bytes": 12939095,
+      "treeHash": "0958fff482765941525467b34d7fab7e2eb540a7a036ae7a7c075595c5b5821b",
+      "fileCount": 678,
+      "bytes": 12992427,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "51a7009f3fdf55b5d6586a8f29210b19d7c25d17b33afc864ee120371ed68ae7",
+          "hash": "938e7e2a5eb945294b062b19d7095c0874796efdee6e441e6ee1f6d901e4f056",
           "size": 161430,
           "executable": false
         },
@@ -4491,8 +4491,8 @@
         },
         {
           "path": "assets/preview-touch-bridge.js",
-          "hash": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
-          "size": 3977,
+          "hash": "89f13aa1c6f44e22d849f0b3c87ef5d3d18fc7623b8b8287d89039d81b35c73b",
+          "size": 4334,
           "executable": false
         },
         {
@@ -4833,8 +4833,8 @@
         },
         {
           "path": "references/tiktok-home-growth.md",
-          "hash": "218bac709e41b557728b91ea1412516a01bb3e499710359ae2bddf6ffa2ae934",
-          "size": 15697,
+          "hash": "4989eea98a7efb12fc77501c0d715c0efffc8ad53df5ddcce0b00edaa7e576c7",
+          "size": 15950,
           "executable": false
         },
         {
@@ -5546,6 +5546,12 @@
           "executable": false
         },
         {
+          "path": "scripts/fixtures/preview-touch-bridge-v1.js",
+          "hash": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
+          "size": 3977,
+          "executable": false
+        },
+        {
           "path": "scripts/fixtures_rewire/dqiao/TTSdk.js",
           "hash": "727b5d93cb4afe794a9e14293627cb031094d115df82ce947101b7856c3cf6e4",
           "size": 10487,
@@ -5757,8 +5763,8 @@
         },
         {
           "path": "scripts/package_gates/ads_static.py",
-          "hash": "eed747c38289b7498979c09c842588b2cafcf196109095de80301c55d1c213d2",
-          "size": 14460,
+          "hash": "ed7f1225f8e7133da01695b668b9ec22a347677a5022bb5c8f179e80d9902de2",
+          "size": 14525,
           "executable": false
         },
         {
@@ -5889,8 +5895,8 @@
         },
         {
           "path": "scripts/preview_check_once.py",
-          "hash": "d20ab9912dd4b180191240fe4a40d2dee330251c365aeda61d4160f32833718e",
-          "size": 2943,
+          "hash": "49be650b844f56f498e465c0531eab041dbcecc8d3b3883264a3e63322b320c4",
+          "size": 3333,
           "executable": false
         },
         {
@@ -6021,8 +6027,8 @@
         },
         {
           "path": "scripts/scan_free_claim_ad_lock.cjs",
-          "hash": "3be678e6002a12ba7bd0c99fc9a89643249b6be3ee37ac93476cd4d75fdff656",
-          "size": 10102,
+          "hash": "456b0dde27f0ee4991375f287c015e84d9e7b2dc9471d4e5544a495fcf0744c0",
+          "size": 12980,
           "executable": false
         },
         {
@@ -6053,6 +6059,12 @@
           "path": "scripts/scan_systemjs_resources.cjs",
           "hash": "d1bc4507dae8166d76f02521b0e7e8ec2d60c78cfd46b2d6f2eb271ea4134528",
           "size": 12620,
+          "executable": false
+        },
+        {
+          "path": "scripts/scan_tiktok_host_refs.cjs",
+          "hash": "7e9d4271b1decf473cd97e466b4ed05ad0cd68d0490e38f776f76658fb0efc7e",
+          "size": 10278,
           "executable": false
         },
         {
@@ -6519,14 +6531,14 @@
         },
         {
           "path": "scripts/test_free_claim_ad_lock.cjs",
-          "hash": "58cc2a5613a5901a840c16fe478dc5c7b7e68ca2cb56242457661c6d893dd8f9",
-          "size": 2369,
+          "hash": "e8d1a061e5d374e83b1aa7fdefaa647c37486543641d961e5adc437c46df1bc7",
+          "size": 3353,
           "executable": false
         },
         {
           "path": "scripts/test_free_claim_ad_lock.py",
-          "hash": "bfb7f24c585bb89a1734e64b76481d11a88e71c522371a118f06fe510ae87894",
-          "size": 3957,
+          "hash": "0fbb3a08a674e466c7718fe0e26418a0172ce27eb48029e1eecd2ae7eeb2a6e9",
+          "size": 4283,
           "executable": false
         },
         {
@@ -6956,6 +6968,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_preview_check_once.py",
+          "hash": "3a69037574231d352073654494e9cb381e98c04caa9be046a14e13acac24ffb1",
+          "size": 8343,
+          "executable": false
+        },
+        {
           "path": "scripts/test_preview_chrome.py",
           "hash": "d6dab12c406627c4567541a00085836dcfb5a9dee6c7b9aa2957412d45ce64f2",
           "size": 8360,
@@ -6971,6 +6989,12 @@
           "path": "scripts/test_preview_phone.py",
           "hash": "52ee95722206a4321732006b062917968b91e2ed38333c3694359248e792e020",
           "size": 5248,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_preview_touch_bridge.cjs",
+          "hash": "df1c9105de3bf3b1af189eb1d33c45577772f958813befe5507ac30ebf056ef2",
+          "size": 19518,
           "executable": false
         },
         {
@@ -7359,8 +7383,8 @@
         },
         {
           "path": "scripts/test_upload_size_gate.py",
-          "hash": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c",
-          "size": 10647,
+          "hash": "5f20ad5fa23b0acf5ed6130b45a110caffc269d2c512ec54a2d9d4a3a4f7ed5a",
+          "size": 16448,
           "executable": false
         },
         {
@@ -7641,8 +7665,8 @@
         },
         {
           "path": "scripts/upload_size_gate.py",
-          "hash": "8777148192f38548ae55133d882275d04c985debe99ea7197a823911a9bc9929",
-          "size": 15119,
+          "hash": "100da39c1185a5b54fd141e506fdc5350dff8ccbbe03130b1cf8d4f2aeee05a1",
+          "size": 15281,
           "executable": false
         },
         {

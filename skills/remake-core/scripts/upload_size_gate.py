@@ -9,6 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import stat
 import uuid
 import zipfile
@@ -76,29 +78,27 @@ def enforce(sizes, game, platform='tiktok'):
 
 # Only the shipped multiplatform Cocos engine paths carry supported wx branches.
 _ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
-_WECHAT_HOST_REFERENCE = re.compile(
-    r"""(?<![\w$])wx\s*(?:\?\.|\.|\[)|\btypeof\s+wx\b|"""
-    r"""\b(?:window|globalThis|global|root|self)\s*(?:(?:\?\.|\.)\s*wx\b|"""
-    r"""(?:\?\.)?\s*\[\s*['"]wx['"]\s*\])"""
-)
 
 
 def enforce_tiktok_host(files):
     """Report legacy host access in the main package, adapters and subpackages."""
-    findings = []
-    for name, data in sorted(files.items()):
-        if name in _ENGINE_MULTIPLATFORM_FILES or not name.lower().endswith(('.js', '.mjs', '.cjs')):
-            continue
-        source = data.decode('utf-8-sig')
-        for match in _WECHAT_HOST_REFERENCE.finditer(source):
-            line = source.count('\n', 0, match.start()) + 1
-            findings.append(f"{name}:{line} {match.group().strip()}")
-            if len(findings) == 12:
-                break
-        if len(findings) == 12:
-            break
+    candidates = [{'file': name, 'code': data.decode('utf-8-sig')}
+                  for name, data in sorted(files.items())
+                  if name not in _ENGINE_MULTIPLATFORM_FILES and name.lower().endswith(('.js', '.mjs', '.cjs'))]
+    if not candidates:
+        return
+    node = shutil.which('node')
+    if not node:
+        raise ValueError('TikTok host-reference check needs Node.js')
+    scanner = Path(__file__).with_name('scan_tiktok_host_refs.cjs')
+    result = subprocess.run([node, str(scanner)], input=json.dumps({'files': candidates}),
+                            text=True, capture_output=True, timeout=30)
+    if result.returncode:
+        raise ValueError('TikTok host-reference check did not run: ' + result.stderr[-500:])
+    findings = json.loads(result.stdout)['findings']
     if findings:
-        raise ValueError('TikTok Native contains legacy WeChat host references: ' + '; '.join(findings))
+        raise ValueError('TikTok Native contains legacy WeChat host references: ' + '; '.join(
+            f"{row['file']}:{row['line']} {row['reference']}" for row in findings[:12]))
 
 
 def enforce_files(files):

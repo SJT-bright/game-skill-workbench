@@ -8,8 +8,14 @@ from pathlib import Path
 import json
 import check_ledger as C
 
-def rule_files(kind):
-    files=[Path(__file__).with_name('serve_preview.py'),Path(__file__)]
+def rule_files(kind,conditions=None):
+    assets=Path(__file__).resolve().parent.parent/'assets'
+    # These are the actual response-injected scripts. Their bytes can fix an
+    # input failure or invalidate an old pass without changing the game export.
+    files=[Path(__file__).with_name('serve_preview.py'),Path(__file__),
+           assets/'preview-touch-bridge.js']
+    if (conditions or {}).get('ad_simulator') is True:
+        files.append(assets/'ad-simulator.js')
     if kind=='ad-response':
         scripts=Path(__file__).resolve().parents[2]/'cocos-game-check/package-check/scripts'
         runtime=scripts/'runtime_regression'
@@ -26,7 +32,7 @@ def run(project,kind,export,conditions,fn,adapter=None):
     root=lambda:{'preview':C.manifest(export),'adapter':C.json_manifest(json.loads(Path(adapter).read_text()) if adapter else {})}
     roots=root()
     try:
-        p=ledger.prepare('preview.'+kind,roots,conditions,C.tool_fingerprint(rule_files(kind)),label='试玩入口 / '+kind,domain='startup' if kind=='home' else 'platform')
+        p=ledger.prepare('preview.'+kind,roots,conditions,C.tool_fingerprint(rule_files(kind,conditions)),label='试玩入口 / '+kind,domain='startup' if kind=='home' else 'platform')
         def execute():
             value=list(fn())
             if kind=='ad-response' and value[0]=='pass':

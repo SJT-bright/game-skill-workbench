@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.21",
+  "revision": "2026-11-10.english-simple.11.17.22",
   "skill": "remake-core",
-  "previous_provenance_sha256": "adf8ad6875897b93b804872705abb0110c92ebdbebff1d284fed0255bc2447dd",
+  "previous_provenance_sha256": "51a7009f3fdf55b5d6586a8f29210b19d7c25d17b33afc864ee120371ed68ae7",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -988,8 +988,8 @@
     },
     {
       "path": "references/tiktok-home-growth.md",
-      "sha256": "218bac709e41b557728b91ea1412516a01bb3e499710359ae2bddf6ffa2ae934",
-      "bytes": 15697
+      "sha256": "4989eea98a7efb12fc77501c0d715c0efffc8ad53df5ddcce0b00edaa7e576c7",
+      "bytes": 15950
     },
     {
       "path": "references/token-economy.md",

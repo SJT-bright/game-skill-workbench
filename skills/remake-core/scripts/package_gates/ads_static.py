@@ -228,10 +228,10 @@ def free_claim_ad_locks(view):
     scanner = Path(__file__).resolve().parent.parent / 'scan_free_claim_ad_lock.cjs'
     result = subprocess.run([node, str(scanner)], input=json.dumps({'files': candidates}),
                             capture_output=True, text=True, timeout=30)
-    if result.returncode not in (0, 1):
+    if result.returncode != 0:
         raise RuntimeError('free-claim ad-lock AST check did not run: ' + (result.stdout or result.stderr)[-500:])
     report = json.loads(result.stdout)
-    if report.get('status') not in ('checked', 'failed') or report.get('checked') != len(candidates):
+    if report.get('status') not in ('checked', 'risk_detected') or report.get('checked') != len(candidates):
         raise RuntimeError('free-claim ad-lock AST check returned incomplete evidence')
     return report['findings']
 
@@ -278,11 +278,12 @@ def check(view):
                            {'hits': sorted(set(hits))}))
     claim_locks = free_claim_ad_locks(view)
     if claim_locks:
-        out.append(finding('A4_free_claim_ad_lock', 'block',
+        out.append(finding('A4_free_claim_ad_lock', 'warn',
                            'an optional-ad busy guard also blocks a non-ad reward button: %s; '
-                           'keep the earned base reward claimable, isolate the cancelled request and its late result, '
-                           'then verify this entry with a missing callback'
+                           'verify this entry with a missing callback and its existing timeout/exit route; '
+                           'the structural match alone does not prove a permanent lock'
                            % '; '.join('%s/%s (%s:%s)' % (row['module'], row['handler'], row['file'], row['line'])
                                        for row in claim_locks[:6]),
-                           {'hits': claim_locks, 'scope': 'supported shared-handler/button-binding structure'}))
+                           {'hits': claim_locks, 'scope': 'supported shared-handler/button-binding structure',
+                            'requires_runtime_verification': True}))
     return out

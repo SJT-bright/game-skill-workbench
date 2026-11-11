@@ -35,4 +35,12 @@ check('unrelated classes with the same handler', bindings.replaceAll('Panel', 'O
 const object = `{start:function(){UI.setButtonClickEvents(this,a,'collect',1);UI.setButtonClickEvents(this,b,'collect',0);},
  collect:function(event,mode){if(this.waiting)return;${ad}${reward}}}`;
 check('object methods', 'var panel=' + object, 1);
+check('guard wraps only the ad branch', method('if(!this.waiting){' + ad + '}' + reward), 0);
+check('busy guard is inside the ad choice', method('if(mode===0){if(this.waiting)return;' + ad + '}' + reward), 0);
+check('binding belongs to another component', method('if(this.waiting)return;' + ad + reward).replaceAll('setButtonClickEvents(this,', 'setButtonClickEvents(other,'), 0);
+check('lock cleared before its guard', method('this.waiting=false;if(this.waiting)return;' + ad + reward), 0);
+check('lock cleared in a sequence test', method('if(this.waiting=false,!this.waiting){' + ad + reward + '}'), 0);
+check('state-changing call precedes guard', method('this.cancelBonus();if(this.waiting)return;' + ad + reward), 0);
+check('paid alternatives with success reentry', method('if(this.waiting)return;' + ad + 'this.purchase(mode===1?this.basicPrice:this.premiumPrice);'), 0);
+check('a non-reward navigation action', method('if(this.waiting)return;' + ad + 'this.returnHome();'), 0);
 console.log(JSON.stringify({passed: true, cases}));

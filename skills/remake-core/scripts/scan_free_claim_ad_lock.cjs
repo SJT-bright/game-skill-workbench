@@ -66,7 +66,10 @@ function returnsAtEnd(node) {
 }
 
 function scan(source, file = '<input>') {
-  const ast = acorn.parse(source, {ecmaVersion: 'latest', sourceType: 'module', locations: true, allowReturnOutsideFunction: true});
+  const options = {ecmaVersion: 'latest', sourceType: 'script', locations: true, allowReturnOutsideFunction: true};
+  let ast;
+  try { ast = acorn.parse(source, options); }
+  catch (_) { ast = acorn.parse(source, {...options, sourceType: 'module'}); }
   const parents = new Map(), functions = [], bindings = new Map(), registrations = [];
   visit(ast, node => {
     for (const child of children(node)) parents.set(child, node);
@@ -75,7 +78,7 @@ function scan(source, file = '<input>') {
     if (member(node.callee) === 'push' && member(node.callee.object) === '_RF' && typeof constant(node.arguments[2]) === 'string') {
       registrations.push({start: node.start, name: constant(node.arguments[2])});
     }
-    if (member(node.callee) !== 'setButtonClickEvents' || node.arguments.length < 4) return;
+    if (member(node.callee) !== 'setButtonClickEvents' || node.arguments.length < 4 || node.arguments[0].type !== 'ThisExpression') return;
     const handler = constant(node.arguments[2]), value = constant(node.arguments[3]);
     if (typeof handler !== 'string' || value === undefined) return;
     if (!bindings.has(handler)) bindings.set(handler, []);
@@ -125,6 +128,31 @@ function scan(source, file = '<input>') {
     const isThis = node => node && (node.type === 'ThisExpression' || (node.type === 'Identifier' && aliases.has(node.name)));
     const flag = node => node?.type === 'MemberExpression' && isThis(node.object) ? member(node) : null;
     const params = fn.params.map(param => param.type === 'Identifier' ? param.name : param.left?.name);
+    // Confirm the non-ad branch selects an existing base collection while the
+    // alternative extends that same collection. Other handlers need runtime review.
+    const reference = node => {
+      if (node?.type === 'CallExpression' && member(node.callee) === 'slice' && !node.arguments.length) return reference(node.callee.object);
+      if (isThis(node)) return 'this';
+      if (node?.type === 'Identifier') return node.name;
+      if (node?.type === 'MemberExpression' && member(node) !== null) {
+        const object = reference(node.object);
+        return object === null ? null : object + '.' + member(node);
+      }
+      return null;
+    };
+    const extendsBase = (base, bonus) => {
+      if (bonus?.type !== 'CallExpression' || member(bonus.callee) !== 'concat') return false;
+      const key = reference(base);
+      return key !== null && [bonus.callee.object, ...bonus.arguments].some(value => reference(value) === key);
+    };
+    const rewardChoices = [];
+    visit(fn.body, node => {
+      if (node.type !== 'ConditionalExpression') return;
+      const choice = selector(node.test, params);
+      if (choice && (extendsBase(node.consequent, node.alternate) || extendsBase(node.alternate, node.consequent))) {
+        rewardChoices.push({choice, node});
+      }
+    });
     const calls = [];
     visit(fn.body, node => { if (node.type === 'CallExpression' && AD_METHODS.has(member(node.callee))) calls.push(node); });
     for (const ad of calls) {
@@ -135,7 +163,12 @@ function scan(source, file = '<input>') {
       }
       if (!branch || branch === fn || !(ad.start >= branch.consequent.start && ad.end <= branch.consequent.end)) continue;
       const choice = selector(branch.test, params);
+      if (choice.index !== params.length - 1) continue;
       if (!bound.some(row => row.value === choice.value) || !bound.some(row => row.value !== choice.value)) continue;
+      const rewards = rewardChoices.filter(row => row.choice.index === choice.index && row.choice.value !== choice.value &&
+        bound.some(binding => binding.value === row.choice.value) &&
+        !(row.node.start >= branch.consequent.start && row.node.end <= branch.consequent.end));
+      if (!rewards.length) continue;
       let reenters = false;
       visit(ad, node => {
         if (node.type === 'CallExpression' && member(node.callee) === method && isThis(node.callee.object)) {
@@ -152,14 +185,17 @@ function scan(source, file = '<input>') {
         let guard = null;
         for (let node = parents.get(branch); node && node !== fn; node = parents.get(node)) {
           const test = node.type === 'IfStatement' ? last(node.test) : null;
-          if (test?.type === 'UnaryExpression' && test.operator === '!' && flag(test.argument) === lock && branch.start >= node.consequent.start && branch.end <= node.consequent.end) guard = node;
+          if (test?.type === 'UnaryExpression' && test.operator === '!' && flag(test.argument) === lock &&
+              parents.get(node) === fn.body && branch.start >= node.consequent.start && branch.end <= node.consequent.end &&
+              rewards.some(row => row.node.start >= node.consequent.start && row.node.end <= node.consequent.end)) guard = node;
         }
         for (let node = branch; parents.has(node) && parents.get(node) !== fn; node = parents.get(node)) {
           const block = parents.get(node);
           if (block.type !== 'BlockStatement') continue;
           for (const prior of block.body) {
             if (prior.start >= node.start) break;
-            if (prior.type === 'IfStatement' && flag(last(prior.test)) === lock && immediateReturn(prior.consequent)) guard = prior;
+            if (block === fn.body && prior.type === 'IfStatement' && flag(last(prior.test)) === lock &&
+                immediateReturn(prior.consequent) && rewards.some(row => row.node.start > prior.end)) guard = prior;
           }
         }
         const otherChoices = [...new Set(bound.map(row => row.value))].filter(value => value !== choice.value);
@@ -176,7 +212,14 @@ function scan(source, file = '<input>') {
           }
         }
         const blockedChoices = otherChoices.filter(value => !alreadyHandled.has(value));
-        if (guard && blockedChoices.length) findings.push({file, module: moduleAt(fn.start), handler: method, lock, line: guard.loc.start.line,
+        let lockReset = false;
+        if (guard) visit(fn.body, node => {
+          const inGuardTest = node.start >= guard.test.start && node.end <= guard.test.end;
+          if (node.start >= guard.start && !inGuardTest) return;
+          if (node.type === 'AssignmentExpression' && flag(node.left) === lock && constant(node.right) === false) lockReset = true;
+          if (node.type === 'CallExpression' && node.callee.type === 'MemberExpression' && isThis(node.callee.object)) lockReset = true;
+        });
+        if (guard && !lockReset && blockedChoices.length) findings.push({file, module: moduleAt(fn.start), handler: method, lock, line: guard.loc.start.line,
           ad_choice: choice.value, other_button_choices: blockedChoices,
           reason: 'An unconditional ad-busy guard also blocks the non-ad button bound to this reward handler.'});
       }
@@ -193,10 +236,13 @@ if (require.main === module) {
     try {
       const input = JSON.parse(fs.readFileSync(0, 'utf8'));
       if (!Array.isArray(input.files) || !input.files.length) throw new Error('files must be a nonempty array');
+      if (!input.files.every(row => row && typeof row.file === 'string' && row.file.trim() && typeof row.code === 'string' && row.code.trim())) {
+        throw new Error('each file needs a nonempty file name and JavaScript source');
+      }
       const findings = input.files.flatMap(row => scan(row.code, row.file));
-      console.log(JSON.stringify({status: findings.length ? 'failed' : 'checked', checked: input.files.length, findings,
+      console.log(JSON.stringify({status: findings.length ? 'risk_detected' : 'checked', checked: input.files.length, findings,
+        requires_runtime_verification: findings.length > 0,
         boundary: 'Checks the supported shared-handler structure only. No findings do not prove runtime recovery.'}));
-      if (findings.length) process.exitCode = 1;
     } catch (error) {
       console.log(JSON.stringify({status: 'not_run', checked: 0, reason: error.message}));
       process.exitCode = 2;

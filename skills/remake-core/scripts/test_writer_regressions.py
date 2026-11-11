@@ -10,6 +10,7 @@ Synthetic fixtures: every earlier writer gate is stubbed (their own tests cover 
 are real except where a test replaces runtime_regression.run / ad_regression.run with a pass or a failure.
 Run: python3 test_writer_regressions.py
 """
+import ast
 import contextlib
 import hashlib
 import inspect
@@ -94,6 +95,12 @@ class WriterRegressions(unittest.TestCase):
         except ImportError:             # v7.7.5 has no delivery_folder: the comparison run still reaches the regressions
             tidy = []
         return tidy + [
+            # Synthetic writer orchestration does not carry a real scope plan or
+            # immutable browser proof. Keep the actual regression error routing,
+            # isolating only authorization and final complete-proof boundaries.
+            mock.patch.object(C, 'verify_regression_scope', return_value={'unit_test': 'synthetic authorization'}),
+            mock.patch.object(C, 'regression_record', return_value={'unit_test': 'synthetic evidence boundary'}),
+            mock.patch.object(C, 'regression_coverage_problem', return_value=None),
             mock.patch.object(M, 'finalize_for_writer', return_value=(record, {'writer': True}, [])),
             mock.patch.object(audit_native_resource_paths, 'audit', return_value={'status': 'pass', 'errors': []}),
             mock.patch.object(M, 'native_problems', return_value=([], sizes, info)),
@@ -170,6 +177,9 @@ class WriterRegressions(unittest.TestCase):
         code, err, _ = self.make('new', self.adapter(COMPLETE),
                                  [mock.patch.dict(os.environ, {RR.ENV_BROWSER: ''}),
                                   mock.patch.object(RR, '_which', lookup),
+                                  # This case targets environment validation of the
+                                  # raw runner, not incremental authorization.
+                                  mock.patch.object(RR, 'run', side_effect=RR._run_uncached),
                                   mock.patch.object(RR, 'run_suite', execution)])
         self.assertEqual(code, 1, err)
         self.assertIn('Ego CLI 不可用', err)
@@ -255,7 +265,10 @@ class WriterRegressions(unittest.TestCase):
 
 class Interface(unittest.TestCase):
     def test_writer_regressions_never_raises_and_legacy_only_warns(self):
-        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {RR.ENV_ADAPTER: ''}):
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {RR.ENV_ADAPTER: ''}), \
+                mock.patch.object(C, 'verify_regression_scope', return_value={'unit_test': 'synthetic authorization'}), \
+                mock.patch.object(C, 'regression_record', return_value={'unit_test': 'synthetic evidence boundary'}), \
+                mock.patch.object(C, 'regression_coverage_problem', return_value=None):
             (Path(d) / 'game.js').write_bytes(b'//g')
             files = {'game.js': b'//g'}
             new = C.writer_regressions(files, d, None, policy='new', board='remake')
@@ -267,13 +280,25 @@ class Interface(unittest.TestCase):
         self.assertTrue(old['warnings'])
 
     def test_wiring_runs_before_the_receipt_and_check_is_unchanged(self):
-        body = inspect.getsource(M.main)
-        # 简化.11.15 (出包后返工): the same call, plus the last passed package (rework_of) the writer resolved
-        self.assertIn('writer_regressions(check, a.ad_regression, gate_policy, a.board, rework_of=rework_of)', body)
-        self.assertLess(body.index('resolve_rework(a.rework_of, out)'), body.index('writer_regressions(check'))
-        self.assertLess(body.index('writer_regressions(check'), body.index('vnz.make_receipt('))
-        self.assertIn('runtime_gate(verified_files, folder, ad_regression, policy=gates.get(\'policy\'), board=board,\n'
-                      '                                       rework=rework)', inspect.getsource(C.check))
+        body = ast.parse(inspect.getsource(M.main))
+        calls = [n for n in ast.walk(body) if isinstance(n, ast.Call)]
+        regression = next(n for n in calls if isinstance(n.func, ast.Name) and n.func.id == 'writer_regressions')
+        self.assertEqual([ast.unparse(a) for a in regression.args],
+                         ['check', 'a.ad_regression', 'gate_policy', 'a.board'])
+        keywords = {k.arg: ast.unparse(k.value) for k in regression.keywords}
+        self.assertEqual(keywords['rework_of'], 'rework_of')
+        self.assertEqual(keywords['project'], 'a.project')
+        self.assertIn('expected_scope_sha256', keywords)
+        resolve = next(n for n in calls if isinstance(n.func, ast.Name) and n.func.id == 'resolve_rework')
+        receipt = next(n for n in calls if isinstance(n.func, ast.Attribute) and n.func.attr == 'make_receipt')
+        self.assertLess(resolve.lineno, regression.lineno)
+        self.assertLess(regression.lineno, receipt.lineno)
+        check = ast.parse(inspect.getsource(C.check))
+        runtime = next(n for n in ast.walk(check) if isinstance(n, ast.Call)
+                       and isinstance(n.func, ast.Name) and n.func.id == 'runtime_gate')
+        self.assertEqual([ast.unparse(a) for a in runtime.args], ['verified_files', 'folder', 'ad_regression'])
+        self.assertEqual({k.arg for k in runtime.keywords}, {'policy', 'board'})
+
 
 
 if __name__ == '__main__':

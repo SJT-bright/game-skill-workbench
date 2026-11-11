@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.22",
+  "revision": "2026-11-10.english-simple.11.17.23",
   "skill": "remake-core",
-  "previous_provenance_sha256": "51a7009f3fdf55b5d6586a8f29210b19d7c25d17b33afc864ee120371ed68ae7",
+  "previous_provenance_sha256": "7c76790a14dd087b54bca5196f56127bbd3e1dc951ead7d40c4e6f704443e145",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -43,8 +43,8 @@
     },
     {
       "path": "assets/known-issues.json",
-      "sha256": "16b388786941812725d12e1774bd3a14d9dfc1f5bb64777a9915f99136b508b3",
-      "bytes": 148505
+      "sha256": "cc0e29cf7462b212a2cbd44e8c590bf5933f110e62ad9ceb050f1075f63d48d5",
+      "bytes": 148014
     },
     {
       "path": "assets/loading-recovery-examples/asset-load-guard.js",
@@ -88,8 +88,8 @@
     },
     {
       "path": "assets/platform-kit/README_接入说明.md",
-      "sha256": "9b32f8659642fbabcc979ffb3ff5185bdba26fc7c58d740a97236beca4b822d1",
-      "bytes": 84469
+      "sha256": "1c384532bb64be81a62a3bc00b8e4c7ade223d0ee8cea0356cf163e64c1377ae",
+      "bytes": 84616
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
@@ -713,8 +713,8 @@
     },
     {
       "path": "assets/preview-touch-bridge.js",
-      "sha256": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
-      "bytes": 3977
+      "sha256": "89f13aa1c6f44e22d849f0b3c87ef5d3d18fc7623b8b8287d89039d81b35c73b",
+      "bytes": 4334
     },
     {
       "path": "assets/production-task-template.md",
@@ -888,8 +888,8 @@
     },
     {
       "path": "references/incremental-checks.md",
-      "sha256": "6ec41874645ae7c2773a5489a36f425ed30cfd34a97aee050733bb141032d2f5",
-      "bytes": 9934
+      "sha256": "dc3a4abe9002e46c7e778fc2c133154b329847d3b340957731778819dd9bcf7e",
+      "bytes": 10848
     },
     {
       "path": "references/known-issue-checklist.md",
@@ -918,13 +918,18 @@
     },
     {
       "path": "references/manual-visual-review.md",
-      "sha256": "79990941e48a0abdb76f7fca82ffa3588d35e82505f59247940d75b4d7895962",
-      "bytes": 4701
+      "sha256": "45b4e0ae9c9f1338d9f736c2a0734629c70913b1222e626617bf60ba8e646a7e",
+      "bytes": 6244
     },
     {
       "path": "references/method-provenance.md",
       "sha256": "1e5a6835d774e34d38e3f226be2db24af6f6b5a42d2a0582619e6545431d4182",
       "bytes": 1871
+    },
+    {
+      "path": "references/native-startup-ledger.md",
+      "sha256": "e2040e8f07ec7f42a097f2c257d1fa232eeb3e7dadb5770fae0fff05d4384f44",
+      "bytes": 1673
     },
     {
       "path": "references/no-social-features.md",
@@ -952,6 +957,11 @@
       "bytes": 9126
     },
     {
+      "path": "references/production-baseline.md",
+      "sha256": "cc2c4436f535afe2fded4e4149638ebd4fbbf138b0c0ba310cc44adad871e9aa",
+      "bytes": 9441
+    },
+    {
       "path": "references/production-plan.md",
       "sha256": "d6e21bfd24090c90f46f231d66ed7efcc1107edc4a9d890ca5fe03babedb2148",
       "bytes": 4671
@@ -965,6 +975,11 @@
       "path": "references/ranking-league.md",
       "sha256": "178463339985ed9706f862d51299929ecc56576f06e63eec0043e2fd7202ac25",
       "bytes": 470
+    },
+    {
+      "path": "references/regression-scope-gate.md",
+      "sha256": "9b8bd25c0731a84fabea078b9680acf4d26c1900c128e26413dc45d496bf2ea8",
+      "bytes": 8247
     },
     {
       "path": "references/returned-art-delivery.md",
@@ -983,8 +998,8 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "d8f0210c2268e5082ff731688c0f8c0ca3f07e39e3cd215767aad411c102e3d3",
-      "bytes": 50883
+      "sha256": "77a619dcbd8f34954edb6af70f938afe204c9299183b23967fc88cff7442ad8c",
+      "bytes": 51077
     },
     {
       "path": "references/tiktok-home-growth.md",
@@ -998,8 +1013,8 @@
     },
     {
       "path": "references/two-boards.md",
-      "sha256": "38b87fd666e27366fc4c7d51a8051f798504ec4ad047751fabbe3e382389a287",
-      "bytes": 2454
+      "sha256": "57797bd2c532459ef834f4229329dd847fee2d87f5d5136ccf6449b3a76d4041",
+      "bytes": 2601
     },
     {
       "path": "references/user-phone-preview.md",
@@ -1193,8 +1208,8 @@
     },
     {
       "path": "scripts/audit_final_package_startup.py",
-      "sha256": "96c867e4a596bcd4d57a297752956ae8f362430fc95ce7fcf0784427c73694ae",
-      "bytes": 8375
+      "sha256": "450111c50cfb7c42189f4da120b732c9ae342371768bf6ee050f66b07364f896",
+      "bytes": 9566
     },
     {
       "path": "scripts/audit_frame_glitches.py",
@@ -1258,8 +1273,8 @@
     },
     {
       "path": "scripts/audit_native_startup_renderer.py",
-      "sha256": "73aeb29629c133b3fc525408276dd8c9c9a8b09b241461b0c2891ca59ed7120f",
-      "bytes": 15758
+      "sha256": "e041fb43e87104eab9bbea2d4a984ef1f30ee0477b242ff829dd738432d3cc2c",
+      "bytes": 16113
     },
     {
       "path": "scripts/audit_native_storage_contract.py",
@@ -1363,8 +1378,8 @@
     },
     {
       "path": "scripts/audit_startup_contract.py",
-      "sha256": "38298cc4870fd650183d052b8f19705f51905abb8291eadbbbe7d36c36dbdc22",
-      "bytes": 13304
+      "sha256": "e2744d9b70f31ee34c3c3a12d53870a0047badfa5570ccae953d5f48579073e0",
+      "bytes": 13731
     },
     {
       "path": "scripts/audit_startup_loading.py",
@@ -1417,6 +1432,11 @@
       "bytes": 5807
     },
     {
+      "path": "scripts/check-ledger-rule-compat.json",
+      "sha256": "51d6ac2590015245b1a9ebb83acf4ad2c2c1c6345f940872331cd9f466d257b4",
+      "bytes": 530
+    },
+    {
       "path": "scripts/check_hint_presentations.py",
       "sha256": "27cae969cee2c3654baee3026cf938cffab512736d3e2abd2416533ed308de03",
       "bytes": 5600
@@ -1433,8 +1453,8 @@
     },
     {
       "path": "scripts/check_ledger.py",
-      "sha256": "05b1daa81d4bd834754b72f0f546a8a3fc6e955ffcc8fc0bd48c931ff7872ca5",
-      "bytes": 23186
+      "sha256": "2f1318c7731f5551d74cdd2ff59f2582cf9e734634bd7aaddd986921c9482825",
+      "bytes": 25397
     },
     {
       "path": "scripts/check_runner.py",
@@ -1577,6 +1597,11 @@
       "bytes": 21992
     },
     {
+      "path": "scripts/fixtures/preview-touch-bridge-v1.js",
+      "sha256": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
+      "bytes": 3977
+    },
+    {
       "path": "scripts/fixtures_rewire/dqiao/TTSdk.js",
       "sha256": "727b5d93cb4afe794a9e14293627cb031094d115df82ce947101b7856c3cf6e4",
       "bytes": 10487
@@ -1708,13 +1733,18 @@
     },
     {
       "path": "scripts/make_tiktok_zip.py",
-      "sha256": "03655f5e4e4382c9bb4437bc82a8af3d6781e326f536c5f352760c933ab4208b",
-      "bytes": 43676
+      "sha256": "b6f1bdbc9d29d322c023bbb3bc4c4dcc9bfcc8b43a045d78238eaabb8d2b10f2",
+      "bytes": 44895
     },
     {
       "path": "scripts/modules_harness.mjs",
       "sha256": "f4470312aa17e659d17b43230e63c83a113c2dbce26c026d9494824501cd3c56",
       "bytes": 6972
+    },
+    {
+      "path": "scripts/native_startup_ledger.py",
+      "sha256": "9cdd611513e38a605592fdfb19fbb77fea418c03ba06724ade875ce5585b069b",
+      "bytes": 6451
     },
     {
       "path": "scripts/official_engine_sources.json",
@@ -1748,8 +1778,8 @@
     },
     {
       "path": "scripts/package_gates/ads_static.py",
-      "sha256": "0e458cd6e9d1301bfc38822ae51a659c9c3feae9d1d0031cb7bceb92b5095207",
-      "bytes": 12235
+      "sha256": "ed7f1225f8e7133da01695b668b9ec22a347677a5022bb5c8f179e80d9902de2",
+      "bytes": 14525
     },
     {
       "path": "scripts/package_gates/audio.py",
@@ -1858,8 +1888,8 @@
     },
     {
       "path": "scripts/preview_check_once.py",
-      "sha256": "d20ab9912dd4b180191240fe4a40d2dee330251c365aeda61d4160f32833718e",
-      "bytes": 2943
+      "sha256": "49be650b844f56f498e465c0531eab041dbcecc8d3b3883264a3e63322b320c4",
+      "bytes": 3333
     },
     {
       "path": "scripts/preview_chrome.py",
@@ -1868,8 +1898,8 @@
     },
     {
       "path": "scripts/preview_touch_fakedom.cjs",
-      "sha256": "ac46a04b762db17bac1a4ff60efd1e678dfd713d66939188027e80d78a45c786",
-      "bytes": 3778
+      "sha256": "8ecf1f49e5adbc35cb55b3af80510476cb0916e5a34306ade7eb628578fe02dc",
+      "bytes": 3913
     },
     {
       "path": "scripts/probe_cocos2_papercut_storage.cjs",
@@ -1932,6 +1962,11 @@
       "bytes": 9660
     },
     {
+      "path": "scripts/regression_scope_gate.py",
+      "sha256": "d13e9c62fbf9fd84caa87cca09252aa883ed68798c685123d7d85aff37fd4895",
+      "bytes": 28320
+    },
+    {
       "path": "scripts/returned_art_acceptance.py",
       "sha256": "860fa4e7bd215ba5688f457167f3290eacf2a9289144e533f33d4ad21d3ecd14",
       "bytes": 11005
@@ -1962,6 +1997,11 @@
       "bytes": 9571
     },
     {
+      "path": "scripts/scan_free_claim_ad_lock.cjs",
+      "sha256": "a5a201f217d1c2a26b6a7cd4d3d3df3f41661a48d9687bb4cdbe0825b20b17db",
+      "bytes": 13433
+    },
+    {
       "path": "scripts/scan_input_ownership.cjs",
       "sha256": "ef412a6aa5a361710b37a3c1f6638d9e7670dec1b419bc099d4a6bc47a39962b",
       "bytes": 12178
@@ -1985,6 +2025,11 @@
       "path": "scripts/scan_systemjs_resources.cjs",
       "sha256": "d1bc4507dae8166d76f02521b0e7e8ec2d60c78cfd46b2d6f2eb271ea4134528",
       "bytes": 12620
+    },
+    {
+      "path": "scripts/scan_tiktok_host_refs.cjs",
+      "sha256": "1749bbf8823c7ab3f5c4ac5191c7a91197a6fe676711725326c5e936d8b74574",
+      "bytes": 18491
     },
     {
       "path": "scripts/selftest_native_startup_renderer.py",
@@ -2187,6 +2232,11 @@
       "bytes": 4326
     },
     {
+      "path": "scripts/test_ast_worker_cli.py",
+      "sha256": "813c4aa7d62db3460c8aef20630b49ef6afe611d27a2de1b9cb692113cb41342",
+      "bytes": 4781
+    },
+    {
       "path": "scripts/test_async_and_writer.py",
       "sha256": "332914b75ff4a124913b8ae172a8b5ecb1e698b8dc5689e5ff648bfbbe286acf",
       "bytes": 8570
@@ -2372,6 +2422,16 @@
       "bytes": 6649
     },
     {
+      "path": "scripts/test_free_claim_ad_lock.cjs",
+      "sha256": "e8d1a061e5d374e83b1aa7fdefaa647c37486543641d961e5adc437c46df1bc7",
+      "bytes": 3353
+    },
+    {
+      "path": "scripts/test_free_claim_ad_lock.py",
+      "sha256": "0fbb3a08a674e466c7718fe0e26418a0172ce27eb48029e1eecd2ae7eeb2a6e9",
+      "bytes": 4283
+    },
+    {
       "path": "scripts/test_fused_cleanup.py",
       "sha256": "250da62be3d539769b292fee752300536cddeca59f524955e12ff6dd1f345088",
       "bytes": 9896
@@ -2425,6 +2485,11 @@
       "path": "scripts/test_host_adaptation.py",
       "sha256": "8d9d1bc4167a3c5a81c0b259c23df780f6808c3572edb4fb23a963ee9d6e06ed",
       "bytes": 3426
+    },
+    {
+      "path": "scripts/test_host_optional_compat.cjs",
+      "sha256": "e398070a99a2d1d1133c271dd45485d704889a19588d75bc18ab091227d0827c",
+      "bytes": 3742
     },
     {
       "path": "scripts/test_image_inflight_example.cjs",
@@ -2727,6 +2792,11 @@
       "bytes": 18460
     },
     {
+      "path": "scripts/test_preview_check_once.py",
+      "sha256": "3a69037574231d352073654494e9cb381e98c04caa9be046a14e13acac24ffb1",
+      "bytes": 8343
+    },
+    {
       "path": "scripts/test_preview_chrome.py",
       "sha256": "d6dab12c406627c4567541a00085836dcfb5a9dee6c7b9aa2957412d45ce64f2",
       "bytes": 8360
@@ -2740,6 +2810,11 @@
       "path": "scripts/test_preview_phone.py",
       "sha256": "52ee95722206a4321732006b062917968b91e2ed38333c3694359248e792e020",
       "bytes": 5248
+    },
+    {
+      "path": "scripts/test_preview_touch_bridge.cjs",
+      "sha256": "df1c9105de3bf3b1af189eb1d33c45577772f958813befe5507ac30ebf056ef2",
+      "bytes": 19518
     },
     {
       "path": "scripts/test_product_contract.py",
@@ -2842,6 +2917,11 @@
       "bytes": 4559
     },
     {
+      "path": "scripts/test_regression_scope_gate.py",
+      "sha256": "c56334fdedb0a3861921866b562649aa8c81815f996c7e996bb11cbd019dcf70",
+      "bytes": 17469
+    },
+    {
       "path": "scripts/test_res_keys.py",
       "sha256": "28e2ac6584c0e5d9a01e8009aa28c16216a0fb4910d683d85164844bcb1ea6e6",
       "bytes": 7516
@@ -2853,8 +2933,8 @@
     },
     {
       "path": "scripts/test_returned_art_acceptance.py",
-      "sha256": "aa78164c6644374f032a9eae18d06b56d63efa191b670c23b079ade9abc16094",
-      "bytes": 18223
+      "sha256": "102eb17dfe78c4b4c482304c5d80b7026a44869570f0ec933e560197cf6884d7",
+      "bytes": 18878
     },
     {
       "path": "scripts/test_rewardguard3x.py",
@@ -2868,8 +2948,8 @@
     },
     {
       "path": "scripts/test_runtime_timing_reporting.py",
-      "sha256": "a0168788b4994b70a111b72396bc3822875df1d50be6928799da60b5881868eb",
-      "bytes": 3884
+      "sha256": "f5eb6ecd6e61e7b3af0aae3796c5f72d69bbe12a4029c326a565a366e23d2644",
+      "bytes": 6227
     },
     {
       "path": "scripts/test_runtime_word_images.py",
@@ -3058,8 +3138,8 @@
     },
     {
       "path": "scripts/test_upload_size_gate.py",
-      "sha256": "7afa80db2006175c1c4318a0783117ae26fcc451c3739366c204a0867efbc40c",
-      "bytes": 10647
+      "sha256": "5f20ad5fa23b0acf5ed6130b45a110caffc269d2c512ec54a2d9d4a3a4f7ed5a",
+      "bytes": 16448
     },
     {
       "path": "scripts/test_value_labels.py",
@@ -3098,8 +3178,8 @@
     },
     {
       "path": "scripts/test_writer_finalize.py",
-      "sha256": "28568f80a6c66140bfafd16f0fdb456e52cc5f034db4a6498a837002b0316a76",
-      "bytes": 32789
+      "sha256": "034b27d13c129df8f98d81b86ccac011cbc821a08ac578229dc311067a914f85",
+      "bytes": 33676
     },
     {
       "path": "scripts/test_writer_refusal.py",
@@ -3108,8 +3188,8 @@
     },
     {
       "path": "scripts/test_writer_regressions.py",
-      "sha256": "4887492b8b62d9de09ec6fd785ceaa07d77a64bd23b9cc22da9da3df67344afc",
-      "bytes": 15145
+      "sha256": "46c9c49701ae1696189aac3d9d2702ce1c9c9b08877bcebe5ae03190f98ae340",
+      "bytes": 16980
     },
     {
       "path": "scripts/tiktok_cli_gate.py",
@@ -3293,8 +3373,8 @@
     },
     {
       "path": "scripts/upload_size_gate.py",
-      "sha256": "f245ffead76e24c7f6aa5d0a6ce7063deb848d24c55c8db3491606398e70020e",
-      "bytes": 13873
+      "sha256": "100da39c1185a5b54fd141e506fdc5350dff8ccbbe03130b1cf8d4f2aeee05a1",
+      "bytes": 15281
     },
     {
       "path": "scripts/vendor/ACORN-LICENSE",
@@ -4220,7 +4300,20 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "ui-structure.20261111.1",
+      "authority": "User requested merging general UI lessons, preserving check scope and cross-Skill compatibility",
+      "scope": "UI production guidance and existing-rule routing only",
+      "files": [
+        {
+          "path": "references/production-baseline.md",
+          "before_sha256": "18c1dd39748b208537c639b1f2e32430fbe632db28a5c8c6a5aaf23a97204c8f",
+          "after_sha256": "cc2c4436f535afe2fded4e4149638ebd4fbbf138b0c0ba310cc44adad871e9aa"
+        }
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8"
+  "previous_local_provenance_sha256": "239a579d4088849be278746974f055fbd3b6d2c8bf698aad5bf01db51db67bcf",
+  "maintenance_revision": "ui-structure.20261111.1"
 }

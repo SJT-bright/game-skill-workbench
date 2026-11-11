@@ -26,10 +26,13 @@ function hostName(node, name) {
 function hasHost(node, name) {
   let found = false; walk(node, child => { if (hostName(child, name)) found = true; }); return found;
 }
-function scan(source, file) {
+function parse(source) {
   const options = {ecmaVersion:'latest', locations:true, allowReturnOutsideFunction:true};
-  let ast; try { ast = acorn.parse(source, {...options,sourceType:'script'}); }
-  catch (_) { ast = acorn.parse(source, {...options,sourceType:'module'}); }
+  try { return acorn.parse(source, {...options,sourceType:'script'}); }
+  catch (_) { return acorn.parse(source, {...options,sourceType:'module'}); }
+}
+function scan(source, file, context = {}) {
+  const ast = parse(source);
   const parents = new Map(), nodes = [];
   walk(ast, node => { nodes.push(node); for (const child of children(node)) parents.set(child,node); });
   // Resolve real lexical bindings, not the presence of a declaration anywhere
@@ -114,6 +117,94 @@ function scan(source, file) {
     for (const child of children(node)) assignScopes(child,scope);
   }
   assignScopes(ast,newScope('program',null));
+  function isIdentifierReference(node) {
+    const p=parents.get(node);
+    if (boundIdentifiers.has(node)) return false;
+    if (p?.type === 'MemberExpression' && !p.computed && p.property === node) return false;
+    if (p?.type === 'Property' && p.key === node && !p.computed && !p.shorthand) return false;
+    if (['MethodDefinition','PropertyDefinition'].includes(p?.type) && p.key === node && !p.computed) return false;
+    if (/Function/.test(p?.type || '') && p.id === node) return false;
+    if (p?.type === 'ImportSpecifier' && p.imported === node) return false;
+    if (p?.type === 'ExportSpecifier' && p.exported === node) return false;
+    return !(['LabeledStatement','BreakStatement','ContinueStatement'].includes(p?.type) && p.label === node);
+  }
+  function bindingScope(node,name) {
+    for(let scope=scopeOf.get(node);scope;scope=scope.parent)if(scope.bindings.has(name))return scope;
+    return null;
+  }
+  // An unused local alias merely reads an optional global property. If the value
+  // is used, escapes, or can be accessed through eval/with it remains checked.
+  const unusedReads=new Set();
+  for(const declaration of nodes) {
+    if(declaration.type!=='VariableDeclarator'||declaration.id.type!=='Identifier'||
+       declaration.init?.type!=='MemberExpression'||!hostName(declaration.init,'wx')||
+       !['window','globalThis'].includes(declaration.init.object.name))continue;
+    const name=declaration.id.name,scope=bindingScope(declaration.id,name);
+    if(nodes.some(n=>n.type==='Identifier'&&n.name===name&&isIdentifierReference(n)&&bindingScope(n,name)===scope))continue;
+    let owner=declaration;
+    while(parents.has(owner)&&!['Program','FunctionExpression','FunctionDeclaration','ArrowFunctionExpression'].includes(owner.type))owner=parents.get(owner);
+    let dynamic=false;
+    walk(owner,n=>{if(n.type==='WithStatement'||n.type==='CallExpression'&&n.callee.type==='Identifier'&&n.callee.name==='eval')dynamic=true;});
+    if(!dynamic)unusedReads.add(declaration.init);
+  }
+  function rootWx(node) {
+    return node?.type==='MemberExpression'&&hostName(node,'wx')?node:null;
+  }
+  function sameRoot(a,b) {
+    return !!a&&!!b&&a.object.name===b.object.name&&property(a)===property(b);
+  }
+  function guardedOptional(node) {
+    const base=rootWx(node)||(node.type==='MemberExpression'?rootWx(node.object):null);
+    if(!base||!['window','globalThis'].includes(base.object.name))return false;
+    // bare wx or an unbound local root can throw before testing the property.
+    for(let current=node;parents.has(current);current=parents.get(current)) {
+      const p=parents.get(current);
+      if(/Function/.test(p.type))break; // A deferred callback does not inherit the guard.
+      if(p.type!=='LogicalExpression'||p.operator!=='&&'||!sameRoot(rootWx(p.left),base))continue;
+      // Only a direct guarded call; sequences or mutations cannot reuse a stale
+      // existence check, nor can a guard for window.wx protect globalThis.wx.
+      if(p.right.type!=='CallExpression'||!sameRoot(rootWx(p.right.callee?.object),base))continue;
+      let writes=false;
+      walk(p.right,n=>{if(n.type==='AssignmentExpression'||n.type==='UpdateExpression'||n.type==='UnaryExpression'&&n.operator==='delete')writes=true;});
+      if(!writes&&(node===p.left||node===p.right.callee||node===p.right.callee.object))return true;
+    }
+    return false;
+  }
+  // Root-level Creator exports use the same real engine as cocos/<name>.js.
+  // Recognize its module graph and version, but exempt only the guarded feature
+  // probes below, never the entire file or appended game code.
+  let engineShape=false;
+  if(context.requiredEngine&&source.length>100000&&/cc\.ENGINE_VERSION\s*=\s*["']2\.4\.\d+["']/.test(source)) {
+    engineShape=nodes.some(n=>n.type==='ObjectExpression'&&n.properties.filter(p=>p.type==='Property'&&p.value.type==='ArrayExpression'&&p.value.elements[0]?.type==='FunctionExpression'&&p.value.elements[1]?.type==='ObjectExpression').length>=100);
+  }
+  function guardedEngineProbe(node) {
+    if(!engineShape||node.type!=='MemberExpression'||node.object.type!=='Identifier'||node.object.name!=='wx'||!['getSharedCanvas','getSystemInfoSync'].includes(property(node)))return false;
+    if(parents.get(node)?.type!=='UnaryExpression'||parents.get(node).operator!=='!')return false;
+    let owner=node;
+    while(parents.has(owner)&&!['FunctionExpression','FunctionDeclaration','ArrowFunctionExpression'].includes(owner.type))owner=parents.get(owner);
+    if(owner.body?.type!=='BlockStatement')return false;
+    for(let current=node;parents.has(current)&&current!==owner;current=parents.get(current)) {
+      const p=parents.get(current),left=p?.left;
+      if(p.type!=='LogicalExpression'||p.operator!=='||'||left?.type!=='UnaryExpression'||left.operator!=='!'||left.argument.type!=='CallExpression')continue;
+      const call=left.argument;
+      if(call.callee.type!=='Identifier'||call.arguments.length!==1||call.arguments[0].value!=='wx')continue;
+      const helper=owner.body.body.find(n=>n.type==='FunctionDeclaration'&&n.id.name===call.callee.name);
+      if(!helper||helper.params.length!==1||helper.body.body.length!==1)continue;
+      const expression=helper.body.body[0].argument;
+      if(helper.body.body[0].type!=='ReturnStatement'||expression?.type!=='BinaryExpression'||!['==','==='].includes(expression.operator))continue;
+      const [text,test]=expression.left.value==='object'?[expression.left,expression.right]:[expression.right,expression.left];
+      if(text.value!=='object'||test.type!=='UnaryExpression'||test.operator!=='typeof'||test.argument.type!=='MemberExpression'||!test.argument.computed||test.argument.property.name!==helper.params[0].name)continue;
+      const globalName=test.argument.object.name;
+      const globalDecl=owner.body.body.flatMap(n=>n.type==='VariableDeclaration'?n.declarations:[]).find(n=>n.id.name===globalName);
+      const init=globalDecl?.init;
+      if(init?.type==='ConditionalExpression'&&init.test.type==='BinaryExpression'&&
+         [init.test.left,init.test.right].some(n=>n.type==='UnaryExpression'&&n.operator==='typeof'&&n.argument.name==='window')&&
+         [init.test.left,init.test.right].some(n=>n.value==='undefined')&&
+         ((['==','==='].includes(init.test.operator)&&init.consequent.name==='global'&&init.alternate.name==='window')||
+          (['!=','!=='].includes(init.test.operator)&&init.consequent.name==='window'&&init.alternate.name==='global')))return true;
+    }
+    return false;
+  }
   function shadowed(node) {
     for (let scope=scopeOf.get(node);scope;scope=scope.parent) {
       const binding=scope.bindings.get('wx');
@@ -180,16 +271,46 @@ function scan(source, file) {
           /Function/.test(p?.type || '') && p.params.includes(node)) continue;
       reference = true; unqualified = true;
     }
-    if (!reference || unqualified && shadowed(node) || compatible(node)) continue;
+    if (!reference || unusedReads.has(node) || guardedOptional(node) || guardedEngineProbe(node) || unqualified && shadowed(node) || compatible(node)) continue;
     hits.push({file,line:node.loc.start.line,reference:source.slice(node.start,node.end).slice(0,90)});
   }
   return hits;
 }
-module.exports = {scan};
+function scanFiles(files) {
+  const entry=files.find(f=>f.file==='game.js'),required=new Set();
+  if(entry)walk(parse(entry.code),n=>{
+    if(n.type==='CallExpression'&&n.callee.type==='Identifier'&&n.callee.name==='require'&&n.arguments.length===1&&
+       /^\.\/cocos2d-js(?:-min)?\.js$/.test(n.arguments[0].value||''))required.add(n.arguments[0].value.slice(2));
+  });
+  return files.flatMap(f=>scan(f.code,f.file,{requiredEngine:required.has(f.file)}));
+}
+module.exports = {scan,scanFiles};
 if (require.main === module) {
-  try {
-    const input = JSON.parse(fs.readFileSync(0,'utf8'));
-    if (!Array.isArray(input.files)) throw new Error('files must be an array');
-    console.log(JSON.stringify({findings:input.files.flatMap(f=>scan(f.code,f.file))}));
-  } catch (error) { console.error(error.message); process.exitCode=2; }
+  if (process.argv.includes('--help')) {
+    console.log('Usage: node scan_tiktok_host_refs.cjs < input.json\nInput is {files:[{file,code}]}. Read-only structural check.');
+  } else {
+    let phase = 'input';
+    try {
+      const raw = fs.readFileSync(0, 'utf8');
+      if (!raw.trim()) throw new Error('input required');
+      phase = 'json';
+      const input = JSON.parse(raw);
+      phase = 'input';
+      if (!input || !Object.prototype.hasOwnProperty.call(input, 'files') || Array.isArray(input.files) && !input.files.length) {
+        throw new Error('input required');
+      }
+      if (!Array.isArray(input.files)) throw new Error('files must be a nonempty array');
+      if (!input.files.every(row => row && typeof row.file === 'string' && row.file.trim() && typeof row.code === 'string' && row.code.trim())) {
+        throw new Error('input required');
+      }
+      phase = 'javascript';
+      const findings = scanFiles(input.files);
+      console.log(JSON.stringify({status: findings.length ? 'risk_detected' : 'checked', checked: input.files.length, findings}));
+    } catch (error) {
+      const reason = phase === 'json' ? 'invalid JSON input: ' + error.message :
+        phase === 'javascript' ? 'JavaScript parse failed: ' + error.message : error.message;
+      console.log(JSON.stringify({status: 'not_run', checked: 0, reason}));
+      process.exitCode = 2;
+    }
+  }
 }

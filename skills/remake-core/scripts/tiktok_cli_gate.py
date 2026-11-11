@@ -96,7 +96,18 @@ def invoke(cli, subcommand, project, work):
     result['result'] = payload
     summary = payload.get('summary')
     success_status = {'check': 'passed', 'build': 'succeeded'}[subcommand]
-    result['passed'] = (completed.returncode == 0 and payload.get('status') == success_status
+    # CLI check uses warning for optional APIs; preserve warnings without
+    # rejecting a package whose required checks all passed. Required failures,
+    # error diagnostics and missing diagnostic evidence still fail closed.
+    diagnostics = payload.get('diagnostics')
+    optional_only = (subcommand == 'check' and payload.get('status') == 'warning'
+                     and isinstance(diagnostics, list) and bool(diagnostics)
+                     and all(isinstance(d, dict)
+                             and (d.get('passed') is True
+                                  or (d.get('required') is False and d.get('severity') == 'warning'))
+                             for d in diagnostics))
+    result['passed'] = (completed.returncode == 0
+                        and (payload.get('status') == success_status or optional_only)
                         and isinstance(summary, dict) and summary.get('errors') == 0)
     return result
 

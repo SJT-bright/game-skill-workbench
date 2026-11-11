@@ -233,18 +233,29 @@ if (require.main === module) {
   if (process.argv.includes('--help')) {
     console.log('Usage: node scan_free_claim_ad_lock.cjs < input.json\nInput is {files:[{file,code}]}. Read-only structural check.');
   } else {
+    let phase = 'input';
     try {
-      const input = JSON.parse(fs.readFileSync(0, 'utf8'));
-      if (!Array.isArray(input.files) || !input.files.length) throw new Error('files must be a nonempty array');
-      if (!input.files.every(row => row && typeof row.file === 'string' && row.file.trim() && typeof row.code === 'string' && row.code.trim())) {
-        throw new Error('each file needs a nonempty file name and JavaScript source');
+      const raw = fs.readFileSync(0, 'utf8');
+      if (!raw.trim()) throw new Error('input required');
+      phase = 'json';
+      const input = JSON.parse(raw);
+      phase = 'input';
+      if (!input || !Object.prototype.hasOwnProperty.call(input, 'files') || Array.isArray(input.files) && !input.files.length) {
+        throw new Error('input required');
       }
+      if (!Array.isArray(input.files)) throw new Error('files must be a nonempty array');
+      if (!input.files.every(row => row && typeof row.file === 'string' && row.file.trim() && typeof row.code === 'string' && row.code.trim())) {
+        throw new Error('input required');
+      }
+      phase = 'javascript';
       const findings = input.files.flatMap(row => scan(row.code, row.file));
       console.log(JSON.stringify({status: findings.length ? 'risk_detected' : 'checked', checked: input.files.length, findings,
         requires_runtime_verification: findings.length > 0,
         boundary: 'Checks the supported shared-handler structure only. No findings do not prove runtime recovery.'}));
     } catch (error) {
-      console.log(JSON.stringify({status: 'not_run', checked: 0, reason: error.message}));
+      const reason = phase === 'json' ? 'invalid JSON input: ' + error.message :
+        phase === 'javascript' ? 'JavaScript parse failed: ' + error.message : error.message;
+      console.log(JSON.stringify({status: 'not_run', checked: 0, reason}));
       process.exitCode = 2;
     }
   }

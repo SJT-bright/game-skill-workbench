@@ -117,6 +117,7 @@ class Returned(unittest.TestCase):
         import runtime_incremental as RI
         import check_package as CP
         import check_ledger as CL
+        import regression_scope_gate as SG
         adapter=self.p/'qa/adapter.json';adapter.parent.mkdir();A.write(adapter,{'layout_states':[{'name':'home'},{'name':'settings'}]})
         A.write(self.p/'docs/checks/check-inputs.json',{'schema':'check-inputs.v1','checks':{
             'runtime.layout_state/@startup':{'inputs':{'package':['*'],'adapter':['/layout_states']},'basis':'Startup bytes include every actual Native resource'},
@@ -133,6 +134,14 @@ class Returned(unittest.TestCase):
                              'evidence':{'report':str(raw),'startup':{'MiB':1,'audioBytes':0,'beforeHome':[]}},'raw_files':[str(raw)]})
             return {'suites':rows,'warnings':[],'seconds':0.01,'passed':not fail_startup}
         stack=contextlib.ExitStack()
+        # This fixture tests returned-art handling and the real incremental ledger with
+        # synthetic Native bytes/executor. Isolate only public scope authorization;
+        # missing-plan/actual authorization are covered by the public-scope tests.
+        # Keep ledger planning, raw evidence, coverage and rule-change refusal real.
+        stack.enter_context(mock.patch.object(CP,'verify_regression_scope',
+            return_value={'plan_sha256':'fixture-returned-art-scope'}))
+        stack.enter_context(mock.patch.object(SG,'authorize_batch',
+            return_value='fixture-returned-art-scope'))
         for target,values in [(RR,{'required_suites':lambda *a,**k:['layout_state','save_restart'], 'load_adapter':lambda *a,**k:A.read(adapter),
                                    'detect_engine':lambda *a,**k:'2.x','package_policy':lambda *a,**k:('new','fixture'),
                                    'preflight':lambda *a,**k:({},[]),'precheck':lambda *a,**k:None,'_run_uncached':execute}),

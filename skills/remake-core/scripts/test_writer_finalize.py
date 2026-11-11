@@ -313,7 +313,14 @@ class Policy(KitInSync):
             out = real(*a, **k)
             seen.append(out)
             return out
+        decisions = []
+        real_decide = P.decide
+        def decide(*a, **k):
+            result = real_decide(*a, **k)
+            decisions.append({'files': k.get('files'), 'result': result})
+            return result
         with mock.patch.object(G, 'run', spy), \
+                mock.patch.object(P, 'decide', side_effect=decide), \
                 mock.patch.object(C, 'runtime_gate', return_value={'status': 'patched'}), \
                 mock.patch.object(C, 'rewarded_ad_gate', return_value={'status': 'patched'}):
             try:
@@ -321,21 +328,30 @@ class Policy(KitInSync):
                 error = ''
             except ValueError as e:
                 error = str(e)
-        return seen[0], error
+        return seen[0], error, decisions
 
     def test_check_package_given_only_a_zip_judges_policy_from_the_artifact(self):
         b = self.native()
         z = write_zip(self.d / 'raw.zip', C.native_files(b))
-        out, error = self.check_zip(z)                          # not listed -> new -> kit parts missing blocks
+        out, error, decisions = self.check_zip(z)               # not listed -> new -> kit parts missing blocks
         self.assertEqual(out['policy'], 'new')
-        self.assertTrue(out['policy_reason'].startswith('judged from the package'))
+        # regression_context resolves artifact policy before handing the concrete
+        # decision to PackageView; test the real decision/input instead of that
+        # later layer's 'given by caller' display text.
+        self.assertEqual(len(decisions), 1)
+        self.assertEqual(decisions[0]['files'], C.native_files(b))
+        self.assertEqual(decisions[0]['result']['policy'], 'new')
+        self.assertIn('not on the legacy list', decisions[0]['result']['reason'])
         self.assertIn('K1_kit_bytes', error)
         with self.legacy_list():
-            out, error = self.check_zip(z)                      # its scene uuid is on the list -> legacy
+            out, error, decisions = self.check_zip(z)           # its scene uuid is on the list -> legacy
             self.assertEqual(out['policy'], 'legacy')
-            self.assertIn('on the legacy list', out['policy_reason'])
+            self.assertEqual(len(decisions), 1)
+            self.assertEqual(decisions[0]['files'], C.native_files(b))
+            self.assertIn('on the legacy list', decisions[0]['result']['reason'])
             self.assertNotIn('K1_kit_bytes', error)
-            out, error = self.check_zip(z, policy='new')        # test-only --policy new still blocks it
+            out, error, decisions = self.check_zip(z, policy='new')  # explicit test-only --policy bypasses inference
+            self.assertEqual(decisions, [])
             self.assertEqual(out['policy'], 'new')
             self.assertIn('K1_kit_bytes', error)
 

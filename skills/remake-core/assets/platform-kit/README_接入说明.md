@@ -42,7 +42,7 @@ v1.1（2026-10-27）：卡住判定 20 秒 → 10 秒（skill 规定 10 秒无�
 | `parts/CapsuleAuto.js` | 生成时预防 I3 新增，**新游戏默认装**：`tiktok_finalize.py source` 把它和 CapsuleLayout.js 一起拷进 assets/tiktok-platform/，场景启动后自己把压在胶囊下的顶栏挪下来，不用写调用；英化和老游戏只列出顶栏节点警告 | 平台包新写（普查重叠 64 款 99 次、胶囊遮挡 16 次） | Node 测试通过（`tests/capsule-auto.test.js`），**待真机复测** |
 | `parts/host-shim.js` | 生成时预防 B 批新增、宿主接口兜底（2.4 和 3.x 同一份）：`getSystemInfoSync` 缺失或抛错时兜底、补 `SDKVersion`、`canIUse`、`getOpenDataContext`，只补缺的、不覆盖已有的；新代码读版本号用 `parseVersion` / `sdkVersion`。**R4B 起由 `tiktok_finalize` startup 步骤自动装进 `game.js`**（见第十四节） | 平台包新写（躲雨小鸭 v16、射击高手2048 的写法） | Node 测试通过（`tests/host-shim.test.js`），**待真机复测** |
 | `parts-3x/boot-guard-3x.js` | 生成时预防 B 批新增、Cocos 3.x 启动看守，规则和 2.4 `main.js` v1.6 一样（单个文件 10 秒重发、30 秒失败、只算前台、Retry 发新请求）。**R4B 起由 `tiktok_finalize` startup 步骤自动装进 `game.js`**（见第十四节） | 平台包新写（TrashPanda、恢复线场、美女快跑的固定 15 秒总期限） | Node 测试通过（`tests/boot-3x.test.js`），**待真机复测** |
-| `tools/home_free_slot.js` | 生成时预防 E 批：首页找空位。按首页现有按钮的包围盒找两个平台入口不重叠的位置，放不下就报错；英化游戏原按钮不动。R4G1 起 `--dump` 也躲开 ui_dump 记下的带触摸监听节点（`comps.touch`，代码 `node.on(TOUCH_END)` 挂的，例如 ad-boost 首页入口），不用再传 `--obstacle` | 平台包新写 | Node 测试通过（`tests/home-free-slot.test.js`） |
+| `tools/home_free_slot.js` | 生成时预防 E 批：首页找空位。按首页现有按钮的包围盒找两个平台入口不重叠的位置，放不下就报错；英化首次主页按美工方案统一排版，已交付后的局部接入保留未受影响布局。R4G1 起 `--dump` 也躲开 ui_dump 记下的带触摸监听节点（`comps.touch`，代码 `node.on(TOUCH_END)` 挂的，例如 ad-boost 首页入口），不用再传 `--obstacle` | 平台包新写 | Node 测试通过（`tests/home-free-slot.test.js`） |
 | `KIT_FINGERPRINTS.json`、`tools/build_kit_fingerprints.py`、`tools/kit_versions/` | v7.8 新增：认出包里脚本合并文件中旧版平台包模块（门禁 K6_kit_module_old）用的特征；改了 `assets/tiktok-platform/*.js` 就重跑 `build_kit_fingerprints.py`，旧版原文按 `<模块>/<sha256>.txt` 留在 `tools/kit_versions/` | 全民飞车门禁原型 C | `remake-core/scripts/test_kit_module_versions.py` |
 | `settings/bytedance.json` | 字节构建设置模板：数字 App ID（7683427172773644296 是多款游戏共用的测试组 ID，相同是正常的）、首场景分包关、REMOTE_SERVER_ROOT 空。没有它命令行出包会是 `testappId` | 细菌2048 build2 起验证过的写法 | 检查脚本强制 |
 | `webp-probe/cocos2.4/` | 老游戏保留 WebP 时用的标准探针：`webp-decode-probe.js` + `loading/webp-probe.webp`（放主包），用 TikTok 的 createImage 真解码这张图，解出宽高才开 WebP，5 秒没回应算不开、显示 Retry、点了重新检测 | Mabel's Meadow r8，逐字节相同 | `test_webp_decode_probe.cjs` 通过，**待真机复测** |
@@ -259,7 +259,7 @@ node tests/run-all.js
 
 - **按需用，不是必装件**：跑酷、飞行这类有滚动障碍的游戏用。`tiktok_finalize` 不装它，`check_kit_project.py` 和 K1/K2 不要求它，
   没装它的老工程不会因此被拒（清单里登记为 `reference: true, optional: true`）。真正拦问题的是写包入口必跑的运行时套件 `popin`：
-  四种屏幕上主角无敌飞 18 秒再复活一次，障碍在屏幕里凭空出现、消失、一帧跳 40 以上就拦，不管游戏用的是这个件还是自己的写法。
+  四种屏幕上按本作真实移动方式无敌观察 18 秒，自动障碍观察不触发局内广告复活；障碍在屏幕里凭空出现、消失、一帧跳 40 以上就按现行范围判定，不管游戏用的是这个件还是自己的写法。
 - 2.4：复制到 `assets/`（例如 `assets/tiktok-platform/CourseLane.js`），`var Lane = require('CourseLane');`。
   3.x：放进 `assets/` 并勾「导入为插件」，用全局 `TikTokCourseLane`。
 - 用法（`opts` 里 `halfWidth` 是障碍半宽，`space` 是障碍所在的父节点，`camera` 是跟着赛道走的相机，都可不填）：

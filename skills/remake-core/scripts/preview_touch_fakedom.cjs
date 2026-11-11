@@ -27,6 +27,8 @@ const body = new N('BODY', doc.documentElement);
 const canvas = new N('CANVAS', body);
 const overlay = new N('DIV', body);
 doc.createEvent = () => ({initEvent(type, bubbles, cancelable) { this.type = type; this.bubbles = bubbles; this.cancelable = cancelable; }});
+// This synthetic DOM exposes the EventTarget constructor whose prototype implements its capture/bubble dispatch.
+win.EventTarget = N;
 win.document = doc; win.pageXOffset = 0; win.pageYOffset = 0;
 const got = [];
 ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'mousedown', 'mousemove', 'mouseup'].forEach((t) => {

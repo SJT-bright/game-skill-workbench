@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "f47db9f3-d5b5-45fa-a6b8-15c7f50fb1f9",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v74",
+      "createdAt": "2026-11-11T11:28:46.926Z",
+      "summary": "文件变更：新增 0，修改 6，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 6,
+        "deleted": 0
+      },
+      "treeHash": "07e7e7e0d722a45db790762f98eaf39e6518378f8e11c66269a7b8e92ca480c0",
+      "bytes": 984056,
+      "fileCount": 62
+    },
+    {
       "id": "798c38f7-44a9-4549-8734-e0e10dc5bb67",
       "skillId": "s-c80e30dda4e7623bf0ac",
       "name": "remake-art",

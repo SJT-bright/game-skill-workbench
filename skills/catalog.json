@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-11T20:39:46.603Z",
-  "treeHash": "ab01ebab73ed8ab18b88beda0b2677a33b52c0e33e7806457b6d8882a98ef0ec",
+  "createdAt": "2026-11-11T20:40:22.420Z",
+  "treeHash": "109d2ef9c0c62c8f8f9bf591e741337570a34a20927ad39334c2c1e1f77fce98",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2107,20 +2107,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "ad312508eecbbfed72e8420f388675adafee5d637e5f3b29680aabf01791e676",
-      "fileCount": 62,
-      "bytes": 984408,
+      "treeHash": "52a6f00eb508dd297ab4389032701c2137fcc536755004063285fe1403772c3e",
+      "fileCount": 64,
+      "bytes": 993907,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "1f1d94f32fbcfe93a0a2937e6c0ace0f6be730e8651b51c0ba78d01e66400f56",
-          "size": 27836,
+          "hash": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
+          "size": 27598,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "c5e7db78222573535c15862b83c41ae4b03cdf405fcf70fc3a1dd65b5808b81f",
-          "size": 95338,
+          "hash": "f0f5953965ce4525fec2f9f54f86650810617cb9197a078f2c25a5b61c2a71cb",
+          "size": 95732,
           "executable": false
         },
         {
@@ -2163,6 +2163,12 @@
           "path": "references/creator-migration.md",
           "hash": "4252847f2742d0f84b284df4840c38fe93f53839b6b82469742d226f13737227",
           "size": 3603,
+          "executable": false
+        },
+        {
+          "path": "references/delivery-continuation.md",
+          "hash": "8daa9b265ad1bc9c3cd0ea89fe3490530eb12808acced944c4a8cc4ba67260c4",
+          "size": 3679,
           "executable": false
         },
         {
@@ -2293,8 +2299,8 @@
         },
         {
           "path": "scripts/handoff_preview.py",
-          "hash": "7762e3decabf8cea8c2df0a5026e93709404fe7459b36c1ef2e8e2726d61fe53",
-          "size": 11391,
+          "hash": "1c5218c4ac6c8e20f3c6c3e98a584772b0a16fb6d57064e5df3206bb12006a28",
+          "size": 11423,
           "executable": false
         },
         {
@@ -2317,8 +2323,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "7808ad251658d50e5f74bb295a582480176cb1c737616e1e430a83c588b0a3f2",
-          "size": 20972,
+          "hash": "1306057fa9b25f409632b33efcfe8e74f95aacc2534c96a29b72ddabf6858a15",
+          "size": 21209,
           "executable": false
         },
         {
@@ -2349,6 +2355,12 @@
           "path": "scripts/test_creator_typed_config.py",
           "hash": "1e3ed6e209bc6543613d1b8098a91840ad6e2279661dcfc448e85f05b4fe21fe",
           "size": 7221,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_delivery_continuation.py",
+          "hash": "54f18edd56f5bb8042726679860d22fb2aa7da1a90cc11086cf04cc1ce79f360",
+          "size": 5145,
           "executable": false
         },
         {
@@ -2479,8 +2491,8 @@
         },
         {
           "path": "版本历史.md",
-          "hash": "80107a6811783cc02b397608cb5f437c7f13e106e567e720978fc9c5ce7a56bc",
-          "size": 15155,
+          "hash": "11f822a420ef368b4e3a1ba993662e842ba48ad56c9bbac65989b881c4d7b089",
+          "size": 15405,
           "executable": false
         }
       ]

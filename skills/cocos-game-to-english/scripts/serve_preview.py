@@ -30,6 +30,7 @@ changed between the check and the copy.
 """
 from pathlib import Path
 import argparse
+import json
 import runpy
 import shutil
 import sys
@@ -100,6 +101,9 @@ def find_project(directory, given):
 
 def refuse(message):
     print('不起英文试玩服务：' + message, file=sys.stderr, flush=True)
+    sys.path.insert(0, str(HERE.parents[1] / 'remake-core' / 'scripts'))
+    from delivery_continuation import failure
+    print(json.dumps(failure(message, stage='preview'), ensure_ascii=False), file=sys.stderr, flush=True)
     raise SystemExit(1)
 
 

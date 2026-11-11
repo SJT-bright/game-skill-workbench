@@ -17,6 +17,7 @@ SKILLS = HERE.parents[1]
 sys.path.insert(0, str(SKILLS / 'remake-core' / 'scripts'))
 sys.path.insert(0, str(SKILLS / 'cocos-game-check' / 'package-check' / 'scripts'))
 
+from delivery_continuation import failure
 import art_check_record
 import audit_native_startup_renderer as startup_renderer
 import browser_slots
@@ -211,7 +212,7 @@ def main(argv=None):
         result = handoff(args.project, args.preview_url, args.kind, plan, args.delivery_record,
                          no_browser=args.no_browser)
     except (OSError, KeyError, TypeError, ValueError, http.client.HTTPException) as error:
-        print(json.dumps({'status': 'refuse', 'error': str(error)}, ensure_ascii=False), file=sys.stderr)
+        print(json.dumps(failure(error, stage='preview'), ensure_ascii=False), file=sys.stderr)
         return 1
     print(json.dumps(result, ensure_ascii=False))
     return 0

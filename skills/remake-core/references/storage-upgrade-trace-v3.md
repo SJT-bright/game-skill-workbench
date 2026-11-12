@@ -67,3 +67,7 @@ schema为 `storage_value_schema.v1`，`fields`逐实际键声明当前及所有�
 `approve_runtime(trace, native, binding)` 先校验当前原始观察，再真实回放current、negative_control、upgrade_negative_control；成功才生成 `execution_receipt.schema:"native_storage_execution_receipt.v1"`。回执含run_id、verified_at、三记录replayed列表，以及trace完整内容的canonical SHA、三个契约工具文件hash、runner/command/显式dependencies列表与逐raw_report的路径/hash。self-contained runner也须写 `execution.dependencies:[]`。这是一致性与执行身份回执，不是密码学签名；不能证明蓄意伪造的runner或模型等同真机。
 
 consumer通过 `validate_execution_receipt(report, trace)` 只读核这些身份和原始观察。修改任何绑定依赖或缺回执会拒绝，须回首次核准节点；已有效原始结果仍按现有增量账本复用，不生成虚假新运行时间。测试/制作代码不得在核准回放执行途中改变，否则本次回执失配应正确拒绝。
+
+## 原始存档消费者覆盖补充（2026-11-12）
+
+最终Native有直接旧键读取时，v3还需[逐键消费者与恢复观察](startup-storage-consumer-gate.md#检查端独立发现消费者)。此项由现有审计器自动派生实际读取点；没有这些消费者则沿用原v3范围。不能给另一键的旧通过更换哈希来替代漏测键。原始观察仍由当前runner重放，consumer只读核准。

@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import subprocess
 from urllib.parse import quote
@@ -276,6 +277,28 @@ def with_module_inputs(roots, source_files=None, *, scope=None):
     for source in sources:
         try:
             expanded = expand_module_roots(roots, source)
+            if cache is not None:
+                cache[identity] = expanded['modules']
+            return expanded
+        except ModuleInputError as exc:
+            errors.append(str(exc))
+    # A repaired candidate may follow several real intermediate executions, not
+    # just the last delivered ZIP. Recover their original JS by content hash;
+    # never trust a stored module decomposition without its original bytes.
+    archive = os.environ.get('ENGLISH_CHECK_MODULE_ARCHIVE')
+    if archive:
+        folder = Path(archive).resolve()
+        recovered = {}
+        for path, expected in roots.get('package', {}).items():
+            if path.endswith('.js'):
+                item = folder / (expected + '.js')
+                if item.is_file():
+                    raw = item.read_bytes()
+                    if _sha(raw) != expected:
+                        raise ModuleInputError('历史模块原始字节校验失败：' + path)
+                    recovered[path] = raw
+        try:
+            expanded = expand_module_roots(roots, recovered)
             if cache is not None:
                 cache[identity] = expanded['modules']
             return expanded

@@ -4,7 +4,7 @@ import hashlib,json,re,os,sys
 from PIL import Image
 import audit_native_startup_renderer as R
 import startup_play_successor as S
-S_SHA='789ed0dedb5bc59f0a8e8a809df5f8c7e04f6fcce5196ed278a8849fbb11bd76'
+S_SHA='6100770ed5fb7af24c78bd5671ab1d2e8b17e095473890f27a03e46d81badd14'
 OLD_ENV_SHA='f2e636d43d9e28e98ebaa2dbddbbf5deedace40240a94bef433c4adfd788626a'
 OLD_CONTRACT_SHA='fbbfc262c73532e00a8f48fa11a32d9222c487c3b86985111e58b7ed1c5b2298'
 OLD_TREE='091e65517c99dfe08583c576a36434f9485037843ed19b55e6e25ee4380bf901'
@@ -12,7 +12,7 @@ PLAY_D_SHA='0380e4c70d1e8293a2e2e46df6cdf22a8a52be4069233450ba25efa8eb78745c'
 SCENE='assets/scenes/Main.scene'
 SCHEMA='shellstrike_debrand_loading_successor.v1'
 SUCCESSOR_PATH='docs/startup/loading-runtime-r19-successor.json'
-DELTA_TOOL=Path('/Users/sijunting/.codex/skills/cocos-game-check/package-check/scripts/debrand_delta_guard.py')
+DELTA_TOOL=Path(__file__).resolve().parents[2]/'cocos-game-check/package-check/scripts/debrand_delta_guard.py'
 NAME_UUIDS={'5b69458c-85d4-4781-9fef-97b5bded02b0','0d11d70a-0c77-4e00-bdd6-2fb72e3a3ce4'}
 NAME_TEXT=re.compile(r'shell\s*strike|末日特工队|蛋壳特工队',re.I)
 read=S.read;sha=S.sha;checked=S.checked
@@ -20,7 +20,7 @@ read=S.read;sha=S.sha;checked=S.checked
 def need(ok,message):
  if not ok:raise ValueError('Debrand startup: '+message)
 def original_helper():
- need(Path(S.__file__).resolve()==Path('/Users/sijunting/.codex/skills/remake-core/scripts/startup_play_successor.py')and sha(S.__file__)==S_SHA,'original PLAY checker identity changed')
+ need(Path(S.__file__).resolve()==Path(__file__).resolve().with_name('startup_play_successor.py')and sha(S.__file__)==S_SHA,'original PLAY checker identity changed')
 def capture(project,record,vp,loading=False):
  dfile=checked(project,record['dump']);png=checked(project,record['screenshot']);d=read(dfile)
  need(d.get('origin')=='strict-native-host'and not d.get('errors')and not d.get('truncated')and not d.get('error'),'original dump invalid')

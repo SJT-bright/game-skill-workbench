@@ -157,6 +157,32 @@ class SizeGate(unittest.TestCase):
             feedback.write_text(json.dumps({'platform':'tiktok','rejected_sha256':a['sha256'].upper()}))
             self.assertFalse(inspect_zip(q,feedback=feedback)['passed'])
 
+    def test_green_size_and_cli_cannot_certify_project_local_or_changed_zip(self):
+        import hashlib
+        from verify_native_zip import make_receipt
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);archive=root/'game.zip';files=payload()
+            with zipfile.ZipFile(archive,'w') as z:
+                for name,data in files.items():z.writestr(name,data)
+            cli={'passed':True,'errors':[]}
+            with patch('tiktok_cli_gate.verify',return_value=cli):
+                refused=inspect_final_zip(archive)
+                self.assertTrue(refused['size_passed']);self.assertFalse(refused['passed'])
+                self.assertFalse(refused['delivery_ready']);self.assertIn('delivery.writer_receipt',refused['errors'][0])
+                # Explicit receipt-schema unit fixture, not a game acceptance record.
+                receipt=make_receipt('build_checked_zip',archive,hashlib.sha256(archive.read_bytes()).hexdigest(),
+                    {n:hashlib.sha256(v).hexdigest() for n,v in files.items()}, {'blocks':[]},'localize',
+                    finalize={'kind':'finalize-native','policy':'new','files_after':{},'blocks':[]})
+                (root/'game.zip.receipt.json').write_text(json.dumps(receipt))
+                accepted=inspect_final_zip(archive);self.assertTrue(accepted['passed'])
+                self.assertFalse(accepted['delivery_ready']) # final runtime/preview handoff is still separate
+                renamed=root/'renamed.zip';renamed.write_bytes(archive.read_bytes())
+                self.assertTrue(inspect_final_zip(renamed)['passed'])
+                with zipfile.ZipFile(renamed,'a') as z:z.writestr('extra.js','changed();')
+                self.assertFalse(inspect_final_zip(renamed)['passed'])
+                (root/'game.zip.receipt.json').write_text('{"passed":true}')
+                self.assertFalse(inspect_final_zip(archive)['passed'])
+
     def test_final_gate_binds_cli_to_zip_and_preserves_rejection(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

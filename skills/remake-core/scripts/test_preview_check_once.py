@@ -36,6 +36,7 @@ class PreviewInjectedDependencies(unittest.TestCase):
         shutil.copy2(P.__file__, self.module)
         dependencies = [core / 'serve_preview.py', core / 'check_ledger.py', core / 'preview_audio_startup.py',
                         core.parent / 'assets/preview-touch-bridge.js',
+                        core.parent / 'assets/preview-web-audio-probe.js',
                         core.parent / 'assets/ad-simulator.js']
         check = skills / 'cocos-game-check/package-check/scripts'
         dependencies += [check / 'runtime_regression.py', check / 'ego_test_page.mjs']

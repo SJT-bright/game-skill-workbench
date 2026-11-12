@@ -213,6 +213,79 @@ def _current_source(cid, row, records, all_records=None):
     return _source(cid, key, record, 'current_observation')
 
 
+def _new_check_repair(cid, row, history, declaration, recovery, archive_sha, project):
+    """Continue a genuinely new failed check only after a provable input correction."""
+    request = recovery.get('check_repairs', {}).get(cid)
+    if not isinstance(request, dict) or not str(request.get('correction_basis') or '').strip():
+        fail(cid + ' 有真实旧记录或失败，不能改名为新增项绕过')
+    reference = request.get('prior_plan') or {}
+    path = Path(reference.get('path') or '')
+    if not path.is_absolute() or not path.is_file() or digest(path) != reference.get('sha256'):
+        fail(cid + ' 修复缺少原核准计划字节')
+    plan = json.loads(path.read_bytes())
+    baseline = plan.get('baseline') or {}
+    origin = (baseline.get('sources') or {}).get(cid) or {}
+    actions = [group[cid] for group in (plan.get('actions') or {}).values() if cid in group]
+    origin_valid = False
+    seen = set()
+    for _ in range(16):
+        if origin.get('declaration') != declaration: break
+        if origin.get('kind') == 'new_check':
+            origin_valid = True; break
+        if origin.get('kind') not in ('new_check_repair','new_check_environment_retry'): break
+        parent = origin.get('prior_plan') or {}
+        parent_path = Path(parent.get('path') or '')
+        if (not parent_path.is_absolute() or str(parent_path) in seen or not parent_path.is_file()
+                or digest(parent_path) != parent.get('sha256')): break
+        seen.add(str(parent_path)); ancestor = json.loads(parent_path.read_bytes())
+        if (ancestor.get('schema') != 'cocos-regression-scope.v1' or ancestor.get('project') != str(project)
+                or (ancestor.get('baseline') or {}).get('sha256') != archive_sha): break
+        origin = ((ancestor.get('baseline') or {}).get('sources') or {}).get(cid) or {}
+    if (plan.get('schema') != 'cocos-regression-scope.v1' or plan.get('project') != str(project)
+            or baseline.get('sha256') != archive_sha or not origin_valid
+            or origin.get('declaration') != declaration or len(actions) != 1):
+        fail(cid + ' 原计划不能证明是本工程本基线的真实新增检查')
+    prior_key = request.get('source_key') or request.get('failed_key')
+    failed = next((r for key, r in history if key == prior_key), None)
+    if (failed is None or type(failed.get('passed')) is not bool or actions[0].get('key') != prior_key
+            or actions[0].get('action') != 'run'):
+        fail(cid + ' 修复缺少原计划对应的真实失败记录')
+    # A checked session may have stopped before any game case was executed.
+    # Preserve that real error and retry it as an environment failure, never as
+    # a game pass or a cleared product failure. The actual observer still runs.
+    environment = request.get('environment_retry')
+    if environment and failed.get('passed') is False:
+        ref = environment.get('raw_report') or {}
+        raw = Path(ref.get('path') or '')
+        if (not str(environment.get('resolved_reason') or '').strip() or not raw.is_absolute()
+                or not raw.is_file() or digest(raw) != ref.get('sha256')):
+            fail(cid + ' 环境恢复缺少真实原始错误或解决原因')
+        observed = json.loads(raw.read_bytes())
+        message = 'Ego session stopped; resolve the recorded error/control state before continuing'
+        if (observed.get('cases') != [] or not str(observed.get('fatal') or '').startswith('Error: ' + message)
+                or message not in str(failed.get('error') or (failed.get('result') or {}).get('fatal') or '')
+                or (failed.get('result') or {}).get('cases') not in (None, [])):
+            fail(cid + ' 此失败不是已核对的零用例环境中断')
+        return {'kind': 'new_check_environment_retry', 'current_key': row['key'],
+                'declaration': declaration, 'old_pass_claimed': False, 'prior_plan': reference,
+                'prior_record_sha256': ledger.sha(failed), 'prior_error': failed.get('error') or (failed.get('result') or {}).get('fatal'),
+                'prior_binding': failed['binding'], 'environment_retry': environment}
+    if ledger.select_inputs(failed['roots'], row.get('scope')) == row['binding']['inputs']:
+        fail(cid + ' 实际依赖没有修正，不能将同输入失败重置为新增检查')
+    if failed.get('passed') is False and not failed.get('files'):
+        if not isinstance(failed.get('error'), str) or not failed['error']:
+            fail(cid + ' 原失败缺少执行错误，不能恢复来源')
+        previous = {'kind':'new_check_failed_execution', 'key':prior_key,
+                    'record_sha256':ledger.sha(failed), 'binding':failed['binding'],
+                    'executed_at':failed['executed_at'], 'passed':False, 'error':failed['error'],
+                    'files':[], 'boundary':'Failed execution provenance only; no passing observation reused.'}
+    else:
+        previous = _source(cid, prior_key, failed, 'new_check_observed_failure' if failed['passed'] is False else 'new_check_observed_pass')
+    return {'kind': 'new_check_repair', 'current_key': row['key'], 'declaration': declaration,
+            'old_pass_claimed': False, 'prior_plan': reference, 'correction_basis': request['correction_basis'],
+            'prior_observation': previous}
+
+
 def identity(archive, candidate, project=None, groups=None):
     """Return the compatible official identity or a fully bound recovery identity.
 
@@ -314,9 +387,10 @@ def identity(archive, candidate, project=None, groups=None):
                            for k in ('reason', 'basis'))):
                 fail(cid + ' 新增项需要明确 reason 和实际依赖 basis')
             if any(key != row['key'] or record.get('passed') is not True for key, record in history):
-                fail(cid + ' 有真实旧记录或失败，不能改名为新增项绕过')
-            sources[cid] = {'kind': 'new_check', 'current_key': row['key'],
-                            'declaration': declaration, 'old_pass_claimed': False}
+                sources[cid] = _new_check_repair(cid, row, history, declaration, recovery, archive_sha, project)
+            else:
+                sources[cid] = {'kind': 'new_check', 'current_key': row['key'],
+                                'declaration': declaration, 'old_pass_claimed': False}
         elif current_source:
             sources[cid] = dict(current_source, current_key=row['key'], old_pass_claimed=False)
         else:

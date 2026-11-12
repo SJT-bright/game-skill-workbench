@@ -123,7 +123,7 @@ OLD_CONTROLS_SHA='8989f8695837283aedccc20b532ae520c496d2c79c6d1d648f7f9d0747eb17
 OLD_VALIDATOR_SHA='0050214b1693f7e03b3f4f6f94bdc0fcb7a06486952d0b3ab6ee42301f65ea9e'
 SUCCESSOR_SCHEMA='shellstrike_loading_successor.v1'
 SUCCESSOR_PATH='docs/startup/loading-runtime-r18-successor.json'
-DELTA_TOOL=Path('/Users/sijunting/.codex/skills/cocos-game-check/package-check/scripts/play_art_delta_guard.py')
+DELTA_TOOL=Path(__file__).resolve().parents[2]/'cocos-game-check/package-check/scripts/play_art_delta_guard.py'
 
 def _fixed_module(file,name):
  import importlib.util

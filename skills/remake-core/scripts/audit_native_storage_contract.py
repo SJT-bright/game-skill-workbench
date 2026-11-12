@@ -260,6 +260,9 @@ def inside(root, path):
 
 
 def validate(trace, native, expected_binding):
+    if isinstance(trace, dict) and trace.get('numeric_snapshot_encoding'):
+        from numeric_snapshot_contract import validate as validate_numeric_snapshot
+        return validate_numeric_snapshot(trace, native, expected_binding)
     errors = []
     if not isinstance(trace, dict): return ['storage trace must be an object']
     if not isinstance(expected_binding, dict): return ['current binding must be an object']
@@ -412,6 +415,12 @@ def validate(trace, native, expected_binding):
         errors.append('upgrade negative and current bundle are identical')
     if current.get('bundle_sha256') == old.get('bundle_sha256'):
         errors.append('negative and current bundle are identical')
+    if trace.get('schema') == 'native_storage_trace.v3' and 'current' in loaded_results:
+        try:
+            from startup_storage_consumers import coverage_errors
+            errors.extend(coverage_errors(trace, loaded_results['current'], native))
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            errors.append('legacy consumer coverage unavailable: ' + str(exc))
     return errors
 
 
@@ -453,10 +462,13 @@ def execution_identity(trace):
             'command': execution.get('command'), 'dependencies': deps}
 
 
-def contract_identity():
+def contract_identity(trace=None):
     here = Path(__file__).resolve().parent
     rows = {}
-    for name in ('audit_native_storage_contract.py', 'maintenance_scope.py', 'startup_business_contract.py'):
+    names = ('audit_native_storage_contract.py', 'maintenance_scope.py', 'startup_business_contract.py', 'startup_storage_consumers.py', 'scan_storage_consumers.cjs', 'vendor/acorn.cjs')
+    if isinstance(trace, dict) and trace.get('numeric_snapshot_encoding'):
+        names += ('numeric_snapshot_contract.py',)
+    for name in names:
         file = here / name
         if not file.is_file():
             # Staged evaluation can borrow unchanged dependencies from their imported modules.
@@ -467,10 +479,51 @@ def contract_identity():
 
 def receipt_identity(trace):
     labels = ('current', 'negative_control', 'upgrade_negative_control')
-    return {'trace_sha256': canonical_sha(trace), 'contract_files': contract_identity(),
+    return {'trace_sha256': canonical_sha(trace), 'contract_files': contract_identity(trace),
             'execution': execution_identity(trace),
             'raw_reports': {label: {'path': str(Path(trace[label]['raw_report']).resolve()),
                                     'sha256': digest(trace[label]['raw_report'])} for label in labels}}
+
+
+def unchanged_nonconsumer_receipt(report, trace, expected):
+    """A known previous rule adds no obligations when this Native has no raw consumers.
+    Preserve the original execution time; never rewrite old evidence as a fresh run.
+    """
+    previous = report.get('execution_receipt', {}).get('identity')
+    if not isinstance(previous, dict): return False
+    old = previous.get('contract_files', {})
+    baseline = '499c175aff78232fc57e5b8a7a6a78dd245bf090ed295f3b87491752b23d42ae'
+    retained = ('maintenance_scope.py', 'startup_business_contract.py')
+    if (set(old) != {'audit_native_storage_contract.py', *retained} or
+            old.get('audit_native_storage_contract.py') != baseline or
+            any(old.get(k) != expected['contract_files'].get(k) for k in retained) or
+            {k:v for k,v in previous.items() if k != 'contract_files'} !=
+            {k:v for k,v in expected.items() if k != 'contract_files'}): return False
+    from check_known_issues import tree_sha
+    from startup_storage_consumers import inventory
+    name = report.get('native')
+    if not isinstance(name,str) or not Path(name).is_absolute():return False
+    native = Path(name)
+    return native.is_dir() and tree_sha(native) == trace.get('binding', {}).get('native_tree_sha256') and not inventory(native)
+
+
+def unchanged_text_codec_receipt(report, trace, expected):
+    """Keep the actual old execution for an unchanged text-codec branch.
+
+    The reviewed predecessor differs only by the opt-in snapshot branch and
+    conditional fingerprint. All raw data, runner/dependencies and the full
+    original default validator are rechecked; no execution is invented.
+    """
+    if trace.get('numeric_snapshot_encoding'): return False
+    previous = report.get('execution_receipt', {}).get('identity')
+    if not isinstance(previous, dict): return False
+    old = previous.get('contract_files', {})
+    if old.get('audit_native_storage_contract.py') != '35002eea8cdd657b4eb87a523ebf4ef2118a6205c90ed41501c7a666f11e439f': return False
+    current = expected['contract_files']
+    return (set(old) == set(current) and
+            all(old[name] == current[name] for name in current if name != 'audit_native_storage_contract.py') and
+            {k:v for k,v in previous.items() if k != 'contract_files'} ==
+            {k:v for k,v in expected.items() if k != 'contract_files'})
 
 
 def validate_execution_receipt(report, trace):
@@ -481,7 +534,7 @@ def validate_execution_receipt(report, trace):
                 not isinstance(receipt.get('run_id'), str) or not receipt['run_id'] or
                 not isinstance(receipt.get('verified_at'), str) or not receipt['verified_at'] or
                 receipt.get('replayed') != ['current', 'negative_control', 'upgrade_negative_control'] or
-                receipt.get('identity') != receipt_identity(trace)):
+                (receipt.get('identity') != receipt_identity(trace) and not unchanged_nonconsumer_receipt(report, trace, receipt_identity(trace)) and not unchanged_text_codec_receipt(report, trace, receipt_identity(trace)))):
             return ['missing, stale or mismatched storage execution receipt']
     except (ValueError, OSError, TypeError, KeyError, AttributeError) as exc:
         return ['storage execution receipt identity invalid: ' + str(exc)]

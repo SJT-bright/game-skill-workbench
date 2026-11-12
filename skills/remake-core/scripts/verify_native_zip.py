@@ -192,8 +192,10 @@ def _receipt_status(archive, zip_sha256, file_sha256, selected=None):
     path, by_bytes = selected or find_receipt(archive, zip_sha256)
     out = {'entry': 'unofficial', 'entry_label': ENTRY_LABEL['unofficial'], 'receipt': str(path)}
     if not path.is_file() or path.is_symlink():
-        out['entry_reason'] = ('no writer receipt %s, and no receipt in that folder for these ZIP bytes: this ZIP was not '
-                               'written by make_tiktok_zip.py / build_checked_zip.py (hand-zipped or changed)' % path.name)
+        out['entry_reason'] = ('no writer receipt %s, and no receipt in that folder for these ZIP bytes: '
+                               'original writer evidence is unavailable here; this does not establish that an external '
+                               'producer failed to write officially. Use game_handoff.py receive for intake, or obtain '
+                               'the original matching receipt before a new formal delivery' % path.name)
         return out
     if by_bytes:
         out['receipt_found_by'] = 'zip_sha256 (the ZIP was renamed after writing)'

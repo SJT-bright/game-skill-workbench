@@ -60,6 +60,10 @@ missing=false&syncnumbool=all&async_storage=typed&storage_seed=<URL编码的本�
 
 `storage_seed` 写宿主隔离空间且在游戏代码前执行；下一次冷重启**移除 seed**。`async_storage=typed` 独立于同步失真；缺键和既有throw模型仍照原样。用 2.x 的 `window.__hostLog`、3.x 的 `window.__H.log` 核对 fault 确实命中。默认`save_restart`同版写后重开记录不能冒充冷升级；使用已有运行器新增这个定点节点，先校准再正式记账。
 
+## 实际旧键逐项覆盖（2026-11-12）
+
+R7声音旧键启动失败暴露了只测代表键的缺口。当前STORAGE-01在既有v3证据之上，从最终Native独立发现直接原始存档读取，按实际键和消费者核准typed恢复、保档及真实输入，细节、schema和边界见[旧存档消费者与交付约束](startup-storage-consumer-gate.md)。已有另一键/新玩家通过不覆盖漏键；动态键域未解析不能认定完整。只补真正缺失或受影响的存储/启动节点。
+
 ## 可执行门禁与负例
 
 运行器字段与原始观察格式见[STORAGE-01 v3回执](storage-upgrade-trace-v3.md)。非二值采用本作schema允许的值（如45或0.7），边界用合法0或1，不能塞入本作不接受的45再报产品故障。
@@ -69,6 +73,12 @@ missing=false&syncnumbool=all&async_storage=typed&storage_seed=<URL编码的本�
 - 旧故障版或单点反例必须在同一运行器复现：不保值/无法进入首关/永久loading等实际失败，不能只填pass字段。原空字符串缺键反例不能替代数值旧档反例。
 - 平台件修改验证：`tests/storage-guard.test.js`、`storage-guard-negative-controls.js`、`storage-recovery.test.js`；宿主修改用 `runtime_regression/tests/storage_host_profiles.cjs`。这些是标准件自测，**不替代本作真实导出引擎实跑**。
 - 新鲜证据绑定实际Native树、入口/adapter、runner及依赖、profile与故障命中、旧fixture SHA、before/after、首个异常、遮罩与业务结果。升级fixture、profile或平台存档层变化，仅补这个受影响节点；原23项的有效证据可由同一runner按现有增量账本复用，只补新增或确实失效项，记录reused/rerun及原真实执行时间；不能用“改动小/遗留游戏”把缺证写成通过。
+
+### 保留旧键的独立数值快照编码（2026-11-12）
+
+旧原始值不可可靠原位读回时，可以保留旧键和值，写入项目拥有、带 schema 和原键标识的独立 JSON 快照。此路径不取消 STORAGE-01：`numeric_snapshot_encoding.v1` 从最终 Native 的实际有限键表、前缀、schema 与调用消费者取范围，逐键验证同步失真、typed 异步、正确读回、冷重开和原值及类型未变。关键余额不可读时保档并显示真实 Retry；可选字段隔离不能阻断首个可玩场景。
+
+此编码沿用原 23 项及冷升级用例、同 runner 空档和 Boolean 误转换负例，并补实际 Native 首次触控、关键错误恢复与逐键原始观察。`numeric_snapshot_contract.py` 只在明确注册该编码时生效；默认原位文本编码的判定仍保留。适用报告必须有真实执行回执，不能借编码描述、缓存值或新键存在跳过保值与兑现链。未知键或逃逸调用先拒绝补域，不用代表 Coin 覆盖其他读取。
 
 ## 真机与交付的边界
 

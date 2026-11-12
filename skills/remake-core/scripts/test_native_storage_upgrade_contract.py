@@ -57,6 +57,8 @@ class UpgradeTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(prefix='storage-upgrade-schema-')
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name); self.native = self.root / 'Native'; self.native.mkdir()
+        # Keep real JS parseable; the explicit synthetic runner payload is JSON.
+        (self.native / 'game.js').write_text('// Native boundary fixture; no raw storage consumers\n')
         self.runner = self.root / 'synthetic_runner.py'
         self.runner.write_text('import argparse,hashlib,json\np=argparse.ArgumentParser();p.add_argument("--bundle");p.add_argument("--adapter");a=p.parse_args()\nh=lambda p:hashlib.sha256(open(p,"rb").read()).hexdigest()\nr=json.load(open(a.bundle));r.update(runner_sha256=h(__file__),bundle_sha256=h(a.bundle),adapter_sha256=h(a.adapter));print(json.dumps(r))\n')
         self.raw = {'cases': {k: 'pass' for k in contract.CASES}, 'upgrade_observations': observations()}
@@ -69,7 +71,7 @@ class UpgradeTests(unittest.TestCase):
                       'project': str(self.root), 'execution': {'runner': str(self.runner),
                       'runner_sha256': contract.digest(self.runner), 'dependencies': [],
                       'command': [sys.executable, str(self.runner), '--bundle', '{bundle}', '--adapter', '{adapter}']}}
-        for key, name, value in [('current', 'Native/game.js', self.raw),
+        for key, name, value in [('current', 'Native/storage-fixture.json', self.raw),
                                  ('negative_control', 'old.json', old),
                                  ('upgrade_negative_control', 'upgrade-old.json', upgrade)]:
             path = self.root / name; path.write_text(json.dumps(value))

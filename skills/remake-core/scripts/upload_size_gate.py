@@ -192,7 +192,7 @@ def inspect_files(files, platform='tiktok'):
     return result
 
 
-def inspect_zip(archive, platform='tiktok', feedback=None):
+def inspect_zip(archive, platform='tiktok', feedback=None, *, _verified_files=None):
     """No cached verdict, receipt reuse or game execution. Every payload is CRC-read."""
     archive=Path(archive).resolve()
     before=hashlib.sha256(archive.read_bytes()).hexdigest()
@@ -245,12 +245,18 @@ def inspect_zip(archive, platform='tiktok', feedback=None):
     if hashlib.sha256(archive.read_bytes()).hexdigest()!=before:
         result['passed']=False
         result['errors'].append('ZIP changed during checking; no valid delivery receipt')
+    if _verified_files is not None and result['passed']:
+        if type(_verified_files) is not dict or _verified_files:
+            raise ValueError('verified payload output must be an empty dict')
+        _verified_files.update(files)
     return result
 
 
 def inspect_final_zip(archive, platform='tiktok', feedback=None):
     """Fresh final-package gate. TikTok adds official CLI checks to the size receipt."""
-    result = inspect_zip(archive, platform, feedback)
+    verified_files = {}
+    result = inspect_zip(archive, platform, feedback, _verified_files=verified_files)
+    result.update(delivery_ready=False, next_step='prepare_delivery.py; file checks do not certify runtime')
     if platform == 'tiktok':
         result['size_passed'] = result['passed']
         if result['passed']:
@@ -258,9 +264,17 @@ def inspect_final_zip(archive, platform='tiktok', feedback=None):
             cli = result['tiktok_cli'] = verify(result['archive'], result['sha256'])
             result['passed'] = cli['passed']
             result['errors'].extend(cli['errors'])
+            if result['passed']:
+                from verify_native_zip import receipt_status
+                receipt = receipt_status(Path(archive), result['sha256'],
+                                         {name: hashlib.sha256(data).hexdigest() for name, data in verified_files.items()})
+                result['writer_receipt'] = receipt
+                if receipt.get('entry') != 'official':
+                    result['passed'] = False
+                    result['errors'].append('delivery.writer_receipt: no byte-matching official writer receipt; repair current startup/storage evidence and return to the original writer, not a project-local ZIP script')
         else:
             result['tiktok_cli'] = {'passed': False, 'status': 'blocked_by_size_or_zip_check'}
-        result['boundary'] = 'Fresh local ZIP/CRC/size, known JS host/input prerequisites and TikTok CLI checks; platform upload and device tests are separate.'
+        result['boundary'] = 'Final ZIP/CRC/size, host/input prerequisites, TikTok CLI and byte-matching official writer receipt; prepare_delivery must still verify current startup/storage and preview. No platform/device verdict.'
     return result
 
 

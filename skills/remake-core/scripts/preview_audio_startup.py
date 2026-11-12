@@ -1,7 +1,7 @@
 """Small preview-only BGM smoke check; native request, browser output and device proof stay separate.
 
 Runs inside the existing home-screenshot Ego page. It neither toggles music nor
-calls game methods, records no video/PCM, and makes at most one safe PLAY tap.
+calls game methods, records no video/PCM, and makes at most one ordinary PLAY or settings-opener tap; never a music toggle.
 The existing R09 output/volume regression remains responsible for full audio QA.
 """
 import argparse
@@ -11,12 +11,14 @@ from pathlib import Path
 
 EGO_PROBE_JS = r"""
 async function collectPreviewAudio(p) {
- const snapshot=()=>p.evaluate(()=>typeof window.__audioStartupSnapshot==='function'?window.__audioStartupSnapshot():null);
+ const snapshot=()=>p.evaluate(()=>typeof window.__audioStartupSnapshot==='function'?window.__audioStartupSnapshot():
+  typeof window.__webAudioStartupSnapshot==='function'?window.__webAudioStartupSnapshot():null);
  const before=await snapshot();
  if(!before)return {schema:'preview-bgm-smoke.v1',before:null,after:null,action:null};
  let action=null;
- const wanted=(before.tracks||[]).some(t=>t.intent&&t.volume>0);
- const moving=(before.tracks||[]).some(t=>t.intent&&t.volume>0&&!t.paused&&t.currentTime>0);
+ const wanted=(before.tracks||[]).some(t=>t.intent&&t.volume>0&&(before.environment!=='browser_web_export'||t.loop===true));
+ const moving=(before.tracks||[]).some(t=>t.intent&&t.volume>0&&!t.paused&&t.currentTime>0&&
+  (before.environment!=='browser_web_export'||t.loop===true&&t.routeKnown===true&&(!t.contextState||t.contextState==='running')));
  if(!wanted)return {schema:'preview-bgm-smoke.v1',before,after:before,sample:before,action:null};
  if(wanted&&!moving){
   const at=await p.evaluate(()=>{
@@ -25,13 +27,15 @@ async function collectPreviewAudio(p) {
    function visit(n){
     if(!n.activeInHierarchy||n.opacity===0)return;
     const b=n.getComponent(c.Button);
-    if(b&&b.enabled!==false&&b.interactable!==false&&/^(play|playbutton|btnplay|start|startbutton|startgame)$/i.test(n.name))found.push(n);
+    if(b&&b.enabled!==false&&b.interactable!==false&&/^(play|playbutton|btnplay|start|startbutton|startgame|start_1|opensettings|settingsbutton)$/i.test(n.name))found.push(n);
     (n.children||[]).forEach(visit);
    }
    visit(scene);const n=found.find(n=>/^playbutton$/i.test(n.name))||found[0];
-   // This is only the calibrated Cocos 2.x native browser host; 3.x/Web keep an explicit untested result.
+   // Cocos 2.x Web exports use cc.game.canvas; native browser hosts expose window.canvas.
    if(!n||typeof n.getBoundingBoxToWorld!=='function'||!c.view.getVisibleSize)return null;
-   const canvas=window.canvas,r=Element.prototype.getBoundingClientRect.call(canvas),bb=n.getBoundingBoxToWorld();
+   const canvas=c.game&&c.game.canvas||window.canvas;if(!canvas||!canvas.width||!canvas.height)return null;
+   const r=Element.prototype.getBoundingClientRect.call(canvas),bb=n.getBoundingBoxToWorld();
+   if(!r.width||!r.height)return null;
    const v=c.view,vp=v.getViewportRect(),mx=canvas.width/r.width,my=canvas.height/r.height;
    const x=r.left+(vp.x+(bb.x+bb.width/2)*v.getScaleX())/mx;
    const y=r.top+r.height-(vp.y+(bb.y+bb.height/2)*v.getScaleY())/my;
@@ -48,7 +52,8 @@ async function collectPreviewAudio(p) {
  while(Date.now()<until){
   await new Promise(r=>setTimeout(r,350));
   sample=await snapshot();
-  if((sample?.tracks||[]).some(t=>t.intent&&t.volume>0&&!t.paused&&t.currentTime>0))break;
+  if((sample?.tracks||[]).some(t=>t.intent&&t.volume>0&&!t.paused&&t.currentTime>0&&
+   (sample.environment!=='browser_web_export'||t.loop===true&&t.routeKnown===true&&(!t.contextState||t.contextState==='running'))))break;
  }
  // One additional short sample verifies progression, not an optimistic play flag.
  after=sample;await new Promise(r=>setTimeout(r,350));sample=await snapshot();
@@ -57,7 +62,84 @@ async function collectPreviewAudio(p) {
 """
 
 
+def _web_track_playing(track):
+    """Only the explicitly observed output path is calibrated, never engine flags."""
+    import math
+    if not isinstance(track, dict):
+        return False
+    def positive(value):
+        return type(value) in (int, float) and math.isfinite(value) and value > 0
+    if (track.get('loop') is not True or track.get('requested') is not True
+            or not track.get('src') or not track.get('id') or not track.get('intent')
+            or track.get('paused') is not False or track.get('ended') is not False
+            or track.get('muted') is not False or track.get('routeKnown') is not True
+            or not positive(track.get('volume')) or not positive(track.get('playbackRate'))):
+        return False
+    if track.get('kind') == 'webaudio':
+        return (track.get('started') is True and track.get('active') is True
+                and track.get('stopped') is False and track.get('hasBuffer') is True
+                and positive(track.get('duration')) and track.get('contextState') == 'running')
+    if track.get('kind') == 'html_media':
+        return not track.get('routedThroughWebAudio') or track.get('contextState') == 'running'
+    return False
+
+
+def _judge_web(trace, expected_music=None):
+    result = {'schema':'preview-bgm-verdict.v1', 'environment':'browser_web_export',
+              'web_auto_request':'unverified', 'native_auto_request':'unverified',
+              'tiktok_device':'unverified', 'platform_passed':False, 'trace':trace}
+    def done(level, code, message):
+        result.update(level=level, code=code, message=message)
+        return result
+    before, after, sample = (trace.get(key) for key in ('before','after','sample'))
+    if (before.get('gestures') != 0 or before.get('installedWithEngine') is not False):
+        return done('block','not_cold_start','Web 音频观测未在引擎启动前安装，或采样前已有输入，不能核准零输入默认请求。')
+    requested = type(before.get('autoRequests')) is int and before['autoRequests'] > 0
+    result['web_auto_request'] = 'verified' if requested else 'not_observed'
+    if not requested:
+        return done('block' if expected_music is True else 'warn','web_default_request_missing',
+                    'Web 导出在零输入时未观察到循环 BGM 的实际播放请求；不能推断 Native 或 TikTok 设备结果。')
+    defaults = {t.get('src') for t in before.get('tracks',[]) if isinstance(t,dict)
+                and t.get('requested') is True and t.get('requestGesture') == 0 and t.get('loop') is True and t.get('src')}
+    if not defaults:
+        return done('block','web_default_source_missing','零输入请求未绑定真实循环音源，不能核准 Web 播放。')
+    if not isinstance(after,dict) or not isinstance(sample,dict):
+        return done('block','output_not_sampled','Web BGM 已请求，但缺少后续真实时间采样。')
+    if any(s.get('environment') != 'browser_web_export' or s.get('schema') != 'preview-audio-startup.v1' for s in (after,sample)):
+        return done('block','web_probe_changed','Web 前后观测环境不一致，不能核准。')
+    import math
+    for a in after.get('tracks',[]):
+        for b in sample.get('tracks',[]):
+            if (not _web_track_playing(a) or not _web_track_playing(b) or a['id'] != b['id']
+                    or a['src'] != b['src'] or a['src'] not in defaults):
+                continue
+            # HTML media exposes its own playback clock; WebAudio exposes the
+            # real context clock, gated by the observed live source and route.
+            try:
+                delta = b['currentTime'] - a['currentTime']
+                if a['kind'] == 'html_media' and delta < 0 and a.get('duration',0) > 0:
+                    delta += a['duration']
+                if a.get('routedThroughWebAudio') and not b.get('contextTime',0) - a.get('contextTime',0) > 0.02:
+                    continue
+                if math.isfinite(delta) and delta > 0.02:
+                    return done('pass','web_browser_playback_started',
+                                'Web 导出零输入已请求循环 BGM，同一真实音源在有效输出路线中的播放时钟前进。仅 Web 预览通过；Native 与 TikTok 真机不由此验证。')
+            except (KeyError,TypeError,ValueError):
+                continue
+    return done('block' if expected_music is True or trace.get('action') else 'warn',
+                'web_output_unverified','Web 音源未证明有效路线中的真实播放推进；需查浏览器限制、context、停止状态、音量或输出路线，不能作为声音通过。')
+
+
 def judge(trace, expected_music=None):
+    before = trace.get('before') if isinstance(trace,dict) else None
+    if (isinstance(trace,dict) and trace.get('schema') == 'preview-bgm-smoke.v1'
+            and isinstance(before,dict) and before.get('schema') == 'preview-audio-startup.v1'
+            and before.get('environment') == 'browser_web_export'):
+        return _judge_web(trace,expected_music)
+    return _judge_native(trace,expected_music)
+
+
+def _judge_native(trace, expected_music=None):
     """Do not promote a browser result into a TikTok-device claim."""
     result = {'schema': 'preview-bgm-verdict.v1', 'environment': 'browser_native_host',
               'native_auto_request': 'unverified', 'tiktok_device': 'unverified',

@@ -139,7 +139,16 @@ class DeliveryRefusesUncleanSource(unittest.TestCase):
             z.writestr('game.json', '{}')
             z.writestr('project.config.json', '{"appid":"123"}')
         source = zip_of(project())
-        # Only the external CLI boundary is synthetic; final ZIP inspection remains real.
+        # This case exercises source hygiene. Keep the real final ZIP size/CRC
+        # and same-byte receipt validation; only external CLI execution is synthetic.
+        from verify_native_zip import make_receipt
+        import hashlib
+        with zipfile.ZipFile(archive) as bundle:
+            members = {name: hashlib.sha256(bundle.read(name)).hexdigest() for name in bundle.namelist()}
+        fixture_receipt = make_receipt('build_checked_zip', archive,
+            hashlib.sha256(archive.read_bytes()).hexdigest(), members, {'blocks': []}, 'localize',
+            finalize={'kind': 'finalize-native', 'policy': 'new', 'files_after': {}, 'blocks': []})
+        Path(str(archive) + '.receipt.json').write_text(json.dumps(fixture_receipt))
         digest = __import__('hashlib').sha256(archive.read_bytes()).hexdigest()
         def cli_boundary(actual_archive, expected_sha):
             self.assertEqual(Path(actual_archive).resolve(), archive.resolve())

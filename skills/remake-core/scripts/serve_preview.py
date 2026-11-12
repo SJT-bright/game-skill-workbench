@@ -217,6 +217,9 @@ function send(){try{var x=new XMLHttpRequest();x.open('POST','/__local_home_prob
 w.addEventListener('load',send);setInterval(send,500);})(window);"""
 
 
+# Response-only observation on the existing __home_shot page, before engine startup.
+HOME_PROBE_JS += b'\n' + (Path(__file__).resolve().parent.parent / 'assets' / 'preview-web-audio-probe.js').read_bytes()
+
 def png_stats(data):
     """Black / one-colour verdict input for a headless screenshot (8-bit RGB/RGBA/grey PNG, as Chrome writes them):
     {'width','height','dark','dominant'} with dark = share of pixels darker than luminance 16 and dominant = share of

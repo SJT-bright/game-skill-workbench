@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T11:53:52.385Z",
-  "treeHash": "23e8792f371ebb7ff070ac1d2f9cbc1f929bcd9acb84784071338eb9b14262a8",
+  "createdAt": "2026-11-12T11:54:14.920Z",
+  "treeHash": "798736ebafc75f0144e56e9901baad2088222560fc5387a540fe93f97fc3a23f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3319,14 +3319,14 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "ad3727b6cd962b0ad35ac27a0eae8115d54ebd8bda60514e430b06fc7864cb77",
+      "treeHash": "2da62da5496230faa8621683e4bf810d0f351a23d0b3d4f15ebf923fbc5e6ca3",
       "fileCount": 67,
-      "bytes": 1474091,
+      "bytes": 1475722,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "e46ed048ab9f8acf553ae2304ee789a765321a140678f51025e816d2cd4bc9d3",
-          "size": 18145,
+          "hash": "45e64f07a6b62899e8af0d7cf7982b605186bb399d7c9970450853e67796ad61",
+          "size": 19123,
           "executable": false
         },
         {
@@ -3385,8 +3385,8 @@
         },
         {
           "path": "references/art-iteration-workflow.md",
-          "hash": "1a70d06edd7dbcd361fcd52d86de7c08ee86e0bf15c989be6add803b0fe6643c",
-          "size": 12373,
+          "hash": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae",
+          "size": 13026,
           "executable": false
         },
         {

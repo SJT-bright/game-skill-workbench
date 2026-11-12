@@ -52,8 +52,8 @@
     },
     {
       "path": "references/art-iteration-workflow.md",
-      "sha256": "1a70d06edd7dbcd361fcd52d86de7c08ee86e0bf15c989be6add803b0fe6643c",
-      "bytes": 12373
+      "sha256": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae",
+      "bytes": 13026
     },
     {
       "path": "references/artwork-and-feedback.md",
@@ -473,7 +473,29 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "production-order.20261112.1",
+      "installed_at": "2026-11-12T11:21:28.405470+00:00",
+      "scope": "English production dependency order only. Six standard ad families; no counting, runtime-quality, game, or formal-release changes.",
+      "authority": "User requested removing repeated preparation and art rework by correcting production order.",
+      "files": [
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "1a70d06edd7dbcd361fcd52d86de7c08ee86e0bf15c989be6add803b0fe6643c",
+          "sha256": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae"
+        }
+      ],
+      "verification": {
+        "ad_planner_cases": 32,
+        "ad_gate_cases": 21,
+        "entry_consistency_cases": 77,
+        "entry_pack_only_skips": 10,
+        "real_project_read_only_plan_comparisons": 2,
+        "quality_functions_unchanged": 15,
+        "whole_game_time_saving_measured": false
+      }
     }
   ],
-  "previous_local_provenance_sha256": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928"
+  "previous_local_provenance_sha256": "e46ed048ab9f8acf553ae2304ee789a765321a140678f51025e816d2cd4bc9d3"
 }

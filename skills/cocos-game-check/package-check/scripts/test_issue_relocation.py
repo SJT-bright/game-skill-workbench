@@ -171,7 +171,15 @@ class IssueRelocation(unittest.TestCase):
 
 
 class RelocatedWriterDelivery(unittest.TestCase):
-    setUp = IssueRelocation.setUp
+    def setUp(self):
+        IssueRelocation.setUp(self)
+        # This synthetic fixture isolates issue-evidence relocation/obligations.
+        # AD6 has independent, unpatched production and writer-refusal tests.
+        ad_scope = patch('ad_standard_scope.requirement',
+                         return_value={'required': False, 'reason': 'synthetic issue-relocation fixture'})
+        ad_scope.start()
+        self.addCleanup(ad_scope.stop)
+
     tearDown = IssueRelocation.tearDown
     clone = IssueRelocation.clone
 

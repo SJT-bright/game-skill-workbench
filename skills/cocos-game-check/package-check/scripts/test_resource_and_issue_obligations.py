@@ -1,6 +1,8 @@
 """Production discovery + real local retest runner; no full game CI/browser mocks claimed."""
 import copy
+import contextlib
 import hashlib
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -210,6 +212,12 @@ class EntryPoints(unittest.TestCase):
     def setUp(self):
         ReportedIssues.setUp(self)
         finalize_project(self.project)      # v7.7: the writers need a current source record (K5)
+        # These synthetic entry/static-manifest fixtures isolate the original
+        # resource and reported-issue obligations; independent AD6 tests stay unpatched.
+        ad_scope = patch('ad_standard_scope.requirement',
+                         return_value={'required': False, 'reason': 'synthetic resource/issue obligation fixture'})
+        ad_scope.start()
+        self.addCleanup(ad_scope.stop)
     tearDown=ReportedIssues.tearDown
     report=ReportedIssues.report
 
@@ -256,9 +264,15 @@ class EntryPoints(unittest.TestCase):
     def test_formal_writer_also_refuses_open_issue_before_full_ci(self):
         import make_tiktok_zip
         manifest=self.setup_package();self.report();out=self.root/'formal.zip'
+        # Satisfy the earlier resource-path input so this test reaches its
+        # actual reported-issue obligation instead of passing on a missing file.
+        (self.root/'review.json').write_text('{}')
+        error = io.StringIO()
         argv=['make_tiktok_zip.py','--native',str(self.native),'--app-id',APP,'--out',str(out),'--project',str(self.project),'--web',str(self.root/'web'),'--build-tag','fixture','--review',str(self.root/'review.json'),'--resource-manifest',str(manifest)]
-        with patch.object(sys,'argv',argv),patch('audit_final_package_startup.audit_final_startup') as runtime:
+        with patch.object(sys,'argv',argv),patch('audit_final_package_startup.audit_final_startup') as runtime, \
+                contextlib.redirect_stderr(error):
             self.assertEqual(make_tiktok_zip.main(),1);runtime.assert_not_called()
+        self.assertIn('no passed retest', error.getvalue())
         self.assertFalse(out.exists())
 
 

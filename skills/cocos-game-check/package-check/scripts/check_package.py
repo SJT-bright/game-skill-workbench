@@ -586,7 +586,10 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     project = project or (context or {}).get('project')
     project, ad_regression, board, policy = regression_context(
         verified_files, tree or Path(archive).parent, ad_regression, board, policy, project)
-    gates = package_gates.run(verified_files, None, board, policy=policy, context=context)
+    gate_context = dict(context or {})
+    if project is not None:
+        gate_context['project'] = project
+    gates = package_gates.run(verified_files, tree, board, policy=policy, context=gate_context)
     reasons.extend(package_gates.messages(gates['blocks']))
     regression = runtime = None
     # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses what the official writer ran on exactly these bytes with
@@ -709,6 +712,7 @@ def main():
     parser.add_argument('--input', required=True, type=Path)
     parser.add_argument('--expected-app-id')
     parser.add_argument('--expected-tree', type=Path)
+    parser.add_argument('--project', type=Path, help='actual project for six-standard ad/UI production evidence')
     parser.add_argument('--report', type=Path)
     parser.add_argument('--ad-regression', type=Path, help='adapter JSON for the mandatory rewarded-ad and runtime regressions '
                         '(default $%s)' % ad_regression_gate.ENV_ADAPTER)
@@ -729,12 +733,12 @@ def main():
             with tempfile.TemporaryDirectory(prefix='TikTok Native preflight ') as temp:
                 zipped = Path(temp) / 'candidate.zip'
                 write_archive(zipped, native_files(args.input))
-                result = check(zipped, args.expected_app_id, args.input, args.ad_regression, args.board, args.policy)
+                result = check(zipped, args.expected_app_id, args.input, args.ad_regression, args.board, args.policy, project=args.project)
                 result['input'] = str(args.input.resolve())
                 result.pop('archive', None)
             result['verdict'] = READ_ONLY_DIR
         else:
-            result = check(args.input, args.expected_app_id, args.expected_tree, args.ad_regression, args.board, args.policy)
+            result = check(args.input, args.expected_app_id, args.expected_tree, args.ad_regression, args.board, args.policy, project=args.project)
             # v7.8 (总表 B17): check() is unchanged (the writers import it); only this command refuses a ZIP that no
             # official writer wrote, as verify_native_zip.py / upload_preflight.py do since v7.7.4.
             if result.get('entry') == 'official':
@@ -768,7 +772,7 @@ def main():
     if refused:
         print('REFUSED: ' + refused, file=sys.stderr)
         return 3
-    return 0
+    return 1 if result.get('passed') is False else 0
 
 
 if __name__ == '__main__':

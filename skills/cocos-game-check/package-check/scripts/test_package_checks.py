@@ -361,5 +361,15 @@ class KitMainFixture(unittest.TestCase):
             check(self.archive(), APP)
 
 
+# This module checks the original gate's own obligations with tiny fixtures.
+# Keep the strict-six production boundary in its dedicated real-auditor tests.
+from pathlib import Path as _AdFixturePath
+import sys as _ad_fixture_sys
+_ad_fixture_core = next(p/'remake-core/scripts' for p in _AdFixturePath(__file__).resolve().parents
+                        if (p/'remake-core/scripts/fixture_ad_standard_scope.py').is_file())
+_ad_fixture_sys.path.insert(0,str(_ad_fixture_core))
+from fixture_ad_standard_scope import isolate as _isolate_ad_fixture
+_isolate_ad_fixture(globals())
+
 if __name__=='__main__':
     unittest.main(verbosity=2)

@@ -1,0 +1,11 @@
+{
+  "name": "modal_lifecycle",
+  "about": "Scoped modal ownership: real normal/burst/slow-burst opens, close each visible instance, assert no orphan blockers and reopen without reload. Async cancellation is tested only for declared real cancel controls. No game-specific names or reward assumptions.",
+  "applies": ["adapter:modal_lifecycle"],
+  "needs": ["home", "modal_lifecycle"],
+  "fields": [],
+  "engines": ["2.x", "3.x"],
+  "timeout_s": 300,
+  "owner": "modal-input-ownership",
+  "proof": "Calibrate old same-name backdrop release against per-instance release, plus normal single-open; keep project evidence outside the shared Skill."
+}

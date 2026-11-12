@@ -247,6 +247,7 @@
     main.addEventListener(type, function (e) {
       e.preventDefault(); touchCount[type]++;
       H_[type].emit({ touches: tlist(e.touches), changedTouches: tlist(e.changedTouches), timeStamp: e.timeStamp });
+      if (type === 'touchend' && typeof recoverPreviewAudio === 'function') recoverPreviewAudio();
     }, { passive: false });
   });
   // Mouse -> single TikTok touch. 生成时预防 #41 (普查 hit_area_misaligned 13/17, BrothersRush「本地预览鼠标划不动」):
@@ -264,7 +265,7 @@
     function fromTouch() { return fingersDown > 0 || now() - lastRealTouch < 800; }
     main.addEventListener('mousedown', function (e) { if ((e.button || 0) !== 0 || fromTouch()) return; down = true; H_.touchstart.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
     window.addEventListener('mousemove', function (e) { if (down) H_.touchmove.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
-    window.addEventListener('mouseup', function (e) { if (!down) return; down = false; H_.touchend.emit({ touches: [], changedTouches: mt(e), timeStamp: e.timeStamp }); });
+    window.addEventListener('mouseup', function (e) { if (!down) return; down = false; H_.touchend.emit({ touches: [], changedTouches: mt(e), timeStamp: e.timeStamp }); if (typeof recoverPreviewAudio === 'function') recoverPreviewAudio(); });
   }
   var hidden = false;
   var growthLaunchScene = Q.get('growth_launch');
@@ -280,6 +281,32 @@
 
   // ---------- audio ----------
   var audioLive = 0, innerAudios = [], audioCleared = 0, sfxPlays = 0;
+  // Preview only: Native has no browser autoplay policy. Preserve the package's
+  // own request and recover ONLY a NotAllowedError on the next ordinary input.
+  // No new track is started, no setting is changed, and no game failure is hidden.
+  var audioGestures = 0, musicAutoRequests = 0, previewAudioRecoveries = 0;
+  var audioInterrupted = false;
+  H_.audioBegin.on(function () { audioInterrupted = true; });
+  H_.audioEnd.on(function () { audioInterrupted = false; });
+  function recoverPreviewAudio() {
+    audioGestures++;
+    if (Q.get('preview_audio_recovery') === '0' || hidden || audioInterrupted) return;
+    innerAudios.forEach(function (x) {
+      if (x._autoplayBlocked && !x._destroyed && x._intent && !x._pausedByGame && x.loop && x.src && x.volume > 0) {
+        previewAudioRecoveries++;
+        x.play();
+      }
+    });
+  }
+  window.__audioStartupSnapshot = function () {
+    return {schema: 'preview-audio-startup.v1', environment: 'browser_native_host',
+      gestures: audioGestures, autoRequests: musicAutoRequests, previewRecoveries: previewAudioRecoveries,
+      tracks: innerAudios.filter(function (x) { return !x._destroyed && x.loop && x.src; }).map(function (x) {
+        return {src: x.src, intent: !!x._intent, paused: x.paused, volume: x.volume,
+          currentTime: x.currentTime, duration: x.duration, blocked: !!x._autoplayBlocked,
+          error: x._playError || null};
+      })};
+  };
   window.__musicState = function () {
     return innerAudios.filter(function (x) { return !x._destroyed && x.loop && x.src; })
       .map(function (x) { return { src: String(x.src).slice(-80), playing: !!x._intent, volume: x.volume }; });
@@ -307,7 +334,7 @@
       hs[n] = hub(); self['on' + n] = hs[n].on; self['off' + n] = hs[n].off;
     });
     a.addEventListener('canplay', function () { hs.Canplay.emit(); });
-    a.addEventListener('play', function () { hs.Play.emit(); });
+    a.addEventListener('play', function () { self._autoplayBlocked = false; self._playError = null; hs.Play.emit(); });
     a.addEventListener('pause', function () { if (!self._stopping) hs.Pause.emit(); });
     a.addEventListener('ended', function () { hs.Ended.emit(); });
     // The engine recycles players with src = null/'' (cocos2d-js-min: this._element.src=""). That is
@@ -330,11 +357,25 @@
     this.obeyMuteSwitch = true;
     // _intent records what the game asked for, so autoplay blocking cannot hide a missing resume.
     self._intent = false;
-    this.play = function () { self._intent = true; self._pausedByGame = false; if (!a.loop) sfxPlays++; var p = a.play(); if (p && p.catch) p.catch(function (e) { beacon('audio-play-blocked', String(e && e.name)); }); };
-    this.pause = function () { self._intent = false; self._pausedByGame = true; a.pause(); };
-    this.stop = function () { self._intent = false; self._pausedByGame = false; self._stopping = true; a.pause(); try { a.currentTime = 0; } catch (_) {} self._stopping = false; hs.Stop.emit(); };
+    self._playEpoch = 0;
+    this.play = function () {
+      self._intent = true; self._pausedByGame = false;
+      var epoch = ++self._playEpoch;
+      self._autoplayBlocked = false;
+      if (!a.loop) sfxPlays++;
+      else if (audioGestures === 0) musicAutoRequests++;
+      function failed(e) {
+        if (self._destroyed || epoch !== self._playEpoch || !self._intent) return;
+        self._playError = String(e && e.name || e);
+        self._autoplayBlocked = self._playError === 'NotAllowedError';
+        beacon('audio-play-blocked', self._playError);
+      }
+      try { var p = a.play(); if (p && p.catch) p.catch(failed); } catch (e) { failed(e); }
+    };
+    this.pause = function () { self._playEpoch++; self._autoplayBlocked = false; self._intent = false; self._pausedByGame = true; a.pause(); };
+    this.stop = function () { self._playEpoch++; self._autoplayBlocked = false; self._intent = false; self._pausedByGame = false; self._stopping = true; a.pause(); try { a.currentTime = 0; } catch (_) {} self._stopping = false; hs.Stop.emit(); };
     this.seek = function (t) { try { a.currentTime = t; } catch (_) {} };
-    this.destroy = function () { self._intent = false; self._pausedByGame = false; self._destroyed = true; a.pause(); a.removeAttribute('src'); audioLive--; };
+    this.destroy = function () { self._playEpoch++; self._autoplayBlocked = false; self._intent = false; self._pausedByGame = false; self._destroyed = true; a.pause(); a.removeAttribute('src'); audioLive--; };
     a.addEventListener('ended', function () { if (!a.loop) { self._intent = false; self._pausedByGame = false; } });
     window.__audios = window.__audios || []; window.__audios.push(a);
     innerAudios.push(self);

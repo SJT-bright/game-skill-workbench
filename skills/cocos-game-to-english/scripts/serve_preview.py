@@ -197,6 +197,14 @@ def gate(argv, say=print, timing_run_id=None):
                '第 1 阶段的中文原版链接加 --chinese-original')
     sys.path.insert(0, str(HERE.parents[1] / 'remake-core/scripts'))
     import returned_art_acceptance as returned
+    if not opts.draft:
+        from ad_standard_scope import requirement
+        if requirement(project, 'new')['required']:
+            from ad_nodes_gate import check_project as check_ad_nodes
+            ad_result = check_ad_nodes(project, native=opts.native, stage='trial')
+            if not ad_result.get('passed'):
+                refuse('六标准广告制作/新增UI尚未完成：' + '; '.join(ad_result.get('problems') or ['unknown']))
+            say('六标准广告接线和本轮新增UI检查：通过；最终广告运行回归留在出包前。')
     if (project/returned.MANIFEST).is_file():
         accepted = returned_preview(argv, project, export, opts.native, say, timing_run_id)
         if accepted is not None:

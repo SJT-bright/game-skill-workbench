@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-11.english-simple.11.17.24",
+  "revision": "2026-11-11.ad-six-fusion.2.1.0",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "170ab1264cd2187f5d3fb3432af39d347d34685637598b8787f61b9680d3c31e",
-      "bytes": 95380
+      "sha256": "61bc257525e047dbf5f84752c5b06aa615025548e3142a7c54cdb314134884f9",
+      "bytes": 94682
     },
     {
       "path": "agents/openai.yaml",
@@ -96,8 +96,8 @@
     },
     {
       "path": "references/sidebar-retrofit.md",
-      "sha256": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
-      "bytes": 6332
+      "sha256": "2e12fa08445709f62c8a737eaca855b29dae33b5246657bfd10b8517b8309511",
+      "bytes": 6588
     },
     {
       "path": "scripts/browser_env.py",
@@ -156,8 +156,8 @@
     },
     {
       "path": "scripts/handoff_preview.py",
-      "sha256": "1c5218c4ac6c8e20f3c6c3e98a584772b0a16fb6d57064e5df3206bb12006a28",
-      "bytes": 11423
+      "sha256": "a0eb07e650febbd5b6d5217173523224f8eab1aa7d9692f5571e526efea3a96c",
+      "bytes": 11829
     },
     {
       "path": "scripts/inspect_creator_migration.cjs",
@@ -176,13 +176,18 @@
     },
     {
       "path": "scripts/serve_preview.py",
-      "sha256": "1306057fa9b25f409632b33efcfe8e74f95aacc2534c96a29b72ddabf6858a15",
-      "bytes": 21209
+      "sha256": "99efc43fca5967ba5c28f4d72d734d42407222ba288b7ab1448f6fa0af65865b",
+      "bytes": 21775
     },
     {
       "path": "scripts/stage_timer.py",
       "sha256": "68122666aea309b4a528c47e9f47f61667fe5d241bb001ab0bb4da155c4bd072",
       "bytes": 62129
+    },
+    {
+      "path": "scripts/test_ad_standard_english_entry.py",
+      "sha256": "f3b13eafed12033bb040abb816f01148795ac216790ba6b345b70b2b5a46bec0",
+      "bytes": 2115
     },
     {
       "path": "scripts/test_check_export_images.py",
@@ -221,8 +226,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "b869b758dd1f917f3356898f335cb4353d5357ede84665f993b419d08b54fc1e",
-      "bytes": 83853
+      "sha256": "dcc8c5423aafee12dcc9a8a4288f7837d4d7e8b7912f1090aad5d1de3aa462e3",
+      "bytes": 77970
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -281,8 +286,8 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "f4dc15efc87b473dca9e868b2618817542fc119172b12afa95dce111b5d67dc2",
-      "bytes": 33640
+      "sha256": "e939cf051af2cbf3f7e85c5c4b63fbc4e8bdf31309a335c5c9d8d8e719ce8d7e",
+      "bytes": 34471
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -320,7 +325,7 @@
       "bytes": 15405
     }
   ],
-  "previous_provenance_sha256": "165717d70427bf23dfa68f9db5a7b4a98d16404591c9889a72d5dc8a056bb929",
+  "previous_provenance_sha256": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -676,5 +681,31 @@
       ]
     }
   ],
-  "previous_local_provenance_sha256": "8d0c6a78efab79340c10f0abccbaf721ea1bd07f9cf9caa87d2f2d91a3ca4660"
+  "previous_local_provenance_sha256": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
+  "integration_revision": "2026-11-11.ad-six-fusion.2.1.0",
+  "upstream_revision": "2026-11-11.english-simple.11.17.24",
+  "installed_at": "2026-11-12T03:33:42+00:00",
+  "file_count": 64,
+  "local_overlay_preserved": true,
+  "local_overlay_paths": [
+    "SKILL.md",
+    "references/sidebar-retrofit.md"
+  ],
+  "delta_install": {
+    "schema": "ad-six-delta-install.v1",
+    "target": "codex-english",
+    "formal_base": {
+      "path": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/Cocos游戏Skill_英化包_v7简化.11.17.24_20261111.zip",
+      "sha256": "9a315ed711fadf6845e75a11940b15a555e9614ee1c80fa7b414aa19eba8337d",
+      "revision": "2026-11-11.english-simple.11.17.24"
+    },
+    "ad_base": {
+      "path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/发布/ad-boost_v2.0.0_20261111.zip",
+      "sha256": "ef8a58d0d352de55c9809990c1f63c0bfa279a14fddb3c2b9cc7312c9048b115"
+    },
+    "candidate": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/完整融合_20261111/english-tree",
+    "candidate_provenance_sha256": "abc872f50226f4220de29e065a3d7733b46bc0bb15f7087c044c901655706be7",
+    "freeze_sha256": "7565f0c65f80ef3c9ed871876180d1bd62c1aa4b17b76880ee6354a293171874",
+    "scope": "Only candidate-vs-formal-base delta; actual installed bytes, local overlays and config retained."
+  }
 }

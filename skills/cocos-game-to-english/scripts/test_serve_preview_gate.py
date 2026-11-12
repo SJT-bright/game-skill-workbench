@@ -89,7 +89,17 @@ def quiet():
     return out, out.append
 
 
-class GateDecisions(unittest.TestCase):
+class PreviewOnlyCase(unittest.TestCase):
+    def setUp(self):
+        # Isolate Chinese-audit, Native and preview lifecycle rules. Strict-six
+        # production is tested by test_ad_standard_english_entry and shared gates.
+        import ad_standard_scope
+        guard = patch.object(ad_standard_scope, 'requirement', return_value={'required': False})
+        guard.start()
+        self.addCleanup(guard.stop)
+
+
+class GateDecisions(PreviewOnlyCase):
     """The gate itself, in this process."""
 
     def test_person_modes_use_existing_candidate_without_an_art_receipt(self):
@@ -289,7 +299,7 @@ class GateDecisions(unittest.TestCase):
             self.assertGreater(log[0]['open_problems'], 0)
 
 
-class FirstTrialArtRecord(unittest.TestCase):
+class FirstTrialArtRecord(PreviewOnlyCase):
     """11.17.14: one full art_check run before the first formal trial; no image fingerprints, no forced re-runs."""
 
     def args(self, root, web):
@@ -352,7 +362,7 @@ def timing_events(root):
     return [json.loads(l) for l in log.read_text(encoding='utf-8').splitlines() if l.strip()] if log.is_file() else []
 
 
-class TrialLinkTiming(unittest.TestCase):
+class TrialLinkTiming(PreviewOnlyCase):
     """简化.11.9 (割草 蛋壳特工队: the second trial link was never recorded, so a 6-hour "round 1" hid Saul's second
     playtest): serve_preview.py records `stage_timer.py link <N>` itself, N = different exports handed out."""
 
@@ -412,11 +422,15 @@ class _stderr(object):
         return False
 
 
-class RealServer(unittest.TestCase):
+class RealServer(PreviewOnlyCase):
     """The real wrapper process: refused without a check, started (and the copy verified) after a clean one."""
 
     def start(self, td, argv, env):
-        p = subprocess.Popen([sys.executable, '-B', str(HERE / 'serve_preview.py')] + argv, cwd=str(HERE), env=env,
+        # Child-process isolation, without a production bypass flag.
+        bootstrap = ("import sys,runpy;sys.path.insert(0," + repr(str(HERE.parents[1] / 'remake-core/scripts')) +
+                     ");import ad_standard_scope;ad_standard_scope.requirement=lambda *a,**k:{'required':False};" +
+                     "sys.argv=[" + repr(str(HERE / 'serve_preview.py')) + "]+sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')")
+        p = subprocess.Popen([sys.executable, '-B', '-c', bootstrap] + argv, cwd=str(HERE), env=env,
                              stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         lines = []
         reader = threading.Thread(target=lambda: [lines.append(l) for l in p.stdout], daemon=True)
@@ -507,7 +521,7 @@ class RealServer(unittest.TestCase):
             self.assertEqual(log[-1]['snapshot_manifest_sha256'], log[-1]['export_manifest_sha256'])
 
 
-class UserHandoff(unittest.TestCase):
+class UserHandoff(PreviewOnlyCase):
     """Real retained HTTP shell, synthetic game evidence, intercepted Chrome launch."""
 
     def test_only_completed_art_or_bound_package_can_request_chrome(self):

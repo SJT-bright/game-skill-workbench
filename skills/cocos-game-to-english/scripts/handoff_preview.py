@@ -60,6 +60,12 @@ def art_trial(project, slot):
         raise ValueError(art['message'])
     native = Path(required_text(trial, 'native', '美工试玩记录'))
     export = Path(required_text(trial, 'export', '美工试玩记录'))
+    from ad_standard_scope import requirement
+    if requirement(project, 'new')['required']:
+        from ad_nodes_gate import check_project as check_ad_nodes
+        ad_result = check_ad_nodes(project, native=native, stage='trial')
+        if not ad_result.get('passed'):
+            raise ValueError('六标准广告制作/新增UI尚未完成：' + '; '.join(ad_result.get('problems') or ['unknown']))
     native_sha, native_record = check_prepared_native(project, native)
     source_record = project / SOURCE_RECORD
     if (native_sha != trial['native_tree_sha256']

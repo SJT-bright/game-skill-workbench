@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T05:45:52.567Z",
-  "treeHash": "49d59ce69abcecb2e178290122009cd5653b6702e0a190fee2b93ae2f223bf5a",
+  "createdAt": "2026-11-12T05:46:29.419Z",
+  "treeHash": "47aa108fb337a8deba47badb4e2371be3a3bfa14e2959d719f5a3bf81c6295cd",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2131,20 +2131,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "52a6f00eb508dd297ab4389032701c2137fcc536755004063285fe1403772c3e",
-      "fileCount": 64,
-      "bytes": 993907,
+      "treeHash": "6f8560090cf3de042305538a2df7041766403fdc22ee211a830d5866f3193853",
+      "fileCount": 65,
+      "bytes": 992453,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
-          "size": 27598,
+          "hash": "0f76332343d6a23d903e40cd5fa8f97315d6f5b8adfbc841b32e2ca53b5eacc4",
+          "size": 29159,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "f0f5953965ce4525fec2f9f54f86650810617cb9197a078f2c25a5b61c2a71cb",
-          "size": 95732,
+          "hash": "61bc257525e047dbf5f84752c5b06aa615025548e3142a7c54cdb314134884f9",
+          "size": 94682,
           "executable": false
         },
         {
@@ -2323,8 +2323,8 @@
         },
         {
           "path": "scripts/handoff_preview.py",
-          "hash": "1c5218c4ac6c8e20f3c6c3e98a584772b0a16fb6d57064e5df3206bb12006a28",
-          "size": 11423,
+          "hash": "a0eb07e650febbd5b6d5217173523224f8eab1aa7d9692f5571e526efea3a96c",
+          "size": 11829,
           "executable": false
         },
         {
@@ -2347,14 +2347,20 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "1306057fa9b25f409632b33efcfe8e74f95aacc2534c96a29b72ddabf6858a15",
-          "size": 21209,
+          "hash": "99efc43fca5967ba5c28f4d72d734d42407222ba288b7ab1448f6fa0af65865b",
+          "size": 21775,
           "executable": false
         },
         {
           "path": "scripts/stage_timer.py",
           "hash": "68122666aea309b4a528c47e9f47f61667fe5d241bb001ab0bb4da155c4bd072",
           "size": 62129,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_ad_standard_english_entry.py",
+          "hash": "f3b13eafed12033bb040abb816f01148795ac216790ba6b345b70b2b5a46bec0",
+          "size": 2115,
           "executable": false
         },
         {
@@ -2401,8 +2407,8 @@
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "hash": "b869b758dd1f917f3356898f335cb4353d5357ede84665f993b419d08b54fc1e",
-          "size": 83853,
+          "hash": "dcc8c5423aafee12dcc9a8a4288f7837d4d7e8b7912f1090aad5d1de3aa462e3",
+          "size": 77970,
           "executable": false
         },
         {
@@ -2473,8 +2479,8 @@
         },
         {
           "path": "scripts/test_serve_preview_gate.py",
-          "hash": "f4dc15efc87b473dca9e868b2618817542fc119172b12afa95dce111b5d67dc2",
-          "size": 33640,
+          "hash": "e939cf051af2cbf3f7e85c5c4b63fbc4e8bdf31309a335c5c9d8d8e719ce8d7e",
+          "size": 34471,
           "executable": false
         },
         {

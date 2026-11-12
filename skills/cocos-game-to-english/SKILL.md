@@ -40,7 +40,7 @@ description: "英化（触发词：英化、英化skill、中文源码、翻译�
 
 英化人工操作用 **Computer Use + Edge**。自动检查仍在 **Ego Lite** 独立 TaskSpace 执行原有脚本并复用有效证据。英化的 Google Chrome 只在美工试玩和最终测试包交接时打开。详见[浏览器测试规则](../remake-core/references/browser-testing-policy.md)及[试玩交接](references/preview-handoff.md)。
 
-修订：`2026-11-11.english-simple.11.17.26`（整合已验证的跨会话制作、预览、弹窗与旧档补丁；保留局部复验和阶段计时。历次改动见[版本历史](版本历史.md)。）
+修订：`2026-11-12.english-simple.11.17.27`（整合已验证的跨会话制作、预览、弹窗与旧档补丁；保留局部复验和阶段计时。历次改动见[版本历史](版本历史.md)。）
 
 在新电脑上使用本包时，先核对该机的依赖和 Cocos 版本。共享检查依据用项目相对路径和内容指纹，试玩链接在接收电脑重新绑定。跨机 H5 使用[转发清单](references/playtest-h5.md#换电脑接手)。
 

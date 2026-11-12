@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-11.ad-six-fusion.2.1.0",
+  "revision": "2026-11-11.english-simple.11.17.26",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "61bc257525e047dbf5f84752c5b06aa615025548e3142a7c54cdb314134884f9",
-      "bytes": 94682
+      "sha256": "5590531f0d0927a3a59681acc350d639a73dda1290f472133b16b55454c51417",
+      "bytes": 94697
     },
     {
       "path": "agents/openai.yaml",
@@ -321,11 +321,11 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "11f822a420ef368b4e3a1ba993662e842ba48ad56c9bbac65989b881c4d7b089",
-      "bytes": 15405
+      "sha256": "147b40cc15769735911c9979441310f5c2bb299e0d5881768e605da1f7d03807",
+      "bytes": 15826
     }
   ],
-  "previous_provenance_sha256": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
+  "previous_provenance_sha256": "c964ea71e9aa5de3dca82142cdd20263b2296ae27a0f99c8875cef6410cc6279",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -681,31 +681,5 @@
       ]
     }
   ],
-  "previous_local_provenance_sha256": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
-  "integration_revision": "2026-11-11.ad-six-fusion.2.1.0",
-  "upstream_revision": "2026-11-11.english-simple.11.17.24",
-  "installed_at": "2026-11-12T03:33:42+00:00",
-  "file_count": 64,
-  "local_overlay_preserved": true,
-  "local_overlay_paths": [
-    "SKILL.md",
-    "references/sidebar-retrofit.md"
-  ],
-  "delta_install": {
-    "schema": "ad-six-delta-install.v1",
-    "target": "codex-english",
-    "formal_base": {
-      "path": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/Cocos游戏Skill_英化包_v7简化.11.17.24_20261111.zip",
-      "sha256": "9a315ed711fadf6845e75a11940b15a555e9614ee1c80fa7b414aa19eba8337d",
-      "revision": "2026-11-11.english-simple.11.17.24"
-    },
-    "ad_base": {
-      "path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/发布/ad-boost_v2.0.0_20261111.zip",
-      "sha256": "ef8a58d0d352de55c9809990c1f63c0bfa279a14fddb3c2b9cc7312c9048b115"
-    },
-    "candidate": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/完整融合_20261111/english-tree",
-    "candidate_provenance_sha256": "abc872f50226f4220de29e065a3d7733b46bc0bb15f7087c044c901655706be7",
-    "freeze_sha256": "7565f0c65f80ef3c9ed871876180d1bd62c1aa4b17b76880ee6354a293171874",
-    "scope": "Only candidate-vs-formal-base delta; actual installed bytes, local overlays and config retained."
-  }
+  "previous_local_provenance_sha256": "8d0c6a78efab79340c10f0abccbaf721ea1bd07f9cf9caa87d2f2d91a3ca4660"
 }

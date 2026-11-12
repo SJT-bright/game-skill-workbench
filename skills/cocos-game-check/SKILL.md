@@ -3,9 +3,11 @@ name: cocos-game-check
 description: "统一检查（触发词：检查、测试、验收、找bug、修bug、启动、进不去、白屏、卡加载、按钮没反应、音量、出包、打包、ZIP、检查包、包太大、评审、接收他人包、别人发来的包、总管验收）。所有Cocos小游戏共用的检查Skill：英化游戏和重塑游戏都用同一份。启动与稳定、功能测试与修复、出包、最终包检查、评审（只检测不修改）、美术检查，以及全部检查脚本。"
 ---
 
-**接收他人包／总管验收（2026-11-12）**：别人发来的测试包与源码走[外来包接收模式](../remake-core/references/external-package-handoff.md)，先只读接收并准备同版试玩，缺原回执不等于原游戏失败；需要修改/正式转交时按实际依赖补缺。完整团队交接默认附原writer/交付回执及可移植证据ZIP，不能仅发游戏ZIP。
+**接收他人包／总管验收（2026-11-12）**：别人发来的测试包与源码走[外来包接收模式](../remake-core/references/external-package-handoff.md)，先只读接收并准备同版试玩，缺原回执不等于原游戏失败；需要修改/正式转交时按实际依赖补缺。做完游戏默认交四样：测试包、同版源码包、试玩链接、交接证据包；英化最终交接命令 `handoff_preview.py --kind package` 自动备齐后两个文件并在 `reply_lines` 列出，其他入口用 `game_handoff.py deliver`，不能仅发游戏ZIP。
 
-**旧存档消费者与交付约束（2026-11-12）**：有原始存档读取时，现有 STORAGE-01 从实际 Native 独立盘点并逐键核旧类型恢复、失败保档和真实开局；另一键通过或新玩家通过不能替代。最终体积/CLI检查同时核同字节正式writer回执，`delivery_ready:false`仍须经正式交付复核。“不用旧记录、直接出包”不自动豁免当前启动/存储验收，不用项目zip脚本替代门禁。细则与执行字段见[通用约束](../remake-core/references/startup-storage-consumer-gate.md)；按实际缺项补验，不重跑无关美工/关卡。
+**存档读不出来不能挡启动（2026-11-12 重定，取代 11-11、11-12 的“保档＋恢复页”）**：存档读不出来就按没有这个值、用默认值继续玩；不抛错、不卡加载页、不弹恢复页、不锁存档，金币等余额也一样。平台存档保护件已改回这个行为，读到布尔值等异常形状时在控制台逐键打一行 `[TikTokKit] storage …`；游戏代码拿到 `null` 要能继续，不再自写抛错保护。只有上线过且原样写过数字/布尔值的游戏才用 `TikTokStorageGuard.recoverTyped` 取回旧值，取不回照常进游戏。规则与原因见[跨平台语义与旧存档](../remake-core/references/cross-platform-runtime-contract.md)。
+
+**读存档代码的检查与交付约束（2026-11-12）**：最终 Native 里有直接读存档的代码时，STORAGE-01 自己从 Native 找出读取点。首次上线的游戏只需整款两次运行（所有键读回 true / false、异步不可用），证明没有异常并能从首页真实点进玩法；上线过且写过原始值的游戏逐键证明旧值能取回。2026-11-12 之前签发的回执继续有效。最终体积/CLI检查同时核同字节正式writer回执，`delivery_ready:false`仍须经正式交付复核。“不用旧记录、直接出包”不自动豁免当前启动/存储验收，不用项目zip脚本替代门禁。写法见[存档读取点与交付约束](../remake-core/references/startup-storage-consumer-gate.md)；按实际缺项补验，不重跑无关美工/关卡。
 
 **平台宏导致按钮未绑定（2026-11-12）**：已有“HOME→真实触摸→玩法变化”要求继续保留。制作期 `audit_startup_contract.py`、出包期 `audit_upload_startup.py` 和交付必跑的 `upload_size_gate.py` 现共用 AST 判定，拦截 Cocos 2.x 生命周期中因旧平台宏跳过普通可见节点输入绑定的可证明路径；最终 ZIP 路径复用现有宿主扫描的 AST，不额外运行游戏。两边等效绑定、明确隐藏和无关 SDK 判断作正常对照。命中后只补对应分支，未知路径保留未覆盖，不把默认浏览器点通或 CLI 通过当作平台输入通过。详见[平台条件与输入绑定](startup/references/platform-input-binding.md)。
 
@@ -14,11 +16,9 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 **手机仍失败时先撤销结案（用户2026-11-12）**：按[已报告手机问题](package-check/references/resource-and-reported-issues.md)登记实际故障包和原始症状。先区分平台包挂载/入口前、适配器至首帧、游戏内加载、进入玩法后。受控存档或广告通过不能关闭“平台加载页无游戏画面”；保留本地通过的原范围，手机故障保持未解决。实际产物先跑当前启动审计；已知SDKVersion、子域判断、包内fs.access旧写法在适用Cocos2产物中必须经共享normalizer修正，重建后补入口能力差异对照。缺日志不能补成“入口已执行”，模拟器自动补全接口不能冒充缺字段覆盖。没有原症状对照或真机成功证据，不再交同字节包宣称修复；诊断候选只在用户明确授权后按既有defer-external登记。局部/旧游戏/--draft不豁免故障追踪和实际writer回执，不扩测无关内容。
 
-**启动故障按完整依赖链复验（Music Slice后续反馈，2026-11-12）**：盘点首帧前的每个实际存档消费者和强制写入点，不能只把用户第一行报错的键修通。离线逐键/多键覆盖后，真实Native补适用的存储不可写、键信息仅异步可用、SDK命名空间缺方法、图片解析不回及系统弹窗失败；触控走到PLAY，不以首页或诊断首帧代替可玩。读取和显示余额不写存档，元数据恢复结果要传到后续消费者；失败恢复须实际可见可点。已通过且依赖未变项沿用，详见[跨平台启动链](../remake-core/references/cross-platform-runtime-contract.md#首帧前完整依赖与恢复路径2026-11-12)。
+**启动故障按完整依赖链复验（2026-11-12）**：不能只把用户第一行报错的地方修通。真实Native补适用的键信息仅异步可用、SDK命名空间缺方法、图片解析不回；触控走到PLAY，不以首页或诊断首帧代替可玩。读取和显示余额不写存档，平台信息要传到后续消费者。**加载失败**（分包、资源）须有实际可见可点的 Retry，系统弹窗失败不算；这条不适用于存档。已通过且依赖未变项沿用，详见[启动链上其余要守的](../remake-core/references/cross-platform-runtime-contract.md#启动链上其余要守的2026-11-12)。
 
-**非关键存档不可读不能拖死启动（Music Slice 2026-11-12）**：先按日志定位实际键及消费者。签到序号等非关键字段在同步和异步都不可读时，保留原值、锁住该奖励的免费与广告发放、给原入口可见提示/重试，首页和不依赖它的玩法继续启动；金币等关键账本仍须保档并阻止不安全读写。不能把Boolean猜成0/1或全局清档。新写采用已审JSON存档或schema封装，旧值成功恢复并读回校验后才迁移；以原故障包的同一报错、修复包和正常旧档对照验证。详见[跨平台运行与旧存档升级](../remake-core/references/cross-platform-runtime-contract.md)。
-
-**跨平台语义与冷升级（用户 2026-11-11）**：Android、浏览器触控或标记为iOS的宿主通过，不能证明iOS Native通过。首次平台接入及存档/启动/SDK相关依赖变化时，按[跨平台运行与旧存档升级](../remake-core/references/cross-platform-runtime-contract.md)补最短Native链：新玩家、旧类型存档升级、同步失真/异步保值恢复、不可恢复时保档与可见Retry、实际触控进入玩法。已有存档不可读不能当空档重置。STORAGE-01 v3核原始类型、恢复结果和同runner反例；无裸数值按实际schema举证。正式、轻量写包与最终交付共用只读核准回执，旧报告不覆盖新增场景。只补受影响节点，真机与语义模型分列。
+**跨平台语义（用户 2026-11-11）**：Android、浏览器触控或标记为iOS的宿主通过，不能证明iOS Native通过。首次平台接入及存档/启动/SDK相关依赖变化时，按[跨平台语义与旧存档](../remake-core/references/cross-platform-runtime-contract.md)补最短Native链：新玩家、旧值读不出来照样能玩、实际触控进入玩法。正式、轻量写包与最终交付共用只读核准回执。只补受影响节点，真机与语义模型分列；保护件和 SaveStore 仍标“待真机复测”，手机上平台实际返回什么以真机日志为准。
 
 **六标准广告节点与美工制作已接入（用户2026-11-11）**。首次完整制作与明确的六类迁移，结束、主页、永久皮肤、体力、局内道具、周期试用六类全部必需；额外奖励循环不能替代任何一类。按[六标准广告制作联动](../remake-core/references/ad-standard-six.md)在制作时调用同包ad-boost与remake-art。旧“0～2个才推荐/无系统不新增/英化默认不加这些系统”不再限制这六类所需依赖。已交付游戏的无关局部维护保留原授权范围和有效记录，不自动改原件。
 
@@ -77,7 +77,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 | 类型 | 判断 | 适用 |
 |---|---|---|
-| 英化 | 拿到的是能运行的中文完整游戏，只改中文美工/文字，加少量固定入口 | 下表“英化”列；默认不查关数、经济数值、皮肤、签到、教程等重塑专属项（Saul 要求创新玩法时，新加的部分要查） |
+| 英化 | 拿到的是能运行的中文完整游戏，只改中文美工/文字，加少量固定入口 | 下表“英化”列；默认不查关数、原游戏的经济数值、教程等重塑专属项；六标准补齐的皮肤、体力、道具、签到等板块和 Saul 要求创新玩法新加的部分要查 |
 | 重塑 | 用启动包做的新游戏 | 全部检查 |
 
 工程里写 `docs/board.txt`（`localize` 或 `remake`）；没写时按 [两个制作入口](../remake-core/references/two-boards.md) 判断。
@@ -114,7 +114,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 个人主页侧栏回访、添加桌面 | 必查 | 必查 | 实际 Native 先查旧句残留，再跑 [`growth_entry`](package-check/references/runtime-regression.md)，验证冷启动、保活返回、到账与重复领取。历史包重出同样必查 |
 | 结算页 Watch Ad x2 与 Retry；广告取消/失败不发奖、只用激励视频、无广告跳关 | 必查 | 必查 | `remake-core/scripts/audit_ad_binding.py`、`audit_no_ad_skip.py`、`audit_no_ad_simulator.py` |
 | 美术检查（穿模、暗区、按钮覆盖、图片清晰度） | 只查改过的页面 | 必查 | [art](../remake-art/SKILL.md)、`remake-core/scripts/art_check.py` |
-| 关卡、经济、皮肤、签到、教程、模块 | 默认不查；创新玩法新加的部分要查 | 必查 | `remake-core/scripts/audit_level_plan.py`、`audit_game_modules.py`、`audit_acquisition_progression.py` 等 |
+| 关卡、经济、皮肤、签到、教程、模块 | 原游戏的默认不查；六标准补齐的板块和创新玩法新加的部分要查 | 必查 | `remake-core/scripts/audit_level_plan.py`、`audit_game_modules.py`、`audit_acquisition_progression.py` 等 |
 | 出包与最终包检查 | 必查 | 必查 | [package](package/README.md)、[package-check](package-check/README.md) |
 | 出包时的布局状态、按钮普查（v7.8，总表 B30，Saul 10-30 定必跑）：iPhone 14 和 SE、胶囊按点 / 按像素，查按钮伸出屏幕、压胶囊、压底部横条、被 3D 盖住、胶囊单位一变就移位、开局下载超过 10 MiB 或带声音；首页每个按钮和一层弹窗按钮真点一次，没反应就拦。首页规则：重塑查设置在左上、最下面一排只放主页回访和加桌面；首次英化主页按[默认主页排版](../remake-art/references/english-home-layout.md)由美工 Skill 重新设计，检查两个平台入口及本次重排控件在首页可见、能点、不重叠；已交付后的局部返工只查受影响区域。新游戏拦、老游戏只警告；3.x 只有开局下载会拦 | 必查 | 必查 | 写包入口自动跑（运行时套件 `layout_state`、`button_sweep`，[运行时回归](package-check/references/runtime-regression.md)），每款多 6～10 分钟；要测「展台上有车」这类首页一层点不到的状态，在 adapter 写 `layout_states`。顶栏、设置钮贴着胶囊放的，用平台包 `parts/CapsuleLayout.js` 读胶囊位置 |
 | 正常游玩手感 | 按实际玩法核输入、运动和流畅度 | 同左 | 怀疑帧率相关时显式运行 `frame_rate` 对照诊断，5% 只提示位移差，默认终检和出包不跑 |

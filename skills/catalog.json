@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T14:58:00.008Z",
-  "treeHash": "a3d89fb63b80706b0c076eb6e93eb3840bd374e6fa52adf6c602b50c97c9a8fe",
+  "createdAt": "2026-11-12T17:58:38.598Z",
+  "treeHash": "4f4f60a867a214602ea26a9192216448c0d52bf0bbec02c85dea00f7a61d5450",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "959debedd39e49393c59f769e34c1b4bd6724994135de21d60b97ac220d07f53",
+      "treeHash": "83d8e65a10b9c83a124f985df58a62eb7d1855755df292b87a066862922b91ce",
       "fileCount": 204,
-      "bytes": 2150203,
+      "bytes": 2157667,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "f10ed8feef756b9969eb39d0a60edaa254d50a4f3475ce8d9470ece1ceb25f4b",
-          "size": 63324,
+          "hash": "bc1711d508dd0581a2985efea58424f5329da40922dc54c9acaabd5bfd3951e5",
+          "size": 68169,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "f3150515fe942bddff8a331b9bb4195ec04b6a2f7933250ba8352fb8456b4085",
-          "size": 33899,
+          "hash": "95fc0fd31bd329b1f00ef4f920950fc51126fe9c4ace4f6902d3db88345649cf",
+          "size": 34159,
           "executable": false
         },
         {
@@ -425,8 +425,8 @@
         },
         {
           "path": "package-check/README.md",
-          "hash": "7e3950710cd99886d4bb64cd4f5548a7c4c8a8f607948713576b210eb33c9926",
-          "size": 5822,
+          "hash": "9eecb57dabf3487f8660ae9d2fe833ff67b36799d98ff69f7074c3ba2c98ca90",
+          "size": 5931,
           "executable": false
         },
         {
@@ -1277,8 +1277,8 @@
         },
         {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "cda279f91545e8a3d20b1c1fc479ae6635b61e92e36d896cd6166aa7744b9b0f",
-          "size": 111268,
+          "hash": "ba1c5da9b6781fbafb5af7534aa18a8e886877dca20e61ead6bb5527f95e3dd1",
+          "size": 111425,
           "executable": false
         },
         {
@@ -1355,8 +1355,8 @@
         },
         {
           "path": "startup/references/platform-input-binding.md",
-          "hash": "64dca9057fe1a5965b01231057663763d6bffab197ef7ea46543294980ea1d09",
-          "size": 4036,
+          "hash": "8c175296f218b6edbf76e3bda8dbed9c3936b4115f94edf07ba0186a9451fc58",
+          "size": 6129,
           "executable": false
         },
         {

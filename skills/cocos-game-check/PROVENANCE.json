@@ -1510,9 +1510,74 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "rule-wording-unify.20261112.1",
+      "installed_at": "2026-11-12T16:19:13.915290+00:00",
+      "scope": "Wording only: stale sentences in rule pages, checklists, trigger descriptions and rules-table title/note replaced by the newer rulings already in the pack (no-fail-state revive per 11.17.23; skin-trial timing and games without energy per user 2026-11-11 six standard). No number, params, revision, audit code, gate catalog or existing tool changed. One new check script added.",
+      "authority": "用户 2026-11-12 07:49 PT「你现在先去把skill的存在的问题给修复了吧」，08:16 PT「你这个对话允许你修改skill」。",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "f3150515fe942bddff8a331b9bb4195ec04b6a2f7933250ba8352fb8456b4085",
+          "sha256": "a5a4392fadc35fd652eaf29b2cb68a3cfa862a34ceacf416adc418130a6b60f7"
+        }
+      ],
+      "verification": {
+        "replacements": 34,
+        "files_modified_in_pack": 15,
+        "files_added": 1,
+        "clean_apply_on_fresh_extract": true,
+        "relevant_selfcheck_files_passed_on_patched_tree": 8,
+        "entry_consistency_cases": 77,
+        "full_run_scripts_on_base": 531,
+        "passed_on_base": 524,
+        "passed_on_base_but_failed_after_patch": 0,
+        "new_check_hits_on_unpatched_base": 24,
+        "release_selfcheck_C1_C13_run": false,
+        "tried_on_a_game_project": false
+      },
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_规则口径统一_基于11.17.27/receipt.json"
+    },
+    {
+      "id": "storage-nonblocking-and-four-deliverables.20261112.1",
+      "installed_at": "2026-11-12T17:43:51.594943+00:00",
+      "scope": "Storage: the platform-kit storage guard and SaveStore no longer stop or lock a game on an unreadable value (behaviour of the parts in games up to 2026-11-10 restored, one console line per odd key; typed recovery kept as an optional helper that never ends with an error). STORAGE-01 gate: an unreadable legacy value is proved by a start with the fallback value, first-release games by two whole-game runs; receipts issued by the reviewed earlier texts stay valid. Rule pages rewritten accordingly. Hand-over: the final package hand-off prepares source ZIP + evidence ZIP by default (game_handoff.deliver) and lists the four deliverables. Platform-macro page: where the macro value comes from. Known-issues catalog: description-only (STORAGE-01 text, English notes of ECON-01 / ECON-02) with the prior catalog hash whitelisted. No ad, art, economy number, level or package-size rule changed.",
+      "authority": "用户 2026-11-12：「你这个对话允许你修改skill」；「你也要读取这个对话的历史，需要让他的这部分内容由你去合理的设计，更新skill」；09:32 PT「这个codex的对话也需要，一起检查了一起修改，这几个一起」。",
+      "stacked_on": "rule-wording-unify.20261112.1 (补丁_规则口径统一_基于11.17.27)",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "a5a4392fadc35fd652eaf29b2cb68a3cfa862a34ceacf416adc418130a6b60f7",
+          "sha256": "95fc0fd31bd329b1f00ef4f920950fc51126fe9c4ace4f6902d3db88345649cf"
+        },
+        {
+          "path": "package-check/README.md",
+          "before_sha256": "7e3950710cd99886d4bb64cd4f5548a7c4c8a8f607948713576b210eb33c9926",
+          "sha256": "9eecb57dabf3487f8660ae9d2fe833ff67b36799d98ff69f7074c3ba2c98ca90"
+        },
+        {
+          "path": "references/tiktok-fixed-adaptation.md",
+          "before_sha256": "cda279f91545e8a3d20b1c1fc479ae6635b61e92e36d896cd6166aa7744b9b0f",
+          "sha256": "ba1c5da9b6781fbafb5af7534aa18a8e886877dca20e61ead6bb5527f95e3dd1"
+        },
+        {
+          "path": "startup/references/platform-input-binding.md",
+          "before_sha256": "64dca9057fe1a5965b01231057663763d6bffab197ef7ea46543294980ea1d09",
+          "sha256": "8c175296f218b6edbf76e3bda8dbed9c3936b4115f94edf07ba0186a9451fc58"
+        }
+      ],
+      "verification": {
+        "fresh_extract": "11.17.27 ZIP + patch 1 + this patch == work tree, byte for byte (1785 files)",
+        "full_suite": "see 底本校验与测试记录.json verification.full_suite: the scripts not passing after this patch are the same ones as on the untouched 11.17.27 base",
+        "kit": "node tests/run-all.js: all suites pass (46; base 43)",
+        "real_receipts": "4 real STORAGE-01 reports on this machine judged identically by the base gate and the patched gate",
+        "not_verified": "no real-phone run; kit parts stay 待真机复测"
+      },
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_存档不挡启动与四样交付_基于11.17.27/receipt.json"
     }
   ],
-  "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8",
+  "previous_local_provenance_sha256": "54a00ffdbff4177f740799ff4697c554e3bfa77b9765aefd3fc83974ffeafe0f",
   "local_updates": [
     {
       "id": "2026-11-12.startup-storage-consumers-r7.v1",

@@ -176,10 +176,10 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 4. 存档读值、旧档与恢复
 
-- **规则与唯一细则**：按[跨平台运行与旧档契约](../../remake-core/references/cross-platform-runtime-contract.md)。历史与受控兼容模型中，缺键可能为false/空字符串，旧裸数字可能失真为Boolean；不是所有iOS必然如此。只有确认缺键才能初始化，已有或存在性未知但不可读的数据不得当空档覆盖。实际对象按本作schema处理，不重复JSON.parse、不把Boolean猜成0/1。
-- **标准件**：新游戏（重塑和英化）使用平台 `storage24` / `storage3x` 存档保护层；SaveStore键由其自身状态与schema处理。仅装guard不自动恢复旧档；在消费者/场景前等待按真实schema的typed恢复，失败给简短提示和Retry/免费退出，开发日志保留阶段诊断。旧客户端缺同步元数据时用可用异步接口确认原值或确切缺键，不让新玩家永久loading。
+- **规则与唯一细则**：按[跨平台语义与旧存档](../../remake-core/references/cross-platform-runtime-contract.md)（2026-11-12 重定）。历史与受控兼容模型中，缺键可能为false/空字符串，旧裸数字可能失真为Boolean；不是所有iOS必然如此。读不出来的值一律按没有这个值、用默认值继续，不抛错、不出恢复页、不锁存档。实际对象按本作schema处理，不重复JSON.parse、不把Boolean猜成任意数字。
+- **标准件**：新游戏（重塑和英化）使用平台 `storage24` / `storage3x` 存档保护层：写文本，读不懂的值返回 `null`（读到布尔值等异常形状时在控制台逐键打一行 `[TikTokKit] storage …`），不上锁。SaveStore键由它自己处理：没有就建新档，读不出来或损坏就备份后从默认值开始。只有上线过且原样写过数字/布尔值的游戏才在读存档前调用 `TikTokStorageGuard.recoverTyped` 取回旧值；取不回照常进游戏，不出提示页。
 - **安装范围**：2.4标准main在游戏脚本前装guard；非标准main经game.js的adaptEngine之后接入；3.x经web-adapter之后接入。新游戏按manifest同步，旧游戏仍按Q6不强制全量换件，但本次涉及存档/启动的适用契约不得因旧游戏身份免验或把实际证据失败降为警告。
-- **门禁**：K1/K2/K3继续核字节、接线和单层。`save_restart`仍核同版写后重开，不能代表冷升级。STORAGE-01使用[v3原始观察与首次核准回执](../../remake-core/references/storage-upgrade-trace-v3.md)核本作真实旧档fixture、保值或保档出口、触控进入玩法及同runner反例。旧23项有效证据按增量账本复用，只补新增/失效项。consumer核准证据，不重复启动长矩阵。组件自测不替代本作Native/真机。
+- **门禁**：K1/K2/K3继续核字节、接线和单层。`save_restart`仍核同版写后重开，不能代表冷升级。STORAGE-01使用[v3原始观察与首次核准回执](../../remake-core/references/storage-upgrade-trace-v3.md)核新玩家、旧值读不出来照样进玩法（上线过且写过原始值的另核旧值取回）及同runner反例。旧23项有效证据按增量账本复用，只补新增/失效项。consumer核准证据，不重复启动长矩阵。组件自测不替代本作Native/真机。
 - **反例**：历史或可审查的单点受控反例必须复现本项已知故障；缺键空字符串负例与旧类型恢复负例分开留证。值域、键名和编码来自本作schema，JSON、Boolean、文本无裸数字机制不得硬塞45制造失败。设备、真实IAA与平台接受分别登记。
 
 ### 5. 适配层三处旧写法（12 款）

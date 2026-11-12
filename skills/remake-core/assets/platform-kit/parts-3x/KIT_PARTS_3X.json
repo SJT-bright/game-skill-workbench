@@ -84,16 +84,17 @@
       "file": {
         "src": "plugins-3x/SaveStore.plugin.js",
         "dest": "assets/tiktok-platform/SaveStore.plugin.js",
-        "sha256": "396543bf0881d67c1e132dc9e6024e484322e0bdea897af2b3986918d1e39f14",
+        "sha256": "c8435c8043ee8e3d63a5fd848481788a7bcd37d8216ac3c34be9cfac6b997256",
         "previous_sha256": [
           "c6d7b35f87ec51d5c768a33636354506c238bd86f92ab5c5847687499cd31eb1",
           "dcf16d37f6032f97e799624f2da01ccf972686bc93305cd778f4f0a207f38a59",
           "81f900888a76c56f72aac1817070cb8446095825c51fdab074f6319a492f39d5",
           "1076eae52c305e0c666a0e105639b780857954c909676f7f762358b684f601f9",
-          "bd88908cacbbbb48a4cd8e42234dca5d4f60b1273525ce628bf08d45018f79ca"
+          "bd88908cacbbbb48a4cd8e42234dca5d4f60b1273525ce628bf08d45018f79ca",
+          "396543bf0881d67c1e132dc9e6024e484322e0bdea897af2b3986918d1e39f14"
         ],
         "from": "assets/tiktok-platform/SaveStore.js",
-        "from_sha256": "34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0"
+        "from_sha256": "d50ecbb869ec987963bb3340427f48a4a3b7d1b02850df1ab033893654bdf934"
       },
       "global": "globalThis.TikTokKit.SaveStore",
       "policy": {
@@ -229,10 +230,11 @@
         "src": "parts/storage-guard.js",
         "dest": "storage-guard.js",
         "template": "build-templates/bytedance-mini-game/storage-guard.js",
-        "sha256": "cb588030cb7dbb75e285b5673e629f22f17abebdfc961ecaccaca7ab2e046155",
+        "sha256": "dcf66357106de4eaf0dd3f64697537690f8a89f3d83082b806ef67911877b4d8",
         "previous_sha256": [
           "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
-          "b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602"
+          "b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602",
+          "cb588030cb7dbb75e285b5673e629f22f17abebdfc961ecaccaca7ab2e046155"
         ]
       },
       "wiring": [

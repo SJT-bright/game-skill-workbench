@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T17:58:38.598Z",
-  "treeHash": "4f4f60a867a214602ea26a9192216448c0d52bf0bbec02c85dea00f7a61d5450",
+  "createdAt": "2026-11-12T18:00:37.206Z",
+  "treeHash": "28bdd7a257bf5c23c0064b5f39a153509ab95815add245cf649e697fe2d97e58",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3735,20 +3735,20 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "100aea68014553ddbc549a42ec17c89b125718af70cc9383928245ff2b76ee3d",
-      "fileCount": 742,
-      "bytes": 13751721,
+      "treeHash": "3a96c2d4da473a1d58db9ad5488a50e2b863dd9c9506adf7c24090259f4d2eb7",
+      "fileCount": 743,
+      "bytes": 13872875,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "ce2cd68ae66fa50b0b6490ee6529999c2371da56df9760ff84271ae3f96a8fb5",
-          "size": 178485,
+          "hash": "a1cba4d2f1a6cb822e3c35f72a932d37e948b1d1f6eaae2177799bcb9e4bd3cd",
+          "size": 191095,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "0578886fcb5edb259ddcdda7ecc9f54ccd3bd59e72cc4aa450e58ea7c52ff092",
-          "size": 14979,
+          "hash": "8547ad19f0e596dc9e7d557302e74f2fe47965ca1a4fbf1308c481a5d18910c6",
+          "size": 15495,
           "executable": false
         },
         {
@@ -3795,8 +3795,8 @@
         },
         {
           "path": "assets/known-issues.json",
-          "hash": "033303e0ace7b0809fcf9debdaff0fe09cda1362b0ab0eebf3e72f72980f6a71",
-          "size": 147910,
+          "hash": "2a0b1d8a9eeaad727ed4842995e4295ae47b9f0228d7e57bb588752ab10fa1e3",
+          "size": 148691,
           "executable": false
         },
         {
@@ -3831,14 +3831,14 @@
         },
         {
           "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-          "hash": "458ae33377c90fcf6c4ce4cdd5661e0b568e5868aea97be16a35eaab0117ef69",
-          "size": 14671,
+          "hash": "b6d49e98433309d09ca8af04a6dfc9dcf8490671c21fece79c0ad661efc6c67d",
+          "size": 14495,
           "executable": false
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "efedfdb84c3c659402c1d00ae4fa4721357a0259e86f6fc196cec5d569fd3807",
-          "size": 64771,
+          "hash": "62652db6f6725fcc77cce61490b25e00db0ae9422e50a6ec792aab6cfe00a099",
+          "size": 66283,
           "executable": false
         },
         {
@@ -3849,8 +3849,8 @@
         },
         {
           "path": "assets/platform-kit/README_接入说明.md",
-          "hash": "429383f1bdc2efebdbb795c87df2f3c3849d422e5920c0445d14427d0efb805f",
-          "size": 84665,
+          "hash": "775e1a9f0a6292fa91001e0e4e847ee77bf7625720aa0d0953b6f4dd5075f224",
+          "size": 86049,
           "executable": false
         },
         {
@@ -3879,8 +3879,8 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/SaveStore.js",
-          "hash": "34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0",
-          "size": 25457,
+          "hash": "d50ecbb869ec987963bb3340427f48a4a3b7d1b02850df1ab033893654bdf934",
+          "size": 26370,
           "executable": false
         },
         {
@@ -3999,8 +3999,8 @@
         },
         {
           "path": "assets/platform-kit/parts/storage-guard.js",
-          "hash": "cb588030cb7dbb75e285b5673e629f22f17abebdfc961ecaccaca7ab2e046155",
-          "size": 12518,
+          "hash": "dcf66357106de4eaf0dd3f64697537690f8a89f3d83082b806ef67911877b4d8",
+          "size": 17911,
           "executable": false
         },
         {
@@ -4017,8 +4017,8 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-          "hash": "97bd9746181b8f4dcb7b4a30324ad1a7b067cd2fa2b39f86a018fb305df3ad87",
-          "size": 15345,
+          "hash": "89c436c03d167c71897da429d032d0ff9ea23f147c151e58dcd6ea4e9753b187",
+          "size": 15501,
           "executable": false
         },
         {
@@ -4065,8 +4065,8 @@
         },
         {
           "path": "assets/platform-kit/plugins-3x/SaveStore.plugin.js",
-          "hash": "396543bf0881d67c1e132dc9e6024e484322e0bdea897af2b3986918d1e39f14",
-          "size": 27641,
+          "hash": "c8435c8043ee8e3d63a5fd848481788a7bcd37d8216ac3c34be9cfac6b997256",
+          "size": 28554,
           "executable": false
         },
         {
@@ -4251,14 +4251,14 @@
         },
         {
           "path": "assets/platform-kit/tests/kit-negative-controls.js",
-          "hash": "60f4c26c241920e692426b594c3757fed3fb3e490ed20d2403c0e09607a29191",
-          "size": 5709,
+          "hash": "af5c795e5759c771baa571f16f5654105e99b63af65de0ad0480fd3309278b90",
+          "size": 5669,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/kit.test.js",
-          "hash": "2637ac9cd73221ba1d03e137a4e7e1fc7178160d1adbae55b953bdbd462a4667",
-          "size": 47745,
+          "hash": "cabce5c645bb5d9ebabb1603678b6b4925133155a3a89a49946f0e9f58080706",
+          "size": 50979,
           "executable": false
         },
         {
@@ -4299,8 +4299,8 @@
         },
         {
           "path": "assets/platform-kit/tests/run-all.js",
-          "hash": "849f877765bea0cc0991e6693e55e0043e068e82d2922c1cf6d6feba0aaa823f",
-          "size": 9053,
+          "hash": "37f3659d6867bf2fc7b1925450b44fad1a8430d616dd39300374aaf3823c7f1d",
+          "size": 9524,
           "executable": false
         },
         {
@@ -4353,32 +4353,32 @@
         },
         {
           "path": "assets/platform-kit/tests/storage-guard-negative-controls.js",
-          "hash": "08b1506bf243f815b8d49ca88c27eeb0f6f294e330bed22223e85e80bde730fa",
-          "size": 2642,
+          "hash": "254be0299141ab5e958dcf9369e872b777f7d3f811b3ed117c7a674f96461b90",
+          "size": 3157,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/storage-guard.test.js",
-          "hash": "0af896c872a2997b2d633e1bb879a88a3ba8fc9d948b6846022e9d8f32b15e1a",
-          "size": 6740,
+          "hash": "ef563dd8eeaf61016a1116a7977379539d0f0e8fbd1169beea060422b1219033",
+          "size": 10793,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/storage-recovery.test.js",
-          "hash": "467b17fb94fb7c8ac50f3fc3c1425eeaf851b40dc49bcb0fc1bbdaf2238b38ef",
-          "size": 3569,
+          "hash": "dbd27a51994b48d2b52f1c2642474a2e82f206568a6f130f7876ca31ecafbaf2",
+          "size": 8757,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/storage-typed-negative-controls.js",
-          "hash": "a62644c015b8f5676b8a4b7ac05e87c327ea0f1c040cc998a1651bbe9168aebd",
-          "size": 2402,
+          "hash": "e2ca719313424f38c99fec32bcf631616f93869b2baec39ed258b5eacee4ba1b",
+          "size": 3915,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/storage-typed-recovery.test.js",
-          "hash": "ddcf95fd2767c89d86b2cd1ed81428d44169016b41f11687594dae64dbd5e6b2",
-          "size": 9724,
+          "hash": "8bfbfe71ad2f659424549f850e2f97c124362fc7b8609c288f566bcc93c716de",
+          "size": 12480,
           "executable": false
         },
         {
@@ -4532,6 +4532,12 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tools/kit_versions/SaveStore/34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0.txt",
+          "hash": "34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0",
+          "size": 25457,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tools/kit_versions/SaveStore/954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406.txt",
           "hash": "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406",
           "size": 5391,
@@ -4587,8 +4593,8 @@
         },
         {
           "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-          "hash": "73e76fa0e16581559eb7bb6bd06d1c0a233ab1cfde1531525c91fc07b948350b",
-          "size": 23986,
+          "hash": "206acd8eabda6310b5811edb75647d4a7bd2fe9d40da2b11c7a6424881a56486",
+          "size": 24400,
           "executable": false
         },
         {
@@ -4791,8 +4797,8 @@
         },
         {
           "path": "references/cross-platform-runtime-contract.md",
-          "hash": "e951650fd1839f9ef67b3eba8c883542e9a0c34305754d206024849671e7bbd8",
-          "size": 15240,
+          "hash": "3837d3d4d5394cac664742e2337ddc8932d49717a37c9c3b7d7c008be5884058",
+          "size": 14743,
           "executable": false
         },
         {
@@ -4827,8 +4833,8 @@
         },
         {
           "path": "references/external-package-handoff.md",
-          "hash": "9a9244adf6ff8d10ba35285e9bf3bb0366a3027368dac4c3e5a43b92f1e0a64b",
-          "size": 5090,
+          "hash": "d6ae4c86e9d89f920cca44bf8664085bca4bb790e5023b542e58ae090fe11a21",
+          "size": 6807,
           "executable": false
         },
         {
@@ -4869,8 +4875,8 @@
         },
         {
           "path": "references/known-issue-checklist.md",
-          "hash": "ed6471eb83c88451cc4af8f4986ce93fc8f8872a75bed56cdf9a9687a040ae86",
-          "size": 46645,
+          "hash": "0fceb2768d4e6d6856bc5951b03d1c681e9a819df776323b479318f702e050a9",
+          "size": 46698,
           "executable": false
         },
         {
@@ -4959,8 +4965,8 @@
         },
         {
           "path": "references/production-baseline.md",
-          "hash": "f9ea04817201861c45b97cf2a470a3f4edfd9913eadf61abe75ea61e37e5b59f",
-          "size": 12846,
+          "hash": "21be0f107379504ea8e49f60570078810a2f7faf9959801992fa7656fad5de6c",
+          "size": 12615,
           "executable": false
         },
         {
@@ -5013,14 +5019,14 @@
         },
         {
           "path": "references/startup-storage-consumer-gate.md",
-          "hash": "e155fa73bdb238e39c112a76844eeb5f684e09fe168d0022fdaddb38a9b8dcba",
-          "size": 7953,
+          "hash": "3e30b440e68848aa40d9e2a510e55f9f888309b6ade966edfb838dc73129ed4a",
+          "size": 8782,
           "executable": false
         },
         {
           "path": "references/storage-upgrade-trace-v3.md",
-          "hash": "465900716c46b1d46eac0508e1387fbeef6c0eab3b4ce89a50e2ab51a5a322f8",
-          "size": 9957,
+          "hash": "fad93ffd6f23572cab911c025161cec1a67f9a9bda4242774d7785ffa1477605",
+          "size": 13485,
           "executable": false
         },
         {
@@ -5391,8 +5397,8 @@
         },
         {
           "path": "scripts/audit_native_storage_contract.py",
-          "hash": "4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc",
-          "size": 36906,
+          "hash": "80bc479c1f6d9c93c2ae862ea34924affe99b680b729467b0321ecd1b1659ddb",
+          "size": 46564,
           "executable": false
         },
         {
@@ -5601,8 +5607,8 @@
         },
         {
           "path": "scripts/check_known_issues.py",
-          "hash": "12c6bbbba3cf2c391eb8ccbd17225b2e3c6bd6beeed9f69fcc6aaf462479548d",
-          "size": 61349,
+          "hash": "13ec11585e2b6ba43debd116009413f88bca17924ee49482274edc94e8fcf71b",
+          "size": 61717,
           "executable": false
         },
         {
@@ -5883,8 +5889,8 @@
         },
         {
           "path": "scripts/game_handoff.py",
-          "hash": "3268b76a22844af9d105275d4f732d9cc374437ade4f52127fb733414e35af5a",
-          "size": 13091,
+          "hash": "8774d5427740b78ca84ec51103c25ba1bf201954ebe17f800b0ffe8a6a7eca66",
+          "size": 23371,
           "executable": false
         },
         {
@@ -6459,8 +6465,8 @@
         },
         {
           "path": "scripts/startup_storage_consumers.py",
-          "hash": "ab3159de99f437ff14d17e6cfd34b9d39d66c48e92c7b450e2d0d5894828edc2",
-          "size": 10139,
+          "hash": "3c832d4be8447f87e177cf27102d6374bf2b28ec684f389ca4ac68608d454ed8",
+          "size": 14865,
           "executable": false
         },
         {
@@ -6969,8 +6975,8 @@
         },
         {
           "path": "scripts/test_game_handoff.py",
-          "hash": "b1428821dc0c0f450fed40ec57db2854597f5e028febb142ace4b468f6b95ad0",
-          "size": 7269,
+          "hash": "bc299b6d9f5da981ab1cea0c7c664cc35e881ea11d3825520dd19465acb11650",
+          "size": 14327,
           "executable": false
         },
         {
@@ -7089,8 +7095,8 @@
         },
         {
           "path": "scripts/test_known_issue_gate.py",
-          "hash": "e326ceda22282987e999a5546c4df08fe654e894bffc5a3dcd24b4faaa0fd128",
-          "size": 47054,
+          "hash": "cb0005dc38753611b30460b920668a3f994b8dbca2bf4eca752b00458f75e152",
+          "size": 47314,
           "executable": false
         },
         {
@@ -7227,8 +7233,8 @@
         },
         {
           "path": "scripts/test_native_storage_upgrade_contract.py",
-          "hash": "fa52ffa1c58c829b3d0489e99e26a259624cfff73400c079325259006e8d64d4",
-          "size": 22609,
+          "hash": "1d9e599838bd724b12021ef31021bc2fd14e541126bbd64140b7e08d7e4d6be5",
+          "size": 32787,
           "executable": false
         },
         {
@@ -7743,8 +7749,8 @@
         },
         {
           "path": "scripts/test_startup_storage_consumers.py",
-          "hash": "bcc2441d41b93472662bc620f15019a00b039389da8e942256ed0db81847addf",
-          "size": 10142,
+          "hash": "701978b23f04d881d0caf45019fcdd3c722c8445836233c8544def4ff084e07a",
+          "size": 15806,
           "executable": false
         },
         {

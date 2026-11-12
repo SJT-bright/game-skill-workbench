@@ -938,7 +938,7 @@
         "audit_acquisition_progression"
       ],
       "board_notes": {
-        "localize": "英化默认不加皮肤和经济（Saul 2026-10-28，取代 10-21“英化＋优化”的按模板新增）：原游戏自带的皮肤/商店只英化，数量和价格不改，看广告的入口改接平台包激励广告；原版没有就写不适用并附依据。Saul 要求创新玩法、新加皮肤或商店时，新加的部分按本条和经济板块测。"
+        "localize": "英化：完整六标准制作（用户 2026-11-11）补齐六类广告节点所需的永久皮肤、体力、局内道具等系统，新加的部分按本条和经济板块测。已交付旧合同的无关局部维护不加皮肤和经济（Saul 2026-10-28）：原游戏自带的皮肤/商店只英化，数量和价格不改，看广告的入口改接平台包激励广告；原版没有、也不在本次范围内的写不适用并附依据。Saul 要求创新玩法、新加皮肤或商店时，新加的部分同样按本条和经济板块测。"
       },
       "maintenance_scope_note": "Explicit preservation scope checks the actual existing collection and trial mechanics, original price catalog and source/Web/Native runtime plus current GUI; does not waive economy or introduce template-only map/trial popup.",
       "gate": "design"
@@ -959,7 +959,7 @@
         "map_unlock"
       ],
       "board_notes": {
-        "localize": "英化：原游戏有试用弹窗或地图解锁，按原机制测；创新玩法新加的，按本条测；都没有就写不适用并附依据（英化默认不加，Saul 2026-10-28）。"
+        "localize": "英化：原游戏有试用弹窗或地图解锁，按原机制测；完整六标准制作新加的周期试用（用户 2026-11-11，完成第 3、6、9……局后的局间邀请）和创新玩法新加的，按本条测；已交付旧合同的无关局部维护不新增，都没有就写不适用并附依据。"
       },
       "maintenance_observations": [
         "existing_trial_entry_and_effect",
@@ -1195,9 +1195,9 @@
       "id": "STORAGE-01",
       "feature": "save",
       "title": "最终 Native 奖励与存档读写契约",
-      "symptom": "跨平台存储桥的缺键值和旧类型值可能与浏览器不同；同版新档重开不能覆盖旧存档冷升级。已有但不可读的数据被当空档，可能导致初始化卡加载、错误重置或奖励异常。",
-      "steps": "按 references/cross-platform-runtime-contract.md 与 storage-upgrade-trace-v3.md 盘点实际存储编码，使用同一项目runner核最终Native/adapter、旧档入口前fixture、新玩家、typed恢复、无法恢复保档与可见出口、真实触控进入玩法及对应反例；原23项有效证据按现有增量账本复用，仅执行新增或失效项。首次审计重放并生成核准回执；三个写包/交付入口通过audit_final_storage.py核原始证据、依赖和回执，显式合同native_storage_report或既有STORAGE-01 auto_reports引用，不在每次调用重新启动长矩阵。",
-      "expected": "当前STORAGE-01 v3核准报告与实际Native、runner、原始观察及当前检查表绑定；只确认适用的真实存储机制，非数字存档以schema和源码读写清单举证，不硬造数字故障。原缺键负例和适用升级负例保留；缺项、负例未复现、原始文件/依赖变化或回执失配时拒绝，按具体缺口修复，不自动扩大全量。Android、iOS真实TikTok、真实IAA及平台上传接受另列。",
+      "symptom": "跨平台存储桥的缺键值和旧类型值可能与浏览器不同（缺键读成false或空串，数字读成布尔值）；同版新档重开测不到这些。游戏或存档保护层遇到读不出来的值就抛错、卡加载或弹恢复页，会让手机打不开游戏（2026-11-12：快乐星猫R7、Music Slice v34）。",
+      "steps": "按 references/cross-platform-runtime-contract.md 与 storage-upgrade-trace-v3.md 盘点实际存储编码，使用同一项目runner核最终Native/adapter：新玩家；旧值读不出来（入口前fixture、同步读回布尔值、异步不可用）时没有异常并真实触控进入玩法，最终Native里有直接读存档代码的按 startup-storage-consumer-gate.md 整款两次运行覆盖每个键；上线过且原样写过数字或布尔值的游戏另核旧值取回；及对应反例。存档读不出来按没有这个值继续，不做保档恢复页；原23项有效证据按现有增量账本复用，仅执行新增或失效项。首次审计重放并生成核准回执；三个写包/交付入口通过audit_final_storage.py核原始证据、依赖和回执，显式合同native_storage_report或既有STORAGE-01 auto_reports引用，不在每次调用重新启动长矩阵。",
+      "expected": "当前STORAGE-01 v3核准报告与实际Native、runner、原始观察及当前检查表绑定；只确认适用的真实存储机制，非数字存档以schema和源码读写清单举证，不硬造数字故障。读不出来的旧值不挡启动；2026-11-12之前签发的回执继续有效。原缺键负例和适用升级负例保留；缺项、负例未复现、原始文件/依赖变化或回执失配时拒绝，按具体缺口修复，不自动扩大全量。Android、iOS真实TikTok、真实IAA及平台上传接受另列。",
       "phase": "pre_scan",
       "always_applicable": true,
       "required_observations": [

@@ -1,14 +1,16 @@
 'use strict';
 // Each variant breaks one rule of parts/storage-guard.js in a temporary copy; storage-guard.test.js MUST fail.
+// 2026-11-12: the rule "reading saved data never stops the game" replaced "an unreadable value throws and locks the key".
 var fs = require('fs'), os = require('os'), path = require('path'), child = require('child_process');
 var src = path.join(__dirname, '..', 'parts', 'storage-guard.js');
 var variants = [
-  {name: 'legacy_value_defaulted', before: 'throw unreadable(key);\n    };', after: 'return null;\n    };'},
+  {name: 'boolean_read_throws', before: "return noValue(key, typeof value === 'boolean' ? 'boolean_read' : 'empty_read', value);", after: "throw new Error('Stored value unreadable: ' + key);"},
+  {name: 'read_error_rethrown', before: "return noValue(key, 'read_threw');", after: 'throw error;'},
+  {name: 'write_refused_after_unreadable_read', before: 'var result = write.call(storage, key, value);', after: "if (warned) throw new Error('Stored value unreadable: ' + key); var result = write.call(storage, key, value);"},
   {name: 'numbers_written_raw', before: "if (typeof value !== 'string') { note(key, 'as_text_' + typeof value); value = text(value); }", after: ''},
   {name: 'false_read_returned', before: "if (value === '' && present === true) return '';", after: "if (value === false) return false;\n      if (value === '' && present === true) return '';"},
-  {name: 'unknown_value_reset', before: 'throw unreadable(key);', after: 'return null;'},
   {name: 'boolean_true_read_returned', before: "if (typeof value === 'number' && isFinite(value)) return String(value);", after: "if (typeof value === 'number' && isFinite(value)) return String(value);\n      if (value === true) return value;"},
-  {name: 'throw_not_caught', before: "if (listed(key, storage) === false) { note(key, 'throw_absent'); return null; }", after: ''},
+  {name: 'boolean_read_as_text', before: "return noValue(key, typeof value === 'boolean' ? 'boolean_read' : 'empty_read', value);", after: "return typeof value === 'boolean' ? String(value) : null;"},
   {name: 'object_read_stringified', before: "if (value && typeof value === 'object') return value;", after: "if (value && typeof value === 'object') return JSON.stringify(value);"},
   {name: 'installs_twice', before: '|| storage.getItem.__tiktokKitStorageGuard) return false;', after: ') return false;'},
   {name: 'savestore_key_guarded', before: 'if (SAVESTORE_KEY.test(String(key))) return value;', after: ''}

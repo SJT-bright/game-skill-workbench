@@ -13,7 +13,7 @@
    - `AUDIO-02`：`scripts/audit_audio_sources.py --project <工程>`（每个音频都有合格来源记录）
    - 动态画面问题在试玩时按[人工试玩画面清单](manual-visual-review.md)观察。
    - `ECON-01`：`scripts/audit_acquisition_progression.py --table <unlock_table.json>`；`NOSKIP-01`：`scripts/audit_no_ad_skip.py --project <工程>`
-   - `STORAGE-01`：`scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json> --out <本次报告.json>`；按[冷升级回执v3](storage-upgrade-trace-v3.md)核实际存储编码、旧档恢复/保档、真实触控可玩及原始证据。原有效项按增量账本沿用，只补适用缺项；首次审计核准回放，三个写包/交付入口共用 `audit_final_storage.py` 消费当前核准回执，合同用 `native_storage_report: {path, sha256}` 引用，或复用既有STORAGE-01 auto_reports。缺覆盖、已知反例未复现、最终Native/运行器/原始证据失配时拒绝，设备和真实IAA另列。
+   - `STORAGE-01`：`scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json> --out <本次报告.json>`；按[回执v3](storage-upgrade-trace-v3.md)核新玩家、旧值读不出来照样能玩（上线过且写过原始值的游戏另核旧值取回）、真实触控可玩及原始证据。原有效项按增量账本沿用，只补适用缺项；首次审计核准回放，三个写包/交付入口共用 `audit_final_storage.py` 消费当前核准回执，合同用 `native_storage_report: {path, sha256}` 引用，或复用既有STORAGE-01 auto_reports。缺覆盖、已知反例未复现、最终Native/运行器/原始证据失配时拒绝，设备和真实IAA另列。
 3. 修完问题、改代码或换图后，核实际证据绑定和受影响范围；只补失效检查及相关回归。现有工具使用全树绑定时按其要求真实重跑，不把旧报告换哈希当新证据；也不在同版有效时固定重开全部人工操作。
 4. **每条检查写自己看到的内容**：同一段话复制到多条检查，或一条检查的几个观察字段写成一样，门禁会直接拒绝。
 

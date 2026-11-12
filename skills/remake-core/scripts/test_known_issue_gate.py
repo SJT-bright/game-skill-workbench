@@ -266,6 +266,8 @@ def main():
                 records()
         probe('complete synthetic schema accepted (not a game pass)', lambda d: None, 'passed')
         probe('description-only prior catalog retains unrelated valid evidence', lambda d: d.update(catalog_sha256=gate.PRE_STORAGE_UPGRADE_CATALOG), 'passed')
+        probe('2026-11-12 description-only prior catalog retains valid evidence', lambda d: d.update(catalog_sha256=gate.PRE_UNREADABLE_START_CATALOG), 'passed')
+        probe('an unknown catalog is still refused', lambda d: d.update(catalog_sha256='0' * 64))
         def old_storage_cannot_hide_behind_prior_catalog(d):
             d['catalog_sha256']=gate.PRE_STORAGE_UPGRADE_CATALOG
             d['checks']['STORAGE-01']['auto_reports']=[]

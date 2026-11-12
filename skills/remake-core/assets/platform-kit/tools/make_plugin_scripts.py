@@ -88,6 +88,10 @@ PREVIOUS = {'missions3x': ['876096fa0ba41ca95871446875105329dfc715b20fb33e772a1a
 PREVIOUS['storage3x'] = ['1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27']
 PREVIOUS['storage3x'].append('b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602')
 PREVIOUS['savestore3x'].append('bd88908cacbbbb48a4cd8e42234dca5d4f60b1273525ce628bf08d45018f79ca')
+# 2026-11-12: cb588030 = storage-guard.js of 2026-11-11 (an unreadable read threw and locked the key);
+# 396543bf = the plugin of SaveStore.js 34f53c10 of 2026-11-11 (an unreadable save became 'unavailable' for good).
+PREVIOUS['storage3x'].append('cb588030cb7dbb75e285b5673e629f22f17abebdfc961ecaccaca7ab2e046155')
+PREVIOUS['savestore3x'].append('396543bf0881d67c1e132dc9e6024e484322e0bdea897af2b3986918d1e39f14')
 TOUCH_SRC = 'build-templates/bytedance-mini-game/tiktok-touch-3x.js'
 STORAGE_SRC = 'parts/storage-guard.js'
 WEB_ADAPTER = r"""require\(\s*['"]\./web-adapter(?:\.js)?['"]\s*\)\s*;?"""

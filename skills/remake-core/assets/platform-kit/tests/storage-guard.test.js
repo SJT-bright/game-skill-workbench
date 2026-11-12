@@ -45,23 +45,30 @@ function fakeRuntime(opts) {
     s.restore();
   });
 });
-test('unwritten_key_without_key_list_is_ambiguous', function () {
-  var s = fakeRuntime({absent: false, noKeys: true});
-  assert.throws(function(){ s.cc.sys.localStorage.getItem('level'); }, /unreadable/);
-  assert.throws(function(){ s.cc.sys.localStorage.setItem('level', 0); }, /unreadable/);
-  assert.deepStrictEqual(s.data, {});
-  s.restore();
+// 2026-11-12: reading saved data never stops the game. Before this, a new player on a phone without a key list
+// (or any player with a listed Boolean) made every read throw and the game could not start.
+[false, '', undefined, null].forEach(function (absent) {
+  test('unwritten_key_without_key_list_reading_' + JSON.stringify(absent === undefined ? 'undefined' : absent) + '_is_null_and_writable', function () {
+    var s = fakeRuntime({absent: absent, noKeys: true});
+    assert.strictEqual(s.cc.sys.localStorage.getItem('level'), null, 'a new player starts');
+    s.cc.sys.localStorage.setItem('level', 0);
+    assert.deepStrictEqual(s.data, {level: '0'});
+    assert.strictEqual(s.cc.sys.localStorage.getItem('level'), '0');
+    s.restore();
+  });
 });
 test('read_that_throws_for_unlisted_key_is_null', function () {
   var s = fakeRuntime({throwAbsent: true});
   assert.strictEqual(s.cc.sys.localStorage.getItem('coins'), null);
   s.restore();
 });
-test('existing_read_error_is_preserved', function(){
+test('existing_read_error_reads_as_no_value_and_does_not_block', function(){
   var s=fakeRuntime({throwListed:true});s.data.wallet=45;
-  assert.throws(function(){s.storage.getItem('wallet');}, /unreadable/);
-  assert.throws(function(){s.storage.setItem('wallet',0);}, /unreadable/);
-  assert.strictEqual(s.data.wallet,45);s.restore();
+  assert.strictEqual(s.storage.getItem('wallet'), null, 'the read does not throw');
+  assert.strictEqual(s.data.wallet,45, 'a read changes nothing');
+  assert.strictEqual(s.writes.length,0);
+  s.storage.setItem('wallet',3);
+  assert.strictEqual(s.data.wallet,'3', 'the game can save again');s.restore();
 });
 test('numbers_and_booleans_are_written_as_text', function () {
   var s = fakeRuntime({numberAs: true, boolAs: true});
@@ -79,14 +86,74 @@ test('object_write_is_json_text', function () {
   assert.strictEqual(s.writes[0].v, '{"coins":5}');
   s.restore();
 });
-test('raw_number_written_before_the_guard_is_preserved_and_locked', function () {
+test('raw_number_read_back_as_boolean_is_no_value_until_typed_recovery', function () {
   var s = fakeRuntime({numberAs: true});
   s.data.level = 7;                         // written by an old build without the guard
-  assert.throws(function(){s.cc.sys.localStorage.getItem('level');}, /unreadable/);
-  assert.throws(function(){s.cc.sys.localStorage.setItem('level',0);}, /unreadable/);
-  assert.strictEqual(s.data.level, 7);
+  assert.strictEqual(s.cc.sys.localStorage.getItem('level'), null, 'not true, not "true", and no throw');
+  assert.strictEqual(s.data.level, 7, 'reading does not touch the old value');
   assert.strictEqual(s.writes.length,0);
+  s.cc.sys.localStorage.setItem('level', 2);
+  assert.strictEqual(s.data.level, '2');
   s.restore();
+});
+test('game_scripts_reach_the_helper_through_a_global', function () {
+  var s = fakeRuntime({});
+  assert.strictEqual(typeof globalThis.TikTokStorageGuard, 'function');
+  assert.strictEqual(typeof globalThis.TikTokStorageGuard.recoverTyped, 'function');
+  assert.strictEqual(typeof globalThis.TikTokStorageGuard.recoverNumeric, 'function');
+  s.restore();
+});
+test('listed_boolean_switch_reads_as_no_value_and_is_logged', function () {
+  var s = fakeRuntime({});
+  s.data.IS_GAME_MUSIC = false; s.data.TUTORIAL_DONE = true;   // an older build stored real Booleans
+  var lines = [], warn = console.warn; console.warn = function (x) { lines.push(String(x)); };
+  try {
+    assert.strictEqual(s.cc.sys.localStorage.getItem('IS_GAME_MUSIC'), null);
+    assert.strictEqual(s.cc.sys.localStorage.getItem('TUTORIAL_DONE'), null);
+    assert.strictEqual(s.cc.sys.localStorage.getItem('IS_GAME_MUSIC'), null, 'second read, still no throw');
+  } finally { console.warn = warn; }
+  assert.deepStrictEqual(lines, ['[TikTokKit] storage IS_GAME_MUSIC: boolean_read false, read as no value',
+                                 '[TikTokKit] storage TUTORIAL_DONE: boolean_read true, read as no value'], 'one line per key');
+  assert.strictEqual(s.data.IS_GAME_MUSIC, false);
+  s.restore();
+});
+test('console_line_only_for_shapes_that_point_at_the_platform', function () {
+  var lines = [], warn = console.warn; console.warn = function (x) { lines.push(String(x)); };
+  try {
+    var quiet = fakeRuntime({absent: null, noKeys: true});            // never written, no key list: the usual null
+    assert.strictEqual(quiet.cc.sys.localStorage.getItem('level'), null);
+    quiet.restore();
+    var undef = fakeRuntime({absent: undefined, noKeys: true});
+    assert.strictEqual(undef.cc.sys.localStorage.getItem('level'), null);
+    undef.restore();
+    assert.deepStrictEqual(lines, [], 'no line for a plain missing key');
+    var odd = fakeRuntime({absent: false, noKeys: true});             // a missing key read as false: worth a line
+    assert.strictEqual(odd.cc.sys.localStorage.getItem('level'), null);
+    odd.restore();
+    var listed = fakeRuntime({});                                     // the platform lists the key but hands back nothing
+    listed.data.coins = undefined;
+    assert.strictEqual(listed.cc.sys.localStorage.getItem('coins'), null);
+    listed.restore();
+  } finally { console.warn = warn; }
+  assert.deepStrictEqual(lines, ['[TikTokKit] storage level: boolean_read false, read as no value',
+                                 '[TikTokKit] storage coins: empty_read, read as no value']);
+});
+test('reading_never_throws_for_any_value_shape', function () {
+  [{}, {noKeys: true}].forEach(function (keys) {
+    [true, false, '', undefined, null, NaN, 0, 1, 45, 'x', {a: 1}].forEach(function (stored) {
+      var s = fakeRuntime(Object.assign({absent: false}, keys));
+      s.data.k = stored;
+      assert.doesNotThrow(function () { s.cc.sys.localStorage.getItem('k'); s.cc.sys.localStorage.getItem('missing'); },
+        'stored ' + String(stored) + (keys.noKeys ? ', no key list' : ''));
+      assert.doesNotThrow(function () { s.cc.sys.localStorage.setItem('k', 5); });
+      s.restore();
+    });
+  });
+  var t = fakeRuntime({throwListed: true, throwAbsent: true, noKeys: true});
+  t.data.k = 1;
+  assert.strictEqual(t.cc.sys.localStorage.getItem('k'), null);
+  assert.strictEqual(t.cc.sys.localStorage.getItem('missing'), null);
+  t.restore();
 });
 test('listed_empty_string_stays_empty_string', function () {
   var s = fakeRuntime({absent: ''});

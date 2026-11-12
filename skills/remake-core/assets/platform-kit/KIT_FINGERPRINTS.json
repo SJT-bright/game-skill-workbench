@@ -440,41 +440,26 @@
     "s:write_failed"
    ],
    "current_only": [
-    "p:__tiktokKitStorageState",
-    "p:_unavailable",
-    "p:isSafeInteger",
-    "p:knownAbsent",
-    "s:saved_data_malformed",
-    "s:saved_data_unreadable",
-    "s:saved_data_wrong_type"
+    "p:unreadableSavePolicy",
+    "s:backup-then-defaults"
    ],
-   "current_sha256": "34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0",
+   "current_sha256": "d50ecbb869ec987963bb3340427f48a4a3b7d1b02850df1ab033893654bdf934",
    "editable": false,
    "previous": {
-    "2b86117a5c7b7f97ecfbbc267cc9dd2996edf56d5ee63a0a4e1c06c963541a41": [
-     "s::corrupt-backup",
-     "s:recovered"
+    "2b86117a5c7b7f97ecfbbc267cc9dd2996edf56d5ee63a0a4e1c06c963541a41": [],
+    "34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0": [
+     "p:__tiktokKitStorageState",
+     "p:isSafeInteger",
+     "p:knownAbsent",
+     "s:saved_data_malformed",
+     "s:saved_data_unreadable",
+     "s:saved_data_wrong_type"
     ],
-    "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406": [
-     "s::corrupt-backup",
-     "s:recovered"
-    ],
-    "9fca45e213abf061ffec93f6380e56c12977e26bdbe5a8a1b059807abc46428b": [
-     "s::corrupt-backup",
-     "s:recovered"
-    ],
-    "ba99f77166cc8859dd7ae6a8308250868bf2f73dd2c15bf4bb35a104f0e79499": [
-     "s::corrupt-backup",
-     "s:recovered"
-    ],
-    "cb7d95e46be83decf23758895a3cc289f63781628437c6b80b02a9ab762f2415": [
-     "s::corrupt-backup",
-     "s:recovered"
-    ],
-    "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf": [
-     "s::corrupt-backup",
-     "s:recovered"
-    ]
+    "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406": [],
+    "9fca45e213abf061ffec93f6380e56c12977e26bdbe5a8a1b059807abc46428b": [],
+    "ba99f77166cc8859dd7ae6a8308250868bf2f73dd2c15bf4bb35a104f0e79499": [],
+    "cb7d95e46be83decf23758895a3cc289f63781628437c6b80b02a9ab762f2415": [],
+    "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf": []
    },
    "previous_without_text": []
   },

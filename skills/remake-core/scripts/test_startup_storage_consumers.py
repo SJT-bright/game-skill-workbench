@@ -112,6 +112,76 @@ class Consumers(unittest.TestCase):
         f.binding['native_tree_sha256']=tree_sha(f.native);expected=contract.receipt_identity(f.trace);old['trace_sha256']=expected['trace_sha256']
         self.assertFalse(contract.unchanged_nonconsumer_receipt(report,f.trace,expected))
 
+    # ---- 2026-11-12: saved data never stops the game ----
+    def fallback_rows(self):
+        """Per-key rows of the current policy: the unrecoverable value is a start with the fallback, no recovery page."""
+        self.raw['recovery_failure_observations']=[]
+        for r in self.raw['legacy_consumer_observations']:
+            if r['case']!='unrecoverable':continue
+            for name in ('recovery_feedback_visible','isolated_consumer_writes','writes'):r.pop(name,None)
+            key=r['key'];r.update(outcome='started_with_fallback',sync_read={'type':'boolean','value':True},first_exception=None,
+                                 storage_before={key:r['storage_before'][key],'other':'keep'},storage_after={key:'0','other':'keep'})
+    def test_per_key_fallback_start_needs_no_recovery_page_rows(self):
+        self.fallback_rows()
+        self.assertEqual(coverage_errors(self.trace,self.raw,self.root,new_approval=True),[])
+        r=next(r for r in self.raw['legacy_consumer_observations'] if r['case']=='unrecoverable')
+        r['first_exception']='Stored value unreadable';self.assertTrue(any('exception' in e for e in self.check()))
+        r['first_exception']=None;r['business'].pop('play');self.assertTrue(any('start with fallback' in e for e in self.check()))
+    def test_blocking_recovery_rows_are_read_for_earlier_receipts_only(self):
+        self.assertEqual(self.check(),[])
+        self.assertTrue(any('no longer accepted' in e for e in coverage_errors(self.trace,self.raw,self.root,new_approval=True)))
+    def whole_game(self):
+        """Two runs for the whole game: every found key reads back true / false, async storage fails."""
+        self.trace={'legacy_consumers':{'mode':'unreadable_start'},
+                    'legacy_data':{'earlier_release_wrote_raw_values':False,'basis':'first TikTok release'}}
+        sites=[s['site_id'] for s in inventory(self.root)];rows=[]
+        for profile,value in [('all_true',True),('all_false',False)]:
+            r=business();r.pop('fixture_case')
+            r.update(case='unreadable_start',profile=profile,fixture_installed_before_entry=True,seeded_keys=['flag','best'],
+                     storage_before={'flag':value,'best':45 if value else 0,'other':'keep'},
+                     sync_reads={'flag':{'type':'boolean','value':value},'best':{'type':'boolean','value':value}},
+                     read_sites=sites,async_storage='unavailable',metadata_status='unavailable' if value else 'present',
+                     errors=[],removed_keys=[],loading_overlay_visible=False)
+            rows.append(r)
+        self.raw={'legacy_consumer_observations':rows}
+        return rows
+    def test_whole_game_unreadable_start_two_runs(self):
+        self.whole_game()
+        self.assertEqual(coverage_errors(self.trace,self.raw,self.root,new_approval=True),[])
+    def test_whole_game_needs_both_profiles_every_key_and_a_real_boolean_read(self):
+        rows=self.whole_game();keep=copy.deepcopy(self.raw)
+        self.raw['legacy_consumer_observations']=rows[:1];self.assertTrue(any('all_false' in e for e in self.check()))
+        self.raw=copy.deepcopy(keep);self.raw['legacy_consumer_observations'][0]['seeded_keys']=['flag']
+        self.assertTrue(any('best' in e for e in self.check()))
+        self.raw=copy.deepcopy(keep);self.raw['legacy_consumer_observations'][0]['sync_reads']['best']={'type':'string','value':'45'}
+        self.assertTrue(any('best was not read back as Boolean true' in e for e in self.check()))
+        self.raw=copy.deepcopy(keep);self.raw['legacy_consumer_observations'][1]['sync_reads']['flag']={'type':'boolean','value':True}
+        self.assertTrue(any('flag was not read back as Boolean false' in e for e in self.check()))
+    def test_whole_game_async_must_fail_and_the_game_must_play(self):
+        rows=self.whole_game();keep=copy.deepcopy(self.raw)
+        for change,word in [(lambda r:r.update(async_storage='typed'),'async storage must fail'),
+                            (lambda r:r.update(errors=['Stored value unreadable']),'exception'),
+                            (lambda r:r.update(loading_overlay_visible=True),'loading overlay'),
+                            (lambda r:r.update(removed_keys=['flag']),'removed key'),
+                            (lambda r:r['business'].pop('play'),'play'),
+                            (lambda r:r.update(fixture_installed_before_entry=False),'seeded before entry'),
+                            (lambda r:r.update(read_sites=['not-a-site']),'actual consumer sites')]:
+            self.raw=copy.deepcopy(keep);change(self.raw['legacy_consumer_observations'][0])
+            self.assertTrue(any(word in e for e in self.check()),word)
+        self.raw=copy.deepcopy(keep)
+        for r in self.raw['legacy_consumer_observations']:r['metadata_status']='present'
+        self.assertTrue(any('key list unavailable' in e for e in self.check()))
+    def test_whole_game_mode_needs_the_stated_release_history(self):
+        self.whole_game();self.trace.pop('legacy_data')
+        self.assertTrue(any('earlier_release_wrote_raw_values' in e for e in self.check()))
+        self.trace['legacy_data']={'earlier_release_wrote_raw_values':True,'basis':'v1 shipped without the guard'}
+        self.assertTrue(any('typed recovery per key' in e for e in self.check()))
+    def test_whole_game_mode_covers_computed_keys_by_the_run(self):
+        self.js.write_text("var raw=cc.sys.localStorage;raw.getItem('flag');raw.getItem('best');raw.getItem('level_'+n);")
+        rows=self.whole_game()
+        self.assertEqual(len([s for s in inventory(self.root) if s['key'] is None]),1)
+        self.assertEqual(self.check(),[])
+
     def test_no_direct_storage_consumers_do_not_invalidate_other_games(self):
         self.js.write_text("useAlreadySchemaBackedService();")
         self.assertEqual(coverage_errors({}, {}, self.root),[])

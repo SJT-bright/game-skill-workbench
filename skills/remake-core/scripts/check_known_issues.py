@@ -25,6 +25,9 @@ PRE_MANUAL_VISUAL_CATALOGS = (
 # STORAGE-01 description-only catalog update retains all other historical rows.
 PRE_STORAGE_UPGRADE_CATALOG = 'cc0e29cf7462b212a2cbd44e8c590bf5933f110e62ad9ceb050f1075f63d48d5'
 PRE_DIRECT_GROWTH_CATALOG = 'cdf079ed8ebea18acce0bb552e20b21962fa34a9bf73c64cefe1685c96613b02'
+# 2026-11-12, description-only: STORAGE-01 text follows "an unreadable save never stops the game" and the English notes
+# of ECON-01 / ECON-02 follow the six standard ad nodes. Same items, same automatic checks: reviews keep their binding.
+PRE_UNREADABLE_START_CATALOG = '033303e0ace7b0809fcf9debdaff0fe09cda1362b0ab0eebf3e72f72980f6a71'
 # Two separate work boards (remake-core/references/two-boards.md, user 2026-10-21).
 BOARDS = ('localize', 'remake')
 DEFAULT_BOARD = 'remake'  # strictest; old reviews without a board keep their previous behaviour
@@ -522,7 +525,7 @@ def audit(args):
                       ' (user chose 按重塑画风重做: make a new review with --art-style remake)')
     expected_binding = binding(args)
     catalog_digest = review.get('catalog_sha256')
-    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_STORAGE_UPGRADE_CATALOG, PRE_DIRECT_GROWTH_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
+    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_STORAGE_UPGRADE_CATALOG, PRE_DIRECT_GROWTH_CATALOG, PRE_UNREADABLE_START_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
         errors.append('Checklist catalog changed; review added/changed checks')
     if review.get('binding') != expected_binding:
         errors.append('Source/Native/Web/build tag differs from the reviewed inputs')

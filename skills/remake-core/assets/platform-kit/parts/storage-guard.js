@@ -1,10 +1,24 @@
 'use strict';
 // TikTok Platform Kit storage guard. Known SDK/bridge compatibility models, not a real-device verdict.
-// New writes are text. A listed but unreadable legacy key is NOT a new player.
-// SaveStore keys remain raw; its schema/recovery owns them. See cross-platform-runtime-contract.md.
+//
+// Rule (2026-11-12): reading saved data never stops the game.
+//   - setItem writes text only: numbers and Booleans become String(value), objects become JSON text.
+//   - getItem hands back a non-empty string or an object unchanged; a number becomes text.
+//   - anything else (true / false / '' / undefined / null / NaN, or a read that throws) is "no value": null.
+//     A key the platform lists with '' stays ''. The game then uses its default, exactly as for a new player.
+//   - no key is ever locked: the game can always save.
+// History: the version in games up to 2026-11-10 (1853efbe, base MergeShot2048 v85, real iPhone) returned null in
+// these cases. The 2026-11-11 versions threw and locked the key instead; a game built with them did not start on
+// a real phone (startup load failed: "Stored value unreadable ... IS_GAME_MUSIC"). This file returns to null and
+// prints one console line per key for a Boolean, a read that throws or a listed key that reads empty, so a phone
+// log shows what the storage really returned (a plain null / undefined for a key nobody lists stays silent).
+// recoverTyped() below can fetch the real value of an old key through the async API before the game reads it.
+// SaveStore keys remain raw; SaveStore decides about them itself. See cross-platform-runtime-contract.md.
 var SAVESTORE_KEY = /:save:v\d+(:corrupt-backup)?$/;
 function install(cc, api) {
   var root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this);
+  // Game scripts inside the Cocos bundle cannot require() this root file: they reach recoverTyped() through this global.
+  root.TikTokStorageGuard = install;
   var log = root.__tiktokKitStorageEvents = root.__tiktokKitStorageEvents || [];
   function note(key, kind) { if (log.length < 60) log.push({key: String(key), kind: kind, at: Date.now()}); }
   function listed(key, storage) {
@@ -29,16 +43,21 @@ function install(cc, api) {
   function text(value) {
     if (typeof value === 'string') return value;
     if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-    if (value && typeof value === 'object') return JSON.stringify(value);
+    if (value && typeof value === 'object') { try { return JSON.stringify(value); } catch (error) { return String(value); } }
     return String(value);
   }
   function guard(storage) {
     if (!storage || typeof storage.getItem !== 'function' || storage.getItem.__tiktokKitStorageGuard) return false;
-    var read = storage.getItem, write = storage.setItem, blocked = Object.create(null), knownAbsent = Object.create(null);
-    function unreadable(key) {
-      blocked[String(key)] = true; note(key, 'unreadable_preserved');
-      var error = new Error('Stored value unreadable; preserve save and retry typed recovery: ' + String(key));
-      error.code = 'TIKTOK_STORAGE_UNREADABLE'; error.key = String(key); return error;
+    var read = storage.getItem, write = storage.setItem, knownAbsent = Object.create(null);
+    var writeCount = Object.create(null), warnedKeys = Object.create(null), warned = 0;
+    // One short console line per key (at most 20 keys) so a phone log shows what the storage returned.
+    function noValue(key, kind, value) {
+      note(key, kind);
+      if (!warnedKeys[String(key)] && warned < 20 && typeof console !== 'undefined' && console && typeof console.warn === 'function') {
+        warnedKeys[String(key)] = true; warned++;
+        try { console.warn('[TikTokKit] storage ' + String(key) + ': ' + kind + (typeof value === 'boolean' ? ' ' + value : '') + ', read as no value'); } catch (ignore) {}
+      }
+      return null;
     }
     var guardedRead = function (key) {
       var value;
@@ -47,7 +66,7 @@ function install(cc, api) {
         if (knownAbsent[String(key)]) return null;
         if (SAVESTORE_KEY.test(String(key))) throw error;
         if (listed(key, storage) === false) { note(key, 'throw_absent'); return null; }
-        throw unreadable(key);
+        return noValue(key, 'read_threw');
       }
       // An async-confirmed missing key must not conceal a subsequently readable SDK write.
       if (knownAbsent[String(key)]) {
@@ -61,17 +80,21 @@ function install(cc, api) {
       var present = listed(key, storage);
       if (value === '' && present === true) return '';
       if (present === false) { note(key, 'confirmed_absent'); return null; }
-      // Unknown metadata is not proof of a fresh install. Do not default or overwrite it.
-      throw unreadable(key);
+      // null / undefined without a key list is the usual answer for a key that was never written: no console line.
+      if ((value === null || value === undefined) && present === null) { note(key, 'absent_unknown'); return null; }
+      // Still not a string, number or object: a Boolean, '' or NaN, or nothing at all for a key the platform lists.
+      // It may be a real switch, a missing key or a number the bridge turned into a Boolean; this layer cannot tell.
+      return noValue(key, typeof value === 'boolean' ? 'boolean_read' : 'empty_read', value);
     };
     guardedRead.__tiktokKitStorageGuard = true;
-    guardedRead.__tiktokKitStorageState = {storage: storage, read: read, write: write, listed: function(key){return listed(key,storage);}, blocked: blocked, knownAbsent: knownAbsent, generation: 0, note: note};
+    // blocked: always empty since 2026-11-12 (no key is locked); kept so code written against 2026-11-11 still runs.
+    guardedRead.__tiktokKitStorageState = {storage: storage, read: read, write: write, listed: function(key){return listed(key,storage);}, blocked: Object.create(null), knownAbsent: knownAbsent, writeCount: writeCount, generation: 0, note: note};
     storage.getItem = guardedRead;
     if (typeof write === 'function') {
       var guardedWrite = function (key, value) {
-        if (blocked[String(key)]) throw unreadable(key);
         if (typeof value !== 'string') { note(key, 'as_text_' + typeof value); value = text(value); }
-        var result = write.call(storage, key, value); delete knownAbsent[String(key)]; return result;
+        var result = write.call(storage, key, value);
+        delete knownAbsent[String(key)]; writeCount[String(key)] = (writeCount[String(key)] || 0) + 1; return result;
       };
       guardedWrite.__tiktokKitStorageGuard = true;
       storage.setItem = guardedWrite;
@@ -84,8 +107,8 @@ function install(cc, api) {
   if (other && other !== main) installed = guard(other) || installed;
   return installed;
 }
-// Call before game save consumers. Schema types: integer, number, boolean, string, json_object.
-// No Boolean -> numeric guessing. Errors preserve data; caller owns bounded visible Retry/exit.
+// A stored value against this game's schema. Types: integer, number, boolean, string, json_object.
+// A Boolean is never a number here; recoverTyped() handles the two declared exceptions.
 function typedValue(value, spec) {
   var type = spec.type, parsed = value, encoded;
   if (type === 'integer' || type === 'number') {
@@ -121,6 +144,27 @@ function missingStorage(error) {
   if (error.errCode === 'STORAGE_KEY_NOT_FOUND' || error.errCode === 'KEY_NOT_FOUND') return true;
   return typeof error.errMsg === 'string' && /^getStorage:fail (?:data not found|key not found|no such key)[.;]?$/i.test(error.errMsg);
 }
+// Optional helper for old keys, called before the game reads them (cc may be null on Cocos 3.x):
+//   var guard = globalThis.TikTokStorageGuard;
+//   guard.recoverTyped(cc, platform, [{key:'Coin', type:'integer', min:0}, {key:'IS_MUSIC', type:'boolean'}], function (error, results) {...})
+// For each key whose sync read is not usable it asks the async API for the real value and stores it as text.
+// It never stops the game: when no real value can be had (async fails, hangs, answers with a Boolean again, the
+// value breaks the schema, time is up) the key simply reads as "no value" and done() is still called WITHOUT an error.
+// error is set only for a wrong schema list or when a newer call took over (code TIKTOK_STORAGE_SUPERSEDED: the
+// newer call's callback continues the startup). results[key] says what happened:
+//   kept                 already readable text that fits the schema; nothing written
+//   value_recovered      the real value was found and stored as text
+//   boolean_kept         type 'boolean': the Boolean itself is the value ("true" / "false" stored)
+//   boolean_as_number    numeric spec with acceptBoolean: true (a 0/1 flag): stored as "1" / "0"
+//   absent               the platform confirmed there is no such key (new player)
+//   <why>_no_value       no real value; the key reads as no value (why: async_failed, async_empty, schema_reject,
+//                        api_unavailable, timeout)
+//   <why>_left_as_is     the storage returns a readable value outside the schema; the game reads it as before
+//   write_unconfirmed    the text was written but did not read back; the next read decides
+//   newer_write_kept     the game saved this key meanwhile; its value stays
+//   not_checked_no_sdk   no guard or no platform SDK (browser preview); nothing done
+// A Boolean false for a key the platform does not list is a missing key on several devices, so only `true`, or a
+// Boolean for a listed key, counts as a stored Boolean.
 install.recoverTyped = function (cc, api, specs, done, timeoutMs) {
   var storage = cc && cc.sys && cc.sys.localStorage;
   if (!storage) {
@@ -128,15 +172,23 @@ install.recoverTyped = function (cc, api, specs, done, timeoutMs) {
     storage = root && root.localStorage;
   }
   var state = storage && storage.getItem && storage.getItem.__tiktokKitStorageState;
-  if (!state || !api || !Array.isArray(specs) || typeof done !== 'function') throw Error('storage guard, SDK, schema and callback required');
+  if (!Array.isArray(specs) || typeof done !== 'function') throw Error('schema list and callback required');
+  if (!state || !api) {
+    var unchecked = {};
+    specs.forEach(function (s) { if (s && typeof s.key === 'string') unchecked[s.key] = 'not_checked_no_sdk'; });
+    setTimeout(function () { done(undefined, unchecked); }, 0);
+    return;
+  }
   var token = ++state.generation, previous = state.cancelRecovery, ended = false, timer, lifecycle = false;
   var remaining = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 5000, hidden = false, lastTime = Date.now();
+  var results = {}, outOfTime = false, waiting = null;
   function accountTime() { var now=Date.now(); if (!hidden) remaining -= Math.max(0,now-lastTime); lastTime=now; }
   function onHide() { if (!current()) return; accountTime(); hidden=true; }
   function onShow() { if (!current()) return; hidden=false; lastTime=Date.now(); }
   function deadline() {
     if (!current()) return; accountTime();
-    if (!hidden && remaining <= 0) return finish(Error('Typed storage recovery timed out; save preserved'));
+    // Out of foreground time: the key being waited for and every key after it are settled from the sync read alone.
+    if (!hidden && remaining <= 0) { outOfTime = true; if (waiting) waiting(); return; }
     timer=setTimeout(deadline,hidden ? 250 : Math.max(1,Math.min(250,remaining)));
   }
   function current() { return !ended && state.generation === token; }
@@ -144,9 +196,9 @@ install.recoverTyped = function (cc, api, specs, done, timeoutMs) {
     if (ended) return; ended = true; clearTimeout(timer);
     if (state.cancelRecovery === cancel) state.cancelRecovery = null;
     if (lifecycle) { try { api.offHide(onHide); } catch (ignore) {} try { api.offShow(onShow); } catch (ignore2) {} }
-    done(error);
+    done(error, results);
   }
-  function cancel() { var error=Error('Typed storage recovery superseded; save preserved'); error.code='TIKTOK_STORAGE_SUPERSEDED'; finish(error); }
+  function cancel() { var error=Error('Typed storage recovery superseded by a newer call'); error.code='TIKTOK_STORAGE_SUPERSEDED'; finish(error); }
   // Own the batch BEFORE cancellation can run caller code and recursively start a newer batch.
   state.cancelRecovery = cancel;
   if (previous) previous();
@@ -156,44 +208,64 @@ install.recoverTyped = function (cc, api, specs, done, timeoutMs) {
     lifecycle=true; try { api.onHide(onHide); api.onShow(onShow); } catch (ignore) { try {api.offHide(onHide);api.offShow(onShow);}catch(ignore2){} lifecycle=false; }
   }
   timer=setTimeout(deadline,hidden ? 250 : Math.max(1,Math.min(250,remaining)));
-  function absent(key) { delete state.blocked[key]; state.knownAbsent[key] = true; state.note(key,'typed_confirmed_absent'); next(); }
   function next() {
     if (!current()) return;
     if (!queue.length) return finish();
     var spec = queue.shift();
     if (!spec || typeof spec.key !== 'string' || !spec.key || ['integer','number','boolean','string','json_object'].indexOf(spec.type) < 0)
       return finish(Error('Explicit typed legacy key schema required'));
-    var key = spec.key, value, thrown = false;
+    var key = spec.key, value, thrown = false, settled = false;
+    var seenWrites = state.writeCount[key] || 0;
     try { value = state.read.call(storage, key); } catch (error) { thrown = true; }
     var present = state.listed(key);
     // Boolean/sentinel/unknown empty reads can be bridge distortion, so validate them through async API.
     var ambiguous = thrown || value === null || value === undefined || typeof value === 'boolean' || value === '' && present !== true;
     var existing = !ambiguous && typedValue(value, spec);
-    if (present === false && ambiguous) return absent(key);
-    if (existing && typeof value === 'string') { delete state.blocked[key]; delete state.knownAbsent[key]; return next(); }
-    state.blocked[key] = true;
-    function persist(original) {
-      if (!current()) return;
-      var checked = typedValue(original, spec);
-      if (!checked) return finish(Error('Typed storage value violates schema; save preserved: ' + key));
-      try {
-        state.write.call(storage, key, checked.text);
-        if (state.read.call(storage, key) !== checked.text) throw Error('Typed storage recovery readback mismatch: ' + key);
-        delete state.blocked[key]; delete state.knownAbsent[key]; state.note(key, 'typed_value_recovered'); next();
-      } catch (error) { finish(error); }
+    function settle(outcome) {
+      settled = true; waiting = null;
+      state.note(key, 'typed_' + outcome); results[key] = outcome; next();
     }
+    function absent() { state.knownAbsent[key] = true; settle('absent'); }
+    function store(textValue, outcome) {
+      // The game wrote this key while the async read was out: its newer value stays.
+      if ((state.writeCount[key] || 0) !== seenWrites) return settle('newer_write_kept');
+      var back;
+      try { state.write.call(storage, key, textValue); back = state.read.call(storage, key); } catch (error) { back = undefined; }
+      if (back !== textValue) return settle('write_unconfirmed');
+      delete state.knownAbsent[key]; settle(outcome);
+    }
+    // No real value could be had for this key.
+    function noRealValue(why) {
+      if (typeof value === 'boolean' && (value === true || present === true)) {
+        if (spec.type === 'boolean') return store(String(value), 'boolean_kept');
+        if ((spec.type === 'integer' || spec.type === 'number') && spec.acceptBoolean === true) {
+          var flag = typedValue(value ? 1 : 0, spec);
+          if (flag) return store(flag.text, 'boolean_as_number');
+        }
+      }
+      if (!ambiguous) return settle(why + '_left_as_is');
+      state.knownAbsent[key] = true; settle(why + '_no_value');
+    }
+    function persist(original) {
+      var checked = typedValue(original, spec);
+      if (!checked) return noRealValue('schema_reject');
+      store(checked.text, 'value_recovered');
+    }
+    if (present === false && ambiguous) return absent();
+    if (existing && typeof value === 'string') { delete state.knownAbsent[key]; return settle('kept'); }
     if (existing) return persist(value);
-    if (typeof api.getStorage !== 'function') return finish(Error('Typed storage API unavailable; save preserved: ' + key));
-    var settled = false;
+    if (outOfTime) return noRealValue('timeout');
+    if (typeof api.getStorage !== 'function') return noRealValue('api_unavailable');
+    waiting = function () { if (!current() || settled) return; noRealValue('timeout'); };
     function failed(error) {
-      if (!current() || settled) return; settled = true;
+      if (!current() || settled) return;
       // Only an explicit missing-key response plus no contradictory key index proves a fresh key.
-      if (present !== true && missingStorage(error)) return absent(key);
-      finish(Error('Typed storage recovery failed; save preserved: ' + key));
+      if (present !== true && missingStorage(error)) return absent();
+      noRealValue('async_failed');
     }
     function success(result) {
-      if (!current() || settled) return; settled = true;
-      if (!result || !Object.prototype.hasOwnProperty.call(result,'data')) return finish(Error('Typed storage data missing; save preserved: ' + key));
+      if (!current() || settled) return;
+      if (!result || !Object.prototype.hasOwnProperty.call(result,'data')) return noRealValue('async_empty');
       persist(result.data);
     }
     try {

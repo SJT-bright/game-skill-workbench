@@ -4,6 +4,13 @@
 The project runner produces raw case results. This tool binds those results to
 the final Native bytes, checks the required matrix, and verifies that the same
 runner reproduced the reported defect on an older bundle.
+
+2026-11-12, saved data never stops the game: a legacy value that cannot be read
+is proved by a start with the fallback value (home -> trusted touch -> play),
+see fallback_start_errors(). The earlier proof (value left untouched behind a
+visible recovery / exit page) stays valid only for receipts issued before this
+text; approve_runtime() no longer accepts it. Case names and POLICY_VERSION are
+unchanged, so reports of both kinds are read by the same consumers.
 """
 import argparse
 import hashlib
@@ -32,6 +39,68 @@ POLICY_VERSION = 3
 UPGRADE_CASES = ('legacy_numeric_nonbinary_typed', 'legacy_numeric_boundary_typed',
                  'legacy_unreadable_preserved', 'legacy_upgrade_touch_play')
 CASES = BASE_CASES + UPGRADE_CASES
+STORAGE_POLICY = 'unreadable_starts_with_fallback.2026-11-12'
+FALLBACK_OUTCOME = 'started_with_fallback'
+STOPPED_START = 'unreadable_stops_startup'
+ASYNC_FAILED = ('unreadable', 'error', 'timeout', 'unavailable')
+
+
+def raw_history(trace):
+    """Whether a released build of this game may have written raw numbers / Booleans.
+
+    Only an explicit statement with its basis turns the typed-recovery cases off
+    (first release, or every released build wrote text through the kit guard).
+    Missing or anything else keeps them required, as before 2026-11-12.
+    """
+    row = trace.get('legacy_data') if isinstance(trace, dict) else None
+    return not (isinstance(row, dict) and row.get('earlier_release_wrote_raw_values') is False and
+                isinstance(row.get('basis'), str) and bool(row['basis'].strip()))
+
+
+def unrelated_changed(before, after, key):
+    return (json.dumps({k: v for k, v in before.items() if k != key}, sort_keys=True) !=
+            json.dumps({k: after.get(k) for k in before if k != key and k in after}, sort_keys=True) or
+            any(k not in after for k in before if k != key))
+
+
+def fallback_start_errors(row, label, key):
+    """One unreadable legacy value: the game starts and plays with its fallback value.
+
+    The value itself may be overwritten or backed up by the game; what is proved
+    is that nothing else is lost and that the player reaches gameplay.
+    """
+    from startup_business_contract import validate_business
+    errors = []
+    before = row.get('storage_before'); after = row.get('storage_after')
+    sync = row.get('sync_read'); async_read = row.get('async_read')
+    if (row.get('fixture_installed_before_entry') is not True or not isinstance(before, dict) or
+            not isinstance(after, dict) or not isinstance(key, str) or key not in before):
+        return [label + ': unreadable fixture of the named key must precede Native entry']
+    if not isinstance(sync, dict) or sync.get('type') != 'boolean' or type(sync.get('value')) is not bool:
+        errors.append(label + ': actual sync Boolean bridge observation required')
+    if not isinstance(async_read, dict) or async_read.get('status') not in ASYNC_FAILED:
+        errors.append(label + ': the async read must actually fail in the unreadable branch')
+    if row.get('first_exception') or row.get('loading_overlay_visible') is not False:
+        errors.append(label + ': an unreadable value left an exception or the loading overlay')
+    if row.get('removed_keys') != [] or unrelated_changed(before, after, key):
+        errors.append(label + ': other saved data was removed or changed')
+    errors.extend(label + ': start with fallback ' + e for e in validate_business(row))
+    return errors
+
+
+def stopped_start_errors(result, row, label):
+    """Negative control of the fallback proof: the same fixture stops this older / mutated bundle."""
+    from startup_business_contract import validate_business
+    if not isinstance(row, dict):
+        return [label + ': raw observation missing']
+    sync = row.get('sync_read')
+    stopped = bool(row.get('first_exception')) or row.get('loading_overlay_visible') is True or bool(validate_business(row))
+    if (result.get('cases', {}).get('legacy_unreadable_preserved') != 'fail' or row.get('failure_kind') != STOPPED_START or
+            row.get('fixture_installed_before_entry') is not True or not isinstance(row.get('storage_before'), dict) or
+            row.get('key') not in row['storage_before'] or
+            not isinstance(sync, dict) or sync.get('type') != 'boolean' or type(sync.get('value')) is not bool or not stopped):
+        return [label + ': negative must show the same unreadable fixture stopping the start (exception, loading overlay or no gameplay)']
+    return []
 
 
 def json_only_scope(trace, binding, native=None):
@@ -105,10 +174,15 @@ def decoded_encoded(value, encoding):
     raise ValueError('saved value does not match current encoding')
 
 
-def non_numeric_upgrade_errors(result, fields, negative=False):
+def non_numeric_upgrade_errors(result, fields, negative=False, new_approval=False):
     errors = []
     observations = result.get('upgrade_observations', {})
     if not isinstance(observations, dict): return ['non-numeric upgrade raw observations missing']
+    if negative and isinstance(observations.get('legacy_unreadable_preserved'), dict) and \
+            observations['legacy_unreadable_preserved'].get('failure_kind') == STOPPED_START:
+        return stopped_start_errors(result, observations['legacy_unreadable_preserved'], 'upgrade non-numeric negative')
+    if negative and new_approval:
+        return ['upgrade non-numeric negative: a reset of an unreadable save is no longer the defect; reproduce ' + STOPPED_START]
     if negative:
         name = ('non_numeric_unreadable_preserved' if 'non_numeric_unreadable_preserved' in observations
                 else 'json_unreadable_preserved')
@@ -141,7 +215,13 @@ def non_numeric_upgrade_errors(result, fields, negative=False):
     blocked = observations.get('legacy_unreadable_preserved', {})
     if not isinstance(blocked, dict): blocked = {}
     sync = blocked.get('sync_read', {}); async_read = blocked.get('async_read', {})
-    if (blocked.get('key') != key or blocked.get('storage_before') != before or
+    if blocked.get('outcome') == FALLBACK_OUTCOME:
+        if blocked.get('key') != key or blocked.get('storage_before') != before:
+            errors.append('non-numeric unreadable start must use the same key and legacy fixture')
+        errors.extend(fallback_start_errors(blocked, 'non-numeric unreadable data', key))
+    elif new_approval:
+        errors.append('non-numeric unreadable data: a blocking recovery page is no longer accepted; prove outcome ' + FALLBACK_OUTCOME)
+    elif (blocked.get('key') != key or blocked.get('storage_before') != before or
             blocked.get('storage_after') != before or blocked.get('fixture_installed_before_entry') is not True or
             not isinstance(sync, dict) or sync.get('type') != 'boolean' or type(sync.get('value')) is not bool or
             blocked.get('removed_keys') != [] or blocked.get('writes') != [] or
@@ -158,8 +238,11 @@ def non_numeric_upgrade_errors(result, fields, negative=False):
     return errors
 
 
-def upgrade_errors(result, *, negative=False, json_only=False, fields=None):
+def upgrade_errors(result, *, negative=False, json_only=False, fields=None, typed=True, new_approval=False):
     """Check raw semantics; pass labels alone cannot establish preservation.
+
+    typed=False (raw_history() is False): the two typed-recovery rows are not applicable; only the
+    unreadable start and the play with that fixture are checked.
 
     This validates/replays supplied runner observations. It does not turn a
     synthetic host into a physical phone or prove a dishonest runner truthful.
@@ -170,12 +253,20 @@ def upgrade_errors(result, *, negative=False, json_only=False, fields=None):
     if not isinstance(observations, dict):
         return ['upgrade raw observations missing']
     if json_only:
-        return non_numeric_upgrade_errors(result, fields or {}, negative)
-    names = UPGRADE_CASES[:1] if negative else UPGRADE_CASES[:3]
+        return non_numeric_upgrade_errors(result, fields or {}, negative, new_approval)
+    stopped = observations.get('legacy_unreadable_preserved')
+    if negative and isinstance(stopped, dict) and stopped.get('failure_kind') == STOPPED_START:
+        return stopped_start_errors(result, stopped, 'upgrade negative')
+    if negative and not typed:
+        return ['upgrade negative: without typed recovery the negative must reproduce ' + STOPPED_START]
+    names = UPGRADE_CASES[:1] if negative else (UPGRADE_CASES[:3] if typed else UPGRADE_CASES[2:3])
     for name in names:
         row = observations.get(name, {})
         if not isinstance(row, dict):
             errors.append(name + ': raw observation missing'); continue
+        if not typed and row.get('outcome') == FALLBACK_OUTCOME:
+            # No typed recovery in this game: the stored value may be of any type, only its Boolean sync read matters.
+            errors.extend(fallback_start_errors(row, name, row.get('key'))); continue
         key = row.get('key'); before = row.get('storage_before', {}); after = row.get('storage_after', {})
         value = row.get('expected_numeric', 0 if name == 'legacy_numeric_boundary_typed' else 45)
         def numeric(n):
@@ -210,12 +301,20 @@ def upgrade_errors(result, *, negative=False, json_only=False, fields=None):
                     row.get('failure_kind') != 'legacy_numeric_bridge' or not actual_failure):
                 errors.append('upgrade negative did not reproduce legacy numeric bridge failure')
             continue
-        if row.get('removed_keys') != []:
+        fallback = name == 'legacy_unreadable_preserved' and row.get('outcome') == FALLBACK_OUTCOME
+        if row.get('removed_keys') != [] and not fallback:
             errors.append(name + ': key removal/default reset forbidden')
-        # Unrelated raw data must remain exact, not just the selected scalar.
-        if json.dumps({k:v for k,v in before.items() if k != key}, sort_keys=True) != json.dumps({k:v for k,v in after.items() if k != key}, sort_keys=True):
+        # Unrelated raw data must remain exact, not just the selected scalar. (A fallback start may add keys,
+        # e.g. a backup of the unreadable value; fallback_start_errors() checks that nothing else changed.)
+        if not fallback and json.dumps({k:v for k,v in before.items() if k != key}, sort_keys=True) != json.dumps({k:v for k,v in after.items() if k != key}, sort_keys=True):
             errors.append(name + ': unrelated saved data changed')
         async_read = row.get('async_read', {})
+        if name == 'legacy_unreadable_preserved' and row.get('outcome') == FALLBACK_OUTCOME:
+            errors.extend(fallback_start_errors(row, name, key))
+            continue
+        if name == 'legacy_unreadable_preserved' and new_approval:
+            errors.append(name + ': a blocking recovery page is no longer accepted; prove outcome ' + FALLBACK_OUTCOME)
+            continue
         if name == 'legacy_unreadable_preserved':
             if (json.dumps(after, sort_keys=True) != json.dumps(before, sort_keys=True) or writes or not isinstance(async_read, dict) or
                     async_read.get('status') not in ('unreadable', 'error', 'timeout', 'unavailable') or
@@ -239,7 +338,9 @@ def upgrade_errors(result, *, negative=False, json_only=False, fields=None):
     if not negative:
         from startup_business_contract import validate_business
         business = observations.get('legacy_upgrade_touch_play', {})
-        if not isinstance(business, dict) or business.get('fixture_case') != 'legacy_numeric_nonbinary_typed':
+        if not typed and (not isinstance(business, dict) or business.get('fixture_case') != 'legacy_unreadable_preserved'):
+            errors.append('upgrade play must use the unreadable legacy fixture when typed recovery is not applicable')
+        elif typed and (not isinstance(business, dict) or business.get('fixture_case') != 'legacy_numeric_nonbinary_typed'):
             errors.append('upgrade play must use the recovered nonbinary project-valid legacy fixture')
         else:
             errors.extend('upgrade ' + e for e in validate_business(business))
@@ -259,7 +360,8 @@ def inside(root, path):
     return path.is_file() and path.is_relative_to(root)
 
 
-def validate(trace, native, expected_binding):
+def validate(trace, native, expected_binding, new_approval=False):
+    """new_approval=True (approve_runtime only): evidence of the earlier blocking-recovery policy is refused."""
     if isinstance(trace, dict) and trace.get('numeric_snapshot_encoding'):
         from numeric_snapshot_contract import validate as validate_numeric_snapshot
         return validate_numeric_snapshot(trace, native, expected_binding)
@@ -299,6 +401,7 @@ def validate(trace, native, expected_binding):
             errors.append('verified existing routes: '+str(exc))
     json_only, scope_errors = json_only_scope(trace, expected_binding, native)
     errors.extend(scope_errors)
+    typed = raw_history(trace)
     fields = {}
     if json_only:
         from maintenance_scope import checked_ref
@@ -344,13 +447,13 @@ def validate(trace, native, expected_binding):
         if label == 'current':
             for name in (CASES if trace.get('schema') == 'native_storage_trace.v3' else BASE_CASES):
                 route = {'reopen_map':'map', 'reopen_stage_details':'stage_details'}.get(name)
-                expected = 'not_applicable' if (route and routes and routes[route]['present'] is False or json_only and name in UPGRADE_CASES[:2]) else 'pass'
+                expected = 'not_applicable' if (route and routes and routes[route]['present'] is False or (json_only or not typed) and name in UPGRADE_CASES[:2]) else 'pass'
                 if cases.get(name) != expected:
                     errors.append('current case missing or failed: ' + name + ' (requires '+expected+')')
             if trace.get('schema') == 'native_storage_trace.v3':
-                errors.extend(upgrade_errors(result, json_only=json_only, fields=fields))
+                errors.extend(upgrade_errors(result, json_only=json_only, fields=fields, typed=typed, new_approval=new_approval))
         elif label == 'upgrade_negative':
-            errors.extend(upgrade_errors(result, negative=True, json_only=json_only, fields=fields))
+            errors.extend(upgrade_errors(result, negative=True, json_only=json_only, fields=fields, typed=typed, new_approval=new_approval))
             current_raw = loaded_results.get('current', {})
             if not current_raw:
                 errors.append('upgrade negative cannot be compared without valid current raw evidence')
@@ -363,11 +466,15 @@ def validate(trace, native, expected_binding):
                     current_name = 'valid_legacy_record' if json_only else 'legacy_numeric_nonbinary_typed'
                     negative_name = (('non_numeric_unreadable_preserved' if 'non_numeric_unreadable_preserved' in negative_observations else 'json_unreadable_preserved')
                                      if json_only else current_name)
+                    stopped_row = negative_observations.get('legacy_unreadable_preserved')
+                    stopped_kind = isinstance(stopped_row, dict) and stopped_row.get('failure_kind') == STOPPED_START
+                    if stopped_kind:      # the fallback proof and its negative use the same unreadable fixture
+                        current_name = negative_name = 'legacy_unreadable_preserved'
                     current_row = observations.get(current_name, {}); negative_row = negative_observations.get(negative_name, {})
                     if (not isinstance(current_row, dict) or not isinstance(negative_row, dict) or
                             current_row.get('key') != negative_row.get('key') or
                             current_row.get('storage_before') != negative_row.get('storage_before') or
-                            not json_only and current_row.get('expected_numeric', 45) != negative_row.get('expected_numeric', 45)):
+                            not json_only and not stopped_kind and current_row.get('expected_numeric', 45) != negative_row.get('expected_numeric', 45)):
                         errors.append('upgrade negative must use the same project key and legacy fixture value')
             try:
                 from maintenance_scope import checked_ref
@@ -418,7 +525,7 @@ def validate(trace, native, expected_binding):
     if trace.get('schema') == 'native_storage_trace.v3' and 'current' in loaded_results:
         try:
             from startup_storage_consumers import coverage_errors
-            errors.extend(coverage_errors(trace, loaded_results['current'], native))
+            errors.extend(coverage_errors(trace, loaded_results['current'], native, new_approval=new_approval))
         except (ValueError, OSError, TypeError, KeyError) as exc:
             errors.append('legacy consumer coverage unavailable: ' + str(exc))
     return errors
@@ -526,6 +633,34 @@ def unchanged_text_codec_receipt(report, trace, expected):
             {k:v for k,v in expected.items() if k != 'contract_files'})
 
 
+# Earlier reviewed texts of the contract files whose receipts keep their original execution.
+# 2026-11-12 (fallback start): against these texts the current one only adds accepted evidence for new approvals;
+# validate() still applies every earlier obligation to the unchanged raw data of an earlier receipt.
+REVIEWED_PREDECESSORS = {
+    'audit_native_storage_contract.py': ('35002eea8cdd657b4eb87a523ebf4ef2118a6205c90ed41501c7a666f11e439f',
+                                         '4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc'),
+    'startup_storage_consumers.py': ('ab3159de99f437ff14d17e6cfd34b9d39d66c48e92c7b450e2d0d5894828edc2',),
+}
+
+
+def reviewed_predecessor_receipt(report, trace, expected):
+    """Keep the actual old execution of a receipt issued by a reviewed earlier text.
+
+    Every other contract file, the trace, the runner, its dependencies and the raw
+    reports must be identical; no execution is invented and nothing is re-run.
+    """
+    previous = report.get('execution_receipt', {}).get('identity')
+    if not isinstance(previous, dict): return False
+    old = previous.get('contract_files', {}); current = expected['contract_files']
+    if not isinstance(old, dict) or set(old) != set(current): return False
+    if any(old[name] != current[name] and old[name] not in REVIEWED_PREDECESSORS.get(name, ()) for name in current): return False
+    # 35002eea predates the opt-in snapshot branch and never approved such a trace.
+    if old.get('audit_native_storage_contract.py') == REVIEWED_PREDECESSORS['audit_native_storage_contract.py'][0] and trace.get('numeric_snapshot_encoding'):
+        return False
+    return ({k:v for k,v in previous.items() if k != 'contract_files'} ==
+            {k:v for k,v in expected.items() if k != 'contract_files'})
+
+
 def validate_execution_receipt(report, trace):
     """Read-only rejudgment: valid evidence is not re-executed at each writer."""
     receipt = report.get('execution_receipt', {})
@@ -534,7 +669,8 @@ def validate_execution_receipt(report, trace):
                 not isinstance(receipt.get('run_id'), str) or not receipt['run_id'] or
                 not isinstance(receipt.get('verified_at'), str) or not receipt['verified_at'] or
                 receipt.get('replayed') != ['current', 'negative_control', 'upgrade_negative_control'] or
-                (receipt.get('identity') != receipt_identity(trace) and not unchanged_nonconsumer_receipt(report, trace, receipt_identity(trace)) and not unchanged_text_codec_receipt(report, trace, receipt_identity(trace)))):
+                (receipt.get('identity') != receipt_identity(trace) and not unchanged_nonconsumer_receipt(report, trace, receipt_identity(trace)) and not unchanged_text_codec_receipt(report, trace, receipt_identity(trace)) and
+                 not reviewed_predecessor_receipt(report, trace, receipt_identity(trace)))):
             return ['missing, stale or mismatched storage execution receipt']
     except (ValueError, OSError, TypeError, KeyError, AttributeError) as exc:
         return ['storage execution receipt identity invalid: ' + str(exc)]
@@ -547,9 +683,9 @@ def approve_runtime(trace, native, binding):
     Project runners retain existing incremental plan/ledger semantics. Replaying
     orchestration does not license rerunning unrelated cases or changing data.
     """
-    errors = validate(trace, native, binding)
+    errors = validate(trace, native, binding, new_approval=True)
     if not errors: errors.extend(replay(trace))
-    report = {'tool': 'audit_native_storage_contract', 'binding': binding,
+    report = {'tool': 'audit_native_storage_contract', 'binding': binding, 'storage_policy': STORAGE_POLICY,
               'checked': len(CASES) + 2, 'failed': len(errors), 'passed': not errors,
               'policy_version': POLICY_VERSION, 'status': ('needs_upgrade' if trace.get('schema') != 'native_storage_trace.v3' else 'passed' if not errors else 'failed'),
               'required_cases': list(CASES), 'native': str(Path(native).resolve()),

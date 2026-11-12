@@ -44,12 +44,30 @@ def observations():
                'writes': [{'key': key, 'value': str(value)}], 'removed_keys': [],
                'first_exception': None}
         if name == 'legacy_unreadable_preserved':
-            row.update(storage_after=copy.deepcopy(row['storage_before']), writes=[],
-                       async_read={'status': 'unreadable'}, recovery_feedback_visible=True,
-                       loading_overlay_visible=False, retry_or_exit_available=True)
+            # 2026-11-12: the game starts with its fallback value (here it saves "0") and reaches gameplay.
+            row.update(outcome='started_with_fallback', storage_after={key: '0', 'unrelated': 'keep'},
+                       writes=[{'key': key, 'value': '0'}], async_read={'status': 'unreadable'},
+                       loading_overlay_visible=False, business=business()['business'])
         out[name] = row
     out['legacy_upgrade_touch_play'] = business()
     return out
+
+
+def blocking(row):
+    """The proof of the policy before 2026-11-12: value untouched behind a visible recovery / exit page."""
+    for name in ('outcome', 'business'):
+        row.pop(name, None)
+    row.update(storage_after=copy.deepcopy(row['storage_before']), writes=[], recovery_feedback_visible=True,
+               loading_overlay_visible=False, retry_or_exit_available=True)
+    return row
+
+
+def stopped(row):
+    """Negative control of the fallback proof: the same fixture stops the start of this bundle."""
+    for name in ('outcome', 'business', 'recovery_feedback_visible', 'retry_or_exit_available'):
+        row.pop(name, None)
+    row.update(failure_kind='unreadable_stops_startup', first_exception='Stored value unreadable', loading_overlay_visible=True)
+    return row
 
 
 class UpgradeTests(unittest.TestCase):
@@ -123,21 +141,23 @@ class UpgradeTests(unittest.TestCase):
                 'key': 'save', 'fixture_installed_before_entry': True,
                 'storage_before': {'save': '{"schema":1,"coins":45}'},
                 'storage_after': {'save': '{"schema":1,"coins":45}'}}
+            # 2026-11-12: the unreadable save is backed up, the game starts from defaults and reaches gameplay.
             r['upgrade_observations']['legacy_unreadable_preserved'] = {
-                'key': 'save', 'fixture_installed_before_entry': True,
+                'key': 'save', 'fixture_installed_before_entry': True, 'outcome': 'started_with_fallback',
                 'storage_before': {'save': '{"schema":1,"coins":45}'},
-                'storage_after': {'save': '{"schema":1,"coins":45}'},
+                'storage_after': {'save': '{"schema":1,"coins":0}', 'save:corrupt-backup': 'true'},
                 'sync_read': {'type': 'boolean', 'value': True}, 'async_read': {'status': 'unreadable'},
-                'writes': [], 'removed_keys': [], 'recovery_feedback_visible': True,
-                'loading_overlay_visible': False, 'retry_or_exit_available': True}
+                'writes': [{'key': 'save:corrupt-backup', 'value': 'true'}, {'key': 'save', 'value': '{"schema":1,"coins":0}'}],
+                'removed_keys': [], 'first_exception': None, 'loading_overlay_visible': False,
+                'business': business()['business']}
         self.change(current)
         def negative(r):
-            r['cases'] = {'json_unreadable_preserved': 'fail'}
-            r['upgrade_observations'] = {'json_unreadable_preserved': {
+            r['cases'] = {'legacy_unreadable_preserved': 'fail'}
+            r['upgrade_observations'] = {'legacy_unreadable_preserved': {
                 'key': 'save', 'fixture_installed_before_entry': True,
-                'storage_before': {'save': '{"schema":1,"coins":45}'}, 'storage_after': {'save': '{}'},
-                'sync_read': {'type': 'boolean', 'value': True},
-                'failure_kind': 'existing_json_silently_reset'}}
+                'storage_before': {'save': '{"schema":1,"coins":45}'}, 'storage_after': {'save': '{"schema":1,"coins":45}'},
+                'sync_read': {'type': 'boolean', 'value': True}, 'first_exception': 'save unavailable',
+                'loading_overlay_visible': True, 'failure_kind': 'unreadable_stops_startup'}}
         self.change(negative, 'upgrade_negative_control')
         assets = self.root / 'assets'; assets.mkdir()
         source = assets / 'store.js'; source.write_text('var a=storage.getItem("save"); storage.setItem("save",JSON.stringify(data));')
@@ -229,10 +249,137 @@ class UpgradeTests(unittest.TestCase):
             {'ProjectSpecific.Number': '0'}))
         self.assertTrue(any('default reset' in e for e in self.validate()))
 
-    def test_unreadable_original_cannot_overwrite(self):
-        self.change(lambda r: r['upgrade_observations']['legacy_unreadable_preserved'].update(
+    # ---- 2026-11-12: saved data never stops the game ----
+    def test_unreadable_value_must_reach_gameplay_without_exception_or_loading(self):
+        row = lambda r: r['upgrade_observations']['legacy_unreadable_preserved']
+        self.assertEqual(self.validate(), [])
+        for broken, word in [(lambda r: row(r).update(first_exception='Stored value unreadable'), 'exception'),
+                             (lambda r: row(r).update(loading_overlay_visible=True), 'loading overlay'),
+                             (lambda r: row(r)['business'].pop('play'), 'start with fallback'),
+                             (lambda r: row(r).update(async_read={'type': 'number', 'value': 45}), 'async read must actually fail'),
+                             (lambda r: row(r).update(sync_read={'type': 'string', 'value': '45'}), 'sync Boolean'),
+                             (lambda r: row(r)['storage_after'].update(unrelated='reset'), 'other saved data'),
+                             (lambda r: row(r)['storage_after'].pop('unrelated'), 'other saved data'),
+                             (lambda r: row(r).update(removed_keys=['unrelated']), 'other saved data'),
+                             (lambda r: row(r).update(fixture_installed_before_entry=False), 'precede Native entry')]:
+            keep = json.loads(Path(self.trace['current']['bundle']).read_text())
+            self.change(broken)
+            self.assertTrue(any(word in e for e in self.validate()), word)
+            self.change(lambda r: (r.clear(), r.update(keep)))
+        self.assertEqual(self.validate(), [])
+
+    def test_fallback_start_may_save_its_default_and_add_a_backup(self):
+        def adjust(r):
+            row = r['upgrade_observations']['legacy_unreadable_preserved']
+            row['storage_after'] = {'ProjectSpecific.Number': '0', 'ProjectSpecific.Number:backup': 'true', 'unrelated': 'keep'}
+        self.change(adjust)
+        self.assertEqual(self.validate(), []); self.assertTrue(self.accept_consumer())
+
+    def test_blocking_recovery_evidence_is_still_read_but_not_newly_approved(self):
+        self.change(lambda r: blocking(r['upgrade_observations']['legacy_unreadable_preserved']))
+        self.assertEqual(self.validate(), [], 'a receipt issued before 2026-11-12 keeps its verdict')
+        self.assertTrue(any('no longer accepted' in e for e in contract.validate(self.trace, self.native, self.binding, new_approval=True)))
+        report = contract.approve_runtime(self.trace, self.native, self.binding)
+        self.assertFalse(report['passed']); self.assertNotIn('execution_receipt', report)
+
+    def test_earlier_blocking_evidence_still_refuses_an_overwrite(self):
+        self.change(lambda r: blocking(r['upgrade_observations']['legacy_unreadable_preserved']).update(
             writes=[{'key': 'ProjectSpecific.Number', 'value': '0'}]))
         self.assertTrue(any('unreadable data' in e for e in self.validate()))
+
+    def first_release(self):
+        """No released build wrote raw values: typed recovery is not applicable, only the unreadable start."""
+        self.trace['legacy_data'] = {'earlier_release_wrote_raw_values': False,
+                                     'basis': 'first TikTok release; the kit storage guard writes text since the first build'}
+        def current(r):
+            for name in contract.UPGRADE_CASES[:2]:
+                r['cases'][name] = 'not_applicable'; r['upgrade_observations'].pop(name)
+            r['upgrade_observations']['legacy_upgrade_touch_play']['fixture_case'] = 'legacy_unreadable_preserved'
+        self.change(current)
+        def negative(r):
+            r['cases'] = {'legacy_unreadable_preserved': 'fail'}
+            r['upgrade_observations'] = {'legacy_unreadable_preserved': stopped(observations()['legacy_unreadable_preserved'])}
+        self.change(negative, 'upgrade_negative_control')
+
+    def test_first_release_needs_only_the_unreadable_start(self):
+        self.first_release()
+        self.assertEqual(self.validate(), [])
+        self.assertEqual(contract.replay(self.trace), [])
+        self.assertTrue(self.accept_consumer())
+        report = contract.approve_runtime(self.trace, self.native, self.binding)
+        self.assertEqual(report['storage_policy'], contract.STORAGE_POLICY); self.assertEqual(report['required_cases'], list(contract.CASES))
+
+    def test_first_release_unreadable_fixture_may_be_a_stored_boolean(self):
+        self.first_release()
+        def as_switch(r):
+            row = r['upgrade_observations']['legacy_unreadable_preserved']
+            row.update(key='IS_MUSIC', storage_before={'IS_MUSIC': True, 'unrelated': 'keep'},
+                       storage_after={'IS_MUSIC': True, 'unrelated': 'keep'}, writes=[])
+        self.change(as_switch); self.change(as_switch, 'upgrade_negative_control')
+        self.assertEqual(self.validate(), []); self.assertTrue(self.accept_consumer())
+        self.change(lambda r: r['upgrade_observations']['legacy_unreadable_preserved'].pop('key'))
+        self.assertTrue(any('named key' in e for e in self.validate()))
+
+    def test_typed_recovery_stays_required_without_a_stated_basis(self):
+        self.first_release()
+        for value in ({'earlier_release_wrote_raw_values': False}, {'earlier_release_wrote_raw_values': False, 'basis': '  '},
+                      {'earlier_release_wrote_raw_values': True, 'basis': 'v1 shipped without the guard'}, None):
+            self.trace['legacy_data'] = value
+            self.assertTrue(any('legacy_numeric_nonbinary_typed' in e for e in self.validate()), value)
+
+    def test_first_release_negative_must_really_stop_the_start(self):
+        self.first_release()
+        def soften(r):
+            row = r['upgrade_observations']['legacy_unreadable_preserved']
+            row.update(first_exception=None, loading_overlay_visible=False, business=business()['business'])
+        self.change(soften, 'upgrade_negative_control')
+        self.assertTrue(any('stopping the start' in e for e in self.validate()))
+
+    def test_first_release_negative_cannot_be_the_typed_bridge(self):
+        self.first_release()
+        def typed(r):
+            r['cases'] = {'legacy_numeric_nonbinary_typed': 'fail'}
+            row = observations()['legacy_numeric_nonbinary_typed']
+            row.update(storage_after={'ProjectSpecific.Number': '0', 'unrelated': 'keep'}, failure_kind='legacy_numeric_bridge',
+                       first_exception='type mismatch', loading_overlay_visible=True)
+            r['upgrade_observations'] = {'legacy_numeric_nonbinary_typed': row}
+        self.change(typed, 'upgrade_negative_control')
+        self.assertTrue(any('must reproduce unreadable_stops_startup' in e for e in self.validate()))
+
+    def test_json_only_earlier_reset_negative_is_read_but_not_newly_approved(self):
+        self.enable_json_only()
+        def earlier(r):
+            blocking(r['upgrade_observations']['legacy_unreadable_preserved'])
+        self.change(earlier)
+        def negative(r):
+            r['cases'] = {'json_unreadable_preserved': 'fail'}
+            r['upgrade_observations'] = {'json_unreadable_preserved': {
+                'key': 'save', 'fixture_installed_before_entry': True,
+                'storage_before': {'save': '{"schema":1,"coins":45}'}, 'storage_after': {'save': '{}'},
+                'sync_read': {'type': 'boolean', 'value': True}, 'failure_kind': 'existing_json_silently_reset'}}
+        self.change(negative, 'upgrade_negative_control')
+        ref = self.trace['numeric_scope']['access_inventory']; path = Path(ref['path']); doc = json.loads(path.read_text())
+        doc['binding'] = self.binding; path.write_text(json.dumps(doc)); ref['sha256'] = contract.digest(path)
+        self.assertEqual(self.validate(), [])
+        errors = contract.validate(self.trace, self.native, self.binding, new_approval=True)
+        self.assertTrue(any('no longer accepted' in e for e in errors)); self.assertTrue(any('no longer the defect' in e for e in errors))
+
+    def test_receipt_of_a_reviewed_earlier_text_keeps_its_execution(self):
+        path = self.report_file(); report = json.loads(path.read_text()); trace = self.trace
+        files = report['execution_receipt']['identity']['contract_files']
+        earlier = {'audit_native_storage_contract.py': '4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc',
+                   'startup_storage_consumers.py': 'ab3159de99f437ff14d17e6cfd34b9d39d66c48e92c7b450e2d0d5894828edc2'}
+        files.update(earlier)
+        self.assertEqual(contract.validate_execution_receipt(report, trace), [])
+        files['audit_native_storage_contract.py'] = '35002eea8cdd657b4eb87a523ebf4ef2118a6205c90ed41501c7a666f11e439f'
+        self.assertEqual(contract.validate_execution_receipt(report, trace), [])
+        files['audit_native_storage_contract.py'] = '0' * 64
+        self.assertTrue(contract.validate_execution_receipt(report, trace), 'an unknown text is not a predecessor')
+        files.update(earlier); files['startup_business_contract.py'] = '0' * 64
+        self.assertTrue(contract.validate_execution_receipt(report, trace), 'every other contract file must be the current one')
+        files['startup_business_contract.py'] = contract.contract_identity(trace)['startup_business_contract.py']
+        report['execution_receipt']['identity']['trace_sha256'] = 'forged'
+        self.assertTrue(contract.validate_execution_receipt(report, trace))
 
     def test_play_must_have_touch_business_result(self):
         self.change(lambda r: r['upgrade_observations']['legacy_upgrade_touch_play']['business']['play'].update(
@@ -280,11 +427,8 @@ class UpgradeTests(unittest.TestCase):
                 r['upgrade_observations'][name]['storage_after'] = {'save': value}
         self.change(current)
         def negative(r):
-            row = r['upgrade_observations'].pop('json_unreadable_preserved')
-            row['storage_before'] = {'save': value}; row['storage_after'] = {'save': 'WRONG_RESET'}
-            row['failure_kind'] = 'existing_non_numeric_silently_reset'
-            r['upgrade_observations']['non_numeric_unreadable_preserved'] = row
-            r['cases'] = {'non_numeric_unreadable_preserved': 'fail'}
+            row = r['upgrade_observations']['legacy_unreadable_preserved']
+            row['storage_before'] = {'save': value}; row['storage_after'] = {'save': value}
         self.change(negative, 'upgrade_negative_control')
         source = self.root / source_dir / 'storage.js'; source.parent.mkdir(exist_ok=True)
         source.write_text('var a=storage.getItem("save"); storage.setItem("save",data);')

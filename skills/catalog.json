@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T08:49:51.017Z",
-  "treeHash": "55fce8ac960bac80146e3021e1303e0cc1431e643d64c8c7362b7700f60440be",
+  "createdAt": "2026-11-12T08:50:18.448Z",
+  "treeHash": "4efabfcb16dde8edbdf28a5b37ca33823c0e7e86a915563fec63552093a1acde",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3295,20 +3295,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "e2df6a8336485395fb1b4dbd82bd936734b630c0abbb9249a62ad314214cd332",
+      "treeHash": "ad3727b6cd962b0ad35ac27a0eae8115d54ebd8bda60514e430b06fc7864cb77",
       "fileCount": 67,
-      "bytes": 1478937,
+      "bytes": 1474091,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d4a1bf1663066ef2598f7376501fedb06c9a35e18c514e4644d2f6dcc6c99e1b",
-          "size": 22997,
+          "hash": "e46ed048ab9f8acf553ae2304ee789a765321a140678f51025e816d2cd4bc9d3",
+          "size": 18145,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "39211a14c7577373c3b8996192954fa027c49fbae7dedffddba6fa06b3560bdc",
-          "size": 26373,
+          "hash": "9fc5011c5300ae010d5657df01eecd998891eca7657fa5c1cac3a7cb82245f53",
+          "size": 26377,
           "executable": false
         },
         {
@@ -3469,8 +3469,8 @@
         },
         {
           "path": "references/new-feature-ui.md",
-          "hash": "a81d75e4c19236096cf2caf989d6016ea85ade1e8a1a9762034648f0e0081d1a",
-          "size": 4369,
+          "hash": "0a89871b2a1dd2f7aaccdadf8ac7e49e693157e1a04cdab2ce5f175c97898758",
+          "size": 4371,
           "executable": false
         },
         {

@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-11.ad-six-fusion.2.1.0",
+  "revision": "2026-11-11.english-simple.11.17.26",
   "skill": "remake-art",
-  "previous_provenance_sha256": "a1d01c1beca206895c615b47232ed5321ad242d24b49954ca232c32c7e5bb503",
+  "previous_provenance_sha256": "be0af96f4d2c6b10b25da02478d15a366e5923c2a1c9c60e26eb27a2b10b235c",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "38012663acb4d90b95d34dd84e8845bde4b52aaadf4f09597f05df370e48a875",
-      "bytes": 26137
+      "sha256": "9fc5011c5300ae010d5657df01eecd998891eca7657fa5c1cac3a7cb82245f53",
+      "bytes": 26377
     },
     {
       "path": "agents/openai.yaml",
@@ -142,8 +142,8 @@
     },
     {
       "path": "references/new-feature-ui.md",
-      "sha256": "4ae29199212ccbc161d4363a712f39f7cc7e2325dc6d7c8e3313e0d1a8ae9935",
-      "bytes": 3911
+      "sha256": "0a89871b2a1dd2f7aaccdadf8ac7e49e693157e1a04cdab2ce5f175c97898758",
+      "bytes": 4371
     },
     {
       "path": "references/page-richness.md",
@@ -473,105 +473,7 @@
           "method": "release"
         }
       ]
-    },
-    {
-      "id": "ui-structure.20261111.1",
-      "authority": "User requested merging general UI lessons, preserving check scope and cross-Skill compatibility",
-      "scope": "UI production guidance and existing-rule routing only",
-      "files": [
-        {
-          "path": "references/local-ui-contract.md",
-          "before_sha256": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
-          "after_sha256": "71f78ae7d8c51ffd47ca214ac3f9c716b0f33417c38832ece3ca3399632100f2"
-        },
-        {
-          "path": "references/production-prevention.md",
-          "before_sha256": "4f245a1bc9397cf2f5355523f0a45aae082edd80b116a31301c159534b52c7ab",
-          "after_sha256": "b0e83698b71b346477d8dfcc0ec437e417c80f920dfdd7eb821839a034d668ad"
-        }
-      ]
-    },
-    {
-      "id": "hud-backplate.20261111.1",
-      "authority": "User 2026-11-11: inspect and refine art Skill HUD backgrounds before merging into bundles",
-      "scope": "art production guidance and existing probe boundaries only",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "before_sha256": "71a2d2f7c7e53913d12f95f5e669e0c51bf5111acac441ba89ff1d350f785cbc",
-          "after_sha256": "04d91130186614c1d78ddd5b3145ddec9e4d27af3a0704cb62f01a0b442099c2"
-        },
-        {
-          "path": "references/text-backplate-review.md",
-          "before_sha256": "324750481195bc7a1a0503b39ce62f3286f834a1f7c99174e02c45e465cd53f3",
-          "after_sha256": "331b5ab997a79c1218950f5740566b135ae6105834f5d270cdb3d5d77f1f5285"
-        },
-        {
-          "path": "references/production-prevention.md",
-          "before_sha256": "b0e83698b71b346477d8dfcc0ec437e417c80f920dfdd7eb821839a034d668ad",
-          "after_sha256": "5369338e671dc7c2d2db77b20df93457ce4ccbe8285ed569bf47edfb7e4b7fcc"
-        },
-        {
-          "path": "references/page-richness.md",
-          "before_sha256": "c75ba221cd4f028a80edb50704078af3397b8198ce21b439e90b6d36a96794d3",
-          "after_sha256": "213a5a8de68d5333f0ac524d94c0d976c0ad326b89a3d61a0194924ae79a0370"
-        },
-        {
-          "path": "references/saul-art-rules.md",
-          "before_sha256": "7ddebd10f64a056cfaa85705a93aa745a047b1868e26802b9a97686a1b9639ee",
-          "after_sha256": "ecfc189627369c619f8e637d1b1de88d9919fa1c55a8e7e1e965230498f88be1"
-        },
-        {
-          "path": "references/theme-readability.md",
-          "before_sha256": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
-          "after_sha256": "81c867fc10c8e6eb9615573ec4e127670d63edc9310c59140e324fd98e49af00"
-        },
-        {
-          "path": "references/new-feature-ui.md",
-          "before_sha256": "67c5e86727ab48f2663549661c4c8bd81876e49c33a4728c13adf6c32028a30e",
-          "after_sha256": "0a2b582dce595dd257c1fd8bae1915edc17cfe650abe087e3774b78973fb34bd"
-        },
-        {
-          "path": "references/common-game-components.md",
-          "before_sha256": "1763a697e7c194a0ec62bf3c69af53bcb41238c5461670192580843676b02ffa",
-          "after_sha256": "b749c0f857a16907e19111ad6c45369220f3a1616a89b034ff58b73acb2e13b2"
-        }
-      ]
     }
   ],
-  "previous_local_provenance_sha256": "a1d01c1beca206895c615b47232ed5321ad242d24b49954ca232c32c7e5bb503",
-  "maintenance_revision": "hud-backplate.20261111.1",
-  "integration_revision": "2026-11-11.ad-six-fusion.2.1.0",
-  "upstream_revision": "2026-11-11.english-simple.11.17.24",
-  "installed_at": "2026-11-12T03:33:43+00:00",
-  "file_count": 66,
-  "local_overlay_preserved": true,
-  "local_overlay_paths": [
-    "SKILL.md",
-    "references/common-game-components.md",
-    "references/local-ui-contract.md",
-    "references/new-feature-ui.md",
-    "references/page-richness.md",
-    "references/production-prevention.md",
-    "references/saul-art-rules.md",
-    "references/text-backplate-review.md",
-    "references/theme-readability.md"
-  ],
-  "delta_install": {
-    "schema": "ad-six-delta-install.v1",
-    "target": "codex-english",
-    "formal_base": {
-      "path": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/Cocos游戏Skill_英化包_v7简化.11.17.24_20261111.zip",
-      "sha256": "9a315ed711fadf6845e75a11940b15a555e9614ee1c80fa7b414aa19eba8337d",
-      "revision": "2026-11-11.english-simple.11.17.24"
-    },
-    "ad_base": {
-      "path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/发布/ad-boost_v2.0.0_20261111.zip",
-      "sha256": "ef8a58d0d352de55c9809990c1f63c0bfa279a14fddb3c2b9cc7312c9048b115"
-    },
-    "candidate": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/完整融合_20261111/english-tree",
-    "candidate_provenance_sha256": "93834adf70bf386e6c7dadefe05ce6f77e6e857ae76c2f6e7c5104c5a51037d6",
-    "freeze_sha256": "7565f0c65f80ef3c9ed871876180d1bd62c1aa4b17b76880ee6354a293171874",
-    "scope": "Only candidate-vs-formal-base delta; actual installed bytes, local overlays and config retained."
-  }
+  "previous_local_provenance_sha256": "bf69b711a2b59f149eabb91ac958b988220ba043d12462e3b65ceb9ebd08c928"
 }

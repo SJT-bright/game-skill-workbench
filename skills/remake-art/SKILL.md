@@ -49,7 +49,7 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 | 首页按玩法设计、会动的背景、可互动的首页物件 | [首页按玩法设计](references/home-by-gameplay.md)（用户 2026-10-28） |
 | 集合预览、首尾压框、装备对应 | [集合预览](references/collection-preview-review.md) |
 | 拼装后的实际画面和输入 | [美术自审](references/artwork-and-feedback.md)、[局部UI契约](references/local-ui-contract.md) |
-| 弹窗、侧栏或加载层接入，连续操作后无法关闭 | [实例归属](../remake-core/references/modal-input-ownership.md)：底板与触摸拦截分清，关闭只释放本实例；行为定点检查不扩成美术全验 |
+| 新增/修改实际拦截输入的弹窗、加载层行为，连续操作后无法关闭 | [实例归属](../remake-core/references/modal-input-ownership.md)：沿用现有管理器，机制代表件定点验证；不扩成美术全验 |
 | 用户确认后的检查范围 | [美术前移与锁定](references/art-before-trial.md)、[执行去重](../cocos-game-check/test/references/review-execution-plan.md) |
 | 新游戏开工、共享修改或反复返工 | [少返工的制作与采集](references/art-iteration-workflow.md)（用途盘点、首件、故障分流和下一步计划） |
 

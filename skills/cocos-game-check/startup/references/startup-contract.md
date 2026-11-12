@@ -45,9 +45,11 @@
 
 ## 三、静态检查（便宜，每次预检都跑）
 
+普通输入接线另按[平台宏与输入绑定](platform-input-binding.md)执行：源码预检与实际 Native 启动审计共享 AST 判定。旧宏使可见节点缺监听时直接阻断；默认预览点通不能豁免，也不把此项静态通过当作真机结案。
+
 `scripts/audit_startup_contract.py` 查两件事：
 
-- 源码里容易导致进不去的写法：可选接口当启动条件、加载用固定长时间 setTimeout、直接 `director.loadScene`、`game.run` 出现多次、Retry 重用同一个请求。每处要么改掉，要么在 `docs/startup-contract-review.json` 里写一句为什么没问题（例如"这是首页之后的制作人员页"）。
+- 源码里容易导致进不去的写法：可选接口当启动条件、加载用固定长时间 setTimeout、直接 `director.loadScene`、`game.run` 出现多次、Retry 重用同一个请求。这些既有提示每处要么改掉，要么在 `docs/startup-contract-review.json` 里写一句为什么没问题（例如"这是首页之后的制作人员页"）。新增 `platform_input_binding` 是已证明的接线缺口，不能用该文字表改成通过。
 - 实际 Native 构建的启动下载量（主包 + `--startup-subpackages` 列出的启动分包）不超过 10 MB，且启动下载里没有声音文件。
 
 一键预检会跑源码部分；出包前带 `--native` 和 `--binding` 跑完整版，结果进门禁 LOAD-01。脚本只能拦住已知的写法问题，真正证明"进得去"的是上面的故障测试。

@@ -5,7 +5,9 @@ from pathlib import Path
 import time
 import uuid
 from runtime_incremental import CL
+from regression_scope_gate import scoped_execution
 
+@scoped_execution
 def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_only=False):
     """Plan with the production ledger, or execute that exact validated scope."""
     started=time.monotonic();package=Path(package_dir).resolve();adapter=ar.load_adapter(adapter_path)

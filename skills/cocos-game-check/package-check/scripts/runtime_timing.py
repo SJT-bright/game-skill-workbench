@@ -1,8 +1,8 @@
-"""Reporting-only runtime timing and exact 11.17.11 rule identity compatibility.
+"""Runtime timing and exact reviewed scheduling identity compatibility.
 
-Compatibility is limited to the two byte-identical files approved in the adjacent
-manifest. Any later edit (including this helper) falls back to the normal rule
-fingerprint. No arbitrary AST field or checker change is ignored.
+The adjacent fixed manifest binds every changed scheduler/helper and the original
+import sources. Real observers always retain their actual file hashes. Unknown
+bytes use the ordinary fingerprint; legacy overlays then require diagnosis.
 """
 import ast
 import hashlib
@@ -26,37 +26,63 @@ def suite_metadata(report, name, reused):
             'additive': False, 'note': 'Use summary.seconds for total wall time; suites may overlap.'}
 
 
-def rule_fingerprint(cl, paths):
+def rule_fingerprint(cl, paths, *, source_overrides=None):
+    """Hash real observers, with one fixed reviewed scheduler import tree.
+
+    Old suite overlays are private migration inputs: they must equal the pinned
+    legacy fixture and its whole-file reviewed target. They never affect normal
+    runner fingerprints, and unknown scheduler bytes disable every overlay.
+    """
+    overrides = {Path(path).resolve(): raw for path, raw in (source_overrides or {}).items()}
+    if any(not isinstance(raw, bytes) for raw in overrides.values()):
+        raise ValueError('fingerprint source overrides must contain bytes')
     here = Path(__file__).resolve()
     module = here.with_name('runtime_incremental.py')
     ledger_module = Path(cl.__file__).resolve()
-    compatible_ledger_sha = None
+    fixtures = ledger_module.parent/'fixtures/reviewed-legacy-suites'
+    approved = False
     try:
         proof = json.loads(here.with_name('runtime-reporting-compat.json').read_text())
-        module_sha = hashlib.sha256(module.read_bytes()).hexdigest()
-        helper_sha = hashlib.sha256(here.read_bytes()).hexdigest()
-        approved = (proof.get('schema') == 'runtime-reporting-compat.v1'
-            and module_sha == proof['new_runtime_sha256']
-            and helper_sha == proof['helper_sha256']
-            and proof.get('scope') == 'reporting-only-exact-byte-pair')
-        if not approved:
-            # The exact reviewed scope pair adds authorization and a read-only
-            # plan route. It leaves all observers and result predicates intact.
-            scope = json.loads(here.with_name('runtime-scope-compat.json').read_text())
-            approved = (scope.get('schema') == 'runtime-scope-compat.v2'
-                and scope.get('scope') == 'scheduler-and-evidence-recovery-exact-byte-triple'
-                and module_sha == scope['new_runtime_sha256']
-                and helper_sha == scope['new_helper_sha256']
-                and hashlib.sha256(ledger_module.read_bytes()).hexdigest() == scope['new_ledger_sha256']
-                and scope['prior_runtime_sha256'] == proof['new_runtime_sha256']
-                and scope['prior_helper_sha256'] == proof['helper_sha256']
-                and hashlib.sha256(here.with_name('runtime-reporting-compat.json').read_bytes()).hexdigest()
-                    == scope['prior_compat_sha256'])
-            if approved:
-                compatible_ledger_sha = scope['prior_ledger_sha256']
-    except (OSError, ValueError, KeyError, TypeError):
+        scope = json.loads(here.with_name('runtime-scope-compat.json').read_text())
+        prior_scope_raw = (fixtures/'runtime-scope-compat.prior.json').read_bytes()
+        prior_scope = json.loads(prior_scope_raw)
+        runtime_source = (fixtures/'runtime_incremental.py').read_bytes()
+        ledger_raw = ledger_module.read_bytes()
+        ledger_identity, ledger_source = cl._tool_compat_source(ledger_module, ledger_raw)
+        review_raw = (fixtures/'unit-rule-review.json').read_bytes()
+        approved = (scope.get('schema') == 'runtime-scope-compat.v3'
+            and scope.get('scope') == 'scoped-module-input-and-unit-scheduler-exact-byte-set'
+            and cl.sha(module.read_bytes()) == scope['new_runtime_sha256']
+            and cl.sha(here.read_bytes()) == scope['new_helper_sha256']
+            and cl.sha(ledger_raw) == scope['new_ledger_sha256']
+            and cl.sha(ledger_module.with_name('bundle_module_inputs.py').read_bytes()) == scope['module_helper_sha256']
+            and cl.sha(ledger_module.with_name('runtime_unit_reuse.py').read_bytes()) == scope['unit_reuse_sha256']
+            and cl.sha(review_raw) == scope['unit_review_sha256']
+            and cl.sha(runtime_source) == scope['scheduler_source_sha256']
+            and cl.sha(ledger_source) == scope['ledger_source_sha256']
+            and cl.sha(prior_scope_raw) == scope['scheduler_prior_compat_sha256']
+            and prior_scope.get('schema') == 'runtime-scope-compat.v2'
+            and prior_scope['new_runtime_sha256'] == scope['scheduler_source_sha256']
+            and prior_scope['new_ledger_sha256'] == scope['ledger_source_sha256']
+            and scope['prior_runtime_sha256'] == prior_scope['prior_runtime_sha256'] == proof['new_runtime_sha256']
+            and scope['prior_helper_sha256'] == prior_scope['prior_helper_sha256'] == proof['helper_sha256']
+            and scope['prior_compat_sha256'] == prior_scope['prior_compat_sha256']
+                == cl.sha(here.with_name('runtime-reporting-compat.json').read_bytes())
+            and ledger_identity == scope['prior_ledger_sha256'] == prior_scope['prior_ledger_sha256'])
+        if approved and overrides:
+            reviewed = json.loads(review_raw)['suites']
+            for path, raw in overrides.items():
+                suite = path.stem
+                if (suite not in reviewed or path != (here.parent/'runtime_regression/suites'/(suite+'.mjs')).resolve()
+                        or cl.sha(raw) != reviewed[suite]['old_sha256']
+                        or raw != (fixtures/(suite+'.mjs')).read_bytes()
+                        or cl.sha(path.read_bytes()) != reviewed[suite]['new_sha256']):
+                    raise cl.NeedsScope('旧断言 overlay 不属于固定整文件规则审查对')
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         approved = False
     if not approved:
+        if overrides:
+            raise cl.NeedsScope('旧断言指纹迁移需要已核准的精确调度/规则版本')
         return cl.tool_fingerprint(paths)
     todo = [Path(p).resolve() for p in paths]
     seen = set()
@@ -67,24 +93,24 @@ def rule_fingerprint(cl, paths):
             continue
         seen.add(p)
         if p == here:
-            continue  # Only the exact approved reporting helper is excluded.
+            continue
         if p.is_dir():
             todo.extend(x for x in p.rglob('*') if x.is_file() and not set(x.parts) & cl.IGNORED and x.suffix != '.pyc')
             continue
         if not p.is_file():
             rows.append((p.name, 'missing'))
             continue
-        raw = p.read_bytes()
+        raw = overrides.get(p, p.read_bytes())
         if p == module:
-            fingerprint = proof['old_runtime_sha256']
-        elif p == ledger_module and compatible_ledger_sha:
-            fingerprint = compatible_ledger_sha
+            fingerprint, import_source = proof['old_runtime_sha256'], runtime_source
+        elif p == ledger_module:
+            fingerprint, import_source = ledger_identity, ledger_source
         else:
-            fingerprint = cl.sha(raw)
+            fingerprint, import_source = cl.sha(raw), raw
         rows.append((p.name, fingerprint))
         if p.suffix == '.py':
             try:
-                for node in ast.walk(ast.parse(raw)):
+                for node in ast.walk(ast.parse(import_source)):
                     names = ([a.name for a in node.names] if isinstance(node, ast.Import)
                              else [node.module] if isinstance(node, ast.ImportFrom) and node.module else [])
                     for name in names:

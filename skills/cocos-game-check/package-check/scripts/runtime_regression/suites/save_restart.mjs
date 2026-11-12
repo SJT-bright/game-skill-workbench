@@ -42,6 +42,26 @@ function problems(b) {
     if (!s || typeof s.read_js !== 'string' || !s.read_js.trim()) out.push('save_restart.steps[' + i + '].read_js must return what the player sees (level reached, coins, owned item ...)');
     if (s && 'kind' in s ? !KINDS.includes(s.kind) : POLICY === 'new') out.push('save_restart.steps[' + i + '].kind must be ' + KINDS.join(' / ') + ' (what the step earns)');
   });
+  if (Array.isArray(b.steps) && b.steps.some((s) => s && 'requires' in s)) {
+    const names = b.steps.map((s) => s && s.name);
+    if (new Set(names).size !== names.length) out.push('save_restart independent steps must have unique names');
+    for (const s of b.steps) {
+      if (!s || !Array.isArray(s.requires) || new Set(s.requires).size !== s.requires.length
+          || s.requires.some((name) => typeof name !== 'string' || !names.includes(name) || name === s.name))
+        out.push('save_restart independent steps must all declare requires: [] or unique existing prerequisite names');
+    }
+    if (!out.length) {
+      const visiting = new Set(), visited = new Set();
+      const visit = (name) => {
+        if (visiting.has(name)) { out.push('save_restart requires has a dependency cycle at ' + name); return; }
+        if (visited.has(name)) return;
+        visiting.add(name);
+        for (const prior of b.steps.find((s) => s.name === name).requires) visit(prior);
+        visiting.delete(name); visited.add(name);
+      };
+      names.forEach(visit);
+    }
+  }
   if ('none' in b && !(b.none && typeof b.none === 'object' && !Array.isArray(b.none) && Object.entries(b.none).every(([k, v]) => KINDS.includes(k) && typeof v === 'string' && v.trim())))
     out.push('save_restart.none must map a kind (' + KINDS.join(' / ') + ') to why the game has nothing of that kind');
   return out;
@@ -68,7 +88,7 @@ async function home(page) {
   return null;
 }
 
-await L.suite(async ({ out, page }) => {
+async function journey({ out, page }, B = A.save_restart || {}, checkKinds = true, evidencePrefix = '') {
   const rep = { suite: 'save_restart', policy: POLICY, storage: PHONE, steps: [] };
   const bad = problems(B);
   if (bad.length) { out.add('adapter', POLICY === 'legacy', bad.join('; ')); if (POLICY === 'legacy') out.warn('save_restart adapter: ' + bad.join('; ') + ' [legacy game: warning]'); return; }
@@ -76,12 +96,12 @@ await L.suite(async ({ out, page }) => {
   await G.openGame(page, 'iphone14', q);
   let fail = await home(page);
   // v7.9 手机检查补全: the kinds this home asks for (new game)
-  if (!fail && POLICY === 'new') {
+  if (!fail && POLICY === 'new' && checkKinds) {
     const miss = needed(P.buttonsOf(await P.snap(page)));
     rep.kinds = { steps: (B.steps || []).map((s) => s.kind), none: B.none || null, missing: miss };
     if (miss.length) {
       out.add('kinds', false, 'save_restart.steps has no step of kind ' + miss.map((m) => '"' + m.kind + '" (' + m.why + ')').join(', ') + '. Write the step (real actions, read_js) or save_restart.none.' + miss[0].kind + ' = "why the game has none"');
-      out.evidence.report = L.evidence('save_restart.json', rep);
+      out.evidence.report = L.evidence(evidencePrefix + 'save_restart.json', rep);
       return;
     }
   }
@@ -121,7 +141,7 @@ await L.suite(async ({ out, page }) => {
     if (earned) fail = 'with TikTok phone storage (a key never written reads false, 0/1 read back as false/true) step ' + stuck.name + (stuck.why ? ' cannot run (' + stuck.why + ')' : ' earns nothing (' + JSON.stringify(stuck.after) + ')') + '; with browser storage the same steps give ' + JSON.stringify(stuck.browser_storage[0]) + ' -> ' + JSON.stringify(stuck.browser_storage[1]) + ': the game breaks on a phone';
   }
   if (!fail) {
-    rep.before_png = await G.shot(page, path.join(C.evidenceDir, 'save-before-restart.png'));
+    rep.before_png = await G.shot(page, path.join(C.evidenceDir, evidencePrefix + 'save-before-restart.png'));
     rep.store_before = await page.evaluate(() => (window.__storeDump ? Object.keys(window.__storeDump()).length : null)).catch(() => null);
     // cold restart: the same host page, storage kept (no reset=1)
     await page.goto(L.url('dev=iphone14&' + q + '&r=' + Date.now()));
@@ -138,12 +158,65 @@ await L.suite(async ({ out, page }) => {
       row.after_restart = now;
       if (!P.same(now, row.after)) lost.push(row.name + ': ' + JSON.stringify(row.after) + ' before the restart, ' + JSON.stringify(now) + ' after it');
     }
-    rep.after_png = await G.shot(page, path.join(C.evidenceDir, 'save-after-restart.png'));
+    rep.after_png = await G.shot(page, path.join(C.evidenceDir, evidencePrefix + 'save-after-restart.png'));
     if (lost.length) fail = 'lost after closing and reopening the game (TikTok phone storage): ' + lost.join('; ');
   }
   rep.result = fail ? 'fail' : 'pass';
   const blocks = !!fail && (POLICY === 'new' || /^invalid run/.test(fail));
   if (fail && !blocks) out.warn('save_restart: ' + fail + ' [legacy game: warning]');
   out.add('restart', !blocks, fail || ('kept after a restart: ' + done.map((r) => r.name + (r.kind ? ' (' + r.kind + ')' : '') + ' = ' + JSON.stringify(r.after)).join(', ')));
-  out.evidence.report = L.evidence('save_restart.json', rep);
+  out.evidence.report = L.evidence(evidencePrefix + 'save_restart.json', rep);
+}
+
+await L.suite(async ({ out, page }) => {
+  const bad = problems(B);
+  if (bad.length) { out.add('adapter', POLICY === 'legacy', bad.join('; ')); if (POLICY === 'legacy') out.warn('save_restart adapter: ' + bad.join('; ') + ' [legacy game: warning]'); return; }
+  const independent = B.steps.every((s) => Array.isArray(s.requires));
+  const catalog = independent ? ['@kinds', ...B.steps.map((s) => 'step/' + s.name)] : ['@suite'];
+  const selection = C.selection == null ? catalog : C.selection;
+  if (!Array.isArray(selection) || !selection.length || new Set(selection).size !== selection.length
+      || selection.some((id) => typeof id !== 'string' || !catalog.includes(id))) {
+    out.add('selection', false, 'save_restart selection must name non-empty, unique units from the full catalog: ' + catalog.join(', ')); return;
+  }
+  if (!independent) return journey({ out, page });
+  out.units = {}; out.evidence.units = {};
+  for (const unit of selection) {
+    const cases = [];
+    const unitOut = {
+      evidence: {},
+      add(id, passed, detail) {
+        const row = { id: unit + (id === unit ? '' : '/' + id), passed: passed === true, detail };
+        cases.push(row); out.add(row.id, row.passed, row.detail);
+      },
+      warn(message) { out.warn(message); },
+    };
+    if (unit === '@kinds') {
+      await G.openGame(page, 'iphone14', 'capsule=pt&ad=complete&adms=600&' + PHONE + (B.query ? '&' + B.query : ''));
+      const fail = await home(page);
+      const missing = !fail && POLICY === 'new' ? needed(P.buttonsOf(await P.snap(page))) : [];
+      unitOut.add(unit, !fail && !missing.length, fail || (missing.length
+        ? 'save_restart.steps has no step of kind ' + missing.map((m) => '"' + m.kind + '" (' + m.why + ')').join(', ') + '. Write the step (real actions, read_js) or save_restart.none.' + missing[0].kind + ' = "why the game has none"'
+        : 'full declared step catalog covers the storage kinds visible at home'));
+      unitOut.evidence.report = L.evidence('save-restart-kinds.json', {
+        suite: 'save_restart', catalog, steps: B.steps.map((s) => ({ name: s.name, kind: s.kind, requires: s.requires })),
+        none: B.none || null, missing, failure: fail,
+      });
+    } else {
+      const closure = [], seen = new Set();
+      const add = (name) => {
+        if (seen.has(name)) return;
+        seen.add(name);
+        const step = B.steps.find((s) => s.name === name);
+        step.requires.forEach(add); closure.push(step);
+      };
+      add(unit.slice('step/'.length));
+      // Every independent observation starts with a fresh save, executes only its
+      // prerequisite closure, then uses the original complete readback journey.
+      await journey({ out: unitOut, page }, { ...B, steps: closure }, false,
+        'step-' + encodeURIComponent(unit.slice('step/'.length)) + '-');
+    }
+    out.units[unit] = { passed: cases.length > 0 && cases.every((c) => c.passed === true), cases };
+    out.evidence.units[unit] = unitOut.evidence;
+  }
+  out.evidence.report = L.evidence('save-restart-units.json', { suite: 'save_restart', catalog, selection, units: out.units });
 }, { w: 390, h: 844 });

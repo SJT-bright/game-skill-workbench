@@ -18,6 +18,8 @@ import runtime_timing as RT
 CORE=Path(__file__).resolve().parents[3]/'remake-core/scripts'
 sys.path.insert(0,str(CORE))
 import check_ledger as CL
+import runtime_unit_reuse as unit_reuse
+from regression_scope_gate import scoped_execution
 
 DOMAINS={'layout_state':'image','dead_shell':'image','image_stall':'image','popin':'image',
          'startup':'startup','startup3x':'startup','network':'platform','growth_entry':'platform',
@@ -33,6 +35,20 @@ def unit_ids(name, meta, adapter, prechecked=False):
         return ['background','finger_held','finger_held_new_id','pause_background','ad_background','ad_background_close_first']
     if name=='ad_entries':
         return [str(e['id'])+'/'+str(s['name']) for e in adapter.get('ad_entries',[]) for s in e['states']]
+    if name=='ad_outcome':
+        units=[str(e['id'])+'/'+str(s['name']) for e in adapter.get('ad_entries',[]) for s in e['states']]
+        resume=adapter.get('resume_play')
+        if (isinstance(resume,dict) and 'n/a' not in resume and isinstance(resume.get('ad'),dict)
+                and not resume['ad'].get('none') and isinstance(resume.get('start'),list)):
+            units.append('resume_play.ad')
+        return units+['@discovered']
+    if name=='save_restart':
+        block=adapter.get('save_restart')
+        steps=block.get('steps') if isinstance(block,dict) else None
+        if (isinstance(steps,list) and steps
+                and all(isinstance(s,dict) and isinstance(s.get('requires'),list) for s in steps)):
+            return ['@kinds']+['step/'+str(s.get('name','')) for s in steps]
+        return ['@suite']
     if name=='layout_state':
         return [d+'/'+str(s['name']) for d in ('iphone14','se') for s in (adapter.get('layout_states') or [{'name':'home'}])]
     return ['@suite']
@@ -60,6 +76,7 @@ def _unit_row(row,unit):
                 browser=row.get('browser',True),
                 warnings=row.get('warnings',[]),evidence=row.get('evidence'),raw_files=row.get('raw_files',[]),seconds=row.get('seconds',0))
 
+@scoped_execution
 def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_dir=None,policy=None,board=None,
         trial_url=None,capabilities=None,*,plan_only=False):
     """Plan with the production ledger, or execute that exact validated scope."""
@@ -112,6 +129,8 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                     'trial_url':trial_url if name=='trial_link' else None,
                     'capabilities':caps if name in ('ad_outcome','ad_entries') else None},rules,
                     label=name+' / '+unit,domain='startup' if unit=='@startup' else DOMAINS.get(name,'gameplay'))
+                if name in ('ad_outcome','save_restart') and unit!='@suite':
+                    p=unit_reuse.reuse_unit(ledger,p,name,unit,meta['script'])
                 if returned_art and p['action']=='run' and unit!='@startup':
                     previous=ledger.previous(cid)
                     if previous and all(r['binding']['tool_sha256']!=rules for r in previous):

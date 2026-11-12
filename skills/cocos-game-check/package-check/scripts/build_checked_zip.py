@@ -23,8 +23,10 @@ import check_package as package_checks
 from check_package import native_files, write_archive, check
 from audit_final_package_startup import audit_final_startup
 import package_obligations
+from regression_scope_gate import scoped_execution
 
 
+@scoped_execution
 def build(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None, project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None, board=None, keep_webp_exception=None, keep_old_packages=False, rework_of=None):
     """rework_of (简化.11.15, --rework-of; Saul 2026-11-04「出包后的返工修改，就只检查修改涉及的那些部分」): the last
     passed package, a folder with 最新.txt, or 'auto' (the --out folder's 最新.txt). The shared scope preflight

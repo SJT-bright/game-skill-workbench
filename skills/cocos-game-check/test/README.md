@@ -8,6 +8,7 @@
 
 | 检查对象 | 参考 |
 |---|---|
+| 首轮试玩前的操作测速、倍速匹配与完整连续游玩 | [测速与连续游玩](references/pretrial-continuous-play.md)，本作持续吞吐、原速基准、稳定档与真实免费重开在交接前核准 |
 | 逐按钮实际点击与视觉清单完整性（完整验收/局部范围） | [逐按钮覆盖](references/button-interaction-coverage.md)；模拟测试必读，不能只用自动识别清单 |
 | 跨视口的玩法空间、运动/碰撞、动作完成及后续操作 | [坐标与完成结果](../../remake-core/references/viewport-gameplay.md)，沿用本轮范围及现有第二比例检查 |
 | 操作、胜败、重开、取消、多指与暂停 | [重开与输入](references/replay-and-input-checks.md)、[移动输入](references/mobile-input-gates.md) |

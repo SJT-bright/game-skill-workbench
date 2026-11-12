@@ -27,6 +27,7 @@ SHARED = Path(__file__).resolve().parents[3] / 'remake-core' / 'scripts'
 sys.path.insert(0, str(SHARED))
 import verify_native_zip as verifier
 from delivery_continuation import repair_context
+from regression_scope_gate import scoped_execution
 from audit_packed_assets import audit as packed_assets
 
 
@@ -126,17 +127,19 @@ def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
     """Resolve the historical proof without turning an unknown edit into a full browser run."""
     if not rework_of:
         return None
+    from regression_scope_gate import ENV_PLAN, preflight
+    if os.environ.get(ENV_PLAN):
+        from check_ledger import project_of
+        current_adapter=adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
+        preflight(project_of(adapter=current_adapter), files, current_adapter, board=board,
+                  policy=policy, prior=rework_of, operation='writer')
+        return None  # The precise plan can recover real evidence without an old writer receipt.
     import rework_scope
     result=rework_scope.plan(rework_of, files, adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER), policy, board)
     if not result.get('reuse'):
         from check_ledger import project_of, Ledger
         current_adapter=adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
         project=project_of(adapter=current_adapter)
-        from regression_scope_gate import ENV_PLAN, preflight
-        if os.environ.get(ENV_PLAN):
-            preflight(project, files, current_adapter, board=board, policy=policy,
-                      prior=rework_of, operation='writer')
-            return None  # The validated unit plan includes new and inherited independent checks.
         ledger=Ledger(project)
         try:
             import runtime_incremental
@@ -213,11 +216,10 @@ def verify_regression_scope(files, folder, adapter, board, policy, prior, *,
     """Check authorization on these exact bytes before a package check can open Ego."""
     if 'game.js' not in files and not ad_regression_gate.needs_regression(files):
         return None
-    from regression_scope_gate import preflight
+    from regression_scope_gate import ensure_plan
     project, adapter, board, policy = regression_context(files, folder, adapter, board, policy, project)
-    audit = preflight(project, files, adapter, board=board, policy=policy, prior=prior, operation=operation)
-    if expected_scope_sha256 is not None and audit.get('plan_sha256') != expected_scope_sha256:
-        raise ValueError('scope_required: regression plan changed after writer preflight')
+    audit = ensure_plan(project, files, adapter, board=board, policy=policy, prior=prior,
+                       operation=operation, expected_sha256=expected_scope_sha256)
     return audit
 
 
@@ -444,6 +446,7 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             'runtime_regression': dict(rt, reused_from=source)}
 
 
+@scoped_execution
 def writer_regressions(files, folder, adapter=None, policy=None, board=None, rework_of=None, *,
                        project=None, expected_scope_sha256=None):
     """v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions for make_tiktok_zip.py, which does not call
@@ -532,6 +535,7 @@ def _fallback_entries(archive):
     return out
 
 
+@scoped_execution
 def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None,
           reuse_writer_regressions=False, rework_of=None, *, expected_scope_sha256=None, project=None):
     # 简化.11.15 (出包后返工): rework_of (build_checked_zip --rework-of) is the last passed package; when only pictures,

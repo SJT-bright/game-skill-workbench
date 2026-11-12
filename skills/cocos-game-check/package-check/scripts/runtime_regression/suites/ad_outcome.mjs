@@ -181,11 +181,37 @@ await L.suite(async ({ out, page }) => {
   const rep = { suite: 'ad_outcome', policy: POLICY, cases: [] };
   const bad = problems();
   if (bad.length) { out.add('adapter', POLICY === 'legacy', bad.join('; ')); return; }
+  // One unit includes cancel AND completion on the same entry. Neither half
+  // independently proves the original retry/unlock and reward assertions.
+  const catalog = (A.ad_entries || []).flatMap((e) => e.states.map((s) => e.id + '/' + s.name));
+  if (RP && RP.ad && !isNone(RP.ad) && Array.isArray(RP.start)) catalog.push('resume_play.ad');
+  catalog.push('@discovered');
+  const selection = C.selection == null ? catalog : C.selection;
+  if (!Array.isArray(selection) || !selection.length || new Set(selection).size !== selection.length
+      || selection.some((id) => typeof id !== 'string' || !catalog.includes(id))) {
+    out.add('selection', false, 'ad_outcome selection must name non-empty, unique entry/state units from the full catalog: ' + catalog.join(', ')); return;
+  }
+  out.units = {};
   const { list, skipped, prior } = await entries();
   const disc = ((C.prior || {}).resume_play || {}).discovery || {};
   rep.entries = list.map((e) => ({ id: e.id, from: e.from, role: e.role || null, button: e.button || 'tap_js', sig: e.sig || null, taps: e.taps || null }));
   rep.skipped = skipped;
-  const done = () => { out.evidence.report = L.evidence('ad_outcome.json', rep); out.evidence.entries = rep.entries.map((e) => e.id); };
+  rep.catalog = catalog; rep.selection = selection;
+  const dynamicIds = new Set(list.filter((e) => e.from === 'button_sweep').map((e) => e.id));
+  const done = () => {
+    for (const id of selection) {
+      const cases = out.cases.filter((c) => id === '@discovered'
+        ? c.id === '@discovered' || c.id === 'entries' || c.id === 'adapter' || [...dynamicIds].some((key) => c.id === key || c.id.startsWith(key + '/'))
+        : c.id === id || c.id.startsWith(id + '/'));
+      out.units[id] = { passed: cases.length > 0 && cases.every((c) => c.passed === true), cases };
+    }
+    out.evidence.report = L.evidence('ad_outcome.json', rep); out.evidence.entries = rep.entries.map((e) => e.id);
+  };
+  for (const id of selection.filter((id) => id !== '@discovered' && !list.some((e) => e.id === id))) {
+    // Legacy policy intentionally does not discover in-level entries, and used
+    // to warn without running declarations when ad_outcome was absent.
+    out.add(id, POLICY === 'legacy', POLICY === 'legacy' ? 'legacy policy: this declared entry is not applicable to the original ad_outcome route' : 'declared entry missing from the actual catalog');
+  }
   if (!list.length) {
     if (POLICY === 'legacy') {
       if (A.ad_entries && !A.ad_outcome) { out.warn('ad_outcome not run: adapter has no "ad_outcome" [legacy game: warning]'); out.add('adapter', true, 'legacy game: warning'); }
@@ -207,8 +233,12 @@ await L.suite(async ({ out, page }) => {
     out.add('entries', !block, why);
     return done();
   }
-  if (list.length > MAX_ENTRIES) out.warn('ad_outcome: omitted entries: ' + list.slice(MAX_ENTRIES).map(e => e.id).join(', '));
-  for (const en of list.slice(0, MAX_ENTRIES)) {
+  const selected = list.filter((en) => selection.includes(en.from === 'button_sweep' ? '@discovered' : en.id));
+  if (selection.includes('@discovered')) out.add('@discovered', true, 'full entry catalog retained: ' + rep.entries.map((e) => e.id).join(', '));
+  const discovered = selected.filter((en) => en.from === 'button_sweep');
+  if (discovered.length > MAX_ENTRIES) out.warn('ad_outcome: omitted discovered entries: ' + discovered.slice(MAX_ENTRIES).map(e => e.id).join(', '));
+  const runEntries = selected.filter((en) => en.from !== 'button_sweep' || discovered.indexOf(en) < MAX_ENTRIES);
+  for (const en of runEntries) {
     const spec = (O.entries || {})[en.key] || (O.entries || {})[en.id] || {};
     const cont = spec.continue_button || O.continue_button || (RP && RP.continue_button) || disc.continue || null;
     const c = { id: en.id, from: en.from, button: en.button || 'tap_js' };

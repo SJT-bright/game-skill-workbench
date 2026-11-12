@@ -17,6 +17,7 @@ function fakeRuntime(opts) {
   var data = {}, writes = [];
   var storage = {
     getItem: function (k) {
+      if (opts.throwListed && k in data) throw new Error('getStorageSync fail existing');
       if (opts.throwAbsent && !(k in data)) throw new Error('getStorageSync fail');
       if (!(k in data)) return opts.absent;
       var v = data[k];
@@ -44,16 +45,23 @@ function fakeRuntime(opts) {
     s.restore();
   });
 });
-test('unwritten_key_without_key_list_is_null', function () {
+test('unwritten_key_without_key_list_is_ambiguous', function () {
   var s = fakeRuntime({absent: false, noKeys: true});
-  assert.strictEqual(s.cc.sys.localStorage.getItem('level'), null);
-  assert.strictEqual(s.cc.sys.localStorage.getItem('x'), null);
+  assert.throws(function(){ s.cc.sys.localStorage.getItem('level'); }, /unreadable/);
+  assert.throws(function(){ s.cc.sys.localStorage.setItem('level', 0); }, /unreadable/);
+  assert.deepStrictEqual(s.data, {});
   s.restore();
 });
 test('read_that_throws_for_unlisted_key_is_null', function () {
   var s = fakeRuntime({throwAbsent: true});
   assert.strictEqual(s.cc.sys.localStorage.getItem('coins'), null);
   s.restore();
+});
+test('existing_read_error_is_preserved', function(){
+  var s=fakeRuntime({throwListed:true});s.data.wallet=45;
+  assert.throws(function(){s.storage.getItem('wallet');}, /unreadable/);
+  assert.throws(function(){s.storage.setItem('wallet',0);}, /unreadable/);
+  assert.strictEqual(s.data.wallet,45);s.restore();
 });
 test('numbers_and_booleans_are_written_as_text', function () {
   var s = fakeRuntime({numberAs: true, boolAs: true});
@@ -71,10 +79,13 @@ test('object_write_is_json_text', function () {
   assert.strictEqual(s.writes[0].v, '{"coins":5}');
   s.restore();
 });
-test('raw_number_written_before_the_guard_reads_true_then_null', function () {
+test('raw_number_written_before_the_guard_is_preserved_and_locked', function () {
   var s = fakeRuntime({numberAs: true});
   s.data.level = 7;                         // written by an old build without the guard
-  assert.strictEqual(s.cc.sys.localStorage.getItem('level'), null, 'listed key, unreadable value -> default once');
+  assert.throws(function(){s.cc.sys.localStorage.getItem('level');}, /unreadable/);
+  assert.throws(function(){s.cc.sys.localStorage.setItem('level',0);}, /unreadable/);
+  assert.strictEqual(s.data.level, 7);
+  assert.strictEqual(s.writes.length,0);
   s.restore();
 });
 test('listed_empty_string_stays_empty_string', function () {

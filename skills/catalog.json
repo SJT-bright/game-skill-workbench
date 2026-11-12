@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T02:40:55.753Z",
-  "treeHash": "f8692ab9e41e25515e5e995a2c553d4755be10ae59e90f7f99b7e5c9bc51198c",
+  "createdAt": "2026-11-12T02:41:52.612Z",
+  "treeHash": "268078f8648db6f82f4611ad2e370f1ad0d97387915452afeabc09a655f718b2",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3675,9 +3675,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "3266ca28739ec8b147f28b9ec0be9710881fcce2fddc1b118a6272ea8abff602",
-      "fileCount": 683,
-      "bytes": 13040103,
+      "treeHash": "c0d0f1f0f7fc89d08cf36cc42dd4303e192cdde96b5651423bd3c0d82d8d62e4",
+      "fileCount": 687,
+      "bytes": 13093163,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3771,8 +3771,8 @@
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
-          "size": 60120,
+          "hash": "0a212a3f40f1c4b86a4928ea506f6cce2aaa04df1bf14504020fd09b0a5a1a85",
+          "size": 60342,
           "executable": false
         },
         {
@@ -3933,8 +3933,8 @@
         },
         {
           "path": "assets/platform-kit/parts/storage-guard.js",
-          "hash": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
-          "size": 4483,
+          "hash": "b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602",
+          "size": 7036,
           "executable": false
         },
         {
@@ -3951,8 +3951,8 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-          "hash": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
-          "size": 15103,
+          "hash": "062e1d972ff0b2e94250b6473e84b4a921776e8055ae1394d6331d3cec88aa45",
+          "size": 15189,
           "executable": false
         },
         {
@@ -4287,14 +4287,20 @@
         },
         {
           "path": "assets/platform-kit/tests/storage-guard-negative-controls.js",
-          "hash": "5a26669f7d8704c83e8142bdec333afb336d749bffca9e30257e71a22b141115",
-          "size": 2565,
+          "hash": "2c2cfff48bdb7fa63d122b556c13aae26d0fed5ebaa6a1dc679edec26928936f",
+          "size": 2651,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/storage-guard.test.js",
-          "hash": "a9f5f06e2aec837cc5336dc801e64565a3a44e3f017fdb8daeecfa8743ba0ebf",
-          "size": 6112,
+          "hash": "0af896c872a2997b2d633e1bb879a88a3ba8fc9d948b6846022e9d8f32b15e1a",
+          "size": 6740,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tests/storage-recovery.test.js",
+          "hash": "467b17fb94fb7c8ac50f3fc3c1425eeaf851b40dc49bcb0fc1bbdaf2238b38ef",
+          "size": 3569,
           "executable": false
         },
         {
@@ -4497,8 +4503,8 @@
         },
         {
           "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-          "hash": "1863f920924107c283bb481071440407deb2eb2df3755933a11cb7f6998c7d56",
-          "size": 23697,
+          "hash": "9917dc8f3a63e00a76ef94c4364adabd0824fb57faee888c8e01e1477849b1dd",
+          "size": 23790,
           "executable": false
         },
         {
@@ -4682,6 +4688,12 @@
           "executable": false
         },
         {
+          "path": "references/cross-platform-runtime-contract.md",
+          "hash": "54826715a8b97420e108bd15d5e6620dcd768f1a362689d5ed82200c9c6da007",
+          "size": 6855,
+          "executable": false
+        },
+        {
           "path": "references/current-contracts.md",
           "hash": "3c3deca3db3b7ac5b12b633c69b1facb58190b743b76428d4cf187ab449b7ff7",
           "size": 7253,
@@ -4791,8 +4803,8 @@
         },
         {
           "path": "references/native-startup-ledger.md",
-          "hash": "e2040e8f07ec7f42a097f2c257d1fa232eeb3e7dadb5770fae0fff05d4384f44",
-          "size": 1673,
+          "hash": "1ce10d9122277843235b2740716deb96a766698b64a17b9df97cc9a406005d93",
+          "size": 1979,
           "executable": false
         },
         {
@@ -4827,8 +4839,8 @@
         },
         {
           "path": "references/production-baseline.md",
-          "hash": "e2abbd58d040fb8235ca35294acdd4e4de2d6fc107548d5a3d558133d164730e",
-          "size": 9629,
+          "hash": "d47d3c3623e31a98344719bba02c301fa74f5a0a7cb3a02ecd0084d9c29d5ee3",
+          "size": 10047,
           "executable": false
         },
         {
@@ -4877,6 +4889,12 @@
           "path": "references/stage-flow.md",
           "hash": "77a619dcbd8f34954edb6af70f938afe204c9299183b23967fc88cff7442ad8c",
           "size": 51077,
+          "executable": false
+        },
+        {
+          "path": "references/storage-upgrade-trace-v3.md",
+          "hash": "affad0dfe078d9fe56e183879ee304c15f1bdec8f3b7ec5588a1c625bb35c0f8",
+          "size": 6057,
           "executable": false
         },
         {
@@ -5217,8 +5235,8 @@
         },
         {
           "path": "scripts/audit_native_storage_contract.py",
-          "hash": "2bcfc7bc122cbb5c0cf160a12effeff14f5dad37b68b520a7415f7202f9f6a96",
-          "size": 9723,
+          "hash": "22fcedbc850bc3d9740eb3d8e7349e7f37d357875611629c0eb4fe133c92db4c",
+          "size": 24497,
           "executable": false
         },
         {
@@ -5421,8 +5439,8 @@
         },
         {
           "path": "scripts/check_known_issues.py",
-          "hash": "cd8ba5f710a11d9aafaad44fccd2aeed6c769b1ea7013347ca15642e20801a03",
-          "size": 61101,
+          "hash": "f6d3bb442adf26d4e1bae8326abdfe584164d50877744b2d605e311cee503d8f",
+          "size": 61121,
           "executable": false
         },
         {
@@ -6855,8 +6873,14 @@
         },
         {
           "path": "scripts/test_native_storage_contract_gate.py",
-          "hash": "7e0ea31c359d499d10b87ab4b650feb376f3baf7588f6f87af6d7bb6e9a3bd9f",
-          "size": 4205,
+          "hash": "1ed572b6a45f33bba4e43a5b24ffd8897c857603084787e44f369be3ef76cbf6",
+          "size": 5906,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_native_storage_upgrade_contract.py",
+          "hash": "45e830298bb8d0e9ffa2917906579c51500a15ba2d8992770a890dfad1998c98",
+          "size": 15692,
           "executable": false
         },
         {

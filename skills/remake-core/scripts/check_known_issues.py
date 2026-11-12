@@ -284,10 +284,10 @@ def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD,
                 continue  # F01-F20 alone, stale cases or changed raw evidence cannot pass LOGIC-01.
             if tool == 'audit_native_storage_contract':
                 try:
-                    from audit_native_storage_contract import CASES, validate as validate_storage, replay as replay_storage
+                    from audit_native_storage_contract import CASES, POLICY_VERSION, validate as validate_storage, replay as replay_storage
                     trace_path = Path(report['trace'])
                     native_path = Path(report['native'])
-                    if (report.get('policy_version') != (2 if load(trace_path).get('schema') == 'native_storage_trace.v2' else 1) or report.get('required_cases') != list(CASES) or
+                    if (report.get('policy_version') != POLICY_VERSION or load(trace_path).get('schema') != 'native_storage_trace.v3' or report.get('required_cases') != list(CASES) or
                             sha(trace_path.read_bytes()) != report.get('trace_sha256') or
                             tree_sha(native_path) != expected_binding['native_tree_sha256'] or
                             validate_storage(load(trace_path), native_path, expected_binding) or

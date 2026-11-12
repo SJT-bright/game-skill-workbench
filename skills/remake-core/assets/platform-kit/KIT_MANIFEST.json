@@ -50,9 +50,9 @@
       "origin": "StarPop v50 build-templates, byte-identical (delivery ZIP 星星点点消.zip sha cf82092e: package root and source build-templates/bytedance both 1aeb690c, 852 B); no user phone-scan confirmation found for StarPop v50: 待真机复测. Not the same file as 0369875d (RainyDuck v20 / MergeShot2048 pkg85, 1566 B, other code)"
     },
     "parts/storage-guard.js": {
-      "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
+      "sha256": "b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602",
       "project_path": "build-templates/bytedance/storage-guard.js",
-      "origin": "new in kit 2.0 (v7.7): MergeShot2048 v85 storage-guard.js (40aee1a4, real-iPhone vConsole 10-28/10-29) + TobinsGem / Tansys key-list rule; SaveStore keys read raw; Node-tested (tests/storage-guard.test.js + negative controls); 待真机复测"
+      "origin": "2026-11-11: unreadable existing keys are preserved/blocked; explicit-schema typed numeric recovery; tested callback/Promise/cancellation/readback; prior base in kit 2.0 (v7.7): MergeShot2048 v85 storage-guard.js (40aee1a4, real-iPhone vConsole 10-28/10-29) + TobinsGem / Tansys key-list rule; SaveStore keys read raw; Node-tested (tests/storage-guard.test.js + negative controls); 待真机复测"
     },
     "parts/rewarded-guard.js": {
       "sha256": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f",
@@ -281,8 +281,8 @@
       "engine": 2, "phase": "native",
       "needs": {"engine_versions": ["2.4.x"]},
       "file": {"src": "parts/storage-guard.js", "template": "build-templates/bytedance/storage-guard.js", "dest": "storage-guard.js",
-               "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
-               "previous_sha256": ["40aee1a437d1be48aca797ce099f87f3a7dad28dadc8029baf66bf6b7cf31190", "0e090a0fc1b1b2408e28515ac3d8655b341928646f3959d8c7f64798047f8f9a"],
+               "sha256": "b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602",
+               "previous_sha256": ["1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27", "40aee1a437d1be48aca797ce099f87f3a7dad28dadc8029baf66bf6b7cf31190", "0e090a0fc1b1b2408e28515ac3d8655b341928646f3959d8c7f64798047f8f9a"],
                "previous_note": "40aee1a4 = MergeShot2048 pkg85 (base of the kit file), 0e090a0f = pkg83/pkg84 (old): both count as old versions of this part"},
       "wiring": [
         {"in": "main.js", "when": "kit_main", "kit_line": "require('./storage-guard')(cc, platform)"},

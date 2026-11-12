@@ -3,10 +3,11 @@
 var fs = require('fs'), os = require('os'), path = require('path'), child = require('child_process');
 var src = path.join(__dirname, '..', 'parts', 'storage-guard.js');
 var variants = [
+  {name: 'legacy_value_defaulted', before: 'throw unreadable(key);\n    };', after: 'return null;\n    };'},
   {name: 'numbers_written_raw', before: "if (typeof value !== 'string') { note(key, 'as_text_' + typeof value); value = text(value); }", after: ''},
   {name: 'false_read_returned', before: "if (value === '' && present === true) return '';", after: "if (value === false) return false;\n      if (value === '' && present === true) return '';"},
-  {name: 'empty_string_returned_without_key_list', before: "if (value === '' && present === true) return '';", after: "if (value === '') return '';"},
-  {name: 'boolean_true_read_returned', before: "if (typeof value === 'number') return String(value);", after: "if (typeof value === 'number') return String(value);\n      if (value === true) return value;"},
+  {name: 'unknown_value_reset', before: 'throw unreadable(key);', after: 'return null;'},
+  {name: 'boolean_true_read_returned', before: "if (typeof value === 'number' && isFinite(value)) return String(value);", after: "if (typeof value === 'number' && isFinite(value)) return String(value);\n      if (value === true) return value;"},
   {name: 'throw_not_caught', before: "if (listed(key) === false) { note(key, 'throw_absent'); return null; }", after: ''},
   {name: 'object_read_stringified', before: "if (value && typeof value === 'object') return value;", after: "if (value && typeof value === 'object') return JSON.stringify(value);"},
   {name: 'installs_twice', before: '|| storage.getItem.__tiktokKitStorageGuard) return false;', after: ') return false;'},

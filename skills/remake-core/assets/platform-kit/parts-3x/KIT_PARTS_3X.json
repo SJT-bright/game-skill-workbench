@@ -228,8 +228,10 @@
         "src": "parts/storage-guard.js",
         "dest": "storage-guard.js",
         "template": "build-templates/bytedance-mini-game/storage-guard.js",
-        "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
-        "previous_sha256": []
+        "sha256": "b7299c4792345ad5fe3c781999bd8a3a21c6965ef8c31589c1000e65cd1f7602",
+        "previous_sha256": [
+          "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27"
+        ]
       },
       "wiring": [
         {

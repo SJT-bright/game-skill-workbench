@@ -185,6 +185,14 @@ class ArtCheckWrites(Tmp):
 
 
 class Writers(W.KitInSync):
+    def setUp(self):
+        super().setUp()
+        # Isolate historical receipt retirement and original-audio behavior.
+        # The strict-six production contract has its own fail-closed tests.
+        scope = mock.patch('ad_standard_scope.requirement', return_value={'required': False})
+        scope.start()
+        self.addCleanup(scope.stop)
+
     def art_project(self, name='p'):
         p = H.project24(self.d / name)
         (p / 'assets' / 'tiktok-platform' / 'PlatformConfig.js').write_text(W.kit_config(), encoding='utf-8')
@@ -404,7 +412,7 @@ class Preview(Tmp):
 
     def test_keep_needs_a_project(self):
         r = self.serve('--keep')
-        self.assertEqual(r.returncode, 2)
+        self.assertEqual(r.returncode, 1)  # the formal production entry refuses before the older parser guard
         self.assertIn('--project', r.stderr)
 
 

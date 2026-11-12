@@ -182,7 +182,7 @@ class Measured(unittest.TestCase):
 class Wiring(unittest.TestCase):
     def test_listed_last_in_gate_modules(self):
         # 简化.11.3: the sound wiring gate (package_gates/sound.py) runs right after it
-        self.assertEqual(gates.GATE_MODULES[-2:], ('audio', 'sound'))
+        self.assertEqual(gates.GATE_MODULES[-3:], ('audio', 'sound', 'ad_standard_six'))
 
     def test_no_ffmpeg_never_passes_silently(self):
         files = pkg([('audio/sfx/sfx_coin', b'not measured')])

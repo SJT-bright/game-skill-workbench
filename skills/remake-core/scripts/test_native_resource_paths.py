@@ -37,7 +37,12 @@ with tempfile.TemporaryDirectory(prefix='native-path-gate ') as td:
     (project/'assets/tiktok-platform/PlatformConfig.js').write_text(kitcfg.replace("gameId: 'change-me'","gameId: 'fixture'").replace('normalLevelCoins: 0,','normalLevelCoins: 12,'),encoding='utf-8')
     check('fixture-source-finalized',F.finalize_source(project,'remake')['blocks']==[])
     command=[sys.executable,str(HERE/'make_tiktok_zip.py'),'--native',str(native),'--app-id',H.APP,'--out',str(out),'--project',str(project),'--web',str(native),'--build-tag','fixture','--review',str(review)]
-    r=subprocess.run(command,capture_output=True,text=True)
+    # Isolate only the six-family boundary for this old resource-path fixture;
+    # the actual writer still performs its real Native resource-path refusal.
+    bootstrap=("import sys,runpy;sys.path.insert(0,"+repr(str(HERE))+");import ad_standard_scope;"+
+               "ad_standard_scope.requirement=lambda *a,**k:{'required':False};"+
+               "sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')")
+    r=subprocess.run([command[0],'-B','-c',bootstrap,*command[1:]],capture_output=True,text=True)
     check('actual-formal-writer-refuses-before-zip',r.returncode!=0 and not out.exists() and 'native resource path check' in r.stderr+r.stdout)
     cfg.write_text(json.dumps({'nativeBase':'native'}));check('normal-unrelocated-control',audit(native)['status']=='pass')
     sub=native/'subpackages/second/config.json';sub.parent.mkdir(parents=True);sub.write_text(json.dumps({'nativeBase':'../../other/native'}))

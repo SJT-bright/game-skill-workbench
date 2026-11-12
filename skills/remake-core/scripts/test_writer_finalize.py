@@ -120,6 +120,17 @@ def run_make_zip(argv):
 
 
 class Writers(KitInSync):
+    def setUp(self):
+        super().setUp()
+        # Isolate the older platform-kit/K5 writer wiring contract. The new AD6 refusal
+        # is exercised independently by test_ad_nodes_gate and actual writer CLI negatives;
+        # this patch must never be used by production writers or those AD6 tests.
+        import ad_standard_scope
+        patcher = mock.patch.object(ad_standard_scope, 'requirement',
+                                    return_value={'required': False, 'reason': 'isolated platform-kit wiring fixture'})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def zip_args(self, b, p):
         review = self.d / 'review.json'
         review.write_text('{}')
@@ -192,7 +203,7 @@ class Writers(KitInSync):
     def test_build_checked_zip_without_project_refused(self):
         b = self.native()
         before = H.tree_sha(b)
-        with self.assertRaisesRegex(ValueError, 'K5_source_finalized: no --project given'):
+        with self.assertRaisesRegex(ValueError, 'AD6_manifest_required|K5_source_finalized: no --project given'):
             B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json')
         self.assertEqual(H.tree_sha(b), before)
         cli = subprocess.run([sys.executable, '-B', str(CHECK / 'build_checked_zip.py'), '--native', str(b),
@@ -528,7 +539,10 @@ class W_D4_Requests(KitInSync):
         own = "var PlatformConfig = {endpoint: 'x'};"                       # a game module that only has the name
         self.assertEqual(self.config_findings({'assets/main/index.js': bundle(('PlatformConfig', own))}), [])
 
-    def test_platform_config_checked_in_the_writer_path(self):
+    # This older test isolates PlatformConfig wiring; AD6 has its own unpatched writer tests.
+    @mock.patch('ad_standard_scope.requirement',
+                return_value={'required': False, 'reason': 'isolated PlatformConfig wiring fixture'})
+    def test_platform_config_checked_in_the_writer_path(self, _isolated_ad_standard):
         p, b = self.project(config=False), self.native()           # project keeps H.project24's own PlatformConfig
         (p / 'assets' / 'tiktok-platform' / 'PlatformConfig.js').write_text(kit_config('change-me', 0))
         F.finalize_source(p, 'remake')

@@ -285,7 +285,7 @@ def find_shot_browser():
 
 
 def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, browser=None, timeout=90, wait=12,
-                   run=None):
+                   run=None, expected_music=None):
     """生成时预防 P21 ⑤ (后半; 普查「进不去游戏」96 款 203 次, 试玩链接打不开 14 次): before a link a person opens is
     printed, an actual Ego Page takes one screenshot of the game page (the same page the phone frame shows).
     Returns (level, message, info). 'block' (no link): the picture is black or one flat colour, the page is still on
@@ -293,6 +293,10 @@ def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, bro
     (no browser on this computer, browser failed or timed out, export without scripts) - the message says 没截图, it
     is never reported as passed. probe: callable returning the page probe report (dict) or None."""
     import subprocess
+    # This helper affects home/audio only; preview_check_once explicitly binds
+    # its bytes to that node, without invalidating the unrelated ad-response node.
+    from importlib import import_module
+    audio_support = import_module('preview_audio_startup')
     info = {'screenshot': None, 'browser': None}
     try:
         entry = (Path(export_dir) / 'index.html').read_bytes()
@@ -313,10 +317,11 @@ def home_shot_gate(shot_url, export_dir, phone_size, out_png, *, probe=None, bro
     width, height = phone_size
     name = 'preview-home-%s-%s' % (os.getpid(), secrets.token_hex(4))
     info['space_name'] = name
-    script = """const fs=await import('node:fs/promises');
+    script = audio_support.EGO_PROBE_JS + """const fs=await import('node:fs/promises');
 const t=await taskSpace(%s);
 const sessionId=t.spaceId;
 let failure;
+let audio_startup=null;
 try {
  const p=t.page('p1');
  await p.cdp('Network.enable',{});await p.cdp('Network.setCacheDisabled',{cacheDisabled:true});
@@ -324,6 +329,7 @@ try {
  await size();await p.goto(%s);await size();
  const until=Date.now()+%d;while(Date.now()<until)await new Promise(r=>setTimeout(r,250));
  const image=await p.cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await fs.writeFile(%s,Buffer.from(image.data,'base64'));
+ try {audio_startup=await collectPreviewAudio(p);} catch(error) {audio_startup={schema:'preview-bgm-smoke.v1',error:String(error)};}
 } catch (error) {
  failure=error;
 }
@@ -341,7 +347,7 @@ if (!failure || !/control|hand.?off|inactive|unassigned|hard.?stop|EGO_TASK_SPAC
  }
 }
 if (failure) throw failure;
-console.log(JSON.stringify({browser_route:'ego_taskspace',input_transport:'ego_page_cdp',session_id:sessionId,space_name:%s,screenshot:%s,space_finished:true}));
+console.log(JSON.stringify({browser_route:'ego_taskspace',input_transport:'ego_page_cdp',session_id:sessionId,space_name:%s,screenshot:%s,space_finished:true,audio_startup}));
 """ % (json.dumps(name),width,height,width,height,json.dumps(shot_url),int(wait*1000),json.dumps(str(out_png)),json.dumps(name),json.dumps(str(out_png)))
     try:
         done=(run or subprocess.run)([ego,'nodejs','-e',script],stdin=subprocess.DEVNULL,capture_output=True,timeout=timeout)
@@ -368,6 +374,11 @@ console.log(JSON.stringify({browser_route:'ego_taskspace',input_transport:'ego_p
             or type(evidence.get('session_id')) is not int or evidence['session_id'] <= 0):
         return 'warn', '首页 Ego 截图缺少有效的当前空间回执，未核对不算通过', info
     info.update(session_id=evidence['session_id'], space_finished=True)
+    audio = audio_support.judge(evidence.get('audio_startup'), expected_music)
+    info['audio_startup'] = audio
+    audio_path = out_png.with_suffix('.audio.json')
+    audio_path.write_text(json.dumps(audio, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    info['audio_startup_record'] = str(audio_path)
     if not out_png.is_file():
         return 'warn', '首页截图没截成：浏览器退出码 %s，没写出图（%s）。没截图，不算通过' % (done.returncode, tail or '无输出'), info
     info['screenshot'] = str(out_png)
@@ -397,8 +408,11 @@ console.log(JSON.stringify({browser_route:'ego_taskspace',input_transport:'ego_p
                         % ('；'.join(problems), out_png)), info
     if problems:
         return 'block', '不给试玩链接：%s。截图：%s' % ('；'.join(problems), out_png), info
+    if audio['level'] == 'block':
+        return 'block', '不给试玩链接：%s 回执：%s' % (audio['message'], audio_path), info
     seen = '，场景 %s' % report['scene'] if report and report.get('scene') else ('，页面探针没回报' if not report else '')
-    return 'pass', '首页截图核对通过（不是黑屏、不是纯色、没停在加载页、没报错%s）。截图：%s，给链接前自己看一眼' % (seen, out_png), info
+    return 'pass', ('首页截图核对通过（不是黑屏、不是纯色、没停在加载页、没报错%s）。截图：%s，给链接前自己看一眼\nBGM：%s 回执：%s'
+                    % (seen, out_png, audio['message'], audio_path)), info
 
 
 def phone_preview_html(width=390, height=844, entry="index.html"):
@@ -618,6 +632,8 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
                         'before the picture is taken (default 12)')
     parser.add_argument('--home-shot-timeout', type=float, default=90, help='headless home screenshot: give up after this '
                         'many seconds (default 90; then the link says 没截图)')
+    parser.add_argument('--expect-home-bgm', action='store_true', default=None,
+                        help='known home BGM: require a zero-input play request and ordinary-input recovery; no music toggle')
     args = parser.parse_args(argv)
     internal_window = english_preview or chinese_original or args.raw
     setup_bytes = None
@@ -652,6 +668,27 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         current = returned_art_acceptance.validate(Path(args.project), web=directory)
         if current != returned_art:
             parser.error('返工试玩绑定与当前候选不同')
+    if (not english_preview and not chinese_original and not args.raw
+            and (args.keep or args.open or args.idle_minutes == 0)):
+        # Formal remake trials share the writer's six-family/UI contract. Check
+        # before copying snapshots, sweeping slots or creating a server/window.
+        if not args.project or not Path(args.project).expanduser().is_dir():
+            print('不给正式试玩：缺少实际 Cocos 工程 --project，无法核对六类广告节点和新增界面。', file=sys.stderr)
+            raise SystemExit(1)
+        try:
+            from ad_standard_scope import requirement
+            from ad_nodes_gate import check_project
+            project = Path(args.project).expanduser().resolve()
+            scope = requirement(project, 'new')
+            if scope.get('required', True):
+                result = check_project(project, stage='trial')
+                if result.get('passed') is not True or result.get('problems'):
+                    for problem in result.get('problems') or ['六类广告节点或新增界面检查未通过。']:
+                        print('不给正式试玩：' + str(problem), file=sys.stderr)
+                    raise SystemExit(1)
+        except Exception as error:
+            print('不给正式试玩：六类广告节点检查无法完成：' + str(error), file=sys.stderr)
+            raise SystemExit(1)
     if args.keep and verify_snapshot is None and not chinese_original and not args.project:
         parser.error('用户试玩 --keep 需要 --project <这款游戏的 Cocos 工程>，用于定位本次试玩证据。')
     try:
@@ -740,10 +777,12 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         from check_ledger import NeedsScope
         try:
             level, message, shot_info = preview_once(args.project,'home',current_export,
-                {'viewport':list(phone_size),'ad_simulator':args.ad_simulator,'wait':args.home_shot_wait},
+                {'viewport':list(phone_size),'ad_simulator':args.ad_simulator,'wait':args.home_shot_wait,
+                 'expect_home_bgm':args.expect_home_bgm},
                 lambda:home_shot_gate(shot_url,current_export,phone_size,
                     Path(tempfile.gettempdir())/('serve_preview_home_%d.png'%server.server_port),
-                    probe=lambda:getattr(check_server,'home_probe',None),timeout=args.home_shot_timeout,wait=args.home_shot_wait))
+                    probe=lambda:getattr(check_server,'home_probe',None),timeout=args.home_shot_timeout,wait=args.home_shot_wait,
+                    expected_music=args.expect_home_bgm))
         except NeedsScope as exc:
             abort_start(check_server);raise SystemExit('试玩节点待定位（不自动全测）：'+str(exc))
         print(message, file=sys.stderr if level == 'block' else sys.stdout, flush=True)

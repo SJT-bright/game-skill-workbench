@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict'),{scan}=require('./scan_modal_ownership.cjs');
+const bad=`function close(){let bgname="blackBg"+this.node.name;this.node.parent.getChildByName(bgname).destroy()}`;
+assert.equal(scan(bad).risks.length,1);
+assert.equal(scan('// '+bad+'\nconst note='+JSON.stringify(bad)+';').risks.length,0);
+assert.equal(scan(`const re=/getChildByName(mask).destroy()/;`).risks.length,0);
+assert.equal(scan(`@ccclass export default class V { close(){ this.backdrop.destroy(); } }`).risks.length,0);
+assert.equal(scan(`function close(){root.getChildByName('blackBgShop').destroy()}`).risks.length,1);
+assert.equal(scan(`function find(){return root.getChildByName('blackBgShop')}`).risks.length,0);
+assert.equal(scan(`function close(){this.ownedContainer.destroy()}`).risks.length,0);
+assert.equal(scan('const broken = "').status,'unresolved');
+console.log('PASS 8 modal lexical calibration cases (risk inventory, not runtime acceptance)');

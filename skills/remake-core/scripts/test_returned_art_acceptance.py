@@ -32,6 +32,11 @@ if english_path.is_file():
 @unittest.skipIf(E is None, 'English returned-delivery route is tested in the English distribution')
 class Returned(unittest.TestCase):
     def setUp(self):
+        # Isolate this prior-delivery visual authorization contract. Six-family
+        # production and verified maintenance scope have independent tests.
+        import ad_standard_scope
+        ad_scope = mock.patch.object(ad_standard_scope, 'requirement', return_value={'required': False})
+        ad_scope.start();self.addCleanup(ad_scope.stop)
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
         self.p=self.root/'project';(self.p/'assets').mkdir(parents=True)
         (self.p/'assets/button.png').write_bytes(b'fixture-current-art')

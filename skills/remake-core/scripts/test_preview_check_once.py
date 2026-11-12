@@ -34,7 +34,7 @@ class PreviewInjectedDependencies(unittest.TestCase):
         self.module = self.install / 'remake-core/scripts/preview_check_once.py'
         self.module.parent.mkdir(parents=True)
         shutil.copy2(P.__file__, self.module)
-        dependencies = [core / 'serve_preview.py', core / 'check_ledger.py',
+        dependencies = [core / 'serve_preview.py', core / 'check_ledger.py', core / 'preview_audio_startup.py',
                         core.parent / 'assets/preview-touch-bridge.js',
                         core.parent / 'assets/ad-simulator.js']
         check = skills / 'cocos-game-check/package-check/scripts'
@@ -48,6 +48,7 @@ class PreviewInjectedDependencies(unittest.TestCase):
             target.write_bytes(source.read_bytes())
         self.bridge = self.install / 'remake-core/assets/preview-touch-bridge.js'
         self.simulator = self.install / 'remake-core/assets/ad-simulator.js'
+        self.audio_probe = self.install / 'remake-core/scripts/preview_audio_startup.py'
         self.patch = patch.object(P, '__file__', str(self.module))
         self.patch.start()
         self.addCleanup(self.patch.stop)
@@ -79,6 +80,17 @@ class PreviewInjectedDependencies(unittest.TestCase):
                 self.assertIn(self.bridge, P.rule_files(kind, {'ad_simulator': False}))
                 self.assertNotIn(self.simulator, P.rule_files(kind, {'ad_simulator': False}))
                 self.assertIn(self.simulator, P.rule_files(kind, {'ad_simulator': True}))
+
+    def test_bgm_probe_change_invalidates_only_home(self):
+        for kind in ('home', 'ad-response'):
+            self.run_preview(kind)
+            self.run_preview(kind)
+            self.assertEqual(self.count(kind), 1)
+        self.audio_probe.write_bytes(self.audio_probe.read_bytes() + b'\n# isolated Python dependency changed\n')
+        self.run_preview('home')
+        self.run_preview('ad-response')
+        self.assertEqual(self.count('home'), 2)
+        self.assertEqual(self.count('ad-response'), 1)
 
     def test_bridge_change_retries_failed_items_without_rewriting_original_record(self):
         for kind in ('home', 'ad-response'):

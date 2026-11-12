@@ -287,7 +287,16 @@ class EndToEnd(Tmp):
             project = self.d / 'project'
             (project / 'assets').mkdir(parents=True, exist_ok=True)
             extra += ['--project', str(project)]
-        p = subprocess.Popen([PY, '-B', str(scripts / 'serve_preview.py'), '--directory', str(self.web), '--no-browser',
+        launch = [PY, '-B', str(scripts / 'serve_preview.py')]
+        if new:
+            # Only isolate this fake-Ego screenshot/touch fixture from AD6.
+            # Formal six-family refusal is covered by test_ad_trial_entry.py.
+            runner = ('import runpy,sys; from pathlib import Path; from unittest.mock import patch; '
+                      'sys.path.insert(0,str(Path(sys.argv[1]).parent)); sys.argv=sys.argv[1:]\n'
+                      "with patch('ad_standard_scope.requirement', return_value={'required':False}):\n"
+                      " runpy.run_path(sys.argv[0],run_name='__main__')\n")
+            launch = [PY, '-B', '-c', runner, str(scripts / 'serve_preview.py')]
+        p = subprocess.Popen([*launch, '--directory', str(self.web), '--no-browser',
                               '--idle-minutes', '0', *extra],
                              env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         lines = []

@@ -93,6 +93,9 @@ def find():
  return Path('/vendor/Google Chrome')
 chrome.find_chrome=find
 sys.modules['browser_slots']=types.SimpleNamespace(sweep=lambda **kw:None,register=lambda *a,**kw:None)
+# Browser-request/HTTP isolation only; the production strict-six formal entry
+# and its UI callback are exercised separately in test_ad_trial_entry.py.
+sys.modules['ad_standard_scope']=types.SimpleNamespace(requirement=lambda *a,**kw:{'required':False})
 import serve_preview
 english, original = sys.argv[4] == 'yes', sys.argv[5] == 'yes'
 serve_preview.main(sys.argv[6:], english_preview=english, chinese_original=original)

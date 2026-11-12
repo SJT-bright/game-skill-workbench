@@ -18,6 +18,7 @@ import urllib.request
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
 from urllib.parse import urlsplit
+from unittest.mock import patch
 
 HERE = Path(os.environ.get('SERVE_PREVIEW_DIR') or Path(__file__).resolve().parent)
 sys.path.insert(0, str(HERE))
@@ -30,6 +31,13 @@ def fetch(url):
 
 
 class FreshSaveOnUserLink(unittest.TestCase):
+    def setUp(self):
+        # Isolate this existing origin/save test from the production ad-node
+        # contract; strict-six formal entry is covered in test_ad_trial_entry.
+        isolation = patch('ad_standard_scope.requirement', return_value={'required': False})
+        isolation.start()
+        self.addCleanup(isolation.stop)
+
     def run_main(self, keep):
         seen = {'shot': None, 'smoke': None, 'same_page': None}
         export = Path(tempfile.mkdtemp(prefix='fresh_save_'))

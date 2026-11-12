@@ -191,6 +191,14 @@ class MarlowsR6(unittest.TestCase):
 
 
 class RecordedOptions(WF.KitInSync):
+    def setUp(self):
+        super().setUp()
+        # This fixture isolates the existing source/writer options contract.
+        # Strict-six production refusal is covered by the dedicated ad gate tests.
+        scope = mock.patch('ad_standard_scope.requirement', return_value={'required': False})
+        scope.start()
+        self.addCleanup(scope.stop)
+
     def src(self, options):
         p = H.project24(self.d / 'p')
         (p / 'assets' / 'tiktok-platform' / 'PlatformConfig.js').write_text(WF.kit_config(), encoding='utf-8')

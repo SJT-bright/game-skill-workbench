@@ -361,6 +361,19 @@ def main():
     else:
         add('异步返回方式', '出错', text.strip()[-300:], 'logs/audit_async_contracts.log')
 
+    # Modal/input ownership is a source risk review, never a fabricated runtime pass.
+    code, text = run('audit_modal_ownership.py', ['--project', proj, '--out', out / 'modal_ownership.json'], logs)
+    modal = first_json(text)
+    if modal and code in (0, 1):
+        risks = modal.get('source_risks', [])
+        unresolved = modal.get('unresolved', [])
+        add('弹窗输入锁归属', '需处理' if risks or unresolved else '提示',
+            ('发现按名称销毁遮罩或未解析源码；核具体实例归属，并只补 modal_lifecycle 受影响路线'
+             if risks or unresolved else '未发现已知按名称释放遮罩写法；静态结果不代表弹窗交互通过，沿用有效专项或按影响补验'),
+            'modal_ownership.json')
+    else:
+        add('弹窗输入锁归属', '出错', text.strip()[-300:], 'logs/audit_modal_ownership.log')
+
     # 5 触屏写法
     mi_args = [proj, '--stage', 'code', '--report', out / 'mobile_input.json']
     if a.native_zip:

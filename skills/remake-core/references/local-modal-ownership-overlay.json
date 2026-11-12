@@ -1,0 +1,16 @@
+{
+  "schema": "local-skill-overlay.v1",
+  "patch_id": "modal-input-ownership.20261111.1",
+  "scope": [
+    "remake-core",
+    "cocos-game-check",
+    "remake-art"
+  ],
+  "kind": "local additive overlay, not an upstream full Skill release",
+  "basis": "Per-instance input blocker ownership and async UI lifecycle; calibrated against original Native defect and paired-reference diagnostic copy",
+  "not_claimed": [
+    "physical Android/iOS pass",
+    "all games modified",
+    "upstream official full package replaced"
+  ]
+}

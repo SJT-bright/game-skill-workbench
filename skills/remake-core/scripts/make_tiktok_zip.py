@@ -260,6 +260,9 @@ def finalize_for_writer(native, project, board, app_id, options=None):
        project marker / the frozen legacy list (design section 2).
     -> (record, gate_context, problems). problems non-empty = refuse; record is None when step 1 refused."""
     import tiktok_finalize as F
+    from ad_standard_scope import requirement
+    if requirement(project, None)['required'] and (not project or not (Path(project) / 'docs/adboost/ad_nodes.json').is_file()):
+        return None, None, ['AD6_manifest_required: 六标准广告制作尚未登记；先按同包ad-boost盘点并补齐六类及新增UI，不写ZIP。']
     options = dict(options or {})
     try:
         kit = F.T.load_manifest()

@@ -2,6 +2,8 @@
 
 Native audit reuse is restricted to one writer invocation and re-reads all package,
 source-preparation, kit and process dependencies before returning its original result.
+AD6 has project/UI/runtime evidence with external references: its owning gate is
+re-executed on every reuse rather than approximating that dependency graph here.
 Persistence coverage is a pure file validator. The reward VM is only memoized when
 its real output says not_applicable; applicable probes have an unbound clock today.
 """
@@ -74,7 +76,7 @@ def native_identity(native, board, policy, context):
     import package_gates
     from package_gates import audio
     known = ('network', 'mission', 'startup', 'webp', 'ads_static', 'adapter_fix', 'kit_parts', 'tiktok_compat',
-             'portrait', 'secrets', 'audio', 'sound')
+             'portrait', 'secrets', 'audio', 'sound', 'ad_standard_six')
     if package_gates.GATE_MODULES != known:
         raise ValueError('unregistered Native gate dependencies; perform the actual audit')
     context = context or {}
@@ -102,6 +104,37 @@ def native_identity(native, board, policy, context):
             'tools': tools_state(), 'environment': environment()}
 
 
+def _refresh_ad_standard(result, native, board, policy, context):
+    """Refresh only AD6 through its real owner, including all external evidence.
+
+    A positive stored Native result has no old block messages. Retain unrelated
+    gate findings, but replace AD6 warnings/metadata and use current AD6 blocks.
+    Unknown summaries fall back to the full actual check instead of a cached pass.
+    """
+    import package_gates
+    old = result[2].get('package_gates')
+    if not isinstance(old, dict) or 'ad_standard_six' not in old.get('gates', []):
+        raise ValueError('cached Native result has no executed AD6 gate summary')
+    files = {name: (Path(native) / name).read_bytes() for name in result[1]}
+    fresh = package_gates.run(files, native, board, modules=('ad_standard_six',), policy=policy, context=context)
+    if 'ad_standard_six' not in fresh['gates']:
+        fresh['blocks'].append(package_gates.finding('GATE_NOT_RUN_ad_standard_six', 'block',
+                                                   'Current AD6 owning gate did not execute; cached Native checks cannot replace it.'))
+    def is_ad_standard(finding):
+        gate_id = finding.get('id', '')
+        return gate_id.startswith('AD6_') or gate_id.endswith('_ad_standard_six')
+    summary = dict(old)
+    for kind in ('blocks', 'warnings'):
+        summary[kind] = [row for row in old.get(kind, []) if not is_ad_standard(row)] + fresh[kind]
+    summary['gates'] = [name for name in old.get('gates', []) if name != 'ad_standard_six'] + fresh['gates']
+    summary['missing'] = [name for name in old.get('missing', []) if name != 'ad_standard_six'] + fresh['missing']
+    result[0].extend(package_gates.messages(fresh['blocks']))
+    result[2]['package_gates'] = package_gates.summary(summary)
+    result[2]['ad_standard_six_recheck'] = {'executed': True, 'passed': not fresh['blocks'],
+        'scope': 'Current owning AD6 gate only; unrelated Native gates reused under their original identity.'}
+    return result
+
+
 class NativeAuditMemo:
     """No process-global or persistent Native verdict. A changed hook invalidates reuse."""
     def __init__(self):
@@ -119,7 +152,14 @@ class NativeAuditMemo:
         key = digest(before)
         if self.key == key:
             result = copy.deepcopy(self.result)
+            try:
+                result = _refresh_ad_standard(result, native, board, policy, context)
+            except (OSError, ValueError, TypeError, KeyError):
+                return check(native, board, policy, context)
+            if native_identity(native, board, policy, context) != before:
+                raise ValueError('Native audit inputs changed during AD6 refresh; prepare the affected candidate again')
             result[2]['audit_reuse'] = dict(self.proof, reused=True,
+                ad_standard_six_rechecked=True,
                 current_binding_seconds=round(time.monotonic()-started, 6))
             return result
         executed = time.monotonic()

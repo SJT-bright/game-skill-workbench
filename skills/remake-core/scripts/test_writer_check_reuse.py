@@ -126,7 +126,10 @@ class WriterReuseTests(unittest.TestCase):
     def test_native_reuse_rechecks_full_identity_and_returns_copy(self):
         memo = reuse.NativeAuditMemo();state = {'native': 'old', 'source': 'old'}
         def check(*args): return [], {'game.js': 8}, {'ok': ['original']}
-        with patch.object(reuse, 'native_identity', side_effect=lambda *args: dict(state)):
+        # Isolate copy/identity semantics in this non-Native fixture. The tests
+        # below exercise the real AD6 owner independently with mutable evidence.
+        with patch.object(reuse, 'native_identity', side_effect=lambda *args: dict(state)), \
+                patch.object(reuse, '_refresh_ad_standard', side_effect=lambda result, *args: result):
             a = memo.run(None,None,None,None,check);a[2]['ok'].append('mutated caller')
             b = memo.run(None,None,None,None,check)
             self.assertTrue(b[2]['audit_reuse']['reused']);self.assertEqual(b[2]['ok'], ['original'])
@@ -157,6 +160,80 @@ class WriterReuseTests(unittest.TestCase):
             memo = reuse.NativeAuditMemo()
             for _ in range(2): memo.run(self.roots['native'], 'localize', 'new', {}, check)
             self.assertEqual(len(calls), 2)
+
+    def test_ad6_runtime_and_ui_changes_reject_cached_native_without_repeating_unrelated_gates(self):
+        import ad_nodes_gate
+        import package_gates
+        import tiktok_finalize
+        from test_ad_nodes_gate import SharedGate
+        for relative in ('qa/ad-nodes-runtime.json', 'docs/art/ad-production-context.json'):
+            with self.subTest(evidence=relative):
+                fixture = SharedGate()
+                fixture.setUp()
+                self.addCleanup(fixture.doCleanups)
+                native = fixture.native
+                context = {'project': str(fixture.project)}
+                files = {'game.js': (native / 'game.js').read_bytes()}
+                unrelated_calls = []
+                owner_calls = []
+                def actual_owner(project, **kwargs):
+                    owner_calls.append(1)
+                    # Real six-family gate/runtime/UI-binding owner; only the
+                    # existing fixture's visual callback is synthetic, never UI proof.
+                    return fixture.gate.check_project(project, art_stage_check=fixture.synthetic_ui_callback, **kwargs)
+                def full_check(root, board, policy, ctx):
+                    unrelated_calls.append(1)
+                    gates = package_gates.run(files, root, board, modules=('ad_standard_six',), policy=policy, context=ctx)
+                    return package_gates.messages(gates['blocks']), {'game.js': len(files['game.js'])}, \
+                        {'package_gates': package_gates.summary(gates)}
+                memo = reuse.NativeAuditMemo()
+                with patch.object(tiktok_finalize, 'check_source_record', return_value=[]), \
+                        patch.object(ad_nodes_gate, 'check_project', side_effect=actual_owner), \
+                        patch.object(reuse, 'tools_state', return_value={}), \
+                        patch.object(reuse, 'environment', return_value={}):
+                    first = memo.run(native, 'localize', 'new', context, full_check)
+                    self.assertEqual(first[0], [], first)
+                    second = memo.run(native, 'localize', 'new', context, full_check)
+                    self.assertTrue(second[2]['audit_reuse']['reused'])
+                    self.assertEqual(second[0], [])
+                    evidence = fixture.project / relative
+                    evidence.write_bytes(evidence.read_bytes() + b'\nchanged after Native cache\n')
+                    refused = memo.run(native, 'localize', 'new', context, full_check)
+                self.assertTrue(refused[0], refused)
+                self.assertIn('AD6_production_incomplete', ' '.join(refused[0]))
+                self.assertFalse(refused[2]['ad_standard_six_recheck']['passed'])
+                self.assertEqual(len(unrelated_calls), 1)
+                self.assertEqual(len(owner_calls), 3)
+
+    def test_retained_old_scope_keeps_native_cache_without_invoking_new_ui_owner(self):
+        import ad_standard_scope
+        import ad_nodes_gate
+        import package_gates
+        from package_gates import ad_standard_six
+        import tiktok_finalize
+        calls = []
+        context = {'project': str(self.project)}
+        files = {'main.js': (self.roots['native'] / 'main.js').read_bytes()}
+        def full_check(native, board, policy, ctx):
+            calls.append(1)
+            gates = package_gates.run(files, native, board, modules=('ad_standard_six',), policy=policy, context=ctx)
+            return package_gates.messages(gates['blocks']), {'main.js': len(files['main.js'])}, \
+                {'package_gates': package_gates.summary(gates)}
+        with patch.object(ad_standard_scope, 'requirement', return_value={'required': False, 'reason': 'synthetic prior maintenance contract'}), \
+                patch.object(ad_nodes_gate, 'check_project', side_effect=AssertionError('old scope must not invoke six-class UI')), \
+                patch.object(tiktok_finalize, 'check_source_record', return_value=[]), \
+                patch.object(reuse, 'tools_state', return_value={}), \
+                patch.object(reuse, 'environment', return_value={}):
+            memo = reuse.NativeAuditMemo()
+            first = memo.run(self.roots['native'], 'localize', 'new', context, full_check)
+            second = memo.run(self.roots['native'], 'localize', 'new', context, full_check)
+            with patch.object(ad_standard_six, 'check', None):
+                missing_owner = memo.run(self.roots['native'], 'localize', 'new', context, full_check)
+        self.assertEqual(first[0], [])
+        self.assertEqual(second[0], [])
+        self.assertTrue(second[2]['audit_reuse']['reused'])
+        self.assertIn('GATE_NOT_RUN_ad_standard_six', ' '.join(missing_owner[0]))
+        self.assertEqual(len(calls), 1)
 
     def test_native_hook_mutation_runs_check_again(self):
         memo = reuse.NativeAuditMemo();state = {'native': 'old'}

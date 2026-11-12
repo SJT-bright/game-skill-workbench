@@ -407,8 +407,24 @@ class TrialFirstThenFullChecks(unittest.TestCase):
             self.assertIn(phrase, st[3], phrase)
         self.assertIn('候选供内部测试', st[4])
         for phrase in ('完整与局部交付均用[同页试玩 H5](references/playtest-h5.md)',
-                       '只改一处就一条', '3–5 条以内', '测试包与同版可用的手机试玩链接同发'):
+                       '只改一处就一条', '3–5 条以内', '测试包、源码包、试玩链接、交接证据包四样同发'):
             self.assertIn(phrase, st[5], phrase)
+
+    def test_finished_game_hands_over_four_things_by_default(self):
+        """User 2026-11-12: test ZIP, source ZIP, play link and evidence ZIP together; the final command prepares them."""
+        _, st = self.stages()
+        self.assertIn('把它输出的 `reply_lines` 原样放进回复', st[5])
+        link = read('cocos-game-to-english', 'references', 'preview-handoff.md')
+        for phrase in ('自动备齐同版源码包和交接证据包', '测试包、源码包、试玩链接、交接证据包', '--skip-team-handoff'):
+            self.assertIn(phrase, link, phrase)
+        rule = read('remake-core', 'references', 'external-package-handoff.md')
+        for phrase in ('## 做完游戏默认交四样', 'handoff_preview.py --kind package', 'game_handoff.py deliver', '--skip-team-handoff'):
+            self.assertIn(phrase, rule, phrase)
+        entry = read('cocos-game-to-english', 'scripts', 'handoff_preview.py')
+        for phrase in ('game_handoff.deliver(delivery, project, source)', "'--skip-team-handoff'", "result['reply_lines'] = lines"):
+            self.assertIn(phrase, entry, phrase)
+        for name in ('cocos-game-check', 'remake-core'):
+            self.assertIn('默认', read(name, 'SKILL.md').split('**接收他人包／总管验收（2026-11-12）**')[1].split('\n')[0])
 
     def test_trial_improve_checks_affected_art_on_internal_candidates(self):
         _, st = self.stages()
@@ -426,7 +442,7 @@ class TrialFirstThenFullChecks(unittest.TestCase):
                        '确认同版 Web、Native 与 ZIP 的身份和包内资源完整性',
                        '视觉问题留在制作或定点修复节点', 'logic.json', 'TikTok 固定适配',
                        '正式写包按同一 ledger 只补缺项和真实受影响项，已通过项直接沿用',
-                       '重新复查最终 ZIP 的分包体积', '测试包与同版可用的手机试玩链接同发'):
+                       '重新复查最终 ZIP 的分包体积', '测试包、源码包、试玩链接、交接证据包四样同发'):
             self.assertIn(phrase, st[5], phrase)
         for obsolete in ('逐图复核沿用第 3 阶段的记录', 'image-review.json', 'art-receipt.json'):
             self.assertNotIn(obsolete, st[5])

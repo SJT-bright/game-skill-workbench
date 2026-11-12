@@ -711,7 +711,92 @@
         "quality_functions_unchanged": 15,
         "whole_game_time_saving_measured": false
       }
+    },
+    {
+      "id": "rule-wording-unify.20261112.1",
+      "installed_at": "2026-11-12T16:19:13.915290+00:00",
+      "scope": "Wording only: stale sentences in rule pages, checklists, trigger descriptions and rules-table title/note replaced by the newer rulings already in the pack (no-fail-state revive per 11.17.23; skin-trial timing and games without energy per user 2026-11-11 six standard). No number, params, revision, audit code, gate catalog or existing tool changed. One new check script added.",
+      "authority": "用户 2026-11-12 07:49 PT「你现在先去把skill的存在的问题给修复了吧」，08:16 PT「你这个对话允许你修改skill」。",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "a3ac7923165fc2a774251317fe98914303e278d7797b506f695d2835b38720ca",
+          "sha256": "8807099a963f70a0e066e7203c8a27c31c052d2d6a8d31c8608c8537add12fd7"
+        },
+        {
+          "path": "references/fixed-entries.md",
+          "before_sha256": "8ad6d8fc4d2260be07276b5cd4a19fcfffd876fc8e3a0c791107306ee13cc680",
+          "sha256": "4589dd360353d6b8349b74217a809de58ae847f4f2194391ed29a24a8151b95d"
+        },
+        {
+          "path": "scripts/test_retired_phrases.py",
+          "before_sha256": null,
+          "sha256": "c6d1c67ea398dd2001755be5e4dadb82b4f149f3fabef8cc9f970994458be30f"
+        }
+      ],
+      "verification": {
+        "replacements": 34,
+        "files_modified_in_pack": 15,
+        "files_added": 1,
+        "clean_apply_on_fresh_extract": true,
+        "relevant_selfcheck_files_passed_on_patched_tree": 8,
+        "entry_consistency_cases": 77,
+        "full_run_scripts_on_base": 531,
+        "passed_on_base": 524,
+        "passed_on_base_but_failed_after_patch": 0,
+        "new_check_hits_on_unpatched_base": 24,
+        "release_selfcheck_C1_C13_run": false,
+        "tried_on_a_game_project": false
+      },
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_规则口径统一_基于11.17.27/receipt.json"
+    },
+    {
+      "id": "storage-nonblocking-and-four-deliverables.20261112.1",
+      "installed_at": "2026-11-12T17:43:51.594943+00:00",
+      "scope": "Storage: the platform-kit storage guard and SaveStore no longer stop or lock a game on an unreadable value (behaviour of the parts in games up to 2026-11-10 restored, one console line per odd key; typed recovery kept as an optional helper that never ends with an error). STORAGE-01 gate: an unreadable legacy value is proved by a start with the fallback value, first-release games by two whole-game runs; receipts issued by the reviewed earlier texts stay valid. Rule pages rewritten accordingly. Hand-over: the final package hand-off prepares source ZIP + evidence ZIP by default (game_handoff.deliver) and lists the four deliverables. Platform-macro page: where the macro value comes from. Known-issues catalog: description-only (STORAGE-01 text, English notes of ECON-01 / ECON-02) with the prior catalog hash whitelisted. No ad, art, economy number, level or package-size rule changed.",
+      "authority": "用户 2026-11-12：「你这个对话允许你修改skill」；「你也要读取这个对话的历史，需要让他的这部分内容由你去合理的设计，更新skill」；09:32 PT「这个codex的对话也需要，一起检查了一起修改，这几个一起」。",
+      "stacked_on": "rule-wording-unify.20261112.1 (补丁_规则口径统一_基于11.17.27)",
+      "files": [
+        {
+          "path": "scripts/handoff_preview.py",
+          "before_sha256": "a0eb07e650febbd5b6d5217173523224f8eab1aa7d9692f5571e526efea3a96c",
+          "sha256": "b03ec0471a9d994c6fd7fbc60bb8f5bfa745b3b42f56c3305133ba03fd76a526"
+        },
+        {
+          "path": "SKILL.md",
+          "before_sha256": "8807099a963f70a0e066e7203c8a27c31c052d2d6a8d31c8608c8537add12fd7",
+          "sha256": "5fe6dc523413fe1a5c02ef93bde4f8b11ceae024e30b4d6ac8f4ff031c2834f2"
+        },
+        {
+          "path": "references/preview-handoff.md",
+          "before_sha256": "ee10450eb769b4da0b625095bf1dec8e2f76c23f33c7ff91882602d3e148d02b",
+          "sha256": "c06867f92351d95fc5b6d12a0b4566929233b592d6b57c375d34bcd79baf970b"
+        },
+        {
+          "path": "scripts/test_entry_consistency.py",
+          "before_sha256": "dcc8c5423aafee12dcc9a8a4288f7837d4d7e8b7912f1090aad5d1de3aa462e3",
+          "sha256": "d2e7e3c2ece628514cb4071727dcc713bdb44fd15db764fed0a7c8c41f64c2dd"
+        },
+        {
+          "path": "scripts/test_retired_phrases.py",
+          "before_sha256": "c6d1c67ea398dd2001755be5e4dadb82b4f149f3fabef8cc9f970994458be30f",
+          "sha256": "6fedb551e868ea3c0b506b5fe53956b8803bd5aee009977cbf469571eb7a528d"
+        },
+        {
+          "path": "scripts/test_serve_preview_gate.py",
+          "before_sha256": "e939cf051af2cbf3f7e85c5c4b63fbc4e8bdf31309a335c5c9d8d8e719ce8d7e",
+          "sha256": "d98eb910a386cff5e5d2738de14702fd5daf066e6925fa6c05c9ebd57e5a1e48"
+        }
+      ],
+      "verification": {
+        "fresh_extract": "11.17.27 ZIP + patch 1 + this patch == work tree, byte for byte (1785 files)",
+        "full_suite": "see 底本校验与测试记录.json verification.full_suite: the scripts not passing after this patch are the same ones as on the untouched 11.17.27 base",
+        "kit": "node tests/run-all.js: all suites pass (46; base 43)",
+        "real_receipts": "4 real STORAGE-01 reports on this machine judged identically by the base gate and the patched gate",
+        "not_verified": "no real-phone run; kit parts stay 待真机复测"
+      },
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_存档不挡启动与四样交付_基于11.17.27/receipt.json"
     }
   ],
-  "previous_local_provenance_sha256": "4845301dfe5aaad58822de632eb0fb4056363c6a110f8326c5a6d4230befdcd2"
+  "previous_local_provenance_sha256": "bb2c5faf9fd85a586264042382ed0d65a7807f8f7363f3eb8b34598bb9bc6109"
 }

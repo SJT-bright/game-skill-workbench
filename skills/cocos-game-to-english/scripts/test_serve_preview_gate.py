@@ -608,18 +608,50 @@ class UserHandoff(PreviewOnlyCase):
                                                        H.startup_renderer.digest(H.startup_renderer.tree(native))},
                              'preview': {'url': url, 'web_tree_sha256': H.tree_sha(web), 'slot_id': slot['id']}}
                     delivery.write_text(json.dumps(proof))
-                    result = H.handoff(project, url, 'package', plan, delivery)
+                    # 2026-11-12: the final hand-over is four things together. The source ZIP and the evidence ZIP are
+                    # made by remake-core game_handoff.deliver (its own tests use real files); here: it is called by
+                    # default, a failure records nothing and opens nothing, and the reply lists all four.
+                    import game_handoff
+                    made = {'status': 'team_handoff_ready', 'test_zip': str(archive), 'source_zip': str(Path(td) / 'Final_源码.zip'),
+                            'evidence_zip': str(Path(td) / 'Final_交接证据.zip'),
+                            'reply_lines': ['测试包：' + str(archive), '源码包：' + str(Path(td) / 'Final_源码.zip'),
+                                            '交接证据包：' + str(Path(td) / 'Final_交接证据.zip')]}
+                    events_before = [event['ev'] for event in timing_events(project)]
+                    with patch.object(game_handoff, 'deliver', side_effect=ValueError('工程里有账号、密码或密钥')) as deliver:
+                        with self.assertRaisesRegex(ValueError, '最终交接未完成.*账号、密码或密钥'):
+                            H.handoff(project, url, 'package', plan, delivery)
+                    self.assertEqual(deliver.call_args.args, (delivery, project.resolve(), None))
+                    self.assertEqual(launch.call_count, 1, 'Chrome is not opened when the four things are not ready')
+                    self.assertEqual([event['ev'] for event in timing_events(project)], events_before, 'and nothing is recorded')
+                    with patch.object(game_handoff, 'deliver', return_value=made) as deliver:
+                        result = H.handoff(project, url, 'package', plan, delivery)
+                    self.assertEqual(deliver.call_count, 1)
                     self.assertEqual(result['label'], '测试包同版试玩')
                     self.assertEqual(launch.call_count, 2)
                     self.assertEqual(result['playtest_url'], url + '__playtest/')
                     self.assertIn('核对本次实际 ZIP', result['stage_report'])
+                    self.assertEqual(result['team_handoff'], made)
+                    self.assertEqual([line.split('：')[0] for line in result['reply_lines'][:4]], ['测试包', '源码包', '试玩链接', '交接证据包'])
+                    self.assertEqual(result['reply_lines'][2], '试玩链接：' + url + '__playtest/')
+                    self.assertIn('四样', result['reply_lines'][4])
+                    # only an explicit, stated reason leaves the source ZIP and the evidence ZIP out
+                    with patch.object(game_handoff, 'deliver', side_effect=AssertionError('must not be called')):
+                        with self.assertRaisesRegex(ValueError, '写明原因'):
+                            H.handoff(project, url, 'package', plan, delivery, skip_team_handoff=' ')
+                        result = H.handoff(project, url, 'package', plan, delivery, no_browser=True,
+                                           skip_team_handoff='用户原话：这次只要测试包，源码先不用')
+                    self.assertEqual(result['team_handoff']['status'], 'team_handoff_skipped')
+                    self.assertEqual(result['reply_lines'], ['测试包：' + str(archive), '试玩链接：' + url + '__playtest/',
+                                                              '这次没有附源码包和交接证据包：用户原话：这次只要测试包，源码先不用'])
+                    self.assertEqual(launch.call_count, 2)
 
                     (native / 'game.js').write_text('changed after the final check')
-                    with self.assertRaisesRegex(ValueError, 'Native.*变化'):
-                        H.handoff(project, url, 'package', plan, delivery)
-                    archive.write_bytes(b'changed ZIP')
-                    with self.assertRaisesRegex(ValueError, 'ZIP 已变化'):
-                        H.handoff(project, url, 'package', plan, delivery)
+                    with patch.object(game_handoff, 'deliver', side_effect=AssertionError('checked before the team hand-off')):
+                        with self.assertRaisesRegex(ValueError, 'Native.*变化'):
+                            H.handoff(project, url, 'package', plan, delivery)
+                        archive.write_bytes(b'changed ZIP')
+                        with self.assertRaisesRegex(ValueError, 'ZIP 已变化'):
+                            H.handoff(project, url, 'package', plan, delivery)
                     self.assertEqual(launch.call_count, 2)
             finally:
                 server.shutdown()

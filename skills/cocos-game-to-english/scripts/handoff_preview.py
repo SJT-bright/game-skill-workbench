@@ -3,6 +3,14 @@
 
 The server is already running. This entry only reads existing evidence and the
 live phone shell. It does not build, recapture a page, or run a regression.
+
+Final test-package hand-off (--kind package), user 2026-11-12: a finished game is
+handed over as four things together: test ZIP, editable source ZIP, same-build
+play link and the evidence ZIP. This entry makes the source ZIP when none exists
+and exports the evidence ZIP (remake-core game_handoff.deliver) before it records
+the stage and opens Chrome, and lists all four in reply_lines. When that step
+fails nothing is recorded and Chrome is not opened. --skip-team-handoff "<reason>"
+is for a hand-over the user explicitly limited to the test package.
 """
 import argparse
 import http.client
@@ -135,7 +143,21 @@ def finish_stage(project, kind, trial_identity):
     return report
 
 
-def handoff(project, url, kind, plan, delivery=None, *, no_browser=False):
+def team_handoff(project, delivery, source, skip_reason):
+    """Source ZIP + evidence ZIP for the final hand-over, or the stated reason for leaving them out."""
+    if skip_reason is not None:
+        reason = str(skip_reason).strip()
+        if len(reason) < 4:
+            raise ValueError('不附源码包和交接证据包时要写明原因（用户原话或具体情况）。')
+        return {'status': 'team_handoff_skipped', 'reason': reason}
+    import game_handoff
+    try:
+        return game_handoff.deliver(delivery, project, source)
+    except (OSError, KeyError, TypeError, ValueError) as error:
+        raise ValueError('源码包和交接证据包没有备齐，最终交接未完成：%s' % error)
+
+
+def handoff(project, url, kind, plan, delivery=None, *, no_browser=False, source=None, skip_team_handoff=None):
     project = project.resolve()
     matches = [s for s in browser_slots.slots() if s.get('kind') == 'preview'
                and s.get('url') == url and s.get('project') == str(project)
@@ -165,11 +187,14 @@ def handoff(project, url, kind, plan, delivery=None, *, no_browser=False):
         web_sha, package = packaged_trial(slot, url, delivery)
         plan['mode'] = 'package'
         label = '测试包同版试玩'
+    team = None
     if plan['web_tree_sha256'] != web_sha:
         raise ValueError('试玩清单与当前候选不是同一 Web 构建。')
     preview = verify_preview(url, web_sha, require_ad_simulator=plan['require_ad_simulator'])
     if preview['slot_id'] != slot['id']:
         raise ValueError('试玩服务在核对过程中被替换。')
+    if kind == 'package':
+        team = team_handoff(project, delivery, source, skip_team_handoff)
     observation = None
     if timeline.cur and timeline.cur['n'] == phase:
         try:
@@ -197,9 +222,19 @@ def handoff(project, url, kind, plan, delivery=None, *, no_browser=False):
         total_report = ''
     browser = preview_chrome.browser_request(checklist, explicit_open=True, no_browser=no_browser,
                                              window_size=(1180, 900))
-    return {'status': 'handoff_ready', 'kind': kind, 'label': label, 'playtest_url': checklist,
-            'markdown_link': f'[{label}与清单]({checklist})', 'web_tree_sha256': web_sha,
-            'stage_report': stage_report, 'timing_report': total_report, 'browser': browser}
+    result = {'status': 'handoff_ready', 'kind': kind, 'label': label, 'playtest_url': checklist,
+              'markdown_link': f'[{label}与清单]({checklist})', 'web_tree_sha256': web_sha,
+              'stage_report': stage_report, 'timing_report': total_report, 'browser': browser}
+    if team is not None:
+        result['team_handoff'] = team
+        if team['status'] == 'team_handoff_ready':
+            lines = [team['reply_lines'][0], team['reply_lines'][1], '试玩链接：' + checklist] + team['reply_lines'][2:]
+            lines.append('以上四样在同一条回复里一起给；试玩链接是本机地址，换电脑后在接收的电脑上重新起同版试玩。')
+        else:
+            lines = ['测试包：' + str(Path(required_text(read_object(delivery, '测试包交付回执'), 'archive', '测试包交付回执')).resolve()),
+                     '试玩链接：' + checklist, '这次没有附源码包和交接证据包：' + team['reason']]
+        result['reply_lines'] = lines
+    return result
 
 
 def main(argv=None):
@@ -210,13 +245,18 @@ def main(argv=None):
     parser.add_argument('--plan', type=Path, required=True, help='current playtest checklist plan JSON')
     parser.add_argument('--delivery-record', type=Path, help='required for package handoff')
     parser.add_argument('--no-browser', action='store_true', help='reuse a verified checklist window without requesting another Chrome window')
+    parser.add_argument('--source', type=Path, help='package hand-off: an existing source ZIP made with make_source_zip.py (default: made here)')
+    parser.add_argument('--skip-team-handoff', metavar='REASON', help='package hand-off: leave out the source ZIP and the evidence ZIP; '
+                        'give the reason (the user limited this hand-over to the test package)')
     args = parser.parse_args(argv)
     if (args.kind == 'package') != (args.delivery_record is not None):
         parser.error('只有最终测试包交接使用且必须提供 --delivery-record。')
+    if args.kind != 'package' and (args.source is not None or args.skip_team_handoff is not None):
+        parser.error('--source 和 --skip-team-handoff 只用于最终测试包交接。')
     try:
         plan = read_object(args.plan, '试玩计划')
         result = handoff(args.project, args.preview_url, args.kind, plan, args.delivery_record,
-                         no_browser=args.no_browser)
+                         no_browser=args.no_browser, source=args.source, skip_team_handoff=args.skip_team_handoff)
     except (OSError, KeyError, TypeError, ValueError, http.client.HTTPException) as error:
         print(json.dumps(failure(error, stage='preview'), ensure_ascii=False), file=sys.stderr)
         return 1

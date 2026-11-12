@@ -1195,9 +1195,9 @@
       "id": "STORAGE-01",
       "feature": "save",
       "title": "最终 Native 奖励与存档读写契约",
-      "symptom": "Tower Heroes 导出包的 Web 缺键返回 null，Native 可返回空字符串；奖励读取误判损坏，Retry 在主页和关卡详情重复遮挡。此前只测 Web 与手填存档回归，未把实际 Native 账本和适配器负例纳入出包硬门禁。",
-      "steps": "盘点全部持久化域及可达入口；用同一项目 runner 加载已知故障反例与最终 Native bundle/adapter，注入缺键 null/undefined/空字符串、字符串与对象返回、坏值、读写异常、回读歧义和 pending 重开。保存结构化原始结果与 runner、bundle、adapter SHA，执行 audit_native_storage_contract.py；同时真实触摸主页、地图、关卡详情的重开与 Retry。已知故障反例空字符串必须失败，修复版全部场景通过。",
-      "expected": "STORAGE-01 自动报告 policy_version=1、23 个当前场景及 1 个原版负例全通过，报告与最终 Native 树、当前检查表绑定；原始 runner/输入/结果文件哈希可复核。任一场景缺失、已知故障反例负例未复现、最终 Native 文件变更或报告过期，写 ZIP 前拒绝。真实 TikTok 手机和广告仍分别验。 v2 may explicitly mark only source-and-GUI-proven absent map/details routes not_applicable; negative historical_release or exact labeled controlled_legacy_fixture must reproduce the same named defect with the same runner. Final bundle and all existing routes remain required.",
+      "symptom": "跨平台存储桥的缺键值和旧类型值可能与浏览器不同；同版新档重开不能覆盖旧存档冷升级。已有但不可读的数据被当空档，可能导致初始化卡加载、错误重置或奖励异常。",
+      "steps": "按 references/cross-platform-runtime-contract.md 与 storage-upgrade-trace-v3.md 盘点实际存储编码，使用同一项目runner核最终Native/adapter、旧档入口前fixture、新玩家、typed恢复、无法恢复保档与可见出口、真实触控进入玩法及对应反例；原23项有效证据按现有增量账本复用，仅执行新增或失效项。首次审计重放并生成核准回执；三个写包/交付入口通过audit_final_storage.py核原始证据、依赖和回执，显式合同native_storage_report或既有STORAGE-01 auto_reports引用，不在每次调用重新启动长矩阵。",
+      "expected": "当前STORAGE-01 v3核准报告与实际Native、runner、原始观察及当前检查表绑定；只确认适用的真实存储机制，非数字存档以schema和源码读写清单举证，不硬造数字故障。原缺键负例和适用升级负例保留；缺项、负例未复现、原始文件/依赖变化或回执失配时拒绝，按具体缺口修复，不自动扩大全量。Android、iOS真实TikTok、真实IAA及平台上传接受另列。",
       "phase": "pre_scan",
       "always_applicable": true,
       "required_observations": [

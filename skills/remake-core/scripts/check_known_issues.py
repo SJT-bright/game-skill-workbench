@@ -22,6 +22,8 @@ PRE_MANUAL_VISUAL_CATALOGS = (
     PRE_MANUAL_VISUAL_CATALOG,
     'bd1142eae920c802625caeacc22c82477d78024003e0d63da6b6164d2e771adc',
 )
+# STORAGE-01 description-only catalog update retains all other historical rows.
+PRE_STORAGE_UPGRADE_CATALOG = 'cc0e29cf7462b212a2cbd44e8c590bf5933f110e62ad9ceb050f1075f63d48d5'
 PRE_DIRECT_GROWTH_CATALOG = 'cdf079ed8ebea18acce0bb552e20b21962fa34a9bf73c64cefe1685c96613b02'
 # Two separate work boards (remake-core/references/two-boards.md, user 2026-10-21).
 BOARDS = ('localize', 'remake')
@@ -284,14 +286,14 @@ def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD,
                 continue  # F01-F20 alone, stale cases or changed raw evidence cannot pass LOGIC-01.
             if tool == 'audit_native_storage_contract':
                 try:
-                    from audit_native_storage_contract import CASES, POLICY_VERSION, validate as validate_storage, replay as replay_storage
+                    from audit_native_storage_contract import CASES, POLICY_VERSION, validate as validate_storage, validate_execution_receipt
                     trace_path = Path(report['trace'])
                     native_path = Path(report['native'])
                     if (report.get('policy_version') != POLICY_VERSION or load(trace_path).get('schema') != 'native_storage_trace.v3' or report.get('required_cases') != list(CASES) or
                             sha(trace_path.read_bytes()) != report.get('trace_sha256') or
                             tree_sha(native_path) != expected_binding['native_tree_sha256'] or
                             validate_storage(load(trace_path), native_path, expected_binding) or
-                            replay_storage(load(trace_path))):
+                            validate_execution_receipt(report, load(trace_path))):
                         continue
                 except (KeyError, ValueError, TypeError, OSError):
                     continue
@@ -520,7 +522,7 @@ def audit(args):
                       ' (user chose 按重塑画风重做: make a new review with --art-style remake)')
     expected_binding = binding(args)
     catalog_digest = review.get('catalog_sha256')
-    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_DIRECT_GROWTH_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
+    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_STORAGE_UPGRADE_CATALOG, PRE_DIRECT_GROWTH_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
         errors.append('Checklist catalog changed; review added/changed checks')
     if review.get('binding') != expected_binding:
         errors.append('Source/Native/Web/build tag differs from the reviewed inputs')

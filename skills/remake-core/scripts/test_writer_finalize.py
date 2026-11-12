@@ -585,7 +585,8 @@ class Delivery(KitInSync):
         contract = self.d / 'startup-contract.json'
         contract.write_text(json.dumps({'binding': {'web_tree_sha256': 'a' * 64}}))
         preview = {'markdown_link': '[fixture](http://127.0.0.1:1/)', 'passed': True}
-        with mock.patch.object(D, 'check', return_value=result), \
+        with mock.patch('audit_final_storage.audit_final_storage', return_value={'id': 'storage.native.contract', 'action': 'rejudged', 'status': 'synthetic_unrelated_boundary'}), \
+                mock.patch.object(D, 'check', return_value=result), \
                 mock.patch('tiktok_cli_gate.verify', return_value={
                     'passed': True, 'errors': [], 'version': 'fixture-cli'}) as cli, \
                 mock.patch.object(D.package_obligations, 'verify', return_value={'passed': True}), \

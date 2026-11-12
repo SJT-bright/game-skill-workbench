@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 import sys
 import check_known_issues as gate
+import audit_native_storage_contract as storage_contract  # pin this installation before helper imports adjust sys.path
 import logic_regressions as logic_reg
 
 
@@ -84,27 +85,68 @@ def main():
                      {'mode': 'levels'} if tool == 'audit_level_plan' else
                      {'stage': 'runtime'} if tool in {'audit_page_readiness', 'audit_loading_recovery'} else {})
             if tool == 'audit_native_storage_contract':
-                from audit_native_storage_contract import CASES, digest
+                from audit_native_storage_contract import CASES, digest, approve_runtime
+                from test_native_storage_upgrade_contract import observations
+                import maintenance_scope
+                # Explicit orchestration boundary: this synthetic catalog fixture
+                # has no scenes. Only its own route ref is mocked; the production
+                # storage validator, runner replay and approval receipt are real.
+                route_file = root / 'synthetic-storage-routes.json'
+                route_file.write_text(json.dumps({'unit_boundary': 'synthetic source/UI inventory only'}))
+                route_ref = {'path': str(route_file), 'sha256': digest(route_file)}
+                real_inventory = maintenance_scope.source_inventory
+                def synthetic_storage_routes(ref, *pargs, **kwargs):
+                    if ref == route_ref:
+                        return {'routes': {name: {'present': True} for name in ('home', 'map', 'stage_details')}}
+                    return real_inventory(ref, *pargs, **kwargs)
+                route_boundary = patch.object(maintenance_scope, 'source_inventory', side_effect=synthetic_storage_routes)
+                route_boundary.start(); atexit.register(route_boundary.stop)
+                current_result = {'cases': {k: 'pass' for k in CASES}, 'upgrade_observations': observations()}
+                old_result = {'cases': {k: ('fail' if k == 'missing_empty_string' else 'pass') for k in CASES}}
+                upgrade_result = deepcopy(current_result)
+                upgrade_result['cases']['legacy_numeric_nonbinary_typed'] = 'fail'
+                upgrade_result['upgrade_observations']['legacy_numeric_nonbinary_typed'].update(
+                    storage_after={'ProjectSpecific.Number': '0', 'unrelated': 'keep'},
+                    failure_kind='legacy_numeric_bridge', first_exception='synthetic type mismatch', loading_overlay_visible=True)
                 runner = root / 'synthetic-storage-runner.py'
+                fixture_results = {'current': current_result, 'negative': old_result, 'upgrade': upgrade_result}
                 runner.write_text('import argparse,hashlib,json\n'
                     'p=argparse.ArgumentParser();p.add_argument("--bundle");p.add_argument("--adapter");a=p.parse_args()\n'
                     'h=lambda q:hashlib.sha256(open(q,"rb").read()).hexdigest()\n'
-                    'cases={k:"pass" for k in ' + repr(CASES) + '} if "Native" in a.bundle else {"missing_empty_string":"fail"}\n'
-                    'print(json.dumps({"runner_sha256":h(__file__),"bundle_sha256":h(a.bundle),"adapter_sha256":h(a.adapter),"cases":cases}))\n')
-                negative = root / 'negative-storage.js'; negative.write_text('// known bad synthetic control')
-                def execution(bundle, label):
+                    'fixtures=json.loads(' + repr(json.dumps(fixture_results)) + ')\n'
+                    'text=open(a.bundle).read();kind="upgrade" if "numeric-bridge-negative" in text else "negative" if "empty-string-negative" in text else "current"\n'
+                    'r=fixtures[kind];r.update(runner_sha256=h(__file__),bundle_sha256=h(a.bundle),adapter_sha256=h(a.adapter));print(json.dumps(r))\n')
+                base_bundle = native / 'game.js'
+                base_line = '// Synthetic Native'
+                negative = root / 'negative-storage.js'
+                negative_line = '// Synthetic Native empty-string-negative'
+                negative.write_text(base_bundle.read_text().replace(base_line, negative_line, 1))
+                upgrade_negative = root / 'upgrade-negative-storage.js'
+                upgrade_line = '// Synthetic Native numeric-bridge-negative'
+                upgrade_negative.write_text(base_bundle.read_text().replace(base_line, upgrade_line, 1))
+                def execution(bundle, label, changed_line=None):
                     raw = root / (label + '-storage.json')
                     run = subprocess.run([sys.executable, str(runner), '--bundle', str(bundle), '--adapter', str(bundle)], capture_output=True, text=True, check=True)
                     raw.write_text(run.stdout)
-                    return {'bundle': str(bundle), 'bundle_sha256': digest(bundle), 'adapter': str(bundle),
-                            'adapter_sha256': digest(bundle), 'raw_report': str(raw), 'raw_sha256': digest(raw)}
-                trace = {'schema': 'native_storage_trace.v1', 'binding': binding,
-                         'execution': {'runner': str(runner), 'runner_sha256': digest(runner),
+                    record = {'bundle': str(bundle), 'bundle_sha256': digest(bundle), 'adapter': str(bundle),
+                              'adapter_sha256': digest(bundle), 'raw_report': str(raw), 'raw_sha256': digest(raw)}
+                    if changed_line:
+                        record.update(kind='controlled_legacy_fixture', provenance={'path': str(artifact), 'sha256': digest(artifact)},
+                                      base_bundle={'path': str(base_bundle), 'sha256': digest(base_bundle)},
+                                      mechanism='Synthetic orchestration defect selected by an exact one-line fixture mutation',
+                                      patch={'before': base_line, 'after': changed_line})
+                    return record
+                trace = {'schema': 'native_storage_trace.v3', 'binding': binding, 'project': str(project),
+                         'trace_base': str(root), 'route_inventory': route_ref,
+                         'execution': {'runner': str(runner), 'runner_sha256': digest(runner), 'dependencies': [],
                                        'command': [sys.executable, str(runner), '--bundle', '{bundle}', '--adapter', '{adapter}']},
-                         'current': execution(native / 'game.js', 'current'), 'negative_control': execution(negative, 'negative')}
+                         'current': execution(base_bundle, 'current'),
+                         'negative_control': execution(negative, 'negative', negative_line),
+                         'upgrade_negative_control': execution(upgrade_negative, 'upgrade', upgrade_line)}
                 trace_file = root / 'synthetic-storage-trace.json'; trace_file.write_text(json.dumps(trace))
-                extra = {'policy_version': 1, 'required_cases': list(CASES), 'trace': str(trace_file),
-                         'trace_sha256': digest(trace_file), 'native': str(native)}
+                extra = approve_runtime(trace, native, binding)
+                extra.update(trace=str(trace_file), trace_sha256=digest(trace_file), native=str(native))
+                assert extra.get('passed') is True, extra
             if tool == 'test_writer_refusal':
                 extra = {'checks': [{'id': cid, 'passed': True} for cid in
                                    ('missing_review', 'failed_check', 'stale_binding', 'missing_storage', 'normal')]}
@@ -223,6 +265,11 @@ def main():
             finally:
                 records()
         probe('complete synthetic schema accepted (not a game pass)', lambda d: None, 'passed')
+        probe('description-only prior catalog retains unrelated valid evidence', lambda d: d.update(catalog_sha256=gate.PRE_STORAGE_UPGRADE_CATALOG), 'passed')
+        def old_storage_cannot_hide_behind_prior_catalog(d):
+            d['catalog_sha256']=gate.PRE_STORAGE_UPGRADE_CATALOG
+            d['checks']['STORAGE-01']['auto_reports']=[]
+        probe('prior catalog still requires current storage approval', old_storage_cannot_hide_behind_prior_catalog)
         # User 2026-10-24: design and art rows are checked at their own stage (design_check.py / art_check.py).
         gated = [x['id'] for x in catalog['items'] if x.get('gate') in ('design', 'art')]
         results.append({'name': 'design/art rows are the expected earlier-stage checks',

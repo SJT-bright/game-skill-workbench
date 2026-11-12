@@ -8,10 +8,10 @@ var variants = [
   {name: 'false_read_returned', before: "if (value === '' && present === true) return '';", after: "if (value === false) return false;\n      if (value === '' && present === true) return '';"},
   {name: 'unknown_value_reset', before: 'throw unreadable(key);', after: 'return null;'},
   {name: 'boolean_true_read_returned', before: "if (typeof value === 'number' && isFinite(value)) return String(value);", after: "if (typeof value === 'number' && isFinite(value)) return String(value);\n      if (value === true) return value;"},
-  {name: 'throw_not_caught', before: "if (listed(key) === false) { note(key, 'throw_absent'); return null; }", after: ''},
+  {name: 'throw_not_caught', before: "if (listed(key, storage) === false) { note(key, 'throw_absent'); return null; }", after: ''},
   {name: 'object_read_stringified', before: "if (value && typeof value === 'object') return value;", after: "if (value && typeof value === 'object') return JSON.stringify(value);"},
   {name: 'installs_twice', before: '|| storage.getItem.__tiktokKitStorageGuard) return false;', after: ') return false;'},
-  {name: 'savestore_key_guarded', before: 'if (SAVESTORE_KEY.test(String(key))) return read.call(storage, key);', after: ''}
+  {name: 'savestore_key_guarded', before: 'if (SAVESTORE_KEY.test(String(key))) return value;', after: ''}
 ];
 var results = variants.map(function (v) {
   var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'storage-neg-'));

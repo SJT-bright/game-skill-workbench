@@ -129,9 +129,26 @@ def audit_cocos2_resources(files, settings, engine_subpackages, subpackage_roots
     return errors
 
 
+def audit_adapter_preconditions(files):
+    """Reject known unsafe Cocos2 startup assumptions before accepting an artifact.
+
+    Writers normalize these forms before this read-only audit. Legacy or renamed
+    candidates do not turn the three known defects into verified compatibility.
+    This is a static prerequisite, not an iOS/device or first-frame verdict.
+    """
+    from package_gates.adapter_fix import detect
+    state = detect(files)
+    old = sorted(name for name, status in state.get('rules', {}).items() if status == 'old')
+    return {**state, 'passed': not old, 'known_unsafe': old,
+            'errors': ['Cocos2 startup adapter normalization missing: ' + ', '.join(old)] if old else [],
+            'boundary': 'Known adapter prerequisites only; actual first-frame and device failure remain separate.'}
+
+
 def audit_files(files):
     """files is a ZIP-root-relative {path: bytes}; no filesystem mutation."""
     errors, warnings, edges, dynamic = [], [], [], []
+    adapter_preconditions = audit_adapter_preconditions(files)
+    errors.extend(adapter_preconditions['errors'])
     parse_stats = {"cache_hits":0,"executed":0}
     signature = None
     entry_protocols = set()
@@ -447,9 +464,9 @@ def audit_files(files):
                       'cocos-js/*.js was found), so SDK screenX/screenY cannot be proven to reach the engine')
     if dynamic:
         warnings.append('dynamic require sites are not proven by static closure; execute actual Native startup')
-    return {'tool': 'audit_upload_startup', 'policy_version': 1, 'passed': not errors,
+    return {'tool': 'audit_upload_startup', 'policy_version': 2, 'passed': not errors,
             'errors': sorted(set(errors)), 'warnings': sorted(set(warnings)),
             'reachable_files': sorted(visited), 'require_edges': edges, 'dynamic_requires': dynamic,
-            'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
+            'adapter_preconditions': adapter_preconditions, 'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
             'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch/resources registration and provable startup loads, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes',
             'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'account/region/network', 'platform acceptance']}

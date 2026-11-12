@@ -25,4 +25,21 @@ function scan(source){
   return {status:'scanned',risks};
 }
 module.exports={scan};
-if(require.main===module){const data=JSON.parse(fs.readFileSync(0,'utf8'));console.log(JSON.stringify(data.sources.map(scan)));}
+if (require.main === module) {
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log('Usage: node scan_modal_ownership.cjs < input.json\nInput: {"sources":["JavaScript or TypeScript source"]}. Token risk inventory only; no runtime verdict.');
+  } else {
+    try {
+      if (process.argv.length !== 2) throw new Error('Unexpected arguments; use --help');
+      const input = fs.readFileSync(0, 'utf8');
+      if (!input.trim()) throw new Error('No input; expected a JSON sources array on stdin');
+      const data = JSON.parse(input);
+      if (!data || !Array.isArray(data.sources) || !data.sources.length || !data.sources.every(source => typeof source === 'string'))
+        throw new Error('sources must be a non-empty array of source strings');
+      console.log(JSON.stringify(data.sources.map(scan)));
+    } catch (error) {
+      console.log(JSON.stringify({status:'not_executed',reason:error.message,risks:[]}));
+      process.exitCode = 2;
+    }
+  }
+}

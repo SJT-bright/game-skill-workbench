@@ -11,7 +11,7 @@ function setUp(launch, current = launch, storage = new Map()) {
   const events = new Set();
   const shown = [];
   const saved = new SaveStore({coins: 0}, {key: 'entry', login: false,
-    storage: {getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value)}});
+    storage: {get length() { return storage.size; }, key: index => [...storage.keys()][index] ?? null, getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value)}});
   assert(saved.load().ok);
   const sdk = {getLaunchOptionsSync: () => ({scene: launch}), getEnterOptionsSync: () => ({scene: current}),
     onShow: fn => events.add(fn), offShow: fn => events.delete(fn), canIUse: () => undefined};

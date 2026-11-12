@@ -43,6 +43,16 @@ class KitModuleVersions(unittest.TestCase):
     def ids(self, findings, level=None):
         return sorted((f['id'], f['evidence']['module']) for f in findings if level is None or f['level'] == level)
 
+    def test_short_literals_do_not_shift_following_string_tokens(self):
+        source = 'var a="";var b="x";var c=":";var old=":corrupt-backup";var state="recovered";'
+        expected = {'s::corrupt-backup', 's:recovered'}
+        self.assertEqual({value for value in K.tokens(source) if value.startswith('s:')}, expected)
+        self.assertEqual(K.tokens(source), K.tokens(source.replace(';', ';\n')))
+
+    def test_long_literal_is_consumed_without_hiding_next_marker(self):
+        source = 'var short="";var long="' + 'z' * 250 + '";var old="recovered";'
+        self.assertEqual({value for value in K.tokens(source) if value.startswith('s:')}, {'s:recovered'})
+
     def test_fingerprints_match_the_manifest(self):
         fps = K.load()
         self.assertEqual(K.stale_modules(fps, self.man), [])

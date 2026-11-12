@@ -5,7 +5,7 @@ var assert = require('assert');
 var path = require('path');
 var base = process.env.KIT_DIR || path.join(__dirname, '..', 'assets', 'tiktok-platform');
 var config = require(path.join(base, 'PlatformConfig.js'));
-var SaveStore = require(path.join(base, 'SaveStore.js'));
+var SaveStore = require(process.env.SAVE_STORE_FILE || path.join(base, 'SaveStore.js'));
 var MissionFlow = require(path.join(base, 'MissionFlow.js'));
 var Mission = require(path.join(base, 'TikTokMissionService.js'));
 
@@ -25,8 +25,10 @@ function memoryStorage() {
       s.writes++;
       map[k] = s.transform ? s.transform(String(v)) : String(v);
     },
+    key: function(i){return Object.keys(map)[i] || null;},
     raw: map
   };
+  Object.defineProperty(s,'length',{get:function(){return Object.keys(map).length;}});
   return s;
 }
 
@@ -123,13 +125,12 @@ function setup(options) {
     assert.strictEqual(st.raw.k.indexOf('"coins":0') >= 0 ? 'bad' : 'ok', 'ok');
     assert(before.indexOf('"coins":2') >= 0);
   });
-  await test('save_corrupt_is_backed_up_and_one_time_rewards_not_repaid', function () {
-    var st = memoryStorage(); st.raw.k = '{not json';
-    var s = new SaveStore({coins: 0}, {storage: st, key: 'k'});
-    var r = s.load();
-    assert.strictEqual(r.status, 'recovered');
-    assert.strictEqual(st.raw['k:corrupt-backup'], '{not json');
-    assert(s.isClaimed('shortcut') && s.isClaimed('profile'));
+  await test('save_corrupt_preserved_and_update_blocked', function () {
+    var st = memoryStorage(); st.raw.k = '{not json'; var before=st.raw.k;
+    var s = new SaveStore({}, {storage: st, key: 'k'}),r=s.load();
+    assert.strictEqual(r.status,'unavailable');assert.strictEqual(r.ok,false);
+    assert.strictEqual(s.update(function(d){d.coins=99;}).ok,false);
+    assert.strictEqual(st.raw.k,before);assert.strictEqual(st.writes,0);
   });
   await test('save_cancelled_mutator_does_not_write', function () {
     var st = memoryStorage(), s = new SaveStore({}, {storage: st, key: 'k'});
@@ -159,17 +160,14 @@ function setup(options) {
       assert.strictEqual(again.get().coins, 5);
     });
   });
-  await test('save_read_true_for_existing_key_is_recovered_once_not_every_read', function () {
-    var st = memoryStorage(); st.raw.k = 'x';
-    var get = st.getItem, broken = true;
-    st.getItem = function (k) { return k === 'k' && broken ? true : get(k); };
-    var s = new SaveStore({coins: 0}, {storage: st, key: 'k', storageKeys: function () { return Object.keys(st.raw); }, login: false});
-    var r = s.load();
-    assert.strictEqual(r.status, 'recovered'); assert(s.isClaimed('shortcut'), 'one-time rewards not paid twice');
-    assert.strictEqual(st.raw['k:corrupt-backup'], 'true');
-    broken = false;
-    var again = new SaveStore({coins: 0}, {storage: st, key: 'k', storageKeys: function () { return Object.keys(st.raw); }, login: false});
-    assert.strictEqual(again.load().status, 'loaded', 'defaults were written once; no repeated failure');
+  await test('save_read_true_for_existing_key_preserved_until_load_retry', function () {
+    var st=memoryStorage();st.raw.k='{"coins":45}';var before=st.raw.k,get=st.getItem,broken=true;
+    st.getItem=function(k){return k==='k'&&broken?true:get(k);};
+    var s=new SaveStore({coins:0},{storage:st,key:'k',storageKeys:function(){return Object.keys(st.raw);},login:false});
+    var r=s.load();assert.strictEqual(r.status,'unavailable');assert.strictEqual(r.ok,false);
+    assert.strictEqual(s.update(function(d){d.coins=100;}).ok,false);assert.strictEqual(st.writes,0);assert.strictEqual(st.raw.k,before);
+    broken=false;assert.strictEqual(s.load().status,'loaded');assert.strictEqual(s.get().coins,45);
+    assert.strictEqual(s.update(function(d){d.coins+=1;}).ok,true);assert.strictEqual(s.get().coins,46);
   });
   await test('save_numbers_are_written_as_text', function () {
     var st = memoryStorage(), s = new SaveStore({level: 1, gems: 0}, {storage: st, key: 'k', login: false});
@@ -623,7 +621,7 @@ function setup(options) {
       delete plain.guardLevel; delete withGuard.guardLevel;
       assert.deepStrictEqual(withGuard, plain, c[0]);
     });
-    assert.strictEqual(run(true, cases[2][1], cases[2][2]).status, 'recovered');
+    assert.strictEqual(run(true, cases[2][1], cases[2][2]).status, 'unavailable');
   });
 
   await test('flow_without_reward_pays_platformconfig_growth_reward', async function () {

@@ -67,7 +67,7 @@ class UpgradeTests(unittest.TestCase):
             failure_kind='legacy_numeric_bridge', first_exception='type mismatch', loading_overlay_visible=True)
         self.trace = {'schema': 'native_storage_trace.v3', 'trace_base': str(self.root),
                       'project': str(self.root), 'execution': {'runner': str(self.runner),
-                      'runner_sha256': contract.digest(self.runner),
+                      'runner_sha256': contract.digest(self.runner), 'dependencies': [],
                       'command': [sys.executable, str(self.runner), '--bundle', '{bundle}', '--adapter', '{adapter}']}}
         for key, name, value in [('current', 'Native/game.js', self.raw),
                                  ('negative_control', 'old.json', old),
@@ -101,11 +101,10 @@ class UpgradeTests(unittest.TestCase):
 
     def accept_consumer(self, version=3):
         trace_path = self.root / 'trace.json'; trace_path.write_text(json.dumps(self.trace))
-        report = self.root / 'report.json'; report.write_text(json.dumps({
-            'tool': 'audit_native_storage_contract', 'policy_version': version,
-            'required_cases': list(contract.CASES), 'trace': str(trace_path),
-            'trace_sha256': contract.digest(trace_path), 'native': str(self.native),
-            'binding': self.binding, 'passed': True, 'failed': 0, 'checked': len(contract.CASES)}))
+        report = self.root / 'report.json'
+        approval = contract.approve_runtime(self.trace, self.native, self.binding)
+        approval.update(policy_version=version, trace=str(trace_path), trace_sha256=contract.digest(trace_path))
+        report.write_text(json.dumps(approval))
         errors = []
         consumer.auto_reports({'id': 'STORAGE-01', 'auto_check': ['audit_native_storage_contract']},
                               {'auto_reports': [{'path': str(report), 'sha256': contract.digest(report)}]},
@@ -114,7 +113,7 @@ class UpgradeTests(unittest.TestCase):
 
     def enable_json_only(self):
         def current(r):
-            for name in contract.UPGRADE_CASES[:3]:
+            for name in contract.UPGRADE_CASES[:2]:
                 r['cases'][name] = 'not_applicable'
                 r['upgrade_observations'].pop(name)
             r['upgrade_observations']['legacy_upgrade_touch_play']['fixture_case'] = 'valid_legacy_record'
@@ -122,6 +121,13 @@ class UpgradeTests(unittest.TestCase):
                 'key': 'save', 'fixture_installed_before_entry': True,
                 'storage_before': {'save': '{"schema":1,"coins":45}'},
                 'storage_after': {'save': '{"schema":1,"coins":45}'}}
+            r['upgrade_observations']['legacy_unreadable_preserved'] = {
+                'key': 'save', 'fixture_installed_before_entry': True,
+                'storage_before': {'save': '{"schema":1,"coins":45}'},
+                'storage_after': {'save': '{"schema":1,"coins":45}'},
+                'sync_read': {'type': 'boolean', 'value': True}, 'async_read': {'status': 'unreadable'},
+                'writes': [], 'removed_keys': [], 'recovery_feedback_visible': True,
+                'loading_overlay_visible': False, 'retry_or_exit_available': True}
         self.change(current)
         def negative(r):
             r['cases'] = {'json_unreadable_preserved': 'fail'}
@@ -258,6 +264,109 @@ class UpgradeTests(unittest.TestCase):
         self.change(lambda r: r['upgrade_observations']['legacy_numeric_nonbinary_typed'].update(
             fixture_installed_before_entry=False))
         self.assertTrue(any('precede Native entry' in e for e in self.validate()))
+
+    def enable_non_numeric(self, encoding='boolean', value=True, source_dir='packages'):
+        self.enable_json_only()
+        self.trace['numeric_scope']['mode'] = 'schema_backed_non_numeric'
+        schema_path = Path(self.trace['numeric_scope']['schema']['path'])
+        schema = json.loads(schema_path.read_text())
+        schema['fields']['save'] = {'encoding': encoding, 'legacy_encodings': [encoding]}
+        schema_path.write_text(json.dumps(schema)); self.trace['numeric_scope']['schema']['sha256'] = contract.digest(schema_path)
+        def current(r):
+            for name in ('valid_legacy_record', 'legacy_unreadable_preserved'):
+                r['upgrade_observations'][name]['storage_before'] = {'save': value}
+                r['upgrade_observations'][name]['storage_after'] = {'save': value}
+        self.change(current)
+        def negative(r):
+            row = r['upgrade_observations'].pop('json_unreadable_preserved')
+            row['storage_before'] = {'save': value}; row['storage_after'] = {'save': 'WRONG_RESET'}
+            row['failure_kind'] = 'existing_non_numeric_silently_reset'
+            r['upgrade_observations']['non_numeric_unreadable_preserved'] = row
+            r['cases'] = {'non_numeric_unreadable_preserved': 'fail'}
+        self.change(negative, 'upgrade_negative_control')
+        source = self.root / source_dir / 'storage.js'; source.parent.mkdir(exist_ok=True)
+        source.write_text('var a=storage.getItem("save"); storage.setItem("save",data);')
+        inventory_path = Path(self.trace['numeric_scope']['access_inventory']['path']); inventory = json.loads(inventory_path.read_text())
+        inventory.update(binding=self.binding, schema_sha256=contract.digest(schema_path))
+        inventory['keys'] = [{'key': 'save', 'read': [{'source': {'path': str(source), 'sha256': contract.digest(source)}, 'expression': 'storage.getItem("save")'}],
+                              'write': [{'source': {'path': str(source), 'sha256': contract.digest(source)}, 'expression': 'storage.setItem("save",data)'}]}]
+        inventory_path.write_text(json.dumps(inventory)); self.trace['numeric_scope']['access_inventory']['sha256'] = contract.digest(inventory_path)
+
+    def test_boolean_only_schema_in_packages(self):
+        self.enable_non_numeric('boolean', False)
+        self.assertEqual(self.validate(), []); self.assertTrue(self.accept_consumer())
+
+    def test_string_only_schema_in_build_templates(self):
+        self.enable_non_numeric('string', 'keep me', 'build-templates')
+        self.assertEqual(self.validate(), []); self.assertTrue(self.accept_consumer())
+
+    def test_boolean_legacy_to_text_preserves_semantics(self):
+        self.enable_non_numeric('boolean', False)
+        self.change(lambda r: r['upgrade_observations']['valid_legacy_record']['storage_after'].update(save='false'))
+        # Source-bound inventory binding is refreshed by the existing fixture recorder.
+        inventory_path=Path(self.trace['numeric_scope']['access_inventory']['path'])
+        inventory=json.loads(inventory_path.read_text());inventory['binding']=self.binding
+        inventory_path.write_text(json.dumps(inventory));self.trace['numeric_scope']['access_inventory']['sha256']=contract.digest(inventory_path)
+        self.assertEqual(self.validate(), []);self.assertTrue(self.accept_consumer())
+
+    def test_non_numeric_unreadable_case_cannot_opt_out(self):
+        self.enable_json_only()
+        self.change(lambda r: r['cases'].update(legacy_unreadable_preserved='not_applicable'))
+        self.assertTrue(self.validate())
+
+    def test_huge_numeric_fixture_is_rejected_without_overflow(self):
+        self.change(lambda r: r['upgrade_observations']['legacy_numeric_nonbinary_typed'].update(expected_numeric=10**2000))
+        self.assertTrue(self.validate())
+
+    def test_current_raw_missing_is_diagnostic(self):
+        self.trace['current'].pop('raw_report')
+        self.assertTrue(self.validate())
+
+    def test_malformed_current_record_is_diagnostic(self):
+        self.trace['current'] = []
+        self.assertTrue(self.validate())
+
+    def test_malformed_current_paths_are_diagnostic(self):
+        self.trace['current']['raw_report'] = None
+        self.assertTrue(self.validate())
+
+    def report_file(self):
+        trace_path = self.root / 'trace.json'; trace_path.write_text(json.dumps(self.trace))
+        approved = contract.approve_runtime(self.trace, self.native, self.binding)
+        self.assertTrue(approved['passed'], approved['errors'])
+        approved.update(trace=str(trace_path), trace_sha256=contract.digest(trace_path))
+        path = self.root / 'approved.json'; path.write_text(json.dumps(approved))
+        return path
+
+    def consume_report(self, path):
+        errors = []
+        consumer.auto_reports({'id':'STORAGE-01','auto_check':['audit_native_storage_contract']},
+                              {'auto_reports':[{'path':str(path),'sha256':contract.digest(path)}]},
+                              self.root,errors,self.binding)
+        return errors
+
+    def test_consumer_rejudges_without_execution(self):
+        path = self.report_file()
+        with patch.object(contract,'replay', side_effect=AssertionError('must not rerun')):
+            self.assertEqual(self.consume_report(path), [])
+
+    def test_missing_receipt_is_not_a_pass(self):
+        path = self.report_file(); report=json.loads(path.read_text()); report.pop('execution_receipt'); path.write_text(json.dumps(report))
+        self.assertTrue(self.consume_report(path))
+
+    def test_changed_runner_dependency_invalidates_receipt(self):
+        dependency=self.root/'host.js';dependency.write_text('current host')
+        self.trace['execution']['dependencies']=[{'path':str(dependency),'sha256':contract.digest(dependency)}]
+        path=self.report_file();dependency.write_text('new host')
+        self.assertTrue(self.consume_report(path))
+
+    def test_changed_raw_invalidates_receipt_without_execution(self):
+        path=self.report_file();raw=Path(self.trace['current']['raw_report']); raw.write_text('{}')
+        self.assertTrue(self.consume_report(path))
+
+    def test_missing_dependencies_is_refused(self):
+        self.trace['execution'].pop('dependencies')
+        self.assertTrue(self.validate())
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

@@ -614,7 +614,7 @@ test('v16_normal_start_and_other_scene_errors_unchanged', function () {
 // ---------- v1.3 (kit 2.0): storage layer, silent login, WebP-probe exception ----------
 function tiktokStorage() {
   var map = {};
-  return {getItem: function (k) { return k in map ? map[k] : false; }, setItem: function (k, v) { map[k] = v; }, map: map};
+  return {get length() { return Object.keys(map).length; }, key: function (n) { var keys = Object.keys(map); return n >= 0 && n < keys.length ? keys[n] : null; }, getItem: function (k) { return k in map ? map[k] : false; }, setItem: function (k, v) { map[k] = v; }, map: map};
 }
 test('v13_storage_guard_installed_before_game_scripts', function () {
   var st = tiktokStorage(), seen = null;

@@ -9,8 +9,8 @@
 // Rules this file enforces:
 //  - update() works on a copy. Memory only changes after the write is read back identical.
 //  - A failed write never reports success; the caller shows "Could not save" and keeps its state.
-//  - A corrupt save is backed up and replaced by defaults with meta.recoveredFromCorrupt set, so
-//    one-time rewards (platform claims) are treated as already claimed instead of paid twice.
+//  - Existing unreadable/corrupt saves remain untouched and unavailable until typed recovery + load Retry.
+//    No reward/update may replace such a save with defaults.
 //  - Everything that must change together (coins + "reward claimed" flag) goes in ONE update().
 var config = require('./PlatformConfig');
 
@@ -21,7 +21,7 @@ function defaultStorage() {
 }
 // getStorageInfoSync().keys from the platform SDK (same lookup order as TikTokMissionService.js).
 // Returns an array of keys, or null when the runtime cannot tell which keys exist.
-function defaultStorageKeys() {
+function defaultStorageKeys(storage) {
   var candidates = [
     typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
     typeof tt !== 'undefined' && tt,
@@ -35,6 +35,14 @@ function defaultStorageKeys() {
       if (info && Array.isArray(info.keys)) return info.keys;
     } catch (_) {}
   }
+  try {
+    if (storage && typeof storage.key === 'function' && Number.isSafeInteger(storage.length) && storage.length >= 0 && storage.length <= 10000) {
+      var keys = []; for (var n = 0; n < storage.length; n++) {
+        var key = storage.key(n); if (typeof key !== 'string' || keys.indexOf(key) >= 0) return null; keys.push(key);
+      }
+      return keys;
+    }
+  } catch (ignore) {}
   return null;
 }
 function isUnreadable(raw) { return raw === undefined || raw === true || raw === false; }
@@ -68,7 +76,8 @@ function SaveStore(defaults, options) {
   options = options || {};
   this.key = options.key || config.saveKey();
   this.storage = options.storage || defaultStorage();
-  this.storageKeys = options.storageKeys || defaultStorageKeys;
+  var self = this;
+  this.storageKeys = options.storageKeys || function(){return defaultStorageKeys(self.storage);};
   // login: false turns the fire-and-forget login off (tests); a function replaces the platform call.
   this.login = options.login === false ? noop : (typeof options.login === 'function' ? options.login : defaultLogin);
   this.loginTried = false;
@@ -224,10 +233,8 @@ SaveStore.prototype._fill = function (data) {
 };
 
 // Returns {ok, status: 'new'|'loaded'|'recovered'|'unavailable', data}.
-// v1.2 (MergeShot2048 v81-v85 on a real iPhone): TikTok storage can read back true/false/undefined, or throw,
-// for a key. Such a read is never treated as a save. getStorageInfoSync().keys decides whether the key exists:
-// missing key = no save yet, defaults are written once; existing key with an unreadable value = corrupt save
-// (backed up, defaults written once, one-time rewards treated as claimed). Nothing is logged per read.
+// 2026-11-11: key-presence proof distinguishes fresh state from unreadable existing data.
+// Typed recovery belongs before consumers; after it succeeds call load() again. No implicit reset/backup overwrite.
 SaveStore.prototype.load = function () {
   var result = this._load();
   this._loginOnce();
@@ -243,52 +250,38 @@ SaveStore.prototype._loginOnce = function () {
   try { if (typeof setTimeout === 'function') setTimeout(send, 0); else send(); } catch (_) {}
 };
 
+SaveStore.prototype._unavailable = function(error) {
+  this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false,error);
+};
 SaveStore.prototype._load = function () {
-  if (!this.storage) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'storage_unavailable'); }
-  var raw = null, threw = false;
-  try { raw = this.storage.getItem(this.key); }
-  catch (_) { threw = true; }
-  if (threw || isUnreadable(raw)) {
-    var keys = null;
-    try { keys = this.storageKeys(); } catch (_) { keys = null; }
-    var known = Array.isArray(keys);
-    if (known && keys.indexOf(this.key) < 0) return this._fresh();
-    if (threw) { this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, 'read_failed'); }
-    if (raw === undefined && !known) { this.data = clone(this.defaults); this.status = 'new'; return this._result(true); }
-    return this._recover(raw);
-  }
-  if (raw === null || raw === '') {
-    this.data = clone(this.defaults); this.status = 'new'; return this._result(true);
-  }
-  var parsed = null;
-  try { parsed = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) { parsed = null; }
-  if (!isRecord(parsed)) return this._recover(raw);
-  this.data = this._fill(parsed);
-  this.status = 'loaded';
+  if (!this.storage) return this._unavailable('storage_unavailable');
+  var raw, threw = false, keys = null;
+  try { raw = this.storage.getItem(this.key); } catch (_) { threw = true; }
+  try { keys = this.storageKeys(); } catch (_) {}
+  var state = this.storage.getItem && this.storage.getItem.__tiktokKitStorageState;
+  var absent = Array.isArray(keys) && keys.indexOf(this.key) < 0 || state && state.knownAbsent[this.key] === true;
+  if (absent && (threw || isUnreadable(raw) || raw === null || raw === '')) return this._fresh();
+  if (threw) return this._unavailable('read_failed');
+  if (isUnreadable(raw) || raw === null || raw === '') return this._unavailable('saved_data_unreadable');
+  var parsed;
+  try { parsed = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) { return this._unavailable('saved_data_malformed'); }
+  if (!isRecord(parsed)) return this._unavailable('saved_data_wrong_type');
+  this.data = this._fill(parsed); this.status = 'loaded';
   if (!this.schema) return this._result(true);
   this._applySchema();
-  var loaded = this._result(true);
-  if (this.repairs.length) loaded.repaired = clone(this.repairs);
-  return loaded;
+  var loaded = this._result(true); if (this.repairs.length) loaded.repaired = clone(this.repairs); return loaded;
 };
 
-// No save under this key: start from defaults and write them once, so the next read returns a string.
+// Defaults are written only after a reliable key index or explicit typed-API not-found result proves absence.
 SaveStore.prototype._fresh = function () {
-  this.data = clone(this.defaults);
-  this.status = 'new';
+  this.data = clone(this.defaults); this.status = 'new';
   var written = this._write(this.data);
-  return this._result(true, written);
-};
-
-SaveStore.prototype._recover = function (raw) {
-  try { this.storage.setItem(this.key + ':corrupt-backup', typeof raw === 'string' ? raw : String(raw)); } catch (_) {}
-  var fresh = clone(this.defaults);
-  fresh.meta.recoveredFromCorrupt = this.now();
-  this.data = fresh;
-  this.status = 'recovered';
-  var written = this._write(fresh);
+  if (written) this.status = 'unavailable';
   return this._result(written === null, written);
 };
+
+// Kept for existing callers; recovery now means preserving data and asking the owner for a typed retry.
+SaveStore.prototype._recover = function () { return this._unavailable('saved_data_unreadable'); };
 
 SaveStore.prototype._write = function (draft) {
   var text;
@@ -317,7 +310,7 @@ SaveStore.prototype.get = function () {
 // mutator(draft) edits the copy; return false to cancel. Returns {ok, error, data}.
 SaveStore.prototype.update = function (mutator) {
   if (this.status === 'unloaded') this.load();
-  if (!this.storage) return this._result(false, 'storage_unavailable');
+  if (!this.storage || this.status === 'unavailable') return this._result(false, 'storage_unavailable');
   var draft = clone(this.data);
   var answer;
   try { answer = mutator(draft); } catch (_) { return this._result(false, 'mutator_threw'); }

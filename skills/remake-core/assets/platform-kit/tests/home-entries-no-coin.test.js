@@ -25,7 +25,7 @@ async function test(name, run) {
 }
 function memoryStorage() {
   var map = {};
-  return {getItem: function (k) { return k in map ? map[k] : null; }, setItem: function (k, v) { map[k] = String(v); }};
+  return {get length() { return Object.keys(map).length; }, key: function (n) { var keys = Object.keys(map); return n >= 0 && n < keys.length ? keys[n] : null; }, getItem: function (k) { return k in map ? map[k] : null; }, setItem: function (k, v) { map[k] = String(v); }};
 }
 function missionSDK() {
   var calls = [], sdk = {canIUse: function () { return true; }};

@@ -84,7 +84,7 @@ def run():
   ui=json.loads(uip.read_text());ui['binding']=sb;uip.write_text(json.dumps(ui));si['ui_route_inventory']=ref(uip)
   sip=write('storage-inventory.json',si)
   st={'schema':'native_storage_trace.v2','binding':sb,'project':str(proj),'trace_base':str(d),'route_inventory':ref(sip),'execution':{'runner':str(store),'runner_sha256':sha(store),'command':[sys.executable,str(store),'{bundle}','{adapter}']},'current':store_record(fixed,'current'),'negative_control':{**store_record(faulty,'negative'),'kind':'controlled_legacy_fixture','base_bundle':ref(fixed),'patch':{'before':fixed.read_text().strip(),'after':faulty.read_text().strip()},'mechanism':'empty string reaches JSON.parse rather than missing-key branch','provenance':ref(provenance)}}
-  assert not validate(st,native,sb),validate(st,native,sb);assert not replay(st);passed.append('storage_verified_absent_routes_and_exact_defect_replay')
+  assert validate(st,native,sb) == ['needs_upgrade: v1/v2 do not prove cold-upgrade bridge coverage'];assert not replay(st);passed.append('legacy_storage_verified_routes_remain_replayable_but_require_v3_upgrade')
   bad=copy.deepcopy(st);bad['negative_control']['patch']['after']='unrelated crash';assert validate(bad,native,sb);passed.append('unrelated_fixture_refused')
   forged=json.loads(Path(st['current']['raw_report']).read_text());forged['cases']['reopen_map']='pass';Path(st['current']['raw_report']).write_text(json.dumps(forged));st['current']['raw_sha256']=sha(st['current']['raw_report']);assert validate(st,native,sb) and replay(st);passed.append('absent_route_silent_pass_and_forged_raw_refused')
   scene2=proj/'assets/map.fire';scene2.write_text('{}');si['binding']['source_sha256']=snapshot(proj)[2];si['scene_files'].append(ref(scene2));

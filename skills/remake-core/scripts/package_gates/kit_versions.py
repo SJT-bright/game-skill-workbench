@@ -31,7 +31,7 @@ SCRIPT_MODULES = ('RewardedService', 'SaveStore', 'MissionFlow', 'TikTokMissionS
 NOISE = set('''prototype length call apply push pop exports module require function return this var let const
 then catch resolve reject undefined null true false constructor toString default use strict Math floor min max now
 Date setTimeout clearTimeout options console log warn error string number object game tt wx cc _RF'''.split())
-STR_RE = re.compile(r'"((?:[^"\\\n]|\\.){3,200})"|\'((?:[^\'\\\n]|\\.){3,200})\'')
+STR_RE = re.compile(r'"((?:[^"\\\n]|\\.)*)"|\'((?:[^\'\\\n]|\\.)*)\'')
 PROP_RE = re.compile(r'\.([A-Za-z_$][\w$]{3,})\b')
 KEY_RE = re.compile(r'[{,]\s*([A-Za-z_$][\w$]{3,})\s*:')
 RF_RE = re.compile(r'cc\._RF\.push\(\s*[\w$]+\s*,\s*"[0-9a-zA-Z+/=_-]*"\s*,\s*"([\w$-]+)"\s*\)')
@@ -65,7 +65,7 @@ def tokens(src, strings=True):
     if strings:
         for a, b in STR_RE.findall(s):
             v = (a or b).strip()
-            if v and not v.isdigit():
+            if 3 <= len(v) <= 200 and not v.isdigit():
                 t.add('s:' + v)
     return {x for x in t if x[2:] not in NOISE}
 

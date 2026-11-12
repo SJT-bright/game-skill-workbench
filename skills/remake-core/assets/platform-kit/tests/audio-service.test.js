@@ -13,7 +13,7 @@ var SaveStore = require(path.join(__dirname, '..', 'assets', 'tiktok-platform', 
 
 function memoryStorage() {
   var m = {};
-  return {getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
+  return {get length() { return Object.keys(m).length; }, key: function (n) { var keys = Object.keys(m); return n >= 0 && n < keys.length ? keys[n] : null; }, getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
     setItem: function (k, v) { m[k] = String(v); }, removeItem: function (k) { delete m[k]; }, _m: m};
 }
 function fakeBackend() {

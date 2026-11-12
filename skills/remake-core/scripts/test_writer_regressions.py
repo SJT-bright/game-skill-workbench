@@ -87,7 +87,7 @@ class WriterRegressions(unittest.TestCase):
                 'pre_home_bytes': {'bytes': 1}}
         record = {'policy': policy, 'kit_version': 'fixture', 'steps': [], 'blocks': [], 'warnings': [], 'table': []}
         import audit_native_resource_paths, audit_packed_assets, package_obligations, audit_final_package_startup
-        import project_qa
+        import project_qa, audit_final_storage
         try:
             import delivery_folder
             tidy = [mock.patch.object(delivery_folder, 'tidy', return_value={}),
@@ -109,6 +109,7 @@ class WriterRegressions(unittest.TestCase):
             mock.patch.object(package_obligations, 'publication_guard', return_value=contextlib.nullcontext()),
             mock.patch.object(audit_final_package_startup, 'audit_final_startup', return_value={}),
             mock.patch.object(project_qa, 'review_policy', return_value=None),
+            mock.patch.object(audit_final_storage, 'audit_final_storage', return_value={'unit_test':'storage gate independently calibrated'}),
             mock.patch.object(subprocess, 'run', side_effect=fake_subprocess),
             mock.patch.object(V, 'verify', side_effect=fake_verify),
             mock.patch.object(V, 'make_receipt', return_value={'schema': 'fixture'}),

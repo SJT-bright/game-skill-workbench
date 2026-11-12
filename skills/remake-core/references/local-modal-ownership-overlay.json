@@ -1,6 +1,6 @@
 {
   "schema": "local-skill-overlay.v1",
-  "patch_id": "modal-input-ownership.20261111.1",
+  "patch_id": "modal-input-ownership.20261111.2",
   "scope": [
     "remake-core",
     "cocos-game-check",
@@ -12,5 +12,7 @@
     "physical Android/iOS pass",
     "all games modified",
     "upstream official full package replaced"
-  ]
+  ],
+  "activation": "Relevant production principles; reuse existing input/pause manager; scanner and separate optional suite only when needed",
+  "compatibility": "Default preflight, catalogue, runner, SDK and whole-catalog digest preserved"
 }

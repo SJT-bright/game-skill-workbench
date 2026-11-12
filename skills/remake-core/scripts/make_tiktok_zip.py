@@ -583,6 +583,12 @@ def main():
         if p.returncode != 0:
             print('REFUSED, no ZIP written: the known-issue gate failed (exit %d):\n%s' % (p.returncode, gate['tail']), file=sys.stderr)
             return 1
+    from audit_final_storage import audit_final_storage
+    try:
+        gate['native_storage_contract'] = audit_final_storage(native, a.project, a.startup_contract, review=a.review)
+    except (ValueError, OSError, TypeError) as error:
+        print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
+        return 1
     reviewed = json.loads(a.review.read_text(encoding='utf-8')) if a.review else {}
     import project_qa
     profile = project_qa.review_policy(a, reviewed)

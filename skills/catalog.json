@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T05:45:10.701Z",
-  "treeHash": "d97b8e963c8f36a5e1e97a34b9be2f6a9ce5a794c8d18fe9227fe739ff2504e7",
+  "createdAt": "2026-11-12T05:45:52.567Z",
+  "treeHash": "49d59ce69abcecb2e178290122009cd5653b6702e0a190fee2b93ae2f223bf5a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3283,20 +3283,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "184cae43687e06f14700586e7168a8553d770605ea07d5ac321f377899ad2487",
+      "treeHash": "e2df6a8336485395fb1b4dbd82bd936734b630c0abbb9249a62ad314214cd332",
       "fileCount": 67,
-      "bytes": 1466531,
+      "bytes": 1478937,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "adfa3de30555a1e3203697632bf08068b36a36c35e793beca1072f061e9b2578",
-          "size": 18992,
+          "hash": "d4a1bf1663066ef2598f7376501fedb06c9a35e18c514e4644d2f6dcc6c99e1b",
+          "size": 22997,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "71a2d2f7c7e53913d12f95f5e669e0c51bf5111acac441ba89ff1d350f785cbc",
-          "size": 24951,
+          "hash": "39211a14c7577373c3b8996192954fa027c49fbae7dedffddba6fa06b3560bdc",
+          "size": 26373,
           "executable": false
         },
         {
@@ -3403,8 +3403,8 @@
         },
         {
           "path": "references/common-game-components.md",
-          "hash": "1763a697e7c194a0ec62bf3c69af53bcb41238c5461670192580843676b02ffa",
-          "size": 15615,
+          "hash": "b749c0f857a16907e19111ad6c45369220f3a1616a89b034ff58b73acb2e13b2",
+          "size": 15694,
           "executable": false
         },
         {
@@ -3457,14 +3457,14 @@
         },
         {
           "path": "references/new-feature-ui.md",
-          "hash": "67c5e86727ab48f2663549661c4c8bd81876e49c33a4728c13adf6c32028a30e",
-          "size": 3306,
+          "hash": "a81d75e4c19236096cf2caf989d6016ea85ade1e8a1a9762034648f0e0081d1a",
+          "size": 4369,
           "executable": false
         },
         {
           "path": "references/page-richness.md",
-          "hash": "c75ba221cd4f028a80edb50704078af3397b8198ce21b439e90b6d36a96794d3",
-          "size": 94520,
+          "hash": "213a5a8de68d5333f0ac524d94c0d976c0ad326b89a3d61a0194924ae79a0370",
+          "size": 95649,
           "executable": false
         },
         {
@@ -3487,14 +3487,14 @@
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "b0e83698b71b346477d8dfcc0ec437e417c80f920dfdd7eb821839a034d668ad",
-          "size": 34902,
+          "hash": "5369338e671dc7c2d2db77b20df93457ce4ccbe8285ed569bf47edfb7e4b7fcc",
+          "size": 35324,
           "executable": false
         },
         {
           "path": "references/saul-art-rules.md",
-          "hash": "7ddebd10f64a056cfaa85705a93aa745a047b1868e26802b9a97686a1b9639ee",
-          "size": 50140,
+          "hash": "ecfc189627369c619f8e637d1b1de88d9919fa1c55a8e7e1e965230498f88be1",
+          "size": 50521,
           "executable": false
         },
         {
@@ -3517,8 +3517,8 @@
         },
         {
           "path": "references/text-backplate-review.md",
-          "hash": "324750481195bc7a1a0503b39ce62f3286f834a1f7c99174e02c45e465cd53f3",
-          "size": 3811,
+          "hash": "331b5ab997a79c1218950f5740566b135ae6105834f5d270cdb3d5d77f1f5285",
+          "size": 7535,
           "executable": false
         },
         {
@@ -3529,8 +3529,8 @@
         },
         {
           "path": "references/theme-readability.md",
-          "hash": "42797afe69918a461586703d512308603da7b71141506149bf58997a2a381e40",
-          "size": 2118,
+          "hash": "81c867fc10c8e6eb9615573ec4e127670d63edc9310c59140e324fd98e49af00",
+          "size": 2299,
           "executable": false
         },
         {

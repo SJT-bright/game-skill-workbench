@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "08fa9c02-1c3a-4ada-91ca-ef540899ac25",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v81",
+      "createdAt": "2026-11-12T18:02:13.814Z",
+      "summary": "文件变更：新增 1，修改 8，移除 0。",
+      "changes": {
+        "added": 1,
+        "modified": 8,
+        "deleted": 0
+      },
+      "treeHash": "834033660e28642a310df3bdf3d3118db0840331c328b1e827411fb64966acd0",
+      "bytes": 1026473,
+      "fileCount": 67
+    },
+    {
       "id": "df5e87dc-0df0-4982-a183-fcd58db983b1",
       "skillId": "s-c527d5389d209a5759a9",
       "name": "remake-core",

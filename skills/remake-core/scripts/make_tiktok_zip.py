@@ -46,6 +46,7 @@ suites take minutes; for test_writer_refusal give the same --ad-regression in th
 """
 import argparse
 from delivery_continuation import continuing_cli
+from regression_scope_gate import scoped_execution
 import hashlib
 import json
 import os
@@ -414,6 +415,7 @@ def write_zip(native, files, target, *, reviewed_files=None):
 
 
 @continuing_cli('writer')
+@scoped_execution
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--native', type=Path, required=True, help='the Cocos Native (mini-game) build output folder')

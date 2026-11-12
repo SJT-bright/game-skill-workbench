@@ -261,9 +261,12 @@ process.stdin.on('end', () => {
         ? (test.type === 'UnaryExpression' ? 'skip_falsy' : 'skip_explicitly_absent')
         : 'unconditional';
     }
+    const platform_input_bindings = require('./scan_platform_input_bindings.cjs').analyze({
+      nodes, parents, isGlobal: (name, node) => !binding(name, node)
+    });
     process.stdout.write(JSON.stringify({dependencies,dynamic,bundle_internal_requires:internal,parser:'acorn@8.15.0',
       native_entry_protocols,startup24_resources,startup_requires,global_boot_assignments:bootAssignments.length,calls_global_boot,
-      direct_startup_resources,direct_boot_resources}));
+      direct_startup_resources,direct_boot_resources,platform_input_bindings}));
   } catch (error) {
     process.stdout.write(JSON.stringify({error:String(error.message)})); process.exitCode=1;
   }

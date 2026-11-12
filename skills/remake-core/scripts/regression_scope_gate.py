@@ -2,13 +2,17 @@
 """Authorize scoped regressions and return recoverable gaps to the repair workflow."""
 import argparse
 from contextvars import ContextVar
+from contextlib import contextmanager
+from functools import wraps
 import hashlib
+import inspect
 import json
 import os
 from pathlib import Path, PurePosixPath
 import re
 import sys
 import tempfile
+import uuid
 import zipfile
 
 import check_ledger as ledger
@@ -20,6 +24,42 @@ STARTUP = 'startup.native.renderer'
 MIXED_SUITES = {'ad_outcome', 'save_restart', 'button_sweep'}
 ADAPTER_ENV = 'TIKTOK_AD_REGRESSION_ADAPTER'
 _active_plan = ContextVar('active_regression_scope', default=None)
+_execution_depth = ContextVar('regression_execution_depth', default=0)
+
+
+@contextmanager
+def execution_scope():
+    """Bind one plan during an invocation and release it before a repaired retry."""
+    if _execution_depth.get():
+        yield
+        return
+    depth_token = _execution_depth.set(1)
+    plan_token = _active_plan.set(None)
+    try:
+        yield
+    finally:
+        _active_plan.reset(plan_token)
+        _execution_depth.reset(depth_token)
+
+
+def scoped_execution(function):
+    signature = inspect.signature(function)
+    @wraps(function)
+    def execute(*args, **kwargs):
+        if kwargs.get('plan_only'):
+            return function(*args, **kwargs)
+        values = signature.bind_partial(*args, **kwargs).arguments
+        source = values.get('files') or values.get('package_dir') or values.get('native')
+        prior = values.get('rework_of')
+        if not prior and os.environ.get(ENV_PLAN):
+            try:
+                prior = (json.loads(Path(os.environ[ENV_PLAN]).read_bytes()).get('baseline') or {}).get('path')
+            except (OSError, ValueError, TypeError):
+                pass
+        previous = archive_files(prior) if prior and Path(str(prior)).is_file() else None
+        with execution_scope(), ledger.module_sources(source, previous):
+            return function(*args, **kwargs)
+    return execute
 
 
 class ScopeRepairRequired(ledger.NeedsScope):
@@ -69,36 +109,27 @@ def whole_package(pattern):
     return pattern and all(ch == '*' for ch in pattern)
 
 
-def baseline_identity(archive, candidate):
-    from verify_native_zip import receipt_status, safe_name
-
-    path = Path(archive).resolve()
-    if not path.is_file():
-        fail('找不到原交付 ZIP，禁止自动切到全量')
-    archive_sha = digest(path)
-    with zipfile.ZipFile(path) as z:
+def archive_files(archive):
+    from verify_native_zip import safe_name
+    with zipfile.ZipFile(archive) as source:
         files = {}
-        for item in z.infolist():
-            if item.is_dir():
+        for entry in source.infolist():
+            if entry.is_dir():
                 continue
-            name = safe_name(item.filename).as_posix()
+            name = safe_name(entry.filename).as_posix()
             if name in files:
                 fail('原交付 ZIP 存在重复条目')
-            files[name] = z.read(item)
-    if digest(path) != archive_sha:
-        fail('原交付 ZIP 在读取期间变化')
-    status = receipt_status(path, archive_sha, package_manifest(files))
-    if status.get('entry') != 'official':
-        fail('原交付 ZIP 缺少同字节的正式回执')
-    receipt = Path(status['receipt'])
-    for config in ('project.config.json', 'game.json'):
-        old = json.loads(files.get(config, b'{}'))
-        new = json.loads(candidate.get(config, b'{}'))
-        for key in ('appId', 'appid', 'app_id'):
-            if old.get(key) and new.get(key) and old[key] != new[key]:
-                fail('上一交付 ZIP 的 App ID 不匹配')
-    return {'path': str(path), 'sha256': archive_sha,
-            'receipt': str(receipt), 'receipt_sha256': digest(receipt)}
+            files[name] = source.read(entry)
+    return files
+
+
+def baseline_identity(archive, candidate, project=None, groups=None):
+    from regression_baseline import identity
+    try:
+        with ledger.module_sources(candidate, archive_files(archive)):
+            return identity(archive, candidate, project, groups)
+    except ledger.NeedsScope as error:
+        fail(str(error))
 
 
 def _load_plan(project):
@@ -181,7 +212,7 @@ def needs_ad_suite(files, adapter, ad_runner, runtime_runner):
     return True
 
 
-def _observe(project, files, adapter, board, policy):
+def _observe(project, files, adapter, board, policy, prior_files=None):
     """Ask the same runners for their actual schedule without executing it."""
     scripts = Path(__file__).resolve().parents[2] / 'cocos-game-check/package-check/scripts'
     sys.path.insert(0, str(scripts))
@@ -193,7 +224,7 @@ def _observe(project, files, adapter, board, policy):
 
     if ledger.project_of(adapter=adapter) != project:
         fail('回归适配文件或环境指向了另一个工程')
-    with tempfile.TemporaryDirectory(prefix='regression-plan-') as folder:
+    with ledger.module_sources(files, prior_files), tempfile.TemporaryDirectory(prefix='regression-plan-') as folder:
         stage = Path(folder)
         for name, data in files.items():
             target = stage / safe_name(name)
@@ -211,9 +242,13 @@ def _observe(project, files, adapter, board, policy):
 def _specific_run(cid, row):
     scope = row.get('scope') or {}
     patterns = scope.get('inputs', {}).get('package', [])
+    modules = scope.get('inputs', {}).get('modules', [])
+    selected_modules = row.get('binding', {}).get('inputs', {}).get('modules', {})
+    module_scope = bool(modules) and any('::module/' in key for key in selected_modules)
     selected = set(row.get('binding', {}).get('inputs', {}).get('package', {})) - {'<selectors>'}
     actual = set(row.get('roots', {}).get('package', {}))
-    if (not patterns or any(whole_package(pattern) for pattern in patterns)
+    if ((not patterns and not module_scope) or any(whole_package(pattern) for pattern in patterns)
+            or any(whole_package(pattern) for pattern in modules)
             or (bool(actual) and selected == actual)):
         fail(cid + ' 用整包或空范围解释重跑。先登记实际代码、资源和页面依赖')
     if cid.removeprefix('runtime.').split('/')[0] in MIXED_SUITES and cid.endswith('/@suite'):
@@ -234,6 +269,52 @@ def _only_bundle_changed(before, current):
     return bool(changed) and all(bundle.fullmatch(path) for path in changed)
 
 
+
+def module_ownership(eligible, proposed, baseline, files):
+    """Validate module changes and independently declared shared wrapper checks."""
+    from fnmatch import fnmatchcase
+    from bundle_module_inputs import MODULE_SEP, module_bundle
+    patterns = [pattern for row in eligible.values()
+                for pattern in (row.get('scope') or {}).get('inputs', {}).get('modules', [])]
+    if not patterns:
+        return set(), set()
+    old_files = archive_files(baseline['path'])
+    old = ledger.expand_module_roots({'package': package_manifest(old_files)}, old_files)
+    current = ledger.expand_module_roots({'package': package_manifest(files)}, files)
+    keys = set(old['modules']) | set(current['modules'])
+    bundles = {module_bundle(key) for key in keys if MODULE_SEP in key
+               and any(fnmatchcase(key, pattern) for pattern in patterns)}
+    snapshots = [dict(roots,
+                      package={path: value for path, value in roots['package'].items() if path in bundles},
+                      modules={key: value for key, value in roots['modules'].items()
+                               if key.split('::', 1)[0] in bundles})
+                 for roots in (old, current)]
+    coverage = ledger.module_coverage(*snapshots)
+    if coverage['unparsed_bundles']:
+        fail('实际模块格式或原字节尚未核准，先修复解析适配：' + ', '.join(coverage['unparsed_bundles']))
+    envelope_checks = set()
+    for bundle in coverage['envelope_changed']:
+        owners = {cid for cid, row in eligible.items() if row['action'] == 'run'
+                  and (row.get('scope') or {}).get('module_envelope') == bundle
+                  and bundle in (row.get('scope') or {}).get('inputs', {}).get('package', [])}
+        if not owners or not owners <= proposed.keys():
+            fail('实际共享加载外层变化需要精确独立节点：' + bundle)
+        consumers = {cid for cid, row in eligible.items()
+                     if any(fnmatchcase(key, pattern) for key in keys if module_bundle(key) == bundle
+                            for pattern in (row.get('scope') or {}).get('inputs', {}).get('modules', []))}
+        missing_consumers = sorted(cid for cid in consumers
+                                   if eligible[cid]['action'] != 'run' or cid not in proposed)
+        if missing_consumers:
+            fail('共享加载外层变化尚未覆盖全部真实模块消费者：' + bundle
+                 + '；缺少 ' + ', '.join(missing_consumers))
+        envelope_checks.update(owners)
+    missing = [key for key in coverage['changed_modules']
+               if not any(fnmatchcase(key, pattern) for pattern in patterns)]
+    if missing:
+        fail('这些真实模块变化缺少检查归属：' + ', '.join(missing))
+    return bundles, envelope_checks
+
+
 def _check_impact(project, groups, proposed, mode, baseline, files):
     eligible = {row['check_id']: row for rows in groups.values() for row in rows}
     pending = {cid for cid, row in eligible.items() if row['action'] == 'run'}
@@ -251,22 +332,24 @@ def _check_impact(project, groups, proposed, mode, baseline, files):
             _specific_run(cid, row)
     if blocked:
         fail('先处理逐项缺口：' + '；'.join(blocked))
+    module_bundles, envelope_checks = module_ownership(eligible, proposed, baseline, files)
     store = ledger.Ledger(project)
     try:
-        for cid in sorted(pending):
-            row = eligible[cid]
-            passed = [old for old in store.previous(cid) if old.get('passed')]
-            if not passed:
-                continue  # Explicitly proposed new case with a declared dependency.
-            before = ledger.select_inputs(passed[0].get('roots', {}), row['scope'])
-            current = row['binding']['inputs']
-            recovery = row.get('evidence_recheck')
-            recollect = (recovery and recovery.get('prior_key') == ledger.sha(passed[0]['binding'])
-                         and not store._evidence_valid(passed[0]))
-            if before == current and passed[0]['binding']['conditions'] == row['binding']['conditions'] and not recollect:
-                fail(cid + ' 的实际输入未变。先核对旧证据或判定器变化，不能以工具版本解释重跑')
-            if _only_bundle_changed(before, current):
-                fail(cid + ' 只匹配到合并脚本字节变化，先核对受影响的真实模块')
+        with ledger.module_sources(files, archive_files(baseline['path'])):
+            for cid in sorted(pending):
+                row = eligible[cid]
+                passed = [old for old in store.previous(cid) if old.get('passed')]
+                if not passed:
+                    continue  # Explicitly proposed new case with a declared dependency.
+                before = ledger.select_inputs(passed[0].get('roots', {}), row['scope'])
+                current = row['binding']['inputs']
+                recovery = row.get('evidence_recheck')
+                recollect = (recovery and recovery.get('prior_key') == ledger.sha(passed[0]['binding'])
+                             and not store._evidence_valid(passed[0]))
+                if before == current and passed[0]['binding']['conditions'] == row['binding']['conditions'] and not recollect:
+                    fail(cid + ' 的实际输入未变。先核对旧证据或判定器变化，不能以工具版本解释重跑')
+                if _only_bundle_changed(before, current) and cid not in envelope_checks:
+                    fail(cid + ' 只匹配到合并脚本字节变化，先核对受影响的真实模块')
     finally:
         store.close()
     if pending - proposed.keys():
@@ -281,15 +364,13 @@ def _check_impact(project, groups, proposed, mode, baseline, files):
     current = package_manifest(files)
     changed = {name for name in old.keys() | current.keys() if old.get(name) != current.get(name)}
     owners = []
-    for cid, row in eligible.items():
-        scope = row.get('scope') or {}
-        inputs = scope.get('inputs', {})
-        patterns = inputs.get('package', [])
-        broad = not patterns or any(whole_package(p) for p in patterns)
-        if not broad:
+    for row in eligible.values():
+        patterns = (row.get('scope') or {}).get('inputs', {}).get('package', [])
+        if patterns and not any(whole_package(pattern) for pattern in patterns):
             owners.extend(patterns)
     from fnmatch import fnmatchcase
-    unmapped = sorted(path for path in changed if not any(fnmatchcase(path, p) for p in owners))
+    unmapped = sorted(path for path in changed if path not in module_bundles
+                      and not any(fnmatchcase(path, pattern) for pattern in owners))
     if unmapped:
         fail('这些产物变化缺少精确归属：' + ', '.join(unmapped[:15]))
     # A non-empty explanation is required in addition to the ledger's concrete binding.
@@ -304,8 +385,9 @@ def create_plan(project, files, adapter, *, board, policy, prior, mode, proposed
         fail('重跑项必须是「检查 ID → 实际变更理由」的对象')
     if mode == 'full' and not (isinstance(authorization, str) and authorization.strip()):
         fail('全量执行需要记录用户本轮明确原话')
-    baseline = baseline_identity(prior, files) if prior else None
-    groups = _observe(project, files, adapter, board, policy)
+    previous_files = archive_files(prior) if prior else None
+    groups = _observe(project, files, adapter, board, policy, previous_files)
+    baseline = baseline_identity(prior, files, project, groups) if prior else None
     _check_impact(project, groups, proposed, mode, baseline, files)
     actions = {group: {p['check_id']: {'action': p['action'], 'key': p['key'],
                                        'reason': proposed.get(p['check_id'], p['why'])}
@@ -331,11 +413,13 @@ def preflight(project, files, adapter, *, board=None, policy=None, prior=None, o
         fail('缺少原交付基线')
     if operation == 'writer' and plan['mode'] == 'scoped' and not prior:
         fail('写包器未核准原交付基线，不会按首次运行处理')
-    if baseline and baseline != baseline_identity(prior or baseline['path'], files):
-        fail('原交付基线或回执已经变化')
     if ledger.sha(roots['package']) != plan.get('native_tree'):
         fail('计划和即将写包的实际 Native 文件不一致')
-    groups = _observe(project, files, adapter, board, policy)
+    previous_path = prior or (baseline or {}).get('path')
+    previous_files = archive_files(previous_path) if previous_path else None
+    groups = _observe(project, files, adapter, board, policy, previous_files)
+    if baseline and baseline != baseline_identity(previous_path, files, project, groups):
+        fail('原交付基线或可恢复的真实证据已经变化')
     for group, rows in groups.items():
         if {row['check_id'] for row in rows} != plan['actions'].get(group, {}).keys():
             fail(group + ' 的覆盖清单已经变化')
@@ -409,7 +493,8 @@ def repair_report(project, files, adapter, *, board, policy, prior, mode, propos
     issues = []
     preserved = []
     try:
-        groups = _observe(project, files, adapter_file(adapter), board, policy)
+        groups = _observe(project, files, adapter_file(adapter), board, policy,
+                          archive_files(prior) if prior else None)
     except (ValueError, OSError, zipfile.BadZipFile) as error:
         groups = {}
         issues.append({'id': 'inspection', 'kind': 'input_repair', 'reason': str(error),
@@ -434,6 +519,9 @@ def repair_report(project, files, adapter, *, board, policy, prior, mode, propos
                     issues.append({'id': cid, 'kind': 'dependency_or_execution_unit', 'reason': str(error),
                                    'remedy': '补准实际依赖。包含多个功能的执行器拆成可独立核验的单元，按原报告恢复未受影响项。'})
     plan = None
+    if proposed is None:
+        proposed = {row['check_id']: '逐项依赖或原始证据变化，按当前账本补齐此项：' + row['why']
+                    for rows in groups.values() for row in rows if row['action'] == 'run'}
     try:
         plan = create_plan(project, files, adapter, board=board, policy=policy, prior=prior,
                            mode=mode, proposed=proposed, authorization=authorization)
@@ -453,6 +541,94 @@ def repair_report(project, files, adapter, *, board, policy, prior, mode, propos
             'instruction': '在现有授权内持续修复并续跑。仅有真实外部文件、权限、决定缺失或用户明确暂停时才交回用户。',
         },
     }, plan
+
+
+def ensure_plan(project, files, adapter, *, board, policy, prior=None, operation='writer',
+                expected_sha256=None):
+    """Repair a missing/stale plan from exact declarations before a new invocation."""
+    if expected_sha256 is not None or _active_plan.get() is not None:
+        audit = preflight(project, files, adapter, board=board, policy=policy, prior=prior, operation=operation)
+        if expected_sha256 is not None and audit['plan_sha256'] != expected_sha256:
+            fail('执行中的计划已变化，先结束当前调用，再按原授权修复续跑')
+        return audit
+    if os.environ.get(ENV_PLAN):
+        try:
+            return preflight(project, files, adapter, board=board, policy=policy, prior=prior, operation=operation)
+        except ScopeRepairRequired:
+            pass  # A fresh invocation can reconstruct its authorization from the same real evidence.
+    mode = 'scoped' if prior else 'reuse-only'
+    report, plan = repair_report(project, files, adapter, board=board, policy=policy, prior=prior,
+                                 mode=mode, proposed=None)
+    folder = Path(project).resolve() / 'docs/checks/incremental/scope-plans'
+    folder.mkdir(parents=True, exist_ok=True)
+    run_id = uuid.uuid4().hex
+    report_path = folder / (run_id + '.repair.json')
+    if plan is None:
+        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+        reasons = '；'.join(issue['reason'] for issue in report['issues'])
+        fail(reasons + '。修复记录：' + str(report_path))
+    plan_path = folder / (run_id + '.plan.json')
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + '\n')
+    report.update(plan_path=str(plan_path), automatic_repair='plan_binding')
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    os.environ[ENV_PLAN] = str(plan_path)
+    audit = preflight(project, files, adapter, board=board, policy=policy, prior=prior, operation=operation)
+    return dict(audit, repaired_plan=str(plan_path), repair_report=str(report_path))
+
+
+def resume_scoped_step(task, *, project, read_files, adapter, board, policy, prior,
+                       proposed, repair_action, actions, observe, resume):
+    """Connect a diagnosed repair to the real gate and the original gated entry.
+
+    Call after the failed invocation has unwound. Semantic repairs are explicit
+    registered Python callbacks supplied by the owning agent, never task JSON code.
+    The original authorization may narrow here, but cannot be promoted to full.
+    """
+    from delivery_continuation import repair_and_resume
+    if _execution_depth.get():
+        fail('原执行调用尚未退出，修复续跑必须使用新的调用边界')
+    mode = task.get('mode')
+    if mode not in ('scoped', 'reuse-only'):
+        fail('修复续跑入口只接受原局部或纯沿用任务，不自动生成全量模式')
+    project = Path(project).resolve()
+    proposed = json.loads(json.dumps(proposed))
+    previous_plan = os.environ.get(ENV_PLAN)
+    bound = {}
+
+    def replan(_):
+        files = read_files()
+        plan = create_plan(project, files, adapter, board=board, policy=policy,
+                           prior=prior, mode=mode, proposed=proposed)
+        folder = project / 'docs/checks/incremental/scope-plans'
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / (uuid.uuid4().hex + '.plan.json')
+        path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + '\n')
+        bound['path'] = path
+        os.environ[ENV_PLAN] = str(path)
+        with execution_scope():
+            audit = preflight(project, read_files(), adapter, board=board,
+                              policy=policy, prior=prior)
+        bound.update(path=path, sha256=audit['plan_sha256'])
+        return {'plan': plan, 'plan_path': str(path), 'verification': audit}
+
+    def original_entry(plan):
+        if os.environ.get(ENV_PLAN) != str(bound['path']):
+            fail('续跑前计划路径已变化')
+        with execution_scope():
+            audit = preflight(project, read_files(), adapter, board=board,
+                              policy=policy, prior=prior)
+            if audit['plan_sha256'] != bound['sha256']:
+                fail('续跑前计划内容已变化')
+            return resume(plan)
+
+    result = repair_and_resume(task, repair_action=repair_action, actions=actions,
+                               observe=observe, replan=replan, resume=original_entry)
+    if result['status'] != 'resumed' and os.environ.get(ENV_PLAN) == str(bound.get('path')):
+        if previous_plan is None:
+            os.environ.pop(ENV_PLAN, None)
+        else:
+            os.environ[ENV_PLAN] = previous_plan
+    return result
 
 
 def main():

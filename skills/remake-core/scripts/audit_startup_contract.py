@@ -69,6 +69,37 @@ def scan_source(project):
         for g in game_runs:
             hits.append({'id': g, 'rule': 'game_run_twice', 'line': 'game.run(...)',
                          'why': 'engine init must run once; a Retry while init is in flight must not call game.run again'})
+    # Share the package parser/AST check: flag guards in compiled comma/short-circuit
+    # expressions and in source blocks must not acquire different acceptance rules.
+    import audit_upload_startup as upload
+    import shutil
+    node, signature = shutil.which('node'), None
+    for f in walk_sources(project):
+        if f.suffix != '.js':
+            continue  # TypeScript is covered by its actual compiled Native JS, not guessed by a regex.
+        content = f.read_bytes()
+        if not re.search(rb'\bCC_(?:WECHATGAME|WECHATGAMESUB|BYTEDANCEGAME|QQPLAY)\b', content):
+            continue
+        rel = f.relative_to(project).as_posix()
+        try:
+            if not node:
+                raise ValueError('Node.js required to inspect platform-dependent input binding')
+            if signature is None:
+                signature = upload.parser_fingerprint()
+            code, stderr, parsed, _ = upload.parse_package_source(content, node, signature)
+            if code or parsed.get('error'):
+                raise ValueError(parsed.get('error') or stderr or 'AST parser failed')
+            for finding in (parsed.get('platform_input_bindings') or {}).get('findings', []):
+                hits.append({'id': '%s:%d:platform_input_binding' % (rel, finding['line']),
+                             'rule': 'platform_input_binding', 'line': finding['event'],
+                             'why': finding['reason'], 'hard_block': True, 'evidence': finding})
+            for finding in (parsed.get('platform_input_bindings') or {}).get('unresolved', []):
+                hits.append({'id': '%s:%d:platform_input_binding_review' % (rel, finding['line']),
+                             'rule': 'platform_input_binding_review', 'line': finding['lifecycle'],
+                             'why': finding['reason'], 'evidence': finding})
+        except (OSError, ValueError, UnicodeError, upload.subprocess.TimeoutExpired) as error:
+            hits.append({'id': rel + ':platform_input_parser', 'rule': 'platform_input_parser',
+                         'line': '', 'why': str(error), 'hard_block': True})
     return hits
 
 
@@ -187,7 +218,7 @@ def main():
         print(json.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False), file=sys.stderr)
         return 2
     problems = []
-    open_hits = [h for h in hits if not str(reviewed.get(h['id'], '')).strip()]
+    open_hits = [h for h in hits if h.get('hard_block') or not str(reviewed.get(h['id'], '')).strip()]
     for h in open_hits:
         problems.append('%s [%s] %s' % (h['id'], h['rule'], h['why']))
     if sizes:

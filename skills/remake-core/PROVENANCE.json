@@ -838,8 +838,8 @@
     },
     {
       "path": "references/ad-standard-six.md",
-      "sha256": "e38b9ce71148f4803e45af94b5103791645adfd620aacbcf1b4ca843a27f179d",
-      "bytes": 6430
+      "sha256": "6351e08a387fafb4d080728fa42371bd4c940a6ba3b9da4d666a9d95bb5a421c",
+      "bytes": 7046
     },
     {
       "path": "references/architecture-and-platform.md",
@@ -1013,8 +1013,8 @@
     },
     {
       "path": "references/production-plan.md",
-      "sha256": "d6e21bfd24090c90f46f231d66ed7efcc1107edc4a9d890ca5fe03babedb2148",
-      "bytes": 4671
+      "sha256": "9aefea5704b95fb860b38223d15bedd754de9aaab8d704036c236d6da1c5885d",
+      "bytes": 9278
     },
     {
       "path": "references/project-qa-registration.md",
@@ -1048,8 +1048,8 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "946f34f1234abcce749ff463b2bfbfa2177165cec6bafe8cb0f43cfb7e4c302f",
-      "bytes": 51362
+      "sha256": "f7dc321282ca64b925ae4fc88414234e2d3cf6350a4fc90991c2910bba051ce3",
+      "bytes": 50461
     },
     {
       "path": "references/storage-upgrade-trace-v3.md",
@@ -4450,7 +4450,39 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "production-order.20261112.1",
+      "installed_at": "2026-11-12T11:21:28.405470+00:00",
+      "scope": "English production dependency order only. Six standard ad families; no counting, runtime-quality, game, or formal-release changes.",
+      "authority": "User requested removing repeated preparation and art rework by correcting production order.",
+      "files": [
+        {
+          "path": "references/production-plan.md",
+          "before_sha256": "d6e21bfd24090c90f46f231d66ed7efcc1107edc4a9d890ca5fe03babedb2148",
+          "sha256": "9aefea5704b95fb860b38223d15bedd754de9aaab8d704036c236d6da1c5885d"
+        },
+        {
+          "path": "references/ad-standard-six.md",
+          "before_sha256": "e38b9ce71148f4803e45af94b5103791645adfd620aacbcf1b4ca843a27f179d",
+          "sha256": "6351e08a387fafb4d080728fa42371bd4c940a6ba3b9da4d666a9d95bb5a421c"
+        },
+        {
+          "path": "references/stage-flow.md",
+          "before_sha256": "946f34f1234abcce749ff463b2bfbfa2177165cec6bafe8cb0f43cfb7e4c302f",
+          "sha256": "f7dc321282ca64b925ae4fc88414234e2d3cf6350a4fc90991c2910bba051ce3"
+        }
+      ],
+      "verification": {
+        "ad_planner_cases": 32,
+        "ad_gate_cases": 21,
+        "entry_consistency_cases": 77,
+        "entry_pack_only_skips": 10,
+        "real_project_read_only_plan_comparisons": 2,
+        "quality_functions_unchanged": 15,
+        "whole_game_time_saving_measured": false
+      }
     }
   ],
-  "previous_local_provenance_sha256": "a2a8cf48eb14f6b92bcab65c03ddec0be569e567760e91f14c5349e4bbdc4fd8"
+  "previous_local_provenance_sha256": "ce09b2968487882d593b83e93162d0f97f632772c6e661b71234cb0692d4cafb"
 }

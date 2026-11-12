@@ -187,9 +187,9 @@ def find_receipt(archive, zip_sha256, limit=500):
     return path, False
 
 
-def receipt_status(archive, zip_sha256, file_sha256):
+def _receipt_status(archive, zip_sha256, file_sha256, selected=None):
     """'official' only when an official writer's receipt exists for exactly these bytes (find_receipt)."""
-    path, by_bytes = find_receipt(archive, zip_sha256)
+    path, by_bytes = selected or find_receipt(archive, zip_sha256)
     out = {'entry': 'unofficial', 'entry_label': ENTRY_LABEL['unofficial'], 'receipt': str(path)}
     if not path.is_file() or path.is_symlink():
         out['entry_reason'] = ('no writer receipt %s, and no receipt in that folder for these ZIP bytes: this ZIP was not '
@@ -220,6 +220,28 @@ def receipt_status(archive, zip_sha256, file_sha256):
                    receipt_tool=receipt['tool'], receipt_board=receipt.get('board'),
                    receipt_policy=receipt['finalize'].get('policy'), receipt_kit_version=receipt['finalize'].get('kit_version'))
     return out
+
+
+
+def receipt_status(archive, zip_sha256, file_sha256):
+    """Find a fully valid same-byte receipt even beside a stale same-name file."""
+    preferred = find_receipt(archive, zip_sha256)
+    result = _receipt_status(archive, zip_sha256, file_sha256, preferred)
+    if result.get('entry') == 'official':
+        return result
+    for path in sorted(Path(archive).parent.glob('*' + RECEIPT_SUFFIX))[:500]:
+        if path == preferred[0] or path.is_symlink() or not path.is_file():
+            continue
+        try:
+            if path.stat().st_size > 2_000_000:
+                continue
+            candidate = _receipt_status(archive, zip_sha256, file_sha256, (path, True))
+        except (OSError, ValueError):
+            continue
+        if candidate.get('entry') == 'official':
+            candidate['ignored_receipt'] = {'path': str(preferred[0]), 'reason': result.get('entry_reason')}
+            return candidate
+    return result
 
 
 def safe_name(name):

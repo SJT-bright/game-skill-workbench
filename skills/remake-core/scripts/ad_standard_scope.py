@@ -19,6 +19,8 @@ def requirement(project=None, policy=None):
             return {'required': True, 'reason': 'project policy is unreadable; cannot downgrade the ad standard'}
     if data.get('ad_standard') == STANDARD or (project / 'docs/adboost/ad_nodes.json').is_file():
         return {'required': True, 'reason': 'six-standard production is enabled for this project'}
+    if _verified_confirmed_trial(project):
+        return {'required': False, 'reason': 'machine-registered user approval retains this confirmed trial scope; evidence and production dependencies match'}
     if marker.is_file() and data.get('policy') == 'new' and data.get('created'):
         if _verified_maintenance(project):
             return {'required': False, 'reason': 'verified prior delivery and scoped maintenance plan retain their recorded contract'}
@@ -43,4 +45,33 @@ def _verified_maintenance(project):
         baseline = plan['baseline']
         return owner.baseline_identity(baseline['path'], {}) == baseline
     except (Exception, SystemExit):
+        return False
+
+
+def _verified_confirmed_trial(project):
+    """Only machine-registered approvals apply; project self-declarations confer no authority."""
+    import hashlib
+    from project_qa import read_store, relative_file
+    try:
+        project = project.resolve()
+        registered = read_store().get('confirmed_trial_scopes', {}).get(str(project))
+        if not isinstance(registered, dict):
+            return False
+        record = relative_file(project, registered['path'])
+        if hashlib.sha256(record.read_bytes()).hexdigest() != registered['sha256']:
+            return False
+        scope = json.loads(record.read_text())
+        trial = relative_file(project, scope['trial_record'])
+        if (scope.get('schema') != 'ad-standard-user-scope.v1'
+                or scope.get('authority') != 'explicit_current_user_instruction'
+                or scope.get('scope') != 'retain_confirmed_trial'
+                or not scope.get('instruction')
+                or hashlib.sha256(trial.read_bytes()).hexdigest() != scope['trial_sha256']
+                or json.loads(trial.read_text()).get('status') not in ('ready', 'handoff_ready')):
+            return False
+        dependencies = scope['production_dependencies']
+        return isinstance(dependencies, dict) and bool(dependencies) and all(
+            hashlib.sha256(relative_file(project, name).read_bytes()).hexdigest() == expected
+            for name, expected in dependencies.items())
+    except (KeyError, OSError, ValueError, TypeError):
         return False

@@ -16,6 +16,24 @@ import sqlite3
 import sys
 import time
 import uuid
+import bundle_module_inputs as BMI
+
+module_sources = BMI.module_sources
+module_coverage = BMI.module_coverage
+
+
+def expand_module_roots(roots, source_files):
+    try:
+        return BMI.expand_module_roots(roots, source_files)
+    except BMI.ModuleInputError as exc:
+        raise NeedsScope(str(exc)) from exc
+
+
+def with_module_inputs(roots, source_files=None, *, scope=None):
+    try:
+        return BMI.with_module_inputs(roots, source_files, scope=scope)
+    except BMI.ModuleInputError as exc:
+        raise NeedsScope(str(exc)) from exc
 
 SCHEMA = 'check-ledger.v1'
 SCOPE_SCHEMA = 'check-inputs.v1'
@@ -82,6 +100,41 @@ def manifest(root, *, project=False):
     return out
 
 
+def _tool_compat_source(path, raw):
+    """Return only the reviewed identity/import source for this exact ledger.
+
+    Observer files keep their real bytes. The legacy import tree prevents a new
+    scheduling helper from invalidating unrelated old, non-module observations.
+    The actual ledger and module helper must both match the fixed reviewed set.
+    """
+    identity=sha(raw)
+    if path != Path(__file__).resolve():return identity,raw
+    try:
+        proof=json.loads(path.with_name('check-ledger-rule-compat.json').read_text())
+        if proof.get('schema')=='check-ledger-rule-compat.v1':
+            if proof.get('current_sha256')==identity and proof.get('scope')=='evidence-recovery-scheduling-only':
+                return proof['prior_sha256'],raw
+        elif (proof.get('schema')=='check-ledger-rule-compat.v2'
+              and proof.get('scope')=='module-input-and-evidence-recovery-exact-byte-set'
+              and proof.get('current_sha256')==identity):
+            fixtures=path.parent/'fixtures/reviewed-legacy-suites'
+            prior=(fixtures/'check_ledger.py').read_bytes()
+            prior_proof_raw=(fixtures/'check-ledger-rule-compat.prior.json').read_bytes()
+            prior_proof=json.loads(prior_proof_raw)
+            module_raw=path.with_name('bundle_module_inputs.py').read_bytes()
+            if (sha(prior)==proof['prior_source_sha256']
+                    and sha(prior_proof_raw)==proof['prior_compat_sha256']
+                    and prior_proof.get('schema')=='check-ledger-rule-compat.v1'
+                    and prior_proof.get('scope')=='evidence-recovery-scheduling-only'
+                    and prior_proof.get('current_sha256')==sha(prior)
+                    and prior_proof.get('prior_sha256')==proof['prior_sha256']
+                    and sha(module_raw)==proof['module_helper_sha256']):
+                return proof['prior_sha256'],prior
+    except (OSError,ValueError,KeyError,TypeError):
+        pass
+    return identity,raw
+
+
 def tool_fingerprint(paths):
     """Explicit tool files plus local Python imports. Callers include non-Python resources."""
     todo=[Path(p).resolve() for p in paths]; seen=set(); rows=[]
@@ -95,20 +148,11 @@ def tool_fingerprint(paths):
         if not p.is_file():
             rows.append((p.name,'missing')); continue
         raw=p.read_bytes()
-        identity = sha(raw)
-        if p == Path(__file__).resolve():
-            try:
-                compatibility = json.loads(p.with_name('check-ledger-rule-compat.json').read_text())
-                if (compatibility.get('schema') == 'check-ledger-rule-compat.v1'
-                        and compatibility.get('current_sha256') == identity
-                        and compatibility.get('scope') == 'evidence-recovery-scheduling-only'):
-                    identity = compatibility['prior_sha256']
-            except (OSError, ValueError, KeyError, TypeError):
-                pass
+        identity,import_source = _tool_compat_source(p,raw)
         rows.append((p.name,identity))
         if p.suffix=='.py':
             try:
-                tree=ast.parse(raw)
+                tree=ast.parse(import_source)
                 for node in ast.walk(tree):
                     names=([a.name for a in node.names] if isinstance(node,ast.Import)
                            else [node.module] if isinstance(node,ast.ImportFrom) and node.module else [])
@@ -156,12 +200,32 @@ def select_inputs(roots, scope):
     path globs. JSON pointers are supplied as virtual manifest entries by the caller.
     """
     if scope is None:return roots
+    roots=with_module_inputs(roots, scope=scope)
     result={}
     for name, patterns in scope['inputs'].items():
         if name not in roots or not isinstance(patterns,list) or not patterns or not all(isinstance(s,str) and s for s in patterns):
             raise NeedsScope('无效依赖选择器：'+name)
         values=roots[name]
-        result[name]={k:v for k,v in values.items() if any(fnmatch.fnmatchcase(k,p) for p in patterns)}
+        if name == 'modules':
+            # Metadata may never serve as a fake module selector. Every pattern
+            # must bind an actual module, and each consumer binds its envelope.
+            candidates={k:v for k,v in values.items() if BMI.MODULE_SEP in k}
+            if any(BMI.META_SEP in p or not any(fnmatch.fnmatchcase(k,p) for k in candidates) for p in patterns):
+                details='；'.join(k+': '+str(v) for k,v in values.items()
+                                 if k.endswith(BMI.META_SEP+'error') and
+                                 any(fnmatch.fnmatchcase(k.split(BMI.META_SEP,1)[0]+BMI.MODULE_SEP+'*',p)
+                                     or p.startswith(k.split(BMI.META_SEP,1)[0]+BMI.MODULE_SEP) for p in patterns))
+                raise NeedsScope('模块选择器未命中真实静态模块，或选择了元数据：'+repr(patterns)+(('；'+details) if details else ''))
+            result[name]={k:v for k,v in candidates.items() if any(fnmatch.fnmatchcase(k,p) for p in patterns)}
+            for key in list(result[name]):
+                envelope=BMI.module_bundle(key)+BMI.META_SEP+'envelope'
+                if envelope not in values:raise NeedsScope('模块缺少原始 bundle envelope：'+key)
+                result[name][envelope]=values[envelope]
+                parser=BMI.module_bundle(key)+BMI.META_SEP+'parser'
+                if parser not in values:raise NeedsScope('模块缺少静态解析器规则指纹：'+key)
+                result[name][parser]=values[parser]
+        else:
+            result[name]={k:v for k,v in values.items() if any(fnmatch.fnmatchcase(k,p) for p in patterns)}
         # Preserve empty globs so later added dependencies invalidate this input.
         result[name]['<selectors>']=sha(patterns)
     return result
@@ -176,10 +240,45 @@ def unmapped_changes(project, old, new):
         for root,patterns in row.get('inputs',{}).items():
             if isinstance(patterns,list):owners.setdefault(root,[]).extend(patterns)
     missing=[]
+    module_patterns=owners.get('modules',[])
+    # A separate ordinary-file consumer must still see that changed bundle
+    # bytes have real module owners. Expand only with registered original bytes;
+    # an unsupported parser/envelope keeps the ordinary package boundary.
+    if module_patterns and (old.get('modules') is None or new.get('modules') is None):
+        try:
+            module_scope={'inputs':{'modules':module_patterns}}
+            before=with_module_inputs(old,scope=module_scope)
+            after=with_module_inputs(new,scope=module_scope)
+            select_inputs(before,module_scope);select_inputs(after,module_scope)
+            old,new=before,after
+        except NeedsScope:
+            pass
+    covered_bundles=set()
+    if old.get('modules') is not None and new.get('modules') is not None:
+        bundles={BMI.module_bundle(key) for roots in (old,new) for key in roots['modules']
+                 if BMI.MODULE_SEP in key and any(fnmatch.fnmatchcase(key,p) for p in module_patterns)}
+        # A normal .js bootstrap has its own package owner. It must not make a
+        # separately parsed, module-owned bundle fail one global coverage flag.
+        for bundle in bundles:
+            snapshots=[dict(roots,
+                            package={p:v for p,v in roots.get('package',{}).items() if p==bundle},
+                            modules={k:v for k,v in roots['modules'].items()
+                                     if BMI.module_bundle(k)==bundle or k.startswith(bundle+BMI.META_SEP)})
+                       for roots in (old,new)]
+            coverage=module_coverage(*snapshots)
+            if coverage['covered'] and all(any(fnmatch.fnmatchcase(k,p) for p in module_patterns)
+                                           for k in coverage['changed_modules']):
+                covered_bundles.update(coverage['changed_bundles'])
     for root in set(old)|set(new):
         a,b=old.get(root,{}),new.get(root,{})
         changed=[k for k in set(a)|set(b) if a.get(k)!=b.get(k)]
         for key in changed:
+            # A verified module decomposition owns the aggregate bundle hash;
+            # changed module leaves still need a real owner below. Envelope or
+            # unknown-byte changes retain the ordinary package-scope boundary.
+            if root=='package' and key in covered_bundles:continue
+            if root=='modules' and BMI.META_SEP in key:continue
+            if root=='modules' and any(fnmatch.fnmatchcase(BMI.module_bundle(key) or '',p) for p in owners.get('package',[])):continue
             # A JSON object's parent digest is an aggregate, not a second unowned leaf.
             if any(other.startswith(key.rstrip('/')+'/') for other in changed if other!=key):continue
             # Selecting a JSON object binds its aggregate hash, including every
@@ -254,6 +353,7 @@ class Ledger:
     def prepare(self, check_id, roots, conditions, tools, *, label=None, domain='gameplay'):
         if not check_id or domain not in DOMAINS:raise NeedsScope('检查节点必须有稳定 ID 和有效类别')
         scope=scope_for(self.project,check_id)
+        roots=with_module_inputs(roots, scope=scope)
         inputs=select_inputs(roots,scope)
         value={'schema':SCHEMA,'check_id':check_id,'inputs':inputs,'conditions':conditions,'tool_sha256':tools,
                'scope_sha256':sha(scope) if scope else None}
@@ -261,6 +361,16 @@ class Ledger:
         found=self.db.execute('SELECT data FROM records WHERE key=?',(key,)).fetchone()
         cached=json.loads(found[0]) if found else None
         previous=self.previous(check_id)
+        # A newly precise declaration has a new binding key. It can still name
+        # the real previous observation for restoration/recollection; never
+        # relabel that missing old evidence as a first execution.
+        if cached is None and scope:
+            projected=[row for row in previous
+                       if row['binding']['conditions']==conditions and row['binding']['tool_sha256']==tools
+                       and select_inputs(row.get('roots',{}),scope)==inputs]
+            # A newer failure of this exact projection outranks every older
+            # pass, including when a declaration changed the binding key.
+            cached=projected[0] if projected else None
         evidence_recheck = self.evidence_recheck(check_id, cached) if cached and cached.get('passed') else None
         if evidence_recheck:
             value['evidence_recheck'] = sha(evidence_recheck)
@@ -268,7 +378,8 @@ class Ledger:
             recovered = self.db.execute('SELECT data FROM records WHERE key=?', (key,)).fetchone()
             if recovered:
                 cached = json.loads(recovered[0])
-        unmapped=unmapped_changes(self.project,previous[0].get('roots',{}),roots) if scope and previous else []
+        old_roots=with_module_inputs(previous[0].get('roots',{}), scope=scope) if scope and previous else None
+        unmapped=unmapped_changes(self.project,old_roots,roots) if old_roots is not None else []
         if unmapped:
             action='needs_scope';why='这些变化尚未关联到检查节点：'+', '.join(unmapped[:12])
         elif cached and cached.get('passed') and self._evidence_valid(cached):
@@ -285,7 +396,7 @@ class Ledger:
             action='run';why='首次/新增检查项，或已声明的相关输入、规则、条件发生变化'
         # Adding a precise dependency declaration to a real prior execution is not a
         # new test. Retain the original execution identity, time and files.
-        if not unmapped and scope and action == 'run':
+        if not unmapped and scope and action == 'run' and not (cached and cached.get('passed') is False):
             for row in previous:
                 b=row['binding']
                 if (row.get('passed') and b['conditions']==conditions and b['tool_sha256']==tools

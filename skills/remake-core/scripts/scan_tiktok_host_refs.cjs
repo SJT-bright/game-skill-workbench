@@ -274,15 +274,23 @@ function scan(source, file, context = {}) {
     if (!reference || unusedReads.has(node) || guardedOptional(node) || guardedEngineProbe(node) || unqualified && shadowed(node) || compatible(node)) continue;
     hits.push({file,line:node.loc.start.line,reference:source.slice(node.start,node.end).slice(0,90)});
   }
+  // The mandatory final-ZIP check already parsed this AST. Reuse it for the
+  // known legacy-flag input gap instead of running a second game/Node suite.
+  if (context.inputBindings) {
+    const input = require('./scan_platform_input_bindings.cjs').analyze({
+      nodes, parents, isGlobal: (name, node) => !bindingScope(node, name)
+    });
+    context.inputBindings.push({file, ...input});
+  }
   return hits;
 }
-function scanFiles(files) {
+function scanFiles(files, inputBindings = null) {
   const entry=files.find(f=>f.file==='game.js'),required=new Set();
   if(entry)walk(parse(entry.code),n=>{
     if(n.type==='CallExpression'&&n.callee.type==='Identifier'&&n.callee.name==='require'&&n.arguments.length===1&&
        /^\.\/cocos2d-js(?:-min)?\.js$/.test(n.arguments[0].value||''))required.add(n.arguments[0].value.slice(2));
   });
-  return files.flatMap(f=>scan(f.code,f.file,{requiredEngine:required.has(f.file)}));
+  return files.flatMap(f=>scan(f.code,f.file,{requiredEngine:required.has(f.file), inputBindings}));
 }
 module.exports = {scan,scanFiles};
 if (require.main === module) {
@@ -304,8 +312,12 @@ if (require.main === module) {
         throw new Error('input required');
       }
       phase = 'javascript';
-      const findings = scanFiles(input.files);
-      console.log(JSON.stringify({status: findings.length ? 'risk_detected' : 'checked', checked: input.files.length, findings}));
+      const inputBindings = [], findings = scanFiles(input.files, inputBindings);
+      const platform_input_bindings = {schema:'platform_input_bindings.v1',
+        findings:inputBindings.flatMap(row=>row.findings.map(f=>({file:row.file,...f}))),
+        unresolved:inputBindings.flatMap(row=>row.unresolved.map(f=>({file:row.file,...f})))};
+      console.log(JSON.stringify({status: findings.length || platform_input_bindings.findings.length ? 'risk_detected' : 'checked',
+        checked: input.files.length, findings, platform_input_bindings}));
     } catch (error) {
       const reason = phase === 'json' ? 'invalid JSON input: ' + error.message :
         phase === 'javascript' ? 'JavaScript parse failed: ' + error.message : error.message;

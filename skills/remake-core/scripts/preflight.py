@@ -498,7 +498,7 @@ def main():
     if code in (0, 1) and j:
         add('启动契约', '需处理' if j.get('failed') else '通过',
             (f"{j.get('failed')}处可能导致进不去游戏的写法：" + '；'.join(p[:90] for p in j.get('problems', [])[:3])) if j.get('failed')
-            else '没有发现会卡住启动的写法（可选接口当必需、固定总截止、直接切场景、重复 game.run、同一请求重试）',
+            else '没有发现已覆盖的启动与普通输入接线风险（含平台宏跳过按钮绑定；静态检查不代替 Native 实际输入）',
             'startup_contract.json')
     else:
         add('启动契约', '出错', text.strip()[-300:], 'logs/audit_startup_contract.log')

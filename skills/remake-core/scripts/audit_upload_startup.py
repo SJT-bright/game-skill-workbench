@@ -18,7 +18,7 @@ _PARSE_CACHE_LIMIT = 64
 def parser_fingerprint():
     root = Path(__file__).parent
     return tuple(hashlib.sha256((root/name).read_bytes()).hexdigest()
-                 for name in ('parse_package_requires.cjs','vendor/acorn.cjs'))
+                 for name in ('parse_package_requires.cjs','vendor/acorn.cjs','scan_platform_input_bindings.cjs'))
 
 def parse_package_source(source, node, signature):
     key = (node, signature, hashlib.sha256(source).hexdigest())
@@ -152,6 +152,7 @@ def audit_files(files):
     parse_stats = {"cache_hits":0,"executed":0}
     signature = None
     entry_protocols = set()
+    platform_input_bindings, platform_input_unresolved = [], []
     startup_modules, startup_imports = {}, {}
     settings = files.get('src/settings.js', b'').decode('utf-8-sig', errors='replace')
     engine_subpackages, subpackage_roots = set(), {}
@@ -278,6 +279,16 @@ def audit_files(files):
             continue
         if name == 'game.js':
             entry_protocols = set(parsed.get('native_entry_protocols', []))
+        input_scan = parsed.get('platform_input_bindings') or {}
+        for finding in input_scan.get('findings', []):
+            platform_input_bindings.append(dict(source=name, **finding))
+            errors.append('Cocos platform input binding skipped: %s:%s [%s] %s; missing when %s' %
+                          (name, finding['line'], finding['id'], finding['event'],
+                           json.dumps(finding['missing_when'], sort_keys=True)))
+        for finding in input_scan.get('unresolved', []):
+            platform_input_unresolved.append(dict(source=name, **finding))
+            warnings.append('Cocos platform input binding needs runtime review: %s:%s (%s)' %
+                            (name, finding['line'], finding['reason']))
         startup_modules[name] = {key: parsed.get(key) for key in
                                  ('startup24_resources', 'global_boot_assignments', 'calls_global_boot',
                                   'direct_startup_resources', 'direct_boot_resources')}
@@ -468,5 +479,6 @@ def audit_files(files):
             'errors': sorted(set(errors)), 'warnings': sorted(set(warnings)),
             'reachable_files': sorted(visited), 'require_edges': edges, 'dynamic_requires': dynamic,
             'adapter_preconditions': adapter_preconditions, 'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
-            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch/resources registration and provable startup loads, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes',
-            'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'account/region/network', 'platform acceptance']}
+            'platform_input_bindings': {'findings': platform_input_bindings, 'unresolved': platform_input_unresolved},
+            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch/resources registration and provable startup loads, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes; legacy-flag skipped common node input bindings in Cocos2 lifecycle methods',
+            'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'platform flags outside checked Cocos2 lifecycle paths', 'account/region/network', 'platform acceptance']}

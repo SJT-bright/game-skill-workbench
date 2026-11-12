@@ -90,6 +90,34 @@ class ScopeGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ledger.NeedsScope, '更换|变化'):
             self.authorize([row])
 
+    def test_repaired_plan_can_resume_in_a_new_invocation_in_the_same_process(self):
+        first = self.row('ads.normal')
+        self.plan([first])
+        with gate.execution_scope():
+            self.activate_plan()
+            old_digest = gate.digest(self.plan_path)
+            changed = json.loads(self.plan_path.read_text())
+            changed['startup_run'] = True
+            self.write_plan(changed)
+            with self.assertRaisesRegex(ledger.NeedsScope, '更换|变化'):
+                gate._load_plan(self.project)
+            self.assertEqual(gate._active_plan.get(), old_digest)
+        self.assertIsNone(gate._active_plan.get())
+        with gate.execution_scope():
+            self.assertNotEqual(gate._load_plan(self.project)[1], old_digest)
+            self.activate_plan()
+        self.assertIsNone(gate._active_plan.get())
+
+    def test_nested_entry_cannot_release_the_outer_execution_binding(self):
+        self.plan([self.row('ads.normal')])
+        with gate.execution_scope():
+            self.activate_plan()
+            expected = gate._active_plan.get()
+            with gate.execution_scope():
+                self.assertEqual(gate._active_plan.get(), expected)
+            self.assertEqual(gate._active_plan.get(), expected)
+        self.assertIsNone(gate._active_plan.get())
+
     def test_full_run_cannot_omit_user_authorization(self):
         row = self.row('ads.normal', paths=('*',))
         self.plan([row], mode='full')
@@ -231,10 +259,13 @@ class ScopeGateTests(unittest.TestCase):
 
     def test_repairing_plan_cannot_bypass_wildcard_validation(self):
         groups = {'ads': [self.row('ads.normal', paths=('*',))], 'runtime': []}
+        previous = self.project / 'old.zip'
+        with zipfile.ZipFile(previous, 'w') as archive:
+            archive.writestr('game.js', b'game')
         with patch.object(gate, '_observe', return_value=groups), \
-             patch.object(gate, 'baseline_identity', return_value={'path': 'old.zip'}):
+             patch.object(gate, 'baseline_identity', return_value={'path': str(previous)}):
             report, plan = gate.repair_report(self.project, self.files, self.adapter, board='localize',
-                                              policy='new', prior='old.zip', mode='scoped',
+                                              policy='new', prior=previous, mode='scoped',
                                               proposed={'ads.normal': 'attempt to approve full wildcard'})
         self.assertIsNone(plan)
         self.assertEqual(report['status'], 'repair_required')
@@ -318,8 +349,9 @@ class ScopeGateTests(unittest.TestCase):
         ad, _ = self.import_runners()
         ar = self.fake_ad_runner()
         self.plan([self.row('ads.normal')])
-        self.activate_plan()
-        result = ad.run(ar, self.native, self.adapter, cases=[])
+        with gate.execution_scope():
+            self.activate_plan()
+            result = ad.run(ar, self.native, self.adapter, cases=[])
         ar._run_uncached.assert_not_called()
         self.assertFalse(result['complete'])
         self.assertEqual(result['planned_not_run'], ['normal'])
@@ -328,8 +360,8 @@ class ScopeGateTests(unittest.TestCase):
         _, runtime = self.import_runners()
         rr = self.fake_runtime_runner()
         self.plan([], actions={'runtime': {}})
-        self.activate_plan()
-        with patch.object(runtime, '_rule', return_value='runtime-tool'):
+        with gate.execution_scope(), patch.object(runtime, '_rule', return_value='runtime-tool'):
+            self.activate_plan()
             result = runtime.run(rr, self.native, self.adapter, suites=[])
         rr._run_uncached.assert_not_called()
         self.assertFalse(result['complete'])

@@ -1,0 +1,12 @@
+{
+  "schema": "runtime-scope-compat.v2",
+  "scope": "scheduler-and-evidence-recovery-exact-byte-triple",
+  "prior_runtime_sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
+  "prior_helper_sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
+  "prior_compat_sha256": "5b2106bfccb91e54a6859a4b638a2c1951bbfaef10b8e594a638a42108980f76",
+  "new_runtime_sha256": "9244fa13d161d2e7c3d086ac7ade70b7e3be26125256dc7430c3dd032ec7b4d4",
+  "new_helper_sha256": "8b47127bdf512219b4bf47d2c24676d5f7651b31ddae2c357317238cebb80a05",
+  "basis": "The reviewed exact scheduler and ledger changes add scope authorization, continuation status, and per-node recovery of missing evidence. Existing runtime checks, case enumeration, and observers remain unchanged. Unrecognized byte combinations use the regular fingerprint.",
+  "prior_ledger_sha256": "05b1daa81d4bd834754b72f0f546a8a3fc6e955ffcc8fc0bd48c931ff7872ca5",
+  "new_ledger_sha256": "2f1318c7731f5551d74cdd2ff59f2582cf9e734634bd7aaddd986921c9482825"
+}

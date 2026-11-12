@@ -81,7 +81,7 @@ _ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
 
 
 def enforce_tiktok_host(files):
-    """Report legacy host access in the main package, adapters and subpackages."""
+    """Inspect shipped JS for legacy host access and known platform-gated input gaps."""
     candidates = [{'file': name, 'code': data.decode('utf-8-sig')}
                   for name, data in sorted(files.items())
                   if name not in _ENGINE_MULTIPLATFORM_FILES and name.lower().endswith(('.js', '.mjs', '.cjs'))]
@@ -95,10 +95,21 @@ def enforce_tiktok_host(files):
                             text=True, capture_output=True, timeout=30)
     if result.returncode:
         raise ValueError('TikTok host-reference check did not run: ' + result.stderr[-500:])
-    findings = json.loads(result.stdout)['findings']
+    data = json.loads(result.stdout)
+    findings = data['findings']
+    input_scan = data.get('platform_input_bindings')
+    if (not isinstance(input_scan, dict) or input_scan.get('schema') != 'platform_input_bindings.v1' or
+            not isinstance(input_scan.get('findings'), list) or not isinstance(input_scan.get('unresolved'), list)):
+        raise ValueError('TikTok platform-input binding check did not run: missing/invalid AST scan result')
     if findings:
         raise ValueError('TikTok Native contains legacy WeChat host references: ' + '; '.join(
             f"{row['file']}:{row['line']} {row['reference']}" for row in findings[:12]))
+    if input_scan['findings']:
+        raise ValueError('TikTok Native platform input binding skipped: ' + '; '.join(
+            '%s:%s:%s %s missing when %s' % (row['file'], row['line'], row['column'], row['event'],
+                                            json.dumps(row['missing_when'], sort_keys=True))
+            for row in input_scan['findings'][:12]))
+    return input_scan
 
 
 def enforce_files(files):
@@ -128,12 +139,15 @@ def inspect_files(files, platform='tiktok'):
             raise ValueError('Missing/empty root entry: '+name+' (do not upload an outer folder)')
     game=json_object(files['game.json'])
     result=enforce({p:len(b) for p,b in files.items()},game,platform)
-    if platform == 'tiktok':
-        enforce_tiktok_host(files)
+    input_scan = enforce_tiktok_host(files) if platform == 'tiktok' else None
     key='subpackages' if platform=='tiktok' else 'subPackages'
     subs=game.get(key,[])
     roots=[s['root'].rstrip('/')+'/' for s in subs]
     warnings=[]
+    if input_scan:
+        result['platform_input_bindings'] = input_scan
+        warnings.extend('Platform input branch needs runtime review: %s:%s (%s)' %
+                        (row['file'], row['line'], row['reason']) for row in input_scan['unresolved'])
     for sub,root in zip(subs,roots):
         if not files.get(root+'game.js'):
             raise ValueError('Missing/empty subpackage game.js entry: '+root)
@@ -188,7 +202,7 @@ def inspect_zip(archive, platform='tiktok', feedback=None):
             'platform':platform,'source':SOURCES[platform],
             'tool_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'passed':False,'errors':[],
-            'boundary':'Fresh local partition/configuration/byte/CRC check only; no platform upload or gameplay verdict.'}
+            'boundary':'Fresh local partition/configuration/byte/CRC and known JS host/input prerequisite checks only; no platform upload or gameplay verdict.'}
     files={};seen=set()
     try:
         with zipfile.ZipFile(archive) as z:
@@ -246,7 +260,7 @@ def inspect_final_zip(archive, platform='tiktok', feedback=None):
             result['errors'].extend(cli['errors'])
         else:
             result['tiktok_cli'] = {'passed': False, 'status': 'blocked_by_size_or_zip_check'}
-        result['boundary'] = 'Fresh local ZIP/CRC/size and TikTok CLI checks; platform upload and device tests are separate.'
+        result['boundary'] = 'Fresh local ZIP/CRC/size, known JS host/input prerequisites and TikTok CLI checks; platform upload and device tests are separate.'
     return result
 
 

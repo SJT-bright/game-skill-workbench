@@ -4,6 +4,8 @@
 
 # 用户本地试玩：生成链接前落实手机视口（2026-10-25）
 
+**输入检查的环境边界（2026-11-12）**：默认 Native 浏览器宿主只证明实际走过的环境/宏取值。若制作/包审计发现普通按钮接线依赖旧平台宏，先按[平台条件与输入绑定](../../cocos-game-check/startup/references/platform-input-binding.md)处理该入口；不能因本页 PLAY 点通或音乐恢复而写跨平台 PLAY 通过。仅更新 Skill 流程时不因此重跑游戏或重出测试包。
+
 **默认 BGM（2026-11-11）**：已确认首页有配乐时，在现有预览命令加 `--expect-home-bgm`；首页检查复用同一 Ego 页补最多一次普通 PLAY 与播放时间采样。漏掉默认请求或普通输入后仍停住时拦截，浏览器 autoplay 限制与 TikTok 真机输出分列。细则见 [BGM 分域与轻量核验](bgm-startup-preview.md)，不重跑完整声音矩阵。
 
 英化使用[两次正式试玩交接](../../cocos-game-to-english/references/preview-handoff.md)。英化入口的 `--keep` 保留内部服务，窗口由交接入口打开。

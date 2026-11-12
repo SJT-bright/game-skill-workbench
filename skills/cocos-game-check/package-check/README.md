@@ -2,6 +2,10 @@
 
 2026-11-11：当前完整制作的六标准广告与新增UI由两写包入口和最终ZIP共享门禁自动核，缺任何一类都不能以扩展顶替；检查用 `check_package.py --project <实际工程>`，规则及阶段范围见[六标准制作](../../remake-core/references/ad-standard-six.md)。
 
+**接收他人包（2026-11-12）**：用户声明同事/别人发来的成品时，按[团队交接](../../remake-core/references/external-package-handoff.md)使用`game_handoff.py receive`，无原回执也能先接收、诊断与同版试玩；`intake_passed`不是`delivery_ready`。完整制作交接附测试ZIP、源码ZIP、试玩及`game_handoff.py export`证据ZIP，原writer回执可跨电脑按哈希核验。
+
+**旧记录缺失不等于当前验收豁免（2026-11-12）**：按[消费者与交付约束](../../remake-core/references/startup-storage-consumer-gate.md)只补缺失的当前启动/存储证据。项目脚本只准备Native；最终writer与prepare_delivery不能被手工ZIP及体积/CLI绿灯替代。最终文件检查拒绝无同字节正式writer回执，失败继续修具体节点。
+
 **拒绝后继续执行（2026-11-11）**。当轮已授权的写包与交付遇到失败时，读取原错误并修复具体节点，沿用未受影响的有效证据，再回原入口续跑到同版交付。只补验真实改动或缺证项；不要停在“ZIP 尚未生成”或等待用户再次说继续。
 
 **测试包与同版试玩链接同发（用户 2026-11-07）**。只要交付含游戏测试包，同一回复须给出 ZIP 和已启动、可打开的同版手机试玩链接。跳过美术、重发、改名同样适用，用户明确说本次不用链接时按其指示。仅有 ZIP 只算出包，交付未完成。正式交付用 `prepare_delivery.py --preview-url` 回读手机入口与脚本，并用启动合同的 Web 指纹校验正在服务的快照，任何一项失败都不写交付回执。

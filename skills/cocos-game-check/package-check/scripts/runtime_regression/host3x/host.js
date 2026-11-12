@@ -262,6 +262,33 @@ const storage = {
 };
 X.storage = storage;
 
+
+// Opt-in storage/recovery fault profiles. Defaults and old missing/numbool models stay unchanged.
+function storageProfileHit(kind, key) {
+  if (typeof hit === 'function') hit(kind, key); else log('fault-' + kind, key);
+}
+function applyStorageProfile(api) {
+  var mode = Q.get('storage_info');
+  if (mode === 'missing') { delete api.getStorageInfoSync; storageProfileHit('storage_info_missing', 'api'); }
+  if (mode === 'throw') api.getStorageInfoSync = function () { storageProfileHit('storage_info_throw', 'api'); throw Error('getStorageInfoSync:fail simulated'); };
+  if (Q.get('async_storage') === 'unavailable') { delete api.getStorage; storageProfileHit('storage_async_unavailable', 'api'); }
+}
+function storageAsyncFault(o) {
+  if (Q.get('storage_fault_key') && Q.get('storage_fault_key') !== String(o.key)) return false;
+  var mode = Q.get('async_storage');
+  if (mode !== 'error' && mode !== 'hang') return false;
+  storageProfileHit('storage_async_' + mode, o.key);
+  if (mode === 'error') setTimeout(function () { cb(o, false, { errMsg: 'getStorage:fail simulated recovery error' }); });
+  return true;
+}
+function modalFault(o) {
+  var mode = Q.get('modal_fault');
+  if (mode !== 'fail' && mode !== 'reject' && mode !== 'silent') return null;
+  storageProfileHit('modal_' + mode, o.title || '');
+  if (mode === 'fail') setTimeout(function () { cb(o, false, { errMsg: 'showModal:fail simulated' }); });
+  return { value: mode === 'reject' ? Promise.reject(Error('showModal:fail simulated rejection')) : undefined };
+}
+
 // ---------- touch ----------
 const touchCbs = { Start: [], Move: [], End: [], Cancel: [] };
 const active = new Map();
@@ -325,6 +352,7 @@ function loadSubpackage(o) {
 
 // ---------- modal / ads / growth ----------
 function showModal(o) {
+  var injected = modalFault(o || {}); if (injected) return injected.value;
   o = o || {}; X.modals.push({ t: now(), title: o.title, content: o.content }); log('modal.show', o.title + ' | ' + o.content);
   gateLog('modal', o.title || o.content); beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText });
   const ov = document.getElementById('ov'); document.getElementById('ovt').textContent = o.title || ''; document.getElementById('ovc').textContent = o.content || '';
@@ -425,7 +453,7 @@ const tt = {
   getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, v),
   removeStorageSync: k => localStorage.removeItem(STORE + k), clearStorageSync: () => storage.keys().forEach(k => localStorage.removeItem(STORE + k)),
   getStorageInfoSync: () => ({ keys: storage.keys(), currentSize: 1, limitSize: 10240 }),
-  getStorage(o) { let d; try { d = storage.get(o.key, Q.get('async_storage') === 'typed'); } catch (e) { cb(o, false, { errMsg: String(e) }); return; } cb(o, true, { data: d }); }, setStorage(o) { try { storage.set(o.key, o.data); cb(o, true, {}); } catch (e) { cb(o, false, { errMsg: String(e) }); } },
+  getStorage(o) { if (storageAsyncFault(o)) return; let d; try { d = storage.get(o.key, Q.get('async_storage') === 'typed'); } catch (e) { cb(o, false, { errMsg: String(e) }); return; } cb(o, true, { data: d }); }, setStorage(o) { try { storage.set(o.key, o.data); cb(o, true, {}); } catch (e) { cb(o, false, { errMsg: String(e) }); } },
   onTouchStart: f => touchCbs.Start.push(f), onTouchMove: f => touchCbs.Move.push(f), onTouchEnd: f => touchCbs.End.push(f), onTouchCancel: f => touchCbs.Cancel.push(f),
   offTouchStart() {}, offTouchMove() {}, offTouchEnd() {}, offTouchCancel() {},
   onAccelerometerChange() {}, offAccelerometerChange() {}, startAccelerometer(o) { o && cb(o, true, {}); }, stopAccelerometer(o) { o && cb(o, true, {}); },
@@ -447,6 +475,7 @@ tt.canIUse = name => { if (F.has('caniuse_false')) return false; return typeof t
 if (F.has('no_ads')) delete tt.createRewardedVideoAd;
 // Names starting with __ are kit / host markers (tiktok-touch-3x.js reads tt.__tiktokKitTouch3x to see whether it is
 // installed), never SDK APIs, so they are not logged as missing (W-D4 request 6).
+applyStorageProfile(tt);
 const ttProxy = new Proxy(tt, { get(t, k) { if (typeof k === 'string' && !k.startsWith('__') && !(k in t) && !X.missing[k]) { X.missing[k] = now(); log('tt.missing', k); } return t[k]; } });
 GT.tt = ttProxy;
 if (!F.has('no_ttminis')) GT.TTMinis = { game: ttProxy };

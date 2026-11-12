@@ -1,6 +1,6 @@
 # 每次交付的主包与分包体积复查
 
-TikTok 的同一命令会在体积、分包和 CRC 通过后，对同一 SHA-256 的 ZIP 在独立临时目录解包，自动执行 `ttmg check` 和 `ttmg build`。两个 writer 完成内部写包和回读后，正式交付只由 `prepare_delivery.py` 对实际交付路径执行一次并保存新回执，无需再单独跑下方命令。专项候选、仅重发、外来包或同版改名，走下方命令生成本次新回执。回执的 `size_passed`、`tiktok_cli.check`、`tiktok_cli.build` 分别保留结果，`passed` 是总判定。已知拒包证据通过 `--platform-feedback` 传入独立检查或 `prepare_delivery.py`。平台拒绝同一 SHA、任一必需检查失败或未运行时不交包。
+TikTok 的同一命令会在体积、分包和 CRC 通过后，对同一 SHA-256 的 ZIP 在独立临时目录解包，自动执行 `ttmg check` 和 `ttmg build`。两个 writer 完成内部写包和回读后，正式交付只由 `prepare_delivery.py` 对实际交付路径执行一次并保存新回执，无需再单独跑下方命令。专项候选、仅重发、外来包或同版改名，走下方命令生成本次新回执。回执的 `size_passed`、`tiktok_cli.check`、`tiktok_cli.build` 分别保留结果，`passed` 是最终文件前提总判定，并非可玩性通过；TikTok还须有同字节正式writer回执，否则保留体积/CLI结果但总判定拒绝。`delivery_ready`固定false，正常交付继续由`prepare_delivery.py`核当前启动/存储与同版试玩。已知拒包证据通过 `--platform-feedback` 传入独立检查或 `prepare_delivery.py`。平台拒绝同一 SHA、任一必需检查失败或未运行时不交包。
 
 新电脑安装此更新后的 Skill 后，首次运行会用 npm 官方源将固定的 `@ttmg/cli@0.4.7` 安装到用户缓存，后续复用。须有受该版本支持的 Node.js（20.19.1 至 20.x 或 22 及以上），首次安装还需 npm 和 npm 官方源可访问。离线检查无需开发者登录或手机。安装或执行失败保留原因。本地结果覆盖归档与 CLI 构建，平台上传和真机单独验证。
 
@@ -29,3 +29,5 @@ TikTok 只认小写 `subpackages`；抖音小游戏当前文档使用 `subPackag
 仅 ZIP CRC/哈希通过不是合格交付；体积通过也不覆盖其他门禁或代替真实上传结果。缺文件、无报告、失败、运行中换包一律不交可上传包。
 
 TikTok 最终 ZIP 同时运行 `enforce_tiktok_host`，用语法树检查主包、适配器和分包业务脚本的微信宿主引用，按文件和行号报错。直接调用全局 `wx`、`window.wx`、`globalThis.wx` 及其别名仍拒绝；注释、字符串和词法作用域内的普通局部对象不按全局宿主处理。标准件明确先选择 `TTMinis` 和 `tt`、最后才保留 `wx` 的 SDK 兼容候选值允许通过，不按文件名整份放行。缺 Node 或脚本解析失败时拒绝，不能当作没有问题。此项用标准件实际源码、合法回退和非法直接调用作正反对照，启动、宿主加载遮罩及输入验收仍分别记录。
+
+**R7缺口约束（2026-11-12）**：只读`inspect_zip`仍能诊断外来归档的体积，不能作为交付入口；最终命令在体积和CLI合格后拒绝无正式writer回执的自写ZIP。改名可按同目录原回执的SHA匹配；改字节、只有手填passed或失配回执拒绝。详见[消费者与交付约束](../../../remake-core/references/startup-storage-consumer-gate.md#最终文件与可交付结论不能混用)。

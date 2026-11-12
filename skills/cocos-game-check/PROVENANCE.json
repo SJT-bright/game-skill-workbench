@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-11.english-simple.11.17.26",
+  "revision": "2026-11-12.english-simple.11.17.27",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "531862bb2e9985f3f4cb85cf76c00e3f6f59e49084846748cefbcee0708acba3",
-      "bytes": 28046
+      "sha256": "f3150515fe942bddff8a331b9bb4195ec04b6a2f7933250ba8352fb8456b4085",
+      "bytes": 33899
     },
     {
       "path": "agents/openai.yaml",
@@ -146,8 +146,8 @@
     },
     {
       "path": "package-check/README.md",
-      "sha256": "8c51b196dae6bea3527406b1cbda121047b00c456ee208dee7b3425ad3415ac8",
-      "bytes": 5002
+      "sha256": "7e3950710cd99886d4bb64cd4f5548a7c4c8a8f607948713576b210eb33c9926",
+      "bytes": 5822
     },
     {
       "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.json",
@@ -171,8 +171,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "5212bb783c734c630f8f3a90390c3680961996c5d821ba005356b8dbdef32f4b",
-      "bytes": 22219
+      "sha256": "88f14ed7b68b7c0c6f7c3ca7b544b6bb58fff660f305ff07f0a1ce22492d2b77",
+      "bytes": 22713
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -201,8 +201,8 @@
     },
     {
       "path": "package-check/references/fresh-upload-size.md",
-      "sha256": "269a7db0a5bf84a0e2850064dfd4ec7c14e79bdcf356b22dd5a5f04592af1e2a",
-      "bytes": 5766
+      "sha256": "c0780b1df82866124a3fb543e4d62136409575d645b032ec8ab7250bd095fdcd",
+      "bytes": 6456
     },
     {
       "path": "package-check/references/gate-order-and-identity.md",
@@ -221,8 +221,8 @@
     },
     {
       "path": "package-check/references/resource-and-reported-issues.md",
-      "sha256": "20631aa91c7074a831d8f646bea1cf44773f8bc3f3d49a6b89d61f03c17fc62b",
-      "bytes": 16836
+      "sha256": "5d47bdba7eb42f23b27867b7f6e44b79bbdaf6119bb1b93ceb71faa04132df8f",
+      "bytes": 17576
     },
     {
       "path": "package-check/references/resource-loss-recovery.md",
@@ -246,8 +246,8 @@
     },
     {
       "path": "package-check/scripts/ad_incremental.py",
-      "sha256": "86bd9840066e27af0c6ff6e89675887b9ab62406ad5f249003de626725cc2fdd",
-      "bytes": 4778
+      "sha256": "5b9e20c6ea2302ff0d373ad72c3f6ea3b99f607b562e7c0c71a8514a336c0918",
+      "bytes": 4847
     },
     {
       "path": "package-check/scripts/ad_regression/cases.mjs",
@@ -256,8 +256,8 @@
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
-      "sha256": "b7740ccbf3b854f304d4809e5197054cb30975222b6800c1d3de0b706f777b31",
-      "bytes": 62495
+      "sha256": "c317233b398f00e591a9d06af7c3d3ea377aed633d35ca91517774c345e2986a",
+      "bytes": 64163
     },
     {
       "path": "package-check/scripts/ad_regression/play.html",
@@ -296,8 +296,8 @@
     },
     {
       "path": "package-check/scripts/build_checked_zip.py",
-      "sha256": "0237f0caef269123410716d2babf99f95659d6665afeea67cc12f6ed0a1bb446",
-      "bytes": 15942
+      "sha256": "08e615ee8fc8b13b2dc39fa859d6c6b8cee8aeea7644014f78c216b7b5eec5cc",
+      "bytes": 16011
     },
     {
       "path": "package-check/scripts/check_guard.cjs",
@@ -311,8 +311,8 @@
     },
     {
       "path": "package-check/scripts/check_package.py",
-      "sha256": "a7e5b208c86d8711ae7a82e7ebf03124fb7fb84730d56c60afef2e5fffff4722",
-      "bytes": 48636
+      "sha256": "4ef56ee699f4a620dc8aaa3867d4dad72da0c6d042a7040fecf68a11000487df",
+      "bytes": 48739
     },
     {
       "path": "package-check/scripts/debrand_delta_guard.py",
@@ -351,8 +351,8 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "854709d261184d03c48f03c54b9298ebfcaa7966c198f529428ea070a6b1a110",
-      "bytes": 23756
+      "sha256": "e67ebd4968a6822e30e136b9f2ba00d8fec323f1055f9950f0f7ec61fbbba7b1",
+      "bytes": 24677
     },
     {
       "path": "package-check/scripts/rework_scope.py",
@@ -366,13 +366,13 @@
     },
     {
       "path": "package-check/scripts/runtime-scope-compat.json",
-      "sha256": "ee3585e7abf07337c5932ebe71378a8e879b96a52e25909aba04f1292f2fbad0",
-      "bytes": 1039
+      "sha256": "815644bba187d68c5b91a91375eda32033696fae86e108965ca03ccac739e229",
+      "bytes": 1677
     },
     {
       "path": "package-check/scripts/runtime_incremental.py",
-      "sha256": "9244fa13d161d2e7c3d086ac7ade70b7e3be26125256dc7430c3dd032ec7b4d4",
-      "bytes": 13636
+      "sha256": "1e506ee8b7b63d1dead78b76eeac09909a9de50a6b4422c8ed5465350b619df4",
+      "bytes": 14735
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -401,8 +401,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/host.js",
-      "sha256": "0ea02785287c4ae29af634e640277ed214d00ec022c351c757255a519865ebce",
-      "bytes": 42518
+      "sha256": "08a24282c36e9446f5bd4c5d819375a73a43a34145ae868583241c659ef959e5",
+      "bytes": 44182
     },
     {
       "path": "package-check/scripts/runtime_regression/host3x/play.html",
@@ -471,8 +471,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/ad_outcome.mjs",
-      "sha256": "07ea1ec2e46ff8c5550084d9ea70c35bbd28c49fdce6fbb1a0490063b016d4a1",
-      "bytes": 24741
+      "sha256": "e76f459d4438b62522ee0dd7474f25fe09c7cffe873617b9aea612d16873716f",
+      "bytes": 27021
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/button_sweep.json",
@@ -571,8 +571,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/save_restart.mjs",
-      "sha256": "22876a5015ed801ed369afad6a4b70210b8b0ac31701c0146b360eb07f7fccfc",
-      "bytes": 11191
+      "sha256": "d10ca32a95e4f01b6beac01d2cac4cf6f5ebc27f03b2a41349bcc6c2e12a8262",
+      "bytes": 15541
     },
     {
       "path": "package-check/scripts/runtime_regression/suites/startup.json",
@@ -606,8 +606,8 @@
     },
     {
       "path": "package-check/scripts/runtime_regression/tests/storage_host_profiles.cjs",
-      "sha256": "eccda85deb90580d508dc40479e97385fe2b179aac6a22e84b5ba562b63ff572",
-      "bytes": 4443
+      "sha256": "b7e785a875576437fd237f3d43aecf0fb8250ca1f4615bdd92e4f5841b490324",
+      "bytes": 7027
     },
     {
       "path": "package-check/scripts/runtime_regression.py",
@@ -616,8 +616,8 @@
     },
     {
       "path": "package-check/scripts/runtime_timing.py",
-      "sha256": "8b47127bdf512219b4bf47d2c24676d5f7651b31ddae2c357317238cebb80a05",
-      "bytes": 4605
+      "sha256": "2a3b401892f3fae61cf6d599b1ff20e73f0a33fb6953fe6ad42a81a48c2547d2",
+      "bytes": 6708
     },
     {
       "path": "package-check/scripts/test_ad_host_mouse_touch.py",
@@ -661,8 +661,8 @@
     },
     {
       "path": "package-check/scripts/test_delivery_logic_records.py",
-      "sha256": "83a92148ec90203f22b98089eb8796ae7401ff6fd3b2957339727f6d2792a730",
-      "bytes": 10262
+      "sha256": "7ea99bb93398044d4cc5f7d62fd0d7b8ac834f6bfcda7e388311854c6bc99127",
+      "bytes": 11288
     },
     {
       "path": "package-check/scripts/test_device_issue_repro.py",
@@ -696,8 +696,8 @@
     },
     {
       "path": "package-check/scripts/test_issue_relocation.py",
-      "sha256": "47715fa6705eb9ddeec830a64bffb6ba3f14bd1a45e4bd0c3f7dcde6f36e6ec8",
-      "bytes": 13958
+      "sha256": "6b81b0fca16786295e14f3817e03c2dd0c0287cd9ef27873ea1446f1250cf001",
+      "bytes": 14244
     },
     {
       "path": "package-check/scripts/test_issue_supersede.py",
@@ -776,8 +776,8 @@
     },
     {
       "path": "package-check/scripts/test_resource_and_issue_obligations.py",
-      "sha256": "1f595742fcb753f8c5e3e2a1cbc2a9969b1da685956a87129e5cf0e58d2a8412",
-      "bytes": 21171
+      "sha256": "c8b9e2db66a861f45604914e632f78cc4b1d8a93891b598318b3a20882a02582",
+      "bytes": 21295
     },
     {
       "path": "package-check/scripts/test_revive_return.mjs",
@@ -798,6 +798,16 @@
       "path": "package-check/scripts/test_runtime_regression.py",
       "sha256": "5ab96d7c1796e29097eebd9324a7466928d307e0f6d740c3454444d00faadaa8",
       "bytes": 25753
+    },
+    {
+      "path": "package-check/scripts/test_runtime_selected_unit_catalog.py",
+      "sha256": "dddc955f458ad8d3d0903587441d5a8bb2ba09684a3279fb6e83be8f68b24d27",
+      "bytes": 1758
+    },
+    {
+      "path": "package-check/scripts/test_runtime_selected_units.mjs",
+      "sha256": "81595e6958ab6cf5ae2f459a3392f91c21874fa27ecc595dc389f696f1208e7e",
+      "bytes": 14566
     },
     {
       "path": "package-check/scripts/test_screen_change.py",
@@ -910,9 +920,14 @@
       "bytes": 3234
     },
     {
+      "path": "startup/references/platform-input-binding.md",
+      "sha256": "64dca9057fe1a5965b01231057663763d6bffab197ef7ea46543294980ea1d09",
+      "bytes": 4036
+    },
+    {
       "path": "startup/references/startup-contract.md",
-      "sha256": "d823cfc57fc8c08400d12c7097f1cad60a2996ca5ecb9b864acd6c7bb3dfe1d8",
-      "bytes": 11879
+      "sha256": "b82f6d03fa3501d1a96a2c9a8db5fe3e6f3874bbcacac8f83003d175cdd640e5",
+      "bytes": 12273
     },
     {
       "path": "startup/references/startup-loading-timing.md",
@@ -926,8 +941,8 @@
     },
     {
       "path": "test/README.md",
-      "sha256": "7c819f1594f6b560ad145e2fa0d0d117369c0cc97b902a08023dbc8f5fe034d7",
-      "bytes": 4657
+      "sha256": "8b6c14fa6baf274d25373e41f7222853d4b28f320b16d3877e0361dd98ec927a",
+      "bytes": 4881
     },
     {
       "path": "test/assets/logic-report-template.md",
@@ -966,8 +981,8 @@
     },
     {
       "path": "test/references/mobile-motion-state-review.md",
-      "sha256": "d96c99bd66d02ea4e47e8239737804433738c154644f893b40da270140601f75",
-      "bytes": 4714
+      "sha256": "2b09d7e82823d1d7dca16a1930dc27670f8218ce992d6a1a32b2a38b74c95fc4",
+      "bytes": 4996
     },
     {
       "path": "test/references/page-readiness-and-cancel.md",
@@ -978,6 +993,11 @@
       "path": "test/references/prepackage-mobile-review.md",
       "sha256": "a3ea3ad288bda6bb8361441edffca4bf919d9fcc6046d2a57e02e670bff2210a",
       "bytes": 22462
+    },
+    {
+      "path": "test/references/pretrial-continuous-play.md",
+      "sha256": "4139b0562964bf9648bdffbef055dc47f251844909923e3feec41530482e32ca",
+      "bytes": 6465
     },
     {
       "path": "test/references/replay-and-input-checks.md",
@@ -1000,7 +1020,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "f1990199919d16e9b36af4aa31bf3788fdc006559dce0150beefdf6c6f2ac873",
+  "previous_provenance_sha256": "8dd398dadf7eaf520ac338ce1f1e7f32e140e087d0e10011a28139c7de9ea804",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -1492,5 +1512,40 @@
       ]
     }
   ],
-  "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8"
+  "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8",
+  "local_updates": [
+    {
+      "id": "2026-11-12.startup-storage-consumers-r7.v1",
+      "scope": "Per-consumer typed legacy startup proof and official-writer final-file prerequisite; no game or external distribution changed.",
+      "files": [
+        "SKILL.md",
+        "package-check/README.md",
+        "package-check/references/fresh-upload-size.md",
+        "package-check/scripts/prepare_delivery.py",
+        "package-check/scripts/test_delivery_logic_records.py"
+      ],
+      "previous_provenance_sha256": "2f085014564a5eac8264e3ac1adf03c0a582ed50ae68901caa8f7394494bb4a7"
+    },
+    {
+      "id": "2026-11-12.startup-storage-host-profiles-r7.v1",
+      "scope": "Opt-in SDK storage/modal fault profiles, complete AST file selection, and shared production routing.",
+      "files": [
+        "package-check/scripts/ad_regression/host.js",
+        "package-check/scripts/runtime_regression/host3x/host.js",
+        "package-check/scripts/runtime_regression/tests/storage_host_profiles.cjs"
+      ],
+      "previous_provenance_sha256": "2cc976da9c83ea7800ed831c8c48ebd9cd368af80a92c9c3ebf7c2bd1720569a"
+    },
+    {
+      "id": "2026-11-12.external-package-handoff.v1",
+      "scope": "Explicit team intake, portable original evidence and receipt artifacts; no runtime bypass or external distribution.",
+      "files": [
+        "SKILL.md",
+        "package-check/README.md",
+        "package-check/scripts/prepare_delivery.py",
+        "package-check/scripts/test_delivery_logic_records.py"
+      ],
+      "previous_provenance_sha256": "5cf52536df551502a1c263dd33143a2ffc15c4d90f20eeacd494eb029d29a2eb"
+    }
+  ]
 }

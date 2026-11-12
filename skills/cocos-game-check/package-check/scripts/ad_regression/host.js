@@ -452,7 +452,34 @@
     return m === 'true' ? true : m === 'false' ? false : m === 'null' ? null : undefined;
   }
 
-  // ---------- rewarded ads (simulated) ----------
+  
+// Opt-in storage/recovery fault profiles. Defaults and old missing/numbool models stay unchanged.
+function storageProfileHit(kind, key) {
+  if (typeof hit === 'function') hit(kind, key); else log('fault-' + kind, key);
+}
+function applyStorageProfile(api) {
+  var mode = Q.get('storage_info');
+  if (mode === 'missing') { delete api.getStorageInfoSync; storageProfileHit('storage_info_missing', 'api'); }
+  if (mode === 'throw') api.getStorageInfoSync = function () { storageProfileHit('storage_info_throw', 'api'); throw Error('getStorageInfoSync:fail simulated'); };
+  if (Q.get('async_storage') === 'unavailable') { delete api.getStorage; storageProfileHit('storage_async_unavailable', 'api'); }
+}
+function storageAsyncFault(o) {
+  if (Q.get('storage_fault_key') && Q.get('storage_fault_key') !== String(o.key)) return false;
+  var mode = Q.get('async_storage');
+  if (mode !== 'error' && mode !== 'hang') return false;
+  storageProfileHit('storage_async_' + mode, o.key);
+  if (mode === 'error') setTimeout(function () { cb(o, false, { errMsg: 'getStorage:fail simulated recovery error' }); });
+  return true;
+}
+function modalFault(o) {
+  var mode = Q.get('modal_fault');
+  if (mode !== 'fail' && mode !== 'reject' && mode !== 'silent') return null;
+  storageProfileHit('modal_' + mode, o.title || '');
+  if (mode === 'fail') setTimeout(function () { cb(o, false, { errMsg: 'showModal:fail simulated' }); });
+  return { value: mode === 'reject' ? Promise.reject(Error('showModal:fail simulated rejection')) : undefined };
+}
+
+// ---------- rewarded ads (simulated) ----------
   var adStats = window.__adStats = { created: 0, shown: 0, closedEnded: 0, closedEarly: 0, errors: 0, live: 0, units: {} };
   var adRecords = [];
   window.__adPendingListeners = function () {
@@ -544,6 +571,7 @@
   // tapped with real pointer input (window.__modalRect(which) gives their CSS rect).
   window.__modalOpen = null;
   function showModal(o) {
+    var injected = modalFault(o || {}); if (injected) return injected.value;
     o = o || {};
     beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText }); gateLog('modal', o.title || o.content);
     var box = nCreate('div');
@@ -691,7 +719,7 @@
     removeStorageSync: function (k) { NLS.removeItem(SP + k); },
     clearStorageSync: function () { sKeys().forEach(function (k) { NLS.removeItem(SP + k); }); },
     getStorageInfoSync: function () { return { keys: sKeys(), currentSize: 0, limitSize: 10240 }; },
-    getStorage: function (o) { var v = Q.get('async_storage') === 'typed' ? typedStorageValue(o.key) : tt.getStorageSync(o.key); setTimeout(function () { cb(o, true, { data: v }); }); },
+    getStorage: function (o) { if (storageAsyncFault(o)) return; var v = Q.get('async_storage') === 'typed' ? typedStorageValue(o.key) : tt.getStorageSync(o.key); setTimeout(function () { cb(o, true, { data: v }); }); },
     setStorage: function (o) { tt.setStorageSync(o.key, o.data); setTimeout(function () { cb(o, true, {}); }); },
     onTouchStart: H_.touchstart.on, offTouchStart: H_.touchstart.off,
     onTouchMove: H_.touchmove.on, offTouchMove: H_.touchmove.off,
@@ -752,6 +780,7 @@
     var legacy = function (kind) { return function (o) { beacon('legacy-ad-create', kind + ':' + (o && o.adUnitId)); var h = { style: Object.assign({ realWidth: 300, realHeight: 100 }, (o && o.style) || {}) }; ['onResize', 'offResize', 'onLoad', 'offLoad', 'onError', 'offError', 'onClose', 'offClose'].forEach(function (k) { h[k] = function () {}; }); h.show = function () { return Promise.reject({ errCode: 1004, errMsg: 'no fill (legacy stub)' }); }; h.load = function () { return Promise.reject({ errCode: 1004 }); }; h.hide = function () {}; h.destroy = function () {}; return h; }; };
     tt.createBannerAd = legacy('banner'); tt.createInterstitialAd = legacy('interstitial');
   }
+  applyStorageProfile(tt);
   window.tt = tt;
   window.TTMinis = { game: tt };
   window.GameGlobal = window;

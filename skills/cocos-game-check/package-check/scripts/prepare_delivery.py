@@ -186,7 +186,7 @@ def prepare(archive, native, app_id, record, project=None, startup_contract=None
     except (ValueError, OSError, RuntimeError) as error:
         if 'record' in state:
             path = Path(str(state['record']) + '.blocked.json')
-            blocked = {'status': 'delivery_blocked', 'archive': state['archive'], 'sha256': state.get('sha256'),
+            blocked = {'status': 'delivery_blocked', 'delivery_ready': False, 'archive': state['archive'], 'sha256': state.get('sha256'),
                        **repair_context('delivery'),
                        'checks': checks + [{'id': error.check_id if isinstance(error, StartupRefused) else state['stage'],
                                             'action': 'blocked',
@@ -225,13 +225,15 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         json.dump(size_check, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
     state.update(record=record, archive=str(archive), sha256=size_check['sha256'],
-                 stage='package.size_crc' if not size_check.get('size_passed') else 'package.tiktok_cli',
+                 stage=('package.size_crc' if not size_check.get('size_passed') else
+                        'package.writer_receipt' if size_check.get('writer_receipt', {}).get('entry') == 'unofficial' else 'package.tiktok_cli'),
                  evidence=[str(size_record)])
     if size_check.get('size_passed') or size_check['passed']:
         checks.append({'id': 'package.size_crc', 'action': 'rerun', 'reason': '逐次核对最终 ZIP 体积、分包和 CRC',
                        'evidence': [str(size_record)], 'run_id': size_check['run_id']})
     if not size_check['passed']:
-        phase = 'TikTok CLI' if size_check.get('size_passed') else 'size'
+        phase = ('writer receipt' if size_check.get('writer_receipt', {}).get('entry') == 'unofficial' else
+                 'TikTok CLI' if size_check.get('size_passed') else 'size')
         raise ValueError(f'fresh delivery {phase} check failed: ' + '; '.join(size_check['errors']))
     checks.append({'id': 'package.tiktok_cli', 'action': 'rerun', 'reason': '本次对最终 ZIP 执行官方 check/build',
                    'evidence': [str(size_record)], 'run_id': size_check['run_id']})
@@ -288,7 +290,7 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         logic = logic_source_binding(logic_report, source, project)
         checks.append({'id': 'source.logic', 'action': 'rejudged', 'reason': '核对已有逐项玩法证据和本次源码身份',
                        'evidence': [str(logic_report)]})
-    receipt = {'status': 'delivery_file_verified', 'archive': str(archive),
+    receipt = {'status': 'delivery_file_verified', 'delivery_ready': False, 'archive': str(archive),
                'sha256': after, 'bytes': archive.stat().st_size,
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
                'markdown_link': '[' + archive.name + '](<' + str(archive) + '>)',
@@ -303,6 +305,13 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
                'package_obligations': obligations,
                'source_hygiene': ({'source': hygiene['source'], 'passed': True} if hygiene else None),
                'entry': result['entry'], 'receipt': result.get('receipt'),
+               'receipt_artifacts': [
+                   {'kind': 'writer_receipt', 'path': str(result.get('receipt')),
+                    'markdown_link': '[' + Path(result['receipt']).name + '](<' + str(result['receipt']) + '>)'},
+                   {'kind': 'delivery_record', 'path': str(record),
+                    'markdown_link': '[' + record.name + '](<' + str(record) + '>)'}],
+               'team_handoff': {'next': 'game_handoff.py export with this record and the actual source ZIP',
+                                'evidence_exported': False, 'receiver_current_approval': False},
                'finalize': writer_finalize(result.get('receipt')),
                'kit_parts_status': KIT_PARTS_PHONE_RETEST,
                'reply_lines': [KIT_PARTS_PHONE_RETEST],
@@ -325,6 +334,7 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         state.update(stage='delivery.publication', evidence=[str(size_record)])
         if hashlib.sha256(archive.read_bytes()).hexdigest() != after:
             raise ValueError('ZIP changed while checking the preview; no delivery record written')
+        receipt['delivery_ready'] = True
         with record.open('x', encoding='utf-8') as stream:
             json.dump(receipt, stream, ensure_ascii=False, indent=2)
             stream.write('\n')

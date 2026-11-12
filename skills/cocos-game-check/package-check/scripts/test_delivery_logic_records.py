@@ -90,6 +90,14 @@ class DeliveryLogicRecords(unittest.TestCase):
         verified = {'sha256': hashlib.sha256(archive.read_bytes()).hexdigest(),
                     'file_sha256': {n: hashlib.sha256(d).hexdigest() for n, d in files.items()},
                     'entry': 'official', 'runtime_execution': 'synthetic verifier boundary'}
+        # Same-byte receipt-schema fixture for the new final-file prerequisite;
+        # runtime/source ownership remains independently isolated below.
+        from verify_native_zip import make_receipt
+        fixture_receipt = make_receipt('build_checked_zip', archive, verified['sha256'],
+            verified['file_sha256'], {'blocks': []}, 'localize',
+            finalize={'kind': 'finalize-native', 'policy': 'new', 'files_after': {}, 'blocks': []})
+        Path(str(archive) + '.receipt.json').write_text(json.dumps(fixture_receipt))
+        verified['receipt'] = str(archive) + '.receipt.json'
         # This fixture exercises source-record reuse, not the installed external CLI.
         # Keep the real final-ZIP size/config/hash inspection; isolate only CLI execution.
         def cli_boundary(actual_archive, expected_sha):
@@ -120,6 +128,10 @@ class DeliveryLogicRecords(unittest.TestCase):
             self.assertEqual(blocked['checks'][-1]['action'], 'blocked')
             self.assertNotIn('markdown_link', blocked)
             self.assertEqual(blocked['sha256'], verified['sha256'])
+        artifacts = {a['kind']: a['path'] for a in result['receipt_artifacts']}
+        self.assertEqual(artifacts['writer_receipt'], verified['receipt'])
+        self.assertEqual(Path(artifacts['delivery_record']).resolve(), record.resolve())
+        self.assertTrue(all(Path(p).is_file() for p in artifacts.values()))
         states = {row['id']: row['action'] for row in result['checks']}
         self.assertEqual(states['package.size_crc'], 'rerun')
         self.assertEqual(states['package.tiktok_cli'], 'rerun')
@@ -127,6 +139,8 @@ class DeliveryLogicRecords(unittest.TestCase):
         self.assertEqual(states['preview.same_build'], 'rerun')
         self.assertEqual(result['logic_source_binding']['validation'], 'existing_case_records')
         self.assertEqual(result['logic_source_binding']['current_source_sha256'], R.source_digest(self.root))
+        self.assertTrue(result['delivery_ready'])
+        self.assertFalse(blocked['delivery_ready'])
         self.assertTrue(record.is_file())
         self.assertEqual(cli.call_count, 2)
         cli.assert_called_with(str(archive.resolve()), verified['sha256'])

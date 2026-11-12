@@ -3,6 +3,16 @@
 // This is a host-semantics test, not a rendered game or physical-phone test.
 const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm'), assert = require('node:assert/strict');
 const root = process.env.HOST_SCRIPTS || path.resolve(__dirname, '../..');
+const acorn = require(path.resolve(root, '../../../remake-core/scripts/vendor/acorn.cjs'));
+function declaration(text, name) {
+ let found;
+ function walk(n) {
+  if (!n || typeof n !== 'object') return;
+  if (n.type === 'FunctionDeclaration' && n.id.name === name) found=n;
+  for (const v of Object.values(n)) if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v==='object') walk(v);
+ }
+ walk(acorn.parse(text,{ecmaVersion:'latest'}));assert(found,name);return text.slice(found.start,found.end);
+}
 function section(s, a, b) { const i=s.indexOf(a), j=s.indexOf(b,i+a.length); assert(i>=0&&j>i, a); return s.slice(i,j); }
 function localStore() {
  const value={}; Object.defineProperties(value,{
@@ -21,9 +31,9 @@ function host(kind, query, kept) {
  vm.createContext(context);
  const body=section(text,'// ---------- storage ----------',kind===2?'// ---------- rewarded ads':'// ---------- touch ----------');
  const api=section(text,kind===2?'getStorageSync: function (k)':'getStorageSync: k => storage.get(k)',kind===2?'onTouchStart: H_.touchstart.on':'onTouchStart: f => touchCbs.Start.push(f)');
- vm.runInContext(body+'\nvar tt={'+api+'};window.__testApi=tt;',context,{filename:file});
+ vm.runInContext(body+'\n'+declaration(text,'showModal')+'\nvar tt={'+api+'showModal:showModal};applyStorageProfile(tt);window.__testApi=tt;',context,{filename:file});
  const tt=context.window.__testApi;
- return {tt,localStorage,logs,read(k){let r,failed; const returned=tt.getStorage({key:k,success:v=>{r=v.data;},fail:e=>{failed=e;}});while(timers.length)timers.shift()();if(failed)throw Error(failed.errMsg);assert.equal(returned,undefined,'host remains callback API');return r;}};
+ return {tt,localStorage,logs,context,text,flush(){while(timers.length)timers.shift()();},read(k){let r,failed; const returned=tt.getStorage({key:k,success:v=>{r=v.data;},fail:e=>{failed=e;}});while(timers.length)timers.shift()();if(failed)throw Error(failed.errMsg);assert.equal(returned,undefined,'host remains callback API');return r;}};
 }
 const cases=[];
 function test(name,f){f();cases.push(name);}
@@ -52,4 +62,31 @@ for(const k of [2,3]) {
  });
  test('host'+k+' invalid fixture rejected',()=>assert.throws(()=>host(k,'storage_seed=%5B45%5D'),/must be a JSON object/));
 }
-console.log(JSON.stringify({suite:'storage_host_profiles',passed:true,cases,boundary:'actual host storage sections in VM; not game-renderer/device acceptance'},null,2));
+for(const k of [2,3]) {
+ test('host'+k+' actual absent metadata API',()=>{
+  const h=host(k,'storage_info=missing');assert.equal(typeof h.tt.getStorageInfoSync,'undefined');assert(h.logs.some(r=>String(r).includes('storage_info_missing')));
+ });
+ test('host'+k+' throwing metadata is distinct from absent key',()=>{
+  const h=host(k,'storage_info=throw');assert.throws(()=>h.tt.getStorageInfoSync(),/simulated/);
+ });
+ test('host'+k+' async failure is keyed and leaves other data available',()=>{
+  const h=host(k,'async_storage=error&storage_fault_key=wallet&storage_seed='+encodeURIComponent(JSON.stringify({wallet:45,flag:true})));
+  assert.throws(()=>h.read('wallet'),/recovery error/);assert.equal(h.read('flag'),true);assert.equal(h.tt.getStorageSync('wallet'),45);
+ });
+ test('host'+k+' async hang produces no callback and changes no storage',()=>{
+  const h=host(k,'async_storage=hang');let called=false;h.tt.getStorage({key:'flag',success:()=>called=true,fail:()=>called=true});h.flush();assert.equal(called,false);
+ });
+ test('host'+k+' unavailable async method is really absent',()=>{
+  const h=host(k,'async_storage=unavailable');assert.equal(typeof h.tt.getStorage,'undefined');
+ });
+ for(const mode of ['fail','silent'])test('host'+k+' actual showModal '+mode+' before DOM',()=>{
+  const h=host(k,'modal_fault='+mode);let failed=false;
+  h.context.opts={title:'Retry',success(){throw Error('fault incorrectly succeeded')},fail(){failed=true}};
+  assert.equal(h.tt.showModal(h.context.opts),undefined);h.flush();assert.equal(failed,mode==='fail');assert(h.logs.some(r=>String(r).includes('modal_'+mode)));
+ });
+}
+(async()=>{for(const k of [2,3]){
+ const h=host(k,'modal_fault=reject');h.context.opts={title:'Retry'};
+ const result=h.tt.showModal(h.context.opts);await assert.rejects(result,/simulated rejection/);cases.push('host'+k+' actual showModal rejected promise');
+}
+console.log(JSON.stringify({suite:'storage_host_profiles',passed:true,cases,boundary:'actual host storage sections in VM; not game-renderer/device acceptance'},null,2));})().catch(e=>{console.error(e);process.exitCode=1});

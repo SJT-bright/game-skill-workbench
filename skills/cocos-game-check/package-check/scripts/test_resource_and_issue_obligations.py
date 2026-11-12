@@ -250,7 +250,7 @@ class EntryPoints(unittest.TestCase):
         with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
             build(self.native,APP,archive,resource_manifest=manifest,project=self.project)
         self.report()
-        with patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)),patch('prepare_delivery.audit_final_startup') as runtime:
+        with patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': [], 'version': 'synthetic-unrelated-cli-boundary'}),patch('prepare_delivery.tempfile.gettempdir',return_value=str(other)),patch('prepare_delivery.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError,'no passed retest'):prepare(archive,self.native,APP,record,project=self.project,resource_manifest=manifest)
             runtime.assert_not_called()
         self.assertFalse(record.exists())

@@ -201,6 +201,7 @@ class RelocatedWriterDelivery(unittest.TestCase):
             result=build(moved,APP,archive,project=self.project,resource_manifest=manifest)
         self.assertTrue(result['package_obligations']['reported_issues']['checked_issues'][0]['dependency_bytes_reused'])
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
+                patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': [], 'version': 'synthetic-unrelated-cli-boundary'}), \
                 patch('prepare_delivery.audit_final_startup',return_value={'passed':True}):
             import hashlib
             url='http://127.0.0.1:54321/'
@@ -237,6 +238,7 @@ class RelocatedWriterDelivery(unittest.TestCase):
             build(moved,APP,archive,project=self.project,resource_manifest=manifest)
         (self.normal/'state.json').unlink();record=self.root/'delivery.json'
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
+                patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': [], 'version': 'synthetic-unrelated-cli-boundary'}), \
                 patch('prepare_delivery.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError,'production artifact missing/changed'):
                 prepare(archive,moved,APP,record,project=self.project,resource_manifest=manifest)

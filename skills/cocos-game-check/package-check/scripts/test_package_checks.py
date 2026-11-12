@@ -20,13 +20,37 @@ from audit_upload_startup import audit_files
 # public boundaries together, keeping every actual static validator in scope.
 # Missing-plan refusal and complete evidence requirements remain real in
 # test_regression_scope_entrypoints.py, test_check_inputs.py and runtime tests.
-def runtime_patch():
-    return patch.multiple('check_package',
-        runtime_gate=lambda *a, **k: {'id': 'runtime_regression', 'status': 'patched_in_unit_test'},
-        verify_regression_scope=lambda *a, **k: {'unit_test': 'synthetic static fixture authorization'},
-        regression_record=lambda *a, **k: {'unit_test': 'synthetic static fixture; runtime not executed'},
-        regression_coverage_problem=lambda *a, **k: None)
+class _StaticFixtureBoundaries:
+    """Only unrelated synthetic orchestration checks; never game acceptance.
 
+    The actual storage gate/three entry refusals are executed without these
+    stubs in test_final_storage_gate.py and the v3 upgrade controls.
+    """
+    def start(self):
+        import contextlib
+        self.stack = contextlib.ExitStack()
+        self.stack.enter_context(patch.multiple('check_package',
+            runtime_gate=lambda *a, **k: {'id': 'runtime_regression', 'status': 'patched_in_unit_test'},
+            verify_regression_scope=lambda *a, **k: {'unit_test': 'synthetic static fixture authorization'},
+            regression_record=lambda *a, **k: {'unit_test': 'synthetic static fixture; runtime not executed'},
+            regression_coverage_problem=lambda *a, **k: None))
+        for name in ('audit_final_storage.audit_final_storage',):
+            self.stack.enter_context(patch(name, return_value={
+                'id': 'storage.native.contract', 'action': 'rejudged', 'status': 'synthetic_unrelated_gate_boundary'}))
+        return self
+
+    def stop(self):
+        self.stack.close()
+
+    def __enter__(self):
+        return self.start()
+
+    def __exit__(self, *exc):
+        return self.stack.__exit__(*exc)
+
+
+def runtime_patch():
+    return _StaticFixtureBoundaries()
 
 _RUNTIME = runtime_patch()
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T05:46:29.419Z",
-  "treeHash": "47aa108fb337a8deba47badb4e2371be3a3bfa14e2959d719f5a3bf81c6295cd",
+  "createdAt": "2026-11-12T08:47:29.203Z",
+  "treeHash": "65e9174e8acc44ecc79fa9771303c231010ed7c6a5c4bfd9882f321ff4036fef",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "713042a31ae6d811d0d088e4ed0a13c643f2209f2b388d853717a2ab850338c1",
-      "fileCount": 199,
-      "bytes": 2090562,
+      "treeHash": "29877018b6669ca89bce93844bf8b71f448940c684a28842d815c060eca8e4f0",
+      "fileCount": 200,
+      "bytes": 2093137,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "fcfbe8f4dc7b90bf667538897c7dff5d03fe23b82e63f80faa5a892fe0378773",
-          "size": 62925,
+          "hash": "2f085014564a5eac8264e3ac1adf03c0a582ed50ae68901caa8f7394494bb4a7",
+          "size": 60957,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "1cc7e122bb617309fd70ffef04bb01897d0177990dfba7257f73b6b84e223ca7",
-          "size": 27992,
+          "hash": "a6f8f7c2b01d4bf8ececf8faf74e590f27bad711d274da5c4a27fdcf62c6c2d4",
+          "size": 29135,
           "executable": false
         },
         {
@@ -430,6 +430,24 @@
           "executable": false
         },
         {
+          "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.json",
+          "hash": "1b54128bef01b515382b32c6863ef14edabfb1a967a9e6ca47a87a71ce2f6099",
+          "size": 644,
+          "executable": false
+        },
+        {
+          "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.mjs",
+          "hash": "b66c8a4177f68d466dfbe7acd03d0923a6fabb7c30848276c44adc9d2e1468ef",
+          "size": 6340,
+          "executable": false
+        },
+        {
+          "path": "package-check/optional-suites/modal-lifecycle/run_modal_lifecycle.py",
+          "hash": "3c14455ddcc3f9651d7e29ef3ca66f8bca9f01a21dfa7ab43bcd5e64bf43b26b",
+          "size": 1646,
+          "executable": false
+        },
+        {
           "path": "package-check/references/bootstrap-order-review.md",
           "hash": "68c7836696999ae34db03efc2f388160d5a50068e3bfbc5b3ca7a34c2af15bd2",
           "size": 1381,
@@ -437,8 +455,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "d6402c1215a4a4a19b72fe0c6954ee66bdfd6a48a5fb7d02f9191b167d473432",
-          "size": 22214,
+          "hash": "5212bb783c734c630f8f3a90390c3680961996c5d821ba005356b8dbdef32f4b",
+          "size": 22219,
           "executable": false
         },
         {
@@ -491,14 +509,14 @@
         },
         {
           "path": "package-check/references/modal-lifecycle.md",
-          "hash": "b70c1d33920d78037164feeacb3414b377d48e54bd8972da0fd519dbdc7cbe80",
-          "size": 3915,
+          "hash": "0086d5906ae7a17f1193689cc9af07ad7c7437c068fc5b5ee8fe08b8e059df7e",
+          "size": 3971,
           "executable": false
         },
         {
           "path": "package-check/references/resource-and-reported-issues.md",
-          "hash": "20631aa91c7074a831d8f646bea1cf44773f8bc3f3d49a6b89d61f03c17fc62b",
-          "size": 16836,
+          "hash": "5d47bdba7eb42f23b27867b7f6e44b79bbdaf6119bb1b93ceb71faa04132df8f",
+          "size": 17576,
           "executable": false
         },
         {
@@ -515,8 +533,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "ead7883dcb5cfa910115949bb5fe8c92a673e21ba234103369144c2cd3445882",
-          "size": 65866,
+          "hash": "08e1a529df6d23ce8c04d3dd94314255f304697ab61fb9d58c2c44f270e0b106",
+          "size": 65847,
           "executable": false
         },
         {
@@ -587,8 +605,8 @@
         },
         {
           "path": "package-check/scripts/build_checked_zip.py",
-          "hash": "c7e993b3b509a103f75a9d83ae7bb4bc68a369dcf9d6c1edbbfc2c1db590b54d",
-          "size": 15747,
+          "hash": "0237f0caef269123410716d2babf99f95659d6665afeea67cc12f6ed0a1bb446",
+          "size": 15942,
           "executable": false
         },
         {
@@ -653,8 +671,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "88626d1128157d244d510bc472ad25885f08341e8ecbb3c3d7a971904ef17886",
-          "size": 23514,
+          "hash": "854709d261184d03c48f03c54b9298ebfcaa7966c198f529428ea070a6b1a110",
+          "size": 23756,
           "executable": false
         },
         {
@@ -874,18 +892,6 @@
           "executable": false
         },
         {
-          "path": "package-check/scripts/runtime_regression/suites/modal_lifecycle.json",
-          "hash": "1b54128bef01b515382b32c6863ef14edabfb1a967a9e6ca47a87a71ce2f6099",
-          "size": 644,
-          "executable": false
-        },
-        {
-          "path": "package-check/scripts/runtime_regression/suites/modal_lifecycle.mjs",
-          "hash": "b66c8a4177f68d466dfbe7acd03d0923a6fabb7c30848276c44adc9d2e1468ef",
-          "size": 6340,
-          "executable": false
-        },
-        {
           "path": "package-check/scripts/runtime_regression/suites/network.json",
           "hash": "7e8695fa155403513d1f1819202855d788d322b4b5ba937717a8fe7f1afe6144",
           "size": 418,
@@ -1037,8 +1043,8 @@
         },
         {
           "path": "package-check/scripts/test_delivery_logic_records.py",
-          "hash": "6a561d712f24fbbfa7e6cd380ec4d78497c517dc40361a34a91f6d86f14cb0c6",
-          "size": 10082,
+          "hash": "83a92148ec90203f22b98089eb8796ae7401ff6fd3b2957339727f6d2792a730",
+          "size": 10262,
           "executable": false
         },
         {
@@ -1049,8 +1055,8 @@
         },
         {
           "path": "package-check/scripts/test_final_startup_gate.py",
-          "hash": "f81770d72c6d5a19666f438f21665de20ff098d99a27ccd990bf4803be6255ea",
-          "size": 9220,
+          "hash": "ed1ddac07ef0a2f374b088c884da0ce57db2af5eef5aaeb510955f6dc6e82809",
+          "size": 9400,
           "executable": false
         },
         {
@@ -1121,8 +1127,8 @@
         },
         {
           "path": "package-check/scripts/test_package_checks.py",
-          "hash": "4969599a3c9a67e3c663edf80c710c8ec92b1efee2513222a46ce503b78cdc2f",
-          "size": 22059,
+          "hash": "d27d70b0c0461b9f349ae1be9b421acd832b432e8e322c5ce870c97e82acd789",
+          "size": 22935,
           "executable": false
         },
         {
@@ -1259,8 +1265,8 @@
         },
         {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "7a227732a19fd64a93fd14c0d95157574d556060d7ed7a3797543b3dcb6aa527",
-          "size": 112032,
+          "hash": "cda279f91545e8a3d20b1c1fc479ae6635b61e92e36d896cd6166aa7744b9b0f",
+          "size": 111268,
           "executable": false
         },
         {
@@ -1367,8 +1373,8 @@
         },
         {
           "path": "test/references/button-interaction-coverage.md",
-          "hash": "30f9d5e8ae00bb2384d533cfa56e2c58e2e26e7a6526da407553838437d214ec",
-          "size": 7885,
+          "hash": "03be201dd7cf28d6f55ee997fff78001ad574ae015ece086e3bf70d3b1ff9b04",
+          "size": 7948,
           "executable": false
         },
         {

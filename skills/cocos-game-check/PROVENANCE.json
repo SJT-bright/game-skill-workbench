@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-11.ad-six-fusion.2.1.0",
+  "revision": "2026-11-11.english-simple.11.17.26",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "766ef61c2eea4e7bcad59993e1001bdac2f1379350caf544a4226c04324335de",
-      "bytes": 27016
+      "sha256": "531862bb2e9985f3f4cb85cf76c00e3f6f59e49084846748cefbcee0708acba3",
+      "bytes": 28046
     },
     {
       "path": "agents/openai.yaml",
@@ -110,9 +110,59 @@
       "bytes": 1161
     },
     {
+      "path": "package/README.md",
+      "sha256": "592caece8f888fe87d446574d03da9c9873197025898715294387d1206d2312b",
+      "bytes": 6831
+    },
+    {
+      "path": "package/references/check-fix-package-loop.md",
+      "sha256": "3c15e9a170546c8ae78bd820c653dc0c22aaca9fb8c4df0a2913309347a0c538",
+      "bytes": 12842
+    },
+    {
+      "path": "package/references/package-forms.md",
+      "sha256": "f4daa9e63cfabf2da890cf7246c2690724c06855cbf678de77a6dd69f81fcf7d",
+      "bytes": 4809
+    },
+    {
+      "path": "package/references/tiktok-app-creation.md",
+      "sha256": "a4ec00510de4200c8decc8d64a047be2f4ca6f9df5b920b98e755485c3b25898",
+      "bytes": 8378
+    },
+    {
+      "path": "package/references/tiktok-device-stage.md",
+      "sha256": "1c10f15146a10beb40d90382da0ad8da85ea982f5eb9abdc672e6ab112e02b5a",
+      "bytes": 1451
+    },
+    {
+      "path": "package/references/upload-compat-and-entry-fix.md",
+      "sha256": "5d47f2539ec8f5e23ff73493ee5c4d19907011c278019d1a12a023d60a7b978b",
+      "bytes": 4037
+    },
+    {
+      "path": "package/scripts/upload_preflight.py",
+      "sha256": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
+      "bytes": 2366
+    },
+    {
       "path": "package-check/README.md",
       "sha256": "8c51b196dae6bea3527406b1cbda121047b00c456ee208dee7b3425ad3415ac8",
       "bytes": 5002
+    },
+    {
+      "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.json",
+      "sha256": "1b54128bef01b515382b32c6863ef14edabfb1a967a9e6ca47a87a71ce2f6099",
+      "bytes": 644
+    },
+    {
+      "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.mjs",
+      "sha256": "b66c8a4177f68d466dfbe7acd03d0923a6fabb7c30848276c44adc9d2e1468ef",
+      "bytes": 6340
+    },
+    {
+      "path": "package-check/optional-suites/modal-lifecycle/run_modal_lifecycle.py",
+      "sha256": "3c14455ddcc3f9651d7e29ef3ca66f8bca9f01a21dfa7ab43bcd5e64bf43b26b",
+      "bytes": 1646
     },
     {
       "path": "package-check/references/bootstrap-order-review.md",
@@ -121,8 +171,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "d6402c1215a4a4a19b72fe0c6954ee66bdfd6a48a5fb7d02f9191b167d473432",
-      "bytes": 22214
+      "sha256": "5212bb783c734c630f8f3a90390c3680961996c5d821ba005356b8dbdef32f4b",
+      "bytes": 22219
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -165,6 +215,11 @@
       "bytes": 4610
     },
     {
+      "path": "package-check/references/modal-lifecycle.md",
+      "sha256": "0086d5906ae7a17f1193689cc9af07ad7c7437c068fc5b5ee8fe08b8e059df7e",
+      "bytes": 3971
+    },
+    {
       "path": "package-check/references/resource-and-reported-issues.md",
       "sha256": "20631aa91c7074a831d8f646bea1cf44773f8bc3f3d49a6b89d61f03c17fc62b",
       "bytes": 16836
@@ -181,8 +236,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "8fc1661f3b1f5f0a23bf0e237a18b9891a300ae0fc3919c0930302765b5c5849",
-      "bytes": 65461
+      "sha256": "08e1a529df6d23ce8c04d3dd94314255f304697ab61fb9d58c2c44f270e0b106",
+      "bytes": 65847
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -195,19 +250,14 @@
       "bytes": 4778
     },
     {
-      "path": "package-check/scripts/ad_regression.py",
-      "sha256": "992e72ebfe1d103a59e8e8d8a05a2b29cc33eff4179c5e7e6d35da11e63c43c7",
-      "bytes": 20723
-    },
-    {
       "path": "package-check/scripts/ad_regression/cases.mjs",
       "sha256": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
       "bytes": 24364
     },
     {
       "path": "package-check/scripts/ad_regression/host.js",
-      "sha256": "0a8598c5e71c37568a4fc532dd29756863d17ad9269fd632b595be60981a5346",
-      "bytes": 60246
+      "sha256": "b7740ccbf3b854f304d4809e5197054cb30975222b6800c1d3de0b706f777b31",
+      "bytes": 62495
     },
     {
       "path": "package-check/scripts/ad_regression/play.html",
@@ -218,6 +268,11 @@
       "path": "package-check/scripts/ad_regression/server.py",
       "sha256": "bdc7878870930eb557beed0a3ab6bded888c1ecea5d2070a57b1aa14731d1faa",
       "bytes": 2622
+    },
+    {
+      "path": "package-check/scripts/ad_regression.py",
+      "sha256": "992e72ebfe1d103a59e8e8d8a05a2b29cc33eff4179c5e7e6d35da11e63c43c7",
+      "bytes": 20723
     },
     {
       "path": "package-check/scripts/audit_interaction_audio.py",
@@ -241,8 +296,8 @@
     },
     {
       "path": "package-check/scripts/build_checked_zip.py",
-      "sha256": "c7e993b3b509a103f75a9d83ae7bb4bc68a369dcf9d6c1edbbfc2c1db590b54d",
-      "bytes": 15747
+      "sha256": "0237f0caef269123410716d2babf99f95659d6665afeea67cc12f6ed0a1bb446",
+      "bytes": 15942
     },
     {
       "path": "package-check/scripts/check_guard.cjs",
@@ -296,8 +351,8 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "88626d1128157d244d510bc472ad25885f08341e8ecbb3c3d7a971904ef17886",
-      "bytes": 23514
+      "sha256": "854709d261184d03c48f03c54b9298ebfcaa7966c198f529428ea070a6b1a110",
+      "bytes": 23756
     },
     {
       "path": "package-check/scripts/rework_scope.py",
@@ -318,11 +373,6 @@
       "path": "package-check/scripts/runtime_incremental.py",
       "sha256": "9244fa13d161d2e7c3d086ac7ade70b7e3be26125256dc7430c3dd032ec7b4d4",
       "bytes": 13636
-    },
-    {
-      "path": "package-check/scripts/runtime_regression.py",
-      "sha256": "b37d3704f0fd9f4bbe615f9e17fa5b3500a4d98af20a4a14ab416eede570166a",
-      "bytes": 69138
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -560,6 +610,11 @@
       "bytes": 4443
     },
     {
+      "path": "package-check/scripts/runtime_regression.py",
+      "sha256": "b37d3704f0fd9f4bbe615f9e17fa5b3500a4d98af20a4a14ab416eede570166a",
+      "bytes": 69138
+    },
+    {
       "path": "package-check/scripts/runtime_timing.py",
       "sha256": "8b47127bdf512219b4bf47d2c24676d5f7651b31ddae2c357317238cebb80a05",
       "bytes": 4605
@@ -606,8 +661,8 @@
     },
     {
       "path": "package-check/scripts/test_delivery_logic_records.py",
-      "sha256": "6a561d712f24fbbfa7e6cd380ec4d78497c517dc40361a34a91f6d86f14cb0c6",
-      "bytes": 10082
+      "sha256": "83a92148ec90203f22b98089eb8796ae7401ff6fd3b2957339727f6d2792a730",
+      "bytes": 10262
     },
     {
       "path": "package-check/scripts/test_device_issue_repro.py",
@@ -616,8 +671,8 @@
     },
     {
       "path": "package-check/scripts/test_final_startup_gate.py",
-      "sha256": "f81770d72c6d5a19666f438f21665de20ff098d99a27ccd990bf4803be6255ea",
-      "bytes": 9220
+      "sha256": "ed1ddac07ef0a2f374b088c884da0ce57db2af5eef5aaeb510955f6dc6e82809",
+      "bytes": 9400
     },
     {
       "path": "package-check/scripts/test_frame_rate_gate.py",
@@ -676,8 +731,8 @@
     },
     {
       "path": "package-check/scripts/test_package_checks.py",
-      "sha256": "4969599a3c9a67e3c663edf80c710c8ec92b1efee2513222a46ce503b78cdc2f",
-      "bytes": 22059
+      "sha256": "d27d70b0c0461b9f349ae1be9b421acd832b432e8e322c5ce870c97e82acd789",
+      "bytes": 22935
     },
     {
       "path": "package-check/scripts/test_package_reuse.py",
@@ -790,44 +845,9 @@
       "bytes": 5248
     },
     {
-      "path": "package/README.md",
-      "sha256": "592caece8f888fe87d446574d03da9c9873197025898715294387d1206d2312b",
-      "bytes": 6831
-    },
-    {
-      "path": "package/references/check-fix-package-loop.md",
-      "sha256": "3c15e9a170546c8ae78bd820c653dc0c22aaca9fb8c4df0a2913309347a0c538",
-      "bytes": 12842
-    },
-    {
-      "path": "package/references/package-forms.md",
-      "sha256": "f4daa9e63cfabf2da890cf7246c2690724c06855cbf678de77a6dd69f81fcf7d",
-      "bytes": 4809
-    },
-    {
-      "path": "package/references/tiktok-app-creation.md",
-      "sha256": "a4ec00510de4200c8decc8d64a047be2f4ca6f9df5b920b98e755485c3b25898",
-      "bytes": 8378
-    },
-    {
-      "path": "package/references/tiktok-device-stage.md",
-      "sha256": "1c10f15146a10beb40d90382da0ad8da85ea982f5eb9abdc672e6ab112e02b5a",
-      "bytes": 1451
-    },
-    {
-      "path": "package/references/upload-compat-and-entry-fix.md",
-      "sha256": "5d47f2539ec8f5e23ff73493ee5c4d19907011c278019d1a12a023d60a7b978b",
-      "bytes": 4037
-    },
-    {
-      "path": "package/scripts/upload_preflight.py",
-      "sha256": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
-      "bytes": 2366
-    },
-    {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "7a227732a19fd64a93fd14c0d95157574d556060d7ed7a3797543b3dcb6aa527",
-      "bytes": 112032
+      "sha256": "cda279f91545e8a3d20b1c1fc479ae6635b61e92e36d896cd6166aa7744b9b0f",
+      "bytes": 111268
     },
     {
       "path": "review/README.md",
@@ -916,8 +936,8 @@
     },
     {
       "path": "test/references/button-interaction-coverage.md",
-      "sha256": "69de31c525c018b44770e2ee05f400c4ad596b4d6ca6c335f22e977b1077e942",
-      "bytes": 7529
+      "sha256": "03be201dd7cf28d6f55ee997fff78001ad574ae015ece086e3bf70d3b1ff9b04",
+      "bytes": 7948
     },
     {
       "path": "test/references/button-state-check.md",
@@ -980,7 +1000,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "7a7d0b09fcb3e4a377fa7a24e96f18e38a0974cf55ed1e430a09d33072df7b9b",
+  "previous_provenance_sha256": "f1990199919d16e9b36af4aa31bf3788fdc006559dce0150beefdf6c6f2ac873",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -1470,59 +1490,7 @@
           "method": "release"
         }
       ]
-    },
-    {
-      "id": "20261111-bgm-preview-domain-smoke",
-      "authority": "用户要求现在落实轻量、有效的 BGM 限制与提示；目标平台已确认为 TikTok。",
-      "scope": "Native browser preview host, existing home smoke, and evidence classification only; no game ZIP or platform runtime modified.",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "before_sha256": "766ef61c2eea4e7bcad59993e1001bdac2f1379350caf544a4226c04324335de",
-          "after_sha256": "af6c16bd1b8d042b531a6ee48579b4ba3d9e13b0ff8eb4b9bf532d7b910f4e96",
-          "after_bytes": 27495,
-          "method": "source"
-        },
-        {
-          "path": "package-check/scripts/ad_regression/host.js",
-          "before_sha256": "0a8598c5e71c37568a4fc532dd29756863d17ad9269fd632b595be60981a5346",
-          "after_sha256": "b7740ccbf3b854f304d4809e5197054cb30975222b6800c1d3de0b706f777b31",
-          "after_bytes": 62495,
-          "method": "source"
-        }
-      ],
-      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_BGM预览分域轻量检查_20261111/receipt.json"
     }
   ],
-  "previous_local_provenance_sha256": "4e4519635c06fcac3404c8350066baa7e3c39a839609087d5969d065ef3b992d",
-  "integration_revision": "2026-11-11.ad-six-fusion.2.1.0",
-  "upstream_revision": "2026-11-11.english-simple.11.17.24",
-  "installed_at": "2026-11-12T03:33:42+00:00",
-  "file_count": 195,
-  "local_overlay_preserved": true,
-  "local_overlay_paths": [
-    "SKILL.md",
-    "package-check/scripts/ad_regression/host.js",
-    "package-check/scripts/runtime_regression/host3x/host.js",
-    "package-check/scripts/runtime_regression/tests/storage_host_profiles.cjs",
-    "references/tiktok-fixed-adaptation.md",
-    "test/README.md"
-  ],
-  "delta_install": {
-    "schema": "ad-six-delta-install.v1",
-    "target": "codex-english",
-    "formal_base": {
-      "path": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/Cocos游戏Skill_英化包_v7简化.11.17.24_20261111.zip",
-      "sha256": "9a315ed711fadf6845e75a11940b15a555e9614ee1c80fa7b414aa19eba8337d",
-      "revision": "2026-11-11.english-simple.11.17.24"
-    },
-    "ad_base": {
-      "path": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/发布/ad-boost_v2.0.0_20261111.zip",
-      "sha256": "ef8a58d0d352de55c9809990c1f63c0bfa279a14fddb3c2b9cc7312c9048b115"
-    },
-    "candidate": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/广告Skill/完整融合_20261111/english-tree",
-    "candidate_provenance_sha256": "d14921601ef3f8d9c961f3842ed8321445aa3b9d7d67492155e87c1e8f10e762",
-    "freeze_sha256": "7565f0c65f80ef3c9ed871876180d1bd62c1aa4b17b76880ee6354a293171874",
-    "scope": "Only candidate-vs-formal-base delta; actual installed bytes, local overlays and config retained."
-  }
+  "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8"
 }

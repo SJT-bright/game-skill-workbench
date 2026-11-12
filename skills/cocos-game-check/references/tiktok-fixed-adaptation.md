@@ -174,12 +174,13 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
   - 试玩链接冒烟（总表 B21、B30 F，套件 `trial_link`）：`serve_preview.py --keep` 起服务后、打印链接之前，按 Saul 的用法（1180×960 电脑窗口、清存档）点一次看广告：2.5 秒内画面中心要被模拟广告窗盖住，等「看完」可点后点它，游戏必须有变化；不过就不给链接、退出码 1；跑不了（没有 Ego、找不到入口）时打印原因再给链接。手动跑 `runtime_regression.py trial --url <链接>`。入口不对时在适配文件写 `trial.taps`（`--adapter`）。试玩页往页面上加元素一律挂画布的父节点（挂在 `document.body` 上会被游戏适配器换掉的 body 吃掉）。英化包的 `cocos-game-to-english/scripts/serve_preview.py` 现在转到 `remake-core/scripts/serve_preview.py`（以前指向不存在的 `cocos-game-core`）。
 - **验收包**：10 例广告回归全过（late16 不发奖、bgload 回来看完发奖、long200 发奖、nocallback 30 秒有 X 且下一次马上能用）；任挑一款自写广告服务的旧包（如 SimonsScrew R14）必须被拦，换成平台包后通过。v7.8：全民飞车漂移 v1 的 `ad_entries` 被拦（`offline_x2` 收益 0 时哑按钮、`natural_fall` 没有复活页），v3.1 6/6 通过；飞车 v1 自带的旧试玩宿主 `trial_link` 被拦（广告已开始但页面上看不到广告窗），v3.1 放进手机外壳、ReefGuard v7 经 `serve_preview.py --ad-simulator` 通过。
 
-### 4. 存档读到的值（13 款）
-- **规则**：TikTok 存储和浏览器不一样：没存过的键读到 `false` 或 `''`，用数字写进去的值读回 `true`。写入只写文字（数字、布尔先转）；读到 `null`、`undefined`、`''`、`false`、`true`、`0` 时用 key 列表（`getStorageInfoSync().keys`）判断键在不在，不在就是新玩家；读出对象直接用，不再 `JSON.parse` 一次。所有游戏（含英化原版存档代码）都走同一层。
-- **标准件**：重塑用平台包 `assets/tiktok-platform/SaveStore.js`（v7.5 已按 key 列表判断）。所有新游戏（重塑和英化）再加一层平台包 `parts/storage-guard.js`（件名 `storage24` / `storage3x`；以射击高手 pkg85 的 `storage-guard.js` 为底，加 TobinsGem / Tansys 的 key 列表判断；SaveStore 的键原样读，和 SaveStore 一起跑有测试）。射击高手 pkg85（`40aee1a4…`）和 pkg83/84（`0e090a0f…`）的存档层被清单认作旧版本。
-- **出包时怎么装**：产物段 `storage` 步。2.4 平台包 `main.js` 在加载游戏脚本前装它；不是平台包 `main.js` 时，包根放 `storage-guard.js`，在 `game.js` 的 `__globalAdapter.adaptEngine()` 之后插一行；3.x 插在 `require('./web-adapter')` 之后。新游戏一律装，旧版本换成新版；旧游戏不装（Q6：旧英化游戏只在 `adopt` 以后装；“盘点出数字写入时也装”还没做成脚本，要装就先 `adopt`）。
-- **现在怎么拦**：`K1_kit_bytes`、`K2_kit_wiring`、`K3_single_layer`（`storage24` / `storage3x`）；旧游戏带旧版本存档层时报警告。`SaveStore.js`、`storage-guard.js` 单测（`tests/kit.test.js`、`tests/storage-guard.test.js`）；启动套件有“没存过的键”用例。写入类型记录：仍是文档规则。重开保存检查 v7.9 做成运行时套件 `save_restart`（两个宿主都按手机的读法：没存过的键读到 false、存的 0/1 读回 false/true），手机检查补全起每一步写 `kind`，新游戏首页有 PLAY、商店、领奖入口就各要有一步（见第二部分第 1 条）。新游戏存档层由出包入口自动装上，这一层装上后甜点消消乐 R48 那种「新玩家第一次打开读到 false、判存档坏了」不会发生；遗留名单上的旧游戏不装（R48、猴子快跑 v12 就是这样被 `save_restart` 查出来的，只警告）。
-- **验收包**：射击高手 v84 必须被拦，v85 通过；SorensRivet R21 在“没存过的键读到 false”时必须被拦，R22 通过；DoubleJumpDuo 的空字符串情况通过。
+### 4. 存档读值、旧档与恢复
+
+- **规则与唯一细则**：按[跨平台运行与旧档契约](../../remake-core/references/cross-platform-runtime-contract.md)。历史与受控兼容模型中，缺键可能为false/空字符串，旧裸数字可能失真为Boolean；不是所有iOS必然如此。只有确认缺键才能初始化，已有或存在性未知但不可读的数据不得当空档覆盖。实际对象按本作schema处理，不重复JSON.parse、不把Boolean猜成0/1。
+- **标准件**：新游戏（重塑和英化）使用平台 `storage24` / `storage3x` 存档保护层；SaveStore键由其自身状态与schema处理。仅装guard不自动恢复旧档；在消费者/场景前等待按真实schema的typed恢复，失败给简短提示和Retry/免费退出，开发日志保留阶段诊断。旧客户端缺同步元数据时用可用异步接口确认原值或确切缺键，不让新玩家永久loading。
+- **安装范围**：2.4标准main在游戏脚本前装guard；非标准main经game.js的adaptEngine之后接入；3.x经web-adapter之后接入。新游戏按manifest同步，旧游戏仍按Q6不强制全量换件，但本次涉及存档/启动的适用契约不得因旧游戏身份免验或把实际证据失败降为警告。
+- **门禁**：K1/K2/K3继续核字节、接线和单层。`save_restart`仍核同版写后重开，不能代表冷升级。STORAGE-01使用[v3原始观察与首次核准回执](../../remake-core/references/storage-upgrade-trace-v3.md)核本作真实旧档fixture、保值或保档出口、触控进入玩法及同runner反例。旧23项有效证据按增量账本复用，只补新增/失效项。consumer核准证据，不重复启动长矩阵。组件自测不替代本作Native/真机。
+- **反例**：历史或可审查的单点受控反例必须复现本项已知故障；缺键空字符串负例与旧类型恢复负例分开留证。值域、键名和编码来自本作schema，JSON、Boolean、文本无裸数字机制不得硬塞45制造失败。设备、真实IAA与平台接受分别登记。
 
 ### 5. 适配层三处旧写法（12 款）
 - **规则**：Cocos 2.4 bytedance 适配层的 `SDKVersion[0]`（字段缺失就崩、两位数主版本读错）、“没有 `getOpenDataContext` 就判成开放数据子域”、doNothing 对包内文件做 `fs.access`（真机上这一步可能一直不回），由写包入口统一替换，每处正好命中一次；替换不到或命中多处就拒绝并提示人工确认。SDKVersion 用 `split('.')` 取主版本、缺字段按 2，不用 `String(...)[0]`。模型不手改 adapter。
@@ -309,6 +310,6 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 3. 不要因为旧游戏自写的启动链、广告代码能用，就自动替换。只对新游戏强制，旧游戏给警告，交给各自的会话。
 4. 每做成一条硬拦截，都在完结游戏里抽 3 款（至少一款 3.x）跑一次，确认不误拦好包。检查工具自己也会误报漏报（33 款碰到过），探针报错不能说成包不合格。
 
-## 跨平台旧存档补充（用户2026-11-11）
+## 跨平台旧存档导航（用户2026-11-11）
 
-按[共享跨平台契约](../../remake-core/references/cross-platform-runtime-contract.md)实施。旧游戏只警告/免自动换件不等于免验证当前修复涉及的旧档兼容；冷升级、同步Boolean/异步原类型、保值或保档重试用STORAGE-01 v3留实际Native证据。仅清新档和同版重开不覆盖它。共享storage-guard不再将已存在或存在性未知的不可读值转null；按明确schema恢复，无法恢复则由启动层给Retry，禁止默认覆盖。
+本页第4节与[共享契约](../../remake-core/references/cross-platform-runtime-contract.md)为当前接入口径；详细原始观察和核准回执只维护在[v3格式](../../remake-core/references/storage-upgrade-trace-v3.md)，不重复旧版23项摘要。

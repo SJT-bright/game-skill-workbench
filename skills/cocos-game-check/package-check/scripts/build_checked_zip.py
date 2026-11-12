@@ -98,6 +98,8 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
         observed = audit(interaction_audio_trace, native)
         if not observed['passed']:
             raise ValueError('interaction/audio: ' + '; '.join(observed['errors']))
+    from audit_final_storage import audit_final_storage
+    storage_contract = audit_final_storage(native, project, startup_contract)
     import rework_scope
     rework_path, rework_note = rework_scope.resolve(rework_of, out)
     scope_audit = package_checks.verify_regression_scope(
@@ -138,6 +140,7 @@ def build(native, app_id, out, report=None, interaction_audio_trace=None, resour
             raise ValueError('finalize record does not match the ZIP: ' + problem)
         result.update(entry='official', entry_label=verifier.ENTRY_LABEL['official'],
                       entry_reason='matching receipt from build_checked_zip', receipt=str(receipt_file))
+        result['native_storage_contract'] = storage_contract
         result['final_startup_runtime'] = startup_runtime
         result['package_obligations'] = obligations
         if observed is not None:

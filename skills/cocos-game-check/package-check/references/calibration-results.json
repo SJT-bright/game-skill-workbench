@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-11",
- "release_label": "v7.9-en11.17.24-ad-six-fusion",
- "selftest_report_sha256": "f10763c0b407e5af28b14976ed9dd9a542afe22040367e4808e1ed9d323d87e5",
+ "release_label": "v7.9-en11.17.26-integrated-patches",
+ "selftest_report_sha256": "c148f8ac9707d64bbe227724b2759db20edd0a804da381bd13ab8122fd4677b3",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
@@ -11,7 +11,7 @@
   "remake-core/scripts/package_gates/ads_static.py": "ed7f1225f8e7133da01695b668b9ec22a347677a5022bb5c8f179e80d9902de2",
   "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
   "remake-core/scripts/package_gates/kit_parts.py": "1e771575f90f31673008921ebd01772be803bbb381e2f1a6bc8c28bffee19693",
-  "remake-core/scripts/package_gates/kit_versions.py": "a3c9306c7f0309493123cb06c5afafe6c135395934013dd88bfd2a9785db6ffd",
+  "remake-core/scripts/package_gates/kit_versions.py": "ea95dc3136ae4343563e692d842d14521c3792f01f313f8185772324027c393d",
   "remake-core/scripts/package_gates/mission.py": "78a2749ce1425c6bb5f131f84240dd06a87dc5e1b20c5fdbe0f9485658f6bf7b",
   "remake-core/scripts/package_gates/network.py": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
   "remake-core/scripts/package_gates/portrait.py": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
@@ -783,7 +783,7 @@
   }
  ],
  "test_inventory": {
-  "files": 748,
+  "files": 755,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",

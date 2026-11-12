@@ -259,6 +259,9 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
     state.update(stage='package.regressions', evidence=[str(archive) + '.receipt.json'])
     result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True, project=project)
     checks.extend(regression_checks(result))
+    state.update(stage='storage.native.contract', evidence=[str(startup_contract)] if startup_contract else [])
+    from audit_final_storage import audit_final_storage
+    checks.append(audit_final_storage(native, project, startup_contract))
     state.update(stage='startup.native.current_evidence', evidence=[str(p) for p in (startup_contract, loading_recovery_runtime) if p])
     startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
     checks.extend(startup_runtime.get('checks') or [])

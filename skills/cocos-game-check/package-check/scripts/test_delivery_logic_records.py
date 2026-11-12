@@ -98,7 +98,8 @@ class DeliveryLogicRecords(unittest.TestCase):
             self.assertEqual(hashlib.sha256(Path(actual_archive).read_bytes()).hexdigest(), expected_sha)
             return {'passed': True, 'errors': [], 'version': 'synthetic-cli-boundary'}
 
-        with patch('tiktok_cli_gate.verify', side_effect=cli_boundary) as cli, \
+        with patch('audit_final_storage.audit_final_storage', return_value={'id': 'storage.native.contract', 'action': 'rejudged', 'status': 'synthetic_unrelated_boundary'}), \
+                patch('tiktok_cli_gate.verify', side_effect=cli_boundary) as cli, \
                 patch.object(P.tempfile, 'gettempdir', return_value='/nonexistent-temp'), \
                 patch.object(P, 'writer_board', return_value='localize'), \
                 patch.object(P, 'check', return_value=verified), patch.object(P, 'native_files', return_value=files), \

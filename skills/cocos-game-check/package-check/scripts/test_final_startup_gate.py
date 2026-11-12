@@ -30,7 +30,8 @@ class FinalStartupGate(unittest.TestCase):
     def call(self):return gate.audit_final_startup(self.native,self.project,self.contract,self.recovery)
     def test_no_runtime_proof_no_zip(self):
         out=self.root/'test.zip'
-        with patch('upload_size_gate.enforce_tiktok_host'), \
+        with patch('audit_final_storage.audit_final_storage', return_value={'id': 'storage.native.contract', 'action': 'rejudged', 'status': 'synthetic_unrelated_boundary'}), \
+                patch('upload_size_gate.enforce_tiktok_host'), \
                 self.assertRaisesRegex(ValueError,'scope_required'):
             build(self.native,APP,out,resource_manifest=self.manifest,project=self.project)
         self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))

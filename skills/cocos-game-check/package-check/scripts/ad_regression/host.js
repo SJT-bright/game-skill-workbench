@@ -388,8 +388,21 @@
   if (Q.get('reset') === '1' || Q.get('fresh') === '1') sKeys().forEach(function (k) { NLS.removeItem(SP + k); });
   window.__storeRaw = function (k, raw) { if (raw === null || raw === undefined) NLS.removeItem(SP + k); else NLS.setItem(SP + k, String(raw)); };
   window.__storeDump = function () { var o = {}; sKeys().forEach(function (k) { o[k] = NLS.getItem(SP + k); }); return o; };
+  // Test-only cold-upgrade fixture, applied before the game loads. Supply a JSON object of typed key/value pairs.
+  // It belongs to this isolated host store, never the user's platform data. Remove storage_seed on restart.
+  if (Q.has('storage_seed')) {
+    var seed = JSON.parse(Q.get('storage_seed'));
+    if (!seed || typeof seed !== 'object' || Array.isArray(seed)) throw new Error('storage_seed must be a JSON object');
+    Object.keys(seed).forEach(function (k) { NLS.setItem(SP + k, JSON.stringify(seed[k])); });
+  }
+  function typedStorageValue(k) {
+    var v = NLS.getItem(SP + k); if (v === null) return missingValue(k);
+    try { return JSON.parse(v); } catch (_) { return v; }
+  }
   // missing=true|false|undefined|null|throw: what getStorageSync returns for a key never written
-  // (real TikTok can return true; MergeShot2048 v81). numbool=01|all: a stored number reads back as a Boolean.
+  // (real TikTok can return true; MergeShot2048 v81). numbool=01|all (alias syncnumbool): sync numbers read as Boolean.
+  // async_storage=typed bypasses only that injected numeric distortion for getStorage; default remains unchanged.
+  // This is an explicit compatibility fault profile, not a real-device/iOS acceptance claim.
   function missingValue(k) {
     var m = Q.get('missing');
     if (m === null) return '';
@@ -629,16 +642,15 @@
       return task;
     },
     getStorageSync: function (k) {
-      var v = NLS.getItem(SP + k); if (v === null) return missingValue(k);
-      var r; try { r = JSON.parse(v); } catch (_) { return v; }
-      var nb = Q.get('numbool'); if (nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { hit('numbool', k + '=' + r); return r !== 0; }
+      var r = typedStorageValue(k);
+      var nb = Q.get('syncnumbool') || Q.get('numbool'); if (nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { hit('numbool', k + '=' + r); return r !== 0; }
       return r;
     },
     setStorageSync: function (k, v) { storageWrites++; NLS.setItem(SP + k, JSON.stringify(v)); },
     removeStorageSync: function (k) { NLS.removeItem(SP + k); },
     clearStorageSync: function () { sKeys().forEach(function (k) { NLS.removeItem(SP + k); }); },
     getStorageInfoSync: function () { return { keys: sKeys(), currentSize: 0, limitSize: 10240 }; },
-    getStorage: function (o) { var v = tt.getStorageSync(o.key); setTimeout(function () { cb(o, true, { data: v }); }); },
+    getStorage: function (o) { var v = Q.get('async_storage') === 'typed' ? typedStorageValue(o.key) : tt.getStorageSync(o.key); setTimeout(function () { cb(o, true, { data: v }); }); },
     setStorage: function (o) { tt.setStorageSync(o.key, o.data); setTimeout(function () { cb(o, true, {}); }); },
     onTouchStart: H_.touchstart.on, offTouchStart: H_.touchstart.off,
     onTouchMove: H_.touchmove.on, offTouchMove: H_.touchmove.off,

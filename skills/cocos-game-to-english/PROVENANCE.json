@@ -6,8 +6,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "5590531f0d0927a3a59681acc350d639a73dda1290f472133b16b55454c51417",
-      "bytes": 94697
+      "sha256": "55410f7674e02bfad70db50ca8a83feb72a2c1811278a8d1a3fcb2ac97ea72ae",
+      "bytes": 97891
     },
     {
       "path": "agents/openai.yaml",
@@ -81,8 +81,8 @@
     },
     {
       "path": "references/phase-timing.md",
-      "sha256": "aa070b432a43bbc43926a7b47be132b6b9f8868dd4e3481522463c31277261b9",
-      "bytes": 6058
+      "sha256": "fba6584d2d0fe2c36025a4a721b46c5e999230b575c8fde143c2be4c6691c0b3",
+      "bytes": 6944
     },
     {
       "path": "references/playtest-h5.md",
@@ -679,7 +679,34 @@
           "method": "release"
         }
       ]
+    },
+    {
+      "id": "production-order.20261112.1",
+      "installed_at": "2026-11-12T11:21:28.405470+00:00",
+      "scope": "English production dependency order only. Six standard ad families; no counting, runtime-quality, game, or formal-release changes.",
+      "authority": "User requested removing repeated preparation and art rework by correcting production order.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "85a8206991c18fa5fa5c2bbb1ac8c9e8f672d283ccb954775004a3dfb03fb869",
+          "sha256": "55410f7674e02bfad70db50ca8a83feb72a2c1811278a8d1a3fcb2ac97ea72ae"
+        },
+        {
+          "path": "references/phase-timing.md",
+          "before_sha256": "4165baf01deab896fecabdb77bf780855b0de6483e5125d621265bf9cacece32",
+          "sha256": "fba6584d2d0fe2c36025a4a721b46c5e999230b575c8fde143c2be4c6691c0b3"
+        }
+      ],
+      "verification": {
+        "ad_planner_cases": 32,
+        "ad_gate_cases": 21,
+        "entry_consistency_cases": 77,
+        "entry_pack_only_skips": 10,
+        "real_project_read_only_plan_comparisons": 2,
+        "quality_functions_unchanged": 15,
+        "whole_game_time_saving_measured": false
+      }
     }
   ],
-  "previous_local_provenance_sha256": "8d0c6a78efab79340c10f0abccbaf721ea1bd07f9cf9caa87d2f2d91a3ca4660"
+  "previous_local_provenance_sha256": "4845301dfe5aaad58822de632eb0fb4056363c6a110f8326c5a6d4230befdcd2"
 }

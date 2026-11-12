@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T11:54:14.920Z",
-  "treeHash": "798736ebafc75f0144e56e9901baad2088222560fc5387a540fe93f97fc3a23f",
+  "createdAt": "2026-11-12T11:54:44.523Z",
+  "treeHash": "8e2b0fba99df6164836fdecaec098aae5d1b9d2f3c6a2299d4c0aae9f74a2250",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2161,20 +2161,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "9b81f38c8f42b2c481914920fa6153daadceb2038efd435163d39e422a77dd3a",
-      "fileCount": 65,
-      "bytes": 991504,
+      "treeHash": "a0f9102608c340198c16c84b6647706873c2713ea6495e40015ca06bef9355e2",
+      "fileCount": 66,
+      "bytes": 1001274,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "4845301dfe5aaad58822de632eb0fb4056363c6a110f8326c5a6d4230befdcd2",
-          "size": 27774,
+          "hash": "00afb8866372ebb7cb9c78a800a15d2b496272ee538c94d508c1337f4470ab13",
+          "size": 28975,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "5590531f0d0927a3a59681acc350d639a73dda1290f472133b16b55454c51417",
-          "size": 94697,
+          "hash": "55410f7674e02bfad70db50ca8a83feb72a2c1811278a8d1a3fcb2ac97ea72ae",
+          "size": 97891,
           "executable": false
         },
         {
@@ -2263,8 +2263,8 @@
         },
         {
           "path": "references/phase-timing.md",
-          "hash": "aa070b432a43bbc43926a7b47be132b6b9f8868dd4e3481522463c31277261b9",
-          "size": 6058,
+          "hash": "fba6584d2d0fe2c36025a4a721b46c5e999230b575c8fde143c2be4c6691c0b3",
+          "size": 6944,
           "executable": false
         },
         {
@@ -2275,8 +2275,8 @@
         },
         {
           "path": "references/preview-handoff.md",
-          "hash": "25a73bb594df285001fb30409aa18aca056025a506f9736d15103389af7ed55a",
-          "size": 2720,
+          "hash": "ee10450eb769b4da0b625095bf1dec8e2f76c23f33c7ff91882602d3e148d02b",
+          "size": 3133,
           "executable": false
         },
         {
@@ -2373,6 +2373,12 @@
           "path": "scripts/ocr_windows.ps1",
           "hash": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
           "size": 4615,
+          "executable": false
+        },
+        {
+          "path": "scripts/reviewed_resource_profiles.json",
+          "hash": "7906c773e4ae8ca7f7b72689e70f760525e29a591c751a62a3444e0172272cc8",
+          "size": 4076,
           "executable": false
         },
         {

@@ -165,7 +165,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 3. 激励广告计时与卡死（34 款）
 - **规则**：按上面“已定口径”第 1 条。锁必须在超时、取消、按 X 时一起清掉“正在播放”并解绑 onClose/onError；`onError` 不能是空回调；切到后台不能取消或结束正在播的广告（TikTok 播全屏广告时游戏会切后台）；广告期间暂停 BGM 和音效，各种结局后恢复。
-- **标准件**：平台包 `assets/tiktok-platform/RewardedService.js`（件名 `rewarded`，与 v7.4 逐字节相同），单测 `tests/rewarded-timing.test.js`；3.x 用 `RewardedService.plugin.js`（`rewarded3x`，游戏里调 `globalThis.TikTokKit.RewardedService`），同一套计时用例。游戏只调它，不再自写广告服务。
+- **标准件**：平台包 `assets/tiktok-platform/RewardedService.js`（件名 `rewarded`，以当前 manifest 与同源生成件为准），单测 `tests/rewarded-timing.test.js`；3.x 用 `RewardedService.plugin.js`（`rewarded3x`，游戏里调 `globalThis.TikTokKit.RewardedService`），同一套计时用例。游戏只调它，不再自写广告服务。
 - **出包时怎么装**：源码段 `kit_sources` 让工程里的平台包广告服务和清单逐字节相同（新游戏缺了补上、改过恢复；旧游戏只报差异）。游戏的发奖函数接到哪里，脚本不改，由模型接、由 10 个广告用例验。
 - **现在怎么拦**：v7.9 起模拟宿主有 `adhide=1`（激励视频一开播游戏就被切后台、播完回来，和手机一样），`resume_play`、`ad_outcome` 两个套件用它真点按钮看广告；v7.9 手机检查补全起这两个套件不靠 adapter 写全：关内广告、各个看广告入口没写就用 button_sweep 这次真点出广告的按钮，新游戏一个都找不到又没写明原因就拒。`check_package --ad-regression <qa/ad-regression.json>` 的 10 个广告用例必跑，有激励广告却没有适配文件或任一用例失败就出不了包（`build_checked_zip.py`、`prepare_delivery.py` 同样接收）。`A2_hide_kills_ad`：重塑拦、其他板块警告。`A1_rewarded_outside_kit`（平台包以外直接调 `createRewardedVideoAd`）：新游戏拦，旧游戏警告。BGM/音效暂停只进警告。v7.8：
   - 3.x 相机（总表 A13 补）：广告回归点 X、运行时回归找字和定位，3.x 改用节点所在 Canvas 的相机（`cameraComponent`），找不到才退回第一个相机；三处换算是同一段 `cam-point` 块（`test_tap_point.py` 会运行它）。企鹅雪道 v7 的 X 以前被算到 (818, -918) 误报 5 条，现在点到 (354, 78) 通过；2.x 不变。

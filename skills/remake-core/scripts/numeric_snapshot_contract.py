@@ -10,7 +10,7 @@ from pathlib import Path
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def read(p):return json.loads(Path(p).read_text())
 def same(a,b):return json.dumps(a,sort_keys=True,allow_nan=False)==json.dumps(b,sort_keys=True,allow_nan=False)
-def validate(trace,native,binding):
+def validate(trace,native,binding,*,_scope=None):
     from maintenance_scope import checked_ref,source_inventory
     from check_known_issues import tree_sha
     from audit_native_storage_contract import BASE_CASES,execution_identity
@@ -22,7 +22,7 @@ def validate(trace,native,binding):
     try:
         native=Path(native).resolve();project=Path(trace['project']).resolve();base=Path(trace['trace_base'])
         need(trace.get('schema')=='native_storage_trace.v3' and trace.get('binding')==binding,'v3/current binding required')
-        need(tree_sha(native)==binding['native_tree_sha256'],'Native identity changed')
+        need((_scope.native_identity(native,binding) if _scope else tree_sha(native))==binding['native_tree_sha256'],'Native identity changed')
         execution_identity(trace)
         command=trace['execution'].get('command',[])
         need(isinstance(command,list) and trace['execution']['runner'] in command and '{bundle}' in command and '{adapter}' in command,'actual runner command/arguments required')
@@ -46,7 +46,7 @@ def validate(trace,native,binding):
         main=native/'assets/main/index.js';run=subprocess.run([shutil.which('node'),'-e',scanner,str(parser)],input=main.read_text(),text=True,capture_output=True,timeout=30)
         need(run.returncode==0,'numeric caller domain unresolved: '+run.stderr[-300:])
         if run.returncode==0:need(set(json.loads(run.stdout))<=set(keys),'uncovered numeric business key')
-        routes=source_inventory(trace['route_inventory'],base,project,binding)['routes']
+        routes=source_inventory(trace['route_inventory'],base,project,binding,**({'source_snapshot':_scope.source_snapshot} if _scope else {}))['routes']
         loaded={}
         for label in ('current','negative_control','upgrade_negative_control'):
             row=trace[label];bundle=Path(row['bundle']);adapter=Path(row['adapter']);raw=Path(row['raw_report'])
@@ -109,7 +109,7 @@ def validate(trace,native,binding):
         # Reuse the common, independently registered actual-renderer contract.
         renderer_path=checked_ref(trace['renderer_report'],base)
         from audit_native_startup_renderer import validate as renderer_validate
-        errors.extend(renderer_validate(read(renderer_path),native,binding,project))
+        errors.extend(renderer_validate(read(renderer_path),_scope.home/'package' if _scope else native,binding,project))
     except (ValueError,KeyError,TypeError,OSError,AttributeError,IndexError,StopIteration) as e:
         errors.append('numeric snapshot contract invalid: '+str(e))
     return errors

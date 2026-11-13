@@ -461,6 +461,7 @@ class Ledger:
             if verify_inputs and verify_inputs()!=plan['binding']['inputs']:
                 ok=False;raise NeedsScope(cid+'：执行期间输入变化，不能给新字节沿用这次结果')
         except BaseException as exc:
+            ok=False
             error=type(exc).__name__+': '+str(exc);raise
         finally:
             elapsed=round(time.monotonic()-start,6)

@@ -3,6 +3,7 @@
 
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -60,7 +61,10 @@ class ArtAuditRegressionTests(unittest.TestCase):
         soft = sprite_node(
             'badge', [30, 30], [20, 20], [0.2, 0.2, 0.1, 0.1]
         )
-        self.assertTrue(any('low_res:' in item for item in audit.low_res_problems([soft], [])))
+        self.assertEqual(audit.low_res_problems([soft], []), [])  # 1x default: ratio alone is advisory.
+        from clarity_policy import resolve_policy
+        with mock.patch.object(audit, 'CLARITY_POLICY', resolve_policy(cli_preset='strict')):
+            self.assertTrue(any('low_res:' in item for item in audit.low_res_problems([soft], [])))
 
     def test_fullscreen_art_uses_live_css_size_not_design_units(self):
         # A phone screenshot is 393x852 CSS px even when Cocos reports a larger design-space display size.
@@ -70,7 +74,10 @@ class ArtAuditRegressionTests(unittest.TestCase):
 
         soft = sprite_node('v4_bg_spring', [500, 1000], [878, 1561], [0, 0, 1, 1])
         soft['comps']['sprite']['css_display_size'] = [393, 852]
-        self.assertTrue(any('low_res:' in item for item in audit.low_res_problems([soft], [])))
+        self.assertEqual(audit.low_res_problems([soft], []), [])  # 1x default: ratio alone is advisory.
+        from clarity_policy import resolve_policy
+        with mock.patch.object(audit, 'CLARITY_POLICY', resolve_policy(cli_preset='strict')):
+            self.assertTrue(any('low_res:' in item for item in audit.low_res_problems([soft], [])))
 
     def test_dim_cocos_bgshade_is_not_art_but_opaque_fallback_still_fails(self):
         shade = sprite_node('bgshade', [2, 2], [750, 1626], [0, 0, 1, 1])

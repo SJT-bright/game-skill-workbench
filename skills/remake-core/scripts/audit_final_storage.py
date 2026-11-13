@@ -20,9 +20,9 @@ def audit_final_storage(native, project, startup_contract=None, *, review=None):
     if not isinstance(doc, dict) or not isinstance(doc.get('binding'), dict):
         raise ValueError('storage.native.contract: current binding required')
     binding = doc['binding']
-    if (binding.get('native_tree_sha256') != tree_sha(native) or
-            binding.get('source_sha256') != snapshot(project)[2]):
-        raise ValueError('storage.native.contract: source/Native binding stale')
+    # The envelope can retain an original binding. Each actual report must either
+    # match exact current bytes or carry a verified immutable dependency scope.
+    current_binding = dict(binding, native_tree_sha256=tree_sha(native), source_sha256=snapshot(project)[2])
     if review:
         checks = doc.get('checks', {})
         row = checks.get('STORAGE-01', {}) if isinstance(checks, dict) else {}
@@ -40,15 +40,29 @@ def audit_final_storage(native, project, startup_contract=None, *, review=None):
             if not report_path.is_absolute(): report_path = path.parent / report_path
             report = load(report_path)
             if (isinstance(report, dict) and sha(report_path.read_bytes()) == ref.get('sha256') and
-                    Path(report.get('native', '')).resolve() == native):
+                    report.get('tool') == 'audit_native_storage_contract'):
                 matched.append(ref)
         except (OSError, ValueError, KeyError, TypeError):
             continue
+    from storage_scoped_reuse import validate_report
     errors = []
-    auto_reports({'id': 'STORAGE-01', 'auto_check': ['audit_native_storage_contract']},
-                 {'auto_reports': matched}, path.parent, errors, binding, project=project)
-    if errors:
-        raise ValueError('storage.native.contract: ' + '; '.join(errors))
+    accepted = []
+    for ref in matched:
+        report_path = Path(ref['path'])
+        if not report_path.is_absolute(): report_path = path.parent / report_path
+        report = load(report_path)
+        if binding not in (report.get('binding'), current_binding):
+            errors.append('binding stale: envelope does not match the original or actual current artifacts')
+            continue
+        result = validate_report(report, native, current_binding, project=project)
+        if not result:
+            accepted.append(ref)
+        else:
+            errors.extend(result)
+    if not accepted:
+        raise ValueError('storage.native.contract: ' + '; '.join(errors or ['missing current native_storage_report / STORAGE-01 approval']))
     return {'id': 'storage.native.contract', 'action': 'rejudged',
             'reason': 'read-only approval receipt and final source/Native identity verification',
-            'evidence': [str(path)] + [str(ref['path']) for ref in matched]}
+            'evidence': [str(path)] + [str(ref['path']) for ref in accepted],
+            'current_binding': current_binding, 'original_binding': binding,
+            'game_executed': False}

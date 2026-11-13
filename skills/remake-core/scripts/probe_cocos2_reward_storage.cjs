@@ -2,13 +2,14 @@ const __cg=(()=>{try{return require(require('path').join(__dirname,'..','..','co
 if(__cg&&require.main===module)__cg.cli({tool:'probe_cocos2_reward_storage.cjs',usage:'Usage: node probe_cocos2_reward_storage.cjs <native-build-folder> <web-mobile-folder> [out.json]',minArgs:2});
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const NATIVE=path.resolve(process.argv[2]),WEB=path.resolve(process.argv[3]);
+const clock=require('./reward_probe_clock.cjs');
 function loadLedger(bundle,missing,typed=false){
  const values=new Map;let getThrows=false,setThrows=false,writes=0;
  const tt={getStorageSync:k=>{if(getThrows)throw Error('storage unavailable');return values.has(k)?(typed?JSON.parse(values.get(k)):values.get(k)):missing;},setStorageSync:(k,v)=>{if(setThrows)throw Error('quota exceeded');writes++;values.set(k,v);},removeStorageSync:k=>values.delete(k)};
  // Execute the ACTUAL adapter storage module shipped in the old Native ZIP.
  const adapter=fs.readFileSync(path.join(NATIVE,'adapter-min.js'),'utf8');const start=adapter.indexOf('46:[function(e,t,n){')+'46:[function(e,t,n){'.length,end=adapter.indexOf('},{}],47:',start);
- const storageModule={exports:{}};vm.runInNewContext('(function(e,t,n){'+adapter.slice(start,end)+'})(null,module,module.exports)',{tt,module:storageModule});
- const logs=[],ctx={window:{},cc:{_RF:{push(){},pop(){}},sys:{localStorage:storageModule.exports}},console:{warn:(...a)=>logs.push(a)}};
+ const storageModule={exports:{}};vm.runInNewContext('(function(e,t,n){'+adapter.slice(start,end)+'})(null,module,module.exports)',{tt,module:storageModule,...clock()});
+ const logs=[],ctx={window:{},cc:{_RF:{push(){},pop(){}},sys:{localStorage:storageModule.exports}},console:{warn:(...a)=>logs.push(a)},...clock()};
  const source=fs.readFileSync(bundle,'utf8').replace(/,\["Enum","Index"[\s\S]*$/,',[]);');vm.runInNewContext(source,ctx);
  const Ledger=ctx.window.__screwRequire('GrowthLedger').default,ledger=new Ledger;
  return{ledger,values,key:Ledger.KEY,logs,fault(get,set){getThrows=get;setThrows=set;},writes:()=>writes};

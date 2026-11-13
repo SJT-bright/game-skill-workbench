@@ -151,4 +151,18 @@ function scanAST(ast, file = '<source>') {
 }
 function scan(source,file) { let ast;const opt={ecmaVersion:'latest',locations:true,allowReturnOutsideFunction:true};try{ast=acorn.parse(source,{...opt,sourceType:'script'});}catch(_){ast=acorn.parse(source,{...opt,sourceType:'module'});}return scanAST(ast,file); }
 module.exports={scan,scanAST};
-if(require.main===module){const fs=require('fs');try{const input=JSON.parse(fs.readFileSync(0,'utf8'));if(!Array.isArray(input.files)||!input.files.length)throw Error('nonempty files required');const reports=input.files.map(x=>scan(x.code,x.file));console.log(JSON.stringify({status:reports.some(x=>x.findings.length)?'risk_detected':'checked',checked:reports.length,findings:reports.flatMap(x=>x.findings),unresolved:reports.flatMap(x=>x.unresolved)}));}catch(e){console.log(JSON.stringify({status:'not_run',checked:0,reason:e.message}));process.exitCode=2;}}
+if(require.main===module){
+  const fs=require('fs');
+  if(process.argv.slice(2).some(arg=>arg==='--help'||arg==='-h')){
+    console.log('Usage: node scan_ad_sdk_capabilities.cjs < input.json\nRead JSON from stdin with a nonempty files array: {"files":[{"file":"game.js","code":"..."}]}.\nScans known rewarded SDK capability rejection shapes; no game code is executed.');
+  }else{
+    try{
+      const raw=fs.readFileSync(0,'utf8');
+      if(!raw.trim())throw Error('JSON input with nonempty files required');
+      const input=JSON.parse(raw);
+      if(!Array.isArray(input.files)||!input.files.length)throw Error('nonempty files required');
+      const reports=input.files.map(x=>scan(x.code,x.file));
+      console.log(JSON.stringify({status:reports.some(x=>x.findings.length)?'risk_detected':'checked',checked:reports.length,findings:reports.flatMap(x=>x.findings),unresolved:reports.flatMap(x=>x.unresolved)}));
+    }catch(e){console.log(JSON.stringify({status:'not_run',checked:0,reason:e.message}));process.exitCode=2;}
+  }
+}

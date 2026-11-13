@@ -58,6 +58,16 @@ class LedgerTests(unittest.TestCase):
     def test_midrun_input_change_never_passes(self):
         with self.assertRaises(C.NeedsScope):self.l.execute(self.plan(),lambda:{'passed':True},lambda r:r['passed'],verify_inputs=lambda:{})
         self.assertFalse(self.l.previous('runtime.audio')[0]['passed'])
+    def test_input_verifier_exception_cannot_leave_a_passing_record(self):
+        def unavailable():
+            raise OSError('input disappeared during verification')
+        with self.assertRaisesRegex(OSError, 'disappeared'):
+            self.l.execute(self.plan(),lambda:{'passed':True},lambda r:r['passed'],verify_inputs=unavailable)
+        row=self.l.previous('runtime.audio')[0]
+        self.assertFalse(row['passed'])
+        self.assertIn('OSError',row['error'])
+        self.assertEqual(self.plan()['action'],'blocked_failed')
+        self.assertEqual(self.l.db.execute('SELECT COUNT(*) FROM active').fetchone()[0],0)
     def test_rule_change_rechecks_only_this_node(self):
         self.perform(self.plan());p=self.l.prepare('runtime.audio',self.inputs,{'engine':'2.x'},'newtool',domain='audio')
         self.assertEqual(p['action'],'run')

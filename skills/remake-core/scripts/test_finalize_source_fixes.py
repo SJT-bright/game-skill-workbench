@@ -256,6 +256,8 @@ class RecordedOptions(WF.KitInSync):
         # The gate keeps its own comparison as a second line: a context whose options differ from the record.
         p, _ = self.src(EXC)
         b = self.native()
+        prepared = F.finalize_native(b, p, 'remake', APP, options=dict(EXC))
+        self.assertEqual(prepared['blocks'], [], prepared['blocks'])
         record, context, problems = M.finalize_for_writer(b, p, 'remake', APP, dict(EXC))   # same option
         self.assertIsNotNone(record, problems)
         context = dict(context, finalize_options={})

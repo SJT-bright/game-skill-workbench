@@ -3,7 +3,7 @@
 
 Synthetic fixtures only (never a game pass); real packages are in the W-D1 evidence. Each gate has a bad case that is
 blocked and a good case that passes:
-  writers   make_tiktok_zip.main() and build_checked_zip.build() run finalize_native (its adapter step is the only
+  writers   make_tiktok_zip.main() and build_checked_zip.build() consume explicit Native preparation (its adapter step is the only
             adapter_fix.apply call) and hand its policy and record to the package gates; a stale or missing source
             record (K5) and a refused finalize refuse BEFORE the build folder changes; build_checked_zip refuses
             without --project; the writers never pass --policy
@@ -87,6 +87,11 @@ class KitInSync(unittest.TestCase):
             self.assertEqual(rec['blocks'], [], rec['blocks'])
         return p
 
+    def prepare(self, native, project, app_id=APP):
+        record = F.finalize_native(native, project, 'remake', app_id)
+        self.assertEqual(record['blocks'], [], record['blocks'])
+        return record
+
     def native(self, name='b'):
         b = H.build24(self.d / name)
         (b / 'assets' / 'main').mkdir(parents=True)
@@ -135,22 +140,26 @@ class Writers(KitInSync):
         review = self.d / 'review.json'
         review.write_text('{}')
         return ['--native', b, '--app-id', APP, '--out', self.d / 'out.zip', '--project', p, '--web', b,
-                '--build-tag', 't', '--review', review, '--board', 'remake']
+                '--build-tag', 't', '--review', review, '--board', 'remake',
+                '--resource-manifest', self.d / 'r.json']
 
-    def test_build_checked_zip_calls_finalize_and_gates_get_its_record(self):
+    def test_build_checked_zip_consumes_preparation_and_gates_get_its_record(self):
         p, b = self.project(), self.native()
+        self.prepare(b, p)
+        before = H.tree_sha(b)
         calls, spy = stop_native_problems()
         from package_gates import adapter_fix
         with mock.patch.object(M, 'native_problems', spy), \
                 mock.patch.object(adapter_fix, 'apply', wraps=adapter_fix.apply) as fix:
             with self.assertRaisesRegex(ValueError, 'STOP-AFTER-FINALIZE'):
-                B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, board='remake')
-        self.assertEqual(fix.call_count, 1)                    # only through finalize's adapter step
+                B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, board='remake', web=b)
+        self.assertEqual(fix.call_count, 0)                    # producer ran before writer
+        self.assertEqual(H.tree_sha(b), before)
         self.assertEqual(len(calls), 1)
         ctx = calls[0]['context']
         self.assertEqual(calls[0]['policy'], 'new')
         self.assertTrue(ctx['writer'])
-        self.assertEqual(ctx['project'], p)
+        self.assertEqual(ctx['project'], p.resolve())
         self.assertEqual(ctx['finalize_record']['kind'], 'finalize-native')
         self.assertEqual(ctx['finalize_record']['blocks'], [])
         self.assertEqual(ctx['finalize_record']['source_record']['source_sha256'], F.source_sha256(p))
@@ -158,8 +167,10 @@ class Writers(KitInSync):
         self.assertTrue((b / 'storage-guard.js').is_file())
         self.assertFalse((self.d / 'out.zip').exists())
 
-    def test_make_tiktok_zip_calls_finalize_and_gates_get_its_record(self):
+    def test_make_tiktok_zip_consumes_preparation_and_gates_get_its_record(self):
         p, b = self.project(), self.native()
+        self.prepare(b, p)
+        before = H.tree_sha(b)
         calls, spy = stop_native_problems()
         import audit_native_resource_paths
         with mock.patch.object(M, 'native_problems', spy), \
@@ -170,6 +181,7 @@ class Writers(KitInSync):
         self.assertEqual(calls[0]['policy'], 'new')
         self.assertEqual(calls[0]['context']['finalize_record']['kind'], 'finalize-native')
         self.assertTrue((b / 'touch-coordinates.js').is_file())
+        self.assertEqual(H.tree_sha(b), before)
         self.assertFalse((self.d / 'out.zip').exists())
 
     def test_stale_source_record_refused_and_build_untouched(self):
@@ -177,7 +189,7 @@ class Writers(KitInSync):
         (p / 'assets' / 'later.js').write_text('// changed after the source phase\n')
         before = H.tree_sha(b)
         with self.assertRaisesRegex(ValueError, 'K5_source_finalized: project changed after the source phase'):
-            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p)
+            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, web=b)
         code, err = run_make_zip(self.zip_args(b, p))
         self.assertEqual(code, 1)
         self.assertIn('K5_source_finalized: project changed after the source phase', err)
@@ -190,12 +202,12 @@ class Writers(KitInSync):
         rec['kit_version'] = '1.9'
         (p / F.SOURCE_RECORD).write_text(json.dumps(rec))
         with self.assertRaisesRegex(ValueError, 'source record is for kit 1.9'):
-            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p)
+            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, web=b)
 
     def test_missing_source_record_refused(self):
         p, b = self.project(source=False), self.native()
         with self.assertRaisesRegex(ValueError, 'K5_source_finalized: source record .* missing'):
-            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p)
+            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, web=b)
         code, err = run_make_zip(self.zip_args(b, p))
         self.assertEqual(code, 1)
         self.assertIn('finalize-source.json missing', err)
@@ -203,7 +215,7 @@ class Writers(KitInSync):
     def test_build_checked_zip_without_project_refused(self):
         b = self.native()
         before = H.tree_sha(b)
-        with self.assertRaisesRegex(ValueError, 'AD6_manifest_required|K5_source_finalized: no --project given'):
+        with self.assertRaisesRegex(ValueError, 'actual --project is required'):
             B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json')
         self.assertEqual(H.tree_sha(b), before)
         cli = subprocess.run([sys.executable, '-B', str(CHECK / 'build_checked_zip.py'), '--native', str(b),
@@ -214,13 +226,17 @@ class Writers(KitInSync):
 
     def test_refused_finalize_refuses_the_writer(self):
         p, b = self.project(), self.native()
+        self.prepare(b, p)
+        before = H.tree_sha(b)
         other = '7000000000000000001'                           # PlatformConfig.js says APP
-        with self.assertRaisesRegex(ValueError, 'tiktok_finalize: K_appid_mismatch'):
-            B.build(b, other, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p)
+        with self.assertRaisesRegex(ValueError, 'K_native_preparation_required'):
+            B.build(b, other, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, web=b)
+        self.assertEqual(H.tree_sha(b), before)
         self.assertFalse((self.d / 'out.zip').exists())
 
     def test_good_case_finalized_build_passes_kit_gates(self):
         p, b = self.project(), self.native()
+        self.prepare(b, p)
         record, context, problems = M.finalize_for_writer(b, p, 'remake', APP)
         self.assertEqual(problems, [])
         out = G.run(F._native_files(b), b, 'remake', policy=record['policy'], context=context)
@@ -233,6 +249,7 @@ class Writers(KitInSync):
 
     def test_bad_case_edited_after_finalize_blocked_by_k4(self):
         p, b = self.project(), self.native()
+        self.prepare(b, p)
         record, context, problems = M.finalize_for_writer(b, p, 'remake', APP)
         self.assertEqual(problems, [])
         (b / 'touch-coordinates.js').write_text('/* edited after finalize */\n')
@@ -241,11 +258,79 @@ class Writers(KitInSync):
 
     def test_writers_never_pass_policy_and_never_call_adapter_fix_themselves(self):
         body = inspect.getsource(M.finalize_for_writer)
-        self.assertIn('F.finalize_native(native, project, board, app_id, manifest=kit, options=options)', body)
-        for source in (inspect.getsource(M.main), inspect.getsource(B.build)):
+        self.assertIn('F.prepared_native_result(native, project, board, app_id, manifest=kit, options=options)', body)
+        self.assertNotIn('F.finalize_native(', body)
+        self.assertIn('finalize_for_writer(', inspect.getsource(M.write_package))
+        self.assertIn('make_tiktok_zip.write_package(', inspect.getsource(B.build))
+        for source in (inspect.getsource(M.write_package), inspect.getsource(B.build)):
             self.assertNotIn('adapter_fix.apply(', source)
-            self.assertIn('finalize_for_writer(', source)
             self.assertNotIn('policy=\'new\'', source)
+
+    def test_real_preparation_reuses_and_rejects_native_source_and_tool_mutations(self):
+        # Keep tool mutation inside this test's copied kit; never edit the shared
+        # production helper while another test can be importing it.
+        import preparation_cache as cache
+        copied_kit = self.d / 'private-kit'
+        shutil.copytree(KIT, copied_kit, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        manifest = T.Manifest(kit_in_sync().data, copied_kit)
+        with mock.patch.object(T, 'load_manifest', return_value=manifest):
+            p, b = self.project(), self.native()
+            executed = self.prepare(b, p)
+            self.assertTrue(Path(executed['preparation']['evidence']).is_file())
+            before = H.tree_sha(b)
+            self.assertIsNotNone(F.prepared_native_result(b, p, 'remake', APP))
+            self.assertEqual(H.tree_sha(b), before)
+            native_file = b / 'game.js'
+            original = native_file.read_bytes()
+            native_file.write_bytes(original + b'\n// changed Native input\n')
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP))
+            native_file.write_bytes(original)
+            added = p / 'assets/changed-source.js'
+            added.write_text('// real source dependency addition')
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP))
+            added.unlink()
+            helper = copied_kit / 'tools/check_kit_project.py'
+            tool_original = helper.read_bytes()
+            helper.write_bytes(tool_original + b'\n# changed actual tool bytes\n')
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP))
+            helper.write_bytes(tool_original)
+            self.assertIsNotNone(F.prepared_native_result(b, p, 'remake', APP))
+            ctx = T.Ctx('native', b, project=p, board='remake', engine=2, policy='new',
+                        manifest=manifest, app_id=APP, options={})
+            self.assertIn('upload_compat', F.NATIVE_STEPS)
+            with self.assertRaises(cache.Uncacheable):
+                cache.native_binding(ctx, F.NATIVE_STEPS + ('unknown_step',))
+
+    def test_real_legacy_preparation_keeps_policy_and_rejects_changed_dependencies(self):
+        copied_kit = self.d / 'legacy-kit'
+        shutil.copytree(KIT, copied_kit, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        manifest = T.Manifest(kit_in_sync().data, copied_kit)
+        legacy_file = self.d / 'legacy-list.json'
+        legacy_file.write_text(json.dumps({'frozen': True, 'games': [
+            {'name': 'Explicit legacy fixture', 'folder': 'fixture', 'scene_uuids': [SCENE]}]}))
+        with mock.patch.object(T, 'load_manifest', return_value=manifest), mock.patch.object(P, 'LEGACY', legacy_file):
+            p = H.project24(self.d / 'legacy-source')
+            (p / 'assets/tiktok-platform/PlatformConfig.js').write_text(kit_config())
+            source = F.finalize_source(p, 'remake')
+            self.assertEqual(source['policy'], 'legacy'); self.assertFalse(source['blocks'])
+            b = self.native('legacy-native')
+            record = self.prepare(b, p)
+            self.assertEqual(record['policy'], 'legacy'); self.assertFalse(record['policy_override'])
+            self.assertTrue(Path(record['preparation']['evidence']).is_file())
+            original_native = H.tree_sha(b)
+            reused = F.prepared_native_result(b, p, 'remake', APP)
+            self.assertEqual(reused['policy'], 'legacy')
+            self.assertEqual(reused['warnings'], record['warnings'])
+            self.assertEqual(H.tree_sha(b), original_native)
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP, policy='new'))
+            self.assertIsNone(F.prepared_native_result(b, p, 'localize', APP))
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP, options={'keep_webp_exception':'changed option'}))
+            changed = p / 'assets/added-source.js'; changed.write_text('// real legacy source mutation')
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP)); changed.unlink()
+            helper = copied_kit / 'tools/check_kit_project.py'; original = helper.read_bytes()
+            helper.write_bytes(original + b'\n# changed legacy rule dependency\n')
+            self.assertIsNone(F.prepared_native_result(b, p, 'remake', APP)); helper.write_bytes(original)
+            self.assertIsNotNone(F.prepared_native_result(b, p, 'remake', APP))
 
 
 def write_zip(path, files):
@@ -546,10 +631,14 @@ class W_D4_Requests(KitInSync):
         p, b = self.project(config=False), self.native()           # project keeps H.project24's own PlatformConfig
         (p / 'assets' / 'tiktok-platform' / 'PlatformConfig.js').write_text(kit_config('change-me', 0))
         F.finalize_source(p, 'remake')
+        self.prepare(b, p)
+        before = H.tree_sha(b)
         with self.assertRaisesRegex(ValueError, 'K_platform_config: project assets/tiktok-platform/PlatformConfig.js'):
-            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, board='remake')
+            B.build(b, APP, self.d / 'out.zip', resource_manifest=self.d / 'r.json', project=p, board='remake', web=b)
+        self.assertEqual(H.tree_sha(b), before)
         self.assertFalse((self.d / 'out.zip').exists())
         p2, b2 = self.project('p2'), self.native('b2')
+        self.prepare(b2, p2)
         record, context, problems = M.finalize_for_writer(b2, p2, 'remake', APP)
         self.assertEqual(problems, [])
         out = G.run(F._native_files(b2), b2, 'remake', policy=record['policy'], context=context)

@@ -132,7 +132,9 @@ def plan(status,reports=(),changed_rules=(),impact=None,case_ids=(),rule_hashes_
             'impact declaration alone','do not recapture stale export'))]
         if history_plan.get('unknown'):
             blockers.extend(history_plan['unknown'])
-            result['capture']['scope']='explicit shared/unknown expansion; no inherited evidence authorized'
+            result['status']='scope_required'
+            result['capture'].update(required=None,
+                scope='repair explicit dependency ownership; no capture authorized')
     if verified_history is not None:
         if verified_history.get('ready') is True and not verified_history.get('error'):
             result['capture']={'required':False,'reason':'owning verifier validated all current original proofs and required anchors',

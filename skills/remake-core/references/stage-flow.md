@@ -188,7 +188,7 @@
 | 8 | 英文文案自动检查 | COPY 的自动部分 |
 | 9 | **核最终构建绑定及覆盖**：第1段报告仍有效则引用，不固定重跑；加载/资源/分包/引擎变化或工具判绑定失效时重跑实际失效矩阵 → 门禁完成检查 | LOAD-03、全部 |
 
-**每一段**：测 → 发现 bug **当段修好** → 复测这一段（修改影响到前面的段，就把受影响的部分也复测）→ 在 `docs/test/测试进度.md` 里打勾 → **直接进下一段**。中间不停下来等用户，也不先汇报。
+**每一段**：测 → 发现 bug **当段修好** → 复测这一段（修改影响到前面的段，就把受影响的部分也复测）→ 在 `docs/test/测试进度.md` 里打勾 → **直接进下一段**。节点结束先在聊天汇报实际用时、完成与沿用范围，再直接进下一节点；不以过程报告结束执行或等待用户再次说继续。
 
 **唯一的结束条件**：运行
 
@@ -197,7 +197,7 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
   --review docs/test/review.json --stage pre_scan --executor-exit --report docs/test/test-stage-exit.json
 ```
 
-返回 `test_stage_complete` 才算测完：除了只能由 Codex 做的几项（GPT/Codex 抽查、英文语感审查），其他每一项都是"通过"或"有依据的不适用"。返回 `test_stage_incomplete` 就照 `errors` 继续测、继续修。
+返回 `test_stage_complete` 才算测完：本轮适用义务均有有效通过或有依据的不适用记录。执行者身份不产生额外抽查、重新跑自动检查或再走三条流程的要求。返回 `test_stage_incomplete` 就照 `errors` 继续测、继续修。
 
 **只有这两种情况可以中途停**：
 
@@ -251,7 +251,7 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
 
 ## 和打包的关系
 
-阶段 4 通过后，用户说"打包"才出包：用 [`cocos-game-check/package`](../../cocos-game-check/package/README.md) 的 `make_tiktok_zip.py` 出唯一一种包（可直接上传的 TikTok 平台包，主包≤4,000,000、总包≤30,000,000，BUILD-04）；同版自动打开的 Google Chrome 试玩窗口及本地链接 + TikTok 上传 ZIP，ZIP 过 `verify_native_zip.py` 和门禁 `check_known_issues.py --stage post_package`。这就是本 Skill 的终点，不再有真机阶段。不自动打包的规则不变。v7.8 起 `make_tiktok_zip.py` 写 ZIP 前也跑激励广告回归和全部运行时套件（布局状态、按钮普查、看广告入口、dead_shell、popin、frame_rate 等，和 `build_checked_zip.py` 一样），出包命令要带 `--ad-regression <工程>/qa/ad-regression.json`：新游戏（工程标记 new 的英化游戏也算）没这个文件、缺套件要的字段或有用例没过就不写 ZIP；名单上的老游戏只警告（[运行时回归](../../cocos-game-check/package-check/references/runtime-regression.md)）。每款多几分钟。
+阶段 4 通过后，用户说"打包"才出包：用 [`cocos-game-check/package`](../../cocos-game-check/package/README.md) 的 `make_tiktok_zip.py` 出唯一一种包（可直接上传的 TikTok 平台包，主包≤4,000,000、总包≤30,000,000，BUILD-04）；同版自动打开的 Google Chrome 试玩窗口及本地链接 + TikTok 上传 ZIP，ZIP 过 `verify_native_zip.py` 和门禁 `check_known_issues.py --stage post_package`。这就是本 Skill 的终点，不再有真机阶段。不自动打包的规则不变。按[统一写包路线](single-writer.md)，回归在各生产节点形成记录；writer 只合并有效记录，不重新跑激励广告或全部运行套件。`--ad-regression <工程>/qa/ad-regression.json` 仍用于核对真实所需覆盖与依赖；缺项或失败回对应节点修复，不换旧入口，不以名单或测试子集冒充完整通过。
 
 ### 美术检查明细
 

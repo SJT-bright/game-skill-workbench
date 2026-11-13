@@ -1,48 +1,13 @@
 #!/usr/bin/env python3
-"""Make the ONE allowed upload package: the TikTok platform package (user 2026-10-23, SquareRush UPLOADFIX).
+"""One deterministic TikTok writer, shared by both historical CLI names.
 
-Every package the user asks for - 打包, 出包, 上传测试包, 检测包, 压缩包, TikTok 平台包 - is this form and nothing else:
-the files of the real Cocos Native (mini-game) build at the ZIP root (game.js, game.json, project.config.json), big
-resources in a normal subpackage, within the TikTok limits, no outer folder, no Web build, no source, no zip-in-zip,
-no Finder junk. The old SquareRush package was rejected: assets/resources stayed in the main package (8,754,975 bytes
-> 4,000,000). This writer refuses BEFORE any ZIP is written, then writes to a temp file, re-reads and checks it
-(verify_native_zip.py: CRC, safe paths, root entry, App ID, no QA level jump, limits, every file byte-equal to the
-Native tree), extracts it again into a folder with spaces and compares, and only then moves it to --out.
+Consume prepared Native bytes and independently bound original evidence. A writer
+never finalizes Native, executes storage VM probes or starts a game/browser. Missing
+or stale evidence returns to its precise producer. Final ZIP readback, byte identity,
+resource/issue guards and per-delivery size/CLI checks retain their existing roles.
 
-  python make_tiktok_zip.py --native <Native build folder> --app-id <App ID> --out <Game_TikTok_test_v3.zip>
-         --project <game> --web <web build> --build-tag v3 --review docs/test/known-issue-review.json [--board localize|remake]
-         --resource-manifest <current resource manifest.json>
-         --startup-contract <current startup contract.json> --loading-recovery-runtime <current recovery runtime.json>
-         --ad-regression <project>/qa/ad-regression.json [--report <new report.json>]
-
-For every package the mandatory --review known-issue gate (check_known_issues.py check --stage pre_scan) runs first and a failure stops it
-(BUILD-03; use this script as the game's writer for test_writer_refusal.py). Exit codes: 0 ZIP written and verified,
-1 refused (no ZIP written), 2 bad input. A passing ZIP is a local structure check only - not platform acceptance.
-The report (<out>.report.json; tool make_tiktok_zip, bound to the review's binding) goes into BUILD-04 auto_reports.
-v7.5: before any check the stock Cocos 2.4 ByteDance adapter forms are rewritten in the Native folder
-(package_gates/adapter_fix.py, listed in the report; an unrecognised adapter is refused). native_problems() lists
-EVERY reason at once and runs the shared package gates (package_gates.run: bundle names, analytics domains,
-cross-promotion, growth APIs, startup, WebP, static ad code). A written ZIP gets <out>.receipt.json; without it
-verify_native_zip.py calls a ZIP unofficial and prepare_delivery.py refuses it.
-v7.7 (design D77 1.1, 1.5): the source record <project>/.tiktok-kit/finalize-source.json must match the project and
-the kit version (K5; `tiktok_finalize.py source` before the Cocos build), then tiktok_finalize.finalize_native installs
-the platform-kit standard parts in the Native folder in place of the v7.5 adapter_fix call (adapter_fix is its first
-step) and the package gates run with the finalize record (K4) and its policy (new | legacy). Report and receipt carry
-`finalize` (receipt schema 2). --keep-webp-exception REASON is the design 3.6 WebP exception (kit probe installed).
-For test_writer_refusal.py give this script a separate --out (its normal case makes one ZIP; existing ZIPs are never
-overwritten) and delete that check ZIP afterwards.
-v7.8 (总表 B32 b): after the ZIP is written, older packages of the same game in the --out folder (same App ID and the
-same game's own files, delivery_folder.py) move into 旧包/ with their receipts, and 最新.txt says which file to upload,
-its sha256 and time; the moved files are listed in the output and in the report (delivery_folder). Source ZIPs and
-everything else stay. --keep-old-packages (or TIKTOK_KEEP_OLD_PACKAGES=1) leaves the folder as it is: use it, or an
-own folder, for the test_writer_refusal check ZIP.
-v7.8 (W97, 总表 22.6 D/E): after the written ZIP is re-read and extracted, the rewarded-ad regression and the runtime
-regression suites (startup, network, dead_shell, layout_state, button_sweep, ad_entries, popin, frame_rate, ...) run on
-that extraction through check_package.writer_regressions - the same gates build_checked_zip runs in check_package.check()
-- with --ad-regression <adapter JSON> (or $TIKTOK_AD_REGRESSION_ADAPTER), the finalize policy and --board. A new game
-is refused (no adapter, no Ego browser, an incomplete environment and a failed case all refuse); a game on the frozen
-legacy list gets warnings and its ZIP. Results go into the report (rewarded_ad_regression, runtime_regression). The
-suites take minutes; for test_writer_refusal give the same --ad-regression in the writer command (its normal case).
+Explicit storage producer: writer_proofs.py prepare --project ... --native ... --web ...
+Both --app-id and --expected-app-id name the same target parameter.
 """
 import argparse
 from delivery_continuation import continuing_cli
@@ -60,6 +25,7 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import verify_native_zip as vnz  # noqa: E402
+from audit_upload_startup import audit_invocation  # noqa: E402
 
 FIXED_TIME = (2020, 1, 1, 0, 0, 0)
 SKIPPED = []
@@ -252,12 +218,12 @@ def source_record_ref(project):
 
 
 def finalize_for_writer(native, project, board, app_id, options=None):
-    """v7.7, both writers (make_tiktok_zip.main and build_checked_zip.build), BEFORE any other package check.
+    """Read-only source/production guards and exact prepared Native evidence before writing.
 
     1. K5: the source record must exist, have no block, match the current project (assets/, build-templates/,
        settings/) and the kit version - checked before the build folder is touched, so a refusal changes nothing.
-    2. tiktok_finalize.finalize_native(native, project, board, app_id): installs the standard parts in place (the
-       v7.5 adapter_fix rewrite is its first step). The writers never pass --policy: the policy comes from the
+    2. tiktok_finalize.prepared_native_result: consumes the original standard-parts preparation (the
+       adapter rewrite remains at its explicit preparation node). The policy comes from the
        project marker / the frozen legacy list (design section 2).
     -> (record, gate_context, problems). problems non-empty = refuse; record is None when step 1 refused."""
     import tiktok_finalize as F
@@ -300,7 +266,9 @@ def finalize_for_writer(native, project, board, app_id, options=None):
             base_audio_warning = F.T.finding(GATE_BASE_AUDIO, 'warn', message)
     if localize:
         options['prepared_png_only'] = True
-    record = F.finalize_native(native, project, board, app_id, manifest=kit, options=options)
+    record = F.prepared_native_result(native, project, board, app_id, manifest=kit, options=options)
+    if record is None:
+        return None, None, ['K_native_preparation_required: 当前 Native 缺少有效准备记录；回到 tiktok_finalize.py native 准备节点，仅补受影响项，写包不会改动构建。']
     record['source_record'] = source_record_ref(project)
     if base_audio_warning:
         record['warnings'].append(base_audio_warning)
@@ -328,27 +296,66 @@ def adapter_step(record):
 
 
 CHECK_SCRIPTS = HERE.parents[1] / 'cocos-game-check' / 'package-check' / 'scripts'
+if str(CHECK_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(CHECK_SCRIPTS))
 
 
 def writer_regressions(folder, adapter, policy, board, rework_of=None, *,
                        project=None, expected_scope_sha256=None):
-    """v7.8 (W97): check_package.writer_regressions on the files of `folder` (the independent extraction of the ZIP
-    about to be published). The import or a crash is a refusal for a new game, never a skip.
-    rework_of (简化.11.15, --rework-of): the last passed package; see check_package.rework_plan."""
+    """Read complete original ledger results; an empty selection cannot launch CI."""
+    import time
+    import check_package as checks
+    import ad_incremental
+    import runtime_incremental
+    import ad_regression
+    import runtime_regression
+    from regression_scope_gate import needs_ad_suite
+    started = time.monotonic()
     folder = Path(folder)
-    files = {p.relative_to(folder).as_posix(): p.read_bytes() for p in sorted(folder.rglob('*')) if p.is_file()}
+    files = checks.native_files(folder)
+    out = {'id': 'writer_regressions', 'policy': policy, 'board': board,
+           'adapter': str(adapter) if adapter else None, 'blocked': True,
+           'problems': [], 'warnings': [], 'rewarded_ad_regression': None,
+           'runtime_regression': None}
     try:
-        if str(CHECK_SCRIPTS) not in sys.path:
-            sys.path.insert(0, str(CHECK_SCRIPTS))
-        import check_package
-    except Exception as error:  # noqa: BLE001
-        text = 'rewarded-ad / runtime regression not run: cocos-game-check package-check unusable (%r)' % (error,)
-        return {'id': 'writer_regressions', 'policy': policy, 'board': board, 'blocked': True,
-                'problems': [text], 'warnings': [],
-                'rewarded_ad_regression': None, 'runtime_regression': None, 'adapter': str(adapter) if adapter else None}
-    return check_package.writer_regressions(files, folder, str(adapter) if adapter else None, policy=policy, board=board,
-                                            rework_of=str(rework_of) if rework_of else None, project=project,
-                                            expected_scope_sha256=expected_scope_sha256)
+        project, adapter, board, policy = checks.regression_context(files, folder, adapter, board, policy, project)
+        scope = checks.verify_regression_scope(files, folder, adapter, board, policy, rework_of,
+            project=project, expected_scope_sha256=expected_scope_sha256, operation='writer')
+        plans = []
+        needs_ads = needs_ad_suite(files, adapter, ad_regression, runtime_regression)
+        if needs_ads:
+            checks.input_gate('rewarded_ad_regression', adapter)
+            plans.extend(ad_incremental.run(ad_regression, folder, adapter, plan_only=True))
+        if 'game.js' in files:
+            checks.input_gate('runtime_regression', adapter)
+            plans.extend(runtime_incremental.run(runtime_regression, folder, adapter,
+                                                policy=policy, board=board, plan_only=True))
+        missing = [p['check_id'] + ': ' + p['why'] for p in plans if p['action'] != 'reuse']
+        if missing:
+            raise ValueError('writer only consumes existing evidence; return to affected checks: ' + '; '.join(missing))
+        # These APIs append only reusable units when selection is empty. They still
+        # use the actual production judge and report missing coverage as incomplete.
+        ad = (ad_incremental.run(ad_regression, folder, adapter, cases=[]) if needs_ads else
+              {'id': 'rewarded_ad_regression', 'status': 'not_applicable',
+               'reason': 'no applicable automated rewarded-ad request; manual revive coverage stays at its playtest node'})
+        runtime = (runtime_incremental.run(runtime_regression, folder, adapter, suites=[], policy=policy, board=board)
+                   if 'game.js' in files else {'id': 'runtime_regression', 'status': 'not_applicable', 'reason': 'no game.js'})
+        problem = checks.regression_coverage_problem(ad, runtime, files, adapter, policy)
+        if problem:
+            raise ValueError(problem)
+        if checks.regression_record(ad, runtime) is None:
+            raise ValueError('complete passing original regression records are missing')
+        out.update(blocked=False, policy=policy, board=board, regression_scope=scope,
+                   rewarded_ad_regression=ad, runtime_regression=runtime,
+                   warnings=list(runtime.get('warnings') or []))
+        if scope.get('baseline'):
+            out['rework'] = {'reuse': True, 'old': scope['baseline'],
+                             'why': 'canonical writer consumed original independent records',
+                             'rerun': [], 'reused': [p['check_id'] for p in plans]}
+    except (ValueError, OSError, TypeError, KeyError) as error:
+        out['problems'].append(str(error))
+    out['seconds'] = round(time.monotonic() - started, 6)
+    return out
 
 
 def resolve_rework(value, out):
@@ -415,323 +422,310 @@ def write_zip(native, files, target, *, reviewed_files=None):
             z.writestr(zi, payload[rel])
 
 
-@continuing_cli('writer')
+@audit_invocation()
 @scoped_execution
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--native', type=Path, required=True, help='the Cocos Native (mini-game) build output folder')
-    ap.add_argument('--app-id', required=True, help='App ID of the target TikTok app (project.config.json appid)')
-    ap.add_argument('--out', type=Path, required=True, help='new ZIP path (game, use, version in the name); never overwritten')
-    ap.add_argument('--report', type=Path, help='new report path (default: <out>.report.json next to the ZIP)')
-    ap.add_argument('--project', type=Path)
-    ap.add_argument('--web', type=Path)
-    ap.add_argument('--build-tag')
-    ap.add_argument('--review', type=Path, help='known-issue review JSON: runs the pre_scan gate first (BUILD-03)')
-    ap.add_argument('--coverage', type=Path, help='final source/Web/Native storage ownership evidence; default project/docs/test/runtime-coverage.json')
-    ap.add_argument('--board', choices=['localize', 'remake'], help='remake | localize; package gates use it only to choose block vs warning')
-    ap.add_argument('--startup-contract', type=Path)
-    ap.add_argument('--loading-recovery-runtime', type=Path)
-    ap.add_argument('--resource-manifest', type=Path, help='complete current production resource requests; shared mandatory gate')
-    ap.add_argument('--keep-webp-exception', metavar='REASON', help='design D77 3.6: keep WebP (still over 30 MB after '
-                    'shrinking); finalize installs the kit WebP probe. Same reason as `tiktok_finalize.py source`')
-    ap.add_argument('--keep-old-packages', action='store_true', help='v7.8: leave older packages of this game in the '
-                    'output folder and do not write 最新.txt (e.g. a writer-refusal test ZIP); default: they go into 旧包/')
-    ap.add_argument('--ad-regression', type=Path, help='v7.8: adapter JSON for the rewarded-ad and runtime regressions, '
-                    'as build_checked_zip.py (default $TIKTOK_AD_REGRESSION_ADAPTER; usually <project>/qa/'
-                    'ad-regression.json). Required regression coverage is enforced for delivery.')
-    ap.add_argument('--rework-of', default='auto', help='简化.11.15 出包后返工: the last passed package (a ZIP, or a folder '
-                    'with 最新.txt; default auto = the 最新.txt of the --out folder). Missing scope refuses. When only '
-                    'pictures, sounds or fonts changed since it (same code, settings, adapter and check tools), only the '
-                    'browser checks that can see the change run again; static checks always run '
-                    '(cocos-game-check/package-check/scripts/rework_scope.py)')
-    a = ap.parse_args()
-    if not (a.review and a.project and a.web and a.build_tag):
-        print('REFUSED, no ZIP written: all upload/test/detection packages require --review, --project, --web and --build-tag; use verify_native_zip.py --structure-only for read-only structure diagnosis', file=sys.stderr)
-        return 2
-    native = a.native.resolve()
-    if not native.is_dir():
-        print('make_tiktok_zip: --native %s is not a folder (give the Native build folder, not a ZIP)' % native, file=sys.stderr)
-        return 2
-    out = a.out.resolve()
-    if out.suffix.lower() != '.zip':
-        print('make_tiktok_zip: --out must end in .zip', file=sys.stderr)
-        return 2
-    if out.exists():
-        print('make_tiktok_zip: %s already exists - give the new version its own name' % out, file=sys.stderr)
-        return 2
-    try:
-        out.relative_to(native)
-        print('make_tiktok_zip: --out must be outside the Native folder', file=sys.stderr)
-        return 2
-    except ValueError:
-        pass
-    report_path = (a.report or out.with_name(out.stem + '.report.json')).resolve()
-    if report_path.exists():
-        print('make_tiktok_zip: report %s already exists' % report_path, file=sys.stderr)
-        return 2
-    # 简化.11.15 (出包后返工, Saul 2026-11-04): the last passed package; its passes are kept for what did not change
-    rework_of, rework_note = resolve_rework(a.rework_of, out)
-    receipt_file = vnz.receipt_path(out)
-    if receipt_file.exists() or receipt_file.is_symlink():
-        print('make_tiktok_zip: receipt %s already exists' % receipt_file, file=sys.stderr)
-        return 2
-    # v7.7: the source record must be current (K5), then finalize installs the platform-kit standard parts in the
-    # Native folder BEFORE any check (its first step is the v7.5 adapter_fix rewrite; unknown adapter = refused).
-    options = {'keep_webp_exception': a.keep_webp_exception} if a.keep_webp_exception else {}
-    finalized, gate_context, finalize_problems = finalize_for_writer(native, a.project, a.board, a.app_id, options)
-    if finalize_problems:
-        print('REFUSED, no ZIP written (tiktok_finalize):\n- ' + '\n- '.join(finalize_problems), file=sys.stderr)
-        return 1
-    gate_policy = finalized['policy']
-    a.board = finalized.get('board') or a.board
-    # Cocos bundle URLs can contain ../ even when every ZIP entry is safe.
-    try:
-        from audit_native_resource_paths import audit as audit_resource_paths
-        path_review=json.loads(a.review.read_text(encoding='utf-8'))
-        proof=path_review.get('native_resource_paths_runtime')
-        if proof:
-            proof=Path(proof)
-            if not proof.is_absolute(): proof=a.review.parent/proof
-        resource_result=audit_resource_paths(native,proof)
-        if resource_result['status']!='pass':
-            raise ValueError('; '.join(resource_result['errors']))
-    except (OSError,ValueError,TypeError) as error:
-        print('REFUSED, no ZIP written: native resource path check: '+str(error),file=sys.stderr)
-        return 1
-    # Reject size and missing/moved local art BEFORE replaying the expensive review.
-    # This never substitutes for the full review gate below.
-    import writer_check_reuse
-    native_audit = writer_check_reuse.NativeAuditMemo()
-    early_problems, early_sizes, _ = native_audit.run(native, a.board, gate_policy, gate_context, native_problems)
-    from audit_packed_assets import audit as audit_packed_assets
-    asset_result = audit_packed_assets(native)
-    if early_problems or not asset_result['passed']:
-        print('REFUSED, no ZIP written: ' + '\n'.join(early_problems + asset_result['errors']), file=sys.stderr)
-        return 1
+def write_package(native, app_id, out, report=None, interaction_audio_trace=None, resource_manifest=None,
+                  project=None, startup_contract=None, loading_recovery_runtime=None, ad_regression=None,
+                  board=None, keep_webp_exception=None, keep_old_packages=False, rework_of='auto', *,
+                  web=None, build_tag=None, review=None, coverage=None, writer_evidence=None,
+                  native_resource_paths_runtime=None, webp_codec_reports=None):
+    """The sole official writer. Consume prepared bytes and original passing evidence.
+
+    Both historical CLIs and build_checked_zip.build call this function. Missing
+    evidence returns to its producer; this function never finalizes, launches a
+    browser, or replays gameplay/storage suites. Static file/host VM guards remain.
+    """
+    import time
+    from types import SimpleNamespace
+    import writer_proofs
     import package_obligations
-    try:
-        obligation_files = {name: (native/name).read_bytes() for name in early_sizes}
-        obligations = package_obligations.verify(obligation_files, native, a.project, a.resource_manifest)
-    except (ValueError, OSError, TypeError, KeyError, subprocess.TimeoutExpired) as error:
-        print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
-        return 1
-    english_problems = english_new_image_problems(obligation_files, a.project, a.board)
-    if english_problems:
-        print('REFUSED, no ZIP written: ' + '\n'.join(english_problems), file=sys.stderr)
-        return 1
-    from audit_final_package_startup import audit_final_startup
-    try:
-        if str(CHECK_SCRIPTS) not in sys.path:
-            sys.path.insert(0, str(CHECK_SCRIPTS))
-        from check_package import verify_regression_scope
-        scope_audit = verify_regression_scope(
-            obligation_files, native, a.ad_regression, a.board, gate_policy, rework_of,
-            project=a.project, operation='writer')
-        startup_runtime = audit_final_startup(native, a.project, a.startup_contract, a.loading_recovery_runtime)
-    except (ValueError, OSError, TypeError, KeyError) as error:
-        print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
-        return 1
-    # Native WebP texture selection can fail even when canvas encoding works.
-    # Detect actual packed formats instead of trusting a hand-filled 'unchanged' flag.
-    if any(p.is_file() and p.suffix.lower() == '.webp' for p in native.rglob('*')):
-        try:
-            review_data = json.loads(a.review.read_text(encoding='utf-8'))
-            refs = review_data['checks']['LOAD-03']['auto_reports']
-            codec_ok = False
-            for ref in refs:
-                report_file = Path(ref['path'])
-                if not report_file.is_absolute():
-                    report_file = a.review.parent / report_file
-                report_data = json.loads(report_file.read_text(encoding='utf-8'))
-                if report_data.get('tool') not in ('audit_loading_recovery', 'audit_native_texture_codec'):
-                    continue
-                runtime_file = Path(report_data['runtime_file'])
-                if not runtime_file.is_absolute():
-                    runtime_file = report_file.parent / runtime_file
-                runtime_data = json.loads(runtime_file.read_text(encoding='utf-8'))
-                codec_ok = codec_ok or (runtime_data.get('native_codec_verified') is True and bool(runtime_data.get('codec_evidence_refs')))
-            if not codec_ok:
-                raise ValueError('Native WebP files require decoder evidence in LOAD-03 runtime')
-        except (KeyError, TypeError, ValueError, OSError) as error:
-            print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
-            return 1
-    # Execute known production-runtime regressions before accepting any attested
-    # coverage table. This is not satisfied by a handwritten pass row.
-    probe_cmd = [sys.executable, str(HERE / 'run_reward_storage_probe.py'), '--native', str(native), '--web', str(a.web)]
-    probe_run = writer_check_reuse.run_command(a.project, 'reward-storage', probe_cmd, native=native, web=a.web)
-    if probe_run.returncode:
-        print('REFUSED, no ZIP written: executable Native/Web reward storage probe failed:\n' +
-              (probe_run.stdout + probe_run.stderr)[-2500:], file=sys.stderr)
-        return 1
-    try:
-        storage_probe = json.loads(probe_run.stdout.strip().splitlines()[-1])
-        storage_probe['check_reuse'] = getattr(probe_run, 'check_reuse', {'reused': False})
-    except (ValueError, IndexError):
-        print('REFUSED, no ZIP written: reward storage probe produced no valid result', file=sys.stderr)
-        return 1
-    gate = {'ran': False, 'reward_storage_probe': storage_probe}
-    if a.review is not None:
-        if not (a.project and a.web and a.build_tag):
-            print('make_tiktok_zip: --review needs --project, --web and --build-tag for the gate', file=sys.stderr)
-            return 2
-        cmd = [sys.executable, str(HERE / 'check_known_issues.py'), 'check', '--project', str(a.project), '--native', str(native),
-               '--web', str(a.web), '--build-tag', a.build_tag, '--review', str(a.review), '--stage', 'pre_scan']
-        if a.board:
-            cmd += ['--board', a.board]
-        if not a.review.is_file():
-            print('REFUSED, no ZIP written: the known-issue review %s is missing (BUILD-03)' % a.review, file=sys.stderr)
-            return 1
-        p = subprocess.run(cmd, capture_output=True, text=True)
-        gate = {'reward_storage_probe': storage_probe, 'ran': True, 'exit': p.returncode, 'command': cmd[1:], 'tail': (p.stdout + p.stderr).strip()[-600:]}
-        if p.returncode != 0:
-            print('REFUSED, no ZIP written: the known-issue gate failed (exit %d):\n%s' % (p.returncode, gate['tail']), file=sys.stderr)
-            return 1
+    import check_package
+    from audit_packed_assets import audit as packed_assets
+    from audit_native_resource_paths import audit as resource_paths
     from audit_final_storage import audit_final_storage
-    try:
-        gate['native_storage_contract'] = audit_final_storage(native, a.project, a.startup_contract, review=a.review)
-    except (ValueError, OSError, TypeError) as error:
-        print('REFUSED, no ZIP written: ' + str(error), file=sys.stderr)
-        return 1
-    reviewed = json.loads(a.review.read_text(encoding='utf-8')) if a.review else {}
+    from audit_final_package_startup import audit_final_startup
+    from known_issue_checkpoints import consume_for_writer
+
+    started = time.monotonic()
+    native, out = Path(native).resolve(), Path(out).resolve()
+    project = Path(project).resolve() if project else None
+    if not native.is_dir():
+        raise ValueError('Native input directory missing')
+    if not isinstance(app_id, str) or not app_id.strip():
+        raise ValueError('a nonempty target App ID is required')
+    if out.suffix.lower() != '.zip':
+        raise ValueError('upload output must end in .zip')
+    if out.exists() or out.is_symlink() or out.is_relative_to(native):
+        raise ValueError('output must be new and outside Native input')
+    report_path = Path(report).resolve() if report else out.with_name(out.stem + '.report.json')
+    if report_path.exists() or report_path.is_symlink() or report_path == out or report_path.is_relative_to(native):
+        raise ValueError('report must be new, outside Native, and distinct from ZIP')
+    receipt_file = vnz.receipt_path(out)
+    if receipt_file.exists() or receipt_file.is_symlink() or report_path == receipt_file:
+        raise ValueError('receipt already exists or conflicts with report')
+    if not project or not project.is_dir():
+        raise ValueError('actual --project is required')
+    if not resource_manifest:
+        raise ValueError('runtime resource manifest required before writing ZIP')
+    manifest_path = Path(resource_manifest).resolve()
+    review = Path(review).resolve() if review else None
+    default_review = project / 'docs/test/known-issue-review.json'
+    if review is None and default_review.is_file():
+        review = default_review
+    reviewed = json.loads(review.read_bytes()) if review else {}
+    if not isinstance(reviewed, dict):
+        raise ValueError('existing known-issue review must be an object')
+    web = writer_proofs.resolve_web(project, native, web, writer_evidence, startup_contract)
+    if not web.is_dir():
+        raise ValueError('actual current Web directory missing')
+    if review is None:
+        review = writer_proofs.resolve_registered_review(project, native, web)
+        reviewed = json.loads(review.read_bytes()) if review else {}
+    a = SimpleNamespace(native=native, app_id=app_id, out=out, report=report_path, project=project,
+                        web=web, build_tag=build_tag, review=review, coverage=coverage, board=board,
+                        startup_contract=startup_contract, loading_recovery_runtime=loading_recovery_runtime,
+                        resource_manifest=manifest_path, ad_regression=ad_regression,
+                        keep_webp_exception=keep_webp_exception, keep_old_packages=keep_old_packages,
+                        rework_of=rework_of)
+    options = {'keep_webp_exception': keep_webp_exception} if keep_webp_exception else {}
+    finalized, gate_context, problems = finalize_for_writer(native, project, board, app_id, options)
+    if problems:
+        raise ValueError('tiktok_finalize: ' + '; '.join(problems))
+    board, policy = finalized.get('board') or board, finalized['policy']
+    a.board = board
+    problems, sizes, info = native_problems(native, board, policy, gate_context)
+    if info.get('appId') != app_id:
+        problems.append('Root App ID does not match the requested target')
+    assets = packed_assets(native)
+    problems.extend(assets.get('errors') or [] if not assets['passed'] else [])
+    if problems:
+        raise ValueError('; '.join(problems))
+    files = {name: (native / name).read_bytes() for name in sizes}
+    obligations = package_obligations.verify(files, native, project, manifest_path)
+    problems = english_new_image_problems(files, project, board)
+    if problems:
+        raise ValueError('; '.join(problems))
+    proof = native_resource_paths_runtime or reviewed.get('native_resource_paths_runtime')
+    if proof:
+        proof = Path(proof)
+        if not proof.is_absolute():
+            proof = (review.parent if review else project) / proof
+    path_result = resource_paths(native, proof)
+    if path_result['status'] != 'pass':
+        raise ValueError('native resource path check: ' + '; '.join(path_result['errors']))
+    technical_refs = {str(Path(proof).resolve()): sha(proof)} if proof else {}
+    if any(name.lower().endswith('.webp') for name in files):
+        from check_known_issues import tree_sha, snapshot
+        current_codec_inputs = {'source_sha256': snapshot(project)[2],
+                                'native_tree_sha256': tree_sha(native), 'web_tree_sha256': tree_sha(web)}
+        refs = list(webp_codec_reports or [])
+        refs.extend(reviewed.get('checks', {}).get('LOAD-03', {}).get('auto_reports', []))
+        codec_ok = False
+        for ref in refs:
+            value = ref.get('path') if isinstance(ref, dict) else ref
+            report_file = Path(value)
+            if not report_file.is_absolute():
+                report_file = (review.parent if review else project) / report_file
+            report_data = json.loads(report_file.read_bytes())
+            if isinstance(ref, dict) and ref.get('sha256') and sha(report_file) != ref['sha256']:
+                raise ValueError('WebP decoder report reference changed')
+            if report_data.get('tool') not in ('audit_loading_recovery', 'audit_native_texture_codec'):
+                continue
+            if (report_data.get('passed') is not True or report_data.get('failed') != 0
+                    or type(report_data.get('checked')) is not int or report_data['checked'] < 1
+                    or any((report_data.get('binding') or {}).get(key) != value for key, value in current_codec_inputs.items())):
+                raise ValueError('WebP decoder report is failed or stale; return to its affected producer')
+            runtime_file = Path(report_data['runtime_file'])
+            if not runtime_file.is_absolute():
+                runtime_file = report_file.parent / runtime_file
+            runtime_data = json.loads(runtime_file.read_bytes())
+            if any((runtime_data.get('binding') or {}).get(key) != value for key, value in current_codec_inputs.items()):
+                raise ValueError('WebP decoder runtime evidence has stale artifact inputs')
+            if report_data.get('tool') == 'audit_loading_recovery':
+                from audit_loading_recovery import validate
+                errors = validate(runtime_data, runtime_data['binding'], runtime_file.parent)
+                if errors:
+                    raise ValueError('WebP decoder runtime evidence invalid: ' + '; '.join(errors))
+            refs = runtime_data.get('raw_evidence', [])
+            indexes = runtime_data.get('codec_evidence_refs', [])
+            if not indexes or not all(type(i) is int and 0 <= i < len(refs) for i in indexes):
+                raise ValueError('WebP decoder raw evidence references missing')
+            for i in indexes:
+                raw = (runtime_file.parent / refs[i]['path']).resolve()
+                if sha(raw) != refs[i].get('sha256'):
+                    raise ValueError('WebP decoder raw evidence missing or changed')
+                technical_refs[str(raw)] = sha(raw)
+            technical_refs.update({str(report_file.resolve()): sha(report_file), str(runtime_file.resolve()): sha(runtime_file)})
+            codec_ok = codec_ok or (runtime_data.get('native_codec_verified') is True and bool(runtime_data.get('codec_evidence_refs')))
+        if not codec_ok:
+            raise ValueError('Native WebP files require current decoder evidence; return to LOAD-03 producer')
+    observed = None
+    if interaction_audio_trace:
+        from audit_interaction_audio import audit
+        observed = audit(interaction_audio_trace, native)
+        if not observed['passed']:
+            raise ValueError('interaction/audio: ' + '; '.join(observed['errors']))
     import project_qa
     profile = project_qa.review_policy(a, reviewed)
-    if profile and profile.get('writer_path'):
-        addition = project_qa.invoke(profile, 'legacy_coverage', a, native, reviewed, HERE, field='writer_path')
-        if not isinstance(addition, dict):
-            print('REFUSED, no ZIP written: project coverage gate failed', file=sys.stderr)
-            return 1
-        gate.update(addition)
-    if not (profile and profile.get('legacy_coverage_override')):
-        source_root = a.project / 'assets'
-        if not source_root.is_dir():source_root = a.project / 'src'
-        coverage = a.coverage or a.project / 'docs/test/runtime-coverage.json'
-        coverage_cmd = [sys.executable, str(HERE / 'audit_runtime_coverage.py'), '--source', str(source_root), '--native', str(native), '--web', str(a.web), '--coverage', str(coverage)]
-        coverage_result = writer_check_reuse.run_command(a.project, 'runtime-coverage', coverage_cmd,
-            native=native, web=a.web, source=source_root, coverage=coverage)
-        if coverage_result.returncode:
-            print('REFUSED, no ZIP written: actual runtime persistence coverage failed:\n'+(coverage_result.stdout+coverage_result.stderr)[-2000:], file=sys.stderr)
-            return 1
-        gate['runtime_coverage_sha256'] = sha(coverage)
-        gate['runtime_coverage_reuse'] = getattr(coverage_result, 'check_reuse', {'reused': False})
-    problems, sizes, info = native_audit.run(native, a.board, gate_policy, gate_context, native_problems)
-    if 'appId' in info and info['appId'] != a.app_id:
-        problems.append('App ID: project.config.json appid is %r, the target is %r - rebuild with the right App ID'
-                        % (info.get('appId'), a.app_id))
-    if problems:
-        print('REFUSED, no ZIP written - not the uploadable TikTok platform package:\n- ' + '\n- '.join(problems), file=sys.stderr)
-        return 1
+    producer_proofs = writer_proofs.consume(project, native, web, coverage, writer_evidence,
+        require_coverage=not (profile and profile.get('legacy_coverage_override')))
+    producer_proofs['refs'].update(technical_refs)
+    qa_proof = writer_proofs.consume_project_qa(a, reviewed, profile, writer_evidence) if profile else None
+    # Existing summaries can show unmapped duties; they cannot manufacture a pass.
+    checkpoints = consume_for_writer(project, native, web, build_tag=build_tag, review=review, board=board)
+    storage = audit_final_storage(native, project, startup_contract, review=review)
+    summary = vnz.finalize_summary(finalized) if 'decision' in finalized else finalized
+    problem = vnz.finalize_problem(summary, {name: hashlib.sha256(data).hexdigest() for name, data in files.items()})
+    if problem:
+        raise ValueError('finalize record does not match the ZIP: ' + problem)
+    previous, rework_note = resolve_rework(rework_of, out)
+    scope = check_package.verify_regression_scope(files, native, ad_regression, board, policy, previous,
+                                                  project=project, operation='writer')
+    startup = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
+    regressions = writer_regressions(native, ad_regression, policy, board, previous, project=project,
+                                     expected_scope_sha256=(scope or {}).get('plan_sha256'))
+    if regressions['blocked']:
+        raise ValueError('; '.join(regressions['problems']))
+    regression_record = regression_receipt(regressions)
+    if regression_record is None:
+        raise ValueError('writer did not find complete passing regression evidence')
+    static_seconds = time.monotonic() - started
     out.parent.mkdir(parents=True, exist_ok=True)
-    tmpdir = Path(tempfile.mkdtemp(prefix='.tiktok-zip-', dir=out.parent))
-    try:
-        tmp = tmpdir / out.name
-        write_zip(native, sizes, tmp, reviewed_files=obligation_files)
-        result = vnz.verify(tmp, a.app_id)                    # built-in TikTok limits, forbidden entries, CRC, root entry
-        reviewed_tree = {rel: hashlib.sha256(data).hexdigest() for rel, data in obligation_files.items()}
-        if reviewed_tree != result['file_sha256']:
-            raise ValueError('ZIP differs from the Native bytes reviewed before packaging')
-        check = tmpdir / 'extracted copy'                     # independent extraction into a folder with a space
-        with zipfile.ZipFile(tmp) as z:
-            z.extractall(check)
-        again = {f.relative_to(check).as_posix(): sha(f) for f in check.rglob('*') if f.is_file()}
-        if again != result['file_sha256']:
-            raise ValueError('independent extraction differs from the ZIP listing')
-        # v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions build_checked_zip runs through
-        # check_package.check(), here on the extracted bytes of the ZIP about to be published (same adapter, policy
-        # and board). A new game is refused; a game on the frozen legacy list gets warnings.
-        regressions = writer_regressions(
-            check, a.ad_regression, gate_policy, a.board, rework_of=rework_of, project=a.project,
-            expected_scope_sha256=(scope_audit or {}).get('plan_sha256'))
-        if regressions['blocked']:
-            print('REFUSED, no ZIP written (rewarded-ad / runtime regression, policy %s):\n- %s'
-                  % (gate_policy, '\n- '.join(regressions['problems'])), file=sys.stderr)
-            return 1
-        if hashlib.sha256(tmp.read_bytes()).hexdigest() != result['sha256']:
-            raise ValueError('ZIP changed during the runtime regression')
-        verified_regressions = regression_receipt(regressions)
-        if verified_regressions is None:
-            raise ValueError('writer did not produce complete passing regression evidence')
-        receipt = vnz.make_receipt('make_tiktok_zip', tmp, result['sha256'], result['file_sha256'],
-                                   info['package_gates'], a.board,
-                                   {'tool_sha256': sha(Path(__file__)),
-                                    'regression_scope': regressions.get('regression_scope'),
-                                    'regressions': verified_regressions}, finalize=finalized)
-        receipt_tmp = tmpdir / receipt_file.name
-        receipt_tmp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        with package_obligations.publication_guard(obligation_files, native, a.project, a.resource_manifest, obligations):
-            os.link(receipt_tmp, receipt_file)          # never overwrites; published together with the ZIP
-            try:
-                os.replace(tmp, out)
-            except OSError:
-                receipt_file.unlink()
-                raise
-    except (ValueError, OSError, zipfile.BadZipFile, RuntimeError) as e:
-        print('REFUSED, no ZIP written: the written ZIP failed its own check: %s' % e, file=sys.stderr)
-        return 1
-    finally:
-        shutil.rmtree(tmpdir, True)
-    result['archive'] = str(out)
-    result.update(vnz.receipt_status(out, sha(out), result['file_sha256']))
-    report = {'tool': 'make_tiktok_zip', 'status': 'tiktok_upload_zip_ready', 'passed': True, 'failed': 0,
-              'package_obligations': obligations, 'final_startup_runtime': startup_runtime,
-              'checked': result['files'], 'zip': str(out), 'zip_sha256': sha(out),
-              'zip_bytes': out.stat().st_size, 'native': str(native), 'appId': a.app_id, 'gate': gate,
-              'sizes': {'main_bytes': info['main'], 'main_limit': vnz.TIKTOK_MAIN, 'total_bytes': info['total'],
-                        'total_limit': vnz.TIKTOK_TOTAL, 'normal_subpackages': info['normal'],
-                        'independent_subpackages': info['independent'], 'independent_limit': vnz.TIKTOK_INDEPENDENT},
-              'files': result['files'], 'checks': ['refused before writing: outer folder, Web build, source, junk, zip-in-zip, '
-                                                   'non-ASCII paths, QA level jump, App ID, limits',
-                                                   'written ZIP re-read: CRC, safe paths, root entry, App ID, limits',
-                                                   'every file byte-equal to the Native tree',
-                                                   'independent extraction (folder with a space) equal'],
-              'warnings': result.get('warnings', []) + regressions['warnings'], 'left_out_junk': SKIPPED, 'limits_source': vnz.LIMITS_SOURCE,
-              'upload': 'upload this ZIP directly - do not unzip, re-zip or wrap it',
-              'not_verified': result['not_verified'],
-              'board': a.board, 'package_gates': info['package_gates'], 'pre_home_bytes': info['pre_home_bytes'],
-              'finalize': finalize_report(finalized), 'adapter_fix': adapter_step(finalized),
-              'entry': result['entry'], 'receipt': str(receipt_file),
-              # v7.8 (W97): same keys as check_package.check() / build_checked_zip reports
-              'rewarded_ad_regression': regressions['rewarded_ad_regression'],
-              'runtime_regression': regressions['runtime_regression'],
-              'regression_scope': regressions.get('regression_scope'),
-              'regressions': {k: regressions.get(k) for k in ('policy', 'board', 'adapter', 'problems', 'warnings',
-                                                              'seconds')},
-              # 简化.11.15 (出包后返工): what was compared with which package, what ran again, what was kept
-              'rework': regressions.get('rework') or {'reuse': False, 'why': rework_note}}
-    if isinstance(info.get('pre_home_bytes'), dict) and isinstance(regressions['runtime_regression'], dict):
-        info['pre_home_bytes']['measured'] = regressions['runtime_regression'].get('startup_measured')
-    if a.review is not None:            # BUILD-04 auto report: bound to this build like every other automatic check
-        try:
-            report['binding'] = json.loads(a.review.read_text(encoding='utf-8')).get('binding')
-        except (OSError, ValueError):
-            pass
-    # v7.8 (总表 B32 b): older packages of this game go into 旧包/, the folder keeps this one package and 最新.txt.
-    import delivery_folder
-    report['delivery_folder'] = delivery_folder.tidy(out, a.app_id, 'make_tiktok_zip', report['zip_sha256'],
-                                                     keep=a.keep_old_packages)
-    # 简化.11.15 (出包后返工): what was compared, rerun and kept, and what the AI checks by hand, in docs/checks/
-    rework_rec = rework_record(a.project, regressions.get('rework'))
-    if rework_rec:
-        report['rework_record'] = rework_rec
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(json.dumps({k: report[k] for k in ('status', 'zip', 'zip_sha256', 'zip_bytes', 'appId', 'sizes', 'warnings',
-                                             'pre_home_bytes', 'entry')},
-                     ensure_ascii=False, indent=2))
-    print('finalize (policy %s, kit %s):\n%s' % (finalized['policy'], finalized['kit_version'],
-                                                 report['finalize']['table_markdown']))
-    runtime = regressions['runtime_regression'] or {}
-    print('rewarded-ad / runtime regression (policy %s, %s s): suites %s%s' % (
-        gate_policy, regressions.get('seconds'), ', '.join(runtime.get('required') or []) or '-',
-        ''.join('\n  warning: %s' % w for w in regressions['warnings'])))
-    if regressions.get('rework'):
-        print('\n'.join(rework_lines(regressions['rework'], rework_rec)))
-    else:
-        print('返工范围｜%s' % rework_note)
-    print('report: %s' % report_path)
-    print('\n'.join(delivery_folder.describe(report['delivery_folder'])))
+    with tempfile.TemporaryDirectory(prefix='.tiktok-zip-', dir=out.parent) as folder:
+        tmpdir = Path(folder)
+        temporary = tmpdir / out.name
+        write_zip(native, sizes, temporary, reviewed_files=files)
+        result = vnz.verify(temporary, app_id)
+        expected = {rel: hashlib.sha256(data).hexdigest() for rel, data in files.items()}
+        if result['file_sha256'] != expected:
+            raise ValueError('ZIP differs from the exact reviewed Native bytes')
+        extracted = tmpdir / 'extracted copy'
+        with zipfile.ZipFile(temporary) as archive:
+            archive.extractall(extracted)
+        if {p.relative_to(extracted).as_posix(): sha(p) for p in extracted.rglob('*') if p.is_file()} != expected:
+            raise ValueError('independent extraction differs from the ZIP listing')
+        receipt = vnz.make_receipt('make_tiktok_zip', temporary, result['sha256'], result['file_sha256'],
+            info['package_gates'], board, {'tool_sha256': sha(Path(__file__)), 'canonical_backend': 'make_tiktok_zip.write_package',
+            'regression_scope': scope, 'regressions': regression_record,
+            'writer_producer_proofs': producer_proofs}, finalize=finalized)
+        result.update(tool='make_tiktok_zip', canonical_backend='make_tiktok_zip.write_package',
+            status='tiktok_upload_zip_ready', passed=True, failed=0, archive=str(out), zip=str(out),
+            sha256=result['sha256'], zip_sha256=result['sha256'], zip_bytes=temporary.stat().st_size,
+            native=str(native), app_id=app_id, appId=app_id, board=board, expected_tree_exact=True,
+            entry='official', entry_label=vnz.ENTRY_LABEL['official'],
+            entry_reason='matching canonical writer receipt', receipt=str(receipt_file),
+            package_gates=info['package_gates'], package_obligations=obligations,
+            packed_resource_check=assets, native_storage_contract=storage, final_startup_runtime=startup,
+            native_resource_paths=path_result, writer_producer_proofs=producer_proofs,
+            project_qa_proof=qa_proof, known_issue_coverage=checkpoints,
+            finalize=finalize_report(finalized), adapter_fix=adapter_step(finalized),
+            pre_home_bytes=info.get('pre_home_bytes'), native_pre_home_bytes=info.get('pre_home_bytes'),
+            rewarded_ad_regression=regressions['rewarded_ad_regression'], runtime_regression=regressions['runtime_regression'],
+            regression_scope=scope, rework=regressions.get('rework') or {'reuse': False, 'why': rework_note},
+            runtime_execution='existing_evidence_only_no_game_execution',
+            sizes={'main_bytes': info['main'], 'main_limit': vnz.TIKTOK_MAIN, 'total_bytes': info['total'],
+                   'total_limit': vnz.TIKTOK_TOTAL, 'normal_subpackages': info['normal'],
+                   'independent_subpackages': info['independent'], 'independent_limit': vnz.TIKTOK_INDEPENDENT},
+            check_timings={'static_preflight_seconds': round(static_seconds, 6),
+                           'total_seconds': round(time.monotonic() - started, 6)})
+        if observed is not None:
+            result['interaction_audio_check'] = observed
+        result['tool_identity'] = check_package.tools_in_use()
+        if reviewed.get('binding'):
+            result['binding'] = reviewed['binding']
+        receipt_tmp = tmpdir / 'receipt.json'
+        receipt_tmp.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+        # All validations have finished. Publish new files under the same guards;
+        # never overwrite a concurrently created ZIP, receipt or report.
+        with package_obligations.publication_guard(files, native, project, manifest_path, obligations):
+            writer_proofs.unchanged(producer_proofs)
+            if qa_proof:
+                writer_proofs.unchanged(qa_proof)
+            published = []
+            try:
+                os.link(receipt_tmp, receipt_file)
+                published.append(receipt_file)
+                os.link(temporary, out)
+                published.append(out)
+                with report_path.open('x', encoding='utf-8') as stream:
+                    json.dump(result, stream, ensure_ascii=False, indent=2)
+                    stream.write('\n')
+                published.append(report_path)
+            except BaseException:
+                for path in reversed(published):
+                    path.unlink(missing_ok=True)
+                raise
+    import delivery_folder
+    result['delivery_folder'] = delivery_folder.tidy(out, app_id, 'make_tiktok_zip', result['sha256'], keep=keep_old_packages)
+    record = rework_record(project, result.get('rework'))
+    if record:
+        result['rework_record'] = record
+    # Post-publication housekeeping is report metadata, never another validation.
+    report_tool_identity(result, project, out)
+    report_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+    return result
+
+
+def report_tool_identity(result, project, out):
+    """Retain modified-tool diagnostics once in the canonical writer only."""
+    import check_package
+    identity = result.get('tool_identity')
+    if not isinstance(identity, dict) or identity.get('status') != 'modified':
+        return
+    result['modified_tools'] = identity.get('summary') or []
+    warnings = result.setdefault('warnings', [])
+    for item in result['modified_tools']:
+        warning = '改过的工具: ' + item
+        if warning not in warnings:
+            warnings.append(warning)
+    draft = check_package.feedback_draft(identity, Path(project).name if project else Path(out).stem)
+    if draft:
+        result['tool_feedback_draft'] = draft
+
+
+def add_writer_arguments(parser):
+    parser.add_argument('--native', type=Path, required=True)
+    parser.add_argument('--app-id', '--expected-app-id', dest='app_id', required=True)
+    parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--report', type=Path)
+    parser.add_argument('--project', type=Path, required=True)
+    parser.add_argument('--web', type=Path, help='exact current Web artifact, or its existing producer record')
+    parser.add_argument('--build-tag')
+    parser.add_argument('--review', type=Path, help='existing known-issue evidence; no handfilled table is required')
+    parser.add_argument('--coverage', type=Path)
+    parser.add_argument('--writer-evidence', type=Path, help='writer_proofs.py prepare manifest; read-only consumption')
+    parser.add_argument('--native-resource-paths-runtime', type=Path)
+    parser.add_argument('--webp-codec-report', dest='webp_codec_reports', action='append', type=Path)
+    parser.add_argument('--interaction-audio-trace', type=Path)
+    parser.add_argument('--resource-manifest', type=Path, required=True)
+    parser.add_argument('--startup-contract', type=Path)
+    parser.add_argument('--loading-recovery-runtime', type=Path)
+    parser.add_argument('--ad-regression', type=Path)
+    parser.add_argument('--board', choices=['localize', 'remake'])
+    parser.add_argument('--keep-webp-exception', metavar='REASON')
+    parser.add_argument('--keep-old-packages', action='store_true')
+    parser.add_argument('--rework-of', default='auto')
+    return parser
+
+
+@continuing_cli('writer')
+def main(argv=None):
+    parser = add_writer_arguments(argparse.ArgumentParser(description='One official TikTok writer; consume prepared bytes and existing evidence.'))
+    args = parser.parse_args(argv)
+    result = write_package(**vars(args))
+    print(json.dumps({key: result.get(key) for key in ('archive', 'sha256', 'archive_bytes', 'main_bytes',
+        'uncompressed_total_bytes', 'expected_tree_exact', 'check_timings', 'pre_home_bytes', 'entry', 'receipt', 'canonical_backend')}, ensure_ascii=False))
+    print('finalize (policy %s):\n%s' % (result['finalize']['policy'], result['finalize']['table_markdown']))
+    if result.get('rework'):
+        print('\n'.join(rework_lines(result['rework'], result.get('rework_record'))))
+    import delivery_folder
+    print('\n'.join(delivery_folder.describe(result['delivery_folder'])))
+    if result.get('modified_tools'):
+        print('改过的工具：%s%s' % ('; '.join(result['modified_tools']),
+              '（反馈草稿：%s）' % result['tool_feedback_draft'] if result.get('tool_feedback_draft') else ''))
     return 0
 
 
-
 if __name__ == '__main__':
-    sys.exit(main())
+    raise SystemExit(main())

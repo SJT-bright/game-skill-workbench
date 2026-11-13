@@ -85,7 +85,12 @@ class DefaultRuleCompat(unittest.TestCase):
                 changed = link.SKILLS / relative
                 with mock.patch.object(link, 'sha', side_effect=lambda p: 'f' * 64 if Path(p) == changed else original(p)):
                     self.assertNotEqual(link.fingerprint(self.root), before)
-                    self.assertFalse(link.audit(self.root)['passed'])
+                    result = link.audit(self.root)
+                    self.assertTrue(result['passed'])
+                    rules = result['assets'][0]['measurements']['production_rules']
+                    self.assertTrue(rules['changed'])
+                    self.assertEqual(rules['current'][relative], 'f' * 64)
+                    self.assertEqual(rules['verification'], 'current-rule-replay-and-exact-output-comparison')
 
     def test_fixed_producer_and_trim_stay_exact_dependencies(self):
         self.produce(); before = link.fingerprint(self.root); original = link.sha
@@ -93,14 +98,20 @@ class DefaultRuleCompat(unittest.TestCase):
             changed = link.ART / name
             with mock.patch.object(link, 'sha', side_effect=lambda p: 'f' * 64 if Path(p) == changed else original(p)):
                 self.assertNotEqual(link.fingerprint(self.root), before)
-                self.assertFalse(link.audit(self.root)['passed'])
+                result = link.audit(self.root)
+                self.assertTrue(result['passed'])
+                rules = result['assets'][0]['measurements']['production_rules']
+                self.assertTrue(rules['changed'])
+                self.assertEqual(rules['current'][changed.relative_to(link.SKILLS).as_posix()], 'f' * 64)
 
-    def test_missing_or_malformed_mapping_fails_closed(self):
+    def test_missing_or_malformed_mapping_cannot_reuse_old_fingerprint(self):
         self.produce(); before = link.fingerprint(self.root); original = Path.read_text
         for content in ('{}', '{broken', json.dumps(dict(self.compat, files={}))) :
             with mock.patch.object(Path, 'read_text', lambda p, *a, **kw: content if p.name == 'art-default-rules-compat.json' else original(p, *a, **kw)):
                 self.assertNotEqual(link.fingerprint(self.root), before)
-                self.assertFalse(link.audit(self.root)['passed'])
+                result = link.audit(self.root)
+                self.assertTrue(result['passed'])
+                self.assertTrue(result['assets'][0]['measurements']['production_rules']['changed'])
 
     def test_pixels_cannot_be_forged_with_output_hash(self):
         data = self.produce(); output = self.root / 'assets/output.png'
@@ -111,7 +122,7 @@ class DefaultRuleCompat(unittest.TestCase):
         self.assertFalse(result['passed']); self.assertIn('replayed pixels', result['assets'][0]['error'])
 
     @unittest.skipUnless(BASELINE, 'requires formal 11.17.11 tree')
-    def test_real_formal_output_and_fingerprint_unchanged_without_rewrite(self):
+    def test_real_formal_output_rechecked_without_rewriting_old_evidence(self):
         base = Path(BASELINE)
         for relative, pair in self.compat['files'].items(): self.assertEqual(link.sha(base / relative), pair['before_sha256'])
         for kind in ('fixed_button', 'sheet_frame'):
@@ -123,7 +134,13 @@ class DefaultRuleCompat(unittest.TestCase):
                 code = 'import sys,json;sys.path.insert(0,sys.argv[1]);import art_production;print(json.dumps(art_production.fingerprint(sys.argv[2])))'
                 proc = subprocess.run([sys.executable, '-B', '-c', code, str(base / 'remake-core/scripts'), str(self.root)], capture_output=True, text=True)
                 self.assertEqual(proc.returncode, 0, proc.stderr)
-                self.assertEqual(link.fingerprint(self.root), json.loads(proc.stdout))
+                record = json.loads(manifest.read_text())['production_assets'][0]
+                actual = link.fingerprint(self.root)
+                historical = json.loads(proc.stdout)
+                if record['rules'] == link.rule_hashes(kind, record.get('parameters')):
+                    self.assertEqual(actual, historical)
+                else:
+                    self.assertNotEqual(actual, historical, 'changed dependencies cannot reuse the old fingerprint')
                 self.assertTrue(link.audit(self.root)['passed'])
                 self.assertEqual(before, (manifest.read_bytes(), (self.root / 'assets/output.png').read_bytes()))
 
@@ -141,16 +158,12 @@ class DefaultRuleCompat(unittest.TestCase):
         self.assertEqual(len(branches), 1)
         at = extract.body.index(branches[0]); extract.body[at:at + 1] = branches[0].orelse
         self.assertEqual(ast.dump(old['extract']), ast.dump(extract))
+        # Producer input/output and pixel-comparison functions remain exact.
+        # replay() now intentionally re-evaluates changed tools; its actual RGBA
+        # result is covered above instead of falsely requiring historical code identity.
         old = functions(base / 'remake-core/scripts/art_production.py'); new = functions(link.HERE / 'art_production.py')
-        for name in old:
-            if name == 'rule_hashes': continue
-            changed = copy.deepcopy(new[name])
-            for call in ast.walk(changed):
-                if not isinstance(call, ast.Call): continue
-                if isinstance(call.func, ast.Name) and call.func.id == 'rule_hashes':
-                    self.assertEqual(len(call.args), 2); call.args.pop()
-                if isinstance(call.func, ast.Attribute) and call.func.attr == 'extract':
-                    self.assertEqual([k.arg for k in call.keywords], ['rows_from_bands']); call.keywords = []
-            self.assertEqual(ast.dump(old[name]), ast.dump(changed), name)
+        for name in ('sha', 'local', 'file_record', 'declaration_bytes', 'read_manifest',
+                     'load_producer', 'valid_id', 'check_conflicts', 'verify_file', 'inspect'):
+            self.assertEqual(ast.dump(old[name]), ast.dump(new[name]), name)
 
 if __name__ == '__main__': unittest.main()

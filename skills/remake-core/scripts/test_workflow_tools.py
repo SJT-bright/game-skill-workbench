@@ -348,7 +348,7 @@ class PreflightTests(unittest.TestCase):
         self.assertNotIn("出错", rows.values())
         self.assertTrue((self.out / "preflight.md").is_file())
         out2 = self.out.parent / (self.out.name + "-strict")
-        r = self.run_tool("preflight.py", "--project", self.project, "--levels", "20", "--recheck-earlier", "--out", out2)
+        r = self.run_tool("preflight.py", "--project", self.project, "--levels", "20", "--recheck-earlier", "--clarity-preset", "strict", "--out", out2)
         rows = {x["check"]: x["status"] for x in json.loads((out2 / "preflight.json").read_text(encoding="utf-8"))["results"]}
         self.assertEqual(rows["清晰度"], "需处理")
         self.assertEqual(rows["排名扩展"], "不适用")          # no ranking feature; missing old opt-in record must not demand one
@@ -993,6 +993,68 @@ class MachineLoadTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 
+    def isolated_process_tools(self):
+        """Only expose this test's helpers; no global process scan or Ego tool."""
+        root = Path(self.temp.name)
+        registry = root / 'owned-processes'; registry.mkdir()
+        binary = root / 'bin'; binary.mkdir()
+        ps = binary / 'ps'
+        ps.write_text('#!' + sys.executable + '\n' + '''import json,os,sys
+from pathlib import Path
+rows=[]
+for path in Path(os.environ['GAME_SKILL_FIXTURE_PROCESSES']).glob('*.json'):
+    row=json.loads(path.read_text())
+    try:os.kill(row['pid'],0)
+    except OSError:continue
+    rows.append(row)
+if '-p' in sys.argv:
+    pid=int(sys.argv[sys.argv.index('-p')+1]);rows=[r for r in rows if r['pid']==pid]
+    for row in rows:
+        if 'stat=' in sys.argv: print('Z' if row.get('stopped') else 'S')
+        elif 'lstart=' in sys.argv:print(str(row['nonce'])+' '+row['cmd'])
+        elif not row.get('stopped'):print(row['cmd'])
+else:
+    for row in rows:
+        if row.get('stopped'):continue
+        if any('rss=' in a for a in sys.argv):print(row['pid'],row['ppid'],1024,row['cmd'])
+        else:print(row['pid'],row['ppid'],row['cmd'])
+''')
+        ps.chmod(0o755)
+        self.env.update(PATH=str(binary), GAME_SKILL_FIXTURE_PROCESSES=str(registry))
+        self.fixture_registry = registry
+        self.fixture_helper = root / 'chrome_touch.py'
+        self.fixture_helper.write_text('''import json,os,signal,sys,time
+from pathlib import Path
+folder=Path(os.environ['GAME_SKILL_FIXTURE_PROCESSES']);pid=os.getpid()
+row={'pid':pid,'ppid':os.getppid(),'nonce':time.monotonic_ns(),'cmd':' '.join([sys.executable,*sys.argv]),'stopped':False}
+path=folder/(str(pid)+'.json');path.write_text(json.dumps(row))
+def stop(*_):
+    row['stopped']=True;path.write_text(json.dumps(row));raise SystemExit(0)
+signal.signal(signal.SIGTERM,stop)
+while True:
+    request=folder/(str(pid)+'.stop')
+    if request.exists() and request.read_text()==str(row['nonce']):stop()
+    time.sleep(.02)
+''')
+
+    def wait_owned_helper(self, pid):
+        import time
+        path = self.fixture_registry / (str(pid) + '.json')
+        until = time.monotonic() + 5
+        while not path.is_file() and time.monotonic() < until:
+            time.sleep(.02)
+        self.assertTrue(path.is_file(), 'owned helper did not start')
+        return json.loads(path.read_text())
+
+    def owned_helper(self, label):
+        child = subprocess.Popen([sys.executable, str(self.fixture_helper), label], env=self.env)
+        self.wait_owned_helper(child.pid)
+        def finish():
+            if child.poll() is None:child.terminate()
+            child.wait(timeout=5)
+        self.addCleanup(finish)
+        return child
+
     def test_same_game_write_waits_for_first(self):
         import time
         game = self.temp.name + "/gameA"
@@ -1077,19 +1139,19 @@ class MachineLoadTests(unittest.TestCase):
 
     def test_line_closes_what_it_opened_after_the_test(self):
         """User 2026-10-23: whatever the stage, once a test is done the session closes its own Ego windows itself."""
-        mine = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
-        other = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
-        self.addCleanup(mine.kill); self.addCleanup(other.kill)
+        self.isolated_process_tools()
+        mine = self.owned_helper('--mine')
+        other = self.owned_helper('--other')
         preview = self.slots("register", "--kind", "preview", "--pid", str(mine.pid), "--name", "测试线 加载复测")["slot"]
         space = self.slots("register", "--kind", "ego_space", "--space-id", "51", "--name", "测试线 按钮点测")["slot"]
-        user = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"]); self.addCleanup(user.kill)
+        user = self.owned_helper('--user')
         trial = self.slots("register", "--kind", "preview", "--pid", str(user.pid), "--name", "测试线 用户试玩", "--keep")["slot"]
         theirs = self.slots("register", "--kind", "touch_run", "--pid", str(other.pid), "--name", "美术线 截图")["slot"]
         r = subprocess.run([sys.executable, "-B", str(self.here / "browser_slots.py"), "check", "--name", "测试线"],
                            env=self.env, capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(r.returncode, 1)                  # still open: the test may not be reported as done
         self.assertEqual(len(json.loads(r.stdout)["still_open"]), 3)
-        env = dict(self.env, PATH="")                     # no ego-browser here: the finish code is handed back
+        env = dict(self.env)                             # isolated ps only; no ego-browser
         r = subprocess.run([sys.executable, "-B", str(self.here / "browser_slots.py"), "close", "--name", "测试线"],
                            env=env, capture_output=True, text=True, encoding="utf-8")
         out = json.loads(r.stdout)
@@ -1150,22 +1212,36 @@ class MachineLoadTests(unittest.TestCase):
         self.assertEqual((snap / "index.html").read_text(encoding="utf-8"), "v1")
 
     def test_cleanup_lists_without_closing(self):
+        self.isolated_process_tools()
         r = subprocess.run([sys.executable, "-B", str(self.here / "cleanup_machine.py")], env=self.env,
                            capture_output=True, text=True, encoding="utf-8")
-        self.assertEqual(r.returncode, 0)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("not closed", json.loads(r.stdout)["closed"])
 
     @unittest.skipIf(os.name == "nt", "orphan reparenting is checked on macOS/Linux")
     def test_cleanup_keeps_running_tests_and_closes_orphans(self):
         import time
-        fake = Path(self.temp.name) / "chrome_touch.py"
-        fake.write_text("import time\ntime.sleep(60)\n")
-        working = subprocess.Popen([sys.executable, str(fake), "--working"])     # parent (this test) is alive
-        self.addCleanup(working.kill)
-        subprocess.run(["sh", "-c", f'"{sys.executable}" "{fake}" --orphan >/dev/null 2>&1 &'])   # parent exits at once
-        time.sleep(1)
-        out = subprocess.run(["ps", "-axo", "pid=,ppid=,command="], capture_output=True, text=True).stdout
-        orphan = [int(l.split()[0]) for l in out.splitlines() if "--orphan" in l and str(fake) in l]
+        self.isolated_process_tools()
+        fake = self.fixture_helper
+        working = self.owned_helper('--working')
+        # Real orphan, discovered solely from the launcher handoff and its own
+        # nonce-bearing status file. Other machine processes are never visible.
+        launcher = 'import subprocess,sys;p=subprocess.Popen(sys.argv[1:],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);print(p.pid)'
+        spawned = subprocess.run([sys.executable, '-c', launcher, sys.executable, str(fake), '--orphan'],
+            env=self.env, capture_output=True, text=True, check=True)
+        orphan_pid = int(spawned.stdout.strip())
+        owned = self.wait_owned_helper(orphan_pid)
+        def stop_orphan():
+            request = self.fixture_registry / (str(orphan_pid) + '.stop')
+            request.write_text(str(owned['nonce']))
+            until = time.monotonic() + 5
+            while time.monotonic() < until:
+                if json.loads((self.fixture_registry/(str(orphan_pid)+'.json')).read_text()).get('stopped'):return
+                time.sleep(.02)
+            self.fail('own orphan did not acknowledge shutdown')
+        self.addCleanup(stop_orphan)
+        out = subprocess.run(['ps', '-axo', 'pid=,ppid=,command='], env=self.env, capture_output=True, text=True).stdout
+        orphan = [int(l.split()[0]) for l in out.splitlines() if '--orphan' in l and str(fake) in l]
         self.assertTrue(orphan)
         r = subprocess.run([sys.executable, "-B", str(self.here / "cleanup_machine.py"), "--close"], env=self.env,
                            capture_output=True, text=True, encoding="utf-8")
@@ -1174,11 +1250,10 @@ class MachineLoadTests(unittest.TestCase):
         self.assertIsNone(working.poll())                 # still working: not closed
         self.assertNotIn(orphan[0], report["closed"])
         self.assertTrue(report["legacy_candidates_require_current_review"])
-        # Clean only the exact ephemeral helper this test created, after current command recheck.
-        check = subprocess.run(["ps", "-p", str(orphan[0]), "-o", "command="], capture_output=True, text=True).stdout
-        if str(fake) in check and "--orphan" in check:
-            import signal
-            os.kill(orphan[0], signal.SIGTERM)
+        # Cleanup cannot terminate an unregistered orphan. Stop only the real
+        # helper through its per-process nonce channel after the assertion.
+        self.assertFalse(json.loads((self.fixture_registry/(str(orphan_pid)+'.json')).read_text())['stopped'])
+        stop_orphan()
         self.assertIn(working.pid, [x["pid"] for x in report["still_working_not_touched"]])
 
 

@@ -9,8 +9,28 @@ class CleanupBoundaryTests(unittest.TestCase):
   self.tmp=tempfile.TemporaryDirectory(prefix='fused-cleanup-');self.addCleanup(self.tmp.cleanup)
   spec=importlib.util.spec_from_file_location('fused_slots',HERE/'browser_slots.py');self.s=importlib.util.module_from_spec(spec)
   with patch.dict(os.environ,{'GAME_SKILL_LOCK_DIR':self.tmp.name}):spec.loader.exec_module(self.s)
+  # OS discovery is isolated to live Popen objects created by this test. Real
+  # terminate()/signals and wait() still run; no global ps scan is necessary.
+  self.owned_children={};self.owned_birth={};original_alive=self.s.alive
+  def own_alive(pid):
+   child=self.owned_children.get(pid)
+   return child.poll()is None if child is not None else original_alive(pid)
+  def own_identity(pid):
+   return self.owned_birth.get(pid) if own_alive(pid) else None
+  active=patch.object(self.s,'alive',side_effect=own_alive);active.start();self.addCleanup(active.stop)
+  identity=patch.object(self.s,'process_identity',side_effect=own_identity);identity.start();self.addCleanup(identity.stop)
+  original_run=self.s.subprocess.run
+  def own_run(args,*a,**kw):
+   if args and Path(args[0]).name=='ps':
+    if '-p'not in args:raise OSError('no global process discovery in fixture')
+    pid=int(args[args.index('-p')+1]);child=self.owned_children.get(pid)
+    if child is None:raise OSError('fixture has no identity for this PID')
+    return subprocess.CompletedProcess(args,0,'Z'if child.poll()is not None else 'S','')
+   return original_run(args,*a,**kw)
+  stat=patch.object(self.s.subprocess,'run',side_effect=own_run);stat.start();self.addCleanup(stat.stop)
  def child(self):
   p=subprocess.Popen([sys.executable,'-c','import time; print("READY", flush=True); time.sleep(20)'],stdout=subprocess.PIPE,text=True)
+  self.owned_children[p.pid]=p;self.owned_birth[p.pid]='own-child-%s-%s'%(p.pid,time.monotonic_ns())
   self.assertEqual(p.stdout.readline().strip(),'READY')
   def finish():
    if p.poll()is None:p.terminate()

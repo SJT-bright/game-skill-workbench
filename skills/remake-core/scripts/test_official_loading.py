@@ -152,7 +152,9 @@ class LoadingConsumers(unittest.TestCase):
         logo['comps']['sprite']['display_size']=[300,110];logo['comps']['sprite']['css_display_size']=[300,110]
         im=Image.new('RGB',(390,844),(23,23,23));source=Image.open(self.logo).convert('RGBA').resize((300,110),Image.Resampling.BILINEAR);im.paste(source,(45,367),source)
         ImageDraw.Draw(im).text((170,round(844*.65)),'Loading...',fill=(255,255,255));im.save(loading.screenshot(d));self.refresh(d,True)
-        self.assertTrue(any(p.startswith('low_res:') for p in self.errors(d)),self.errors(d))
+        from clarity_policy import resolve_policy
+        with patch.object(richness, 'CLARITY_POLICY', resolve_policy(cli_preset='strict')):
+            self.assertTrue(any(p.startswith('low_res:') for p in self.errors(d)),self.errors(d))
 
     def test_game_picture_story_or_omitted_pixels_not_waived(self):
         d=self.data[0];extra=copy.deepcopy(d['nodes'][2]);extra['path']='Canvas/Character';extra['comps']['sprite']['frame']='hero';d['nodes'].append(extra);self.refresh(d)

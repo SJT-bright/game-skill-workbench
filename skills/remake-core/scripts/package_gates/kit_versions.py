@@ -70,6 +70,25 @@ def tokens(src, strings=True):
     return {x for x in t if x[2:] not in NOISE}
 
 
+def code_fingerprint(source):
+    """Exact token spelling, with comments/spacing removed outside literals only.
+
+    This supplements a module whose current property/string delta is empty. It
+    cannot claim compatibility for renamed/restructured unknown source.
+    """
+    source = strip_comments(source)
+    pattern = re.compile(r"(?:\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|"
+                         r"(?:[A-Za-z_$][\w$]*|(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)|"
+                         r"(?:>>>=|===|!==|>>>|\*\*=|&&=|\|\|=|\?\?=|=>|==|!=|<=|>=|\+\+|--|&&|\|\||\?\?|\?\.|<<=|>>=|<<|>>|\*\*|\+=|-=|\*=|/=|%=|&=|\|=|\^=|\.\.\.)|[^\s]", re.S)
+    values = pattern.findall(source)
+    # Cocos' RF bundle may append empty statements after the original body.
+    while values and values[-1] == ';':
+        values.pop()
+    while values and values[0] == ';':
+        values.pop(0)
+    return hashlib.sha256(json.dumps(values, ensure_ascii=False, separators=(',', ':')).encode('utf-8')).hexdigest()
+
+
 def build(manifest, kit_dir=KIT, versions=VERSIONS):
     """Fingerprints from the manifest's current files and the previous texts in tools/kit_versions/<Module>/<sha>.txt."""
     fps = {'schema': 'tiktok-kit.fingerprints.v1', 'manifest_version': manifest.get('version'), 'modules': {}}
@@ -84,11 +103,15 @@ def build(manifest, kit_dir=KIT, versions=VERSIONS):
             raise ValueError('kit file %s does not match its manifest hash' % rel)
         cur = tokens(data.decode('utf-8'), strings=not editable)
         entry = {'current_sha256': meta['sha256'], 'editable': editable, 'previous': {}, 'previous_without_text': []}
+        entry['current_code_sha256'] = code_fingerprint(data.decode('utf-8'))
+        entry['previous_code_sha256'] = {}
         prev = {}
         for h in meta.get('previous_sha256') or []:
             f = Path(versions) / mod / (h + '.txt')
             if f.is_file() and hashlib.sha256(f.read_bytes()).hexdigest() == h:
-                prev[h] = tokens(f.read_text(encoding='utf-8'), strings=not editable)
+                previous_text = f.read_text(encoding='utf-8')
+                prev[h] = tokens(previous_text, strings=not editable)
+                entry['previous_code_sha256'][h] = code_fingerprint(previous_text)
             else:
                 entry['previous_without_text'].append(h)
         allprev = set().union(*prev.values()) if prev else set()
@@ -148,8 +171,17 @@ def classify(entry, code):
     cur_ratio = len(cur_hit) / max(1, len(cur))
     common = set(entry.get('common') or [])
     subset_prev = [h for h, lst in entry['previous'].items() if not lst]
-    if not cur:
+    if not cur and entry.get('editable'):
         res['version'] = 'unversioned'          # editable PlatformConfig: no stable version marks
+    elif not cur:
+        actual = code_fingerprint(code)
+        exact_previous = [h for h, value in entry.get('previous_code_sha256', {}).items() if value == actual]
+        if actual == entry.get('current_code_sha256'):
+            res['version'] = 'current'
+        elif exact_previous or best_ratio >= 0.6:
+            res.update(version='previous', previous_sha256=exact_previous[-1] if exact_previous else best_prev, text_only=False)
+        else:
+            res['version'] = 'unknown'
     elif cur_ratio >= 0.7 and best_ratio <= 0.2:
         res['version'] = 'current'
     elif best_ratio >= 0.6 and cur_ratio <= 0.3:

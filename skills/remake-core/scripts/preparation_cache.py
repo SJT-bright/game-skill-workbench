@@ -34,7 +34,10 @@ PURE = {'frame_scan', 'ui_kit_scan', 'home_entry_scan', 'save_read_scan', 'plugi
         'debug_leftover_scan', 'art_static', 'orientation'}
 SOURCE = PURE | {'images', 'kit_sources', 'physics_clock', 'build_templates', 'startup',
                  'settings', 'capsule_auto', 'bg_cover', 'ui_kit', 'run_parts'}
-NATIVE = {'adapter', 'startup', 'touch', 'storage', 'rewarded', 'login', 'appid', 'png', 'structure'}
+NATIVE = {'adapter', 'startup', 'touch', 'storage', 'rewarded', 'login', 'appid', 'png', 'structure', 'upload_compat'}
+# upload_compat reads the Native file/folder inventory and game.js/game.json/
+# project.config.json. native_binding binds their exact bytes and all names;
+# tool_inputs binds upload_compat.py and its imports. It has no external runtime.
 _HASH_MEMO = ContextVar('preparation_hash_memo', default=None)
 _LOCKS, _LOCK_GUARD, _LOCK_DEPTH = {}, threading.Lock(), threading.local()
 
@@ -347,8 +350,8 @@ def runtime_inputs(ctx, names):
         exe = png.pngquant_path(ctx)
         if not exe or not os.access(exe, os.X_OK):
             raise Uncacheable('pngquant unavailable')
-        resolved = shutil.which(str(exe)) or str(exe)
-        out['pngquant'] = {'path': str(Path(resolved).resolve()), 'identity': file_identity(resolved),
+        resolved = str(Path(shutil.which(str(exe)) or str(exe)).resolve())
+        out['pngquant'] = {'path': resolved, 'identity': file_identity(resolved),
                            'version': png.pngquant_version(resolved), 'args': png.ARGS}
         path = png._cache_path(ctx)
         out['png_cache'] = file_identity(path) if path else None
@@ -528,7 +531,7 @@ def source_pipeline_binding(ctx, names, session=None):
 
 def native_binding(ctx, names):
     names = tuple(names)
-    if not ctx.project or ctx.policy != 'new' or not names or set(names) - NATIVE:
+    if not ctx.project or ctx.policy not in ('new', 'legacy') or not names or set(names) - NATIVE:
         raise Uncacheable('no project or unknown Native preparation step')
     return {'scope': 'native', 'steps': list(names), 'context': context(ctx),
             'native': tree(ctx.root, prune=False), 'project': project_inputs(ctx, '@native'),
@@ -559,7 +562,7 @@ def native_lookup(ctx, names):
 
 def native_guard(ctx, names):
     """Inputs a Native mutator is not allowed to change (PNG cache is its own output)."""
-    if not ctx.project or ctx.policy != 'new':
+    if not ctx.project or ctx.policy not in ('new', 'legacy'):
         raise Uncacheable('no cacheable project')
     runtime = runtime_inputs(ctx, names)
     runtime.pop('png_cache', None)

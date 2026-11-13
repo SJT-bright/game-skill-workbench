@@ -160,8 +160,7 @@ python3 -B <skills>/remake-core/scripts/art_capture_history.py verify \
 The result exposes `resolved_dumps`: the exact original files selected from new
 and historical directories. Inventory and subcheckers consume that list through
 `resolve_input_files`; they must never recursively import an entire old directory.
-Required current captures must be fresh in the current round, one anchor per
-viewport is mandatory, and mixed environments, unexpected competing files,
+Required affected captures must be fresh in the current round. Anchors are required only when their explicit dependency mapping changed; unchanged viewports add no anchor quota. Unknown ownership returns scope_required and authorizes no capture. Mixed environments, unexpected competing files,
 modified originals, symlinks, or changed quality reports are rejected.
 
 ## Keep subsequent repairs local too

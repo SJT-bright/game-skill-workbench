@@ -277,8 +277,7 @@
       ],
       "auto_check": [
         "audit_copy_quality"
-      ],
-      "reviewer": "gpt"
+      ]
     },
     {
       "id": "UI-02",
@@ -566,22 +565,24 @@
     {
       "id": "BUILD-03",
       "feature": "build",
-      "title": "实际打包脚本拒绝缺证据的包",
-      "steps": "打包脚本在生成 ZIP 前必须自己运行 check_known_issues.py check --stage pre_scan，非零就停止、不留 ZIP。用 test_writer_refusal.py 实际跑本游戏的打包脚本五次：检查表缺失、有一项失败、版本指纹过期（三次都必须拒绝且不产生 ZIP），以及正常一次（必须产生 ZIP）。",
-      "expected": "三种缺证据情况都被实际打包脚本拒绝、没有新 ZIP；正常情况能出包；检查表原样恢复。只证明共用门禁脚本会拒绝，不等于打包脚本调用了它。",
+      "title": "统一写包工具的缺证拒绝契约（Skill 发版时验证）",
+      "steps": "统一写包后端及其两种旧命令别名，在 Skill 更新时用 test_single_writer.py 等工具级回归验证缺实质证据、失败、过期输入、正常写包、原子发布与不启动浏览器。游戏制作只消费当前正式工具和本游戏实际检查记录，不再为这一行额外多次运行真实打包命令。项目另写的绕行打包器不属于正式入口。",
+      "expected": "两个旧命令均命中 make_tiktok_zip.write_package；缺实质证据或证据失败时无可交付 ZIP；工具级验证在对应 Skill 修订形成一次，不让每款游戏重复产检查 ZIP。",
       "phase": "post_package",
       "always_applicable": true,
       "symptom": "门禁脚本单独跑会拦，但项目里的打包脚本没调用它：缺报告、报告失败、旧版本指纹都照样出包（Monkey Dash 2026-10-21）。",
       "required_observations": [
-        "missing_review_refused",
-        "failed_check_refused",
-        "stale_binding_refused",
+        "canonical_backend_used",
+        "missing_producer_refused",
+        "failed_evidence_refused",
+        "stale_inputs_refused",
         "normal_path_packaged",
         "storage_report_refused"
       ],
       "auto_check": [
-        "test_writer_refusal"
-      ]
+        "test_single_writer"
+      ],
+      "gate": "tool_release"
     },
     {
       "id": "BUILD-04",
@@ -1337,12 +1338,13 @@
     "logic_check": "scripts/logic_check.py --mode build (cocos-game-check/test, user 2026-10-23): static suspects in assets/ scripts and level JSON (touch cancel committed like touch end, unbounded while(true)/for(;;), load error branch that only logs, buttons placed by Math.random, saved keys never read, sound setting only in memory, empty level-config slots, \"Daily\" without a date, physics not stopped on pause), each fixed or judged in docs/logic/triage.json with a why; plus docs/logic/flows.json F01-F20 walked with real touch in two ratios (exit/Home/Retry/Next on every page, pause stops physics, clean-up on leaving, round tokens for ads and loads, refresh keeps progress, touch cancel, last level, daily, platform buttons), every pass with an evidence file; untested never passes; review-mode reports never pass",
     "make_tiktok_zip": "scripts/make_tiktok_zip.py (cocos-game-check/package, user 2026-10-23 SquareRush UPLOADFIX): makes the one uploadable TikTok platform package from the Native build - refuses before writing any ZIP when the gate fails, the folder has an outer folder / is a Web build / has source files, junk, nested archives, non-ASCII paths or the QA level jump, the App ID differs, or the uncompressed main > 4,000,000, total > 30,000,000 or an independent subpackage > 4,000,000 bytes; then re-reads the written ZIP (CRC, root entry, limits, every file byte-equal to the Native tree, independent extraction) and only then moves it to --out; report <zip>.report.json bound to the review",
     "audit_page_readiness": "scripts/audit_page_readiness.py: source-only flags broad button barriers/all-page batches/internal file counters; final runtime requires bound route inventory, two ratios, cold/warm/slow_cancel_reopen/closed_completion/failure_retry/offline_warm/core_independence, raw evidence SHA, no stale/duplicate work. Static is not acceptance.",
-    "audit_game_modules": "scripts/audit_game_modules.py: docs/modules.json (game_modules.v1, user 2026-10-23): decisions asked and recorded (gameplay, currency, skins default yes, backgrounds), no ranking/leaderboard, 7-day check-in, more games/cross-promotion or share, 英化 button audit (every original button: works/keep/why, useless ones removed), AdRewards.ts byte-equal to the skill copy and its simulation passes (result x2, bonus level 3x -> 6x, gift and currency ad 5B, gift 30-minute persisted cooldown, ad buttons fire once), skin module skin.v1 (20 heroes + 10 backgrounds, price steps, bonus by rarity, limited skin first and its route), gift box 10 frames"
+    "audit_game_modules": "scripts/audit_game_modules.py: docs/modules.json (game_modules.v1, user 2026-10-23): decisions asked and recorded (gameplay, currency, skins default yes, backgrounds), no ranking/leaderboard, 7-day check-in, more games/cross-promotion or share, 英化 button audit (every original button: works/keep/why, useless ones removed), AdRewards.ts byte-equal to the skill copy and its simulation passes (result x2, bonus level 3x -> 6x, gift and currency ad 5B, gift 30-minute persisted cooldown, ad buttons fire once), skin module skin.v1 (20 heroes + 10 backgrounds, price steps, bonus by rarity, limited skin first and its route), gift box 10 frames",
+    "test_single_writer": "scripts/test_single_writer.py: Skill-level synthetic writer-contract controls, run when the writer/tool changes; never a per-game pack-again requirement."
   },
   "negative_control_rule": "Items with requires_negative_control need, in their own evidence, a known-bad run of the SAME check: a JSON {schema: known_issue_negative_control.v1, mutant, status: fail, failed > 0, tool: {path, sha256}} whose tool SHA equals the tool of a current_result in the same row. A check that never failed on a known-bad version proves nothing (Monkey Dash 2026-10-21).",
-  "reviewer_rule": "Items with \"reviewer\": \"gpt\" need the row field reviewer = \"gpt\" when marked pass (judgement only a GPT/Codex session gives).",
-  "spot_check_rule": "When review.test_executor is another AI, review.gpt_spot_check is required: GPT read every code change since locked_commit, re-ran all automatic checks and redid >= 3 flows (one ad, one platform task if any) with no open disagreements.",
-  "gate_rule": "用户 2026-10-24（remake-core/references/check-stages.md）：检查分阶段。gate \"design\" 的条目在设计关由 scripts/design_check.py 查（重塑：第一轮玩法节点1前；英化默认没有设计关，创新玩法新加的部分也在这里查）；gate \"art\" 的条目在美术关由 scripts/art_check.py 查（英化只查改过的页面、重塑第二轮美术、remake-art）。最终总检测（check_known_issues.py）只查没有 gate 的条目：加载、广告与奖励、存储、异步、输入与按钮、逻辑、不能看广告跳关、构建与打包、英文文案、闪烁等以前出过问题的地方；gate 条目不进 review，留在 review 里的旧行忽略。锁定后又改了设计或美术，只对改动重跑 design_check.py / art_check.py，不重开最终门禁的这些行。",
+  "reviewer_rule": "Executor/model identity is provenance only. Every executor supplies the same input-bound evidence. Valid checks are reused; missing/contradictory evidence is repaired by its check ID without model-dependent replay.",
+  "spot_check_rule": "Existing optional supplementary observations may be read; switching AI never requires rerunning automatic checks or an arbitrary three-flow sample. Unresolved discrepancies remain specific defects; preserve original records and timestamps.",
+  "gate_rule": "按所属节点形成一次证据；design/art 由其制作节点检查，tool_release 的 BUILD-03 只在 Skill 工具更新时验证。最终总表只读聚合其余适用项的原记录，缺项回对应节点，不因写包、版本号或更换 AI 重测。动态观感随同版 H5 交人工快查。",
   "package_gate_intercepts_rule": "v7.5: symptom -> the script/gate that stops it at packaging (or source stage). Lookup only: these are not review rows; the review items above stay the checklist. level warn = reported, never refuses.",
   "package_gate_intercepts": [
     {

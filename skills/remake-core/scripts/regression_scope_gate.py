@@ -447,6 +447,30 @@ def startup_replay(proof, native, binding, project, *, reuse_only, plan_project)
     import native_startup_ledger as startup
 
     native, project = Path(native).resolve(), Path(project).resolve()
+    # Scoped imports are registered from an exact prior observation; this path
+    # only consumes them. It never derives ownership or starts a renderer.
+    from startup_scoped_evidence import consume
+    for contract in sorted((project / 'docs' / 'checks' / 'startup-scoped').glob('*.json')):
+        link = json.loads(contract.read_text())
+        store = ledger.Ledger(project)
+        try:
+            found = store.db.execute('SELECT data FROM records WHERE key=?', (link.get('record_key'),)).fetchone()
+            prior = json.loads(found[0]) if found else None
+            saved = (prior or {}).get('result', {})
+            candidate = json.loads(saved['contract_json']) if 'contract_json' in saved else {}
+            ref = candidate.get('startup_renderer_report', {})
+            if candidate.get('binding') != binding and proof.get('binding') != candidate.get('binding'):
+                continue
+            # Original JSON is retained, and the registered contract hash names
+            # the existing original file, not a fabricated current binding.
+            original_contract = next((Path(row['path']) for row in (prior or {}).get('files', [])
+                                      if row.get('sha256') == link.get('contract_sha256')), None)
+        finally:
+            store.close()
+        if original_contract is not None:
+            scoped = consume(project, native, original_contract, current_binding=binding)
+            if scoped is not None:
+                return scoped
     if renderer.digest(renderer.tree(native)) != binding.get('native_tree_sha256'):
         fail('Native 启动证据对应其他构建')
     conditions, tools = startup.identity(proof, native, project)

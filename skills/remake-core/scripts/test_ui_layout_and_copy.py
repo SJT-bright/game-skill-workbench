@@ -326,9 +326,9 @@ class PageRichnessTests(unittest.TestCase):
             (root / 'docs/league/decision.json').write_text(json.dumps({'decision': 'add'}))
         return root
 
-    def run_audit(self, root):
+    def run_audit(self, root, *extra):
         out = root / 'rich.json'
-        code, text = py('audit_page_richness.py', '--project', root, '--out', out)
+        code, text = py('audit_page_richness.py', '--project', root, '--out', out, *extra)
         return code, json.loads(out.read_text())
 
     def problems(self, report, purpose):
@@ -344,7 +344,14 @@ class PageRichnessTests(unittest.TestCase):
         win = self.problems(r, 'result_win')
         for kind in ('monotonous', 'result_page', 'result_double'):
             self.assertIn(kind, win)
-        self.assertIn('empty_panel', self.problems(r, 'league'))
+        league = self.problems(r, 'league')
+        self.assertIn('league_page', league)
+        self.assertNotIn('empty_panel', league)
+        # This fixture has a title and sparse contents. Keep its exact original
+        # screenshot in the review list; low area alone is not an empty panel.
+        reviews = ' '.join(issue for page in r['pages'] if page['purpose'] == 'league'
+                           for issue in page.get('visual_reviews', []))
+        self.assertIn('panel_fill_review', reviews)
 
     FULL = [('good_home', 'home'), ('good_result', 'result_win'), ('good_result', 'result_fail'),
             ('settings', 'settings'), ('settings_sound', 'settings_sound'), ('play', 'other')]
@@ -764,18 +771,22 @@ class PageRichnessTests(unittest.TestCase):
         # user 2026-10-23: the final review (ART-04) found frames below 2x their node size after the user had approved the
         # art; the same runtime check runs in every art round (backgrounds 1.5x)
         root = self.project([('blurry', 'gameplay')] + self.FULL, league_add=True)
-        code, r = self.run_audit(root)
+        _, default = self.run_audit(root)
+        self.assertEqual(default['clarity_policy']['severity'], 'advisory')
+        self.assertEqual(default['clarity_policy']['min_ratio'], 1)
+        self.assertNotIn('low_res:', self.problems(default, 'gameplay'))
+        code, r = self.run_audit(root, '--clarity-preset', 'strict')
         self.assertEqual(code, 1)
         bad = self.problems(r, 'gameplay')
-        self.assertIn('low_res: Canvas/Robot (frame "gameplay:10") picture 140x126 is drawn at 82.5x90 = 1.40x - needs >= 2x (165x180 px)', bad)
+        self.assertIn('low_res: Canvas/Robot (frame "gameplay:10") source 140x126 / rendered 82.5x90 = 1.40x; reference 2x; blocking', bad)
         self.assertIn('low_res: Canvas/GameBg (frame "bg_spa")', bad)
-        self.assertIn('= 1.47x - needs >= 1.5x', bad)
+        self.assertIn('= 1.47x; reference 1.5x; blocking', bad)
         self.assertIn('low_res: Canvas/OldShelf', bad)
         self.assertNotIn('low_res: Canvas/Tray', bad)
         (root / 'docs/art').mkdir(parents=True, exist_ok=True)
         (root / 'docs/art/clarity-exempt.json').write_text(json.dumps({'frames': [{'frame': 'orig_*', 'why': 'original shelf kept (localize)'},
                                                                                    {'frame': 'gameplay:*', 'why': ''}]}))
-        bad = self.problems(self.run_audit(root)[1], 'gameplay')
+        bad = self.problems(self.run_audit(root, '--clarity-preset', 'strict')[1], 'gameplay')
         self.assertNotIn('Canvas/OldShelf', bad)
         self.assertIn('Canvas/Robot', bad, 'an exemption needs a why')
         good = ' '.join(p for row in self.run_audit(self.project(self.FULL, league_add=False))[1]['pages'] for p in row['problems'])
@@ -989,7 +1000,7 @@ class PageRichnessTests(unittest.TestCase):
 class ArtCheckTests(unittest.TestCase):
     """art_check.py: the art line's own check right after each art round (user 2026-10-21)."""
     def run_check(self, scenes, flat=(), bar=False, extra_screens=(), board=None, runtime_verified=True, screen_alias=False,
-                  legacy_video=False, capture_identity=False):
+                  legacy_video=False, capture_identity=False, clarity_preset=None):
         helper = PageRichnessTests()
         helper.addCleanup = self.addCleanup
         root = helper.project(scenes, league_add=False, flat=flat)
@@ -1071,7 +1082,8 @@ class ArtCheckTests(unittest.TestCase):
             capture_build = self.synthetic_capture_round(root)
             capture_args = ['--capture-build', capture_build]
         code, text = py('art_check.py', '--project', root, '--out', out, *capture_args,
-                        *(['--board', board] if board else []))
+                        *(['--board', board] if board else []),
+                        *(['--clarity-preset', clarity_preset] if clarity_preset else []))
         return code, json.loads((out / 'art-check.json').read_text()), text
 
     def synthetic_capture_round(self, root):
@@ -1265,7 +1277,7 @@ class ArtCheckTests(unittest.TestCase):
         # user 2026-10-23: the final review's ART-04 (runtime frames < 2x node size, background < 1.5x) is the same check as
         # the art self-check after every art round - also the first localize round in the original style
         scenes = [('blurry', 'gameplay'), ('good_home+bar', 'home')] + [s for s in PageRichnessTests.FULL[1:] if s[1] != 'league']
-        code, r, text = self.run_check(scenes, bar=True, board='localize', capture_identity=True)
+        code, r, text = self.run_check(scenes, bar=True, board='localize', capture_identity=True, clarity_preset='strict')
         self.assertEqual(r['art_style'], 'original')
         self.assertEqual(code, 1)
         row = next(x for x in r['rows'] if x['check'].startswith('清晰度（ART-04'))

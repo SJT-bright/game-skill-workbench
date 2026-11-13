@@ -65,9 +65,9 @@ class History(unittest.TestCase):
         self.baseline.write_text(json.dumps(dict(b,seal=digest(b))))
         m=H.read(self.new/H.MANIFEST);m['baseline_sha256']=file_sha(self.baseline);(self.new/H.MANIFEST).write_text(json.dumps(m))
         with self.assertRaisesRegex(ValueError,'not initialized before'):H.verify(self.project,self.build,self.new)
-    def test_missing_anchor_and_omitted_affected_case_rejected(self):
-        m=self.transition();m['fresh_cases']=['popup'];(self.new/H.MANIFEST).write_text(json.dumps(m))
-        with self.assertRaisesRegex(ValueError,'impact plus viewport anchors'):H.verify(self.project,self.build,self.new)
+    def test_omitted_actual_affected_case_is_rejected(self):
+        m=self.transition();m['fresh_cases']=['home'];(self.new/H.MANIFEST).write_text(json.dumps(m))
+        with self.assertRaisesRegex(ValueError,'omits actual affected inputs'):H.verify(self.project,self.build,self.new)
     def test_changed_quality_and_png_rejected(self):
         self.transition();(self.old/'settings.png').write_bytes(b'changed')
         with self.assertRaisesRegex(ValueError,'dump/PNG changed'):H.verify(self.project,self.build,self.new)
@@ -116,7 +116,7 @@ class History(unittest.TestCase):
         planned=subprocess.run(args,capture_output=True,text=True,check=True)
         p=json.loads(planned.stdout)
         self.assertFalse(p['build']['required']);self.assertTrue(p['capture']['required'])
-        self.assertEqual(set(p['capture']['fresh_cases']),{'home','popup'})
+        self.assertEqual(set(p['capture']['fresh_cases']),{'popup'})
         self.assertFalse(p['capture']['verified_current_ready'])
         checked=subprocess.run(args+['--dumps',str(self.new)],capture_output=True,text=True,check=True)
         p=json.loads(checked.stdout);self.assertFalse(p['capture']['required']);self.assertTrue(p['capture']['verified_current_ready'])
@@ -153,5 +153,68 @@ class History(unittest.TestCase):
         (newest/H.MANIFEST).write_text(json.dumps(m));r=H.verify(self.project,self.build,newest)
         self.assertTrue(r['ready']);self.assertEqual(Path(r['resolved_dumps'][1]).parent,self.new)
         self.assertEqual(r['cases'][1]['action'],'reuse')
+
+    def test_local_method_change_requires_only_affected_case_without_unrelated_anchor(self):
+        self.write_source(self.text.replace('return 1','return 2'));self.start()
+        planned=H.transition_plan(self.project,self.build,self.baseline,self.old)
+        self.assertEqual(planned['fresh_cases'],['popup']);self.assertEqual(planned['anchors'],[])
+        self.capture(self.new,self.cases[1]);(self.new/H.MANIFEST).write_text(json.dumps(planned['manifest']))
+        before={str(p):file_sha(p) for p in self.old.iterdir()}
+        checked=H.verify(self.project,self.build,self.new)
+        self.assertEqual([row['action'] for row in checked['cases']],['reuse','fresh','reuse'])
+        self.assertEqual(before,{str(p):file_sha(p) for p in self.old.iterdir()})
+
+    def test_no_change_transition_requires_no_capture_and_reuses_all_originals(self):
+        self.start();planned=H.transition_plan(self.project,self.build,self.baseline,self.old)
+        self.assertEqual(planned['fresh_cases'],[]);self.assertEqual(planned['anchors'],[])
+        (self.new/H.MANIFEST).write_text(json.dumps(planned['manifest']))
+        checked=H.verify(self.project,self.build,self.new)
+        self.assertTrue(checked['ready']);self.assertTrue(all(row['action']=='reuse' for row in checked['cases']))
+
+    def test_unmapped_file_is_scope_required_not_full_fresh_fallback(self):
+        (self.project/'assets/New.js').write_text('var unmapped=1;');(self.build/'New.js').write_text('var unmapped=1;');self.start()
+        planned=H.transition_plan(self.project,self.build,self.baseline,self.old)
+        self.assertEqual(planned['status'],'scope_required');self.assertFalse(planned['ready'])
+        self.assertFalse(planned['use_plain_current_capture']);self.assertEqual(planned['fresh_cases'],[])
+        self.assertIsNone(planned['manifest']);self.assertTrue(planned['scope_gaps'])
+        from art_change_plan import plan
+        fake_status={'changes':{k:False for k in ('source','export','matrix','collector')},'current_round_version':'synthetic-current'}
+        current=plan(fake_status,history_plan=planned)
+        self.assertTrue(current['planning_blockers']);self.assertEqual(current['capture']['fresh_cases'],[])
+        self.assertEqual(current['status'],'scope_required');self.assertIsNone(current['capture']['required'])
+        self.assertIn('no capture authorized',current['capture']['scope'])
+        self.assertFalse(current['capture']['verified_current_ready'])
+
+    def test_explicit_changed_anchor_input_is_honored_without_global_anchor_quota(self):
+        b=H.sealed(self.baseline);self.write_source(self.text.replace('return 1','return 2'))
+        changed={'source':['assets/UI.js'],'export':['UI.js']}
+        delta=H.dependency_impact(self.contract,b['views'],snapshot_views(self.contract,self.project,self.build),changed)
+        contract=copy.deepcopy(self.contract)
+        contract['case_inputs']['home']['anchor_dependencies']=[{'domain':'source','path':'assets/UI.js','basis':'synthetic viewport setup owner'}]
+        old={c['id']:c for c in self.cases}
+        required,anchors=H.required_cases(contract,old,self.cases,delta,changed)
+        self.assertEqual(required,{'home','popup'});self.assertEqual(anchors,{'home'})
+        required,anchors=H.required_cases(contract,old,self.cases,dict(delta,affected_cases=[]),{'source':[],'export':[]})
+        self.assertEqual(required,set());self.assertEqual(anchors,set())
+
+    def test_outside_owned_methods_needs_shared_scope_instead_of_all_cases(self):
+        b=H.sealed(self.baseline);self.write_source('var uncertainShared=2;'+self.text);self.start()
+        planned=H.transition_plan(self.project,self.build,self.baseline,self.old)
+        self.assertEqual(planned['status'],'scope_required');self.assertEqual(planned['fresh_cases'],[])
+        self.assertTrue(any('outside owned methods' in gap['reason'] for gap in planned['scope_gaps']))
+        contract=copy.deepcopy(self.contract)
+        for entry in contract['files']:
+            entry['shared_cases']=['home'];entry['shared_basis']='synthetic known homepage-only module initializer'
+        views=snapshot_views(contract,self.project,self.build)
+        delta=H.dependency_impact(contract,b['views'],views,{'source':['assets/UI.js'],'export':['UI.js']})
+        self.assertEqual(delta['unknown'],[]);self.assertEqual(delta['affected_cases'],['home'])
+
+    def test_shared_owner_cannot_certify_source_only_stale_export(self):
+        b=H.sealed(self.baseline);(self.project/'assets/UI.js').write_text('var shared=2;'+self.text)
+        contract=copy.deepcopy(self.contract)
+        for entry in contract['files']:
+            entry['shared_cases']=['home'];entry['shared_basis']='synthetic homepage initializer'
+        delta=H.dependency_impact(contract,b['views'],snapshot_views(contract,self.project,self.build),{'source':['assets/UI.js'],'export':[]})
+        self.assertTrue(any('shared-byte changes do not correspond' in issue for issue in delta['unknown']))
 
 if __name__=='__main__':unittest.main()

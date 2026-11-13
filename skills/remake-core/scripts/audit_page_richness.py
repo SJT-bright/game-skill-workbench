@@ -19,7 +19,7 @@ Every non-gameplay dump:
   plain_backdrop  no full-screen picture and no game scene behind (a flat colour / tinted default sprite)
   bare_button     a button with text but no plate picture
   system_font     any visible text drawn in the system default font (use the game font)
-  empty_panel     a popup/page panel whose inside is less than 30% filled
+  empty_panel     a popup/page panel with no visible contents; low nonzero fill requires visual review
   dev_text        developer wording on screen ("LOCAL PREVIEW", "PROTOTYPE", "TEST AD" ...)
 Text on every dump, gameplay HUD included (user 2026-10-22: thin system-font words dropped on generated art, white
 RETRY on cream, navy PLAY on a navy button, "Coins 0 Springs 1" on a busy picture):
@@ -117,7 +117,8 @@ By purpose (dump_ui "purpose"):
   skins/map, which have their own content rules)
     plain_popup             the panel holds only text and buttons: it needs a generated illustration (gift/chest,
                             mascot, phone with the game icon, reward items with the currency icon ...) covering
-                            >= 10% of the panel (user 2026-10-23 negative example: a flat pale "Home screen reward" panel
+                            (below the 10% composition reference requires visual review, not automatic redraw;
+                            user 2026-10-23 negative example: a flat pale "Home screen reward" panel
                             with font text and three flat buttons ADD NOW / CHECK REWARD / CLOSE)
   league                    >= 10 numbers (ranks and points), >= 35% of the screen used
   settings (General tab)    >= 3 rows/buttons, "How to Play", with no Credits/About entry (remake-art/references/common-game-components.md)
@@ -185,7 +186,7 @@ MAINTENANCE_RULES = set()
 REQUIRED = ('home', 'result_win', 'result_fail', 'settings', 'settings_sound')
 FUNCTION_PAGES = {'home', 'result_win', 'result_fail', 'pause', 'settings', 'settings_sound', 'revive', 'trial'}
 MAX_BUTTON_SHARE, MIN_TITLE_WIDTH, MIN_COVER_ART = 0.40, 0.55, 0.15   # buttons <= 40% (user 2026-10-23)
-MIN_POPUP_ART = 0.10        # popup illustration share of the panel (user 2026-10-23)
+MIN_POPUP_ART = 0.10        # composition review reference; an absent illustration still blocks
 TITLE_DECOR = re.compile(r'ribbon|banner|title|header|corner|border|frame|divider|line', re.I)   # not an illustration
 OWN_POPUP_RULES = {'settings', 'settings_sound', 'league', 'checkin', 'shop', 'skins', 'map'}
 MAX_FLAT, MAX_PLAIN_BLOCK = 0.40, 0.35
@@ -1172,7 +1173,8 @@ def assembly_visual_reviews(report):
     """Preserve exact original evidence in the existing Codex look-list flow."""
     return [dict(screen=page.get('screen'), file=page.get('file'), issue=issue)
             for page in report.get('pages', [])
-            for issue in page.get('visual_reviews', page.get('stats', {}).get('sprite_assembly', {}).get('reviews', []))]
+            for issue in page.get('visual_reviews', page.get('stats', {}).get('visual_reviews', []) +
+                page.get('stats', {}).get('sprite_assembly', {}).get('reviews', []))]
 
 
 def runtime_clarity_findings(nodes, full, policy=None):
@@ -3159,6 +3161,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     assembly = sprite_assembly_findings(d, nodes)
     problems += assembly['problems']
     pix['sprite_assembly'] = assembly
+    visual_reviews = pix['visual_reviews'] = []
     problems += text_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
     problems += one_piece_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)])
     problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module) + low_res_problems(nodes, full)
@@ -3244,24 +3247,34 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
                (n['name'] == 'PanelSurface' and 'graphics' in n['comps']))]
     if panels and kind in ('popup', 'page', 'home'):
         p = max(panels, key=lambda n: area(n['rect']))
-        inner = [n['rect'] for n in content if n is not p and center_in(n['rect'], p['rect']) and area(n['rect']) < 0.9 * area(p['rect'])]
+        inner = [n['rect'] for n in content if n is not p and
+                 (text(n) or 'sprite' in n['comps'] or 'graphics' in n['comps']) and
+                 center_in(n['rect'], p['rect']) and 0 < area(n['rect']) < 0.9 * area(p['rect'])]
         filled = coverage(inner, p['rect'])
         # A check-in page has its own seven-card/day-7 layout checks; generic
         # panel fill counts the card grid incorrectly. Keep the generic guard
         # active for other pages, including league/rankings panels.
         if filled < 0.30 and purpose != 'checkin':
-            problems.append('empty_panel: %s is only %.0f%% filled (needs >= 30%%): the screenshot "Weekly Rankings" mistake'
-                            % (p['path'], filled * 100))
+            if not inner:
+                problems.append('empty_panel: %s has no visible contents inside its panel' % p['path'])
+            else:
+                visual_reviews.append('panel_fill_review: %s has visible content occupying %.0f%% of the panel '
+                    '(30%% composition reference). Use the original screenshot to judge spacing and completeness; '
+                    'the ratio does not prove an empty panel or require artwork changes.' % (p['path'], filled * 100))
         if (kind == 'popup' or masks) and purpose not in OWN_POPUP_RULES:
             art = [n['rect'] for n in pictures if n is not p and n not in panels and not text(n) and center_in(n['rect'], p['rect'])
                    and not TITLE_DECOR.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
-                   and area(n['rect']) >= 0.005 and not any(node_under(n, b) for b in buttons)]
-            art_share = coverage(art, p['rect'])
+                   and area(n['rect']) > 0 and not any(node_under(n, b) for b in buttons)]
+            art_share = coverage([r for r in art if area(r) >= 0.005], p['rect'])
             if art_share < MIN_POPUP_ART and 'original_popup_illustration' not in original_rules:
-                problems.append('plain_popup: %s holds only text and buttons (pictures %.0f%% of the panel, needs >= 10%%): add a '
-                                'generated illustration - gift/chest, mascot, phone with the game icon, the reward items with the '
-                                'currency icon - plus a picture-text title on a ribbon (user 2026-10-23: the flat "Home screen '
-                                'reward" popup)' % (p['path'], art_share * 100))
+                if not art:
+                    problems.append('plain_popup: %s has no visible illustration besides text and buttons: add a '
+                                    'generated illustration - gift/chest, mascot, phone with the game icon, or reward items '
+                                    'with the currency icon' % p['path'])
+                else:
+                    visual_reviews.append('popup_illustration_share_review: %s has a visible illustration covering %.0f%% '
+                        'of the panel (10%% composition reference). Check its presence, scale and clarity in the original '
+                        'screenshot; the ratio alone does not require redrawing or enlarging it.' % (p['path'], art_share * 100))
     if purpose in ('result_win', 'result_fail'):
         decor = [n for n in pictures if not any(node_under(n, b) for b in buttons) and n not in panels]
         need = []
@@ -3370,9 +3383,16 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             continue
         if frame.lower().startswith('btn_') and baked(n):
             continue  # A generated whole-word action button is not an empty collection card.
-        inside = [m['rect'] for m in content if m is not n and center_in(m['rect'], n['rect']) and area(m['rect']) < 0.9 * area(n['rect'])]
-        if coverage(inside, n['rect']) < 0.15:
+        inside = [m['rect'] for m in content if m is not n and
+                  (text(m) or 'sprite' in m['comps'] or 'graphics' in m['comps']) and
+                  center_in(m['rect'], n['rect']) and 0 < area(m['rect']) < 0.9 * area(n['rect'])]
+        card_fill = coverage(inside, n['rect'])
+        if not inside:
             problems.append('blank_card: %s is an empty card/frame (put the level preview, item picture, number or icon in it)' % n['path'])
+        elif card_fill < 0.15:
+            visual_reviews.append('card_fill_review: %s has visible content occupying %.0f%% of the card '
+                '(15%% composition reference). Check the actual item, icon and number in the original screenshot; '
+                'low area alone is not an empty-card defect or an instruction to remake it.' % (n['path'], card_fill * 100))
     for n in content:
         lab = n['comps'].get('label') or {}
         col = lab.get('color')
@@ -3660,7 +3680,7 @@ def main():
         problems, advisories = split_clarity_messages(problems, CLARITY_POLICY)
         row = {'screen': d.get('screen'), 'kind': d.get('kind'), 'purpose': d.get('purpose', 'other'), 'file': d['_file'],
                'problems': problems, 'advisories': advisories,
-               'visual_reviews': stats.get('sprite_assembly', {}).get('reviews', []),
+               'visual_reviews': stats.get('visual_reviews', []) + stats.get('sprite_assembly', {}).get('reviews', []),
                'clarity_findings': clarity, 'stats': stats}
         pages.append(row)
         if problems:
@@ -3688,7 +3708,8 @@ def main():
         pass
     try:
         from audit_level_plan import plan_mode     # imported here: audit_level_plan imports this module
-        if plan_mode(proj) == 'levels' and __import__('maintenance_scope').required_map(proj):
+        if (plan_mode(proj) == 'levels' and __import__('maintenance_scope').required_map(proj)
+                and __import__('feature_policy').applies('level_map', BOARD, proj) != 'not_applicable'):
             need.append('map')
     except ImportError:
         pass

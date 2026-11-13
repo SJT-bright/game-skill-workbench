@@ -161,7 +161,7 @@ TRIAL_GROUPS = {
     'text_fit': ('text-fit.json',),
     'values': ('value-presentation.json',),
     'atlas': ('atlas_slices', 'atlas_slices/report.json', 'sprite_sources.json'),
-    'page': ('page_richness.json', 'clarity.json'),
+    'page': ('page_richness.json', 'clarity.json', 'clarity-group.json'),
     'reward': ('claim_double.json',),
     'background': ('screens.json',),
     'layout': ('ui_coverage.json', 'logs/extract_ui_layout.log'),

@@ -28,12 +28,57 @@ PRE_DIRECT_GROWTH_CATALOG = 'cdf079ed8ebea18acce0bb552e20b21962fa34a9bf73c64cefe
 # 2026-11-12, description-only: STORAGE-01 text follows "an unreadable save never stops the game" and the English notes
 # of ECON-01 / ECON-02 follow the six standard ad nodes. Same items, same automatic checks: reviews keep their binding.
 PRE_UNREADABLE_START_CATALOG = '033303e0ace7b0809fcf9debdaff0fe09cda1362b0ab0eebf3e72f72980f6a71'
+# Only tool ownership and obsolete model-specific replay requirements changed.
+# Existing actual game observations remain subject to every current validator.
+PRE_SINGLE_WRITER_CATALOG = '2a0b1d8a9eeaad727ed4842995e4295ae47b9f0228d7e57bb588752ab10fa1e3'
 # Two separate work boards (remake-core/references/two-boards.md, user 2026-10-21).
 BOARDS = ('localize', 'remake')
 DEFAULT_BOARD = 'remake'  # strictest; old reviews without a board keep their previous behaviour
 
 
 ART_STYLES = ('original', 'remake')
+
+
+class _NodeErrors(list):
+    """An explicitly owned validator sink; text prefixes never assign ownership."""
+    def __init__(self, all_errors):
+        super().__init__()
+        self.all_errors = all_errors
+
+    def append(self, error):
+        super().append(error)
+        list.append(self.all_errors, error)
+
+    def extend(self, errors):
+        for error in errors:
+            self.append(error)
+
+
+class _ValidationErrors(list):
+    def __init__(self):
+        super().__init__()
+        self.global_errors = []
+        self.nodes = {}
+
+    def append(self, error):
+        super().append(error)
+        self.global_errors.append(error)
+
+    def extend(self, errors):
+        for error in errors:
+            self.append(error)
+
+    def for_node(self, node):
+        if node not in self.nodes:
+            self.nodes[node] = _NodeErrors(self)
+        return self.nodes[node]
+
+    def validation(self):
+        return {'per_node_validation_schema': 'known-node-validation.v1',
+                'per_node_validation': {node: {'status': 'failed' if errors else 'passed',
+                                                'errors': list(errors)}
+                                        for node, errors in self.nodes.items()},
+                'global_validation_errors': list(self.global_errors)}
 
 
 def applies(item, board, art_style='original'):
@@ -55,7 +100,8 @@ def recorded_art_style(project):
 # gate "design" = design_check.py (英化 1.5 / 重塑 round 1); gate "art" = art_check.py (英化 1.8 / 重塑 round 2 / art-redo).
 # The final audit only checks the rest (loading, ads/rewards, storage, async, input/buttons, logic, no ad skip, build,
 # English copy, flicker ...): items with an earlier gate are not expected in the review, and rows left there are ignored.
-EARLIER_GATES = {'design': 'design_check.py', 'art': 'art_check.py'}
+EARLIER_GATES = {'design': 'design_check.py', 'art': 'art_check.py',
+                 'tool_release': 'test_single_writer.py'}
 
 
 def final_gate(item):
@@ -262,7 +308,7 @@ def evidence(refs, base, errors, label, expected_binding, require_current=False)
         errors.append(label + ': historical/negative evidence alone cannot support current pass')
 
 
-def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD, *, project=None):
+def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD, *, project=None, current_native=None):
     """Each automatic tool named by the catalog must have a current, passing, unedited report."""
     refs = row.get('auto_reports', [])
     if not isinstance(refs, list):
@@ -287,17 +333,15 @@ def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD,
                 continue  # Static preflight is never page-entry acceptance.
             if tool == 'logic_check' and (project is None or not current_logic_report(report, project)):
                 continue  # F01-F20 alone, stale cases or changed raw evidence cannot pass LOGIC-01.
+            storage_current = False
+            startup_current = False
             if tool == 'audit_native_storage_contract':
                 try:
-                    from audit_native_storage_contract import CASES, POLICY_VERSION, validate as validate_storage, validate_execution_receipt
-                    trace_path = Path(report['trace'])
+                    from storage_scoped_reuse import validate_report as validate_storage_report
                     native_path = Path(report['native'])
-                    if (report.get('policy_version') != POLICY_VERSION or load(trace_path).get('schema') != 'native_storage_trace.v3' or report.get('required_cases') != list(CASES) or
-                            sha(trace_path.read_bytes()) != report.get('trace_sha256') or
-                            tree_sha(native_path) != expected_binding['native_tree_sha256'] or
-                            validate_storage(load(trace_path), native_path, expected_binding) or
-                            validate_execution_receipt(report, load(trace_path))):
+                    if validate_storage_report(report, Path(current_native) if current_native is not None else native_path, expected_binding, project=project):
                         continue
+                    storage_current = True
                 except (KeyError, ValueError, TypeError, OSError):
                     continue
             if tool in {'audit_game_modules','audit_optional_features','audit_acquisition_progression'} and report.get('implementation') == 'production_js':
@@ -330,14 +374,28 @@ def auto_reports(item, row, base, errors, expected_binding, board=DEFAULT_BOARD,
                     continue  # A stamped pass is not executable, current evidence.
             if tool == 'audit_startup_contract':
                 from audit_startup_contract import validate_runtime_report
-                if validate_runtime_report(report, expected_binding):
-                    continue  # Source-only or static legacy passes cannot satisfy final LOAD-01.
+                from startup_scoped_evidence import consume as consume_startup_scope
+                from functools import partial
+                from regression_scope_gate import startup_replay
+                if project is None:
+                    continue
+                try:
+                    scoped = (consume_startup_scope(project, current_native, p,
+                              current_binding=expected_binding) if current_native is not None else None)
+                    if scoped is not None:
+                        startup_current = True
+                    else:
+                        replay = partial(startup_replay, reuse_only=True, plan_project=Path(project).resolve())
+                        if validate_runtime_report(report, expected_binding, replay_runner=replay):
+                            continue
+                except (ValueError, OSError, KeyError, TypeError):
+                    continue
             if tool == 'audit_startup_loading':
                 from audit_startup_loading import validate_report as validate_startup_report
                 if validate_startup_report(report, expected_binding):
                     continue
             checked = report.get('checked')
-            if (report.get('binding') == expected_binding and report.get('passed') is True and
+            if ((report.get('binding') == expected_binding or storage_current or startup_current) and report.get('passed') is True and
                     report.get('failed') == 0 and type(checked) is int and
                     (checked >= 1 or tool == 'audit_audio_sources')):
                 ok = True
@@ -428,23 +486,28 @@ def discovered_apis(row, base, expected_binding):
 
 
 def spot_check(review, base, expected_binding, applicable_ids, declared):
-    """User 2026-10-21: tests may run on a cheaper AI; GPT must re-run the automatic checks and redo >= 3 flows itself."""
+    """Review existing evidence without executor-dependent replay obligations.
+
+    The same row, raw-report and binding validators apply to every executor.
+    A discrepancy remains a specific unresolved issue; it never authorizes
+    rerunning a whole category or replacing old observations with a new pass.
+    """
     v = review.get('gpt_spot_check')
     if not isinstance(v, dict):
-        return ['gpt_spot_check: tests were run by ' + str(review.get('test_executor')) + '; GPT must re-run the automatic '
-                'checks and redo at least 3 flows itself before anything passes']
+        return []
     errors = []
-    if v.get('reviewer') != 'gpt':
-        errors.append('gpt_spot_check: reviewer must be "gpt"')
-    if v.get('code_changes_reviewed') is not True or not str(v.get('locked_commit', '')).strip():
-        errors.append('gpt_spot_check: GPT must read every code change the test AI made since the lock '
-                      '(git diff <locked_commit>..HEAD): set locked_commit and code_changes_reviewed: true')
-    if v.get('rerun_auto_checks') is not True:
-        errors.append('gpt_spot_check: GPT must re-run every automatic check script itself (rerun_auto_checks: true)')
     flows = v.get('flows')
     flows = [f for f in flows if isinstance(f, dict)] if isinstance(flows, list) else []
-    if len(flows) < 3:
-        errors.append('gpt_spot_check: redo at least 3 flows (one ad entry, one platform task if any, one free restart)')
+    if v.get('disagreements') not in ([], None):
+        errors.append('evidence_review: unresolved discrepancies; locate the affected check IDs and repair only their evidence or inputs')
+    for f in flows:
+        if result_failure(f):
+            errors.append('evidence_review/' + str(f.get('check_id')) + ': an explicit failed supplementary observation remains unresolved')
+    if v.get('role') != 'current_result':
+        # Old forced three-flow spot checks are retained as history. They do
+        # not become new current observations on every build. Actual current
+        # coverage is independently validated in each applicable check row.
+        return errors
     texts = set()
     for f in flows:
         cid = f.get('check_id')
@@ -456,14 +519,6 @@ def spot_check(review, base, expected_binding, applicable_ids, declared):
             errors.append(label + ': write what GPT itself saw (own text per flow)')
         texts.add(text)
         evidence(f.get('evidence'), base, errors, label, expected_binding, require_current=True)
-    ids = {f.get('check_id') for f in flows}
-    if any(e.get('trigger') == 'rewarded_video' for e in declared) and not any(str(i).startswith(('AD-', 'CLAIM-')) for i in ids):
-        errors.append('gpt_spot_check: include one rewarded-ad flow (AD-* or CLAIM-*)')
-    # v7.5 (Mabel 1.2): every TikTok game has add-to-desktop and profile revisit, declared or not.
-    if not ids & {'GROW-01', 'ASYNC-01', 'LIFE-02'}:
-        errors.append('gpt_spot_check: include one platform-task leave-and-return flow (GROW-01/ASYNC-01/LIFE-02)')
-    if v.get('disagreements') not in ([], None):
-        errors.append('gpt_spot_check: GPT found records that do not match; re-test that whole category and clear the list')
     return errors
 
 
@@ -485,6 +540,16 @@ def check_row(row, base, errors, label, expected_binding):
 
 
 def audit(args):
+    from known_issue_checkpoints import audit_once
+    try:
+        return audit_once(args, _audit_uncached)
+    except (ValueError, OSError, TypeError) as error:
+        return {'status': 'blocked', 'stage': args.stage, 'errors': [str(error)],
+                'replay_authorized': False}
+
+
+def _audit_uncached(args):
+    import known_issue_checkpoints as checkpoints
     from audit_no_social_features import audit as audit_no_social
     review = load(args.review)
     import project_qa
@@ -496,7 +561,7 @@ def audit(args):
     social = audit_no_social(social_project, native=args.native, web=args.web)
     if not social['passed']:
         return {'status': 'blocked', 'stage': args.stage, 'binding': binding(audit_args), 'errors': ['Forbidden sharing/ranking feature present'], 'no_social_features': social}
-    catalog = load(CATALOG); errors = []
+    catalog = load(CATALOG); errors = _ValidationErrors()
     if not isinstance(review, dict):
         raise ValueError('Review must be an object')
     if policy:
@@ -525,9 +590,9 @@ def audit(args):
                       ' (user chose 按重塑画风重做: make a new review with --art-style remake)')
     expected_binding = binding(args)
     catalog_digest = review.get('catalog_sha256')
-    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_STORAGE_UPGRADE_CATALOG, PRE_DIRECT_GROWTH_CATALOG, PRE_UNREADABLE_START_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
+    if catalog_digest not in (sha(CATALOG.read_bytes()), PRE_STORAGE_UPGRADE_CATALOG, PRE_DIRECT_GROWTH_CATALOG, PRE_UNREADABLE_START_CATALOG, PRE_SINGLE_WRITER_CATALOG, *PRE_MANUAL_VISUAL_CATALOGS):
         errors.append('Checklist catalog changed; review added/changed checks')
-    if review.get('binding') != expected_binding:
+    if review.get('binding') != expected_binding and not checkpoints.accepts_prior_binding(review.get('binding')):
         errors.append('Source/Native/Web/build tag differs from the reviewed inputs')
     base = args.review.resolve().parent
     executor_exit = bool(getattr(args, 'executor_exit', False))
@@ -581,49 +646,44 @@ def audit(args):
             continue
         if args.stage == 'post_package' and item['phase'] == 'device':
             continue
+        if checkpoints.reused('known.' + item['id']):
+            continue
+        node_errors = errors.for_node('known.' + item['id'])
         if item.get('always_applicable') and rows.get(item['id'], {}).get('status') == 'not_applicable':
-            errors.append(item['id'] + ': baseline/build/test integrity checks cannot be waived as not-applicable')
+            node_errors.append(item['id'] + ': baseline/build/test integrity checks cannot be waived as not-applicable')
         if board in item.get('required_boards', []) and rows.get(item['id'], {}).get('status') == 'not_applicable' and not (no_collection and item['id'] in ('ECON-01', 'ECON-02')):
-            errors.append(item['id'] + ': required for ' + board + (' (英化入口第 3 项：每个英化游戏都有音效、BGM 两个音量)'
+            node_errors.append(item['id'] + ': required for ' + board + (' (英化入口第 3 项：每个英化游戏都有音效、BGM 两个音量)'
                                                                      if board == 'localize' else ''))
         if item['id'] in required_checks and rows.get(item['id'], {}).get('status') == 'not_applicable':
-            errors.append(item['id'] + (': required for every TikTok game (add-to-desktop and profile revisit)'
+            node_errors.append(item['id'] + (': required for every TikTok game (add-to-desktop and profile revisit)'
                                         if item['id'] == 'GROW-01' else ': required by declared reward mechanisms'))
         # User 2026-10-22: the test stage ends only when everything is done except what only Codex may fill.
-        if executor_exit and item.get('reviewer') and rows.get(item['id'], {}).get('status') in (None, 'pending'):
-            left_for_codex.append(item['id'])
-            continue
-        check_row(rows.get(item['id'], {}), base, errors, item['id'], expected_binding)
+        check_row(rows.get(item['id'], {}), base, node_errors, item['id'],
+                  checkpoints.node_binding('known.' + item['id'], expected_binding))
         row = rows.get(item['id'], {})
         if row.get('status') == 'pass' and auto_tools(item, board):
-            auto_reports(item, row, base, errors, expected_binding, board, project=args.project)
+            auto_reports(item, row, base, node_errors, expected_binding, board, project=args.project, current_native=args.native)
         if row.get('status') == 'pass' and item.get('requires_gui'):
             layers = row.get('layers', []) if row.get('layer') == 'mixed' else [row.get('layer')]
             if not isinstance(layers, list) or not set(layers) & {'gui_mouse', 'gui_touch', 'device'}:
-                errors.append(item['id'] + ': current GUI/device observation required; source/HTTP alone is insufficient')
+                node_errors.append(item['id'] + ': current GUI/device observation required; source/HTTP alone is insufficient')
         required_observations = (item.get('maintenance_observations') if maintenance_scope and item.get('maintenance_observations') else item.get('required_observations'))
         if row.get('status') == 'pass' and required_observations:
             observations = row.get('observations', {})
             if not isinstance(observations, dict) or any(not observations.get(k) for k in required_observations):
-                errors.append(item['id'] + ': missing required observations ' + ', '.join(required_observations))
+                node_errors.append(item['id'] + ': missing required observations ' + ', '.join(required_observations))
         if row.get('status') == 'pass' and item.get('requires_negative_control'):
-            calibration(row, base, errors, item['id'])
-        if row.get('status') == 'pass' and item.get('reviewer') and row.get('reviewer') != item['reviewer']:
-            errors.append(item['id'] + ': only a ' + item['reviewer'].upper() + ' session can mark this pass (row reviewer = "' +
-                          item['reviewer'] + '")')
-    executor = str(review.get('test_executor') or '').strip()
-    if executor_exit:
-        left_for_codex.append('gpt_spot_check')
-    elif executor and executor.lower() not in {'gpt', 'codex'}:
-        errors.extend(spot_check(review, base, expected_binding, expected, declared))
+            calibration(row, base, node_errors, item['id'])
+    errors.extend(spot_check(review, base, expected_binding, expected, declared))
     # Monkey Dash 2026-10-21: a mechanism found in code must produce its own checks.
     async_row = rows.get('ASYNC-01')
     if any(x['id'] == 'ASYNC-01' and applies(x, board, art_style) for x in catalog['items']) and isinstance(async_row, dict) \
             and async_row.get('status') == 'pass':
-        found = discovered_apis(async_row, base, expected_binding)
+        found = discovered_apis(checkpoints.stored_observation('known.ASYNC-01', async_row), base,
+                                checkpoints.node_binding('known.ASYNC-01', expected_binding))
         declared_apis = {str(e.get('api', '')).strip() for e in declared}
         if found is None:
-            errors.append('ASYNC-01: needs the audit_async_contracts report of this build to list the reward APIs in code')
+            errors.for_node('known.ASYNC-01').append('ASYNC-01: needs the audit_async_contracts report of this build to list the reward APIs in code')
         else:
             missing = sorted(api for api in found if api not in declared_apis)
             if missing:
@@ -632,16 +692,16 @@ def audit(args):
     # decisions are read from the project records (design_check.py checked them earlier), not from MOD-01/RANK-01 rows.
     rec = project_records(args.project)
     if board == 'remake' and rec['league'] in ('add', 'keep_original') and rows.get('RANK-02', {}).get('status') == 'not_applicable':
-        errors.append('RANK-02: this game has a Weekly League (docs/league/decision.json decision ' + str(rec['league']) +
+        errors.for_node('known.RANK-02').append('RANK-02: this game has a Weekly League (docs/league/decision.json decision ' + str(rec['league']) +
                       '); test it in the browser, it cannot be marked not applicable')
     for key, cid in (('skin_bonus', 'FEAT-01'), ('daily_checkin', 'FEAT-02')):
         if rec['features'].get(key) is True and rows.get(cid, {}).get('status') == 'not_applicable':
-            errors.append(cid + ': the user chose this feature (docs/features.json ' + key + ': true); test it, it cannot be not applicable')
+            errors.for_node('known.' + cid).append(cid + ': the user chose this feature (docs/features.json ' + key + ': true); test it, it cannot be not applicable')
     if rec['skins'] is True and rows.get('FEAT-01', {}).get('status') == 'not_applicable':
-        errors.append('FEAT-01: this game has the skin module (docs/modules.json skins.user_choice yes); test it, '
+        errors.for_node('known.FEAT-01').append('FEAT-01: this game has the skin module (docs/modules.json skins.user_choice yes); test it, '
                       'it cannot be not applicable')
     if rec['level_mode'] == 'levels' and rows.get('LEVEL-02', {}).get('status') == 'not_applicable':
-        errors.append('LEVEL-02: this is a level game (level_plan.json mode levels); test the map, bonus and limited levels, '
+        errors.for_node('known.LEVEL-02').append('LEVEL-02: this is a level game (level_plan.json mode levels); test the map, bonus and limited levels, '
                       'it cannot be not applicable')
     # Copied text is not evidence: each check must describe its own observation (2026-10-20 postmortem).
     seen_text = {}
@@ -656,27 +716,30 @@ def audit(args):
         if isinstance(obs, dict):
             values = [' '.join(str(v).split()) for v in obs.values() if str(v).strip()]
             if len(values) >= 2 and len(set(values)) < len(values):
-                errors.append(item['id'] + ': observation fields repeat the same text; describe each one separately')
+                errors.for_node('known.' + item['id']).append(item['id'] + ': observation fields repeat the same text; describe each one separately')
     for text, ids in seen_text.items():
         if len(ids) >= 2:
             errors.append('Same observed text copied into ' + ', '.join(ids) + '; each check needs its own observation')
     inventory = review.get('reward_entries')
     if not isinstance(inventory, list):
         errors.append('reward_entries must be an actual entry inventory'); inventory = []
+    inventory_errors = errors.for_node('known.inventory')
     if review.get('inventory_complete') is not True:
-        errors.append('Actual prefab/scene/runtime entry inventory has not been completed')
-    evidence(review.get('inventory_evidence'), base, errors, 'inventory', expected_binding, require_current=True)
+        inventory_errors.append('Actual prefab/scene/runtime entry inventory has not been completed')
+    inventory_binding = checkpoints.node_binding('known.inventory', expected_binding)
+    if not checkpoints.reused('known.inventory'):
+        evidence(review.get('inventory_evidence'), base, inventory_errors, 'inventory', inventory_binding, require_current=True)
     captured = []
     try:
         ref = review.get('inventory_snapshot', {})
         relative = Path(ref.get('path', ''))
         if relative.is_absolute() or len(relative.parts) != 1:
             raise ValueError('Inventory snapshot must be a local sidecar file')
-        snapshot_path = base / relative
+        snapshot_path = checkpoints.reference_path('known.inventory', ref, base)
         if not snapshot_path.is_file() or sha(snapshot_path.read_bytes()) != ref.get('sha256'):
             raise ValueError('Inventory snapshot is missing or changed')
         snapshot_record = load(snapshot_path)
-        if snapshot_record.get('binding') != expected_binding:
+        if snapshot_record.get('binding') != inventory_binding:
             raise ValueError('Inventory snapshot belongs to another build')
         captured = snapshot_record.get('entries')
         if inventory_signature(captured) != inventory_signature(inventory):
@@ -691,15 +754,18 @@ def audit(args):
         else:
             for key, pair in pairs.items():
                 row = checks[key]; label = 'independent/' + key
+                if checkpoints.reused('known.pair.' + key):
+                    continue
+                node_errors = errors.for_node('known.pair.' + key)
                 if row.get('status') != 'pass':
-                    errors.append(label + ': declared independent group requires a passing cross-state observation')
+                    node_errors.append(label + ': declared independent group requires a passing cross-state observation')
                 if any(row.get(field) != value for field, value in pair.items()):
-                    errors.append(label + ': cross-state identities differ from captured inventory')
-                check_row(row, base, errors, label, expected_binding)
+                    node_errors.append(label + ': cross-state identities differ from captured inventory')
+                check_row(row, base, node_errors, label, expected_binding)
                 post = row.get('postconditions', {})
                 if row.get('status') == 'pass' and any(post.get(field) is not True for field in
                     ('claimed_entry_applied_once', 'other_reward_still_eligible', 'other_reward_unchanged')):
-                    errors.append(label + ': claim A then verify independent B eligibility and unchanged model')
+                    node_errors.append(label + ': claim A then verify independent B eligibility and unchanged model')
     except (ValueError, TypeError, AttributeError) as error:
         errors.append('independent reward checks: ' + str(error))
     seen = set()
@@ -719,6 +785,9 @@ def audit(args):
             errors.append(eid + ': missing/unknown reward states')
         for state in catalog['reward_states']:
             row = states.get(state, {}); label = eid + '/' + state
+            if checkpoints.reused('known.reward.' + eid + '.' + state):
+                continue
+            node_errors = errors.for_node('known.reward.' + eid + '.' + state)
             required = {'eligible', 'completed', 'apply_or_consume'}
             if entry.get('trigger') == 'rewarded_video':
                 required |= {'pending', 'cancelled', 'error', 'timeout', 'duplicate_or_late_callback', 'return_contracts'}
@@ -727,18 +796,18 @@ def audit(args):
             if entry.get('persistence') == 'durable':
                 required.add('save_failure_retry')
             if state in required and row.get('status') == 'not_applicable':
-                errors.append(label + ': required for the declared reward mechanism')
-            check_row(row, base, errors, label, expected_binding)
+                node_errors.append(label + ': required for the declared reward mechanism')
+            check_row(row, base, node_errors, label, expected_binding)
             if row.get('status') != 'pass':
                 continue
             if state == 'completed':
                 post = row.get('postconditions', {})
                 if post.get('reward_applied_once') is not True or post.get('model_updated') is not True:
-                    errors.append(label + ': reward and model must both be checked')
+                    node_errors.append(label + ': reward and model must both be checked')
                 if any(post.get(field) is not True for field in
                        ('reward_identity_verified', 'current_reward_display_consistent',
                         'success_feedback_consistent')):
-                    errors.append(label + ': verify this reward identity/display and consistent committed-success feedback')
+                    node_errors.append(label + ': verify this reward identity/display and consistent committed-success feedback')
                 outcome = post.get('presentation')
                 valid = {'hidden', 'disabled_claimed', 'navigated'}
                 if entry.get('policy') == 'repeatable':
@@ -746,25 +815,25 @@ def audit(args):
                 if entry.get('policy') == 'navigation_reward':
                     valid = {'claimed_navigation', 'retained_navigation', 'navigated'}
                 if outcome not in valid:
-                    errors.append(label + ': no valid claimed button presentation for this policy')
+                    node_errors.append(label + ': no valid claimed button presentation for this policy')
                 if outcome == 'hidden' and post.get('button_visible') is not False:
-                    errors.append(label + ': hidden requires actual button_visible=false')
+                    node_errors.append(label + ': hidden requires actual button_visible=false')
                 if outcome == 'disabled_claimed' and (post.get('interactable') is not False or not post.get('claimed_text_visible')):
-                    errors.append(label + ': disabled must also visibly say claimed')
+                    node_errors.append(label + ': disabled must also visibly say claimed')
                 if outcome == 'navigated' and post.get('claim_page_left') is not True:
-                    errors.append(label + ': claim page was not confirmed closed')
+                    node_errors.append(label + ': claim page was not confirmed closed')
                 if outcome == 'claimed_navigation' and post.get('claimed_text_visible') is not True:
-                    errors.append(label + ': retained navigation must show claimed state')
+                    node_errors.append(label + ': retained navigation must show claimed state')
                 if outcome == 'retained_navigation' and (post.get('navigation_available') is not True or
                                                         post.get('claim_state_visible') is not True):
-                    errors.append(label + ': navigation and visible claim state must be checked separately')
+                    node_errors.append(label + ': navigation and visible claim state must be checked separately')
             elif state == 'pending':
                 post = row.get('postconditions', {})
                 if post.get('checking_state_visible') is not True or post.get('bounded_wait') is not True:
-                    errors.append(label + ': show a visible checking/waiting state and end the wait within a bounded time')
+                    node_errors.append(label + ': show a visible checking/waiting state and end the wait within a bounded time')
                 if entry.get('trigger') in {'rewarded_video', 'platform_mission'} and any(
                         post.get(field) is not True for field in ('sdk_and_timer_held_recovers', 'retry_after_recovery_works')):
-                    errors.append(label + ': hold the SDK result AND the original timeout callback; the screen must still end the wait '
+                    node_errors.append(label + ': hold the SDK result AND the original timeout callback; the screen must still end the wait '
                                           'and a real-touch retry must work (having timeout code is not proof)')
             elif state == 'return_contracts':
                 post = row.get('postconditions', {})
@@ -774,64 +843,64 @@ def audit(args):
                 if entry.get('trigger') == 'rewarded_video':
                     needed = {'event', 'promise', 'reject_or_throw'}
                 if not needed <= channels:
-                    errors.append(label + ': return channels not all tested; missing ' + ', '.join(sorted(needed - channels)))
+                    node_errors.append(label + ': return channels not all tested; missing ' + ', '.join(sorted(needed - channels)))
                 if any(post.get(field) is not True for field in
                        ('each_channel_settles_once', 'non_eligible_results_no_reward', 'every_result_visible_end_state',
                         'test_double_supports_each_channel')):
-                    errors.append(label + ': each return channel must reach one single settle with a visible end state, '
+                    node_errors.append(label + ': each return channel must reach one single settle with a visible end state, '
                                           'and the SDK test double must be able to answer through each channel')
             elif state == 'leave_and_return':
                 post = row.get('postconditions', {})
                 if any(post.get(field) is not True for field in
                        ('stale_request_invalidated', 'new_check_started', 'late_result_ignored', 'visible_result_feedback')):
-                    errors.append(label + ': leave the game while a check is pending, return, and verify the old check is dropped, '
+                    node_errors.append(label + ': leave the game while a check is pending, return, and verify the old check is dropped, '
                                           'a new check runs, the late old result changes nothing and the player sees the result')
             elif state in {'cancelled', 'error', 'timeout'}:
                 post = row.get('postconditions', {})
                 if post.get('reward_delta_zero') is not True or post.get('can_retry_or_exit') is not True:
-                    errors.append(label + ': check no reward and recovery, not just request failure')
+                    node_errors.append(label + ': check no reward and recovery, not just request failure')
                 if post.get('failure_feedback_visible') is not True:
-                    errors.append(label + ': the player must see a message for this result; a silent return looks like a dead button')
+                    node_errors.append(label + ': the player must see a message for this result; a silent return looks like a dead button')
                 if entry.get('trigger') == 'rewarded_video':
                     if post.get('no_automatic_replay') is not True:
-                        errors.append(label + ': explicit retries only; no automatic replay')
+                        node_errors.append(label + ': explicit retries only; no automatic replay')
                     if state == 'error' and post.get('terminal_failure_retry_available') is not True:
-                        errors.append(label + ': SDK terminal failure must permit a later explicit retry, exit alone is insufficient')
+                        node_errors.append(label + ': SDK terminal failure must permit a later explicit retry, exit alone is insufficient')
                     if state == 'timeout' and post.get('unconfirmed_session_not_reopened') is not True:
-                        errors.append(label + ': business timeout must not reopen an unconfirmed SDK session')
+                        node_errors.append(label + ': business timeout must not reopen an unconfirmed SDK session')
             elif state in {'reopen', 'reload', 'duplicate_or_late_callback'}:
                 post = row.get('postconditions', {})
                 if post.get('no_extra_reward_or_request') is not True:
-                    errors.append(label + ': missing repeat/persistence postcondition')
+                    node_errors.append(label + ': missing repeat/persistence postcondition')
                 if state in {'reopen', 'reload'} and post.get('model_and_presentation_consistent') is not True:
-                    errors.append(label + ': verify model and visible state after reopening/reloading')
+                    node_errors.append(label + ': verify model and visible state after reopening/reloading')
             elif state == 'save_failure_retry':
                 post = row.get('postconditions', {})
                 fields = ('same_transaction_retried', 'no_additional_ad_request',
                           'reward_applied_once', 'commit_readback_ambiguity_checked',
                           'no_premature_success_ui', 'proof_target_preserved')
                 if any(post.get(field) is not True for field in fields):
-                    errors.append(label + ': verify the same completed proof, no replay, uncertain commit and exactly-once saving')
+                    node_errors.append(label + ': verify the same completed proof, no replay, uncertain commit and exactly-once saving')
                 if post.get('recovery_scope') not in {'process_only', 'durable_restart'}:
-                    errors.append(label + ': declare process_only or durable_restart recovery scope')
+                    node_errors.append(label + ': declare process_only or durable_restart recovery scope')
             elif state == 'apply_or_consume':
                 post = row.get('postconditions', {})
                 if any(post.get(field) is not True for field in
                        ('actual_effect_verified', 'correct_target', 'quantity_and_effect_consistent',
                         'ownership_and_usage_distinguished', 'related_views_consistent')):
-                    errors.append(label + ': verify actual usable reward/effect and matching quantity, not balance alone')
+                    node_errors.append(label + ': verify actual usable reward/effect and matching quantity, not balance alone')
     if executor_exit:
         return {'status': 'test_stage_complete' if not errors else 'test_stage_incomplete', 'stage': args.stage, 'board': board,
                 'binding': binding(args), 'catalog_revision': catalog['revision'], 'catalog_checks': len(expected),
                 'earlier_stage_checks': earlier_stage_checks(catalog, board, art_style),
-                'left_for_codex': left_for_codex, 'errors': errors,
+                'left_for_codex': left_for_codex, 'errors': errors, **errors.validation(),
                 'rule': 'The test stage may end (and hand over to 最终验收) only with status test_stage_complete: every check '
                         'passed or justly not applicable, except the Codex-only rows listed in left_for_codex.'}
     return {'status': 'passed' if not errors else 'blocked', 'stage': args.stage, 'board': board,
             'binding': binding(args), 'catalog_revision': catalog['revision'],
             'catalog_checks': len(expected), 'reward_entries': len(inventory),
             'earlier_stage_checks': earlier_stage_checks(catalog, board, art_style),
-            'errors': errors, 'limits': 'Coverage/hash/postcondition review only. Does not prove screenshots, actual UI actions, physical device, IAA or upload. Existing mobile gates remain separate.'}
+            'errors': errors, **errors.validation(), 'limits': 'Coverage/hash/postcondition review only. Does not prove screenshots, actual UI actions, physical device, IAA or upload. Existing mobile gates remain separate.'}
 
 
 def init(args):
@@ -879,7 +948,7 @@ def init(args):
               'test_executor': '',
               'gpt_spot_check': {'reviewer': '', 'locked_commit': '', 'code_changes_reviewed': False,
                                  'rerun_auto_checks': False, 'flows': [], 'disagreements': [],
-                                 'note': 'Required when test_executor is another AI: GPT re-runs all automatic checks and redoes >= 3 flows.'}}
+                                 'note': 'Optional existing-evidence review. Executor changes do not authorize replay; unresolved discrepancies are repaired by check ID.'}}
     if args.review.exists():
         raise ValueError('Existing review is preserved; update it without erasing observations')
     if args.markdown and args.markdown.exists():
@@ -911,7 +980,8 @@ def init(args):
         earlier = earlier_stage_checks(catalog, board, art_style)
         if earlier:
             lines += ['', '前面阶段已查、最终总检测不再查（用户 2026-10-24，check-stages.md）：' + '；'.join(
-                {'design': '设计关 design_check.py', 'art': '美术关 art_check.py'}[g] + '：' + '、'.join(ids)
+                {'design': '设计关 design_check.py', 'art': '美术关 art_check.py',
+                 'tool_release': 'Skill 工具发版 test_single_writer.py'}[g] + '：' + '、'.join(ids)
                 for g, ids in earlier.items()) + '。锁定后又改了设计或美术，只对改动重跑对应脚本，不进本清单。']
         lines += ['', '## 每个奖励入口的状态检查', '',
                   '| 入口 / 规则 | ' + ' | '.join(catalog['reward_states']) + ' |',

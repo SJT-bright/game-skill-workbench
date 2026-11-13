@@ -20,6 +20,13 @@ class CoverageTests(unittest.TestCase):
  def test_untested_refused(self):self.doc['domains']['rewards']['cases']['read_failure']['status']='untested';self.assertTrue(self.check())
  def test_dynamic_key_discovered(self):self.assertTrue(any(s['argument']=='KEY' for s in audit.inventory(self.roots)[1].values()))
  def test_writer_no_review_cannot_emit_zip(self):
-  out=self.root/'test.zip';p=subprocess.run([sys.executable,str(Path(__file__).with_name('make_tiktok_zip.py')),'--native',str(self.roots['native']),'--app-id','test','--out',str(out)],capture_output=True,text=True)
-  self.assertNotEqual(p.returncode,0);self.assertFalse(out.exists());self.assertIn('all upload/test/detection packages require',p.stderr)
+  from unittest.mock import patch
+  import make_tiktok_zip as writer,writer_proofs
+  from test_single_writer import SingleWriter
+  actual_consume=writer_proofs.consume
+  f=SingleWriter('test_legacy_build_routes_all_parameters_once');f.setUp();self.addCleanup(f.doCleanups);f.mock_engine()
+  with patch.object(writer_proofs,'consume',side_effect=actual_consume):
+   with self.assertRaisesRegex(ValueError,'writer.producers: missing evidence'):
+    writer.write_package(**f.kw)
+  self.assertFalse(f.out.exists())
 if __name__=='__main__':unittest.main()

@@ -64,6 +64,7 @@
     "p:onShow",
     "p:open"
    ],
+   "current_code_sha256": "3b3f483905d830ef69ce77795988a77824c25d7d15453d04bbd27a4268c9d10b",
    "current_only": [
     "p:profileClaimedNode",
     "p:shortcutClaimedNode",
@@ -122,6 +123,16 @@
      "s:claimed",
      "s:opened"
     ]
+   },
+   "previous_code_sha256": {
+    "2b13d4bb4f6ff439a9fd944b856b8287f1be274becb740f7020d767dcdd7a51d": "491e510aed3b413a43afe5e18a0126cc43f7bd1c4f90a2b49f311d2547b64f0f",
+    "4b83de5d5c94ed5070a6114fa4ec3c24584f61e06cc220f3ae48dfdf493d2122": "a23d9d40b7445f2cf618844d89db0351f789340c5ce90681aed0f7b8a6a1642e",
+    "632096c7d86150257de2a4ddf30d8b675ca82242f4b4511eda64b6abf823c02c": "1a33617df8e3846bb4099efcc1ca4e65fc775b13f1606d37a0e9c1875bdd155f",
+    "999654f4ff6d106cafb38c67b9de4de26f4fabcb4ba44c58030d79ebdceac3ab": "a903233c805aa6b6288ff05cdbea8b81a02716c5b960205da01ab0647ba427f4",
+    "a8c9fc3016e13cdf75cc1165ede10d2fa62b967ac8086eaefeed40261408a3cc": "4b3cb185f1445591364333fca0c0b5c652b90a68da16c8f55557c9bfe05ca598",
+    "c3dbfcb6262976ddba7f719e66f6ef6940bb3fb796a96b696053464ffa70af77": "eb4b2f7babac0cab36a49adeca41101254561ab5371117f0de547fb776f4c128",
+    "cc45891244346833d4ee6f804578d4099937b9029f46bb8cb63b68337f2ce963": "46445ed314ac85e7bf985d7110065ab056ae78891dfff512bdf04f14546fa201",
+    "f58c8df407f54c0fea18e91f30bfbc6f19fcd9e4b1539225a8d6e7a00c524474": "a2b54e0a56774417865e20463ec13ffe592ab7bcd2bd9b9dee39f1e2a87d570e"
    },
    "previous_without_text": []
   },
@@ -188,6 +199,7 @@
     "s:check",
     "s:checking"
    ],
+   "current_code_sha256": "bba7b7ffbecb876e7d89d8583cf182e3bc24d16a3d65a7b944eb838640e328ef",
    "current_only": [
     "p:directEntry"
    ],
@@ -282,6 +294,14 @@
      "s:unsupported"
     ]
    },
+   "previous_code_sha256": {
+    "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f": "b69d4835b632d756f15cbdb70e910e597d0da86b205efc4c9646c509c8c24373",
+    "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee": "375787c56b78f3fa8b63f99356c6b9607ccd2eabef5d3f365c923cc1a40627ba",
+    "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348": "6224cc27e523592299cdca1179c6d0536c3b1dc9417cd21bc3c86ed020da74a2",
+    "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a": "554934cb564b48fcbb3d2106f574c5d1fcd5f86e324a8900d21a8f7d26041afb",
+    "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11": "f04cfdeccb06333fd8f0b6fb4f14d89159e845fff189272cbedf7e53431a42fa",
+    "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49": "1a8fdf24a644d784b51621cc2bb10c5e02d5afb7563aa48425bf642e07f881ba"
+   },
    "previous_without_text": []
   },
   "PlatformConfig": {
@@ -307,11 +327,15 @@
     "p:skin",
     "p:start_boost"
    ],
+   "current_code_sha256": "b73825a52950a8a7156a9558bbec9178d4ae42996da693e72c6183a588a955f6",
    "current_only": [],
    "current_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
    "editable": true,
    "previous": {
     "b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46": []
+   },
+   "previous_code_sha256": {
+    "b3a0b5102b5b7f3ffc73bbe27f499c31ab6ac092704695815cdaf0203f9c8c46": "b61e274150999b497f45f42420104fe3b90273497047cc3f438b3e0ed8c09d77"
    },
    "previous_without_text": []
   },
@@ -375,6 +399,7 @@
     "s:unsupported",
     "s:use strict"
    ],
+   "current_code_sha256": "e266d7055db26df228d50aa975957d37bf6293bfda3dc4d14e6a0d8942f30138",
    "current_only": [],
    "current_sha256": "4220ca579a85348b64652baa143ac22e260088cac0195c4aad0ad83128ccb151",
    "editable": false,
@@ -391,6 +416,12 @@
     "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1": [
      "p:deadline"
     ]
+   },
+   "previous_code_sha256": {
+    "04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd": "c0afa459f8a7e6ea7f843271e3d93c02ba6c6e7960d6ef3b6075d3ee4d61c5d5",
+    "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243": "c92aa01b5eaea8b248842faa634fbc04fd541f76bb5d7b183962da0f411b1d37",
+    "7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52": "d3f5cd7982e56257332fd4ab59d70fd62b00a1cba47d1418e3828d65ad8a452a",
+    "d8c32935330fabb9c95b0bfd84392a78b73c0efaffd24a56d8ec5ac992ead3f1": "c9d1cb731585416113b9cc255a169d513ccc3980a4ae8e74f64f573712fe7d71"
    },
    "previous_without_text": []
   },
@@ -436,6 +467,7 @@
     "s:use strict",
     "s:write_failed"
    ],
+   "current_code_sha256": "8765ca4ea9fd4caf8d1517badf0c49ce7b05be8d6f0d4ec0d4a7ae2252735dc8",
    "current_only": [
     "p:unreadableSavePolicy",
     "s:backup-then-defaults"
@@ -457,6 +489,15 @@
     "ba99f77166cc8859dd7ae6a8308250868bf2f73dd2c15bf4bb35a104f0e79499": [],
     "cb7d95e46be83decf23758895a3cc289f63781628437c6b80b02a9ab762f2415": [],
     "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf": []
+   },
+   "previous_code_sha256": {
+    "2b86117a5c7b7f97ecfbbc267cc9dd2996edf56d5ee63a0a4e1c06c963541a41": "1d80d58fa9b4c4db514a6ec33cc09d9b977d919d6b2a5b917b0a6ff95543c067",
+    "34f53c10a546f408f5247476dcec2b0903b358828fe3fe0fbc111ac66d7654c0": "b2115e52be70b6ce3ac5c6b03f4565df2da9ffdb9cb7daacfbba2b1889a5e429",
+    "954b56491844cd2964915e0aaa7fbd931fe5330f56135c42d9eee2df0d63d406": "19ca42d0e82975a8475a074db1891b31fa07861c566efca826f1c3ba20057371",
+    "9fca45e213abf061ffec93f6380e56c12977e26bdbe5a8a1b059807abc46428b": "f0ce9bb625a69522c64c0b530135c1462cf3b2ede227eb522d6b546accc5e82c",
+    "ba99f77166cc8859dd7ae6a8308250868bf2f73dd2c15bf4bb35a104f0e79499": "4e936119f8ccf71c85a7402ab161f3e1f3e9f9ca3c6896581245e7d1de64d123",
+    "cb7d95e46be83decf23758895a3cc289f63781628437c6b80b02a9ab762f2415": "e652db7703f86ed79aef0fd66a921c150908400de10ae6124a24bef6cd8961ba",
+    "ee5bc1e1269251cd72bf4101062e53266b47a8ba49c2f9e1e71ec1a39c7bdfbf": "af9af1c5a6c3b4d63fb135aba54be8ba980af3a6dff78c4b8913b8f603c0b0ad"
    },
    "previous_without_text": []
   },
@@ -523,6 +564,7 @@
     "s:invalid",
     "s:query"
    ],
+   "current_code_sha256": "13e1e808a7fada5d4521f2b8ab1410af6765cdaf2285077487a98b9f89e0bd89",
    "current_only": [
     "p:navigation",
     "s:navigation"
@@ -544,6 +586,11 @@
      "s:Return through this TikTok entry, then check your reward.",
      "s:navigate"
     ]
+   },
+   "previous_code_sha256": {
+    "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e": "f315dfe66f8356aaf21394d3e45148d330c12373b3edf90d2eec1a05c11b87a1",
+    "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608": "fde92e9fdb5521b0f2aad5bd17002076c4486dea56215e83901288eb747d7338",
+    "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4": "c3aaeb8f0e81851ef6595d7248b8a49c5b7d99e41e4c0cb10605a21cf6ed4ac8"
    },
    "previous_without_text": []
   }

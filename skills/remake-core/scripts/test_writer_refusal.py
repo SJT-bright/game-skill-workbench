@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Prove that the game's real packaging script (the "writer") refuses to make a ZIP without a passing gate.
+"""Legacy diagnostic for a custom project's real packaging script.
+
+Not part of per-game production or the canonical writer path. The shared writer
+contract is tested at Skill tool-update time by test_single_writer.py. This legacy
+script deliberately makes multiple diagnostic ZIPs and must not be scheduled just
+to fill BUILD-03 in an ordinary game review.
+
+Prove that a custom writer refuses to make a ZIP without a passing gate.
 
 Monkey Dash 2026-10-21: the shared gate rejects bad reviews in its own tests, but nobody had checked that
 the project's packaging script actually calls it. This runs the real writer through refusal and normal paths:

@@ -31,6 +31,9 @@ An exact noninteractive card surface may declare role "container" and a
 "contains" list of sibling content paths under the same card root. Its measured
 border remains checked, and its content is checked inside that border; this is
 not an exclusion or an override of any rectangle.
+An independently extracted noninteractive Sprite may declare intentional_contact_with
+(an exact other noninteractive Sprite path) plus why. This preserves both rectangles
+and all other collisions; the auditor only permits <= 3 CSS px and <= 10% edge contact.
 Optional home_entry_pages is a list of exact dumped screen IDs, explicitly annotated as
 reachable from HOME after checking actual navigation. Entry names still come from runtime
 buttons; the annotation itself does not prove navigation. Match CSS width/height and DPR,
@@ -136,6 +139,11 @@ def load_overrides(path):
         if tag.get('label', 'none') not in {'none', 'small', 'text'} or tag.get('role', 'content') not in {
                 'content', 'decoration', 'panel', 'ignore', 'container'}:
             raise ValueError('overrides tag for %s: label none/small/text, role content/decoration/panel/ignore' % p)
+        if 'intentional_contact_with' in tag:
+            target=tag['intentional_contact_with']
+            if (not isinstance(target,str) or not target.strip() or target!=target.strip() or target==p
+                    or any(c in target+p for c in '*?[]{}') or not isinstance(tag.get('why'),str) or not tag['why'].strip()):
+                raise ValueError('intentional contact requires an exact other path and nonempty why: '+p)
         if tag.get('role')=='container':
             children=tag.get('contains');parent=p.rsplit('/',1)[0]
             if (not isinstance(children,list) or not children or len(set(children))!=len(children)
@@ -428,6 +436,33 @@ class Screen:
                     item['surface_backing']=all(Image.open(source['path']).convert('RGB').getextrema()==tuple((v,v) for v in Image.open(source['path']).convert('RGB').getpixel((0,0))) for source in sources)
                 except (OSError,ImportError):pass
             item['text_content']=any(bool(text_of(m)) or str(m.get('comps',{}).get('sprite',{}).get('frame','')).startswith(('digit_','symbol_')) for m in members)
+        # A declared contact never removes a node or changes its measured rectangle.
+        # Both endpoints must remain independently extracted, text-free Sprites.
+        for source in measured:
+            target=source['tag'].get('intentional_contact_with')
+            if target is None:continue
+            matches=[n for n in self.nodes if n['path']==target]
+            if len(matches)!=1 or sum(n['path']==source['path'] for n in self.nodes)!=1:
+                raise ValueError('intentional contact requires two unique visible Sprite paths: '+source['path'])
+            endpoints=[source,matches[0]];items=[]
+            for n in endpoints:
+                family=[m for m in self.d['nodes'] if under(m['path'],n['path']) or under(n['path'],m['path'])]
+                descendants=[m for m in family if under(m['path'],n['path'])]
+                if ('sprite' not in n['comps'] or n['comps']['sprite'].get('sliced') or n['comps']['sprite'].get('tiled')
+                        or any(set(m['comps']) & {'button','toggle','slider','editbox','touch','block_input'} for m in family)
+                        or any(text_of(m) or str(m['comps'].get('sprite',{}).get('frame','')).startswith(('txt_','digit_','symbol_','btn_')) for m in descendants)):
+                    raise ValueError('intentional contact may not hide text or interactive controls: '+n['path'])
+                item=next((item for item in contents if item['name']==n['path']),None)
+                if item is None:raise ValueError('intentional contact Sprite must remain independently extracted: '+n['path'])
+                items.append(item)
+            if not isinstance(source['tag'].get('why'),str) or not source['tag']['why'].strip():
+                raise ValueError('intentional contact requires why: '+source['path'])
+            for item in items:
+                item['contact_eligible_sprite']=True
+                item['contact_dpr']=self.d['page'].get('dpr') or 1
+            items[0]['intentional_contact_with']=target
+            items[0]['contact_why']=source['tag']['why']
+            self.notes.append('declared exact Sprite contact '+source['path']+' -> '+target+': '+source['tag']['why'])
         # Explicit per-card semantic nesting. Do not remove the surface or its
         # content from geometry, and never infer this relationship from overlap.
         for surface in measured:

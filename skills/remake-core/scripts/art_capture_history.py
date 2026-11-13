@@ -79,6 +79,68 @@ def archive_owned(contract,project,build):
     return {e['domain']+':'+e['path']:base64.b64encode(project_file(project if e['domain']=='source' else build,e['path']).read_bytes()).decode()
             for e in contract['files']}
 
+def dependency_impact(contract,before,after,changed):
+    """Unknown ownership repairs scope; it never authorizes a full recapture."""
+    delta=affected_cases(contract,before,after,changed)
+    mapped={(entry['domain'],entry['path']):entry for entry in contract['files']}
+    gaps=[];affected={c for c,spec in contract['case_inputs'].items() if spec['mode']=='fresh' or spec['external_inputs']}
+    for domain,paths in changed.items():
+        for path in paths:
+            entry=mapped.get((domain,path))
+            if entry is None:
+                gaps.append({'domain':domain,'path':path,'reason':'no declared source/export owner'})
+                continue
+            if entry['kind']!='methods':
+                affected.update(entry['cases']);continue
+            key=domain+':'+path;a,b=before.get(key),after.get(key)
+            if not a or not b:continue
+            if a['shared']!=b['shared']:
+                shared=entry.get('shared_cases')
+                if (not isinstance(shared,list) or not shared or not set(shared)<=set(contract['cases'])
+                        or not entry.get('shared_basis')):
+                    gaps.append({'domain':domain,'path':path,'reason':'changed bytes outside owned methods need explicit shared owner'})
+                else:affected.update(shared)
+            altered={name for name in a['methods'] if a['methods'][name]!=b['methods'].get(name)}
+            refs={name:set(a.get('references',{}).get(name,[]))|set(b.get('references',{}).get(name,[]))
+                  for name in set(a.get('references',{}))|set(b.get('references',{}))}
+            while True:
+                expanded=altered|{name for name,uses in refs.items() if uses&altered}
+                if expanded==altered:break
+                altered=expanded
+            missing=sorted(altered-{m['name'] for m in entry['methods']})
+            if missing:gaps.append({'domain':domain,'path':path,'methods':missing,'reason':'method consumer has no owner'})
+            else:
+                owners={m['name']:m for m in entry['methods']}
+                for name in altered:affected.update(owners[name]['cases'])
+    for unit in {e['unit'] for e in contract['files'] if e['kind']=='methods'}:
+        pair={e['domain']:e for e in contract['files'] if e['unit']==unit}
+        flags={domain:before.get(domain+':'+e['path'],{}).get('shared')!=after.get(domain+':'+e['path'],{}).get('shared') for domain,e in pair.items()}
+        if flags.get('source')!=flags.get('export'):
+            gaps.append({'domain':'source/export','path':unit,'reason':'shared-byte changes do not correspond between source and export'})
+    delta['affected_cases']=sorted(affected)
+    delta['unaffected_cases']=sorted(set(contract['cases'])-affected)
+    delta['scope_gaps']=gaps
+    delta['unknown']=list(delta['unknown'])+[g['domain']+':'+g['path']+': '+g['reason'] for g in gaps]
+    return delta
+
+
+def required_cases(contract,old_cases,cases,delta,changed):
+    """Legacy anchor labels do not cause work; only explicit changed inputs do."""
+    required=set(delta['affected_cases'])
+    required.update(c['id'] for c in cases if digest(c)!=digest(old_cases[c['id']]))
+    anchors=set();mapped={(entry['domain'],entry['path']) for entry in contract['files']}
+    for c in cases:
+        dependencies=contract['case_inputs'][c['id']].get('anchor_dependencies',[])
+        if not isinstance(dependencies,list):raise ValueError('anchor dependencies must be an explicit list')
+        for spec in dependencies:
+            if (not isinstance(spec,dict) or spec.get('domain') not in ('source','export')
+                    or (spec.get('domain'),spec.get('path')) not in mapped or not spec.get('basis')):
+                raise ValueError('anchor dependency needs a mapped source/export input and reviewed basis')
+            if spec['path'] in changed.get(spec['domain'],[]):anchors.add(c['id'])
+    required.update(anchors)
+    return required,anchors
+
+
 def validate_baseline(project,record,seen=None):
     """Recompute projected historical bytes against the original snapshot hashes."""
     seen=set() if seen is None else seen
@@ -102,15 +164,10 @@ def validate_baseline(project,record,seen=None):
     old=snapshot(project,parent['version'])
     if old['collector']!=snap['collector']:raise ValueError('unknown producer transition in checkpoint')
     changed={domain:[k for k in set(old[field])|set(snap[field]) if old[field].get(k)!=snap[field].get(k)] for domain,field in [('source','source'),('export','exported')]}
-    delta=affected_cases(contract,parent['views'],views,changed)
+    delta=dependency_impact(contract,parent['views'],views,changed)
     if delta['unknown']:raise ValueError('unknown archived dependency closure')
-    fresh=set(delta['affected_cases']);old_cases={c['id']:c for c in parent['cases']}
-    fresh.update(c['id'] for c in record['cases'] if digest(c)!=digest(old_cases[c['id']]))
-    anchors={}
-    for c in record['cases']:
-        key=(c['width'],c['height'],c['dpr'])
-        if key not in anchors or c.get('anchor'):anchors[key]=c['id']
-    fresh.update(anchors.values())
+    old_cases={c['id']:c for c in parent['cases']}
+    fresh,_=required_cases(contract,old_cases,record['cases'],delta,changed)
     origins=lineage['origins']
     if set(origins)!={c['id'] for c in record['cases']}:raise ValueError('incomplete checkpoint origins')
     for c in record['cases']:
@@ -119,6 +176,8 @@ def validate_baseline(project,record,seen=None):
         if proof['id']!=origin['proof']:raise ValueError('checkpoint origin changed')
         if c['id'] in fresh:
             if proof['version']!=record['version'] or proof['round']!=record['round']:raise ValueError('changed case checkpoint is not fresh')
+        elif proof['version']==record['version'] and proof['round']==record['round']:
+            pass  # Preserve an actual optional historical capture; never schedule it again.
         elif prior_origins is not None:
             if origin!=prior_origins[c['id']]:raise ValueError('checkpoint replaced an inherited origin')
         elif proof['version']!=parent['version'] or proof['round']!=parent['round'] or parent['created_ms']>proof['timeOrigin']:
@@ -176,19 +235,17 @@ def verify(project,build,folder):
         changed={domain:[k for k in set(previous[field])|set(now[field]) if previous[field].get(k)!=now[field].get(k)]
                  for domain,field in [('source','source'),('export','exported')]}
         views=snapshot_views(contract,project,build)
-        delta=affected_cases(contract,baseline['views'],views,changed)
+        delta=dependency_impact(contract,baseline['views'],views,changed)
         if delta['unknown']:raise ValueError('unknown dependency closure: '+'; '.join(delta['unknown']))
         old_cases={c['id']:c for c in baseline['cases']}
-        changed_policy={c['id'] for c in cases if digest(c)!=digest(old_cases[c['id']])}
-        required=set(delta['affected_cases'])|changed_policy
-        # One real current-version anchor for every viewport. No synthetic state
-        # replay or second byte-identical screenshot is required.
-        anchors={}
-        for c in cases:
-            key=(c['width'],c['height'],c['dpr'])
-            if key not in anchors or c.get('anchor'):anchors[key]=c['id']
-        required.update(anchors.values())
-        if set(manifest.get('fresh_cases',[]))!=required:raise ValueError('fresh-case list must equal actual impact plus viewport anchors')
+        required,anchors=required_cases(contract,old_cases,cases,delta,changed)
+        declared=manifest.get('fresh_cases',[])
+        if (not isinstance(declared,list) or len(declared)!=len(set(declared))
+                or not required<=set(declared) or not set(declared)<={c['id'] for c in cases}):
+            raise ValueError('fresh-case list omits actual affected inputs or names unknown cases')
+        # Existing valid manifests may include already captured optional anchors.
+        # Reading those originals is not a request to capture them again.
+        required=set(declared)
         base_folder=Path(manifest['base_dumps'])
         if not base_folder.is_absolute() or not base_folder.is_dir():raise ValueError('missing absolute original capture directory')
         quality=[]
@@ -257,20 +314,19 @@ def transition_plan(project,build,baseline_path,base_dumps):
     if old['collector']!=now['collector']:raise ValueError('unknown collector transition; no equivalence inferred')
     if set(baseline['contract']['cases'])!={c['id'] for c in policy['cases']}:raise ValueError('case inventory change needs a new forward contract')
     changed={d:[k for k in set(old[f])|set(now[f]) if old[f].get(k)!=now[f].get(k)] for d,f in [('source','source'),('export','exported')]}
-    delta=affected_cases(baseline['contract'],baseline['views'],snapshot_views(baseline['contract'],project,build),changed)
+    delta=dependency_impact(baseline['contract'],baseline['views'],snapshot_views(baseline['contract'],project,build),changed)
     if delta['unknown']:
-        return {'read_only':True,'unknown':delta['unknown'],'fresh_cases':[c['id'] for c in policy['cases']],
-                'use_plain_current_capture':True,'manifest':None,'reason':'Unknown closure cannot authorize inheritance. Expand the explicit scope once.'}
-    before={c['id']:c for c in baseline['cases']};fresh=set(delta['affected_cases']);anchors={}
-    for c in policy['cases']:
-        if digest(c)!=digest(before[c['id']]):fresh.add(c['id'])
-        key=(c['width'],c['height'],c['dpr'])
-        if key not in anchors or c.get('anchor'):anchors[key]=c['id']
-    fresh.update(anchors.values())
+        return {'read_only':True,'status':'scope_required','ready':False,
+                'unknown':delta['unknown'],'scope_gaps':delta.get('scope_gaps',[]),
+                'fresh_cases':[],'reuse_cases':[],'anchors':[],
+                'use_plain_current_capture':False,'manifest':None,
+                'reason':'Repair the precise ownership gaps; no full recapture or inherited approval is authorized.'}
+    before={c['id']:c for c in baseline['cases']}
+    fresh,anchors=required_cases(baseline['contract'],before,policy['cases'],delta,changed)
     manifest={'schema':SCHEMA,'project':str(project),'baseline':str(baseline_path),'baseline_sha256':file_sha(baseline_path),
               'base_dumps':str(Path(base_dumps).resolve(strict=True)),'fresh_cases':sorted(fresh),'quality_refs':[]}
     return {'read_only':True,'dependency_diff':changed,'affected_cases':delta['affected_cases'],'shared_expansions':delta['shared_expansions'],
-            'anchors':sorted(anchors.values()),'fresh_cases':sorted(fresh),
+            'anchors':sorted(anchors),'fresh_cases':sorted(fresh),
             'reuse_cases':sorted(set(before)-fresh),'manifest':manifest,'quality_promoted':False}
 
 def main():

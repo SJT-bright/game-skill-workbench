@@ -84,7 +84,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 打包（TikTok 平台包）
 
-`python scripts/make_tiktok_zip.py --native <Native构建> --app-id <App ID> --out <新ZIP> --project <工程> --web <Web构建> --build-tag <版本> --review <review.json> --resource-manifest <当前业务资源清单.json> --startup-contract <当前启动报告.json> --loading-recovery-runtime <当前恢复runtime.json>`（[`cocos-game-check/package`](../../cocos-game-check/package/README.md)，BUILD-04，用户 2026-10-23）：所有叫法（打包、出包、上传测试包、检测包、压缩包）都只出这一种包。先跑门禁，再查形式（外层文件夹、Web 构建、源码、ZIP 套 ZIP、垃圾文件、非 ASCII、测试跳关、App ID）和体积（未压缩主包≤4,000,000、总包≤30,000,000、独立分包各≤4,000,000），不合格不写 ZIP；写完回读、和 Native 逐字节比、独立解压再比，才放到 `--out`，旁边写 `<ZIP名>.report.json`。检查现成的包：`python scripts/verify_native_zip.py <包.zip>`（限额内置，只能更严）。
+`python scripts/make_tiktok_zip.py --native <Native构建> --app-id <App ID> --out <新ZIP> --project <工程> --web <Web构建> --build-tag <版本> --review <review.json> --resource-manifest <当前业务资源清单.json> --startup-contract <当前启动报告.json> --loading-recovery-runtime <当前恢复runtime.json>`（[`cocos-game-check/package`](../../cocos-game-check/package/README.md)，BUILD-04，用户 2026-10-23）：所有叫法（打包、出包、上传测试包、检测包、压缩包）都只出这一种包。只读消费准备和已形成的检查记录，再查形式（外层文件夹、Web 构建、源码、ZIP 套 ZIP、垃圾文件、非 ASCII、测试跳关、App ID）和体积（未压缩主包≤4,000,000、总包≤30,000,000、独立分包各≤4,000,000），不合格不写 ZIP；写完回读、和 Native 逐字节比、独立解压再比，才放到 `--out`，旁边写 `<ZIP名>.report.json`。检查现成的包：`python scripts/verify_native_zip.py <包.zip>`（限额内置，只能更严）。
 
 ## 设计关自检
 

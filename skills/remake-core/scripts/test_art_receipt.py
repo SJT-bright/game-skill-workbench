@@ -204,6 +204,8 @@ class Writers(W.KitInSync):
 
     def test_writer_advances_without_an_art_receipt(self):
         p, b = self.art_project(), self.native()
+        prepared=F.finalize_native(b,p,'remake',APP)
+        self.assertEqual(prepared['blocks'],[],prepared['blocks'])
         with mock.patch.object(R, 'read', side_effect=AssertionError('writers must not read an art receipt')):
             record, _, problems = M.finalize_for_writer(b, p, 'remake', APP)
         self.assertIsNotNone(record, problems)
@@ -213,6 +215,8 @@ class Writers(W.KitInSync):
     def test_english_writer_ignores_even_unreadable_historical_art_receipt(self):
         p, b = self.art_project(), self.native()
         F.finalize_source(p, 'localize')
+        prepared=F.finalize_native(b,p,'localize',APP,options={'prepared_png_only':True})
+        self.assertEqual(prepared['blocks'],[],prepared['blocks'])
         original = b'invalid historical art receipt'
         R.receipt_path(p).write_bytes(original)
         with mock.patch.object(R, 'read', side_effect=AssertionError('writers must not read an art receipt')), \

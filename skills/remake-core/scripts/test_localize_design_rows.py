@@ -104,6 +104,7 @@ class ArtCheckRows(unittest.TestCase):
             return 0, '{"status": "pass", "passed": true, "checks": [], "findings": []}'
         with patch.object(sys, 'argv', ['art_check.py', '--project', str(proj), '--out', str(out)]), \
                 patch.object(art_check, 'run', side_effect=fake), \
+                patch('art_input_check.verify_capture', return_value=None), \
                 patch('audit_no_social_features.audit', return_value={'passed': True}), \
                 contextlib.redirect_stdout(io.StringIO()):
             art_check.main()

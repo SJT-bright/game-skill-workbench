@@ -57,43 +57,40 @@ class FinalStorageTests(unittest.TestCase):
         self.approve();self.report.write_text('{}')
         with self.assertRaisesRegex(ValueError,'storage.native.contract'):audit_final_storage(f.native,self.project,self.startup)
         self.approve();(self.project/'assets/store.js').write_text('// changed dependency/source')
-        with self.assertRaisesRegex(ValueError,'binding stale'):audit_final_storage(f.native,self.project,self.startup)
+        with self.assertRaisesRegex(ValueError,'scope_required|affected dependencies|binding stale'):audit_final_storage(f.native,self.project,self.startup)
 
     def test_light_writer_really_refuses_before_runtime_and_zip(self):
-        spec=importlib.util.spec_from_file_location('light_writer',HERE.parents[1]/'cocos-game-check/package-check/scripts/build_checked_zip.py')
-        if not Path(spec.origin).is_file():
-            spec=importlib.util.spec_from_file_location('light_writer',DEPS.parents[1]/'cocos-game-check/package-check/scripts/build_checked_zip.py')
-        m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
-        import make_tiktok_zip as writer, verify_native_zip as verifier, package_obligations
-        f=self.f;out=f.root/'out.zip';manifest=f.root/'manifest.json';manifest.write_text('{}')
-        (f.native/'project.config.json').write_text('{"appid":"ttfixture"}')
-        # Fresh candidate binding, but deliberately no storage reference.
-        f.binding['native_tree_sha256']=consumer.tree_sha(f.native)
+        import build_checked_zip as alias
+        import make_tiktok_zip as writer
+        import test_single_writer
+        import audit_final_storage as shared_storage
+        fixture = test_single_writer.SingleWriter('test_legacy_build_routes_all_parameters_once')
+        fixture.setUp(); self.addCleanup(fixture.doCleanups)
+        fixture.mock_engine()
+        f = self.f
+        # The alias forwards to the canonical backend. Other gates belong to
+        # their own controls; this case keeps the actual storage gate active.
         self.startup.write_text(json.dumps({'binding':f.binding}))
-        with contextlib.ExitStack() as stack:
-            stack.enter_context(patch.object(writer,'finalize_for_writer',return_value=({'policy':'legacy','board':'localize'},None,[])))
-            stack.enter_context(patch.object(writer,'native_problems',return_value=([],{},{})))
-            stack.enter_context(patch.object(writer,'english_new_image_problems',return_value=[]))
-            stack.enter_context(patch.object(package_obligations,'verify',return_value={}))
-            stack.enter_context(patch.object(m.package_checks,'packed_assets',return_value={'passed':True}))
-            stack.enter_context(patch.object(verifier,'finalize_problem',return_value=None))
-            runtime=stack.enter_context(patch.object(m,'audit_final_startup',side_effect=AssertionError('must refuse first')))
-            archive=stack.enter_context(patch.object(m,'write_archive',side_effect=AssertionError('must not write')))
+        with patch.object(shared_storage, 'audit_final_storage', side_effect=audit_final_storage), \
+                patch.object(writer, 'writer_regressions', side_effect=AssertionError('must refuse before runtime')), \
+                patch.object(writer, 'write_zip', side_effect=AssertionError('must not write')):
             with self.assertRaisesRegex(ValueError,'storage.native.contract'):
-                m.build(f.native,'ttfixture',out,project=self.project,startup_contract=self.startup,resource_manifest=manifest)
-            runtime.assert_not_called();archive.assert_not_called();self.assertFalse(out.exists())
+                alias.build(**dict(fixture.kw, startup_contract=self.startup))
+        self.assertFalse(fixture.out.exists())
 
     def test_main_writer_really_refuses_no_zip(self):
-        from test_writer_regressions import WriterRegressions
-        fixture=WriterRegressions('test_new_game_without_adapter_refused_no_zip');fixture.setUp();self.addCleanup(fixture.doCleanups)
-        # Prior unrelated writer gates are stubbed by the existing orchestration fixture.
-        # The real new storage gate receives its deliberately empty review and must stop publication.
-        import test_writer_regressions as orchestration
-        spec=importlib.util.spec_from_file_location('new_main_writer',HERE/'make_tiktok_zip.py');new_main=importlib.util.module_from_spec(spec);spec.loader.exec_module(new_main)
+        import make_tiktok_zip as writer
+        import test_single_writer
         import audit_final_storage as shared_storage
-        with patch.object(orchestration,'M',new_main):
-            code,err,_=fixture.make('legacy',extra=[patch.object(shared_storage,'audit_final_storage',side_effect=audit_final_storage)])
-        self.assertNotEqual(code,0);self.assertIn('storage.native.contract',err);self.assertFalse(fixture.out.exists())
+        fixture = test_single_writer.SingleWriter('test_legacy_build_routes_all_parameters_once')
+        fixture.setUp(); self.addCleanup(fixture.doCleanups)
+        fixture.mock_engine()
+        self.startup.write_text(json.dumps({'binding':self.f.binding}))
+        with patch.object(shared_storage, 'audit_final_storage', side_effect=audit_final_storage), \
+                patch.object(writer, 'write_zip', side_effect=AssertionError('must not write')):
+            with self.assertRaisesRegex(ValueError,'storage.native.contract'):
+                writer.write_package(**dict(fixture.kw, startup_contract=self.startup))
+        self.assertFalse(fixture.out.exists())
 
     def test_delivery_really_refuses_before_success_record(self):
         spec=importlib.util.spec_from_file_location('delivery',HERE.parents[1]/'cocos-game-check/package-check/scripts/prepare_delivery.py')

@@ -143,6 +143,15 @@ def validate_runtime_report(report, binding, *, detail=None, replay_runner=None)
     import audit_native_startup_renderer as renderer
     import native_startup_ledger
     try:
+        # A registered immutable scope may cover the current bytes while the
+        # original contract/proof keep their original complete build binding.
+        from startup_scoped_evidence import consume
+        contract_file = report.get('_contract_file')
+        if contract_file:
+            scoped = consume(report['project'], report['native'], contract_file, current_binding=binding)
+            if scoped is not None:
+                if detail is not None: detail.update(scoped)
+                return []
         if report.get('policy_version') != 2 or report.get('runtime_required') is not True:
             return ['Final startup report requires real Native renderer policy v2']
         ref = report['startup_renderer_report']; path = Path(ref['path'])
@@ -171,6 +180,7 @@ def main():
     ap.add_argument('--out', type=Path)
     ap.add_argument('--renderer-report', type=Path, help='actual real-Native renderer report, required for final Native startup checks')
     ap.add_argument('--runtime-only', action='store_true', help='finished-product startup maintenance: require and replay actual Native runtime; upload writer separately enforces file/size rules')
+    ap.add_argument('--scope-web', type=Path, help='actual same-version Web root; freezes registered startup dependency scope after a passing original observation')
     a = ap.parse_args()
     if a.runtime_only:
         try:
@@ -190,7 +200,11 @@ def main():
             if a.out:
                 a.out.parent.mkdir(parents=True,exist_ok=True)
                 with a.out.open('x',encoding='utf-8') as f:json.dump(report,f,ensure_ascii=False,indent=2)
-            print(json.dumps({'passed':not errors,'errors':errors},ensure_ascii=False))
+                if not errors and a.scope_web:
+                    from startup_scoped_evidence import auto_approve
+                    report['scope_registration'] = auto_approve(a.project, a.native, a.out, a.scope_web)
+            print(json.dumps({'passed':not errors,'errors':errors,
+                              'scope_registration':report.get('scope_registration')},ensure_ascii=False))
             return int(bool(errors))
         except (KeyError,TypeError,ValueError,OSError) as error:
             print(json.dumps({'status':'refuse','error':str(error)},ensure_ascii=False));return 1
@@ -258,7 +272,11 @@ def main():
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        if not problems and runtime_required and a.scope_web:
+            from startup_scoped_evidence import auto_approve
+            report['scope_registration'] = auto_approve(a.project, a.native, a.out, a.scope_web)
     print(json.dumps({'failed': len(problems), 'problems': problems[:10],
+                      'scope_registration': report.get('scope_registration'),
                       'startup_mb': round(sizes['startup_bytes'] / 1048576, 2) if sizes else None}, ensure_ascii=False))
     return 1 if problems else 0
 

@@ -6,15 +6,15 @@
 
 ## 先看这里（测试线省 token 的读法）
 
-0. 先跑 `scripts/preflight.py`（一键预检），读 `preflight.md`；它查出的问题修完再进入下面的逐项测试。
+0. 先读已有 `preflight.md` 和逐项账本；缺项或真实受影响的预检只在原节点执行一次，修完继续，不因写包重开整套预检。
 1. 用 `check_known_issues.py init` 生成本游戏清单后，**先只读生成的清单**：每行有"常见症状"（以前真实出过的问题长什么样）和"自动检查"列。按症状去找问题，比读长规则更快更准。某一行看不懂时，再读本页或对应专题页的相关小节。
-2. **"自动检查"列有脚本的行，必须跑脚本**：脚本加 `--binding <review.json> --out <报告.json>`，把报告写进该行的 `auto_reports`（`[{"path": "...", "sha256": "..."}]`）。门禁会核对报告是本版本、本工具、全部通过、未被改动；缺报告或不通过就拒绝打包。目前有：
+2. **"自动检查"列读取相应节点的真实结果；首次未执行或实际失效时才回该节点执行**：脚本加 `--binding <review.json> --out <报告.json>`，把报告写进该行的 `auto_reports`（`[{"path": "...", "sha256": "..."}]`）。门禁会核对报告是本版本、本工具、全部通过、未被改动；缺报告或不通过就拒绝打包。目前有：
    - `ART-02`、`ART-03`：`scripts/audit_dark_area.py <每个页面和弹窗的截图>`（只查负向：大块深色、整屏纯色、边缘纯色/纯黑底、大白板；不设亮度下限）
    - `AUDIO-02`：`scripts/audit_audio_sources.py --project <工程>`（每个音频都有合格来源记录）
    - 动态画面问题在试玩时按[人工试玩画面清单](manual-visual-review.md)观察。
    - `ECON-01`：`scripts/audit_acquisition_progression.py --table <unlock_table.json>`；`NOSKIP-01`：`scripts/audit_no_ad_skip.py --project <工程>`
    - `STORAGE-01`：`scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json> --out <本次报告.json>`；按[回执v3](storage-upgrade-trace-v3.md)核新玩家、旧值读不出来照样能玩（上线过且写过原始值的游戏另核旧值取回）、真实触控可玩及原始证据。原有效项按增量账本沿用，只补适用缺项；首次审计核准回放，三个写包/交付入口共用 `audit_final_storage.py` 消费当前核准回执，合同用 `native_storage_report: {path, sha256}` 引用，或复用既有STORAGE-01 auto_reports。缺覆盖、已知反例未复现、最终Native/运行器/原始证据失配时拒绝，设备和真实IAA另列。
-3. 修完问题、改代码或换图后，核实际证据绑定和受影响范围；只补失效检查及相关回归。现有工具使用全树绑定时按其要求真实重跑，不把旧报告换哈希当新证据；也不在同版有效时固定重开全部人工操作。
+3. 修完问题、改代码或换图后，核实际证据绑定和受影响范围；只补失效检查及相关回归。现有工具仍有整树绑定时，先定位具体证据及依赖 ownership，沿用可核准的旧项；未知范围只回这一节点补依据或定点验证，不把旧报告换哈希当新证据，也不重开全部人工操作。
 4. **每条检查写自己看到的内容**：同一段话复制到多条检查，或一条检查的几个观察字段写成一样，门禁会直接拒绝。
 
 
@@ -147,9 +147,9 @@ inventory输入是实际入口数组，例如：
 
 `review`使用schema 3，保存源/Native/Web指纹、build tag、catalog摘要、全部编号、入口矩阵及证据路径/哈希。证据行使用真实`layer`与`observed`；不适用需`reason`与当前绑定的依据；入口已声明的视频或持久奖励不能把相关AD/CLAIM/STATE总项免验。`completed`的`postconditions`填写奖励、模型及按钮结果；取消/失败填写零奖励与恢复；重开/刷新/迟到回调填写不额外奖励/请求。
 
-### 换其他 AI 测试时的 GPT 抽查（gpt_spot_check）
+### 更换 AI 时沿用有效证据
 
-检查表顶层 `test_executor` 写着其他 AI（不是 gpt/codex）时，门禁要求顶层 `gpt_spot_check`：`reviewer` 为 `gpt`；`locked_commit` 写锁定时的提交号、`code_changes_reviewed` 为 true（Codex 读过测试阶段的 AI 从锁定到现在改过的全部代码：`git diff <锁定提交>..HEAD`）；`rerun_auto_checks` 为 true（GPT 自己重跑了全部自动检查脚本）；`flows` 至少 3 条 GPT 亲自重做的流程，每条有 `check_id`、自己的 `observed` 和当前版本证据；有看广告入口时必须含一条 AD-*/CLAIM-*，有平台任务时必须含 GROW-01/ASYNC-01/LIFE-02 之一；`disagreements` 必须为空（发现对不上就把那一类全部重测后再清空）。这样便宜模型漏测或乱填"通过"时，GPT 在抽查里就能发现，包出不来。
+执行者名称只记录来源，不要求 GPT 重跑全部自动检查或再走三条固定流程。按[统一写包路线](single-writer.md)核原 key、输入、条件和原始证据；发现不一致只定位对应检查 ID。旧 `gpt_spot_check` 可以保留历史观察，未完成的分歧必须解决，但不扩大成整类复测。
 
 ### 改坏版本的失败记录（negative_control）
 
@@ -198,17 +198,9 @@ python3 /path/to/skill/scripts/make_tiktok_zip.py --native <Native构建> --app-
 
 它先跑 `pre_scan` 门禁，再查形式和体积（外层文件夹、Web 构建、源码、ZIP 套 ZIP、Mac/Windows 垃圾、非 ASCII 路径、测试跳关、App ID、主包≤4,000,000、总包≤30,000,000、独立分包各≤4,000,000），不合格**不写 ZIP**；写完回读核对、独立解压再比，才放到 `--out`。报告 `<ZIP名>.report.json`（tool `make_tiktok_zip`，带 review 的 binding）放进 BUILD-04 的 `auto_reports`（`--stage post_package` 检查）。观察：`made_by_make_tiktok_zip`、`big_resources_in_normal_subpackage`（resources 等大 bundle 在 `subpackages/`，启动时带进度加载、有 Retry）、`main_total_independent_within_limits`、`root_entry_no_outer_folder`、`no_web_source_nested_zip_or_junk`。形式和改法见[包的形式](../../cocos-game-check/package/references/package-forms.md)。
 
-### 打包脚本必须真的拒绝（BUILD-03）
+### 统一写包工具拒绝契约（BUILD-03）
 
-本游戏的打包脚本在生成 ZIP 前自己运行 `check_known_issues.py check --stage pre_scan`，非零就停止、不留 ZIP。出包时用下面的命令实际跑一遍打包脚本，证明缺检查表、有失败项、指纹过期、缺当前适用冷升级覆盖或 `STORAGE-01` Native核准报告时都出不了包，正常时能出包：
-
-```sh
-python3 /path/to/skill/scripts/test_writer_refusal.py \
-  --review /path/to/project/known-issue-review.json --zip-dir /path/to/zip-output \
-  --out /path/to/evidence/writer-refusal.json -- <本游戏的打包命令>
-```
-
-报告放进 BUILD-03 的 `auto_reports`（`--stage post_package` 检查）。只证明共用门禁会拒绝不算数，必须是本游戏实际的打包脚本。用 `make_tiktok_zip.py` 出包时，它就是打包脚本：`-- python3 make_tiktok_zip.py ... --out <单独的检查用 ZIP>`（已有的 ZIP 不覆盖；跑完删掉检查用的 ZIP）。
+BUILD-03 属于 Skill 工具发版验证，由 `test_single_writer.py` 等定点控制证明两个旧命令进入同一后端、缺实质证据拒绝、Native 不被修改、缺项不启动浏览器。每款游戏只消费该工具和实际生产证据，不再为了填表额外五次运行真实 writer。实际游戏的 ZIP 字节与最终交付核对仍逐次保留，详见[唯一写包入口](single-writer.md)。
 
 每条证据标`role`：`current_result`是本轮现场运行的JSON结果包装，要求`schema=known_issue_current_result.v1`、完整`binding`等于本轮、`status=pass`、整数`failed=0`；`execution`必须含命令数组`command`、整数`exit_code=0`、`tool`与`raw_report`的`path/sha256`；路径相对包装所在目录或为绝对路径。脚本核原报告的明确通过状态与无失败案例；无可识别结果保留待审，不拿手写包装代替执行。`current_artifact`用于本轮原截图、实际资源或绑定盘点，证据引用也带本轮`binding`，主线审阅原件。历史说明为`historical_reference`，预期失败的旧版报告为`negative_control`；后二者不能单独支撑当前pass。哈希能发现文件变化，不能证明从未被盘点的入口不存在、截图真实或人工声明准确。
 

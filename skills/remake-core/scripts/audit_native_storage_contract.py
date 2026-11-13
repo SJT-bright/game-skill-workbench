@@ -174,6 +174,92 @@ def decoded_encoded(value, encoding):
     raise ValueError('saved value does not match current encoding')
 
 
+def _json_preserves_existing(before, after):
+    """Allow object default-field additions; every existing leaf/array stays exact."""
+    if isinstance(before, dict):
+        return (isinstance(after, dict) and set(before).issubset(after) and
+                all(_json_preserves_existing(value, after[key]) for key, value in before.items()))
+    return canonical_sha(before) == canonical_sha(after)
+
+
+JSON_RETRY_POLICY = 'preserve_json_unreadable_retry.v1'
+JSON_RETRY_OUTCOME = 'preserved_with_retry_then_resumed'
+
+
+def json_retry_upgrade_errors(result, fields, negative=False):
+    """An unreadable JSON envelope remains untouched, then a real Retry resumes original data."""
+    from startup_business_contract import validate_business
+    from maintenance_scope import checked_ref
+    errors = []
+    observations = result.get('upgrade_observations', {})
+    row = observations.get('legacy_unreadable_preserved', {}) if isinstance(observations, dict) else {}
+    if not isinstance(row, dict): return ['JSON retry: raw observation required']
+    key = row.get('key'); before = row.get('storage_before'); sync = row.get('sync_read', {})
+    if (not isinstance(key, str) or fields.get(key, {}).get('encoding') != 'json_object' or
+            not isinstance(before, dict) or key not in before or
+            not valid_encoded(before.get(key), ['json_object']) or row.get('fixture_installed_before_entry') is not True):
+        return ['JSON retry: schema-valid original fixture before entry required']
+    fault_read = (isinstance(sync, dict) and
+                  (sync.get('type') == 'boolean' and type(sync.get('value')) is bool or
+                   sync.get('type') == 'exception' and isinstance(sync.get('error'), str) and bool(sync['error'])))
+    if not fault_read: errors.append('JSON retry: actual Boolean or thrown SDK read required')
+    if negative:
+        after = row.get('storage_after_fault', row.get('storage_after'))
+        writes = row.get('writes_fault', [])
+        changed = isinstance(after, dict) and after.get(key) != before[key]
+        if (row.get('failure_kind') != 'unreadable_original_overwritten' or
+                result.get('cases', {}).get('legacy_unreadable_preserved') != 'fail' or not changed or
+                not isinstance(writes, list) or not any(isinstance(w, dict) and w.get('key') == key and
+                                                       w.get('value') != before[key] for w in writes)):
+            errors.append('JSON retry negative: same unreadable original must actually be overwritten by controlled defect')
+        return errors
+    if row.get('outcome') != JSON_RETRY_OUTCOME:
+        errors.append('JSON retry: preserve-visible-Retry-resume outcome required')
+    if (row.get('storage_after_fault') != before or row.get('writes_fault') != [] or
+            row.get('removed_keys_fault') != [] or row.get('runtime_initialized_fault') is not False or
+            row.get('unsafe_grant_or_spend') is not False or row.get('first_exception')):
+        errors.append('JSON retry: fault must preserve every key with no writes, no runtime, no unsafe transaction or unhandled exception')
+    recovery = row.get('recovery', {}); action = row.get('recovery_action', {})
+    if (not isinstance(recovery, dict) or recovery.get('visible') is not True or
+            recovery.get('retry_visible') is not True or recovery.get('retry_interactable') is not True or
+            not isinstance(recovery.get('node_path'), str) or not recovery['node_path']):
+        errors.append('JSON retry: actual visible interactable LoadingRecovery Retry required')
+    if (not isinstance(action, dict) or action.get('transport') != 'ego_page_cdp' or
+            not isinstance(action.get('event'), dict) or action['event'].get('isTrusted') is not True):
+        errors.append('JSON retry: real trusted Retry input required')
+    business = row.get('business', {})
+    home = business.get('home', {}) if isinstance(business, dict) else {}
+    moments = [row.get('fault_observed_at_ms'), recovery.get('at_ms') if isinstance(recovery, dict) else None,
+               row.get('sdk_restored_at_ms'), action.get('at_ms') if isinstance(action, dict) else None,
+               home.get('at_ms') if isinstance(home, dict) else None]
+    if (any(type(t) not in (int, float) or not math.isfinite(t) or t < 0 for t in moments) or
+            not moments[0] <= moments[1] < moments[2] <= moments[3] < moments[4]):
+        errors.append('JSON retry: fault -> visible Retry -> SDK recovery -> trusted Retry -> HOME timing required')
+    after = row.get('storage_after_retry'); loaded = row.get('restored_data')
+    try:
+        original = decoded_encoded(before[key], 'json_object')
+        restored = decoded_encoded(after[key], 'json_object') if isinstance(after, dict) and key in after else None
+        if (not isinstance(after, dict) or not _json_preserves_existing(original, restored) or
+                not isinstance(loaded, dict) or not _json_preserves_existing(original, loaded) or
+                any(k not in after or canonical_sha(after[k]) != canonical_sha(v) for k, v in before.items() if k != key)):
+            errors.append('JSON retry: original data and every unrelated key must survive actual Retry and reach production consumer')
+    except (ValueError, TypeError, KeyError):
+        errors.append('JSON retry: actual restored JSON snapshots invalid')
+    evidence = row.get('raw_evidence')
+    if not isinstance(evidence, list) or not evidence:
+        errors.append('JSON retry: original captured evidence refs required')
+    else:
+        for ref in evidence:
+            try: checked_ref(ref, Path(result.get('trace_base', '.')))
+            except (ValueError, OSError, TypeError, KeyError): errors.append('JSON retry: captured evidence missing or changed')
+    errors.extend('JSON retry restored ' + e for e in validate_business(row))
+    play = observations.get('legacy_upgrade_touch_play', {})
+    if (not isinstance(play, dict) or play.get('fixture_case') != 'legacy_unreadable_preserved' or
+            play.get('business') != row.get('business')):
+        errors.append('JSON retry: upgrade touch-play must be the same recovered fixture run')
+    return errors
+
+
 def non_numeric_upgrade_errors(result, fields, negative=False, new_approval=False):
     errors = []
     observations = result.get('upgrade_observations', {})
@@ -207,7 +293,10 @@ def non_numeric_upgrade_errors(result, fields, negative=False, new_approval=Fals
     try:
         before_value = decoded_encoded(before.get(key), fields.get(key, {}).get('encoding'))
         after_value = decoded_encoded(after.get(key), fields.get(key, {}).get('encoding'))
-        if (canonical_sha(before_value) != canonical_sha(after_value) or
+        preserved = (_json_preserves_existing(before_value, after_value)
+                     if fields.get(key, {}).get('encoding') == 'json_object'
+                     else canonical_sha(before_value) == canonical_sha(after_value))
+        if (not preserved or
                 canonical_sha({k:v for k,v in before.items() if k != key}) != canonical_sha({k:v for k,v in after.items() if k != key})):
             errors.append('non-numeric legacy fixture data changed')
     except (ValueError, TypeError, KeyError):
@@ -238,7 +327,7 @@ def non_numeric_upgrade_errors(result, fields, negative=False, new_approval=Fals
     return errors
 
 
-def upgrade_errors(result, *, negative=False, json_only=False, fields=None, typed=True, new_approval=False):
+def upgrade_errors(result, *, negative=False, json_only=False, fields=None, typed=True, new_approval=False, policy=None):
     """Check raw semantics; pass labels alone cannot establish preservation.
 
     typed=False (raw_history() is False): the two typed-recovery rows are not applicable; only the
@@ -252,6 +341,9 @@ def upgrade_errors(result, *, negative=False, json_only=False, fields=None, type
     observations = result.get('upgrade_observations', {})
     if not isinstance(observations, dict):
         return ['upgrade raw observations missing']
+    if policy == JSON_RETRY_POLICY:
+        if not json_only: return ['JSON retry policy requires current schema-backed JSON-only domain']
+        return json_retry_upgrade_errors(result, fields or {}, negative)
     if json_only:
         return non_numeric_upgrade_errors(result, fields or {}, negative, new_approval)
     stopped = observations.get('legacy_unreadable_preserved')
@@ -360,11 +452,11 @@ def inside(root, path):
     return path.is_file() and path.is_relative_to(root)
 
 
-def validate(trace, native, expected_binding, new_approval=False):
+def validate(trace, native, expected_binding, new_approval=False, *, _scope=None):
     """new_approval=True (approve_runtime only): evidence of the earlier blocking-recovery policy is refused."""
     if isinstance(trace, dict) and trace.get('numeric_snapshot_encoding'):
         from numeric_snapshot_contract import validate as validate_numeric_snapshot
-        return validate_numeric_snapshot(trace, native, expected_binding)
+        return validate_numeric_snapshot(trace, native, expected_binding, **({'_scope': _scope} if _scope else {}))
     errors = []
     if not isinstance(trace, dict): return ['storage trace must be an object']
     if not isinstance(expected_binding, dict): return ['current binding must be an object']
@@ -394,9 +486,9 @@ def validate(trace, native, expected_binding, new_approval=False):
         try:
             from maintenance_scope import source_inventory
             from check_known_issues import tree_sha
-            if tree_sha(native) != expected_binding.get('native_tree_sha256'):
+            if (_scope.native_identity(native, expected_binding) if _scope else tree_sha(native)) != expected_binding.get('native_tree_sha256'):
                 raise ValueError('final Native tree differs from binding')
-            routes = source_inventory(trace.get('route_inventory'), Path(trace.get('trace_base', '.')), trace.get('project', ''), expected_binding)['routes']
+            routes = source_inventory(trace.get('route_inventory'), Path(trace.get('trace_base', '.')), trace.get('project', ''), expected_binding, **({'source_snapshot': _scope.source_snapshot} if _scope else {}))['routes']
         except (ValueError, OSError, TypeError, KeyError) as exc:
             errors.append('verified existing routes: '+str(exc))
     json_only, scope_errors = json_only_scope(trace, expected_binding, native)
@@ -451,9 +543,9 @@ def validate(trace, native, expected_binding, new_approval=False):
                 if cases.get(name) != expected:
                     errors.append('current case missing or failed: ' + name + ' (requires '+expected+')')
             if trace.get('schema') == 'native_storage_trace.v3':
-                errors.extend(upgrade_errors(result, json_only=json_only, fields=fields, typed=typed, new_approval=new_approval))
+                errors.extend(upgrade_errors(result, json_only=json_only, fields=fields, typed=typed, new_approval=new_approval, policy=trace.get('storage_policy')))
         elif label == 'upgrade_negative':
-            errors.extend(upgrade_errors(result, negative=True, json_only=json_only, fields=fields, typed=typed, new_approval=new_approval))
+            errors.extend(upgrade_errors(result, negative=True, json_only=json_only, fields=fields, typed=typed, new_approval=new_approval, policy=trace.get('storage_policy')))
             current_raw = loaded_results.get('current', {})
             if not current_raw:
                 errors.append('upgrade negative cannot be compared without valid current raw evidence')
@@ -468,7 +560,7 @@ def validate(trace, native, expected_binding, new_approval=False):
                                      if json_only else current_name)
                     stopped_row = negative_observations.get('legacy_unreadable_preserved')
                     stopped_kind = isinstance(stopped_row, dict) and stopped_row.get('failure_kind') == STOPPED_START
-                    if stopped_kind:      # the fallback proof and its negative use the same unreadable fixture
+                    if stopped_kind or isinstance(stopped_row, dict) and stopped_row.get('failure_kind') == 'unreadable_original_overwritten':      # the fallback proof and its negative use the same unreadable fixture
                         current_name = negative_name = 'legacy_unreadable_preserved'
                     current_row = observations.get(current_name, {}); negative_row = negative_observations.get(negative_name, {})
                     if (not isinstance(current_row, dict) or not isinstance(negative_row, dict) or
@@ -637,8 +729,10 @@ def unchanged_text_codec_receipt(report, trace, expected):
 # 2026-11-12 (fallback start): against these texts the current one only adds accepted evidence for new approvals;
 # validate() still applies every earlier obligation to the unchanged raw data of an earlier receipt.
 REVIEWED_PREDECESSORS = {
+    'numeric_snapshot_contract.py': ('bc89284895eafd0dd61b84cb68bdce8f4ee40307081601ed30afc31c14870d74',),
+    'maintenance_scope.py': ('61b612615382eb079994df5013b0dbf90e7064314f1f7cee68ee07cede373017',),
     'audit_native_storage_contract.py': ('35002eea8cdd657b4eb87a523ebf4ef2118a6205c90ed41501c7a666f11e439f',
-                                         '4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc'),
+                                         '4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc', '80bc479c1f6d9c93c2ae862ea34924affe99b680b729467b0321ecd1b1659ddb'),
     'startup_storage_consumers.py': ('ab3159de99f437ff14d17e6cfd34b9d39d66c48e92c7b450e2d0d5894828edc2',),
 }
 
@@ -661,6 +755,34 @@ def reviewed_predecessor_receipt(report, trace, expected):
             {k:v for k,v in expected.items() if k != 'contract_files'})
 
 
+def _valid_execution_mode(report, trace, receipt):
+    labels = ['current', 'negative_control', 'upgrade_negative_control']
+    if receipt.get('mode') == 'produced-once':
+        if receipt.get('executed_once') != labels or 'replayed' in receipt:
+            return False
+        execution = report.get('production_execution', {})
+        if not isinstance(execution, dict) or execution.get('mode') != 'execute-once-then-validate':
+            return False
+        runs = execution.get('runs')
+        if not isinstance(runs, list) or len(runs) != len(labels):
+            return False
+        for label, run in zip(labels, runs):
+            if not isinstance(run, dict) or set(run) != {'label', 'command', 'returncode', 'raw_sha256', 'stderr_sha256'}:
+                return False
+            record = trace[label]
+            command = [part.replace('{bundle}', record['bundle']).replace('{adapter}', record['adapter'])
+                       for part in trace['execution']['command']]
+            if (run['label'] != label or type(run['returncode']) is not int or run['returncode'] != 0 or
+                    run['command'] != command or run['raw_sha256'] != record.get('raw_sha256') or
+                    run['raw_sha256'] != digest(record['raw_report']) or
+                    not isinstance(run['stderr_sha256'], str) or len(run['stderr_sha256']) != 64 or
+                    any(c not in '0123456789abcdef' for c in run['stderr_sha256'])):
+                return False
+        return True
+    return ('mode' not in receipt and 'executed_once' not in receipt and
+            receipt.get('replayed') == labels)
+
+
 def validate_execution_receipt(report, trace):
     """Read-only rejudgment: valid evidence is not re-executed at each writer."""
     receipt = report.get('execution_receipt', {})
@@ -668,7 +790,7 @@ def validate_execution_receipt(report, trace):
         if (not isinstance(receipt, dict) or receipt.get('schema') != 'native_storage_execution_receipt.v1' or
                 not isinstance(receipt.get('run_id'), str) or not receipt['run_id'] or
                 not isinstance(receipt.get('verified_at'), str) or not receipt['verified_at'] or
-                receipt.get('replayed') != ['current', 'negative_control', 'upgrade_negative_control'] or
+                not _valid_execution_mode(report, trace, receipt) or
                 (receipt.get('identity') != receipt_identity(trace) and not unchanged_nonconsumer_receipt(report, trace, receipt_identity(trace)) and not unchanged_text_codec_receipt(report, trace, receipt_identity(trace)) and
                  not reviewed_predecessor_receipt(report, trace, receipt_identity(trace)))):
             return ['missing, stale or mismatched storage execution receipt']
@@ -677,15 +799,15 @@ def validate_execution_receipt(report, trace):
     return []
 
 
-def approve_runtime(trace, native, binding):
+def _approve_runtime(trace, native, binding, *, replay_required=True, production_errors=()):
     """Validate and execute once; consumers later rejudge the unchanged receipt.
 
     Project runners retain existing incremental plan/ledger semantics. Replaying
     orchestration does not license rerunning unrelated cases or changing data.
     """
-    errors = validate(trace, native, binding, new_approval=True)
-    if not errors: errors.extend(replay(trace))
-    report = {'tool': 'audit_native_storage_contract', 'binding': binding, 'storage_policy': STORAGE_POLICY,
+    errors = list(production_errors) + validate(trace, native, binding, new_approval=True)
+    if not errors and replay_required: errors.extend(replay(trace))
+    report = {'tool': 'audit_native_storage_contract', 'binding': binding, 'storage_policy': (JSON_RETRY_POLICY if trace.get('storage_policy') == JSON_RETRY_POLICY else STORAGE_POLICY),
               'checked': len(CASES) + 2, 'failed': len(errors), 'passed': not errors,
               'policy_version': POLICY_VERSION, 'status': ('needs_upgrade' if trace.get('schema') != 'native_storage_trace.v3' else 'passed' if not errors else 'failed'),
               'required_cases': list(CASES), 'native': str(Path(native).resolve()),
@@ -707,6 +829,88 @@ def approve_runtime(trace, native, binding):
         report['excluded_routes'] = [name for name in ('map', 'stage_details') if observed.get('reopen_' + name) == 'not_applicable']
     except (KeyError, OSError, ValueError, AttributeError, TypeError):
         report['checked_routes'], report['excluded_routes'] = [], []
+    if not errors and trace.get('project'):
+        from storage_scoped_reuse import seal_approval
+        try:
+            report['storage_scope'] = seal_approval(report, trace, native, trace['project'])
+        except (ValueError, OSError, KeyError, TypeError) as exc:
+            report['storage_scope_status'] = {'status': 'scope_required', 'node': 'storage.native.contract', 'reason': str(exc)}
+    return report
+
+
+def approve_runtime(trace, native, binding):
+    """Compatibility entry: existing raw evidence is replayed once as before."""
+    return _approve_runtime(trace, native, binding)
+
+
+def produce_runtime_once(trace, native, binding, produced_trace):
+    """Execute three fixed recorded commands once, seal raw bytes, then validate.
+
+    Caller supplied case/pass labels are never used as execution evidence. Raw
+    targets and produced_trace must be new files. Consumers retain the ordinary
+    immutable execution receipt checks; the historical replay API is unchanged.
+    """
+    import copy
+    trace = copy.deepcopy(trace)
+    errors = []
+    produced_trace = Path(produced_trace).resolve()
+    if produced_trace.exists():
+        raise ValueError('produced trace already exists; consume its approval instead of rerunning')
+    if trace.get('schema') != 'native_storage_trace.v3' or trace.get('binding') != binding:
+        raise ValueError('producer requires current v3 trace binding')
+    execution_identity(trace)  # verifies exact runner and explicit dependencies before execution
+    command = trace['execution']['command']
+    runner = Path(trace['execution']['runner']).resolve()
+    if (not isinstance(command, list) or not all(isinstance(x, str) for x in command) or
+            str(Path(trace['execution']['runner'])) not in command or '{bundle}' not in command or '{adapter}' not in command):
+        raise ValueError('fixed production runner command with bundle/adapter slots required')
+    labels = ('current', 'negative_control', 'upgrade_negative_control')
+    paths = set()
+    before_identity = execution_identity(trace)
+    for label in labels:
+        row = trace.get(label, {})
+        bundle, adapter, raw = (Path(row.get(k, '')).resolve() for k in ('bundle', 'adapter', 'raw_report'))
+        if (not bundle.is_file() or not adapter.is_file() or raw.exists() or raw in paths or
+                raw == produced_trace or raw in (bundle, adapter, runner) or raw.is_relative_to(Path(native).resolve())):
+            raise ValueError('new distinct raw outputs outside Native and actual input files required: ' + label)
+        if label == 'current' and (not inside(native, bundle) or not inside(native, adapter)):
+            raise ValueError('current producer inputs must be in final Native tree')
+        if digest(bundle) != row.get('bundle_sha256') or digest(adapter) != row.get('adapter_sha256'):
+            raise ValueError('production input bytes changed before execution: ' + label)
+        paths.add(raw)
+    records = []
+    for label in labels:
+        row = trace[label]
+        raw = Path(row['raw_report']).resolve()
+        actual = [x.replace('{bundle}', row['bundle']).replace('{adapter}', row['adapter']) for x in command]
+        try:
+            proc = subprocess.run(actual, capture_output=True, text=True, timeout=120, check=False)
+            # Persist exact actual stdout, never the caller's asserted JSON. Invalid output remains diagnostic evidence.
+            raw.parent.mkdir(parents=True, exist_ok=True)
+            with raw.open('x', encoding='utf-8') as stream: stream.write(proc.stdout)
+            row['raw_sha256'] = digest(raw)
+            records.append({'label': label, 'command': actual, 'returncode': proc.returncode,
+                            'raw_sha256': row['raw_sha256'], 'stderr_sha256': hashlib.sha256(proc.stderr.encode()).hexdigest()})
+            result = json.loads(proc.stdout)
+            if not isinstance(result, dict) or proc.returncode != 0:
+                errors.append(label + ' actual producer failed')
+        except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+            errors.append(label + ' actual producer failed: ' + type(exc).__name__)
+        if digest(Path(row['bundle'])) != row['bundle_sha256'] or digest(Path(row['adapter'])) != row['adapter_sha256']:
+            errors.append(label + ' production input bytes changed during execution')
+    if execution_identity(trace) != before_identity:
+        errors.append('runner or dependency bytes changed during production')
+    # New trace is part of the raw-evidence closure; no old trace is overwritten.
+    produced_trace.parent.mkdir(parents=True, exist_ok=True)
+    with produced_trace.open('x', encoding='utf-8') as stream:
+        json.dump(trace, stream, ensure_ascii=False, indent=2); stream.write('\n')
+    report = _approve_runtime(trace, native, binding, replay_required=False, production_errors=errors)
+    report.update(trace=str(produced_trace), trace_sha256=digest(produced_trace),
+                  production_execution={'mode': 'execute-once-then-validate', 'runs': records})
+    if report.get('passed') is True and 'execution_receipt' in report:
+        receipt = report['execution_receipt']
+        receipt.pop('replayed', None)
+        receipt.update(mode='produced-once', executed_once=list(labels))
     return report
 
 
@@ -716,11 +920,17 @@ def main():
     parser.add_argument('--native', required=True, type=Path)
     parser.add_argument('--binding', required=True, type=Path, help='current known-issue review JSON')
     parser.add_argument('--out', required=True, type=Path)
+    parser.add_argument('--produce-once', action='store_true', help='execute each fixed runner once before full approval validation')
+    parser.add_argument('--produced-trace', type=Path, help='new trace output required with --produce-once')
     args = parser.parse_args()
     trace = read(args.trace)
     binding = read(args.binding).get('binding')
-    report = approve_runtime(trace, args.native, binding)
-    report.update(trace=str(args.trace.resolve()), trace_sha256=digest(args.trace))
+    if args.produce_once:
+        if args.produced_trace is None: parser.error('--produce-once requires --produced-trace')
+        report = produce_runtime_once(trace, args.native, binding, args.produced_trace)
+    else:
+        report = approve_runtime(trace, args.native, binding)
+        report.update(trace=str(args.trace.resolve()), trace_sha256=digest(args.trace))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'passed': report['passed'], 'failed': report['failed'], 'out': str(args.out)}))

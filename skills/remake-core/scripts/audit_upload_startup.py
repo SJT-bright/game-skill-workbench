@@ -3,12 +3,92 @@
 import json
 import collections
 import copy
+from contextlib import contextmanager
+from contextvars import ContextVar
 import hashlib
+import os
 import posixpath
 import re
 from pathlib import Path
 import shutil
 import subprocess
+import sys
+import time
+
+
+_AUDIT_INVOCATION = ContextVar('upload_startup_audit_invocation', default=None)
+
+
+@contextmanager
+def audit_invocation():
+    """Reuse exact successful startup audits only inside this explicit invocation.
+
+    A canonical writer checks Native and freshly rereads its ZIP. Both payloads
+    must have exactly the same bytes before their startup result can be shared.
+    Exiting the context drops every verdict; independent calls never inherit it.
+    """
+    cache = {}
+    token = _AUDIT_INVOCATION.set(cache)
+    try:
+        yield
+    finally:
+        cache.clear()
+        _AUDIT_INVOCATION.reset(token)
+
+
+def _memo_file(path):
+    path = Path(path)
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('unknown/linked startup audit dependency: ' + str(path))
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _audit_memo_identity(files):
+    """Conservatively bind package bytes, all local helpers and process inputs.
+
+    NODE_OPTIONS / NODE_PATH can import arbitrary code outside our helper tree.
+    They keep the normal audit path and can never inherit a memoized verdict.
+    """
+    if type(files) is not dict or any(type(name) is not str or type(data) is not bytes
+                                      for name, data in files.items()):
+        raise ValueError('startup audit memo requires a concrete path-to-bytes map')
+    if os.environ.get('NODE_OPTIONS') or os.environ.get('NODE_PATH'):
+        raise ValueError('startup audit has unbound external Node dependencies')
+    node = shutil.which('node')
+    if not node:
+        raise ValueError('startup audit memo needs an identified Node executable')
+    here = Path(__file__).resolve().parent
+    tools = {}
+    # The audit owns dynamically imported Python gates and CJS helpers. Taking
+    # their complete local tree also detects a newly added helper; a suffix-only
+    # approximation could silently omit a new dependency or fixture format.
+    for path in sorted(here.rglob('*')):
+        relative = path.relative_to(here)
+        if '__pycache__' in relative.parts or path.suffix == '.pyc':
+            continue
+        if path.is_symlink():
+            raise ValueError('startup audit helper tree contains a link: ' + str(path))
+        if path.is_file():
+            tools[relative.as_posix()] = _memo_file(path)
+    guard = here.parents[1] / 'cocos-game-check/package-check/scripts/check_guard.cjs'
+    from package_gates import adapter_fix
+    if not Path(adapter_fix.__file__).resolve().is_relative_to(here):
+        raise ValueError('startup audit imported a gate outside its bound helper tree')
+    hooks = [parse_package_source, parser_fingerprint, audit_adapter_preconditions,
+             audit_cocos2_resources, audit_scene_components, _audit_files_uncached,
+             adapter_fix.detect, subprocess.run, shutil.which]
+    identity = {
+        'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())},
+        'tools': tools, 'guard': _memo_file(guard),
+        'node': {'path': str(Path(node).resolve()), 'sha256': _memo_file(Path(node).resolve())},
+        'python': {'version': sys.version, 'executable': str(Path(sys.executable).resolve()),
+                   'sha256': _memo_file(Path(sys.executable).resolve())},
+        # Only a digest is retained; environment values can contain credentials.
+        'environment_sha256': hashlib.sha256(json.dumps(dict(os.environ), sort_keys=True).encode()).hexdigest(),
+        'cwd': os.getcwd(), 'python_search_path': list(map(str, sys.path)),
+        'hooks': [id(hook) for hook in hooks],
+    }
+    return hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
 # Pure parse cache is process-local; it never caches a package/game verdict.
@@ -146,6 +226,47 @@ def audit_adapter_preconditions(files):
 
 def audit_files(files):
     """files is a ZIP-root-relative {path: bytes}; no filesystem mutation."""
+    cache = _AUDIT_INVOCATION.get()
+    if cache is None:
+        return _audit_files_uncached(files)
+    started = time.monotonic()
+    try:
+        before = _audit_memo_identity(files)
+    except (OSError, ValueError, TypeError):
+        # An unknown dependency can never suppress the real audit.
+        return _audit_files_uncached(files)
+    cached = cache.get(before)
+    if cached is not None:
+        if _audit_memo_identity(files) != before:
+            raise ValueError('startup audit inputs changed during memo verification')
+        result = copy.deepcopy(cached)
+        result['audit_invocation_reuse'].update(reused=True,
+            current_binding_seconds=round(time.monotonic() - started, 6))
+        return result
+    executed = time.monotonic()
+    result = _audit_files_uncached(files)
+    elapsed = time.monotonic() - executed
+    try:
+        after = _audit_memo_identity(files)
+    except (OSError, ValueError, TypeError) as error:
+        raise ValueError('startup audit dependencies became unknown during validation') from error
+    if before != after:
+        raise ValueError('startup audit inputs changed during validation')
+    if isinstance(result, dict) and result.get('passed') is True and result.get('errors') == []:
+        result = copy.deepcopy(result)
+        result['audit_invocation_reuse'] = {
+            'reused': False, 'binding_sha256': before,
+            'original_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            'original_seconds': round(elapsed, 6),
+            'current_binding_seconds': round(time.monotonic() - started - elapsed, 6),
+            'boundary': 'Exact bytes and dependencies within one explicit invocation only',
+        }
+        cache[before] = copy.deepcopy(result)
+    return result
+
+
+def _audit_files_uncached(files):
+    """Execute the actual startup closure and applicable registered probes."""
     errors, warnings, edges, dynamic = [], [], [], []
     adapter_preconditions = audit_adapter_preconditions(files)
     errors.extend(adapter_preconditions['errors'])

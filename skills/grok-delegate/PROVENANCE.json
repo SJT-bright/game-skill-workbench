@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-08.english-simple.11.17.10",
+  "revision": "2026-11-12.english-simple.11.17.28",
   "skill": "grok-delegate",
   "previous_provenance_sha256": "7cb2f245256d33036ac8ddcfe7e4a6e296f0d474772f1fec168267187a614ef4",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
@@ -60,5 +60,13 @@
       "sha256": "fb9c27fd491e679340000974d18ac0077a523de6a9a41be764a191368ecdce73",
       "bytes": 5713
     }
-  ]
+  ],
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
 }

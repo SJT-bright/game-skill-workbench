@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-11.english-simple.11.17.26",
+  "revision": "2026-11-12.english-simple.11.17.28",
   "skill": "remake-art",
   "previous_provenance_sha256": "be0af96f4d2c6b10b25da02478d15a366e5923c2a1c9c60e26eb27a2b10b235c",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
@@ -497,5 +497,13 @@
       }
     }
   ],
-  "previous_local_provenance_sha256": "e46ed048ab9f8acf553ae2304ee789a765321a140678f51025e816d2cd4bc9d3"
+  "previous_local_provenance_sha256": "e46ed048ab9f8acf553ae2304ee789a765321a140678f51025e816d2cd4bc9d3",
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
 }

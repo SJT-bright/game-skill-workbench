@@ -9,6 +9,7 @@ var suites = [
   ['启动文件 故意改坏必须被抓到', 'boot-negative-controls.js'],
   ['工程检查 App ID（settings/bytedance.json）', 'check-kit-project.test.js'],
   ['激励广告计时 long200/late16/bgplay/bgload/hang/nocallback', 'rewarded-timing.test.js'],
+  ['激励广告能力识别（当前2.4/3.x服务、空首候选回退、canIUse缺失/空值/false/抛错、两个独立反例）', 'rewarded-capability.test.js'],
   ['激励广告兜底 rewarded-guard（埃及宝石/拇指弹球旧版/搭桥小能手三个夹具不装必失败、装上不锁死不迟到发奖；rewarded-timing 和 AdBoostKit 经 guard 结果不变；D2 放行标记）', 'rewarded-guard.test.js'],
   ['存档层 storage-guard（false/\'\'/undefined/数字读回 true）', 'storage-guard.test.js'],
   ['存档层 故意改坏必须被抓到', 'storage-guard-negative-controls.js'],

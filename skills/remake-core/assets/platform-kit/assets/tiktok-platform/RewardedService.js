@@ -21,7 +21,7 @@ var messages = {
 };
 function rootSDK(method) {
   var candidates = [
-    typeof TTMinis !== 'undefined' && TTMinis.game,
+    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
     typeof tt !== 'undefined' && tt,
     typeof wx !== 'undefined' && wx
   ];
@@ -29,7 +29,7 @@ function rootSDK(method) {
     var candidate = candidates[i];
     if (!candidate || typeof candidate[method] !== 'function') continue;
     try {
-      if (typeof candidate.canIUse === 'function' && !candidate.canIUse(method)) continue;
+      if (typeof candidate.canIUse === 'function' && candidate.canIUse(method) === false) continue;
       return candidate; // Preserve the API receiver; never detach native methods.
     } catch (_) {}
   }
@@ -115,7 +115,7 @@ RewardedService.prototype.request = function (options) {
   var sdk;
   try { sdk = this.getSDK('createRewardedVideoAd'); } catch (_) {}
   if (!sdk || typeof sdk.createRewardedVideoAd !== 'function') return Promise.resolve(makeResult('unsupported', null));
-  try { if (typeof sdk.canIUse === 'function' && !sdk.canIUse('createRewardedVideoAd')) return Promise.resolve(makeResult('unsupported', null)); }
+  try { if (typeof sdk.canIUse === 'function' && sdk.canIUse('createRewardedVideoAd') === false) return Promise.resolve(makeResult('unsupported', null)); }
   catch (_) { return Promise.resolve(makeResult('unsupported', null)); }
   var adUnitId = config.getAdUnitId(options.placementKey);
   if (!adUnitId) return Promise.resolve(makeResult('unconfigured', null));

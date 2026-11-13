@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T17:25:34.207Z",
-  "treeHash": "3a1a1362f6f2deba28611c8999c135b7917bccb3031132380870169da012ed79",
+  "createdAt": "2026-11-13T17:27:03.920Z",
+  "treeHash": "aa6d00b4aa03aa03072eff18536d11861afbb6a9a43fb08ae52a441d4874aecb",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3747,9 +3747,9 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "6ce50bfd8bee7a801bcc8534d6939d78d8aa273e9af8047d9c6e6b3dd8091de9",
-      "fileCount": 761,
-      "bytes": 14118480,
+      "treeHash": "9c20ca7403f8eb44a17b11455f840fc258728704bb914d78a9bc0a5db45e056f",
+      "fileCount": 766,
+      "bytes": 14157448,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3843,14 +3843,14 @@
         },
         {
           "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-          "hash": "b6d49e98433309d09ca8af04a6dfc9dcf8490671c21fece79c0ad661efc6c67d",
-          "size": 14495,
+          "hash": "bdedd71693710ce9d91af7ca860b543b942094fdd1e8382513217ebae79a4687",
+          "size": 14474,
           "executable": false
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "62652db6f6725fcc77cce61490b25e00db0ae9422e50a6ec792aab6cfe00a099",
-          "size": 66283,
+          "hash": "b153eca134c39894df57a9fa371d18e87372e2f74f296c6556150bdf86783704",
+          "size": 66437,
           "executable": false
         },
         {
@@ -3885,8 +3885,8 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/RewardedService.js",
-          "hash": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
-          "size": 9797,
+          "hash": "4220ca579a85348b64652baa143ac22e260088cac0195c4aad0ad83128ccb151",
+          "size": 9826,
           "executable": false
         },
         {
@@ -4029,8 +4029,8 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-          "hash": "89c436c03d167c71897da429d032d0ff9ea23f147c151e58dcd6ea4e9753b187",
-          "size": 15501,
+          "hash": "7ebf58155b1734f637e0390e08f6918a3214099e3a2e49cce04ae27ac501757e",
+          "size": 15579,
           "executable": false
         },
         {
@@ -4071,8 +4071,8 @@
         },
         {
           "path": "assets/platform-kit/plugins-3x/RewardedService.plugin.js",
-          "hash": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
-          "size": 12017,
+          "hash": "5eeb70c3e5b271d926fe997626c941867de2a05fd2a5ef9ea8185d921fa0d1c9",
+          "size": 12046,
           "executable": false
         },
         {
@@ -4298,6 +4298,12 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tests/rewarded-capability.test.js",
+          "hash": "fdec742bafedf1f24a9b0ec54493090cb413e69d9727a40e7e876fa136151ef9",
+          "size": 8046,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tests/rewarded-guard.test.js",
           "hash": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b",
           "size": 31270,
@@ -4311,8 +4317,8 @@
         },
         {
           "path": "assets/platform-kit/tests/run-all.js",
-          "hash": "37f3659d6867bf2fc7b1925450b44fad1a8430d616dd39300374aaf3823c7f1d",
-          "size": 9524,
+          "hash": "a80b6a3eaa65b7cd897b475f46ec13dc6e3f1b5d161a74c7c95d08c0e9a94fd3",
+          "size": 9690,
           "executable": false
         },
         {
@@ -4526,6 +4532,12 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tools/kit_versions/RewardedService/57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243.txt",
+          "hash": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+          "size": 9797,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tools/kit_versions/RewardedService/7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52.txt",
           "hash": "7a4467265a37f9e9631ca95c4a191464611b364af8ebe57c9d63f05a022c3c52",
           "size": 8666,
@@ -4605,8 +4617,8 @@
         },
         {
           "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-          "hash": "206acd8eabda6310b5811edb75647d4a7bd2fe9d40da2b11c7a6424881a56486",
-          "size": 24400,
+          "hash": "8eb80f06f865244835f50faa0d64d1f361d7378a43f0b56c275394d658804bb0",
+          "size": 24468,
           "executable": false
         },
         {
@@ -6398,6 +6410,12 @@
           "executable": false
         },
         {
+          "path": "scripts/scan_ad_sdk_capabilities.cjs",
+          "hash": "fd784b6ed7554caaf424313a8df66700688c6deb8c1f9fd8f67a95897abe9b46",
+          "size": 12269,
+          "executable": false
+        },
+        {
           "path": "scripts/scan_cocos2_finite_art.cjs",
           "hash": "9e6a31a299829570f2b96b8628fa7328eafe9922f582c01a6da5f6b8f3bb0253",
           "size": 9571,
@@ -6459,8 +6477,8 @@
         },
         {
           "path": "scripts/scan_tiktok_host_refs.cjs",
-          "hash": "840835df166636a650077ea108159028900c34b6a669f29524bb4e04fafb39b1",
-          "size": 19296,
+          "hash": "ae4dc6fd585cc892df563fa35658fd33c78ba88c9f2b0173ac55a2a6e48c0d39",
+          "size": 19952,
           "executable": false
         },
         {
@@ -6527,6 +6545,18 @@
           "path": "scripts/test_ad_nodes_gate.py",
           "hash": "d2975eb403991a0388021d9440984a08bf8b08268d6ef4d098eb066b80ae52cf",
           "size": 17584,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_ad_sdk_capabilities.cjs",
+          "hash": "f849c73192f868741fa51977f5a9fc4bfff4e2a91201275c90f90ce77e7eac41",
+          "size": 4846,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_ad_sdk_capability_gate.py",
+          "hash": "ccd62dc243fb403347aa1e5b0a29aade0a6e96bdddab48f105c907ed8d9dfbed",
+          "size": 2058,
           "executable": false
         },
         {
@@ -8277,8 +8307,8 @@
         },
         {
           "path": "scripts/upload_size_gate.py",
-          "hash": "f4ea0b03060100d8c9d56c3a1d6521ebc3f4ccd0c7dc17bef6917cfc547848dc",
-          "size": 17580,
+          "hash": "34b4ca067719f44c8dafb50f664fcb30c43c1106ea1852c170cd1ee997549226",
+          "size": 18373,
           "executable": false
         },
         {

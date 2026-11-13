@@ -282,15 +282,20 @@ function scan(source, file, context = {}) {
     });
     context.inputBindings.push({file, ...input});
   }
+  if (context.adCapabilities) {
+    const result = source.includes('createRewardedVideoAd') && source.includes('canIUse')
+      ? require('./scan_ad_sdk_capabilities.cjs').scanAST(ast, file) : {findings:[], unresolved:[]};
+    context.adCapabilities.push({file, ...result});
+  }
   return hits;
 }
-function scanFiles(files, inputBindings = null) {
+function scanFiles(files, inputBindings = null, adCapabilities = null) {
   const entry=files.find(f=>f.file==='game.js'),required=new Set();
   if(entry)walk(parse(entry.code),n=>{
     if(n.type==='CallExpression'&&n.callee.type==='Identifier'&&n.callee.name==='require'&&n.arguments.length===1&&
        /^\.\/cocos2d-js(?:-min)?\.js$/.test(n.arguments[0].value||''))required.add(n.arguments[0].value.slice(2));
   });
-  return files.flatMap(f=>scan(f.code,f.file,{requiredEngine:required.has(f.file), inputBindings}));
+  return files.flatMap(f=>scan(f.code,f.file,{requiredEngine:required.has(f.file), inputBindings, adCapabilities}));
 }
 module.exports = {scan,scanFiles};
 if (require.main === module) {
@@ -312,12 +317,15 @@ if (require.main === module) {
         throw new Error('input required');
       }
       phase = 'javascript';
-      const inputBindings = [], findings = scanFiles(input.files, inputBindings);
+      const inputBindings = [], adCapabilities = [], findings = scanFiles(input.files, inputBindings, adCapabilities);
       const platform_input_bindings = {schema:'platform_input_bindings.v1',
         findings:inputBindings.flatMap(row=>row.findings.map(f=>({file:row.file,...f}))),
         unresolved:inputBindings.flatMap(row=>row.unresolved.map(f=>({file:row.file,...f})))};
-      console.log(JSON.stringify({status: findings.length || platform_input_bindings.findings.length ? 'risk_detected' : 'checked',
-        checked: input.files.length, findings, platform_input_bindings}));
+      const ad_sdk_capabilities = {schema:'ad_sdk_capabilities.v1', coverage:'known_canIUse_rejection_shapes_only',
+        findings:adCapabilities.flatMap(row=>row.findings),
+        unresolved:adCapabilities.flatMap(row=>row.unresolved)};
+      console.log(JSON.stringify({status: findings.length || platform_input_bindings.findings.length || ad_sdk_capabilities.findings.length ? 'risk_detected' : 'checked',
+        checked: input.files.length, findings, platform_input_bindings, ad_sdk_capabilities}));
     } catch (error) {
       const reason = phase === 'json' ? 'invalid JSON input: ' + error.message :
         phase === 'javascript' ? 'JavaScript parse failed: ' + error.message : error.message;

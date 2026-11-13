@@ -62,12 +62,13 @@
       "file": {
         "src": "plugins-3x/RewardedService.plugin.js",
         "dest": "assets/tiktok-platform/RewardedService.plugin.js",
-        "sha256": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
+        "sha256": "5eeb70c3e5b271d926fe997626c941867de2a05fd2a5ef9ea8185d921fa0d1c9",
         "previous_sha256": [
+          "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
           "16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a"
         ],
         "from": "assets/tiktok-platform/RewardedService.js",
-        "from_sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243"
+        "from_sha256": "4220ca579a85348b64652baa143ac22e260088cac0195c4aad0ad83128ccb151"
       },
       "global": "globalThis.TikTokKit.RewardedService",
       "policy": {

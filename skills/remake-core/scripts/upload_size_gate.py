@@ -109,7 +109,15 @@ def enforce_tiktok_host(files):
             '%s:%s:%s %s missing when %s' % (row['file'], row['line'], row['column'], row['event'],
                                             json.dumps(row['missing_when'], sort_keys=True))
             for row in input_scan['findings'][:12]))
-    return input_scan
+    ad_scan = data.get('ad_sdk_capabilities')
+    if (not isinstance(ad_scan, dict) or ad_scan.get('schema') != 'ad_sdk_capabilities.v1' or
+            not isinstance(ad_scan.get('findings'), list) or not isinstance(ad_scan.get('unresolved'), list)):
+        raise ValueError('TikTok ad SDK capability check did not run: missing/invalid AST scan result')
+    if ad_scan['findings']:
+        raise ValueError('TikTok ad SDK capability rejects callable API: ' + '; '.join(
+            '%s:%s:%s [%s] %s' % (row['file'], row['line'], row['column'], row['rule'], row['reason'])
+            for row in ad_scan['findings'][:12]))
+    return dict(input_scan, ad_sdk_capabilities=ad_scan)
 
 
 def enforce_files(files):
@@ -145,7 +153,8 @@ def inspect_files(files, platform='tiktok'):
     roots=[s['root'].rstrip('/')+'/' for s in subs]
     warnings=[]
     if input_scan:
-        result['platform_input_bindings'] = input_scan
+        result['platform_input_bindings'] = {key: input_scan[key] for key in ('schema', 'findings', 'unresolved')}
+        result['ad_sdk_capabilities'] = input_scan['ad_sdk_capabilities']
         warnings.extend('Platform input branch needs runtime review: %s:%s (%s)' %
                         (row['file'], row['line'], row['reason']) for row in input_scan['unresolved'])
     for sub,root in zip(subs,roots):

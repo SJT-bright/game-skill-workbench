@@ -78,7 +78,7 @@ def slots_problems():
 # R4J1: 81f90088 = the plugin of SaveStore.js ba99f771 (R4E, before schema 2 and the dated grant id clean-up).
 PREVIOUS = {'missions3x': ['876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f', '7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d'],
             'missionflow3x': ['4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae', 'fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919', '9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2'],
-            'rewarded3x': ['16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a'],
+            'rewarded3x': ['d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd', '16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a'],
             'savestore3x': ['c6d7b35f87ec51d5c768a33636354506c238bd86f92ab5c5847687499cd31eb1',
                             'dcf16d37f6032f97e799624f2da01ccf972686bc93305cd778f4f0a207f38a59',
                             '81f900888a76c56f72aac1817070cb8446095825c51fdab074f6319a492f39d5',

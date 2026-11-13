@@ -27,6 +27,10 @@ The overrides file may only correct those choices, never positions:
    "tags": {"Canvas/Home/BtnPlay": {"primary": true, "label": "text"},
             "Canvas/Pause/Ribbon": {"role": "decoration"}, "Canvas/HUD/Tip": {"temporary": true},
             "Canvas/Pause/Bg": {"role": "panel"}, "Canvas/HUD/Fx": {"role": "ignore"}}}
+An exact noninteractive card surface may declare role "container" and a
+"contains" list of sibling content paths under the same card root. Its measured
+border remains checked, and its content is checked inside that border; this is
+not an exclusion or an override of any rectangle.
 Optional home_entry_pages is a list of exact dumped screen IDs, explicitly annotated as
 reachable from HOME after checking actual navigation. Entry names still come from runtime
 buttons; the annotation itself does not prove navigation. Match CSS width/height and DPR,
@@ -129,8 +133,13 @@ def load_overrides(path):
         if not isinstance(tag, dict) or FORBIDDEN_TAG_KEYS & set(tag):
             raise ValueError('overrides tag for %s may not contain positions or sizes' % p)
         if tag.get('label', 'none') not in {'none', 'small', 'text'} or tag.get('role', 'content') not in {
-                'content', 'decoration', 'panel', 'ignore'}:
+                'content', 'decoration', 'panel', 'ignore', 'container'}:
             raise ValueError('overrides tag for %s: label none/small/text, role content/decoration/panel/ignore' % p)
+        if tag.get('role')=='container':
+            children=tag.get('contains');parent=p.rsplit('/',1)[0]
+            if (not isinstance(children,list) or not children or len(set(children))!=len(children)
+                    or any(not isinstance(x,str) or not x.startswith(parent+'/') or x==p or under(p,x) for x in children)):
+                raise ValueError('container %s requires exact sibling content paths under its own card root' % p)
     linked=o.get('home_entry_pages',[])
     if not isinstance(linked,list) or not all(isinstance(x,str) and x.strip() for x in linked):
         raise ValueError('home_entry_pages must be a list of nonempty exact screen IDs')
@@ -418,6 +427,22 @@ class Screen:
                     item['surface_backing']=all(Image.open(source['path']).convert('RGB').getextrema()==tuple((v,v) for v in Image.open(source['path']).convert('RGB').getpixel((0,0))) for source in sources)
                 except (OSError,ImportError):pass
             item['text_content']=any(bool(text_of(m)) or str(m.get('comps',{}).get('sprite',{}).get('frame','')).startswith(('digit_','symbol_')) for m in members)
+        # Explicit per-card semantic nesting. Do not remove the surface or its
+        # content from geometry, and never infer this relationship from overlap.
+        for surface in measured:
+            if surface['tag'].get('role')!='container':continue
+            if 'button' in surface['comps'] or 'sprite' not in surface['comps']:
+                raise ValueError('declared card container must be a noninteractive measured Sprite: '+surface['path'])
+            prefixes=surface['tag']['contains']
+            if any(not any(under(n['path'],prefix) for n in sub) for prefix in prefixes):
+                raise ValueError('declared card content is absent: '+surface['path'])
+            owner=next((item for item in contents if item['name']==surface['path']),None)
+            if owner is None:raise ValueError('declared container surface was not independently extracted: '+surface['path'])
+            owner['container_for']=prefixes
+            for item in contents:
+                if any(under(item['name'],prefix) for prefix in prefixes):
+                    if item.get('container_owner'):raise ValueError('ambiguous card container owner: '+item['name'])
+                    item['container_owner']=surface['path']
         res = {'kind': 'popup', 'panel': list(pr), 'safe': [round(v, 1) for v in safe], 'decorations': decorations, 'contents': contents}
         res['screen_size']=self.size
         if estimated:

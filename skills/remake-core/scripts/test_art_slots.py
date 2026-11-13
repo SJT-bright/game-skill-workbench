@@ -43,3 +43,42 @@ class Capture(unittest.TestCase):
         self.assertFalse(self.run_case())
         self.nodes.pop()
         self.assertFalse(self.run_case())
+
+class ExactCaptureCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name)
+        self.case=dict(id='home',screen='home',capture_case='home-phone',viewport_width=100,viewport_height=100,
+                       expected_width=100,expected_height=100,owner='card',inside=[0,0,1,1],children=['card/count'])
+        self.nodes=[dict(path='card',screen=[0,0,1,1]),dict(path='card/count',screen=[.2,.2,.5,.5])]
+        self.config=self.root/'slots.json'
+        self.dumps=[];self.shots=[]
+        for name in ['home-phone','zz-home-after-win-phone']:
+            shot=self.root/(name+'.png');Image.new('RGB',(100,100),'blue').save(shot)
+            dump=self.root/('capture-ui-dump-'+name+'.json')
+            dump.write_text(json.dumps(dict(screen='home',viewport={'width':100,'height':100},nodes=self.nodes,screenshot=shot.name)))
+            self.dumps.append(dump);self.shots.append(shot)
+    def result(self):
+        self.config.write_text(json.dumps({'cases':[self.case]}))
+        return run(self.config,self.dumps,self.shots)
+    def test_exact_initial_and_after_win_can_share_page(self):
+        self.assertTrue(self.result()['passed'])
+        self.case['capture_case']='zz-home-after-win-phone'
+        self.assertTrue(self.result()['passed'])
+    def test_without_selector_remains_ambiguous(self):
+        self.case.pop('capture_case');self.assertFalse(self.result()['passed'])
+    def test_missing_case_and_mismatched_attachment_fail(self):
+        self.case['capture_case']='missing';self.assertFalse(self.result()['passed'])
+        self.case['capture_case']='home-phone'
+        d=json.loads(self.dumps[0].read_text());d['screenshot']=self.shots[1].name
+        self.dumps[0].write_text(json.dumps(d));self.assertFalse(self.result()['passed'])
+    def test_duplicate_exact_capture_still_fails(self):
+        self.dumps.append(self.dumps[0]);self.assertFalse(self.result()['passed'])
+    def test_first_piece_uses_same_selector(self):
+        from audit_art_slots import first_piece_documents
+        self.config.write_text(json.dumps({'cases':[self.case]}))
+        docs=[dict(json.loads(p.read_text()),_file=str(p)) for p in self.dumps]
+        selected,_,_=first_piece_documents(self.config,docs,['home'])
+        self.assertEqual(selected[0]['_file'],str(self.dumps[0]))
+        self.case.pop('capture_case');self.config.write_text(json.dumps({'cases':[self.case]}))
+        with self.assertRaisesRegex(ValueError,'ambiguous'):first_piece_documents(self.config,docs,['home'])

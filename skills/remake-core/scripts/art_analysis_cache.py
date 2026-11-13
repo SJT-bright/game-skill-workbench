@@ -123,21 +123,29 @@ class PageCache:
             # referenced file and JSON attachment recursively; unresolved paths are misses.
             pending = [origin, Path(shot)]
             seen = {}
-            def refs(obj, parent):
+            def refs(obj, parent, location=()):
                 if isinstance(obj, dict):
-                    for value in obj.values():
-                        yield from refs(value, parent)
+                    for field, value in obj.items():
+                        yield from refs(value, parent, location + (field,))
                 elif isinstance(obj, list):
-                    for value in obj:
-                        yield from refs(value, parent)
+                    for index, value in enumerate(obj):
+                        yield from refs(value, parent, location + (index,))
                 elif isinstance(obj, str) and Path(obj).suffix.lower() in {
                         '.png', '.jpg', '.jpeg', '.webp', '.json', '.fnt', '.ttf', '.otf', '.webm', '.mp4'}:
                     p = Path(obj)
+                    # Cocos SpriteFrame.name is an identifier, even when the atlas
+                    # retained a .png suffix. It is not an attachment path. The raw
+                    # identifier stays in the document hash; all assets stay in base.
+                    if (len(location) == 5 and location[0] == 'nodes'
+                            and isinstance(location[1], int)
+                            and location[2:] == ('comps', 'sprite', 'frame')
+                            and p.name == obj and '/' not in obj and '\\' not in obj):
+                        return
                     if not p.is_absolute():
                         candidates = [parent/p, self.project/p]
                         found = [c for c in candidates if c.is_file()]
                         if not found:
-                            raise ValueError('unresolved evidence reference')
+                            raise ValueError('unresolved evidence reference: ' + obj)
                         # Hash both when relative resolution is ambiguous.
                         yield from found
                     else:
@@ -159,7 +167,8 @@ class PageCache:
             key = sha(encoded(dict(base=self.base, document=document, dependencies=seen)))
             self.observed[str(origin)] = (document, shot, key)
             return key
-        except (OSError, ValueError, TypeError, KeyError):
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            self.reason = str(exc)
             return None
 
     def _secret(self):

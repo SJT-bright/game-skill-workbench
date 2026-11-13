@@ -32,6 +32,7 @@ import json
 from pathlib import Path
 import re
 import sys
+import hashlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audit_page_richness import load as load_dumps, text as node_text, area  # noqa: E402
@@ -41,6 +42,7 @@ GENERIC_COIN = re.compile(r'^(coin|coins|gold|gold[\s_-]?coins?|money|cash)$', r
 LIGHTNING = re.compile(r'lightning|bolt|thunder|flash', re.I)
 NUMBER = re.compile(r'(\d[\d,\s]*(?:\.\d+)?)\s*([kKmM]?)')
 PROJECT_FOR_SCOPE = None
+ORIGINAL_SEQUENTIAL = False
 TOP_MAX, BOTTOM_MAX = 0.12, 0.20
 CAPSULE = (0.72, 0.10)          # TikTok menu capsule: top-right corner stays free
 # user 2026-10-23: the currency bar is always at the very top, never in the middle (prices/rewards on these pages are content)
@@ -68,6 +70,43 @@ def mask_order(d):
     return max((n['order'] for n in d.get('nodes', []) if n['comps'].get('block_input') and visible(n) and area(n['rect']) >= 0.85),
                default=-1)
 
+def count_text(node):
+    return (node.get('_resource_text') or node_text(node)) if node else ''
+
+def measured_group(nodes,path):
+    """A non-rendering Cocos parent may be omitted; union only actual child boxes."""
+    children=[n for n in nodes if n['path'].startswith(path+'/')]
+    if not children:return None
+    rects=[n.get('screen') or n['rect'] for n in children]
+    left=min(r[0] for r in rects);top=min(r[1] for r in rects)
+    right=max(r[0]+r[2] for r in rects);bottom=max(r[1]+r[3] for r in rects)
+    return {'path':path,'rect':[left,top,right-left,bottom-top],'screen':[left,top,right-left,bottom-top],
+            'order':min(n.get('order',0) for n in children),'comps':{},'_measured_children':[n['path'] for n in children]}
+
+def bitmap_count(nodes,path):
+    """Read an exact declared glyph group, with real FNT/page/rect source evidence."""
+    if PROJECT_FOR_SCOPE is None:return None
+    glyphs=[n for n in nodes if n['path'].startswith(path+'/') and 'sprite' in n.get('comps',{})]
+    if not glyphs:return None
+    symbols={'symbol_percent':'%','symbol_slash':'/','symbol_plus':'+','symbol_minus':'-','symbol_colon':':','symbol_dot':'.'}
+    observed={};chars={}
+    for n in glyphs:
+        sprite=n['comps']['sprite'];name=sprite.get('frame','');match=re.fullmatch(r'digit_([0-9])',name)
+        char=match.group(1) if match else symbols.get(name)
+        if char is None:return None
+        observed.setdefault(name,[]).append(sprite);chars[n['path']]=char
+    import importlib.util
+    source=Path(__file__).resolve().parents[2]/'remake-art/scripts/check_native_sprite_sources.py'
+    spec=importlib.util.spec_from_file_location('_top_bar_sprite_sources',source);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    routes,_=module.bitmap_font_routes(PROJECT_FOR_SCOPE,set(observed),observed)
+    if set(routes)!=set(observed):return None
+    glyphs.sort(key=lambda n:(n.get('screen') or n['rect'])[0])
+    centers=[(n.get('screen') or n['rect'])[1]+(n.get('screen') or n['rect'])[3]/2 for n in glyphs]
+    if max(centers)-min(centers)>.2*max((n.get('screen') or n['rect'])[3] for n in glyphs):return None
+    group=measured_group(glyphs,path)
+    group.update(_resource_text=''.join(chars[n['path']] for n in glyphs),_bitmap_sources=routes)
+    return group
+
 
 def energy_word(res):
     """A user-requested battery is allowed only with exact authorization and current art hashes."""
@@ -88,16 +127,37 @@ def find(d, res):
     """(count node, container node, icon node) of a resource on this dump."""
     counts = res['count'] if isinstance(res.get('count'), list) else [res.get('count')]
     nodes = [n for n in d.get('nodes', []) if visible(n)]
-    count = next((n for c in counts if c for n in nodes if ends(n['path'], c) and node_text(n)), None)
+    choices=[n for c in counts if c for n in nodes if ends(n['path'],c) and node_text(n)]
+    choices += [group for c in counts if isinstance(c,str) for group in [bitmap_count(nodes,c)] if group]
+    count=max(choices,key=lambda n:n.get('order',0)) if choices else None
     if not count:
         return None, None, None
     declared_boxes=res.get('node') if isinstance(res.get('node'),list) else [res.get('node')]
-    box = next((n for b in declared_boxes if b for n in nodes if ends(n['path'],b)),None)
+    boxes=[n for b in declared_boxes if b for n in nodes if ends(n['path'],b)]
+    boxes += [group for b in declared_boxes if isinstance(b,str) for group in [measured_group(nodes,b)] if group]
+    enclosing=[n for n in boxes if count['path'].startswith(n['path']+'/')]
+    box=max(enclosing,key=lambda n:len(n['path'])) if enclosing else None
     scope = box['path'] if box else count['path'].rsplit('/', 1)[0]
-    word = energy_word(res) if res['kind'] == 'energy' else re.compile(re.escape(str(res.get('icon_frame') or res.get('icon') or '')), re.I)
+    word = re.compile(re.escape(str(res['icon_frame'])),re.I) if res.get('icon_frame') else energy_word(res) if res['kind'] == 'energy' else re.compile(re.escape(str(res.get('icon') or '')), re.I)
     icon = next((n for n in nodes if (n['path'] + '/').startswith(scope + '/') and 'sprite' in n['comps'] and n is not box
                  and word.pattern and word.search(str(n['comps']['sprite'].get('frame', '')))), None)
     return count, box, icon
+
+def original_sequential(project):
+    """Keep a declared original linear route only when original/current data match."""
+    try:
+        from audit_level_plan import find_plan
+        from feature_policy import board_of
+        if board_of(project)[0]!='localize':return False
+        p=json.loads(find_plan(project).read_text());nav=p.get('navigation',{})
+        if nav.get('mode')!='sequential' or nav.get('map')!='none' or nav.get('level_selection') is not False:return False
+        refs=[]
+        for key in ('original_data','current_data'):
+            ref=p[key];path=Path(ref['source']);path=(path if path.is_absolute() else project/path).resolve()
+            if hashlib.sha256(path.read_bytes()).hexdigest()!=ref['sha256']:return False
+            refs.append(path)
+        return refs[0]!=refs[1] and refs[1].is_relative_to(project/'assets') and refs[0].read_bytes()==refs[1].read_bytes()
+    except (OSError,ValueError,KeyError,TypeError,AttributeError):return False
 
 
 def declared(cfg, mode, add):
@@ -129,22 +189,28 @@ def declared(cfg, mode, add):
 
 
 def on_pages(dumps, res, mode, add):
-    pages = ['home'] + (['map'] if mode == 'levels' and __import__('maintenance_scope').required_map(PROJECT_FOR_SCOPE) else [])
+    pages = ['home'] + (['map'] if mode == 'levels' and not ORIGINAL_SEQUENTIAL and __import__('maintenance_scope').required_map(PROJECT_FOR_SCOPE) else [])
+    scopes={}
+    for r in res:
+        declared_pages=r.get('visible_on')
+        scopes[id(r)]=(declared_pages if ORIGINAL_SEQUENTIAL and r['kind']=='progress' and isinstance(declared_pages,list) and declared_pages and all(isinstance(p,str) and p for p in declared_pages) else pages)
+    pages=list(dict.fromkeys(pages+[p for selected in scopes.values() for p in selected]))
     for purpose in pages:
-        ds = [d for d in dumps if d.get('purpose') == purpose]
+        active=[r for r in res if purpose in scopes[id(r)]]
+        ds = [d for d in dumps if d.get('purpose') == purpose or d.get('screen')==purpose]
         if not ds:
             add('bar_on_' + purpose, False, 'no %s dump: read the %s page with chrome_touch dump_ui' % (purpose, purpose))
             continue
         problems = []
-        for r in res:
+        for r in active:
             for d in ds:
                 count, box, icon = find(d, r)
                 where = '%s on %s' % (r['name'], d.get('screen'))
                 if not count:
                     problems.append('%s: count %s not found or empty' % (where, r['count']))
                     continue
-                if value(node_text(count)) is None:
-                    problems.append('%s: "%s" has no number' % (where, node_text(count)))
+                if value(count_text(count)) is None:
+                    problems.append('%s: "%s" has no number' % (where, count_text(count)))
                 rect = (box or count).get('screen') or (box or count)['rect']
                 if rect[1] > TOP_MAX or rect[1] + rect[3] > BOTTOM_MAX:
                     problems.append('%s: not at the top (top %.0f%%, bottom %.0f%% of the screen; needs <= 12%% / 20%%)'
@@ -156,7 +222,7 @@ def on_pages(dumps, res, mode, add):
                                     (where, 'lightning' if r['kind'] == 'energy' else r.get('icon_frame') or r['icon']))
                 if mask_order(d) > count['order']:
                     problems.append('%s: under a popup mask' % where)
-        add('bar_on_' + purpose, not problems, '%d resources at the top of %d %s dumps' % (len(res), len(ds), purpose)
+        add('bar_on_' + purpose, not problems, '%d resources at the top of %d %s dumps' % (len(active), len(ds), purpose)
             if not problems else '; '.join(problems[:6]))
     cur = [r for r in res if r['kind'] == 'currency']
     for purpose in ('shop', 'skins'):
@@ -204,16 +270,47 @@ def live(folders, res, mode, add):
         seen, drops = 0, []
         for folder in folders:
             for run in sorted({Path(d['_file']).parent for d in load_dumps([folder])}):
-                ds = sorted(load_dumps([run]), key=lambda d: Path(d['_file']).name)
-                for i, d in enumerate(ds):
-                    if d.get('purpose') != 'result_win':
-                        continue
-                    before = [value(node_text(find(x, r)[0])) for x in ds[:i] if x.get('purpose') in ('home', 'map') and find(x, r)[0]]
-                    after = [value(node_text(find(x, r)[0])) for x in ds[i + 1:] if x.get('purpose') in ('home', 'map') and find(x, r)[0]]
-                    if before and after and before[-1] is not None and after[0] is not None:
-                        seen += 1
-                        if after[0] <= before[-1]:
-                            drops.append('%s: %s before the win, %s after (%s)' % (run.name, before[-1], after[0], d.get('screen')))
+                loaded=load_dumps([run]);sequence={}
+                execution=run/'execution.json'
+                if execution.is_file():
+                    try:
+                        record=json.loads(execution.read_text())
+                        if record.get('schema')=='english-art-capture-execution.v1' and record.get('status')=='captured_not_art_checked':
+                            sequence={str(Path(row['file']).resolve()):i for i,row in enumerate(record['captures'])}
+                    except (OSError,ValueError,KeyError,TypeError):pass
+                groups={}
+                for d in loaded:
+                    viewport=d.get('page',{});session='legacy'
+                    capture=d.get('art_capture_id')
+                    if capture and PROJECT_FOR_SCOPE is not None:
+                        try:
+                            if not re.fullmatch(r'[A-Za-z0-9_.-]+',capture) or capture in ('.','..'):raise ValueError('invalid capture ID')
+                            proof=json.loads((PROJECT_FOR_SCOPE/'.tiktok-kit/art-rounds/proofs'/(capture+'.json')).read_text())
+                            fields={k:v for k,v in proof.items() if k!='seal'}
+                            if hashlib.sha256(json.dumps(fields,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()!=proof.get('seal'):raise ValueError('capture proof changed')
+                            if proof.get('dump')!=hashlib.sha256(Path(d['_file']).read_bytes()).hexdigest():raise ValueError('dump changed')
+                            shot=Path(d.get('screenshot',''));shot=shot if shot.is_absolute() else Path(d['_file']).parent/shot
+                            if proof.get('png')!=hashlib.sha256(shot.read_bytes()).hexdigest():raise ValueError('screenshot changed')
+                            session=proof['session']
+                        except (OSError,ValueError,KeyError,TypeError):session='unverified:'+str(capture)
+                    groups.setdefault((viewport.get('width'),viewport.get('height'),viewport.get('dpr'),session),[]).append(d)
+                for grouped in groups.values():
+                    ds=sorted(grouped,key=lambda d:sequence.get(str(Path(d['_file']).resolve()),float('inf')) if sequence else Path(d['_file']).name)
+                    for i, d in enumerate(ds):
+                        if d.get('purpose') != 'result_win':continue
+                        # Linear games display progress in their real gameplay HUD,
+                        # including the still-rendered HUD behind end/pause overlays.
+                        gameplay_progress=ORIGINAL_SEQUENTIAL and r['kind']=='progress' and r.get('visible_on') in (['level'],['gameplay'])
+                        accepted=lambda x: True if gameplay_progress else x.get('purpose') in ('home','map')
+                        before = [value(count_text(find(x, r)[0])) for x in ds[:i] if accepted(x) and find(x, r)[0]]
+                        after = [value(count_text(find(x, r)[0])) for x in ds[i + 1:] if accepted(x) and find(x, r)[0]]
+                        if before and after and before[-1] is not None and after[0] is not None:
+                            # A same-level retry can legitimately retain the level.
+                            if gameplay_progress:
+                                after=[v for v in after if v is not None and v!=before[-1]]
+                                if not after:continue
+                            seen += 1
+                            if after[0] <= before[-1]:drops.append('%s: %s before the win, %s after (%s)' % (run.name,before[-1],after[0],d.get('screen')))
         ok = seen and not drops
         add('live_' + r['kind'], ok, '%s went up after %d won levels' % (r['name'], seen) if ok else
             ('%s did not go up after a win: %s (update the bar the moment it changes)' % (r['name'], '; '.join(drops[:3])) if drops else
@@ -228,8 +325,8 @@ def main():
     ap.add_argument('--binding', type=Path)
     ap.add_argument('--out', type=Path, required=True)
     a = ap.parse_args()
-    global PROJECT_FOR_SCOPE
-    proj = a.project.resolve();PROJECT_FOR_SCOPE=proj
+    global PROJECT_FOR_SCOPE,ORIGINAL_SEQUENTIAL
+    proj = a.project.resolve();PROJECT_FOR_SCOPE=proj;ORIGINAL_SEQUENTIAL=original_sequential(proj)
     if not (proj / 'assets').is_dir():
         ap.error('%s is not a Cocos project (no assets folder)' % proj)
     checks = []

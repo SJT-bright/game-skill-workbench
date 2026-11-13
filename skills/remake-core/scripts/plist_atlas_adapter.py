@@ -65,6 +65,11 @@ def normalize(path,data,only=None):
   try:rect,size,source,rotated=frame_geometry(raw,fmt)
   except (ValueError,KeyError,TypeError):frames[name]={'texture':str(tex.with_suffix('')),'texture_file':str(tex),'rect':None,'role_name':base_name(name)};continue
   frames[name]={'texture':str(tex.with_suffix('')),'texture_file':str(tex),'rect':rect,'runtime_rect':rect[:2]+size,'rotated':rotated,'role_name':base_name(name),'names':names_of(name,raw)}
+  # Explicit source roles have the same contract as frames.json. A transparent
+  # outlined button can intentionally contain disconnected letters/icons; losing
+  # its declared role incorrectly turns those own parts into foreign islands.
+  for key in ('slice_role','part_reason'):
+   if key in raw:frames[name][key]=raw[key]
   # ui_dump.js reports rect size for trimmed sprites and originalSize for trim=false sprites.
   sizes[name]=[size]+([source] if source and source!=size else [])
  return {'textures':{str(tex.with_suffix('')):{}},'frames':frames,'runtime_sizes':sizes,'packed_rects':walls,'adapter':'plist_format%d_v1'%fmt,'texture_file':str(tex),'scope':selected}

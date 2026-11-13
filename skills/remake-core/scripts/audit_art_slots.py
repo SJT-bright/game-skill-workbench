@@ -1,5 +1,6 @@
 """Replay declared ink reservations or containment on captured Cocos UI. All coordinates are normalized."""
 import json
+import re
 from pathlib import Path
 from PIL import Image
 from ui_region_probe import measure
@@ -160,6 +161,18 @@ def selected_cases(config, case_ids):
 
 
 def matches_case(case, doc, exact_viewport=False):
+    selector = case.get('capture_case')
+    if selector is not None:
+        # Several real captures may share one page/viewport (initial Home and
+        # Home after earned rewards). Bind a declared case to the producer's
+        # exact dump + paired screenshot, without changing screen identity.
+        if (not isinstance(selector,str) or not re.fullmatch(r'[A-Za-z0-9_-]+',selector)
+                or Path(doc.get('_file','')).name != 'capture-ui-dump-'+selector+'.json'
+                or doc.get('screenshot') != selector+'.png'):
+            return False
+        paired=Path(doc['_file']).resolve().parent/(selector+'.png')
+        if '_slot_shot' in doc and Path(doc['_slot_shot']).resolve()!=paired:
+            return False
     return (doc.get('screen') == case['screen'] and
             doc.get('viewport', {}).get('width') == case['viewport_width'] and
             (not (exact_viewport or 'display_budget' in case) or
@@ -192,6 +205,7 @@ def run(config,dump_files,shots,case_ids=None):
         doc=json.loads(Path(f).read_text())
         if isinstance(doc,dict) and 'nodes' in doc:
             f=Path(f)
+            doc['_file']=str(f.resolve())
             shot=Path(doc.get('screenshot') or f.name.replace('-ui-dump-','-ui-').rsplit('.',1)[0]+'.png')
             doc['_slot_shot']=(shot if shot.is_absolute() else f.parent/shot).resolve()
             docs.append(doc)

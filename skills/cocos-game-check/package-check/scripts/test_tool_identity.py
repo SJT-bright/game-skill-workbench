@@ -143,8 +143,30 @@ class Wiring(unittest.TestCase):
         source = Path(check_package.__file__).read_text(encoding='utf-8')
         self.assertIn("result['tool_identity'] = tools_in_use()", source)
         self.assertIn("result['modified_tools'] = result['tool_identity']['summary']", source)
-        writer = (Path(check_package.__file__).parent / 'build_checked_zip.py').read_text(encoding='utf-8')
-        self.assertIn("package_checks.feedback_draft(result.get('tool_identity')", writer)
+        # The compatibility command delegates; diagnostics belong to the sole
+        # canonical backend. Exercise its actual diagnostic hook and real draft.
+        import make_tiktok_zip as writer
+        import build_checked_zip as alias
+        with patch.object(writer, 'write_package', return_value={'sentinel': True}) as backend:
+            self.assertEqual(alias.build('native', APP, 'out.zip'), {'sentinel': True})
+            self.assertEqual(backend.call_count, 1)
+        with tempfile.TemporaryDirectory() as out, patch.dict('os.environ', {T.ENV_FEEDBACK: out}):
+            result = {'tool_identity': ident, 'warnings': []}
+            writer.report_tool_identity(result, 'Game', Path(out)/'Game.zip')
+            self.assertEqual(result['modified_tools'], ['a'])
+            self.assertEqual(result['warnings'], ['改过的工具: a'])
+            self.assertTrue(Path(result['tool_feedback_draft']).is_file())
+            import contextlib
+            import io
+            result.update(finalize={'policy':'new','table_markdown':''},delivery_folder={})
+            output=io.StringIO()
+            args=['--native','native','--app-id',APP,'--out','out.zip','--project','Game',
+                  '--resource-manifest','resources.json']
+            with patch.object(writer,'write_package',return_value=result), \
+                    patch('delivery_folder.describe',return_value=[]),contextlib.redirect_stdout(output):
+                self.assertEqual(alias.main(args),0)
+            self.assertIn('改过的工具：a',output.getvalue())
+            self.assertIn('反馈草稿：',output.getvalue())
 
 
 

@@ -216,10 +216,10 @@ class WriterScope(unittest.TestCase):
         trace = self.root / 'sound.json'
         trace.write_text('{"schema":"sound_settings_trace.v1"}')
         out = self.root / 'no-output.zip'
-        with patch('build_checked_zip.audit_final_startup') as runtime:
+        with patch('audit_final_package_startup.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError, 'unregistered sound-only evidence scope'):
                 package_fixtures.build(self.native, APP, out,
-                    resource_manifest=manifest, project=self.project, interaction_audio_trace=trace)
+                    resource_manifest=manifest, project=self.project, interaction_audio_trace=trace,web=self.native)
             runtime.assert_not_called()
         self.assertFalse(out.exists())
 

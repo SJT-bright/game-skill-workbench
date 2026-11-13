@@ -6,6 +6,19 @@ import time
 import uuid
 from runtime_incremental import CL
 from regression_scope_gate import scoped_execution
+import project_qa
+
+def _reuse_project_unit(store, plan, case, adapter_path):
+    """Optional reviewed project rule; unrelated projects retain their exact plan."""
+    try:
+        entry=project_qa.project_policy(store.project, required_paths=[])
+        if entry is None or 'ad_unit_reuse.v1' not in entry['policy'].get('validators',{}):
+            return plan
+        policy=project_qa.lookup(store.project,'validators','ad_unit_reuse.v1')
+        return project_qa.invoke(policy,'reuse_unit',store,plan,case,adapter_path)
+    except (ValueError,OSError,KeyError,TypeError,AttributeError) as error:
+        raise CL.NeedsScope('Reviewed project ad-unit reuse refused: '+str(error)) from error
+
 
 @scoped_execution
 def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_only=False):
@@ -21,6 +34,7 @@ def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_onl
     try:
         for case in required:
             p=ledger.prepare('ads.'+case,roots,{},ar.tool_digest(),label='广告回调 / '+case,domain='platform')
+            p=_reuse_project_unit(ledger,p,case,adapter_path)
             if case in selected or p['action']=='reuse':plans.append(p)
         if plan_only:
             return plans

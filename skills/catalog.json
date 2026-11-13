@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T17:27:03.920Z",
-  "treeHash": "aa6d00b4aa03aa03072eff18536d11861afbb6a9a43fb08ae52a441d4874aecb",
+  "createdAt": "2026-11-13T20:28:33.780Z",
+  "treeHash": "a2d45bf7179601fe954e07c26c576ed76600e44a65969d64f05463e18ec8a9c0",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "06e433b2379645038327fdbac2b968fd83279a287e27847e67c772ab2022d89a",
-      "fileCount": 204,
-      "bytes": 2156964,
+      "treeHash": "a1e1605cada3551f250a85fc6e3d21b77257e8241e10a6a4ca67583666b1f33f",
+      "fileCount": 206,
+      "bytes": 2162202,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "92ec1a247030b7dabf50d5c36470fb1cb7cb003d0a2cd1a8b7ca3ebc6967b600",
-          "size": 68480,
+          "hash": "4874981dd55f40bb69b778b60c5e10536d2fec1a7f5a388c936c4186c728eb0a",
+          "size": 68668,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "917f97be1489be920627e27b86edf1374baf046b14494b9538ce1bbff7d2dfb4",
-          "size": 34353,
+          "hash": "232215defbebbd244be7c1869f507fa3cd4d0ea797cce1545305b64db76d8a7c",
+          "size": 34727,
           "executable": false
         },
         {
@@ -383,8 +383,8 @@
         },
         {
           "path": "package/README.md",
-          "hash": "592caece8f888fe87d446574d03da9c9873197025898715294387d1206d2312b",
-          "size": 6831,
+          "hash": "64b778040d5145aec476d4937dec0f219bbfca1882933a2c5cd491f722149fe9",
+          "size": 6891,
           "executable": false
         },
         {
@@ -425,8 +425,8 @@
         },
         {
           "path": "package-check/README.md",
-          "hash": "9eecb57dabf3487f8660ae9d2fe833ff67b36799d98ff69f7074c3ba2c98ca90",
-          "size": 5931,
+          "hash": "a5bebf351f66391a7d34e62b3a2a5eb0724817872b7b91ce7f00f6e3b8d22667",
+          "size": 6343,
           "executable": false
         },
         {
@@ -455,8 +455,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "9df9d0efbaa7874f838fafe63120fb77a4c9ddcd4105b43fe84b0e1321da97ba",
-          "size": 22708,
+          "hash": "42748401b58dc1ee2d98f9c8b40d24849a97eb4caaf7d1bc6abfb4b12b8d81ac",
+          "size": 23486,
           "executable": false
         },
         {
@@ -533,8 +533,8 @@
         },
         {
           "path": "package-check/references/runtime-regression.md",
-          "hash": "08e1a529df6d23ce8c04d3dd94314255f304697ab61fb9d58c2c44f270e0b106",
-          "size": 65847,
+          "hash": "47f5faf43abd3f3f5702bd274ac0e61efb25496e294c3050a730855a7b449cf1",
+          "size": 65074,
           "executable": false
         },
         {
@@ -545,6 +545,12 @@
         },
         {
           "path": "package-check/scripts/ad_incremental.py",
+          "hash": "b887afeab4c56e25d840c8630008e9373b50aeaa15ac47e7567dd5400a95f30a",
+          "size": 5605,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/ad_incremental.py.backup-ball112-project-hook-20261113113741",
           "hash": "5b9e20c6ea2302ff0d373ad72c3f6ea3b99f607b562e7c0c71a8514a336c0918",
           "size": 4847,
           "executable": false
@@ -605,8 +611,8 @@
         },
         {
           "path": "package-check/scripts/build_checked_zip.py",
-          "hash": "08e615ee8fc8b13b2dc39fa859d6c6b8cee8aeea7644014f78c216b7b5eec5cc",
-          "size": 16011,
+          "hash": "186a22a8edee27a1e1da409fe2bf49e456be25e720dc1a2b0f204fafff03e030",
+          "size": 1710,
           "executable": false
         },
         {
@@ -671,8 +677,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "e67ebd4968a6822e30e136b9f2ba00d8fec323f1055f9950f0f7ec61fbbba7b1",
-          "size": 24677,
+          "hash": "8caea63692301d826143184f0e042cee037fe96e8b8d9d146cd13478e6b6bcc8",
+          "size": 24926,
           "executable": false
         },
         {
@@ -689,14 +695,14 @@
         },
         {
           "path": "package-check/scripts/runtime-scope-compat.json",
-          "hash": "11576b163c0828cb5ee97ae5bb338424fa88d8d8602fa48d18bcc6fca6ac09e5",
-          "size": 1677,
+          "hash": "dbdceab383c31f7069feb365b99973ebac94d568b0312c2e7bb3214be18fd64c",
+          "size": 1848,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_incremental.py",
-          "hash": "1e506ee8b7b63d1dead78b76eeac09909a9de50a6b4422c8ed5465350b619df4",
-          "size": 14735,
+          "hash": "cd0035433350478ca9e6053769da71dca072fecaa3ce6d0710ca81da3b34572b",
+          "size": 15528,
           "executable": false
         },
         {
@@ -815,8 +821,8 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/ad_outcome.mjs",
-          "hash": "e76f459d4438b62522ee0dd7474f25fe09c7cffe873617b9aea612d16873716f",
-          "size": 27021,
+          "hash": "afbc9b1d6cfe558be37d799145b50c36a05fb3d82fe1ac0f030742ace686df3d",
+          "size": 29612,
           "executable": false
         },
         {
@@ -1025,8 +1031,8 @@
         },
         {
           "path": "package-check/scripts/test_check_speedups.py",
-          "hash": "3b7d330fe5c0792d80bdef958d9508c88d63935300b684c872c32dc75c566de3",
-          "size": 30735,
+          "hash": "083c44789be2418564ee27c93033ef4870d87a053762b172ce239e2921dea069",
+          "size": 29954,
           "executable": false
         },
         {
@@ -1037,14 +1043,20 @@
         },
         {
           "path": "package-check/scripts/test_delivery_folder.py",
-          "hash": "244be90cafbd8cc6ed03a93d5bed54af0186134d816e242cac65c2057bb07222",
-          "size": 9815,
+          "hash": "3a07ea1fed169a38bd9da248804b050c8d5883e7775e20f620547771abbf9361",
+          "size": 10408,
           "executable": false
         },
         {
           "path": "package-check/scripts/test_delivery_logic_records.py",
           "hash": "7ea99bb93398044d4cc5f7d62fd0d7b8ac834f6bfcda7e388311854c6bc99127",
           "size": 11288,
+          "executable": false
+        },
+        {
+          "path": "package-check/scripts/test_delivery_scoped_preview.py",
+          "hash": "e1fb44dfe0bd8c1d304444078098e11d00f5c44872700fbf94f7ada3de5fce22",
+          "size": 5889,
           "executable": false
         },
         {
@@ -1055,8 +1067,8 @@
         },
         {
           "path": "package-check/scripts/test_final_startup_gate.py",
-          "hash": "ed1ddac07ef0a2f374b088c884da0ce57db2af5eef5aaeb510955f6dc6e82809",
-          "size": 9400,
+          "hash": "5fa51fec9f14da0ace7a3eb9f8d1f7ccbfb1a1829802b423b33ca8a353c024dd",
+          "size": 9375,
           "executable": false
         },
         {
@@ -1067,8 +1079,8 @@
         },
         {
           "path": "package-check/scripts/test_gate_order_and_identity.py",
-          "hash": "82a41390b2b7f42653a9c31ed41668b6a51480e85c038b38adf6e4fe3a1ec638",
-          "size": 11088,
+          "hash": "d89b2565004fd80f12a6c3f7c78e2477de0d3faf62b8233246a38f0e388130d8",
+          "size": 11467,
           "executable": false
         },
         {
@@ -1085,8 +1097,8 @@
         },
         {
           "path": "package-check/scripts/test_issue_relocation.py",
-          "hash": "6b81b0fca16786295e14f3817e03c2dd0c0287cd9ef27873ea1446f1250cf001",
-          "size": 14244,
+          "hash": "f2331ab8edb8468b947e0449e1c8ea73f09a347d6d86ca753611742b4064199a",
+          "size": 14402,
           "executable": false
         },
         {
@@ -1127,8 +1139,8 @@
         },
         {
           "path": "package-check/scripts/test_package_checks.py",
-          "hash": "d27d70b0c0461b9f349ae1be9b421acd832b432e8e322c5ce870c97e82acd789",
-          "size": 22935,
+          "hash": "baa223fe5f5359d45720853cbd6da847c2c53487b79505c7a51707538448615a",
+          "size": 24612,
           "executable": false
         },
         {
@@ -1181,8 +1193,8 @@
         },
         {
           "path": "package-check/scripts/test_resource_and_issue_obligations.py",
-          "hash": "c8b9e2db66a861f45604914e632f78cc4b1d8a93891b598318b3a20882a02582",
-          "size": 21295,
+          "hash": "530f1bb296bbc1474c015dd04773dbd0a626a3460891759117c8e70e575e12ad",
+          "size": 21591,
           "executable": false
         },
         {
@@ -1193,8 +1205,8 @@
         },
         {
           "path": "package-check/scripts/test_rework_scope.py",
-          "hash": "7e2533a18cd24379f63c29ba520d16a5e95d9cc5060d20a4b7cf8e094dbb7c03",
-          "size": 37461,
+          "hash": "66698a048b6ce33c72bb8090583f631c84cb91a86d0971d790dec63edb1fa062",
+          "size": 38100,
           "executable": false
         },
         {
@@ -1229,8 +1241,8 @@
         },
         {
           "path": "package-check/scripts/test_sound_settings_profile.py",
-          "hash": "c36b1252ec5a32cb05c83b5d1792fa8d33a754cfc47f58f6b60f054eb2c3a508",
-          "size": 11726,
+          "hash": "ac309a1847a3a56d550aa1d26df1ae633d39399cf4515c8e3ccec689362f5a73",
+          "size": 11752,
           "executable": false
         },
         {
@@ -1247,8 +1259,8 @@
         },
         {
           "path": "package-check/scripts/test_tool_identity.py",
-          "hash": "d3de96af155e6d5841c75e54604915cc5bd20fe1bd408cb32039861e2c3fa04b",
-          "size": 11518,
+          "hash": "24377bf2750f03c7c2b90fdfda21d2594499779bd414fe55a12a5289c53237de",
+          "size": 12939,
           "executable": false
         },
         {
@@ -1277,8 +1289,8 @@
         },
         {
           "path": "references/tiktok-fixed-adaptation.md",
-          "hash": "87fb52bc24b876811fbf3803146ad1e1344d539bf4365268b4b1fb8f196020e8",
-          "size": 111444,
+          "hash": "7f85d04ac786e892b54d8ef02830cfd5693811156ac962322e11205b73ed758e",
+          "size": 110263,
           "executable": false
         },
         {

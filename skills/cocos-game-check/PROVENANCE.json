@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-12.english-simple.11.17.28",
+  "revision": "2026-11-13.english-simple.11.17.29",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "917f97be1489be920627e27b86edf1374baf046b14494b9538ce1bbff7d2dfb4",
-      "bytes": 34353
+      "sha256": "232215defbebbd244be7c1869f507fa3cd4d0ea797cce1545305b64db76d8a7c",
+      "bytes": 34727
     },
     {
       "path": "agents/openai.yaml",
@@ -111,8 +111,8 @@
     },
     {
       "path": "package/README.md",
-      "sha256": "592caece8f888fe87d446574d03da9c9873197025898715294387d1206d2312b",
-      "bytes": 6831
+      "sha256": "64b778040d5145aec476d4937dec0f219bbfca1882933a2c5cd491f722149fe9",
+      "bytes": 6891
     },
     {
       "path": "package/references/check-fix-package-loop.md",
@@ -146,8 +146,8 @@
     },
     {
       "path": "package-check/README.md",
-      "sha256": "9eecb57dabf3487f8660ae9d2fe833ff67b36799d98ff69f7074c3ba2c98ca90",
-      "bytes": 5931
+      "sha256": "a5bebf351f66391a7d34e62b3a2a5eb0724817872b7b91ce7f00f6e3b8d22667",
+      "bytes": 6343
     },
     {
       "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.json",
@@ -171,8 +171,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "9df9d0efbaa7874f838fafe63120fb77a4c9ddcd4105b43fe84b0e1321da97ba",
-      "bytes": 22708
+      "sha256": "42748401b58dc1ee2d98f9c8b40d24849a97eb4caaf7d1bc6abfb4b12b8d81ac",
+      "bytes": 23486
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -236,8 +236,8 @@
     },
     {
       "path": "package-check/references/runtime-regression.md",
-      "sha256": "08e1a529df6d23ce8c04d3dd94314255f304697ab61fb9d58c2c44f270e0b106",
-      "bytes": 65847
+      "sha256": "47f5faf43abd3f3f5702bd274ac0e61efb25496e294c3050a730855a7b449cf1",
+      "bytes": 65074
     },
     {
       "path": "package-check/references/webp-decode-capability.md",
@@ -296,8 +296,8 @@
     },
     {
       "path": "package-check/scripts/build_checked_zip.py",
-      "sha256": "08e615ee8fc8b13b2dc39fa859d6c6b8cee8aeea7644014f78c216b7b5eec5cc",
-      "bytes": 16011
+      "sha256": "186a22a8edee27a1e1da409fe2bf49e456be25e720dc1a2b0f204fafff03e030",
+      "bytes": 1710
     },
     {
       "path": "package-check/scripts/check_guard.cjs",
@@ -351,8 +351,8 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "e67ebd4968a6822e30e136b9f2ba00d8fec323f1055f9950f0f7ec61fbbba7b1",
-      "bytes": 24677
+      "sha256": "8caea63692301d826143184f0e042cee037fe96e8b8d9d146cd13478e6b6bcc8",
+      "bytes": 24926
     },
     {
       "path": "package-check/scripts/rework_scope.py",
@@ -366,8 +366,8 @@
     },
     {
       "path": "package-check/scripts/runtime-scope-compat.json",
-      "sha256": "11576b163c0828cb5ee97ae5bb338424fa88d8d8602fa48d18bcc6fca6ac09e5",
-      "bytes": 1677
+      "sha256": "6db1ed17268a42df4e7a4c7a5b05e84c18965fde0d718d5a772375fb7f0cc753",
+      "bytes": 1848
     },
     {
       "path": "package-check/scripts/runtime_incremental.py",
@@ -646,8 +646,8 @@
     },
     {
       "path": "package-check/scripts/test_check_speedups.py",
-      "sha256": "3b7d330fe5c0792d80bdef958d9508c88d63935300b684c872c32dc75c566de3",
-      "bytes": 30735
+      "sha256": "083c44789be2418564ee27c93033ef4870d87a053762b172ce239e2921dea069",
+      "bytes": 29954
     },
     {
       "path": "package-check/scripts/test_dead_shell.py",
@@ -656,13 +656,18 @@
     },
     {
       "path": "package-check/scripts/test_delivery_folder.py",
-      "sha256": "244be90cafbd8cc6ed03a93d5bed54af0186134d816e242cac65c2057bb07222",
-      "bytes": 9815
+      "sha256": "3a07ea1fed169a38bd9da248804b050c8d5883e7775e20f620547771abbf9361",
+      "bytes": 10408
     },
     {
       "path": "package-check/scripts/test_delivery_logic_records.py",
       "sha256": "7ea99bb93398044d4cc5f7d62fd0d7b8ac834f6bfcda7e388311854c6bc99127",
       "bytes": 11288
+    },
+    {
+      "path": "package-check/scripts/test_delivery_scoped_preview.py",
+      "sha256": "e1fb44dfe0bd8c1d304444078098e11d00f5c44872700fbf94f7ada3de5fce22",
+      "bytes": 5889
     },
     {
       "path": "package-check/scripts/test_device_issue_repro.py",
@@ -671,8 +676,8 @@
     },
     {
       "path": "package-check/scripts/test_final_startup_gate.py",
-      "sha256": "ed1ddac07ef0a2f374b088c884da0ce57db2af5eef5aaeb510955f6dc6e82809",
-      "bytes": 9400
+      "sha256": "5fa51fec9f14da0ace7a3eb9f8d1f7ccbfb1a1829802b423b33ca8a353c024dd",
+      "bytes": 9375
     },
     {
       "path": "package-check/scripts/test_frame_rate_gate.py",
@@ -681,8 +686,8 @@
     },
     {
       "path": "package-check/scripts/test_gate_order_and_identity.py",
-      "sha256": "82a41390b2b7f42653a9c31ed41668b6a51480e85c038b38adf6e4fe3a1ec638",
-      "bytes": 11088
+      "sha256": "d89b2565004fd80f12a6c3f7c78e2477de0d3faf62b8233246a38f0e388130d8",
+      "bytes": 11467
     },
     {
       "path": "package-check/scripts/test_geom_camera.py",
@@ -696,8 +701,8 @@
     },
     {
       "path": "package-check/scripts/test_issue_relocation.py",
-      "sha256": "6b81b0fca16786295e14f3817e03c2dd0c0287cd9ef27873ea1446f1250cf001",
-      "bytes": 14244
+      "sha256": "f2331ab8edb8468b947e0449e1c8ea73f09a347d6d86ca753611742b4064199a",
+      "bytes": 14402
     },
     {
       "path": "package-check/scripts/test_issue_supersede.py",
@@ -731,8 +736,8 @@
     },
     {
       "path": "package-check/scripts/test_package_checks.py",
-      "sha256": "d27d70b0c0461b9f349ae1be9b421acd832b432e8e322c5ce870c97e82acd789",
-      "bytes": 22935
+      "sha256": "baa223fe5f5359d45720853cbd6da847c2c53487b79505c7a51707538448615a",
+      "bytes": 24612
     },
     {
       "path": "package-check/scripts/test_package_reuse.py",
@@ -776,8 +781,8 @@
     },
     {
       "path": "package-check/scripts/test_resource_and_issue_obligations.py",
-      "sha256": "c8b9e2db66a861f45604914e632f78cc4b1d8a93891b598318b3a20882a02582",
-      "bytes": 21295
+      "sha256": "530f1bb296bbc1474c015dd04773dbd0a626a3460891759117c8e70e575e12ad",
+      "bytes": 21591
     },
     {
       "path": "package-check/scripts/test_revive_return.mjs",
@@ -786,8 +791,8 @@
     },
     {
       "path": "package-check/scripts/test_rework_scope.py",
-      "sha256": "7e2533a18cd24379f63c29ba520d16a5e95d9cc5060d20a4b7cf8e094dbb7c03",
-      "bytes": 37461
+      "sha256": "66698a048b6ce33c72bb8090583f631c84cb91a86d0971d790dec63edb1fa062",
+      "bytes": 38100
     },
     {
       "path": "package-check/scripts/test_runtime_phone_profile.mjs",
@@ -816,8 +821,8 @@
     },
     {
       "path": "package-check/scripts/test_sound_settings_profile.py",
-      "sha256": "c36b1252ec5a32cb05c83b5d1792fa8d33a754cfc47f58f6b60f054eb2c3a508",
-      "bytes": 11726
+      "sha256": "ac309a1847a3a56d550aa1d26df1ae633d39399cf4515c8e3ccec689362f5a73",
+      "bytes": 11752
     },
     {
       "path": "package-check/scripts/test_stable_paths.py",
@@ -831,8 +836,8 @@
     },
     {
       "path": "package-check/scripts/test_tool_identity.py",
-      "sha256": "d3de96af155e6d5841c75e54604915cc5bd20fe1bd408cb32039861e2c3fa04b",
-      "bytes": 11518
+      "sha256": "24377bf2750f03c7c2b90fdfda21d2594499779bd414fe55a12a5289c53237de",
+      "bytes": 12939
     },
     {
       "path": "package-check/scripts/test_webp_decode_probe.cjs",
@@ -856,8 +861,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "ba1c5da9b6781fbafb5af7534aa18a8e886877dca20e61ead6bb5527f95e3dd1",
-      "bytes": 111425
+      "sha256": "7f85d04ac786e892b54d8ef02830cfd5693811156ac962322e11205b73ed758e",
+      "bytes": 110263
     },
     {
       "path": "review/README.md",
@@ -1020,7 +1025,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "bf50376036d7fd5747b42821c50edaf6fa1ed35ae31377b0c2aa0e0ff27467ed",
+  "previous_provenance_sha256": "92ec1a247030b7dabf50d5c36470fb1cb7cb003d0a2cd1a8b7ca3ebc6967b600",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

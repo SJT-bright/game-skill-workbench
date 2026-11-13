@@ -53,6 +53,19 @@ def unit_ids(name, meta, adapter, prechecked=False):
         return [d+'/'+str(s['name']) for d in ('iphone14','se') for s in (adapter.get('layout_states') or [{'name':'home'}])]
     return ['@suite']
 
+def _reuse_project_unit(store, plan, suite, unit, script):
+    """Optional reviewed project adjudication; no profile leaves the plan unchanged."""
+    import project_qa
+    try:
+        entry=project_qa.project_policy(store.project,required_paths=[])
+        if entry is None or 'runtime_unit_rejudge.v1' not in entry['policy'].get('validators',{}):
+            return plan
+        policy=project_qa.lookup(store.project,'validators','runtime_unit_rejudge.v1')
+        return project_qa.invoke(policy,'reuse_unit',store,plan,suite,unit,script)
+    except (ValueError,OSError,KeyError,TypeError,AttributeError) as error:
+        raise CL.NeedsScope('Reviewed runtime-unit adjudication refused: '+str(error)) from error
+
+
 def _rule(rr,meta,engine):
     host=rr.HOST3 if engine=='3.x' else rr.HOST2
     common=[p for p in rr.TOOL.glob('*.mjs') if p.name!='frame_rate_compare.mjs']
@@ -131,6 +144,7 @@ def run(rr,package_dir,adapter_path,suites=None,work=None,timeout=None,suites_di
                     label=name+' / '+unit,domain='startup' if unit=='@startup' else DOMAINS.get(name,'gameplay'))
                 if name in ('ad_outcome','save_restart') and unit!='@suite':
                     p=unit_reuse.reuse_unit(ledger,p,name,unit,meta['script'])
+                p=_reuse_project_unit(ledger,p,name,unit,meta['script'])
                 if returned_art and p['action']=='run' and unit!='@startup':
                     previous=ledger.previous(cid)
                     if previous and all(r['binding']['tool_sha256']!=rules for r in previous):

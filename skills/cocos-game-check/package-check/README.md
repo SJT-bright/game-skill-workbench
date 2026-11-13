@@ -1,3 +1,5 @@
+**唯一正式写包路线（2026-11-13）**：[`make_tiktok_zip.py`](../../remake-core/scripts/make_tiktok_zip.py) 是正式命令；本目录 `build_checked_zip.py` 仅向同一后端映射旧参数，不是另一套可选检查。生产节点形成并保存一次结果，writer 与交付只消费；详见[单入口与逐项路由](../../remake-core/references/single-writer.md)。
+
 # 最终Native/ZIP检查与成品增量出包
 
 2026-11-11：当前完整制作的六标准广告与新增UI由两写包入口和最终ZIP共享门禁自动核，缺任何一类都不能以扩展顶替；检查用 `check_package.py --project <实际工程>`，规则及阶段范围见[六标准制作](../../remake-core/references/ad-standard-six.md)。
@@ -17,7 +19,7 @@
 1. 锁当前Native、目标App ID、稳定新ZIP路径、项目与证据。按[检查合同](references/check-contract.md)先核根入口、原生坐标、引擎/adapter、分包/场景、资源、未压缩体积；[检查顺序](references/gate-order-and-identity.md)先拒绝确定错误。
 2. 按[资源与历史问题门禁](references/resource-and-reported-issues.md)，运行当前生产调用清单反查。清单漏项、未知动态域、固定问题历史缺失、未复验/失败/失效拒包。相关问题有效时仅核证据与依赖，不重新跑该运行器。
 3. 验[同版Native启动恢复](../startup/references/final-package-startup-gate.md)，保留HOME→真实触摸→玩法变化及失败→Retry新请求→恢复。现有可信runner走[项目QA注册](../../remake-core/references/project-qa-registration.md)。
-4. 轻量writer一次完成Native前检、必要启动、ZIP回读和原Native全字节；成功后不手动紧接着跑同一check_package。失败只修复对应链；具体WebP、触摸、资源路径等症状从[当前合同](../../remake-core/references/current-contracts.md)路由。
+4. 统一 writer 一次完成 Native 前检、已有启动证据核对、ZIP 回读和原 Native 全字节核对；成功后不手动紧接着跑同一check_package。失败只修复对应链；具体WebP、触摸、资源路径等症状从[当前合同](../../remake-core/references/current-contracts.md)路由。
 5. 最终交付对实际链接路径运行prepare_delivery；它核同版材料与字节，不再次执行相同启动runner。检查期间新增问题、清单/Native/证据变化拒绝发布。
 
 ```sh

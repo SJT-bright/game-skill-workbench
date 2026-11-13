@@ -19,6 +19,7 @@ from audit_final_package_startup import audit_final_startup, StartupRefused
 import package_obligations
 from verify_delivery_preview import verify_preview
 from delivery_continuation import failure, repair_context
+from audit_upload_startup import audit_invocation
 
 # Parent decision 2026-10-29 (DECISIONS.md, design risk R9): until the first v7.7 NEW game passes a phone scan, every
 # delivery reply says this line. Remove this constant (and its use below) after the first v7.7 game passes a phone
@@ -178,6 +179,7 @@ def regression_checks(result):
     return rows
 
 
+@audit_invocation()
 def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None, platform_feedback=None):
     checks, state = [], {}
     try:
@@ -325,7 +327,9 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         raise ValueError('缺同版试玩链接：只有 ZIP，交付未完成。')
     if hashlib.sha256(contract_bytes).hexdigest() != startup_runtime.get('startup_contract_sha256'):
         raise ValueError('同版启动合同缺失或在校验后变化，无法核对试玩版本。')
-    web_sha = json.loads(contract_bytes)['binding']['web_tree_sha256']
+    # A scoped witness keeps the original contract/observation immutable while
+    # binding the exact current Web served to the user.
+    web_sha = (startup_runtime.get('current_binding') or json.loads(contract_bytes)['binding'])['web_tree_sha256']
     record.parent.mkdir(parents=True, exist_ok=True)
     with package_obligations.publication_guard(files, native, project, resource_manifest, obligations):
         receipt['preview'] = verify_preview(preview_url, web_sha)

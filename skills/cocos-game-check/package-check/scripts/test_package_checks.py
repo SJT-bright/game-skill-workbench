@@ -34,6 +34,15 @@ class _StaticFixtureBoundaries:
             verify_regression_scope=lambda *a, **k: {'unit_test': 'synthetic static fixture authorization'},
             regression_record=lambda *a, **k: {'unit_test': 'synthetic static fixture; runtime not executed'},
             regression_coverage_problem=lambda *a, **k: None))
+        # Controlled fixtures have no GUI/VM producer history. Isolate only
+        # those evidence consumers; keep real source, preparation, resources,
+        # byte/ZIP/static gates and issue/publication guards below.
+        self.stack.enter_context(patch('make_tiktok_zip.writer_regressions', return_value={
+            'blocked': False, 'problems': [], 'warnings': [],
+            'rewarded_ad_regression': {'status': 'not_applicable'},
+            'runtime_regression': {'passed': True, 'warnings': []}}))
+        self.stack.enter_context(patch('writer_proofs.consume', return_value={
+            'refs': {}, 'checks': [], 'boundary': 'synthetic static fixture only; no player evidence'}))
         for name in ('audit_final_storage.audit_final_storage',):
             self.stack.enter_context(patch(name, return_value={
                 'id': 'storage.native.contract', 'action': 'rejudged', 'status': 'synthetic_unrelated_gate_boundary'}))
@@ -70,7 +79,7 @@ from test_tiktok_touch_coordinates import ENGINE_245  # noqa: E402
 
 # v7.7: the fixture is a NEW game (not on the legacy list) as the v7.7 writers expect it: numeric App ID, a project
 # with a current source record (K5), and a build that tiktok_finalize has already processed once. The two writers
-# run finalize again on it (0 changes).
+# consume its separately registered explicit preparation without changing Native.
 # Engine: the shared fixture uses an engine version outside startup24's list (DECISIONS 13:57: such builds keep their
 # own main.js and get the touch and storage load lines in game.js), to keep the v7.6 static fixture: the static
 # resource tests below use a loader-free main.js as in v7.6. (Since W-G2 the static expansion also reads the kit
@@ -161,6 +170,16 @@ def fixture_project(project):
     return finalize_project(project)
 
 
+def prepare_writer_fixture(native, project, app_id=APP):
+    """Explicit real preparation of this synthetic fixture, outside any writer call."""
+    record = F.finalize_native(native, project, 'remake', app_id)
+    if record['blocks']:
+        raise ValueError('fixture preparation refused: ' + '; '.join(row['id'] + ': ' + row['message'] for row in record['blocks']))
+    if F.prepared_native_result(native, project, 'remake', app_id) is None:
+        raise AssertionError('real fixture preparation did not create a reusable exact-byte record')
+    return record
+
+
 class PackageChecks(unittest.TestCase):
     def setUp(self):
         self.files = fixture()
@@ -175,17 +194,22 @@ class PackageChecks(unittest.TestCase):
         manifest.write_text(json.dumps({'resources':[{'bundle':'main','path':'runtime-fixture','type':'cc.JsonAsset'}]}))
         # Runtime gate has its own rejection tests; isolate archive/resource tests here.
         from unittest.mock import patch
-        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
-            return build(native,app_id,out,report,resource_manifest=manifest,project=self.project)
+        prepare_writer_fixture(native, self.project)
+        before = F._native_files(native)
+        with patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}):
+            result = build(native,app_id,out,report,resource_manifest=manifest,project=self.project,web=native)
+        self.assertEqual(F._native_files(native), before, 'writer changed the prepared Native')
+        return result
     def test_missing_runtime_manifest_refused_without_zip(self):
         out=self.root/'delivery.zip'
-        with self.assertRaisesRegex(ValueError,'manifest required'):build(self.native(),APP,out)
+        with self.assertRaisesRegex(ValueError,'manifest required'):build(self.native(),APP,out,project=self.project,web=self.root/'native')
         self.assertFalse(out.exists())
     def test_runtime_resource_missing_refused_without_zip(self):
         manifest=self.root/'bad-resources.json'
         manifest.write_text(json.dumps({'resources':[{'bundle':'main','path':'not-in-catalog','type':'cc.JsonAsset'}]}))
         out=self.root/'delivery.zip'
-        with self.assertRaisesRegex(ValueError,'resources missing'):build(self.native(),APP,out,resource_manifest=manifest,project=self.project)
+        native = self.native(); prepare_writer_fixture(native, self.project)
+        with self.assertRaisesRegex(ValueError,'resources missing'):build(native,APP,out,resource_manifest=manifest,project=self.project,web=native)
         self.assertFalse(out.exists())
     def tearDown(self):
         self.temp.cleanup()
@@ -282,7 +306,7 @@ class PackageChecks(unittest.TestCase):
         self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))
     def test_writer_refuses_wrong_id_without_output(self):
         out=self.root/'delivery.zip'
-        with self.assertRaisesRegex(ValueError,'App ID'):self.build_with_resources(self.native(),'wrong',out)
+        with self.assertRaisesRegex(ValueError,'K_native_preparation_required'):self.build_with_resources(self.native(),'wrong',out)
         self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))
     def test_writer_publishes_and_preserves_existing(self):
         native=self.native();out=self.root/'delivery.zip';result=self.build_with_resources(native,APP,out)
@@ -321,7 +345,7 @@ class PackageChecks(unittest.TestCase):
         self.files['large.bin'] = b'0' * 4_000_001
         native = self.native(); out = self.root/'delivery.zip'
         from unittest.mock import patch
-        with patch('build_checked_zip.write_archive') as writer:
+        with patch('make_tiktok_zip.write_zip') as writer:
             with self.assertRaisesRegex(ValueError, 'main package'):
                 self.build_with_resources(native, APP, out)
             writer.assert_not_called()
@@ -344,7 +368,7 @@ class PackageChecks(unittest.TestCase):
         self.files['subpackages/resources/large.bin']=b'0'*30_000_001
         out=self.root/'delivery.zip'
         from unittest.mock import patch
-        with patch('build_checked_zip.write_archive') as writer:
+        with patch('make_tiktok_zip.write_zip') as writer:
             with self.assertRaisesRegex(ValueError,'total'):
                 self.build_with_resources(self.native(),APP,out)
             writer.assert_not_called()

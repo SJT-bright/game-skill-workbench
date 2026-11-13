@@ -43,22 +43,12 @@ python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapt
 - 必须有 Ego 浏览器（`ego-browser`）和 adapter；缺任何一个、缺套件需要的字段、套件没写结果、超时、任何一条 case
   不过，都是拒绝（`RuntimeRefused`），不会跳过。`warnings` 只记录，不拒绝。
 - 每个套件单独起宿主服务，只绑 127.0.0.1，套件结束就停。环境变量 `RUNTIME_REGRESSION_SPACE` 可指定 Ego 任务空间名。
-- 出包入口已接入（两个写包入口都跑，v7.8 W97 起）：
-  - `build_checked_zip.py`、`prepare_delivery.py` 经 `check_package.check()`：对每个有 game.js 的包用
-    `required_suites(files, adapter)` 算出必跑套件、`run(package_dir, adapter_path, suites)` 跑，和激励广告回归用同一个
-    adapter（`--ad-regression` 或 `$TIKTOK_AD_REGRESSION_ADAPTER`）。没跑通就拒绝出包（没 adapter、广告用例没过时老游戏也拒；套件自己对老游戏只警告的照旧），结果写在报告的
-    `runtime_regression`。
-  - `make_tiktok_zip.py`（重塑游戏的正式写包入口）不调 `check()`，改调 `check_package.writer_regressions()`：同样的
-    激励广告回归 + 运行时套件，跑在刚写好、重读过的 ZIP 的解压副本上（就是要发出去的字节），adapter 同样来自
-    `--ad-regression` 或 `$TIKTOK_AD_REGRESSION_ADAPTER`，policy 用 finalize 记录的、board 用 `--board`。新游戏：没
-    adapter、没 Ego、环境不完整、任一用例没过都不写 ZIP，并列出全部原因；名单上的老游戏：同样的原因只写进报告
-    `warnings`（带「[legacy game: warning]」），照样出包。结果写在报告的 `rewarded_ad_regression`、`runtime_regression`。
-    这一步排在所有便宜检查之后，每款多几分钟（FoxDenDash v1 光广告回归就 457 秒）。
+- 生产/检测节点按 `required_suites(files, adapter)` 与逐项 ledger 生成实际执行计划，只执行新项和输入/规则/条件发生变化的项；原始结果保留原时间。
+- 出包固定调用唯一 `make_tiktok_zip.write_package` 后端；旧 CLI `build_checked_zip.py` 只映射参数。writer 对广告和 runtime 先取 `plan_only`，全部可复用时只合并原结果；缺项回到对应 producer，不在 writer 或最终交付中补跑浏览器。adapter 仍用于核对适用清单、真实依赖和覆盖，不能通过删用例绕过缺项。
 - 套件约定（给写套件的人）：`scripts/runtime_regression/README.md`。
 - 新游戏 / 老游戏（v7.8）：`run(..., policy=None)` 不给时按包的字节判（和 `package_gates` 一样：场景 / 资源 uuid 对
   `LEGACY_GAMES.json`，不在名单 = 新游戏，判不出 = 新游戏），结果写在摘要的 `policy`、`policy_reason`，并传给套件
-  （`CFG.policy`）。`--policy new|legacy` 只给测试和校准用。写包时 `check_package.check()` 把共用门禁定下的 policy（写包入口
-  finalize 记录里的那个）传给 `runtime_gate(..., policy=)`，运行时套件和共用门禁按同一个判定（FoxDenDash v1 回执写 new、
+  （`CFG.policy`）。`--policy new|legacy` 只给测试和校准用。统一 writer 消费已准备候选的 policy 和有效运行记录，运行时 producer 与共用门禁按同一个判定（FoxDenDash v1 回执写 new、
   按字节判 legacy，写包时按 new）。只给 ZIP 跑 `check_package.py` 时没有 finalize 记录，两边都按字节判。
 
 ### 开跑前查环境（v7.8，总表 A6 补）
@@ -71,8 +61,7 @@ python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapt
   `touch-coordinates.js`、3.x 要 `tiktok-touch-3x.js`、这个包里装没装。别的写法的触摸修正探针认就算有；探针跑不了时才只看平台包触摸件装没装。
   不是 Cocos 包不查。
 - **写包回执**（只在命令行对 ZIP 跑时查）：ZIP 旁边要有写包入口给这份字节写的回执（`verify_native_zip.receipt_status`，和
-  `check_package.py` 认回执的办法一样，改名后按字节找也认）。写包入口自己在写回执之前调用 `run()`，所以 Python 里调用 `run()`
-  从不查回执；对解压目录跑也不查。要诊断手打的 ZIP，解压后对目录跑。
+  `check_package.py` 认回执的办法一样，改名后按字节找也认）。producer 可以在首个写包回执形成之前运行，所以 Python 里显式调用 `run()` 和对解压目录运行不要求已有回执；writer 本身只消费既有结果。要诊断手打的 ZIP，解压后对目录跑。
 - 退出码：0 通过、1 包不通过（用例不过或运行被拒）、2 环境不完整；`--out` / `--report` 里 `status: environment_incomplete`、
   `verdict` 写结论，stderr 最后一行「结论: ……」。写包入口照样拒绝（`EnvironmentIncomplete` 是 `RuntimeRefused` /
   `RegressionRefused` 的子类），拒绝原因以「环境不完整：」开头。
@@ -95,19 +84,19 @@ python3 -B runtime_regression.py trial --url http://127.0.0.1:<端口>/ [--adapt
 - **开浏览器前先查 adapter（②）**：`runtime_regression.run()` 在第一个套件开浏览器之前，把这次要跑的每个套件缺的东西一次列全
   （`config_problems`：套件 `needs` 里的字段、`needs_new`、`na_field` 的格式、引擎不支持），有就拒，一个浏览器都不开；老游戏的
   `needs_new` 照旧只警告。以前要等前面的套件跑完才报，而且只报最后撞到的那一条：全民飞车漂移 v3.1 跑了 883 秒才报缺
-  popin，FoxDenDash v1 曾跑了 457 秒只报缺 play。frame_rate 现为显式诊断，不因其缺失阻拦默认终检。广告回归（约 1.5 分钟）照旧先跑。
+  popin，FoxDenDash v1 曾跑了 457 秒只报缺 play。frame_rate 现为显式诊断，不因其缺失阻拦默认终检。广告回归也先按实际计划沿用有效记录。
   `build_checked_zip.py` 也在启动检查和回归之前先核对 finalize 记录和要压进 ZIP 的文件。
 - **静态已经拒了就不跑浏览器套件（总表 19 ④）**：`check_package.check()` 的静态检查（verifier、启动、打包资源、共用门禁）已经拒了的包，
   反正要修好重出，广告回归和运行时套件（7.5～15 分钟）不跑；拒绝原因照旧一次列全，最后一段写「浏览器套件没跑：先修上面的问题，出了
-  新包再跑」（`BROWSER_SKIPPED_NOTE`）。两个写包入口本来就是静态问题先拒、不开浏览器。静态全过的包照旧两套都跑。
+  新包再跑」（`BROWSER_SKIPPED_NOTE`）。统一 writer 和交付消费证据时始终不开浏览器；静态通过后，也只回生产节点补真正缺失或受影响的项。
 - **卡住就停（③）**：广告回归和每个运行时套件边跑边看（`cocos-game-check/package-check/scripts/watched_run.py`）：240 秒里既没有新的
   输出行，工作目录里（宿主日志、结果、证据、`progress.txt`）也没有任何文件变化，就停掉这一步和它起的进程，按「没有进展」拒，不再等
   到套件自己的上限（startup、ad_entries 1500 秒）。`lib.mjs`、`gates.mjs` 每次页面往返写一次 `progress.txt`（最多每秒一次），所以慢
   但在动的套件不会被停。总超时照旧。`$TIKTOK_REGRESSION_STALL_S` 改这个窗口，只给测试用。
-- **交付不重跑（①）**：两个写包入口把通过的两项回归记进收据（`regressions`）。`prepare_delivery.py` 对同一个 ZIP 核对 adapter 文件和
+- **交付不重跑（①）**：统一 writer 把通过的两项回归记进收据（`regressions`）。`prepare_delivery.py` 对同一个 ZIP 核对 adapter 文件和
   两套检查工具的 SHA-256 都和写包时一样、要跑的套件一样、写包时按新游戏或同样的口径判，就直接用收据里的结果，不再开浏览器（每次交付
   省 7.5～15 分钟）；有一样不同就照旧全跑。交付记录的 `regression_reuse` 写明复用了，或者为什么没复用。v7.9 以前的收据没有这条记录，
-  交付时照旧全跑。
+  交付只沿用有效逐项记录，不能因进入交付阶段重跑全部项。
 
 ### 出包后返工只查改动（现行逐项记录）
 

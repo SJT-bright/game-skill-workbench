@@ -26,6 +26,34 @@ const R = await import(new URL('layout_rules.mjs', globalThis.CFG.lib).href);
 const P = await import(new URL('phone.mjs', globalThis.CFG.lib).href);
 const path = await import('node:path');
 const C = L.C, A = L.A;
+// Suite-local optional project observer: canonical adapter and other suite inputs remain untouched.
+const observerFS = await import('node:fs');
+const observerCrypto = await import('node:crypto');
+const observerURL = await import('node:url');
+const observerCP = await import('node:child_process');
+const observerPython = `import sys,json,hashlib
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+import project_qa
+from check_ledger import project_of
+p=project_of(Path(sys.argv[2]) if sys.argv[2] else None,Path(sys.argv[3]) if sys.argv[3] else None)
+entry=project_qa.project_policy(p,required_paths=[])
+if entry is None or 'ad_nodes.readonly_observer.v1' not in entry['policy'].get('validators',{}):print('null');sys.exit(0)
+policy=project_qa.lookup(p,'validators','ad_nodes.readonly_observer.v1')
+ctx=project_qa.module(policy,'ad_readonly_context').readonly_observer(p)
+if ctx.get('suite')!='ad_outcome' or ctx.get('kind')!='readonly_original_promise_instrumentation':raise ValueError('wrong suite observer context')
+q=project_qa.relative_file(p,ctx.get('path'))
+h=hashlib.sha256(q.read_bytes()).hexdigest()
+if str(q) not in policy['dependencies'] or policy['dependencies'][str(q)]!=h or ctx.get('sha256')!=h:raise ValueError('observer is not an exact registered dependency')
+print(json.dumps(dict(ctx,path=str(q),registration_path=policy['path'],registration_sha256=policy['sha256'])))
+`;
+const observerCore = observerURL.fileURLToPath(new URL('../../../../remake-core/scripts/', C.lib));
+const readonlyObserver = JSON.parse(observerCP.execFileSync('python3', ['-B','-c',observerPython,observerCore,C.package || '',C.adapterPath || ''], {encoding:'utf8'}));
+let readonlyObserverCode = null;
+if (readonlyObserver) {
+  readonlyObserverCode = observerFS.readFileSync(readonlyObserver.path,'utf8');
+  if (observerCrypto.createHash('sha256').update(readonlyObserverCode).digest('hex') !== readonlyObserver.sha256) throw Error('registered observer bytes changed before injection');
+}
 const POLICY = C.policy === 'legacy' ? 'legacy' : 'new';
 const O = A.ad_outcome || {};
 const FACTS = C.facts || {};
@@ -93,6 +121,7 @@ async function reach(page, en) {
   const home = await G.waitHome(page, { homeScene: A.home_scene || null, adapterHome: A.home || null });
   if (!home.ok) return home.fps != null && home.fps < G.MIN_FPS ? 'invalid run: the page ran at ' + home.fps + ' fps, re-run with the Ego window visible' : 'untestable: home not reached';
   if (A.after_home_js) { await G.evalJs(page, A.after_home_js).catch(() => null); await P.sleep(400); }
+  if (readonlyObserverCode) await G.evalJs(page, readonlyObserverCode);
   if (en.state.play) { const e = await P.enterLevel(page); if (!e.ok) return 'untestable: the level was not entered (' + e.why + ')'; }
   if (en.state.actions && en.state.actions.length) { const r = await P.steps(page, en.state.actions); if (!r.ok) return 'untestable: state not reached: ' + r.why; }
   if (en.state.setup_js) await G.evalJs(page, en.state.setup_js).catch(() => null);
@@ -116,6 +145,7 @@ const promptsSince = (page, g0) => page.evaluate((g) => (window.__gateLog || [])
 
 // one real tap on the entry while the next simulated ad ends `mode` -> {gone} | {noAd, reaction, prompts} | {ad, before, noisy, g0}
 async function adTap(page, en, mode) {
+  const auditBefore = await G.evalJs(page, 'return window.__ad6Probe ? window.__ad6Probe.snapshot() : null;').catch(() => null);
   await P.setAd(page, mode);
   const p = await find(page, en);
   if (!p) return { gone: true };
@@ -145,7 +175,7 @@ async function adTap(page, en, mode) {
     const n = d.add.length + d.gone.length + d.moved.length + d.text.length + d.sprite.length;
     return { noAd: true, prompts, reaction: prompts.length ? 'prompt' : after.scene !== before.scene ? 'scene' : n ? 'screen' : null };
   }
-  return { ad: seen, before, noisy, g0, gEnd, prompts };
+  return { ad: seen, before, noisy, g0, gEnd, prompts, auditBefore };
 }
 
 // after an ad: a dialog over the game is answered, the pause popup the game opened meanwhile goes with ONE tap. A
@@ -178,7 +208,7 @@ async function usable(page, en) {
 const safe = (s) => String(s).replace(/[^\w.-]+/g, '_').slice(0, 60);
 
 await L.suite(async ({ out, page }) => {
-  const rep = { suite: 'ad_outcome', policy: POLICY, cases: [] };
+  const rep = { suite: 'ad_outcome', policy: POLICY, cases: [], readonly_observer: readonlyObserver };
   const bad = problems();
   if (bad.length) { out.add('adapter', POLICY === 'legacy', bad.join('; ')); return; }
   // One unit includes cancel AND completion on the same entry. Neither half
@@ -256,7 +286,7 @@ await L.suite(async ({ out, page }) => {
       if (base && base.adapterError) { res.cancel = res.complete = 'untestable: reward_js threw: ' + base.adapterError; break run; }
 
       const t1 = await adTap(page, en, 'cancel');
-      c.cancel = { ad: t1.ad || null, reaction: t1.reaction || null, prompts: t1.prompts || [] };
+      c.cancel = { ad: t1.ad || null, reaction: t1.reaction || null, prompts: t1.prompts || [], audit_before: t1.auditBefore || null };
       if (t1.gone) { res.cancel = res.complete = 'missing_entry: ' + c.button + ' not on screen once the state is reached'; break run; }
       if (t1.noAd) {
         const said = t1.prompts.length ? ' (the game said: ' + t1.prompts.join(' / ') + ')' : t1.reaction ? ' (the screen changed: ' + t1.reaction + ')' : ' and nothing happened';
@@ -275,6 +305,7 @@ await L.suite(async ({ out, page }) => {
         c.reward1 = await reward();
         if (!P.same(c.reward1, base)) res.cancel = 'cancel: the ad was closed early but the reward was given anyway (reward_js ' + J(base) + ' -> ' + J(c.reward1) + ')';
       }
+      c.cancel.audit_settled = await G.evalJs(page, 'return window.__ad6Probe ? window.__ad6Probe.snapshot() : null;').catch(() => null);
       // ---- complete: the same button again ----
       let t2 = await adTap(page, en, 'complete');
       c.second = { gone: !!t2.gone, ad: t2.ad || null, reaction: t2.reaction || null, prompts: t2.prompts || [] };
@@ -294,7 +325,7 @@ await L.suite(async ({ out, page }) => {
       } else if (spec.reward_js) base = c.reward1 !== undefined ? c.reward1 : await reward();
       if (!t2.ad.ended) { res.complete = 'untestable: the simulated ad never ended (host log)'; break run; }
       await P.sleep(1200);
-      c.complete = { ad: t2.ad, back_png: await G.shot(page, path.join(C.evidenceDir, 'ad-' + safe(en.id) + '-complete-back.png')) };
+      c.complete = { ad: t2.ad, audit_before: t2.auditBefore || null, back_png: await G.shot(page, path.join(C.evidenceDir, 'ad-' + safe(en.id) + '-complete-back.png')) };
       const k2 = await closeBack(page, cont, t2.before);
       c.complete.continue = k2;
       if (k2.still) { res.complete = 'complete: after the ad the pause popup did not close with 2 taps on ' + k2.button; break run; }
@@ -329,6 +360,7 @@ await L.suite(async ({ out, page }) => {
       for (const p of spec.after_visible || []) {
         if (!(await G.nodeCentre(page, p).catch(() => null))) { res.complete = 'complete: after the ad ' + p + ' is not on screen any more (拇指弹球 v5: BACK gone after a revive)'; break run; }
       }
+      c.complete.audit_settled = await G.evalJs(page, 'return window.__ad6Probe ? window.__ad6Probe.snapshot() : null;').catch(() => null);
       if (en.level && RP) {
         const pl = await P.playable(page, RP);
         c.playable = pl;

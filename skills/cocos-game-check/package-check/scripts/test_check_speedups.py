@@ -169,25 +169,15 @@ def fake_static(files, archive, entry='unofficial', receipt=None, policy='new', 
 class FinalizeBeforeRuntime(Tmp):
     def test_mismatch_refuses_before_startup_runtime_and_regressions(self):
         import build_checked_zip
-        native = self.root / 'Native'
-        write(native / 'game.js', GAME['game.js'])
-        write(native / 'project.config.json', {'appid': 'tt0000000000000000'})
-        manifest = write(self.root / 'resources.json', {'requests': []})
-        finalized = {'kind': 'finalize-native', 'policy': 'new', 'decision': {'reason': 'test'}, 'blocks': [],
-                     'files_after': {'game.js': '0' * 64}, 'steps': [], 'table': []}
-        startup, checker = mock.Mock(), mock.Mock()
-        with mock.patch('make_tiktok_zip.finalize_for_writer', return_value=(finalized, {}, [])), \
-                mock.patch('make_tiktok_zip.native_problems', return_value=([], None, {})), \
-                mock.patch.object(build_checked_zip.package_obligations, 'verify', return_value={}), \
-                mock.patch.object(check_package, 'packed_assets', return_value={'passed': True, 'errors': []}), \
-                mock.patch.object(build_checked_zip, 'audit_final_startup', startup), \
-                mock.patch.object(build_checked_zip, 'check', checker):
-            with self.assertRaises(ValueError) as caught:
-                build_checked_zip.build(native, 'tt0000000000000000', self.root / 'out' / 'Game.zip',
-                                        resource_manifest=manifest, project=self.root, ad_regression=str(self.adapter(COMPLETE)))
-        self.assertIn('finalize record does not match the ZIP', str(caught.exception))
-        startup.assert_not_called()
-        checker.assert_not_called()
+        import make_tiktok_zip as writer
+        from test_single_writer import SingleWriter
+        actual_finalize_problem=writer.vnz.finalize_problem
+        f=SingleWriter('test_legacy_build_routes_all_parameters_once');f.setUp();self.addCleanup(f.doCleanups);f.mock_engine()
+        finalized={'kind':'finalize-native','policy':'new','blocks':[],'files_after':{'game.js':'0'*64}}
+        with mock.patch.object(writer,'finalize_for_writer',return_value=(finalized,{},[])), mock.patch.object(writer.vnz,'finalize_problem',side_effect=actual_finalize_problem), mock.patch.object(writer,'writer_regressions') as regressions:
+            with self.assertRaisesRegex(ValueError,'finalize record does not match the ZIP'):
+                build_checked_zip.build(**f.kw)
+        f.startup.assert_not_called();regressions.assert_not_called();self.assertFalse(f.out.exists())
 
 
 # ---------------------------------------------------------------- 3. S1: delivery reuses the writer's passed regressions
@@ -285,8 +275,6 @@ class WriterReceiptReuse(Tmp):
         self.assertNotIn('regression_reuse', result)
 
     def test_writers_keep_the_record_and_delivery_asks_for_it(self):
-        src = (HERE / 'build_checked_zip.py').read_text(encoding='utf-8')
-        self.assertIn("'regressions': package_checks.regression_record(", src)
         import make_tiktok_zip
         regressions = {'rewarded_ad_regression': object(), 'runtime_regression': object()}
         sentinel = {'unit_test': 'verified regression record'}
@@ -298,7 +286,7 @@ class WriterReceiptReuse(Tmp):
         # The writer now checks the result before passing it to make_receipt.
         # Inspect the binding/order instead of requiring an obsolete inline call.
         tree = ast.parse((SHARED / 'make_tiktok_zip.py').read_text(encoding='utf-8'))
-        main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+        main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'write_package')
         assignment = next(n for n in ast.walk(main) if isinstance(n, ast.Assign)
                           and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Name)
                           and n.value.func.id == 'regression_receipt')

@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from check_package import native_files, write_archive
-from test_package_checks import fixture, runtime_patch, APP, fixture_project
+from test_package_checks import fixture, runtime_patch, APP, fixture_project, prepare_writer_fixture
 _RUNTIME = runtime_patch()
 setUpModule, tearDownModule = _RUNTIME.start, _RUNTIME.stop
 from build_checked_zip import build
@@ -193,12 +193,14 @@ class RelocatedWriterDelivery(unittest.TestCase):
             p=self.native/name; p.parent.mkdir(parents=True,exist_ok=True); p.write_bytes(raw)
         manifest = self.root/'resources.json'
         manifest.write_text('{"resources":[{"bundle":"main","path":"runtime-fixture","type":"cc.JsonAsset"}]}')
-        return self.clone(), manifest
+        moved = self.clone()
+        prepare_writer_fixture(moved, self.project)
+        return moved, manifest
 
     def test_writer_and_delivery_accept_same_dependency_bytes(self):
         moved,manifest = self.package(); archive=self.root/'game.zip'
-        with patch('build_checked_zip.audit_final_startup', return_value={'passed':True}):
-            result=build(moved,APP,archive,project=self.project,resource_manifest=manifest)
+        with patch('audit_final_package_startup.audit_final_startup', return_value={'passed':True}):
+            result=build(moved,APP,archive,project=self.project,resource_manifest=manifest,web=moved)
         self.assertTrue(result['package_obligations']['reported_issues']['checked_issues'][0]['dependency_bytes_reused'])
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
                 patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': [], 'version': 'synthetic-unrelated-cli-boundary'}), \
@@ -226,16 +228,16 @@ class RelocatedWriterDelivery(unittest.TestCase):
 
     def test_original_evidence_loss_blocks_writer_before_runtime(self):
         moved,manifest=self.package(); (self.native/'state.json').unlink(); out=self.root/'game.zip'
-        with patch('build_checked_zip.audit_final_startup') as runtime:
+        with patch('audit_final_package_startup.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError,'production artifact missing/changed'):
-                build(moved,APP,out,project=self.project,resource_manifest=manifest)
+                build(moved,APP,out,project=self.project,resource_manifest=manifest,web=moved)
             runtime.assert_not_called()
         self.assertFalse(out.exists())
 
     def test_original_evidence_loss_blocks_delivery_record(self):
         moved,manifest=self.package(); archive=self.root/'game.zip'
-        with patch('build_checked_zip.audit_final_startup',return_value={'passed':True}):
-            build(moved,APP,archive,project=self.project,resource_manifest=manifest)
+        with patch('audit_final_package_startup.audit_final_startup',return_value={'passed':True}):
+            build(moved,APP,archive,project=self.project,resource_manifest=manifest,web=moved)
         (self.normal/'state.json').unlink();record=self.root/'delivery.json'
         with patch('prepare_delivery.tempfile.gettempdir',return_value=str(self.root/'other-temp')), \
                 patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': [], 'version': 'synthetic-unrelated-cli-boundary'}), \

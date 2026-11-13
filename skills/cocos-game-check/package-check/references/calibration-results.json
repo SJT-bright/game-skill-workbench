@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
- "date": "2026-11-12",
- "release_label": "v7.9-en11.17.28-cursor-storage-handoff",
- "selftest_report_sha256": "c2a87aa95f771b2d9c17799e5204e510e89ed21f0cff5efb2b71ad21c46d6f20",
+ "date": "2026-11-13",
+ "release_label": "v7.9-en11.17.29-single-writer-scoped-receipts",
+ "selftest_report_sha256": "3ac5f02a047abd10827bd8dc14f7344fd899986a8761ec8f125ec57a4c10462e",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
@@ -11,7 +11,7 @@
   "remake-core/scripts/package_gates/ads_static.py": "ed7f1225f8e7133da01695b668b9ec22a347677a5022bb5c8f179e80d9902de2",
   "remake-core/scripts/package_gates/audio.py": "10315db6928d1a9f3bc1ed13857971242f6520fa8a49f6bcdc754d6e5658ed49",
   "remake-core/scripts/package_gates/kit_parts.py": "1e771575f90f31673008921ebd01772be803bbb381e2f1a6bc8c28bffee19693",
-  "remake-core/scripts/package_gates/kit_versions.py": "ea95dc3136ae4343563e692d842d14521c3792f01f313f8185772324027c393d",
+  "remake-core/scripts/package_gates/kit_versions.py": "e6782e9f66c8eb38490fd2490da610d250f6ac33eed4de2f6eed9f6abae7f971",
   "remake-core/scripts/package_gates/mission.py": "78a2749ce1425c6bb5f131f84240dd06a87dc5e1b20c5fdbe0f9485658f6bf7b",
   "remake-core/scripts/package_gates/network.py": "82c0c8ae999d429cca4e3bd4e20df1324b201d00470f30282e180d564950a5c5",
   "remake-core/scripts/package_gates/portrait.py": "1c75fc6cd0e75cfaba47e9bcd0964aaf4e2a1c13096264bffcb0ac448c5ee009",
@@ -21,7 +21,7 @@
   "remake-core/scripts/package_gates/tiktok_compat.py": "86eb559eb9181e37cfc3044c3ec14f0931f1047b08acdff93712ea087ba16ca1",
   "remake-core/scripts/package_gates/webp.py": "4281ffaf7fae8f7c77d29262ee0d3d3d8f4df4230559e18004eaa64c9f81cb70",
   "remake-core/scripts/verify_native_zip.py": "7db0bd7986780013f42611f1bbbdde36a1b419d1015359bf6ac14cbb10db45b8",
-  "remake-core/scripts/upload_size_gate.py": "f4ea0b03060100d8c9d56c3a1d6521ebc3f4ccd0c7dc17bef6917cfc547848dc",
+  "remake-core/scripts/upload_size_gate.py": "34b4ca067719f44c8dafb50f664fcb30c43c1106ea1852c170cd1ee997549226",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
   "remake-core/scripts/tiktok_finalize.py": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
   "remake-core/scripts/tiktok_finalize_steps/__init__.py": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
@@ -59,7 +59,7 @@
   "cocos-game-check/package-check/scripts/ad_regression/cases.mjs": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
   "cocos-game-check/package-check/scripts/runtime_regression/lib.mjs": "66b3faf8e5f300c34257d48560b287ef60a5ddb0ac3459170211c202e45496cc",
   "remake-core/scripts/audit_image_review_record.py": "631387e5efde7676733adfd2be68e06224282e30b4bb494ccc1553e0ba787471",
-  "remake-core/scripts/audit_atlas_slices.py": "5b7d85a3b2b5050986917d0d2a289f127c4e211f2985071d1360f370236822ca",
+  "remake-core/scripts/audit_atlas_slices.py": "62917e6815a68805c517ca950becd3e3dfda77635cd531ae32a6a0edf13ecce3",
   "remake-core/scripts/spine_atlas_binding.py": "4169014911f9b33ac95f4c291bad14ba1d0f270844d110b0b55a5bbe14c904f4"
  },
  "release_checks": {
@@ -758,24 +758,12 @@
    "game": "鸽鸽小羊（真实ZIP；新构造平台拒绝控制输入）",
    "role": "bad",
    "check": "upload_size_zip",
-   "item": "new controlled exact-ZIP refusal fixture",
+   "item": "historical exact ZIP SDK prerequisite negative",
    "expect": {
     "passed": false,
-    "main_bytes": 1224175,
-    "total_bytes": 7797255,
-    "normal_subpackages": {
-     "subpackages/MainScene/": 5841472,
-     "subpackages/AudioAssets/": 731608
-    },
-    "independent_subpackages": {},
-    "crc_verified": true,
     "errors": [
-     "This exact ZIP was rejected by the platform; local arithmetic cannot clear the rejection"
-    ],
-    "platform_feedback": {
-     "sha256": "97d9c86a55593ed9f8bff445586ab0ed87b7e1967fee6f485f703f093127a20a",
-     "same_rejected_archive": true
-    }
+     "TikTok ad SDK capability rejects callable API: assets/main/index.js:1:113247 [ad_sdk_can_i_use_falsy_rejection] Callable rewarded API is rejected when canIUse returns undefined; reject only explicit false (or a failed capability call).; assets/main/index.js:1:115549 [ad_sdk_can_i_use_falsy_rejection] Callable rewarded API is rejected when canIUse returns undefined; reject only explicit false (or a failed capability call)."
+    ]
    },
    "ok": true,
    "since": null
@@ -807,10 +795,37 @@
    },
    "ok": true,
    "since": "v7.9"
+  },
+  {
+   "id": "controlled-platform-refused-sdk-compatible-identical-zip",
+   "game": "小羊隔离SDK兼容衍生校准样本",
+   "role": "bad",
+   "check": "upload_size_zip",
+   "item": "new controlled exact-ZIP refusal fixture",
+   "expect": {
+    "passed": false,
+    "main_bytes": 1224197,
+    "total_bytes": 7797277,
+    "normal_subpackages": {
+     "subpackages/MainScene/": 5841472,
+     "subpackages/AudioAssets/": 731608
+    },
+    "independent_subpackages": {},
+    "crc_verified": true,
+    "errors": [
+     "This exact ZIP was rejected by the platform; local arithmetic cannot clear the rejection"
+    ],
+    "platform_feedback": {
+     "sha256": "9cc8955065b380a6eac9bb8852279c1e533c67c2cc13b3eb9445ef0ee4358c5f",
+     "same_rejected_archive": true
+    }
+   },
+   "ok": true,
+   "since": null
   }
  ],
  "test_inventory": {
-  "files": 772,
+  "files": 799,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",

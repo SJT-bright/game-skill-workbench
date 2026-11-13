@@ -29,12 +29,12 @@ class FinalStartupGate(unittest.TestCase):
     def save(self):self.contract.write_text(json.dumps(self.data))
     def call(self):return gate.audit_final_startup(self.native,self.project,self.contract,self.recovery)
     def test_no_runtime_proof_no_zip(self):
-        out=self.root/'test.zip'
-        with patch('audit_final_storage.audit_final_storage', return_value={'id': 'storage.native.contract', 'action': 'rejudged', 'status': 'synthetic_unrelated_boundary'}), \
-                patch('upload_size_gate.enforce_tiktok_host'), \
-                self.assertRaisesRegex(ValueError,'scope_required'):
-            build(self.native,APP,out,resource_manifest=self.manifest,project=self.project)
-        self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))
+        from test_single_writer import SingleWriter
+        actual_startup=gate.audit_final_startup
+        f=SingleWriter('test_legacy_build_routes_all_parameters_once');f.setUp();self.addCleanup(f.doCleanups);f.mock_engine()
+        with patch.object(gate,'audit_final_startup',side_effect=actual_startup), self.assertRaisesRegex(ValueError,'final Native startup evidence required'):
+            build(**f.kw)
+        self.assertFalse(f.out.exists());self.assertFalse(list(f.home.glob('.tiktok-package-*')))
     def test_failed_contract_rejected(self):
         self.data['passed']=False;self.save()
         with self.assertRaisesRegex(ValueError,'missing or failed'):self.call()

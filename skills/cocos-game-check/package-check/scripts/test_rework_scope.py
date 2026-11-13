@@ -602,19 +602,25 @@ class WriterRecord(Base):
         self.assertIn('包已经出好', RS.writer_lines(p, rec)[-1])
 
     def test_both_writers_write_it_after_publishing(self):
-        import inspect
-        import build_checked_zip as B
-        body = inspect.getsource(B.build)
-        self.assertLess(body.index('delivery_folder.tidy('),
-                        body.index("rework_scope.record_for_writer(project, result.get('rework'))"))
-        self.assertIn("rework_scope.writer_lines(rework, result.get('rework_record'))", inspect.getsource(B.main))
-        sys.path.insert(0, str(HERE.parents[2] / 'remake-core' / 'scripts'))
         import make_tiktok_zip as M
-        body = inspect.getsource(M.main)
-        record = "rework_record(a.project, regressions.get('rework'))"
-        self.assertLess(body.index('delivery_folder.tidy(out'), body.index(record))
-        self.assertLess(body.index(record), body.index('report_path.write_text('))
-        self.assertIn("rework_lines(regressions['rework'], rework_rec)", body)
+        import build_checked_zip as B
+        import delivery_folder
+        from test_single_writer import SingleWriter
+        f=SingleWriter('test_legacy_build_routes_all_parameters_once');f.setUp();self.addCleanup(f.doCleanups);f.mock_engine()
+        events=[]
+        def tidy(*args, **kwargs):
+            self.assertTrue(f.out.is_file());events.append('tidy');return {'fixture':True}
+        def rework(*args):
+            self.assertEqual(events,['tidy']);self.assertTrue(f.out.is_file());events.append('rework');return {'path':'recorded-rework'}
+        with mock.patch.object(delivery_folder,'tidy',side_effect=tidy), mock.patch.object(M,'rework_record',side_effect=rework):
+            result=B.build(**f.kw)
+        self.assertEqual(events,['tidy','rework'])
+        self.assertEqual(result['rework_record'],{'path':'recorded-rework'})
+        argv=['--native',str(f.native),'--app-id',f.app,'--out',str(f.out),'--project',str(f.project),'--resource-manifest',str(f.manifest)]
+        with mock.patch.object(M,'write_package',return_value=result), mock.patch.object(M,'rework_lines',return_value=['retained rework record']) as lines, mock.patch.object(delivery_folder,'describe',return_value=[]), contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(B.main(argv),0)
+        lines.assert_called_once_with(result['rework'],result['rework_record'])
+        self.assertIn('retained rework record',output.getvalue())
 
 
 class StandardLibraryOnly(unittest.TestCase):

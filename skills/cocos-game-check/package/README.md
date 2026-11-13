@@ -1,6 +1,6 @@
 # TikTok小游戏出包与交付
 
-2026-11-11：当前完整制作的六标准广告与新增UI由两写包入口和最终ZIP共享门禁自动核，缺任何一类都不能以扩展顶替；检查用 `check_package.py --project <实际工程>`，规则及阶段范围见[六标准制作](../../remake-core/references/ad-standard-six.md)。
+2026-11-11：当前完整制作的六标准广告与新增UI由统一写包入口和最终 ZIP 共享门禁核对，缺任何一类都不能以扩展顶替；检查用 `check_package.py --project <实际工程>`，规则及阶段范围见[六标准制作](../../remake-core/references/ad-standard-six.md)。
 
 **拒绝后继续执行（2026-11-11）**。当轮已授权的写包与交付遇到失败时，读取原错误并修复具体节点，沿用未受影响的有效证据，再回原入口续跑到同版交付。只补验真实改动或缺证项；不要停在“ZIP 尚未生成”或等待用户再次说继续。
 
@@ -14,13 +14,13 @@
 
 | 当前任务 | 执行路线 |
 |---|---|
-| 新制作首次完整验收/明确完整重做 | 当前适用review通过后用共享 `make_tiktok_zip.py`；完整review与必要启动/存储门禁保留 |
-| 已批准成品的局部修改或同版重出 | 使用[最终文件检查与轻量writer](../package-check/README.md)，沿用有效功能证据；仅补受影响问题，不重做已批准美术和无关游戏CI |
+| 新制作首次完整验收/明确完整重做 | 各生产节点完成本次适用检查；唯一 `make_tiktok_zip.py` 消费原记录，摘要不另造手填总表 |
+| 已批准成品的局部修改或同版重出 | 仍用同一 `make_tiktok_zip.py`；沿用有效证据，只回受影响节点补验，不重做已批准美术和无关游戏 CI |
 | 单独判断已有ZIP | `verify_native_zip.py <ZIP>`或最终检查器；只读诊断不等于已完成可交付门禁 |
 
 共同策略见[执行去重](../test/references/review-execution-plan.md)。适用检查已通过、证据有效且无新改动/失败/疑点即停止，不因表格不同重复操作。
 
-## 两条writer共用的必要门禁
+## 统一 writer 的必要门禁
 
 - 当前目标App ID、真实Native根入口/引擎/adapter/分包、静态资源完整性和场景组件绑定。
 - 固定未压缩限额：总包≤30,000,000、主包≤4,000,000、每个独立分包≤4,000,000字节，普通分包计总包。按 `upload_size_gate.py`执行；压缩后大小不能替代。
@@ -32,12 +32,12 @@
 
 ## 正式writer命令
 
-Creator 构建之前先跑 `python3 <skills>/remake-core/scripts/tiktok_finalize.py source --project <工程> --board remake|localize`。英化先完成同版 Native 准备。写包入口先查源码段记录（K5），完整美术回执和全量逐图复核记录已撤销，再按需执行产物段（装触摸、存档层、启动件、适配层、App ID，最后 `upload_compat` 补分包 root 的 `/`、`game.js` 本地引用的 `./` 和扩展名、`project.config.json` 编译选项），并用 K1～K5 确认。平台上传或审核退回、要求修回访/桌面入口时按[上传兼容与首页两入口定点修复](references/upload-compat-and-entry-fix.md)只改只查这几处。英化 PNG 沿用试玩前已处理且核对通过的实际文件。`--project` 必须给。游戏自己的打包步骤（例如 MabelsMeadow 的 `scripts/prepare-native-package.py` 把 `config/*.json` 放到包根）不是标准件，仍由这款游戏在写包入口之前对 `<Native>` 做完。收据是 schema 2、带 `finalize` 记录；v7.6 写包入口出的 ZIP 收据在 v7.7 不算官方入口，交付前用 v7.7 写包入口重新出。WebP 例外（只限 2.4）要给 `--keep-webp-exception <原因>`，原因和源码段用的一字不差，否则 K5 拒绝。规则见 [TikTok 固定适配·出包时怎么装](../references/tiktok-fixed-adaptation.md)。
+Creator 构建之前先跑 `python3 <skills>/remake-core/scripts/tiktok_finalize.py source --project <工程> --board remake|localize`。英化先完成同版 Native 准备。准备节点先查源码段记录（K5），完整美术回执和全量逐图复核记录已撤销，再按需执行产物段（装触摸、存档层、启动件、适配层、App ID，最后 `upload_compat` 补分包 root 的 `/`、`game.js` 本地引用的 `./` 和扩展名、`project.config.json` 编译选项），并用 K1～K5 确认。统一 writer 只消费已完成的准备证明，不在写包时修改 Native；缺项回准备节点继续处理。平台上传或审核退回、要求修回访/桌面入口时按[上传兼容与首页两入口定点修复](references/upload-compat-and-entry-fix.md)只改只查这几处。英化 PNG 沿用试玩前已处理且核对通过的实际文件。`--project` 必须给。游戏自己的打包步骤（例如 MabelsMeadow 的 `scripts/prepare-native-package.py` 把 `config/*.json` 放到包根）不是标准件，仍由这款游戏在写包入口之前对 `<Native>` 做完。收据是 schema 2、带 `finalize` 记录；v7.6 写包入口出的 ZIP 收据在 v7.7 不算官方入口，交付前用 v7.7 写包入口重新出。WebP 例外（只限 2.4）要给 `--keep-webp-exception <原因>`，原因和源码段用的一字不差，否则 K5 拒绝。规则见 [TikTok 固定适配·出包时怎么装](../references/tiktok-fixed-adaptation.md)。
 
 ```sh
 python <skills>/remake-core/scripts/make_tiktok_zip.py \
   --native <Native> --app-id <目标AppID> --out <稳定交付目录/新版本.zip> \
-  --project <工程> --web <同版Web> --build-tag <版本> --review <本轮review.json> \
+  --project <工程> --web <同版Web> --build-tag <版本> \
   --resource-manifest <当前资源清单.json> --startup-contract <当前启动合同.json> \
   --loading-recovery-runtime <当前恢复索引.json>
 ```

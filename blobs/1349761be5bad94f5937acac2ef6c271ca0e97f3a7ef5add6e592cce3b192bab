@@ -1,0 +1,645 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-11-13.english-simple.11.17.30",
+  "skill": "remake-art",
+  "previous_provenance_sha256": "be0af96f4d2c6b10b25da02478d15a366e5923c2a1c9c60e26eb27a2b10b235c",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "1124e55465bb05ec15cefa32b859a8f22cbcd298455b2fef5d9004de78d98ee0",
+      "bytes": 27874
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "9bc0fe9451c4258a5ce7a18544dc9abc26e3052cdeb199432211fdf08e5c25cf",
+      "bytes": 353
+    },
+    {
+      "path": "examples/fixed-caption/base.png",
+      "sha256": "f5d81f5323e3d5441e333107ce31b63c2a7e7c6bc8d4b17e72cf4df48f335317",
+      "bytes": 7917
+    },
+    {
+      "path": "examples/fixed-caption/claim.png",
+      "sha256": "aa4ccea4099f36c2a6e42f87b46b2dba47100dad842c54867f6227c6cdf280f8",
+      "bytes": 26681
+    },
+    {
+      "path": "examples/fixed-caption/recipe.json",
+      "sha256": "3e21afa591d546dddd8491bf4436d71efb9f488b1fc0e61b0f0089e6f6f67433",
+      "bytes": 548
+    },
+    {
+      "path": "examples/fixed-caption/video.png",
+      "sha256": "456f783b4aaf6c327152cb1ffe6ae635696f414c51d747887b2f2f642e47b860",
+      "bytes": 412
+    },
+    {
+      "path": "examples/weekly-league-typed-text-counterexample-v042.png",
+      "sha256": "9da85657cf23d8add2e35af3bdf008dff0f20bd0aff520fa2f30c1be9189d86f",
+      "bytes": 744350
+    },
+    {
+      "path": "references/actor-pose-handoffs.md",
+      "sha256": "280f94dc1a74166910b36cde36eb1700ce1d2b16cfee28fed9019727383e52b2",
+      "bytes": 5584
+    },
+    {
+      "path": "references/art-before-trial.md",
+      "sha256": "e6c480b2ead5c45eb0ea35c4023a835ae7f164ad6c67c10ef8ee9395d0d557c7",
+      "bytes": 5574
+    },
+    {
+      "path": "references/art-iteration-workflow.md",
+      "sha256": "aa893c65c15b6420a819b0e0074ba5a55edf659df6d897dd4f0aaef7cadcf1b2",
+      "bytes": 7804
+    },
+    {
+      "path": "references/artwork-and-feedback.md",
+      "sha256": "6a53ebfbc15719f78275a809baf3e2d81e1223d77ac646cfbb111dd86156953b",
+      "bytes": 24316
+    },
+    {
+      "path": "references/atlas-slice-integrity.md",
+      "sha256": "e49e9e0e2fdbfcb3b26a96ed9d2d730a82603e498492fcced0a18c891e6864cc",
+      "bytes": 19006
+    },
+    {
+      "path": "references/button-group-review.md",
+      "sha256": "9de67863d040c52b688e7d8cbc06303169fd3a314fca9c0758a58b0961a44ad8",
+      "bytes": 2705
+    },
+    {
+      "path": "references/capsule-content-fit.md",
+      "sha256": "e56d3a930e317835b2204690b2ab6750f0ab75adcd8e95ec8744c168ea5b57d2",
+      "bytes": 1278
+    },
+    {
+      "path": "references/capture-rounds.md",
+      "sha256": "cf26799504b9121e31a9308c1b3f66082ad6cfe65c12a3b544c9ff519a354dbe",
+      "bytes": 9934
+    },
+    {
+      "path": "references/card-ornament-layout-review.md",
+      "sha256": "eee10888defc6ed5f687e0f2e319b52747780ac7486d1f8407dbf53c66b8e1ee",
+      "bytes": 3654
+    },
+    {
+      "path": "references/card-text-fit-review.md",
+      "sha256": "543391fa3bcaad969214d4d32f09dce054e53ddb7475b7980d6f2aedc2860591",
+      "bytes": 1734
+    },
+    {
+      "path": "references/collection-preview-review.md",
+      "sha256": "c227e3a52691dbfee0ef1790faea76c3800d240f6112280ceda3dfa65cea5413",
+      "bytes": 2049
+    },
+    {
+      "path": "references/common-game-components.md",
+      "sha256": "b749c0f857a16907e19111ad6c45369220f3a1616a89b034ff58b73acb2e13b2",
+      "bytes": 15694
+    },
+    {
+      "path": "references/dynamic-visual-review.md",
+      "sha256": "049ca273053e724706a0ebfae87cc4da73ba78fe11312563569af9d2c696a431",
+      "bytes": 2052
+    },
+    {
+      "path": "references/english-home-layout.md",
+      "sha256": "22e79fa2fafa2cbc1053779a43da7e5aae35f76680d1d11a4f3194eb6dcc4a7a",
+      "bytes": 2943
+    },
+    {
+      "path": "references/fixed-caption-button.md",
+      "sha256": "c7d1880347f74f5c89c95302c4268ad2cdfae632c12e5b9614cfa37c3c85d6e6",
+      "bytes": 3615
+    },
+    {
+      "path": "references/full-visual-review.md",
+      "sha256": "11e2ec0421cd4af0155f87e15468fb88a77b3f92135a0f4d3ab2638b7aa04a3d",
+      "bytes": 11404
+    },
+    {
+      "path": "references/home-by-gameplay.md",
+      "sha256": "0780410af884292744cb7048b227049910c58ebff38e6416d2ab7710e8104781",
+      "bytes": 5876
+    },
+    {
+      "path": "references/large-background-static-review.md",
+      "sha256": "4a7ac7eeef8a873a750d21d2c3dd1122fdb39a24db7c8e8bc956fb93aa9a1f57",
+      "bytes": 2254
+    },
+    {
+      "path": "references/local-ui-contract.md",
+      "sha256": "71f78ae7d8c51ffd47ca214ac3f9c716b0f33417c38832ece3ca3399632100f2",
+      "bytes": 12972
+    },
+    {
+      "path": "references/mobile-button-size-and-home-layout.md",
+      "sha256": "3c40fadafada8420aafc73d061d77c4144ca2c125fe09a93091007728a720e18",
+      "bytes": 8518
+    },
+    {
+      "path": "references/new-feature-ui.md",
+      "sha256": "14623b95fadd518a50ce5b3019355e718a03303460206094bc0919c1ad8666c0",
+      "bytes": 5032
+    },
+    {
+      "path": "references/page-richness.md",
+      "sha256": "21025939eedc09a986a643f1d58f154c88a4572753972013b3430717218e83c9",
+      "bytes": 95159
+    },
+    {
+      "path": "references/panel-composite-review.md",
+      "sha256": "e3bc29e317ad4d1fb4782eeae98ec29a0700533af01ba260bde24da4078c35ac",
+      "bytes": 1843
+    },
+    {
+      "path": "references/phone-preview-boundary.md",
+      "sha256": "feceac574cd7e9ccc980e61e291a658dfc6e9cd35417fbba765813f1db6de07a",
+      "bytes": 2724
+    },
+    {
+      "path": "references/production-check-link.md",
+      "sha256": "243b52a622f7ffc28fd1e2610ee360dba98cffbd7d735798ff45f7eb2b3b9ea9",
+      "bytes": 8363
+    },
+    {
+      "path": "references/production-prevention.md",
+      "sha256": "c2a23dc11fd08577ec582e5724e5d65bb4b9fca6a645658545a0d61da8dfb915",
+      "bytes": 39135
+    },
+    {
+      "path": "references/saul-art-rules.md",
+      "sha256": "765666bf780e8b494aebb0341aee1a5e2f8c8f4d10fbfe3da5b70a6035e1d3fb",
+      "bytes": 50574
+    },
+    {
+      "path": "references/standalone-alpha-review.md",
+      "sha256": "9bd3e54f07c322316df7e39c10475e8f2272d0c4f434db176629d7e59a38d8ab",
+      "bytes": 2237
+    },
+    {
+      "path": "references/stat-digit-runtime-review.md",
+      "sha256": "be1643ded0ca1f5fbe4de13a84d768b9c0ef4b42b7bd270ecf1b921fca015c41",
+      "bytes": 2240
+    },
+    {
+      "path": "references/style-limits.md",
+      "sha256": "87e4ee7c15deb18d15a5d7afac937f28bff17accd3693a815ab182ebbfdf927e",
+      "bytes": 28367
+    },
+    {
+      "path": "references/text-backplate-review.md",
+      "sha256": "331b5ab997a79c1218950f5740566b135ae6105834f5d270cdb3d5d77f1f5285",
+      "bytes": 7535
+    },
+    {
+      "path": "references/text-fit-and-coverage.md",
+      "sha256": "1f56a3e61b97e5a7cda907ea4177ea115dca93f394966f7db72a4b914c6208d0",
+      "bytes": 8643
+    },
+    {
+      "path": "references/theme-readability.md",
+      "sha256": "81c867fc10c8e6eb9615573ec4e127670d63edc9310c59140e324fd98e49af00",
+      "bytes": 2299
+    },
+    {
+      "path": "references/ui-style-and-samples.md",
+      "sha256": "927941abd8ab3820337f3e8104464bec19c04cd2b41f2881a26d8b6ad3b2d907",
+      "bytes": 16677
+    },
+    {
+      "path": "scripts/bind_art.py",
+      "sha256": "7a8e70f1f30145b84cda29ce2b128d7489f4a7b9a95c83d949cf4687be3d9da6",
+      "bytes": 46980
+    },
+    {
+      "path": "scripts/check_button_group.py",
+      "sha256": "a4674efc8cacf8510335d935b6d42e1dab9c48dd5c66ec323e7ffa441873f61d",
+      "bytes": 2996
+    },
+    {
+      "path": "scripts/check_card_layout.py",
+      "sha256": "590f674319d922c2c631c809f8b347c6338e350d0fe8c5dfa9756c2cc3b00eea",
+      "bytes": 5193
+    },
+    {
+      "path": "scripts/check_collection_preview.py",
+      "sha256": "1d2d288a3ec8b93a3320fd5fbba03f05d98cf6c247343293f9548d70e22bf699",
+      "bytes": 3181
+    },
+    {
+      "path": "scripts/check_native_sprite_sources.py",
+      "sha256": "dd60ee326bfe0b6a037e5cb18ef86e9403b858e4a6393b5d7d28e1dc78ea4a67",
+      "bytes": 20460
+    },
+    {
+      "path": "scripts/check_phone_boundary.py",
+      "sha256": "5c5a1c4598acf080ab6a0aed5c8fa35d97be3bdfbee14554779c4812fc8ead76",
+      "bytes": 3800
+    },
+    {
+      "path": "scripts/clean_glow.py",
+      "sha256": "cb28a375acf2997e76b30cbdc92b2b02fb450b436ed840275c8a3d2420ff8b37",
+      "bytes": 10288
+    },
+    {
+      "path": "scripts/compose_fixed_button.py",
+      "sha256": "f8432ba542e7842dd607d9568c8aefd8bd5b1b65dfe8b6ec412e03920e4f7477",
+      "bytes": 5647
+    },
+    {
+      "path": "scripts/cut_sheet_frame.py",
+      "sha256": "dd7702c97e75f5a14b86c06f15e8f66a780daa5ae9705b69bbf580c372e28435",
+      "bytes": 7855
+    },
+    {
+      "path": "scripts/make_greybox_reference.py",
+      "sha256": "10ad3548a8a06e13d00d4f6afb7388c084ed8724328867d5a61490622995b693",
+      "bytes": 10832
+    },
+    {
+      "path": "scripts/prompt_name_guard.py",
+      "sha256": "9fbeb6fd1830b1043bd8fa09d92d052fc3dc565cdef6c154ee25cf471855a081",
+      "bytes": 21555
+    },
+    {
+      "path": "scripts/test_bind_art.py",
+      "sha256": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
+      "bytes": 8821
+    },
+    {
+      "path": "scripts/test_bind_art_3x.py",
+      "sha256": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
+      "bytes": 27976
+    },
+    {
+      "path": "scripts/test_bind_art_slot.py",
+      "sha256": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
+      "bytes": 8953
+    },
+    {
+      "path": "scripts/test_bitmap_font_sprite_sources.py",
+      "sha256": "6a3f9cc87759736b5bd9e5d3c5be93a2454f3d19ed229194eda598220be566e2",
+      "bytes": 2955
+    },
+    {
+      "path": "scripts/test_clean_glow.py",
+      "sha256": "457d2ce302ddc9c219c922fc801b3f9b569da539e1cf598edca252a056aa8533",
+      "bytes": 5301
+    },
+    {
+      "path": "scripts/test_cut_sheet_frame.py",
+      "sha256": "38d07b8ef653eb1507800fcb93a2431b9e339536194d33d356427726601420c7",
+      "bytes": 2084
+    },
+    {
+      "path": "scripts/test_greybox_reference.py",
+      "sha256": "30a36a66fda8c55c9a039ead59a42471d23b15b76d1c03007deb0c690b9dab19",
+      "bytes": 4165
+    },
+    {
+      "path": "scripts/test_native_sprite_sources.py",
+      "sha256": "c3e3996608d5c08cd58a8aba3f83d8149d3ddccc234523349c97c30f6ef48f07",
+      "bytes": 6616
+    },
+    {
+      "path": "scripts/test_prompt_name_guard.py",
+      "sha256": "678f89ebf5c1d2dffda1dd1651a679008f5de5359fcaf9473becbdbbfdb8c1f5",
+      "bytes": 7713
+    },
+    {
+      "path": "scripts/test_prompt_name_guard_fix.py",
+      "sha256": "1db5cb55716168e7b0b6b21a1b4bb0a1e36d9a462e538b21728b12df36c34a40",
+      "bytes": 4096
+    },
+    {
+      "path": "scripts/test_prompt_name_guard_refs.py",
+      "sha256": "a689ed2c77cbe491ab6a5d9dd436ff00d07388df0b5854a56ae325b09df3bcb5",
+      "bytes": 2634
+    },
+    {
+      "path": "scripts/test_source_residue.py",
+      "sha256": "f0ec919b42f89741c1f4413f5be9e7ba3fa967dcbfe6838258f1092493129305",
+      "bytes": 3144
+    },
+    {
+      "path": "scripts/test_trim_visible.py",
+      "sha256": "944ebdfe49ae356658feedd822bbd552da8b862a0f9f912e41ad5a08a33b06ba",
+      "bytes": 2933
+    },
+    {
+      "path": "scripts/test_uneven_word_strip.py",
+      "sha256": "c6a76f000264a3ca35e9af3d5a1f08ecd76cf9388c42b170dd7c423c67797c5a",
+      "bytes": 1519
+    },
+    {
+      "path": "scripts/trim_visible.py",
+      "sha256": "891bec3a3cd8f7d806e815ec7b1bf29734ba1dede728d303bb0cc574d73668c1",
+      "bytes": 4556
+    }
+  ],
+  "local_patches": [
+    {
+      "id": "2026-11-06.english-simple.11.17.6",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "78e4b78349867e875cbcfc9719187757ad791e850da3197a3e1d5925d7d48966",
+      "files": [
+        {
+          "path": "references/dynamic-visual-review.md",
+          "before_sha256": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
+          "base_sha256": "c87d1ff648b825d4d6ae63bb384ed7edd367edb3ff8659e8db48f30aa8f2ff9c",
+          "release_sha256": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
+          "after_sha256": "32a6f72e6e157b9b4576da551127338aa7d3d7511edf3860a8a71933e59d590e",
+          "after_bytes": 4341,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "pretrial-art-gate-20261107",
+      "authority": "User requested direct local updates to the current Skills and scripts.",
+      "scope": "Formal English trial art evidence and read-only art verification during delivery.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "7c2aa2f42e63258005ce85633a041e9a7dc1507fa151d4dbd8b6e4eaf352ef79",
+          "after_sha256": "9c32ddfd298b63f489018259a0f555db73d9586b5fb0d23ee24c092da88c46d5",
+          "after_bytes": 23189
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "ffd68663aacc939151cdc411569898233f4c9887095f2f6779a077c19926014a",
+          "after_sha256": "c79d68145fa7ebc5f7fcebdf74494503e6e973ced178db16a8bba4f6e2fb8a94",
+          "after_bytes": 7292
+        }
+      ]
+    },
+    {
+      "id": "2026-11-07.english-simple.11.17.8",
+      "scope": "Only English release delta files",
+      "release_provenance_sha256": "90e2f124f1e429e59e4bd869aaf820379b3927e164902cc99d1d006541267fb2",
+      "files": [
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+          "base_sha256": "8ff3d3c00150eb6e4aa295e83066164dd01123135f5c25c4d347aa3819f8fa1f",
+          "release_sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+          "after_sha256": "c6e22b798615b90875cb03d70e180ed73c1564f325e84c31eab30eb463fa60af",
+          "after_bytes": 7475,
+          "method": "retain"
+        },
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "base_sha256": "0d69db21603423ff0cd4cc40c5049eaa35e09362e346dfc48b3825ec483332c3",
+          "release_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "after_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "after_bytes": 10185,
+          "method": "retain"
+        },
+        {
+          "path": "references/atlas-slice-integrity.md",
+          "before_sha256": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+          "base_sha256": "cf0c24b361480adb63ab2ee0106380965a15a4dedb7b6ff185bae758b0382052",
+          "release_sha256": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
+          "after_sha256": "60b30a31713634a49a25fab22737285b7d68dc2398244d3f637b0e87cbce3a51",
+          "after_bytes": 16919,
+          "method": "release"
+        },
+        {
+          "path": "references/capture-rounds.md",
+          "before_sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+          "base_sha256": "a7e41d9d11d357aa6fd3e45577294d475110dd452d4ebce6b8ff014ef16bfef9",
+          "release_sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+          "after_sha256": "b09c3947e7e941e02a2d45a46cb632c7c50eae4d9bfd79be07a768c67e8c3911",
+          "after_bytes": 9913,
+          "method": "retain"
+        },
+        {
+          "path": "references/full-visual-review.md",
+          "before_sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+          "base_sha256": "1b27d4d10531d73aa25105d2349b08f38ce2b75dde9e03bf5bad20478551c060",
+          "release_sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+          "after_sha256": "0581dfb8ed38df37e2b0d14ea559b52e9f2ad716ea54696c80203ab202c84645",
+          "after_bytes": 11809,
+          "method": "retain"
+        },
+        {
+          "path": "references/page-richness.md",
+          "before_sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+          "base_sha256": "c13d2761879b79eca3ef22c17f59a5845d19a783ed0700b71667662ab3005011",
+          "release_sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+          "after_sha256": "5065f46a4d40848fb245eabd87c932dfaa37ba29ede5495d6048ae3ebf7ef854",
+          "after_bytes": 94755,
+          "method": "retain"
+        },
+        {
+          "path": "references/production-check-link.md",
+          "before_sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+          "base_sha256": "08fd36fb05469a84deaf96090d72a5b1a2b5ed0262ab81548cc317104ee61692",
+          "release_sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+          "after_sha256": "3161c4fc2e5f012e6dedf275d27de9b68d723b89cab1045f3812daccdbf3fbda",
+          "after_bytes": 13559,
+          "method": "retain"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-07.codex.11.17.8-art-capture-scope",
+      "scope": "Codex only, pre-capture art scope review",
+      "files": [
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "22f44dfbd6a10dbc0bb759a5d5472e7e5443c7912a719f5c72dd18f10681bd36",
+          "after_sha256": "233b4241f5275ddbb2fcac4f468b9a5997726e83f6902994aad9d1aed37cd82d",
+          "after_bytes": 11900
+        }
+      ]
+    },
+    {
+      "id": "2026-11-08.english-simple.11.17.14",
+      "scope": "Only English release delta files",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "a7244c3c013d5cb7a131e7914b04bc7804b64bbba7e0b1f4ba7d98a9c2b5a900",
+          "after_sha256": "622d7495c9731d458272ec035de694ab4b9e894964db1c21f74300e0612d52c2",
+          "after_bytes": 24026,
+          "method": "release"
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "0bd3561225aabdad002a43f6cddc2bfdc1e86de353ef02a5604efe5a310e2935",
+          "after_sha256": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+          "after_bytes": 5543,
+          "method": "release"
+        }
+      ]
+    },
+    {
+      "id": "production-order.20261112.1",
+      "installed_at": "2026-11-12T11:21:28.405470+00:00",
+      "scope": "English production dependency order only. Six standard ad families; no counting, runtime-quality, game, or formal-release changes.",
+      "authority": "User requested removing repeated preparation and art rework by correcting production order.",
+      "files": [
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "1a70d06edd7dbcd361fcd52d86de7c08ee86e0bf15c989be6add803b0fe6643c",
+          "sha256": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae"
+        }
+      ],
+      "verification": {
+        "ad_planner_cases": 32,
+        "ad_gate_cases": 21,
+        "entry_consistency_cases": 77,
+        "entry_pack_only_skips": 10,
+        "real_project_read_only_plan_comparisons": 2,
+        "quality_functions_unchanged": 15,
+        "whole_game_time_saving_measured": false
+      }
+    },
+    {
+      "id": "art-once-and-incremental.20261113.1",
+      "installed_at": "2026-11-13T11:19:38.116684+00:00",
+      "authority": "用户 2026-11-13 明确停止游戏，只优化检查器并更新英化 Skill，消除返工与重复验收循环。",
+      "scope": "Individual full-size source planning; configurable advisory clarity; one frozen-batch formal first-piece and shared full capture; original evidence inheritance, checkpointing and current-rule replay without regeneration.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "9fc5011c5300ae010d5657df01eecd998891eca7657fa5c1cac3a7cb82245f53",
+          "sha256": "7c1e55f31334d95dda1354b6abf463ad66a2d3b859eccb313223160bb657efa0",
+          "bytes": 26909
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+          "sha256": "e6c480b2ead5c45eb0ea35c4023a835ae7f164ad6c67c10ef8ee9395d0d557c7",
+          "bytes": 5574
+        },
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae",
+          "sha256": "aa893c65c15b6420a819b0e0074ba5a55edf659df6d897dd4f0aaef7cadcf1b2",
+          "bytes": 7804
+        },
+        {
+          "path": "references/artwork-and-feedback.md",
+          "before_sha256": "b6a406695c663159cda7278b9b36f403a1a0a94a43d1bf250b8f4fd34ae3c5cc",
+          "sha256": "6a53ebfbc15719f78275a809baf3e2d81e1223d77ac646cfbb111dd86156953b",
+          "bytes": 24316
+        },
+        {
+          "path": "references/full-visual-review.md",
+          "before_sha256": "d7c79c7beb52384e815860c4d9c6bbf07956cf6bad8ea39592f7bd9144cf1e01",
+          "sha256": "11e2ec0421cd4af0155f87e15468fb88a77b3f92135a0f4d3ab2638b7aa04a3d",
+          "bytes": 11404
+        },
+        {
+          "path": "references/large-background-static-review.md",
+          "before_sha256": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+          "sha256": "4a7ac7eeef8a873a750d21d2c3dd1122fdb39a24db7c8e8bc956fb93aa9a1f57",
+          "bytes": 2254
+        },
+        {
+          "path": "references/new-feature-ui.md",
+          "before_sha256": "0a89871b2a1dd2f7aaccdadf8ac7e49e693157e1a04cdab2ce5f175c97898758",
+          "sha256": "daa08ba4980519ba71c280d49c1637ecf617d611c45de82190a0d9968c2d905d",
+          "bytes": 4588
+        },
+        {
+          "path": "references/page-richness.md",
+          "before_sha256": "213a5a8de68d5333f0ac524d94c0d976c0ad326b89a3d61a0194924ae79a0370",
+          "sha256": "21025939eedc09a986a643f1d58f154c88a4572753972013b3430717218e83c9",
+          "bytes": 95159
+        },
+        {
+          "path": "references/production-check-link.md",
+          "before_sha256": "91611881c153f67ceee7df826cb6a2364ce6cd159654a166f5647857ac459d46",
+          "sha256": "8cdcc9a699865fca05b60a2a8791345381ea3c415f9b01164fe0076b2fcbc721",
+          "bytes": 7397
+        },
+        {
+          "path": "references/production-prevention.md",
+          "before_sha256": "5369338e671dc7c2d2db77b20df93457ce4ccbe8285ed569bf47edfb7e4b7fcc",
+          "sha256": "e3fbbae91e0502eabefcfff85e095cf14aee40f86314c3623aedf00b3599228b",
+          "bytes": 35650
+        },
+        {
+          "path": "references/saul-art-rules.md",
+          "before_sha256": "ecfc189627369c619f8e637d1b1de88d9919fa1c55a8e7e1e965230498f88be1",
+          "sha256": "765666bf780e8b494aebb0341aee1a5e2f8c8f4d10fbfe3da5b70a6035e1d3fb",
+          "bytes": 50574
+        },
+        {
+          "path": "scripts/check_native_sprite_sources.py",
+          "before_sha256": "8e8f956591134007a051ab69a8a96f1cda463f5cfe5a3a106c8f7e8e08766476",
+          "sha256": "dd60ee326bfe0b6a037e5cb18ef86e9403b858e4a6393b5d7d28e1dc78ea4a67",
+          "bytes": 20460
+        },
+        {
+          "path": "scripts/test_bitmap_font_sprite_sources.py",
+          "before_sha256": null,
+          "sha256": "6a3f9cc87759736b5bd9e5d3c5be93a2454f3d19ed229194eda598220be566e2",
+          "bytes": 2955
+        }
+      ],
+      "verification": "Targeted synthetic tool tests and independent forward validation; see local release receipt. No real game or device acceptance asserted."
+    },
+    {
+      "id": "art-assembly-gap.20261113.1",
+      "installed_at": "2026-11-13T12:21:06.487524+00:00",
+      "authority": "用户明确要求将本次九宫格奖励栏与HINT缩略图漏检修进美工Skill，审查原因与其他Skill冲突并验证有效。",
+      "scope": "Runtime assembly ownership, actual positions and source-role checks. Distinguish stretch center from content-safe and name hints from reviewed caption declarations. Preserve required visual review in existing reports/first-piece/look_list without new full loops.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "7c1e55f31334d95dda1354b6abf463ad66a2d3b859eccb313223160bb657efa0",
+          "sha256": "1124e55465bb05ec15cefa32b859a8f22cbcd298455b2fef5d9004de78d98ee0",
+          "bytes": 27874
+        },
+        {
+          "path": "references/atlas-slice-integrity.md",
+          "before_sha256": "3feb5d159c46a81b718a249c13b0ee57c1471d60f518e108faa27c5bbfb86734",
+          "sha256": "e49e9e0e2fdbfcb3b26a96ed9d2d730a82603e498492fcced0a18c891e6864cc",
+          "bytes": 19006
+        },
+        {
+          "path": "references/production-check-link.md",
+          "before_sha256": "8cdcc9a699865fca05b60a2a8791345381ea3c415f9b01164fe0076b2fcbc721",
+          "sha256": "243b52a622f7ffc28fd1e2610ee360dba98cffbd7d735798ff45f7eb2b3b9ea9",
+          "bytes": 8363
+        },
+        {
+          "path": "references/production-prevention.md",
+          "before_sha256": "e3fbbae91e0502eabefcfff85e095cf14aee40f86314c3623aedf00b3599228b",
+          "sha256": "345f917e0426e7ae95f6638a71238ffdf7ac6aa3e999a11ae343bc6af56b0857",
+          "bytes": 38048
+        }
+      ],
+      "verification": {
+        "related_tests": 69,
+        "independent_controls": 9,
+        "real_original_captures": 44,
+        "game_edited": false,
+        "evidence": "local release validation.json; no game artwork acceptance asserted"
+      }
+    },
+    {
+      "id": "art-non-dark-first-text.20261113.1",
+      "scope": "Art generation only: non-dark glyph cores, first-pass fixed words and generated reward glyphs; no new final gate."
+    }
+  ],
+  "previous_local_provenance_sha256": "f1d3e950f6344193bb9d0d2ef53c002950669e20ad2f2de555be7001e5570478",
+  "release_integration": {
+    "release": "11.17.30",
+    "previous_release": "11.17.29",
+    "patch_ids": [
+      "art-assembly-gap.20261113.1"
+    ],
+    "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
+  },
+  "overlay_release": "art-non-dark-first-text.20261113.1"
+}

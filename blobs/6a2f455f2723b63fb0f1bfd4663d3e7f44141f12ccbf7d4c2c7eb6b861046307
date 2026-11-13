@@ -1,0 +1,37 @@
+{
+  "schema": "gameskills.release-provenance.v1",
+  "revision": "2026-11-12.english-simple.11.17.28",
+  "skill": "grok-image-review",
+  "previous_provenance_sha256": "eecc89f1c36b69970bc32e697248afb8571fa4e0fbb3b436602411a12834f1f8",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "5c8d788633aba85b215f86af447f423aa9bf9a82b562966bdb6ee55b587ca025",
+      "bytes": 1427
+    },
+    {
+      "path": "agents/openai.yaml",
+      "sha256": "f87ff8ea6dba7afe8c77227efb805c3520a6a8d381044388d3c0d6df66b183d3",
+      "bytes": 348
+    },
+    {
+      "path": "scripts/review.py",
+      "sha256": "a39a3ced9c97601e95cdf86d27b8f248cf1dd1ff78e9fd80a4b096caec863b5d",
+      "bytes": 16218
+    },
+    {
+      "path": "scripts/test_review_fallback.py",
+      "sha256": "b5657ca34a0e1c8d0047fc578ca28297e7b9bd2cdb90ef960a2cf89889c80c01",
+      "bytes": 5587
+    }
+  ],
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
+}

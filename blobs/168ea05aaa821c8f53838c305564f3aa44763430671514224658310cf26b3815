@@ -1,0 +1,39 @@
+{
+  "schema": "production_learning_active.v1",
+  "registry_version": 1,
+  "catalog_version": "2026-11-13.1",
+  "formal_base_archive_sha256": "647d90834ab0a14b37764c2adaa1a44ae965bb6dbb385f5b84575fddd5b1cdc1",
+  "structural_principles": [
+    {
+      "id": "named_check_single_producer",
+      "check_operation": "run_check",
+      "execution_role": "producer",
+      "maximum_per_overlapping_scope": 1
+    },
+    {
+      "id": "writer_consumes_named_evidence",
+      "consumer_role": "consumer",
+      "consumer_operation": "consume_evidence",
+      "forbidden_operation": "run_check"
+    },
+    {
+      "id": "experience_prevents_before_checking",
+      "role": "prevention",
+      "operations": [
+        "prepare",
+        "prevent"
+      ],
+      "earliest_stages": [
+        "intake",
+        "source",
+        "integration"
+      ],
+      "external_limit_required_when_generation_cannot_prevent": true
+    }
+  ],
+  "rules": [],
+  "evidence_index": {},
+  "reviews": [],
+  "boundary": "Reviewed shared semantics and evidence hash facts only; no project logs and no new game observations.",
+  "catalog_sha256": "88f7aac4c961710dc866903cd4e46279f234a965eff63d9169d00f01dad412a4"
+}

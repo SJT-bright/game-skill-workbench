@@ -1,7 +1,7 @@
 """Source texture triage for named Cocos2 source/export standalone game sprites.
 Signals need human comparison; not an art verdict or a full bundle-format verifier.
 """
-import argparse,base64,hashlib,json,re
+import argparse,base64,hashlib,json,re,shlex
 from collections import deque
 from pathlib import Path
 
@@ -53,6 +53,11 @@ def components(mask,width,height):
 def inspect_texture(path):
     from PIL import Image
     with Image.open(path) as source:im=source.convert('RGBA')
+    return inspect_image(im)
+
+def inspect_image(im):
+    """The same source signals for a verified texture rectangle, without rewriting pixels."""
+    im=im.convert('RGBA')
     width,height=im.size;mask=bytearray(im.getchannel('A').point(lambda v:1 if v>8 else 0).tobytes())
     if not any(mask):return {'size':[width,height],'suspects':['empty_alpha'],'edge_runs':{},'components':[]}
     edges={'top':mask[:width],'bottom':mask[-width:],'left':mask[::width],'right':mask[width-1::width]}
@@ -153,6 +158,62 @@ def captured_inventory(dumps):
 def captured_frames(dumps):
     return captured_inventory(dumps)['selected_frames']
 
+def bitmap_font_routes(root, names, observations):
+    """Resolve fontFrames glyph sprites from real FNT page geometry and pixels.
+
+    Names alone never approve a glyph: every observed frame must have the exact
+    declared rectangle size, the page dimensions/rect must be valid, and all
+    otherwise indistinguishable source candidates must contain identical pixels.
+    The original texture triage still runs on each rectangle and retains signals.
+    """
+    from PIL import Image
+    aliases={'percent':'%','slash':'/','plus':'+','minus':'-','colon':':','dot':'.','x':'x'}
+    wanted={}
+    for name in names:
+        m=re.fullmatch(r'digit_([0-9])',name)
+        char=m.group(1) if m else aliases.get(name[7:]) if name.startswith('symbol_') else None
+        if char:wanted[name]=ord(char)
+    candidates={name:[] for name in wanted}
+    if not (root/'assets').is_dir() or not wanted:return {},[]
+    for font in sorted((root/'assets').rglob('*.fnt')):
+        try:
+            if not font.resolve().is_relative_to(root/'assets'):continue
+            pages={};glyphs={};common={}
+            for line in font.read_text(encoding='utf-8-sig').splitlines():
+                fields=shlex.split(line)
+                if not fields:continue
+                values=dict(value.split('=',1) for value in fields[1:] if '=' in value)
+                if fields[0]=='page':pages[int(values['id'])]=values['file']
+                elif fields[0]=='char':glyphs[int(values['id'])]=values
+                elif fields[0]=='common':common=values
+            for name,code in wanted.items():
+                value=glyphs.get(code);samples=observations.get(name,[])
+                if not value or not samples:continue
+                x,y,w,h=(int(value[key]) for key in ('x','y','width','height'))
+                if min(x,y)<0 or min(w,h)<=0 or any(s.get('frame_size')!=[w,h] for s in samples):continue
+                texture=(font.parent/pages[int(value.get('page',0))]).resolve()
+                if not texture.is_relative_to(root/'assets') or not texture.is_file():continue
+                with Image.open(texture) as source:im=source.convert('RGBA')
+                if im.size!=(int(common['scaleW']),int(common['scaleH'])) or x+w>im.width or y+h>im.height:continue
+                crop=im.crop((x,y,x+w,y+h));info=inspect_image(crop)
+                binding={'manifest':str(font.relative_to(root)), 'manifest_sha256':hashlib.sha256(font.read_bytes()).hexdigest(),
+                         'texture':str(texture.relative_to(root)), 'texture_sha256':hashlib.sha256(texture.read_bytes()).hexdigest(),
+                         'char_id':code,'rect':[x,y,w,h]}
+                binding_sha=hashlib.sha256(json.dumps(binding,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+                candidates[name].append(dict(info,name=name,resource_kind='bitmap_font_glyph',sha256=binding_sha,**binding))
+        except (OSError,ValueError,KeyError,TypeError,UnicodeError):
+            # Unknown/broken FNTs cannot supply a route. The requested frame remains
+            # missing unless another complete, unambiguous actual source resolves it.
+            continue
+    routes={};rows=[]
+    for name,values in candidates.items():
+        if not values or len({(tuple(v['size']),v['pixel_sha256']) for v in values})!=1:continue
+        for value in values:value['candidate_count']=len(values)
+        rows.extend(values)
+        routes[name]={'type':'bitmap_font_glyph','sources':[{k:v[k] for k in ('manifest','manifest_sha256','texture','texture_sha256','char_id','rect','pixel_sha256')} for v in values],
+                      'status':'exact_geometry_and_pixels_resolved; source signals retained in rows'}
+    return routes,rows
+
 def route_other_sources(result, dumps, atlas_report):
     """Route observed frames that are outside the standalone texture profile."""
     if not dumps or not result['missing']:
@@ -184,11 +245,16 @@ def route_other_sources(result, dumps, atlas_report):
             name = sprite.get('frame')
             if name in result['missing']:
                 observations.setdefault(name, []).append(sprite)
+    glyph_routes,glyph_rows=bitmap_font_routes(root,result['missing'],observations)
+    result['rows'].extend(glyph_rows)
+    result['checked']+=len(glyph_rows)
+    result.setdefault('candidate_counts',{}).update({name:len(route['sources']) for name,route in glyph_routes.items()})
     engine = root / 'project.json'
     engine_version = json.loads(engine.read_text()).get('version') if engine.is_file() else None
     builtin = Path('/Applications/Cocos/Creator/2.4.15/CocosCreator.app/Contents/Resources/static/default-assets/image')
-    routes = {}
+    routes = dict(glyph_routes)
     for name in result['missing']:
+        if name in routes:continue
         samples = observations.get(name, [])
         matched = [row for row in candidates.get(name, [])
                    if samples and all(sample.get('frame_size') in row['sizes'] for sample in samples)]

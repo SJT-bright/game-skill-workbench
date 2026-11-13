@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T10:22:15.779Z",
-  "treeHash": "9aa8da0c29954013cff74d061cadee838d78d76e4cfe7d491950dc5c2cc3ac68",
+  "createdAt": "2026-11-13T10:22:38.212Z",
+  "treeHash": "33b28068977bb867f7f28a3361a7b3b959fdb47c0a58c6bb0736daf83d11df5e",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3331,9 +3331,9 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "532ac2101ec6d0d1a1c4c9d470568237cbc139f9d736391f581b7a3c7a4d0d76",
-      "fileCount": 67,
-      "bytes": 1476033,
+      "treeHash": "7c0f008c7c5acea4a94664f8752a8d0d9d696a4c17c2ba87625e832dc0c69267",
+      "fileCount": 68,
+      "bytes": 1483224,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -3613,8 +3613,8 @@
         },
         {
           "path": "scripts/check_native_sprite_sources.py",
-          "hash": "8e8f956591134007a051ab69a8a96f1cda463f5cfe5a3a106c8f7e8e08766476",
-          "size": 15693,
+          "hash": "9b9341a15cd158eede1384405bd59363499a65ff60923b35cf7c156cf72e848c",
+          "size": 19929,
           "executable": false
         },
         {
@@ -3669,6 +3669,12 @@
           "path": "scripts/test_bind_art_slot.py",
           "hash": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
           "size": 8953,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_bitmap_font_sprite_sources.py",
+          "hash": "6a3f9cc87759736b5bd9e5d3c5be93a2454f3d19ed229194eda598220be566e2",
+          "size": 2955,
           "executable": false
         },
         {

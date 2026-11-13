@@ -1,0 +1,18 @@
+{
+  "schema": "runtime-scope-compat.v3",
+  "scope": "scoped-module-input-and-unit-scheduler-exact-byte-set",
+  "prior_runtime_sha256": "cc7a62b09206ded9c5a58c545c6bcb78385ac703c0d6905a87b9e015ef4cf7d8",
+  "prior_helper_sha256": "c0a476532badfc02817d5eb204999680be9a0544b227bb0e33ad2c5319d12c4b",
+  "prior_compat_sha256": "5b2106bfccb91e54a6859a4b638a2c1951bbfaef10b8e594a638a42108980f76",
+  "prior_ledger_sha256": "05b1daa81d4bd834754b72f0f546a8a3fc6e955ffcc8fc0bd48c931ff7872ca5",
+  "new_runtime_sha256": "1e506ee8b7b63d1dead78b76eeac09909a9de50a6b4422c8ed5465350b619df4",
+  "new_helper_sha256": "2a3b401892f3fae61cf6d599b1ff20e73f0a33fb6953fe6ad42a81a48c2547d2",
+  "new_ledger_sha256": "280ac709af4dda39c3df970894d02e075a778d358b011c28719040cf54edf2d3",
+  "module_helper_sha256": "90a5047408fe73a56a0eea31e79faab354e7c397124cb73fd7f9facf2351650d",
+  "unit_reuse_sha256": "37f9dc34758957146b93a6acc694f48aa4efc1319b39c8117be389c8e8714e55",
+  "unit_review_sha256": "6d469304d0ba3a2dc415e677ce9cb92b807dca862b7476fcced26dc05545d912",
+  "scheduler_source_sha256": "9244fa13d161d2e7c3d086ac7ade70b7e3be26125256dc7430c3dd032ec7b4d4",
+  "ledger_source_sha256": "2f1318c7731f5551d74cdd2ff59f2582cf9e734634bd7aaddd986921c9482825",
+  "scheduler_prior_compat_sha256": "ee3585e7abf07337c5932ebe71378a8e879b96a52e25909aba04f1292f2fbad0",
+  "basis": "Fixed reviewed scheduler/module/repair changes preserve existing observer bytes and assertions. Legacy rule imports are reconstructed from the exact prior scheduler and ledger sources; changed ad/save suite bytes remain independently hashed. Only a whole-file reviewed legacy suite overlay may recover its original source fingerprint."
+}

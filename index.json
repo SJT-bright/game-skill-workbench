@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "47569b37-d36d-4c87-bc17-f2afc4f90321",
+      "skillId": "s-c527d5389d209a5759a9",
+      "name": "remake-core",
+      "version": "v55",
+      "createdAt": "2026-11-13T10:23:03.596Z",
+      "summary": "文件变更：新增 4，修改 8，移除 0。",
+      "changes": {
+        "added": 4,
+        "modified": 8,
+        "deleted": 0
+      },
+      "treeHash": "4764aa3fd0e4fa81482ca6284dacb352159558354f28dcbb7339a1e9e8270cce",
+      "bytes": 13925746,
+      "fileCount": 748
+    },
+    {
       "id": "4a46614b-cd1e-4b3d-98d8-c5f867c144b5",
       "skillId": "s-8a4323773719ef381f6d",
       "directory": "grok-image-review",

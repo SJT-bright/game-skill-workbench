@@ -199,7 +199,8 @@ def runtime_strings(dump_inputs):
     for raw in dump_inputs:
         p = Path(raw)
         if p.is_dir():
-            files += sorted(p.rglob('*ui-dump*.json'))
+            from art_capture_history import resolve_input_files
+            files += resolve_input_files(p)
         elif p.is_file():
             files.append(p)
     out = []

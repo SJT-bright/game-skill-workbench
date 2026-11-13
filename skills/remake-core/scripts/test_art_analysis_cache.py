@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 from PIL import Image
-from art_analysis_cache import PageCache
+from art_analysis_cache import PageCache, tool_snapshot
 import audit_glyph_core as glyph
 from test_glyph_core import write_font, label_node, page
 
@@ -50,6 +50,35 @@ class AnalysisCache(unittest.TestCase):
         cache.put(key, value)
         cache.finish()
         return key, cache.root / (key + '.json')
+
+    def test_owning_outputs_do_not_self_invalidate_but_unknown_inputs_stay_bound(self):
+        (self.root/'docs/art').mkdir(parents=True)
+        before = self.key()
+        output = self.write('docs/art/first_piece-ad-pages.json', json.dumps({
+            'tool': 'art_production_preflight', 'passed': False, 'input_binding': {}}))
+        self.assertEqual(before, self.key())
+        output.write_text(json.dumps({'tool': 'art_production_preflight', 'passed': True}))
+        self.assertEqual(before, self.key())
+        unknown = self.write('docs/art/new-policy.json', '{"actual_input":true}')
+        self.assertNotEqual(before, self.key())
+        unknown.unlink()
+        self.document['render_report'] = str(output)
+        self.dump.write_text(json.dumps(self.document))
+        explicit = self.key()
+        output.write_text(json.dumps({'tool': 'art_production_preflight', 'passed': False}))
+        self.assertNotEqual(explicit, self.key())  # Explicit raw references remain dependencies.
+
+    def test_nonproduction_test_files_do_not_change_checker_fingerprint(self):
+        tools = self.outer/'tools'
+        tools.mkdir()
+        checker = tools/'audit_pixels.py'
+        checker.write_text('actual checker v1')
+        before = tool_snapshot(tools)
+        (tools/'test_unrelated.py').write_text('unrelated test')
+        (tools/'fixture_example.json').write_text('{}')
+        self.assertEqual(before, tool_snapshot(tools))
+        checker.write_text('actual checker v2')
+        self.assertNotEqual(before, tool_snapshot(tools))
 
     def test_repeat_hits_and_retains_failures(self):
         failure = [['known_overlap: letters overlap the icon'], {'visible': 3}]

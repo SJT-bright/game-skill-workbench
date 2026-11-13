@@ -330,7 +330,7 @@ class PreflightTests(unittest.TestCase):
                               capture_output=True, text=True, encoding="utf-8")
 
     def test_clarity_flags_only_the_upscaled_sprite(self):
-        r = self.run_tool("audit_image_clarity.py", "--project", self.project)
+        r = self.run_tool("audit_image_clarity.py", "--project", self.project, "--clarity-preset", "strict")
         data = json.loads(r.stdout)
         self.assertEqual(r.returncode, 1)
         self.assertEqual((data["checked"], data["upscaled"]), (2, 1))

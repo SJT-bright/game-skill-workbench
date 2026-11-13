@@ -22,6 +22,17 @@ def _run_single(command, project, build, dumps=None):
 def run(command, project, build, dumps=None):
     """Verify two sealed capture rounds against the same live Web export."""
     root = Path(dumps).resolve() if dumps is not None else None
+    if command in ('verify', 'plan') and root is not None:
+        from art_capture_history import verify as verify_originals, MANIFEST
+        try:
+            history = verify_originals(project, build, root)
+            if history is not None:
+                return history
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+            # A declared mixed transition is authoritative or invalid. Never
+            # fall back to a looser scan after it failed validation.
+            if (root / MANIFEST).is_file():
+                return {'ready': False, 'error': str(exc)}
     manifest = root / 'same-build-rounds.json' if root else None
     if command != 'verify' or manifest is None or not manifest.is_file():
         return _run_single(command, project, build, dumps)
@@ -68,6 +79,24 @@ def artifact_hash(project, dumps):
     dumps = Path(dumps).resolve(strict=True)
     pending = list(dumps.rglob('*'))
     seen = {}
+    explicit = set()
+    from art_capture_history import MANIFEST, current_context, verify as verify_originals
+    if (dumps / MANIFEST).is_file():
+        current = json.loads((project/'.tiktok-kit/art-rounds/current.json').read_text())
+        snap = json.loads((project/'.tiktok-kit/art-rounds/snapshots'/(current['version']+'.json')).read_text())
+        verified = verify_originals(project, snap['build'], dumps)
+        if not verified or not verified.get('ready'):raise ValueError('inheritance artifact is not verified')
+        manifest = json.loads((dumps/MANIFEST).read_text())
+        explicit.add(Path(manifest['baseline']).resolve())
+        for ref in verified['quality_refs']:explicit.add(Path(ref['path']).resolve())
+        for name in verified['resolved_dumps']:
+            raw=Path(name);doc=json.loads(raw.read_text())
+            explicit.update((raw.resolve(),(raw.parent/doc['screenshot']).resolve()))
+            proof=project/'.tiktok-kit/art-rounds/proofs'/(doc['art_capture_id']+'.json')
+            explicit.add(proof.resolve())
+            version=json.loads(proof.read_text())['version']
+            explicit.add((project/'.tiktok-kit/art-rounds/snapshots'/(version+'.json')).resolve())
+        pending.extend(explicit)
     def references(obj):
         if isinstance(obj, dict):
             for item in obj.values():
@@ -85,7 +114,7 @@ def artifact_hash(project, dumps):
         if item.is_dir():
             continue
         file = item.resolve(strict=True)
-        if not (file.is_relative_to(dumps) or file.is_relative_to(evidence)):
+        if not (file.is_relative_to(dumps) or file.is_relative_to(evidence) or file in explicit):
             raise ValueError('art evidence outside capture directories: '+str(file))
         if file in seen:
             continue

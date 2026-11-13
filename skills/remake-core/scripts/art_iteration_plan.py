@@ -62,10 +62,9 @@ def mapping(visual, capture):
 
 
 def first_piece_state(project, path, slots, dumps=None, board=None):
-    """Replay the trusted checker, never an external report's passed scalar.
+    """Reuse a sealed exact-input result; replay only a missing/stale first piece.
 
-    This runs once at a batch boundary, with the original deterministic pixel
-    cache. The result still cannot certify capture provenance or full art.
+    External passed scalars never confer trust or capture/full-art approval.
     """
     if path is None:
         return dict(current=False, reason='not_supplied', selected_cases=[], remaining_cases=sorted(slots))
@@ -82,7 +81,7 @@ def first_piece_state(project, path, slots, dumps=None, board=None):
         return result, data
     if not declared.get('available'):
         return result, data
-    from art_preflight import first_piece_input_binding, run as check_first_piece
+    from art_preflight import sealed_first_piece, seal_first_piece, run as check_first_piece
     scope = declared.get('scope', {})
     if scope.get('board') != board or board not in (None, 'localize', 'remake'):
         result['reason'] = 'board_does_not_match_current_request'
@@ -93,20 +92,27 @@ def first_piece_state(project, path, slots, dumps=None, board=None):
         result['reason'] = 'invalid_binding'
         return result, None
     binding = binding.get('path') if binding else None
-    actual = first_piece_input_binding(project, files, selected, scope.get('board'), binding)
-    if actual != declared:
-        result['reason'] = 'source_rules_or_evidence_changed'
+    policy = scope.get('clarity_policy')
+    actual, checked, cache = sealed_first_piece(project, path, files, selected, board, binding, policy)
+    if not actual.get('available'):
+        result['reason'] = 'current_input_binding_unavailable'
         return result, data
+    if checked is not None:
+        result.update(current=True, passed=checked['passed'], checker_replays=0,
+                      reason='trusted_first_piece_reused',
+                      binding_sha256=hashlib.sha256(encoded(actual)).hexdigest())
+        return result, checked
     with tempfile.TemporaryDirectory(prefix='art-first-piece-recheck-') as temporary:
         out = Path(temporary)/'result'
         with contextlib.redirect_stdout(io.StringIO()):
-            code = check_first_piece(project, None, out, board, binding, selected, dump_files=files)
+            code = check_first_piece(project, None, out, board, binding, selected, dump_files=files, clarity_policy=policy)
         checked = read(out/'production-preflight.json')
     result['checker_replays'] = 1
-    if (checked.get('input_binding') != declared or checked.get('selected_cases') != selected
+    if (checked.get('input_binding') != actual or checked.get('selected_cases') != selected
             or checked.get('full_art_passed') is not None or checked.get('receipt_written') is not False):
         result['reason'] = 'rechecked_evidence_or_inputs_differ'
         return result, checked
+    seal_first_piece(cache, path, checked)
     result.update(current=True, passed=code == 0 and checked.get('passed') is True,
                   reason='trusted_first_piece_rechecked',
                   recheck_seconds=checked.get('elapsed_seconds'),
@@ -184,6 +190,21 @@ def capture_groups(states, ids):
     return groups
 
 
+def resolved_capture_file(capture, dumps, capture_id):
+    """Use owning collector originals when supplied; never copy or rewrite dumps."""
+    name = 'capture-ui-dump-'+capture_id+'.json'
+    originals = capture.get('resolved_dumps')
+    if originals is None:
+        return (Path(dumps)/name).resolve()
+    if (not isinstance(originals, list) or any(not isinstance(p, str) or not Path(p).is_absolute()
+                                             for p in originals)):
+        raise ValueError('collector resolved_dumps must list absolute original files')
+    matches = [Path(p).resolve() for p in originals if Path(p).name == name]
+    if len(matches) != 1:
+        raise ValueError('missing or ambiguous collector original for '+capture_id)
+    return matches[0]
+
+
 def first_piece_capture_current(data, links, capture, dumps):
     """Bind planning input to the existing collector's actual selected-case proofs.
 
@@ -200,8 +221,8 @@ def first_piece_capture_current(data, links, capture, dumps):
     ids = {links[value] for value in selected}
     if any(states.get(value, {}).get('action') not in ('fresh', 'reuse') for value in ids):
         return False
-    expected = {(Path(dumps)/('capture-ui-dump-'+value+'.json')).resolve() for value in ids}
     try:
+        expected = {resolved_capture_file(capture, dumps, value) for value in ids}
         files = {Path(row['file']).resolve() for row in data['input_binding']['documents']}
         return files == expected
     except (KeyError, TypeError, ValueError):
@@ -221,7 +242,9 @@ def plan(project, build=None, dumps=None, first_piece=None, diagnostics=(), prev
         suggested_action='unknown', reason_code='no_web_export_supplied')
     capture = None
     if build and dumps and status.get('suggested_action') == 'keep_round':
-        capture = capture_check('plan', project, Path(build).resolve(), Path(dumps).resolve())
+        command = 'verify' if any((Path(dumps)/name).is_file() for name in
+                                  ('same-build-rounds.json', 'capture-inheritance.json')) else 'plan'
+        capture = capture_check(command, project, Path(build).resolve(), Path(dumps).resolve())
     raw = read(first_piece) if first_piece else None
     captured = isinstance(raw, dict) and first_piece_capture_current(raw, links, capture, dumps)
     selected = first_piece_state(project, first_piece if captured else None,

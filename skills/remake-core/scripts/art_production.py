@@ -198,8 +198,20 @@ def verify_file(project, entry):
 def replay(project, record):
     from PIL import Image
     kind = record['kind']
-    if record.get('rules') != rule_hashes(kind, record.get('parameters')):
-        raise ValueError('production rules changed; rerun the producer for this asset')
+    current_rules = rule_hashes(kind, record.get('parameters'))
+    original_rules = record.get('rules')
+    if (not isinstance(original_rules, dict) or set(original_rules) != set(current_rules)
+            or any(not isinstance(value, str) or len(value) != 64
+                   or any(char not in '0123456789abcdef' for char in value)
+                   for value in original_rules.values())):
+        raise ValueError('production rule provenance is missing or malformed')
+    # A tool edit invalidates the analysis, not the original artwork. Replay the
+    # bound inputs under current rules and compare every output pixel in inspect.
+    # Never rewrite the historical rule hashes or ask for regeneration solely
+    # because the checker itself changed.
+    rule_review = {'original': dict(original_rules), 'current': current_rules,
+                   'changed': original_rules != current_rules,
+                   'verification': 'current-rule-replay-and-exact-output-comparison'}
     if 'usage_budget' in record:
         from art_usage_budget import validate_budget
         data = json.loads(verify_file(project, record['usage_budget']).read_text(encoding='utf-8'))
@@ -237,12 +249,14 @@ def replay(project, record):
             rgba.close()
         measurements = {'cell_rect': cell, 'crop_rect': bounds}
     native_size = expected.size
-    expected = apply_derivations(expected, record)
+    from clarity_policy import resolve_policy
+    expected = apply_derivations(expected, record, clarity_policy=resolve_policy(project), measurements=measurements)
     if 'boxes' in measurements:
         sx, sy = expected.width / native_size[0], expected.height / native_size[1]
         measurements['boxes'] = {name: [b[0]*sx, b[1]*sy, b[2]*sx, b[3]*sy]
                                 for name, b in measurements['boxes'].items()}
     measurements['output_size'] = list(expected.size)
+    measurements['production_rules'] = rule_review
     return expected, measurements
 
 
@@ -266,7 +280,7 @@ def inspect(project, record):
 
 
 
-def apply_derivations(image, record):
+def apply_derivations(image, record, clarity_policy=None, measurements=None):
     """Only proportional LANCZOS reductions; never a crop, upsample or lossy encoder."""
     from PIL import Image
     steps = record.get('derivations', [])
@@ -294,7 +308,10 @@ def apply_derivations(image, record):
         from art_usage_budget import validate_budget, validate_output
         if record['usage'] is None:
             raise ValueError('declared usage cannot be null')
-        validate_output(validate_budget(record['usage'], record['expected_cases']), image.size)
+        budget_result = validate_output(validate_budget(record['usage'], record['expected_cases']), image.size,
+                                        policy=clarity_policy, background=record.get('background', False))
+        if measurements is not None:
+            measurements['usage_budget'] = budget_result
     return image
 
 

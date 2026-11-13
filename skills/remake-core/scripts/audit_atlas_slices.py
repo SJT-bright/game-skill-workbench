@@ -219,7 +219,9 @@ def check_project(project,dumps=None,out=None,only=None):
  if only and set(only)-set(expected):issues.append({'kind':'declared_frames_missing','frames':sorted(set(only)-set(expected))})
  observed=0
  if dumps:
-  for path in Path(dumps).rglob('*.json'):
+  from art_capture_history import resolve_input_files, MANIFEST
+  observed_files=resolve_input_files(dumps) if (Path(dumps)/MANIFEST).is_file() else Path(dumps).rglob('*.json')
+  for path in observed_files:
    try:j=json.loads(path.read_text())
    except (OSError,ValueError):continue
    if not isinstance(j,dict):continue

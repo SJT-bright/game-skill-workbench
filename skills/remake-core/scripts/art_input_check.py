@@ -5,14 +5,14 @@ from pathlib import Path
 import time
 
 
-def verify_capture(project, dumps, build, board, inventory, capture_build=None, require_web=False):
+def verify_capture(project, dumps, build, board, inventory=None, capture_build=None, require_web=False):
     """Web dumps keep their Web identity even when asset checks use a Native build."""
     from art_round_check import run as capture_check
     web_records = any(d.get('tool') == 'ui_dump' and
                       d.get('producer') in {'chrome_touch.dump_ui', 'ego_page.dump_ui'}
-                      for d in inventory['records'])
+                      for d in (inventory or {}).get('records', []))
     required = board == 'localize' and (
-        require_web or web_records or capture_build or
+        require_web or inventory is None or web_records or capture_build or
         build and (build / 'index.html').is_file() or
         (project / 'docs/art/capture-plan.json').is_file() or
         (project / '.tiktok-kit/art-rounds/current.json').is_file())
@@ -29,13 +29,14 @@ def inspect(project, dumps, build, board, capture_build=None):
     # Reuse the full check's inventory and provenance rules; never make a second
     # relaxed definition of a complete/current screenshot set.
     from art_check import capture_inventory
-    inventory = capture_inventory(project, dumps)
+    provenance = verify_capture(project, dumps, build, board, None, capture_build, require_web=True)
+    inventory = capture_inventory(project, dumps, resolved_dumps=provenance.get('resolved_dumps') if provenance else None)
     errors = list(inventory['errors'])
-    groups = Counter(str(p.parent.relative_to(dumps)) for p in inventory['dump_files'])
+    groups = Counter(str(p.parent.relative_to(dumps)) if p.parent.is_relative_to(dumps)
+                     else str(p.parent.resolve()) for p in inventory['dump_files'])
     unmatched = sorted(str(p.relative_to(dumps)) for p in dumps.rglob('*ui-dump.json'))
     if unmatched:
         errors.append('采集命名未被正式入口识别：' + ', '.join(unmatched[:12]))
-    provenance = verify_capture(project, dumps, build, board, inventory, capture_build, require_web=True)
     if provenance is not None and (not provenance.get('ready') or 'error' in provenance):
         errors.append('截图版本未核准：' + provenance.get('error', '状态或视口需重拍'))
     return {

@@ -57,15 +57,50 @@ class ProductionLink(unittest.TestCase):
             cases=[dict(id=i, css_size=size) for i in (ids or self.ids)])))
         return path
 
-    def test_usage_budget_rejects_before_replacing_output(self):
+    def test_usage_reserve_does_not_force_regeneration_in_default_policy(self):
         budget = self.write_budget()
         self.command('--project', self.root, '--asset-id', 'claim', '--cases', *self.ids,
                      '--usage-budget', budget)
-        old = self.output.read_bytes(), self.manifest().read_bytes()
         self.command('--project', self.root, '--asset-id', 'claim', '--cases', *self.ids,
-                     '--final-size', 68, 22, expected=1)
-        self.assertEqual(old, (self.output.read_bytes(), self.manifest().read_bytes()))
+                     '--final-size', 68, 22)
         self.assertTrue(link.audit(self.root, require_cases=False)['passed'])
+
+    def test_explicit_strict_policy_checks_actual_budget_without_touching_output(self):
+        budget = self.write_budget()
+        self.command('--project', self.root, '--asset-id', 'claim', '--cases', *self.ids,
+                     '--usage-budget', budget, '--final-size', 68, 22)
+        old = self.output.read_bytes(), self.manifest().read_bytes()
+        (self.root/'docs/art/clarity-policy.json').write_text(json.dumps({'preset': 'strict'}))
+        result = link.audit(self.root, require_cases=False)
+        self.assertFalse(result['passed'])
+        self.assertEqual(old, (self.output.read_bytes(), self.manifest().read_bytes()))
+
+    def test_tool_hash_change_revalidates_existing_pixels_without_new_art(self):
+        self.produce()
+        old = self.output.read_bytes(), self.manifest().read_bytes()
+        rules = link.rule_hashes('fixed_button')
+        current = dict(rules, **{'remake-core/scripts/art_usage_budget.py': 'f'*64})
+        with mock.patch.object(link, 'rule_hashes', return_value=current):
+            result = link.audit(self.root, require_cases=False)
+        self.assertTrue(result['passed'], result)
+        review = result['assets'][0]['measurements']['production_rules']
+        self.assertTrue(review['changed'])
+        self.assertEqual(rules, review['original'])
+        self.assertEqual(current, review['current'])
+        self.assertEqual(old, (self.output.read_bytes(), self.manifest().read_bytes()))
+
+    def test_tool_change_cannot_hide_changed_output_pixels(self):
+        self.produce()
+        Image.new('RGBA', (136, 45), 'red').save(self.output)
+        declaration = json.loads(self.manifest().read_text())
+        declaration['production_assets'][0]['output']['sha256'] = link.sha(self.output)
+        self.save(declaration)
+        rules = link.rule_hashes('fixed_button')
+        current = dict(rules, **{'remake-core/scripts/art_usage_budget.py': 'f'*64})
+        with mock.patch.object(link, 'rule_hashes', return_value=current):
+            result = link.audit(self.root, require_cases=False)
+        self.assertFalse(result['passed'])
+        self.assertIn('replayed pixels', result['assets'][0]['error'])
 
     def test_usage_budget_is_retained_and_all_cases_are_required(self):
         budget = self.write_budget()

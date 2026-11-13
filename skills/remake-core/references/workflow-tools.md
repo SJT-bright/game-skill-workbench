@@ -92,7 +92,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 美术自检
 
-`python scripts/art_check.py --project <工程> --dumps docs/test/art-round-N`：每轮美术做完立刻跑（ART-06），把画面相关的检查一次跑完：页面内容与背景（`audit_page_richness.py`，含空白卡片、占位方块、深色粗字、字超出按钮、大片空白、按钮≤40%、单调弹窗、首页上半屏大图和封面、选关≥6关）、截图颜色（`audit_dark_area.py`）、布局（`extract_ui_layout.py`＋`audit_ui_coverage.py`）、文字放得下（`audit_copy_quality.py --require-runtime`）、开发用字和占位图（`audit_dev_text.py --final`）、清晰度（ART-04：dump 里运行时的图≥节点 2 倍、背景≥1.5 倍的 `low_res`＋`audit_image_clarity.py`，两个板块第一轮起就拦；英化未改的原图写 `docs/art/clarity-exempt.json`），首页礼盒 10 帧动画（`docs/modules.json` 的 `gift_box.frames_dir`），再生成总览图和看图清单。美术只在这里查，最终总检测不再查美术（用户 2026-10-24，[检查分阶段](check-stages.md)）。结果在工程外 `<工程名>-artcheck/<时间>/art-check.md`。缺页面、缺截图都是"需处理"。见[美术自检](../../remake-art/references/page-richness.md#五美术自检每轮美术做完立刻做两个板块art-06page-01)。
+`python scripts/art_check.py --project <工程> --dumps <同批采集>`：首件有效预防后集中制作并冻结候选，每个需要的目标构建一次、全量采集一次，适用页面、图文、裁切、布局、清晰度和开发字等检查共用这批证据，一次列全问题。清晰度默认 1:1 advisory、strict 仅显式选择；不是旧 2x / 1.5x 自动阻断。真实问题同因合批修复后只补受影响项；纯工具修复在原证据重算对应报告，不重画、构建或重采。最终总检测核已有覆盖与包内资源。具体入口见[美工批次流程](../../remake-art/references/art-iteration-workflow.md)。
 
 ## 定点短录排障
 

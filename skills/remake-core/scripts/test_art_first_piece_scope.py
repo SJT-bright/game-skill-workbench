@@ -186,7 +186,7 @@ class Scope(unittest.TestCase):
         attachment.unlink()
         self.assertFalse(self.binding()['available'])
 
-    def scoped_entry(self, *, production_failed=False, selected_page_problem=False, mutate_source=False):
+    def scoped_entry(self, *, production_failed=False, selected_page_problem=False, mutate_source=False, visual_reviews=()):
         output = self.root/'entry'
         real_run = subprocess.run
         calls = []
@@ -198,7 +198,8 @@ class Scope(unittest.TestCase):
             calls.append(selected)
             findings = ['a different real problem on selected page'] if selected_page_problem else []
             Path(cmd[cmd.index('--out')+1]).write_text(json.dumps(dict(
-                checked=1, setup=[], pages=[dict(screen='alpha', problems=findings)], missing=['beta'])))
+                checked=1, setup=[], pages=[dict(screen='alpha', file=str(self.a), problems=findings,
+                    visual_reviews=list(visual_reviews))], missing=['beta'])))
             if mutate_source:
                 (self.project/'assets/ui.js').write_text('late write')
             return subprocess.CompletedProcess(cmd, 1 if findings else 0, '', '')
@@ -223,6 +224,16 @@ class Scope(unittest.TestCase):
         self.assertIsNone(report['full_art_passed'])
         self.assertFalse(report['receipt_written'])
         self.assertEqual(report['input_binding'], self.binding())
+
+    def test_first_piece_preserves_same_evidence_visual_review_without_full_acceptance(self):
+        issue='sliced_reward_content_exceeds_inner: inspect the original card, not a new capture'
+        code,report=self.scoped_entry(visual_reviews=[issue])
+        self.assertEqual(code,0)  # Technical checks passed; visual acceptance is still pending.
+        self.assertTrue(report['visual_review_required'])
+        self.assertEqual(report['pages']['visual_reviews'],[
+            dict(screen='alpha',file=str(self.a),issue=issue)])
+        self.assertIsNone(report['full_art_passed'])
+        self.assertFalse(report['receipt_written'])
 
     def test_selected_page_other_problem_still_fails(self):
         code, report = self.scoped_entry(selected_page_problem=True)

@@ -12,7 +12,7 @@
 工程里没有关卡表、皮肤表、docs/modules.json 这些板块记录时，设计关那几行写不适用；Saul 要求创新玩法、用了对应板块时照查（Saul 2026-10-30）；清晰度和音频来源只作提示（原图、原声音文件保留）。
 
 跑哪些检查（缺对应输入的自动跳过）：
-  清晰度        audit_image_clarity.py    场景/预制体里被放大、不到2倍的图片
+  清晰度        audit_image_clarity.py    场景/预制体源图与显示倍率参考（默认1/1 advisory，实看清楚为标准；显式strict才按设置阻断）
   音频来源      audit_audio_sources.py    每个音频都有合格授权记录
   中文残留      audit_english_coverage.py 源码/包里的中文候选数量（需人工分类：注释不算）
   英文文案      audit_copy_quality.py     拼写、中文/全角标点、占位符、中式英语、叫法统一、字放不下（读 docs/test 里的 dump_ui）
@@ -114,6 +114,9 @@ def first_json(text):
         return {}
 
 
+from clarity_policy import add_arguments as add_clarity_arguments, from_args as clarity_from_args, cli_args as clarity_cli_args
+
+
 def main():
     started = time.monotonic()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -139,7 +142,12 @@ def main():
                     help='final = 出包前最后一次预检：任何一项“跳过”都算不通过（比如没给 --native-zip），逻辑检查的 R01–R09 缺失也不通过')
     ap.add_argument('--recheck-earlier', action='store_true',
                     help='实际执行设计关/美术关项目，失败计为需处理；默认不执行这些前置阶段检查')
+    add_clarity_arguments(ap)
     a = ap.parse_args()
+    try:
+        clarity_policy = clarity_from_args(a, a.project.resolve())
+    except ValueError as exc:
+        ap.error(str(exc))
     if a.stage == 'final' and a.recheck_earlier:
         ap.error('出包预检只核对前置记录；设计和美术复查须在正式试玩前执行')
     if a.maintenance_scope and not a.binding:
@@ -227,15 +235,18 @@ def main():
 
     if not skip_earlier('清晰度'):
         # 1 清晰度
-        code, text = run('audit_image_clarity.py', ['--project', proj, '--out', out / 'clarity.json'], logs)
+        code, text = run('audit_image_clarity.py', ['--project', proj, '--out', out / 'clarity.json', *clarity_cli_args(clarity_policy)], logs)
         j = first_json(text)
         if code in (0, 1) and j:
             worst = '；'.join(f"{x['image']}（原图{x['source'][0]}×{x['source'][1]}→显示{x['display'][0]}×{x['display'][1]}）"
                              for x in j.get('worst', [])[:3])
-            bad = j.get('upscaled') or j.get('below_2x')
-            add('清晰度', ('提示' if soft_art else '需处理') if bad else '通过',
-                f"检查{j.get('checked', 0)}张；放大使用{j.get('upscaled', 0)}张，不到2倍{j.get('below_2x', 0)}张" + (f"。最严重：{worst}" if worst else '')
-                + ('。英化只要求新做的英文图达标，原游戏没改的图不追究' if soft_art and bad else ''),
+            bad = j.get('below_threshold', j.get('blocking_count', j.get('upscaled') or 0))
+            blocked = clarity_policy['severity'] == 'blocking' and bool(j.get('blocking_count', bad))
+            add('清晰度', ('需处理' if blocked else '提示') if bad else '通过',
+                f"倍率参考：普通{clarity_policy['min_ratio']:g}x、背景{clarity_policy['background_min_ratio']:g}x；{clarity_policy['severity']}。"
+                + f"检查{j.get('checked', 0)}张；参考倍率以下{bad}张"
+                + (f"。测量：{worst}" if worst else '')
+                + '。肉眼清楚为标准；倍率提示不自动要求重新生成，缺字/裁切/变形/对比/字高仍独立检查。',
                 'clarity.json')
         elif code == 2 and j.get('status') == 'not_run':   # P20: 0 items checked is "跳过" (final stage: 需处理), not a pass
             add('清晰度', '跳过', j.get('reason', '实际检查 0 项'), 'clarity.json')
@@ -647,7 +658,7 @@ def main():
             page_args += ['--maintenance-visual-policy', a.maintenance_visual_policy]
         if a.binding:
             page_args += ['--binding', a.binding]
-        code, text = run('audit_page_richness.py', page_args, logs)
+        code, text = run('audit_page_richness.py', [*page_args, *clarity_cli_args(clarity_policy)], logs)
         j = first_json(text)
         if j and code in (0, 1):
             found = '；'.join(f"{x.get('screen') or '缺页面'}：{x['problems'][0][:80]}" for x in j.get('found', [])[:3] if x.get('problems'))
@@ -679,7 +690,7 @@ def main():
     md += ['', '说明：本预检只做静态检查和截图测量，不代替真实触摸测试、真机和真实广告验收。']
     (out / 'preflight.md').write_text('\n'.join(md) + '\n', encoding='utf-8')
     from check_runner import read_timings
-    (out / 'preflight.json').write_text(json.dumps({'project': str(proj), 'board': board, 'stage': a.stage, 'results': rows, 'check_timings': read_timings(logs), 'total_elapsed_seconds': round(time.monotonic()-started,6)}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (out / 'preflight.json').write_text(json.dumps({'project': str(proj), 'board': board, 'stage': a.stage, 'clarity_policy': clarity_policy, 'results': rows, 'check_timings': read_timings(logs), 'total_elapsed_seconds': round(time.monotonic()-started,6)}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('\n'.join(md))
     print(f"\n完整结果：{out}")
     return 1 if todo else 0

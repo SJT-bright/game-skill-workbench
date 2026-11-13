@@ -1,24 +1,20 @@
 #!/usr/bin/env python3
-"""Static image-clarity check: compare each Sprite's display size with its source image size.
+"""Read-only static image resolution measurements for Cocos scenes/prefabs.
 
-Read-only. Works on Cocos 2.4 and 3.x projects (scenes .fire/.scene and .prefab).
-For every Sprite with a sprite frame it computes
-    ratio = display size / source size   (display = node content size x parent scales)
-  upscaled  - enlarged on both axes (shown larger than the image itself; blurry, must fix)
-  below 2x  - worst axis ratio > 0.5, i.e. source under the 2x rule (should fix); bars or lines
-              stretched on one axis land here instead of "upscaled"
-Sliced (nine-slice) and tiled sprites are skipped (stretching is intended), as are
-sprites set only from code (they are not in scene files) - check those on screenshots.
-
-Usage:
-  python audit_image_clarity.py --project GAME_PROJECT [--min-display 24] [--out result.json]
-Exit codes: 0 no upscaled images, 1 upscaled images found, 2 bad input.
-Images "below 2x" are reported for fixing but do not change the exit code.
+Default: ordinary/background 1.0x source/render reference, advisory only; actual visible clarity is the standard. Explicit
+strict preset uses ordinary 2.0x/background 1.5x, blocking. Project JSON and CLI can
+adjust thresholds/severity; see --clarity-* help. Ratios do not replace actual
+visual review or missing glyph, crop, distortion, contrast and text-size checks.
+Sliced/tiled and code-assigned sprites require independent runtime/screenshot review.
+Exit 0: no blocking resolution findings; 1: blocking findings; 2: invalid input/not_run.
 """
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
+
+from clarity_policy import add_arguments, from_args, measure
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'cocos-game-check' / 'package-check' / 'scripts'))
 from check_guard import engine_of, zero_items  # P20 shared guard
@@ -95,7 +91,12 @@ def main():
     ap.add_argument('--project', type=Path, required=True)
     ap.add_argument('--min-display', type=float, default=24, help='ignore sprites smaller than this on screen (design px)')
     ap.add_argument('--out', type=Path)
+    add_arguments(ap)
     a = ap.parse_args()
+    try:
+        policy = from_args(a)
+    except ValueError as exc:
+        ap.error(str(exc))
     if not (a.project / 'assets').is_dir():
         print(json.dumps({'status': 'error', 'error': f'no assets folder in {a.project}'}))
         return 2
@@ -104,7 +105,7 @@ def main():
         return 2
     files = {}
     frames = frame_sizes(a.project, files)
-    findings, checked, seen = [], 0, set()
+    findings, items, checked, seen = [], [], 0, set()
     for f in walk(a.project, {'.fire', '.scene', '.prefab'}):
         try:
             objs = json.loads(f.read_text(encoding='utf-8'))
@@ -128,41 +129,51 @@ def main():
             if max(dw, dh) < a.min_display:
                 continue
             name, rw, rh = frames[uuid]
-            ratio = max(dw / rw, dh / rh)          # worst axis: used for the 2x rule
-            both = min(dw / rw, dh / rh)           # both axes enlarged = really upscaled (bars stretched one way are not)
-            checked += 1
-            if ratio <= 0.5:
-                continue
             node_name = objs[node_ref].get('_name', '')
+            background = bool(re.search(r'(?:^|[/_. -])(?:bg|background|backdrop)(?:[0-9]|[/_. -]|$)', node_name + ' ' + name, re.I))
+            metric = measure([rw, rh], [dw, dh], policy, background=background)
+            checked += 1
             key = (f.relative_to(a.project).as_posix(), node_name, name)
             if key in seen:
                 continue
             seen.add(key)
-            findings.append({'file': key[0], 'node': node_name, 'image': name,
-                             'source': [rw, rh], 'display': [round(dw), round(dh)], 'ratio': round(ratio, 2),
-                             'level': 'upscaled' if both > 1.0 else 'below_2x',
-                             **({'image_path': files[uuid]} if uuid in files else {})})
-    findings.sort(key=lambda x: -x['ratio'])
+            both_upscaled = max(metric['axis_source_render_ratios']) < 1.0
+            item = {'file': key[0], 'node': node_name, 'image': name,
+                    **metric, 'display': [round(dw, 3), round(dh, 3)],
+                    'ratio': round(max(dw / rw, dh / rh), 6),
+                    'ratio_definition': 'legacy ratio = render/source; source_render_ratio is source/render',
+                    'render_units': 'scene node units multiplied by ancestor scale; not phone CSS pixels',
+                    'level': 'upscaled' if both_upscaled else 'below_threshold',
+                    **({'image_path': files[uuid]} if uuid in files else {})}
+            items.append(item)
+            if metric['below_threshold']:
+                findings.append(item)
+    findings.sort(key=lambda x: x['source_render_ratio'])
     upscaled = sum(1 for x in findings if x['level'] == 'upscaled')
+    blocked = sum(1 for x in findings if x['blocking'])
+    below_2x = sum(1 for x in items if x['source_render_ratio'] < 2 and x['level'] != 'upscaled')
     report = {'tool': 'audit_image_clarity', 'checked': checked, 'upscaled': upscaled,
-              'below_2x': len(findings) - upscaled, 'findings': findings,
-              'note': 'Static scene/prefab sprites only; sliced/tiled skipped; code-assigned sprites need screenshot review.'}
+              'below_2x': below_2x, 'below_threshold': len(findings), 'blocking_count': blocked,
+              'advisory_count': sum(x['severity'] == 'advisory' for x in findings),
+              'findings': findings, 'items': items, 'clarity_policy': policy,
+              'note': 'Resolution measurements only; no automatic regeneration. Static scene/prefab sprites only; sliced/tiled skipped; code-assigned sprites need runtime measurements and actual visual review.'}
     # P20 (问题普查 T20): 0 sprites checked (for example a Cocos 3.x project, whose sprite frames this static reader
     # does not resolve) used to print exit 0 like a pass. It is "not_run" now, with the engine, exit 2.
     report['engine'] = engine_of(a.project)
-    report['passed'] = not upscaled
+    report['passed'] = not blocked
+    report['status'] = 'fail' if blocked else ('advisory' if findings else 'pass')
     zero_items(report, what='场景和预制体里没有能对上图片尺寸的 Sprite（Cocos %s）' % (report['engine']['version'] or report['engine']['major']),
                need='运行时 dump 的 low_res 检查（art_check 已做）', engine=report['engine'])
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     # R4I1 (Round4 #4): the printed report starts with the engine and the number of items actually checked
-    print(json.dumps({'engine': report['engine'], 'checked': checked, 'upscaled': upscaled, 'below_2x': len(findings) - upscaled,
+    print(json.dumps({'engine': report['engine'], 'checked': checked, 'upscaled': upscaled, 'below_2x': below_2x, 'below_threshold': len(findings), 'blocking_count': blocked, 'clarity_policy': policy,
                       'worst': findings[:8], 'status': report.get('status', 'checked'),
                       **({'reason': report['reason']} if report.get('status') == 'not_run' else {})}, ensure_ascii=False))
     if report.get('status') == 'not_run':
         return 2
-    return 1 if upscaled else 0
+    return 1 if blocked else 0
 
 
 if __name__ == '__main__':

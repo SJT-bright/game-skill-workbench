@@ -59,7 +59,8 @@ LEVELS/SKINS/Add to Home/Revisit tiles, typed numbers 0/9 and 0):
                   frame_size and display_size; user 2026-10-23: DETAILS 570x345 forced into 234x49 = 2.89x): crop each word
                   to its own SpriteFrame and scale it uniformly; squashed_picture: the same for other pictures (bars,
                   glows, backgrounds may stretch)
-  low_res         ART-04 at run time (user 2026-10-23: the final review found 22 frames below 2x their node size after the user
+  low_res         Configurable source/render ratio reference; default advisory, actual phone readability decides.
+                  Historical strict case (2026-10-23): the final review found 22 frames below 2x after the user
                   had approved the art): a simple sprite whose picture (frame_size) is smaller than 2x the size it is drawn at
                   (display_size; backgrounds and full-screen pictures 1.5x), so it looks soft on phone screens. Same check in
                   every art round as in the final review; regenerate / re-crop at >= 2x. Original untouched frames of a
@@ -136,6 +137,7 @@ from contextvars import ContextVar
 from collections import Counter
 import fnmatch
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -249,7 +251,8 @@ NAME_TOKENS = re.compile(r'[A-Z]?[a-z]+|[A-Z]+(?![a-z])')   # BtnWord -> Btn, Wo
 MAX_STRETCH, MIN_STRETCH_AREA, MAX_STRETCH_AREA = 1.10, 0.002, 0.6   # user 2026-10-23: words 570x345 forced into 234x49
 STRETCH_OK = re.compile(r'bar|fill|progress|line|divider|strip|stripe|glow|shadow|mask|ray|light|particle|bg|backdrop|'
                         r'background|sky|ground|floor|water|wave|gradient|vignette|overlay|dim', re.I)   # stretchable pictures
-MIN_SHARP, MIN_SHARP_BG, MIN_SHARP_AREA = 1.99, 1.495, 0.003   # ART-04: picture >= 2x its node size, backgrounds 1.5x
+MIN_SHARP, MIN_SHARP_BG, MIN_SHARP_AREA = 1.0, 1.0, 0.003  # Default ratio reference only; actual readability is reviewed.
+CLARITY_POLICY = None
 BACKGROUND_NAME = re.compile(r'bg|backdrop|background|sky|scene|wallpaper', re.I)
 CLARITY_EXEMPT = []   # docs/art/clarity-exempt.json: frame globs (with a why) kept from the original game (localize)
 CANVAS_TEXT_FILES = []   # docs/text/runtime-text.json "canvas_text_files": scripts allowed to draw text with Canvas fonts
@@ -1046,10 +1049,138 @@ def squash_problems(nodes, full):
     return out
 
 
-def low_res_problems(nodes, full):
+def sprite_assembly_findings(d, nodes):
+    """Locate reward-composition defects and ambiguous cases on existing evidence.
+
+    Insets describe a stretch center, not a universal content-safe area. A name
+    is an art-role hint, not proof of baked text. Keep those risks for direct
+    visual review; only an explicitly declared caption role is a hard mismatch.
+    """
+    result = {'problems': [], 'reviews': [], 'measurements': []}
+    nodes = [n for n in nodes if n.get('active') is not False and n.get('opacity', 1) > .05]
+    viewport = d.get('viewport') or d.get('page') or {}
+    width, height = viewport.get('width'), viewport.get('height')
+    valid_number = lambda v: type(v) in (int, float) and math.isfinite(v)
+    valid_rect = lambda r: (isinstance(r, (list, tuple)) and len(r) == 4 and
+                            all(valid_number(v) for v in r) and min(r[2:]) > 0)
+    reward_group = re.compile(r'^(?:rewards?|rewarditems|rewardicons|prizes?|items)$', re.I)
+    uncertain_group = re.compile(r'^contents?$', re.I)
+    def group_kind(n, owner=None):
+        path = n.get('path', '')
+        if owner is not None:
+            if not under(path, owner): return None
+            path = path[len(owner):].strip('/')
+        parts = path.split('/')[:-1]
+        return 'reward' if any(reward_group.fullmatch(p) for p in parts) else (
+            'unknown' if any(uncertain_group.fullmatch(p) for p in parts) else None)
+    def interactive(n):
+        return any('button' in b.get('comps', {}) and node_under(n, b) for b in nodes)
+    def ordinary_content(n):
+        return (bool(text(n) or n.get('comps', {}).get('sprite')) and
+                not re.search(r'(?:^|/)(?:decorations?|ornaments?|badges?|sparkles?)(?:/|$)',
+                              n.get('path', ''), re.I))
+    def slice_surface(n):
+        s = n.get('comps', {}).get('sprite', {})
+        return (s.get('sliced') and not s.get('tiled') and not
+            re.search(r'progress|slider|gauge|meter|(?:^|[_ /.-])(?:bar|fill|track|rail)(?:$|[_ /.-])',
+                      n.get('name', '')+' '+str(s.get('frame', '')), re.I))
+    surfaces = [n for n in nodes if slice_surface(n)]
+    designated = lambda n: str(n.get('name', '')).lower() in {'cardsurface', 'panelsurface'}
+    reviewed_owners = set()
+    for n in nodes:
+        sprite = n.get('comps', {}).get('sprite', {})
+        frame = str(sprite.get('frame', ''))
+        role = group_kind(n)
+        caption_confirmed = bool(CAPTION_FRAMES and glob_any(frame, CAPTION_FRAMES, lower=True))
+        if (role and ordinary_content(n) and not interactive(n) and
+                (frame.lower().startswith('btn_') or caption_confirmed)):
+            known_mismatch = role == 'reward' and caption_confirmed
+            message = ('reward_button_thumbnail: %s uses %s frame "%s" in a non-interactive %s slot. '
+                'Inspect the source and actual displayed words on this same screenshot; confirm whether it is '
+                'a whole caption button or a pure item/symbol icon. Naming and resolution alone are not proof; '
+                'do not regenerate automatically.' % (n['path'],
+                'an explicitly declared whole-caption' if caption_confirmed else 'a button-named', frame, role))
+            result['problems' if known_mismatch else 'reviews'].append(message)
+            result['measurements'].append(dict(code='reward_button_thumbnail', path=n['path'], frame=frame,
+                css_display_size=sprite.get('css_display_size'), source_size=sprite.get('frame_size'),
+                caption_confirmed=caption_confirmed, role=role, visual_review_required=not known_mismatch,
+                auto_regenerate=False))
+        if n not in surfaces:
+            continue
+        owner = parent_of(n)
+        siblings = [s for s in surfaces if parent_of(s) == owner]
+        preferred = [s for s in siblings if designated(s)]
+        if preferred and n not in preferred:
+            continue  # A second decorative surface does not own the card rewards.
+        items = [m for m in nodes if m is not n and group_kind(m, owner) and
+                 ordinary_content(m) and valid_rect(m.get('screen') or m.get('rect'))]
+        if not items: continue
+        candidates = preferred or siblings
+        if len(candidates) != 1:
+            if owner not in reviewed_owners:
+                result['reviews'].append('sliced_reward_owner_unresolved: %s has multiple possible surfaces; '
+                    'resolve the actual container on the existing screenshot before applying any inner-area rule.' % owner)
+                reviewed_owners.add(owner)
+            continue
+        inner = sprite.get('inner'); outer = n.get('screen') or n.get('rect')
+        row = dict(code='sliced_reward_content', path=n['path'], frame=frame,
+                   source_size=sprite.get('frame_size'), css_display_size=sprite.get('css_display_size'),
+                   insets=sprite.get('insets'), inner=inner, inner_meaning='stretch_center_not_content_safe',
+                   auto_regenerate=False)
+        result['measurements'].append(row)
+        if not (valid_rect(inner) and valid_rect(outer) and valid_number(width) and
+                valid_number(height) and min(width, height) > 0):
+            row['status'] = 'unmeasured'
+            result['reviews'].append('sliced_reward_inner_unmeasured: %s has populated content but no valid '
+                'measured stretch center/viewport; inspect the existing screenshot. A missing center does not '
+                'prove either a broken card or a safe composition.' % n['path'])
+            continue
+        row['inner_css_size'] = [inner[2]*width, inner[3]*height]
+        # Measurement rounding tolerance, never a style or resolution threshold.
+        tolerance = 2.0
+        def overflow(rect, boundary):
+            return max((boundary[0]-rect[0])*width, (boundary[1]-rect[1])*height,
+                (rect[0]+rect[2]-boundary[0]-boundary[2])*width,
+                (rect[1]+rect[3]-boundary[1]-boundary[3])*height, 0)
+        center_crossing = []; outer_crossing = []
+        for item in items:
+            rect = item.get('screen') or item['rect']; size = [rect[2]*width, rect[3]*height]
+            center = overflow(rect, inner); edge = overflow(rect, outer)
+            if center > tolerance:
+                center_crossing.append(dict(path=item['path'], css_size=size, overflow_css=center))
+            if edge > tolerance:
+                outer_crossing.append(dict(path=item['path'], overflow_css=edge))
+        row.update(center_crossing=center_crossing, outer_crossing=outer_crossing,
+                   status='review_required' if center_crossing or outer_crossing else 'within_measured_center')
+        if center_crossing:
+            result['reviews'].append('sliced_reward_content_exceeds_inner: %s has measured stretch center '
+                '%.2fx%.2f CSS px; %d content items cross it by position or size. Check the actual border, '
+                'center bands and source-safe design in the same screenshot. Stretch center is not a universal '
+                'content-safe area; intended overhang and decorations are not automatically defects.' %
+                (n['path'], *row['inner_css_size'], len(center_crossing)))
+        if outer_crossing:
+            result['reviews'].append('reward_content_outside_card: %s has %d content items outside its outer '
+                'rect; verify actual ownership, masks and intended overhang on the existing screenshot.' %
+                (n['path'], len(outer_crossing)))
+        if any(group_kind(m, owner) == 'unknown' for m in items):
+            result['reviews'].append('reward_content_role_unresolved: %s uses a generic content group; '
+                'confirm the actual item/decorative/action roles before requiring an artwork change.' % n['path'])
+    return result
+
+
+def assembly_visual_reviews(report):
+    """Preserve exact original evidence in the existing Codex look-list flow."""
+    return [dict(screen=page.get('screen'), file=page.get('file'), issue=issue)
+            for page in report.get('pages', [])
+            for issue in page.get('visual_reviews', page.get('stats', {}).get('sprite_assembly', {}).get('reviews', []))]
+
+
+def runtime_clarity_findings(nodes, full, policy=None):
     """ART-04 at run time. Compare source pixels to the sprite's actual CSS-pixel size on the phone, not Cocos design
     units. Frames set from code are not in scene files, so the static audit_image_clarity.py misses them - the dump measures
     the live view."""
+    from clarity_policy import resolve_policy, measure
+    policy = policy or CLARITY_POLICY or resolve_policy()
     out = []
     for n in nodes:
         s = n['comps'].get('sprite')
@@ -1074,15 +1205,31 @@ def low_res_problems(nodes, full):
         bg = n in full or a >= MAX_STRETCH_AREA or bool(BACKGROUND_NAME.search(n['name'] + ' ' + frame))
         if not bg and STRETCH_OK.search(n['name'] + ' ' + frame):
             continue
-        need = MIN_SHARP_BG if bg else MIN_SHARP
-        r = min(fs[0] / ds[0], fs[1] / ds[1])
-        if r >= need:
-            continue
-        want = 1.5 if bg else 2
-        out.append('low_res: %s (frame "%s") picture %dx%d is drawn at %gx%g = %.2fx - needs >= %gx (%dx%d px) or it looks soft on '
-                   'the phone: regenerate or re-crop it at >= %gx (ART-04, same check every art round as in the final review, '
-                   'user 2026-10-23)' % (n['path'], frame, fs[0], fs[1], ds[0], ds[1], r, want, round(ds[0] * want), round(ds[1] * want), want))
+        item = measure(fs, ds, policy, background=bg)
+        item.update(path=n.get('path'), frame=frame)
+        out.append(item)
     return out
+
+
+def low_res_problems(nodes, full):
+    """Ratio messages only. Advisory messages are kept separate from defects by main()."""
+    out = []
+    for item in runtime_clarity_findings(nodes, full):
+        if not item['below_threshold']:
+            continue
+        out.append('low_res: %s (frame "%s") source %gx%g / rendered %gx%g = %.2fx; reference %gx; %s. '
+                   'Judge clarity at the actual phone size; ratio alone never schedules regeneration.' %
+                   (item['path'], item['frame'], *item['source'], *item['render'],
+                    item['source_render_ratio'], item['threshold'], item['severity']))
+    return out
+
+
+def split_clarity_messages(problems, policy):
+    """Only a resolution-ratio advisory is non-blocking; other defects retain their status."""
+    if policy['severity'] != 'advisory':
+        return list(problems), []
+    return ([message for message in problems if not message.startswith('low_res:')],
+            [message for message in problems if message.startswith('low_res:')])
 
 
 BITMAP_DIGIT_FRAME = re.compile(r'(?:^|[_-])(?:digit|digits|num|nums|number|numbers|glyph|glyphs)[_-]?\d+(?:$|[_-])', re.I)
@@ -2659,10 +2806,11 @@ def _verified_legacy_capture_ids(project, folder):
 
 
 def load(folders, project=None):
+    from art_capture_history import resolve_input_files
     dumps = []
     for folder in folders:
         legacy_ids = None
-        for f in sorted(Path(folder).rglob('*ui-dump-*.json')):
+        for f in resolve_input_files(folder, project=project):
             try:
                 d = json.loads(f.read_text(encoding='utf-8'))
             except (OSError, ValueError):
@@ -3008,6 +3156,9 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     pix = {'flat_ratio': pixels['flat_ratio'], 'plain_block_ratio': pixels['plain_block_ratio']} if pixels else {}
     if colour_hints:
         pix['dark_button_hints'] = colour_hints
+    assembly = sprite_assembly_findings(d, nodes)
+    problems += assembly['problems']
+    pix['sprite_assembly'] = assembly
     problems += text_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
     problems += one_piece_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)])
     problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module) + low_res_problems(nodes, full)
@@ -3370,7 +3521,14 @@ def main():
     ap.add_argument('--board', choices=['localize', 'remake'],
                     help='overrides the board recorded in the project (small_value_font blocks remake games only)')
     ap.add_argument('--no-analysis-cache', action='store_true', help='recompute identical pixel inputs for comparison')
+    from clarity_policy import add_arguments as clarity_arguments, from_args as clarity_from_args
+    clarity_arguments(ap)
     a = ap.parse_args()
+    global CLARITY_POLICY
+    try:
+        CLARITY_POLICY = clarity_from_args(a)
+    except ValueError as exc:
+        ap.error(str(exc))
     global BOARD
     proj = a.project.resolve()
     from feature_policy import board_of
@@ -3478,7 +3636,7 @@ def main():
     # Keep first-piece and full checks compatible for the exact same original dump.
     cache_options.pop('dump_file', None)
     analysis_cache = PageCache(proj, dict(board=BOARD, binding=presentation_binding,
-        maintenance=maintenance_mapping, cli=cache_options), enabled=not a.no_analysis_cache)
+        maintenance=maintenance_mapping, clarity_policy=CLARITY_POLICY, cli=cache_options), enabled=not a.no_analysis_cache)
     pages, failed = [], []
     for d in dumps:
         from english_visual_scope import rules_for
@@ -3498,8 +3656,12 @@ def main():
             _PAGE_PIXELS.reset(token)
             for pixels in images.values():
                 pixels.close()
+        clarity = runtime_clarity_findings([n for n in d.get('nodes', []) if n.get('active') is not False], [], CLARITY_POLICY)
+        problems, advisories = split_clarity_messages(problems, CLARITY_POLICY)
         row = {'screen': d.get('screen'), 'kind': d.get('kind'), 'purpose': d.get('purpose', 'other'), 'file': d['_file'],
-               'problems': problems, 'stats': stats}
+               'problems': problems, 'advisories': advisories,
+               'visual_reviews': stats.get('sprite_assembly', {}).get('reviews', []),
+               'clarity_findings': clarity, 'stats': stats}
         pages.append(row)
         if problems:
             failed.append(row)
@@ -3540,7 +3702,12 @@ def main():
     report = {'tool': 'audit_page_richness', 'schema': 2, 'checked': len(pages),
               'failed': len(failed), 'passed': not failed and bool(pages), 'status': 'pass' if not failed and pages else 'fail',
               'pages': pages, 'missing': missing, 'setup': setup,
-              'boundary': 'Scene-tree structure from dump_ui; the final look is still judged by Codex on the contact sheets.'}
+              'clarity_policy': CLARITY_POLICY,
+              'clarity_findings': [dict(x, file=p['file'], screen=p['screen']) for p in pages for x in p.get('clarity_findings', [])],
+              'boundary': 'Technical findings only. Required visual reviews use the existing original screenshots; '
+                          'a technical pass never replaces Codex visual acceptance.'}
+    report['visual_review_count'] = len(assembly_visual_reviews(report))
+    report['visual_review_required'] = report['visual_review_count'] > 0
     if maintenance_mapping is not None:
         report['maintenance_mapping'] = maintenance_mapping
     if original_mapping is not None:
@@ -3557,6 +3724,7 @@ def main():
     a.out.with_suffix('.cache.json').write_text(json.dumps(analysis_cache.report(), ensure_ascii=False, indent=2))
     a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'status': report['status'], 'checked': report['checked'], 'failed': len(failed),
+                      'visual_review_count': report['visual_review_count'],
                       'found': [{'screen': f['screen'], 'problems': f['problems'][:3]} for f in failed][:8], 'report': str(a.out)},
                      ensure_ascii=False))
     return 0 if report['passed'] else 1

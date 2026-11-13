@@ -132,7 +132,7 @@ class PreflightMaintenanceTests(unittest.TestCase):
                 out = root / 'out'
                 argv = ['preflight.py', '--project', str(project), '--board', 'remake', '--out', str(out)]
                 if recheck:
-                    argv.append('--recheck-earlier')
+                    argv.extend(['--recheck-earlier', '--clarity-preset', 'strict'])
                 with patch.object(sys, 'argv', argv), patch.object(preflight, 'run', side_effect=stub), \
                         contextlib.redirect_stdout(io.StringIO()):
                     code = preflight.main()

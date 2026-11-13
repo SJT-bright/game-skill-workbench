@@ -32,9 +32,9 @@ result_fail、settings、settings_sound、map、shop、skins、pause、revive、
   真字宽      audit_text_fit.py        用游戏自己的字体量字宽：出底板/按钮、压图标、出屏、出图里画好的色条、带字图被盖；
                                        另写 text-plan.md 排版预算（每段字要多宽、底板至少多宽）
   开发用字    audit_dev_text.py --final                      PROTOTYPE/LOCAL PREVIEW、占位图
-  清晰度      dump 里运行时的图（low_res）+ audit_image_clarity.py   两个板块、第一轮起就必须通过（用户 2026-10-23：
-                                       最终验收 ART-04 才发现 22 张图不到节点 2 倍、背景 1.47 倍，那时美术已经给用户确认过）；
-                                       英化原游戏没改的原图写进 docs/art/clarity-exempt.json（每条写 why），新做/重做的图不能豁免
+  清晰度      dump low_res + audit_image_clarity.py；默认普通/背景1x advisory，不因倍率阻断或自动生图。
+              项目docs/art/clarity-policy.json与CLI可覆盖；显式strict为普通2x/背景1.5x blocking。
+              缺字、裁切、变形、对比度、字高及实际视觉检查独立保留。
   最终总检测不查美术（用户 2026-10-24，remake-core/references/check-stages.md）：美术只在本脚本查（英化 1.8 每轮、重塑第二轮美术、
                                        remake-art）；锁定后又改了美术，只对改动重跑本脚本，不进最终门禁
   顶部资源栏  audit_top_bar.py         货币/体力/关卡进度在首页（和地图）最上方、货币贴合题材、体力是闪电；
@@ -69,6 +69,7 @@ import time
 import sys
 
 HERE = Path(__file__).resolve().parent
+from clarity_policy import add_arguments as add_clarity_arguments, from_args as clarity_from_args, cli_args as clarity_cli_args, group_result as clarity_group_result
 TIMEOUT = 600
 DARK_TEXT_KINDS = {'dark_bold_text', 'dark_picture_text', 'dark_green_text', 'dark_text', 'dev_text'}
 # user 2026-10-23 (both boards): every word, number and button is generated picture text in one piece with the art
@@ -236,6 +237,29 @@ def static_clarity_left(proj, findings, rows):
     return left
 
 
+def analysis_report_refs(output, previous=None):
+    """Bind this run's real child reports; inherit only already-bound, unchanged artifacts."""
+    result = {}
+    inherited = (previous or {}).get('analysis_reports', {})
+    if not isinstance(inherited, dict):
+        raise ValueError('previous analysis_reports must be an object')
+    for name in ('page_richness.json', 'visual-slots-result.json'):
+        current = Path(output) / name
+        if current.is_file():
+            checker = HERE / ('audit_page_richness.py' if name == 'page_richness.json' else 'audit_art_slots.py')
+            result[name] = {'path': str(current.resolve()), 'sha256': hashlib.sha256(current.read_bytes()).hexdigest(),
+                            'checker': str(checker), 'checker_sha256': hashlib.sha256(checker.read_bytes()).hexdigest()}
+        elif name in inherited:
+            ref = inherited[name]
+            if not isinstance(ref, dict) or not isinstance(ref.get('path'), str) or not Path(ref['path']).is_absolute():
+                raise ValueError('previous child report lacks original absolute path: ' + name)
+            source = Path(ref['path'])
+            if not source.is_file() or hashlib.sha256(source.read_bytes()).hexdigest() != ref.get('sha256'):
+                raise ValueError('previous bound child report changed/missing: ' + name)
+            result[name] = dict(ref)
+    return result
+
+
 def tree_fingerprint(root):
     """Assets of the build the art check looked at (so a later art change shows up as a stale check)."""
     files = {}
@@ -265,10 +289,27 @@ def screen_viewport_gaps(screens, viewports, observed):
     return sorted(expected - set(observed))
 
 
-def capture_inventory(project, dumps):
+def capture_inventory(project, dumps, resolved_dumps=None):
     """Cheap prerequisite check, not a visual verdict or runtime authenticity check."""
     errors=[];observed=set();kinds=set();records=[];shots=set()
-    dump_files=sorted(dumps.rglob('*ui-dump-*.json')) if dumps.is_dir() else []
+    if resolved_dumps is None:
+        dump_files=sorted(dumps.rglob('*ui-dump-*.json')) if dumps.is_dir() else []
+    else:
+        # Only the provenance owner supplies this list after verifying original proofs.
+        # Inventory checks completeness; it does not confer provenance or quality approval.
+        dump_files=[]
+        if not isinstance(resolved_dumps, (list, tuple)):
+            errors.append('resolved_dumps必须是已核原始文件列表')
+        else:
+            for raw in resolved_dumps:
+                try:
+                    file=Path(raw)
+                    if not file.is_absolute() or not file.is_file():raise ValueError('原始dump须为存在的绝对文件路径')
+                    file=file.resolve()
+                    if file in dump_files:raise ValueError('重复原始dump')
+                    dump_files.append(file)
+                except (TypeError, ValueError) as exc:errors.append('无效resolved_dumps: '+str(exc))
+        dump_files.sort()
     if not dump_files:errors.append('没有运行页面dump；先采集本轮页面，不能以源码清单代替')
     try:
         manifest=json.loads((project/'docs/art/screens.json').read_text(encoding='utf-8-sig'))
@@ -310,6 +351,17 @@ def capture_inventory(project, dumps):
     errors.extend('缺采集: %s@%sx%s'%gap for gap in gaps)
     errors.extend(adboost_capture_gaps(project, records))
     return {'ready':not errors,'errors':errors,'dump_files':dump_files,'shots':sorted(shots), 'records':records,'observed':sorted(observed),'listed':valid,'viewports':valid_vp}
+
+
+def verified_capture_inventory(project, dumps, build, board, capture_build=None):
+    """Resolve provenance once before completeness, preserving approved original paths."""
+    from art_input_check import verify_capture
+    capture_round = verify_capture(project, dumps, build, board, None, capture_build)
+    resolved = None
+    if isinstance(capture_round, dict) and capture_round.get('ready') and not capture_round.get('error'):
+        resolved = capture_round.get('resolved_dumps')
+    inventory = capture_inventory(project, dumps, resolved_dumps=resolved)
+    return inventory, capture_round
 
 
 ADBOOST_DIR = Path('assets') / 'resources' / 'adboost'
@@ -526,7 +578,12 @@ def main():
     ap.add_argument('--affected-group', action='append', choices=sorted(TRIAL_GROUPS), default=[],
                     help='also recheck a previously passed group whose input changed')
     ap.add_argument('--prior-report', type=Path, help='relocated prior report with the recorded SHA-256')
+    add_clarity_arguments(ap)
     a = ap.parse_args()
+    try:
+        clarity_policy = clarity_from_args(a, a.project.resolve())
+    except ValueError as exc:
+        ap.error(str(exc))
     if a.prior_report and not (a.plan_trial or a.resume_trial):
         ap.error('--prior-report requires --plan-trial or --resume-trial')
     if a.plan_trial:
@@ -565,7 +622,7 @@ def main():
         if not a.out:
             ap.error('--production-only requires --out outside project')
         from art_preflight import run as production_preflight
-        return production_preflight(a.project, a.dumps, a.out, a.board, a.binding, case_ids=a.first_piece_case)
+        return production_preflight(a.project, a.dumps, a.out, a.board, a.binding, case_ids=a.first_piece_case, clarity_policy=clarity_policy)
     if a.loading_only:
         if a.ui_contract or a.ui_native or a.ui_runner or a.ui_calibrate:
             ap.error('--loading-only cannot be combined with UI contract mode')
@@ -633,9 +690,7 @@ def main():
             add('制作素材与应查实例联动', production['passed'],
                 '重新核对真实素材与制作约束；页面显示仍由本轮实际采集判断', 'production-assets.json')
 
-    inventory = capture_inventory(proj, dumps)
-    from art_input_check import verify_capture
-    capture_round = verify_capture(proj, dumps, a.build, board, inventory, a.capture_build)
+    inventory, capture_round = verified_capture_inventory(proj, dumps, a.build, board, a.capture_build)
     if recheck is not None and capture_round is None:
         ap.exit(3, '补验需要本轮实际 Web 和已核准的采集记录。先补对应状态或恢复已有证据。\n')
     if capture_round is not None:
@@ -762,8 +817,9 @@ def main():
         add('领奖窗看广告双倍（签到/转盘结果/礼包：一个默认勾上的勾选框、有免费 CLAIM）', code == 0,
             '；'.join(p[:120] for p in j.get('problems', []))[:700] or '通过（%s 个领奖窗）' % j.get('screens', 0), 'claim_double.json')
 
+    page_visual_reviews = previous.get('visual_reviews', []) if previous else []
     if runs('page'):
-        code, text = run('audit_page_richness.py', ['--project', proj, '--dumps', dumps, '--out', out / 'page_richness.json', *binding,
+        code, text = run('audit_page_richness.py', ['--project', proj, '--dumps', dumps, '--out', out / 'page_richness.json', *binding, *clarity_cli_args(clarity_policy),
                                                     *(['--english-visual-scope',a.english_visual_scope] if a.english_visual_scope else []),
                                                     *(['--board', a.board] if a.board else []),
                                                     *(['--maintenance-scope', a.maintenance_scope,
@@ -776,6 +832,8 @@ def main():
         dark = []
         try:
             rep = json.loads((out / 'page_richness.json').read_text(encoding='utf-8'))
+            from audit_page_richness import assembly_visual_reviews
+            page_visual_reviews = assembly_visual_reviews(rep)
             for pg in rep.get('pages', []):
                 for prob in pg.get('problems', []):
                     if prob.split(':', 1)[0] in DARK_TEXT_KINDS:
@@ -967,9 +1025,8 @@ def main():
             'dev_text.json')
 
     if runs('page'):
-        # user 2026-10-23: ART-04 found 22 runtime frames below 2x their node size (and a 1.47x background) in the FINAL review,
-        # after the user had approved the art. The final review's art checks are these same checks, run after every own art round
-        # (both boards, first round included): runtime frames from the dumps (low_res) + scene/prefab sprites, one row, blocking.
+        # Source/render ratios follow explicit clarity policy only. Text, clipping, distortion,
+        # contrast, text-height and actual review remain independent rows and are never waived here.
         try:
             ce = json.loads((proj / 'docs' / 'art' / 'clarity-exempt.json').read_text(encoding='utf-8-sig'))
             exempt_rows = [x for x in ce.get('frames', []) if isinstance(x, dict) and x.get('frame') and str(x.get('why', '')).strip()]
@@ -979,27 +1036,42 @@ def main():
         low = []
         try:
             for pg in rep.get('pages', []):
-                for prob in pg.get('problems', []):
-                    if prob.split(':', 1)[0] == 'low_res':
-                        low.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', prob[9:120]))
-        except (NameError, AttributeError):
+                for prob in list(pg.get('problems', [])) + list(pg.get('advisories', [])):
+                    message = prob.get('message', '') if isinstance(prob, dict) else str(prob)
+                    if message.split(':', 1)[0] == 'low_res':
+                        low.append('%s：%s' % (pg.get('screen') or pg.get('file') or '?', message[9:220]))
+        except (NameError, AttributeError, TypeError):
             pass
-        code, text = run('audit_image_clarity.py', ['--project', proj, '--out', out / 'clarity.json'], logs)
+        code, text = run('audit_image_clarity.py', ['--project', proj, '--out', out / 'clarity.json', *clarity_cli_args(clarity_policy)], logs)
         try:
             cj = json.loads((out / 'clarity.json').read_text(encoding='utf-8'))
         except (OSError, ValueError):
             cj = first_json(text)
-        static = static_clarity_left(proj, cj.get('findings', []), exempt_rows)   # 美工skill 2026-11-05: frame names match
-        static_txt = ['%s/%s "%s" %sx%s 显示 %sx%s（%s）' % (x.get('file'), x.get('node'), x.get('image'), *(x.get('source') or ['?', '?']),
-                                                       *(x.get('display') or ['?', '?']), '放大使用' if x.get('level') == 'upscaled' else '不到2倍')
-                      for x in static[:4]]
-        clear_ok = dark_ok and not low and not static
-        add('清晰度（ART-04：运行时的图≥节点2倍、背景≥1.5倍）', clear_ok,
-            '；'.join(distinct(low, 5) + static_txt)[:900] if (low or static) else
-            (('通过：运行时 dump 里的图和场景里的图都够清晰（已豁免 %d 条原图）' % len(exempt) if cj.get('status') != 'not_run' else
-              '运行时 dump 里的图够清晰；场景/预制体静态检查没执行（%s），只靠运行时 dump' % cj.get('reason', '0 项'))
-             if dark_ok else (no_report or '没有页面报告：先 dump 全部页面（含游戏中）')),
-            'clarity.json')
+        static = static_clarity_left(proj, cj.get('findings', []), exempt_rows)
+        static_txt = ['%s/%s "%s" source/render=%s threshold=%s (%s)' %
+                      (x.get('file'), x.get('node'), x.get('image'), x.get('source_render_ratio', '?'),
+                       x.get('threshold', '?'), clarity_policy['severity']) for x in static[:4]]
+        tool_ok = code in (0, 1) or cj.get('status') == 'not_run'
+        runtime_metrics = rep.get('clarity_findings', []) if isinstance(rep, dict) else []
+        runtime_below = [x for x in runtime_metrics if isinstance(x, dict) and x.get('below_threshold', True)]
+        clear_ok = clarity_group_result(clarity_policy, low or runtime_below, static, inputs_ready=dark_ok and tool_ok)
+        detail = '；'.join(distinct(low, 5) + static_txt)[:900] if (low or static) else (
+            '没有低于当前分辨率阈值的项；这不代替实看清晰度' if dark_ok and tool_ok else
+            (no_report or '分辨率工具或页面输入缺失，先核实际报告'))
+        if runtime_below and not low:
+            detail = '；'.join('%s source/render=%s threshold=%s (%s)' % (x.get('path', '?'), x.get('source_render_ratio', '?'), x.get('threshold', '?'), clarity_policy['severity']) for x in runtime_below[:5])
+        if clear_ok is None:
+            detail += '；仅提示：不因倍率阻断，不自动生图；继续实看及独立文字/布局门禁'
+        ratio_group = {'tool': 'art_check_clarity_group', 'clarity_policy': clarity_policy,
+                       'runtime_findings': rep.get('clarity_findings', []) if isinstance(rep, dict) else [],
+                       'runtime_messages': low, 'static_findings': static,
+                       'blocking': clear_ok is False, 'advisory': clear_ok is None,
+                       'status': 'pass' if clear_ok is True else 'advisory' if clear_ok is None else 'fail',
+                       'auto_regenerate': False}
+        (out / 'clarity-group.json').write_text(json.dumps(ratio_group, ensure_ascii=False, indent=2) + '\n')
+        add('清晰度（ART-04倍率参考：普通%gx、背景%gx；%s；实看清楚为标准）' %
+            (clarity_policy['min_ratio'], clarity_policy['background_min_ratio'], clarity_policy['severity']),
+            clear_ok, detail, 'clarity-group.json')
 
     # 用户 2026-10-22：体力/货币/关卡进度放在最上方，货币贴合题材；有关卡就有地图（显示总关数），无尽游戏没有地图
     # 简化.11.14.1：这两行是重塑板块的设计，英化游戏没用这些板块时不适用（feature_policy top_bar / level_map）
@@ -1031,6 +1103,8 @@ def main():
             add('关卡地图', False if art else (None if plan else True),
                 '；'.join(c['detail'][:110] for c in (art or plan)[:3]) or '通过', 'level_plan.json')
     look = [x for x in LOOK if not any(not_applicable[r] and x.startswith(DESIGN_ROWS[r][1]) for r in DESIGN_ROWS)]
+    look += ['Codex 用原截图核对 %s：%s（只看此处，不重复采集或计算）' %
+             (item.get('screen') or item.get('file'), item['issue']) for item in page_visual_reviews]
 
     # 用户 2026-10-24：礼盒 10 帧只在美术阶段查（原来在 audit_game_modules.py / 最终门禁里）
     if runs('design'):
@@ -1064,9 +1138,15 @@ def main():
             ap.exit(3, '补验期间素材发生变化。保留原记录，核准当前候选后再补相关项。\n')
     blocking = [r for r in rows if r['status'] == '需处理']
     report = {'tool': 'art_check', 'schema': 1, 'board': board, 'board_source': board_source, 'art_style': 'remake' if remake_art else 'original',
-              'assets_fingerprint': fingerprint, 'checked': len(rows), 'failed': len(blocking),
+              'clarity_policy': clarity_policy, 'assets_fingerprint': fingerprint, 'checked': len(rows), 'failed': len(blocking),
               'passed': not blocking, 'status': 'pass' if not blocking else 'fail', 'rows': rows, 'look_list': look,
               'base_generated': static_summary, 'time': dt.datetime.now().isoformat(timespec='seconds')}
+    report['visual_reviews'] = page_visual_reviews
+    report['visual_review_required'] = bool(page_visual_reviews)
+    try:
+        report['analysis_reports'] = analysis_report_refs(out, previous)
+    except ValueError as exc:
+        ap.exit(3, '分析子报告需定位：' + str(exc) + '\n')
     if recheck is not None:
         report['trial_recheck'] = recheck
     if capture_round is not None:

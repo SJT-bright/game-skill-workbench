@@ -66,7 +66,8 @@ def load_dumps(inputs):
     for raw in inputs:
         p = Path(raw)
         if p.is_dir():
-            files += sorted(x for x in p.rglob('*ui-dump*.json') if x.is_file())
+            from art_capture_history import resolve_input_files
+            files += resolve_input_files(p)
         elif p.is_file():
             files.append(p)
         else:

@@ -30,7 +30,24 @@ def file_hash(path):
     return sha(path.read_bytes())
 
 
-def snapshot(root, names):
+def _owning_report(path):
+    """Only known checker outputs are not policy inputs; unknown files stay bound.
+
+    Explicit evidence references are still hashed recursively by key(). This
+    prevents a saved/copied first-piece output from invalidating its own inputs.
+    """
+    if path.suffix.lower() != '.json':
+        return False
+    try:
+        row = json.loads(path.read_text())
+        return isinstance(row, dict) and (row.get('tool') in {
+            'art_production_preflight', 'art_check', 'art_input_preflight'}
+            or row.get('schema') == 'art_iteration_plan.v1')
+    except (OSError, ValueError):
+        return False
+
+
+def snapshot(root, names, *, skip_owning_reports=False):
     result = {}
     for name in names:
         base = root / name
@@ -46,8 +63,16 @@ def snapshot(root, names):
             if path.is_symlink():
                 raise ValueError('symlink dependency')
             if path.is_file():
+                if skip_owning_reports and path.is_relative_to(root/'docs/art') and _owning_report(path):
+                    continue
                 result[path.relative_to(root).as_posix()] = file_hash(path)
     return result
+
+
+def tool_snapshot(root):
+    return snapshot(root, [p.name for p in root.iterdir()
+                          if p.is_file() and p.suffix in {'.py', '.json', '.js', '.mjs'}
+                          and not p.name.startswith(('test_', 'fixture_'))])
 
 
 def option_state(arguments):
@@ -103,9 +128,9 @@ class PageCache:
                 'assets', 'settings', 'profiles', 'extensions', 'package.json', 'project.json',
                 'docs/art', 'docs/text', 'docs/art-style.txt', 'docs/features.json',
                 'docs/league', 'docs/levels', 'docs/english/pre-english-images.json',
-                'docs/board.txt', '.tiktok-kit/finalize-source.json', '.tiktok-kit/policy.json'])
-            tools = snapshot(here, [p.name for p in here.iterdir()
-                                   if p.is_file() and p.suffix in {'.py', '.json', '.js', '.mjs'}])
+                'docs/board.txt', '.tiktok-kit/finalize-source.json', '.tiktok-kit/policy.json'],
+                skip_owning_reports=True)
+            tools = tool_snapshot(here)
             self.base = sha(encoded(dict(project=str(self.project), files=project_files,
                 tools=tools, options=options, python=platform.python_version(),
                 pillow=PIL.__version__, numpy=numpy_version)))

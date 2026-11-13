@@ -99,7 +99,27 @@ def _layout_preflight(project, documents, out, board=None, binding=None):
         result['elapsed_seconds'] = time.monotonic()-started
 
 
-def _first_piece_binding(project, dump_files, case_ids, board=None, binding=None):
+def current_clarity_policy(project, supplied=None):
+    from clarity_policy import resolve_policy, validate
+    if supplied is None:
+        return resolve_policy(project)
+    validate({key: supplied[key] for key in ('schema', 'preset', 'min_ratio',
+              'background_min_ratio', 'severity')}, 'first-piece clarity policy')
+    sources = supplied.get('sources') or {}
+    path = supplied.get('policy_path')
+    default_path = (Path(project)/'docs/art/clarity-policy.json').resolve()
+    kwargs = dict(policy_path=path if path and Path(path).resolve() != default_path else None)
+    if any(str(value).startswith('CLI') for value in sources.values()):
+        if (any(value == 'CLI preset' for value in sources.values())
+                or all(sources.get(key) == 'CLI field' for key in ('min_ratio', 'background_min_ratio', 'severity'))):
+            kwargs['cli_preset'] = supplied['preset']
+        for key in ('min_ratio', 'background_min_ratio', 'severity'):
+            if sources.get(key) == 'CLI field':
+                kwargs['cli_'+key] = supplied[key]
+    return resolve_policy(project, **kwargs)
+
+
+def _first_piece_binding(project, dump_files, case_ids, board=None, binding=None, clarity_policy=None):
     """Use existing read-only cache dependency rules; never create capture/ART evidence."""
     import art_analysis_cache
     import audit_art_slots
@@ -110,6 +130,7 @@ def _first_piece_binding(project, dump_files, case_ids, board=None, binding=None
     documents, selected, remaining = audit_art_slots.first_piece_documents(
         Path(project)/'docs/art/visual-slots.json', documents, case_ids)
     options = dict(scope='first-piece-only', selected_cases=selected, board=board,
+                   clarity_policy=current_clarity_policy(project, clarity_policy),
                    binding=(dict(path=str(Path(binding).resolve()), sha256=art_analysis_cache.file_hash(binding))
                             if binding else None))
     cache = art_analysis_cache.PageCache(project, options=options)
@@ -125,17 +146,17 @@ def _first_piece_binding(project, dump_files, case_ids, board=None, binding=None
             screenshot_sha256=art_analysis_cache.file_hash(shot), dependency_key=key))
         result['available'] = result['available'] and key is not None
     for name in ('art_preflight.py', 'audit_art_slots.py', 'audit_page_richness.py',
-                 'art_analysis_cache.py', 'art_production.py', 'art_check.py'):
+                 'art_analysis_cache.py', 'art_production.py', 'art_check.py', 'clarity_policy.py'):
         result['checker_sha256'][name] = art_analysis_cache.file_hash(HERE/name)
     if not result['available']:
         result['error'] = cache.reason or 'selected evidence has unclosed dependencies or needs a specialized checker'
     return result, cache
 
 
-def first_piece_input_binding(project, dump_files, case_ids, board=None, binding=None):
+def first_piece_input_binding(project, dump_files, case_ids, board=None, binding=None, clarity_policy=None):
     """Public read-only helper for recomputing exactly the first-piece report binding."""
     try:
-        result, cache = _first_piece_binding(project, dump_files, case_ids, board, binding)
+        result, cache = _first_piece_binding(project, dump_files, case_ids, board, binding, clarity_policy)
         cache.finish()  # No get/put: verifies stability without writing a cache.
         return result
     except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
@@ -143,9 +164,38 @@ def first_piece_input_binding(project, dump_files, case_ids, board=None, binding
                     error=str(exc), receipt_written=False)
 
 
-def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_files=None):
+def _result_cache_key(report_path, binding):
+    import art_analysis_cache as cache
+    return cache.sha(cache.encoded(dict(kind='first-piece-result.v1',
+        report_sha256=cache.file_hash(report_path), input_binding=binding)))
+
+
+def sealed_first_piece(project, report_path, dump_files, case_ids, board=None, binding=None, clarity_policy=None):
+    """Verify exact current inputs and the tool-owned seal, including failed results."""
+    actual, cache = _first_piece_binding(project, dump_files, case_ids, board, binding, clarity_policy)
+    cached = cache.get(_result_cache_key(report_path, actual)) if actual.get('available') else None
+    cache.finish()
+    checked = cached[1].get('report') if cached else None
+    if (not isinstance(checked, dict) or checked.get('tool') != 'art_production_preflight'
+            or checked.get('input_binding') != actual or checked.get('selected_cases') != list(case_ids)
+            or type(checked.get('passed')) is not bool or checked.get('full_art_passed') is not None
+            or checked.get('receipt_written') is not False):
+        checked = None
+    return actual, checked, cache
+
+
+def seal_first_piece(cache, report_path, checked):
+    """Use the existing private analysis cache; this is not an aggregate ART receipt."""
+    declared = checked.get('input_binding') or {}
+    if declared.get('available') and type(checked.get('passed')) is bool:
+        cache.put(_result_cache_key(report_path, declared), [[], dict(report=checked)])
+        cache.finish()
+
+
+def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_files=None, clarity_policy=None):
     import art_production
     project, out = Path(project).resolve(), Path(out).resolve()
+    clarity_policy = current_clarity_policy(project, clarity_policy)
     if dump_files is not None and case_ids is None:
         raise ValueError('explicit original dump files require first-piece case IDs')
     if case_ids is not None and dumps is None and dump_files is None:
@@ -157,10 +207,12 @@ def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_fi
     has_dumps = dumps is not None or dump_files is not None
     production = art_production.audit(project, require_cases=has_dumps)
     result = dict(tool='art_production_preflight', scope='assets-and-first-integration-only',
-                  production=production, runtime_verified=False, receipt_written=False)
+                  production=production, runtime_verified=False, receipt_written=False,
+                  clarity_policy=clarity_policy)
     if case_ids is not None:
         result.update(selected_cases=[], remaining_cases=[], full_art_passed=None)
     passed = production['passed']
+    binding_guard = None
     if not has_dumps and (not production['declared'] or not production['assets']):
         result.update(error='no registered production assets; nothing was checked', status='not_run')
         passed = False
@@ -176,7 +228,7 @@ def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_fi
                 documents, selected, remaining = audit_art_slots.first_piece_documents(config, documents, case_ids)
                 result.update(selected_cases=selected, remaining_cases=remaining)
                 result['input_binding'], binding_guard = _first_piece_binding(
-                    project, [d['_file'] for d in documents], case_ids, board, binding)
+                    project, [d['_file'] for d in documents], case_ids, board, binding, clarity_policy)
                 if not result['input_binding']['available']:
                     raise ValueError('first-piece input binding unavailable: ' + result['input_binding']['error'])
             except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
@@ -209,6 +261,8 @@ def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_fi
                 cmd += ['--dump-file', str(Path(doc['_file']).resolve())]
         if board: cmd += ['--board', board]
         if binding: cmd += ['--binding', str(binding)]
+        from clarity_policy import cli_args
+        cmd += cli_args(clarity_policy)
         proc = subprocess.run(cmd, capture_output=True, text=True)
         (out/'pages.log').write_text(proc.stdout + proc.stderr)
         if proc.returncode not in (0, 1) or not report.exists():
@@ -221,6 +275,8 @@ def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_fi
             result['pages'] = dict(checked=pages['checked'], setup=pages['setup'],
                 findings=[p for p in pages['pages'] if p['problems']],
                 remaining_project_purposes=pages['missing'])
+            result['pages']['visual_reviews'] = audit_page_richness.assembly_visual_reviews(pages)
+            result['visual_review_required'] = bool(result['pages']['visual_reviews'])
             passed = passed and bool(pages['pages']) and not pages['setup'] and not result['pages']['findings']
         if binding_guard is not None:
             try:
@@ -230,6 +286,15 @@ def run(project, dumps, out, board=None, binding=None, case_ids=None, *, dump_fi
                 result['error'] = 'first-piece inputs changed during analysis'
                 passed = False
     result.update(passed=bool(passed), elapsed_seconds=time.monotonic()-started)
-    (out/'production-preflight.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))
+    report_path = out/'production-preflight.json'
+    report_path.write_text(json.dumps(result, ensure_ascii=False, indent=2))
+    if binding_guard is not None:
+        try:
+            seal_first_piece(binding_guard, report_path, result)
+        except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+            result['input_binding'].update(available=False, error=str(exc))
+            result.update(passed=False, error='first-piece inputs changed before result registration')
+            passed = False
+            _write_json(report_path, result)
     print(json.dumps(result, ensure_ascii=False))
     return 0 if passed else 1

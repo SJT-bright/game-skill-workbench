@@ -1,0 +1,85 @@
+{
+  "id": "597fb569-c3c7-4ee6-86b2-eca698a36e48",
+  "skillId": "s-a5a5d4cc5c2308178580",
+  "directory": "chrome-mobile-testing",
+  "name": "chrome-mobile-testing",
+  "version": "v17",
+  "createdAt": "2026-11-13T07:21:06.596Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "1c0b004518f0629393de4eeb50fc24360d7ab9b6e1886f56a786dff9f124f46f",
+  "bytes": 77649,
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "PROVENANCE.json",
+      "hash": "4b9ff32057929b7a8b8f84c497f896d90a29360407ecd6eb96a75bfa7daa49c9",
+      "size": 2337,
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "hash": "75f57d0df3e38d794ec59c5badd2fa6af960a88b01b03236116bc866e8b38c80",
+      "size": 14841,
+      "executable": false
+    },
+    {
+      "path": "scripts/chrome_touch.py",
+      "hash": "93563abe3ed6320a7ae26505b5c2aa5fd2203b7031ea99ba7a2258e75028572e",
+      "size": 30101,
+      "executable": false
+    },
+    {
+      "path": "scripts/ego_touch_runner.js",
+      "hash": "409317030c574826283b251264d075afe446e32a1c97aba8befd34745fdcd1e1",
+      "size": 15952,
+      "executable": false
+    },
+    {
+      "path": "tests/calibration-plan.json",
+      "hash": "a2e8e5e5fb915222386195cb8b5fcbc74c46bccda09447cab095259097bf05c6",
+      "size": 333,
+      "executable": false
+    },
+    {
+      "path": "tests/site/big.png",
+      "hash": "82c88be7500e579e4219db87afa35bf36c0602915c298f9bd769c01dcb1e311b",
+      "size": 1390,
+      "executable": false
+    },
+    {
+      "path": "tests/site/index.html",
+      "hash": "10964c5f7910c168d2223b1e40bb4ed8215b3865f3af0810567f7091dacdf053",
+      "size": 578,
+      "executable": false
+    },
+    {
+      "path": "tests/test_ego_route.py",
+      "hash": "ffd076fab74fa880723c4fc777be46408995f3935b896fbfe0d9d1cee444ffd2",
+      "size": 7111,
+      "executable": false
+    },
+    {
+      "path": "tests/test_r4o4_dump_retry.py",
+      "hash": "7eecbecc02580a59456c472e9ec9b03ba2fa0d5c46ee3644adafad60560917a4",
+      "size": 2858,
+      "executable": false
+    },
+    {
+      "path": "tests/test_timing_fps.py",
+      "hash": "84f46b5a5aa62bcc65694e8a84081fa94d0e4e04e45ed1558270a5b67154b58b",
+      "size": 1821,
+      "executable": false
+    },
+    {
+      "path": "tests/timing-plan.json",
+      "hash": "8bcc9dd535f585767ff9ac0444aa84eeb6ba35fd5dec6c71155f53df4b7fa841",
+      "size": 327,
+      "executable": false
+    }
+  ]
+}

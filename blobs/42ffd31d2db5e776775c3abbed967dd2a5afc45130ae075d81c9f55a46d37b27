@@ -1,0 +1,148 @@
+{
+  "rubber-monster-en2-local-ui": {
+    "source_sha256": {
+      "adapter-min.js": "1eb4159b1bb40c30e2ee8a8eb43bf80c16e3186a347618e884317cd94960d2f2",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "71021fe7e7ce3936471aab88cfdb9765d944dfd198465056ba61be60bdd98e3a",
+      "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
+      "game.js": "2f206d980e40b3c2ce2d2f19ec5c2f2d5a160d8f098c5ac5005125c86a0fccdd",
+      "host-shim.js": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
+      "main.js": "2cc6f5fab1970e3f156399a4d4bc01c75d0ac16770102b985038601b28651215",
+      "rewarded-guard.js": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f",
+      "src/settings.js": "244230982dff561b55f42fa7e55b4b809af339bff13878c116c9fd85ef5ae34e",
+      "storage-guard.js": "cb588030cb7dbb75e285b5673e629f22f17abebdfc961ecaccaca7ab2e046155",
+      "subpackages/gameAudio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "touch-coordinates.js": "5baebf9c652b9909c51640763e7d8bfe0a7628e314b7a18f856797e1e74c5216",
+      "webp-decode-probe.js": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56"
+    },
+    "resolutions": {
+      "assets/main/index.js:36221": {
+        "reason": "The receiver is the WalletStore instance constructed in BasementServices. WalletStore inherits SaveStore.load. The inherited load and storage-only _load override do not call Cocos resource loaders.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 142922,
+          "end": 142979,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:36594": {
+        "reason": "The receiver is the WalletStore instance constructed in BasementServices. WalletStore inherits SaveStore.load. The inherited load and storage-only _load override do not call Cocos resource loaders.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 142922,
+          "end": 142979,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:101236": {
+        "reason": "Imported BasementUI.load is the exact local loader function. Four actual delegated cc.resources calls stay independently inventoried: 51 required UI images, separate optional add_home/profile images, and Exo2 body font.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 39909,
+          "end": 40570,
+          "sha256": "cfdd69d9771486b8160f76e3b1bb79119e3511f9f454f866a41b3848c0e368dd",
+          "delegate_sites": [
+            "assets/main/index.js:40150",
+            "assets/main/index.js:40315",
+            "assets/main/index.js:40365",
+            "assets/main/index.js:40442"
+          ]
+        }
+      },
+      "assets/main/index.js:166966": {
+        "reason": "Imported BasementUI.load is the exact local loader function. Four actual delegated cc.resources calls stay independently inventoried: 51 required UI images, separate optional add_home/profile images, and Exo2 body font.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 39909,
+          "end": 40570,
+          "sha256": "cfdd69d9771486b8160f76e3b1bb79119e3511f9f454f866a41b3848c0e368dd",
+          "delegate_sites": [
+            "assets/main/index.js:40150",
+            "assets/main/index.js:40315",
+            "assets/main/index.js:40365",
+            "assets/main/index.js:40442"
+          ]
+        }
+      }
+    },
+    "escapes": {},
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "rubber-monster-en2-local-ui-abbe5b254677": {
+    "source_sha256": {
+      "adapter-min.js": "1eb4159b1bb40c30e2ee8a8eb43bf80c16e3186a347618e884317cd94960d2f2",
+      "assets/internal/index.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "assets/main/index.js": "abbe5b254677ac3f80dc5b3aef5498d4041503b9a9b0a8b793ed194dcc7c1239",
+      "ccRequire.js": "41df227074c50d58d1120e5f9a8b176bee165fa4450ec496c04b601f2906c48b",
+      "game.js": "2f206d980e40b3c2ce2d2f19ec5c2f2d5a160d8f098c5ac5005125c86a0fccdd",
+      "host-shim.js": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
+      "main.js": "2cc6f5fab1970e3f156399a4d4bc01c75d0ac16770102b985038601b28651215",
+      "rewarded-guard.js": "d4f019554821a5c58c438901b03bf8a1948452fd965fb2ca7250b180ae32e50f",
+      "src/settings.js": "244230982dff561b55f42fa7e55b4b809af339bff13878c116c9fd85ef5ae34e",
+      "storage-guard.js": "cb588030cb7dbb75e285b5673e629f22f17abebdfc961ecaccaca7ab2e046155",
+      "subpackages/gameAudio/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "subpackages/resources/game.js": "91e9970eba5f76af1a8585527b6e80352978ac231908ea9e6ec3e139e8f326a5",
+      "touch-coordinates.js": "5baebf9c652b9909c51640763e7d8bfe0a7628e314b7a18f856797e1e74c5216",
+      "webp-decode-probe.js": "8dec1594d3043035f9b1bc5dcad8f8095ba55157b9fb6d2f7b92684538040d56"
+    },
+    "resolutions": {
+      "assets/main/index.js:34945": {
+        "reason": "The receiver is the WalletStore instance constructed in BasementServices. WalletStore inherits SaveStore.load unchanged. The inherited load and storage-only _load override do not call Cocos resource loaders.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 141245,
+          "end": 141302,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:35318": {
+        "reason": "The receiver is the WalletStore instance constructed in BasementServices. WalletStore inherits SaveStore.load unchanged. The inherited load and storage-only _load override do not call Cocos resource loaders.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 141245,
+          "end": 141302,
+          "sha256": "ea9d38d871973e629db704e7c8150513566889f3c821a53452aaa64c6fe28459",
+          "delegate_sites": []
+        }
+      },
+      "assets/main/index.js:99957": {
+        "reason": "Imported BasementUI.load is the exact local loader function. Four actual delegated cc.resources calls stay independently inventoried: 51 required UI images, separate optional add_home/profile images, and Exo2 body font.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 38648,
+          "end": 39309,
+          "sha256": "cfdd69d9771486b8160f76e3b1bb79119e3511f9f454f866a41b3848c0e368dd",
+          "delegate_sites": [
+            "assets/main/index.js:38889",
+            "assets/main/index.js:39054",
+            "assets/main/index.js:39104",
+            "assets/main/index.js:39181"
+          ]
+        }
+      },
+      "assets/main/index.js:165271": {
+        "reason": "Imported BasementUI.load is the exact local loader function. Four actual delegated cc.resources calls stay independently inventoried: 51 required UI images, separate optional add_home/profile images, and Exo2 body font.",
+        "local_method": {
+          "source": "assets/main/index.js",
+          "start": 38648,
+          "end": 39309,
+          "sha256": "cfdd69d9771486b8160f76e3b1bb79119e3511f9f454f866a41b3848c0e368dd",
+          "delegate_sites": [
+            "assets/main/index.js:38889",
+            "assets/main/index.js:39054",
+            "assets/main/index.js:39104",
+            "assets/main/index.js:39181"
+          ]
+        }
+      }
+    },
+    "escapes": {},
+    "data_digest_kind": "serialized-json-assets-v1",
+    "data_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  }
+}

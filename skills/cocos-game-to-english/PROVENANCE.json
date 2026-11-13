@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-12.english-simple.11.17.27",
+  "revision": "2026-11-12.english-simple.11.17.28",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "a3ac7923165fc2a774251317fe98914303e278d7797b506f695d2835b38720ca",
-      "bytes": 97891
+      "sha256": "80cd1c2f310b227360d048b9a1279253cd24734e59e44c454f97124bbb7ae80d",
+      "bytes": 98210
     },
     {
       "path": "agents/openai.yaml",
@@ -71,8 +71,8 @@
     },
     {
       "path": "references/fixed-entries.md",
-      "sha256": "8ad6d8fc4d2260be07276b5cd4a19fcfffd876fc8e3a0c791107306ee13cc680",
-      "bytes": 14264
+      "sha256": "4589dd360353d6b8349b74217a809de58ae847f4f2194391ed29a24a8151b95d",
+      "bytes": 14593
     },
     {
       "path": "references/local-creator-versions.md",
@@ -91,8 +91,8 @@
     },
     {
       "path": "references/preview-handoff.md",
-      "sha256": "ee10450eb769b4da0b625095bf1dec8e2f76c23f33c7ff91882602d3e148d02b",
-      "bytes": 3133
+      "sha256": "c06867f92351d95fc5b6d12a0b4566929233b592d6b57c375d34bcd79baf970b",
+      "bytes": 3693
     },
     {
       "path": "references/sidebar-retrofit.md",
@@ -156,8 +156,8 @@
     },
     {
       "path": "scripts/handoff_preview.py",
-      "sha256": "a0eb07e650febbd5b6d5217173523224f8eab1aa7d9692f5571e526efea3a96c",
-      "bytes": 11829
+      "sha256": "b03ec0471a9d994c6fd7fbc60bb8f5bfa745b3b42f56c3305133ba03fd76a526",
+      "bytes": 14641
     },
     {
       "path": "scripts/inspect_creator_migration.cjs",
@@ -176,8 +176,8 @@
     },
     {
       "path": "scripts/reviewed_resource_profiles.json",
-      "sha256": "7906c773e4ae8ca7f7b72689e70f760525e29a591c751a62a3444e0172272cc8",
-      "bytes": 4076
+      "sha256": "42ffd31d2db5e776775c3abbed967dd2a5afc45130ae075d81c9f55a46d37b27",
+      "bytes": 8143
     },
     {
       "path": "scripts/serve_preview.py",
@@ -231,8 +231,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "dcc8c5423aafee12dcc9a8a4288f7837d4d7e8b7912f1090aad5d1de3aa462e3",
-      "bytes": 77970
+      "sha256": "d2e7e3c2ece628514cb4071727dcc713bdb44fd15db764fed0a7c8c41f64c2dd",
+      "bytes": 79315
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -290,9 +290,14 @@
       "bytes": 2614
     },
     {
+      "path": "scripts/test_retired_phrases.py",
+      "sha256": "6fedb551e868ea3c0b506b5fe53956b8803bd5aee009977cbf469571eb7a528d",
+      "bytes": 10534
+    },
+    {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "e939cf051af2cbf3f7e85c5c4b63fbc4e8bdf31309a335c5c9d8d8e719ce8d7e",
-      "bytes": 34471
+      "sha256": "d98eb910a386cff5e5d2738de14702fd5daf066e6925fa6c05c9ebd57e5a1e48",
+      "bytes": 37859
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -326,11 +331,11 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "147b40cc15769735911c9979441310f5c2bb299e0d5881768e605da1f7d03807",
-      "bytes": 15826
+      "sha256": "272125010d008e90d73398b170e88506ed354b09b745b5598acfd936d0905de2",
+      "bytes": 16543
     }
   ],
-  "previous_provenance_sha256": "00afb8866372ebb7cb9c78a800a15d2b496272ee538c94d508c1337f4470ab13",
+  "previous_provenance_sha256": "d2840f129d2307e79994e0d2eb220dbe9c45509ed3b9f2770da21a31a6a2695f",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -798,5 +803,13 @@
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_存档不挡启动与四样交付_基于11.17.27/receipt.json"
     }
   ],
-  "previous_local_provenance_sha256": "bb2c5faf9fd85a586264042382ed0d65a7807f8f7363f3eb8b34598bb9bc6109"
+  "previous_local_provenance_sha256": "4845301dfe5aaad58822de632eb0fb4056363c6a110f8326c5a6d4230befdcd2",
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
 }

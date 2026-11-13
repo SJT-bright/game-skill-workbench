@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T07:19:07.618Z",
-  "treeHash": "9930522459d0bfa7beb4e94660efb9aa811b7f75438fd683c4eca59d8a06b72e",
+  "createdAt": "2026-11-13T07:19:38.068Z",
+  "treeHash": "f824858d81543543b33e6b72016744b9085e47fdfaffd27c00e249b9b744350f",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2161,20 +2161,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "834033660e28642a310df3bdf3d3118db0840331c328b1e827411fb64966acd0",
+      "treeHash": "5e945b98c01ad0b3df12402a22c4b2da198321b40baa8ed8c0bdf2421a2f2450",
       "fileCount": 67,
-      "bytes": 1026473,
+      "bytes": 1031787,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "c854b9f75a18f8c0c4f4cf3f79751acbf7fcb4b54be412d2968e85cccbd190a2",
-          "size": 34939,
+          "hash": "f2d94c2c5ea00c0b00dbed9921686d0893906b217ab73b5531d9a08718632a5c",
+          "size": 35417,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "5fe6dc523413fe1a5c02ef93bde4f8b11ceae024e30b4d6ac8f4ff031c2834f2",
-          "size": 98177,
+          "hash": "80cd1c2f310b227360d048b9a1279253cd24734e59e44c454f97124bbb7ae80d",
+          "size": 98210,
           "executable": false
         },
         {
@@ -2377,8 +2377,8 @@
         },
         {
           "path": "scripts/reviewed_resource_profiles.json",
-          "hash": "bdf1194777e811950b809f1b0aa4c3c713a43efeb78f1f2fd1a70b3e1afe92f8",
-          "size": 4057,
+          "hash": "42ffd31d2db5e776775c3abbed967dd2a5afc45130ae075d81c9f55a46d37b27",
+          "size": 8143,
           "executable": false
         },
         {
@@ -2563,8 +2563,8 @@
         },
         {
           "path": "版本历史.md",
-          "hash": "147b40cc15769735911c9979441310f5c2bb299e0d5881768e605da1f7d03807",
-          "size": 15826,
+          "hash": "272125010d008e90d73398b170e88506ed354b09b745b5598acfd936d0905de2",
+          "size": 16543,
           "executable": false
         }
       ]

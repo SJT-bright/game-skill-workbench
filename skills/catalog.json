@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T07:21:03.183Z",
-  "treeHash": "834451d285df5fea3fa9d69256b8599e77470fa3a5b25faf673e616a4acfe86b",
+  "createdAt": "2026-11-13T07:21:24.808Z",
+  "treeHash": "e48141456f1a510a90ec1788d0036267e6068ef72879d77a4dbd0f7af917ee40",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3237,14 +3237,14 @@
     },
     {
       "name": "grok-image-review",
-      "treeHash": "779e2757d55c1808c32e4b3024610bfb865a06c3a0f979e5c8317fbf1fba3ad6",
+      "treeHash": "b345104506b99400b7949d37043ac3dda9c0612083bca59e73c7573b90d6aaa3",
       "fileCount": 5,
-      "bytes": 24518,
+      "bytes": 24832,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "c4daf6c2df8d03404bfc076189f499ecb550677dc07b1d59875f814bbf49c059",
-          "size": 938,
+          "hash": "6a2f455f2723b63fb0f1bfd4663d3e7f44141f12ccbf7d4c2c7eb6b861046307",
+          "size": 1252,
           "executable": false
         },
         {

@@ -53,7 +53,7 @@ JS依赖检查使用随工具固定的Acorn 8.15.0（MIT，scripts/vendor/ACORN-
 
 ## 2026-10-26 最终启动与恢复强制门禁
 
-按[每包启动与恢复规则](../../startup/references/final-package-startup-gate.md)执行。轻量writer不再仅靠文件成功放行；正式writer复核同版启动与恢复材料，沿review重跑已登记启动器；prepare_delivery复核同版材料及原始证据。三入口均接共用audit_final_package_startup，缺材料或失败不交普通完成包。不扩大无关CI，也不声称手机扫码已验证。
+按[每包启动与恢复规则](../../startup/references/final-package-startup-gate.md)执行。唯一 writer 与 prepare_delivery 消费已有当前启动、恢复材料和原始证据，通过共用 audit_final_package_startup 只读验证。首次缺证或真实失效回相应生产节点，不隐式重跑启动器；实际失败不交普通完成包。不扩大无关CI，也不声称手机扫码已验证。
 
 ## 扫码后进不去：出包前清单（2026-10-26）
 

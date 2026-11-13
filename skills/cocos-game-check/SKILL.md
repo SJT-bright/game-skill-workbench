@@ -31,7 +31,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 **当前检查执行规则（用户 2026-11-08）**：先读[一次通过、按改动复验](../remake-core/references/incremental-checks.md)。图片、文字/字幕、音效、玩法、关卡、平台检查均按命名节点留存真实记录；已通过且依赖未变的项禁止重复执行，代码或配置变化也不触发全量。浏览器和写包读取同一计划；旧文中的“每次必跑/全量检查”改按完整覆盖核对解释。最终 ZIP 的本次体积与分包核对按用户单独要求保留。
 
-**正式 Native 启动与交付记录**：启动合同、两个写包入口和正式交付共用 `startup.native.renderer` 实跑账本。先核本版启动、遮罩消失、真实触控及 Retry 证据，再按 Native 内容、运行器、环境和规则决定沿用或只补跑启动项。交付记录逐项写明执行方式及证据；阻断写独立拒绝回执。[复用边界](../remake-core/references/native-startup-ledger.md)
+**正式 Native 启动与交付记录**：启动合同、统一写包后端（含旧名转发）和正式交付共用 `startup.native.renderer` 实跑账本。先核本版启动、遮罩消失、真实触控及 Retry 证据，再按 Native 内容、运行器、环境和规则决定沿用或只补跑启动项。交付记录逐项写明执行方式及证据；阻断写独立拒绝回执。[复用边界](../remake-core/references/native-startup-ledger.md)
 
 **完整美术回执已撤销（用户 2026-11-08）**。美术制作和实际画面问题按首次制作或受影响的节点处理，保留各项实际结果。常规与轻量写包、正式试玩、最终交付均不得生成、补齐、更新或要求完整美术回执，也不以全量图片复核或截图汇总作为替代条件。已通过的游戏局部返工只检查该改动影响的节点。**保留的三条轻量保障（11.17.14）**：① 首轮正式英文试玩前要有一次完整 `art_check.py` 运行记录（`.tiktok-kit/art-check-record.json`，不绑图片指纹，之后小改不用重跑，最近一次运行有需处理项时先修这些行）；② 统一写包入口只读包内字节，查英化新做的图不超过 800 KB（`docs/english/pre-english-images.json` 里的中文原图不查）；③ 首次英化的人工画面清单并入 Saul“试玩没问题”这一步，返工时清单只是可选快看。最终 ZIP 分包、体积、配置和同版链接核对按原规则执行。
 
@@ -120,7 +120,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 出包与最终包检查 | 必查 | 必查 | [package](package/README.md)、[package-check](package-check/README.md) |
 | 出包时的布局状态、按钮普查（v7.8，总表 B30，Saul 10-30 定必跑）：iPhone 14 和 SE、胶囊按点 / 按像素，查按钮伸出屏幕、压胶囊、压底部横条、被 3D 盖住、胶囊单位一变就移位、开局下载超过 10 MiB 或带声音；首页每个按钮和一层弹窗按钮真点一次，没反应就拦。首页规则：重塑查设置在左上、最下面一排只放主页回访和加桌面；首次英化主页按[默认主页排版](../remake-art/references/english-home-layout.md)由美工 Skill 重新设计，检查两个平台入口及本次重排控件在首页可见、能点、不重叠；已交付后的局部返工只查受影响区域。新游戏拦、老游戏只警告；3.x 只有开局下载会拦 | 必查 | 必查 | 写包入口自动跑（运行时套件 `layout_state`、`button_sweep`，[运行时回归](package-check/references/runtime-regression.md)），每款多 6～10 分钟；要测「展台上有车」这类首页一层点不到的状态，在 adapter 写 `layout_states`。顶栏、设置钮贴着胶囊放的，用平台包 `parts/CapsuleLayout.js` 读胶囊位置 |
 | 正常游玩手感 | 按实际玩法核输入、运动和流畅度 | 同左 | 怀疑帧率相关时显式运行 `frame_rate` 对照诊断，5% 只提示位移差，默认终检和出包不跑 |
-| 出包流程（v7.8，总表 B32）：出包后同款旧包连同回执挪进「旧包/」，交付文件夹只留这一个包和「最新.txt」（上传用哪个包、sha256、时间）；检查用的工具不是安装版（自己复制改过的）报「改过的工具」并写反馈草稿到 ！Skill更新/；Saul 改了设计、旧问题的用例不再适用时，按新设计登记新问题再用 `package_issue_gate.py supersede` 作废旧的（要 Saul 原话、日期、新问题编号）；旧笔记里的 `cocos-game-check/core/scripts/<脚本>.py` 转到 `remake-core/scripts/` | 自动 | 自动 | 两个写包入口自动挪包、写 最新.txt（不想挪加 `--keep-old-packages`）；`check_package` 报告的 `modified_tools`；作废见 [已报告问题](package-check/references/resource-and-reported-issues.md)「按新设计作废旧问题」 |
+| 出包流程（v7.8，总表 B32）：出包后同款旧包连同回执挪进「旧包/」，交付文件夹只留这一个包和「最新.txt」（上传用哪个包、sha256、时间）；检查用的工具不是安装版（自己复制改过的）报「改过的工具」并写反馈草稿到 ！Skill更新/；Saul 改了设计、旧问题的用例不再适用时，按新设计登记新问题再用 `package_issue_gate.py supersede` 作废旧的（要 Saul 原话、日期、新问题编号）；旧笔记里的 `cocos-game-check/core/scripts/<脚本>.py` 转到 `remake-core/scripts/` | 自动 | 自动 | 统一写包后端（含旧名转发）自动挪包、写 最新.txt（不想挪加 `--keep-old-packages`）；`check_package` 报告的 `modified_tools`；作废见 [已报告问题](package-check/references/resource-and-reported-issues.md)「按新设计作废旧问题」 |
 | 障碍不许在屏幕里凭空出现、消失、瞬移（v7.8，总表 P2 补）：四种屏幕（390×844、375×667、768×1024、1115×791）上主角无敌飞 18 秒，带碰撞体的障碍在看得见的地方新出现、消失、一帧跳 40 以上就拦。新游戏拦、老游戏只警告；3.x 只警告「未覆盖」 | 必查 | 必查 | 写包入口自动跑（运行时套件 `popin`）；adapter 要写 `popin` 块（主角、无敌、游戏节点），没有滚动障碍的写 `{"n/a": "原因"}`。跑酷、飞行类用平台包 `parts/CourseLane.js` 算出生、回收和复活清障 |
 | 看广告入口真点（局内广告复活在首轮人工试玩）、试玩链接点看广告 | 有 adapter `ad_entries` 时必查；给 Saul 试玩链接前必查 | 同左 | 运行时套件 `ad_entries`（只执行适用的自动广告入口）；`serve_preview.py --keep` 给链接前自动跑 `trial_link`（模拟广告窗要在最上层、点「看完」游戏要变），不过就不给链接，也能 `runtime_regression.py trial --url <链接>` 手动跑 |
 | 评审别人的游戏（只检测不修改） | 可用 | 可用 | [review](review/README.md) |

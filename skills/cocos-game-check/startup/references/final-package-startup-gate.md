@@ -1,6 +1,6 @@
 # 最终测试包必查：扫码后卡加载的本地启动与恢复链（2026-10-26）
 
-用户明确要求每次新测试包都审查“扫码后进不去、一直停加载”的对应启动风险。本条覆盖旧的“成品轻量出包只做静态检查/可省 Native 运行”的例外；不重跑玩法、经济、广告和已批准美工CI，但最终启动和加载恢复必做。
+用户明确要求每次新测试包都审查“扫码后进不去、一直停加载”的对应启动风险。本条覆盖旧的“成品轻量出包只做静态检查/可省 Native 运行”的例外；最终启动和恢复必须有当前有效证据；在对应节点首次执行，真实依赖变化时定点补验，writer 与最终交付只读核对。
 
 ## 复用的现有检测
 
@@ -8,15 +8,15 @@
 - [启动契约](startup-contract.md)：入口→实际adapter→原引擎→场景→业务；宿主全局、资源/分包失败、超时和必要/可选初始化分离。
 - [加载恢复回归](loading-recovery-regression.md)：实际Native捕获边界、无回调/超时、失败后可见Retry、真实触摸后新请求、旧回调隔离、恢复后可玩。
 
-不得以HTTP200、进度100%、scene active、Web预览、文件/体积检查通过、手填passed或旧包报告替代。报告必须绑定最终Native树；相同Native仅改ZIP名可以复用原始材料，但轻量writer每次仍执行已登记可信启动runner并核恢复原始材料。Native字节变更旧绑定拒绝，不能只改哈希续用旧证据。缺适配runner或材料就补适配/实测，不删门禁、不写空通过；既有真实扫码失败未闭合不得标普通测试包完成。
+不得以HTTP200、进度100%、scene active、Web预览、文件/体积检查通过、手填passed或旧包报告替代。报告及原始材料按[启动精确依赖](../../../remake-core/references/scoped-storage-startup.md)核对当前 Native。实际依赖未变可沿用原 key、原观察和时间，ZIP 改名或已证明无关的资源变化不重跑 runner。真实依赖改变只补启动或恢复项；缺映射先补映射，缺原件先恢复原件，不能只改旧哈希续用。既有实际失败仍须处理，不伪造通过。
 
-每次启动检查同时按[资源生命周期与失败任务重试清单](loading-scene-false-positive.md#启动资源生命周期与失败任务重试清单2026-10-26)核当前存在的机制：切场景资源释放、失败Promise与无回调恢复、分包/图片缓存、宿主别名、Retry最终尺寸与实际点击、运行版本缓存。已知缺陷先做旧失败→修复及正常对照；不能仅以文件检查通过或替身合同通过交付。
+实际执行启动节点时同时按[资源生命周期与失败任务重试清单](loading-scene-false-positive.md#启动资源生命周期与失败任务重试清单2026-10-26)核当前存在的机制：切场景资源释放、失败Promise与无回调恢复、分包/图片缓存、宿主别名、Retry最终尺寸与实际点击、运行版本缓存。已知缺陷先做旧失败→修复及正常对照；不能仅以文件检查通过或替身合同通过交付。
 
 ## 已接入脚本的门禁
 
-共用 `scripts/audit_final_package_startup.py` 复用现有 `audit_native_startup_renderer.validate`、可信runner及 `audit_loading_recovery.validate`。轻量writer写临时ZIP之前强制执行；正式writer在已有review门禁外强制核同版材料，实际可信重跑沿原review执行，避免重复。最终prepare_delivery重新核材料/原始文件/Native字节，不第二次执行相同runner。
+共用 `scripts/audit_final_package_startup.py` 消费已有启动和恢复记录，沿用现有 validator 的语义与可信执行证据。唯一 writer 及 `prepare_delivery` 均只读核材料、原件与实际 Native，不调用 runner 补证；缺失或失效返回对应生产节点继续处理。
 
-两个writer和prepare_delivery新增参数：
+唯一 writer（含旧名转发）和 prepare_delivery 的既有材料参数：
 
 ```
 --project <源码工程>

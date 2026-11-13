@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-13",
- "release_label": "v7.9-en11.17.29-single-writer-scoped-receipts",
- "selftest_report_sha256": "3ac5f02a047abd10827bd8dc14f7344fd899986a8761ec8f125ec57a4c10462e",
+ "release_label": "v7.10-en11.17.30-production-prevention-learning",
+ "selftest_report_sha256": "e358602a5cb5c4dc176aba2c530e8c42cac3a2eab164d38ec5d5b95b6705df29",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
@@ -23,7 +23,7 @@
   "remake-core/scripts/verify_native_zip.py": "7db0bd7986780013f42611f1bbbdde36a1b419d1015359bf6ac14cbb10db45b8",
   "remake-core/scripts/upload_size_gate.py": "34b4ca067719f44c8dafb50f664fcb30c43c1106ea1852c170cd1ee997549226",
   "cocos-game-check/package/scripts/upload_preflight.py": "b4c38b5f0b6ea247261f340ee540cafd5dda2715cc39922da70203469f486265",
-  "remake-core/scripts/tiktok_finalize.py": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
+  "remake-core/scripts/tiktok_finalize.py": "d537d20a945dce95396c4d62bade4c6ef1b3e8c399de4792a26c35c0e7936afb",
   "remake-core/scripts/tiktok_finalize_steps/__init__.py": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
   "remake-core/scripts/tiktok_finalize_steps/adapter.py": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7",
   "remake-core/scripts/tiktok_finalize_steps/appid.py": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76",
@@ -825,7 +825,7 @@
   }
  ],
  "test_inventory": {
-  "files": 799,
+  "files": 805,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",

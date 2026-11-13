@@ -23,7 +23,7 @@
    **侧栏领奖专项（11.17.7）**。钱包就绪即挂回访监听，按本次 TikTok `scene` 分流。`center` 查个人侧栏，`desktop_shortcut` 查桌面，普通返回保持安静。资格为真才记一次奖励。已有游戏重新出包也由 G1 拦旧句、G3 查实际 Native 的冷启动、保活返回、到账、重复领取及遮盖页。真机优先从 TikTok 个人主页侧栏实际进入。
 5. **新游戏必须用平台包标准件**，不手写、不“照抄平台包”另存一份；**旧游戏**（在冻结的遗留名单上的）不自动替换，只给警告，由各自的游戏会话处理。哪些算旧游戏见下一节「新游戏和旧游戏」。
 6. **交付回复写“标准件待真机复测”**：v7.7 的标准件（平台包 `main.js` v1.6、`storage-guard.js`、`tiktok-touch-3x.js`、`HomeGrowthEntries.js`、3.x 插件版、WebP 探针）都只在 Node 和模拟宿主里测过，没有扫码确认。第一款 v7.7 新游戏扫码通过之前，每个交付回复都写这一句。v7.8 的三个可选件（`parts/CapsuleLayout.js`、`parts/CourseLane.js`、`parts/PhysicsClock.js`）也一样，用了它们的游戏照样写这一句。
-7. **美术检查按制作和改动节点执行**。完整美术回执已撤销；首轮正式英文试玩前要有一次完整 art_check 运行记录（不绑图片指纹，之后只复查受影响的行），试玩核候选身份和适用冒烟，写包核实际包文件、英化新图体积（≤800 KB）及适用的功能证据。出包必跑的启动用例另查“屏幕离开加载画面”：日志进了首页、屏幕变化不到 2% 判失败（11.17.16，`runtime_regression/screen.mjs`）。写包最后一步 `upload_compat` 自动补分包 root 的 `/`、`game.js` 本地引用的 `./` 与扩展名、`project.config.json` 的 es6/minified/urlCheck 并删 postcss/newFeature（鸽鸽小羊上传成功的修法，见[定点修复](../package/references/upload-compat-and-entry-fix.md)）。
+7. **美术检查按制作和改动节点执行**。完整美术回执已撤销；首轮正式英文试玩前要有一次完整 art_check 运行记录（不绑图片指纹，之后只复查受影响的行），试玩核候选身份和适用冒烟，写包核实际包文件、英化新图体积（≤800 KB）及适用的功能证据。启动生产节点的用例另查“屏幕离开加载画面”，writer 只读核对该有效记录：日志进了首页、屏幕变化不到 2% 判失败（11.17.16，`runtime_regression/screen.mjs`）。Native 准备最后一步 `upload_compat` 自动补分包 root 的 `/`、`game.js` 本地引用的 `./` 与扩展名、`project.config.json` 的 es6/minified/urlCheck 并删 postcss/newFeature（鸽鸽小羊上传成功的修法，见[定点修复](../package/references/upload-compat-and-entry-fix.md)）。
 8. **代码画的按钮和数字不算图片字**（Saul 10-30）：按钮和数字图片字都要用 GPT 生图，生图要留记录（H10，见「出包时怎么装」）；PIL、字体离线画的 PNG 不能登记成「允许代码画」。
 9. **布局状态、按钮普查出包必跑**（Saul 10-30 10:4x）：新游戏拦、名单上的老游戏只警告；3.x 先只拦开局下载（超过 10 MiB 或带声音），其余只警告。
 10. **关卡难度和样板**（Saul 10-29、10-30）：新关卡表默认 `wave-tiers.v2`（第 1、2 关教学，第 3 关就是难关），按旧 v1 排好的表不返工（第二部分第 8 节）。完整换皮照搬底子要写 `mode=reskin` 并有 Saul 点头记录；样板先行（首页样图、20 秒试玩、BGM 三选一、3～5 个样关）只管自制新游戏，只提示、不拦。
@@ -77,7 +77,7 @@
 - 多花的时间（这台机器实测）：`dead_shell` 15～30 秒，`layout_state` 30～104 秒，`button_sweep` 110～500 秒（首页预算 480 秒封顶，W93 加局内后另有 90 秒上限），`popin` 约 112 秒，`frame_rate` 30～60 秒，写了 n/a 的 0 秒；每款出包合计多约 5～15 分钟。
 
 **出包后（v7.8，总表 B32）**：
-- 两个写包入口发布 ZIP 和回执后，把同一文件夹里同款游戏的旧包（appid 相同、游戏自己的文件至少 30% 相同）连同回执、报告挪进「旧包/」，写「最新.txt」（上传 TikTok 用哪个包的完整路径、sha256、「源码包、试玩文件夹不能上传」）；源码 ZIP、别的游戏的包、`delivery_receipt_*.json`、说明文件不动；「旧包/」里重名加「 (2)」，不覆盖、不删。`--keep-old-packages` 或 `TIKTOK_KEEP_OLD_PACKAGES=1` 什么都不挪。交付回复照「最新.txt」写「上传 TikTok 用这个」。
+- 统一写包后端（含旧名转发）发布 ZIP 和回执后，把同一文件夹里同款游戏的旧包（appid 相同、游戏自己的文件至少 30% 相同）连同回执、报告挪进「旧包/」，写「最新.txt」（上传 TikTok 用哪个包的完整路径、sha256、「源码包、试玩文件夹不能上传」）；源码 ZIP、别的游戏的包、`delivery_receipt_*.json`、说明文件不动；「旧包/」里重名加「 (2)」，不覆盖、不删。`--keep-old-packages` 或 `TIKTOK_KEEP_OLD_PACKAGES=1` 什么都不挪。交付回复照「最新.txt」写「上传 TikTok 用这个」。
 - 按新设计作废旧问题：`package_issue_gate.py supersede --id <旧> --by <新> --quote '<Saul 原话>' --date YYYY-MM-DD`，没有原话、日期不对或是将来、新问题没登记都拒；作废后旧问题不再拦包，新问题复验通过前照样拦。v7～v7.7.5 写的复验证明照样认，已关掉的问题不用重测。
 - 用的检查工具和安装版、发布记录（PROVENANCE.json）都对不上时，`check_package` 的结果里写「改过的工具」（`tool_identity`，只警告、不拦），并写一份反馈草稿到 `！Skill更新/反馈草稿_改过的工具_<游戏>_<日期>.md`（同一天同样的改动只写一次）。
 - 拆包前的旧路径 `cocos-game-check/core/scripts/<脚本>.py`（19 个）是转发桩，转到 `remake-core/scripts/` 的同名脚本，并提示新路径；新写的文档和命令用新路径。
@@ -103,7 +103,7 @@ v7.8 另有三个可选件，登记在 `KIT_MANIFEST.json` 的 `files` 段（`re
 
 3.x 没有启动件（Q5，没有真机通过的底子）、没有 `HomeGrowthEntries`（3.x 首页入口直接用 `TikTokKit.MissionFlow`）、没有 WebP 探针，也没有 WebP 例外（DECISIONS 13:25：3.x 新游戏只能靠 PNG/JPG 和 `max_side` 缩到 30 MB 以内；带 `--keep-webp-exception` 时源码段、产物段在任何步骤之前拒绝，不改工程和构建文件，写包门禁也拦，`K_webp_exception_3x`；3.x 探针放到 v7.8）。另外两步每款都跑、不是文件：`adapter`（v7.5 的适配层三处，第 5 条）、`appid`（`project.config.json` 写 App ID，第 8 条）；`png`、`structure` 见第 6 条。
 
-**新门禁**（`remake-core/scripts/package_gates/kit_parts.py`，挂在 `package_gates` 里，两个写包入口和只读的 `check_package.py` 都跑；只读包里的字节和清单，不信记录）：
+**新门禁**（`remake-core/scripts/package_gates/kit_parts.py`，挂在 `package_gates` 里，统一写包后端（含旧名转发）和只读的 `check_package.py` 都跑；只读包里的字节和清单，不信记录）：
 
 | 门禁 | 查什么 | 新游戏 | 旧游戏 |
 |---|---|---|---|
@@ -262,7 +262,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 4. 源码和上传包对不上（21 款）
 - **规则**：上传包只能从源码经官方写包入口（`make_tiktok_zip.py` / `build_checked_zip.py`）出；直接改包必须带补丁脚本，对源码和包打同一组改动、每处正好命中一次，并写进源码说明。
-- **现在怎么拦**：两个写包入口都写 `<zip>.receipt.json`，没有回执的 ZIP 标“非官方入口”，`prepare_delivery.py` 拒收；`prepare_delivery.py` 比对 `logic_check` 报告里的源码哈希和交付源码。v7.7 起写包入口还查 `K5_source_finalized`（源码段之后工程没改过）和 `K4_finalize_ran`（产物段写的文件和包里一致），收据升到 schema 2、带 `finalize` 记录；v7.6 写的收据不再是官方入口，要用 v7.7 写包入口重新出包。v7.7.4 起 `verify_native_zip.py` 和 `upload_preflight.py` 单独运行时也拒收没有匹配回执的 ZIP（退出码 3 / refuse；DriftRacer v2 就是只跑了这两个、带着旧版广告服务交的包），只看结构加 `--structure-only`。v7.7.5 起 ZIP 改了名也认：同名回执不在时，在同一文件夹里找为这份 ZIP 字节写的回执（官方写包入口写的、`zip_sha256` 相同），内容改过一个字节就找不到。v7.8（总表 B17）：`check_package.py` 命令行对没有匹配写包回执的 ZIP，结论写「只读预检，不可交付（非官方入口）」，状态 `unofficial_not_deliverable`，**退出码 3**（以前照样报通过，丛林荡藤 v6、剪刀达人 v30 都是这样）；给的是 Native 目录时写「只读预检，不可交付（Native 目录不是上传包）」；`--structure-only` 只看结构，结论仍写不可交付；官方入口写的包写「官方入口写出的包，本地检查通过」。写包入口和 prepare_delivery 调的 `check()` 不变。build-templates 和包根文件逐字节比对、补丁脚本要求：仍是文档规则，计划做成出包硬拦截。
+- **现在怎么拦**：统一写包后端（含旧名转发）都写 `<zip>.receipt.json`，没有回执的 ZIP 标“非官方入口”，`prepare_delivery.py` 拒收；`prepare_delivery.py` 比对 `logic_check` 报告里的源码哈希和交付源码。v7.7 起写包入口还查 `K5_source_finalized`（源码段之后工程没改过）和 `K4_finalize_ran`（产物段写的文件和包里一致），收据升到 schema 2、带 `finalize` 记录；v7.6 写的收据不再是官方入口，要用 v7.7 写包入口重新出包。v7.7.4 起 `verify_native_zip.py` 和 `upload_preflight.py` 单独运行时也拒收没有匹配回执的 ZIP（退出码 3 / refuse；DriftRacer v2 就是只跑了这两个、带着旧版广告服务交的包），只看结构加 `--structure-only`。v7.7.5 起 ZIP 改了名也认：同名回执不在时，在同一文件夹里找为这份 ZIP 字节写的回执（官方写包入口写的、`zip_sha256` 相同），内容改过一个字节就找不到。v7.8（总表 B17）：`check_package.py` 命令行对没有匹配写包回执的 ZIP，结论写「只读预检，不可交付（非官方入口）」，状态 `unofficial_not_deliverable`，**退出码 3**（以前照样报通过，丛林荡藤 v6、剪刀达人 v30 都是这样）；给的是 Native 目录时写「只读预检，不可交付（Native 目录不是上传包）」；`--structure-only` 只看结构，结论仍写不可交付；官方入口写的包写「官方入口写出的包，本地检查通过」。写包入口和 prepare_delivery 调的 `check()` 不变。build-templates 和包根文件逐字节比对、补丁脚本要求：仍是文档规则，计划做成出包硬拦截。
 - **验收包**：Basil fix1、fix2 配 0.4.0 源码被拦；Marlows R6 配 R6 源码通过；方块冲冲原包配现在的源码被拒、`方块冲冲tk.zip` 通过。
 
 ### 5. 英化固定清理：分享、更多游戏、排行、跳转、国内统计（10 款 + 统计 2 款）

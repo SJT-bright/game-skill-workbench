@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-13.english-simple.11.17.29",
+  "revision": "2026-11-13.english-simple.11.17.30",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "232215defbebbd244be7c1869f507fa3cd4d0ea797cce1545305b64db76d8a7c",
-      "bytes": 34727
+      "sha256": "1bd4066bbb08b8fb5929fe5121d058eb2c78e580db0cbb0650df0f6f40a35566",
+      "bytes": 34769
     },
     {
       "path": "agents/openai.yaml",
@@ -171,13 +171,13 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "42748401b58dc1ee2d98f9c8b40d24849a97eb4caaf7d1bc6abfb4b12b8d81ac",
-      "bytes": 23486
+      "sha256": "35526c98440b13e0c8fb1a785ef1939c1dbb5ba5189dc07c48435231545ae623",
+      "bytes": 23488
     },
     {
       "path": "package-check/references/check-contract.md",
-      "sha256": "2dce01c569459f3ae8bcafb58da435e2c3a097a64297c627c656469b74d632e4",
-      "bytes": 12286
+      "sha256": "3b60bf62a1198c423654039b48361b701013c5e02acd08af120b15a940ba134d",
+      "bytes": 12274
     },
     {
       "path": "package-check/references/check-status.json",
@@ -206,8 +206,8 @@
     },
     {
       "path": "package-check/references/gate-order-and-identity.md",
-      "sha256": "f323e9e7ada2cb11f61ca90ee6fd056a38ec8d71f5a478fa747c3141ca16480f",
-      "bytes": 4604
+      "sha256": "a0aa6bc13440f211f81b062321040287f446e69f82315184a610bef7903ff7f8",
+      "bytes": 4631
     },
     {
       "path": "package-check/references/main-package-overflow.md",
@@ -221,8 +221,8 @@
     },
     {
       "path": "package-check/references/resource-and-reported-issues.md",
-      "sha256": "5d47bdba7eb42f23b27867b7f6e44b79bbdaf6119bb1b93ceb71faa04132df8f",
-      "bytes": 17576
+      "sha256": "3765f4c916aba376485705924665ab8d4153f050e1a9cc4cf6ef855508c75bed",
+      "bytes": 17659
     },
     {
       "path": "package-check/references/resource-loss-recovery.md",
@@ -246,8 +246,8 @@
     },
     {
       "path": "package-check/scripts/ad_incremental.py",
-      "sha256": "5b9e20c6ea2302ff0d373ad72c3f6ea3b99f607b562e7c0c71a8514a336c0918",
-      "bytes": 4847
+      "sha256": "b887afeab4c56e25d840c8630008e9373b50aeaa15ac47e7567dd5400a95f30a",
+      "bytes": 5605
     },
     {
       "path": "package-check/scripts/ad_regression/cases.mjs",
@@ -351,8 +351,8 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "8caea63692301d826143184f0e042cee037fe96e8b8d9d146cd13478e6b6bcc8",
-      "bytes": 24926
+      "sha256": "b990102934a05d9a3ec36addbca96d15eab41ae1c95860b6ba0f7a60bd2c2352",
+      "bytes": 25438
     },
     {
       "path": "package-check/scripts/rework_scope.py",
@@ -366,13 +366,13 @@
     },
     {
       "path": "package-check/scripts/runtime-scope-compat.json",
-      "sha256": "6db1ed17268a42df4e7a4c7a5b05e84c18965fde0d718d5a772375fb7f0cc753",
+      "sha256": "dbdceab383c31f7069feb365b99973ebac94d568b0312c2e7bb3214be18fd64c",
       "bytes": 1848
     },
     {
       "path": "package-check/scripts/runtime_incremental.py",
-      "sha256": "1e506ee8b7b63d1dead78b76eeac09909a9de50a6b4422c8ed5465350b619df4",
-      "bytes": 14735
+      "sha256": "cd0035433350478ca9e6053769da71dca072fecaa3ce6d0710ca81da3b34572b",
+      "bytes": 15528
     },
     {
       "path": "package-check/scripts/runtime_regression/README.md",
@@ -720,6 +720,11 @@
       "bytes": 13661
     },
     {
+      "path": "package-check/scripts/test_learning_delivery_isolation.py",
+      "sha256": "4585b0dd322d2a4fe599ec8a950a99bfe87ae0238a01ed5e0b24d3446ecb08ca",
+      "bytes": 1116
+    },
+    {
       "path": "package-check/scripts/test_make_runtime_resource_manifest.py",
       "sha256": "52e59cdb3e572614076ffda7b79f8c41ea8a0479c69b0973f93cdb74acd8920b",
       "bytes": 9741
@@ -861,8 +866,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "7f85d04ac786e892b54d8ef02830cfd5693811156ac962322e11205b73ed758e",
-      "bytes": 110263
+      "sha256": "7dee9dd91f7c362f435896977701cdf3f34101a7ab738cf168997e6de1505068",
+      "bytes": 110370
     },
     {
       "path": "review/README.md",
@@ -886,8 +891,8 @@
     },
     {
       "path": "startup/references/final-package-startup-gate.md",
-      "sha256": "6d58496a96638b10fa0e7dd3740d38bc7a98247e5a0f7578e453d299eac799ab",
-      "bytes": 4587
+      "sha256": "05f4fe254cd6bee8e026e862d2c75b58cf2b2476257edc87d3e92c04cf068a98",
+      "bytes": 4611
     },
     {
       "path": "startup/references/loading-and-ad-prevention.md",
@@ -966,8 +971,8 @@
     },
     {
       "path": "test/references/candidate-execution.md",
-      "sha256": "e84a32d2e98a40bdceed933f2cb03ba41bebeb6a99aa6847a5664bc384a2693e",
-      "bytes": 7429
+      "sha256": "f0cce1a0c1a38fce169ece22987ed54ab369026d24561878acd31ff365e776c1",
+      "bytes": 7339
     },
     {
       "path": "test/references/learned-regressions.md",
@@ -1025,7 +1030,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "92ec1a247030b7dabf50d5c36470fb1cb7cb003d0a2cd1a8b7ca3ebc6967b600",
+  "previous_provenance_sha256": "4874981dd55f40bb69b778b60c5e10536d2fec1a7f5a388c936c4186c728eb0a",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

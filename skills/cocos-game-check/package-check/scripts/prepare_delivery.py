@@ -342,6 +342,14 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         with record.open('x', encoding='utf-8') as stream:
             json.dump(receipt, stream, ensure_ascii=False, indent=2)
             stream.write('\n')
+    # Learning reads already existing project evidence after publication. It
+    # neither mutates the signed record/ZIP nor participates in delivery gates.
+    try:
+        from production_hooks import collect_after_delivery
+        collect_after_delivery(project, record_paths=[record, startup_contract, resource_manifest,
+                               ad_regression, logic_report], final_zip_sha256=after)
+    except Exception:
+        pass  # Even an unavailable hook cannot invalidate a verified delivery.
     return receipt
 
 

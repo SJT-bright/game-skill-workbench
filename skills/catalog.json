@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T14:12:23.155Z",
-  "treeHash": "5ad385bc71f184767b0720992695c2c3f08ad7fba7deba87e7ab7e96152f55ed",
+  "createdAt": "2026-11-13T14:13:05.134Z",
+  "treeHash": "f2f71212f79ee68cb6254ba370a6daf6c6f227aa25b3a24dbce50afb5c6eb134",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2161,20 +2161,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "5e945b98c01ad0b3df12402a22c4b2da198321b40baa8ed8c0bdf2421a2f2450",
+      "treeHash": "522c10fe21168b2b25d5ad8553a90ab89f28a16e19fb6c045cb06b448e495dfb",
       "fileCount": 67,
-      "bytes": 1031787,
+      "bytes": 1047669,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "f2d94c2c5ea00c0b00dbed9921686d0893906b217ab73b5531d9a08718632a5c",
-          "size": 35417,
+          "hash": "5c84849d24575b2ab3c0773bd69b449be3da0cf2b6be2134913b202f5717dde6",
+          "size": 38819,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "80cd1c2f310b227360d048b9a1279253cd24734e59e44c454f97124bbb7ae80d",
-          "size": 98210,
+          "hash": "45699f9adca28c61295f5ae3a0be04125a21cac8a137f9e45b359df57adc42e3",
+          "size": 101304,
           "executable": false
         },
         {
@@ -2239,14 +2239,14 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
-          "size": 34394,
+          "hash": "5c7930a3d8893a7498e4308267c34764b5a22126a25096b2aa78566b4c14dc1b",
+          "size": 35012,
           "executable": false
         },
         {
           "path": "references/first-trial-repair.md",
-          "hash": "d86616f3823832abd1a229ed9a0dccca08180a668eadf949e01e03230278aa2e",
-          "size": 3558,
+          "hash": "081f12e867a70ed907d213d46fc2c7ca6580142ed3dc0a4c44f9debdbd8d3b13",
+          "size": 4255,
           "executable": false
         },
         {
@@ -2329,8 +2329,8 @@
         },
         {
           "path": "scripts/english_copy_guard.py",
-          "hash": "bca2c42d32db819b7d055058e52f030a685e1846963b73ddd730bef79a600033",
-          "size": 26255,
+          "hash": "a76a48a9d2a8d0a8aa9eb5b91d97c7ff36771376df2df7cfe322f341ca41eae5",
+          "size": 28735,
           "executable": false
         },
         {
@@ -2437,8 +2437,8 @@
         },
         {
           "path": "scripts/test_english_copy_guard.py",
-          "hash": "579cd2ee96ada2866bee6e205d10951285eaed1c2bb70d9ad2524603cdfecdb1",
-          "size": 11926,
+          "hash": "7d0f082ea6af58e182fb3ca65b8b4570346653c4f9b539938d6194234cac493e",
+          "size": 16102,
           "executable": false
         },
         {
@@ -2563,8 +2563,8 @@
         },
         {
           "path": "版本历史.md",
-          "hash": "272125010d008e90d73398b170e88506ed354b09b745b5598acfd936d0905de2",
-          "size": 16543,
+          "hash": "bf361d22783f53ba75bf1b60d66b453809ca88ec56e26873c32bd23a801dd390",
+          "size": 17958,
           "executable": false
         }
       ]

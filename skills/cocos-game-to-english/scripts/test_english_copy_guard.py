@@ -43,6 +43,15 @@ def win_prefab():
 
 
 class Guard(unittest.TestCase):
+    def test_mixed_case_copy_and_amount_enter_first_asset_list(self):
+        p = self.root / 'docs/copy/copy-table.csv'
+        p.write_text('zh,en,where,pointer\n领取,Claim,,\n奖励,20 COINS,,\n', encoding='utf-8')
+        cs = G.charset(self.root)
+        self.assertIn('Claim', cs['word_images'])
+        self.assertIn('COINS', cs['word_images'])
+        self.assertNotIn('20 COINS', cs['word_images'])
+        self.assertEqual(cs['word_sources']['Claim'], 'docs/copy/copy-table.csv')
+
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix='copyguard_'))
         for d in ('assets/ui', 'assets/scripts', 'assets/font', 'docs/copy'):
@@ -210,6 +219,72 @@ class NumberFormatUnits(unittest.TestCase):
             for ch in 'OfLowHigh':
                 self.assertNotIn(ch, cs['value_charset'].replace('0123456789', ''))
             self.assertEqual(set(cs['fonts'][0]['missing']), set('KMBTQE.'))
+
+
+class FirstArtFixedCaptions(unittest.TestCase):
+    """The first art list includes fixed UI words without collecting prose or names."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='copyguard_fixed_')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        (self.root / 'assets/ui').mkdir(parents=True)
+        self.prefab = self.root / 'assets/ui/Rewards.prefab'
+
+    def write_labels(self, entries):
+        objects = [
+            {'__type__': 'cc.Prefab', 'data': {'__id__': 1}},
+            {'__type__': 'cc.Node', '_name': 'Rewards', '_parent': None,
+             '_children': [], '_components': []},
+        ]
+        for name, text, rich in entries:
+            node_id = len(objects)
+            objects[1]['_children'].append({'__id__': node_id})
+            objects += [
+                {'__type__': 'cc.Node', '_name': name, '_parent': {'__id__': 1},
+                 '_children': [], '_components': [{'__id__': node_id + 1}]},
+                {'__type__': 'cc.RichText' if rich else 'cc.Label', 'node': {'__id__': node_id},
+                 '_N$string': text},
+            ]
+        self.prefab.write_text(json.dumps(objects), encoding='utf-8')
+
+    def test_static_score_and_mixed_case_claim_enter_original_word_list_with_sources(self):
+        self.write_labels([('ScoreLabel', 'SCORE', False),
+                           ('ClaimAction', '<color=#ffffff>Claim</color>', True)])
+        cs = G.charset(self.root)
+        self.assertEqual(cs['word_images'], ['Claim', 'SCORE'])
+        self.assertEqual(cs['word_sources']['SCORE'], 'assets/ui/Rewards.prefab:Rewards/ScoreLabel')
+        self.assertEqual(cs['word_sources']['Claim'], 'assets/ui/Rewards.prefab:Rewards/ClaimAction')
+        self.assertEqual(set(cs['value_charset']), set(G.DIGITS))
+
+    def test_reward_amount_keeps_digits_and_separate_unit_word(self):
+        self.write_labels([('RewardAmount', '+20 COINS', False), ('ScoreValue', 'Score 125', False)])
+        cs = G.charset(self.root)
+        self.assertEqual(cs['word_images'], ['COINS', 'Score'])
+        self.assertNotIn('+20 COINS', cs['word_images'])
+        self.assertNotIn('Score 125', cs['word_images'])
+        self.assertEqual(set(cs['value_charset']), set(G.DIGITS + '+'))
+
+    def test_prose_names_placeholders_and_code_strings_stay_out(self):
+        self.write_labels([('Help', 'Claim your coins after each round.', False),
+                           ('Nickname', 'Alice', False), ('PlayerName', 'SCORE', False),
+                           ('DisplayName', 'Claim', False), ('Title', 'ALICE', False),
+                           ('Player', '{playerName}', False), ('Prompt', 'Claim {name}', False),
+                           ('Summary', 'SCORE {value}', False)])
+        (self.root / 'assets/Unused.js').write_text(
+            "const caption = 'Claim'; const nickname = 'SCORE'; this.name.string = playerName;\n",
+            encoding='utf-8')
+        self.assertEqual(G.charset(self.root)['word_images'], [])
+
+    def test_dry_run_preserves_all_project_bytes_with_new_fixed_words(self):
+        self.write_labels([('ScoreLabel', 'SCORE', False), ('ClaimAction', 'Claim', False),
+                           ('RewardAmount', '+20 COINS', False)])
+        before = {p.relative_to(self.root).as_posix(): p.read_bytes()
+                  for p in self.root.rglob('*') if p.is_file()}
+        rec = G.run(self.root, dry_run=True)
+        self.assertEqual(rec['charset']['word_images'], ['COINS', 'Claim', 'SCORE'])
+        self.assertEqual({p.relative_to(self.root).as_posix(): p.read_bytes()
+                          for p in self.root.rglob('*') if p.is_file()}, before)
 
 
 if __name__ == '__main__':

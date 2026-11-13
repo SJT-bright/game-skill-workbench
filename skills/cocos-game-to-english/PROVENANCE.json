@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-12.english-simple.11.17.28",
+  "revision": "2026-11-13.english-simple.11.17.30",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "80cd1c2f310b227360d048b9a1279253cd24734e59e44c454f97124bbb7ae80d",
-      "bytes": 98210
+      "sha256": "45699f9adca28c61295f5ae3a0be04125a21cac8a137f9e45b359df57adc42e3",
+      "bytes": 101304
     },
     {
       "path": "agents/openai.yaml",
@@ -61,13 +61,13 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
-      "bytes": 34394
+      "sha256": "5c7930a3d8893a7498e4308267c34764b5a22126a25096b2aa78566b4c14dc1b",
+      "bytes": 35012
     },
     {
       "path": "references/first-trial-repair.md",
-      "sha256": "d86616f3823832abd1a229ed9a0dccca08180a668eadf949e01e03230278aa2e",
-      "bytes": 3558
+      "sha256": "081f12e867a70ed907d213d46fc2c7ca6580142ed3dc0a4c44f9debdbd8d3b13",
+      "bytes": 4255
     },
     {
       "path": "references/fixed-entries.md",
@@ -136,8 +136,8 @@
     },
     {
       "path": "scripts/english_copy_guard.py",
-      "sha256": "bca2c42d32db819b7d055058e52f030a685e1846963b73ddd730bef79a600033",
-      "bytes": 26255
+      "sha256": "a76a48a9d2a8d0a8aa9eb5b91d97c7ff36771376df2df7cfe322f341ca41eae5",
+      "bytes": 28735
     },
     {
       "path": "scripts/find_creator.py",
@@ -226,8 +226,8 @@
     },
     {
       "path": "scripts/test_english_copy_guard.py",
-      "sha256": "579cd2ee96ada2866bee6e205d10951285eaed1c2bb70d9ad2524603cdfecdb1",
-      "bytes": 11926
+      "sha256": "7d0f082ea6af58e182fb3ca65b8b4570346653c4f9b539938d6194234cac493e",
+      "bytes": 16102
     },
     {
       "path": "scripts/test_entry_consistency.py",
@@ -331,8 +331,8 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "272125010d008e90d73398b170e88506ed354b09b745b5598acfd936d0905de2",
-      "bytes": 16543
+      "sha256": "bf361d22783f53ba75bf1b60d66b453809ca88ec56e26873c32bd23a801dd390",
+      "bytes": 17958
     }
   ],
   "previous_provenance_sha256": "d2840f129d2307e79994e0d2eb220dbe9c45509ed3b9f2770da21a31a6a2695f",
@@ -801,15 +801,80 @@
         "not_verified": "no real-phone run; kit parts stay 待真机复测"
       },
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_存档不挡启动与四样交付_基于11.17.27/receipt.json"
+    },
+    {
+      "id": "art-once-and-incremental.20261113.1",
+      "installed_at": "2026-11-13T11:19:38.116684+00:00",
+      "authority": "用户 2026-11-13 明确停止游戏，只优化检查器并更新英化 Skill，消除返工与重复验收循环。",
+      "scope": "Individual full-size source planning; configurable advisory clarity; one frozen-batch formal first-piece and shared full capture; original evidence inheritance, checkpointing and current-rule replay without regeneration.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "80cd1c2f310b227360d048b9a1279253cd24734e59e44c454f97124bbb7ae80d",
+          "sha256": "b315d2cc9ff4dccf84429f52c14e66556f85ef5160d328e4e6a29bfe970f731e",
+          "bytes": 101312
+        },
+        {
+          "path": "references/english-ui-rebuild.md",
+          "before_sha256": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
+          "sha256": "5c7930a3d8893a7498e4308267c34764b5a22126a25096b2aa78566b4c14dc1b",
+          "bytes": 35012
+        },
+        {
+          "path": "references/first-trial-repair.md",
+          "before_sha256": "d86616f3823832abd1a229ed9a0dccca08180a668eadf949e01e03230278aa2e",
+          "sha256": "081f12e867a70ed907d213d46fc2c7ca6580142ed3dc0a4c44f9debdbd8d3b13",
+          "bytes": 4255
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "272125010d008e90d73398b170e88506ed354b09b745b5598acfd936d0905de2",
+          "sha256": "a131ebc2bebc2e5a26456ba12030f40715ecf736a7cbbed4a580c9c3473019e2",
+          "bytes": 17369
+        }
+      ],
+      "verification": "Targeted synthetic tool tests and independent forward validation; see local release receipt. No real game or device acceptance asserted."
+    },
+    {
+      "id": "art-assembly-gap.20261113.1",
+      "installed_at": "2026-11-13T12:21:06.487524+00:00",
+      "authority": "用户明确要求将本次九宫格奖励栏与HINT缩略图漏检修进美工Skill，审查原因与其他Skill冲突并验证有效。",
+      "scope": "Runtime assembly ownership, actual positions and source-role checks. Distinguish stretch center from content-safe and name hints from reviewed caption declarations. Preserve required visual review in existing reports/first-piece/look_list without new full loops.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "b315d2cc9ff4dccf84429f52c14e66556f85ef5160d328e4e6a29bfe970f731e",
+          "sha256": "45699f9adca28c61295f5ae3a0be04125a21cac8a137f9e45b359df57adc42e3",
+          "bytes": 101304
+        },
+        {
+          "path": "版本历史.md",
+          "before_sha256": "a131ebc2bebc2e5a26456ba12030f40715ecf736a7cbbed4a580c9c3473019e2",
+          "sha256": "bf361d22783f53ba75bf1b60d66b453809ca88ec56e26873c32bd23a801dd390",
+          "bytes": 17958
+        }
+      ],
+      "verification": {
+        "related_tests": 69,
+        "independent_controls": 9,
+        "real_original_captures": 44,
+        "game_edited": false,
+        "evidence": "local release validation.json; no game artwork acceptance asserted"
+      }
+    },
+    {
+      "id": "art-non-dark-first-text.20261113.1",
+      "scope": "Art generation only: non-dark glyph cores, first-pass fixed words and generated reward glyphs; no new final gate."
     }
   ],
-  "previous_local_provenance_sha256": "4845301dfe5aaad58822de632eb0fb4056363c6a110f8326c5a6d4230befdcd2",
+  "previous_local_provenance_sha256": "f35fb7b4baeafe707a07b4917a08e6c7ce71b54db9d9015ad8a8a41f2433f99c",
   "release_integration": {
-    "release": "11.17.28",
+    "release": "11.17.30",
+    "previous_release": "11.17.29",
     "patch_ids": [
-      "rule-wording-unify.20261112.1",
-      "storage-nonblocking-and-four-deliverables.20261112.1"
+      "art-assembly-gap.20261113.1"
     ],
-    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
-  }
+    "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
+  },
+  "overlay_release": "art-non-dark-first-text.20261113.1"
 }

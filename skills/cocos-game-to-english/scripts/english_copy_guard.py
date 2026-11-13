@@ -14,7 +14,10 @@ Two jobs, both static, seconds, no build, no browser:
        (`+ 'E' +`, toFixed's '.'), wherever the formatter lives (方块收割者 11-05: K/M/B/T/Q/E in a 0-9 font)
      - digits 0-9 always
    and the whole-word pictures come from ONE list (short fixed words: copy-table rows marked image, the word_image rows
-   of docs/english/fit-labels.json, short button/title words). Both go to docs/english/charset.json. Each project .fnt
+   of docs/english/fit-labels.json, short button/title words, and explicit fixed UI captions such as SCORE / Claim
+   in serialized Labels / RichText). Amounts such as `20 COINS` keep the unit word separate from bitmap digits;
+   prose, identity fields and arbitrary script literals are not additional word-image sources.
+   Both go to docs/english/charset.json. Each project .fnt
    is compared with the set; `missing` names what a font still lacks. Generate the digit font from `value_charset` and
    every word in `word_images` before the first piece, not while building.
 
@@ -68,6 +71,16 @@ AD_WORDS = re.compile(r'\b(watch|ad|ads|video)\b', re.I)
 AD_NAME = re.compile(r'(?:^|[_\-\s])(?:ad|ads|video|watch)(?:[_\-\s]|$)|(?:btn|button)_?(?:ad|video)|'
                      r'(?:ad|video|watch)_?(?:btn|button)|watchad|double', re.I)
 WORD_IMAGE_MAX = 16          # characters in a fixed word picture (CLAIM, NO THANKS, LEVEL, BEST, TRY AGAIN ...)
+# A narrow vocabulary for the existing serialized-UI scan, not a generic short-string collector.
+FIXED_ACTION_CAPTIONS = {'claim', 'collect', 'play', 'next', 'retry', 'restart', 'revive', 'resume', 'continue',
+                         'close', 'back', 'cancel', 'confirm', 'open', 'spin', 'equip', 'buy', 'no thanks',
+                         'try again', 'watch ad'}
+FIXED_VALUE_CAPTIONS = {'score', 'best', 'goal', 'level', 'lv.', 'lvl', 'stage', 'wave', 'coin', 'coins',
+                        'gem', 'gems', 'pearl', 'pearls', 'heart', 'hearts', 'energy'}
+IDENTITY_NODE_NAMES = {'name', 'namelabel', 'nametext', 'labelname', 'txtname', 'playername', 'username',
+                       'nickname', 'displayname', 'profilename', 'charactername', 'heroname', 'petname',
+                       'opponentname', 'friendname', 'enemyname'}
+STATIC_AMOUNT = re.compile(r'[+\-−]?\d+(?:[.,]\d+)*%?')
 
 
 def ref(v):
@@ -267,6 +280,28 @@ def is_word_image(text):
         and re.fullmatch(r"[A-Za-z][A-Za-z !?'&-]*", t) is not None and len(t.split()) <= 3 and t.upper() == t
 
 
+def fixed_ui_words(text, node_path=''):
+    """Known static UI captions only; a displayed amount contributes its separate fixed unit/label.
+
+    Preserve spelling/case for generation. Numeric placeholders and player names stay dynamic; existing
+    value_chars still handles their numeric symbols independently. No script-literal scan is introduced.
+    """
+    if PLACEHOLDER.search(text) or '\n' in text or '\r' in text:
+        return []
+    nearby_names = [re.sub(r'[^a-z0-9]', '', part.casefold()) for part in node_path.split('/')[-2:]]
+    if any(name in IDENTITY_NODE_NAMES for name in nearby_names):
+        return []
+    t = text.strip()
+    if t.casefold() in FIXED_ACTION_CAPTIONS | FIXED_VALUE_CAPTIONS:
+        return [t]
+    parts = t.split()
+    if len(parts) == 2:
+        for word, amount in (parts, parts[::-1]):
+            if word.casefold() in FIXED_VALUE_CAPTIONS and STATIC_AMOUNT.fullmatch(amount):
+                return [word]
+    return []
+
+
 def parse_fnt_ids(text):
     return {int(m.group(1)) for m in re.finditer(r'^\s*char\s+id=(\d+)', text, re.M)}
 
@@ -285,6 +320,9 @@ def charset(root):
         kind = (row.get('kind') or row.get('as') or '').strip().lower()
         if kind in ('image', 'word_image', 'picture') or is_word_image(en):
             words.setdefault(en.strip(), 'docs/copy/copy-table.csv')
+        else:
+            for word in fixed_ui_words(en):
+                words.setdefault(word, 'docs/copy/copy-table.csv')
     for f in ui_files(root):
         try:
             doc = Doc(f)
@@ -297,6 +335,9 @@ def charset(root):
                     s = RICH_TAG.sub('', o[k])
                     if CJK.search(s):
                         continue
+                    node_path = doc.path_of(doc.get(ref(o.get('node'))))
+                    for word in fixed_ui_words(s, node_path):
+                        words.setdefault(word, rel + (':' + node_path if node_path else ''))
                     v = value_chars(s)
                     if v:
                         value |= v

@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T07:19:59.634Z",
-  "treeHash": "c706b9e795cb3136f19dcdd163bd5fd36184964c0f1815ef9fdcb528067747b1",
+  "createdAt": "2026-11-13T07:20:21.010Z",
+  "treeHash": "2979937dd08e5c1e6d9468aaf865240caea5b29c865b329a02850126a41da958",
   "skills": [
     {
       "name": "chrome-mobile-testing",
-      "treeHash": "43761dea6d7d161a3ea9b4e1e929ab3726784e3bde22f145f47bd17bc54d0339",
+      "treeHash": "1c0b004518f0629393de4eeb50fc24360d7ab9b6e1886f56a786dff9f124f46f",
       "fileCount": 11,
-      "bytes": 77338,
+      "bytes": 77649,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d648446633d8f39fbd56f7e0796ab75f1a68819ed08580a923ca7fd8f1d215e3",
-          "size": 2026,
+          "hash": "4b9ff32057929b7a8b8f84c497f896d90a29360407ecd6eb96a75bfa7daa49c9",
+          "size": 2337,
           "executable": false
         },
         {

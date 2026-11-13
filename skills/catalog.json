@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-12T18:01:18.930Z",
-  "treeHash": "2f1b383a28d49c37f03a73e30d75d5a85a525703264a347a5f7caf5bd3098354",
+  "createdAt": "2026-11-13T07:18:06.292Z",
+  "treeHash": "511eaa42637c2a1ae4ea99243dafa9f3b9c3d34831ddc8eb85e948f2ddd322ea",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "83d8e65a10b9c83a124f985df58a62eb7d1855755df292b87a066862922b91ce",
+      "treeHash": "b7793985c49d57bd2a5cd33ff3c7284a1156287165e5663785d180fc5ba21d5b",
       "fileCount": 204,
-      "bytes": 2157667,
+      "bytes": 2156945,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "bc1711d508dd0581a2985efea58424f5329da40922dc54c9acaabd5bfd3951e5",
-          "size": 68169,
+          "hash": "92ec1a247030b7dabf50d5c36470fb1cb7cb003d0a2cd1a8b7ca3ebc6967b600",
+          "size": 68480,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "95fc0fd31bd329b1f00ef4f920950fc51126fe9c4ace4f6902d3db88345649cf",
-          "size": 34159,
+          "hash": "917f97be1489be920627e27b86edf1374baf046b14494b9538ce1bbff7d2dfb4",
+          "size": 34353,
           "executable": false
         },
         {
@@ -455,8 +455,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "88f14ed7b68b7c0c6f7c3ca7b544b6bb58fff660f305ff07f0a1ce22492d2b77",
-          "size": 22713,
+          "hash": "9df9d0efbaa7874f838fafe63120fb77a4c9ddcd4105b43fe84b0e1321da97ba",
+          "size": 22708,
           "executable": false
         },
         {
@@ -689,14 +689,14 @@
         },
         {
           "path": "package-check/scripts/runtime-scope-compat.json",
-          "hash": "815644bba187d68c5b91a91375eda32033696fae86e108965ca03ccac739e229",
+          "hash": "11576b163c0828cb5ee97ae5bb338424fa88d8d8602fa48d18bcc6fca6ac09e5",
           "size": 1677,
           "executable": false
         },
         {
           "path": "package-check/scripts/runtime_incremental.py",
-          "hash": "a95960d085c447559ad5bc0b29503a0ebb45352a52c6d8cdee09d5e3aa75181a",
-          "size": 14832,
+          "hash": "1e506ee8b7b63d1dead78b76eeac09909a9de50a6b4422c8ed5465350b619df4",
+          "size": 14735,
           "executable": false
         },
         {
@@ -827,8 +827,8 @@
         },
         {
           "path": "package-check/scripts/runtime_regression/suites/button_sweep.mjs",
-          "hash": "c70c838aec7989eff227cd55e76dc16f1211a43c7fba885c73363698a8623434",
-          "size": 26172,
+          "hash": "ff5e28ac5d6e924dbd910a143390656774ebb9a38972438064ec85b875e847e2",
+          "size": 25047,
           "executable": false
         },
         {

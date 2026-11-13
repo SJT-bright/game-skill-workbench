@@ -31,8 +31,6 @@ def unit_ids(name, meta, adapter, prechecked=False):
         text=meta['script'].read_text()
         sections=re.findall(r'const (?:CASES|LIFE) = \[(.*?)\n\];',text,re.S)
         return re.findall(r"^\s*\['([^']+)'",'\n'.join(sections),re.M)
-    if name=='button_sweep':
-        return ['home','game'] if adapter.get('play') else ['home']
     if name=='resume_play':
         return ['background','finger_held','finger_held_new_id','pause_background','ad_background','ad_background_close_first']
     if name=='ad_entries':

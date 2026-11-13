@@ -299,15 +299,11 @@ await L.suite(async ({ out, page }) => {
       buttons: all.sort((a, b) => a.box.y0 - b.box.y0 || a.box.x0 - b.box.x0).slice(0, MAX_HOME), popupsTodo: [], checked: new Set(),
       deadline: T0 + BUDGET, maxPopup: MAX_POPUP,
       reload: async () => (h = await fresh(page, 1500)).ok, reloadFailed: () => add('home', 'home screen not reached on reload') };
-    if (!C.selection || C.selection.includes('home')) {
-      await sweepStage(home);
-      await sweepPopups(home);
-    }
-    const homeFindingEnd = rep.findings.length;
+    await sweepStage(home);
+    await sweepPopups(home);
 
     // W93 (3): the running level
-    if (C.selection && !C.selection.includes('game')) {}
-    else if (!A.play) rep.notRun.push('in-game sweep: the adapter has no "play" (the startup suite\'s PLAY locator), so the level was not entered');
+    if (!A.play) rep.notRun.push('in-game sweep: the adapter has no "play" (the startup suite\'s PLAY locator), so the level was not entered');
     else {
       const G0 = Date.now();
       const g = rep.game = { entered: false, rows: [], popups: [], adEntries: [], ms: 0 };
@@ -330,18 +326,7 @@ await L.suite(async ({ out, page }) => {
       }
       g.ms = Date.now() - G0;
     }
-    out.units = {};
-    for (const stage of ['home','game']) {
-      if (C.selection && !C.selection.includes(stage)) continue;
-      if (stage === 'game' && !A.play) continue;
-      const findings = stage === 'home' ? rep.findings.slice(0, homeFindingEnd) : rep.findings.slice(homeFindingEnd);
-      const blocks = findings.filter(f => R.level(f.code,{engine:ENGINE,policy:POLICY}) === 'block');
-      const completed = stage === 'home' ? (rep.home.length > 0 || rep.homeButtonCount === 0) : !!(rep.game && rep.game.entered);
-      const passed = completed && blocks.length === 0;
-      out.units[stage] = {passed,cases:[{id:stage,passed,detail:{findings,completed}}]};
-    }
   }
-  if (!out.units) {out.units={};for(const stage of C.selection || (A.play ? ['home','game'] : ['home']))out.units[stage]={passed:false,cases:[{id:stage,passed:false,detail:rep.findings}]};}
   rep.ms = Date.now() - T0;
   for (const r of rep.home) delete r.after;
   for (const f of rep.findings) f.level = R.level(f.code, { engine: ENGINE, policy: POLICY });
@@ -355,7 +340,7 @@ await L.suite(async ({ out, page }) => {
     out.add(code, blocks.length === 0, blocks.length ? blocks.map((f) => f.msg).slice(0, 8) : (fs2.length ? 'warnings only' : null));
   }
   // nothing tapped although the home showed buttons = the sweep did not run (fail closed on a new 2.x game)
-  const swept = C.selection && !C.selection.includes('home') ? !!(rep.game && rep.game.entered) : rep.home.length > 0 || rep.homeButtonCount === 0;
+  const swept = rep.home.length > 0 || rep.homeButtonCount === 0;
   if (!swept || rep.homeButtonCount === 0) out.warn('button_sweep: ' + (rep.homeButtonCount === 0 ? 'no home button found to tap' : 'no home button was tapped'));
   out.add('swept', swept || R.level('home', { engine: ENGINE, policy: POLICY }) === 'warn',
     { homeButtons: rep.homeButtonCount, tapped: rep.home.length, popups: rep.popups.length, adEntries: rep.adEntries.map((a) => a.taps.join(' > ')),

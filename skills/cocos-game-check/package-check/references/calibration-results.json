@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-12",
- "release_label": "v7.9-en11.17.27-production-order-integrated",
- "selftest_report_sha256": "323fc33899184f59a93dcb9005261240ccb48f10008c7e5f8eb5384bcf670f67",
+ "release_label": "v7.9-en11.17.28-cursor-storage-handoff",
+ "selftest_report_sha256": "c2a87aa95f771b2d9c17799e5204e510e89ed21f0cff5efb2b71ad21c46d6f20",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
@@ -810,7 +810,7 @@
   }
  ],
  "test_inventory": {
-  "files": 769,
+  "files": 772,
   "failing_known": [
    "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
    "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",

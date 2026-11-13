@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-12.english-simple.11.17.27",
+  "revision": "2026-11-12.english-simple.11.17.28",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "f3150515fe942bddff8a331b9bb4195ec04b6a2f7933250ba8352fb8456b4085",
-      "bytes": 33899
+      "sha256": "917f97be1489be920627e27b86edf1374baf046b14494b9538ce1bbff7d2dfb4",
+      "bytes": 34353
     },
     {
       "path": "agents/openai.yaml",
@@ -146,8 +146,8 @@
     },
     {
       "path": "package-check/README.md",
-      "sha256": "7e3950710cd99886d4bb64cd4f5548a7c4c8a8f607948713576b210eb33c9926",
-      "bytes": 5822
+      "sha256": "9eecb57dabf3487f8660ae9d2fe833ff67b36799d98ff69f7074c3ba2c98ca90",
+      "bytes": 5931
     },
     {
       "path": "package-check/optional-suites/modal-lifecycle/modal_lifecycle.json",
@@ -171,8 +171,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "88f14ed7b68b7c0c6f7c3ca7b544b6bb58fff660f305ff07f0a1ce22492d2b77",
-      "bytes": 22713
+      "sha256": "9df9d0efbaa7874f838fafe63120fb77a4c9ddcd4105b43fe84b0e1321da97ba",
+      "bytes": 22708
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -366,7 +366,7 @@
     },
     {
       "path": "package-check/scripts/runtime-scope-compat.json",
-      "sha256": "815644bba187d68c5b91a91375eda32033696fae86e108965ca03ccac739e229",
+      "sha256": "11576b163c0828cb5ee97ae5bb338424fa88d8d8602fa48d18bcc6fca6ac09e5",
       "bytes": 1677
     },
     {
@@ -856,8 +856,8 @@
     },
     {
       "path": "references/tiktok-fixed-adaptation.md",
-      "sha256": "cda279f91545e8a3d20b1c1fc479ae6635b61e92e36d896cd6166aa7744b9b0f",
-      "bytes": 111268
+      "sha256": "ba1c5da9b6781fbafb5af7534aa18a8e886877dca20e61ead6bb5527f95e3dd1",
+      "bytes": 111425
     },
     {
       "path": "review/README.md",
@@ -921,8 +921,8 @@
     },
     {
       "path": "startup/references/platform-input-binding.md",
-      "sha256": "64dca9057fe1a5965b01231057663763d6bffab197ef7ea46543294980ea1d09",
-      "bytes": 4036
+      "sha256": "8c175296f218b6edbf76e3bda8dbed9c3936b4115f94edf07ba0186a9451fc58",
+      "bytes": 6129
     },
     {
       "path": "startup/references/startup-contract.md",
@@ -1020,7 +1020,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "8dd398dadf7eaf520ac338ce1f1e7f32e140e087d0e10011a28139c7de9ea804",
+  "previous_provenance_sha256": "bf50376036d7fd5747b42821c50edaf6fa1ed35ae31377b0c2aa0e0ff27467ed",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -1577,7 +1577,7 @@
       "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_存档不挡启动与四样交付_基于11.17.27/receipt.json"
     }
   ],
-  "previous_local_provenance_sha256": "54a00ffdbff4177f740799ff4697c554e3bfa77b9765aefd3fc83974ffeafe0f",
+  "previous_local_provenance_sha256": "715d8edb499aed15e0df4925ebd6df87325c41cc62fa16822a0052e99ae358b8",
   "local_updates": [
     {
       "id": "2026-11-12.startup-storage-consumers-r7.v1",
@@ -1612,5 +1612,13 @@
       ],
       "previous_provenance_sha256": "5cf52536df551502a1c263dd33143a2ffc15c4d90f20eeacd494eb029d29a2eb"
     }
-  ]
+  ],
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
 }

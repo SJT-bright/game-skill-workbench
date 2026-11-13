@@ -74,6 +74,18 @@ def tool_identity():
         'startup_business_contract.py', 'numeric_snapshot_contract.py', 'vendor/acorn.cjs')}
 
 
+# Exact formal 11.17.29 lineage. Original observations are still rejudged by the
+# current validator; only these audited producer/rule changes are compatible.
+REVIEWED_FORMAL29_TOOLS = {'storage_scoped_reuse.py': '6a58e411590495ace5a05025dc7bef8866ee8af3fd1be3fe567388cb3c67f826', 'audit_native_storage_contract.py': '3703a36dbc934e5a84787a411ca4d3275be189e9dcc022db4be727ba022dab30', 'maintenance_scope.py': '0c4147f64a9a32e4f27b2a30257d86193bbbcfffe7abb07dc5db0ee276daa391', 'startup_storage_consumers.py': '3c832d4be8447f87e177cf27102d6374bf2b28ec684f389ca4ac68608d454ed8', 'scan_storage_consumers.cjs': 'b31e37f94db9c47d0646fbfcf5f9a394e99e27b3a28ec8b1d5c9b995ea9f4805', 'startup_business_contract.py': 'c8600b73ea380b841e5d7d9065b4053a35c76a7dff8bf1ac8f6b9d42173ee007', 'numeric_snapshot_contract.py': '8b94ca6a0fc899c0e7401a1cb6df413d561d1f295436aff9c36dda0d6951fabe', 'vendor/acorn.cjs': 'fdb08546776ec6228b03e8d02b40d4ab3255bae5f401adba7ff5dad927ac5c9c'}
+
+def compatible_tool_identity(previous, current):
+    if previous == current:
+        return True
+    changed = {'storage_scoped_reuse.py', 'audit_native_storage_contract.py', 'maintenance_scope.py'}
+    return (previous == REVIEWED_FORMAL29_TOOLS and set(previous) == set(current)
+            and all(previous[name] == current[name] for name in previous if name not in changed))
+
+
 def profile(project):
     import project_qa
     policy = project_qa.lookup(project, 'validators', PROFILE)
@@ -167,12 +179,12 @@ class _Projection:
         return self.record['original_binding']['native_tree_sha256']
 
 
-def home_path(project, report, native=None):
+def home_path(project, report, native=None, *, tools=None):
     run = report.get('execution_receipt', {}).get('run_id')
     if not isinstance(run, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,120}', run):
         raise ValueError('storage scope: original approval run_id missing')
     target = str(Path(native or report['native']).resolve())
-    revision = digest(canonical({'native': target, 'tools': tool_identity(), 'helper': profile(project)}))[:24]
+    revision = digest(canonical({'native': target, 'tools': tool_identity() if tools is None else tools, 'helper': profile(project)}))[:24]
     return Path(project).resolve() / 'docs/checks/storage-scopes' / run / revision
 
 
@@ -299,7 +311,7 @@ def verify_record(record, home, native, project, report, trace):
     if (Path(record['current_project']).resolve() != Path(project).resolve()
             or Path(record['current_native']).resolve() != Path(native).resolve()):
         raise ValueError('storage scope: current artifact path differs; explicitly register its actual roots')
-    if record['tools'] != tool_identity() or record['helper'] != profile(project):
+    if not compatible_tool_identity(record['tools'], tool_identity()) or record['helper'] != profile(project):
         raise ValueError('storage scope_required: storage rules, runner policy or helper changed')
     validate_scope(record['scope'], record['manifests'])
     for role in ('source', 'package'):
@@ -346,6 +358,13 @@ def validate_report(report, native, expected_binding, *, project):
             raise ValueError('storage scope_required: actual current source project required')
         project = Path(project).resolve()
         home = home_path(project, report, native)
+        if not (home / 'scope.json').is_file():
+            # The producer's immutable path included its exact tool identities.
+            # Resolve only the audited formal29 revision, then verify all original
+            # bytes, current dependencies and the same reviewed helper below.
+            predecessor = home_path(project, report, native, tools=REVIEWED_FORMAL29_TOOLS)
+            if (predecessor / 'scope.json').is_file():
+                home = predecessor
         record = read(home / 'scope.json')
         verify_record(record, home, native, project, report, trace)
         from check_known_issues import tree_sha, snapshot as source_snapshot

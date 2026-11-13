@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""tiktok_finalize (v7.7, design D77 sections 1-2): install the platform-kit standard parts at packaging time.
+"""tiktok_finalize (v7.7, design D77 sections 1-2): prepare platform-kit parts before production checks; writers consume prepared bytes.
 
     tiktok_finalize.py init    --project P --board remake|localize      write the new-game marker (start of a project)
                                [--base <base folder or source ZIP> | --no-base-why "..."]
@@ -24,16 +24,15 @@
                                (it is not the source record: the writers still need `source`).
     --policy new|legacy on source/native/decide is for tests and calibration only; the package writers never pass it.
 
-Library (the two package writers call these; package_gates.kit_parts reuses the checks):
+Production library (writers only consume its prepared proof; package_gates.kit_parts reuses read-only checks):
     finalize_source(project, board, ...) -> record   (also written to <project>/.tiktok-kit/finalize-source.json)
     finalize_native(native, project, board, app_id, ...) -> record   (goes into the writer report and receipt)
     check_source_record(project, options=None) -> findings (K5_source_finalized; with the writer's options it also
         requires the same --keep-webp-exception as the source record's `options`)
     check_finalize_record(record, files) -> findings (K4_finalize_ran)
 A record with any block means: refuse the package.
-v7.8 (U7 补): `source` reads the art receipt (<project>/.tiktok-kit/art-receipt.json, art_receipt.py) before its steps
-and, only when every image still matched it, carries it to the image bytes its `images` step wrote (record key
-`art_receipt`). The source step `art_static` blocks squashed SIMPLE/CUSTOM sprites and colliders without a visible picture (no
+Historical U7 receipt compatibility remains a non-required record path; current source and writer do not request
+a complete art receipt. Current visual results follow their actual production/check nodes. The source step `art_static` blocks squashed SIMPLE/CUSTOM sprites and colliders without a visible picture (no
 popup-dim opacity limit since Saul 10-31).
 v7.8 (H8 / H10): `source` also follows its own image conversions in docs/art/generated.json (derived entries) and
 docs/art/base-assets.json (record key `art_records`), so a recorded picture never needs a manual re-record after it.
@@ -188,7 +187,17 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
     art_before = _art_receipt_before(project, board, decision['policy']) if write_record else None
     records_before = _art_records_before(project) if write_record else None
     preparation_session = _preparation_session(ctx)
-    results = [] if refused else _run_steps(ctx, steps, preparation_session)  # a refused option changes nothing
+    # The complete new-source pipeline installs the same standard parts as sync
+    # before any source checks. Otherwise the first prebuild sync adds GameUIKit
+    # after the source receipt, correctly invalidating the whole source binding.
+    # Explicit scoped steps and legacy sources keep their requested boundary.
+    results = []
+    if not refused:
+        if decision['policy'] == 'new' and tuple(steps) == tuple(SOURCE_STEPS):
+            for name, action in (('ui_kit', sync_ui_kit), ('run_parts', sync_run_parts)):
+                results.append(preparation_session.apply(name, lambda action=action: action(ctx))
+                               if preparation_session else action(ctx))
+        results += _run_steps(ctx, steps, preparation_session)
     blocks, warnings = _collect(results)
     blocks = refused + blocks
     if engine not in (2, 3):
@@ -210,7 +219,8 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
     if decision['policy'] == 'new' and not blocks:
         try:
             from preparation_cache import source_pipeline_binding
-            record['preparation_binding'] = source_pipeline_binding(ctx, steps, preparation_session)
+            record['preparation_binding'] = source_pipeline_binding(
+                ctx, [result['step'] for result in results], preparation_session)
         except Exception:
             pass  # Unknown scopes still executed; there is no fabricated reuse proof.
     if write_record:
@@ -844,7 +854,11 @@ def main(argv=None):
         manifest = T.load_manifest()
         if args.cmd == 'init' and args.base and args.no_base_why:
             ap.error('--base and --no-base-why exclude each other')
+        existing_marker = (Path(args.project) / P.MARKER).is_file()
         data = P.write_marker(args.project, args.board, manifest.version, reason=args.cmd)
+        if args.cmd == 'init' and args.board == 'localize' and not existing_marker:
+            from production_hooks import admit_resources
+            admit_resources(args.project)
         print(json.dumps(data, ensure_ascii=False))
         if args.cmd == 'init':
             try:
@@ -884,7 +898,22 @@ def main(argv=None):
     if args.cmd == 'sync':
         if not args.project:
             ap.error('--project is required')
+        if not args.native:
+            from production_hooks import resource_step
+            resource = resource_step(args.project, args.board, policy_override=args.policy)
+            if resource is not None:
+                print('resource-package: ' + json.dumps(resource, ensure_ascii=False, default=str))
+                if not resource['passed']:
+                    return 1
         record = finalize_sync(args.project, args.board, native=args.native, policy=args.policy)
+        if not args.native and not record['blocks']:
+            from production_hooks import resource_refresh
+            resource = resource_refresh(args.project, args.board, policy_override=args.policy)
+            if resource is not None:
+                print('resource-package-refresh: ' + json.dumps(resource, ensure_ascii=False, default=str))
+                if not resource['passed']:
+                    record['blocks'].append(T.finding('K_resource_package_prepare', 'block',
+                        json.dumps({'blocks': resource['blocks'], 'next_action': resource['next_action']}, ensure_ascii=False)))
         print('sync: %s, %d file(s) put back, %.2f s%s' % (record['policy'], len(record['changed']), record['seconds'],
                                                            ''.join('\n  ' + c for c in record['changed'])))
         _print(record)
@@ -892,10 +921,24 @@ def main(argv=None):
     if args.cmd == 'source':
         if not args.project:
             ap.error('--project is required')
+        from production_hooks import resource_step
+        resource = resource_step(args.project, args.board, policy_override=args.policy)
+        if resource is not None:
+            print('resource-package: ' + json.dumps(resource, ensure_ascii=False, default=str))
+            if not resource['passed']:
+                return 1
         note = ensure_first_screen(args.project, args.board)    # R4F2 #7
         if note:
             print(note)
         record = finalize_source(args.project, args.board, policy=args.policy, app_id=args.app_id, options=options)
+        if not record['blocks']:
+            from production_hooks import resource_refresh
+            resource = resource_refresh(args.project, args.board, policy_override=args.policy)
+            if resource is not None:
+                print('resource-package-refresh: ' + json.dumps(resource, ensure_ascii=False, default=str))
+                if not resource['passed']:
+                    record['blocks'].append(T.finding('K_resource_package_prepare', 'block',
+                        json.dumps({'blocks': resource['blocks'], 'next_action': resource['next_action']}, ensure_ascii=False)))
     else:
         if not args.native:
             ap.error('--native is required')
@@ -905,6 +948,14 @@ def main(argv=None):
             prepared_source = prepared_source_identity(args.project)
         record = finalize_native(args.native, args.project, args.board, args.app_id, policy=args.policy,
                                  options=options)
+        if not record['blocks']:
+            from production_hooks import resource_step
+            resource = resource_step(args.project, args.board, native=args.native, policy_override=args.policy)
+            if resource is not None:
+                print('resource-package: ' + json.dumps(resource, ensure_ascii=False, default=str))
+                if not resource['passed']:
+                    record['blocks'].append(T.finding('K_resource_package_prepare', 'block',
+                        json.dumps({'blocks': resource['blocks'], 'next_action': resource['next_action']}, ensure_ascii=False)))
         if prepared_source and not record['blocks']:
             try:
                 record['prepared_native_sha256'] = record_prepared_native(args.project, args.native, prepared_source)

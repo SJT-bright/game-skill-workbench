@@ -13,7 +13,7 @@ ran in `sync`, so its block never reached the source record and the writers let 
   4 levels    new remake: K_dev_text blocks, popup + mask warn (K_W_, NEW_GAME_LEVEL); English: warnings; legacy: info
   5 skip      assets/tiktok-platform/ and `// tiktok-kit:ui-ok why` are not reported
   6 wiring    frame_scan and ui_kit_scan are in SOURCE_STEPS; finalize_source on a new game with a per-frame move and a
-              hand-built popup writes K_frame_dt (block) + K_W_ui_handmade_popup (warning); K5 refuses the writer
+              hand-built popup installs GameUIKit first, writes K_frame_dt + K_ui_handmade_popup blocks; K5 refuses the writer
   7 speed     200 scripts in under 1 second
 Run: python3 test_ui_kit_scan.py
 """
@@ -168,8 +168,10 @@ class UiKitScan(unittest.TestCase):
         rec = F.finalize_source(self.tmp, 'remake')
         got = {b['id'] for b in rec['blocks']}
         self.assertIn('K_frame_dt', got)
-        self.assertNotIn('K_ui_handmade_popup', got)
-        self.assertIn('K_W_ui_handmade_popup', {w['id'] for w in rec['warnings']})
+        # Full new-source preparation installs GameUIKit before the scan;
+        # missing popup adoption must now block at this first preparation.
+        self.assertIn('K_ui_handmade_popup', got)
+        self.assertNotIn('K_W_ui_handmade_popup', {w['id'] for w in rec['warnings']})
         k5 = F.check_source_record(self.tmp)
         self.assertTrue(any('K_frame_dt' in f['message'] for f in k5), k5)
 

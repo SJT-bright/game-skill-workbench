@@ -27,34 +27,13 @@ def checked_ref(ref,base):
  if not p.is_file() or sha(p)!=ref.get('sha256'):raise ValueError('missing/changed evidence '+str(p))
  return p
 
-def conditional_gui_reuse(project, artifact, original, binding, kind, route=None):
- """Optional reviewed unchanged-dependency transition, never a new execution."""
- if project is None:return False
- import project_qa
- entry=project_qa.project_policy(project,required_paths=[])
- if entry is None or 'maintenance_gui_reuse.v1' not in entry['policy'].get('validators',{}):return False
- policy=project_qa.lookup(project,'validators','maintenance_gui_reuse.v1')
- proof=project_qa.invoke(policy,'reuse_gui',project,artifact=artifact,original=original,
-                         binding=binding,kind=kind,route=route)
- origin=original.get('execution_binding') if kind=='gui_wrapper' else original.get('binding')
- if (not isinstance(proof,dict) or proof.get('schema')!='maintenance_gui_reuse.v1'
-     or not isinstance(origin,dict) or any(not origin.get(k) for k in BINDING_KEYS)
-     or proof.get('original_binding')!=origin or proof.get('current_binding')!=binding
-     or proof.get('artifact')!={'path':str(artifact),'sha256':sha(artifact)}
-     or proof.get('kind')!=kind or proof.get('route')!=route
-     or proof.get('unchanged_gui_dependencies') is not True
-     or proof.get('current_execution') is not False):
-  raise ValueError('invalid reviewed GUI dependency transition')
- return True
-
-def gui_refs(refs,base,binding,route=None,*,project=None):
+def gui_refs(refs,base,binding,route=None):
  """Current GUI wrapper retains original raw traces; operator must review effects."""
  if not isinstance(refs,list) or not refs:raise ValueError('current GUI evidence required')
  ratios=[]
  for ref in refs:
   p=checked_ref(ref,base);j=read(p)
-  if j.get('execution_binding')!=binding and not conditional_gui_reuse(project,p,j,binding,'gui_wrapper',route):raise ValueError('GUI execution binding/trusted interaction required')
-  if j.get('trusted_touch') is not True or not str(j.get('interaction_effect','')).strip():raise ValueError('GUI execution binding/trusted interaction required')
+  if j.get('execution_binding')!=binding or j.get('trusted_touch') is not True or not str(j.get('interaction_effect','')).strip():raise ValueError('GUI execution binding/trusted interaction required')
   if route and j.get('route')!=route:raise ValueError('GUI route mismatch '+route)
   v=j.get('viewport');raw=j.get('raw_evidence')
   if not isinstance(v,list) or len(v)!=2 or not all(type(n) is int and n>0 for n in v):raise ValueError('GUI mobile viewport required')
@@ -121,8 +100,7 @@ def source_inventory(ref,base,project,binding,require_reward=False,*,source_snap
  declared=sorted(checked_ref(x,p.parent) for x in j.get('scene_files',[]))
  if not scenes or scenes!=declared:raise ValueError('source scene inventory not exhaustive/current')
  ui_path=checked_ref(j.get('ui_route_inventory'),p.parent);ui=read(ui_path)
- if ui.get('binding')!=binding and not conditional_gui_reuse(project,ui_path,ui,binding,'ui_route_inventory'):raise ValueError('current actual UI route inventory required')
- if not isinstance(ui.get('routes'),list) or not ui.get('raw_evidence'):raise ValueError('current actual UI route inventory required')
+ if ui.get('binding')!=binding or not isinstance(ui.get('routes'),list) or not ui.get('raw_evidence'):raise ValueError('current actual UI route inventory required')
  for x in ui['raw_evidence']:checked_ref(x,ui_path.parent)
  if any(not isinstance(x,dict) or x.get('role') not in ('home','map','stage_details','other') or not x.get('id') for x in ui['routes']):raise ValueError('UI route inventory roles/IDs required')
  candidates=[x for q in scenes for x in route_candidates(q,project)]
@@ -144,7 +122,7 @@ def source_inventory(ref,base,project,binding,require_reward=False,*,source_snap
     if candidate['kind']=='click_handler' and explanation['classification']=='decorative':raise ValueError('click handler is not decorative')
     source_paths=[checked_ref(x,p.parent) for x in explanation['source_evidence']]
     if candidate['kind']=='click_handler' and not any(q.suffix in ('.js','.ts') and candidate['value'] in q.read_text(encoding='utf-8-sig') for q in source_paths):raise ValueError('click handler explanation needs actual JS implementation')
-    gui_refs(explanation.get('gui_evidence'),p.parent,binding,name,project=project)
+    gui_refs(explanation.get('gui_evidence'),p.parent,binding,name)
     for x in explanation['gui_evidence']:
      g=read(checked_ref(x,p.parent))
      if g.get('target_candidate')!=candidate or (candidate['kind']=='click_handler' and 'candidate_activate' not in g.get('actions',[])):raise ValueError('candidate-specific actual GUI activation/inspection required')
@@ -155,7 +133,7 @@ def source_inventory(ref,base,project,binding,require_reward=False,*,source_snap
    r['absence_proof']={'kind':'verified_source_inventory_no_candidate','source_sha256':binding['source_sha256'],
                        'scenes':[str(q.relative_to(project)) for q in scenes], 'candidates':[]}
    continue
-  gui_refs(r.get('gui_evidence'),p.parent,binding,name,project=project)
+  gui_refs(r.get('gui_evidence'),p.parent,binding,name)
   for x in r['gui_evidence']:
    wrapper=read(checked_ref(x,p.parent));actions=wrapper.get('actions',[])
    valid_actions=('reopen' in actions and bool({'retry','recovery'}&set(actions))) if r['present'] else 'navigation_inventory' in actions

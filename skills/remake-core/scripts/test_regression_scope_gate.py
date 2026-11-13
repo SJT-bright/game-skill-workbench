@@ -323,7 +323,7 @@ class ScopeGateTests(unittest.TestCase):
 
     def fake_runtime_runner(self):
         return SimpleNamespace(
-            load_suites=lambda suites: {'toy': {}}, load_adapter=lambda path, catalog: {},
+            load_suites=lambda suites: {'toy': {'script': 'toy.mjs'}}, load_adapter=lambda path, catalog: {},
             package_files=lambda path: self.files, detect_engine=lambda files, adapter: '2.x',
             package_policy=lambda files, policy: ('new', 'test'), required_suites=lambda *args: ['toy'],
             load_capabilities=lambda caps: None, preflight=lambda *args, **kwargs: ({}, []),

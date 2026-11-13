@@ -108,6 +108,8 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 首页资源清单和体积账本（开工就分包，P04）
 
+首次完整英化先按[资源分包前置](resource-package-prepare.md)实际准备：资源归属与加载配置在制作节点实施，主包 4,000,000 字节、首屏 10 MiB、总包及独立分包分别核算。下方 `first_screen.py` 和账本是共用输入，不能把生成了清单等同于已拆包；本轮输入未变沿用现有记录，首份 Native 标准准备完成后校准实际字节。普通旧游戏局部维护按原范围继续，不为缺少新资源记录重做。
+
 开工第一步就跑，不等出包：`python3 -B scripts/first_screen.py --project <工程>`（英化在原版工程上跑，加 `--board localize`）。几秒跑完，写 `docs/startup/first-screen.json`（首页要的图、字体、脚本标 `home_needs`，其余标 `deferred`；模板字段照抄 `assets/startup-plan-template.json`，`home_assets_allowed` 自动填好）和 `docs/startup/budget.json`（开局下载的账本）。这几种当场报错：首页开局下载估计超过 10 MiB（主包＋首页前请求的分包＋引擎）、首页前请求了首页不用的分包、加载页或首页 onLoad/start 里加载声音、没有脚本加载也不在白名单里的场景留在主包。英化游戏后三种只提示，超 10 MiB 照样报错。
 
 - 生成时必须用这些，别手写：往工程里放文件的步骤都要记账（`startup_budget.record(...)`，命令行 `scripts/startup_budget.py --project <工程> add --file <文件>`），超 10 MiB 当场拒绝、什么都不写。`import_audio.py` 已自动记账；声音一律算 deferred，由 `AudioService` 在首页第一帧画出来之后才加载（H 批零件）。

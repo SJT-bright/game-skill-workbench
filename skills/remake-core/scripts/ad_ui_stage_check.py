@@ -143,83 +143,6 @@ def full_art_coverage(project, plan, required, dumps, board):
     return result
 
 
-def reviewed_art_ui_reuse(project, required, dumps, first, board):
-    """Optional reviewed transition; default projects keep their original checker."""
-    import project_qa
-    entry = project_qa.project_policy(project, required_paths=[])
-    if entry is None or 'art_ui_reuse.v1' not in entry['policy'].get('validators', {}):
-        return None
-    policy = project_qa.lookup(project, 'validators', 'art_ui_reuse.v1')
-    proof = project_qa.invoke(policy, 'reuse_proof', project)
-    if not isinstance(proof, dict) or proof.get('schema') != 'art_ui_reuse.v1':
-        raise ValueError('missing art UI transition proof')
-    # Independently verify all original artifacts; a project passed scalar cannot
-    # substitute for the owning report, its per-case checks, or source assets.
-    for name, expected in proof.get('files', {}).items():
-        if hashlib.sha256(Path(name).read_bytes()).hexdigest() != expected:
-            raise ValueError('art UI original/current dependency changed: ' + name)
-    snapshot = json.loads(Path(proof['snapshot']).read_bytes())
-    baseline = {k: v for k, v in snapshot['source'].items()
-                if k.startswith('assets/') and k.endswith('.png')}
-    current = {str(f.relative_to(project)): hashlib.sha256(f.read_bytes()).hexdigest()
-               for f in (project/'assets').rglob('*.png')}
-    if not baseline or baseline != proof.get('png') or current != baseline:
-        raise ValueError('art UI current PNG set differs from actual original snapshot')
-    render_suffixes = ('.png', '.png.meta', '.ttf', '.ttf.meta', '.fnt', '.fnt.meta', '.plist', '.plist.meta')
-    original_render = {k: v for k, v in snapshot['source'].items()
-                       if k.startswith('assets/') and k.endswith(render_suffixes)}
-    current_render = {str(f.relative_to(project)): hashlib.sha256(f.read_bytes()).hexdigest()
-                      for f in (project/'assets').rglob('*')
-                      if f.is_file() and f.name.endswith(render_suffixes)}
-    if current_render != original_render:
-        raise ValueError('art UI fonts/atlas/graphic metadata changed from original snapshot')
-    record = json.loads(Path(proof['record']).read_bytes())
-    original = json.loads(Path(proof['report']).read_bytes())
-    if (record.get('last', {}).get('status') != 'pass'
-            or original.get('status') != 'pass' or original.get('failed') != 0
-            or record['last']['report'] != proof['report']
-            or original['capture_round']['version'] != proof['version']
-            or original['capture_round']['round'] != proof['round']):
-        raise ValueError('art UI has no genuine full owning art pass')
-    from art_iteration_plan import mapping
-    links, issues = mapping(json.loads(Path(proof['visual']).read_bytes()),
-                            json.loads(Path(proof['capture_policy']).read_bytes()))
-    if issues or not required.issubset(links):
-        raise ValueError('manifest visual cases lack exact owning capture mapping')
-    capture = original['capture_round']
-    for case in capture.get('cases', []):
-        dump_file = dumps/('capture-ui-dump-' + case['id'] + '.json')
-        dump = json.loads(dump_file.read_bytes())
-        provenance_file = project/'.tiktok-kit/art-rounds/proofs'/(case['origin'] + '.json')
-        provenance = json.loads(provenance_file.read_bytes())
-        sealed = dict(provenance); seal = sealed.pop('seal', None)
-        digest = hashlib.sha256(json.dumps(sealed, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
-        if (seal != digest or provenance.get('id') != dump.get('art_capture_id')
-                or provenance.get('case') != case['id']
-                or provenance.get('round') != proof['round']
-                or provenance.get('version') != proof['version']
-                or provenance.get('dump') != hashlib.sha256(dump_file.read_bytes()).hexdigest()
-                or provenance.get('png') != hashlib.sha256((dumps/(case['id']+'.png')).read_bytes()).hexdigest()):
-            raise ValueError('art UI original collector provenance changed: ' + case['id'])
-    # Hashes above pin all historical dump/PNG/proof artifacts. Existing owning
-    # coverage still checks required-case origin and actual page/slot findings.
-    plan = {'capture_plan': capture, 'visual_to_capture': links}
-    coverage = full_art_coverage(project, plan, required, dumps, board)
-    if coverage.get('problems') or not coverage.get('verified'):
-        raise ValueError('art UI original coverage: ' + repr(coverage.get('problems')))
-    first_doc = json.loads(first.read_bytes())
-    if (str(first) != proof['first_piece'] or first_doc.get('passed') is not True
-            or first_doc.get('tool') != 'art_production_preflight'
-            or not set(first_doc.get('selected_cases') or []).intersection(required)):
-        raise ValueError('art UI lacks genuine inherited representative')
-    return dict(passed=True, problems=[], checked_visual_case_ids=sorted(required),
-                full_art_coverage=coverage, checker_replays=0,
-                source_status='reviewed_unchanged_foreground_ui',
-                first_piece=dict(current=True, passed=True, capture_verified=True,
-                                 selected_cases=first_doc['selected_cases']),
-                inherited_round=proof['round'], inherited_version=proof['version'])
-
-
 def check_project(project, *, manifest, stage='writer', ui=None):
     """Verify current original captures and reuse the exact completed art analyses."""
     project = Path(project).resolve()
@@ -241,10 +164,6 @@ def check_project(project, *, manifest, stage='writer', ui=None):
         board = board_of(project, None)[0]
         if board not in ('remake', 'localize'):
             raise ValueError('ad UI project board is not resolved')
-        reused = reviewed_art_ui_reuse(project, required, dumps, first, board)
-        if reused is not None:
-            result.update(reused)
-            return result
         from art_iteration_plan import plan as owning_plan
         actual = owning_plan(project, build=build, dumps=dumps, first_piece=first, board=board)
         coverage = full_art_coverage(project, actual, required, dumps, board)

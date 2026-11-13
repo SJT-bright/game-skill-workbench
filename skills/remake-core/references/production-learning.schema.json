@@ -1,0 +1,587 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Production learning portable data v1",
+  "description": "Schema describes candidates; production_rule_governance performs stricter scope/catalog/evidence/role/baseline checks. Schema validity does not approve a rule.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/bundle"
+    },
+    {
+      "$ref": "#/$defs/proposals"
+    },
+    {
+      "$ref": "#/$defs/plan"
+    },
+    {
+      "$ref": "#/$defs/review"
+    },
+    {
+      "$ref": "#/$defs/active"
+    }
+  ],
+  "$defs": {
+    "action": {
+      "type": "object",
+      "required": [
+        "id",
+        "role",
+        "node",
+        "producer",
+        "consumers",
+        "operation",
+        "target",
+        "check_id",
+        "decision"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "node": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "producer": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "check_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "role": {
+          "enum": [
+            "producer",
+            "consumer",
+            "prevention"
+          ]
+        },
+        "consumers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+          }
+        },
+        "operation": {
+          "enum": [
+            "run_check",
+            "consume_evidence",
+            "prepare",
+            "prevent",
+            "collect_existing",
+            "document",
+            "forbid"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "require",
+            "forbid",
+            "reuse",
+            "observe"
+          ]
+        },
+        "prevention_stage": {
+          "enum": [
+            "intake",
+            "source",
+            "integration"
+          ]
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": [
+        "id",
+        "revision",
+        "status",
+        "cause_key",
+        "scope",
+        "conditions",
+        "authority",
+        "supersedes",
+        "generalization",
+        "prevention_actions",
+        "evidence",
+        "tests"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "active",
+            "revoked",
+            "superseded"
+          ]
+        },
+        "cause_key": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "level",
+            "applies"
+          ],
+          "properties": {
+            "level": {
+              "enum": [
+                "shared",
+                "project",
+                "unknown"
+              ]
+            },
+            "applies": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "enum": [
+                  "engine",
+                  "platform",
+                  "stage",
+                  "mode",
+                  "artifact"
+                ]
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "conditions": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "inputs_changed",
+              "evidence_exists",
+              "evidence_passed",
+              "returned_delivery",
+              "new_interface",
+              "source_migration",
+              "known_failure",
+              "scope_explicit"
+            ]
+          },
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "authority": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "ref"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "user",
+                  "official",
+                  "reviewed_source"
+                ]
+              },
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "supersedes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+          }
+        },
+        "generalization": {
+          "type": "object",
+          "required": [
+            "private_fields_removed",
+            "reviewed"
+          ],
+          "properties": {
+            "private_fields_removed": {
+              "type": "boolean"
+            },
+            "reviewed": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "prevention_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "record_id",
+              "outcome"
+            ],
+            "properties": {
+              "record_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "outcome": {
+                "enum": [
+                  "failure",
+                  "fixed",
+                  "normal"
+                ]
+              }
+            }
+          }
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "record_id",
+              "passed",
+              "cost_seconds"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "record_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "passed": {
+                "type": "boolean"
+              },
+              "cost_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "exclusiveMaximum": 86400
+              }
+            }
+          }
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "before_sha256",
+              "after_sha256",
+              "content"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "before_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "after_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "content": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "prevention_limit": {
+          "type": "object",
+          "required": [
+            "external_condition",
+            "why_not_preventable",
+            "earliest_recovery_node",
+            "recovery_action",
+            "strategy"
+          ],
+          "properties": {
+            "external_condition": {
+              "type": "string",
+              "minLength": 1
+            },
+            "why_not_preventable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "earliest_recovery_node": {
+              "type": "string",
+              "minLength": 1
+            },
+            "recovery_action": {
+              "type": "string",
+              "minLength": 1
+            },
+            "strategy": {
+              "enum": [
+                "restore",
+                "degrade",
+                "bounded_retry"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "proposals": {
+      "type": "object",
+      "required": [
+        "schema",
+        "rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "production_learning_proposals.v1"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "required": [
+        "schema",
+        "id",
+        "catalog_version",
+        "formal_base_archive_sha256",
+        "records",
+        "proposals",
+        "observations"
+      ],
+      "properties": {
+        "schema": {
+          "const": "production_learning_bundle.v1"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "catalog_version": {
+          "type": "string"
+        },
+        "formal_base_archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "records": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "source",
+              "raw_sha256",
+              "payload"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "source": {
+                "type": "string"
+              },
+              "raw_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "payload": {}
+            }
+          }
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        },
+        "observations": {
+          "type": "array"
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "schema",
+        "blocked",
+        "delivery_blocking",
+        "base_identity",
+        "catalog_sha256",
+        "groups",
+        "changes",
+        "findings"
+      ],
+      "properties": {
+        "schema": {
+          "const": "production_learning_plan.v1"
+        },
+        "blocked": {
+          "type": "boolean"
+        },
+        "delivery_blocking": {
+          "const": false
+        },
+        "base_identity": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "catalog_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "groups": {
+          "type": "array"
+        },
+        "changes": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": [
+        "schema",
+        "approved",
+        "scope",
+        "plan_sha256",
+        "base_identity",
+        "approved_rule_ids",
+        "reviewer"
+      ],
+      "properties": {
+        "schema": {
+          "const": "production_learning_review.v1"
+        },
+        "approved": {
+          "const": true
+        },
+        "scope": {
+          "const": "isolated_candidate_only"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "base_identity": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "approved_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,159}$"
+          }
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "active": {
+      "type": "object",
+      "required": [
+        "schema",
+        "registry_version",
+        "catalog_version",
+        "formal_base_archive_sha256",
+        "structural_principles",
+        "rules",
+        "evidence_index",
+        "reviews",
+        "catalog_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "production_learning_active.v1"
+        },
+        "registry_version": {
+          "const": 1
+        },
+        "catalog_version": {
+          "type": "string"
+        },
+        "formal_base_archive_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "structural_principles": {
+          "type": "array"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        },
+        "evidence_index": {
+          "type": "object"
+        },
+        "reviews": {
+          "type": "array"
+        },
+        "catalog_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

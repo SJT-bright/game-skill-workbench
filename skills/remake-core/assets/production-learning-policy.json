@@ -1,0 +1,178 @@
+{
+  "schema": "production_learning_policy.v1",
+  "catalog_version": "2026-11-13.1",
+  "formal_base_archive_sha256": "647d90834ab0a14b37764c2adaa1a44ae965bb6dbb385f5b84575fddd5b1cdc1",
+  "authority": "user:current-session/production-learning-and-revoked-behaviors",
+  "protected_behaviors": [
+    {
+      "id": "full_art_receipt",
+      "targets": [
+        "full_art_receipt",
+        "art.full_receipt",
+        "complete_art_receipt"
+      ],
+      "forbidden_operations": [
+        "produce_full_art_receipt"
+      ],
+      "reason": "Do not recreate a complete art receipt after scoped changes.",
+      "status": "revoked_behavior"
+    },
+    {
+      "id": "default_video_recording",
+      "targets": [
+        "default_video_recording",
+        "video.default_recording",
+        "record_all_states"
+      ],
+      "forbidden_operations": [
+        "record_video_by_default"
+      ],
+      "reason": "Human visual checklist replaces default video recording.",
+      "status": "revoked_behavior"
+    },
+    {
+      "id": "blind_full_retest",
+      "targets": [
+        "blind_full_retest",
+        "checks.full_after_any_change",
+        "all_checks"
+      ],
+      "forbidden_operations": [
+        "run_all_checks_after_any_change"
+      ],
+      "reason": "Reuse unchanged valid evidence; check only affected units.",
+      "status": "revoked_behavior"
+    },
+    {
+      "id": "alternate_writer",
+      "targets": [
+        "alternate_writer",
+        "writer.alternate",
+        "writer.bypass"
+      ],
+      "forbidden_operations": [
+        "select_alternate_writer"
+      ],
+      "reason": "There is one canonical writer and no bypass route.",
+      "status": "revoked_behavior"
+    }
+  ],
+  "operations": [
+    "run_check",
+    "consume_evidence",
+    "prepare",
+    "prevent",
+    "collect_existing",
+    "document",
+    "forbid"
+  ],
+  "scope_axes": [
+    "engine",
+    "platform",
+    "stage",
+    "mode",
+    "artifact"
+  ],
+  "condition_facts": [
+    "inputs_changed",
+    "evidence_exists",
+    "evidence_passed",
+    "returned_delivery",
+    "new_interface",
+    "source_migration",
+    "known_failure",
+    "scope_explicit"
+  ],
+  "allowed_skills": [
+    "ad-boost",
+    "chrome-mobile-testing",
+    "cocos-game-check",
+    "cocos-game-to-english",
+    "ego-browser",
+    "grok-delegate",
+    "grok-image-review",
+    "mobile-touch-computer-use",
+    "remake-ads",
+    "remake-art",
+    "remake-core",
+    "remake-economy",
+    "remake-skins"
+  ],
+  "protected_paths": [
+    "remake-core/assets/production-learning-policy.json",
+    "remake-core/scripts/production_learning.py",
+    "remake-core/scripts/production_rule_governance.py",
+    "remake-core/assets/production-learning-active.json"
+  ],
+  "boundaries": [
+    "Collection never gates game delivery.",
+    "Only reviewed isolated maintenance candidates may change.",
+    "A named check producer and its writer consumer are different roles, not duplicate executions.",
+    "No daemon, automatic upload, installation or cross-computer background work."
+  ],
+  "scope_values": {
+    "engine": [
+      "2.x",
+      "3.x"
+    ],
+    "platform": [
+      "tiktok",
+      "bytedance",
+      "web"
+    ],
+    "stage": [
+      "intake",
+      "source",
+      "native",
+      "art",
+      "runtime",
+      "writer",
+      "handoff",
+      "delivery",
+      "maintenance"
+    ],
+    "mode": [
+      "first",
+      "returned",
+      "scoped",
+      "shared"
+    ],
+    "artifact": [
+      "source",
+      "native",
+      "web",
+      "zip",
+      "evidence",
+      "skill"
+    ]
+  },
+  "active_registry": "remake-core/assets/production-learning-active.json",
+  "structural_principles": [
+    {
+      "id": "named_check_single_producer",
+      "check_operation": "run_check",
+      "execution_role": "producer",
+      "maximum_per_overlapping_scope": 1
+    },
+    {
+      "id": "writer_consumes_named_evidence",
+      "consumer_role": "consumer",
+      "consumer_operation": "consume_evidence",
+      "forbidden_operation": "run_check"
+    },
+    {
+      "id": "experience_prevents_before_checking",
+      "role": "prevention",
+      "operations": [
+        "prepare",
+        "prevent"
+      ],
+      "earliest_stages": [
+        "intake",
+        "source",
+        "integration"
+      ],
+      "external_limit_required_when_generation_cannot_prevent": true
+    }
+  ]
+}

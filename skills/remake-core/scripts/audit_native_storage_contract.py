@@ -730,9 +730,9 @@ def unchanged_text_codec_receipt(report, trace, expected):
 # validate() still applies every earlier obligation to the unchanged raw data of an earlier receipt.
 REVIEWED_PREDECESSORS = {
     'numeric_snapshot_contract.py': ('bc89284895eafd0dd61b84cb68bdce8f4ee40307081601ed30afc31c14870d74',),
-    'maintenance_scope.py': ('61b612615382eb079994df5013b0dbf90e7064314f1f7cee68ee07cede373017',),
+    'maintenance_scope.py': ('61b612615382eb079994df5013b0dbf90e7064314f1f7cee68ee07cede373017', '0c4147f64a9a32e4f27b2a30257d86193bbbcfffe7abb07dc5db0ee276daa391'),
     'audit_native_storage_contract.py': ('35002eea8cdd657b4eb87a523ebf4ef2118a6205c90ed41501c7a666f11e439f',
-                                         '4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc', '80bc479c1f6d9c93c2ae862ea34924affe99b680b729467b0321ecd1b1659ddb'),
+                                         '4f65642d5b7c702826045f82c3896b010fcb403af510126c8b58b91d6999e3fc', '80bc479c1f6d9c93c2ae862ea34924affe99b680b729467b0321ecd1b1659ddb', '3703a36dbc934e5a84787a411ca4d3275be189e9dcc022db4be727ba022dab30'),
     'startup_storage_consumers.py': ('ab3159de99f437ff14d17e6cfd34b9d39d66c48e92c7b450e2d0d5894828edc2',),
 }
 
@@ -799,7 +799,7 @@ def validate_execution_receipt(report, trace):
     return []
 
 
-def _approve_runtime(trace, native, binding, *, replay_required=True, production_errors=()):
+def _approve_runtime(trace, native, binding, *, replay_required=True, production_errors=(), seal_scope=True):
     """Validate and execute once; consumers later rejudge the unchanged receipt.
 
     Project runners retain existing incremental plan/ledger semantics. Replaying
@@ -829,7 +829,7 @@ def _approve_runtime(trace, native, binding, *, replay_required=True, production
         report['excluded_routes'] = [name for name in ('map', 'stage_details') if observed.get('reopen_' + name) == 'not_applicable']
     except (KeyError, OSError, ValueError, AttributeError, TypeError):
         report['checked_routes'], report['excluded_routes'] = [], []
-    if not errors and trace.get('project'):
+    if not errors and seal_scope and trace.get('project'):
         from storage_scoped_reuse import seal_approval
         try:
             report['storage_scope'] = seal_approval(report, trace, native, trace['project'])
@@ -904,13 +904,21 @@ def produce_runtime_once(trace, native, binding, produced_trace):
     produced_trace.parent.mkdir(parents=True, exist_ok=True)
     with produced_trace.open('x', encoding='utf-8') as stream:
         json.dump(trace, stream, ensure_ascii=False, indent=2); stream.write('\n')
-    report = _approve_runtime(trace, native, binding, replay_required=False, production_errors=errors)
+    report = _approve_runtime(trace, native, binding, replay_required=False, production_errors=errors, seal_scope=False)
     report.update(trace=str(produced_trace), trace_sha256=digest(produced_trace),
                   production_execution={'mode': 'execute-once-then-validate', 'runs': records})
     if report.get('passed') is True and 'execution_receipt' in report:
         receipt = report['execution_receipt']
         receipt.pop('replayed', None)
         receipt.update(mode='produced-once', executed_once=list(labels))
+        # Scope identity must freeze the complete final producer receipt. Sealing
+        # the compatibility replay form before this point makes later reuse stale.
+        if trace.get('project'):
+            from storage_scoped_reuse import seal_approval
+            try:
+                report['storage_scope'] = seal_approval(report, trace, native, trace['project'])
+            except (ValueError, OSError, KeyError, TypeError) as exc:
+                report['storage_scope_status'] = {'status': 'scope_required', 'node': 'storage.native.contract', 'reason': str(exc)}
     return report
 
 

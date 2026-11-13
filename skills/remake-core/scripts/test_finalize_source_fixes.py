@@ -182,12 +182,16 @@ class MarlowsR6(unittest.TestCase):
         self.assertTrue((p / 'assets/resources/art/manifest.json').read_text().count('"imageExt": ".webp"'))
         self.assertTrue(F.check_source_record(p))                 # K5 refuses the writer
 
-    def test_imageExt_png_passes(self):
+    def test_imageExt_png_passes_image_gate_while_original_popups_stay_blocked(self):
         p = self.copy('.png')
         rec = F.finalize_source(p, 'remake', app_id=APP)
-        self.assertEqual(rec['blocks'], [], rec['blocks'])
         self.assertEqual(rec['policy'], 'new')
-        self.assertEqual(F.check_source_record(p), [])
+        self.assertFalse(any(b['id'] == 'IMG0_source_images' for b in rec['blocks']), rec['blocks'])
+        # First source now installs GameUIKit before scanning. The archived
+        # fixture's hand-built popups still need adoption; an image-only fix
+        # must not promote that unrelated UI issue into a ready source record.
+        self.assertEqual([b['id'] for b in rec['blocks']], ['K_ui_handmade_popup'])
+        self.assertTrue(F.check_source_record(p))
 
 
 class RecordedOptions(WF.KitInSync):

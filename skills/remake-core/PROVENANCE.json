@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-13.english-simple.11.17.29",
+  "revision": "2026-11-13.english-simple.11.17.30",
   "skill": "remake-core",
-  "previous_provenance_sha256": "c59efb4e7f7a580e52f98e9c76940fcd8d18884dd450906a4217f49ed6f36534",
+  "previous_provenance_sha256": "1e8ae40fc4c6dfddb2cefebb1f4f7fb6b27540fa5f6ed55d3285d4934f70e75f",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -762,6 +762,16 @@
       "bytes": 8798
     },
     {
+      "path": "assets/production-learning-active.json",
+      "sha256": "168ea05aaa821c8f53838c305564f3aa44763430671514224658310cf26b3815",
+      "bytes": 1183
+    },
+    {
+      "path": "assets/production-learning-policy.json",
+      "sha256": "88f7aac4c961710dc866903cd4e46279f234a965eff63d9169d00f01dad412a4",
+      "bytes": 4339
+    },
+    {
       "path": "assets/production-task-template.md",
       "sha256": "2ea9bf67c190b0cd696bb542bd25f521f8314e301b6164de2fe6341562a63024",
       "bytes": 947
@@ -913,8 +923,8 @@
     },
     {
       "path": "references/executable-regression-retention.md",
-      "sha256": "e39938a3a0c4d1204b556c5dae1bee606ad5a4c13566def19a8abba6f1f8e6dc",
-      "bytes": 3933
+      "sha256": "0bb1ede9348c5cf1af22f589f11297230f762685c147d33c2ffe7199887d0eb2",
+      "bytes": 4337
     },
     {
       "path": "references/execution-budget.md",
@@ -1042,9 +1052,19 @@
       "bytes": 12761
     },
     {
+      "path": "references/production-learning.md",
+      "sha256": "e850524f2ea6a6094395c16c843a40f6cb3da3ed672097322a04dceb7fe58cfe",
+      "bytes": 8453
+    },
+    {
+      "path": "references/production-learning.schema.json",
+      "sha256": "85b38bda22d9fa49b900f804e88aa2b2f2cf390f41a2da1c38a1b9b40372b60f",
+      "bytes": 13680
+    },
+    {
       "path": "references/production-plan.md",
-      "sha256": "9aefea5704b95fb860b38223d15bedd754de9aaab8d704036c236d6da1c5885d",
-      "bytes": 9278
+      "sha256": "67725d016aa0be17e2c085dcd6c546defca1ee8c1614e175d90a808d79ab90cf",
+      "bytes": 9851
     },
     {
       "path": "references/project-qa-registration.md",
@@ -1060,6 +1080,11 @@
       "path": "references/regression-scope-gate.md",
       "sha256": "a9a28e39d1f9326a95d1f00d6fdf08850e96b61cdcc0b39cfa0a2bd155b031a1",
       "bytes": 13740
+    },
+    {
+      "path": "references/resource-package-prepare.md",
+      "sha256": "da126e52863d50f3cbece46e422e7815cfc2c0218d6c83eabe0d972e769f3b25",
+      "bytes": 11031
     },
     {
       "path": "references/returned-art-delivery.md",
@@ -1083,8 +1108,8 @@
     },
     {
       "path": "references/single-writer.md",
-      "sha256": "52edecff08f14472391385101f0a7c04eebed1c013393c3e140c579e2791425e",
-      "bytes": 6962
+      "sha256": "1a1dd248a623dff7cdf27d0b1a6f1fd82bc573b0ef51dc1245fcd8b12fe7e6f6",
+      "bytes": 7520
     },
     {
       "path": "references/stage-flow.md",
@@ -1138,8 +1163,8 @@
     },
     {
       "path": "references/workflow-tools.md",
-      "sha256": "923245d5700ce88a9383f218ccb24813d60a907c3c38771cd14fae6dc29acb4f",
-      "bytes": 21932
+      "sha256": "051a7a4e00161595b49f1238433306f2ff9e9eeca1b23815a332b0374f86be6c",
+      "bytes": 22427
     },
     {
       "path": "scripts/ad_nodes_gate.py",
@@ -1428,8 +1453,8 @@
     },
     {
       "path": "scripts/audit_native_storage_contract.py",
-      "sha256": "3703a36dbc934e5a84787a411ca4d3275be189e9dcc022db4be727ba022dab30",
-      "bytes": 47429
+      "sha256": "96eb89de2c4ce38c705d87f0b5f500d31199962a3511e6fc25ba6bed506d830d",
+      "bytes": 62114
     },
     {
       "path": "scripts/audit_new_english_images.py",
@@ -1508,8 +1533,8 @@
     },
     {
       "path": "scripts/audit_runtime_resources.py",
-      "sha256": "f050caf469e1aadac1a6ff0902ebaca2c234e6a704a4287b3d6c9ea43f224624",
-      "bytes": 45719
+      "sha256": "ff4eff2c46e2ad0c2e6791ed753e018d6300fff1dcfb2e1c366d1b5a31b4e461",
+      "bytes": 50156
     },
     {
       "path": "scripts/audit_share_entries.py",
@@ -1908,8 +1933,8 @@
     },
     {
       "path": "scripts/maintenance_scope.py",
-      "sha256": "0c4147f64a9a32e4f27b2a30257d86193bbbcfffe7abb07dc5db0ee276daa391",
-      "bytes": 17022
+      "sha256": "8068266f64616022dd4a47489c5aacd7aee847ad0cf265748f804867960e908a",
+      "bytes": 17629
     },
     {
       "path": "scripts/make_contact_sheet.py",
@@ -2182,6 +2207,21 @@
       "bytes": 20757
     },
     {
+      "path": "scripts/production_hooks.py",
+      "sha256": "8fae06229900e54f35b23b466ea93a71c07a420bbb76c2d580a1bf2a1508af4e",
+      "bytes": 3422
+    },
+    {
+      "path": "scripts/production_learning.py",
+      "sha256": "2d208a39b66aa2f933bc2894777cac48eea68d025d749f57b362eaff0bc0d4a6",
+      "bytes": 16578
+    },
+    {
+      "path": "scripts/production_rule_governance.py",
+      "sha256": "c04c532a53c76eddd029c01832a6f90435dccc4351c11aea3708c6170e30de1b",
+      "bytes": 30905
+    },
+    {
       "path": "scripts/project_qa.py",
       "sha256": "55e9e99df39b5e2efd3cdf0f76b224ed863ccba0a4e644bb522a4957ebbcdc75",
       "bytes": 17089
@@ -2205,6 +2245,16 @@
       "path": "scripts/regression_scope_gate.py",
       "sha256": "1c91ef2927e92de542a8f85def46bdf1248d29fbed1f224c5212562875598e30",
       "bytes": 39348
+    },
+    {
+      "path": "scripts/resource_package_prepare.cjs",
+      "sha256": "b313ad4fdac9bd9d5af269577e4acccf90e4dc13a0d1f89b403e7bc1f2bbce10",
+      "bytes": 5653
+    },
+    {
+      "path": "scripts/resource_package_prepare.py",
+      "sha256": "8755ba10a52f51b59e13ac010e2a2811d4bd44698511d82ae2663ea8ec878425",
+      "bytes": 50200
     },
     {
       "path": "scripts/returned_art_acceptance.py",
@@ -2348,8 +2398,8 @@
     },
     {
       "path": "scripts/storage_scoped_reuse.py",
-      "sha256": "6a58e411590495ace5a05025dc7bef8866ee8af3fd1be3fe567388cb3c67f826",
-      "bytes": 20551
+      "sha256": "8336095512bb86c98b24934485fe7ab59a4fb3538233392e220b3d36e5e62dcd",
+      "bytes": 22438
     },
     {
       "path": "scripts/subset_fonts.py",
@@ -2763,8 +2813,8 @@
     },
     {
       "path": "scripts/test_finalize_source_fixes.py",
-      "sha256": "465289aa9f0caaadfedcc264d373f5f773902a6d88d6c6db922aa926d249f94c",
-      "bytes": 17473
+      "sha256": "24ac13f90767f7083fa5d6115d1f1965d2be3c33eb9b929aeb1787b98c8d0782",
+      "bytes": 17872
     },
     {
       "path": "scripts/test_finalize_sync.py",
@@ -3042,6 +3092,11 @@
       "bytes": 5906
     },
     {
+      "path": "scripts/test_native_storage_produced_once.py",
+      "sha256": "a0483ca247b18b37280d0caa8a6c85f4c3c30df0e4fbbe4c5f41c420c76563cd",
+      "bytes": 6438
+    },
+    {
       "path": "scripts/test_native_storage_upgrade_contract.py",
       "sha256": "1d9e599838bd724b12021ef31021bc2fd14e541126bbd64140b7e08d7e4d6be5",
       "bytes": 32787
@@ -3252,6 +3307,16 @@
       "bytes": 6806
     },
     {
+      "path": "scripts/test_production_hooks.py",
+      "sha256": "8649cbaaba98b06cba9a74b0db908601e513d36db126fd226f843bf9da265fa8",
+      "bytes": 3812
+    },
+    {
+      "path": "scripts/test_production_learning.py",
+      "sha256": "d749ae77682c6c793996321401b64fb542c9262fe34baf1ae82f97a56bed02fc",
+      "bytes": 22268
+    },
+    {
       "path": "scripts/test_project_qa.py",
       "sha256": "84f9da59c23a0076dce676556a64c9512d0420993f571324272f7ff2b613cfc2",
       "bytes": 7738
@@ -3348,8 +3413,8 @@
     },
     {
       "path": "scripts/test_regression_scope_gate.py",
-      "sha256": "1c90b7c8e688783b846d2db30316f4250cea8576ee41afc8009e9f17e9748d81",
-      "bytes": 20376
+      "sha256": "568c3b0dafb898267e903df45ab52c43d1d78272ad5794270f76fd0b5d8c5a84",
+      "bytes": 20395
     },
     {
       "path": "scripts/test_res_keys.py",
@@ -3360,6 +3425,11 @@
       "path": "scripts/test_resource_adaptation.py",
       "sha256": "32705049c7ed280d8c1512ee219f89e01331cfd3f3e1f7853c5ff6ee9dbb2dcd",
       "bytes": 22608
+    },
+    {
+      "path": "scripts/test_resource_package_prepare.py",
+      "sha256": "73aa6d7ad3cea07e66a78b8408e6377620f91482cb1e6c8a7db255e5100002f3",
+      "bytes": 22277
     },
     {
       "path": "scripts/test_returned_art_acceptance.py",
@@ -3455,6 +3525,11 @@
       "path": "scripts/test_source_stage_gates.py",
       "sha256": "72a5a4c469ddd279919874ec8c622d64dd5e3139ec9a6ac14181c07e71ea98a9",
       "bytes": 8741
+    },
+    {
+      "path": "scripts/test_source_sync_convergence.py",
+      "sha256": "f1601112e18cce44cbb707f61b0b2e50202762e20d2521f2181dec66551a3f9f",
+      "bytes": 3956
     },
     {
       "path": "scripts/test_spine_atlas_binding.py",
@@ -3608,8 +3683,8 @@
     },
     {
       "path": "scripts/test_ui_kit_scan.py",
-      "sha256": "21153b05c4dd58eeedab7fe803fd766d001bf22bdeefea5030eb510176405202",
-      "bytes": 8165
+      "sha256": "e6c2315cc5ee907597a8c1705e7d1c2b24bbfb9dc9799349049851590ba878d9",
+      "bytes": 8327
     },
     {
       "path": "scripts/test_ui_kit_scan_r4n4.py",
@@ -3703,8 +3778,8 @@
     },
     {
       "path": "scripts/tiktok_finalize.py",
-      "sha256": "ee440deea4b8243b3e6c4299d1ebf42a7d50f9bb8937a4a08de6a35d586b9ab0",
-      "bytes": 52200
+      "sha256": "d537d20a945dce95396c4d62bade4c6ef1b3e8c399de4792a26c35c0e7936afb",
+      "bytes": 55683
     },
     {
       "path": "scripts/tiktok_finalize_steps/__init__.py",

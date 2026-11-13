@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T07:18:06.292Z",
-  "treeHash": "511eaa42637c2a1ae4ea99243dafa9f3b9c3d34831ddc8eb85e948f2ddd322ea",
+  "createdAt": "2026-11-13T07:18:45.366Z",
+  "treeHash": "d90c2cf2ddf58500f4920c059d0e91435d9cbf215b970475f63c37448d7f8eca",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3741,14 +3741,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "3a96c2d4da473a1d58db9ad5488a50e2b863dd9c9506adf7c24090259f4d2eb7",
-      "fileCount": 743,
-      "bytes": 13872875,
+      "treeHash": "2678e65e1f9afd5946d14c3da7bd5cfde04c4b0f70a503aee3d1a22bfd0d4182",
+      "fileCount": 744,
+      "bytes": 13886171,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a1cba4d2f1a6cb822e3c35f72a932d37e948b1d1f6eaae2177799bcb9e4bd3cd",
-          "size": 191095,
+          "hash": "9c98b4771f28d6ad0e5a3f0ef3391e3b903742450fe1d6c94cd63989b0e47022",
+          "size": 191843,
           "executable": false
         },
         {
@@ -4803,8 +4803,8 @@
         },
         {
           "path": "references/cross-platform-runtime-contract.md",
-          "hash": "3837d3d4d5394cac664742e2337ddc8932d49717a37c9c3b7d7c008be5884058",
-          "size": 14743,
+          "hash": "399ca297abe6547189ded6beb17587d7071a320d77ac7b2a486423efebc06a50",
+          "size": 15581,
           "executable": false
         },
         {
@@ -4971,8 +4971,8 @@
         },
         {
           "path": "references/production-baseline.md",
-          "hash": "21be0f107379504ea8e49f60570078810a2f7faf9959801992fa7656fad5de6c",
-          "size": 12615,
+          "hash": "dd70cd03782e87fa899f42760bfe8d56c77b274c981278d355155b432c29627a",
+          "size": 12761,
           "executable": false
         },
         {
@@ -5025,8 +5025,8 @@
         },
         {
           "path": "references/startup-storage-consumer-gate.md",
-          "hash": "3e30b440e68848aa40d9e2a510e55f9f888309b6ade966edfb838dc73129ed4a",
-          "size": 8782,
+          "hash": "3fb11aebed26504c7c4fa972d4454a50f38073b70027858624f3f69e9f906cc1",
+          "size": 9044,
           "executable": false
         },
         {
@@ -5595,7 +5595,7 @@
         },
         {
           "path": "scripts/check-ledger-rule-compat.json",
-          "hash": "237eb039d1badf3e2048c771e62478c8aff288f136919f12586a277ae377de4a",
+          "hash": "85cd731d72f57eb26e62567b5e68b9543463916a7b04a5e4a8a05a1defecfdcb",
           "size": 915,
           "executable": false
         },
@@ -6219,8 +6219,8 @@
         },
         {
           "path": "scripts/preview_audio_startup.py",
-          "hash": "6bfc9a09d1f59a615d0b84f7d346bce8b4bdac18b62aba3d11a2379b2f2b73b4",
-          "size": 13029,
+          "hash": "6752fa8d9f11782f0f267e05c83121e9fd06474e7f44daed539faae3026fe883",
+          "size": 13194,
           "executable": false
         },
         {
@@ -7619,6 +7619,12 @@
           "path": "scripts/test_returned_art_acceptance.py",
           "hash": "aa9db628685f6e8168dc500ac20ecf5320e8f66657c806fe9f1a61e60492e3d0",
           "size": 19228,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_reviewed_incremental_updates.py",
+          "hash": "b80f064fe3e63738eafaabb416d97c67130690487928d008131c4a50010443e8",
+          "size": 11137,
           "executable": false
         },
         {

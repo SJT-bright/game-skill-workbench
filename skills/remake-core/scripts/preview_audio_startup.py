@@ -30,7 +30,8 @@ async function collectPreviewAudio(p) {
     if(b&&b.enabled!==false&&b.interactable!==false&&/^(play|playbutton|btnplay|start|startbutton|startgame|start_1|opensettings|settingsbutton)$/i.test(n.name))found.push(n);
     (n.children||[]).forEach(visit);
    }
-   visit(scene);const n=found.find(n=>/^playbutton$/i.test(n.name))||found[0];
+   visit(scene);const n=found.find(n=>/^playbutton$/i.test(n.name))||
+    found.find(n=>/^(play|btnplay|start|startbutton|startgame|start_1)$/i.test(n.name))||found[0];
    // Cocos 2.x Web exports use cc.game.canvas; native browser hosts expose window.canvas.
    if(!n||typeof n.getBoundingBoxToWorld!=='function'||!c.view.getVisibleSize)return null;
    const canvas=c.game&&c.game.canvas||window.canvas;if(!canvas||!canvas.width||!canvas.height)return null;
@@ -44,7 +45,7 @@ async function collectPreviewAudio(p) {
   if(at){
    await p.cdp('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:at.x,y:at.y,id:0,radiusX:1,radiusY:1,force:1}]});
    await p.cdp('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-   action={kind:'ordinary_play_touch',...at};
+   action={kind:/^(opensettings|settingsbutton)$/i.test(at.node)?'ordinary_settings_touch':'ordinary_play_touch',...at};
   }
  }
  let after=await snapshot(),sample=after;

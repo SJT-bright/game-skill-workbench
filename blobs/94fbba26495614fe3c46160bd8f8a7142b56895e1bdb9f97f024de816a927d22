@@ -1,0 +1,12 @@
+{
+  "schema": "startup-formal-observer-tools-fixture.v1",
+  "release": "11.17.28",
+  "archive_sha256": "d5350b57632bcd1a289c443d9b241b9a020b08f277c33586649bd41bf046b988",
+  "tool_sha256": "540a860970a683fdc937869a5b43034182e7f26d3ceaad7ce526869f4d8122fa",
+  "root_files": {
+    "native_startup_ledger.py": "9cdd611513e38a605592fdfb19fbb77fea418c03ba06724ade875ce5585b069b",
+    "audit_native_startup_renderer.py": "e041fb43e87104eab9bbea2d4a984ef1f30ee0477b242ff829dd738432d3cc2c",
+    "cocos3_native_renderer_contract.py": "678a49a9379153a16f865508a77c409079c4979233b67d975543e6f6dbe703b0"
+  },
+  "method": "Actual formal 11.17.28 check_ledger.tool_fingerprint over native_startup_ledger, renderer, Cocos3 contract with original transitive imports; no observer execution."
+}

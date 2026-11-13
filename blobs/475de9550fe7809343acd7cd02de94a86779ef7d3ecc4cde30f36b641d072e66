@@ -1,0 +1,12 @@
+{
+  "base_zip_sha256": "d5350b57632bcd1a289c443d9b241b9a020b08f277c33586649bd41bf046b988",
+  "contract_files": {
+    "audit_native_storage_contract.py": "80bc479c1f6d9c93c2ae862ea34924affe99b680b729467b0321ecd1b1659ddb",
+    "maintenance_scope.py": "61b612615382eb079994df5013b0dbf90e7064314f1f7cee68ee07cede373017",
+    "startup_business_contract.py": "c8600b73ea380b841e5d7d9065b4053a35c76a7dff8bf1ac8f6b9d42173ee007",
+    "startup_storage_consumers.py": "3c832d4be8447f87e177cf27102d6374bf2b28ec684f389ca4ac68608d454ed8",
+    "scan_storage_consumers.cjs": "b31e37f94db9c47d0646fbfcf5f9a394e99e27b3a28ec8b1d5c9b995ea9f4805",
+    "vendor/acorn.cjs": "fdb08546776ec6228b03e8d02b40d4ab3255bae5f401adba7ff5dad927ac5c9c",
+    "numeric_snapshot_contract.py": "bc89284895eafd0dd61b84cb68bdce8f4ee40307081601ed30afc31c14870d74"
+  }
+}

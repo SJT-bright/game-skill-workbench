@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.20",
+  "revision": "2026-11-12.english-simple.11.17.28",
   "skill": "mobile-touch-computer-use",
   "previous_provenance_sha256": "e691ef5d5e21da063b5930f32fa28ebd3868d9205462e8621e070d0c3312777b",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
@@ -41,5 +41,13 @@
       "bytes": 6276
     }
   ],
-  "parent_release_sha256": "0dffc1f86bc770211d9d39cc379e958eadafda1f62e3839bd8443262a42a4b32"
+  "parent_release_sha256": "0dffc1f86bc770211d9d39cc379e958eadafda1f62e3839bd8443262a42a4b32",
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
 }

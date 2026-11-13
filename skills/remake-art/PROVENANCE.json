@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-12.english-simple.11.17.28",
+  "revision": "2026-11-13.english-simple.11.17.30",
   "skill": "remake-art",
   "previous_provenance_sha256": "be0af96f4d2c6b10b25da02478d15a366e5923c2a1c9c60e26eb27a2b10b235c",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "9fc5011c5300ae010d5657df01eecd998891eca7657fa5c1cac3a7cb82245f53",
-      "bytes": 26377
+      "sha256": "1124e55465bb05ec15cefa32b859a8f22cbcd298455b2fef5d9004de78d98ee0",
+      "bytes": 27874
     },
     {
       "path": "agents/openai.yaml",
@@ -47,23 +47,23 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
-      "bytes": 5543
+      "sha256": "e6c480b2ead5c45eb0ea35c4023a835ae7f164ad6c67c10ef8ee9395d0d557c7",
+      "bytes": 5574
     },
     {
       "path": "references/art-iteration-workflow.md",
-      "sha256": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae",
-      "bytes": 13026
+      "sha256": "aa893c65c15b6420a819b0e0074ba5a55edf659df6d897dd4f0aaef7cadcf1b2",
+      "bytes": 7804
     },
     {
       "path": "references/artwork-and-feedback.md",
-      "sha256": "b6a406695c663159cda7278b9b36f403a1a0a94a43d1bf250b8f4fd34ae3c5cc",
-      "bytes": 25122
+      "sha256": "6a53ebfbc15719f78275a809baf3e2d81e1223d77ac646cfbb111dd86156953b",
+      "bytes": 24316
     },
     {
       "path": "references/atlas-slice-integrity.md",
-      "sha256": "3feb5d159c46a81b718a249c13b0ee57c1471d60f518e108faa27c5bbfb86734",
-      "bytes": 17950
+      "sha256": "e49e9e0e2fdbfcb3b26a96ed9d2d730a82603e498492fcced0a18c891e6864cc",
+      "bytes": 19006
     },
     {
       "path": "references/button-group-review.md",
@@ -117,8 +117,8 @@
     },
     {
       "path": "references/full-visual-review.md",
-      "sha256": "d7c79c7beb52384e815860c4d9c6bbf07956cf6bad8ea39592f7bd9144cf1e01",
-      "bytes": 11392
+      "sha256": "11e2ec0421cd4af0155f87e15468fb88a77b3f92135a0f4d3ab2638b7aa04a3d",
+      "bytes": 11404
     },
     {
       "path": "references/home-by-gameplay.md",
@@ -127,8 +127,8 @@
     },
     {
       "path": "references/large-background-static-review.md",
-      "sha256": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
-      "bytes": 2140
+      "sha256": "4a7ac7eeef8a873a750d21d2c3dd1122fdb39a24db7c8e8bc956fb93aa9a1f57",
+      "bytes": 2254
     },
     {
       "path": "references/local-ui-contract.md",
@@ -142,13 +142,13 @@
     },
     {
       "path": "references/new-feature-ui.md",
-      "sha256": "0a89871b2a1dd2f7aaccdadf8ac7e49e693157e1a04cdab2ce5f175c97898758",
-      "bytes": 4371
+      "sha256": "14623b95fadd518a50ce5b3019355e718a03303460206094bc0919c1ad8666c0",
+      "bytes": 5032
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "213a5a8de68d5333f0ac524d94c0d976c0ad326b89a3d61a0194924ae79a0370",
-      "bytes": 95649
+      "sha256": "21025939eedc09a986a643f1d58f154c88a4572753972013b3430717218e83c9",
+      "bytes": 95159
     },
     {
       "path": "references/panel-composite-review.md",
@@ -162,18 +162,18 @@
     },
     {
       "path": "references/production-check-link.md",
-      "sha256": "91611881c153f67ceee7df826cb6a2364ce6cd159654a166f5647857ac459d46",
-      "bytes": 13219
+      "sha256": "243b52a622f7ffc28fd1e2610ee360dba98cffbd7d735798ff45f7eb2b3b9ea9",
+      "bytes": 8363
     },
     {
       "path": "references/production-prevention.md",
-      "sha256": "5369338e671dc7c2d2db77b20df93457ce4ccbe8285ed569bf47edfb7e4b7fcc",
-      "bytes": 35324
+      "sha256": "c2a23dc11fd08577ec582e5724e5d65bb4b9fca6a645658545a0d61da8dfb915",
+      "bytes": 39135
     },
     {
       "path": "references/saul-art-rules.md",
-      "sha256": "ecfc189627369c619f8e637d1b1de88d9919fa1c55a8e7e1e965230498f88be1",
-      "bytes": 50521
+      "sha256": "765666bf780e8b494aebb0341aee1a5e2f8c8f4d10fbfe3da5b70a6035e1d3fb",
+      "bytes": 50574
     },
     {
       "path": "references/standalone-alpha-review.md",
@@ -232,8 +232,8 @@
     },
     {
       "path": "scripts/check_native_sprite_sources.py",
-      "sha256": "8e8f956591134007a051ab69a8a96f1cda463f5cfe5a3a106c8f7e8e08766476",
-      "bytes": 15693
+      "sha256": "dd60ee326bfe0b6a037e5cb18ef86e9403b858e4a6393b5d7d28e1dc78ea4a67",
+      "bytes": 20460
     },
     {
       "path": "scripts/check_phone_boundary.py",
@@ -279,6 +279,11 @@
       "path": "scripts/test_bind_art_slot.py",
       "sha256": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
       "bytes": 8953
+    },
+    {
+      "path": "scripts/test_bitmap_font_sprite_sources.py",
+      "sha256": "6a3f9cc87759736b5bd9e5d3c5be93a2454f3d19ed229194eda598220be566e2",
+      "bytes": 2955
     },
     {
       "path": "scripts/test_clean_glow.py",
@@ -495,15 +500,146 @@
         "quality_functions_unchanged": 15,
         "whole_game_time_saving_measured": false
       }
+    },
+    {
+      "id": "art-once-and-incremental.20261113.1",
+      "installed_at": "2026-11-13T11:19:38.116684+00:00",
+      "authority": "用户 2026-11-13 明确停止游戏，只优化检查器并更新英化 Skill，消除返工与重复验收循环。",
+      "scope": "Individual full-size source planning; configurable advisory clarity; one frozen-batch formal first-piece and shared full capture; original evidence inheritance, checkpointing and current-rule replay without regeneration.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "9fc5011c5300ae010d5657df01eecd998891eca7657fa5c1cac3a7cb82245f53",
+          "sha256": "7c1e55f31334d95dda1354b6abf463ad66a2d3b859eccb313223160bb657efa0",
+          "bytes": 26909
+        },
+        {
+          "path": "references/art-before-trial.md",
+          "before_sha256": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+          "sha256": "e6c480b2ead5c45eb0ea35c4023a835ae7f164ad6c67c10ef8ee9395d0d557c7",
+          "bytes": 5574
+        },
+        {
+          "path": "references/art-iteration-workflow.md",
+          "before_sha256": "905bc8b2b5b79d90f45ce282e33b0a7bdfd2e20a143fcc83a9b457162862d1ae",
+          "sha256": "aa893c65c15b6420a819b0e0074ba5a55edf659df6d897dd4f0aaef7cadcf1b2",
+          "bytes": 7804
+        },
+        {
+          "path": "references/artwork-and-feedback.md",
+          "before_sha256": "b6a406695c663159cda7278b9b36f403a1a0a94a43d1bf250b8f4fd34ae3c5cc",
+          "sha256": "6a53ebfbc15719f78275a809baf3e2d81e1223d77ac646cfbb111dd86156953b",
+          "bytes": 24316
+        },
+        {
+          "path": "references/full-visual-review.md",
+          "before_sha256": "d7c79c7beb52384e815860c4d9c6bbf07956cf6bad8ea39592f7bd9144cf1e01",
+          "sha256": "11e2ec0421cd4af0155f87e15468fb88a77b3f92135a0f4d3ab2638b7aa04a3d",
+          "bytes": 11404
+        },
+        {
+          "path": "references/large-background-static-review.md",
+          "before_sha256": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+          "sha256": "4a7ac7eeef8a873a750d21d2c3dd1122fdb39a24db7c8e8bc956fb93aa9a1f57",
+          "bytes": 2254
+        },
+        {
+          "path": "references/new-feature-ui.md",
+          "before_sha256": "0a89871b2a1dd2f7aaccdadf8ac7e49e693157e1a04cdab2ce5f175c97898758",
+          "sha256": "daa08ba4980519ba71c280d49c1637ecf617d611c45de82190a0d9968c2d905d",
+          "bytes": 4588
+        },
+        {
+          "path": "references/page-richness.md",
+          "before_sha256": "213a5a8de68d5333f0ac524d94c0d976c0ad326b89a3d61a0194924ae79a0370",
+          "sha256": "21025939eedc09a986a643f1d58f154c88a4572753972013b3430717218e83c9",
+          "bytes": 95159
+        },
+        {
+          "path": "references/production-check-link.md",
+          "before_sha256": "91611881c153f67ceee7df826cb6a2364ce6cd159654a166f5647857ac459d46",
+          "sha256": "8cdcc9a699865fca05b60a2a8791345381ea3c415f9b01164fe0076b2fcbc721",
+          "bytes": 7397
+        },
+        {
+          "path": "references/production-prevention.md",
+          "before_sha256": "5369338e671dc7c2d2db77b20df93457ce4ccbe8285ed569bf47edfb7e4b7fcc",
+          "sha256": "e3fbbae91e0502eabefcfff85e095cf14aee40f86314c3623aedf00b3599228b",
+          "bytes": 35650
+        },
+        {
+          "path": "references/saul-art-rules.md",
+          "before_sha256": "ecfc189627369c619f8e637d1b1de88d9919fa1c55a8e7e1e965230498f88be1",
+          "sha256": "765666bf780e8b494aebb0341aee1a5e2f8c8f4d10fbfe3da5b70a6035e1d3fb",
+          "bytes": 50574
+        },
+        {
+          "path": "scripts/check_native_sprite_sources.py",
+          "before_sha256": "8e8f956591134007a051ab69a8a96f1cda463f5cfe5a3a106c8f7e8e08766476",
+          "sha256": "dd60ee326bfe0b6a037e5cb18ef86e9403b858e4a6393b5d7d28e1dc78ea4a67",
+          "bytes": 20460
+        },
+        {
+          "path": "scripts/test_bitmap_font_sprite_sources.py",
+          "before_sha256": null,
+          "sha256": "6a3f9cc87759736b5bd9e5d3c5be93a2454f3d19ed229194eda598220be566e2",
+          "bytes": 2955
+        }
+      ],
+      "verification": "Targeted synthetic tool tests and independent forward validation; see local release receipt. No real game or device acceptance asserted."
+    },
+    {
+      "id": "art-assembly-gap.20261113.1",
+      "installed_at": "2026-11-13T12:21:06.487524+00:00",
+      "authority": "用户明确要求将本次九宫格奖励栏与HINT缩略图漏检修进美工Skill，审查原因与其他Skill冲突并验证有效。",
+      "scope": "Runtime assembly ownership, actual positions and source-role checks. Distinguish stretch center from content-safe and name hints from reviewed caption declarations. Preserve required visual review in existing reports/first-piece/look_list without new full loops.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "before_sha256": "7c1e55f31334d95dda1354b6abf463ad66a2d3b859eccb313223160bb657efa0",
+          "sha256": "1124e55465bb05ec15cefa32b859a8f22cbcd298455b2fef5d9004de78d98ee0",
+          "bytes": 27874
+        },
+        {
+          "path": "references/atlas-slice-integrity.md",
+          "before_sha256": "3feb5d159c46a81b718a249c13b0ee57c1471d60f518e108faa27c5bbfb86734",
+          "sha256": "e49e9e0e2fdbfcb3b26a96ed9d2d730a82603e498492fcced0a18c891e6864cc",
+          "bytes": 19006
+        },
+        {
+          "path": "references/production-check-link.md",
+          "before_sha256": "8cdcc9a699865fca05b60a2a8791345381ea3c415f9b01164fe0076b2fcbc721",
+          "sha256": "243b52a622f7ffc28fd1e2610ee360dba98cffbd7d735798ff45f7eb2b3b9ea9",
+          "bytes": 8363
+        },
+        {
+          "path": "references/production-prevention.md",
+          "before_sha256": "e3fbbae91e0502eabefcfff85e095cf14aee40f86314c3623aedf00b3599228b",
+          "sha256": "345f917e0426e7ae95f6638a71238ffdf7ac6aa3e999a11ae343bc6af56b0857",
+          "bytes": 38048
+        }
+      ],
+      "verification": {
+        "related_tests": 69,
+        "independent_controls": 9,
+        "real_original_captures": 44,
+        "game_edited": false,
+        "evidence": "local release validation.json; no game artwork acceptance asserted"
+      }
+    },
+    {
+      "id": "art-non-dark-first-text.20261113.1",
+      "scope": "Art generation only: non-dark glyph cores, first-pass fixed words and generated reward glyphs; no new final gate."
     }
   ],
-  "previous_local_provenance_sha256": "e46ed048ab9f8acf553ae2304ee789a765321a140678f51025e816d2cd4bc9d3",
+  "previous_local_provenance_sha256": "f1d3e950f6344193bb9d0d2ef53c002950669e20ad2f2de555be7001e5570478",
   "release_integration": {
-    "release": "11.17.28",
+    "release": "11.17.30",
+    "previous_release": "11.17.29",
     "patch_ids": [
-      "rule-wording-unify.20261112.1",
-      "storage-nonblocking-and-four-deliverables.20261112.1"
+      "art-assembly-gap.20261113.1"
     ],
-    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
-  }
+    "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
+  },
+  "overlay_release": "art-non-dark-first-text.20261113.1"
 }

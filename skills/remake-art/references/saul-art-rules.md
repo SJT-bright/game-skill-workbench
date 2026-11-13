@@ -138,7 +138,7 @@
 
 | 规则 | 原话 | 怎么查 |
 |---|---|---|
-| 不模糊、无锯齿、无图集碎片、无棋盘格假透明；生成图按显示尺寸出够大的图，不拿小图放大 | "图中的这个采用生成后的图片放大导致图片分辨率极低的画面问题你现在立马仔细的识别出来"（Tilly's Button Boutique，10-24；修复时定：背景至少 1.5 倍、Sprite 至少 2 倍显示尺寸） | `low_res`、`audit_image_clarity.py`、`audit_atlas_slices.py`、`checker_fill` |
+| 不模糊、无锯齿、无图集碎片、无棋盘格假透明；生成图按显示尺寸出够大的图，不拿小图放大 | "图中的这个采用生成后的图片放大导致图片分辨率极低的画面问题你现在立马仔细的识别出来"（Tilly's Button Boutique，10-24 的历史修复采用背景 1.5x、Sprite 2x；现行默认改为 1:1 advisory，strict 仅显式选择，见清晰度策略） | `low_res`、`audit_image_clarity.py`、`audit_atlas_slices.py`、`checker_fill` |
 | 每张显示中的贴图都切干净：不带邻图残片、残线，四周留透明安全边；图片字、局内棋子、投射物、障碍也要查 | "这部分的画面的折叠问题，呃，没切干净"（Mabel's Bus Stop Bustle，10-25）；"图中的这个画面图片剪切痕迹严重问题你现在立马仔细的识别出来，你想想这个问题出现的原因，有没有从源头就能避免这个问题出现的方法"（Ingrid's Snowball Stack，10-26）；"切图问题优化下"（同一款，连续第三轮） | 独立 PNG：`check_native_sprite_sources.py`（按 dump 里实际显示的帧查，背景除外）；图集切片：`audit_atlas_slices.py`，icon_/node_/btn_/digit_ 开头的按一个主体查，其余切片按 `scope_body` 查截断（`connected_body_cut_by_rect`）和贴边残片（`edge_fragment`），v7.8 起；第三版起 TexturePacker/Cocos 的 .plist 图集也查（见 `atlas-slice-integrity.md`） |
 | 按钮、角色等比显示；九宫格只拉中间 | "人物皮肤有一点挤压，需要更改"（潜水员下潜，10-30） | `squashed_picture` |
 | 物件贴图背后不留占位色块、色圆 | "这个图案它后面不要有红色的这个标，就是真实的一个草莓的贴图"（BobbysBeat，10-28） | 看图 |

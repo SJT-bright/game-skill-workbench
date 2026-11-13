@@ -138,10 +138,23 @@ def check(root,names,role='single_body'):
     status='incomplete' if missing or errors or not rows else 'needs_review' if review else 'no_signals'
     return {'input':str(root),'status':status,'passed':status=='no_signals','checked':len(rows),'missing':missing,'errors':errors,'rows':rows,'candidate_counts':candidate_counts,'runtime_binding':'not_assessed','art_verdict':'not_assessed','coverage':'all discovered distinct PNG/JPEG source textures or standalone Cocos2 export PNGs for each named frame; name collisions are exhaustively inspected, not resolved to runtime bindings; actual frame rect and whole-page composition need project observation'}
 
+def observed_dump_files(dumps, project=None):
+    """Mixed evidence uses only verified originals; ordinary scans keep attachments."""
+    folder = Path(dumps)
+    if (folder/'capture-inheritance.json').is_file():
+        import sys
+        core = Path(__file__).resolve().parents[2]/'remake-core/scripts'
+        if str(core) not in sys.path:
+            sys.path.insert(0, str(core))
+        from art_capture_history import resolve_input_files
+        return resolve_input_files(folder, project)
+    return folder.rglob('*.json')
+
+
 def captured_inventory(dumps):
     names=set();pages=set()
     if dumps:
-        for path in Path(dumps).rglob('*.json'):
+        for path in observed_dump_files(dumps):
             try:doc=json.loads(path.read_text())
             except (OSError,ValueError):continue
             if not isinstance(doc,dict):continue
@@ -233,7 +246,7 @@ def route_other_sources(result, dumps, atlas_report):
                     'sizes': sheet['runtime_sizes'].get(frame, [])
                 })
     observations = {}
-    for path in Path(dumps).rglob('*.json'):
+    for path in observed_dump_files(dumps):
         try:
             doc = json.loads(path.read_text())
         except (OSError, ValueError):

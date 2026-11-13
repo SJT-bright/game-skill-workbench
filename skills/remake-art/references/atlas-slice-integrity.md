@@ -17,6 +17,12 @@ python3 <skills>/remake-core/scripts/test_atlas_slices.py
 
 正式 `art_check.py` 自动调用同一检查并保留独立报告。静态连通轮廓不替代布局、叠层和审美检查。
 
+## 源图 slice 豁免不等于运行拼装豁免
+
+九宫格/平铺的源连通体豁免只属于对应源检查，不证明运行边框、装饰或子内容正常。`panel` 名字本身不再构成跳过依据，真实九宫格/平铺的适用豁免保留。dump 的 `inner` 仅是 stretch center，不是内容安全区；已核准源 `source_safe` 仍由原 `check_card_layout.py` 映射，不能用中心矩形替代。
+
+运行页面检查的 `sprite_assembly_findings` 对实际尺寸、位置相对中心或外框的越区，以及缺测量、归属或职责歧义列 `visual_reviews`，不据此硬判所有九宫格坏。Codex 必须看同批原图并记实际结论；正常进度条、合法中心外内容及有设计依据的装饰保留。需看项经完整检查的原 `look_list` 与首件保留，技术 passed 不等于视觉通过，不得重跑同输入抹掉。具体职责见[实际拼装预防](production-prevention.md#九宫格内区与奖励图标核实际拼装)，不得为清门禁擦源图或将拼装风险写成源图已通过。
+
 ## 固定格偏移与扁平图集短回放（2026-10-25）
 
 出现按钮上下细线、异色条片或花叶平切时，先对照原图邻域和实际 rect；对原图完整 Alpha 主体求框，不能只在已切坏的 crop 上紧裁。共享图集须检查同来源按钮及别名，保持图案、文字、点击与业务语义。
@@ -38,7 +44,7 @@ Pippa 原工具对 atlas.json 返回 applicable=false、checked=0；适配后原
 
 ## v7.8：所有切片都查（Ingrid's Snowball Stack 10-26 连续三轮漏）
 
-`audit_atlas_slices.py` 以前只查 `icon_`、`node_`、`btn_`、`digit_` 开头的切片，图片字、局内棋子、投射物、障碍打进图集后一张都不查。现在其余切片按 `scope_body` 查：主体不能被切片框切断（`connected_body_cut_by_rect`），切片边上不能挂一条细的别家残片（`edge_fragment`，宽或高不到切片的 20%、贴着切片边）；字母、闪光这类自己分开的部分不算。本来就相连的不查（报告 `skipped` 里列出原因）：名字带 tile/tileset/terrain/ground/floor/wall/road/grass/water/map/bg/background/pattern/seamless/border/panel/bar/fill/line 的、九宫格/平铺的、四条边都不透明的整块图，以及 `frames.json` 里写了 `"slice_role": "tileset"` 的。贴图文件不存在的新范围切片也只列进 `skipped`。扁平 `atlas.json`（image/x/y/w/h）不再要求有 btn_/icon_/node_ 开头的条目。
+`audit_atlas_slices.py` 以前只查 `icon_`、`node_`、`btn_`、`digit_` 开头的切片，图片字、局内棋子、投射物、障碍打进图集后一张都不查。现在其余切片按 `scope_body` 查：主体不能被切片框切断（`connected_body_cut_by_rect`），切片边上不能挂一条细的别家残片（`edge_fragment`，宽或高不到切片的 20%、贴着切片边）；字母、闪光这类自己分开的部分不算。本来就相连的不查（报告 `skipped` 里列出原因）：名字带 tile/tileset/terrain/ground/floor/wall/road/grass/water/map/bg/background/pattern/seamless/border/bar/fill/line 的、九宫格/平铺的、四条边都不透明的整块图，以及 `frames.json` 里写了 `"slice_role": "tileset"` 的。贴图文件不存在的新范围切片也只列进 `skipped`。扁平 `atlas.json`（image/x/y/w/h）不再要求有 btn_/icon_/node_ 开头的条目。
 
 校准：把 Ingrid r3 的独立 PNG（closet、caption_closet、caption_energy、caption_level、snowball 等 12 张）原样打成一张图集，报出 5 张 `edge_fragment`，正是那三轮里修的；r9 修好的同名图全过；v7.7.5 只查到 1 张（btn_play），一张都不报。Holly 的地面 tile 和天空切成 40 格的整块图集全部按 tileset 跳过，不误报。
 

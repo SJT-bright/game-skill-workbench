@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-10.english-simple.11.17.20",
+  "revision": "2026-11-12.english-simple.11.17.28",
   "skill": "ego-browser",
   "previous_provenance_sha256": "bf5a3a32ab23db678c6a8e318da89652a952e7a1881aa62358d4ccf4e30ed715",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
@@ -40,5 +40,13 @@
       "sha256": "0dcfb371dc37c61fb61cf31747d9c97f72f5b071147815857734d2096db9d2a3",
       "bytes": 6021
     }
-  ]
+  ],
+  "release_integration": {
+    "release": "11.17.28",
+    "patch_ids": [
+      "rule-wording-unify.20261112.1",
+      "storage-nonblocking-and-four-deliverables.20261112.1"
+    ],
+    "boundary": "Portable Skill sources; local project reports and physical-device acceptance are not shipped prerequisites."
+  }
 }

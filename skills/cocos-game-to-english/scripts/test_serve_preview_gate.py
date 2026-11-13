@@ -547,8 +547,14 @@ class UserHandoff(PreviewOnlyCase):
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             url = f'http://127.0.0.1:{server.server_port}/'
+            # This HTTP server belongs to this test PID. Substitute only its
+            # ps-derived identity when sandbox process listings are unavailable.
+            owned_pid = os.getpid()
+            owned_identity = __import__('hashlib').sha256((str(project.resolve())+':'+str(owned_pid)).encode()).hexdigest()
+            original_probe = H.browser_slots.process_identity
+            own_probe = lambda pid: owned_identity if pid == owned_pid and H.browser_slots.alive(pid) else original_probe(pid)
             slot = {'id': '1110-090000-preview-abcdef', 'kind': 'preview', 'url': url, 'keep': True, 'dir': str(snapshot),
-                    'pid': os.getpid(), 'process_identity': H.browser_slots.process_identity(os.getpid()),
+                    'pid': owned_pid, 'process_identity': own_probe(owned_pid),
                     'project': str(project.resolve()), 'phone_size': [390, 844]}
             plan = {'schema': 'english-playtest-plan.v1', 'game': 'Same game', 'version': 'R1',
                     'mode': 'trial', 'preview_url': url, 'web_tree_sha256': H.tree_sha(web),
@@ -558,7 +564,9 @@ class UserHandoff(PreviewOnlyCase):
                                'checks': [{'covers': ['play'], 'basis': 'strict_requirement',
                                            'action': 'Tap Play', 'expected': 'Game starts'}]}]}
             try:
-                with patch.object(H.browser_slots, 'SLOTS', Path(td) / 'slots'), \
+                with patch.object(H.browser_slots, 'process_identity', side_effect=own_probe), \
+                        patch.object(verify_delivery_preview, 'process_identity', side_effect=own_probe), \
+                        patch.object(H.browser_slots, 'SLOTS', Path(td) / 'slots'), \
                         patch.object(H.browser_slots, 'slots', return_value=[slot]), \
                         patch.object(verify_delivery_preview, 'slots', return_value=[slot]), \
                         patch.object(H.preview_chrome, 'open_chrome_window',

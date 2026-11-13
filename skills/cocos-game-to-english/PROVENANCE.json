@@ -2,12 +2,12 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-13.english-simple.11.17.30",
+  "revision": "2026-11-13.english-simple.11.17.29",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "45699f9adca28c61295f5ae3a0be04125a21cac8a137f9e45b359df57adc42e3",
-      "bytes": 101304
+      "sha256": "e08fb7fe6c0a78cc00fa2216d9b3d3b110129cc4374cc378546fb091ba48cb1c",
+      "bytes": 102250
     },
     {
       "path": "agents/openai.yaml",
@@ -61,13 +61,13 @@
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "5c7930a3d8893a7498e4308267c34764b5a22126a25096b2aa78566b4c14dc1b",
-      "bytes": 35012
+      "sha256": "fb551ba8036fb886e87c0bb66234e1b9b127b12ff89ec526027156c1768df659",
+      "bytes": 34994
     },
     {
       "path": "references/first-trial-repair.md",
-      "sha256": "081f12e867a70ed907d213d46fc2c7ca6580142ed3dc0a4c44f9debdbd8d3b13",
-      "bytes": 4255
+      "sha256": "ebdd1b8512429d158b9dcbc3ee121e1c307689a38599d61cc736888a29cc22d0",
+      "bytes": 4246
     },
     {
       "path": "references/fixed-entries.md",
@@ -216,8 +216,8 @@
     },
     {
       "path": "scripts/test_delivery_continuation.py",
-      "sha256": "54f18edd56f5bb8042726679860d22fb2aa7da1a90cc11086cf04cc1ce79f360",
-      "bytes": 5145
+      "sha256": "cdc2cbc32c072f0097de81457f65c77fb1e28221730bd1290221f61b72a43a46",
+      "bytes": 5487
     },
     {
       "path": "scripts/test_engine_route.py",
@@ -231,8 +231,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "d2e7e3c2ece628514cb4071727dcc713bdb44fd15db764fed0a7c8c41f64c2dd",
-      "bytes": 79315
+      "sha256": "5a9e62d84e6c507f6b3a3c58da5cb2dd2d6757932fc3a1b0016b54e1be0d70e4",
+      "bytes": 79935
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -246,8 +246,8 @@
     },
     {
       "path": "scripts/test_playtest_h5.py",
-      "sha256": "0003f627faa81be3034d3076e462347f2193cbaa487af9faf575048365c57cf1",
-      "bytes": 7430
+      "sha256": "1b53ae0a2deb14a00058c8bef9858dc4fcbab672b0254dc6f0f9007668d7079c",
+      "bytes": 8800
     },
     {
       "path": "scripts/test_portable_tools.py",
@@ -296,8 +296,8 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "d98eb910a386cff5e5d2738de14702fd5daf066e6925fa6c05c9ebd57e5a1e48",
-      "bytes": 37859
+      "sha256": "6629e7c0f6cb9625d5846d28a2e69a11735d22a932fb56dca8411c823b2b31cd",
+      "bytes": 38547
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -335,7 +335,7 @@
       "bytes": 17958
     }
   ],
-  "previous_provenance_sha256": "d2840f129d2307e79994e0d2eb220dbe9c45509ed3b9f2770da21a31a6a2695f",
+  "previous_provenance_sha256": "5c84849d24575b2ab3c0773bd69b449be3da0cf2b6be2134913b202f5717dde6",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

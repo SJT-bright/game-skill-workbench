@@ -45,6 +45,15 @@ class Playtest(unittest.TestCase):
         Thread(target=self.server.serve_forever, daemon=True).start()
         self.addCleanup(self.server.shutdown)
         self.url = f'http://127.0.0.1:{self.server.server_port}/'
+        # Sandbox ps is unavailable. Limit this process-identity probe fixture
+        # to the exact PID that owns this real threaded HTTP server. Other PIDs
+        # still use the production probe; no termination operation is patched.
+        self.owned_pid = os.getpid()
+        self.owned_identity = hashlib.sha256((str(self.root.resolve())+':'+str(self.owned_pid)).encode()).hexdigest()
+        original_probe = browser_slots.process_identity
+        own_probe = lambda pid: self.owned_identity if pid == self.owned_pid and browser_slots.alive(pid) else original_probe(pid)
+        identity_patch = patch.object(browser_slots, 'process_identity', side_effect=own_probe)
+        identity_patch.start(); self.addCleanup(identity_patch.stop)
         self.slot = browser_slots.register('preview', pid=os.getpid(), url=self.url, directory=self.web, keep=True)
         self.plan = {'schema': h5.SCHEMA, 'game': 'H5 fixture <>&', 'version': 'fixture-r2',
                      'mode': 'trial', 'preview_url': self.url, 'web_tree_sha256': self.web_sha,
@@ -59,7 +68,13 @@ class Playtest(unittest.TestCase):
         target = self.root / name
         plan_path = self.root / 'plan.json'
         plan_path.write_text(json.dumps(self.plan))
-        return subprocess.run([sys.executable, '-B', str(h5.HERE / 'build_playtest_h5.py'),
+        # Apply the same owned-PID probe inside this isolated CLI process;
+        # the H5 builder, ZIP identities and actual HTTP reads remain real.
+        bootstrap = ("import sys,runpy;sys.path.insert(0,"+repr(str(h5.CORE_TOOLS))+");import browser_slots;"
+            "original=browser_slots.process_identity;owned="+repr(self.owned_pid)+";identity="+repr(self.owned_identity)+";"
+            "browser_slots.process_identity=lambda pid:identity if pid==owned and browser_slots.alive(pid) else original(pid);"
+            "sys.argv=["+repr(str(h5.HERE/'build_playtest_h5.py'))+"]+sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')")
+        return subprocess.run([sys.executable, '-B', '-c', bootstrap,
                                '--plan', str(plan_path), '--out', str(target), *map(str, extra)],
                               env={**os.environ, 'GAME_SKILL_LOCK_DIR': str(self.slots.parent)},
                               capture_output=True, text=True, timeout=15)

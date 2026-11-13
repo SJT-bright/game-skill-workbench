@@ -56,20 +56,23 @@ class ContinuationTests(unittest.TestCase):
 
     def test_writer_missing_review_returns_repair_without_writing_zip(self):
         out=self.root/'new.zip'
-        result=self.invoke(writer.main,['--native',self.root,'--app-id','tttest','--out',out])
+        native=self.root/'native';native.mkdir()
+        result=self.invoke(writer.main,['--native',native,'--app-id','tttest','--out',out,
+            '--project',self.root,'--web',self.root/'missing-web','--resource-manifest',self.root/'resources.json'])
         self.repair(result,'writer')
-        self.assertEqual(result[0],2)
+        self.assertEqual(result[0],1)
+        self.assertIn('actual current Web directory missing',result[1]+result[2])
         self.assertFalse(out.exists())
 
     def test_writer_missing_native_has_same_repair_contract(self):
         result=self.invoke(writer.main,['--native',self.root/'missing','--app-id','tttest','--out',self.root/'new.zip',
                                       '--review',self.root/'review.json','--project',self.root,
-                                      '--web',self.root/'web','--build-tag','fixture'])
+                                      '--web',self.root/'web','--build-tag','fixture','--resource-manifest',self.root/'resources.json'])
         self.repair(result,'writer')
 
     def test_checked_writer_failure_is_not_a_task_end(self):
         self.repair(self.invoke(checked_writer.main,['--native',self.root/'missing','--expected-app-id','tttest',
-            '--out',self.root/'new.zip','--project',self.root]),'writer')
+            '--out',self.root/'new.zip','--project',self.root,'--resource-manifest',self.root/'resources.json']),'writer')
         self.assertFalse((self.root/'new.zip').exists())
 
     def test_delivery_missing_artifact_routes_to_exact_gap(self):

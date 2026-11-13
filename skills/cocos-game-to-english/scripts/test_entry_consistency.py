@@ -1069,8 +1069,19 @@ class ReworkAfterDelivery(unittest.TestCase):
         r = subprocess.run([sys.executable, '-B', str(tool), '--help'], capture_output=True, text=True,
                            env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONIOENCODING='utf-8'))
         self.assertEqual(r.returncode, 0, r.stderr[-300:])
-        for writer in (self.CHECK / 'scripts' / 'build_checked_zip.py', PACK / 'remake-core' / 'scripts' / 'make_tiktok_zip.py'):
-            self.assertIn("'--rework-of', default='auto'", writer.read_text(encoding='utf-8'), writer.name)
+        import contextlib, io
+        from unittest.mock import patch
+        sys.path.insert(0, str(PACK / 'remake-core/scripts'))
+        sys.path.insert(0, str(self.CHECK / 'scripts'))
+        import make_tiktok_zip as canonical
+        import build_checked_zip as alias
+        argv = ['--native', 'fixture-native', '--app-id', 'fixture', '--out', 'fixture.zip',
+                '--project', 'fixture-project', '--resource-manifest', 'fixture-resources.json']
+        for entry in (canonical.main, alias.main):
+            with patch.object(canonical, 'write_package', side_effect=ValueError('fixture stop')) as backend, \
+                    contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(entry(argv), 1)
+            self.assertEqual(backend.call_args.kwargs['rework_of'], 'auto')
         doc = (self.CHECK / 'references' / 'runtime-regression.md').read_text(encoding='utf-8')
         self.assertEqual(doc.count('\n### 出包后返工只查改动（现行逐项记录）'), 1)
         for phrase in ('docs/checks/incremental/ledger.sqlite3', '禁止自动全测', '有效旧记录或本次真实结果',

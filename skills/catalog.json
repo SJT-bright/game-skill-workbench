@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-13T23:35:33.312Z",
-  "treeHash": "1ed2e8140241ea93b655979287589a4f72cedeacde8c0b774a22db9a9a26d90d",
+  "createdAt": "2026-11-14T05:36:07.609Z",
+  "treeHash": "49ab06fd567596d8ce2fc70bfbeb75d634b4957701dafb93c2279d3d050866d9",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "53945283ef243e3be9d9b6b1a134dc7c0b0181131d2affe8409d9f0d322574af",
+      "treeHash": "f51fbe1df9649504993c3d9f1ce271e3ade57b4eb1cf27f471f607ac8eca949d",
       "fileCount": 207,
-      "bytes": 2161614,
+      "bytes": 2164863,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "1aef690b6f5fe030dd74ced2e0c7447e1984a2c6716a13f1cf202f9404cbb902",
+          "hash": "4f4544122b2aceea04c3da864b08bb22eaa48e81a2f2ba545ffc905cc295f977",
           "size": 68860,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "1bd4066bbb08b8fb5929fe5121d058eb2c78e580db0cbb0650df0f6f40a35566",
-          "size": 34769,
+          "hash": "189afdb7d1966e2ebf87bdfa51cce39bd158561aecb91f4e30aaa0cdf469435d",
+          "size": 35017,
           "executable": false
         },
         {
@@ -455,8 +455,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "35526c98440b13e0c8fb1a785ef1939c1dbb5ba5189dc07c48435231545ae623",
-          "size": 23488,
+          "hash": "3be42fa68d292734ffd63af100ea4e7e5a4e566c5cc008c3f6926a53790644cf",
+          "size": 23476,
           "executable": false
         },
         {
@@ -1337,8 +1337,8 @@
         },
         {
           "path": "startup/references/loading-recovery-casebook.md",
-          "hash": "a11e1f54de605bc2efd47aee5155286345e4e7abba615bbce614913a10c83487",
-          "size": 13154,
+          "hash": "ad803a5cf4b99ed2b31f1fde4fc40cd0916e69293960839d881a563b8f463a00",
+          "size": 13717,
           "executable": false
         },
         {
@@ -1373,14 +1373,14 @@
         },
         {
           "path": "startup/references/platform-input-binding.md",
-          "hash": "8c175296f218b6edbf76e3bda8dbed9c3936b4115f94edf07ba0186a9451fc58",
-          "size": 6129,
+          "hash": "b25c81844e03fd542c504baf12cc7788ec157c04d68e65d903d7c384663fe535",
+          "size": 7807,
           "executable": false
         },
         {
           "path": "startup/references/startup-contract.md",
-          "hash": "b82f6d03fa3501d1a96a2c9a8db5fe3e6f3874bbcacac8f83003d175cdd640e5",
-          "size": 12273,
+          "hash": "a1132ca20cde044de91c1c4ad7a60e9b5b7018f3350412c83e62f176466f31a2",
+          "size": 13045,
           "executable": false
         },
         {

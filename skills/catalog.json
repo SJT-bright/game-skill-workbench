@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T10:16:03.094Z",
-  "treeHash": "9a99bb9b66c2d57cfc2f8f76bed99acb683bfdce5ef9239b495dbdcf6f50422d",
+  "createdAt": "2026-11-14T18:50:06.776Z",
+  "treeHash": "d18c78a93c746b51bb3a391703d5980cb7bb79eabf5adbd3e3f2e5e7f8846806",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,14 +245,14 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "65fa4679de9f325279dcf0158b6d951907a08573eaaf820eb7dcfbfc12afd8d4",
+      "treeHash": "948a6440e7a8b3cc7b1331c83dab45fb8c0c990c2e42806ed59d8d22bad34f7a",
       "fileCount": 207,
-      "bytes": 2165407,
+      "bytes": 2166925,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "4c37f05e16ac2b0ab2c7d80346174ec89f8a05c45d2a01e347ba508aa7714670",
-          "size": 68860,
+          "hash": "d1b2f3b6b9f4e02ebcedde606374dfc2b611747460a61c7d5458db732431421a",
+          "size": 69208,
           "executable": false
         },
         {
@@ -455,8 +455,8 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "c9962e7276bd982501170b92e2db721dd7eb05229cc472ec44953a1e43df25be",
-          "size": 23041,
+          "hash": "9fabfda3207091f677c8dae4b234fcce939cc2239ffbceca3a5317bf16a92d6a",
+          "size": 23050,
           "executable": false
         },
         {
@@ -629,8 +629,8 @@
         },
         {
           "path": "package-check/scripts/check_package.py",
-          "hash": "4ef56ee699f4a620dc8aaa3867d4dad72da0c6d042a7040fecf68a11000487df",
-          "size": 48739,
+          "hash": "1665b1df81a8955c5fb4879c30cba8dd2004d6c26394e767240ae1c1b5642349",
+          "size": 49900,
           "executable": false
         },
         {

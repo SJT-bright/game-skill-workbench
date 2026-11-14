@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
-  "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-14.english-simple.11.17.33",
+  "scope": "Local Creator 1.9.3 exact integration repair support, using independently reproduced engine identity and mandatory original Native evidence. No public Skill release.",
+  "revision": "2026-11-14.english-simple.11.17.34+local-creator193-20261114",
   "files": [
     {
       "path": "SKILL.md",
@@ -171,8 +171,8 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "c9962e7276bd982501170b92e2db721dd7eb05229cc472ec44953a1e43df25be",
-      "bytes": 23041
+      "sha256": "9fabfda3207091f677c8dae4b234fcce939cc2239ffbceca3a5317bf16a92d6a",
+      "bytes": 23050
     },
     {
       "path": "package-check/references/check-contract.md",
@@ -250,6 +250,11 @@
       "bytes": 5605
     },
     {
+      "path": "package-check/scripts/ad_incremental.py.backup-ball112-project-hook-20261113113741",
+      "sha256": "5b9e20c6ea2302ff0d373ad72c3f6ea3b99f607b562e7c0c71a8514a336c0918",
+      "bytes": 4847
+    },
+    {
       "path": "package-check/scripts/ad_regression/cases.mjs",
       "sha256": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
       "bytes": 24364
@@ -311,8 +316,8 @@
     },
     {
       "path": "package-check/scripts/check_package.py",
-      "sha256": "4ef56ee699f4a620dc8aaa3867d4dad72da0c6d042a7040fecf68a11000487df",
-      "bytes": 48739
+      "sha256": "1665b1df81a8955c5fb4879c30cba8dd2004d6c26394e767240ae1c1b5642349",
+      "bytes": 49900
     },
     {
       "path": "package-check/scripts/debrand_delta_guard.py",
@@ -1030,7 +1035,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "4f4544122b2aceea04c3da864b08bb22eaa48e81a2f2ba545ffc905cc295f977",
+  "previous_provenance_sha256": "9298fad4e573c92fdb77cef139db82d200ed586935c5e8f185541c9203dbf605",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",

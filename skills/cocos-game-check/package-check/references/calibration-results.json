@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
  "date": "2026-11-14",
- "release_label": "v7.13-en11.17.33-baseline-six",
- "selftest_report_sha256": "00dc6472bcff5d61ffaabe70cda9d45e83e992a79765d6f634a3e613d226a9ab",
+ "release_label": "v7.14-en11.17.34-platform-suite-ledger",
+ "selftest_report_sha256": "d5edfcf310162d2e7ccf90e5e35b2f8d9e53d3b09e445365e22bbc927300262c",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
@@ -825,7 +825,7 @@
   }
  ],
  "test_inventory": {
-  "files": 807,
+  "files": 808,
   "failing_known": [],
   "new_failures": 0
  }

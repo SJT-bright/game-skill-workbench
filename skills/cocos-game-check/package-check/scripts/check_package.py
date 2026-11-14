@@ -345,6 +345,20 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
     except (OSError, TypeError, ValueError) as error:
         return no('writer receipt unreadable: %s' % error)
     record = receipt.get('regressions') if isinstance(receipt, dict) else None
+    if isinstance(record, dict) and record.get('profile') == 'creator1_compatibility_regression.v1':
+        try:
+            from creator1_compatibility_contract import consume, writer_evidence
+            ref=record['compatibility'];doc=json.loads(Path(ref['path']).read_bytes())
+            checked=consume(doc['project'],doc['native'],doc['web'],ref['path'])
+            if checked['record'] != ref or checked['native_inputs'] != {n:hashlib.sha256(b).hexdigest() for n,b in files.items()}:
+                return no('Creator1 exact ZIP/proof mismatch')
+            _,scope,expected,rt,ad=writer_evidence(doc['project'],doc['native'],doc['web'])
+            if record != expected:return no('Creator1 writer record differs from original mandatory regression evidence')
+            return dict(reused=True,receipt=str(receipt_file),regression_scope=scope,
+                        note='Revalidated immutable Creator1 integration regression; no gameplay rerun',
+                        rewarded_ad_regression=ad,runtime_regression=rt)
+        except (OSError,ValueError,TypeError,KeyError) as error:
+            return no('Creator1 proof refused: '+str(error))
     if not isinstance(record, dict) or record.get('schema') != REUSE_SCHEMA:
         return no('writer receipt has no regression record (written before v7.9, or a regression did not pass there)')
     ad, rt = record.get('rewarded_ad_regression'), record.get('runtime_regression')

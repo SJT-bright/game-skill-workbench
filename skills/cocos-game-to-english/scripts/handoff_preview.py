@@ -9,10 +9,11 @@ handed over as four things together: test ZIP, editable source ZIP, same-build
 play link and the evidence ZIP. This entry makes the source ZIP when none exists
 and exports the evidence ZIP (remake-core game_handoff.deliver) before it records
 the stage and opens Chrome, and lists all four in reply_lines. When that step
-fails nothing is recorded and Chrome is not opened. --skip-team-handoff "<reason>"
+fails its node timings are retained, while no completed handoff or Chrome window is recorded. --skip-team-handoff "<reason>"
 is for a hand-over the user explicitly limited to the test package.
 """
 import argparse
+from contextlib import contextmanager
 import http.client
 import json
 from pathlib import Path
@@ -157,7 +158,33 @@ def team_handoff(project, delivery, source, skip_reason):
         raise ValueError('源码包和交接证据包没有备齐，最终交接未完成：%s' % error)
 
 
+@contextmanager
+def timed_handoff_node(project, timings, name):
+    """Observe actual preparation work; telemetry never changes a quality result."""
+    started = time.monotonic()
+    observation = None
+    try:
+        observation = stage_timer.begin_observation(project, name, node_id='handoff/' + name)
+    except (OSError, ValueError):
+        pass
+    completed = False
+    try:
+        yield
+        completed = True
+    finally:
+        timings[name] = {'seconds': max(0.0, time.monotonic() - started),
+                         'state': 'completed' if completed else 'failed'}
+        if observation:
+            try:
+                stage_timer.finish_observation(observation,
+                    state='completed' if completed else 'failed', exit_code=0 if completed else 1)
+            except (OSError, ValueError):
+                pass
+
+
 def handoff(project, url, kind, plan, delivery=None, *, no_browser=False, source=None, skip_team_handoff=None):
+    handoff_started = time.monotonic()
+    node_timings = {}
     project = project.resolve()
     matches = [s for s in browser_slots.slots() if s.get('kind') == 'preview'
                and s.get('url') == url and s.get('project') == str(project)
@@ -179,22 +206,26 @@ def handoff(project, url, kind, plan, delivery=None, *, no_browser=False, source
     if kind == 'art':
         if plan['mode'] != 'trial':
             raise ValueError('美工试玩的计划使用 trial 模式。')
-        web_sha, trial_identity = art_trial(project, slot)
+        with timed_handoff_node(project, node_timings, 'candidate.identity'):
+            web_sha, trial_identity = art_trial(project, slot)
         label = '英文美工试玩'
     else:
         if delivery is None:
             raise ValueError('最终交付需要 prepare_delivery.py 对本次实际 ZIP 生成的交付回执。')
-        web_sha, package = packaged_trial(slot, url, delivery)
+        with timed_handoff_node(project, node_timings, 'candidate.identity'):
+            web_sha, package = packaged_trial(slot, url, delivery)
         plan['mode'] = 'package'
         label = '测试包同版试玩'
     team = None
     if plan['web_tree_sha256'] != web_sha:
         raise ValueError('试玩清单与当前候选不是同一 Web 构建。')
-    preview = verify_preview(url, web_sha, require_ad_simulator=plan['require_ad_simulator'])
+    with timed_handoff_node(project, node_timings, 'preview.identity'):
+        preview = verify_preview(url, web_sha, require_ad_simulator=plan['require_ad_simulator'])
     if preview['slot_id'] != slot['id']:
         raise ValueError('试玩服务在核对过程中被替换。')
     if kind == 'package':
-        team = team_handoff(project, delivery, source, skip_team_handoff)
+        with timed_handoff_node(project, node_timings, 'team.artifacts'):
+            team = team_handoff(project, delivery, source, skip_team_handoff)
     observation = None
     if timeline.cur and timeline.cur['n'] == phase:
         try:
@@ -203,11 +234,14 @@ def handoff(project, url, kind, plan, delivery=None, *, no_browser=False, source
         except (OSError, ValueError):
             pass
     ready = False
+    checklist_started = time.monotonic()
     try:
         html = render(plan, package, ad_simulator=preview['ad_simulator'])
         checklist = serve_checklist(slot, url, html)
         ready = True
     finally:
+        node_timings['checklist.ready'] = {'seconds': max(0.0, time.monotonic() - checklist_started),
+                                           'state': 'completed' if ready else 'failed'}
         if observation:
             try:
                 stage_timer.finish_observation(observation, state='completed' if ready else 'failed',
@@ -225,6 +259,9 @@ def handoff(project, url, kind, plan, delivery=None, *, no_browser=False, source
     result = {'status': 'handoff_ready', 'kind': kind, 'label': label, 'playtest_url': checklist,
               'markdown_link': f'[{label}与清单]({checklist})', 'web_tree_sha256': web_sha,
               'stage_report': stage_report, 'timing_report': total_report, 'browser': browser}
+    result['handoff_timings'] = {'total_seconds': max(0.0, time.monotonic() - handoff_started),
+                                 'nodes': node_timings,
+                                 'boundary': 'Current identity, source/evidence preparation and checklist work; original game execution time is retained separately. Node/child times must not be added again to this wall time.'}
     if team is not None:
         result['team_handoff'] = team
         if team['status'] == 'team_handoff_ready':

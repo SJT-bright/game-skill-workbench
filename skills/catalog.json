@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T21:59:08.294Z",
-  "treeHash": "ce9a41b0ee7824afad7129bb82e81bd8e41dbd28b41b2e06ec55f6ad9f4449e2",
+  "createdAt": "2026-11-14T22:00:19.841Z",
+  "treeHash": "9b007d889eab8f3037fc84439f3af89f2f8098d8d0690ab62f86aacc15f7c514",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2179,14 +2179,14 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "4763ef3e42503625c0312f9bba5515c34052ec93ba5da8c449b3fe5c39c4a48a",
-      "fileCount": 67,
-      "bytes": 1054056,
+      "treeHash": "23910911abce3cee6e9242db986034e150759ad49e6f000841c743713cccc646",
+      "fileCount": 68,
+      "bytes": 1062036,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "b9d187ea489459d4e6e822b02bca1cc1fed0e318664f00aa7218a24e972d2a3e",
-          "size": 38819,
+          "hash": "44d882d200228564793d4108043712d07459b8a09a52dfc27747d428736a1ebd",
+          "size": 40082,
           "executable": false
         },
         {
@@ -2371,8 +2371,8 @@
         },
         {
           "path": "scripts/handoff_preview.py",
-          "hash": "b03ec0471a9d994c6fd7fbc60bb8f5bfa745b3b42f56c3305133ba03fd76a526",
-          "size": 14641,
+          "hash": "d175d2f0e745b33f812aa141e5d0ffcc9db278d1adc2025e8b491545a61631eb",
+          "size": 16559,
           "executable": false
         },
         {
@@ -2472,6 +2472,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_handoff_node_timing.py",
+          "hash": "e9e411031bade0c90d7682b910337f841d0837676f7d289714e3dc20200c673e",
+          "size": 4042,
+          "executable": false
+        },
+        {
           "path": "scripts/test_p21_browser_env.py",
           "hash": "33b8408a7d8350d2a4922bc913022d955ccaef42b38417aec19d8acbcbaac482",
           "size": 19895,
@@ -2539,8 +2545,8 @@
         },
         {
           "path": "scripts/test_serve_preview_gate.py",
-          "hash": "6629e7c0f6cb9625d5846d28a2e69a11735d22a932fb56dca8411c823b2b31cd",
-          "size": 38547,
+          "hash": "6ce418127b49794ff506938b65e966509e1ad24b3440a5e34806592a20d58aa8",
+          "size": 39304,
           "executable": false
         },
         {

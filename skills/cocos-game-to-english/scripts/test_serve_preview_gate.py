@@ -618,7 +618,7 @@ class UserHandoff(PreviewOnlyCase):
                     delivery.write_text(json.dumps(proof))
                     # 2026-11-12: the final hand-over is four things together. The source ZIP and the evidence ZIP are
                     # made by remake-core game_handoff.deliver (its own tests use real files); here: it is called by
-                    # default, a failure records nothing and opens nothing, and the reply lists all four.
+                    # default, a failure retains node timings without handoff completion or Chrome, and the reply lists all four.
                     import game_handoff
                     made = {'status': 'team_handoff_ready', 'test_zip': str(archive), 'source_zip': str(Path(td) / 'Final_源码.zip'),
                             'evidence_zip': str(Path(td) / 'Final_交接证据.zip'),
@@ -630,7 +630,16 @@ class UserHandoff(PreviewOnlyCase):
                             H.handoff(project, url, 'package', plan, delivery)
                     self.assertEqual(deliver.call_args.args, (delivery, project.resolve(), None))
                     self.assertEqual(launch.call_count, 1, 'Chrome is not opened when the four things are not ready')
-                    self.assertEqual([event['ev'] for event in timing_events(project)], events_before, 'and nothing is recorded')
+                    failed_events = timing_events(project)
+                    self.assertEqual([event['ev'] for event in failed_events[:len(events_before)]], events_before)
+                    observations = failed_events[len(events_before):]
+                    self.assertTrue(observations, 'failed preparation has real node timing observations')
+                    self.assertTrue(all(event.get('kind') == 'tool' and event['ev'] in ('begin', 'end')
+                                        for event in observations), 'no done/link/stage handoff event on failure')
+                    self.assertEqual(observations[-1]['ev'], 'end')
+                    self.assertEqual(observations[-1]['step'], 'team.artifacts')
+                    self.assertEqual(observations[-1]['state'], 'failed')
+                    self.assertEqual(observations[-1]['exit_code'], 1)
                     with patch.object(game_handoff, 'deliver', return_value=made) as deliver:
                         result = H.handoff(project, url, 'package', plan, delivery)
                     self.assertEqual(deliver.call_count, 1)

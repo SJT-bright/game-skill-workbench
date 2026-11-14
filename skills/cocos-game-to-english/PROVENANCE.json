@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
-  "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-13.english-simple.11.17.32",
+  "scope": "Formal portable English Skill source update; reviewed production-efficiency changes and preserved concurrent integration support. Game and machine acceptance remain project-specific.",
+  "revision": "2026-11-14.english-simple.11.17.35",
   "files": [
     {
       "path": "SKILL.md",
@@ -156,8 +156,8 @@
     },
     {
       "path": "scripts/handoff_preview.py",
-      "sha256": "b03ec0471a9d994c6fd7fbc60bb8f5bfa745b3b42f56c3305133ba03fd76a526",
-      "bytes": 14641
+      "sha256": "d175d2f0e745b33f812aa141e5d0ffcc9db278d1adc2025e8b491545a61631eb",
+      "bytes": 16559
     },
     {
       "path": "scripts/inspect_creator_migration.cjs",
@@ -240,6 +240,11 @@
       "bytes": 22361
     },
     {
+      "path": "scripts/test_handoff_node_timing.py",
+      "sha256": "e9e411031bade0c90d7682b910337f841d0837676f7d289714e3dc20200c673e",
+      "bytes": 4042
+    },
+    {
       "path": "scripts/test_p21_browser_env.py",
       "sha256": "33b8408a7d8350d2a4922bc913022d955ccaef42b38417aec19d8acbcbaac482",
       "bytes": 19895
@@ -296,8 +301,8 @@
     },
     {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "6629e7c0f6cb9625d5846d28a2e69a11735d22a932fb56dca8411c823b2b31cd",
-      "bytes": 38547
+      "sha256": "6ce418127b49794ff506938b65e966509e1ad24b3440a5e34806592a20d58aa8",
+      "bytes": 39304
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -335,7 +340,7 @@
       "bytes": 17958
     }
   ],
-  "previous_provenance_sha256": "bbdb7abeefc31a3a871165c9e5d00e3d5a4f42feaf3fc652d30b340ef6784210",
+  "previous_provenance_sha256": "b9d187ea489459d4e6e822b02bca1cc1fed0e318664f00aa7218a24e972d2a3e",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -876,5 +881,20 @@
     ],
     "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
   },
-  "overlay_release": "art-non-dark-first-text.20261113.1"
+  "overlay_release": "art-non-dark-first-text.20261113.1",
+  "local_updates": [
+    {
+      "id": "2026-11-14.english-simple.11.17.35.reviewed-production-efficiency",
+      "scope": "Source handoff identity windows, exact preparation dependency scopes, same-delivery ZIP payload reuse, original startup/storage proof compatibility and node timing; preserve independently reviewed concurrent Creator 1.9.3 existing-game integration support.",
+      "previous_scope": "Portable sources; local QA trust and game evidence excluded.",
+      "files": [
+        "scripts/handoff_preview.py",
+        "scripts/test_handoff_node_timing.py",
+        "scripts/test_serve_preview_gate.py"
+      ],
+      "formal_selftest_sha256": "361122b6fd761fcd7dccd317c28aab34c06194a17c9a09ad6f9c42c463c54ed7",
+      "concurrent_source_review_sha256": "138f932d71fb7a69ebf0d298fa0a393d02d7029234479e4b540b7364cfe88c2b",
+      "boundary": "Portable Skill code only; no copied machine registrations, game PASS state or new real-game acceptance."
+    }
+  ]
 }

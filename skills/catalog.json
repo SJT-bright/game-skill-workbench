@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T18:54:23.233Z",
-  "treeHash": "6612a2ed0b6def0548a645649d5a1b806365b9bf582542935242fbe11821fac5",
+  "createdAt": "2026-11-14T21:55:18.273Z",
+  "treeHash": "d534af049386bd9bc306376084f22ca404fd439fa6abef39184e6f2c4d585258",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,14 +245,14 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "948a6440e7a8b3cc7b1331c83dab45fb8c0c990c2e42806ed59d8d22bad34f7a",
+      "treeHash": "6657aab1c48dc3227257b9b6a7068e4fa24c5c374026ac245452bac01c5d38e7",
       "fileCount": 207,
-      "bytes": 2166925,
+      "bytes": 2174019,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "d1b2f3b6b9f4e02ebcedde606374dfc2b611747460a61c7d5458db732431421a",
-          "size": 69208,
+          "hash": "55d66ee8b7bcc6f0e2ff8dcc0e9909730ff16c75d58e7cd51ee458e4cdddabbe",
+          "size": 70005,
           "executable": false
         },
         {
@@ -455,7 +455,7 @@
         },
         {
           "path": "package-check/references/calibration-results.json",
-          "hash": "9fabfda3207091f677c8dae4b234fcce939cc2239ffbceca3a5317bf16a92d6a",
+          "hash": "29fc854bd15665a14260598664f772b0c1850f0597e93db07ffc5750f11eb804",
           "size": 23050,
           "executable": false
         },
@@ -629,8 +629,8 @@
         },
         {
           "path": "package-check/scripts/check_package.py",
-          "hash": "1665b1df81a8955c5fb4879c30cba8dd2004d6c26394e767240ae1c1b5642349",
-          "size": 49900,
+          "hash": "b00b790c2a9c06bcf61265354af8164c21d4a921bbab655afa65cdf27778ebca",
+          "size": 50628,
           "executable": false
         },
         {
@@ -677,8 +677,8 @@
         },
         {
           "path": "package-check/scripts/prepare_delivery.py",
-          "hash": "b990102934a05d9a3ec36addbca96d15eab41ae1c95860b6ba0f7a60bd2c2352",
-          "size": 25438,
+          "hash": "03996c9d4eeb31a6514365d184713171db95e4ffedb646ca92f43d27924953e9",
+          "size": 31007,
           "executable": false
         },
         {

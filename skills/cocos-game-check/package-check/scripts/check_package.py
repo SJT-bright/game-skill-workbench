@@ -551,7 +551,7 @@ def _fallback_entries(archive):
 
 @scoped_execution
 def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None,
-          reuse_writer_regressions=False, rework_of=None, *, expected_scope_sha256=None, project=None):
+          reuse_writer_regressions=False, rework_of=None, *, expected_scope_sha256=None, project=None, _archive_context=None):
     # 简化.11.15 (出包后返工): rework_of (build_checked_zip --rework-of) is the last passed package; when only pictures,
     # sounds or fonts changed since it, the browser suites that cannot see the change keep its passes (rework_scope).
     # v7.9 (出包检查提速 S1, 总表 19 ①): reuse_writer_regressions (prepare_delivery only) takes an official writer
@@ -571,12 +571,20 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     prepare_delivery.py) = judged from the package bytes (scene / asset uuids against LEGACY_GAMES.json, not listed
     = new). context: writer-only kit_parts attributes (finalize record, project) for K4/K5."""
     import package_gates
-    start_sha = hashlib.sha256(Path(archive).read_bytes()).hexdigest()
+    start_sha = hashlib.sha256(Path(archive).read_bytes()).hexdigest() if _archive_context is None else None
     reasons = []
     verified_files = {}
     try:
-        result = verifier.verify(archive, expected_app_id=app_id, _verified_files=verified_files)
+        if _archive_context is None:
+            result = verifier.verify(archive, expected_app_id=app_id, _verified_files=verified_files)
+        else:
+            from delivery_archive_context import consume_delivery_archive, delivery_payload
+            result = consume_delivery_archive(_archive_context, archive, app_id)
+            verified_files = delivery_payload(_archive_context, archive)
     except ValueError as error:
+        if _archive_context is not None:
+            # Never turn a stale/forged context into a second full read or run.
+            raise
         reasons.append('verifier: ' + str(error))
         result = None
         verified_files = _fallback_entries(archive)
@@ -656,7 +664,12 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
                                                           gates.get('policy'))
                     if problem:
                         reasons.append(problem)
-    if hashlib.sha256(Path(archive).read_bytes()).hexdigest() != (result['sha256'] if result else start_sha):
+    if _archive_context is None:
+        final_sha = hashlib.sha256(Path(archive).read_bytes()).hexdigest()
+    else:
+        from delivery_archive_context import check_delivery_archive_current
+        final_sha = check_delivery_archive_current(_archive_context, archive)
+    if final_sha != (result['sha256'] if result else start_sha):
         raise ValueError('ZIP changed during package checks')
     if reasons:
         tail = [BROWSER_SKIPPED_NOTE] if browser_skipped else []

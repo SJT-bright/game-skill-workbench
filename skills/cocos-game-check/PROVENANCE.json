@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-check",
-  "scope": "Local Creator 1.9.3 exact integration repair support, using independently reproduced engine identity and mandatory original Native evidence. No public Skill release.",
-  "revision": "2026-11-14.english-simple.11.17.34+local-creator193-20261114",
+  "scope": "Formal portable English Skill source update; reviewed production-efficiency changes and preserved concurrent integration support. Game and machine acceptance remain project-specific.",
+  "revision": "2026-11-14.english-simple.11.17.35",
   "files": [
     {
       "path": "SKILL.md",
@@ -171,7 +171,7 @@
     },
     {
       "path": "package-check/references/calibration-results.json",
-      "sha256": "9fabfda3207091f677c8dae4b234fcce939cc2239ffbceca3a5317bf16a92d6a",
+      "sha256": "29fc854bd15665a14260598664f772b0c1850f0597e93db07ffc5750f11eb804",
       "bytes": 23050
     },
     {
@@ -250,11 +250,6 @@
       "bytes": 5605
     },
     {
-      "path": "package-check/scripts/ad_incremental.py.backup-ball112-project-hook-20261113113741",
-      "sha256": "5b9e20c6ea2302ff0d373ad72c3f6ea3b99f607b562e7c0c71a8514a336c0918",
-      "bytes": 4847
-    },
-    {
       "path": "package-check/scripts/ad_regression/cases.mjs",
       "sha256": "c1084c281b5ce2159790bacd50fe3e6749dbe7b02eae635b38eba36f802bb5c4",
       "bytes": 24364
@@ -316,8 +311,8 @@
     },
     {
       "path": "package-check/scripts/check_package.py",
-      "sha256": "1665b1df81a8955c5fb4879c30cba8dd2004d6c26394e767240ae1c1b5642349",
-      "bytes": 49900
+      "sha256": "b00b790c2a9c06bcf61265354af8164c21d4a921bbab655afa65cdf27778ebca",
+      "bytes": 50628
     },
     {
       "path": "package-check/scripts/debrand_delta_guard.py",
@@ -356,8 +351,8 @@
     },
     {
       "path": "package-check/scripts/prepare_delivery.py",
-      "sha256": "b990102934a05d9a3ec36addbca96d15eab41ae1c95860b6ba0f7a60bd2c2352",
-      "bytes": 25438
+      "sha256": "03996c9d4eeb31a6514365d184713171db95e4ffedb646ca92f43d27924953e9",
+      "bytes": 31007
     },
     {
       "path": "package-check/scripts/rework_scope.py",
@@ -1035,7 +1030,7 @@
       "bytes": 13936
     }
   ],
-  "previous_provenance_sha256": "9298fad4e573c92fdb77cef139db82d200ed586935c5e8f185541c9203dbf605",
+  "previous_provenance_sha256": "d1b2f3b6b9f4e02ebcedde606374dfc2b611747460a61c7d5458db732431421a",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -1626,6 +1621,18 @@
         "package-check/scripts/test_delivery_logic_records.py"
       ],
       "previous_provenance_sha256": "5cf52536df551502a1c263dd33143a2ffc15c4d90f20eeacd494eb029d29a2eb"
+    },
+    {
+      "id": "2026-11-14.english-simple.11.17.35.reviewed-production-efficiency",
+      "scope": "Source handoff identity windows, exact preparation dependency scopes, same-delivery ZIP payload reuse, original startup/storage proof compatibility and node timing; preserve independently reviewed concurrent Creator 1.9.3 existing-game integration support.",
+      "previous_scope": "Local Creator 1.9.3 exact integration repair support, using independently reproduced engine identity and mandatory original Native evidence. No public Skill release.",
+      "files": [
+        "package-check/scripts/check_package.py",
+        "package-check/scripts/prepare_delivery.py"
+      ],
+      "formal_selftest_sha256": "361122b6fd761fcd7dccd317c28aab34c06194a17c9a09ad6f9c42c463c54ed7",
+      "concurrent_source_review_sha256": "138f932d71fb7a69ebf0d298fa0a393d02d7029234479e4b540b7364cfe88c2b",
+      "boundary": "Portable Skill code only; no copied machine registrations, game PASS state or new real-game acceptance."
     }
   ],
   "release_integration": {

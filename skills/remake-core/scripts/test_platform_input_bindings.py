@@ -119,6 +119,51 @@ class PlatformInputTests(unittest.TestCase):
         self.accepted(b'function example(cc){cc.Class({onLoad:function(){if(!CC_WECHATGAME){' + BIND.encode() + b'}}});}')
         self.accepted(b'const example={onLoad:function(){if(!CC_WECHATGAME){' + BIND.encode() + b'}}};')
 
+    def test_direct_arrow_iife_is_not_skipped(self):
+        self.rejected(component("(()=>{if(!CC_WECHATGAME){" + BIND + "}})();"))
+        self.rejected(component("(()=>CC_WECHATGAME||this.node.on('click',this.play,this))();"))
+
+    def test_regular_or_bound_function_iife_requires_review(self):
+        for body in ["(function(){if(!CC_WECHATGAME){" + BIND + "}})();",
+                     "(function(){if(!CC_WECHATGAME){" + BIND + "}}).call(this);"]:
+            result = self.scan(component(body))
+            self.assertFalse(result['findings'], result)
+            self.assertTrue(result['unresolved'], result)
+
+    def test_arrow_lexical_writes_or_async_context_require_review(self):
+        for body in ["(()=>{var node=this.node;if(!CC_WECHATGAME)node.on('click',this.play,this);})();",
+                     "var enabled=false;(()=>{enabled=CC_WECHATGAME;})();if(!enabled){" + BIND + "}",
+                     "(async()=>{if(!CC_WECHATGAME){" + BIND + "}})();",
+                     "(()=>{this.isLegacy=CC_WECHATGAME;})();if(!this.isLegacy){" + BIND + "}"]:
+            result = self.scan(component(body))
+            self.assertFalse(result['findings'], result)
+            self.assertTrue(result['unresolved'], result)
+
+    def test_hidden_arrow_branch_is_not_an_input_gap(self):
+        self.accepted(component("(()=>{if(CC_WECHATGAME){this.node.active=false;return;}" + BIND + "})();"))
+
+    def test_alternate_init_binding_is_review_not_component_failure(self):
+        for extra in [",onEnable:function(){if(CC_WECHATGAME){" + BIND + "}}",
+                      ",onEnable:function(){this.bindOther();},bindOther:function(){" + BIND + "}"]:
+            result = self.scan(component('if(!CC_WECHATGAME){' + BIND + '}', extra))
+            self.assertFalse(result['findings'], result)
+            self.assertTrue(result['unresolved'], result)
+
+    def test_other_init_visibility_change_is_review_not_visible_button_failure(self):
+        for property_name in ['active', 'interactable', 'enabled']:
+            result = self.scan(component('if(!CC_WECHATGAME){' + BIND + '}',
+                ',onEnable:function(){this.node.' + property_name + '=!CC_WECHATGAME;}'))
+            self.assertFalse(result['findings'], result)
+            self.assertTrue(result['unresolved'], result)
+
+    def test_alternative_input_event_is_not_total_input_loss(self):
+        self.accepted(component("if(CC_WECHATGAME)this.node.on('touchend',this.play,this);"
+                                "else this.node.on('click',this.play,this);"))
+
+    def test_unrelated_other_lifecycle_sdk_listener_does_not_hide_gap(self):
+        self.rejected(component('if(!CC_WECHATGAME){' + BIND + '}',
+            ",onEnable:function(){this.sdk.on('close',this.afterAd,this);}"))
+
     def test_unsupported_control_flow_cannot_be_certified_by_this_scanner(self):
         result = self.scan(component('try{if(!CC_WECHATGAME){' + BIND + '}}catch(e){}'))
         self.assertTrue(result['unresolved'])

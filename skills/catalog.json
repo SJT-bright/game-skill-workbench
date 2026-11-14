@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T05:36:07.609Z",
-  "treeHash": "49ab06fd567596d8ce2fc70bfbeb75d634b4957701dafb93c2279d3d050866d9",
+  "createdAt": "2026-11-14T05:37:19.675Z",
+  "treeHash": "6fd1b11535b73219cb0d3180e0c49e3da08fc81b988c3605ec030fc8ada77a3b",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3765,14 +3765,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "805b4abc7bd5badaf11dd0274caccd68420a440a6d3786b081facc4605abea11",
-      "fileCount": 802,
-      "bytes": 14868136,
+      "treeHash": "d4ab8a82180539a5854bd1364df2b604c3dc57c0cadfa5b7aeccf946f5b9ecee",
+      "fileCount": 805,
+      "bytes": 14911159,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "a2deac26efe35f08d99ec5c1344c5312c6f30e69a2a87343c414635cecd7afb8",
-          "size": 216556,
+          "hash": "ec68bc3308319c6711046c29b007bd528a294dfb1e9b7405d4fa595ae8c6319a",
+          "size": 217059,
           "executable": false
         },
         {
@@ -3785,6 +3785,12 @@
           "path": "agents/openai.yaml",
           "hash": "bbb5b620e4a2946d0f6ca731ab5b77c1495cea8d1b1bbd6bdf72a69258dd0ba9",
           "size": 317,
+          "executable": false
+        },
+        {
+          "path": "assets/active-skill-advice.json",
+          "hash": "80a75fba7130f39442cb4c3a6eb6d2333eafa60ab70a59b742a28ffe891241e3",
+          "size": 9912,
           "executable": false
         },
         {
@@ -3831,8 +3837,8 @@
         },
         {
           "path": "assets/loading-recovery-examples/asset-load-guard.js",
-          "hash": "ed9a0064448e24239cb41911f4242497d5ff358a9e50f5233938206a9ba494ed",
-          "size": 7426,
+          "hash": "67b67624d2773b54e24a5fada5c48060b14e66f7ecbddc7a38a2a4dee095b04a",
+          "size": 7533,
           "executable": false
         },
         {
@@ -4683,8 +4689,8 @@
         },
         {
           "path": "assets/production-learning-active.json",
-          "hash": "168ea05aaa821c8f53838c305564f3aa44763430671514224658310cf26b3815",
-          "size": 1183,
+          "hash": "0cfc54829c83c88e6c5ef63aab0b1f97ba8bc0968a2d7f52247687cf67fa3064",
+          "size": 10161,
           "executable": false
         },
         {
@@ -4869,8 +4875,8 @@
         },
         {
           "path": "references/delivery-and-handoff.md",
-          "hash": "41c17290ab0cf98fe4636dd8f34c8ae81dd67fd8ae3f38e89bf648fc0aac12ba",
-          "size": 12218,
+          "hash": "046805e72a44df32e2d9937a67da681245f3c3debf068cbbd4380ee9ad72c670",
+          "size": 12333,
           "executable": false
         },
         {
@@ -4887,8 +4893,8 @@
         },
         {
           "path": "references/execution-checkpoints.md",
-          "hash": "ccd6379d5c26f2fccce39a769d89524be5837fcb1d8674d9f5c060df02bd81ac",
-          "size": 6924,
+          "hash": "5084a248cc3e5da2ccc29357172be468f6fc9f992d2ee7108eb88bea3029c536",
+          "size": 6967,
           "executable": false
         },
         {
@@ -4905,8 +4911,8 @@
         },
         {
           "path": "references/fusion-policy.md",
-          "hash": "eb6d24d4e1cd79d88402a455a01b86e619b3997239e5a8294dee92b27e2cd269",
-          "size": 6810,
+          "hash": "e9a76adff52fbe71270c78f45c1c3f2adca64864be80ad141381e0e45b98ad19",
+          "size": 6976,
           "executable": false
         },
         {
@@ -4923,8 +4929,8 @@
         },
         {
           "path": "references/host-adaptation.md",
-          "hash": "b6773fa80817c33fea41551598ad3a97f281b08b0f3939e9f86ac8a5c58f7c45",
-          "size": 3219,
+          "hash": "fdeb52f75fd68d08141c5bd14be68585dd8cf7089f5997e798356299798a707e",
+          "size": 3263,
           "executable": false
         },
         {
@@ -4935,8 +4941,8 @@
         },
         {
           "path": "references/known-issue-checklist.md",
-          "hash": "b1057fc8fc4354c1918d2c7e5da63551b1f735c0c1e77357bc21c85023f4a4fb",
-          "size": 45807,
+          "hash": "6e122befdd6154cef8fb0853e0783ec9a5ad7f603c56750ac8bd6cf7b549ca00",
+          "size": 48501,
           "executable": false
         },
         {
@@ -4965,8 +4971,8 @@
         },
         {
           "path": "references/machine-load.md",
-          "hash": "7989a509b914ade684bec14b3aa71c28842631ccc2fdcd02cc1b72391e2aa549",
-          "size": 14130,
+          "hash": "af188f521cb2de2df03aa9f28f977bf9a9238b285da49a1c09de04d21245b561",
+          "size": 14259,
           "executable": false
         },
         {
@@ -5025,8 +5031,8 @@
         },
         {
           "path": "references/production-baseline.md",
-          "hash": "dd70cd03782e87fa899f42760bfe8d56c77b274c981278d355155b432c29627a",
-          "size": 12761,
+          "hash": "407bfc77dcb392c2e4ea8c7bcfb8f719257fcb62037a3e0b2e6d7abbee84559d",
+          "size": 13838,
           "executable": false
         },
         {
@@ -5103,8 +5109,8 @@
         },
         {
           "path": "references/stage-flow.md",
-          "hash": "7e6299f97df50e259f9fb259f7ce686c2e5f4c36c1168cd18d9c8757c65e4d82",
-          "size": 50423,
+          "hash": "818f3668bdfa67696f21e2142d78771ecdb2475c3dbc16c13b23f29b1729c13e",
+          "size": 50514,
           "executable": false
         },
         {
@@ -5139,8 +5145,8 @@
         },
         {
           "path": "references/two-boards.md",
-          "hash": "57797bd2c532459ef834f4229329dd847fee2d87f5d5136ccf6449b3a76d4041",
-          "size": 2601,
+          "hash": "e5a46a79cdfd79bc97206ed7890755718d404d71bf594cdf65a98e01f2a67dab",
+          "size": 2565,
           "executable": false
         },
         {
@@ -5165,6 +5171,12 @@
           "path": "references/workflow-tools.md",
           "hash": "051a7a4e00161595b49f1238433306f2ff9e9eeca1b23815a332b0374f86be6c",
           "size": 22427,
+          "executable": false
+        },
+        {
+          "path": "scripts/active_skill_advice.py",
+          "hash": "eb7b9a9d7057ed81ba1b6f6fb6e11a10de210a9066cb7c7215310406b16bb01f",
+          "size": 3433,
           "executable": false
         },
         {
@@ -5589,8 +5601,8 @@
         },
         {
           "path": "scripts/audit_page_richness.py",
-          "hash": "833154bfa4123cd8f16ca6a2b206f7a3f7beb23ce03afbcd85e5230e10553563",
-          "size": 228910,
+          "hash": "b70affef12bf1c0d3111c0f04430308994df850984f5bb67f723d6b938b5fb77",
+          "size": 229179,
           "executable": false
         },
         {
@@ -5739,8 +5751,8 @@
         },
         {
           "path": "scripts/check_known_issues.py",
-          "hash": "5556e59a52022357c885d119d8e24c7a873693675110606e4a904257d42df7e6",
-          "size": 64280,
+          "hash": "5bdb4b98fcf89076012115b7c2d6f32fc4a7e6186f0f49bc6237fa34e6db95db",
+          "size": 65936,
           "executable": false
         },
         {
@@ -6351,8 +6363,8 @@
         },
         {
           "path": "scripts/preflight.py",
-          "hash": "80951944597cffd2f450ff49eca61580b3572121de19cdcb787daa67465e0915",
-          "size": 51897,
+          "hash": "aac34d6755a5fca399e1919d6e07fee3e4864951341049f1e174fee596d01653",
+          "size": 51950,
           "executable": false
         },
         {
@@ -6579,8 +6591,8 @@
         },
         {
           "path": "scripts/scan_platform_input_bindings.cjs",
-          "hash": "74b764d775de2f00bff7b70c671184f31f340ddef9edd43486d6dfaa79fb3e5f",
-          "size": 12577,
+          "hash": "26e71d684c80d635dbb45bcc97c922fa627136986ddf56833c3a228931659309",
+          "size": 15094,
           "executable": false
         },
         {
@@ -6683,6 +6695,12 @@
           "path": "scripts/test-fixtures/startup-formal28-tools.json",
           "hash": "94fbba26495614fe3c46160bd8f8a7142b56895e1bdb9f97f024de816a927d22",
           "size": 776,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_active_skill_advice.py",
+          "hash": "d2806d480bb242d99a73e1e828f3262f1314b3306a594480051e40837393fedf",
+          "size": 3445,
           "executable": false
         },
         {
@@ -6945,8 +6963,8 @@
         },
         {
           "path": "scripts/test_asset_load_guard.cjs",
-          "hash": "21abcae5b728a06bf5a3f2dc71ba8bc9c58f2fdb6c69807cb8eded5d3bc7406b",
-          "size": 4326,
+          "hash": "439d317672bd752292262e6f6e59379f86b15ee7ce3cb832ac089e23cfbfdf40",
+          "size": 5670,
           "executable": false
         },
         {
@@ -7365,8 +7383,8 @@
         },
         {
           "path": "scripts/test_known_issue_gate.py",
-          "hash": "1ce6373ec5994923d775df2c381942bb2ca111c1d66bb2404b6bd516637c2aa4",
-          "size": 47712,
+          "hash": "6c13907213a1648dde25f86be601713f3dee91d622bc3702da0bff45f9cdd163",
+          "size": 51434,
           "executable": false
         },
         {
@@ -7659,8 +7677,8 @@
         },
         {
           "path": "scripts/test_platform_input_bindings.py",
-          "hash": "13c9b6bf3aad0a51c35a8c9097047433657223c39b3ea0fc0f5063ca8e456e31",
-          "size": 8214,
+          "hash": "292998a108d5347c4bbfdff5fd6e64be30fb0db70e17e9b1092fe0f87c1cf9c5",
+          "size": 10975,
           "executable": false
         },
         {

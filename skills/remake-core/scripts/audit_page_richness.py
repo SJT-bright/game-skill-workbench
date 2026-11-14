@@ -489,7 +489,7 @@ def text_problems(d, nodes, buttons, image_module):
         if oc and (outline.get('width') or 0) >= 2 and contrast(oc, bg_c) >= 3 and contrast(col, oc) >= 3:
             continue
         out.append('low_contrast: "%s" contrast %.1f:1 against what is behind it (needs %.1f): change the text colour, add an outline '
-                   'or a plate behind it' % (word, ratio, need))
+                   'with clear theme-colour glyph edges or a calmer position; keep resource HUD transparent unless a necessary carrier is established' % (word, ratio, need))
     return out
 
 
@@ -1652,8 +1652,8 @@ def solid_fill(n):
 
 def flat_value_plate_problems(nodes):
     """User 2026-10-28/29 (冲鸭小巴 "数据后面有纯色背景的在skill也要限制住", 坦克 "金币后面的蓝色背景去掉", 人鱼逃脱 blue strip
-    behind "LEVEL 1 • +10 PEARLS"): no flat solid-colour box of ANY colour behind a level/score/currency value. A plate
-    behind data is a picture generated with the art; text-backplate-review.md already bans the dark ones."""
+    behind "LEVEL 1 • +10 PEARLS"): no flat solid-colour box of ANY colour behind a level/score/currency value. Resource HUD stays transparent by default; fix glyphs, spacing and position first.
+    Any necessary carrier must follow text-backplate-review.md, including generated PNG backgrounds."""
     out = []
     for n in nodes:
         value = text(n)
@@ -1675,8 +1675,8 @@ def flat_value_plate_problems(nodes):
             if fill is None or fill[1] < 0.35:      # a faint tint is not a box; popup masks are full-screen anyway
                 continue
             out.append('flat_value_plate: "%s" (%s) sits on a flat colour box %s (colour %s, %.0f%% visible): no flat '
-                       'colour plate of any colour behind data (user 2026-10-29); use a plate picture generated with the '
-                       'art, or no plate and a clear outline on the digits'
+                       'colour plate of any colour behind data; keep an already readable resource HUD transparent; '
+                       'fix glyphs/edges/spacing first; only a necessary carrier may use the game art style'
                        % (value[:30], n['path'], p['path'], fill[0], fill[1] * 100))
             break
     return out
@@ -2369,7 +2369,7 @@ def busy_text_problems(d, nodes, image_module):
         colours, edges = m
         if colours > MAX_TEXT_COLOURS:
             out.append('busy_text_background: "%s" (%s) has no plate and the background behind the words is busy (%d colours, '
-                       'max %d; edges around it %.0f%%): add a plate behind it or move it to a calm part of the background '
+                       'max %d; edges around it %.0f%%): fix glyphs/edges/position or the local background first; keep resource HUD transparent unless a necessary carrier is established '
                        '(Holly v2: PROFILE crossed by the fence)' % (text(t)[:24], t['path'], colours, MAX_TEXT_COLOURS, 100 * edges))
     return out
 

@@ -73,6 +73,7 @@ module.exports = function install(root, engine, nativeBeforeAdapter) {
       Object.keys(options).forEach(function (k) { opts[k] = options[k]; });
       var progress = opts.onFileProgress;
       opts.onFileProgress = function (a, b) {
+        if (r.settled) return;  // Late progress must not update a departed owner or renew completed work.
         var n = typeof a === 'number' ? a : a && a.totalBytesWritten;
         if (typeof n === 'number' && isFinite(n) && n > r.bytes) { r.bytes = n; r.idle = 0; r.last = Date.now(); mark++; }
         if (progress) progress.apply(this, arguments);

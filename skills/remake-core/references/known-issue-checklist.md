@@ -88,6 +88,16 @@ inventory输入是实际入口数组，例如：
 
 ## 领取结果一致性检查
 
+### 主动领取的可见完成反馈
+
+制作第一个实际 CLAIM/领取入口时，就把提交成功、当前奖励反馈与原定去向一起接通。免费领取与广告加赠适用同一标准：实际奖励正确且只应用一次后，玩家能看到本次奖励/到账/已领取的明确反馈，或到达原定下一状态，也可两者都有。既定合同要求继续下一局时，即使有动画也仍须继续；签到、礼盒等允许留页时不强制跳关。同场景重开须核旧结算页退出和新局/目标身份，不能只比场景名。零奖励不要求余额增加或播放“+0”，核本次结算与正确去向；非金币按实际奖励/效果核对。
+
+只变余额、日志/声音、按钮按压色或禁用、通用“Video complete”提示、背景/计时运动，都不能单独证明领取完成。动画不得承担入账或成为唯一继续条件；保存失败不提前显示成功，动画中断/迟到也不重复发奖、不重播广告、不锁住免费出口。平台自动回访奖励、后台记账与静默恢复继续遵守原静默合同，不套用主动领取的动画要求。
+
+复用原 `reward_entries.<入口>.states.completed` 行及同一次真实操作的画面证据，不另建专项、视频、第二视口或固定等待。该行的 `postconditions` 记录 `completion_feedback`：`reward_feedback`（本次可见奖励/到账反馈）或 `destination`（原页退出并到达原定目标），并记录 `destination_contract_met=true`；已有 `observed/evidence` 写清本次目标、反馈和实际去向，须有 `gui_mouse/gui_touch/device` 层，`mixed` 列出实际层。原要求留页且留页正确也可确认合同满足。`navigation_reward` 仍由现有平台导航/静默规则检查，不添加这两个字段。字段只校验证据完整性，不自动识别图片或证明观察为真。
+
+CLAIM-01 汇总引用这些逐入口结果；广告、经济和存档检查复用同一操作的有效证据。`ad_outcome` 的数值变化、泛化画面差异，以及按钮巡查通过，都只作补充，不能替代本次领取反馈与去向。短动画未被现有证据捕获时记缺证，仅补该入口观察，不直接判产品失败，也不添加全量美术采集。旧记录若已包含同版、同目标且依赖未变的真实反馈/去向，可读原证据补这两个字段，保留原时间；只有余额的旧通过不能推定新结论。相关消费者、页面绑定、反馈或去向变化才失效相应入口；最终 ZIP、版本身份和交付回执照现行流程核对。
+
 ### 最小执行法：先打通，再扩展
 
 首个奖励机制可运行就做，别等整套UI和最终打包。每种实际机制先选一个代表入口，复用现有隔离SDK/存储夹具，完成：
@@ -116,7 +126,7 @@ inventory输入是实际入口数组，例如：
 
 | 状态 | 增补的必查后置条件 |
 | --- | --- |
-| `completed` | `reward_identity_verified`（本次类型/数量/物品及周期/局目标）、`current_reward_display_consistent`（本次结果与下一次预告区分）、`success_feedback_consistent`（提交结果与成功/待保存/失败反馈一致） |
+| `completed` | `reward_identity_verified`（本次类型/数量/物品及周期/局目标）、`current_reward_display_consistent`（本次结果与下一次预告区分）、`success_feedback_consistent`（提交结果与成功/待保存/失败反馈一致）；主动领取另按上文填写 `completion_feedback / destination_contract_met`，复用同次GUI证据 |
 | `reopen` / `reload` | `model_and_presentation_consistent`（当前合法资格下，模型与重绘后的文字、按钮及数量/拥有一致） |
 | `save_failure_retry` | `proof_target_preserved`（完成凭证与原日期/局/物品匹配，恢复历史事务不消耗另一目标的新凭证） |
 | `apply_or_consume` | `ownership_and_usage_distinguished`（拥有与选中/装备/实际生效明确）、`related_views_consistent`（已有相关页面含缓存再次显示时与同一模型一致） |

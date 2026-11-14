@@ -16,6 +16,7 @@ import logic_regressions as logic_reg
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--report', type=Path, required=True)
+    parser.add_argument('--claim-feedback-only', action='store_true', help='Run only CLAIM completion controls with the same gate fixtures')
     args = parser.parse_args()
     from unittest.mock import patch
     import audit_startup_contract
@@ -227,6 +228,9 @@ def main():
                         'each_channel_settles_once': True, 'non_eligible_results_no_reward': True,
                         'every_result_visible_end_state': True, 'test_double_supports_each_channel': True,
                         'channels_tested': ['callback', 'promise', 'both', 'void_or_incomplete', 'reject_or_throw', 'event']}
+                if state == 'completed' and entry['policy'] != 'navigation_reward':
+                    entry['states'][state]['layer'] = 'gui_touch'  # Synthetic schema boundary, never real GUI proof.
+                    post.update(completion_feedback='reward_feedback', destination_contract_met=True)
                 entry['states'][state]['postconditions'] = post
         # Calibration (Monkey Dash 2026-10-21): the same check must have failed on a known-bad version.
         cal_tool = root / 'return-contract-check.py'
@@ -251,7 +255,10 @@ def main():
         for item in catalog['items']:
             if item.get('requires_negative_control'):
                 baseline['checks'][item['id']]['evidence'] = [deepcopy(ref)] + cal_refs()
+        claim_feedback_names = {'animation cannot override a missing intended destination', 'active claim source-only feedback is insufficient', 'complete synthetic schema accepted (not a game pass)', 'old balance-only evidence needs scoped feedback observation', 'destination cannot leave the old claim page visible', 'write committed/readback failure not checked', 'save retry replays ad', 'free claim with visible receipt may stay on its original page', 'active claim rejects completion data_only', 'active claim rejects completion background_motion', 'active claim rejects completion video_complete_toast', 'silent platform navigation does not require CLAIM animation', 'active claim rejects completion None', 'zero-reward same-scene next round is valid', 'active claim rejects completion button_press', 'active claim rejects completion []', 'active claim rejects completion {}', 'mixed source without GUI is insufficient', 'mixed GUI evidence remains accepted'}
         def probe(name, change, expected='blocked'):
+            if args.claim_feedback_only and name not in claim_feedback_names:
+                return
             current = deepcopy(baseline)
             change(current)
             a.review.write_text(json.dumps(current))
@@ -332,6 +339,32 @@ def main():
                       lambda d, state=state, field=field: states(d)[state]['postconditions'].pop(field))
                 probe(state + ' inconsistent ' + field,
                       lambda d, state=state, field=field: states(d)[state]['postconditions'].update({field: False}))
+        # Active CLAIM: use the existing completed row, not a second test/manifest.
+        for value in (None, 'data_only', 'button_press', 'background_motion', 'video_complete_toast', [], {}):
+            probe('active claim rejects completion ' + str(value), lambda d, value=value:
+                  states(d)['completed']['postconditions'].update(completion_feedback=value))
+        probe('old balance-only evidence needs scoped feedback observation', lambda d:
+              states(d)['completed']['postconditions'].pop('completion_feedback'))
+        probe('active claim source-only feedback is insufficient', lambda d:
+              states(d)['completed'].update(layer='source'))
+        probe('mixed source without GUI is insufficient', lambda d:
+              states(d)['completed'].update(layer='mixed', layers=['source', 'native']))
+        probe('mixed GUI evidence remains accepted', lambda d:
+              states(d)['completed'].update(layer='mixed', layers=['source', 'gui_touch']), 'passed')
+        probe('animation cannot override a missing intended destination', lambda d:
+              states(d)['completed']['postconditions'].update(destination_contract_met=False))
+        probe('destination cannot leave the old claim page visible', lambda d:
+              states(d)['completed']['postconditions'].update(completion_feedback='destination',
+                  presentation='navigated', claim_page_left=False))
+        probe('zero-reward same-scene next round is valid', lambda d:
+              states(d)['completed']['postconditions'].update(completion_feedback='destination',
+                  presentation='navigated', claim_page_left=True), 'passed')
+        probe('free claim with visible receipt may stay on its original page', lambda d:
+              d['reward_entries'][2]['states']['completed']['postconditions'].update(
+                  completion_feedback='reward_feedback', destination_contract_met=True), 'passed')
+        probe('silent platform navigation does not require CLAIM animation', lambda d:
+              d['reward_entries'][1]['states']['completed']['postconditions'].update(
+                  completion_feedback=None, destination_contract_met=None), 'passed')
         probe('same observed text copied into two checks', lambda d: d['checks']['LOAD-02'].update(
             observed=d['checks']['FLOW-01']['observed']))
         probe('LOAD-03 observation fields repeat one summary', lambda d: d['checks']['LOAD-03'].update(

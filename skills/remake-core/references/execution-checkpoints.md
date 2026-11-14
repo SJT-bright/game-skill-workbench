@@ -42,7 +42,7 @@ python scripts/audit_runtime_coverage.py --source <project/assets或真实src目
 - excluded：具体 `reason` 与哈希 evidence；不得用“不在本次改动里”排除最终包已有业务。
 - 新增调用、产物变化、证据变化、缺域、缺案例、未测、测试目标遗漏均拒绝。变更后明确核哪些观察要重跑；不能只刷新哈希保留旧 pass。
 
-验证：不加 --init，用同样参数，可加 `--out <报告>`。正式 make_tiktok_zip.py 强制执行此检查和原 known-issue 门禁；缺任一不写 ZIP。其他项目自有 writer 若保留，必须执行相同正式门禁/覆盖检查并经过实际拒绝测试，不得降低。
+验证：不加 --init，用同样参数，可加 `--out <报告>`。覆盖与历史问题核准在对应生产/检测节点完成；唯一 writer 按[统一写包路线](single-writer.md)只读消费其有效记录。缺证或真实失效回该节点修复，不使用项目自写打包器绕过正式入口。
 
 ## 诚实边界
 
@@ -52,7 +52,7 @@ python scripts/audit_runtime_coverage.py --source <project/assets或真实src目
 
 ## 已知故障自动执行：Cocos 2 GrowthLedger
 
-正式 writer 在读取覆盖表前自动运行 `run_reward_storage_probe.py --native <目录> --web <目录>`：从当前启动 settings 定位 Web bundle，执行最终 Native 适配器存储模块和两端实际 GrowthLedger，自动注入 null/undefined/空字符串、对象返回、旧档、坏档、读写故障与消费恢复。无需模型填写通过状态。识别到此账本但布局不支持、模块歧义或执行失败则阻止出包；没有此模块只表示此专用探针不适用，不等于其他奖励链已测完。其他账本必须增加对应的实际生产加载器与可执行用例，覆盖表不能替代探针。
+奖励与存档的生产节点用 `writer_proofs.py prepare --kind reward-storage --project <工程> --native <目录> --web <目录>` 调用既有 `run_reward_storage_probe.py`：定位实际 Web bundle、最终 Native 存储模块与两端 GrowthLedger，核缺省值、旧档、坏档、读写故障和消费恢复。按真实模块与输入形成记录，未变项沿用。布局不支持、模块歧义或执行失败回该节点修复；没有此模块只表示此专用探针不适用，不能代替其他奖励链证据。其他账本沿用其实际生产加载器与用例。writer 只读消费记录，不再执行探针；覆盖表不能代替真实执行。
 
 校准记录：Screw It 原 v9 被同一探针在空字符串用例拒绝，v10 通过 28 项；真实设备/广告仍未由此证明。不要把某一游戏旧源码或私人路径内置到通用探针。
 

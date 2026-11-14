@@ -808,6 +808,18 @@ def _audit_uncached(args):
                        ('reward_identity_verified', 'current_reward_display_consistent',
                         'success_feedback_consistent')):
                     node_errors.append(label + ': verify this reward identity/display and consistent committed-success feedback')
+                if active_claim(entry):
+                    layers = row.get('layers', []) if row.get('layer') == 'mixed' else [row.get('layer')]
+                    if not isinstance(layers, list) or not any(x in ('gui_mouse', 'gui_touch', 'device') for x in layers):
+                        node_errors.append(label + ': active claim completion needs the same action GUI/device evidence')
+                    feedback = post.get('completion_feedback')
+                    if feedback not in ('reward_feedback', 'destination'):
+                        node_errors.append(label + ': record visible reward/receipt feedback or the intended destination; '
+                                                  'data-only, press state and unrelated motion do not prove completion')
+                    if post.get('destination_contract_met') is not True:
+                        node_errors.append(label + ': verify the original intended destination, including a new round in the same scene')
+                    if feedback == 'destination' and (post.get('presentation') != 'navigated' or post.get('claim_page_left') is not True):
+                        node_errors.append(label + ': destination feedback requires leaving the claim page and reaching its intended target')
                 outcome = post.get('presentation')
                 valid = {'hidden', 'disabled_claimed', 'navigated'}
                 if entry.get('policy') == 'repeatable':
@@ -903,10 +915,15 @@ def _audit_uncached(args):
             'errors': errors, **errors.validation(), 'limits': 'Coverage/hash/postcondition review only. Does not prove screenshots, actual UI actions, physical device, IAA or upload. Existing mobile gates remain separate.'}
 
 
+def active_claim(entry):
+    """Player claim rows; platform navigation/automatic revisit rewards keep GROW-01."""
+    return entry.get('policy') != 'navigation_reward' and entry.get('trigger') in {'direct', 'rewarded_video'}
+
+
 def init(args):
     catalog = load(CATALOG)
     pending = lambda: {'status': 'pending', 'layer': '', 'observed': '', 'evidence': []}
-    def pending_state(state):
+    def pending_state(state, entry):
         row = pending()
         fields = {'completed': ['reward_identity_verified', 'current_reward_display_consistent',
                                 'success_feedback_consistent'],
@@ -928,6 +945,8 @@ def init(args):
                                        'ownership_and_usage_distinguished', 'related_views_consistent']}
         if state in fields:
             row['postconditions'] = {field: None for field in fields[state]}
+        if state == 'completed' and active_claim(entry):
+            row['postconditions'].update(completion_feedback='', destination_contract_met=None)
         if state == 'save_failure_retry':
             row['postconditions']['recovery_scope'] = ''
         if state == 'return_contracts':
@@ -943,7 +962,7 @@ def init(args):
     review = {'schema': 3, 'board': board, 'art_style': art_style, 'catalog_sha256': sha(CATALOG.read_bytes()),
               'binding': binding(args), 'inventory_complete': False,
               'inventory_evidence': [], 'checks': {x['id']: {**pending(), **({'observations': {k: '' for k in x['required_observations']}} if x.get('required_observations') else {}), **({'auto_reports': []} if auto_tools(x, board) else {})} for x in items},
-              'reward_entries': [{**e, 'states': {s: pending_state(s) for s in catalog['reward_states']}} for e in entries],
+              'reward_entries': [{**e, 'states': {s: pending_state(s, e) for s in catalog['reward_states']}} for e in entries],
               'independent_reward_checks': {key: {**pair, **pending()} for key, pair in independent_pairs(entries).items()},
               'test_executor': '',
               'gpt_spot_check': {'reviewer': '', 'locked_commit': '', 'code_changes_reviewed': False,

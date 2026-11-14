@@ -1,0 +1,256 @@
+{
+  "schema": "active_skill_advice.v1",
+  "purpose": "Skill-maintenance C8 and portable retired-advice selfchecks only; not a new game gate",
+  "source": "User-confirmed fourteen conflict themes, 2026-11-13",
+  "rules": [
+    {
+      "id": "chinese-internal",
+      "current": "cocos-game-to-english/references/preview-handoff.md",
+      "matches": [
+        {
+          "paths": [
+            "cocos-game-to-english/SKILL.md",
+            "remake-core/references/two-boards.md"
+          ],
+          "pattern": "中文原版用 Chrome 交用户试玩|再给 Saul 中文原版的试玩链接|开工先给 Saul 中文原版的手机试玩链接"
+        }
+      ],
+      "stale_control": {
+        "path": "cocos-game-to-english/SKILL.md",
+        "text": "中文原版用 Chrome 交用户试玩，不等回复。"
+      }
+    },
+    {
+      "id": "browser-split",
+      "current": "remake-core/references/browser-testing-policy.md",
+      "matches": [
+        {
+          "paths": [
+            "chrome-mobile-testing/SKILL.md",
+            "remake-core/references/machine-load.md",
+            "remake-core/references/host-adaptation.md",
+            "remake-core/references/stage-flow.md"
+          ],
+          "pattern": "全部浏览器测试只用|所有浏览器测试仅用 Ego|AI 自己测试严格用 Ego|AI 自己测试照常用 Ego|Agent 测试使用 Ego Lite"
+        }
+      ],
+      "stale_control": {
+        "path": "chrome-mobile-testing/SKILL.md",
+        "text": "全部浏览器测试只用 **Ego Lite**。"
+      }
+    },
+    {
+      "id": "executor-independent",
+      "current": "remake-core/references/single-writer.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-core/references/stage-flow.md"
+          ],
+          "pattern": "其他 AI 执行时.{0,30}重跑全部|抽查至少\\s*3\\s*个流程"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-core/references/stage-flow.md",
+        "text": "其他 AI 执行时按现门禁亲自重跑全部适用自动脚本并抽查至少3个流程。"
+      }
+    },
+    {
+      "id": "writer-consumes",
+      "current": "remake-core/references/single-writer.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-core/references/executable-regression-retention.md",
+            "remake-core/references/execution-checkpoints.md",
+            "cocos-game-check/SKILL.md",
+            "cocos-game-check/package-check/references/check-contract.md",
+            "cocos-game-check/package-check/references/resource-and-reported-issues.md"
+          ],
+          "pattern": "writer 在 ZIP 前亲自重跑|正式 writer 在读取覆盖表前自动运行|写包入口自动跑|写包入口必跑的运行时|沿review重跑已登记启动器|启动/恢复门禁仍由writer独立执行"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-core/references/executable-regression-retention.md",
+        "text": "writer 在 ZIP 前亲自重跑。"
+      }
+    },
+    {
+      "id": "trial-incremental",
+      "current": "remake-core/references/incremental-checks.md",
+      "matches": [
+        {
+          "paths": [
+            "cocos-game-to-english/references/english-ui-rebuild.md",
+            "remake-art/SKILL.md"
+          ],
+          "pattern": "每轮试玩链接前的完整美工检查|完整美工检查继续在每轮试玩前完成"
+        }
+      ],
+      "stale_control": {
+        "path": "cocos-game-to-english/references/english-ui-rebuild.md",
+        "text": "制作中确认不代替每轮试玩链接前的完整美工检查。"
+      }
+    },
+    {
+      "id": "six-required",
+      "current": "remake-core/references/ad-standard-six.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-core/references/two-boards.md",
+            "remake-core/references/fusion-policy.md",
+            "ad-boost/references/接入与交付.md",
+            "ad-boost/references/已定规则.md",
+            "ad-boost/references/组合包.md",
+            "ad-boost/references/问Saul话术.md",
+            "ad-boost/scripts/combos.json",
+            "remake-core/scripts/preflight.py",
+            "ad-boost/scripts/diagnose_ads.py"
+          ],
+          "pattern": "英化默认不加这些|英化默认不加新系统|只在原游戏本来就有这个系统时才加|没有可换外观对象时记录皮肤不适用|默认只改美工、文字和固定入口，不改玩法、不补关、不加新系统|英化只在原游戏有皮肤时|英化默认不加皮肤|英化默认不加，|英化默认不加、|没有体力的游戏不新加体力"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-core/references/two-boards.md",
+        "text": "英化默认不加新系统，本次是他授权的例外。"
+      }
+    },
+    {
+      "id": "four-deliverables",
+      "current": "cocos-game-to-english/references/preview-handoff.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-core/references/delivery-and-handoff.md"
+          ],
+          "pattern": "同一条回复里同时给两样|源码及核验记录保留在项目，不附额外源码|不为单 ZIP 交付额外压成总包，用户另要时再整理"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-core/references/delivery-and-handoff.md",
+        "text": "每次出包在同一条回复里同时给两样，源码及核验记录保留在项目，不附额外源码。"
+      }
+    },
+    {
+      "id": "freeze-first-piece",
+      "current": "remake-art/references/art-iteration-workflow.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-art/references/art-before-trial.md",
+            "remake-art/SKILL.md",
+            "remake-art/references/page-richness.md",
+            "ad-boost/SKILL.md",
+            "cocos-game-to-english/references/english-ui-rebuild.md"
+          ],
+          "pattern": "每接好一页马上再跑|每次拼图都审查|每拼完一组功能入口按钮就跑|首件实际初始化通过后批量|待共同问题稳定后批量制作"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-art/references/art-before-trial.md",
+        "text": "每接好一页马上再跑一次 audit_text_fit.py，零发现再做下一页。"
+      }
+    },
+    {
+      "id": "individual-large-assets",
+      "current": "remake-art/references/art-iteration-workflow.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-art/references/page-richness.md"
+          ],
+          "pattern": "不一个一个分别生成|同一组按钮在\\*\\*一次生图要求里一起生成"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-art/references/page-richness.md",
+        "text": "同一组按钮在**一次生图要求里一起生成**，不一个一个分别生成。"
+      }
+    },
+    {
+      "id": "approved-button-compose",
+      "current": "remake-art/references/fixed-caption-button.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-art/references/page-richness.md",
+            "remake-art/references/ui-style-and-samples.md"
+          ],
+          "pattern": "也\\*\\*不能\\*\\*\"生成的底板＋另一张图片字/拼字母\"|固定英文动作、语义图标及背景在同一张 image_gen 图片里一起生成"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-art/references/page-richness.md",
+        "text": "固定英文动作、语义图标及背景在同一张 image_gen 图片里一起生成；"
+      }
+    },
+    {
+      "id": "clarity-advisory",
+      "current": "remake-art/references/artwork-and-feedback.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-art/references/ui-style-and-samples.md"
+          ],
+          "pattern": "默认UI原图至少为最大设计显示尺寸2倍"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-art/references/ui-style-and-samples.md",
+        "text": "默认UI原图至少为最大设计显示尺寸2倍。"
+      }
+    },
+    {
+      "id": "nine-slice-not-safe",
+      "current": "remake-art/references/production-check-link.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-art/references/ui-style-and-samples.md"
+          ],
+          "pattern": "内框就是准的|面板用九宫格图时按九宫格边距算"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-art/references/ui-style-and-samples.md",
+        "text": "面板最好用九宫格图，内框就是准的。"
+      }
+    },
+    {
+      "id": "transparent-hud-advice",
+      "current": "remake-art/references/text-backplate-review.md",
+      "matches": [
+        {
+          "paths": [
+            "remake-core/scripts/audit_page_richness.py",
+            "remake-art/references/page-richness.md"
+          ],
+          "pattern": "add a plate behind it|or a plate behind it|use a plate picture generated with the|报「加底板或挪位置」"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-core/scripts/audit_page_richness.py",
+        "text": "fix by adding contrast or a plate behind it"
+      }
+    },
+    {
+      "id": "preview-shell-only",
+      "current": "remake-core/assets/platform-kit/README",
+      "matches": [
+        {
+          "paths": [
+            "remake-ads/references/tiktok-native-iaa.md",
+            "remake-ads/references/ad-configuration-reuse.md",
+            "remake-ads/references/local-review-and-test-ids.md"
+          ],
+          "pattern": "标明 LOCAL PREVIEW|呈现英文奖励说明、LOCAL PREVIEW 标识|保持可关闭LOCAL PREVIEW|仍显示可关闭 LOCAL PREVIEW"
+        }
+      ],
+      "stale_control": {
+        "path": "remake-ads/references/tiktok-native-iaa.md",
+        "text": "预览窗口使用本游戏 Cocos UI 并保留画风，标明 LOCAL PREVIEW。"
+      }
+    }
+  ]
+}

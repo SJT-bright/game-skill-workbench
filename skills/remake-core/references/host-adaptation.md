@@ -20,7 +20,7 @@ Windows当前Python可用`py -3 -X utf8 -B`，Mac使用已安装的`python3 -B`�
 | Grok候选 | PATH，其次用户目录.grok/bin/grok.exe | PATH，其次用户目录.grok/bin/grok |
 | 后台进程 | 仅操作运行器创建并跟踪的PID树 | 仅操作运行器创建的新POSIX进程组 |
 | 路径/命令 | PowerShell参数和本机实际路径 | POSIX shell参数和本机实际路径 |
-| 浏览器 | Agent 测试使用 Ego Lite；用户试玩窗口使用 Google Chrome | 同左，不从操作系统推断已安装Ego/Chrome或已登录 |
+| 浏览器 | 英化人工点检用 Computer Use + Edge，自动脚本用 Ego Lite；两次正式英文交接用 Google Chrome | 同左，不从操作系统推断已安装Ego/Chrome或已登录 |
 
 已有四个支持脚本内置Windows/POSIX条件分支，保留一份实现；不为系统差异复制两套业务规则。按[浏览器测试规则](browser-testing-policy.md)执行。Ego 并发空间的处理按[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)。Windows实测不替代Mac运行或手机/IAA证据。
 

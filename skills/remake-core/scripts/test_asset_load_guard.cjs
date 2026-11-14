@@ -18,11 +18,11 @@ function harness() {
   const engine = {assetManager: {downloader, parser: {register() {}}}};
   const root = {};
   const api = install(root, engine, true);
-  const calls = [];
-  downloader.register('.png', function raw(url, opts, cb) { calls.push(cb); return {abort() {}}; });
-  function load() {
+  const calls = [], progressCallbacks = [];
+  downloader.register('.png', function raw(url, opts, cb) { calls.push(cb); progressCallbacks.push(opts.onFileProgress); return {abort() {}}; });
+  function load(onProgress) {
     const results = [];
-    registered['.png']('a.png', {}, (err, value) => results.push({err, value, at: now}));
+    registered['.png']('a.png', {onFileProgress: onProgress}, (err, value) => results.push({err, value, at: now}));
     return results;
   }
   function advance(ms, step) {
@@ -34,7 +34,7 @@ function harness() {
     }
   }
   function restore() { Date.now = realNow; global.setTimeout = realSetTimeout; }
-  return {api, calls, load, advance, restore, get now() { return now; }};
+  return {api, calls, progressCallbacks, load, advance, restore, get now() { return now; }};
 }
 
 const cases = {
@@ -93,6 +93,37 @@ const cases = {
     h.calls[1](null, 'img');
     assert.deepStrictEqual(r.map(x => x.value), ['img']);
     h.restore();
+  },
+  'late progress after success does not touch observer or progress clock'() {
+    const h = harness();
+    try {
+      let observed = 0;
+      const r = h.load(() => observed++);
+      h.progressCallbacks[0](10, 100);
+      assert.strictEqual(observed, 1, 'active request still reports progress');
+      h.calls[0](null, 'img');
+      const mark = h.api.progress();
+      h.progressCallbacks[0](100, 100);
+      assert.strictEqual(h.api.progress(), mark, 'settled request cannot advance shared progress');
+      assert.strictEqual(observed, 1, 'late progress cannot update departed UI');
+      assert.strictEqual(r.length, 1);
+    } finally { h.restore(); }
+  },
+  'late progress after failure does not touch observer or progress clock'() {
+    const h = harness();
+    try {
+      let observed = 0;
+      const r = h.load(() => observed++);
+      h.calls[0](new Error('io'));
+      h.advance(600);
+      h.calls[1](new Error('io again'));
+      const mark = h.api.progress();
+      h.progressCallbacks[0](90, 100);
+      h.progressCallbacks[1](100, 100);
+      assert.strictEqual(h.api.progress(), mark);
+      assert.strictEqual(observed, 0);
+      assert.strictEqual(r.length, 1);
+    } finally { h.restore(); }
   },
   'two error answers fail'() {
     const h = harness();

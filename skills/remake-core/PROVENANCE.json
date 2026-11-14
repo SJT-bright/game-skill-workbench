@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-13.english-simple.11.17.30",
+  "revision": "2026-11-13.english-simple.11.17.32",
   "skill": "remake-core",
-  "previous_provenance_sha256": "1e8ae40fc4c6dfddb2cefebb1f4f7fb6b27540fa5f6ed55d3285d4934f70e75f",
+  "previous_provenance_sha256": "b9a4a692c328505ec5f56f06ed60191afd545c43e682ca2a98bd80d7845ad504",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -15,6 +15,11 @@
       "path": "agents/openai.yaml",
       "sha256": "bbb5b620e4a2946d0f6ca731ab5b77c1495cea8d1b1bbd6bdf72a69258dd0ba9",
       "bytes": 317
+    },
+    {
+      "path": "assets/active-skill-advice.json",
+      "sha256": "80a75fba7130f39442cb4c3a6eb6d2333eafa60ab70a59b742a28ffe891241e3",
+      "bytes": 9912
     },
     {
       "path": "assets/ad-config.json",
@@ -53,8 +58,8 @@
     },
     {
       "path": "assets/loading-recovery-examples/asset-load-guard.js",
-      "sha256": "ed9a0064448e24239cb41911f4242497d5ff358a9e50f5233938206a9ba494ed",
-      "bytes": 7426
+      "sha256": "67b67624d2773b54e24a5fada5c48060b14e66f7ecbddc7a38a2a4dee095b04a",
+      "bytes": 7533
     },
     {
       "path": "assets/loading-recovery-examples/runtime-load-guard.js",
@@ -763,8 +768,8 @@
     },
     {
       "path": "assets/production-learning-active.json",
-      "sha256": "168ea05aaa821c8f53838c305564f3aa44763430671514224658310cf26b3815",
-      "bytes": 1183
+      "sha256": "0cfc54829c83c88e6c5ef63aab0b1f97ba8bc0968a2d7f52247687cf67fa3064",
+      "bytes": 10161
     },
     {
       "path": "assets/production-learning-policy.json",
@@ -918,8 +923,8 @@
     },
     {
       "path": "references/delivery-and-handoff.md",
-      "sha256": "41c17290ab0cf98fe4636dd8f34c8ae81dd67fd8ae3f38e89bf648fc0aac12ba",
-      "bytes": 12218
+      "sha256": "046805e72a44df32e2d9937a67da681245f3c3debf068cbbd4380ee9ad72c670",
+      "bytes": 12333
     },
     {
       "path": "references/executable-regression-retention.md",
@@ -933,8 +938,8 @@
     },
     {
       "path": "references/execution-checkpoints.md",
-      "sha256": "ccd6379d5c26f2fccce39a769d89524be5837fcb1d8674d9f5c060df02bd81ac",
-      "bytes": 6924
+      "sha256": "5084a248cc3e5da2ccc29357172be468f6fc9f992d2ee7108eb88bea3029c536",
+      "bytes": 6967
     },
     {
       "path": "references/external-package-handoff.md",
@@ -948,8 +953,8 @@
     },
     {
       "path": "references/fusion-policy.md",
-      "sha256": "eb6d24d4e1cd79d88402a455a01b86e619b3997239e5a8294dee92b27e2cd269",
-      "bytes": 6810
+      "sha256": "e9a76adff52fbe71270c78f45c1c3f2adca64864be80ad141381e0e45b98ad19",
+      "bytes": 6976
     },
     {
       "path": "references/game-modules.md",
@@ -963,8 +968,8 @@
     },
     {
       "path": "references/host-adaptation.md",
-      "sha256": "b6773fa80817c33fea41551598ad3a97f281b08b0f3939e9f86ac8a5c58f7c45",
-      "bytes": 3219
+      "sha256": "fdeb52f75fd68d08141c5bd14be68585dd8cf7089f5997e798356299798a707e",
+      "bytes": 3263
     },
     {
       "path": "references/incremental-checks.md",
@@ -973,8 +978,8 @@
     },
     {
       "path": "references/known-issue-checklist.md",
-      "sha256": "b1057fc8fc4354c1918d2c7e5da63551b1f735c0c1e77357bc21c85023f4a4fb",
-      "bytes": 45807
+      "sha256": "6e122befdd6154cef8fb0853e0783ec9a5ad7f603c56750ac8bd6cf7b549ca00",
+      "bytes": 48501
     },
     {
       "path": "references/licenses/pyspellchecker-MIT.txt",
@@ -998,8 +1003,8 @@
     },
     {
       "path": "references/machine-load.md",
-      "sha256": "7989a509b914ade684bec14b3aa71c28842631ccc2fdcd02cc1b72391e2aa549",
-      "bytes": 14130
+      "sha256": "af188f521cb2de2df03aa9f28f977bf9a9238b285da49a1c09de04d21245b561",
+      "bytes": 14259
     },
     {
       "path": "references/manual-visual-review.md",
@@ -1048,8 +1053,8 @@
     },
     {
       "path": "references/production-baseline.md",
-      "sha256": "dd70cd03782e87fa899f42760bfe8d56c77b274c981278d355155b432c29627a",
-      "bytes": 12761
+      "sha256": "407bfc77dcb392c2e4ea8c7bcfb8f719257fcb62037a3e0b2e6d7abbee84559d",
+      "bytes": 13838
     },
     {
       "path": "references/production-learning.md",
@@ -1113,8 +1118,8 @@
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "7e6299f97df50e259f9fb259f7ce686c2e5f4c36c1168cd18d9c8757c65e4d82",
-      "bytes": 50423
+      "sha256": "818f3668bdfa67696f21e2142d78771ecdb2475c3dbc16c13b23f29b1729c13e",
+      "bytes": 50514
     },
     {
       "path": "references/startup-scoped-inputs.md",
@@ -1143,8 +1148,8 @@
     },
     {
       "path": "references/two-boards.md",
-      "sha256": "57797bd2c532459ef834f4229329dd847fee2d87f5d5136ccf6449b3a76d4041",
-      "bytes": 2601
+      "sha256": "e5a46a79cdfd79bc97206ed7890755718d404d71bf594cdf65a98e01f2a67dab",
+      "bytes": 2565
     },
     {
       "path": "references/user-phone-preview.md",
@@ -1165,6 +1170,11 @@
       "path": "references/workflow-tools.md",
       "sha256": "051a7a4e00161595b49f1238433306f2ff9e9eeca1b23815a332b0374f86be6c",
       "bytes": 22427
+    },
+    {
+      "path": "scripts/active_skill_advice.py",
+      "sha256": "eb7b9a9d7057ed81ba1b6f6fb6e11a10de210a9066cb7c7215310406b16bb01f",
+      "bytes": 3433
     },
     {
       "path": "scripts/ad_nodes_gate.py",
@@ -1508,8 +1518,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "833154bfa4123cd8f16ca6a2b206f7a3f7beb23ce03afbcd85e5230e10553563",
-      "bytes": 228910
+      "sha256": "b70affef12bf1c0d3111c0f04430308994df850984f5bb67f723d6b938b5fb77",
+      "bytes": 229179
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1628,8 +1638,8 @@
     },
     {
       "path": "scripts/check_known_issues.py",
-      "sha256": "5556e59a52022357c885d119d8e24c7a873693675110606e4a904257d42df7e6",
-      "bytes": 64280
+      "sha256": "5bdb4b98fcf89076012115b7c2d6f32fc4a7e6186f0f49bc6237fa34e6db95db",
+      "bytes": 65936
     },
     {
       "path": "scripts/check_ledger.py",
@@ -2133,8 +2143,8 @@
     },
     {
       "path": "scripts/preflight.py",
-      "sha256": "80951944597cffd2f450ff49eca61580b3572121de19cdcb787daa67465e0915",
-      "bytes": 51897
+      "sha256": "aac34d6755a5fca399e1919d6e07fee3e4864951341049f1e174fee596d01653",
+      "bytes": 51950
     },
     {
       "path": "scripts/preparation_cache.py",
@@ -2323,8 +2333,8 @@
     },
     {
       "path": "scripts/scan_platform_input_bindings.cjs",
-      "sha256": "74b764d775de2f00bff7b70c671184f31f340ddef9edd43486d6dfaa79fb3e5f",
-      "bytes": 12577
+      "sha256": "26e71d684c80d635dbb45bcc97c922fa627136986ddf56833c3a228931659309",
+      "bytes": 15094
     },
     {
       "path": "scripts/scan_runtime_resources.cjs",
@@ -2410,6 +2420,11 @@
       "path": "scripts/test-fixtures/startup-formal28-tools.json",
       "sha256": "94fbba26495614fe3c46160bd8f8a7142b56895e1bdb9f97f024de816a927d22",
       "bytes": 776
+    },
+    {
+      "path": "scripts/test_active_skill_advice.py",
+      "sha256": "d2806d480bb242d99a73e1e828f3262f1314b3306a594480051e40837393fedf",
+      "bytes": 3445
     },
     {
       "path": "scripts/test_ad_entry_reachability.py",
@@ -2628,8 +2643,8 @@
     },
     {
       "path": "scripts/test_asset_load_guard.cjs",
-      "sha256": "21abcae5b728a06bf5a3f2dc71ba8bc9c58f2fdb6c69807cb8eded5d3bc7406b",
-      "bytes": 4326
+      "sha256": "439d317672bd752292262e6f6e59379f86b15ee7ce3cb832ac089e23cfbfdf40",
+      "bytes": 5670
     },
     {
       "path": "scripts/test_ast_worker_cli.py",
@@ -2978,8 +2993,8 @@
     },
     {
       "path": "scripts/test_known_issue_gate.py",
-      "sha256": "1ce6373ec5994923d775df2c381942bb2ca111c1d66bb2404b6bd516637c2aa4",
-      "bytes": 47712
+      "sha256": "6c13907213a1648dde25f86be601713f3dee91d622bc3702da0bff45f9cdd163",
+      "bytes": 51434
     },
     {
       "path": "scripts/test_league.py",
@@ -3223,8 +3238,8 @@
     },
     {
       "path": "scripts/test_platform_input_bindings.py",
-      "sha256": "13c9b6bf3aad0a51c35a8c9097047433657223c39b3ea0fc0f5063ca8e456e31",
-      "bytes": 8214
+      "sha256": "292998a108d5347c4bbfdff5fd6e64be30fb0db70e17e9b1092fe0f87c1cf9c5",
+      "bytes": 10975
     },
     {
       "path": "scripts/test_platform_kit_gate.py",

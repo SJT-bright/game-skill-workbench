@@ -573,7 +573,7 @@ def main():
                 add('皮肤收集梯度', '出错', text.strip()[-300:], 'logs/audit_acquisition_progression.log')
         else:
             add('皮肤收集梯度', '不适用' if localize else '跳过',
-                '没有找到 unlock_table.json' + ('：英化默认不加皮肤/收集系统，原游戏没有就不用；创新玩法加了皮肤时要有 unlock_table.json' if localize else '（游戏没有皮肤/收集系统时可以忽略）'))
+                '没有找到 unlock_table.json' + ('：未找到皮肤表；首次六类制作需先补永久外观和真实表，是否合格由当前六类节点核准；已交付旧合同的无关局部维护保留原范围' if localize else '（游戏没有皮肤/收集系统时可以忽略）'))
 
     # 11 严格禁止看广告跳关
     ns = ['--project', proj, '--out', out / 'no_ad_skip.json']

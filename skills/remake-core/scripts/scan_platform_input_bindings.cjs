@@ -31,6 +31,7 @@ function analyze({nodes, parents, isGlobal = () => true}) {
     for (const [lifecycle, fn] of methods) {
       if (!INIT.has(lifecycle)) continue;
       const selected = new Set(), visited = new Set();
+      let opaqueImmediate = false;
       function collect(n) {
         if (!n || typeof n !== 'object' || visited.has(n)) return;
         visited.add(n);
@@ -39,7 +40,16 @@ function analyze({nodes, parents, isGlobal = () => true}) {
         if (n.type === 'CallExpression' && n.callee.object?.type === 'ThisExpression' && methods.has(member(n.callee))) {
           collect(methods.get(member(n.callee)).body);
         }
-        // Deferred callbacks have different lifecycle/order semantics. They are not simulated here.
+        // Only direct arrow IIFEs inherit component `this`. Other immediate
+        // function contexts are review-only; deferred event callbacks are not run.
+        if (n.type === 'CallExpression' && isFunction(n.callee)) {
+          if (n.callee.type !== 'ArrowFunctionExpression') opaqueImmediate = true;
+          collect(n.callee.body);
+        } else if (n.type === 'CallExpression' && isFunction(n.callee.object) &&
+                   ['call', 'apply'].includes(member(n.callee))) {
+          opaqueImmediate = true;
+          collect(n.callee.object.body);
+        }
         if (isFunction(n) && n !== fn) return;
         for (const [key, value] of Object.entries(n)) {
           if (key === 'loc') continue;
@@ -52,7 +62,7 @@ function analyze({nodes, parents, isGlobal = () => true}) {
       if (!flags.length) continue;
       const cases = [], sites = new Map();
       const clone = s => ({...s, vars: new Map(s.vars), bound: new Set(s.bound)});
-      let limited = false;
+      let limited = opaqueImmediate;
       function bounded(states) {
         if (states.length > 64) { limited = true; return states.slice(0, 64); }
         return states;
@@ -145,11 +155,18 @@ function analyze({nodes, parents, isGlobal = () => true}) {
         if (n.type !== 'CallExpression') return states;
         // IIFEs/local helpers run now; an event callback passed as an argument does not.
         if (isFunction(n.callee)) {
-          if (stack.length > 6) { limited = true; return states; }
+          // Do not guess function `this`, async scheduling or nested lexical writes.
+          if (stack.length > 6 || n.callee.type !== 'ArrowFunctionExpression' || n.callee.async ||
+              n.callee.params.length || nodes.some(x => x.start >= n.callee.body.start && x.end <= n.callee.body.end &&
+                (x.type === 'VariableDeclaration' || x.type === 'AssignmentExpression' &&
+                  !(member(x.left) === 'active' && member(x.left.object) === 'node' && x.left.object.object?.type === 'ThisExpression')))) {
+            limited = true; return states;
+          }
           return states.flatMap(s => {
-            const inner = clone(s);
-            n.callee.params.forEach((p, i) => { if (p.type === 'Identifier') inner.vars.set(p.name, nodeValue(n.arguments[i], s, env)); });
-            return block(n.callee.body, [inner], env, [...stack, '<iife>']).map(x => ({...x, stopped: false}));
+            const inner = clone(s), body = n.callee.body;
+            const result = body.type === 'BlockStatement' ? block(body, [inner], env, [...stack, '<iife>'])
+              : expr(body, [inner], env, [...stack, '<iife>']);
+            return result.map(x => ({...x, vars: s.vars, stopped: false}));
           });
         }
         const method = member(n.callee);
@@ -218,9 +235,29 @@ function analyze({nodes, parents, isGlobal = () => true}) {
       }
       for (const [key, site] of sites) {
         const present = cases.find(c => c.states.length && c.states.every(s => s.bound.has(key)));
-        const missing = cases.find(c => c.states.length && c.states.every(s => !s.bound.has(key)) &&
+        const missing = cases.find(c => c.states.length && c.states.every(s => s.bound.size === 0) &&
           c.states.some(s => s.active !== false));
         if (!present || !missing) continue;
+        // Another init lifecycle may establish input (including through a local
+        // helper). Do not turn a method-local gap into a component-wide failure.
+        const seen = new Set();
+        function otherInput(n) {
+          if (!n || typeof n !== 'object' || seen.has(n)) return false;
+          seen.add(n);
+          if (n.type === 'AssignmentExpression' && ['active', 'interactable', 'enabled'].includes(member(n.left))) return true;
+          if (n.type === 'CallExpression') {
+            const name = member(n.callee), event = n.arguments[0];
+            if (['on', 'once'].includes(name) && (!event || event.type !== 'Literal' || EVENT_NAMES.has(event.value))) return true;
+            if (n.callee.object?.type === 'ThisExpression' && methods.has(name) && otherInput(methods.get(name).body)) return true;
+          }
+          return Object.entries(n).some(([k, v]) => k !== 'loc' && (Array.isArray(v) ? v.some(otherInput)
+            : v && typeof v.type === 'string' && otherInput(v)));
+        }
+        if ([...methods].some(([name, other]) => INIT.has(name) && other !== fn && otherInput(other.body))) {
+          unresolved.push({line: site.loc.start.line, lifecycle, flags,
+            reason: 'another init lifecycle may establish input or change visibility/interaction; inspect combined component/serialized state'});
+          continue;
+        }
         findings.push({id: 'platform_input_binding', line: site.loc.start.line, column: site.loc.start.column,
           offset: site.start, lifecycle, event: key.slice('@node:'.length), flags,
           bound_when: present.flags, missing_when: missing.flags,
@@ -229,7 +266,7 @@ function analyze({nodes, parents, isGlobal = () => true}) {
     }
   }
   return {schema: 'platform_input_bindings.v1', findings, unresolved,
-    boundary: 'Cocos 2.x cc.Class lifecycle/local helper paths, this.node and cc.Button node aliases, boolean legacy flags only; no device or general dynamic-program proof.'};
+    boundary: 'Cocos 2.x cc.Class lifecycle/local helper paths, this.node and cc.Button node aliases, boolean legacy flags and simple direct arrow IIFEs only; alternate lifecycle paths are review-only; no device or general dynamic-program proof.'};
 }
 
 module.exports = {analyze};

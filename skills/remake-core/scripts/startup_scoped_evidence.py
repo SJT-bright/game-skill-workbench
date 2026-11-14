@@ -49,22 +49,46 @@ def files(root, *, source=False):
     return cl.manifest(root, project=source)
 
 
-def fingerprint():
+
+
+_STARTUP_TOOL_IDENTITY_SHA256 = '27a71b05088b78a997f3cca3d697653dc24bcdcbe26772d3578554b1b001e036'
+_STARTUP_TOOL_IDENTITY_BODY_SHA256 = '7b6702970ab2c4fcf84f3073cde6a73a0fa37a21b9a2f69060f5cc5a75827895'
+
+
+def _startup_tools(paths, *, proof=None, native=None, project=None):
+    """Startup observation identity only; unknown code keeps its actual identity."""
+    helper = Path(__file__).resolve().with_name('startup_tool_identity.py')
+    if not helper.is_file() or helper.is_symlink():
+        return cl.tool_fingerprint(paths)
+    import re
+    raw = helper.read_bytes()
+    manifest_slot = re.compile(rb"^_MANIFEST_SHA256 = '([0-9a-f]{64})'$", re.M)
+    if (hashlib.sha256(raw).hexdigest() != _STARTUP_TOOL_IDENTITY_SHA256
+            or len(manifest_slot.findall(raw)) != 1
+            or hashlib.sha256(manifest_slot.sub(b"_MANIFEST_SHA256 = '<projection-manifest-sha256>'", raw)).hexdigest() != _STARTUP_TOOL_IDENTITY_BODY_SHA256):
+        return cl.tool_fingerprint(paths)
+    import startup_tool_identity as identity_helper
+    if Path(identity_helper.__file__).resolve() != helper:
+        return cl.tool_fingerprint(paths)
+    return identity_helper.fingerprint(paths, proof=proof, native=native, project=project)
+
+
+def fingerprint(*, proof=None, native=None, project=None):
     # Bind the actual validator and consumers, not only scheduling text.
-    return cl.tool_fingerprint([__file__, renderer.__file__, startup.__file__,
+    return _startup_tools([__file__, renderer.__file__, startup.__file__,
         Path(__file__).with_name('audit_startup_contract.py'),
-        Path(__file__).with_name('audit_final_package_startup.py')])
+        Path(__file__).with_name('audit_final_package_startup.py')], proof=proof, native=native, project=project)
 
 
-def policy_identity(proof, native, project):
-    conditions, tools = startup.identity(proof, native, project)
+def policy_identity(proof, native, project, *, current_native=None):
+    conditions, tools = startup.identity(proof, native, project, _compat_native=current_native)
     provider = project_qa.lookup(project, 'validators', PROVIDER)
     return {'startup': conditions, 'startup_tools': tools, 'provider': provider,
-            'scope_tools': fingerprint()}
+            'scope_tools': fingerprint(proof=proof, native=current_native or native, project=project)}
 
 
 def original_record(proof, original_native, project, binding, preserved_native):
-    conditions, tools = startup.identity(proof, original_native, project)
+    conditions, tools = startup.identity(proof, original_native, project, _compat_native=preserved_native)
     conditions['native_tree_sha256'] = binding['native_tree_sha256']
     store = cl.Ledger(project)
     try:
@@ -222,7 +246,7 @@ def approve(project, native, contract, web, *, source=None, target_native=None, 
     if errors:
         raise ValueError('startup original observation refused: ' + '; '.join(errors))
     original, observed_proof, observed_path = original_record(proof, original_native, project, binding, native)
-    identity = policy_identity(observed_proof, original_native, project)
+    identity = policy_identity(observed_proof, original_native, project, current_native=native)
     raw_path = Path(observed_proof['raw']['path'])
     if not raw_path.is_absolute(): raw_path = project / raw_path
     raw = load(raw_path)
@@ -244,10 +268,10 @@ def approve(project, native, contract, web, *, source=None, target_native=None, 
                   'names': {k: sorted(v) for k, v in manifests.items()}}
     store = cl.Ledger(project)
     try:
-        plan = store.prepare(CHECK_ID, {}, conditions, fingerprint(), domain='startup', label='启动依赖登记 · 原观察沿用')
+        plan = store.prepare(CHECK_ID, {}, conditions, fingerprint(proof=proof, native=native, project=project), domain='startup', label='启动依赖登记 · 原观察沿用')
         def verify():
             if ({k: files(v, source=k == 'source') for k, v in roots.items()} != manifests
-                    or contract.read_bytes() != contract_bytes or policy_identity(observed_proof, original_native, project) != identity
+                    or contract.read_bytes() != contract_bytes or policy_identity(observed_proof, original_native, project, current_native=native) != identity
                     or any(sha(Path(p)) != digest for p, digest in refs.items())):
                 raise ValueError('startup baseline/scope/evidence changed during approval')
             return {}
@@ -322,8 +346,8 @@ def consume(project, native, contract, *, current_binding=None):
         original_contract = json.loads(saved['contract_json'])
         # Policies are verified by identity only. Never invoke derive_startup_scope
         # or registered execution from this read-only consumer.
-        identity = policy_identity(proof, Path(original_contract['native']), project)
-        if identity != json.loads(saved['policy_json']) or record['binding']['tool_sha256'] != fingerprint():
+        identity = policy_identity(proof, Path(original_contract['native']), project, current_native=native)
+        if identity != json.loads(saved['policy_json']) or record['binding']['tool_sha256'] != fingerprint(proof=proof, native=native, project=project):
             raise ValueError('startup runner/environment/consumer rules changed; repair startup scope only')
         if native != Path(saved['target_native']):
             raise ValueError('startup scoped evidence targets another Native candidate')

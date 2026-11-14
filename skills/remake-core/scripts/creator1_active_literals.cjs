@@ -1,7 +1,9 @@
 'use strict';
 // Pure AST evaluation of known mini-game environment constants, never game execution.
 const fs=require('fs'),acorn=require('./vendor/acorn.cjs');
-const input=JSON.parse(fs.readFileSync(0,'utf8')),ast=acorn.parse(input.code,{ecmaVersion:8}),UNKNOWN=Symbol('unknown');
+if(process.argv.slice(2).some(a=>a==='--help'||a==='-h')){console.log("Usage: node creator1_active_literals.cjs < input.json\nstdin: {\"code\":\"JavaScript source\", \"debug\":false}");process.exit(0);}
+const raw=fs.readFileSync(0,'utf8');if(!raw.trim()){console.error("Usage: node creator1_active_literals.cjs < input.json\nstdin: {\"code\":\"JavaScript source\", \"debug\":false}");process.exit(2);}
+const input=JSON.parse(raw),ast=acorn.parse(input.code,{ecmaVersion:8}),UNKNOWN=Symbol('unknown');
 function member(n){if(n.type==='Identifier')return n.name;if(n.type==='MemberExpression'&&!n.computed)return member(n.object)+'.'+n.property.name;return '';}
 function value(n){if(n.type==='Literal')return n.value;const m=member(n);if(m==='cc.sys.isNative')return false;if(['settings.debug','window._CCSettings.debug'].includes(m))return input.debug;if(n.type==='UnaryExpression'&&n.operator==='!'){const v=value(n.argument);return v===UNKNOWN?UNKNOWN:!v;}if(n.type==='LogicalExpression'){const l=value(n.left);if(n.operator==='&&'&&l!==UNKNOWN&&!l)return l;if(n.operator==='||'&&l!==UNKNOWN&&l)return l;const r=value(n.right);return l===UNKNOWN?UNKNOWN:r;}return UNKNOWN;}
 const out=[];

@@ -11,5 +11,8 @@ function normalize(source){
  acorn.parse(source,{ecmaVersion:'latest',allowReturnOutsideFunction:true});
  return source;
 }
-if(require.main===module){const d=JSON.parse(fs.readFileSync(0,'utf8'));console.log(JSON.stringify(Object.fromEntries(Object.entries(d).map(([n,s])=>[n,normalize(s)]))));}
+if(require.main===module){
+ if(process.argv.slice(2).some(a=>a==='--help'||a==='-h')){console.log("Usage: node normalize_cocos1_sdk.cjs < sources.json\nstdin: {\"filename.js\":\"JavaScript source\"}");process.exit(0);}
+ const raw=fs.readFileSync(0,'utf8');if(!raw.trim()){console.error("Usage: node normalize_cocos1_sdk.cjs < sources.json\nstdin: {\"filename.js\":\"JavaScript source\"}");process.exit(2);}
+ const d=JSON.parse(raw);console.log(JSON.stringify(Object.fromEntries(Object.entries(d).map(([n,s])=>[n,normalize(s)]))));}
 module.exports={normalize};

@@ -331,7 +331,8 @@ def check_source_record(project, manifest=None, options=None):
             current_binding = source_pipeline_binding(ctx, names)
         except Exception:
             current_binding = None
-        if current_binding != record['preparation_binding']:
+        from preparation_cache import source_binding_matches
+        if not source_binding_matches(ctx, names, current_binding, record['preparation_binding']):
             pending = source_preparation_plan(project, manifest=manifest, record=record).get('execute', [])
             out.append(T.finding('K5_source_finalized', 'block',
                                 'preparation dependencies changed or have no current proof: %s; %s'

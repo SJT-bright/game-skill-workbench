@@ -10,6 +10,14 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+
+STORAGE_OVERLAY_COMPAT_SHA256 = '84adc895add4f948106eab158000ad2d1e3d750336a04dbcdfc001639b6e1ab2'
+STORAGE_OVERLAY_COMPAT_BODY_SHA256 = '840150a930eae59451105d7f2383f8fabd4c0d35e4d9c62ce9698e44b64b1e80'
+
+def _storage_overlay():
+    import storage_overlay_compat as helper
+    helper.guard(STORAGE_OVERLAY_COMPAT_SHA256, STORAGE_OVERLAY_COMPAT_BODY_SHA256)
+    return helper
 import re
 import shutil
 import tempfile
@@ -78,12 +86,13 @@ def tool_identity():
 # current validator; only these audited producer/rule changes are compatible.
 REVIEWED_FORMAL29_TOOLS = {'storage_scoped_reuse.py': '6a58e411590495ace5a05025dc7bef8866ee8af3fd1be3fe567388cb3c67f826', 'audit_native_storage_contract.py': '3703a36dbc934e5a84787a411ca4d3275be189e9dcc022db4be727ba022dab30', 'maintenance_scope.py': '0c4147f64a9a32e4f27b2a30257d86193bbbcfffe7abb07dc5db0ee276daa391', 'startup_storage_consumers.py': '3c832d4be8447f87e177cf27102d6374bf2b28ec684f389ca4ac68608d454ed8', 'scan_storage_consumers.cjs': 'b31e37f94db9c47d0646fbfcf5f9a394e99e27b3a28ec8b1d5c9b995ea9f4805', 'startup_business_contract.py': 'c8600b73ea380b841e5d7d9065b4053a35c76a7dff8bf1ac8f6b9d42173ee007', 'numeric_snapshot_contract.py': '8b94ca6a0fc899c0e7401a1cb6df413d561d1f295436aff9c36dda0d6951fabe', 'vendor/acorn.cjs': 'fdb08546776ec6228b03e8d02b40d4ab3255bae5f401adba7ff5dad927ac5c9c'}
 
-def compatible_tool_identity(previous, current):
+def compatible_tool_identity(previous, current, *, report=None, trace=None, native=None):
     if previous == current:
         return True
     changed = {'storage_scoped_reuse.py', 'audit_native_storage_contract.py', 'maintenance_scope.py'}
-    return (previous == REVIEWED_FORMAL29_TOOLS and set(previous) == set(current)
-            and all(previous[name] == current[name] for name in previous if name not in changed))
+    return ((previous == REVIEWED_FORMAL29_TOOLS and set(previous) == set(current)
+             and all(previous[name] == current[name] for name in previous if name not in changed))
+            or _storage_overlay().scope_tools(previous, current, report, trace, native))
 
 
 def profile(project):
@@ -311,7 +320,7 @@ def verify_record(record, home, native, project, report, trace):
     if (Path(record['current_project']).resolve() != Path(project).resolve()
             or Path(record['current_native']).resolve() != Path(native).resolve()):
         raise ValueError('storage scope: current artifact path differs; explicitly register its actual roots')
-    if not compatible_tool_identity(record['tools'], tool_identity()) or record['helper'] != profile(project):
+    if not compatible_tool_identity(record['tools'], tool_identity(), report=report, trace=trace, native=native) or record['helper'] != profile(project):
         raise ValueError('storage scope_required: storage rules, runner policy or helper changed')
     validate_scope(record['scope'], record['manifests'])
     for role in ('source', 'package'):
@@ -368,6 +377,12 @@ def validate_report(report, native, expected_binding, *, project):
             predecessor = home_path(project, report, native, tools=REVIEWED_FORMAL29_TOOLS)
             if (predecessor / 'scope.json').is_file():
                 home = predecessor
+            else:
+                tools = _storage_overlay().formal34_tools(report, trace, native)
+                if tools is not None:
+                    predecessor = home_path(project, report, native, tools=tools)
+                    if (predecessor / 'scope.json').is_file():
+                        home = predecessor
         record = read(home / 'scope.json')
         verify_record(record, home, native, project, report, trace)
         from check_known_issues import tree_sha, snapshot as source_snapshot

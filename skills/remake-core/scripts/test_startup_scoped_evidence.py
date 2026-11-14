@@ -260,7 +260,11 @@ def derive_startup_scope(*,native,source,web,proof,raw,binding,project):
         self.approve()
         for name in ('game.js','game.json','cocos/cocos2d-js.js'):
             path=self.native/name;before=path.read_bytes();path.write_bytes(before+b' ')
-            with self.assertRaisesRegex(ValueError,'affected dependencies'):
+            reason = 'startup[.]native: affected dependencies: ' + name.replace('.', '[.]')
+            if name == 'cocos/cocos2d-js.js':
+                # A changed actual engine invalidates the reviewed identity first.
+                reason += '|startup runner/environment/consumer rules changed; repair startup scope only'
+            with self.assertRaisesRegex(ValueError, '^(?:' + reason + ')$'):
                 scoped.consume(self.project,self.native,self.contract)
             path.write_bytes(before)
         (self.native/'art/unknown.png').write_bytes(b'new unknown file')

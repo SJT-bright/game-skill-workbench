@@ -6,6 +6,7 @@ Unknown steps, missing tools, symbolic links and failed results execute normally
 not cached. Original results and execution timestamps remain immutable evidence.
 """
 import ast
+import unicodedata
 import copy
 import hashlib
 import inspect
@@ -20,8 +21,12 @@ import threading
 from contextlib import contextmanager
 from functools import wraps
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from contextvars import ContextVar
+
+PREPARATION_POLICY_SHA256 = 'e078e52449cba2eb85126e867c6492a0821b8fcf8ee0e0e0d16724399c0b7cb1'
+PREPARATION_FINALIZER_SHA256 = 'e876faa088cad0d02aa095c0b8c3fc9082bd07ef1013d282a360e3d9ada2e20b'
+PREPARATION_SELF_SHA256 = '330ee76d1920c5bebfc4e9a3e62c9d30eab7fe3bb9703d04bf39710e65537ce3'
 
 SCHEMA = 'preparation-cache.v1'
 HOME = Path('.tiktok-kit/preparation-cache')
@@ -273,7 +278,7 @@ def project_inputs(ctx, name):
     return found
 
 
-def python_dependencies(paths):
+def python_dependencies(paths, *, excluded=()):
     """Local static import closure, including function-local imports and package initializers.
 
     Dynamic platform-kit imports are bound by the kit tree below. The finalizer's
@@ -282,6 +287,7 @@ def python_dependencies(paths):
     """
     roots = (HERE, HERE.parents[1] / 'cocos-game-check/package-check/scripts')
     todo, found = list(paths), {}
+    excluded = {str(Path(p).resolve()) for p in excluded}
 
     def resolve(base, module):
         p = base.joinpath(*module.split('.')) if module else base
@@ -291,7 +297,7 @@ def python_dependencies(paths):
 
     while todo:
         path = Path(todo.pop()).resolve()
-        if str(path) in found or not path.is_file():
+        if str(path) in excluded or str(path) in found or not path.is_file():
             continue
         found[str(path)] = file_identity(path)
         memo = _HASH_MEMO.get()
@@ -317,21 +323,253 @@ def python_dependencies(paths):
     return found
 
 
-def tool_inputs(ctx, names=()):
+def _scope_policy():
+    """Exact reviewed implementation/policy pair; unknown bytes never grant exclusions.
+
+    Only the single SELF assignment line is normalized to zero. The policy itself
+    is pinned by a literal digest in this file and cannot add arbitrary waivers.
+    """
+    raw = Path(__file__).read_bytes()
+    prefix = b"PREPARATION_SELF_SHA256 = '"
+    matches = [line for line in raw.splitlines(keepends=True) if line.startswith(prefix)]
+    if len(matches) != 1:
+        raise Uncacheable('preparation scope self identity is ambiguous')
+    expected = prefix + PREPARATION_SELF_SHA256.encode('ascii') + b"'\n"
+    if matches[0] != expected or len(PREPARATION_SELF_SHA256) != 64:
+        raise Uncacheable('preparation scope self identity is malformed')
+    normalized = raw.replace(expected, prefix + b'0' * 64 + b"'\n", 1)
+    if hashlib.sha256(normalized).hexdigest() != PREPARATION_SELF_SHA256:
+        raise Uncacheable('preparation scope implementation is not the reviewed identity')
+    path = HERE / 'preparation_scope_policy.json'
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != PREPARATION_POLICY_SHA256:
+        raise Uncacheable('preparation production scope policy changed; review its dependencies')
+    policy = json.loads(data)
+    if policy.get('schema') != 'preparation-production-scope.v1':
+        raise Uncacheable('unknown preparation production scope')
+    if file_identity(HERE / 'tiktok_finalize.py')['sha256'] != PREPARATION_FINALIZER_SHA256:
+        raise Uncacheable('preparation finalizer identity changed; review production readers')
+    return policy
+
+
+def _production_tools(ctx, names):
+    policy = _scope_policy()
     paths = [HERE / 'tiktok_finalize_steps' / (name + '.py') for name in names]
     paths += [HERE / 'tiktok_finalize_steps/__init__.py', HERE / 'tiktok_finalize_steps/policy.py']
-    tools = python_dependencies(paths)
+    # Exact reviewed run_part_step imports this only inside engine == 1.
+    # Stop before traversing that unused branch; every 2/3 reader stays checked.
+    tools = python_dependencies(paths, excluded=(HERE / 'audit_upload_startup.py',))
+    skill_root = HERE.parents[1]
+    expected_readers = set(policy['step_readers']['@common'])
+    for name in names:
+        if name not in policy['step_readers']:
+            raise Uncacheable('unknown production preparation step: ' + name)
+        expected_readers.update(policy['step_readers'][name])
+    if {Path(p).relative_to(skill_root).as_posix() for p in tools} != expected_readers:
+        raise Uncacheable('production reader closure changed or lost an input')
+    for path, actual in tools.items():
+        name = Path(path).relative_to(skill_root).as_posix()
+        if (policy['production_readers'].get(name) or {}).get('sha256') != actual.get('sha256'):
+            raise Uncacheable('unknown preparation production reader: ' + name)
+    for name, expected in policy['classification_inputs'].items():
+        actual = file_identity(skill_root / name)
+        if not actual or actual.get('sha256') != expected['sha256']:
+            raise Uncacheable('unknown Creator engine classifier input: ' + name)
+        tools[str(skill_root / name)] = actual
     for path in (HERE / 'preparation_cache.py', HERE / 'tiktok_finalize.py'):
         tools[str(path)] = file_identity(path)
-    # Python may write bytecode while importing check_kit_project. It is generated
-    # cache, not a new rule; bind the actual .py and kit resources instead. This
-    # exclusion applies only to tools, never to the deliverable Native tree.
-    kit = tree(ctx.manifest.kit_dir,
-               lambda r: '__pycache__' not in Path(r).parts and not r.endswith(('.pyc', '.pyo')),
-               prune=False) if ctx.manifest else {}
-    return {'tools': digest(tools), 'kit': digest(kit),
+    kit, legacy_kit = {}, {}
+    if ctx.manifest:
+        root = Path(ctx.manifest.kit_dir)
+        # These actual dynamically loaded helpers are part of the reviewed reader
+        # closure too. A new/changed helper cannot start reading excluded fixtures.
+        actual_readers = {p.relative_to(root).as_posix(): file_identity(p)
+                          for p in walk(root / 'tools', prune=False)
+                          if p.suffix in {'.py', '.js', '.cjs', '.mjs'} and '__pycache__' not in p.parts}
+        if (set(actual_readers) != set(policy['kit_readers']) or any(
+                actual_readers[name].get('sha256') != policy['kit_readers'][name].get('sha256')
+                for name in actual_readers)):
+            raise Uncacheable('unknown platform-kit production helper; review its actual reads')
+        maintenance = set(policy['maintenance_original'])
+        selected_paths = list(ctx.manifest.files) + list(ctx.manifest.included)
+        for part in ctx.manifest.parts.values():
+            if not isinstance(part, dict):
+                raise Uncacheable('invalid physical part declaration')
+            spec = part.get('file') or {}
+            if isinstance(spec, dict) and spec.get('src') is not None:
+                selected_paths.append(spec['src'])
+            for extra in part.get('extra_files') or []:
+                if not isinstance(extra, dict) or not isinstance(extra.get('src'), str):
+                    raise Uncacheable('invalid physical extra-file declaration')
+                selected_paths.append(extra['src'])
+        canonical_root = root.resolve()
+        requested = set()
+        for value in selected_paths:
+            if not isinstance(value, str) or not value:
+                raise Uncacheable('unknown physical platform input')
+            # Match the real Manifest loader's Path(root)/src, including ./ and
+            # ../ aliases. Foreign absolute paths, links escaping the kit, and
+            # parent escapes cannot borrow a maintenance exclusion.
+            actual = (root / value).resolve()
+            if not actual.is_relative_to(canonical_root) or actual == canonical_root:
+                raise Uncacheable('physical manifest input escapes platform-kit root')
+            requested.add(unicodedata.normalize('NFC', actual.relative_to(canonical_root).as_posix()).casefold())
+        maintenance = {name for name in maintenance
+                       if unicodedata.normalize('NFC', name).casefold() not in requested}
+        kit = tree(root, lambda rel: rel not in maintenance and '__pycache__' not in Path(rel).parts
+                   and not rel.endswith(('.pyc', '.pyo')), prune=False)
+        legacy_kit = dict(kit)
+        legacy_kit.update({name: dict(policy['maintenance_original'][name],
+                           executable=(os.access(root / name, os.X_OK) if (root / name).is_file()
+                                       else bool(os.name == 'nt' or policy['maintenance_original'][name]['executable'])))
+                           for name in maintenance})
+    return policy, tools, kit, legacy_kit
+
+
+def _creator1_inputs(ctx):
+    """New 1.x proofs bind the whole dynamic production domain; never old34 aliases."""
+    _scope_policy()
+    if os.environ.get('NODE_OPTIONS') or os.environ.get('NODE_PATH') or any(
+            value for key, value in os.environ.items() if key.startswith(('LD_', 'DYLD_'))):
+        raise Uncacheable('Creator1 Node has unbound external loader inputs')
+    node = shutil.which('node')
+    if not node:
+        raise Uncacheable('Creator1 preparation needs an identified Node executable')
+    # Skip generated Python caches only. Unknown extensions, vendor data and sibling
+    # package-check helpers are retained, so additions cannot evade the identity.
+    select = lambda rel: '__pycache__' not in Path(rel).parts and not rel.endswith(('.pyc', '.pyo'))
+    root = HERE.parents[1]
+    domains = {'remake-core/scripts': tree(HERE, select, prune=False),
+               'cocos-game-check/package-check/scripts': tree(
+                   root / 'cocos-game-check/package-check/scripts', select, prune=False)}
+    # Shell/tool bookkeeping is not read by the reviewed probes. All actual host
+    # configuration, including PATH, locale, HOME and unknown settings, is hashed.
+    environment = {k: v for k, v in os.environ.items()
+                   if k not in {'_', 'SHLVL', 'CODEX_TOOL_CALL_ID', 'CODEX_TURN_ID', 'CODEX_THREAD_ID'}}
+    return {'tools': digest(domains),
+            'kit': digest(tree(ctx.manifest.kit_dir, select, prune=False)) if ctx.manifest else None,
+            'manifest': digest({'data': ctx.manifest.data, 'parts': ctx.manifest.parts}) if ctx.manifest else None,
+            'python': sys.version, 'production_scope': PREPARATION_POLICY_SHA256,
+            'creator1_runtime': {'node': {'path': str(Path(node).resolve()), 'identity': file_identity(Path(node).resolve())},
+                 'python_executable': file_identity(Path(sys.executable).resolve()),
+                 'environment_sha256': digest(environment), 'cwd': str(Path.cwd().resolve())}}
+
+
+def tool_inputs(ctx, names=()):
+    """Reviewed production inputs, portable across installation roots.
+
+    Known maintenance names are not production inputs. Unclassified additions,
+    actual manifest-selected files and all real runtime/config files stay bound.
+    """
+    if ctx.engine == 1:
+        return _creator1_inputs(ctx)
+    policy, tools, kit, _ = _production_tools(ctx, names)
+    root = HERE.parents[1]
+    portable = {Path(path).relative_to(root).as_posix(): value for path, value in tools.items()}
+    return {'tools': digest(portable), 'kit': digest(kit),
+            'manifest': digest({'data': ctx.manifest.data, 'parts': ctx.manifest.parts}) if ctx.manifest else None,
+            'python': sys.version, 'production_scope': PREPARATION_POLICY_SHA256}
+
+
+def _legacy_origins(ctx):
+    # Roots are identity labels only; never import/read/execute an arbitrary old
+    # location. A recovered hint must still reproduce an exact original v34 key.
+    roots = [str(HERE)]
+    if ctx.project:
+        hint = Path(ctx.project) / '.tiktok-kit' / 'preparation-origin.json'
+        try:
+            if hint.is_symlink() or hint.stat().st_size > 16384:
+                raise ValueError('invalid preparation origin hint')
+            doc = json.loads(hint.read_bytes())
+            values = doc.get('formal34_tool_roots', [])
+            if doc.get('schema') == 'preparation-origin.v1' and isinstance(values, list) and len(values) <= 16:
+                roots.extend(x for x in values if isinstance(x, str) and 0 < len(x) <= 4096)
+        except (OSError, ValueError, TypeError):
+            pass
+    return list(dict.fromkeys(roots))
+
+
+def _formal34_tools(ctx, names, origin):
+    if ctx.engine not in (2, 3):
+        raise Uncacheable('formal34 preparation did not produce Creator1 evidence')
+    policy, tools, _, legacy_kit = _production_tools(ctx, names)
+    # Old proofs observed the original 2/3 branch. Only its exact original reader
+    # graph is projected, after current guarded bytes/classification were checked.
+    old_names = set(policy['formal34_step_readers']['@common'])
+    for name in names:
+        old_names.update(policy['formal34_step_readers'][name])
+    old_tools = {}
+    for name in old_names:
+        actual = tools[str(HERE.parents[1] / name)]
+        old_tools[str(HERE.parents[1] / name)] = dict(policy['formal34_production_readers'][name], executable=actual['executable'])
+    for name in policy['formal34_identity']:
+        old_tools[str(HERE / name)] = tools[str(HERE / name)]
+    tools = old_tools
+    shape = PureWindowsPath if ('\\' in origin or len(origin) > 1 and origin[1] == ':') else PurePosixPath
+    old_here = shape(origin)
+    if not old_here.is_absolute() or old_here.name != 'scripts' or old_here.parent.name != 'remake-core':
+        raise Uncacheable('formal34 origin needs the original remake-core/scripts identity label')
+    base = old_here.parents[1]
+    projected = {str(base.joinpath(*Path(p).relative_to(HERE.parents[1]).parts)): value for p, value in tools.items()}
+    for name, identity in policy['formal34_identity'].items():
+        projected[str(old_here / name)] = dict(identity, executable=tools[str(HERE / name)]['executable'])
+    return {'tools': digest(projected), 'kit': digest(legacy_kit),
             'manifest': digest({'data': ctx.manifest.data, 'parts': ctx.manifest.parts}) if ctx.manifest else None,
             'python': sys.version}
+
+
+def _formal34_binding(ctx, names, current, origin):
+    old = copy.deepcopy(current)
+    old['tools'] = _formal34_tools(ctx, names, origin)
+    return old
+
+
+def _record_lookup(ctx, names, current, folder):
+    path = Path(folder) / (digest(current) + '.json')
+    row = read_record(path, current)
+    if row or path.exists():
+        # Corrupt/failed current evidence must never fall back to an earlier pass.
+        return current, path, row
+    for origin in _legacy_origins(ctx) if ctx.engine in (2, 3) else ():
+        old = _formal34_binding(ctx, names, current, origin)
+        previous = Path(folder) / (digest(old) + '.json')
+        row = read_record(previous, old)
+        if row:
+            row = dict(row, preparation_compatibility={
+                'schema': 'preparation-formal34-consumption.v1',
+                'original_binding_sha256': digest(old), 'current_binding_sha256': digest(current),
+                'original_record': str(previous), 'original_record_sha256': file_identity(previous)['sha256'],
+                'scope_policy_sha256': PREPARATION_POLICY_SHA256,
+                'origin_tool_root': origin,
+                'boundary': 'Original immutable v34 observation consumed; no new execution or rewritten old hash.'})
+            return current, previous, row
+    return current, path, None
+
+
+def source_binding_matches(ctx, names, current_digest, recorded_digest):
+    """A read-only top-level source consumer accepts exact new or reviewed old input.
+
+    Producers always issue the new portable digest; this function never overwrites
+    the original receipt, original observation time, or old binding.
+    """
+    if current_digest == recorded_digest:
+        return True
+    if ctx.engine not in (2, 3):
+        return False
+    if not isinstance(recorded_digest, str) or not current_digest:
+        return False
+    try:
+        current = {'steps': list(names), 'context': context(ctx), 'inputs': project_inputs(ctx, names),
+                   'tools': tool_inputs(ctx, names), 'runtime': runtime_inputs(ctx, names)}
+        if digest(current) != current_digest:
+            return False
+        for origin in _legacy_origins(ctx):
+            if digest(_formal34_binding(ctx, names, current, origin)) == recorded_digest:
+                return True
+    except (OSError, ValueError, TypeError, KeyError, Uncacheable):
+        pass
+    return False
+
 
 
 def runtime_inputs(ctx, names):
@@ -406,6 +644,8 @@ def reused_result(row, path):
     result['preparation'] = {'reused': True, 'executed_at': row['executed_at'],
                              'original_seconds': row['seconds'], 'seconds': 0.0,
                              'evidence': str(path), 'binding_sha256': digest(row['binding'])}
+    if row.get('preparation_compatibility'):
+        result['preparation']['compatibility'] = copy.deepcopy(row['preparation_compatibility'])
     if row.get('requested_prepared_png_only'):
         result['preparation']['requested_prepared_png_only'] = True
         result['preparation']['proof_mode'] = 'exact full preparation satisfies prepared-only request'
@@ -436,7 +676,7 @@ class Session:
     def lookup(self, name):
         binding = self.binding(name)
         path = self.home / ('source-' + name) / (digest(binding) + '.json')
-        return binding, path, read_record(path, binding)
+        return _record_lookup(self.ctx, (name,), binding, self.home / ('source-' + name))
 
     def apply(self, name, fn):
         started = time.monotonic()
@@ -542,7 +782,7 @@ def native_lookup(ctx, names):
     try:
         binding = native_binding(ctx, names)
         path = Path(ctx.project) / HOME / 'native' / (digest(binding) + '.json')
-        row = read_record(path, binding)
+        _, path, row = _record_lookup(ctx, names, binding, Path(ctx.project) / HOME / 'native')
         if row and native_binding(ctx, names) != binding:
             return None, None
         if not row and ctx.options.get('prepared_png_only') is True:

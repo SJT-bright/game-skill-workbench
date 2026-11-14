@@ -264,9 +264,12 @@ def inspect_zip(archive, platform='tiktok', feedback=None, *, _verified_files=No
     return result
 
 
-def inspect_final_zip(archive, platform='tiktok', feedback=None):
+def inspect_final_zip(archive, platform='tiktok', feedback=None, *, _verified_files=None, _verified_receipt=None):
     """Fresh final-package gate. TikTok adds official CLI checks to the size receipt."""
-    verified_files = {}
+    for output in (_verified_files, _verified_receipt):
+        if output is not None and (type(output) is not dict or output):
+            raise ValueError('fresh inspection output must be an empty dict')
+    verified_files, receipt_snapshot = {}, {}
     result = inspect_zip(archive, platform, feedback, _verified_files=verified_files)
     result.update(delivery_ready=False, next_step='prepare_delivery.py; file checks do not certify runtime')
     if platform == 'tiktok':
@@ -279,7 +282,8 @@ def inspect_final_zip(archive, platform='tiktok', feedback=None):
             if result['passed']:
                 from verify_native_zip import receipt_status
                 receipt = receipt_status(Path(archive), result['sha256'],
-                                         {name: hashlib.sha256(data).hexdigest() for name, data in verified_files.items()})
+                                         {name: hashlib.sha256(data).hexdigest() for name, data in verified_files.items()},
+                                         **({'_receipt_snapshot': receipt_snapshot} if _verified_receipt is not None else {}))
                 result['writer_receipt'] = receipt
                 if receipt.get('entry') != 'official':
                     result['passed'] = False
@@ -287,6 +291,11 @@ def inspect_final_zip(archive, platform='tiktok', feedback=None):
         else:
             result['tiktok_cli'] = {'passed': False, 'status': 'blocked_by_size_or_zip_check'}
         result['boundary'] = 'Final ZIP/CRC/size, host/input prerequisites, TikTok CLI and byte-matching official writer receipt; prepare_delivery must still verify current startup/storage and preview. No platform/device verdict.'
+    if result['passed']:
+        if _verified_files is not None:
+            _verified_files.update(verified_files)
+        if _verified_receipt is not None:
+            _verified_receipt.update(receipt_snapshot)
     return result
 
 

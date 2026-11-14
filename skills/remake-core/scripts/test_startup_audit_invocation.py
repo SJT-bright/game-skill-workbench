@@ -223,7 +223,7 @@ class StartupInvocationMemo(unittest.TestCase):
         # as its size/receipt/package layers do. Only unrelated delivery setup is
         # stubbed; neither a real game nor a delivery approval is claimed.
         reads = []
-        def layers(*args):
+        def layers(*args, **kwargs):
             for _ in range(2):
                 result = writer.vnz.verify(out, 'synthetic')
                 reads.append(result['sha256'])

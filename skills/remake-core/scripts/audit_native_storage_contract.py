@@ -19,6 +19,14 @@ import math
 import datetime
 import uuid
 from pathlib import Path
+
+STORAGE_OVERLAY_COMPAT_SHA256 = '84adc895add4f948106eab158000ad2d1e3d750336a04dbcdfc001639b6e1ab2'
+STORAGE_OVERLAY_COMPAT_BODY_SHA256 = '840150a930eae59451105d7f2383f8fabd4c0d35e4d9c62ce9698e44b64b1e80'
+
+def _storage_overlay():
+    import storage_overlay_compat as helper
+    helper.guard(STORAGE_OVERLAY_COMPAT_SHA256, STORAGE_OVERLAY_COMPAT_BODY_SHA256)
+    return helper
 import subprocess
 
 BASE_CASES = (
@@ -800,7 +808,8 @@ def validate_execution_receipt(report, trace):
                 not isinstance(receipt.get('verified_at'), str) or not receipt['verified_at'] or
                 not _valid_execution_mode(report, trace, receipt) or
                 (receipt.get('identity') != receipt_identity(trace) and not unchanged_nonconsumer_receipt(report, trace, receipt_identity(trace)) and not unchanged_text_codec_receipt(report, trace, receipt_identity(trace)) and
-                 not reviewed_predecessor_receipt(report, trace, receipt_identity(trace)))):
+                 not reviewed_predecessor_receipt(report, trace, receipt_identity(trace)) and
+                  not _storage_overlay().execution_receipt(report, trace, receipt_identity(trace)))):
             return ['missing, stale or mismatched storage execution receipt']
     except (ValueError, OSError, TypeError, KeyError, AttributeError) as exc:
         return ['storage execution receipt identity invalid: ' + str(exc)]

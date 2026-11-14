@@ -14,6 +14,9 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
+import re
+import time
 from pathlib import Path
 import tempfile
 import zipfile
@@ -28,6 +31,51 @@ EVIDENCE_TAIL = '_交接证据'
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def file_sha(path):
+    """Bounded-memory identity of the actual file, never an acceptance shortcut."""
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _expected_source_sha(value):
+    if not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{64}', value):
+        raise ValueError('expected source SHA-256 must be a lowercase content digest')
+    return value
+
+
+def _unchanged_inputs(archive, test_sha, source, source_sha, delivery, delivery_bytes):
+    # Source is checked last, after every other callback/IO in this guard.
+    if file_sha(archive) != test_sha or delivery.read_bytes() != delivery_bytes or file_sha(source) != source_sha:
+        raise ValueError('handoff inputs changed while exporting; no completed handoff')
+
+
+def _discard_owned(path, expected, *, identity=None):
+    """Remove only this invocation's unchanged output; preserve concurrent bytes."""
+    path = Path(path)
+    try:
+        if path.is_symlink() or not path.is_file():
+            return
+        before = path.stat()
+        if identity is not None and (before.st_dev, before.st_ino) != identity:
+            return
+        signature = lambda st: (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+        if file_sha(path) == expected and signature(path.stat()) == signature(before):
+            path.unlink()
+    except OSError:
+        pass
+
+
+def _timings(started, packaging):
+    total = time.perf_counter() - started
+    return {'schema': 'handoff-timing.v1', 'total_seconds': total,
+            'packaging_seconds': packaging, 'verification_seconds': max(0.0, total - packaging),
+            'game_execution_seconds': 0.0,
+            'boundary': 'Wall time of this call. Verification includes record preparation and file checks; packaging includes source/evidence ZIP creation. Parent and child totals overlap.'}
 
 
 def read_json(data):
@@ -52,12 +100,17 @@ def short_writer(result):
     return {k: result[k] for k in ('entry', 'entry_reason', 'receipt_tool', 'receipt_policy') if k in result}
 
 
-def export(archive, source, delivery, output, project=None):
+def export(archive, source, delivery, output, project=None, *, expected_source_sha256=None):
+    started, packaging_seconds = time.perf_counter(), 0.0
     archive, source, delivery, output = [Path(p).resolve() for p in (archive, source, delivery, output)]
     if output.exists() or output.suffix.lower() != '.zip' or output in (archive, source):
         raise ValueError('handoff output must be a new evidence ZIP, distinct from game and source')
     if not source.is_file() or source.suffix.lower() != '.zip':
         raise ValueError('handoff needs the actual delivered source ZIP')
+    # A caller's digest is only a stricter expectation; the final actual file
+    # is always hashed and compared. Public standalone export owns its baseline.
+    source_hash = (_expected_source_sha(expected_source_sha256) if expected_source_sha256 is not None
+                   else file_sha(source))
     checked, hashes = package(archive)
     if not checked['passed']:
         raise ValueError('handoff package file check failed: ' + '; '.join(checked['errors']))
@@ -71,7 +124,6 @@ def export(archive, source, delivery, output, project=None):
     hygiene = audit(source)
     if not hygiene['passed']:
         raise ValueError('delivered source hygiene failed: ' + '; '.join(hygiene['problems'][:5]))
-    source_hash = sha(source.read_bytes())
     contents = {'writer.receipt.json': Path(writer['receipt']).read_bytes(),
                 'delivery.json': delivered_bytes, 'receiving-file-check.json': json.dumps(checked, ensure_ascii=False).encode()}
     fresh = delivered.get('fresh_size_check', {})
@@ -111,23 +163,33 @@ def export(archive, source, delivery, output, project=None):
                 'receiver_preview': 'Recreate and verify the same Native on the receiving computer; loopback author URLs are not portable.',
                 'files': {n: sha(b) for n, b in contents.items()},
                 'boundary': 'Byte-bound author evidence, no new execution or current-machine/device approval. Source pairing is declared at export; rejudge source/build bindings separately.'}
-    if sha(archive.read_bytes()) != checked['sha256'] or sha(source.read_bytes()) != source_hash or delivery.read_bytes() != delivered_bytes:
-        raise ValueError('handoff inputs changed while exporting')
+    # Prepare a private ZIP, then verify original bytes before publication.
+    # The final published path is never a partially written successful bundle.
     output.parent.mkdir(parents=True, exist_ok=True)
-    created = False
+    publication_identity, output_sha = None, None
     try:
-        with output.open('xb') as stream, zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as z:
-            created = True
-            for n, b in contents.items():
-                z.writestr(n, b)
-            z.writestr('manifest.json', json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
-    except Exception:
-        # Remove only the file created by this export; existing outputs were refused.
-        if created and output.is_file():
-            output.unlink()
+        with tempfile.TemporaryDirectory(prefix='.handoff-', dir=output.parent) as tmp:
+            staged = Path(tmp) / output.name
+            tick = time.perf_counter()
+            with staged.open('xb') as stream, zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as z:
+                for n, b in contents.items():
+                    z.writestr(n, b)
+                z.writestr('manifest.json', json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
+            packaging_seconds += time.perf_counter() - tick
+            output_sha = file_sha(staged)
+            _unchanged_inputs(archive, checked['sha256'], source, source_hash, delivery, delivered_bytes)
+            stat = staged.stat(); publication_identity = (stat.st_dev, stat.st_ino)
+            os.link(staged, output)  # exclusive atomic publication; never replace an existing path
+            if file_sha(output) != output_sha:
+                raise ValueError('handoff output changed during publication')
+            _unchanged_inputs(archive, checked['sha256'], source, source_hash, delivery, delivered_bytes)
+    except BaseException:
+        if publication_identity is not None:
+            _discard_owned(output, output_sha, identity=publication_identity)
         raise
-    return {'status': 'handoff_exported', 'evidence_zip': str(output), 'sha256': sha(output.read_bytes()),
-            'writer_evidence': 'verified', 'ledger': ledger_meta, 'delivery_ready': False,
+    return {'status': 'handoff_exported', 'evidence_zip': str(output), 'sha256': output_sha,
+            'source_sha256': source_hash, 'writer_evidence': 'verified', 'ledger': ledger_meta, 'delivery_ready': False,
+            'timings': _timings(started, packaging_seconds),
             'reply_artifacts': [str(archive), str(source), str(output)],
             'boundary': manifest['boundary']}
 
@@ -213,12 +275,13 @@ def deliver(delivery, project, source=None, out_dir=None):
     project it packs). A second run with unchanged inputs returns the same two files. The upload ZIP is never touched and nothing
     existing is overwritten. No runtime, device or platform verdict is added here.
     """
+    started, packaging_seconds = time.perf_counter(), 0.0
     delivery = Path(delivery).resolve(); project = Path(project).resolve()
     delivered_bytes = delivery.read_bytes(); record = read_json(delivered_bytes)
     if record.get('delivery_ready') is not True:
         raise ValueError('四样交付需要 prepare_delivery.py 的成功交付记录（delivery_ready 为 true）；先完成最终交付复核')
     archive = Path(str(record.get('archive') or '')).resolve()
-    if not archive.is_file() or sha(archive.read_bytes()) != record.get('sha256'):
+    if not archive.is_file() or file_sha(archive) != record.get('sha256'):
         raise ValueError('测试包与交付记录不是同一份文件：' + str(archive))
     if not (project / 'assets').is_dir():
         raise ValueError('不是 Cocos 工程（没有 assets 文件夹）：' + str(project))
@@ -246,39 +309,61 @@ def deliver(delivery, project, source=None, out_dir=None):
                     continue
         if source is None:
             from make_source_zip import build
+            tick = time.perf_counter()
             written = build(project, _free(folder, archive.stem, SOURCE_TAIL))
+            packaging_seconds += time.perf_counter() - tick
             if not written.get('written'):
                 raise ValueError('源码包没有写出：工程里有账号、密码或密钥，先删掉文件或把值清空再交付。' +
                                  '；'.join(written.get('problems', [])[:8]))
             source = Path(written['zip']); made['source_zip'] = True
     if not source.is_file() or source.suffix.lower() != '.zip':
         raise ValueError('源码包必须是一个 ZIP 文件：' + str(source))
+    # Freeze raw source bytes before the final logical identity/hygiene checks.
+    # Candidate-search identities above only select an old file; they are not proof.
+    source_sha = file_sha(source)
     identity = source_identity(source)
     if identity != current:
         raise ValueError('源码包和当前工程不是同一份源码（assets 下的脚本或配置不同）：' + str(source))
     bound = (record.get('logic_source_binding') or {}).get('current_source_sha256') if isinstance(record.get('logic_source_binding'), dict) else None
     if bound and bound != identity:
         raise ValueError('源码包和交付复核时核对的源码不是同一份；交付复核之后工程又改过，先重新出包和复核')
-    test_sha, source_sha, delivery_sha = record['sha256'], sha(source.read_bytes()), sha(delivered_bytes)
+    test_sha, delivery_sha = record['sha256'], sha(delivered_bytes)
     evidence = manifest = None
     for earlier in _earlier(folder, archive.stem, EVIDENCE_TAIL):
         manifest = _evidence_for(earlier, test_sha, source_sha, delivery_sha)
         if manifest:
             evidence = earlier; break
-    if evidence is None:
-        evidence = _free(folder, archive.stem, EVIDENCE_TAIL)
-        exported = export(archive, source, delivery, evidence, project)
-        ledger = exported['ledger']; made['evidence_zip'] = True
-    else:
-        ledger = manifest.get('ledger')
-    lines = ['测试包：' + str(archive), '源码包：' + str(source), '交接证据包：' + str(evidence)]
-    if not isinstance(ledger, dict) or ledger.get('state') != 'exported':
-        lines.append('证据包里没有逐项检查账本（工程里没有账本或账本是空的），接收方按缺项处理，不是全量通过的证明。')
-    return {'status': 'team_handoff_ready', 'test_zip': str(archive), 'source_zip': str(source), 'evidence_zip': str(evidence),
-            'sha256': {'test_zip': test_sha, 'source_zip': source_sha, 'evidence_zip': sha(evidence.read_bytes())},
-            'made': made, 'ledger': ledger, 'reply_lines': lines,
-            'boundary': 'Files for the hand-over only. The evidence ZIP carries the author records as they are; '
-                        'no new execution, device or platform verdict.'}
+    created_evidence, evidence_sha = False, None
+    try:
+        if evidence is None:
+            evidence = _free(folder, archive.stem, EVIDENCE_TAIL)
+            exported = export(archive, source, delivery, evidence, project, expected_source_sha256=source_sha)
+            evidence_sha = exported['sha256']; created_evidence = True
+            packaging_seconds += exported['timings']['packaging_seconds']
+            if exported.get('source_sha256') != source_sha:
+                raise ValueError('handoff exported a different source identity')
+            ledger = exported['ledger']; made['evidence_zip'] = True
+        else:
+            ledger = manifest.get('ledger')
+            evidence_sha = file_sha(evidence)
+        # Keep source identity stable through both new export and old evidence reuse.
+        if source_identity(project) != current:
+            raise ValueError('source project changed during handoff')
+        if file_sha(evidence) != evidence_sha:
+            raise ValueError('handoff evidence changed before returning')
+        _unchanged_inputs(archive, test_sha, source, source_sha, delivery, delivered_bytes)
+        lines = ['测试包：' + str(archive), '源码包：' + str(source), '交接证据包：' + str(evidence)]
+        if not isinstance(ledger, dict) or ledger.get('state') != 'exported':
+            lines.append('证据包里没有逐项检查账本（工程里没有账本或账本是空的），接收方按缺项处理，不是全量通过的证明。')
+        return {'status': 'team_handoff_ready', 'test_zip': str(archive), 'source_zip': str(source), 'evidence_zip': str(evidence),
+                'sha256': {'test_zip': test_sha, 'source_zip': source_sha, 'evidence_zip': evidence_sha},
+                'made': made, 'ledger': ledger, 'reply_lines': lines, 'timings': _timings(started, packaging_seconds),
+                'boundary': 'Files for the hand-over only. The evidence ZIP carries the author records as they are; '
+                            'it does not approve a receiver environment, real device or platform upload.'}
+    except BaseException:
+        if created_evidence:
+            _discard_owned(evidence, evidence_sha)
+        raise
 
 
 def receive(archive, source=None, evidence=None, feedback=None):

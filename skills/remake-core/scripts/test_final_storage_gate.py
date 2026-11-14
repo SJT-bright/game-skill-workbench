@@ -97,21 +97,39 @@ class FinalStorageTests(unittest.TestCase):
         if not Path(spec.origin).is_file():
             spec=importlib.util.spec_from_file_location('delivery',DEPS.parents[1]/'cocos-game-check/package-check/scripts/prepare_delivery.py')
         m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
-        import upload_size_gate,package_obligations
+        import delivery_archive_context,package_obligations
         stable=Path(os.environ.get('SKILL_TEST_STABLE_ROOT',str(Path.cwd())))
         work=Path(tempfile.mkdtemp(prefix='storage-delivery-fixture-',dir=stable));self.addCleanup(shutil.rmtree,work,True)
         archive=work/'game.zip';archive.write_bytes(b'explicit synthetic boundary');record=work/'delivery.json'
         size={'passed':True,'size_passed':True,'sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'run_id':'synthetic','errors':[]}
         f=self.f;self.startup.write_text(json.dumps({'binding':f.binding}))
+        class SyntheticArchiveContext:
+            # This control isolates STORAGE-01; archive/context semantics have
+            # separate real-ZIP controls. The public wrapper still owns cleanup.
+            closed = False
+            def close(self):
+                self.closed = True
+        archive_context = SyntheticArchiveContext()
         with contextlib.ExitStack() as stack:
-            stack.enter_context(patch.object(upload_size_gate,'inspect_final_zip',return_value=size))
+            fresh = stack.enter_context(patch.object(delivery_archive_context,'inspect_delivery_archive',
+                return_value=(size,archive_context)))
+            current = stack.enter_context(patch.object(delivery_archive_context,'check_delivery_archive_current',
+                return_value=size['sha256']))
+            storage = stack.enter_context(patch('audit_final_storage.audit_final_storage',wraps=audit_final_storage))
             stack.enter_context(patch.object(m,'writer_board',return_value='localize'))
             stack.enter_context(patch.object(package_obligations,'verify',return_value={}))
             stack.enter_context(patch.object(m,'check',return_value={}))
             stack.enter_context(patch.object(m,'regression_checks',return_value=[]))
             runtime=stack.enter_context(patch.object(m,'audit_final_startup',side_effect=AssertionError('must refuse first')))
             with self.assertRaisesRegex(ValueError,'storage.native.contract'):
-                m._prepare(archive,f.native,'ttfixture',record,self.project,self.startup,None,None,None,None,None,None,None,[],{})
+                m.prepare(archive,f.native,'ttfixture',record,project=self.project,startup_contract=self.startup)
+            storage.assert_called_once_with(f.native.resolve(),self.project,self.startup)
+            fresh.assert_called_once_with(archive.resolve(),None)
+            current.assert_called_once_with(archive_context,archive.resolve())
             runtime.assert_not_called();self.assertFalse(record.exists())
+            self.assertTrue(archive_context.closed)
+            blocked=json.loads(Path(str(record)+'.blocked.json').read_text())
+            self.assertFalse(blocked['delivery_ready'])
+            self.assertEqual(blocked['checks'][-1]['id'],'storage.native.contract')
 
 if __name__=='__main__':unittest.main(verbosity=2)

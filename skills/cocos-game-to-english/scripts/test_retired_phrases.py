@@ -76,18 +76,14 @@ RETIRED = (
 )
 
 # 现在还留着旧说法、这次有意不改的文件。值是原因。清理干净以后要从这里删掉（test_known_entries_are_still_needed）。
-KNOWN = {
-    'remake-core/scripts/preflight.py':
-        '工具输出里的一句提示；改工具字节会让依赖它的已通过记录变成待复验，留到下次本来就要改这个工具的版本',
-    'ad-boost/scripts/diagnose_ads.py':
-        '旧诊断工具输出的不推荐原因；六标准的计划以 ad_nodes.py 为准，这个工具归广告 Skill 改',
-}
+KNOWN = {}
 
 
 def skipped(rel):
     """历史记录、学习库副本、测试和清单不查。"""
     name = rel.rsplit('/', 1)[-1]
     return (rel.startswith('ad-boost/vendor/')                                   # 学习库副本，从学习库同步
+            or rel == 'remake-core/assets/active-skill-advice.json'              # 维护期禁用句式与反例登记，不是制作指令
             or name in ('更新记录.txt', '版本历史.md', 'CHANGELOG.md', '验收记录.md')    # 历史与验收记录
             or name in ('distribution-manifest.json', 'PROVENANCE.json')         # 分发清单
             or name.startswith('test_') or '.test.' in name                      # 测试本身会引用旧句子
@@ -147,6 +143,14 @@ class RetiredPhrases(unittest.TestCase):
         for rel, why in KNOWN.items():
             if (PACK / rel).is_file():
                 self.assertIn(rel, found, rel + ' 已经没有作废说法，请从 KNOWN 里删掉这一项（原来留着的原因：' + why + '）')
+
+    def test_active_production_advice_has_no_retired_steps(self):
+        import importlib.util
+        source = PACK / 'remake-core/scripts/active_skill_advice.py'
+        spec = importlib.util.spec_from_file_location('retired_active_advice', source)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.assertEqual(module.scan(PACK), [])
 
     def test_scan_finds_a_planted_stale_line(self):
         import tempfile

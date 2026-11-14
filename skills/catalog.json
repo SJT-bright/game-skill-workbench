@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T05:37:49.161Z",
-  "treeHash": "a17137175cf9fe78e57270d0bbf2b05beb6dd8d1c2da8b4207d97163293ac6d7",
+  "createdAt": "2026-11-14T05:38:16.616Z",
+  "treeHash": "5170e4025f47bb8a3c5174740d7f57651bdd58d76355bd24765b8a985bc04b24",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2179,20 +2179,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "8e4fd499434b98677a878e1bde03d2195efb78facfa6b11901894d7f21b98156",
+      "treeHash": "4763ef3e42503625c0312f9bba5515c34052ec93ba5da8c449b3fe5c39c4a48a",
       "fileCount": 67,
-      "bytes": 1053833,
+      "bytes": 1054056,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "bbdb7abeefc31a3a871165c9e5d00e3d5a4f42feaf3fc652d30b340ef6784210",
+          "hash": "b9d187ea489459d4e6e822b02bca1cc1fed0e318664f00aa7218a24e972d2a3e",
           "size": 38819,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "a100fac52a357f57c9cd6d8c5728a763dab5c7e064a52b50de88c2eb0e8f7e71",
-          "size": 104475,
+          "hash": "d070e1b62546bea3abd38e1f93fced06886d1222c48a452ca1d99d7efb4ef5f9",
+          "size": 104579,
           "executable": false
         },
         {
@@ -2257,8 +2257,8 @@
         },
         {
           "path": "references/english-ui-rebuild.md",
-          "hash": "fb551ba8036fb886e87c0bb66234e1b9b127b12ff89ec526027156c1768df659",
-          "size": 34994,
+          "hash": "2d28b7da6030ff791d4828ba38b20ff31cf9dfb4bf08a39d3aa86903dbcad6cd",
+          "size": 34944,
           "executable": false
         },
         {
@@ -2533,8 +2533,8 @@
         },
         {
           "path": "scripts/test_retired_phrases.py",
-          "hash": "6fedb551e868ea3c0b506b5fe53956b8803bd5aee009977cbf469571eb7a528d",
-          "size": 10534,
+          "hash": "fe0ee36ee7523b05c2a8293620e40392fef4ad7af5fc58d531d1a001a7984002",
+          "size": 10703,
           "executable": false
         },
         {

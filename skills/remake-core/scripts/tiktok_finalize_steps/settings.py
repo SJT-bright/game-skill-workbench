@@ -54,6 +54,10 @@ def detect(ctx):
 
 def apply(ctx):
     r = Result(STEP)
+    if ctx.engine == 1:
+        r.state = 'n/a'
+        r.info.append('Creator 1.9 has no ByteDance builder profile; native App ID is checked in project.config.json')
+        return r.as_dict()
     value, source, problems = expected(ctx)
     r.blocks += [p for p in problems if p['level'] == 'block']
     if not value or r.blocks:

@@ -212,7 +212,7 @@ def check(view):
     except T.KitError as error:
         return [finding('K_kit_unusable', 'block', str(error))]
     engine = view.engine_major
-    if engine not in (2, 3):
+    if engine not in (1, 2, 3):
         # v7.7.4 (总表 B18): an unrecognised engine used to skip every standard-part check without a word.
         policy, why = _policy(view)
         return [finding('K_engine_unknown', 'block' if policy == 'new' else 'warn',

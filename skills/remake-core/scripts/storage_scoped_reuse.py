@@ -326,6 +326,9 @@ def verify_record(record, home, native, project, report, trace):
 
 
 def validate_report(report, native, expected_binding, *, project):
+    if report.get('profile') == 'creator1_first_platform_release.v1':
+        from creator1_storage_contract import consume
+        return consume(report, native, expected_binding, project)
     """Read-only real consumer entry. Returns errors; never runs a helper or VM."""
     import audit_native_storage_contract as gate
     try:

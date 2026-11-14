@@ -37,6 +37,23 @@ def platform_kit_covers_retry(native, project):
 
 
 def audit_final_startup(native, project, startup_contract, recovery_runtime, *, reuse_only=False):
+    if project and startup_contract and (Path(project)/'docs/checks/creator1-compatibility.json').is_file():
+        from cocos1_compat import engine_file
+        engines={n:(Path(native)/n).read_bytes() for n in ('cocos2d-js-min.js','cocos2d-js.js') if (Path(native)/n).is_file()}
+        if engine_file(engines):
+            from creator1_compatibility_contract import consume
+            saved=json.loads((Path(project)/'docs/checks/creator1-compatibility.json').read_bytes())
+            checked=consume(project,native,saved['web'])
+            if (Path(saved['startup']['path']).resolve()!=Path(startup_contract).resolve()
+                    or not recovery_runtime or Path(saved['recovery']['path']).resolve()!=Path(recovery_runtime).resolve()):
+                raise ValueError('Creator1 exact startup/recovery evidence required')
+            return dict(passed=True,native_tree_sha256=checked['binding']['native_tree_sha256'],
+                        startup_contract_sha256=hashlib.sha256(Path(startup_contract).read_bytes()).hexdigest(),
+                        loading_recovery_runtime_sha256=hashlib.sha256(Path(recovery_runtime).read_bytes()).hexdigest(),
+                        current_binding=checked['binding'],registered_renderer_replayed=False,
+                        checks=[dict(id='creator1.compatibility',action='reused',evidence=[saved['startup']['path'],saved['recovery']['path']],
+                                     original_at=checked['original_at'],reason='Exact original registered Native controls revalidated')],
+                        scope=checked['boundary'])
     if project and startup_contract:
         from startup_scoped_evidence import consume
         scoped = consume(project, native, startup_contract)

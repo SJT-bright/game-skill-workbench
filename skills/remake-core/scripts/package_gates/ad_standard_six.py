@@ -7,6 +7,11 @@ def check(view):
     project = getattr(view, 'project', None)
     scope = requirement(project, view.get_policy()[0])
     if not scope['required']:
+        if scope.get('compatibility_native_inputs'):
+            import hashlib
+            actual = {n: hashlib.sha256(b).hexdigest() for n, b in view.files.items()}
+            if actual != scope['compatibility_native_inputs']:
+                return [finding('AD6_scope_mismatch', 'block', 'Package differs from the reviewed compatibility scope')]
         return [finding('AD6_scope_retained', 'warn', scope['reason'])]
     if project is None:
         return [finding('AD6_project_required', 'block',

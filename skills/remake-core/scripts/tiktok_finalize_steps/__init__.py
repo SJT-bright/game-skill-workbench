@@ -601,6 +601,16 @@ def self_check(ctx, r, names_parts, policy, required=True):
 def run_part_step(ctx, step, defaults, label):
     """apply() body shared by the native steps that place one kit file + one load line (touch, storage)."""
     r = Result(step)
+    if ctx.engine == 1:
+        # Creator 1.9 owns a different input/storage/ads integration; 2.4 parts cannot be installed into it.
+        # Validate the actual prepared export here. Its runtime producers are still mandatory at writing.
+        from audit_upload_startup import audit_files
+        audit = audit_files(ctx.files())
+        for error in audit['errors']:
+            r.block('K_creator1_startup', error)
+        r.state = 'own' if not r.blocks else 'conflict'
+        r.info.append('Creator 1.9 export retained; actual adapter/engine audit, runtime evidence required by writer')
+        return r.as_dict()
     if ctx.engine not in (2, 3):
         (r.block if ctx.policy == 'new' else r.warn)('K_engine_unknown', 'not a Cocos 2.4 / 3.x mini-game build; '
                                                      '%s not installed' % label)

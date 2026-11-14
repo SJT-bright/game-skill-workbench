@@ -240,6 +240,24 @@ def audit(root):
  for p in root.rglob('*.js'):
   source_bytes=p.read_bytes();source=source_bytes.decode('utf-8',errors='replace')
   audio_aliases=_reviewed_audio_aliases(root,p,source_bytes,errors)
+  # Creator 1.x exports retain native-only AnySDK and debug-only project paths.
+  # Select only provably active branches in the actual mini-game environment;
+  # unknown conditions keep both sides, so missing live references still fail.
+  if p == root/'main.js':
+   from cocos1_compat import engine_file
+   engines={n:(root/n).read_bytes() for n in ('cocos2d-js-min.js','cocos2d-js.js') if (root/n).is_file()}
+   if engine_file(engines):
+    import subprocess,shutil
+    here=Path(__file__).resolve().parent
+    settings=subprocess.run([shutil.which('node') or 'node',str(here/'read_cocos1_settings.cjs')],input=(root/'src/settings.js').read_text(),capture_output=True,text=True,timeout=10)
+    if settings.returncode:errors.append('Creator1 settings parser refused: '+settings.stderr)
+    else:
+     debug=json.loads(settings.stdout).get('debug', False)
+     if type(debug) is not bool:errors.append('Creator1 actual settings.debug must be literal boolean')
+     else:
+      active=subprocess.run([shutil.which('node') or 'node',str(here/'creator1_active_literals.cjs')],input=json.dumps({'code':source,'debug':debug}),capture_output=True,text=True,timeout=10)
+      if active.returncode:errors.append('Creator1 active-reference parser refused: '+active.stderr)
+      else:source='\n'.join(json.dumps(x) for x in json.loads(active.stdout))
   for m in LITERAL.finditer(source):
    rel=m.group(1)
    if any(c in rel for c in ['+','{','}']):continue

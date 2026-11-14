@@ -454,6 +454,11 @@ def inside(root, path):
 
 def validate(trace, native, expected_binding, new_approval=False, *, _scope=None):
     """new_approval=True (approve_runtime only): evidence of the earlier blocking-recovery policy is refused."""
+    if isinstance(trace, dict) and trace.get('schema') == 'creator1_storage_trace.v1':
+        if _scope is not None:
+            return ['Creator1 storage requires its exact approved artifact inputs']
+        from creator1_storage_contract import validate as validate_creator1
+        return validate_creator1(trace, native, expected_binding, trace.get('project', ''))
     if isinstance(trace, dict) and trace.get('numeric_snapshot_encoding'):
         from numeric_snapshot_contract import validate as validate_numeric_snapshot
         return validate_numeric_snapshot(trace, native, expected_binding, **({'_scope': _scope} if _scope else {}))
@@ -784,6 +789,9 @@ def _valid_execution_mode(report, trace, receipt):
 
 
 def validate_execution_receipt(report, trace):
+    if report.get('profile') == 'creator1_first_platform_release.v1':
+        from creator1_storage_contract import consume
+        return consume(report, trace.get('native', ''), trace.get('binding', {}), trace.get('project', ''))
     """Read-only rejudgment: valid evidence is not re-executed at each writer."""
     receipt = report.get('execution_receipt', {})
     try:
@@ -840,6 +848,9 @@ def _approve_runtime(trace, native, binding, *, replay_required=True, production
 
 def approve_runtime(trace, native, binding):
     """Compatibility entry: existing raw evidence is replayed once as before."""
+    if trace.get('schema') == 'creator1_storage_trace.v1':
+        from creator1_storage_contract import approve
+        return approve(trace, native, binding)
     return _approve_runtime(trace, native, binding)
 
 

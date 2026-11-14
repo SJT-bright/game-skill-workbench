@@ -246,7 +246,13 @@ def starter_trace(project, max_packs=2):
 
 
 def engine_of_names(names, texts=None):
+    if texts is None and isinstance(names, dict):
+        texts = names
     names = list(names)
+    if texts:
+        from cocos1_compat import engine_file
+        if engine_file(texts):
+            return 1
     if any(re.search(r'(^|/)cocos2d-js(-min)?(\.[0-9a-f]+)?\.js$', n) for n in names):
         return 2
     if any(n.startswith('cocos-js/') or re.search(r'(^|/)web-adapter\.js$', n) for n in names):
@@ -263,7 +269,7 @@ def engine_of_project_texts(project_json=None, package_json=None):
         except (ValueError, UnicodeDecodeError):
             continue
         version = (data.get('creator') or {}).get('version') if key else data.get('version')
-        if isinstance(version, str) and version[:1] in '23':
+        if isinstance(version, str) and version[:1] in '123':
             return int(version[0])
     return None
 

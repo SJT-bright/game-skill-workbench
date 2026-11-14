@@ -130,7 +130,7 @@ def main():
         b = load(a.binding); binding = b.get('binding', b)
         data = load(a.runtime)
         errors = validate(data, binding, a.runtime.parent)
-        checked = len(SCENARIOS)
+        checked = len(SCENARIOS) if not data.get('profile') else None  # Custom contracts may cover a different, explicitly scoped catalogue.
     except (ValueError, TypeError, KeyError, AttributeError, OSError) as e:
         errors = ['invalid input: ' + str(e)]
     report = dict(tool=TOOL, policy_version=POLICY_VERSION, runtime_file=str(a.runtime.resolve()), runtime_sha256=hashlib.sha256(a.runtime.read_bytes()).hexdigest() if a.runtime.is_file() else None, stage='runtime', binding=binding, checked=checked, failed=len(errors), passed=not errors, errors=errors,

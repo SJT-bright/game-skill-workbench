@@ -340,6 +340,10 @@ def _audit_files_uncached(files):
         launch = re.search(r'\blaunchScene\s*:\s*["\']([^"\']+)', settings)
         if launch and launch.group(1).startswith('db://'):
             scene_maps = []
+            from cocos1_compat import engine_file
+            if engine_file(files):
+                # 1.9 exports scene registrations in _CCSettings.scenes, before bundle configs existed.
+                scene_maps.extend(re.findall(r'\burl\s*:\s*["\']([^"\']+)', settings))
             for n in names:
                 if re.search(r'/(?:config(?:\.[\w-]+)?)\.json$', n):
                     try:
@@ -520,6 +524,20 @@ def _audit_files_uncached(files):
         except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
             errors.append('Native bootstrap probe unavailable/invalid: '+str(exc))
     touch_coordinates = None
+    from cocos1_compat import engine_file
+    creator1_engine = engine_file(files)
+    if creator1_engine:
+        try:
+            payload = {'files': {n: b.decode('utf-8-sig') for n, b in files.items()
+                                  if n.endswith('.js') and (n in ('game.js', 'adapter-min.js',
+                                      'sdk-namespace.js', creator1_engine) or n.startswith('libs/weapp-adapter/'))}}
+            run = subprocess.run([shutil.which('node') or 'node', str(Path(__file__).with_name(
+                'probe_cocos1_touch_coordinates.cjs'))], input=json.dumps(payload), capture_output=True, text=True, timeout=20)
+            touch_coordinates = json.loads(run.stdout)
+            if run.returncode or touch_coordinates.get('schema') != 'cocos1_touch_coordinates.v1' or touch_coordinates.get('passed') is not True:
+                errors.append('Cocos1 native touch coordinates rejected: ' + str(touch_coordinates.get('error') or 'actual adapter/engine coordinates differ'))
+        except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
+            errors.append('Cocos1 native touch-coordinate probe unavailable: ' + str(exc))
     adapter = files.get('adapter-min.js', b'').decode('utf-8', errors='replace')
     # Release builds ship cocos/cocos2d-js-min.js; debug builds (MergeShot2048 v82) ship cocos/cocos2d-js.js.
     engine_candidates = [n for n in files if re.search(r'(?:^|/)cocos/cocos2d-js(?:-min)?\.js$', n)

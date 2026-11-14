@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T18:50:06.776Z",
-  "treeHash": "d18c78a93c746b51bb3a391703d5980cb7bb79eabf5adbd3e3f2e5e7f8846806",
+  "createdAt": "2026-11-14T18:54:23.233Z",
+  "treeHash": "6612a2ed0b6def0548a645649d5a1b806365b9bf582542935242fbe11821fac5",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3765,14 +3765,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "a4af7cf20cec08ca5ac4e64a4ebc1ebeec2acea354edc5b4d4bade74b973b664",
-      "fileCount": 806,
-      "bytes": 14915778,
+      "treeHash": "3f1837ccc3e3e55351eb4b4295d93517bf895bb36c3e65324fd2b9d95e2eb9e4",
+      "fileCount": 820,
+      "bytes": 15244544,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7a38e955eb82644c4eee53df50a983a2e78c96e39d926ad3da7e7c1271b13fd6",
-          "size": 217234,
+          "hash": "52e7124b21ff304cb4455f4be7f384f6bcab8564d20c9b42fe089eaa6d548a66",
+          "size": 220594,
           "executable": false
         },
         {
@@ -4310,6 +4310,12 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tests/refresh-suite-contracts.cjs",
+          "hash": "f3d57121fb95660e3c9ec842bae02808d1f28bb8a86c761354cc8fdda10a6f03",
+          "size": 2448,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tests/res-loader-fixtures/ResMgr_dessert_v11.js",
           "hash": "a36f3dcefc79d548292ce9cdf610bfbc4230c0a5fd26dd86dc0120e8c6d0a95c",
           "size": 2236,
@@ -4341,8 +4347,8 @@
         },
         {
           "path": "assets/platform-kit/tests/run-all.js",
-          "hash": "a80b6a3eaa65b7cd897b475f46ec13dc6e3f1b5d161a74c7c95d08c0e9a94fd3",
-          "size": 9690,
+          "hash": "a89ad2891458f0584ee5e3358e3808d374dd797a4c93b88b629b03a6e16adb4c",
+          "size": 289,
           "executable": false
         },
         {
@@ -4383,8 +4389,8 @@
         },
         {
           "path": "assets/platform-kit/tests/snake-regression/run.js",
-          "hash": "c9dab06bb78b92bc5855f5a0811c6ddd46355b4b705db9440ec4c5fdd033251d",
-          "size": 1923,
+          "hash": "d801b71c432f36a54338feff2faad3bf621b63a38c9820076fe1c91462d95b8d",
+          "size": 670,
           "executable": false
         },
         {
@@ -4421,6 +4427,24 @@
           "path": "assets/platform-kit/tests/storage-typed-recovery.test.js",
           "hash": "8bfbfe71ad2f659424549f850e2f97c124362fc7b8609c288f566bcc93c716de",
           "size": 12480,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tests/suite-contracts.json",
+          "hash": "64014968ad1ad7a99833de3879b4ad5270def3c674ff5b5cb0e72612503248a4",
+          "size": 200759,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tests/suite-runner.cjs",
+          "hash": "823bceba0fdbf2947b68dbc00a82f5d19f146ae99bbb857c59cdb0cb9f607153",
+          "size": 16409,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tests/test_suite_receipts.cjs",
+          "hash": "7cb0b5528fab0b0ac41f4fab9959eb71dbf7cc677cef4c2ddfc0c4d491c8e487",
+          "size": 7374,
           "executable": false
         },
         {
@@ -5018,6 +5042,12 @@
           "executable": false
         },
         {
+          "path": "references/platform-suite-records.md",
+          "hash": "9fee5e77b3009234e91515fde28471330557c3cca7071e986f54ab1b52c87e8c",
+          "size": 2249,
+          "executable": false
+        },
+        {
           "path": "references/process-gates.md",
           "hash": "b4051d86ce14fb850b5eeddc0025cdc31de81f2b43f2931ef07bd725abd272a3",
           "size": 19938,
@@ -5187,8 +5217,8 @@
         },
         {
           "path": "scripts/ad_standard_scope.py",
-          "hash": "c0c35c5e846f392d5e1de20e6814d291e167016a753b0805408ab7bcac2fc696",
-          "size": 4048,
+          "hash": "34ef5f5c295c7e68854f25c09d6b2534fb27c01dc79d2cfb6505f4200089b526",
+          "size": 4412,
           "executable": false
         },
         {
@@ -5427,8 +5457,8 @@
         },
         {
           "path": "scripts/audit_final_package_startup.py",
-          "hash": "827c10e28a795fa175d009b8cd8a37f9f7dbd8b1b381c2bed2abb0a3ec1d1345",
-          "size": 12021,
+          "hash": "3b9694778aff6437ad596c53a480dfc81dde78b7985dbdbf14a7c7458c66cee3",
+          "size": 13619,
           "executable": false
         },
         {
@@ -5487,8 +5517,8 @@
         },
         {
           "path": "scripts/audit_loading_recovery.py",
-          "hash": "c345a2b418b75cd57bcd38546d7ed86740a3644186c97a8013289648225e7f0d",
-          "size": 10484,
+          "hash": "ccda5b78ff10172f898b900344ac350646922f6fadc3f8d0c97c8cee937efe34",
+          "size": 10593,
           "executable": false
         },
         {
@@ -5523,8 +5553,8 @@
         },
         {
           "path": "scripts/audit_native_storage_contract.py",
-          "hash": "96eb89de2c4ce38c705d87f0b5f500d31199962a3511e6fc25ba6bed506d830d",
-          "size": 62114,
+          "hash": "5b7f03e0ddd2247b95e09945584d5f85211dbf75bcad3f6fd69c35b313f7549f",
+          "size": 62876,
           "executable": false
         },
         {
@@ -5583,8 +5613,8 @@
         },
         {
           "path": "scripts/audit_packed_assets.py",
-          "hash": "adc21108eca7e0dae0da2ba5034d06b1dc060874a8b4a8ccf34f2118f80d98d0",
-          "size": 17907,
+          "hash": "ebe595a870fd7b272ac4ea4810058ae4780ed3f8ba3d70bc544abee63689ef6a",
+          "size": 19248,
           "executable": false
         },
         {
@@ -5631,8 +5661,8 @@
         },
         {
           "path": "scripts/audit_runtime_resources.py",
-          "hash": "ff4eff2c46e2ad0c2e6791ed753e018d6300fff1dcfb2e1c366d1b5a31b4e461",
-          "size": 50156,
+          "hash": "ad5bb13f20ce2f7d43f4c8deb37256b5dd227bf0ae58ca07c34580501d9aa9ae",
+          "size": 51794,
           "executable": false
         },
         {
@@ -5697,8 +5727,8 @@
         },
         {
           "path": "scripts/audit_upload_startup.py",
-          "hash": "1b70b5c81e6680ef2114523b9ac19596a5ecf256881cc44555ba7fcbf63e5d39",
-          "size": 36655,
+          "hash": "e50053958d19d84a3a05c47f0661f128354462650fb3d4338fd51e415960c19b",
+          "size": 38109,
           "executable": false
         },
         {
@@ -5810,6 +5840,12 @@
           "executable": false
         },
         {
+          "path": "scripts/cocos1_compat.py",
+          "hash": "4b6ecabb4b210efb9ea305dbadb9a7d5ca5ac0ad89fec957c8219d7a811712b4",
+          "size": 924,
+          "executable": false
+        },
+        {
           "path": "scripts/cocos24_adapter_coordinates_contract.py",
           "hash": "05dbc9c6038ebe6684a2631b9e293228e47af5750747168dbb1e2e061e5cabe1",
           "size": 5765,
@@ -5837,6 +5873,30 @@
           "path": "scripts/cocos3_native_renderer_contract.py",
           "hash": "678a49a9379153a16f865508a77c409079c4979233b67d975543e6f6dbe703b0",
           "size": 3310,
+          "executable": false
+        },
+        {
+          "path": "scripts/compatibility_scope.py",
+          "hash": "a4cabff76b8cce4c9a4f8fce1c33843ec81a9c36f46d6f06cbf10dca5baa49ec",
+          "size": 7093,
+          "executable": false
+        },
+        {
+          "path": "scripts/creator1_active_literals.cjs",
+          "hash": "9e580bdc2e24a59e2f580074fcf00b52104e54606bc2ee2169f529993eb50047",
+          "size": 1428,
+          "executable": false
+        },
+        {
+          "path": "scripts/creator1_compatibility_contract.py",
+          "hash": "638f48d771a579985d319c7be1fb83fc9799bca80ce306b13da74eb9c1fc4a79",
+          "size": 12229,
+          "executable": false
+        },
+        {
+          "path": "scripts/creator1_storage_contract.py",
+          "hash": "1e3a1a44709d231dadebea130b6bf20aaf529c70ca721c535b58d78a44c5d583",
+          "size": 8318,
           "executable": false
         },
         {
@@ -6177,8 +6237,8 @@
         },
         {
           "path": "scripts/make_tiktok_zip.py",
-          "hash": "717b33a1f5b48528e3de0102b4d5510482fb5aec43f7f6251c3fae5e08a01f7f",
-          "size": 41377,
+          "hash": "14b60b9ec26a905fa0b5cda18efe08d7d7081b931f28af53d5311e16c1622b1d",
+          "size": 42810,
           "executable": false
         },
         {
@@ -6194,6 +6254,12 @@
           "executable": false
         },
         {
+          "path": "scripts/normalize_cocos1_sdk.cjs",
+          "hash": "faab9428f88cb1e5240e70ed5b4f11afc5ecbe509020198917764525872c1d26",
+          "size": 878,
+          "executable": false
+        },
+        {
           "path": "scripts/numeric_snapshot_contract.py",
           "hash": "8b94ca6a0fc899c0e7401a1cb6df413d561d1f295436aff9c36dda0d6951fabe",
           "size": 12909,
@@ -6201,8 +6267,8 @@
         },
         {
           "path": "scripts/official_engine_sources.json",
-          "hash": "7e70b26a2e3f71a2a1b01206964be900964d89ed60f432422c29902984d25e3a",
-          "size": 1551,
+          "hash": "37cea30a31a2c09f664065a951aec23ba04da13e36ff02c3d0b3aec5bd83a870",
+          "size": 56201,
           "executable": false
         },
         {
@@ -6225,14 +6291,14 @@
         },
         {
           "path": "scripts/package_gates/__init__.py",
-          "hash": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
-          "size": 10650,
+          "hash": "4dd2c672ef718c0419cae15a4e2d90dcb916ef7ed84787fae3c063fa551ff14e",
+          "size": 10768,
           "executable": false
         },
         {
           "path": "scripts/package_gates/ad_standard_six.py",
-          "hash": "466fe4711c3a2af25f385a893b7d3d935ab2b2fe2132e02095a1edec5f3edf6c",
-          "size": 1027,
+          "hash": "1553f71ce183cbb74fc5674494039961a636bd3bfd3bc40d74e0dfd073f01ffb",
+          "size": 1378,
           "executable": false
         },
         {
@@ -6255,8 +6321,8 @@
         },
         {
           "path": "scripts/package_gates/kit_parts.py",
-          "hash": "1e771575f90f31673008921ebd01772be803bbb381e2f1a6bc8c28bffee19693",
-          "size": 14184,
+          "hash": "c3a819fc1379b0283851bcc4531646847cbc095a18c1138c0ea9c3b8e98f2879",
+          "size": 14187,
           "executable": false
         },
         {
@@ -6398,6 +6464,12 @@
           "executable": false
         },
         {
+          "path": "scripts/probe_cocos1_touch_coordinates.cjs",
+          "hash": "a3daea030a0eff2d03d46765b3d56bee91fa186c9333942414143a268ef3c3ee",
+          "size": 3671,
+          "executable": false
+        },
+        {
           "path": "scripts/probe_cocos2_papercut_storage.cjs",
           "hash": "88bc5a6d15cd7d0643062c9163c702e71bb9c7bad2a37679839fe6fd275b6388",
           "size": 3576,
@@ -6419,6 +6491,12 @@
           "path": "scripts/probe_cocos3_touch_coordinates.cjs",
           "hash": "451f041909783caa383f06ef6ecf049467b0e93173b5d97780b8b10f033fed71",
           "size": 19146,
+          "executable": false
+        },
+        {
+          "path": "scripts/probe_creator1_sdk.cjs",
+          "hash": "4ee8ede764e5501e7b5a2595654d505255d2e354a2cebad0068f9df523af625d",
+          "size": 5024,
           "executable": false
         },
         {
@@ -6471,8 +6549,8 @@
         },
         {
           "path": "scripts/project_qa.py",
-          "hash": "55e9e99df39b5e2efd3cdf0f76b224ed863ccba0a4e644bb522a4957ebbcdc75",
-          "size": 17089,
+          "hash": "0b32f88bab5aa231c8eb0becbae0a1e962bd3f9a38eb6c5b36a12cbd7adf233d",
+          "size": 17112,
           "executable": false
         },
         {
@@ -6485,6 +6563,12 @@
           "path": "scripts/raw_inputs.py",
           "hash": "790d94d0c9ebc2d019e8f10e508804260f9b66f34e9a6ec1351a07db853d7b29",
           "size": 9660,
+          "executable": false
+        },
+        {
+          "path": "scripts/read_cocos1_settings.cjs",
+          "hash": "b63d63d08a89cbf4e461bd160b20718cf77d8991b56cd9e6c835d7ba92ab64f6",
+          "size": 1326,
           "executable": false
         },
         {
@@ -6681,8 +6765,8 @@
         },
         {
           "path": "scripts/storage_scoped_reuse.py",
-          "hash": "8336095512bb86c98b24934485fe7ab59a4fb3538233392e220b3d36e5e62dcd",
-          "size": 22438,
+          "hash": "9216a9139bb4d03ffa69ad869bd804ff53d1a1fb19a20146ea5e28248642313d",
+          "size": 22628,
           "executable": false
         },
         {
@@ -8349,14 +8433,14 @@
         },
         {
           "path": "scripts/tiktok_finalize.py",
-          "hash": "d537d20a945dce95396c4d62bade4c6ef1b3e8c399de4792a26c35c0e7936afb",
-          "size": 55683,
+          "hash": "dc86720d45c3be8e9cbc84a82408b2c58126c55fd4576447d1cad0a67ada69f8",
+          "size": 55995,
           "executable": false
         },
         {
           "path": "scripts/tiktok_finalize_steps/__init__.py",
-          "hash": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee",
-          "size": 31951,
+          "hash": "1916b40378d0407d8df6658f28b6171f0b3e45d941c63981908593ac74748196",
+          "size": 32573,
           "executable": false
         },
         {
@@ -8427,8 +8511,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/kit_sources.py",
-          "hash": "99e795cfecabe96c62c63c42ba159e59758acaddfd8a0ba19a74052d9606899a",
-          "size": 9387,
+          "hash": "f458bff424a2e1b7a19cbfac3efac20e5b84b09047d242b7ede8d2425b530ff0",
+          "size": 9490,
           "executable": false
         },
         {
@@ -8463,8 +8547,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/policy.py",
-          "hash": "f2275eb05739099ec5900bd6d2ee7c5217b44847d47431cebfdb510790949eba",
-          "size": 22475,
+          "hash": "bdc70612cc05df4584754792f6a171e6f94d208e98d35e832348c63170a31206",
+          "size": 22660,
           "executable": false
         },
         {
@@ -8487,8 +8571,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/settings.py",
-          "hash": "aa48a660755474b126847852129f0acac8cdaeafcbbb90f424fcfe51af58f5ff",
-          "size": 3822,
+          "hash": "53235fe4219cae3834d1961f7f62956cf3863648690bf95863994afb331c6e79",
+          "size": 4016,
           "executable": false
         },
         {
@@ -8559,8 +8643,8 @@
         },
         {
           "path": "scripts/upload_size_gate.py",
-          "hash": "34b4ca067719f44c8dafb50f664fcb30c43c1106ea1852c170cd1ee997549226",
-          "size": 18373,
+          "hash": "7b0cc43877c98e7258f2bb744489b1983e8e303c408de647416fc80704da76df",
+          "size": 18502,
           "executable": false
         },
         {
@@ -8601,8 +8685,8 @@
         },
         {
           "path": "scripts/writer_proofs.py",
-          "hash": "14ed6ec0ca737d61029a4c286876d4f72aaa014e4264f076c887b7c743e48c4f",
-          "size": 29657,
+          "hash": "544c469debcaff39f22f5f698d53246b8d9eaf9f7d8f125a04e6aa0ea7504e6d",
+          "size": 30008,
           "executable": false
         }
       ]

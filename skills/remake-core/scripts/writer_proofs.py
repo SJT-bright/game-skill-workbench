@@ -301,6 +301,12 @@ def consume(project, native, web, coverage=None, evidence=None, *, require_cover
 
 
 def unchanged(result):
+    if result.get('creator1'):
+        from creator1_compatibility_contract import consume
+        row = result['creator1']
+        checked = consume(row['project'], row['native'], row['web'], row['record']['path'])
+        if checked['record'] != row['record']:
+            raise ValueError('Creator1 compatibility proof changed before publication')
     for path, expected in result['refs'].items():
         if file_sha(path) != expected:
             raise ValueError('writer producer evidence changed before publication: ' + path)

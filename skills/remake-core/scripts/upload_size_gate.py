@@ -82,9 +82,12 @@ _ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
 
 def enforce_tiktok_host(files):
     """Inspect shipped JS for legacy host access and known platform-gated input gaps."""
+    from cocos1_compat import engine_file
+    creator1_engine = engine_file(files)
     candidates = [{'file': name, 'code': data.decode('utf-8-sig')}
                   for name, data in sorted(files.items())
-                  if name not in _ENGINE_MULTIPLATFORM_FILES and name.lower().endswith(('.js', '.mjs', '.cjs'))]
+                  if name not in _ENGINE_MULTIPLATFORM_FILES and name != creator1_engine
+                  and name.lower().endswith(('.js', '.mjs', '.cjs'))]
     if not candidates:
         return
     node = shutil.which('node')

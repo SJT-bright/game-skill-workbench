@@ -19,6 +19,12 @@ def requirement(project=None, policy=None):
             return {'required': True, 'reason': 'project policy is unreadable; cannot downgrade the ad standard'}
     if data.get('ad_standard') == STANDARD or (project / 'docs/adboost/ad_nodes.json').is_file():
         return {'required': True, 'reason': 'six-standard production is enabled for this project'}
+    from compatibility_scope import verified
+    preserved = verified(project)
+    if preserved:
+        return {'required': False,
+                'reason': 'reviewed current platform-only repair retains the supplied feature/UI contract; no complete six-family runtime approval claimed',
+                'compatibility_native_inputs': preserved['native_inputs']}
     if _verified_confirmed_trial(project):
         return {'required': False, 'reason': 'machine-registered user approval retains this confirmed trial scope; evidence and production dependencies match'}
     if marker.is_file() and data.get('policy') == 'new' and data.get('created'):

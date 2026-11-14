@@ -36,6 +36,8 @@ def kit_file_bytes(manifest, key):
 def wanted(ctx):
     """[(dest relpath, kit bytes, editable, part name or None, plugin)] for this engine."""
     out = []
+    if ctx.engine == 1:
+        return out  # 2.4/3.x standard modules are not Creator 1.9 components.
     if ctx.engine == 3:
         for name, part in ctx.manifest.parts_for(3, 'source'):
             spec = part.get('file') or {}

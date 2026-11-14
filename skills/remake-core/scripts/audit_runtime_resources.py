@@ -108,6 +108,31 @@ def project_context(function):
 
 def _catalogs(files):
     catalogs = {}
+    from cocos1_compat import engine_file
+    if engine_file(files):
+        run = subprocess.run([shutil.which('node') or 'node', str(HERE / 'read_cocos1_settings.cjs')],
+                             input=files.get('src/settings.js', b'').decode('utf-8-sig'),
+                             text=True, capture_output=True, timeout=10)
+        if run.returncode:
+            raise ValueError('Creator 1.9 settings data rejected: ' + run.stderr[-500:])
+        settings = json.loads(run.stdout)
+        types = settings.get('assetTypes')
+        assets = settings.get('rawAssets')
+        if not isinstance(types, list) or not isinstance(assets, dict):
+            raise ValueError('Creator 1.9 actual assetTypes/rawAssets required')
+        for rows in assets.values():
+            if not isinstance(rows, dict):
+                raise ValueError('Creator 1.9 raw asset table must be an object')
+            for row in rows.values():
+                if not isinstance(row, list) or len(row) < 2 or not isinstance(row[0], str) or type(row[1]) is not int or not 0 <= row[1] < len(types):
+                    raise ValueError('Invalid Creator 1.9 resource catalog row')
+                path = row[0]
+                if path.startswith('resources/'):
+                    path = path[len('resources/'):]
+                    stem, ext = posixpath.splitext(path)
+                    if ext.lower() in ('.fnt', '.ttf', '.otf', '.png', '.jpg', '.jpeg', '.json', '.mp3', '.wav', '.ogg', '.plist', '.prefab', '.anim', '.fire'):
+                        path = stem
+                    catalogs.setdefault('resources', set()).add((path, types[row[1]]))
     for name, content in files.items():
         if not re.search(r'(^|/)config(?:\.[0-9a-fA-F]+)?\.json$', name):
             continue

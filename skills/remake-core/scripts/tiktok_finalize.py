@@ -200,7 +200,7 @@ def finalize_source(project, board, engine=None, policy=None, app_id=None, manif
         results += _run_steps(ctx, steps, preparation_session)
     blocks, warnings = _collect(results)
     blocks = refused + blocks
-    if engine not in (2, 3):
+    if engine not in (1, 2, 3):
         blocks.append(T.finding('K_engine_unknown', 'block', 'Cocos version of the project not readable'))
     record = {'kind': 'finalize-source', 'kit_version': manifest.version, 'policy': decision['policy'],
               'decision': _trim_decision(decision), 'board': board, 'engine': engine,
@@ -460,7 +460,7 @@ def finalize_native(native, project=None, board=None, app_id=None, policy=None, 
     native = Path(native)
     manifest = manifest or T.load_manifest()
     names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
-    engine = P.engine_of_names(names)
+    engine = P.engine_of_names(names, {n: (Path(native) / n).read_bytes() for n in names if n in ('cocos2d-js-min.js', 'cocos2d-js.js')})
     record_src = read_source_record(project) if project else None
     decision = decide_policy(project=project, native=native, override=policy, legacy=legacy, record=record_src,
                              board=board)
@@ -484,7 +484,7 @@ def finalize_native(native, project=None, board=None, app_id=None, policy=None, 
     results = [] if refused else _run_steps(ctx, steps)       # a refused option changes nothing
     blocks, warnings = _collect(results)
     blocks = refused + blocks
-    if engine not in (2, 3):
+    if engine not in (1, 2, 3):
         blocks.append(T.finding('K_engine_unknown', 'block', 'not a Cocos 2.4 / 3.x mini-game build: %s' % native))
     final = {}
     for r in results:
@@ -514,7 +514,7 @@ def prepared_native_result(native, project=None, board=None, app_id=None, policy
     native = Path(native)
     manifest = manifest or T.load_manifest()
     names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
-    engine = P.engine_of_names(names)
+    engine = P.engine_of_names(names, {n: (Path(native) / n).read_bytes() for n in names if n in ('cocos2d-js-min.js', 'cocos2d-js.js')})
     decision = decide_policy(project=project, native=native, override=policy, legacy=legacy,
                              record=read_source_record(project), board=board)
     if webp_exception_3x(engine, options):
@@ -709,7 +709,7 @@ def sync_run_parts(ctx):
     specs = [(k, s) for k, s in sorted(ctx.manifest.files.items())
              if isinstance(s, dict) and isinstance(s.get('sync_install'), dict)]
     rule = lambda s: s['sync_install']
-    if ctx.engine not in (2, 3) or not specs:
+    if ctx.engine not in (1, 2, 3) or not specs:
         r.state = 'n/a'
         return r.as_dict()
     if ctx.policy != 'new' or ctx.board not in rule(specs[0][1]).get('board', ['remake']):
@@ -780,12 +780,12 @@ def finalize_sync(project, board, native=None, policy=None, manifest=None, legac
     if native:
         native = Path(native)
         names = [p.relative_to(native).as_posix() for p in native.rglob('*') if p.is_file()]
-        nctx = T.Ctx('native', native, project=project, board=board, engine=P.engine_of_names(names),
+        nctx = T.Ctx('native', native, project=project, board=board, engine=P.engine_of_names(names, {n: (Path(native) / n).read_bytes() for n in names if n in ('cocos2d-js-min.js', 'cocos2d-js.js')}),
                      policy=decision['policy'], manifest=manifest)
         results += _detect_only(nctx, SYNC_NATIVE_STEPS) if decision['policy'] == 'legacy' else \
             _run_steps(nctx, SYNC_NATIVE_STEPS)
     blocks, warnings = _collect(results)
-    if engine not in (2, 3):
+    if engine not in (1, 2, 3):
         blocks.append(T.finding('K_engine_unknown', 'block', 'Cocos version of the project not readable'))
     record = {'kind': 'finalize-sync', 'kit_version': manifest.version, 'policy': decision['policy'],
               'decision': _trim_decision(decision), 'board': board, 'engine': engine, 'native': str(native or ''),

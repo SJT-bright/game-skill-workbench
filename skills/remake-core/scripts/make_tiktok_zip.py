@@ -567,8 +567,14 @@ def write_package(native, app_id, out, report=None, interaction_audio_trace=None
             raise ValueError('interaction/audio: ' + '; '.join(observed['errors']))
     import project_qa
     profile = project_qa.review_policy(a, reviewed)
-    producer_proofs = writer_proofs.consume(project, native, web, coverage, writer_evidence,
-        require_coverage=not (profile and profile.get('legacy_coverage_override')))
+    from cocos1_compat import engine_file as creator1_engine
+    creator1 = creator1_engine(files) is not None
+    if creator1:
+        from creator1_compatibility_contract import writer_evidence as creator1_evidence
+        producer_proofs, creator1_scope, creator1_record, creator1_runtime, creator1_ads = creator1_evidence(project, native, web)
+    else:
+        producer_proofs = writer_proofs.consume(project, native, web, coverage, writer_evidence,
+            require_coverage=not (profile and profile.get('legacy_coverage_override')))
     producer_proofs['refs'].update(technical_refs)
     qa_proof = writer_proofs.consume_project_qa(a, reviewed, profile, writer_evidence) if profile else None
     # Existing summaries can show unmapped duties; they cannot manufacture a pass.
@@ -579,16 +585,26 @@ def write_package(native, app_id, out, report=None, interaction_audio_trace=None
     if problem:
         raise ValueError('finalize record does not match the ZIP: ' + problem)
     previous, rework_note = resolve_rework(rework_of, out)
-    scope = check_package.verify_regression_scope(files, native, ad_regression, board, policy, previous,
-                                                  project=project, operation='writer')
-    startup = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
-    regressions = writer_regressions(native, ad_regression, policy, board, previous, project=project,
-                                     expected_scope_sha256=(scope or {}).get('plan_sha256'))
-    if regressions['blocked']:
-        raise ValueError('; '.join(regressions['problems']))
-    regression_record = regression_receipt(regressions)
-    if regression_record is None:
-        raise ValueError('writer did not find complete passing regression evidence')
+    if creator1:
+        scope, regression_record = creator1_scope, creator1_record
+        startup = dict(passed=True, native_tree_sha256=creator1_scope['native_tree'],
+                       runtime_execution='existing_evidence_only_no_game_execution', record=creator1_record['compatibility'],
+                       boundary=creator1_runtime['boundary'])
+        regressions = dict(blocked=False, rewarded_ad_regression=creator1_ads, runtime_regression=creator1_runtime,
+                           rework=dict(reuse=False, scope='creator1_registered_integration_repair',
+                                       baseline='original received source/native archives; no prior writer approval inferred',
+                                       record=creator1_record['compatibility']))
+    else:
+        scope = check_package.verify_regression_scope(files, native, ad_regression, board, policy, previous,
+                                                      project=project, operation='writer')
+        startup = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
+        regressions = writer_regressions(native, ad_regression, policy, board, previous, project=project,
+                                         expected_scope_sha256=(scope or {}).get('plan_sha256'))
+        if regressions['blocked']:
+            raise ValueError('; '.join(regressions['problems']))
+        regression_record = regression_receipt(regressions)
+        if regression_record is None:
+            raise ValueError('writer did not find complete passing regression evidence')
     static_seconds = time.monotonic() - started
     out.parent.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -717,7 +733,9 @@ def main(argv=None):
     print(json.dumps({key: result.get(key) for key in ('archive', 'sha256', 'archive_bytes', 'main_bytes',
         'uncompressed_total_bytes', 'expected_tree_exact', 'check_timings', 'pre_home_bytes', 'entry', 'receipt', 'canonical_backend')}, ensure_ascii=False))
     print('finalize (policy %s):\n%s' % (result['finalize']['policy'], result['finalize']['table_markdown']))
-    if result.get('rework'):
+    if result.get('rework', {}).get('scope') == 'creator1_registered_integration_repair':
+        print('Creator1：按登记的原始包逐文件比较，兼容修复的必需节点已通过；不声明全玩法或真机通过。')
+    elif result.get('rework'):
         print('\n'.join(rework_lines(result['rework'], result.get('rework_record'))))
     import delivery_folder
     print('\n'.join(delivery_folder.describe(result['delivery_folder'])))

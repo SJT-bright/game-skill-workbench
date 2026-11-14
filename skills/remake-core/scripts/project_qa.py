@@ -47,7 +47,7 @@ def write_store(data):
         current = read_store()
         for key, value in data.get('projects', {}).items():
             current['projects'][key] = value
-        for key in ('legacy_profile_files','legacy_registry_files','legacy_runner_validator','legacy_contracts','legacy_evidence_profiles','legacy_export_validator'):
+        for key in ('legacy_profile_files','legacy_registry_files','legacy_runner_validator','legacy_contracts','legacy_evidence_profiles','legacy_export_validator','compatibility_scopes'):
             if key in data:current.setdefault(key,{}).update(data[key])
         for kind, rows in data.get('legacy', {}).items():
             current['legacy'].setdefault(kind, {}).update(rows)

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T10:15:27.053Z",
-  "treeHash": "c8254f4e2c60c08a3d4e77cf380c0e5d9e7318027fe341e301373d82101652e4",
+  "createdAt": "2026-11-14T10:16:03.094Z",
+  "treeHash": "9a99bb9b66c2d57cfc2f8f76bed99acb683bfdce5ef9239b495dbdcf6f50422d",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3765,14 +3765,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "d4ab8a82180539a5854bd1364df2b604c3dc57c0cadfa5b7aeccf946f5b9ecee",
-      "fileCount": 805,
-      "bytes": 14911159,
+      "treeHash": "a4af7cf20cec08ca5ac4e64a4ebc1ebeec2acea354edc5b4d4bade74b973b664",
+      "fileCount": 806,
+      "bytes": 14915778,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "ec68bc3308319c6711046c29b007bd528a294dfb1e9b7405d4fa595ae8c6319a",
-          "size": 217059,
+          "hash": "7a38e955eb82644c4eee53df50a983a2e78c96e39d926ad3da7e7c1271b13fd6",
+          "size": 217234,
           "executable": false
         },
         {
@@ -4377,8 +4377,8 @@
         },
         {
           "path": "assets/platform-kit/tests/snake-regression/platform-components.test.js",
-          "hash": "3a8fdda9e20adb0c12c7e68201870e3a93460d563c5233032eb598be3c7577be",
-          "size": 11490,
+          "hash": "e5a27cf79db7b7a78ac83226453db655e79d403874ffcdb49641161250c02de5",
+          "size": 12123,
           "executable": false
         },
         {
@@ -4389,8 +4389,8 @@
         },
         {
           "path": "assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
-          "hash": "07b13ada76f5c6c2cc41a6dac357a709484101f7d0e89a7db58c5fa30d6f147a",
-          "size": 4440,
+          "hash": "968a81037ce4c5a984be5fb94ab1ef2392e68238aface5411d6e001d09608737",
+          "size": 4612,
           "executable": false
         },
         {
@@ -7391,6 +7391,12 @@
           "path": "scripts/test_league.py",
           "hash": "a8f76622c03bda071c63ba5e6d139f78bebf2d61fc03fb02f6446fd7b1f22c7a",
           "size": 951,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_legacy_writer_diagnostic.py",
+          "hash": "422c86f4177a608b9c474c09531985becabd6965f8636e27f0c377f93b9ce0bf",
+          "size": 3639,
           "executable": false
         },
         {

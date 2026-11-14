@@ -3,9 +3,11 @@ var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
 var vm = require('vm');
-var config = require('./PlatformConfig');
+var moduleRoot = fs.existsSync(path.join(__dirname, 'PlatformConfig.js')) ? __dirname :
+  path.resolve(__dirname, '../../assets/tiktok-platform');
+var config = require(path.join(moduleRoot, 'PlatformConfig.js'));
 function load(file, namespaces, oldSelector) {
-  var source=fs.readFileSync(path.join(__dirname,file),'utf8');
+  var source=fs.readFileSync(path.join(moduleRoot,file),'utf8');
   if(oldSelector) source=source.replace(/function (rootSDK|sdk)\(method\) \{[\s\S]*?\n\}/,
     "function $1(method) { return typeof TTMinis !== 'undefined' && TTMinis.game ? TTMinis.game : null; }");
   var context=Object.assign({module:{exports:{}},require:function(){return config;},Promise:Promise,Date:Date,

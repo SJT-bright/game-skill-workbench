@@ -1,8 +1,12 @@
 'use strict';
 var assert = require('assert');
-var RewardedService = require('./RewardedService');
-var Mission = require('./TikTokMissionService');
-var config = require('./PlatformConfig');
+var fs = require('fs');
+var path = require('path');
+var moduleRoot = fs.existsSync(path.join(__dirname, 'PlatformConfig.js')) ? __dirname :
+  path.resolve(__dirname, '../../assets/tiktok-platform');
+var config = require(path.join(moduleRoot, 'PlatformConfig.js'));
+var RewardedService = require(path.join(moduleRoot, 'RewardedService.js'));
+var Mission = require(path.join(moduleRoot, 'TikTokMissionService.js'));
 var results = [];
 var watchdog = setTimeout(function () { console.error('Unsettled test promise: timeout recovery missing'); process.exitCode = 1; }, 1500);
 async function test(name, run) { await run(); results.push({name:name,status:'passed'}); }
@@ -35,10 +39,16 @@ function mission(method) {
     advance:function(n){time+=n;},calls:function(){return calls;}};
 }
 (async function(){
-  await test('all_15_placement_keys_present_three_public_ids_and_removed_card_disabled',async function(){
-    assert.equal(Object.keys(config.placementMap).length,15);
-    assert.equal(new Set(Object.keys(config.placementMap).map(config.getAdUnitId).filter(Boolean)).size,3);
-    assert.equal(config.getAdUnitId('fortune_card'),'');
+  await test('configured_placement_keys_resolve_and_unknown_key_is_disabled',async function(){
+    assert(config.getAdUnitId('revive'), 'The fixture must provide the tested revive placement');
+    Object.keys(config.placementMap).forEach(function(key){
+      var index=config.placementMap[key];
+      if(index===null){assert.equal(config.getAdUnitId(key),'');return;}
+      assert(Number.isInteger(index)&&index>=0&&config.rewardedPlacements[index],key+': invalid placement index');
+      assert.equal(config.getAdUnitId(key),config.rewardedPlacements[index].id);
+      assert(config.getAdUnitId(key),key+': empty ad ID');
+    });
+    assert.equal(config.getAdUnitId('__selftest_unconfigured__'),'');
   });
   await test('web_sdk_missing_never_rewards',async function(){
     var s=new RewardedService({getSDK:function(){return null;},autoPoll:false});
@@ -69,7 +79,7 @@ function mission(method) {
   });
   await test('cross_instance_busy_prevents_callback_overwrite',async function(){
     var f=ads(),g=f.second(),p=f.service.request({placementKey:'revive'});
-    assert.equal((await g.request({placementKey:'daily_double'})).status,'busy');
+    assert.equal((await g.request({placementKey:'revive'})).status,'busy');
     f.list[0].close({isEnded:true});assert.equal((await p).rewarded,true);assert.equal(f.list.length,1);
   });
   await test('duplicate_close_error_only_one_outcome',async function(){

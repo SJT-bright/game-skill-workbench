@@ -1,8 +1,8 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-13.english-simple.11.17.32",
+  "revision": "2026-11-14.english-simple.11.17.33",
   "skill": "remake-core",
-  "previous_provenance_sha256": "b9a4a692c328505ec5f56f06ed60191afd545c43e682ca2a98bd80d7845ad504",
+  "previous_provenance_sha256": "ec68bc3308319c6711046c29b007bd528a294dfb1e9b7405d4fa595ae8c6319a",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
   "scope": "User-authorized automatic Google Chrome user-preview window; acceptance rules unchanged.",
   "files": [
@@ -508,8 +508,8 @@
     },
     {
       "path": "assets/platform-kit/tests/snake-regression/platform-components.test.js",
-      "sha256": "3a8fdda9e20adb0c12c7e68201870e3a93460d563c5233032eb598be3c7577be",
-      "bytes": 11490
+      "sha256": "e5a27cf79db7b7a78ac83226453db655e79d403874ffcdb49641161250c02de5",
+      "bytes": 12123
     },
     {
       "path": "assets/platform-kit/tests/snake-regression/run.js",
@@ -518,8 +518,8 @@
     },
     {
       "path": "assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
-      "sha256": "07b13ada76f5c6c2cc41a6dac357a709484101f7d0e89a7db58c5fa30d6f147a",
-      "bytes": 4440
+      "sha256": "968a81037ce4c5a984be5fb94ab1ef2392e68238aface5411d6e001d09608737",
+      "bytes": 4612
     },
     {
       "path": "assets/platform-kit/tests/storage-guard-negative-controls.js",
@@ -3000,6 +3000,11 @@
       "path": "scripts/test_league.py",
       "sha256": "a8f76622c03bda071c63ba5e6d139f78bebf2d61fc03fb02f6446fd7b1f22c7a",
       "bytes": 951
+    },
+    {
+      "path": "scripts/test_legacy_writer_diagnostic.py",
+      "sha256": "422c86f4177a608b9c474c09531985becabd6965f8636e27f0c377f93b9ce0bf",
+      "bytes": 3639
     },
     {
       "path": "scripts/test_level_intro_sampling.py",

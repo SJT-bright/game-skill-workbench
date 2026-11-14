@@ -8,6 +8,22 @@
 // to accept one. With --package <dir> the probed file must exist in the main package (not in a subpackage).
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const argv=process.argv.slice(2),filename=argv.find(a=>!a.startsWith('--')&&argv[argv.indexOf(a)-1]!=='--package');
+if (argv.length === 0) {
+  const spawnSync = require('node:child_process').spawnSync;
+  const kit = path.resolve(__dirname, '../../../remake-core/assets/platform-kit/webp-probe');
+  const fixtures = [['cocos2.4', 'webp-decode-probe.js'], ['cocos3.x-reference', 'webp-probe.js']];
+  const results = fixtures.map(([folder, file]) => {
+    const dir = path.join(kit, folder);
+    const run = spawnSync(process.execPath, [__filename, path.join(dir, file), '--package', dir],
+      {encoding: 'utf8', timeout: 15000});
+    let report; try { report = JSON.parse(run.stdout); } catch (_) { report = null; }
+    return {fixture: folder, exit: run.status, passed: run.status === 0 && report && report.passed === true,
+      report, error: run.error ? run.error.message : (run.stderr || '').trim()};
+  });
+  const passed = results.every(r => r.passed);
+  console.log(JSON.stringify({schema: 'webp.shipped-probe-contracts.v1', passed, results}, null, 2));
+  process.exit(passed ? 0 : 1);
+}
 const pkgAt=argv.indexOf('--package'),pkg=pkgAt>=0?argv[pkgAt+1]:null;
 if(!filename)throw Error('Usage: node test_webp_decode_probe.cjs /absolute/project/probe.js [--package /unpacked/package]');
 const code=fs.readFileSync(filename,'utf8'),results=[],sources=new Set();

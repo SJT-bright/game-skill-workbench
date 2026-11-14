@@ -1,8 +1,8 @@
 {
  "schema": "tiktok_package_check.calibration.v2",
- "date": "2026-11-13",
- "release_label": "v7.12-en11.17.32-old-advice-cleanup",
- "selftest_report_sha256": "c302670caa42dfba0c9953d2e07e6bea7f203bf435a3560f76fbea03f2fed702",
+ "date": "2026-11-14",
+ "release_label": "v7.13-en11.17.33-baseline-six",
+ "selftest_report_sha256": "00dc6472bcff5d61ffaabe70cda9d45e83e992a79765d6f634a3e613d226a9ab",
  "boundary": "本机发版自检：Skill 全部测试加真包重跑（静态检查和只读检查）；不代表真机、真实广告或 TikTok 后台验收。",
  "checker_sha256": {
   "remake-core/scripts/package_gates/__init__.py": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373",
@@ -825,15 +825,8 @@
   }
  ],
  "test_inventory": {
-  "files": 806,
-  "failing_known": [
-   "cocos-game-check/package-check/scripts/test_webp_decode_probe.cjs",
-   "desktop-agent-orchestrator/scripts/test_dispatch_contract.py",
-   "game-audio-library/scripts/test_audio_manager_contracts.cjs",
-   "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js",
-   "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js",
-   "remake-core/scripts/test_writer_refusal.py"
-  ],
+  "files": 807,
+  "failing_known": [],
   "new_failures": 0
  }
 }

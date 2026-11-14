@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T05:37:19.675Z",
-  "treeHash": "6fd1b11535b73219cb0d3180e0c49e3da08fc81b988c3605ec030fc8ada77a3b",
+  "createdAt": "2026-11-14T05:37:49.161Z",
+  "treeHash": "a17137175cf9fe78e57270d0bbf2b05beb6dd8d1c2da8b4207d97163293ac6d7",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3349,20 +3349,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "a0e7ab4ede4decc58f5bae1759dd7e55096f1ddb2cb6dcaa741cc88b885d2a37",
+      "treeHash": "28f2893eecba0ec657b7a51b114a660b4acbbcfbb7481ef829a7222892075aa4",
       "fileCount": 68,
-      "bytes": 1486303,
+      "bytes": 1486941,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "1349761be5bad94f5937acac2ef6c271ca0e97f3a7ef5add6e592cce3b192bab",
+          "hash": "e4d7104306487f0611c9dd48b7a28ad568137719f2b44a4b3c476f31760ff74f",
           "size": 26121,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "1124e55465bb05ec15cefa32b859a8f22cbcd298455b2fef5d9004de78d98ee0",
-          "size": 27874,
+          "hash": "5b3afe74e4bc9d0c2e030639ebeb723c452e9879a6da5e67a03e9c0b8f9b0cb1",
+          "size": 27769,
           "executable": false
         },
         {
@@ -3409,8 +3409,8 @@
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "e6c480b2ead5c45eb0ea35c4023a835ae7f164ad6c67c10ef8ee9395d0d557c7",
-          "size": 5574,
+          "hash": "10e0595d38e9fde532cb8dfbc35cd50df4e272dcfb46386e9a70a632fc7a8a3c",
+          "size": 5685,
           "executable": false
         },
         {
@@ -3529,8 +3529,8 @@
         },
         {
           "path": "references/page-richness.md",
-          "hash": "21025939eedc09a986a643f1d58f154c88a4572753972013b3430717218e83c9",
-          "size": 95159,
+          "hash": "3cc048ec1a1a9bbd5ba9f00a9f112f949dce3aa9e1e3b627a1ea82a59d977c0a",
+          "size": 95595,
           "executable": false
         },
         {
@@ -3601,8 +3601,8 @@
         },
         {
           "path": "references/ui-style-and-samples.md",
-          "hash": "927941abd8ab3820337f3e8104464bec19c04cd2b41f2881a26d8b6ad3b2d907",
-          "size": 16677,
+          "hash": "93268ea2f02058cf5e0a2eeda168983a50531461e692a8eda2a53cf2320847fa",
+          "size": 16873,
           "executable": false
         },
         {

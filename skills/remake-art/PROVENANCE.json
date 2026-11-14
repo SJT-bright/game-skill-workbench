@@ -1,14 +1,14 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-13.english-simple.11.17.30",
+  "revision": "2026-11-13.english-simple.11.17.32",
   "skill": "remake-art",
-  "previous_provenance_sha256": "be0af96f4d2c6b10b25da02478d15a366e5923c2a1c9c60e26eb27a2b10b235c",
+  "previous_provenance_sha256": "1349761be5bad94f5937acac2ef6c271ca0e97f3a7ef5add6e592cce3b192bab",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "1124e55465bb05ec15cefa32b859a8f22cbcd298455b2fef5d9004de78d98ee0",
-      "bytes": 27874
+      "sha256": "5b3afe74e4bc9d0c2e030639ebeb723c452e9879a6da5e67a03e9c0b8f9b0cb1",
+      "bytes": 27769
     },
     {
       "path": "agents/openai.yaml",
@@ -47,8 +47,8 @@
     },
     {
       "path": "references/art-before-trial.md",
-      "sha256": "e6c480b2ead5c45eb0ea35c4023a835ae7f164ad6c67c10ef8ee9395d0d557c7",
-      "bytes": 5574
+      "sha256": "10e0595d38e9fde532cb8dfbc35cd50df4e272dcfb46386e9a70a632fc7a8a3c",
+      "bytes": 5685
     },
     {
       "path": "references/art-iteration-workflow.md",
@@ -147,8 +147,8 @@
     },
     {
       "path": "references/page-richness.md",
-      "sha256": "21025939eedc09a986a643f1d58f154c88a4572753972013b3430717218e83c9",
-      "bytes": 95159
+      "sha256": "3cc048ec1a1a9bbd5ba9f00a9f112f949dce3aa9e1e3b627a1ea82a59d977c0a",
+      "bytes": 95595
     },
     {
       "path": "references/panel-composite-review.md",
@@ -207,8 +207,8 @@
     },
     {
       "path": "references/ui-style-and-samples.md",
-      "sha256": "927941abd8ab3820337f3e8104464bec19c04cd2b41f2881a26d8b6ad3b2d907",
-      "bytes": 16677
+      "sha256": "93268ea2f02058cf5e0a2eeda168983a50531461e692a8eda2a53cf2320847fa",
+      "bytes": 16873
     },
     {
       "path": "scripts/bind_art.py",

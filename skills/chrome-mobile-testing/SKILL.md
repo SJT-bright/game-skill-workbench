@@ -12,7 +12,7 @@ description: 游戏手机触屏模拟的脚本工具（chrome_touch.py）：默�
 英化人工操作用 **Computer Use + Edge**。自动检查仍在 **Ego Lite** 独立 TaskSpace 执行原有脚本并复用有效证据。英化的 Google Chrome 只在美工试玩和最终测试包交接时打开。 其他流程的自动检查按原 Ego 路线执行。缺少对应能力时继续离线工作，记录实际未测项。详见 `<SKILLS_DIR>/remake-core/references/browser-testing-policy.md`。
 
 
-**浏览器规则（用户 2026-10-21，严格）**：全部浏览器测试只用 **Ego Lite**；**Ego 只给 Agent 自己测试，用户试玩由共享预览入口自动打开独立 Google Chrome（用户 2026-10-27）**，`--handoff` 已停用（直接报错），给用户用主 Skill `serve_preview.py --keep` 自动请求独立 Chrome 手机框窗口，并在回复里保留本地链接；启动回执不等于窗口已出现，按固定手机试玩参考核实。直接运行 `chrome_touch.py`（不用找地址、不加任何连接参数，见下方[Ego 连接方式](#ego-连接方式用户-2026-10-27统一)）：脚本通过 `ego-browser nodejs` 在 Ego 里新建一个**名字唯一**的测试空间跑计划，跑完只结束自己的空间，**不关 Ego、不碰用户的标签页和登录状态**。连不上或没装 Ego：按 ego-browser 的说明诊断；无法完成的项保留未测，不切到 Chrome。`--user-approved-chrome` 已停用并在启动前拒绝。Python 路径按当前系统解析。先读取配套 [手机触控流程](../mobile-touch-computer-use/SKILL.md)。脚本只对本地测试 URL 使用。第一次在一台电脑上用 Ego 时，先跑下方的[一条命令校准](#第一次用先校准一条命令)。
+**浏览器分工**：英化人工可见点检用 **Computer Use + Edge**，结构化自动脚本用 **Ego Lite**；**Ego 只给 Agent 自己测试，用户试玩由共享预览入口自动打开独立 Google Chrome（用户 2026-10-27）**，`--handoff` 已停用（直接报错），给用户用主 Skill `serve_preview.py --keep` 自动请求独立 Chrome 手机框窗口，并在回复里保留本地链接；启动回执不等于窗口已出现，按固定手机试玩参考核实。直接运行 `chrome_touch.py`（不用找地址、不加任何连接参数，见下方[Ego 连接方式](#ego-连接方式用户-2026-10-27统一)）：脚本通过 `ego-browser nodejs` 在 Ego 里新建一个**名字唯一**的测试空间跑计划，跑完只结束自己的空间，**不关 Ego、不碰用户的标签页和登录状态**。连不上或没装 Ego：按 ego-browser 的说明诊断；无法完成的项保留未测，不切到 Chrome。`--user-approved-chrome` 已停用并在启动前拒绝。Python 路径按当前系统解析。先读取配套 [手机触控流程](../mobile-touch-computer-use/SKILL.md)。脚本只对本地测试 URL 使用。第一次在一台电脑上用 Ego 时，先跑下方的[一条命令校准](#第一次用先校准一条命令)。
 
 ## Ego 连接方式（用户 2026-10-27：统一）
 
@@ -58,7 +58,7 @@ python3 scripts/chrome_touch.py --url http://127.0.0.1:PORT/ --plan 当前计划
 
 ## 少占电脑
 
-**被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑remake-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。所有浏览器测试仅用 Ego。不要再用排队锁包本命令（包了也会直接放行）。遗留的用remake-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用remake-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
+**被占就开新的，绝不等待**（用户 2026-10-22/23）：每次运行都在 Ego 里新建一个自己的、名字唯一的测试空间，后台跑，可以同时多开，不等别的游戏或会话；遇到"被占用/排队/还没轮到"就直接再跑一次本命令（又是一个新窗口），不等、不轮询。脚本启动时自动先跑remake-core 的 `browser_slots.py sweep --close`，退役已不存在的拥有者记录，只关闭已完成且当前身份匹配的自有进程；仅心跳超时不自动关闭，别的会话还在跑的不动；然后登记自己的窗口（`--name "<线名+做什么>"` 写清是谁），每一步刷新心跳，结束（含被清理时收到终止信号）关掉自己的窗口并注销。不另外启动 Ego 程序。本命令的自动脚本只在 Ego 执行；英化人工点检使用 Computer Use + Edge。不要再用排队锁包本命令（包了也会直接放行）。遗留的用remake-core 的 `cleanup_machine.py --close` 清理。**测试用完就关（用户 2026-10-23，所有环节）**：本命令结束就关自己的窗口；另外手动开的 Ego 空间或预览服务，测完马上用remake-core 的 `browser_slots.py close --name "<线名>"` 关掉，汇报前 `browser_slots.py check --name "<线名>"` 通过；本命令的窗口从不交给用户。
 
 ## 按需记录短片
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-15T04:02:49.554Z",
-  "treeHash": "55c9006270e0c2a30ff7036891ce747e9ce0dc188c575b4d254c8cbbdbdf6241",
+  "createdAt": "2026-11-15T07:05:55.346Z",
+  "treeHash": "14cbb8ef3e35c1915ccbce153b50ad48768f58bd27414b81057c7758f8fa43eb",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2179,9 +2179,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "3fd3f32788e5e5568f67637933967de7624ca28a4a8a02be71ab44191633bb96",
-      "fileCount": 69,
-      "bytes": 1071248,
+      "treeHash": "0b4aa4aaa22fbe02bc39f058032a73ce82a4f6b4d3c5f85effc3376fb1735994",
+      "fileCount": 72,
+      "bytes": 1137486,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2191,8 +2191,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "428fd0136dd0388bd653907ea10ef4ce3163788b1b0aacfe64872214b4d4f76e",
-          "size": 105192,
+          "hash": "62d99b0acff44671f1c20d91c009c71010ef680644ea329830e6c18b64b946a2",
+          "size": 105739,
           "executable": false
         },
         {
@@ -2281,8 +2281,8 @@
         },
         {
           "path": "references/phase-timing.md",
-          "hash": "233865967e19f2887c058e009bd2393b42ba527c07b7f8fda3368edd9c953456",
-          "size": 7606,
+          "hash": "141e562626d11f8f81677c721fd4110ac91b565c9a97aedfe6119471b159fff2",
+          "size": 7948,
           "executable": false
         },
         {
@@ -2301,6 +2301,12 @@
           "path": "references/repeat-check-convergence.md",
           "hash": "dfd5cf5d256735855dd5bbffb48e25b96317973ceb99908b473242a8549ede24",
           "size": 7442,
+          "executable": false
+        },
+        {
+          "path": "references/retrospective-patch-report.md",
+          "hash": "f2f70973a65dd8af850c7a9ae7d74e715c5380e7aa78d0520c35aa0832f17fec",
+          "size": 8233,
           "executable": false
         },
         {
@@ -2397,6 +2403,12 @@
           "path": "scripts/ocr_windows.ps1",
           "hash": "6f92095fb71c6106dc26b33d84f50c844634e15500bd8f15497ca64a6c556247",
           "size": 4615,
+          "executable": false
+        },
+        {
+          "path": "scripts/retrospective_report.py",
+          "hash": "49d4b915b30733b13274cfb81507e1ec6a7a366592af18c744b7915d488f8df8",
+          "size": 44234,
           "executable": false
         },
         {
@@ -2547,6 +2559,12 @@
           "path": "scripts/test_retired_phrases.py",
           "hash": "fe0ee36ee7523b05c2a8293620e40392fef4ad7af5fc58d531d1a001a7984002",
           "size": 10703,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_retrospective_report.py",
+          "hash": "0baa1c0e44c003a2eb6c3c3466f69d5119782090ce0f7c68e54cdf9e9f052b01",
+          "size": 12882,
           "executable": false
         },
         {

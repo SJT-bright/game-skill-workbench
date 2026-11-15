@@ -153,28 +153,6 @@ def candidate_web(project, record):
     return web
 
 
-def build_diagnostic(log, *, returncode=None, timed_out=False):
-    """Classify observed log evidence only; a stalled engine is not proof of a modal."""
-    path = Path(log)
-    tail = path.read_text(encoding='utf-8', errors='replace')[-12000:] if path.is_file() else ''
-    lower = tail.lower()
-    if 'cannot resolve module' in lower or 'cannot find module' in lower:
-        kind = 'module_resolution'
-        action = 'inspect the named module, its actual exports and import metadata; do not clear caches or repeat the same build'
-    elif 'showmessageboxsync' in lower or 'nsalert' in lower:
-        kind = 'editor_modal_observed'
-        action = 'inspect the actual editor prompt and its source; do not automatically dismiss it'
-    elif 'gpu process' in lower or 'gpu-process' in lower:
-        kind = 'gpu_process_error'
-        action = 'inspect this editor process and supported sandbox settings'
-    else:
-        kind = 'no_progress_unclassified' if timed_out else 'build_failed_unclassified'
-        action = 'inspect the last log progress, actual editor window and owned process stack before choosing a repair; initialization text alone does not identify the cause'
-    return {'status': 'diagnosis_required', 'kind': kind, 'returncode': returncode,
-            'timed_out': timed_out, 'log_tail': tail, 'next_action': action,
-            'automatic_retry': False, 'automatic_cache_reset': False}
-
-
 def build(project):
     project = project.resolve()
     record = load(project)
@@ -207,20 +185,10 @@ def build(project):
         record.pop('smoke', None)
         record['status'] = 'pending_build'
         write(project / REPORT, record)
-        try:
-            with log.open('wb') as output:
-                result = subprocess.run(argv, cwd=project, stdout=output, stderr=subprocess.STDOUT, timeout=600)
-        except subprocess.TimeoutExpired as error:
-            record['status'] = 'diagnosis_required'
-            record['build_diagnostic'] = build_diagnostic(log, timed_out=True)
-            write(project / REPORT, record)
-            raise ValueError('Creator build timed out; inspect build_diagnostic in docs/english/creator-migration.json before another attempt.') from error
+        with log.open('wb') as output:
+            result = subprocess.run(argv, cwd=project, stdout=output, stderr=subprocess.STDOUT, timeout=600)
     if result.returncode != 0:
-        record['status'] = 'diagnosis_required'
-        record['build_diagnostic'] = build_diagnostic(log, returncode=result.returncode)
-        write(project / REPORT, record)
         raise ValueError('Creator 构建失败，查看 docs/english/creator-migration-build.log。')
-    record.pop('build_diagnostic', None)
     web_name = (build_root / 'web-mobile').as_posix()
     web = relative_web(project, web_name)
     if before != source_signature(project):

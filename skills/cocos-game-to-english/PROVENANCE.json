@@ -1,13 +1,13 @@
 {
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
-  "scope": "Formal portable English Skill source update; reviewed production-efficiency changes and preserved concurrent integration support. Game and machine acceptance remain project-specific.",
-  "revision": "2026-11-14.english-simple.11.17.35",
+  "scope": "Portable sources; local QA trust and game evidence excluded.",
+  "revision": "2026-11-11.english-simple.11.17.25",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "11ca1b1e8b3db3290150e72695a90fb72a87e802761698bda1d27020ef9092f4",
-      "bytes": 106764
+      "sha256": "f9d52e7ff08d54986f9fda6e29cae5aea7af2e26d91071f9141a0501219c9678",
+      "bytes": 90520
     },
     {
       "path": "agents/openai.yaml",
@@ -56,23 +56,23 @@
     },
     {
       "path": "references/early-prevention.md",
-      "sha256": "ad358b2701c5cf6d7d9be4d01555bf4bef73b77f96719f17fac972e384f63ea1",
-      "bytes": 7036
+      "sha256": "d4a8c8ddf6b186d36636fdb8311c0bf1abb24fcab12ff2b2129ade37c6323701",
+      "bytes": 6875
     },
     {
       "path": "references/english-ui-rebuild.md",
-      "sha256": "2d28b7da6030ff791d4828ba38b20ff31cf9dfb4bf08a39d3aa86903dbcad6cd",
-      "bytes": 34944
+      "sha256": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
+      "bytes": 34394
     },
     {
       "path": "references/first-trial-repair.md",
-      "sha256": "54311bb394ac475d6b866124d2b887493b2f230658c58be6e029e93cb1612ea9",
-      "bytes": 4741
+      "sha256": "d86616f3823832abd1a229ed9a0dccca08180a668eadf949e01e03230278aa2e",
+      "bytes": 3558
     },
     {
       "path": "references/fixed-entries.md",
-      "sha256": "38934083bfa972b41fbffc55bea052fbe7348d9e57949b1fc87091e964194b9c",
-      "bytes": 14593
+      "sha256": "8ad6d8fc4d2260be07276b5cd4a19fcfffd876fc8e3a0c791107306ee13cc680",
+      "bytes": 14264
     },
     {
       "path": "references/local-creator-versions.md",
@@ -81,8 +81,8 @@
     },
     {
       "path": "references/phase-timing.md",
-      "sha256": "694f376d9e908d2aca2a3a7214d4941587b10020003addad1175100722e7483a",
-      "bytes": 7948
+      "sha256": "aa070b432a43bbc43926a7b47be132b6b9f8868dd4e3481522463c31277261b9",
+      "bytes": 6058
     },
     {
       "path": "references/playtest-h5.md",
@@ -91,23 +91,13 @@
     },
     {
       "path": "references/preview-handoff.md",
-      "sha256": "c06867f92351d95fc5b6d12a0b4566929233b592d6b57c375d34bcd79baf970b",
-      "bytes": 3693
-    },
-    {
-      "path": "references/repeat-check-convergence.md",
-      "sha256": "fa5422168cf75b69776da1ad86ddfd60a6a3629b41642001eef44423a4c811b0",
-      "bytes": 7529
-    },
-    {
-      "path": "references/retrospective-patch-report.md",
-      "sha256": "f2f70973a65dd8af850c7a9ae7d74e715c5380e7aa78d0520c35aa0832f17fec",
-      "bytes": 8233
+      "sha256": "25a73bb594df285001fb30409aa18aca056025a506f9736d15103389af7ed55a",
+      "bytes": 2720
     },
     {
       "path": "references/sidebar-retrofit.md",
-      "sha256": "2e12fa08445709f62c8a737eaca855b29dae33b5246657bfd10b8517b8309511",
-      "bytes": 6588
+      "sha256": "39f0f9d302e8dee288080beca708b588875bc5262e66e25697df829dc20fde87",
+      "bytes": 6332
     },
     {
       "path": "scripts/browser_env.py",
@@ -136,8 +126,8 @@
     },
     {
       "path": "scripts/creator_migration.py",
-      "sha256": "6da79b6c8469953896e470de8c6b0dc7fd84a563026cb19f3e8da2d553fdfb54",
-      "bytes": 17938
+      "sha256": "a911372ee1404d7cf554e1c8ad6cc7a5abb98670b737563b47f51f4f1b5ee436",
+      "bytes": 15903
     },
     {
       "path": "scripts/creator_migration_smoke.mjs",
@@ -146,8 +136,8 @@
     },
     {
       "path": "scripts/english_copy_guard.py",
-      "sha256": "a76a48a9d2a8d0a8aa9eb5b91d97c7ff36771376df2df7cfe322f341ca41eae5",
-      "bytes": 28735
+      "sha256": "bca2c42d32db819b7d055058e52f030a685e1846963b73ddd730bef79a600033",
+      "bytes": 26255
     },
     {
       "path": "scripts/find_creator.py",
@@ -166,8 +156,8 @@
     },
     {
       "path": "scripts/handoff_preview.py",
-      "sha256": "d175d2f0e745b33f812aa141e5d0ffcc9db278d1adc2025e8b491545a61631eb",
-      "bytes": 16559
+      "sha256": "1c5218c4ac6c8e20f3c6c3e98a584772b0a16fb6d57064e5df3206bb12006a28",
+      "bytes": 11423
     },
     {
       "path": "scripts/inspect_creator_migration.cjs",
@@ -185,29 +175,14 @@
       "bytes": 4615
     },
     {
-      "path": "scripts/retrospective_report.py",
-      "sha256": "49d4b915b30733b13274cfb81507e1ec6a7a366592af18c744b7915d488f8df8",
-      "bytes": 44234
-    },
-    {
-      "path": "scripts/reviewed_resource_profiles.json",
-      "sha256": "42ffd31d2db5e776775c3abbed967dd2a5afc45130ae075d81c9f55a46d37b27",
-      "bytes": 8143
-    },
-    {
       "path": "scripts/serve_preview.py",
-      "sha256": "99efc43fca5967ba5c28f4d72d734d42407222ba288b7ab1448f6fa0af65865b",
-      "bytes": 21775
+      "sha256": "1306057fa9b25f409632b33efcfe8e74f95aacc2534c96a29b72ddabf6858a15",
+      "bytes": 21209
     },
     {
       "path": "scripts/stage_timer.py",
       "sha256": "68122666aea309b4a528c47e9f47f61667fe5d241bb001ab0bb4da155c4bd072",
       "bytes": 62129
-    },
-    {
-      "path": "scripts/test_ad_standard_english_entry.py",
-      "sha256": "f3b13eafed12033bb040abb816f01148795ac216790ba6b345b70b2b5a46bec0",
-      "bytes": 2115
     },
     {
       "path": "scripts/test_check_export_images.py",
@@ -218,11 +193,6 @@
       "path": "scripts/test_chinese_audit.py",
       "sha256": "361a4432f217cc99b2eb44ad4c9e087bb684db8f42f9cff1aa477816d2b9f577",
       "bytes": 31960
-    },
-    {
-      "path": "scripts/test_creator_build_diagnostic.py",
-      "sha256": "003f4998a931cd105679011b7770cae932da31bc46ee13f5ca98dd56d2bba150",
-      "bytes": 1537
     },
     {
       "path": "scripts/test_creator_migration.py",
@@ -236,8 +206,8 @@
     },
     {
       "path": "scripts/test_delivery_continuation.py",
-      "sha256": "cdc2cbc32c072f0097de81457f65c77fb1e28221730bd1290221f61b72a43a46",
-      "bytes": 5487
+      "sha256": "54f18edd56f5bb8042726679860d22fb2aa7da1a90cc11086cf04cc1ce79f360",
+      "bytes": 5145
     },
     {
       "path": "scripts/test_engine_route.py",
@@ -246,23 +216,18 @@
     },
     {
       "path": "scripts/test_english_copy_guard.py",
-      "sha256": "7d0f082ea6af58e182fb3ca65b8b4570346653c4f9b539938d6194234cac493e",
-      "bytes": 16102
+      "sha256": "579cd2ee96ada2866bee6e205d10951285eaed1c2bb70d9ad2524603cdfecdb1",
+      "bytes": 11926
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "5dd5d90806f2ccbfb22099a454b5ac8c0c8f5b0f87b92b47939b5e2928df8ae1",
-      "bytes": 79926
+      "sha256": "d41cda3dd935c8c14b07f78ba861695383581a919e7576c7f4926244b22ba3a8",
+      "bytes": 83751
     },
     {
       "path": "scripts/test_fit_english_labels.py",
       "sha256": "4c64148cdd1fb7b69ccd189c953830ba72ffeaaa9621840d085d4149f804dccc",
       "bytes": 22361
-    },
-    {
-      "path": "scripts/test_handoff_node_timing.py",
-      "sha256": "e9e411031bade0c90d7682b910337f841d0837676f7d289714e3dc20200c673e",
-      "bytes": 4042
     },
     {
       "path": "scripts/test_p21_browser_env.py",
@@ -271,8 +236,8 @@
     },
     {
       "path": "scripts/test_playtest_h5.py",
-      "sha256": "1b53ae0a2deb14a00058c8bef9858dc4fcbab672b0254dc6f0f9007668d7079c",
-      "bytes": 8800
+      "sha256": "0003f627faa81be3034d3076e462347f2193cbaa487af9faf575048365c57cf1",
+      "bytes": 7430
     },
     {
       "path": "scripts/test_portable_tools.py",
@@ -315,19 +280,9 @@
       "bytes": 2614
     },
     {
-      "path": "scripts/test_retired_phrases.py",
-      "sha256": "fe0ee36ee7523b05c2a8293620e40392fef4ad7af5fc58d531d1a001a7984002",
-      "bytes": 10703
-    },
-    {
-      "path": "scripts/test_retrospective_report.py",
-      "sha256": "0baa1c0e44c003a2eb6c3c3466f69d5119782090ce0f7c68e54cdf9e9f052b01",
-      "bytes": 12882
-    },
-    {
       "path": "scripts/test_serve_preview_gate.py",
-      "sha256": "6ce418127b49794ff506938b65e966509e1ad24b3440a5e34806592a20d58aa8",
-      "bytes": 39304
+      "sha256": "f4dc15efc87b473dca9e868b2618817542fc119172b12afa95dce111b5d67dc2",
+      "bytes": 33640
     },
     {
       "path": "scripts/test_stage_timer.py",
@@ -361,11 +316,11 @@
     },
     {
       "path": "版本历史.md",
-      "sha256": "bf361d22783f53ba75bf1b60d66b453809ca88ec56e26873c32bd23a801dd390",
-      "bytes": 17958
+      "sha256": "d7bebcd55d15e4c72e1c54536f123714ed2344ad05654cb618386b5f5ffea610",
+      "bytes": 51320
     }
   ],
-  "previous_provenance_sha256": "b9d187ea489459d4e6e822b02bca1cc1fed0e318664f00aa7218a24e972d2a3e",
+  "previous_provenance_sha256": "d4f243c0795f426ea55f22474045d21fabd6964ab05b6362c732d7d883f9f6e9",
   "local_patches": [
     {
       "id": "ego-only-tests-20261106-geometry",
@@ -721,211 +676,32 @@
       ]
     },
     {
-      "id": "production-order.20261112.1",
-      "installed_at": "2026-11-12T11:21:28.405470+00:00",
-      "scope": "English production dependency order only. Six standard ad families; no counting, runtime-quality, game, or formal-release changes.",
-      "authority": "User requested removing repeated preparation and art rework by correcting production order.",
+      "id": "2026-11-15.dated-paragraphs-to-registry.1",
+      "scope": "Saul 2026-11-15 批准的本机补丁：把按日期叠加的段落整理进检查总表（补丁_大换血_日期段落进总表_基于11.17.25）；不是英化发版",
       "files": [
         {
           "path": "SKILL.md",
-          "before_sha256": "85a8206991c18fa5fa5c2bbb1ac8c9e8f672d283ccb954775004a3dfb03fb869",
-          "sha256": "55410f7674e02bfad70db50ca8a83feb72a2c1811278a8d1a3fcb2ac97ea72ae"
-        },
-        {
-          "path": "references/phase-timing.md",
-          "before_sha256": "4165baf01deab896fecabdb77bf780855b0de6483e5125d621265bf9cacece32",
-          "sha256": "fba6584d2d0fe2c36025a4a721b46c5e999230b575c8fde143c2be4c6691c0b3"
-        }
-      ],
-      "verification": {
-        "ad_planner_cases": 32,
-        "ad_gate_cases": 21,
-        "entry_consistency_cases": 77,
-        "entry_pack_only_skips": 10,
-        "real_project_read_only_plan_comparisons": 2,
-        "quality_functions_unchanged": 15,
-        "whole_game_time_saving_measured": false
-      }
-    },
-    {
-      "id": "rule-wording-unify.20261112.1",
-      "installed_at": "2026-11-12T16:19:13.915290+00:00",
-      "scope": "Wording only: stale sentences in rule pages, checklists, trigger descriptions and rules-table title/note replaced by the newer rulings already in the pack (no-fail-state revive per 11.17.23; skin-trial timing and games without energy per user 2026-11-11 six standard). No number, params, revision, audit code, gate catalog or existing tool changed. One new check script added.",
-      "authority": "用户 2026-11-12 07:49 PT「你现在先去把skill的存在的问题给修复了吧」，08:16 PT「你这个对话允许你修改skill」。",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "before_sha256": "a3ac7923165fc2a774251317fe98914303e278d7797b506f695d2835b38720ca",
-          "sha256": "8807099a963f70a0e066e7203c8a27c31c052d2d6a8d31c8608c8537add12fd7"
-        },
-        {
-          "path": "references/fixed-entries.md",
-          "before_sha256": "8ad6d8fc4d2260be07276b5cd4a19fcfffd876fc8e3a0c791107306ee13cc680",
-          "sha256": "4589dd360353d6b8349b74217a809de58ae847f4f2194391ed29a24a8151b95d"
-        },
-        {
-          "path": "scripts/test_retired_phrases.py",
-          "before_sha256": null,
-          "sha256": "c6d1c67ea398dd2001755be5e4dadb82b4f149f3fabef8cc9f970994458be30f"
-        }
-      ],
-      "verification": {
-        "replacements": 34,
-        "files_modified_in_pack": 15,
-        "files_added": 1,
-        "clean_apply_on_fresh_extract": true,
-        "relevant_selfcheck_files_passed_on_patched_tree": 8,
-        "entry_consistency_cases": 77,
-        "full_run_scripts_on_base": 531,
-        "passed_on_base": 524,
-        "passed_on_base_but_failed_after_patch": 0,
-        "new_check_hits_on_unpatched_base": 24,
-        "release_selfcheck_C1_C13_run": false,
-        "tried_on_a_game_project": false
-      },
-      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_规则口径统一_基于11.17.27/receipt.json"
-    },
-    {
-      "id": "storage-nonblocking-and-four-deliverables.20261112.1",
-      "installed_at": "2026-11-12T17:43:51.594943+00:00",
-      "scope": "Storage: the platform-kit storage guard and SaveStore no longer stop or lock a game on an unreadable value (behaviour of the parts in games up to 2026-11-10 restored, one console line per odd key; typed recovery kept as an optional helper that never ends with an error). STORAGE-01 gate: an unreadable legacy value is proved by a start with the fallback value, first-release games by two whole-game runs; receipts issued by the reviewed earlier texts stay valid. Rule pages rewritten accordingly. Hand-over: the final package hand-off prepares source ZIP + evidence ZIP by default (game_handoff.deliver) and lists the four deliverables. Platform-macro page: where the macro value comes from. Known-issues catalog: description-only (STORAGE-01 text, English notes of ECON-01 / ECON-02) with the prior catalog hash whitelisted. No ad, art, economy number, level or package-size rule changed.",
-      "authority": "用户 2026-11-12：「你这个对话允许你修改skill」；「你也要读取这个对话的历史，需要让他的这部分内容由你去合理的设计，更新skill」；09:32 PT「这个codex的对话也需要，一起检查了一起修改，这几个一起」。",
-      "stacked_on": "rule-wording-unify.20261112.1 (补丁_规则口径统一_基于11.17.27)",
-      "files": [
-        {
-          "path": "scripts/handoff_preview.py",
-          "before_sha256": "a0eb07e650febbd5b6d5217173523224f8eab1aa7d9692f5571e526efea3a96c",
-          "sha256": "b03ec0471a9d994c6fd7fbc60bb8f5bfa745b3b42f56c3305133ba03fd76a526"
-        },
-        {
-          "path": "SKILL.md",
-          "before_sha256": "8807099a963f70a0e066e7203c8a27c31c052d2d6a8d31c8608c8537add12fd7",
-          "sha256": "5fe6dc523413fe1a5c02ef93bde4f8b11ceae024e30b4d6ac8f4ff031c2834f2"
-        },
-        {
-          "path": "references/preview-handoff.md",
-          "before_sha256": "ee10450eb769b4da0b625095bf1dec8e2f76c23f33c7ff91882602d3e148d02b",
-          "sha256": "c06867f92351d95fc5b6d12a0b4566929233b592d6b57c375d34bcd79baf970b"
+          "before_sha256": "9426b9820bdb682542f00fb6346aa6d512615fe5ec16afa63df8e25f8f0ccbca",
+          "after_sha256": "f9d52e7ff08d54986f9fda6e29cae5aea7af2e26d91071f9141a0501219c9678",
+          "after_bytes": 90520,
+          "method": "authorized_local_patch"
         },
         {
           "path": "scripts/test_entry_consistency.py",
-          "before_sha256": "dcc8c5423aafee12dcc9a8a4288f7837d4d7e8b7912f1090aad5d1de3aa462e3",
-          "sha256": "d2e7e3c2ece628514cb4071727dcc713bdb44fd15db764fed0a7c8c41f64c2dd"
-        },
-        {
-          "path": "scripts/test_retired_phrases.py",
-          "before_sha256": "c6d1c67ea398dd2001755be5e4dadb82b4f149f3fabef8cc9f970994458be30f",
-          "sha256": "6fedb551e868ea3c0b506b5fe53956b8803bd5aee009977cbf469571eb7a528d"
-        },
-        {
-          "path": "scripts/test_serve_preview_gate.py",
-          "before_sha256": "e939cf051af2cbf3f7e85c5c4b63fbc4e8bdf31309a335c5c9d8d8e719ce8d7e",
-          "sha256": "d98eb910a386cff5e5d2738de14702fd5daf066e6925fa6c05c9ebd57e5a1e48"
-        }
-      ],
-      "verification": {
-        "fresh_extract": "11.17.27 ZIP + patch 1 + this patch == work tree, byte for byte (1785 files)",
-        "full_suite": "see 底本校验与测试记录.json verification.full_suite: the scripts not passing after this patch are the same ones as on the untouched 11.17.27 base",
-        "kit": "node tests/run-all.js: all suites pass (46; base 43)",
-        "real_receipts": "4 real STORAGE-01 reports on this machine judged identically by the base gate and the patched gate",
-        "not_verified": "no real-phone run; kit parts stay 待真机复测"
-      },
-      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_存档不挡启动与四样交付_基于11.17.27/receipt.json"
-    },
-    {
-      "id": "art-once-and-incremental.20261113.1",
-      "installed_at": "2026-11-13T11:19:38.116684+00:00",
-      "authority": "用户 2026-11-13 明确停止游戏，只优化检查器并更新英化 Skill，消除返工与重复验收循环。",
-      "scope": "Individual full-size source planning; configurable advisory clarity; one frozen-batch formal first-piece and shared full capture; original evidence inheritance, checkpointing and current-rule replay without regeneration.",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "before_sha256": "80cd1c2f310b227360d048b9a1279253cd24734e59e44c454f97124bbb7ae80d",
-          "sha256": "b315d2cc9ff4dccf84429f52c14e66556f85ef5160d328e4e6a29bfe970f731e",
-          "bytes": 101312
-        },
-        {
-          "path": "references/english-ui-rebuild.md",
-          "before_sha256": "5c821b5f07e3257f39b0aa1b761b8a390e16ea63819069dd3f8232a6e9264db0",
-          "sha256": "5c7930a3d8893a7498e4308267c34764b5a22126a25096b2aa78566b4c14dc1b",
-          "bytes": 35012
-        },
-        {
-          "path": "references/first-trial-repair.md",
-          "before_sha256": "d86616f3823832abd1a229ed9a0dccca08180a668eadf949e01e03230278aa2e",
-          "sha256": "081f12e867a70ed907d213d46fc2c7ca6580142ed3dc0a4c44f9debdbd8d3b13",
-          "bytes": 4255
+          "before_sha256": "b869b758dd1f917f3356898f335cb4353d5357ede84665f993b419d08b54fc1e",
+          "after_sha256": "d41cda3dd935c8c14b07f78ba861695383581a919e7576c7f4926244b22ba3a8",
+          "after_bytes": 83751,
+          "method": "authorized_local_patch"
         },
         {
           "path": "版本历史.md",
-          "before_sha256": "272125010d008e90d73398b170e88506ed354b09b745b5598acfd936d0905de2",
-          "sha256": "a131ebc2bebc2e5a26456ba12030f40715ecf736a7cbbed4a580c9c3473019e2",
-          "bytes": 17369
+          "before_sha256": "6f7c92092fbfaf56c7b2925c7cf1b2087e01bb66147ce8d204001f78fe709f72",
+          "after_sha256": "d7bebcd55d15e4c72e1c54536f123714ed2344ad05654cb618386b5f5ffea610",
+          "after_bytes": 51320,
+          "method": "authorized_local_patch"
         }
-      ],
-      "verification": "Targeted synthetic tool tests and independent forward validation; see local release receipt. No real game or device acceptance asserted."
-    },
-    {
-      "id": "art-assembly-gap.20261113.1",
-      "installed_at": "2026-11-13T12:21:06.487524+00:00",
-      "authority": "用户明确要求将本次九宫格奖励栏与HINT缩略图漏检修进美工Skill，审查原因与其他Skill冲突并验证有效。",
-      "scope": "Runtime assembly ownership, actual positions and source-role checks. Distinguish stretch center from content-safe and name hints from reviewed caption declarations. Preserve required visual review in existing reports/first-piece/look_list without new full loops.",
-      "files": [
-        {
-          "path": "SKILL.md",
-          "before_sha256": "b315d2cc9ff4dccf84429f52c14e66556f85ef5160d328e4e6a29bfe970f731e",
-          "sha256": "45699f9adca28c61295f5ae3a0be04125a21cac8a137f9e45b359df57adc42e3",
-          "bytes": 101304
-        },
-        {
-          "path": "版本历史.md",
-          "before_sha256": "a131ebc2bebc2e5a26456ba12030f40715ecf736a7cbbed4a580c9c3473019e2",
-          "sha256": "bf361d22783f53ba75bf1b60d66b453809ca88ec56e26873c32bd23a801dd390",
-          "bytes": 17958
-        }
-      ],
-      "verification": {
-        "related_tests": 69,
-        "independent_controls": 9,
-        "real_original_captures": 44,
-        "game_edited": false,
-        "evidence": "local release validation.json; no game artwork acceptance asserted"
-      }
-    },
-    {
-      "id": "art-non-dark-first-text.20261113.1",
-      "scope": "Art generation only: non-dark glyph cores, first-pass fixed words and generated reward glyphs; no new final gate."
+      ]
     }
   ],
-  "previous_local_provenance_sha256": "44d882d200228564793d4108043712d07459b8a09a52dfc27747d428736a1ebd",
-  "release_integration": {
-    "release": "11.17.30",
-    "previous_release": "11.17.29",
-    "patch_ids": [
-      "art-assembly-gap.20261113.1"
-    ],
-    "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
-  },
-  "overlay_release": "art-non-dark-first-text.20261113.1",
-  "local_updates": [
-    {
-      "id": "2026-11-14.english-simple.11.17.35.reviewed-production-efficiency",
-      "scope": "Source handoff identity windows, exact preparation dependency scopes, same-delivery ZIP payload reuse, original startup/storage proof compatibility and node timing; preserve independently reviewed concurrent Creator 1.9.3 existing-game integration support.",
-      "previous_scope": "Portable sources; local QA trust and game evidence excluded.",
-      "files": [
-        "scripts/handoff_preview.py",
-        "scripts/test_handoff_node_timing.py",
-        "scripts/test_serve_preview_gate.py"
-      ],
-      "formal_selftest_sha256": "361122b6fd761fcd7dccd317c28aab34c06194a17c9a09ad6f9c42c463c54ed7",
-      "concurrent_source_review_sha256": "138f932d71fb7a69ebf0d298fa0a393d02d7029234479e4b540b7364cfe88c2b",
-      "boundary": "Portable Skill code only; no copied machine registrations, game PASS state or new real-game acceptance."
-    },
-    {
-      "id": "11.17.35+production-enforcement.1",
-      "scope": "General production inputs, shared UI and detector contracts, early import/resource prevention; preserve installed concurrent optional-energy update. No game PASS or new official release.",
-      "verification": "isolated engine/component/CLI samples and merged tests; real-game acceptance remains separate"
-    }
-  ],
-  "local_enforcement_revision": "11.17.35+production-enforcement.1"
+  "previous_local_provenance_sha256": "c964ea71e9aa5de3dca82142cdd20263b2296ae27a0f99c8875cef6410cc6279"
 }

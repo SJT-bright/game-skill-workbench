@@ -89,17 +89,7 @@ def quiet():
     return out, out.append
 
 
-class PreviewOnlyCase(unittest.TestCase):
-    def setUp(self):
-        # Isolate Chinese-audit, Native and preview lifecycle rules. Strict-six
-        # production is tested by test_ad_standard_english_entry and shared gates.
-        import ad_standard_scope
-        guard = patch.object(ad_standard_scope, 'requirement', return_value={'required': False})
-        guard.start()
-        self.addCleanup(guard.stop)
-
-
-class GateDecisions(PreviewOnlyCase):
+class GateDecisions(unittest.TestCase):
     """The gate itself, in this process."""
 
     def test_person_modes_use_existing_candidate_without_an_art_receipt(self):
@@ -299,7 +289,7 @@ class GateDecisions(PreviewOnlyCase):
             self.assertGreater(log[0]['open_problems'], 0)
 
 
-class FirstTrialArtRecord(PreviewOnlyCase):
+class FirstTrialArtRecord(unittest.TestCase):
     """11.17.14: one full art_check run before the first formal trial; no image fingerprints, no forced re-runs."""
 
     def args(self, root, web):
@@ -362,7 +352,7 @@ def timing_events(root):
     return [json.loads(l) for l in log.read_text(encoding='utf-8').splitlines() if l.strip()] if log.is_file() else []
 
 
-class TrialLinkTiming(PreviewOnlyCase):
+class TrialLinkTiming(unittest.TestCase):
     """简化.11.9 (割草 蛋壳特工队: the second trial link was never recorded, so a 6-hour "round 1" hid Saul's second
     playtest): serve_preview.py records `stage_timer.py link <N>` itself, N = different exports handed out."""
 
@@ -422,15 +412,11 @@ class _stderr(object):
         return False
 
 
-class RealServer(PreviewOnlyCase):
+class RealServer(unittest.TestCase):
     """The real wrapper process: refused without a check, started (and the copy verified) after a clean one."""
 
     def start(self, td, argv, env):
-        # Child-process isolation, without a production bypass flag.
-        bootstrap = ("import sys,runpy;sys.path.insert(0," + repr(str(HERE.parents[1] / 'remake-core/scripts')) +
-                     ");import ad_standard_scope;ad_standard_scope.requirement=lambda *a,**k:{'required':False};" +
-                     "sys.argv=[" + repr(str(HERE / 'serve_preview.py')) + "]+sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')")
-        p = subprocess.Popen([sys.executable, '-B', '-c', bootstrap] + argv, cwd=str(HERE), env=env,
+        p = subprocess.Popen([sys.executable, '-B', str(HERE / 'serve_preview.py')] + argv, cwd=str(HERE), env=env,
                              stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         lines = []
         reader = threading.Thread(target=lambda: [lines.append(l) for l in p.stdout], daemon=True)
@@ -521,7 +507,7 @@ class RealServer(PreviewOnlyCase):
             self.assertEqual(log[-1]['snapshot_manifest_sha256'], log[-1]['export_manifest_sha256'])
 
 
-class UserHandoff(PreviewOnlyCase):
+class UserHandoff(unittest.TestCase):
     """Real retained HTTP shell, synthetic game evidence, intercepted Chrome launch."""
 
     def test_only_completed_art_or_bound_package_can_request_chrome(self):
@@ -547,14 +533,8 @@ class UserHandoff(PreviewOnlyCase):
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             url = f'http://127.0.0.1:{server.server_port}/'
-            # This HTTP server belongs to this test PID. Substitute only its
-            # ps-derived identity when sandbox process listings are unavailable.
-            owned_pid = os.getpid()
-            owned_identity = __import__('hashlib').sha256((str(project.resolve())+':'+str(owned_pid)).encode()).hexdigest()
-            original_probe = H.browser_slots.process_identity
-            own_probe = lambda pid: owned_identity if pid == owned_pid and H.browser_slots.alive(pid) else original_probe(pid)
             slot = {'id': '1110-090000-preview-abcdef', 'kind': 'preview', 'url': url, 'keep': True, 'dir': str(snapshot),
-                    'pid': owned_pid, 'process_identity': own_probe(owned_pid),
+                    'pid': os.getpid(), 'process_identity': H.browser_slots.process_identity(os.getpid()),
                     'project': str(project.resolve()), 'phone_size': [390, 844]}
             plan = {'schema': 'english-playtest-plan.v1', 'game': 'Same game', 'version': 'R1',
                     'mode': 'trial', 'preview_url': url, 'web_tree_sha256': H.tree_sha(web),
@@ -564,9 +544,7 @@ class UserHandoff(PreviewOnlyCase):
                                'checks': [{'covers': ['play'], 'basis': 'strict_requirement',
                                            'action': 'Tap Play', 'expected': 'Game starts'}]}]}
             try:
-                with patch.object(H.browser_slots, 'process_identity', side_effect=own_probe), \
-                        patch.object(verify_delivery_preview, 'process_identity', side_effect=own_probe), \
-                        patch.object(H.browser_slots, 'SLOTS', Path(td) / 'slots'), \
+                with patch.object(H.browser_slots, 'SLOTS', Path(td) / 'slots'), \
                         patch.object(H.browser_slots, 'slots', return_value=[slot]), \
                         patch.object(verify_delivery_preview, 'slots', return_value=[slot]), \
                         patch.object(H.preview_chrome, 'open_chrome_window',
@@ -616,59 +594,18 @@ class UserHandoff(PreviewOnlyCase):
                                                        H.startup_renderer.digest(H.startup_renderer.tree(native))},
                              'preview': {'url': url, 'web_tree_sha256': H.tree_sha(web), 'slot_id': slot['id']}}
                     delivery.write_text(json.dumps(proof))
-                    # 2026-11-12: the final hand-over is four things together. The source ZIP and the evidence ZIP are
-                    # made by remake-core game_handoff.deliver (its own tests use real files); here: it is called by
-                    # default, a failure retains node timings without handoff completion or Chrome, and the reply lists all four.
-                    import game_handoff
-                    made = {'status': 'team_handoff_ready', 'test_zip': str(archive), 'source_zip': str(Path(td) / 'Final_源码.zip'),
-                            'evidence_zip': str(Path(td) / 'Final_交接证据.zip'),
-                            'reply_lines': ['测试包：' + str(archive), '源码包：' + str(Path(td) / 'Final_源码.zip'),
-                                            '交接证据包：' + str(Path(td) / 'Final_交接证据.zip')]}
-                    events_before = [event['ev'] for event in timing_events(project)]
-                    with patch.object(game_handoff, 'deliver', side_effect=ValueError('工程里有账号、密码或密钥')) as deliver:
-                        with self.assertRaisesRegex(ValueError, '最终交接未完成.*账号、密码或密钥'):
-                            H.handoff(project, url, 'package', plan, delivery)
-                    self.assertEqual(deliver.call_args.args, (delivery, project.resolve(), None))
-                    self.assertEqual(launch.call_count, 1, 'Chrome is not opened when the four things are not ready')
-                    failed_events = timing_events(project)
-                    self.assertEqual([event['ev'] for event in failed_events[:len(events_before)]], events_before)
-                    observations = failed_events[len(events_before):]
-                    self.assertTrue(observations, 'failed preparation has real node timing observations')
-                    self.assertTrue(all(event.get('kind') == 'tool' and event['ev'] in ('begin', 'end')
-                                        for event in observations), 'no done/link/stage handoff event on failure')
-                    self.assertEqual(observations[-1]['ev'], 'end')
-                    self.assertEqual(observations[-1]['step'], 'team.artifacts')
-                    self.assertEqual(observations[-1]['state'], 'failed')
-                    self.assertEqual(observations[-1]['exit_code'], 1)
-                    with patch.object(game_handoff, 'deliver', return_value=made) as deliver:
-                        result = H.handoff(project, url, 'package', plan, delivery)
-                    self.assertEqual(deliver.call_count, 1)
+                    result = H.handoff(project, url, 'package', plan, delivery)
                     self.assertEqual(result['label'], '测试包同版试玩')
                     self.assertEqual(launch.call_count, 2)
                     self.assertEqual(result['playtest_url'], url + '__playtest/')
                     self.assertIn('核对本次实际 ZIP', result['stage_report'])
-                    self.assertEqual(result['team_handoff'], made)
-                    self.assertEqual([line.split('：')[0] for line in result['reply_lines'][:4]], ['测试包', '源码包', '试玩链接', '交接证据包'])
-                    self.assertEqual(result['reply_lines'][2], '试玩链接：' + url + '__playtest/')
-                    self.assertIn('四样', result['reply_lines'][4])
-                    # only an explicit, stated reason leaves the source ZIP and the evidence ZIP out
-                    with patch.object(game_handoff, 'deliver', side_effect=AssertionError('must not be called')):
-                        with self.assertRaisesRegex(ValueError, '写明原因'):
-                            H.handoff(project, url, 'package', plan, delivery, skip_team_handoff=' ')
-                        result = H.handoff(project, url, 'package', plan, delivery, no_browser=True,
-                                           skip_team_handoff='用户原话：这次只要测试包，源码先不用')
-                    self.assertEqual(result['team_handoff']['status'], 'team_handoff_skipped')
-                    self.assertEqual(result['reply_lines'], ['测试包：' + str(archive), '试玩链接：' + url + '__playtest/',
-                                                              '这次没有附源码包和交接证据包：用户原话：这次只要测试包，源码先不用'])
-                    self.assertEqual(launch.call_count, 2)
 
                     (native / 'game.js').write_text('changed after the final check')
-                    with patch.object(game_handoff, 'deliver', side_effect=AssertionError('checked before the team hand-off')):
-                        with self.assertRaisesRegex(ValueError, 'Native.*变化'):
-                            H.handoff(project, url, 'package', plan, delivery)
-                        archive.write_bytes(b'changed ZIP')
-                        with self.assertRaisesRegex(ValueError, 'ZIP 已变化'):
-                            H.handoff(project, url, 'package', plan, delivery)
+                    with self.assertRaisesRegex(ValueError, 'Native.*变化'):
+                        H.handoff(project, url, 'package', plan, delivery)
+                    archive.write_bytes(b'changed ZIP')
+                    with self.assertRaisesRegex(ValueError, 'ZIP 已变化'):
+                        H.handoff(project, url, 'package', plan, delivery)
                     self.assertEqual(launch.call_count, 2)
             finally:
                 server.shutdown()

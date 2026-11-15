@@ -188,13 +188,13 @@ class Cocos3Ratio(Base):
         self.assertEqual([d[4]['_contentSize']['width'], d[4]['_contentSize']['height']], [200.0, 100.0])
         self.assertLess(rec['ratio_diff'], 0.01)
 
-    def test_upscale_with_lscale_refused_and_nothing_written(self):
+    def test_design_upscale_with_lscale_is_advisory(self):
         self.png3('mid', (120, 120), (0, 0, 120, 120))
-        p = self.prefab(scale=1.5)
-        before = p.read_bytes()
-        with self.assertRaisesRegex(tool.BindError, 'upscale'):
-            self.bind('mid')
-        self.assertEqual(p.read_bytes(), before)
+        self.prefab(scale=1.5)
+        rec = self.bind('mid')[0]
+        self.assertEqual(rec['clarity_advisory']['source_to_design_scale'], 2.5)
+        self.assertFalse(rec['clarity_advisory']['blocking'])
+        self.assertFalse(rec['clarity_advisory']['auto_regenerate'])
 
     def test_sliced_label_transform_and_nested_prefab(self):
         self.png3('panel', (200, 100), (0, 0, 200, 100))
@@ -296,7 +296,7 @@ class ImportType(Base):
 
     def test_batch_with_meta_fix_is_all_or_nothing(self):
         self.png3('btn_claim', (300, 120), (0, 0, 300, 120), typ='texture')
-        self.png3('tiny', (40, 40), (0, 0, 40, 40))
+        self.png3('tiny', (40, 40), (0, 0, 40, 40), typ='unsupported')
         p = self.prefab(extra=[lambda d: (d[1]['_children'].append({'__id__': 6}),
                                           d.extend([n3('icon', {'__id__': 1}, [7, 8]), ut(6, 200, 200),
                                                     sp3(6, self.old)]))])
@@ -446,14 +446,13 @@ class NestedPrefab3x(Base):
         self.assertEqual(rec['old_size'], [100.0, 100.0])
         self.assertAlmostEqual(rec['new_size'][1], 100.0, delta=0.1)
 
-    def test_instance_root_scale_override_counts_for_upscale(self):
+    def test_instance_root_scale_override_counts_for_advisory(self):
         self.png3('mid', (120, 120), (0, 0, 120, 120))
         self.button_prefab()
-        p = self.home_scene(overrides=[(['rootF'], ['_lscale'], {'__type__': 'cc.Vec3', 'x': 1.5, 'y': 1.5, 'z': 1})])
-        before = p.read_bytes()
-        with self.assertRaisesRegex(tool.BindError, 'upscale'):
-            self.bind('mid', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')
-        self.assertEqual(p.read_bytes(), before)
+        self.home_scene(overrides=[(['rootF'], ['_lscale'], {'__type__': 'cc.Vec3', 'x': 1.5, 'y': 1.5, 'z': 1})])
+        rec = self.bind('mid', prefab='assets/home.scene', node='Canvas/PlayBtn/icon')[0]
+        self.assertEqual(rec['clarity_advisory']['source_to_design_scale'], 2.5)
+        self.assertFalse(rec['clarity_advisory']['blocking'])
 
     def test_two_levels_local_id_path(self):
         self.png3('diver_skin', (80, 206), (0, 0, 80, 206))

@@ -2,6 +2,49 @@
 
 固定英文按钮、透明切片和首次接入的风险控件共用现有配方、`visual-slots.json` 与采集结果，不另建第二套验收。按[制作与采集节奏](art-iteration-workflow.md)先由 Codex 看源图样件与实际预算做预防，再集中制作与接入；冻结候选后，用本次完整采集的代表数据做唯一正式首件核验，让适用检查共用这一轮。共享做法与输入没变时，不为不同检查器重复首件、构建或采集。
 
+## 新 AI 的生产输入入口
+
+新英化工程由 `init` 在已有 `.tiktok-kit/policy.json` 写入 `production_inputs:"required"`。已交付/历史工程不追溯启用。正式提示词生成、手动图片登记和接图会读取该策略：缺用途就给出具体输入错误，不到最终写包才补救。未知策略值报错，不静默降级。
+
+在原 `art.json` 的每张实际资产中，直接附上现有 CSS 预算和已盘清的状态/视口 ID；不另建项目总表：
+
+```json
+{"name":"txt_level","kind":"badge","w":264,"h":80,"alpha":true,"has_text":true,"text":"LEVEL",
+ "expected_cases":["home-375","home-390"],
+ "usage":{"unit":"css_px","density":2,"cases":[
+   {"id":"home-375","css_size":[100,30]},
+   {"id":"home-390","css_size":[105,32]}]}}
+```
+
+`w/h` 是计划处理后的源图尺寸，`css_size` 是最终显示槽，不能直接照抄 Cocos 设计单位或乘 DPR。先追真实消费者和父缩放，未知动态用途先补依据。`expected_cases` 与预算 case 必须逐项对应；这只证明声明一致，不证明所有消费者已被发现。最长固定词直接使用准确 `text`；位图数字的最长串继续用下文真实字体预算。
+
+```sh
+python3 <skills>/ad-boost/scripts/art/make_prompts.py --art ART.json --style STYLE.json --project PROJECT --board localize --out PROMPTS.json
+```
+
+该入口把同一预算传给提示词、首次生成尺寸选择和配色：最大用途参与源图建议，最小用途进入字形/轮廓要求及对比度口径。接着使用现有 `gen_images.py`，或当前 AI 的 image_gen 后用 `record_manual.py --prompts PROMPTS.json --out GEN --tool "image_gen" --source-dir RAW_SOURCE` 登记；预算自动进入原 `gen_log.json`。`postprocess.py --art ART.json --gen GEN --project PROJECT` 沿用预算，在写入前核输出尺寸政策，并把带字图按各声明 CSS 槽离线等比缩小复用现有对比检查。这是原料预防，不是引擎或视觉通过；难以测量的项保留 `review_required`。之后 `skill_link.py record --project PROJECT --gen GEN` 自动把同一预算写入原 `generated.json`。
+
+直接使用当前 AI 的 image_gen、未走 ad-boost 时，也用现有登记入口接受同一预算：
+
+```sh
+python3 <skills>/remake-core/scripts/art_records.py generated --project PROJECT --tool "image_gen" --prompt "完整实际提示词" --usage-budget EXISTING_USAGE.json --expected-cases home-375 home-390 -- PROJECT/assets/ui/txt_level.png
+python3 <skills>/remake-art/scripts/bind_art.py --project PROJECT --map BIND.json
+```
+
+`BIND.json` 是对象，不能直接传数组。最小例子：
+
+```json
+{"bindings":[{"prefab":"assets/prefabs/Panel.prefab","node":"Panel/Button","image":"assets/ui/btn_continue.png"}]}
+```
+
+`prefab` 与 `image` 是工程相对路径，`node` 是真实序列化节点完整路径；2.4 的 `.fire` 与 3.x 的 `.scene` 也使用同一结构。先用 `--dry-run` 解析而不写入，错误会指出具体字段。
+
+`EXISTING_USAGE.json` 内容就是上例 `usage` 对象。`--` 分隔 case 列表与图片路径。`bind_art` 按图片实际 SHA 读取生成记录，派生图沿原来源链继承预算，不要求再次手填；绑定显式预算与生成记录冲突时拒绝写入。默认放大倍率仅提示；只有显式 strict 政策按真实 CSS 预算阻断，不按设计单位自动要求重画。
+
+现有 H10 记录消费者也读取这一预算：仅对新策略下实际会进包、非中文原件/官方标准件的新增图片，缺生成记录或缺/错用途时报告准确缺口。手写一个只有 prompt/tool 的记录不能替代用途输入；未使用图片及无此新策略的旧工程保持原范围。不重算像素，不增加一轮美工检查。
+
+用途确实变更时，在原 `art.json` 修正，再用 `postprocess.py ... --update-usage` 对保留的原图重新处理。它保存原生成用途、当前用途和 raw SHA，重算现有几何/对比/尺寸规则，不启动生图，不伪造实景通过。不要为了改预算自动重新生成一套图片。
+
 ## 生产记录与真实用途
 
 关键整图按钮、独立图标和皮肤默认单资产大图，可逐个生成；集中制作不等于拼一张小图集。只有版式稳定、每格源像素充足且切分可核时才选图集，不以省调用为由牺牲有效尺寸。固定按钮核整词拼写和底图来源；图集先核主体、描边、阴影与安全边界。继续用原制作入口联动登记：

@@ -7,8 +7,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "5b3afe74e4bc9d0c2e030639ebeb723c452e9879a6da5e67a03e9c0b8f9b0cb1",
-      "bytes": 27769
+      "sha256": "33da32b425f9ea0ffd17bc4dadf359c2d6e1fe9994855bf7076a4f8f5d441b9e",
+      "bytes": 27886
     },
     {
       "path": "agents/openai.yaml",
@@ -52,7 +52,7 @@
     },
     {
       "path": "references/art-iteration-workflow.md",
-      "sha256": "aa893c65c15b6420a819b0e0074ba5a55edf659df6d897dd4f0aaef7cadcf1b2",
+      "sha256": "b126ed616b180e45c374cafdbf58132210e78e1e0129f6cc31c54e5f7ae91794",
       "bytes": 7804
     },
     {
@@ -142,7 +142,7 @@
     },
     {
       "path": "references/new-feature-ui.md",
-      "sha256": "14623b95fadd518a50ce5b3019355e718a03303460206094bc0919c1ad8666c0",
+      "sha256": "0f46fb97d7e6a86d68a7bf22f06b9f4f63781db9aad0fe1549c68ccdca0ebbc4",
       "bytes": 5032
     },
     {
@@ -162,8 +162,8 @@
     },
     {
       "path": "references/production-check-link.md",
-      "sha256": "243b52a622f7ffc28fd1e2610ee360dba98cffbd7d735798ff45f7eb2b3b9ea9",
-      "bytes": 8363
+      "sha256": "3f5aa2ee299c83861a98330bfb77035ad84633dcfdb240788698062c301ab2e7",
+      "bytes": 12432
     },
     {
       "path": "references/production-prevention.md",
@@ -212,8 +212,8 @@
     },
     {
       "path": "scripts/bind_art.py",
-      "sha256": "7a8e70f1f30145b84cda29ce2b128d7489f4a7b9a95c83d949cf4687be3d9da6",
-      "bytes": 46980
+      "sha256": "2f920d11bf4b97d98cb04589d175eb3eaf4e31b9ac2c0f767c6dd513d99b4b30",
+      "bytes": 50692
     },
     {
       "path": "scripts/check_button_group.py",
@@ -267,18 +267,23 @@
     },
     {
       "path": "scripts/test_bind_art.py",
-      "sha256": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
-      "bytes": 8821
+      "sha256": "a9c6c882ccbabb9d09860479944ec8e6b62a68d9be830bdbefaaf856fa0b2c3d",
+      "bytes": 8850
     },
     {
       "path": "scripts/test_bind_art_3x.py",
-      "sha256": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
-      "bytes": 27976
+      "sha256": "ff4259e02fcd41d136060a123543519188e6ff791195a8f032a6a28b6fb5a5bc",
+      "bytes": 28054
     },
     {
       "path": "scripts/test_bind_art_slot.py",
       "sha256": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
       "bytes": 8953
+    },
+    {
+      "path": "scripts/test_bind_input_contract.py",
+      "sha256": "58590a77df0dd836230568bf1dae20a7bacfb01ac1e893d432a3845501317b4c",
+      "bytes": 1724
     },
     {
       "path": "scripts/test_bitmap_font_sprite_sources.py",
@@ -632,7 +637,7 @@
       "scope": "Art generation only: non-dark glyph cores, first-pass fixed words and generated reward glyphs; no new final gate."
     }
   ],
-  "previous_local_provenance_sha256": "f1d3e950f6344193bb9d0d2ef53c002950669e20ad2f2de555be7001e5570478",
+  "previous_local_provenance_sha256": "e4d7104306487f0611c9dd48b7a28ad568137719f2b44a4b3c476f31760ff74f",
   "release_integration": {
     "release": "11.17.30",
     "previous_release": "11.17.29",
@@ -641,5 +646,13 @@
     ],
     "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
   },
-  "overlay_release": "art-non-dark-first-text.20261113.1"
+  "overlay_release": "art-non-dark-first-text.20261113.1",
+  "local_enforcement_revision": "11.17.35+production-enforcement.1",
+  "local_updates": [
+    {
+      "id": "11.17.35+production-enforcement.1",
+      "scope": "General production inputs, shared UI and detector contracts, early import/resource prevention; preserve installed concurrent optional-energy update. No game PASS or new official release.",
+      "verification": "isolated engine/component/CLI samples and merged tests; real-game acceptance remains separate"
+    }
+  ]
 }

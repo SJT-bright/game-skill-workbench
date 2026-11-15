@@ -4,7 +4,7 @@
 
 新增或修改实际拦截输入的弹窗/加载层行为时，按[实例归属](../../remake-core/references/modal-input-ownership.md)沿用原管理器、输入/暂停令牌，明确底板与触摸拦截的职责。首件的原操作中并入连续打开和关闭重开；同一机制共用代表件和有效证据，异步机制才补慢加载。只换图片、文字或普通侧栏时复用行为证据，不额外跑生命周期或扩大美工范围。
 
-广告六标准类同样执行本流程：先运行同包ad-boost的 `scripts/art/skill_link.py prepare` 读取本作实际画风与本Skill；六类新增页面和状态进入原page registry与visual/capture计划，首件和受影响范围用原工具检查。共享门禁不读取一份新的全量美术回执，见[六类制作联动](../../remake-core/references/ad-standard-six.md)。
+广告五标准类同样执行本流程：先运行同包ad-boost的 `scripts/art/skill_link.py prepare` 读取本作实际画风与本Skill；五类新增页面和状态进入原page registry与visual/capture计划，首件和受影响范围用原工具检查。共享门禁不读取一份新的全量美术回执，见[五类制作联动](../../remake-core/references/ad-standard-six.md)。
 
 功能新增了玩家可见的页面、弹窗、子面板、按钮或 HUD 控件，或为新功能换了一整块面板，即在设计时走本流程。包括英化的固定入口和推荐广告板块、试玩反馈新增、交付后加功能，以及直接执行广告、经济或皮肤板块。功能工作已经获准时，其新增界面的制作一并进行。只改现有界面上的一处图，沿用原局部改图规则；对已交付美术的复验按本轮授权处理。
 

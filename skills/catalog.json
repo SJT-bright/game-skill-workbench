@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-15T07:05:55.346Z",
-  "treeHash": "14cbb8ef3e35c1915ccbce153b50ad48768f58bd27414b81057c7758f8fa43eb",
+  "createdAt": "2026-11-15T10:06:29.466Z",
+  "treeHash": "ea95094eb7d5d8d74f3d8df6a6aa51b623a01dda733d884e59d1f317741e0793",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -245,20 +245,20 @@
     },
     {
       "name": "cocos-game-check",
-      "treeHash": "6657aab1c48dc3227257b9b6a7068e4fa24c5c374026ac245452bac01c5d38e7",
+      "treeHash": "f8fda9335c0075c4f3638b8fde24b8e44d9ec0c9cfec785c5414f3e08ac9848a",
       "fileCount": 207,
-      "bytes": 2174019,
+      "bytes": 2174590,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "55d66ee8b7bcc6f0e2ff8dcc0e9909730ff16c75d58e7cd51ee458e4cdddabbe",
-          "size": 70005,
+          "hash": "01d4cdd93ea850abe7521f1ff6b832a08f97ae5796c5275f8d28ba80ebdb9b9c",
+          "size": 70459,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "189afdb7d1966e2ebf87bdfa51cce39bd158561aecb91f4e30aaa0cdf469435d",
-          "size": 35017,
+          "hash": "f0d1e6b018ea29db2a88e4ee9d5f3a10f0a3b985696c13b37b4514a96fd9f034",
+          "size": 35134,
           "executable": false
         },
         {
@@ -383,7 +383,7 @@
         },
         {
           "path": "package/README.md",
-          "hash": "64b778040d5145aec476d4937dec0f219bbfca1882933a2c5cd491f722149fe9",
+          "hash": "4cdc797256567844247d58fe7b61ea83269b96fbacd6fb06872bc7226770aed0",
           "size": 6891,
           "executable": false
         },
@@ -425,7 +425,7 @@
         },
         {
           "path": "package-check/README.md",
-          "hash": "a5bebf351f66391a7d34e62b3a2a5eb0724817872b7b91ce7f00f6e3b8d22667",
+          "hash": "b9a448b39fb28199a33f191514cc75c6cd110acdc30a68e95a15cca1164dc4e2",
           "size": 6343,
           "executable": false
         },

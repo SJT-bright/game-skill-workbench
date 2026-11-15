@@ -22,7 +22,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 **跨平台语义（用户 2026-11-11）**：Android、浏览器触控或标记为iOS的宿主通过，不能证明iOS Native通过。首次平台接入及存档/启动/SDK相关依赖变化时，按[跨平台语义与旧存档](../remake-core/references/cross-platform-runtime-contract.md)补最短Native链：新玩家、旧值读不出来照样能玩、实际触控进入玩法。正式、轻量写包与最终交付共用只读核准回执。只补受影响节点，真机与语义模型分列；保护件和 SaveStore 仍标“待真机复测”，手机上平台实际返回什么以真机日志为准。
 
-**六标准广告节点与美工制作已接入（用户2026-11-11）**。首次完整制作与明确的六类迁移，结束、主页、永久皮肤、体力、局内道具、周期试用六类全部必需；额外奖励循环不能替代任何一类。按[六标准广告制作联动](../remake-core/references/ad-standard-six.md)在制作时调用同包ad-boost与remake-art。旧“0～2个才推荐/无系统不新增/英化默认不加这些系统”不再限制这六类所需依赖。已交付游戏的无关局部维护保留原授权范围和有效记录，不自动改原件。
+**五标准广告节点与美工制作已接入（用户2026-11-11）**。首次完整制作与明确的五类迁移，结束、主页、永久皮肤、局内道具、周期试用五类全部必需；体力自2026-11-14起改为可选：原游戏有体力的保留并接看广告+3，没有的不为广告新做体力系统；额外奖励循环不能替代任何一类。按[五标准广告制作联动](../remake-core/references/ad-standard-six.md)在制作时调用同包ad-boost与remake-art。旧“0～2个才推荐/无系统不新增/英化默认不加这些系统”不再限制这五类所需依赖。已交付游戏的无关局部维护保留原授权范围和有效记录，不自动改原件。
 
 
 **返工写包与修复续跑（2026-11-10）**。本轮要求检查或交付游戏时，按[执行范围计划及修复续跑](../remake-core/references/regression-scope-gate.md)核对实际改动与可沿用证据。遇到漏传计划、整包通配、执行中换计划、执行器粒度过粗或最终交付回执缺失、失配时，当前 AI 直接修复具体缺口，重新核准后回到原节点，继续到已授权的检查与交付完成。有效证据直接沿用，新检查限于实际受影响或确实缺证的项目。只讨论流程或更新 Skill 时，完成讨论和规则更新即可，游戏案例用于说明。
@@ -79,7 +79,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 
 | 类型 | 判断 | 适用 |
 |---|---|---|
-| 英化 | 拿到的是能运行的中文完整游戏，只改中文美工/文字，加少量固定入口 | 下表“英化”列；默认不查关数、原游戏的经济数值、教程等重塑专属项；六标准补齐的皮肤、体力、道具、签到等板块和 Saul 要求创新玩法新加的部分要查 |
+| 英化 | 拿到的是能运行的中文完整游戏，只改中文美工/文字，加少量固定入口 | 下表“英化”列；默认不查关数、原游戏的经济数值、教程等重塑专属项；五标准补齐的皮肤、体力、道具、签到等板块和 Saul 要求创新玩法新加的部分要查 |
 | 重塑 | 用启动包做的新游戏 | 全部检查 |
 
 工程里写 `docs/board.txt`（`localize` 或 `remake`）；没写时按 [两个制作入口](../remake-core/references/two-boards.md) 判断。
@@ -116,7 +116,7 @@ description: "统一检查（触发词：检查、测试、验收、找bug、修
 | 个人主页侧栏回访、添加桌面 | 必查 | 必查 | 实际 Native 先查旧句残留，再跑 [`growth_entry`](package-check/references/runtime-regression.md)，验证冷启动、保活返回、到账与重复领取。历史包重出同样必查 |
 | 结算页 Watch Ad x2 与 Retry；广告取消/失败不发奖、只用激励视频、无广告跳关 | 必查 | 必查 | `remake-core/scripts/audit_ad_binding.py`、`audit_no_ad_skip.py`、`audit_no_ad_simulator.py` |
 | 美术检查（穿模、暗区、按钮覆盖、图片清晰度） | 只查改过的页面 | 必查 | [art](../remake-art/SKILL.md)、`remake-core/scripts/art_check.py` |
-| 关卡、经济、皮肤、签到、教程、模块 | 原游戏的默认不查；六标准补齐的板块和创新玩法新加的部分要查 | 必查 | `remake-core/scripts/audit_level_plan.py`、`audit_game_modules.py`、`audit_acquisition_progression.py` 等 |
+| 关卡、经济、皮肤、签到、教程、模块 | 原游戏的默认不查；五标准补齐的板块和创新玩法新加的部分要查 | 必查 | `remake-core/scripts/audit_level_plan.py`、`audit_game_modules.py`、`audit_acquisition_progression.py` 等 |
 | 出包与最终包检查 | 必查 | 必查 | [package](package/README.md)、[package-check](package-check/README.md) |
 | 出包时的布局状态、按钮普查（v7.8，总表 B30，Saul 10-30 定必跑）：iPhone 14 和 SE、胶囊按点 / 按像素，查按钮伸出屏幕、压胶囊、压底部横条、被 3D 盖住、胶囊单位一变就移位、开局下载超过 10 MiB 或带声音；首页每个按钮和一层弹窗按钮真点一次，没反应就拦。首页规则：重塑查设置在左上、最下面一排只放主页回访和加桌面；首次英化主页按[默认主页排版](../remake-art/references/english-home-layout.md)由美工 Skill 重新设计，检查两个平台入口及本次重排控件在首页可见、能点、不重叠；已交付后的局部返工只查受影响区域。新游戏拦、老游戏只警告；3.x 只有开局下载会拦 | 必查 | 必查 | 布局与按钮生产节点执行 `layout_state`、`button_sweep`（[运行时回归](package-check/references/runtime-regression.md)），未变项沿用，writer 只读核准；要测「展台上有车」这类首页一层点不到的状态，在 adapter 写 `layout_states`。顶栏、设置钮贴着胶囊放的，用平台包 `parts/CapsuleLayout.js` 读胶囊位置 |
 | 正常游玩手感 | 按实际玩法核输入、运动和流畅度 | 同左 | 怀疑帧率相关时显式运行 `frame_rate` 对照诊断，5% 只提示位移差，默认终检和出包不跑 |

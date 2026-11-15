@@ -2,7 +2,7 @@
 
 # 最终Native/ZIP检查与成品增量出包
 
-2026-11-11：当前完整制作的六标准广告与新增UI由两写包入口和最终ZIP共享门禁自动核，缺任何一类都不能以扩展顶替；检查用 `check_package.py --project <实际工程>`，规则及阶段范围见[六标准制作](../../remake-core/references/ad-standard-six.md)。
+2026-11-11：当前完整制作的五标准广告与新增UI由两写包入口和最终ZIP共享门禁自动核，缺任何一类都不能以扩展顶替；检查用 `check_package.py --project <实际工程>`，规则及阶段范围见[五标准制作](../../remake-core/references/ad-standard-six.md)。
 
 **接收他人包（2026-11-12）**：用户声明同事/别人发来的成品时，按[团队交接](../../remake-core/references/external-package-handoff.md)使用`game_handoff.py receive`，无原回执也能先接收、诊断与同版试玩；`intake_passed`不是`delivery_ready`。做完游戏默认交测试ZIP、源码ZIP、试玩链接和交接证据ZIP四样：英化最终交接命令自动备齐，其他入口在`prepare_delivery.py`成功后跑`game_handoff.py deliver`；原writer回执可跨电脑按哈希核验。
 

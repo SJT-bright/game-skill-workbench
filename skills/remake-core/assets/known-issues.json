@@ -939,7 +939,7 @@
         "audit_acquisition_progression"
       ],
       "board_notes": {
-        "localize": "英化：完整六标准制作（用户 2026-11-11）补齐六类广告节点所需的永久皮肤、体力、局内道具等系统，新加的部分按本条和经济板块测。已交付旧合同的无关局部维护不加皮肤和经济（Saul 2026-10-28）：原游戏自带的皮肤/商店只英化，数量和价格不改，看广告的入口改接平台包激励广告；原版没有、也不在本次范围内的写不适用并附依据。Saul 要求创新玩法、新加皮肤或商店时，新加的部分同样按本条和经济板块测。"
+        "localize": "英化：完整五标准制作（用户 2026-11-11）补齐五类广告节点所需的永久皮肤、局内道具等系统，新加的部分按本条和经济板块测。已交付旧合同的无关局部维护不加皮肤和经济（Saul 2026-10-28）：原游戏自带的皮肤/商店只英化，数量和价格不改，看广告的入口改接平台包激励广告；原版没有、也不在本次范围内的写不适用并附依据。Saul 要求创新玩法、新加皮肤或商店时，新加的部分同样按本条和经济板块测。"
       },
       "maintenance_scope_note": "Explicit preservation scope checks the actual existing collection and trial mechanics, original price catalog and source/Web/Native runtime plus current GUI; does not waive economy or introduce template-only map/trial popup.",
       "gate": "design"
@@ -960,7 +960,7 @@
         "map_unlock"
       ],
       "board_notes": {
-        "localize": "英化：原游戏有试用弹窗或地图解锁，按原机制测；完整六标准制作新加的周期试用（用户 2026-11-11，完成第 3、6、9……局后的局间邀请）和创新玩法新加的，按本条测；已交付旧合同的无关局部维护不新增，都没有就写不适用并附依据。"
+        "localize": "英化：原游戏有试用弹窗或地图解锁，按原机制测；完整五标准制作新加的周期试用（用户 2026-11-11，完成第 3、6、9……局后的局间邀请）和创新玩法新加的，按本条测；已交付旧合同的无关局部维护不新增，都没有就写不适用并附依据。"
       },
       "maintenance_observations": [
         "existing_trial_entry_and_effect",

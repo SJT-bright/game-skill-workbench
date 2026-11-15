@@ -332,6 +332,20 @@
       "children": [
         "home-entries-notice-settle.test.js"
       ]
+    },
+    {
+      "id": "game-ui-production-contract.test.js",
+      "label": "共享UI生产尺寸、状态、角色与字形来源",
+      "children": [
+        "game-ui-production-contract.test.js"
+      ]
+    },
+    {
+      "id": "screen-fit-watch.test.js",
+      "label": "背景布局变化与监听释放",
+      "children": [
+        "screen-fit-watch.test.js"
+      ]
     }
   ],
   "entries": [
@@ -353,8 +367,7 @@
         "remake-core/assets/platform-kit/tests/snake-regression/platform-components.test.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 30000,
       "audited_sources": {
@@ -391,8 +404,7 @@
         "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 30000,
       "audited_sources": {
@@ -433,8 +445,7 @@
         "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 30000,
       "audited_sources": {
@@ -477,9 +488,7 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -524,11 +533,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -580,7 +586,6 @@
         "remake-core/assets/platform-kit/build-templates/bytedance/storage-guard.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/storage-guard/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/touch-coordinates",
-        "remake-core/assets/platform-kit/build-templates/bytedance/touch-coordinates/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe/index.js"
@@ -632,7 +637,6 @@
         "remake-core/assets/platform-kit/build-templates/bytedance/storage-guard.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/storage-guard/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/touch-coordinates",
-        "remake-core/assets/platform-kit/build-templates/bytedance/touch-coordinates/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe/index.js",
@@ -694,11 +698,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/rewarded-guard",
         "remake-core/assets/platform-kit/build-templates/bytedance/rewarded-guard.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/rewarded-guard/index.js",
@@ -706,7 +707,6 @@
         "remake-core/assets/platform-kit/build-templates/bytedance/storage-guard.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/storage-guard/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/touch-coordinates",
-        "remake-core/assets/platform-kit/build-templates/bytedance/touch-coordinates/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe.js",
         "remake-core/assets/platform-kit/build-templates/bytedance/webp-decode-probe/index.js",
@@ -752,8 +752,7 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -791,7 +790,6 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
         "remake-core/assets/platform-kit/plugins-3x/PlatformConfig",
         "remake-core/assets/platform-kit/plugins-3x/PlatformConfig.js",
         "remake-core/assets/platform-kit/plugins-3x/PlatformConfig/index.js",
@@ -1246,6 +1244,7 @@
         "ad-boost/ui-kit/test/overlay_canvas.test.js",
         "ad-boost/ui-kit/test/page_registry.test.js",
         "ad-boost/ui-kit/test/run_session.test.js",
+        "ad-boost/ui-kit/test/state_art_contract.test.js",
         "ad-boost/ui-kit/test/ts_syntax.test.js",
         "ad-boost/ui-kit/tools/build_kit.py",
         "remake-core/assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
@@ -1276,63 +1275,34 @@
       ],
       "absent_inputs": [
         "ad-boost/modules/base-check/test/harness",
-        "ad-boost/modules/base-check/test/harness/index.js",
         "ad-boost/modules/base-check/test/save_kit",
-        "ad-boost/modules/base-check/test/save_kit/index.js",
         "ad-boost/modules/battle-pass/test/harness",
-        "ad-boost/modules/battle-pass/test/harness/index.js",
         "ad-boost/modules/bonus-level/test/harness",
-        "ad-boost/modules/bonus-level/test/harness/index.js",
         "ad-boost/modules/booster-refill/test/save_kit",
-        "ad-boost/modules/booster-refill/test/save_kit/index.js",
         "ad-boost/modules/checkin/test/harness",
-        "ad-boost/modules/checkin/test/harness/index.js",
         "ad-boost/modules/coin-ad/test/harness",
-        "ad-boost/modules/coin-ad/test/harness/index.js",
         "ad-boost/modules/energy/test/save_kit",
-        "ad-boost/modules/energy/test/save_kit/index.js",
         "ad-boost/modules/extra-slot/test/harness",
-        "ad-boost/modules/extra-slot/test/harness/index.js",
         "ad-boost/modules/extra-slot/test/save_kit",
-        "ad-boost/modules/extra-slot/test/save_kit/index.js",
         "ad-boost/modules/gift/test/harness",
-        "ad-boost/modules/gift/test/harness/index.js",
         "ad-boost/modules/gift/test/save_kit",
-        "ad-boost/modules/gift/test/save_kit/index.js",
         "ad-boost/modules/hint/test/save_kit",
-        "ad-boost/modules/hint/test/save_kit/index.js",
         "ad-boost/modules/key-chest/test/harness",
-        "ad-boost/modules/key-chest/test/harness/index.js",
         "ad-boost/modules/moment-boost/test/save_kit",
-        "ad-boost/modules/moment-boost/test/save_kit/index.js",
         "ad-boost/modules/offline/test/harness",
-        "ad-boost/modules/offline/test/harness/index.js",
         "ad-boost/modules/online-ladder/test/harness",
-        "ad-boost/modules/online-ladder/test/harness/index.js",
         "ad-boost/modules/prestart-boost/test/save_kit",
-        "ad-boost/modules/prestart-boost/test/save_kit/index.js",
         "ad-boost/modules/quest-x2/test/harness",
-        "ad-boost/modules/quest-x2/test/harness/index.js",
         "ad-boost/modules/skin-ad/test/save_kit",
-        "ad-boost/modules/skin-ad/test/save_kit/index.js",
         "ad-boost/modules/skin-ad/test/skin_kit",
-        "ad-boost/modules/skin-ad/test/skin_kit/index.js",
         "ad-boost/modules/timer-chest/test/harness",
-        "ad-boost/modules/timer-chest/test/harness/index.js",
         "ad-boost/modules/wheel/test/entry_button_harness",
-        "ad-boost/modules/wheel/test/entry_button_harness/index.js",
         "ad-boost/ui-kit/test/engine-stub",
-        "ad-boost/ui-kit/test/engine-stub/index.js",
         "ad-boost/ui-kit/test/feedback_helper",
-        "ad-boost/ui-kit/test/feedback_helper/index.js",
         "ad-boost/ui-kit/test/gameui_helper",
-        "ad-boost/ui-kit/test/gameui_helper/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -1634,15 +1604,15 @@
         "ad-boost/modules/wheel/ui/cocos3x/WheelPanel.ts": "9c9a88a2837193d6c0e0647447afca425221d089a309a2381e8e66a432f3924e",
         "ad-boost/modules/wheel/ui/common/WheelController.js": "43cf8ba8f5890a9521ae25fb5230aca25593f4566bd34289ae6bf3cbe32ddd53",
         "ad-boost/scripts/paths.js": "6da4206e406d8e3a7aec1f254c722bf93784caa13a6c2c3bc1b5ba8e4f0f3d6b",
-        "ad-boost/ui-kit/cocos2.4/AdBoostKit.js": "6d85a3b4e906307bd007ac1f04414cea18d3b1b42a7cfec18958f2751709576e",
-        "ad-boost/ui-kit/cocos3x/AdBoostKit.ts": "e0e7708026b1fe611d47ab9bbe179c34e39909d9fff0a5df01a2972a8e46eb10",
+        "ad-boost/ui-kit/cocos2.4/AdBoostKit.js": "40f41c4909e7c6962e322c8e2aa50a2acb20a6e0a565869a968f9f292d4f328d",
+        "ad-boost/ui-kit/cocos3x/AdBoostKit.ts": "65012d5b02e5f87069d8d76c5030a3df52895b57e14903c72c9bf8610272464c",
         "ad-boost/ui-kit/demo/cocos2.4/AdBoostDemo.js": "cba5839438699a8dc7e1cb6c89ff3af568f50a394de8512c59d80d0bf9e406c8",
         "ad-boost/ui-kit/demo/cocos3x/AdBoostDemo.ts": "96b29abcbb318e0d86ccec856cb008b439c93348a474990f42f3c5874450616f",
         "ad-boost/ui-kit/demo/run_demo.mjs": "1958e4093438a849be133204ffd7191e70774664dfe687a3b921d3779e7ed651",
-        "ad-boost/ui-kit/src/adapter-24.js": "c697f95a778110b32597db5e836a24f09509ec1d40fb93c4b37d9f179812761b",
-        "ad-boost/ui-kit/src/adapter-3x.js": "972e8748a1f00b0fafc5a86462bfeaef5229d39bb7420839baa90d4e5e18279e",
-        "ad-boost/ui-kit/src/kit-core.js": "ab4c32f490567cf4b6b7a029ec1caccc35b78444241d98077787eef3f909545c",
-        "ad-boost/ui-kit/test/AdBoostKit.test.js": "ead123448598d1fe04f722ec9e67272d1996ebc10c209b5d2adc1a7967364788",
+        "ad-boost/ui-kit/src/adapter-24.js": "cc515d6537e7073e2de093d0de6b12e0aede074dc04e3fa6ec22edfa96a6f069",
+        "ad-boost/ui-kit/src/adapter-3x.js": "068a8d47d729a5100092ad5be96f372ae15f034daa8103b53ea7eef2e89cb1e4",
+        "ad-boost/ui-kit/src/kit-core.js": "365a7d2b50e23dec02a9c9e0821736cf44fba545632df3d662a049a43a5aa1f9",
+        "ad-boost/ui-kit/test/AdBoostKit.test.js": "147ec881dbced1603fbc1af2480ce0b2307cb9966b8953227954a62c5ae963e1",
         "ad-boost/ui-kit/test/ad_button_fitted_geometry.test.js": "1bf5327f6f0da466566140c55d585169d1df33514888f26d0fdb75c73fcee803",
         "ad-boost/ui-kit/test/art_display_slots.test.js": "21f193c5faa1000cf4bc875e735c30fc4aa412d9a6255f26ab49a576991d13e3",
         "ad-boost/ui-kit/test/audio_service.test.js": "a574fd13282fbfb810b421c29c382510212c7eeaf982845b540185b09e5a0aa3",
@@ -1655,6 +1625,7 @@
         "ad-boost/ui-kit/test/overlay_canvas.test.js": "522a03c14aeafe3055872813f72eb215614b21b86f669f5da67089fd36c16b38",
         "ad-boost/ui-kit/test/page_registry.test.js": "537606d2dbf65105913420d39114c5ff3c41c93ac55dcdf197ef0628eb3f5a6b",
         "ad-boost/ui-kit/test/run_session.test.js": "7a7f97309e37369acb3da647013529666104b24a0f831e837d43506c71c0640f",
+        "ad-boost/ui-kit/test/state_art_contract.test.js": "4dad9c30ef867c4344b1138ba0dc2c20a88cf2375d78ee16e668d8023db5c593",
         "ad-boost/ui-kit/test/ts_syntax.test.js": "32bb94a6a3c8ab85b443777064f9f996a6fa90cd95da8f0d10bafaf8863be80a",
         "ad-boost/ui-kit/tools/build_kit.py": "bcc956b12c6db544cf4eaf21bd406c9ddef8d23fa561e18f9da8a994181b38c5",
         "remake-core/assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js": "6f5f5874e28b07d0842113b7e4bbea6014b64661d699479f659682d5db7ff316",
@@ -1791,8 +1762,7 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -1829,8 +1799,7 @@
         "remake-core/assets/platform-kit/tests/storage-typed-recovery.test.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -1868,11 +1837,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -1912,13 +1878,9 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/SaveStore",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/SaveStore/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -1955,11 +1917,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2000,11 +1959,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2038,8 +1994,7 @@
         "remake-core/assets/platform-kit/tools/home_free_slot.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tools/home_free_slot",
-        "remake-core/assets/platform-kit/tools/home_free_slot/index.js"
+        "remake-core/assets/platform-kit/tools/home_free_slot"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2075,13 +2030,9 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js",
-        "remake-core/assets/platform-kit/tools/home_free_slot",
-        "remake-core/assets/platform-kit/tools/home_free_slot/index.js"
+        "remake-core/assets/platform-kit/tools/home_free_slot"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2122,13 +2073,9 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js",
-        "remake-core/assets/platform-kit/tools/home_free_slot",
-        "remake-core/assets/platform-kit/tools/home_free_slot/index.js"
+        "remake-core/assets/platform-kit/tools/home_free_slot"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2253,11 +2200,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js",
         "remake-core/assets/platform-kit/build-templates/bytedance-mini-game/web-adapter",
         "remake-core/assets/platform-kit/build-templates/bytedance-mini-game/web-adapter.js",
         "remake-core/assets/platform-kit/build-templates/bytedance-mini-game/web-adapter/index.js",
@@ -2283,16 +2227,7 @@
         "remake-core/assets/platform-kit/tests/web-adapter",
         "remake-core/assets/platform-kit/tests/web-adapter.js",
         "remake-core/assets/platform-kit/tests/web-adapter/index.js",
-        "remake-core/assets/platform-kit/tools/X",
-        "remake-core/assets/platform-kit/tools/X.js",
-        "remake-core/assets/platform-kit/tools/X/index.js",
-        "remake-core/assets/platform-kit/tools/boot-guard-3x.js",
-        "remake-core/assets/platform-kit/tools/home_free_slot",
-        "remake-core/assets/platform-kit/tools/home_free_slot/index.js",
-        "remake-core/assets/platform-kit/tools/host-shim.js",
-        "remake-core/assets/platform-kit/tools/rewarded-guard.js",
-        "remake-core/assets/platform-kit/tools/storage-guard.js",
-        "remake-core/assets/platform-kit/tools/tiktok-touch-3x.js"
+        "remake-core/assets/platform-kit/tools/home_free_slot"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2303,8 +2238,8 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/SaveStore.js": "d50ecbb869ec987963bb3340427f48a4a3b7d1b02850df1ab033893654bdf934",
         "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
         "remake-core/assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js": "798fb80c45b851b241ca46d81d7193162c59e5468e9f4f581f0f9f0575135121",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
         "remake-core/assets/platform-kit/parts-3x/boot-guard-3x.js": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
         "remake-core/assets/platform-kit/parts/HomeEntrySlots.js": "3cc806fba345a045e2a0cfc904878ae2ef7966147e26d02c1d84f31722f93126",
         "remake-core/assets/platform-kit/parts/storage-guard.js": "dcf66357106de4eaf0dd3f64697537690f8a89f3d83082b806ef67911877b4d8",
@@ -2401,17 +2336,16 @@
         "remake-core/scripts/page_registry.py"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-kit.test.js": "68f0c326e7272f4291455684b522c09d01038de7f6e09cccbc3182ac6ccbf085",
         "remake-core/scripts/game_capabilities.py": "8d7004bedd5e6c8dd44ef84d558ba814f08b1d90b1256dc64b5e435e11168ad2",
-        "remake-core/scripts/page_registry.py": "d76b29d99cf536b609d837f87589af342dc2dd37f91395fdf64b316d109c2247"
+        "remake-core/scripts/page_registry.py": "e06c6424bb910836db52bd8a8cbdd3ef4651560a4c8fbd8030e77800314c2682"
       },
       "environment_inputs": [
         "ADB_KIT_DIR",
@@ -2444,13 +2378,12 @@
         "remake-core/assets/platform-kit/parts/RunSession.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/parts/RunSession.js": "e4badc3e4df6e993e77f31e583b78566430f85f37f2c0a341900ea4528f4da70",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-pages.test.js": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8"
@@ -2483,13 +2416,12 @@
         "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-adopt.test.js": "8e21c0f6782a31c717f4f9fc47576393540de27b85ae17abf995a050c39760e6"
       },
@@ -2713,8 +2645,7 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2744,7 +2675,7 @@
       "absent_inputs": [],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts/ScreenFit.js": "d3051a65b97276abd795c3bca590b200bb98f306cad88b918e10e0f5d21b8643",
+        "remake-core/assets/platform-kit/parts/ScreenFit.js": "214b395860d2de1f470f22a9a22d1beed014883227ed3b80290ec90dd326ddee",
         "remake-core/assets/platform-kit/tests/screen-fit.test.js": "e482f1ccee3d92ef322ae7dc23b00994e1a7db1780bdbb68de1fc46edc420a27"
       },
       "environment_inputs": [],
@@ -2821,8 +2752,7 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -2916,13 +2846,12 @@
         "remake-core/assets/platform-kit/parts/RunSession.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/parts/RunSession.js": "e4badc3e4df6e993e77f31e583b78566430f85f37f2c0a341900ea4528f4da70",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-text-guide.test.js": "e0449d481c0bd7f47aa43415e8e53ef3ef6cb449ebf053a26c02eabf893333ed"
@@ -2958,13 +2887,12 @@
         "remake-core/assets/platform-kit/parts/RunSession.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/parts/RunSession.js": "e4badc3e4df6e993e77f31e583b78566430f85f37f2c0a341900ea4528f4da70",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-ad-feedback.test.js": "fee1b14d7994a8d2dd8958070d4ede3bc78cc0de7a3bf8875e04c038b156a75e"
@@ -2997,13 +2925,12 @@
         "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-row-state.test.js": "88bda7eb38c4dd4708c59ac899ef77657690c53bac2af4e06bd234ef74642664"
       },
@@ -3035,13 +2962,12 @@
         "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/tests/engine-stub-ui",
-        "remake-core/assets/platform-kit/tests/engine-stub-ui/index.js"
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
         "remake-core/assets/platform-kit/tests/game-ui-frame-release.test.js": "b8d496c65b13b624752bc1c5dfb0d94e75211590b6b003ef37e1aec38b2b1332"
       },
@@ -3079,11 +3005,8 @@
       ],
       "absent_inputs": [
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow/index.js",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService"
       ],
       "timeout_ms": 120000,
       "audited_sources": {
@@ -3091,8 +3014,8 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/MissionFlow.js": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
         "remake-core/assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
-        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-        "remake-core/assets/platform-kit/parts/GameUIKit.js": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
         "remake-core/assets/platform-kit/parts/HomeEntrySlots.js": "3cc806fba345a045e2a0cfc904878ae2ef7966147e26d02c1d84f31722f93126",
         "remake-core/assets/platform-kit/tests/home-entries-notice-settle.test.js": "1c6dd5a6378e829a8743fa93cd0e0b2bb2159208ecf05e8b8e421eda52b29e1d"
       },
@@ -3121,8 +3044,7 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 30000,
       "audited_sources": {
@@ -3154,8 +3076,7 @@
         "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js"
       ],
       "absent_inputs": [
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig",
-        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig/index.js"
+        "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig"
       ],
       "timeout_ms": 30000,
       "audited_sources": {
@@ -3168,6 +3089,73 @@
       "uses_python": false,
       "required_inputs": [
         "remake-core/assets/platform-kit/tests/snake-regression/sdk-resolution.test.js"
+      ]
+    },
+    {
+      "id": "game-ui-production-contract.test.js",
+      "script": "tests/game-ui-production-contract.test.js",
+      "context": "default",
+      "inputs": [
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js",
+        "remake-core/assets/platform-kit/parts/RunSession.js",
+        "remake-core/assets/platform-kit/tests/engine-stub-ui.js",
+        "remake-core/assets/platform-kit/tests/game-ui-production-contract.test.js"
+      ],
+      "input_patterns": [
+        "remake-core/assets/platform-kit/tests/game-ui-production-contract.test.js",
+        "remake-core/assets/platform-kit/tests/engine-stub-ui.js",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js",
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts",
+        "remake-core/assets/platform-kit/parts/RunSession.js"
+      ],
+      "absent_inputs": [
+        "remake-core/assets/platform-kit/tests/engine-stub-ui"
+      ],
+      "timeout_ms": 120000,
+      "audited_sources": {
+        "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+        "remake-core/assets/platform-kit/parts/GameUIKit.js": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
+        "remake-core/assets/platform-kit/parts/RunSession.js": "e4badc3e4df6e993e77f31e583b78566430f85f37f2c0a341900ea4528f4da70",
+        "remake-core/assets/platform-kit/tests/engine-stub-ui.js": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390",
+        "remake-core/assets/platform-kit/tests/game-ui-production-contract.test.js": "d11223a647cb2601b898ac8ea75e2544a759664badd9c9d14ffdd81145749c95"
+      },
+      "environment_inputs": [
+        "ADB_KIT_DIR",
+        "GAMEUI_KINDS",
+        "GAMEUI_KIT_3X_FILE",
+        "GAMEUI_KIT_FILE",
+        "RUN_SESSION_FILE"
+      ],
+      "uses_python": false,
+      "required_inputs": [
+        "remake-core/assets/platform-kit/tests/game-ui-production-contract.test.js"
+      ]
+    },
+    {
+      "id": "screen-fit-watch.test.js",
+      "script": "tests/screen-fit-watch.test.js",
+      "context": "default",
+      "inputs": [
+        "remake-core/assets/platform-kit/parts/ScreenFit.js",
+        "remake-core/assets/platform-kit/tests/screen-fit-watch.test.js"
+      ],
+      "input_patterns": [
+        "remake-core/assets/platform-kit/tests/screen-fit-watch.test.js",
+        "remake-core/assets/platform-kit/parts/ScreenFit.js"
+      ],
+      "absent_inputs": [],
+      "timeout_ms": 120000,
+      "audited_sources": {
+        "remake-core/assets/platform-kit/parts/ScreenFit.js": "214b395860d2de1f470f22a9a22d1beed014883227ed3b80290ec90dd326ddee",
+        "remake-core/assets/platform-kit/tests/screen-fit-watch.test.js": "4de795b3bfa7f07cffa2b93b642a673634e934a77a9f595b8d3bee73acc64bfc"
+      },
+      "environment_inputs": [
+        "SCREEN_FIT_FILE"
+      ],
+      "uses_python": false,
+      "required_inputs": [
+        "remake-core/assets/platform-kit/tests/screen-fit-watch.test.js"
       ]
     }
   ]

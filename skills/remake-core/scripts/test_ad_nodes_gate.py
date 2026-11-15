@@ -131,15 +131,24 @@ class SharedGate(unittest.TestCase):
             self.assertIn(text, ' '.join(result['problems']))
         return result
 
-    def test_six_standard_plus_two_extensions_keeps_standard_count_six(self):
+    def test_five_standard_plus_two_extensions_keeps_standard_count_five(self):
         self.fixture.add_node('offline')
         self.fixture.add_node('quest')
         self.persist()
         result = self.check()
         self.assertTrue(result['passed'], result)
-        self.assertEqual(result['ad_nodes']['standard_count'], 6)
+        self.assertEqual(result['ad_nodes']['standard_count'], 5)
         self.assertEqual(result['ad_nodes']['extra_count'], 2)
         self.assertEqual(result['native_binding']['matched_members'], ['game.js'])
+
+    def test_existing_game_that_keeps_real_energy_passes_and_energy_is_not_required(self):
+        self.assertEqual(self.gate.STANDARD, ('end', 'home', 'skin', 'in_run_item', 'trial'))
+        self.assertTrue(self.check()['passed'])                      # five families, no energy
+        self.fixture.add_node('energy')                              # a delivered six-family game
+        self.persist()
+        result = self.check()
+        self.assertTrue(result['passed'], result)
+        self.assertEqual((result['ad_nodes']['standard_count'], result['ad_nodes']['optional_count']), (5, 1))
 
     def test_each_missing_standard_node_is_refused(self):
         original = copy.deepcopy(self.manifest['nodes'])
@@ -147,7 +156,7 @@ class SharedGate(unittest.TestCase):
             with self.subTest(kind=kind):
                 self.manifest['nodes'] = [n for n in original if n['kind'] != kind]
                 self.persist()
-                self.assert_refused('strict standard six')
+                self.assert_refused('required standard advertisement nodes incomplete')
 
     def test_missing_same_bundle_tool_never_uses_an_installed_fallback(self):
         (self.ad_scripts / 'ad_nodes.py').unlink()
@@ -156,7 +165,7 @@ class SharedGate(unittest.TestCase):
     def test_bare_pass_and_fake_count_do_not_replace_nodes(self):
         self.manifest.update(nodes=[], standard_count=6, count=6, passed=True)
         self.persist()
-        self.assert_refused('strict standard six')
+        self.assert_refused('required standard advertisement nodes incomplete')
 
     def test_bad_or_duplicate_json_fails_closed(self):
         self.write('docs/adboost/ad_nodes.json', '{"nodes":[],"nodes":[]}')
@@ -193,7 +202,7 @@ class SharedGate(unittest.TestCase):
         entry = self.manifest['nodes'][0]['entries'][0]
         path = self.project / entry['evidence'][0]['path']
         path.write_text(path.read_text() + '\nsourceChanged();')
-        self.assert_refused('strict standard six')
+        self.assert_refused('required standard advertisement nodes incomplete')
 
     def test_trial_allows_current_wiring_with_old_runtime_but_writer_refuses_it(self):
         self.write('qa/ad-nodes-runtime.json', {'schema': 'old-runtime', 'passed': True})
@@ -201,7 +210,7 @@ class SharedGate(unittest.TestCase):
         self.assertTrue(result['passed'], result)
         self.assertEqual(result['ad_nodes']['standard_count_runtime'], 0)
         self.assertIsNone(result['native_binding'])
-        self.assert_refused('strict standard six')
+        self.assert_refused('required standard advertisement nodes incomplete')
 
     def test_missing_or_failed_lightweight_art_record_refuses(self):
         (self.project / '.tiktok-kit/art-check-record.json').unlink()

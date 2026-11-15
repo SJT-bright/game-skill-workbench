@@ -396,6 +396,11 @@ def write_marker(project, board, kit_version, reason='init'):
     # blocks hand-built popups); kept from the first marker, never added to an older one.
     if (old or {}).get('ui_kit_at_start') is True or (old is None and reason == 'init'):
         data['ui_kit_at_start'] = True
+    # Admit only new full localization work. Existing markers/adopt stay scoped.
+    if 'production_inputs' in (old or {}):
+        data['production_inputs'] = old['production_inputs']
+    elif old is None and reason == 'init' and board == 'localize':
+        data['production_inputs'] = 'required'
     if reason == 'init' or old is None or (old or {}).get('ad_standard') == 'strict_six_standard_families':
         data['ad_standard'] = 'strict_six_standard_families'
     p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

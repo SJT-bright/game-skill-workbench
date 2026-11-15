@@ -378,6 +378,8 @@ class PageRichnessTests(unittest.TestCase):
             for n in nodes:
                 if n.get('name') == 'LinkClaim':
                     n['rect'] = [n['rect'][0] - 0.15, n['rect'][1], n['rect'][2] + 0.3, n['rect'][3] * 3]
+                    if n.get('screen'):
+                        n['screen'] = [n['screen'][0] - 0.15, n['screen'][1], n['screen'][2] + 0.3, n['screen'][3] * 3]
             return nodes
         self._edit_result(root, grow)
         code, report = self.run_audit(root)
@@ -699,10 +701,10 @@ class PageRichnessTests(unittest.TestCase):
         blocker = {'name': 'Dialog', 'order': 6, 'rect': [-0.1, -0.1, 1.2, 1.2], 'comps': {'block_input': True}}
         shade_only = {'name': 'Shade', 'order': 5, 'rect': [0, 0, 1, 1], 'opacity': 0.5, 'comps': {}}
         masks = modal_masks([underlay, shade_only, blocker])
-        self.assertEqual(masks, [blocker])
-        self.assertTrue(fully_occluded(underlay, masks))
+        self.assertEqual(masks, [])  # input blocking alone does not prove visual opacity
+        self.assertFalse(fully_occluded(underlay, masks))
         partly_visible = dict(underlay, rect=[-0.2, 0.4, 0.3, 0.2])
-        self.assertTrue(fully_occluded(partly_visible, masks))  # every actually visible pixel is covered
+        self.assertFalse(fully_occluded(partly_visible, masks))
         partial_mask = dict(blocker, rect=[0.5,0,0.5,1])
         self.assertFalse(fully_occluded(underlay, [partial_mask]))
 

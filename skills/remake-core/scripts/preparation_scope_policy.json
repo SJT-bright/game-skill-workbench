@@ -474,6 +474,10 @@
       "executable": false,
       "sha256": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8"
     },
+    "tests/game-ui-production-contract.test.js": {
+      "executable": false,
+      "sha256": "d11223a647cb2601b898ac8ea75e2544a759664badd9c9d14ffdd81145749c95"
+    },
     "tests/game-ui-row-state.test.js": {
       "executable": false,
       "sha256": "88bda7eb38c4dd4708c59ac899ef77657690c53bac2af4e06bd234ef74642664"
@@ -530,6 +534,26 @@
       "executable": false,
       "sha256": "e2d4808d6819d4eb0c96b428c96c1ef35567b73a8648e032c17630e481f42b34"
     },
+    "tests/real-engine-ui/README.md": {
+      "executable": false,
+      "sha256": "bc9413e2287e256af12f50647f288f14eb87cde9ce454faf5b37d5ba633c8c9c"
+    },
+    "tests/real-engine-ui/fixture.js": {
+      "executable": false,
+      "sha256": "9ada57d335f2768e735afc7dcc7d76a0960aa4a6de70065e7fba614a1667709c"
+    },
+    "tests/real-engine-ui/index.html": {
+      "executable": false,
+      "sha256": "684459885e879596071d1f0db1725a5e3709305db218484e029493c72837251d"
+    },
+    "tests/real-engine-ui/prepare_ui_engine_fixture.py": {
+      "executable": false,
+      "sha256": "8f742e35fccb280188de8e7f8f5c52b6b1a8fcf282f0812c427e1eccc4fd6b05"
+    },
+    "tests/real-engine-ui/test_prepare_ui_engine_fixture.py": {
+      "executable": false,
+      "sha256": "bdec6fddd5f0ed065c392cf5ca87c047a33a579a30b9c4959debdba88c87f866"
+    },
     "tests/refresh-suite-contracts.cjs": {
       "executable": false,
       "sha256": "f3d57121fb95660e3c9ec842bae02808d1f28bb8a86c761354cc8fdda10a6f03"
@@ -561,6 +585,10 @@
     "tests/run-session.test.js": {
       "executable": false,
       "sha256": "11205510dcd9d2bb752e3f79aa10663a1950bd69fb130cb7da3c1095f2096232"
+    },
+    "tests/screen-fit-watch.test.js": {
+      "executable": false,
+      "sha256": "4de795b3bfa7f07cffa2b93b642a673634e934a77a9f595b8d3bee73acc64bfc"
     },
     "tests/screen-fit.test.js": {
       "executable": false,
@@ -668,6 +696,10 @@
       "executable": false,
       "sha256": "4b6ecabb4b210efb9ea305dbadb9a7d5ca5ac0ad89fec957c8219d7a811712b4"
     },
+    "remake-core/scripts/creator_asset_contract.py": {
+      "executable": false,
+      "sha256": "20b3f1c2d5517193bdf68d9e4b17e310e5e659660eaae4ba80ce005ed3a5a474"
+    },
     "remake-core/scripts/input_owner_inventory.py": {
       "executable": false,
       "sha256": "dafea8fc55ae7c83dd8b2c08370ff907970438e04f520fcd9a735d88cf880c56"
@@ -742,7 +774,7 @@
     },
     "remake-core/scripts/tiktok_finalize_steps/kit_sources.py": {
       "executable": false,
-      "sha256": "f458bff424a2e1b7a19cbfac3efac20e5b84b09047d242b7ede8d2425b530ff0"
+      "sha256": "aaf9bcc12400fcec38913ac5e0fdfdee0d8b7c03f26d98cd1351763626eb723d"
     },
     "remake-core/scripts/tiktok_finalize_steps/login.py": {
       "executable": false,
@@ -766,7 +798,7 @@
     },
     "remake-core/scripts/tiktok_finalize_steps/policy.py": {
       "executable": false,
-      "sha256": "bdc70612cc05df4584754792f6a171e6f94d208e98d35e832348c63170a31206"
+      "sha256": "78b15e5b875134af0841296d542ccb3f18af53bc9d51b0f28363ccca24abb655"
     },
     "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py": {
       "executable": false,
@@ -817,92 +849,66 @@
       "sha256": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29"
     }
   },
-  "reviewed_release": "formal11.17.34",
+  "reviewed_release": "11.17.35+production-enforcement.1",
   "schema": "preparation-production-scope.v1",
   "step_readers": {
     "@common": [
+      "remake-core/scripts/cocos1_compat.py",
       "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
-      "remake-core/scripts/cocos1_compat.py"
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
     ],
     "adapter": [
       "remake-core/scripts/package_gates/__init__.py",
       "remake-core/scripts/package_gates/adapter_fix.py",
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/adapter.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/adapter.py"
     ],
     "appid": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/appid.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/appid.py"
     ],
     "art_static": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/art_static.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py"
     ],
     "bg_cover": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
       "remake-core/scripts/tiktok_finalize_steps/art_static.py",
-      "remake-core/scripts/tiktok_finalize_steps/bg_cover.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/bg_cover.py"
     ],
     "build_templates": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/build_templates.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/build_templates.py"
     ],
     "capsule_auto": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/creator_asset_contract.py",
       "remake-core/scripts/tiktok_finalize_steps/art_static.py",
       "remake-core/scripts/tiktok_finalize_steps/capsule_auto.py",
-      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py"
     ],
     "debug_leftover_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py"
     ],
     "frame_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/frame_scan.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/frame_scan.py"
     ],
     "game_name_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py"
     ],
     "home_entry_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
       "remake-core/scripts/tiktok_finalize_steps/home_entry_scan.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py"
     ],
     "images": [
       "cocos-game-check/package-check/scripts/check_guard.py",
       "remake-core/scripts/audit_image_clarity.py",
       "remake-core/scripts/clarity_policy.py",
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/images.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/images.py"
     ],
     "kit_sources": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/creator_asset_contract.py",
+      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py"
     ],
     "login": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/login.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/login.py"
     ],
     "orientation": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/orientation.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/orientation.py"
     ],
     "physics_clock": [
       "remake-core/scripts/bundle_module_inputs.py",
@@ -912,91 +918,55 @@
       "remake-core/scripts/logic_case_ledger.py",
       "remake-core/scripts/logic_check.py",
       "remake-core/scripts/logic_regressions.py",
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/physics_clock.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/physics_clock.py"
     ],
     "plugin3x_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py"
     ],
     "png": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/png.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+      "remake-core/scripts/tiktok_finalize_steps/png.py"
     ],
     "reward_order_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py"
     ],
     "rewarded": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/rewarded.py"
     ],
-    "run_parts": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
-    ],
+    "run_parts": [],
     "save_read_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/save_read_scan.py"
     ],
     "settings": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
       "remake-core/scripts/tiktok_finalize_steps/appid.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/settings.py"
     ],
     "skin_preview_scan": [
       "remake-core/scripts/check_skin_preview.py",
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/skin_preview_scan.py"
     ],
     "slot_overlap_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/slot_overlap_scan.py"
     ],
     "startup": [
       "remake-core/scripts/package_gates/__init__.py",
       "remake-core/scripts/package_gates/adapter_fix.py",
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
       "remake-core/scripts/tiktok_finalize_steps/build_templates.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/startup.py"
     ],
     "storage": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/storage.py"
     ],
     "structure": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/structure.py"
     ],
     "touch": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/touch.py"
     ],
-    "ui_kit": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py"
-    ],
+    "ui_kit": [],
     "ui_kit_scan": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py"
     ],
     "upload_compat": [
-      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
-      "remake-core/scripts/tiktok_finalize_steps/policy.py",
       "remake-core/scripts/tiktok_finalize_steps/upload_compat.py"
     ]
   }

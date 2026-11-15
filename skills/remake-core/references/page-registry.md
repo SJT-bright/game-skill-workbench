@@ -11,6 +11,10 @@
 - `ui_dump.js` 的每份 dump 带回 `pages`（运行时真打开过的页面）。`page_registry.py merge-dumps --project <工程> --dumps docs/test` 把它们标成 `seen_at_runtime`，并列出运行时打开了、pages.json 里却没有的页面（要补上再 make）。 R4J2：`ad-boost:` 开头的板块页（AdBoostKit 用 `UI.recordPage` 记的）pages.json 里没有时这一版只警告，提示跑 ad-boost 的 `record_ad_entries.py` 补进去；别的没列的页照旧失败。页面 id 只允许字母、数字、`_ . -`，唯一能带冒号的是 `ad-boost:<板块名>`（R4L4），所以 ad-boost 板块页可以直接写进 pages.json。
 - 改了页面就改 pages.json，再跑 `make`。`page_registry.py check` 发现生成文件被手改或过期就失败。
 
+原生旧页面没有 PageRegistry 调用时，`merge-dumps` 会消费已经存在的正式封存采集证明，不启动浏览器：稳定 screen ID、purpose、唯一可见的精确 `node` 和实际绘制内容均须对应 pages.json。源码里存在、隐藏同名节点、空壳节点或未核准的普通 JSON 不会因此得到 `seen_at_runtime`。封存证据不能核准时保留未见状态并报告原因；后面的双视口覆盖仍分别核对。
+
+不可达页面和未显示原文字的范围在 pages.json 顶层写 `not_reachable: [{prefab, why}]`、`text_not_shown: [{text, why}]`，`make` 校验具体理由并原样生成到 screens.json，页面覆盖工具读取同一份范围。不要手改生成文件或另外建立不被消费者读取的豁免表；这些理由不产生运行通过记录。
+
 ## 格式（schema pages.v1）
 
 ```json

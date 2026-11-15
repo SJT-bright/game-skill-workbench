@@ -24,6 +24,7 @@ if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
 import audit_package_estimate as estimate
 import first_screen
 import startup_budget
+from creator_asset_contract import validate_bundle_names
 from preparation_cache import project_lock
 
 SCHEMA = 'resource-package-prepare.v1'
@@ -74,7 +75,8 @@ def tools():
              'audit_package_estimate.py','startup_budget.py','scan_runtime_resources.cjs',
              'parse_package_requires.cjs','preparation_cache.py','vendor/acorn.cjs',
              'tiktok_finalize_steps/__init__.py','tiktok_finalize_steps/startup.py',
-             'upload_size_gate.py','package_gates/__init__.py','package_gates/startup.py','project_qa.py')
+             'upload_size_gate.py','package_gates/__init__.py','package_gates/startup.py','project_qa.py',
+             'creator_asset_contract.py')
     out={n:sha((HERE/n).read_bytes()) for n in names}
     from tiktok_finalize_steps import load_manifest
     manifest=load_manifest()
@@ -472,6 +474,7 @@ def prepare(project, plan=None, board='localize', *, _read_only=False):
             version,major=estimate.engine_major(project)
             record=project/HOME/'prepared.json';old=read(record) if record.is_file() else None
             selected=_owner_plan(project,plan,old);fingerprints=tools();current=inputs(project)
+            validate_bundle_names(project, selected['bundles'])
             if old and old.get('inputs')==current and old.get('tools')==fingerprints and old.get('requested_plan')==selected and old.get('adapter_identity')==_adapter_identity(project):
                 return {**old,'reused':True,'elapsed_seconds':time.monotonic()-started}
             if major=='3':return _prepare3(project,selected,old,fingerprints,current,started,read_only=_read_only)

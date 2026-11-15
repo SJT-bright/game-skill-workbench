@@ -428,3 +428,14 @@ UI.toast('Come back tomorrow');
 - 3.x 游戏的 `assets/tiktok-platform/PlatformConfig.plugin.js` 由 `tiktok_finalize.py` 的 `plugin3x_scan` 步骤用 2.4 同一个 `check_kit_project.foreign_config_findings` 查：共用测试 App（App ID 7683427172773644296 和它的 3 个广告位，Saul 10-29）放行；不是共用测试 App、也没写进本工程 `docs/platform/platform_ids.json`、又在别的游戏里出现的 appId / clientKey / 广告位报 `K_platform_ids_foreign`（新重塑拦、英化警告、老游戏只记录）；gameId 重复和没记录来源的 id 报 `K_W_platform_ids`（警告）。
 - 别的游戏从哪里找：`options['peers']` 或环境变量 `TIKTOK_KIT_PEERS`（多个文件夹用系统路径分隔符隔开）；不给就只查共用测试 App 和本工程记录。工程自己的 `build/`、`library/`、`temp/` 下的副本不算别的游戏（2.4 的 `--peers` 同样）。
 - 测试：`python3 remake-core/scripts/test_platform_ids_3x.py`（旧 plugin3x_scan 2 条失败）。
+
+
+### UI 生产入口的固定输入与更新（GameUIKit 1.1.9）
+
+独立图片及状态换图使用 `var art = UI.picture(parent, {frame, w, h, x, y})`，再 `art.setFrame(nextFrame)`；创建时至少给一个正显示尺寸，换图按同一显示槽等比适配，源像素不决定显示尺寸。背景铺满继续用 `ScreenFit.cover`。正文继续用 `UI.text` 的 shrink/clamp/resize，构造器在添加 Label 后恢复声明框；`set(text)` 保持宽度，resize 只允许高度随内容变化。
+
+按钮 `setEnabled` 和 `setBusy` 保留原图颜色及原始透明度，默认只乘透明度反馈，可用 `disabledOpacity` / `pressOpacity` 指定 0～1 倍率；busy 期间不执行点击，过期的按压恢复不能覆盖新状态。业务禁用与 busy 分开设置，恢复不强行将素材染白。结果页 API 槽仍叫 `claim`，产出节点 `LinkClaim`、职责 `result_claim_link`，视觉文字使用小号整词图片；普通领奖按钮维持完整按钮角色。`claimTextWidth/claimTextHeight` 可声明该文字的实际预算，不能用本身带底板的大按钮冒充文字链。
+
+`UI.fontFrames` 保留字形的实际源字体 UUID 和字符码；运行采集按实际 FNT 与字形矩形追源，无 UUID 不能凭新帧名宣称已核对源。`ScreenFit.cover({watch:true})` 在视口或父布局变化后合并到绘制前刷新，返回 `refresh()/off()`；没有额外常驻帧循环，节点销毁或场景离开会释放本 watcher。
+
+定点验证：`node tests/game-ui-production-contract.test.js`、`node tests/screen-fit-watch.test.js`；这些 Node 适配器样本不代表真机验收。此次维护另用真实 Creator 2.4.15 engine bundle 的隔离浏览器 fixture 核对组件行为，3.x 仍须区分生成源码/Node适配器验证与实际引擎、真机边界。

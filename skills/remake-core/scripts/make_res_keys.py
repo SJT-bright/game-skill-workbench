@@ -35,6 +35,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from creator_asset_contract import module_meta, validate_bundle_names
 
 SCHEMA = 'res_keys.v1'
 IMAGE = {'.png', '.jpg', '.jpeg', '.webp'}
@@ -90,6 +91,7 @@ def detect_engine(project):
 
 
 def bundle_roots(assets):
+    validate_bundle_names(assets.parent)
     roots = {}
     res = assets / 'resources'
     if res.is_dir():
@@ -294,12 +296,20 @@ def main(argv=None):
     text = render(table)
     current = out.read_text(encoding='utf-8') if out.is_file() else None
     stale = current != text
+    meta_path = out.with_name(out.name + '.meta')
+    old_meta = meta_path.read_bytes() if meta_path.is_file() else None
+    # This producer owns its generated module; never alter unrelated game plugins.
+    generated_meta = module_meta(old_meta, out.relative_to(project).as_posix()) if engine == 2 and out.is_relative_to(project / 'assets') else old_meta
+    meta_stale = generated_meta != old_meta
     if not a.check and stale:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_bytes(text.encode('utf-8'))
+    if not a.check and meta_stale:
+        meta_path.parent.mkdir(parents=True, exist_ok=True)
+        meta_path.write_bytes(generated_meta)
     ids = {e['id'] for e in table['entries']}
     dangling, raw = scan_code(project, out, ids)
-    failed = bool(dangling) or (a.check and stale) or (a.strict and bool(raw))
+    failed = bool(dangling) or (a.check and (stale or meta_stale)) or (a.strict and bool(raw))
     try:
         out_name = out.relative_to(project).as_posix()
     except ValueError:
@@ -307,13 +317,16 @@ def main(argv=None):
     report = {'schema': SCHEMA, 'engine': engine, 'out': out_name,
               'keys': len(table['entries']), 'bundles': table['bundles'], 'stale': stale,
               'home_keys': sum(1 for e in table['entries'] if e.get('group') == 'home') if table.get('groups') else None,
-              'written': (not a.check) and stale, 'dangling': dangling, 'raw_loads': raw,
+              'written': (not a.check) and stale, 'metadata_stale': meta_stale,
+              'metadata_written': (not a.check) and meta_stale, 'dangling': dangling, 'raw_loads': raw,
               'skipped': table['skipped'], 'warnings': table['warnings'], 'ok': not failed}
     if a.json:
         print(json.dumps(report, ensure_ascii=False, indent=1))
     else:
         print('ResKeys: %d keys in %s (%s)' % (report['keys'], report['out'],
               ('stale, run without --check' if a.check else 'written') if stale else 'up to date'))
+        if meta_stale:
+            print('  metadata: ' + ('stale, run without --check' if a.check else 'normal-module import flags written'))
         for d in dangling:
             print('  DANGLING %s:%d ResKeys.%s is not in the table (file deleted or renamed?)' % (d['file'], d['line'], d['id']))
         for r in raw:

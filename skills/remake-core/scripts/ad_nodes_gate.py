@@ -1,4 +1,8 @@
-"""Read-only six-standard-family gate shared by formal trials and package writers.
+"""Read-only standard-family gate shared by formal trials and package writers.
+
+Five families are required (end, home, skin, in_run_item, trial). Energy became optional on
+2026-11-14: a game that has it keeps it and its wiring is still validated by the ad-node audit,
+but it is not counted. MODEL and the ad_standard_six gate name are retained record identifiers.
 
 The caller decides whether this production policy applies. There is no bypass
 flag here. A formal trial needs current wiring and scoped UI evidence; a writer
@@ -15,7 +19,7 @@ from pathlib import Path, PurePosixPath
 
 HERE = Path(__file__).resolve().parent
 SKILLS = HERE.parents[1]
-STANDARD = ('end', 'home', 'skin', 'energy', 'in_run_item', 'trial')
+STANDARD = ('end', 'home', 'skin', 'in_run_item', 'trial')
 MODEL = 'strict_six_standard_families'
 ROLE_ALIASES = {'result_double': 'double', 'wheel': 'spin', 'skin_unlock': 'skin',
                 'energy_refill': 'energy', 'item_refill': 'booster_refill'}
@@ -289,9 +293,9 @@ def check_project(project, native=None, files=None, stage='writer', art_stage_ch
         report = module.audit_project(project, manifest=manifest, **kwargs)
         result['ad_nodes'] = report
         if (report.get('counting_model') != MODEL or report.get('required_standard_kinds') != list(STANDARD)
-                or report.get('standard_count') != 6 or report.get('count') != 6
+                or report.get('standard_count') != len(STANDARD) or report.get('count') != len(STANDARD)
                 or report.get('missing_mandatory') or report.get('passed') is not True):
-            raise ValueError('strict standard six advertisement nodes incomplete: ' + ', '.join(report.get('missing_mandatory', [])))
+            raise ValueError('required standard advertisement nodes incomplete: ' + ', '.join(report.get('missing_mandatory', [])))
         if stage == 'writer':
             runtime = _json(_local(project, module.RUNTIME_PATH))
             result['native_binding'] = _native_binding(project, runtime, native, files)

@@ -141,6 +141,7 @@ function makeGameUIAdapter3x(cc) {
     },
     blockInput: function (n) { n.addComponent(cc.BlockInputEvents); },
     onTap: function (n, fn) { n.on(cc.Node.EventType.TOUCH_END, fn); },
+    getOpacity: function (n) { return op(n).opacity; },
     setOpacity: function (n, v) { tw(n, 'opacity', null); op(n).opacity = v; },
     tweenOpacity: function (n, to, ms, cb) {
       tw(n, 'opacity', cc.tween(op(n)).to(ms / 1000, {opacity: to}).call(function () { if (cb) cb(); }).start());
@@ -218,6 +219,7 @@ function makeGameUIAdapter3x(cc) {
     textLabel: function (n, o) {
       var l = n.addComponent(cc.Label), HA = cc.Label.HorizontalAlign;
       l.overflow = cc.Label.Overflow[o.overflow];
+      if (o.width > 0) ui(n).setContentSize(o.width, o.height);
       l.enableWrapText = !!o.wrap;
       l.horizontalAlign = HA[o.align] !== undefined ? HA[o.align] : HA.CENTER;
       l.verticalAlign = cc.Label.VerticalAlign.CENTER;

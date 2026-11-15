@@ -242,6 +242,7 @@ BITMAP_FONT_NAME = re.compile(r'fnt|bitmap|bmfont|atlas|digit|num', re.I)
 MIN_BAKED_TEXT_BUTTON = 0.012   # a btn_<words> picture this big counts as a text button (icons are smaller)
 GENERATED_TEXT_SOURCES = {}
 SPRITE_ART_SOURCES = {}
+GLYPH_ART_SOURCES = {}
 RUNTIME_TEXT = []     # docs/text/runtime-text.json: labels that really change at run time (rival names ...), path globs
 CAPTION_FRAMES = []    # Explicit whole-button word artworks; style membership alone does not imply a caption.
 BUTTON_SET = None     # docs/art/button-set.json: frame-name globs of the one button set drawn for this game
@@ -325,16 +326,46 @@ def contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
+def generated_source(n):
+    """Resolve dynamic glyphs by actual font UUID/code/rect, not a guessed frame name."""
+    sprite = n.get('comps', {}).get('sprite', {})
+    if 'source_font_uuid' in sprite:
+        source = GLYPH_ART_SOURCES.get((sprite.get('source_font_uuid'),sprite.get('source_glyph_code')))
+        if (not source or sprite.get('source_glyph_rect') != source['rect']
+                or sprite.get('frame_size') != source['rect'][2:]):
+            return None
+        return source
+    return GENERATED_TEXT_SOURCES.get(sprite.get('frame'))
+
+
+def load_glyph_sources(project):
+    """Index actual BMFont page rectangles for GameUIKit.fontFrames observations."""
+    from audit_bitmap_letter_fonts import glyphs, uuid_of
+    out = {}
+    assets = Path(project)/'assets'
+    for font in assets.rglob('*.fnt') if assets.is_dir() else []:
+        uuid = uuid_of(font)
+        if not uuid:
+            continue
+        pages = dict((int(i), name) for i,name in re.findall(r'page\s+id=["\']?(\d+)["\']?\s+file=["\']([^"\']+)',font.read_text(encoding='utf-8',errors='replace')))
+        for char,(page,x,y,w,h) in glyphs(font).items():
+            source = (font.parent/pages[page]).resolve() if page in pages else None
+            if source is not None and source.is_file() and source.is_relative_to(assets.resolve()) and w > 0 and h > 0:
+                key=(uuid,ord(char))
+                out[key] = None if key in out else {'path':source,'rect':[x,y,w,h]}
+    return out
+
+
 def generated_text_contrast(img, group, nodes, need, image_module):
     """Use the actual source alpha/fill masks, so the blue gaps between glyphs are not classified as text ink."""
     if group.get('comps',{}).get('image_text',{}).get('complete'):
         pieces=[n for n in nodes if node_under(n,group) and n is not group and 'sprite' in n['comps']]
-    elif group.get('comps',{}).get('sprite',{}).get('frame') in GENERATED_TEXT_SOURCES:pieces=[group]
+    elif generated_source(group):pieces=[group]
     else:return None
     if not pieces:return None
     ratios=[]
     for n in pieces:
-        source=GENERATED_TEXT_SOURCES.get(n['comps']['sprite'].get('frame'))
+        source=generated_source(n)
         if not source or abs(n.get('angle',0))>1:return None
         r=n.get('unclipped_screen') or n.get('screen') or n['rect'];W,H=img.size
         box=(round(r[0]*W),round(r[1]*H),round((r[0]+r[2])*W),round((r[1]+r[3])*H))
@@ -364,6 +395,41 @@ def generated_text_contrast(img, group, nodes, need, image_module):
         elif against>=need:ratios.append(against)
         else:ratios.append(max(pair if bg is None else 0,against))
     return min(ratios)
+
+
+def font_css_size(d,n,lab=None):
+    """Cocos design units are not phone CSS pixels (do not multiply DPR)."""
+    lab=lab or n.get('comps',{}).get('label') or {}
+    rect=n.get('unclipped_screen') or n.get('screen') or n.get('rect')
+    canvas=d.get('canvas_css') or []
+    height=lab.get('height')
+    size=lab.get('actualFontSize') or lab.get('fontSize')
+    if (not rect or len(rect)!=4 or len(canvas)!=4 or not isinstance(height,(int,float)) or height<=0
+            or not isinstance(size,(int,float)) or size<=0 or canvas[3]<=0):
+        return None
+    return round(size*rect[3]*canvas[3]/height,6)
+
+
+def produced_body_text(n, nodes, buttons):
+    """Short complete instructions stay text; fixed titles/actions never do.
+
+    Producer role is necessary but insufficient: require a real TTF label,
+    sentence content and no interactive/title ancestry. Readability and dark
+    fill checks below still apply unchanged.
+    """
+    lab = n.get('comps', {}).get('label')
+    value = text(n).strip()
+    if (n.get('ui_role_source') != 'GameUIKit' or n.get('ui_role') != 'body_text'
+            or not isinstance(lab, dict) or lab.get('font_kind') != 'ttf'
+            or lab.get('system_font') or not lab.get('font') or bitmap_font(lab)
+            or len(re.findall(r'[A-Za-z]+',value)) < 4 or not re.search(r'[.!?]$',value)
+            or re.search(r'(?:^|/)(?:Title|Heading|Caption)(?:/|$)',n.get('path',''),re.I)
+            or any(node_under(n,b) for b in buttons)):
+        return False
+    return not any(node_under(n,parent) and parent is not n and
+                   (parent.get('ui_role') in ('title','fixed_word','action') or
+                    re.search(r'(?:^|/)(?:Title|Heading|Caption)(?:/|$)',parent.get('path',''),re.I))
+                   for parent in nodes)
 
 
 def text_problems(d, nodes, buttons, image_module):
@@ -409,7 +475,7 @@ def text_problems(d, nodes, buttons, image_module):
         r = n.get('screen') or n['rect']
         h_design = lab.get('height') or 0
         size = (lab.get('actualFontSize') or lab.get('fontSize') or 0)
-        css = size * (r[3] * ch / h_design) if h_design else None          # font size in CSS px on the simulated phone
+        css = font_css_size(d,n,lab)
         word = text(n)[:30]
         if css is not None and round(css, 1) < 11:
             out.append('small_text: "%s" is %.0f px on the phone (needs >= 11 px)' % (word, css))
@@ -438,10 +504,11 @@ def text_problems(d, nodes, buttons, image_module):
         outline = lab.get('outline') if isinstance(lab.get('outline'), dict) else ({} if lab.get('outline') else None)
         styled = bool(outline) or lab.get('shadow') or lab.get('bold')
         in_button = any(node_under(n, b) for b in buttons)
-        if not styled and len(text(n)) <= DENSE_TEXT:          # long paragraphs (rules, notices) may be a thinner font
+        body = produced_body_text(n,nodes,buttons)
+        if not styled and len(text(n)) <= DENSE_TEXT and not body:          # long paragraphs (rules, notices) may be a thinner font
             out.append('plain_text: "%s" is thin font text (no outline, shadow or bold): make it picture text with the art, or the '
                        'game display font with an outline/shadow in the theme colours' % word)
-        if WORDS.search(text(n)) and len(text(n)) <= 40 and not n.get('_tutorial_body') and not runtime_text(n['path']):
+        if WORDS.search(text(n)) and len(text(n)) <= 40 and not n.get('_tutorial_body') and not body and not runtime_text(n['path']):
             out.append('font_text: "%s" (%s) is drawn with a font; fixed words (titles, buttons, labels, item and mission names, '
                        'COINS/Price ...) are picture text generated with GPT in the game\'s style, frame txt_<words> '
                        '(only text that really changes at run time goes in docs/text/runtime-text.json)' % (word, n['path']))
@@ -452,7 +519,7 @@ def text_problems(d, nodes, buttons, image_module):
         if isinstance(col, list) and len(col) == 3 and dark_green(col):
             out.append('dark_green_text: "%s" is dark green/teal %s: banned (user 2026-10-22); picture text, or a bright display '
                        'font with an outline' % (word, tuple(col)))
-        heavy = lab.get('bold') or outline is not None or lab.get('shadow') or (css or 0) >= 16 or size >= 24
+        heavy = lab.get('bold') or outline is not None or lab.get('shadow') or (css >= 16 if css is not None else size >= 24)
         if isinstance(col, list) and len(col) == 3 and lstar(col) < DARK_BOLD_LSTAR and heavy and not dark_green(col):
             out.append('dark_bold_text: "%s" is dark bold text %s (L* %.0f): permanently banned (user 2026-10-23, any hue, HUD '
                        'too); fill it white/cream/light yellow or a light theme colour with a darker outline, or picture text '
@@ -790,6 +857,10 @@ def text(n):
 
 def is_claim_link(b, nodes=()):
     if b.get('_claim_link') is True:
+        return True
+    if (b.get('ui_role') == 'result_claim_link' and b.get('ui_role_source') == 'GameUIKit'
+            and b.get('comps', {}).get('button', {}).get('enabled', True)
+            and 'button' in b.get('comps', {})):
         return True
     def named(n):
         frame = str(n.get('comps', {}).get('sprite', {}).get('frame', ''))
@@ -1807,7 +1878,11 @@ def related(a, b):
 
 
 def fully_occluded(node, masks):
-    """A higher, full-screen input-blocking modal makes its lower scene inactive for visual audits."""
+    """Only proven opaque surfaces can completely hide a lower visual node.
+
+    Input blocking is independent of visual coverage. In particular, a dimmer
+    must not turn still-visible underlay into an automatic visual exemption.
+    """
     r=node['rect'];x=max(0,r[0]);y=max(0,r[1]);visible=[x,y,max(0,min(1,r[0]+r[2])-x),max(0,min(1,r[1]+r[3])-y)]
     size = area(visible)
     if size <= 0:
@@ -1817,9 +1892,31 @@ def fully_occluded(node, masks):
 
 
 def modal_masks(nodes):
-    """Full-screen input blockers are the only nodes that can hide a lower screen from visual audits.
-    No dim-opacity limit (Saul 10-31): how dark a popup dim is follows the game's style and is judged by eye."""
-    return [n for n in nodes if area(n['rect']) >= 0.85 and n.get('comps', {}).get('block_input')]
+    """Conservative full-screen occluders with a genuinely opaque source Sprite.
+
+    Unknown Graphics geometry, transparent texture holes, tint alpha and partial
+    visibility retain the underlay. Opacity is not an art-style threshold.
+    """
+    out = []
+    for n in nodes:
+        sprite = n.get('comps', {}).get('sprite', {})
+        source = SPRITE_ART_SOURCES.get(sprite.get('frame'))
+        if (area(n['rect']) < 0.85 or not n.get('comps', {}).get('block_input')
+                or n.get('opacity', 1) < 0.999 or sprite.get('alpha', 255) < 255
+                or abs(n.get('angle', 0)) > 0.01 or sprite.get('filled') is not False or not source):
+            continue
+        try:
+            from PIL import Image
+            with Image.open(source['path']) as image:
+                image = image.convert('RGBA')
+                # The full original must be opaque. A tight opaque trimmed frame
+                # inside an originally transparent canvas cannot hide the node's
+                # whole rectangle when trim is disabled.
+                if image.width > 0 and image.height > 0 and image.getchannel('A').getextrema() == (255,255):
+                    out.append(n)
+        except (OSError, ValueError, KeyError):
+            pass
+    return out
 
 
 # --- clear_color_band (art patch v3, 2026-10-31: v2's band check merged into v7.8 after a 725-dump comparison) -----------
@@ -2659,7 +2756,7 @@ def generated_face_ink_class(img, n, image_module):
     doing so selects only the coloured outline. No source colour is used as evidence
     of the rendered colour. Unknown/rotated assets keep the existing fallback.
     """
-    source = GENERATED_TEXT_SOURCES.get(n.get('comps', {}).get('sprite', {}).get('frame'))
+    source = generated_source(n)
     if not source or image_module is None or abs(n.get('angle', 0)) > 1:
         return None
     r = n.get('unclipped_screen') or n.get('screen') or n['rect']
@@ -2733,29 +2830,49 @@ def ink_class(img, r):
     return max(count, key=count.get)
 
 
-def colour_problems(d, nodes, image_module):
+def colour_samples(d, nodes, image_module):
+    """Return only glyph-colour measurements, never coloured button plates."""
+    shot = screenshot_of(d) if d.get('_file') else None
+    img = page_pixels(image_module,shot) if image_module is not None and shot is not None and shot.is_file() else None
+    groups,settings_text,unknown = {},[],[]
+    for n in nodes:
+        lab = n['comps'].get('label') or n['comps'].get('richtext')
+        value = text(n) or baked(n)
+        if not value or (lab and len(value) > DENSE_TEXT):
+            continue
+        cls = None
+        col = (n['comps'].get('label') or {}).get('color')
+        if n['comps'].get('label') and not bitmap_font(n['comps']['label']) and isinstance(col,list) and len(col)==3:
+            cls = hue_class(col)
+        elif img is not None:
+            if n['comps'].get('image_text',{}).get('complete'):
+                pieces=[child for child in nodes if child is not n and node_under(child,n) and 'sprite' in child['comps']]
+                classes=[generated_face_ink_class(img,child,image_module) for child in pieces]
+                if classes and all(c is not None for c in classes):
+                    cls=max(set(classes),key=classes.count)
+            elif baked(n):
+                # A baked plate has no reliable glyph mask in the legacy format.
+                # White highlights, cream rims and backgrounds are not text ink.
+                cls=None
+            else:
+                cls=generated_face_ink_class(img,n,image_module) or ink_class(img,n.get('screen') or n['rect'])
+        if cls is None:
+            unknown.append(n['path'])
+        else:
+            groups.setdefault(n['name'],(cls,value[:16]))
+            if BOARD=='localize' and d.get('purpose')=='settings_sound':
+                settings_text.append((n['name'],n.get('screen') or n['rect']))
+    return groups,settings_text,unknown
+
+
+def colour_problems(d, nodes, image_module, samples=None):
     """User 2026-10-23 bad examples: the "Hazel's Shelf Scramble" home where the title, PLAY and the numbers 100 / 3 are all
     the same teal, and the "Your Progress" popup where every word is the same orange-yellow with a brown outline. Titles,
     buttons, numbers and labels share one style family but differ in colour (and size/shape). Text items are grouped by
     their node name (a list of rank rows is one item); with >= 3 items all in one colour family the page fails."""
-    shot = screenshot_of(d) if d.get('_file') else None
-    img = page_pixels(image_module, shot) if image_module is not None and shot is not None and shot.is_file() else None
-    groups = {}
-    settings_text = []
-    for n in nodes:
-        lab = n['comps'].get('label') or n['comps'].get('richtext')
-        if not text(n) or (lab and len(text(n)) > DENSE_TEXT):
-            continue
-        cls = None
-        col = (n['comps'].get('label') or {}).get('color')
-        if n['comps'].get('label') and not bitmap_font(n['comps']['label']) and isinstance(col, list) and len(col) == 3:
-            cls = hue_class(col)
-        elif img is not None:
-            cls = generated_face_ink_class(img,n,image_module) or ink_class(img, n.get('screen') or n['rect'])
-        if cls is not None:
-            groups.setdefault(n['name'], (cls, text(n)[:16]))
-            if BOARD == 'localize' and d.get('purpose') == 'settings_sound':
-                settings_text.append((n['name'], n.get('screen') or n['rect']))
+    groups,settings_text,unknown=samples if samples is not None else colour_samples(d,nodes,image_module)
+    if unknown:
+        return []  # Preserve an explicit visual review below, not a false 'all words are the same colour'.
     classes = {c for c, _ in groups.values()}
     if len(groups) >= 3 and len(classes) == 1:
         titles = [rect for name, rect in settings_text if re.search(r'title|heading', name, re.I)]
@@ -2947,7 +3064,7 @@ def canvas_text_code(proj):
     return out
 
 
-def result_claim_problems(buttons, sub_names):
+def result_claim_problems(buttons, sub_names, nodes=()):
     """Remake result page (user 2026-10-27): the x2 ad button is the biggest control; one plain line of generated
     clickable text (LinkClaim / link_claim*) sits under it and claims the base amount."""
     doubles = [b for b in buttons if DOUBLE_BUTTON.search(sub_names(b)) and not is_claim_link(b)]
@@ -2962,9 +3079,18 @@ def result_claim_problems(buttons, sub_names):
         out.append('result_claim_link: no one-line "Claim" text under the x2 button: add generated clickable picture text '
                    '(node LinkClaim, frame link_claim*) that claims the base amount (user 2026-10-27)')
         return out
-    dr = double['rect']
+    def drawn_rect(button):
+        drawn=[n.get('screen') or n['rect'] for n in nodes if node_under(n,button) and
+               (text(n) or 'sprite' in n.get('comps',{}) or 'graphics' in n.get('comps',{}))]
+        if not drawn:
+            return button.get('screen') or button['rect']
+        x=min(r[0] for r in drawn);y=min(r[1] for r in drawn)
+        return [x,y,max(r[0]+r[2] for r in drawn)-x,max(r[1]+r[3] for r in drawn)-y]
+    dr = drawn_rect(double)
     for link in links:
-        r = link['rect']
+        r = drawn_rect(link)
+        if any(node_under(n,link) and baked(n) and not text(n) for n in nodes):
+            out.append('result_claim_link: %s uses a whole button plate; the free Claim is generated one-line picture text' % link['path'])
         if r[1] + r[3] / 2 <= dr[1] + dr[3]:
             out.append('result_claim_link: %s must sit under the x2 button %s (user 2026-10-27)' % (link['path'], double['path']))
         if area(r) > 0.5 * area(dr):
@@ -3162,9 +3288,13 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     problems += assembly['problems']
     pix['sprite_assembly'] = assembly
     visual_reviews = pix['visual_reviews'] = []
+    measured_colours=colour_samples(d,nodes,image_module)
+    _,_,unknown_colours=measured_colours
+    if unknown_colours:
+        visual_reviews.append('text_colour_review: glyph pixels could not be isolated for %s; inspect the same capture; plate/rim colours were not counted as text' % ', '.join(unknown_colours[:8]))
     problems += text_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
     problems += one_piece_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)])
-    problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module) + low_res_problems(nodes, full)
+    problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module,measured_colours) + low_res_problems(nodes, full)
     problems += overlap_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)], full)
     # v7.8 U11: buttons over any picture frame, text on a busy background without a plate, one text drawn twice
     blockers = [n for n in all_full if n.get('comps', {}).get('block_input')]
@@ -3298,7 +3428,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
                 problems.append('result_double: no "watch an ad, x2 reward" button: every level end (endless: every run end) offers '
                                 'it (user 2026-10-23, both boards; AdRewards.resultReward(...).doubled), name it BtnDouble / btn_x2_*')
             elif not claimed_status:
-                problems += result_claim_problems(buttons, sub_names)
+                problems += result_claim_problems(buttons, sub_names,nodes)
     button_share = coverage([b['rect'] for b in buttons])
     problems += video_button_problems(purpose, content, nodes)
     if purpose in FUNCTION_PAGES and button_share > MAX_BUTTON_SHARE:
@@ -3396,7 +3526,9 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     for n in content:
         lab = n['comps'].get('label') or {}
         col = lab.get('color')
-        if text(n) and isinstance(col, list) and len(col) == 3 and lstar(col) < DARK_LSTAR and ((lab.get('fontSize') or 0) >= 28 or lab.get('bold')):
+        css=font_css_size(d,n,lab)
+        heavy=lab.get('bold') or lab.get('outline') or lab.get('shadow') or (css>=16 if css is not None else (lab.get('fontSize') or 0)>=28)
+        if text(n) and isinstance(col, list) and len(col) == 3 and lstar(col) < DARK_LSTAR and heavy:
             problems.append('dark_text: "%s" is dark thick text (L* %.0f); use white/light or a saturated theme colour, medium weight'
                             % (text(n)[:30], lstar(col)))
     for b in buttons:
@@ -3559,7 +3691,7 @@ def main():
         dumps = selected_dump_files(dumps, a.dump_file)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         ap.error(str(exc))
-    global CAPTION_FRAMES, RUNTIME_TEXT, BUTTON_SET, CANVAS_TEXT_FILES, CLARITY_EXEMPT, MODE, OPTIONAL, GENERATED_TEXT_SOURCES, SPRITE_ART_SOURCES
+    global CAPTION_FRAMES, RUNTIME_TEXT, BUTTON_SET, CANVAS_TEXT_FILES, CLARITY_EXEMPT, MODE, OPTIONAL, GENERATED_TEXT_SOURCES, SPRITE_ART_SOURCES, GLYPH_ART_SOURCES
     global HERO_GLOBS
     try:                                     # v7.8 H11: the hero named by the project (else found by name / size)
         hero_spec = json.loads((proj / 'docs/art/hero.json').read_text(encoding='utf-8-sig'))
@@ -3569,6 +3701,7 @@ def main():
         HERO_GLOBS = []
     GENERATED_TEXT_SOURCES={}
     SPRITE_ART_SOURCES={}
+    GLYPH_ART_SOURCES=load_glyph_sources(proj)
     for source in (proj/'assets').rglob('*.png'):
         if (Path(str(source)+'.meta')).is_file():
             try:

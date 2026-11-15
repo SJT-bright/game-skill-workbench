@@ -140,6 +140,18 @@ def first_json(text):
         return {}
 
 
+def subcheck_detail(code, report, success, findings='', output=''):
+    """An empty failed child report must never be rendered as 'passed'."""
+    if findings:
+        return findings
+    if code == 0:
+        return success
+    reason = report.get('error') or report.get('reason') or report.get('problems')
+    if not reason:
+        reason = str(output).strip()[-350:] or 'no structured result; inspect the child log'
+    return '工具未完成或失败（exit %s）：%s' % (code, reason)
+
+
 def distinct(items, limit=6, sep='：'):
     """'page<sep>problem' strings -> at most limit of them, each different problem once. One node seen on several
     pages and at both phone sizes repeated the same problem (蛋壳特工队: 1224 page problems were 317 different ones),
@@ -679,6 +691,8 @@ def main():
     original_style_result = None   # R4Q3: set by dark_area_row()
 
     def add(title, ok, detail, log=''):
+        if ok is False and str(detail).startswith('通过'):
+            detail = '检查未完成或失败；详见 ' + (log or '本项日志')
         rows.append({'check': title, 'status': '通过' if ok is True else ('提示' if ok is None else '需处理'), 'detail': detail, 'log': log})
 
     production = {'passed': True}
@@ -998,7 +1012,7 @@ def main():
                     *(['--english-visual-scope',a.english_visual_scope] if a.english_visual_scope else [])], logs)
                 j = first_json(text)
                 over = '；'.join('%s：%s' % (x['name'], '、'.join(x['problems'][:2])) for x in j.get('over', [])[:4])
-                add('布局（玩法区、弹窗、按钮分布）', code == 0, over or '通过', 'ui_coverage.json')
+                add('布局（玩法区、弹窗、按钮分布）', code == 0, subcheck_detail(code,j,'通过',over,text), 'ui_coverage.json')
             else:
                 add('布局（玩法区、弹窗、按钮分布）', False, '读不出布局：' + text.strip()[-200:], 'logs/extract_ui_layout.log')
         else:
@@ -1009,13 +1023,13 @@ def main():
                                                    '--sheet', out / 'copy-review.md', *binding], logs)
         j = first_json(text)
         found = '；'.join('%s：%s' % (x['text'][:24], x['message']) for x in j.get('found', [])[:4])
-        add('文字放得下、拼写', code == 0, found or '通过', 'copy.json')
+        add('文字放得下、拼写', code == 0, subcheck_detail(code,j,'通过',found,text), 'copy.json')
 
     if runs('fonts'):
         code, text = run('audit_bitmap_letter_fonts.py', ['--project', proj, '--out', out / 'bitmap_letter_fonts.json'], logs)
         j = first_json(text)
         found = '；'.join('%s：%s' % (x['kind'], x['detail']) for x in j.get('findings', [])[:4])
-        add('位图字只用于数字和符号；句子用真字体；字母大小写不串（不许 HelP/TaP）', code == 0, found or '通过（%s 个位图字体）' % j.get('fonts', 0),
+        add('位图字只用于数字和符号；句子用真字体；字母大小写不串（不许 HelP/TaP）', code == 0, subcheck_detail(code,j,'通过（%s 个位图字体）' % j.get('fonts', 0),found,text),
             'bitmap_letter_fonts.json')
 
     if runs('dev_text'):

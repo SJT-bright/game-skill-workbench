@@ -204,11 +204,14 @@
       "use": "opt-in: every new game's sound goes through it (create -> register -> bindFirstFrame -> playMusic / playSfx; settings page setters; ads wrapRewarded). Library sounds come in only through remake-core/scripts/import_audio.py. English games keep their original audio code. Not installed by tiktok_finalize, not required by check_kit_project or K1/K2"
     },
     "parts/ScreenFit.js": {
-      "sha256": "d3051a65b97276abd795c3bca590b200bb98f306cad88b918e10e0f5d21b8643",
+      "sha256": "214b395860d2de1f470f22a9a22d1beed014883227ed3b80290ec90dd326ddee",
       "origin": "new in v7.9 (生成时预防 P07): cover / safeTop / safeBottom / canvasPolicy / checkCanvas from the engine's real visible rect (same calculation as CourseLane.js), 2.4 and 3.x in one file (require('ScreenFit') / global TikTokScreenFit). Node-tested (tests/screen-fit.test.js); 待真机复测",
       "reference": true,
       "optional": true,
-      "use": "opt-in: new games call Fit.canvasPolicy at start, Fit.cover on every page's root background, Fit.safeTop / safeBottom on top bars and bottom button rows. Not installed by tiktok_finalize, not required by check_kit_project or K1/K2"
+      "use": "opt-in: new games call Fit.canvasPolicy at start, Fit.cover on every page's root background, Fit.safeTop / safeBottom on top bars and bottom button rows. Not installed by tiktok_finalize, not required by check_kit_project or K1/K2",
+      "previous_sha256": [
+        "d3051a65b97276abd795c3bca590b200bb98f306cad88b918e10e0f5d21b8643"
+      ]
     },
     "parts/TouchOwner.js": {
       "sha256": "8124f3cb710f11399ef28f5364ade18765c5b9afcc82ffbb87768d07e68e9971",
@@ -249,7 +252,7 @@
       "use": "生成时预防 R4B: installed by tiktok_finalize for NEW 3.x games (startup step, part boot3x in parts-3x/KIT_PARTS_3X.json): one marked line right before System.warmup( in the build game.js (and in a build-templates game.js at source / sync). Legacy games and games with their own start page (game.js loads ./boot-loading, root boot-loading.js / native-recovery.js) are reported, never stacked. Do not hand-write the line."
     },
     "parts/GameUIKit.js": {
-      "sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+      "sha256": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
       "previous_sha256": [
         "77db8dc8d9fe1fd268bd7c99e5c693fe152fe16944bf2658e2e88494eaf624f5",
         "03b76c4ce7a85dd96603002f4cb8170115073571ff7cb6a26cdb96d0e63bf2a8",
@@ -259,7 +262,8 @@
         "76a0d0d15f57e9116869a9bcb30349577c10396611e4fcffac16fb038c4a5ea6",
         "8c55e6c49398df4836b38ec6f648da31f6b44f65f48cf97777a5f6983326b4a3",
         "fb91de7489e05866f2fc79e358cbd8b32709664b1243505cdf103c5d798321ec",
-        "e805429017088a91e838187e071fcb7fcc3d0666fd353aad62556c89503e89c8"
+        "e805429017088a91e838187e071fcb7fcc3d0666fd353aad62556c89503e89c8",
+        "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5"
       ],
       "previous_note": "77db8dc8 = GameUIKit 1.0.0 (英化 简化.11.13, A 批); 1.1.0 (A2 批) only adds: valueLabel, pausePage / revivePage / resultPage, setup({audio, onPageOpen}), the core markers for the 3.x build; 03b76c4c = GameUIKit 1.1.0 (A2 批); 1.1.1 (A3 批) only adds UI.adoptPopup (another kit's popup joins the same popup stack); 98aecc9d = GameUIKit 1.1.1 (A3 批); 1.1.2 (R4H 批) only adds: every popup() / open() and page template open() is recorded in PageRegistry (window.__pageRegistry) in a dev build, popup({pageId}) / page({pageId}); ddc1c28e = GameUIKit 1.1.2 (R4H 批); 1.1.3 (R4J2 批) only adds UI.recordPage(info, node, closeNode), the public name of the page record (AdBoostKit popups); 9ec17170 = GameUIKit 1.1.3 (R4J2 批); 1.1.4 (R4N4 批) only adds UI.text (box, overflow and wrap before the text), UI.guide (tutorial hand follows its target after every layout) and titleSize forwarded by the page templates; 76a0d0d1 = GameUIKit 1.1.4 (R4N4 批, in 11.16 candidate v2/v3 and the ad-boost v1.2.23 vendor); 1.1.5 (lead, 广告skill 11-05 建议) only changes: a page template with runAd shows one toast when the result says feedbackShown === false (AdBoostKit 1.3.3 did not show its own), none when true or when the field is missing; 8c55e6c4 = GameUIKit 1.1.5 (lead, 11.17候选 v1); 1.1.6 (R4Q6 批) only adds: UI.clearToast (every page opening clears the last toast; keepOnPage), popup / page template refresh(saved, handle) on every opening, UI.button({active}) and UI.newButton (active required), UI.iconValue (icon + number row), globalThis.TikTokGameUIKit on 2.4; fb91de74 = GameUIKit 1.1.6 (R4Q6 批, 11.17候选 v2); 1.1.7 (R4R4 批, 补读第 8 组补充 火箭三消) only adds: pictures in config() (closeFrame, toastFrame, digitFrames) are held with addRef() and given back with decRef(false) when replaced (config().closeFrame = f too), and every popup / toast / digits use checks the picture first (E.frameUsable: cc.isValid(frame, true) and its texture); a released close picture falls back to the first close picture set, then a drawn X, one warning, UI.frameIssues(); e8054290 = GameUIKit 1.1.7; 1.1.8 (2026-11-06 art source fix) keeps each valid node/explicit slot dimension, fills only missing dimensions from art display size in host coordinates (nested scale included), then frame metadata. wrapExisting no longer enlarges high-resolution art to native pixels; closeMinSize, click/disabled semantics unchanged. Node replay on both engines; not browser/phone acceptance",
       "project_path": "assets/tiktok-platform/GameUIKit.js",
@@ -271,7 +275,7 @@
       "use": "Cocos 2.4 new games: `tiktok_finalize.py sync` copies it to assets/tiktok-platform/GameUIKit.js (legacy games: reported only). Every new or changed popup / button uses it (var UI = require('GameUIKit')); original buttons the AI touches go through UI.wrapExisting. Not required by check_kit_project or K1/K2 (reference), so a project without it is never refused for that"
     },
     "parts-3x/GameUIKit.ts": {
-      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+      "sha256": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
       "previous_sha256": [
         "41c7d61b2e1553f4047984f0c272b15e8601a7e97c52d1ce9b0930a7058e3103",
         "0a83834a94fafd575c6f1a925a586cc7c232d9afa83519e7d30f6068c24ca356",
@@ -280,7 +284,8 @@
         "d61f7762b823dd77077f8d0ded41dda58ae4c380134a30923208be19ff72abb6",
         "950121aea3122ca4ed2c405f29c6d35130925acc1835b8598b89f3cc0e57b193",
         "04005a1f2edc31ca29ed42d39e41934a13c53f4249e138c3dda1ec8f11ce438b",
-        "a756e93229b5b14c5617ef3a9030f49492cb78b589664e32cd72aed5f24c81fd"
+        "a756e93229b5b14c5617ef3a9030f49492cb78b589664e32cd72aed5f24c81fd",
+        "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9"
       ],
       "previous_note": "41c7d61b = GameUIKit.ts 1.1.0 (A2 批); 1.1.1 (A3 批) is regenerated from the 1.1.1 core (adds UI.adoptPopup); 0a83834a = GameUIKit 1.1.1 (A3 批); 1.1.2 (R4H 批) is regenerated from the 1.1.2 core (PageRegistry record); 96d5b434 = GameUIKit.ts 1.1.2 (R4H 批); 1.1.3 (R4J2 批) is regenerated from the 1.1.3 core (adds UI.recordPage); a549722f = GameUIKit.ts 1.1.3 (R4J2 批); 1.1.4 (R4N4 批) is regenerated from the 1.1.4 core and adapter (adds UI.text, UI.guide, titleSize); d61f7762 = GameUIKit.ts 1.1.4 (R4N4 批); 1.1.5 (lead) is regenerated from the 1.1.5 core (page toast when runAd says feedbackShown === false); 950121ae = GameUIKit.ts 1.1.5 (lead); 1.1.6 (R4Q6 批) is regenerated from the 1.1.6 core (clearToast, refresh, newButton, iconValue); 04005a1f = GameUIKit.ts 1.1.6 (R4Q6 批); 1.1.7 (R4R4 批) is regenerated from the 1.1.7 core and adapter (released pictures fall back, frameUsable / setAngle in the adapter); a756e932 = GameUIKit 1.1.7; 1.1.8 (2026-11-06 art source fix) keeps each valid node/explicit slot dimension, fills only missing dimensions from art display size in host coordinates (nested scale included), then frame metadata. wrapExisting no longer enlarges high-resolution art to native pixels; closeMinSize, click/disabled semantics unchanged. Node replay on both engines; not browser/phone acceptance",
       "project_path": "assets/tiktok-platform/GameUIKit.ts",
@@ -292,9 +297,12 @@
       "use": "Cocos 3.x new games: copy unchanged to assets/tiktok-platform/GameUIKit.ts; import GameUIKit from '../tiktok-platform/GameUIKit' (or globalThis.TikTokGameUIKit). Never edit it: edit parts/GameUIKit.js or the adapter and run tools/make_gameuikit_3x.py (--check in the release self-test). Not required by check_kit_project or K1/K2"
     },
     "parts-3x/GameUIKit.adapter-3x.js": {
-      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "sha256": "798fb80c45b851b241ca46d81d7193162c59e5468e9f4f581f0f9f0575135121",
       "origin": "new in 生成时预防 A2 批: source of the Cocos 3.x engine adapter in parts-3x/GameUIKit.ts (tools/make_gameuikit_3x.py); not copied into games; 1.1.8 adds artSizeIn for child display geometry in host units",
-      "reference": true
+      "reference": true,
+      "previous_sha256": [
+        "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd"
+      ]
     },
     "parts/CapsuleLayout.js": {
       "sha256": "ba5ba44835b8584a98c8780aa019e00f90b298df6e87a4224f3c666d6988dc50",

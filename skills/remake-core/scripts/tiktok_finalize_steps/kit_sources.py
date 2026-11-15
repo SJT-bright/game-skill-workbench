@@ -14,6 +14,7 @@ legacy policy: warning only.
 """
 import json
 import uuid as uuidlib
+from creator_asset_contract import module_meta
 
 from . import KitError, Result, sha256
 
@@ -177,6 +178,17 @@ def apply(ctx):
             if new != old:
                 ctx.write(meta_rel, new)
                 r.change(meta_rel, old, new, 'import as plugin (native + mini-game)')
+        elif ctx.engine == 2 and ctx.policy == 'new' and dest.endswith('.js'):
+            meta_rel = dest + '.meta'
+            old = ctx.read(meta_rel)
+            try:
+                new = module_meta(old, dest)
+            except ValueError as error:
+                r.block('K_module_meta', str(error))
+                continue
+            if new != old:
+                ctx.write(meta_rel, new)
+                r.change(meta_rel, old, new, 'import producer-owned CommonJS as a normal module')
     r.state = 'kit_current' if all(s == 'kit_current' for s in states) else \
         ('own' if 'own' in states else 'absent')
     if ctx.policy == 'new':

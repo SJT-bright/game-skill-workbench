@@ -8,8 +8,8 @@
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "55ae9afebf5504bc2a4fdb4d78f5237ec15e1e4fcde3ae43f9643da4076455e0",
-      "bytes": 16529
+      "sha256": "76260a966ded5ab71b1c93ca5a151fd4c0cca935616aba4273b188c34d319f85",
+      "bytes": 16646
     },
     {
       "path": "agents/openai.yaml",
@@ -53,8 +53,8 @@
     },
     {
       "path": "assets/known-issues.json",
-      "sha256": "838ccfc32c53e96eae4ec022344682600ff335848f579a8ad89ffa03c4e52e40",
-      "bytes": 148568
+      "sha256": "eb884d3feff34de460f46f4bd73a92e28c48984e4feb737634d9a0cadb427162",
+      "bytes": 148559
     },
     {
       "path": "assets/loading-recovery-examples/asset-load-guard.js",
@@ -88,8 +88,8 @@
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "b153eca134c39894df57a9fa371d18e87372e2f74f296c6556150bdf86783704",
-      "bytes": 66437
+      "sha256": "07bbb9f27655045036cf8a393a92d748c6050917c97d8dd4cac670d63b2e635e",
+      "bytes": 66811
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -98,8 +98,8 @@
     },
     {
       "path": "assets/platform-kit/README_接入说明.md",
-      "sha256": "775e1a9f0a6292fa91001e0e4e847ee77bf7625720aa0d0953b6f4dd5075f224",
-      "bytes": 86049
+      "sha256": "43a4fe7ea02d1431b4ed82e3dd66b5ef5671d90b972ba050c316cf5574b1cce5",
+      "bytes": 87873
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
@@ -173,8 +173,8 @@
     },
     {
       "path": "assets/platform-kit/parts/GameUIKit.js",
-      "sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
-      "bytes": 90698
+      "sha256": "31ac219dd364d0f83c2226c0a3cc29d7c05105fa953a1d589a6fff0c9b28973a",
+      "bytes": 93755
     },
     {
       "path": "assets/platform-kit/parts/HomeEntrySlots.js",
@@ -198,8 +198,8 @@
     },
     {
       "path": "assets/platform-kit/parts/ScreenFit.js",
-      "sha256": "d3051a65b97276abd795c3bca590b200bb98f306cad88b918e10e0f5d21b8643",
-      "bytes": 15770
+      "sha256": "214b395860d2de1f470f22a9a22d1beed014883227ed3b80290ec90dd326ddee",
+      "bytes": 19118
     },
     {
       "path": "assets/platform-kit/parts/ShopTx.js",
@@ -228,13 +228,13 @@
     },
     {
       "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
-      "bytes": 14203
+      "sha256": "798fb80c45b851b241ca46d81d7193162c59e5468e9f4f581f0f9f0575135121",
+      "bytes": 14323
     },
     {
       "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-      "bytes": 88164
+      "sha256": "79a8c9efc799e875f67baabdfdb888ab8dff8787df0c8d88d2856743e652cf5a",
+      "bytes": 91191
     },
     {
       "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
@@ -382,6 +382,11 @@
       "bytes": 17055
     },
     {
+      "path": "assets/platform-kit/tests/game-ui-production-contract.test.js",
+      "sha256": "d11223a647cb2601b898ac8ea75e2544a759664badd9c9d14ffdd81145749c95",
+      "bytes": 4468
+    },
+    {
       "path": "assets/platform-kit/tests/game-ui-row-state.test.js",
       "sha256": "88bda7eb38c4dd4708c59ac899ef77657690c53bac2af4e06bd234ef74642664",
       "bytes": 5618
@@ -452,6 +457,31 @@
       "bytes": 30052
     },
     {
+      "path": "assets/platform-kit/tests/real-engine-ui/README.md",
+      "sha256": "503695be1da42141e5075f88ac5d0fe031793b98c08b88bb661100592ec20e17",
+      "bytes": 1725
+    },
+    {
+      "path": "assets/platform-kit/tests/real-engine-ui/fixture.js",
+      "sha256": "9ada57d335f2768e735afc7dcc7d76a0960aa4a6de70065e7fba614a1667709c",
+      "bytes": 4015
+    },
+    {
+      "path": "assets/platform-kit/tests/real-engine-ui/index.html",
+      "sha256": "684459885e879596071d1f0db1725a5e3709305db218484e029493c72837251d",
+      "bytes": 498
+    },
+    {
+      "path": "assets/platform-kit/tests/real-engine-ui/prepare_ui_engine_fixture.py",
+      "sha256": "8f742e35fccb280188de8e7f8f5c52b6b1a8fcf282f0812c427e1eccc4fd6b05",
+      "bytes": 3024
+    },
+    {
+      "path": "assets/platform-kit/tests/real-engine-ui/test_prepare_ui_engine_fixture.py",
+      "sha256": "bdec6fddd5f0ed065c392cf5ca87c047a33a579a30b9c4959debdba88c87f866",
+      "bytes": 3110
+    },
+    {
       "path": "assets/platform-kit/tests/refresh-suite-contracts.cjs",
       "sha256": "f3d57121fb95660e3c9ec842bae02808d1f28bb8a86c761354cc8fdda10a6f03",
       "bytes": 2448
@@ -490,6 +520,11 @@
       "path": "assets/platform-kit/tests/run-session.test.js",
       "sha256": "11205510dcd9d2bb752e3f79aa10663a1950bd69fb130cb7da3c1095f2096232",
       "bytes": 13654
+    },
+    {
+      "path": "assets/platform-kit/tests/screen-fit-watch.test.js",
+      "sha256": "4de795b3bfa7f07cffa2b93b642a673634e934a77a9f595b8d3bee73acc64bfc",
+      "bytes": 3514
     },
     {
       "path": "assets/platform-kit/tests/screen-fit.test.js",
@@ -553,8 +588,8 @@
     },
     {
       "path": "assets/platform-kit/tests/suite-contracts.json",
-      "sha256": "64014968ad1ad7a99833de3879b4ad5270def3c674ff5b5cb0e72612503248a4",
-      "bytes": 200759
+      "sha256": "4693a0fea0d47b2c2a22dc881bfcab69982e59ae9b002e500dc5e8be7ae19fdd",
+      "bytes": 196994
     },
     {
       "path": "assets/platform-kit/tests/suite-runner.cjs",
@@ -893,8 +928,8 @@
     },
     {
       "path": "references/ad-standard-six.md",
-      "sha256": "6351e08a387fafb4d080728fa42371bd4c940a6ba3b9da4d666a9d95bb5a421c",
-      "bytes": 7046
+      "sha256": "d1a85cbffe2680d5f6778f73f55fcd01f9884bcc0024f48219ca6a6e665f1d63",
+      "bytes": 7447
     },
     {
       "path": "references/architecture-and-platform.md",
@@ -973,7 +1008,7 @@
     },
     {
       "path": "references/fusion-policy.md",
-      "sha256": "e9a76adff52fbe71270c78f45c1c3f2adca64864be80ad141381e0e45b98ad19",
+      "sha256": "861db656c3074b0760fe48f228f52fe2c13a902887784974152617df29e41e3d",
       "bytes": 6976
     },
     {
@@ -1058,8 +1093,8 @@
     },
     {
       "path": "references/page-registry.md",
-      "sha256": "75b573dfc1df8481f75b37aba4aa3865de6e73ee353e32a86b458d4f295e9cd2",
-      "bytes": 6405
+      "sha256": "89f7e219fc8aecb40daea95950472d13c792fe1330b8a1cc2a1f23e2b0cea415",
+      "bytes": 7226
     },
     {
       "path": "references/platform-suite-records.md",
@@ -1083,7 +1118,7 @@
     },
     {
       "path": "references/production-efficiency.md",
-      "sha256": "9e7a89f82cf0ed245d0fe38d30faad15b6891d2a263add29ce66c8c6253d95a2",
+      "sha256": "428d9ea020e0f1c2f060eaa15eedc4e8c4a7892b4558092d9a12e756a9fa848c",
       "bytes": 3779
     },
     {
@@ -1098,8 +1133,8 @@
     },
     {
       "path": "references/production-plan.md",
-      "sha256": "67725d016aa0be17e2c085dcd6c546defca1ee8c1614e175d90a808d79ab90cf",
-      "bytes": 9851
+      "sha256": "fa02df4e72f3fc4f293d76494e5284cbde09b50c68d5a62ef2a7c3d0795e1a65",
+      "bytes": 9842
     },
     {
       "path": "references/project-qa-registration.md",
@@ -1143,12 +1178,12 @@
     },
     {
       "path": "references/single-writer.md",
-      "sha256": "67c1b2f67bc8b5e867e468f6f02e0efae422c9fc2f322b227cdf02ec27367c40",
+      "sha256": "4065a43a0a48fccb50ff200dde576152b592937b5b7adad2d644862ac61dd4c1",
       "bytes": 7809
     },
     {
       "path": "references/stage-flow.md",
-      "sha256": "818f3668bdfa67696f21e2142d78771ecdb2475c3dbc16c13b23f29b1729c13e",
+      "sha256": "4428b6fca2005cbf496396b54109ce6c019ca0ff6f5cba23ac81fa6ecf150c8a",
       "bytes": 50514
     },
     {
@@ -1178,7 +1213,7 @@
     },
     {
       "path": "references/two-boards.md",
-      "sha256": "e5a46a79cdfd79bc97206ed7890755718d404d71bf594cdf65a98e01f2a67dab",
+      "sha256": "2cf34ddab08f8ec38bd7a7bf3375ac9430a9c7b7ac960445dcd98fdf526ffda2",
       "bytes": 2565
     },
     {
@@ -1208,8 +1243,8 @@
     },
     {
       "path": "scripts/ad_nodes_gate.py",
-      "sha256": "cff125680df8a1bac8eed950c554ec9b2143217ab68b641bf67a02c3895dc2c9",
-      "bytes": 18006
+      "sha256": "3dfb5db55e8eaa644937a5b05025288d0c79d54beb97e64c97405b0715b0a960",
+      "bytes": 18299
     },
     {
       "path": "scripts/ad_standard_scope.py",
@@ -1268,8 +1303,8 @@
     },
     {
       "path": "scripts/art_check.py",
-      "sha256": "c8879a71e47e96c70531c469f678c85f17a726e86213067bdd122421278ae2c1",
-      "bytes": 89258
+      "sha256": "9f550d15748afeafe319a052cfe8877ea8ddaefde9823889fb77cf69317e7ab3",
+      "bytes": 89976
     },
     {
       "path": "scripts/art_check_record.py",
@@ -1313,8 +1348,8 @@
     },
     {
       "path": "scripts/art_records.py",
-      "sha256": "bb8ca27661c01499e95a782e090c87a6917d8ce1ff88b2b4082dcdcbc0b88e42",
-      "bytes": 61726
+      "sha256": "6f81ead00fbd9032d9586caf48923a9c6c8dec1067c3435af5ff30f08b145d9f",
+      "bytes": 65338
     },
     {
       "path": "scripts/art_round_check.py",
@@ -1323,8 +1358,8 @@
     },
     {
       "path": "scripts/art_usage_budget.py",
-      "sha256": "0fc055c36f0c71008fa672a10c8ee3eed66f45af086f40050f3e3639ebe76397",
-      "bytes": 24441
+      "sha256": "8917888b0c9213b45a76bfd02dea707aa7677aae8208c7a92b7a9e3ada322af0",
+      "bytes": 28117
     },
     {
       "path": "scripts/audio_inventory.py",
@@ -1368,8 +1403,8 @@
     },
     {
       "path": "scripts/audit_bitmap_letter_fonts.py",
-      "sha256": "f0982e695acbfdd19b7bd3a329ccfb9987e599551f6696f22496ac0853ff2be4",
-      "bytes": 5083
+      "sha256": "dad16b0a04ca944ce074f74e9cff62ed658858272abe5b8b5c064950065d7a68",
+      "bytes": 6709
     },
     {
       "path": "scripts/audit_button_colour.py",
@@ -1388,8 +1423,8 @@
     },
     {
       "path": "scripts/audit_copy_quality.py",
-      "sha256": "cd6aa35a672b7c95cb79e1301f63c35e24754906270665055cc72a7bb21aa717",
-      "bytes": 28705
+      "sha256": "214e912b54a78e3798e3af13c9aa1534376147ca667c48a7f8e55d8800e7bea3",
+      "bytes": 30776
     },
     {
       "path": "scripts/audit_dark_area.py",
@@ -1548,8 +1583,8 @@
     },
     {
       "path": "scripts/audit_page_richness.py",
-      "sha256": "b70affef12bf1c0d3111c0f04430308994df850984f5bb67f723d6b938b5fb77",
-      "bytes": 229179
+      "sha256": "a7cf1111274b526aaab89794a2e59039aa4aedc3d9c232b1bfbf7e8aae58fab4",
+      "bytes": 235988
     },
     {
       "path": "scripts/audit_platform_kit_required.py",
@@ -1767,6 +1802,11 @@
       "bytes": 8318
     },
     {
+      "path": "scripts/creator_asset_contract.py",
+      "sha256": "20b3f1c2d5517193bdf68d9e4b17e310e5e659660eaae4ba80ce005ed3a5a474",
+      "bytes": 3377
+    },
+    {
       "path": "scripts/debrand_art_successor.py",
       "sha256": "1d4f984270d0ccf2398302028e7f41fce6cf8b80869c5bc4d377c07df3d30a3d",
       "bytes": 5605
@@ -1848,8 +1888,8 @@
     },
     {
       "path": "scripts/first_screen.py",
-      "sha256": "f084f65a05c227e2ed8a0902fb16dec94902de4292ad48d6cb17adccca575538",
-      "bytes": 27590
+      "sha256": "4b3ead95d204271b2f88d4ebf736ada0c5de93bb9cee1f6f9ae5fa5741b7c06c",
+      "bytes": 27691
     },
     {
       "path": "scripts/fix_game_name.py",
@@ -2073,8 +2113,8 @@
     },
     {
       "path": "scripts/make_res_keys.py",
-      "sha256": "3e50b49e9b1fe234b88fa3f15de87caa25be35d54e91dd76fbce6839a0dff522",
-      "bytes": 17669
+      "sha256": "166f772c74d41de7264d90023c1d14d4d32de2aa55c8ec78e848fe8843f7a330",
+      "bytes": 18574
     },
     {
       "path": "scripts/make_save_schema.py",
@@ -2143,8 +2183,8 @@
     },
     {
       "path": "scripts/package_gates/ad_standard_six.py",
-      "sha256": "1553f71ce183cbb74fc5674494039961a636bd3bfd3bc40d74e0dfd073f01ffb",
-      "bytes": 1378
+      "sha256": "7967b072e16b3782eee70dedc252e3001e3438a38473967ead62def64b81f9c6",
+      "bytes": 1434
     },
     {
       "path": "scripts/package_gates/adapter_fix.py",
@@ -2223,8 +2263,8 @@
     },
     {
       "path": "scripts/page_registry.py",
-      "sha256": "d76b29d99cf536b609d837f87589af342dc2dd37f91395fdf64b316d109c2247",
-      "bytes": 22133
+      "sha256": "e06c6424bb910836db52bd8a8cbdd3ef4651560a4c8fbd8030e77800314c2682",
+      "bytes": 25801
     },
     {
       "path": "scripts/papercut_production_loader.cjs",
@@ -2258,13 +2298,13 @@
     },
     {
       "path": "scripts/preparation_cache.py",
-      "sha256": "17427411579ecc3b6d62f5c956c505edfcd7fcdbe419e5e494a03e289416534f",
+      "sha256": "de0ded4115b8f5d1106a79fad7bf64f4c15e02b196600cca394331f7bb1c3b4e",
       "bytes": 42412
     },
     {
       "path": "scripts/preparation_scope_policy.json",
-      "sha256": "e078e52449cba2eb85126e867c6492a0821b8fcf8ee0e0e0d16724399c0b7cb1",
-      "bytes": 42952
+      "sha256": "2528be53e8a02d3555085243e8ac4d143e22113057939920a6f9306392b700db",
+      "bytes": 40556
     },
     {
       "path": "scripts/preview_audio_startup.py",
@@ -2393,8 +2433,8 @@
     },
     {
       "path": "scripts/resource_package_prepare.py",
-      "sha256": "8755ba10a52f51b59e13ac010e2a2811d4bd44698511d82ae2663ea8ec878425",
-      "bytes": 50200
+      "sha256": "353abb73011b502ee9c4baa1e198c6aac3a13dbcf657d943c8e648151875ef0d",
+      "bytes": 50363
     },
     {
       "path": "scripts/returned_art_acceptance.py",
@@ -2583,8 +2623,8 @@
     },
     {
       "path": "scripts/test_ad_nodes_gate.py",
-      "sha256": "d2975eb403991a0388021d9440984a08bf8b08268d6ef4d098eb066b80ae52cf",
-      "bytes": 17584
+      "sha256": "e24e43bf18932cf50fe049f859bea78e40cca65cfcc6eee702be6633eaed7173",
+      "bytes": 18297
     },
     {
       "path": "scripts/test_ad_sdk_capabilities.cjs",
@@ -2792,6 +2832,11 @@
       "bytes": 14411
     },
     {
+      "path": "scripts/test_art_usage_pipeline.py",
+      "sha256": "dec50f6473074fcd183c1ff51372cea4a27adb051bd749cf16098115e47150d1",
+      "bytes": 17054
+    },
+    {
       "path": "scripts/test_asset_load_guard.cjs",
       "sha256": "439d317672bd752292262e6f6e59379f86b15ee7ce3cb832ac089e23cfbfdf40",
       "bytes": 5670
@@ -2902,6 +2947,11 @@
       "bytes": 6524
     },
     {
+      "path": "scripts/test_creator_asset_contract.py",
+      "sha256": "e96b63411d7b992407a2cd4a714e29142f8adcef9d9a1134b3b66da824ce88b5",
+      "bytes": 5184
+    },
+    {
       "path": "scripts/test_debug_leftover_scan.py",
       "sha256": "3a727e452330cb5a03fd13fae355d169660c2b917488c41956b02540a02e1ded",
       "bytes": 8136
@@ -2920,6 +2970,11 @@
       "path": "scripts/test_delivery_writer_receipt_gate.py",
       "sha256": "bcb6d511c7d2376ed6d7b093e40bf5f5a36170f6753d52cb019bff809cc73192",
       "bytes": 2180
+    },
+    {
+      "path": "scripts/test_detection_production_contracts.py",
+      "sha256": "cce99cd099461ccb9b27df05a5c39225feff9195d135afadfda1a0d76b3cc168",
+      "bytes": 14589
     },
     {
       "path": "scripts/test_dev_text_kit_hint.py",
@@ -3492,6 +3547,11 @@
       "bytes": 6806
     },
     {
+      "path": "scripts/test_production_admission.py",
+      "sha256": "c983487894cc07c735ac4c0a5394bf56a5f808015a3e12c2c7157034ed83b778",
+      "bytes": 1378
+    },
+    {
       "path": "scripts/test_production_hooks.py",
       "sha256": "8649cbaaba98b06cba9a74b0db908601e513d36db126fd226f843bf9da265fa8",
       "bytes": 3812
@@ -3858,8 +3918,8 @@
     },
     {
       "path": "scripts/test_ui_dump_mock.js",
-      "sha256": "df29af28fea0e7d102969972bc2af83c0d238cb1abda639cfdbdd4e0aca7930e",
-      "bytes": 37564
+      "sha256": "7e6d4e6380c542497c9511205856237221617b602b4ec11a16a23dc68190e615",
+      "bytes": 38357
     },
     {
       "path": "scripts/test_ui_dump_settle.cjs",
@@ -3883,8 +3943,8 @@
     },
     {
       "path": "scripts/test_ui_layout_and_copy.py",
-      "sha256": "53399c8988832258874481fb9a65fedda9f20b25b95e0c9ff077e22d60eebfce",
-      "bytes": 85329
+      "sha256": "367b349612628e1df4e72567015620e406b689fbe73031e31f301f530b4be82d",
+      "bytes": 85495
     },
     {
       "path": "scripts/test_unofficial_entry_cli.py",
@@ -4033,8 +4093,8 @@
     },
     {
       "path": "scripts/tiktok_finalize_steps/kit_sources.py",
-      "sha256": "f458bff424a2e1b7a19cbfac3efac20e5b84b09047d242b7ede8d2425b530ff0",
-      "bytes": 9490
+      "sha256": "aaf9bcc12400fcec38913ac5e0fdfdee0d8b7c03f26d98cd1351763626eb723d",
+      "bytes": 10037
     },
     {
       "path": "scripts/tiktok_finalize_steps/login.py",
@@ -4063,8 +4123,8 @@
     },
     {
       "path": "scripts/tiktok_finalize_steps/policy.py",
-      "sha256": "bdc70612cc05df4584754792f6a171e6f94d208e98d35e832348c63170a31206",
-      "bytes": 22660
+      "sha256": "78b15e5b875134af0841296d542ccb3f18af53bc9d51b0f28363ccca24abb655",
+      "bytes": 22959
     },
     {
       "path": "scripts/tiktok_finalize_steps/reward_order_scan.py",
@@ -4133,8 +4193,8 @@
     },
     {
       "path": "scripts/ui_dump.js",
-      "sha256": "1a6afae476cd2a429e473e8235bd436e891f044a177329bc6f0ee092a32f8a4d",
-      "bytes": 32230
+      "sha256": "4195433aac6d79ff5350cfda8c850294e17d5c05616e14cd336546413bf8ff97",
+      "bytes": 33393
     },
     {
       "path": "scripts/ui_region_probe.py",
@@ -5661,7 +5721,7 @@
       }
     }
   ],
-  "previous_local_provenance_sha256": "2a037c9acf0fe4a17702506f8a17e598496ea2cccb7c9d613554e918d0343f49",
+  "previous_local_provenance_sha256": "3157d0b397707d55db48b6b84088b99183e37e1ee161914a1b2864a09b36baff",
   "local_updates": [
     {
       "id": "2026-11-12.startup-storage-consumers-r7.v1",
@@ -5776,6 +5836,11 @@
       "formal_selftest_sha256": "361122b6fd761fcd7dccd317c28aab34c06194a17c9a09ad6f9c42c463c54ed7",
       "concurrent_source_review_sha256": "138f932d71fb7a69ebf0d298fa0a393d02d7029234479e4b540b7364cfe88c2b",
       "boundary": "Portable Skill code only; no copied machine registrations, game PASS state or new real-game acceptance."
+    },
+    {
+      "id": "11.17.35+production-enforcement.1",
+      "scope": "General production inputs, shared UI and detector contracts, early import/resource prevention; preserve installed concurrent optional-energy update. No game PASS or new official release.",
+      "verification": "isolated engine/component/CLI samples and merged tests; real-game acceptance remains separate"
     }
   ],
   "release_integration": {
@@ -5785,5 +5850,6 @@
       "art-assembly-gap.20261113.1"
     ],
     "boundary": "Local English/art/core update only; game sources, assets and original evidence untouched. No new stage, mandatory project manifest or upload gate."
-  }
+  },
+  "local_enforcement_revision": "11.17.35+production-enforcement.1"
 }

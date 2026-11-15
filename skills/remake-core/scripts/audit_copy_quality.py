@@ -288,8 +288,43 @@ def px(rect, canvas, dpr):
     return [(cx + rect[0] * cw) * dpr, (cy + rect[1] * ch) * dpr, rect[2] * cw * dpr, rect[3] * ch * dpr]
 
 
+def read_glossary(path):
+    """Normalize the documented mapping and explicit historical term records.
+
+    A list of records is not the mapping of canonical spellings to forbidden
+    variants. Preserve its meaning instead of calling .items() or dropping it.
+    Unknown shapes are input errors, never a successful empty vocabulary.
+    """
+    value = json.loads(Path(path).read_text(encoding='utf-8-sig')) if path and Path(path).is_file() else {}
+    if not isinstance(value, dict):
+        raise ValueError('glossary must be an object: ' + str(path))
+    terms = value.get('terms') or {}
+    if isinstance(terms, list):
+        mapped = {}
+        for i, row in enumerate(terms):
+            if not isinstance(row, dict):
+                raise ValueError('glossary.terms[%d] must be a term record with canonical/en and banned variants' % i)
+            canon = row.get('canonical') or row.get('en') or row.get('english') or row.get('term')
+            if not isinstance(canon, str) or not canon.strip():
+                raise ValueError('glossary.terms[%d] missing canonical/en term' % i)
+            variants = row.get('banned', row.get('variants', []))
+            if not isinstance(variants, list) or any(not isinstance(x, str) or not x.strip() for x in variants):
+                raise ValueError('glossary.terms[%d].banned must be a list of nonempty strings' % i)
+            mapped.setdefault(canon.strip(), []).extend(variants)
+        value = dict(value, terms=mapped)
+    elif not isinstance(terms, dict):
+        raise ValueError('glossary.terms must map canonical terms to lists of banned variants')
+    for canon, variants in (value.get('terms') or {}).items():
+        if not isinstance(canon, str) or not canon.strip() or not isinstance(variants, list) or any(
+                not isinstance(x, str) or not x.strip() for x in variants):
+            raise ValueError('glossary.terms[%r] must be a list of nonempty banned variants' % canon)
+    if not isinstance(value.get('allow', []), list) or any(not isinstance(x, str) for x in value.get('allow', [])):
+        raise ValueError('glossary.allow must be a list of strings')
+    return value
+
+
 def audit(project, dumps, table_path, glossary_path, *, check_layout=True):
-    glossary = json.loads(Path(glossary_path).read_text(encoding='utf-8')) if glossary_path and Path(glossary_path).is_file() else {}
+    glossary = read_glossary(glossary_path)
     words = load_words(glossary.get('allow', []))
     trademarks = load_trademarks(allowed=glossary.get('trademark_ok') or [])
     try:

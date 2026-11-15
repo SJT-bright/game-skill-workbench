@@ -24,9 +24,9 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from contextvars import ContextVar
 
-PREPARATION_POLICY_SHA256 = 'e078e52449cba2eb85126e867c6492a0821b8fcf8ee0e0e0d16724399c0b7cb1'
+PREPARATION_POLICY_SHA256 = '2528be53e8a02d3555085243e8ac4d143e22113057939920a6f9306392b700db'
 PREPARATION_FINALIZER_SHA256 = 'e876faa088cad0d02aa095c0b8c3fc9082bd07ef1013d282a360e3d9ada2e20b'
-PREPARATION_SELF_SHA256 = '330ee76d1920c5bebfc4e9a3e62c9d30eab7fe3bb9703d04bf39710e65537ce3'
+PREPARATION_SELF_SHA256 = '8a4a0f742925093ba3473b6652e52ecdd9d18016ca8cff2dfe53e8d2fdb1d61e'
 
 SCHEMA = 'preparation-cache.v1'
 HOME = Path('.tiktok-kit/preparation-cache')

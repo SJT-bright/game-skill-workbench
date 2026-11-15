@@ -77,6 +77,72 @@ def validate_budget(data, expected_cases):
     return result
 
 
+def production_inputs_required(project):
+    """New-project production policy, not a retrospective acceptance gate.
+
+    Only the owning init writes this flag. Historical projects with no flag keep
+    their existing producers. Invalid explicit policy is never treated as absent.
+    """
+    if project is None:
+        return False
+    path = Path(project).resolve() / '.tiktok-kit/policy.json'
+    if not path.exists():
+        return False
+    policy = json.loads(path.read_text(encoding='utf-8'))
+    if not isinstance(policy, dict):
+        raise ValueError('project policy must be an object: ' + str(path))
+    value = policy.get('production_inputs')
+    if value is None:
+        return False
+    if value not in ('required', 'legacy'):
+        raise ValueError('policy.production_inputs must be required or legacy')
+    return value == 'required'
+
+
+def asset_usage(asset, project=None):
+    """Use one existing CSS budget from first request through final binding.
+
+    The case list is explicit input, not proof that dynamic consumers are fully
+    discovered. Source dimensions and generation reserves never prove readability.
+    """
+    if not isinstance(asset, dict):
+        raise ValueError('asset must be an object')
+    required = production_inputs_required(project)
+    name = str(asset.get('name') or asset.get('id') or asset.get('file') or '?')
+    declared = 'usage' in asset or 'expected_cases' in asset
+    if not declared:
+        if required:
+            raise ValueError(name + ': production inputs required before generation/registration/binding; '
+                             'supply usage {unit: css_px, density, cases:[{id,css_size}]} and complete expected_cases')
+        return None
+    if asset.get('usage') is None or asset.get('expected_cases') is None:
+        raise ValueError(name + ': usage and complete expected_cases must be supplied together')
+    budget = validate_budget(asset['usage'], asset['expected_cases'])
+    rows = budget['cases']
+    smallest = min(rows, key=lambda row: row['css_size'][0] * row['css_size'][1])
+    largest = max(rows, key=lambda row: row['css_size'][0] * row['css_size'][1])
+    return {'usage': budget, 'expected_cases': list(asset['expected_cases']),
+            'summary': {'minimum_css_size': [min(r['css_size'][i] for r in rows) for i in (0, 1)],
+                        'maximum_css_size': [max(r['css_size'][i] for r in rows) for i in (0, 1)],
+                        'smallest_case': smallest['id'], 'largest_case': largest['id'],
+                        'recommended_output_size': plan_output(budget, asset['expected_cases'])['recommended_output_size'],
+                        'runtime_verified': False, 'visual_passed': None,
+                        'complete_consumers_verified': False,
+                        'boundary': 'Declared intended cases only; minimum-size legibility and actual runtime consumers still require verification.'}}
+
+
+def usage_prompt(asset, project=None):
+    """The generator sees the actual smallest uses, not source W/H as a proxy."""
+    record = asset_usage(asset, project)
+    if record is None:
+        return ''
+    uses = '; '.join('%s: %g x %g CSS px' % (r['id'], *r['css_size']) for r in record['usage']['cases'])
+    return ('Intended final visible uses (CSS pixels, not source pixels or design units): ' + uses + '. '
+            'Keep the exact requested words, all glyphs, silhouette and edge readable at the smallest listed use. '
+            'Use the largest listed use for source-detail planning. Higher source resolution alone does not make '
+            'small displayed letters readable. Do not draw these measurements or case IDs in the image.')
+
+
 def plan_output(data, expected_cases):
     """Recommend source dimensions before the first request; legacy density is a reserve, not a default gate."""
     budget = validate_budget(data, expected_cases)

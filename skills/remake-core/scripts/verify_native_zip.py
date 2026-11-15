@@ -187,21 +187,18 @@ def find_receipt(archive, zip_sha256, limit=500):
     return path, False
 
 
-def _receipt_status(archive, zip_sha256, file_sha256, selected=None, *, _receipt_snapshot=None):
+def receipt_status(archive, zip_sha256, file_sha256):
     """'official' only when an official writer's receipt exists for exactly these bytes (find_receipt)."""
-    path, by_bytes = selected or find_receipt(archive, zip_sha256)
+    path, by_bytes = find_receipt(archive, zip_sha256)
     out = {'entry': 'unofficial', 'entry_label': ENTRY_LABEL['unofficial'], 'receipt': str(path)}
     if not path.is_file() or path.is_symlink():
-        out['entry_reason'] = ('no writer receipt %s, and no receipt in that folder for these ZIP bytes: '
-                               'original writer evidence is unavailable here; this does not establish that an external '
-                               'producer failed to write officially. Use game_handoff.py receive for intake, or obtain '
-                               'the original matching receipt before a new formal delivery' % path.name)
+        out['entry_reason'] = ('no writer receipt %s, and no receipt in that folder for these ZIP bytes: this ZIP was not '
+                               'written by make_tiktok_zip.py / build_checked_zip.py (hand-zipped or changed)' % path.name)
         return out
     if by_bytes:
         out['receipt_found_by'] = 'zip_sha256 (the ZIP was renamed after writing)'
     try:
-        receipt_bytes = path.read_bytes()
-        receipt = json.loads(receipt_bytes.decode('utf-8'))
+        receipt = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError) as error:
         out['entry_reason'] = 'writer receipt unreadable: %s' % error
         return out
@@ -222,33 +219,7 @@ def _receipt_status(archive, zip_sha256, file_sha256, selected=None, *, _receipt
                        ' (found by the ZIP bytes: %s; the ZIP was renamed)' % path.name if by_bytes else ''),
                    receipt_tool=receipt['tool'], receipt_board=receipt.get('board'),
                    receipt_policy=receipt['finalize'].get('policy'), receipt_kit_version=receipt['finalize'].get('kit_version'))
-    if _receipt_snapshot is not None and out.get('entry') == 'official':
-        _receipt_snapshot.update(path=str(path.resolve()), sha256=hashlib.sha256(receipt_bytes).hexdigest(), data=receipt_bytes)
     return out
-
-
-
-def receipt_status(archive, zip_sha256, file_sha256, *, _receipt_snapshot=None):
-    """Find a fully valid same-byte receipt even beside a stale same-name file."""
-    if _receipt_snapshot is not None and (type(_receipt_snapshot) is not dict or _receipt_snapshot):
-        raise ValueError('receipt snapshot output must be an empty dict')
-    preferred = find_receipt(archive, zip_sha256)
-    result = _receipt_status(archive, zip_sha256, file_sha256, preferred, _receipt_snapshot=_receipt_snapshot)
-    if result.get('entry') == 'official':
-        return result
-    for path in sorted(Path(archive).parent.glob('*' + RECEIPT_SUFFIX))[:500]:
-        if path == preferred[0] or path.is_symlink() or not path.is_file():
-            continue
-        try:
-            if path.stat().st_size > 2_000_000:
-                continue
-            candidate = _receipt_status(archive, zip_sha256, file_sha256, (path, True), _receipt_snapshot=_receipt_snapshot)
-        except (OSError, ValueError):
-            continue
-        if candidate.get('entry') == 'official':
-            candidate['ignored_receipt'] = {'path': str(preferred[0]), 'reason': result.get('entry_reason')}
-            return candidate
-    return result
 
 
 def safe_name(name):
@@ -264,7 +235,7 @@ def stricter(value, limit):
     return limit if value is None else min(value, limit)
 
 
-def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max_total=None, max_independent=None, tiktok=True, *, _verified_files=None, _archive_context=None):
+def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max_total=None, max_independent=None, tiktok=True, *, _verified_files=None):
     """tiktok=True (default): the built-in TikTok limits and forbidden entries apply; explicit limits can only be lower."""
     if _verified_files is not None and (type(_verified_files) is not dict or _verified_files):
         raise ValueError('verified payload output must be an empty dict')
@@ -274,12 +245,7 @@ def verify(archive, expected_app_id=None, expected_tree=None, max_main=None, max
         max_main, max_total = stricter(max_main, TIKTOK_MAIN), stricter(max_total, TIKTOK_TOTAL)
         max_independent = stricter(max_independent, TIKTOK_INDEPENDENT)
     hashes, sizes, seen = {}, {}, set()
-    if _archive_context is None:
-        archive_reader = zipfile.ZipFile(archive)
-    else:
-        from delivery_archive_context import _payload_reader
-        archive_reader = _payload_reader(_archive_context, archive, archive_before)
-    with archive_reader as z:
+    with zipfile.ZipFile(archive) as z:
         names = [i.filename for i in z.infolist()]
         if tiktok and not any(n == 'game.json' for n in names):
             tops = {n.split('/', 1)[0] for n in names if n.strip('/')}

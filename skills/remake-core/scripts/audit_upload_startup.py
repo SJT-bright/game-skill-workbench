@@ -3,92 +3,12 @@
 import json
 import collections
 import copy
-from contextlib import contextmanager
-from contextvars import ContextVar
 import hashlib
-import os
 import posixpath
 import re
 from pathlib import Path
 import shutil
 import subprocess
-import sys
-import time
-
-
-_AUDIT_INVOCATION = ContextVar('upload_startup_audit_invocation', default=None)
-
-
-@contextmanager
-def audit_invocation():
-    """Reuse exact successful startup audits only inside this explicit invocation.
-
-    A canonical writer checks Native and freshly rereads its ZIP. Both payloads
-    must have exactly the same bytes before their startup result can be shared.
-    Exiting the context drops every verdict; independent calls never inherit it.
-    """
-    cache = {}
-    token = _AUDIT_INVOCATION.set(cache)
-    try:
-        yield
-    finally:
-        cache.clear()
-        _AUDIT_INVOCATION.reset(token)
-
-
-def _memo_file(path):
-    path = Path(path)
-    if path.is_symlink() or not path.is_file():
-        raise ValueError('unknown/linked startup audit dependency: ' + str(path))
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def _audit_memo_identity(files):
-    """Conservatively bind package bytes, all local helpers and process inputs.
-
-    NODE_OPTIONS / NODE_PATH can import arbitrary code outside our helper tree.
-    They keep the normal audit path and can never inherit a memoized verdict.
-    """
-    if type(files) is not dict or any(type(name) is not str or type(data) is not bytes
-                                      for name, data in files.items()):
-        raise ValueError('startup audit memo requires a concrete path-to-bytes map')
-    if os.environ.get('NODE_OPTIONS') or os.environ.get('NODE_PATH'):
-        raise ValueError('startup audit has unbound external Node dependencies')
-    node = shutil.which('node')
-    if not node:
-        raise ValueError('startup audit memo needs an identified Node executable')
-    here = Path(__file__).resolve().parent
-    tools = {}
-    # The audit owns dynamically imported Python gates and CJS helpers. Taking
-    # their complete local tree also detects a newly added helper; a suffix-only
-    # approximation could silently omit a new dependency or fixture format.
-    for path in sorted(here.rglob('*')):
-        relative = path.relative_to(here)
-        if '__pycache__' in relative.parts or path.suffix == '.pyc':
-            continue
-        if path.is_symlink():
-            raise ValueError('startup audit helper tree contains a link: ' + str(path))
-        if path.is_file():
-            tools[relative.as_posix()] = _memo_file(path)
-    guard = here.parents[1] / 'cocos-game-check/package-check/scripts/check_guard.cjs'
-    from package_gates import adapter_fix
-    if not Path(adapter_fix.__file__).resolve().is_relative_to(here):
-        raise ValueError('startup audit imported a gate outside its bound helper tree')
-    hooks = [parse_package_source, parser_fingerprint, audit_adapter_preconditions,
-             audit_cocos2_resources, audit_scene_components, _audit_files_uncached,
-             adapter_fix.detect, subprocess.run, shutil.which]
-    identity = {
-        'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())},
-        'tools': tools, 'guard': _memo_file(guard),
-        'node': {'path': str(Path(node).resolve()), 'sha256': _memo_file(Path(node).resolve())},
-        'python': {'version': sys.version, 'executable': str(Path(sys.executable).resolve()),
-                   'sha256': _memo_file(Path(sys.executable).resolve())},
-        # Only a digest is retained; environment values can contain credentials.
-        'environment_sha256': hashlib.sha256(json.dumps(dict(os.environ), sort_keys=True).encode()).hexdigest(),
-        'cwd': os.getcwd(), 'python_search_path': list(map(str, sys.path)),
-        'hooks': [id(hook) for hook in hooks],
-    }
-    return hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
 # Pure parse cache is process-local; it never caches a package/game verdict.
@@ -98,7 +18,7 @@ _PARSE_CACHE_LIMIT = 64
 def parser_fingerprint():
     root = Path(__file__).parent
     return tuple(hashlib.sha256((root/name).read_bytes()).hexdigest()
-                 for name in ('parse_package_requires.cjs','vendor/acorn.cjs','scan_platform_input_bindings.cjs'))
+                 for name in ('parse_package_requires.cjs','vendor/acorn.cjs'))
 
 def parse_package_source(source, node, signature):
     key = (node, signature, hashlib.sha256(source).hexdigest())
@@ -209,71 +129,12 @@ def audit_cocos2_resources(files, settings, engine_subpackages, subpackage_roots
     return errors
 
 
-def audit_adapter_preconditions(files):
-    """Reject known unsafe Cocos2 startup assumptions before accepting an artifact.
-
-    Writers normalize these forms before this read-only audit. Legacy or renamed
-    candidates do not turn the three known defects into verified compatibility.
-    This is a static prerequisite, not an iOS/device or first-frame verdict.
-    """
-    from package_gates.adapter_fix import detect
-    state = detect(files)
-    old = sorted(name for name, status in state.get('rules', {}).items() if status == 'old')
-    return {**state, 'passed': not old, 'known_unsafe': old,
-            'errors': ['Cocos2 startup adapter normalization missing: ' + ', '.join(old)] if old else [],
-            'boundary': 'Known adapter prerequisites only; actual first-frame and device failure remain separate.'}
-
-
 def audit_files(files):
     """files is a ZIP-root-relative {path: bytes}; no filesystem mutation."""
-    cache = _AUDIT_INVOCATION.get()
-    if cache is None:
-        return _audit_files_uncached(files)
-    started = time.monotonic()
-    try:
-        before = _audit_memo_identity(files)
-    except (OSError, ValueError, TypeError):
-        # An unknown dependency can never suppress the real audit.
-        return _audit_files_uncached(files)
-    cached = cache.get(before)
-    if cached is not None:
-        if _audit_memo_identity(files) != before:
-            raise ValueError('startup audit inputs changed during memo verification')
-        result = copy.deepcopy(cached)
-        result['audit_invocation_reuse'].update(reused=True,
-            current_binding_seconds=round(time.monotonic() - started, 6))
-        return result
-    executed = time.monotonic()
-    result = _audit_files_uncached(files)
-    elapsed = time.monotonic() - executed
-    try:
-        after = _audit_memo_identity(files)
-    except (OSError, ValueError, TypeError) as error:
-        raise ValueError('startup audit dependencies became unknown during validation') from error
-    if before != after:
-        raise ValueError('startup audit inputs changed during validation')
-    if isinstance(result, dict) and result.get('passed') is True and result.get('errors') == []:
-        result = copy.deepcopy(result)
-        result['audit_invocation_reuse'] = {
-            'reused': False, 'binding_sha256': before,
-            'original_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-            'original_seconds': round(elapsed, 6),
-            'current_binding_seconds': round(time.monotonic() - started - elapsed, 6),
-            'boundary': 'Exact bytes and dependencies within one explicit invocation only',
-        }
-        cache[before] = copy.deepcopy(result)
-    return result
-
-
-def _audit_files_uncached(files):
-    """Execute the actual startup closure and applicable registered probes."""
     errors, warnings, edges, dynamic = [], [], [], []
-    adapter_preconditions = audit_adapter_preconditions(files)
-    errors.extend(adapter_preconditions['errors'])
     parse_stats = {"cache_hits":0,"executed":0}
     signature = None
     entry_protocols = set()
-    platform_input_bindings, platform_input_unresolved = [], []
     startup_modules, startup_imports = {}, {}
     settings = files.get('src/settings.js', b'').decode('utf-8-sig', errors='replace')
     engine_subpackages, subpackage_roots = set(), {}
@@ -342,8 +203,9 @@ def _audit_files_uncached(files):
             scene_maps = []
             from cocos1_compat import engine_file
             if engine_file(files):
-                # 1.9 exports scene registrations in _CCSettings.scenes, before bundle configs existed.
-                scene_maps.extend(re.findall(r'\burl\s*:\s*["\']([^"\']+)', settings))
+                read = subprocess.run([shutil.which('node') or 'node', str(Path(__file__).with_name('read_cocos1_settings.cjs'))], input=settings, text=True, capture_output=True, timeout=10)
+                if read.returncode: errors.append('Creator1 literal settings parser refused')
+                else: scene_maps.extend(row.get('url') for row in json.loads(read.stdout).get('scenes', []))
             for n in names:
                 if re.search(r'/(?:config(?:\.[\w-]+)?)\.json$', n):
                     try:
@@ -404,16 +266,6 @@ def _audit_files_uncached(files):
             continue
         if name == 'game.js':
             entry_protocols = set(parsed.get('native_entry_protocols', []))
-        input_scan = parsed.get('platform_input_bindings') or {}
-        for finding in input_scan.get('findings', []):
-            platform_input_bindings.append(dict(source=name, **finding))
-            errors.append('Cocos platform input binding skipped: %s:%s [%s] %s; missing when %s' %
-                          (name, finding['line'], finding['id'], finding['event'],
-                           json.dumps(finding['missing_when'], sort_keys=True)))
-        for finding in input_scan.get('unresolved', []):
-            platform_input_unresolved.append(dict(source=name, **finding))
-            warnings.append('Cocos platform input binding needs runtime review: %s:%s (%s)' %
-                            (name, finding['line'], finding['reason']))
         startup_modules[name] = {key: parsed.get(key) for key in
                                  ('startup24_resources', 'global_boot_assignments', 'calls_global_boot',
                                   'direct_startup_resources', 'direct_boot_resources')}
@@ -572,7 +424,7 @@ def _audit_files_uncached(files):
     # package's real game.js -> web-adapter.js prefix with SDK touches that carry only the documented
     # identifier/screenX/screenY/force fields, then the engine's own callbacks (probe_cocos3_touch_coordinates.cjs).
     # Its Vec2 turns NaN into 0, so the probe requires the tapped point, not just a finite on-screen value.
-    touch_probed = touch_converter
+    touch_probed = touch_converter or bool(creator1_engine)
     root_scripts = [n for n in files if '/' not in n and n.endswith('.js')]
     tiktok = any(re.search(rb'\btt\s*\.\s*[A-Za-z_$]|\bTTMinis\b', files[n]) for n in root_scripts)
     cocos3_engine = next((n for n in sorted(files) if n.startswith('cocos-js/') and n.endswith('.js')
@@ -614,10 +466,9 @@ def _audit_files_uncached(files):
                       'cocos-js/*.js was found), so SDK screenX/screenY cannot be proven to reach the engine')
     if dynamic:
         warnings.append('dynamic require sites are not proven by static closure; execute actual Native startup')
-    return {'tool': 'audit_upload_startup', 'policy_version': 2, 'passed': not errors,
+    return {'tool': 'audit_upload_startup', 'policy_version': 1, 'passed': not errors,
             'errors': sorted(set(errors)), 'warnings': sorted(set(warnings)),
             'reachable_files': sorted(visited), 'require_edges': edges, 'dynamic_requires': dynamic,
-            'adapter_preconditions': adapter_preconditions, 'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
-            'platform_input_bindings': {'findings': platform_input_bindings, 'unresolved': platform_input_unresolved},
-            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch/resources registration and provable startup loads, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes; legacy-flag skipped common node input bindings in Cocos2 lifecycle methods',
-            'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'platform flags outside checked Cocos2 lifecycle paths', 'account/region/network', 'platform acceptance']}
+            'native_host_boundary': host_boundary, 'bootstrap_boundary': bootstrap_boundary, 'touch_coordinates': touch_coordinates, 'js_parse_reuse': parse_stats,
+            'coverage': 'literal CommonJS startup graph, Cocos2 jsList/launch/resources registration and provable startup loads, declared subpackage entries; registered entry host-boundary fixtures; Cocos 2.x/3.x TikTok SDK touch-coordinate probes',
+            'not_verified': ['dynamic resource paths', 'actual renderer/parser/SDK', 'account/region/network', 'platform acceptance']}

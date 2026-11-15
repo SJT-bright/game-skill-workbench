@@ -303,10 +303,6 @@
         if (s && s.w > 0 && s.h > 0) {
           const rec = { path: here, id: node.uuid || node._id || '', name, depth, order: order++, opacity: Math.round(op * 1000) / 1000,
                         rect: norm(box(node, s, 0, 0, 0, 0), cb), comps: {} };
-          // Roles are observations of the shared producer, not blanket visual exemptions.
-          if (node.__gameUIProducer === 'GameUIKit' && typeof node.__gameUIRole === 'string') {
-            rec.ui_role = node.__gameUIRole; rec.ui_role_source = 'GameUIKit';
-          }
           rec.ancestor_ids=[];for(let parent=node.parent;parent;parent=parent.parent){const id=parent.uuid||parent._id;if(id)rec.ancestor_ids.push(id);}
           if (get(node, T.Canvas)) rec.comps.canvas = true;
           if (rootBox && cb === rootBox) rec.outside_canvas = true;
@@ -363,9 +359,7 @@
           if (spr && spr.enabled !== false && spr.spriteFrame) {
             const sf = spr.spriteFrame;
             const TILED = T.Sprite && T.Sprite.Type ? T.Sprite.Type.TILED : 2;
-            const FILLED = T.Sprite && T.Sprite.Type ? T.Sprite.Type.FILLED : 3;
-            rec.comps.sprite = { whole_text_part: node.__wholeTextPart===true, frame: sf ? sf.name || '' : '', sliced: spr.type === SLICED, tiled: spr.type === TILED,
-              filled: spr.type === FILLED, trim: spr.trim !== false };
+            rec.comps.sprite = { whole_text_part: node.__wholeTextPart===true, frame: sf ? sf.name || '' : '', sliced: spr.type === SLICED, tiled: spr.type === TILED };
             // Clarity is measured against the phone's visible CSS size, not Cocos design units.
             // Keep display_size for geometry; screen is normalized to the camera output.
             if (rec.screen && cr.width > 0 && cr.height > 0) {
@@ -378,8 +372,6 @@
               try {
                 const fr = sf.rect || (sf.getRect && sf.getRect()) || sf._rect;
                 const os = sf.originalSize || (sf.getOriginalSize && sf.getOriginalSize()) || sf._originalSize;
-                if (fr) rec.comps.sprite.frame_rect = [fr.x,fr.y,fr.width,fr.height];
-                if (os) rec.comps.sprite.original_size = [os.width,os.height];
                 const useRect = spr.trim !== false && fr && fr.width > 0;
                 const fw = useRect ? fr.width : (os && os.width), fh = useRect ? fr.height : (os && os.height);
                 if (fw > 0 && fh > 0) {
@@ -409,14 +401,6 @@
               if (ins.some((v) => v > 0) && ins[0] + ins[1] < s.w && ins[2] + ins[3] < s.h) {
                 rec.comps.sprite.inner = norm(box(node, s, ins[0], ins[3], ins[1], ins[2]), cb);
               }
-            }
-            const glyphSource = sf && sf.__gameUISource;
-            if (glyphSource && glyphSource.kind === 'bitmap_glyph' &&
-                typeof glyphSource.font_uuid === 'string' && Number.isInteger(glyphSource.code)) {
-              rec.comps.sprite.source_font_uuid = glyphSource.font_uuid;
-              rec.comps.sprite.source_glyph_code = glyphSource.code;
-              try { const fr = sf.getRect ? sf.getRect() : sf.rect || sf._rect;
-                if (fr) rec.comps.sprite.source_glyph_rect = [fr.x,fr.y,fr.width,fr.height]; } catch (_) {}
             }
           }
           if (get(node, T.BlockInputEvents)) rec.comps.block_input = true;

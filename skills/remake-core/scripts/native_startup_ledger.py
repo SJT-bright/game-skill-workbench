@@ -29,39 +29,15 @@ def environment():
     return cl.sha([platform.platform(), sys.version, str(Path(sys.executable).resolve()), variables, executables])
 
 
-
-
-_STARTUP_TOOL_IDENTITY_SHA256 = '27a71b05088b78a997f3cca3d697653dc24bcdcbe26772d3578554b1b001e036'
-_STARTUP_TOOL_IDENTITY_BODY_SHA256 = '7b6702970ab2c4fcf84f3073cde6a73a0fa37a21b9a2f69060f5cc5a75827895'
-
-
-def _startup_tools(paths, *, proof=None, native=None, project=None):
-    """Startup observation identity only; unknown code keeps its actual identity."""
-    helper = Path(__file__).resolve().with_name('startup_tool_identity.py')
-    if not helper.is_file() or helper.is_symlink():
-        return cl.tool_fingerprint(paths)
-    import re
-    raw = helper.read_bytes()
-    manifest_slot = re.compile(rb"^_MANIFEST_SHA256 = '([0-9a-f]{64})'$", re.M)
-    if (hashlib.sha256(raw).hexdigest() != _STARTUP_TOOL_IDENTITY_SHA256
-            or len(manifest_slot.findall(raw)) != 1
-            or hashlib.sha256(manifest_slot.sub(b"_MANIFEST_SHA256 = '<projection-manifest-sha256>'", raw)).hexdigest() != _STARTUP_TOOL_IDENTITY_BODY_SHA256):
-        return cl.tool_fingerprint(paths)
-    import startup_tool_identity as identity_helper
-    if Path(identity_helper.__file__).resolve() != helper:
-        return cl.tool_fingerprint(paths)
-    return identity_helper.fingerprint(paths, proof=proof, native=native, project=project)
-
-
-def identity(proof, native, project, *, _compat_native=None):
+def identity(proof, native, project):
     runner_id, runner, _, _ = renderer.registered_execution(proof, native, project)
     profile = proof.get('control_profile')
     extra = None
     if profile not in {'native_loading_recovery_v1', 'cocos3_systemjs_native_v1',
                        'native_startup_controls.v1', 'canvas_context_conflict_v1'} and not runner.get('legacy_full_validation'):
         extra = project_qa.lookup(project, 'validators', profile)
-    tools = _startup_tools([__file__, renderer.__file__,
-                                 Path(renderer.__file__).with_name('cocos3_native_renderer_contract.py')], proof=proof, native=_compat_native or native, project=project)
+    tools = cl.tool_fingerprint([__file__, renderer.__file__,
+                                 Path(renderer.__file__).with_name('cocos3_native_renderer_contract.py')])
     conditions = {'native_path': str(native), 'runner': runner_id,
                   'profile': profile, 'policy_sha256': cl.sha([runner, extra]),
                   'environment_sha256': environment()}

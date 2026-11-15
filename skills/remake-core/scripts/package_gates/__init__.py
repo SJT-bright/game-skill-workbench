@@ -33,7 +33,7 @@ import re
 from pathlib import Path
 
 GATE_MODULES = ('network', 'mission', 'startup', 'webp', 'ads_static', 'adapter_fix', 'kit_parts', 'tiktok_compat',
-                'portrait', 'secrets', 'audio', 'sound', 'ad_standard_six')
+                'portrait', 'secrets', 'audio', 'sound')
 POLICIES = ('new', 'legacy')
 CONTEXT_KEYS = ('writer', 'finalize_record', 'project', 'finalize_options')
 
@@ -71,10 +71,7 @@ class PackageView:
                                          'name': sub.get('name') or sub['root'].strip().strip('/'),
                                          'independent': sub.get('independent') is True})
         names = list(self.files)
-        from cocos1_compat import engine_file
-        if engine_file(self.files):
-            self.engine_major = 1
-        elif any(re.search(r'(^|/)cocos2d-js(-min)?\.js$', n) for n in names):
+        if any(re.search(r'(^|/)cocos2d-js(-min)?\.js$', n) for n in names):
             self.engine_major = 2
         elif any(n.startswith('cocos-js/') or re.search(r'(^|/)web-adapter\.js$', n) for n in names):
             self.engine_major = 3

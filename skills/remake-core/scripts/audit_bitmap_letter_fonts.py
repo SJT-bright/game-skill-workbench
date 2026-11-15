@@ -62,35 +62,6 @@ def labels(project):
     return rows
 
 
-def numeric_units(project, path, glyph, usages):
-    """A numeric font may contain measured formatter units, not an alphabet.
-
-    Re-read the real glyph set and usage strings. The existing charset producer
-    supplies dynamic formatter requirements; a declaration alone never exempts
-    alphabet glyphs or bitmap sentences.
-    """
-    letters = {c for c in glyph if c.isascii() and c.isalpha()}
-    if not set('0123456789') <= set(glyph) or not letters <= set('BKMxX'):
-        return set()
-    if any(re.search(r'[A-WYZa-wyz]{2,}|[A-Za-z]\s+[A-Za-z]', value) for value in usages):
-        return set()
-    observed = {c for value in usages if re.fullmatch(r'[\d\s.,+−\-/%:×xXBKM]*', value) for c in value}
-    try:
-        doc = json.loads((project/'docs/english/charset.json').read_text(encoding='utf-8-sig'))
-        rel = path.relative_to(project).as_posix()
-        font = next((f for f in doc.get('fonts', []) if isinstance(f, dict) and f.get('font') == rel
-                     and set(f.get('has', '')) == set(glyph)), None)
-        if font:
-            observed.update(str(doc.get('value_charset', '')))
-    except (OSError, ValueError, TypeError, AttributeError):
-        pass
-    units = set('BKM') & observed
-    # x/X are symbols only when the actual atlas proves the same × glyph.
-    if '×' in glyph and glyph['×'][3] > 0:
-        units.update(c for c in 'xX' if c in glyph and glyph[c] == glyph['×'])
-    return units
-
-
 def audit(project):
     project = Path(project).resolve()
     fonts = {}
@@ -100,19 +71,17 @@ def audit(project):
 
     def add(kind, path, detail):
         findings.append({'kind': kind, 'file': str(Path(path).relative_to(project)), 'detail': detail})
-    label_rows = labels(project)
-    for uuid, (path, g) in fonts.items():
-        units = numeric_units(project,path,g,[text for _,font,text in label_rows if font == uuid])
+    for path, g in fonts.values():
         for low in 'abcdefghijklmnopqrstuvwxyz':
             up = low.upper()
-            if low in g and up in g and g[low] == g[up] and g[low][3] > 0 and not {low,up} <= units:
+            if low in g and up in g and g[low] == g[up] and g[low][3] > 0:
                 add('letter_case_alias', path, '%r uses the same atlas image as %r' % (low, up))
         letters = {c for c in g if c.isascii() and c.isalpha()}
         if any(c.islower() for c in letters) and any(c.isupper() for c in letters):
-            single = sorted(c for c in letters if c.swapcase() not in letters and c not in units)
+            single = sorted(c for c in letters if c.swapcase() not in letters)
             if single:
                 add('partial_letter_case', path, 'letters with one case only: ' + ''.join(single))
-    for path, uuid, text in label_rows:
+    for path, uuid, text in labels(project):
         if uuid not in fonts:
             continue
         fpath, g = fonts[uuid]

@@ -678,24 +678,17 @@ def valid_generated(project):
     return ok, bad, error, rows
 
 
-def record_generated(project, files, tool, prompt=None, date=None, raw=None, source=None, license_=None,
-                     usage=None, expected_cases=None):
+def record_generated(project, files, tool, prompt=None, date=None, raw=None, source=None, license_=None):
     project = Path(project).resolve()
     if not str(tool or '').strip():
         raise ValueError('要写 --tool（用的生图工具，例如 codex image_gen）')
     if not (str(prompt or '').strip() or (str(source or '').strip() and str(license_ or '').strip())):
         raise ValueError('要写 --prompt（提示词）；素材库下载的图写 --source 和 --license')
-    from art_usage_budget import asset_usage, validate_output
-    usage_record = asset_usage(dict(name='generated artwork', **({'usage': usage, 'expected_cases': expected_cases}
-                               if usage is not None or expected_cases is not None else {})), project)
     data = _generated(project)
     date = date or dt.date.today().isoformat()
     known = set(valid_generated(project)[0])      # an earlier entry without prompt/source does not count
     added = []
     base = {'tool': str(tool).strip(), 'date': date, 'recorded': now()}
-    if usage_record:
-        base.update(usage=usage_record['usage'], expected_cases=usage_record['expected_cases'],
-                    usage_summary=usage_record['summary'])
     if prompt:
         base['prompt'] = str(prompt).strip()
     if source:
@@ -713,14 +706,8 @@ def record_generated(project, files, tool, prompt=None, date=None, raw=None, sou
         if not p.is_file():
             raise ValueError('图不存在：%s' % f)
         h = sha(p.read_bytes())
-        if h in known and (usage_record is None or any(x.get('sha256') == h and x.get('usage') == usage_record['usage']
-                and x.get('expected_cases') == usage_record['expected_cases'] for x in data['images'])):
+        if h in known:
             continue
-        if usage_record:
-            size = pixels(p.read_bytes())
-            if size is None:
-                raise ValueError('cannot read image dimensions for declared usage: ' + str(p))
-            validate_output(usage_record['usage'], size, project=project)
         if root_sha and h != root_sha:
             entry = dict(base, sha256=h, file=_rel(project, p), from_sha256=root_sha,
                          how='processed from the generator output (crop / resize / compress)')
@@ -969,16 +956,10 @@ def check_generated(project, board=None, art_style=None, assets=None, ship=None,
     project = Path(project).resolve()
     strict, board, style = applies(project, board, art_style)
     out = {'state': None, 'ok': None, 'strict': strict, 'unrecorded': [], 'edited': [], 'allowed': [], 'recorded': 0,
-           'pre_v78': 0, 'unused': [], 'board': board, 'record': GENERATED_FILE.as_posix(), 'usage_errors': []}
-    from art_usage_budget import asset_usage, production_inputs_required
-    try:
-        required_usage = production_inputs_required(project)
-    except (OSError, ValueError) as error:
-        out.update(state='input_error', ok=False, message='生产输入策略错误：' + str(error))
-        return out
+           'pre_v78': 0, 'unused': [], 'board': board, 'record': GENERATED_FILE.as_posix()}
     assets = assets or project_assets(project)
     record, error = read_base(project)
-    if not strict and not required_usage and (record is None or record.get('base') == 'none'):
+    if not strict and (record is None or record.get('base') == 'none'):
         out.update(state='not_applicable',
                    message='英化游戏：没有记下原版（%s），分不出哪些是新做的图，只提示' % BASE_FILE.as_posix())
         return out
@@ -999,17 +980,6 @@ def check_generated(project, board=None, art_style=None, assets=None, ship=None,
             continue                       # H8 (base) or kit / official loading
         if h in ok:
             out['recorded'] += 1
-            if required_usage and _reason(ship, rel):
-                source, seen = ok[h], set()
-                while 'usage' not in source and source.get('from_sha256') and source['from_sha256'] not in seen:
-                    parent = source['from_sha256']; seen.add(parent)
-                    source = ok.get(parent, {})
-                try:
-                    # Source budget integrity only: do not replay pixels or claim
-                    # that declared consumers prove complete runtime coverage.
-                    asset_usage(dict(source, name=rel), project)
-                except (ValueError, OSError) as error:
-                    out['usage_errors'].append({'file': rel, 'sha256': h, 'error': str(error)})
             if _pre_v78_root(ok, h) and _reason(ship, rel):
                 out['pre_v78'] += 1        # listed in every report (Saul 10-30): registered, not generated
             continue
@@ -1019,12 +989,6 @@ def check_generated(project, board=None, art_style=None, assets=None, ship=None,
         hit = next((x for x in allow if _match(x, rel, h)), None)
         if hit:
             out['allowed'].append({'file': rel, 'why': hit['why']})
-            if required_usage:
-                try:
-                    # An authorized generation exception does not supply layout inputs.
-                    asset_usage(dict(hit, name=rel), project)
-                except (ValueError, OSError) as error:
-                    out['usage_errors'].append({'file': rel, 'sha256': h, 'error': str(error)})
         elif rel in by_file:
             out['edited'].append({'file': rel, 'sha256': h, 'recorded_sha256': by_file[rel].get('sha256')})
         else:
@@ -1051,7 +1015,7 @@ def check_generated(project, board=None, art_style=None, assets=None, ship=None,
             out['message'] += ('。其中 ad-boost 板块 %s 的图：照 ad-boost 第 ④ 步，用 ad-boost 的 scripts/art/skill_link.py '
                                'record --project "%s" --gen <这个板块的 art_<板块> 生图目录> 把它的生图记录（提示词、原图）'
                                '写进 %s，不要逐张手抄' % ('、'.join(adboost), project, GENERATED_FILE.as_posix()))
-        if not strict and not required_usage:
+        if not strict:
             out['message'] = '英化游戏只提示：' + out['message']
     elif not out['recorded'] and not out['allowed']:
         out['message'] = '没有新做的图（其余都是底子原图、平台包或 4x4 以内的填充图）'
@@ -1067,12 +1031,6 @@ def check_generated(project, board=None, art_style=None, assets=None, ship=None,
         out['message'] += '；%s 里 %d 条找不到提示词或来源，不算' % (GENERATED_FILE.as_posix(), len(bad))
     if invalid:
         out['message'] += '；%s 里 %d 条没写 why，不算' % (ALLOW_FILE.as_posix(), len(invalid))
-    if required_usage and (out['usage_errors'] or problems or errors):
-        out['ok'] = False
-        if out['usage_errors']:
-            out['message'] += '；新工程生产用途缺失或无效：' + '; '.join(
-                row['file'] + ': ' + row['error'] for row in out['usage_errors'])
-        out['message'] += '；回到原生成/登记入口补真实用途；无需重画、构建或重采未变化原件'
     return out
 
 
@@ -1089,8 +1047,7 @@ def summary(result):
     return {'base_state': b['state'], 'base_ok': b['ok'], 'base_unlisted': len(b['unlisted']), 'base_kept': len(b['kept']),
             'base_unused': len(b.get('unused') or []), 'generated_state': g['state'], 'generated_ok': g['ok'],
             'not_generated': len(g['unrecorded']) + len(g['edited']), 'allowed': len(g['allowed']),
-            'pre_v78': g.get('pre_v78') or 0, 'generated_unused': len(g.get('unused') or []),
-            'production_usage_errors': len(g.get('usage_errors') or [])}
+            'pre_v78': g.get('pre_v78') or 0, 'generated_unused': len(g.get('unused') or [])}
 
 
 def base_audio_now(project, board=None):
@@ -1222,10 +1179,6 @@ def main(argv=None):
     p.add_argument('--raw', type=Path, help='生图工具直接给的原图（最终文件是裁切/压缩后的）')
     p.add_argument('--source', help='素材库下载的图：来源网址')
     p.add_argument('--license', help='素材库下载的图：授权（CC0 等）')
-    usage_args = p.add_mutually_exclusive_group()
-    usage_args.add_argument('--usage-budget', type=Path, help='existing CSS usage budget JSON; same declaration as first-generation planning')
-    usage_args.add_argument('--usage-json', help='embedded CSS usage budget from the producer; no second manifest')
-    p.add_argument('--expected-cases', nargs='+', help='complete intended case IDs for this artwork')
     p.add_argument('files', nargs='+', type=Path)
     p = sub.add_parser('derive', help='有记录的生成图又裁切/压缩/调色后，记下新文件')
     p.add_argument('--project', required=True, type=Path)
@@ -1256,10 +1209,7 @@ def main(argv=None):
             print('已写 %s' % (a.project / BASE_FILE))
             return 0
         if a.cmd == 'generated':
-            usage = (json.loads(a.usage_budget.read_text(encoding='utf-8')) if a.usage_budget else
-                     json.loads(a.usage_json) if a.usage_json is not None else None)
-            rows = record_generated(a.project, a.files, a.tool, a.prompt, a.date, a.raw, a.source, a.license,
-                                    usage=usage, expected_cases=a.expected_cases)
+            rows = record_generated(a.project, a.files, a.tool, a.prompt, a.date, a.raw, a.source, a.license)
         elif a.cmd == 'derive':
             rows = record_derived(a.project, a.files, a.origin, a.how)
         elif a.cmd in ('keep', 'allow'):
@@ -1275,7 +1225,7 @@ def main(argv=None):
                 print('H8 底子原图原声：%s' % result['base']['message'])
                 print('H10 生图记录：%s' % result['generated']['message'])
             return 0 if result['base']['ok'] is not False and result['generated']['ok'] is not False else 1
-    except (ValueError, OSError) as error:
+    except ValueError as error:
         print('拒绝：%s' % error, file=sys.stderr)
         return 1
     print(json.dumps(rows, ensure_ascii=False, indent=1))

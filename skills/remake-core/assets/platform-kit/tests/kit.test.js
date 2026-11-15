@@ -5,7 +5,7 @@ var assert = require('assert');
 var path = require('path');
 var base = process.env.KIT_DIR || path.join(__dirname, '..', 'assets', 'tiktok-platform');
 var config = require(path.join(base, 'PlatformConfig.js'));
-var SaveStore = require(process.env.SAVE_STORE_FILE || path.join(base, 'SaveStore.js'));
+var SaveStore = require(path.join(base, 'SaveStore.js'));
 var MissionFlow = require(path.join(base, 'MissionFlow.js'));
 var Mission = require(path.join(base, 'TikTokMissionService.js'));
 
@@ -25,10 +25,8 @@ function memoryStorage() {
       s.writes++;
       map[k] = s.transform ? s.transform(String(v)) : String(v);
     },
-    key: function(i){return Object.keys(map)[i] || null;},
     raw: map
   };
-  Object.defineProperty(s,'length',{get:function(){return Object.keys(map).length;}});
   return s;
 }
 
@@ -132,46 +130,6 @@ function setup(options) {
     assert.strictEqual(r.status, 'recovered');
     assert.strictEqual(st.raw['k:corrupt-backup'], '{not json');
     assert(s.isClaimed('shortcut') && s.isClaimed('profile'));
-  });
-  // 2026-11-12: an unreadable save never leaves the game unable to save. The 2026-11-11 text answered each of these
-  // with status 'unavailable' and refused every update().
-  [['undefined', undefined, 'new'], ['empty_text', '', 'new'], ['null', null, 'new'], ['false', false, 'recovered']].forEach(function (c) {
-    test('save_new_player_without_key_list_reading_' + c[0] + '_can_save', function () {
-      var st = memoryStorage(), get = st.getItem;
-      st.getItem = function (k) { return Object.prototype.hasOwnProperty.call(st.raw, k) ? get(k) : c[1]; };
-      var s = new SaveStore({coins: 0}, {storage: st, key: 'k', storageKeys: function () { return null; }, login: false});
-      var r = s.load();
-      assert.strictEqual(r.status, c[2]); assert(r.ok);
-      assert(s.update(function (d) { d.coins += 7; }).ok, 'the first save works');
-      var again = new SaveStore({coins: 0}, {storage: st, key: 'k', storageKeys: function () { return null; }, login: false});
-      assert.strictEqual(again.load().status, 'loaded'); assert.strictEqual(again.get().coins, 7);
-    });
-  });
-  await test('save_malformed_text_is_backed_up_and_the_game_can_save_again', function () {
-    var st = memoryStorage(); st.raw.k = '{"coins":45';
-    var s = new SaveStore({coins: 0}, {storage: st, key: 'k', storageKeys: function () { return Object.keys(st.raw); }, login: false});
-    assert.strictEqual(s.load().status, 'recovered');
-    assert.strictEqual(st.raw['k:corrupt-backup'], '{"coins":45', 'the old text is kept under the backup key');
-    assert(s.update(function (d) { d.coins += 7; }).ok); assert.strictEqual(s.get().coins, 7);
-    assert.strictEqual(s.unreadableSavePolicy, 'backup-then-defaults');
-  });
-  await test('save_subclass_written_for_the_2026_11_11_text_still_runs_and_can_save', function () {
-    // 橡皮怪 WalletStore: _load answers a wallet that fails its own schema with this._unavailable(reason).
-    function Wallet(defaults, options) { SaveStore.call(this, defaults, options); }
-    Wallet.prototype = Object.create(SaveStore.prototype); Wallet.prototype.constructor = Wallet;
-    Wallet.prototype._load = function () {
-      var raw; try { raw = this.storage.getItem(this.key); } catch (_) {}
-      var decoded = raw; try { if (typeof raw === 'string') decoded = JSON.parse(raw); } catch (_) {}
-      if (decoded && typeof decoded === 'object' && !(typeof decoded.coins === 'number' && decoded.coins >= 0)) return this._unavailable('wallet_schema_unreadable');
-      return SaveStore.prototype._load.call(this);
-    };
-    var st = memoryStorage(); st.raw.k = '{"coins":"many"}';
-    var s = new Wallet({coins: 0}, {storage: st, key: 'k', login: false}), r = s.load();
-    assert.strictEqual(r.ok, false); assert.strictEqual(r.status, 'unavailable'); assert.strictEqual(r.error, 'wallet_schema_unreadable');
-    assert.strictEqual(s.get().coins, 0);
-    assert(s.update(function (d) { d.coins += 7; }).ok, 'the game can still save'); assert.strictEqual(JSON.parse(st.raw.k).coins, 7);
-    st.raw.k = '{"coins":5}'; var good = new Wallet({coins: 0}, {storage: st, key: 'k', login: false});
-    assert.strictEqual(good.load().status, 'loaded'); assert.strictEqual(good.get().coins, 5);
   });
   await test('save_cancelled_mutator_does_not_write', function () {
     var st = memoryStorage(), s = new SaveStore({}, {storage: st, key: 'k'});

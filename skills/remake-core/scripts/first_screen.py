@@ -126,8 +126,6 @@ def read_json(path: Path):
 
 class Project:
     def __init__(self, root: Path):
-        from creator_asset_contract import validate_bundle_names
-        validate_bundle_names(root)
         self.root = root.resolve()
         self.assets = self.root / 'assets'
         self.files = [p for p in estimate.files(self.assets) if p.suffix != '.meta']

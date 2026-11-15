@@ -69,37 +69,6 @@ def scan_source(project):
         for g in game_runs:
             hits.append({'id': g, 'rule': 'game_run_twice', 'line': 'game.run(...)',
                          'why': 'engine init must run once; a Retry while init is in flight must not call game.run again'})
-    # Share the package parser/AST check: flag guards in compiled comma/short-circuit
-    # expressions and in source blocks must not acquire different acceptance rules.
-    import audit_upload_startup as upload
-    import shutil
-    node, signature = shutil.which('node'), None
-    for f in walk_sources(project):
-        if f.suffix != '.js':
-            continue  # TypeScript is covered by its actual compiled Native JS, not guessed by a regex.
-        content = f.read_bytes()
-        if not re.search(rb'\bCC_(?:WECHATGAME|WECHATGAMESUB|BYTEDANCEGAME|QQPLAY)\b', content):
-            continue
-        rel = f.relative_to(project).as_posix()
-        try:
-            if not node:
-                raise ValueError('Node.js required to inspect platform-dependent input binding')
-            if signature is None:
-                signature = upload.parser_fingerprint()
-            code, stderr, parsed, _ = upload.parse_package_source(content, node, signature)
-            if code or parsed.get('error'):
-                raise ValueError(parsed.get('error') or stderr or 'AST parser failed')
-            for finding in (parsed.get('platform_input_bindings') or {}).get('findings', []):
-                hits.append({'id': '%s:%d:platform_input_binding' % (rel, finding['line']),
-                             'rule': 'platform_input_binding', 'line': finding['event'],
-                             'why': finding['reason'], 'hard_block': True, 'evidence': finding})
-            for finding in (parsed.get('platform_input_bindings') or {}).get('unresolved', []):
-                hits.append({'id': '%s:%d:platform_input_binding_review' % (rel, finding['line']),
-                             'rule': 'platform_input_binding_review', 'line': finding['lifecycle'],
-                             'why': finding['reason'], 'evidence': finding})
-        except (OSError, ValueError, UnicodeError, upload.subprocess.TimeoutExpired) as error:
-            hits.append({'id': rel + ':platform_input_parser', 'rule': 'platform_input_parser',
-                         'line': '', 'why': str(error), 'hard_block': True})
     return hits
 
 
@@ -143,15 +112,6 @@ def validate_runtime_report(report, binding, *, detail=None, replay_runner=None)
     import audit_native_startup_renderer as renderer
     import native_startup_ledger
     try:
-        # A registered immutable scope may cover the current bytes while the
-        # original contract/proof keep their original complete build binding.
-        from startup_scoped_evidence import consume
-        contract_file = report.get('_contract_file')
-        if contract_file:
-            scoped = consume(report['project'], report['native'], contract_file, current_binding=binding)
-            if scoped is not None:
-                if detail is not None: detail.update(scoped)
-                return []
         if report.get('policy_version') != 2 or report.get('runtime_required') is not True:
             return ['Final startup report requires real Native renderer policy v2']
         ref = report['startup_renderer_report']; path = Path(ref['path'])
@@ -180,7 +140,6 @@ def main():
     ap.add_argument('--out', type=Path)
     ap.add_argument('--renderer-report', type=Path, help='actual real-Native renderer report, required for final Native startup checks')
     ap.add_argument('--runtime-only', action='store_true', help='finished-product startup maintenance: require and replay actual Native runtime; upload writer separately enforces file/size rules')
-    ap.add_argument('--scope-web', type=Path, help='actual same-version Web root; freezes registered startup dependency scope after a passing original observation')
     a = ap.parse_args()
     if a.runtime_only:
         try:
@@ -200,11 +159,7 @@ def main():
             if a.out:
                 a.out.parent.mkdir(parents=True,exist_ok=True)
                 with a.out.open('x',encoding='utf-8') as f:json.dump(report,f,ensure_ascii=False,indent=2)
-                if not errors and a.scope_web:
-                    from startup_scoped_evidence import auto_approve
-                    report['scope_registration'] = auto_approve(a.project, a.native, a.out, a.scope_web)
-            print(json.dumps({'passed':not errors,'errors':errors,
-                              'scope_registration':report.get('scope_registration')},ensure_ascii=False))
+            print(json.dumps({'passed':not errors,'errors':errors},ensure_ascii=False))
             return int(bool(errors))
         except (KeyError,TypeError,ValueError,OSError) as error:
             print(json.dumps({'status':'refuse','error':str(error)},ensure_ascii=False));return 1
@@ -232,7 +187,7 @@ def main():
         print(json.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False), file=sys.stderr)
         return 2
     problems = []
-    open_hits = [h for h in hits if h.get('hard_block') or not str(reviewed.get(h['id'], '')).strip()]
+    open_hits = [h for h in hits if not str(reviewed.get(h['id'], '')).strip()]
     for h in open_hits:
         problems.append('%s [%s] %s' % (h['id'], h['rule'], h['why']))
     if sizes:
@@ -272,11 +227,7 @@ def main():
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        if not problems and runtime_required and a.scope_web:
-            from startup_scoped_evidence import auto_approve
-            report['scope_registration'] = auto_approve(a.project, a.native, a.out, a.scope_web)
     print(json.dumps({'failed': len(problems), 'problems': problems[:10],
-                      'scope_registration': report.get('scope_registration'),
                       'startup_mb': round(sizes['startup_bytes'] / 1048576, 2) if sizes else None}, ensure_ascii=False))
     return 1 if problems else 0
 

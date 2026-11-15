@@ -40,7 +40,7 @@
   if (root) root.TikTokScreenFit = api;
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this), function () {
   'use strict';
-  var VERSION = '1.1', BLEED = 2, MARGIN = 8;
+  var VERSION = '1.0', BLEED = 2, MARGIN = 8;
 
   function v3(cc) { return !!(cc && cc.UITransform); }
   function o(opts) { return opts || {}; }
@@ -134,77 +134,14 @@
       covered: { left: cx - hw, right: cx + hw, bottom: cy - hh, top: cy + hh } };
   }
 
-  // A watcher is event-driven (view + ancestor layout), not an extra frame loop. All listeners and
-  // queued work belong to the background node and are released together on off(), destroy or scene launch.
-  var ownerTypes = [];
-  function watchOwner(cc, node, stop) {
-    if (!cc.Component || typeof node.addComponent !== 'function') return null;
-    var row = null;
-    for (var i = 0; i < ownerTypes.length; i++) if (ownerTypes[i].cc === cc) row = ownerTypes[i];
-    if (!row) {
-      var onDestroy = function () { (this.screenFitStops || []).slice().forEach(function (f) { f(); }); this.screenFitStops = []; };
-      var C;
-      if (typeof cc.Class === 'function') C = cc.Class({extends: cc.Component, onDestroy: onDestroy});
-      else C = class extends cc.Component { onDestroy() { onDestroy.call(this); } };
-      row = {cc: cc, C: C}; ownerTypes.push(row);
-    }
-    var owner = node.getComponent(row.C) || node.addComponent(row.C);
-    (owner.screenFitStops || (owner.screenFitStops = [])).push(stop);
-    return owner;
-  }
   function cover(cc, node, opts) {
     opts = o(opts);
     var res = coverOnce(cc, node, opts);
     if (opts.watch) {
-      var stopped = false, queued = false, listeners = [], owner = null;
-      var dir = cc.director, D = cc.Director || {}, N = cc.Node && cc.Node.EventType || {};
-      var before = D.EVENT_BEFORE_DRAW, launch = D.EVENT_BEFORE_SCENE_LAUNCH || D.EVENT_BEFORE_SCENE_LOADING;
-      function valid() { return node && (typeof cc.isValid !== 'function' || cc.isValid(node, true)); }
-      function listen(target, event, fn) {
-        if (!target || !event || typeof target.on !== 'function') return;
-        target.on(event, fn); listeners.push({target: target, event: event, fn: fn});
-      }
-      function unlisten() {
-        listeners.forEach(function (l) { if (typeof l.target.off === 'function') l.target.off(l.event, l.fn); });
-        listeners = [];
-      }
-      function refresh() {
-        queued = false;
-        if (stopped) return false;
-        if (!valid()) { off(); return false; }
-        var next = coverOnce(cc, node, opts);
-        ['scale', 'x', 'y', 'visible', 'covered'].forEach(function (k) { res[k] = next[k]; });
-        return true;
-      }
-      function request() {
-        if (stopped || queued) return;
-        if (!valid()) { off(); return; }
-        if (dir && before && typeof dir.once === 'function') { queued = true; dir.once(before, refresh); }
-        else refresh();
-      }
-      function bind() {
-        unlisten();
-        ['canvas-resize', 'design-resolution-changed'].forEach(function (e) { listen(cc.view, e, request); });
-        // Local position/scale is written by cover itself: only own content-size/anchor, then ancestor transforms.
-        [N.SIZE_CHANGED, N.ANCHOR_CHANGED].forEach(function (e) { listen(node, e, request); });
-        listen(node, N.PARENT_CHANGED, function () { bind(); request(); });
-        for (var p = node.parent; p; p = p.parent) {
-          var events = [N.TRANSFORM_CHANGED, N.POSITION_CHANGED, N.SCALE_CHANGED, N.ROTATION_CHANGED, N.SIZE_CHANGED, N.ANCHOR_CHANGED];
-          events.filter(function (e, i) { return e && events.indexOf(e) === i; }).forEach(function (e) { listen(p, e, request); });
-        }
-        listen(dir, launch, off);
-      }
-      function off() {
-        if (stopped) return;
-        stopped = true; unlisten();
-        if (queued && dir && before && typeof dir.off === 'function') dir.off(before, refresh);
-        queued = false;
-        if (owner && owner.screenFitStops) owner.screenFitStops = owner.screenFitStops.filter(function (f) { return f !== off; });
-      }
-      res.off = off;
-      res.refresh = function () { if (!stopped) { bind(); return refresh(); } return false; };
-      owner = watchOwner(cc, node, off);
-      bind(); request(); // one post-layout refresh; later changes schedule only one refresh each
+      var v = cc.view, fn = function () { try { coverOnce(cc, node, opts); } catch (e) { try { console.warn('[ScreenFit] cover', e); } catch (_) {} } };
+      var evs = ['canvas-resize', 'design-resolution-changed'];
+      if (v && typeof v.on === 'function') evs.forEach(function (e) { v.on(e, fn); });
+      res.off = function () { if (v && typeof v.off === 'function') evs.forEach(function (e) { v.off(e, fn); }); };
     }
     return res;
   }

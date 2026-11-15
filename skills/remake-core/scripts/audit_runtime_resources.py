@@ -108,31 +108,6 @@ def project_context(function):
 
 def _catalogs(files):
     catalogs = {}
-    from cocos1_compat import engine_file
-    if engine_file(files):
-        run = subprocess.run([shutil.which('node') or 'node', str(HERE / 'read_cocos1_settings.cjs')],
-                             input=files.get('src/settings.js', b'').decode('utf-8-sig'),
-                             text=True, capture_output=True, timeout=10)
-        if run.returncode:
-            raise ValueError('Creator 1.9 settings data rejected: ' + run.stderr[-500:])
-        settings = json.loads(run.stdout)
-        types = settings.get('assetTypes')
-        assets = settings.get('rawAssets')
-        if not isinstance(types, list) or not isinstance(assets, dict):
-            raise ValueError('Creator 1.9 actual assetTypes/rawAssets required')
-        for rows in assets.values():
-            if not isinstance(rows, dict):
-                raise ValueError('Creator 1.9 raw asset table must be an object')
-            for row in rows.values():
-                if not isinstance(row, list) or len(row) < 2 or not isinstance(row[0], str) or type(row[1]) is not int or not 0 <= row[1] < len(types):
-                    raise ValueError('Invalid Creator 1.9 resource catalog row')
-                path = row[0]
-                if path.startswith('resources/'):
-                    path = path[len('resources/'):]
-                    stem, ext = posixpath.splitext(path)
-                    if ext.lower() in ('.fnt', '.ttf', '.otf', '.png', '.jpg', '.jpeg', '.json', '.mp3', '.wav', '.ogg', '.plist', '.prefab', '.anim', '.fire'):
-                        path = stem
-                    catalogs.setdefault('resources', set()).add((path, types[row[1]]))
     for name, content in files.items():
         if not re.search(r'(^|/)config(?:\.[0-9a-fA-F]+)?\.json$', name):
             continue
@@ -258,67 +233,6 @@ def _resolve_reviewed_data(profile, resolution, files):
     return dict(resolution, paths=paths)
 
 
-def _reviewed_project_scripts(report, site, resolution, files):
-    """Expand a reviewed project main's finite script call; an empty list is an observed domain, not a waiver."""
-    domain = resolution.get('finite_scripts')
-    required = {'main_sha256', 'settings', 'settings_sha256', 'call_sha256', 'entries', 'require_files'}
-    if set(resolution) != {'reason', 'finite_scripts'} or not isinstance(domain, dict) or set(domain) != required:
-        raise ValueError('project finite script contract fields invalid')
-    source = site.get('source')
-    match = KIT_JSLIST_CALL.match(site.get('expression') or '')
-    if (source != 'main.js' or not match or
-            not site['expression'][match.end():].lstrip().startswith((',', ')'))):
-        raise ValueError('project finite scripts requires exact supported settings.jsList.map call')
-    if (source not in files or hashlib.sha256(files[source]).hexdigest() != domain['main_sha256'] or
-            hashlib.sha256(site['expression'].encode()).hexdigest() != domain['call_sha256']):
-        raise ValueError('project main/call script identity changed')
-    settings = report.get('settings_js', {})
-    name = domain['settings']
-    if (not isinstance(name, str) or name != 'src/settings.js' or name not in files or
-            hashlib.sha256(files[name]).hexdigest() != domain['settings_sha256'] or
-            set(settings) != {name} or not isinstance(settings[name].get('jsList'), list)):
-        raise ValueError('project finite script settings is unknown, changed, or written dynamically')
-    text = files[source].decode('utf-8-sig')
-    # Creator transfers the original settings object into this exact local before clearing its global.
-    # Clearing that global does not modify the captured jsList. Every other settings write remains refused.
-    captures = list(re.finditer(r'\bvar\s+settings\s*=\s*window\._CCSettings\s*;', text))
-    for write in report.get('settings_writes', []):
-        position = int(write.get('id', ':0').rsplit(':', 1)[1])
-        if (write.get('source') != source or len(captures) != 1 or
-                not re.fullmatch(r'window\._CCSettings\s*=\s*undefined', write.get('expression', '')) or
-                not captures[0].end() <= position < int(site['id'].rsplit(':', 1)[1])):
-            raise ValueError('project finite script settings written dynamically')
-    entries = settings[name]['jsList']
-    if domain['entries'] != entries or any(not isinstance(x, str) for x in entries):
-        raise ValueError('project finite scripts must list every actual jsList entry')
-    paths = []
-    for entry in entries:
-        candidate = posixpath.normpath('src/' + entry)
-        if not entry or entry.startswith('/') or '\\' in entry or not candidate.startswith('src/') or '..' in PurePosixPath(candidate).parts:
-            raise ValueError('unsafe project finite script entry')
-        if candidate not in paths: paths.append(candidate)
-    text = files[source].decode('utf-8-sig')
-    literal = list(re.finditer(r"\brequire\s*\(\s*(['\"])(\./[^'\"]+)\1\s*\)", text))
-    if len(literal) != len(re.findall(r'\brequire\s*\(', text)):
-        raise ValueError('project main contains a nonliteral/unknown require')
-    extra = []
-    for match in literal:
-        candidate = posixpath.normpath(match[2])
-        if not PurePosixPath(candidate).suffix: candidate += '.js'
-        if PurePosixPath(candidate).is_absolute() or '..' in PurePosixPath(candidate).parts:
-            raise ValueError('unsafe project main require')
-        if candidate not in extra: extra.append(candidate)
-    if domain['require_files'] != extra:
-        raise ValueError('project finite scripts omitted or changed a literal main require')
-    for candidate in paths + extra:
-        if not files.get(candidate): raise ValueError('project finite script file missing: ' + candidate)
-    rows = report.setdefault('kit_script_files', [])
-    for candidate in dict.fromkeys(paths + extra):
-        if any(row['path'] == candidate for row in rows): raise ValueError('duplicate finite script ownership: ' + candidate)
-        rows.append({'id': site['id'], 'path': candidate, 'required_by': 'reviewed project finite script domain'})
-    report.setdefault('project_script_domains', []).append({'id':site['id'], **domain})
-
-
 def apply_reviewed_profile(report, files):
     """Exact-inventory finite domains; any changed/new JS falls back to strict discovery."""
     profiles = _reviewed_profiles()
@@ -339,10 +253,7 @@ def apply_reviewed_profile(report, files):
         resolution = _resolve_reviewed_data(profile, resolution, files)
         if not resolution.get('reason'):
             raise ValueError('reviewed resource domain lacks rationale')
-        if 'finite_scripts' in resolution:
-            _reviewed_project_scripts(report, sites[ident], resolution, files)
-            sites.pop(ident)
-        elif 'local_method' in resolution:
+        if 'local_method' in resolution:
             local=resolution['local_method']
             if not isinstance(local,dict) or set(local)!={'source','start','end','sha256','delegate_sites'}:
                 raise ValueError('reviewed local method requires exact body identity and delegated inventory')

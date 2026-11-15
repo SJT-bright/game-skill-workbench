@@ -8,9 +8,5 @@ function literal(n){
  throw Error('Settings must contain literal exported data, not executable expressions');
 }
 function read(s){const ast=acorn.parse(s,{ecmaVersion:'latest'});if(ast.body.length!==1)throw Error('Expected only the exported settings assignment');const e=ast.body[0].expression;if(e?.type!=='AssignmentExpression'||e.operator!=='='||e.left.type!=='MemberExpression'||e.left.object.name!=='window'||e.left.property.name!=='_CCSettings')throw Error('Invalid Creator settings export');return literal(e.right);}
-if(require.main===module){
- if(process.argv.slice(2).some(a=>a==='--help'||a==='-h')){console.log("Usage: node read_cocos1_settings.cjs < settings.js\nstdin: window._CCSettings = { /* literal exported settings */ };");process.exit(0);}
- const raw=fs.readFileSync(0,'utf8');if(!raw.trim()){console.error("Usage: node read_cocos1_settings.cjs < settings.js\nstdin: window._CCSettings = { /* literal exported settings */ };");process.exit(2);}
- try{console.log(JSON.stringify(read(raw)))}catch(e){console.error(String(e));process.exitCode=1}
-}
+if(require.main===module)try{console.log(JSON.stringify(read(fs.readFileSync(0,'utf8'))))}catch(e){console.error(String(e));process.exitCode=1}
 module.exports={read};

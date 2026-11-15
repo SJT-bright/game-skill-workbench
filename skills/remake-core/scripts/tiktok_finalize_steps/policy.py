@@ -246,13 +246,7 @@ def starter_trace(project, max_packs=2):
 
 
 def engine_of_names(names, texts=None):
-    if texts is None and isinstance(names, dict):
-        texts = names
     names = list(names)
-    if texts:
-        from cocos1_compat import engine_file
-        if engine_file(texts):
-            return 1
     if any(re.search(r'(^|/)cocos2d-js(-min)?(\.[0-9a-f]+)?\.js$', n) for n in names):
         return 2
     if any(n.startswith('cocos-js/') or re.search(r'(^|/)web-adapter\.js$', n) for n in names):
@@ -269,7 +263,7 @@ def engine_of_project_texts(project_json=None, package_json=None):
         except (ValueError, UnicodeDecodeError):
             continue
         version = (data.get('creator') or {}).get('version') if key else data.get('version')
-        if isinstance(version, str) and version[:1] in '123':
+        if isinstance(version, str) and version[:1] in '23':
             return int(version[0])
     return None
 
@@ -396,13 +390,6 @@ def write_marker(project, board, kit_version, reason='init'):
     # blocks hand-built popups); kept from the first marker, never added to an older one.
     if (old or {}).get('ui_kit_at_start') is True or (old is None and reason == 'init'):
         data['ui_kit_at_start'] = True
-    # Admit only new full localization work. Existing markers/adopt stay scoped.
-    if 'production_inputs' in (old or {}):
-        data['production_inputs'] = old['production_inputs']
-    elif old is None and reason == 'init' and board == 'localize':
-        data['production_inputs'] = 'required'
-    if reason == 'init' or old is None or (old or {}).get('ad_standard') == 'strict_six_standard_families':
-        data['ad_standard'] = 'strict_six_standard_families'
     p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     return data
 

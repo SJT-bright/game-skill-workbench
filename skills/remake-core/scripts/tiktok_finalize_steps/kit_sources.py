@@ -14,7 +14,6 @@ legacy policy: warning only.
 """
 import json
 import uuid as uuidlib
-from creator_asset_contract import module_meta
 
 from . import KitError, Result, sha256
 
@@ -37,8 +36,6 @@ def kit_file_bytes(manifest, key):
 def wanted(ctx):
     """[(dest relpath, kit bytes, editable, part name or None, plugin)] for this engine."""
     out = []
-    if ctx.engine == 1:
-        return out  # 2.4/3.x standard modules are not Creator 1.9 components.
     if ctx.engine == 3:
         for name, part in ctx.manifest.parts_for(3, 'source'):
             spec = part.get('file') or {}
@@ -178,17 +175,6 @@ def apply(ctx):
             if new != old:
                 ctx.write(meta_rel, new)
                 r.change(meta_rel, old, new, 'import as plugin (native + mini-game)')
-        elif ctx.engine == 2 and ctx.policy == 'new' and dest.endswith('.js'):
-            meta_rel = dest + '.meta'
-            old = ctx.read(meta_rel)
-            try:
-                new = module_meta(old, dest)
-            except ValueError as error:
-                r.block('K_module_meta', str(error))
-                continue
-            if new != old:
-                ctx.write(meta_rel, new)
-                r.change(meta_rel, old, new, 'import producer-owned CommonJS as a normal module')
     r.state = 'kit_current' if all(s == 'kit_current' for s in states) else \
         ('own' if 'own' in states else 'absent')
     if ctx.policy == 'new':

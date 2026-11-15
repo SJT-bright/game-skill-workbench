@@ -40,9 +40,7 @@ def gui_refs(refs,base,binding,route=None):
   if not isinstance(raw,list) or not raw:raise ValueError('GUI raw traces required')
   trusted_raw=False
   def has_trusted(value):
-   if isinstance(value,dict):return (value.get('trusted') is True or value.get('trusted_touch') is True or
-    value.get('transport')=='ego_page_cdp' and isinstance(value.get('event'),dict) and value['event'].get('isTrusted') is True or
-    any(has_trusted(x) for x in value.values()))
+   if isinstance(value,dict):return value.get('trusted') is True or value.get('trusted_touch') is True or any(has_trusted(x) for x in value.values())
    return isinstance(value,list) and any(has_trusted(x) for x in value)
   for x in raw:
    q=checked_ref(x,p.parent)
@@ -68,10 +66,10 @@ def route_candidates(scene,project):
     if isinstance(x,(dict,list)):walk(x,pointer+'/'+str(k))
  walk(read(scene));return out
 
-def source_inventory(ref,base,project,binding,require_reward=False,*,source_snapshot=None):
+def source_inventory(ref,base,project,binding,require_reward=False):
  p=checked_ref(ref,base);j=read(p);project=Path(project).resolve()
  from audit_mobile_input import snapshot
- if snapshot(Path(source_snapshot).resolve() if source_snapshot else project)[2]!=binding.get('source_sha256'):raise ValueError('production source tree differs from binding')
+ if snapshot(project)[2]!=binding.get('source_sha256'):raise ValueError('production source tree differs from binding')
  if j.get('schema')!='maintenance_source_inventory.v1' or j.get('binding')!=binding:raise ValueError('current source inventory schema/binding')
  refs=j.get('source_files',[])
  if not refs:raise ValueError('source inventory empty')
@@ -127,12 +125,6 @@ def source_inventory(ref,base,project,binding,require_reward=False,*,source_snap
      g=read(checked_ref(x,p.parent))
      if g.get('target_candidate')!=candidate or (candidate['kind']=='click_handler' and 'candidate_activate' not in g.get('actions',[])):raise ValueError('candidate-specific actual GUI activation/inspection required')
   if not str(r.get('source_reason','')).strip():raise ValueError('source route rationale required '+name)
-  # source SHA, exhaustive scene list and actual UI inventory were verified above.
-  # No candidate means no page exists to activate; never invent a GUI action.
-  if not r['present'] and not any(candidate['route']==name for candidate in candidates):
-   r['absence_proof']={'kind':'verified_source_inventory_no_candidate','source_sha256':binding['source_sha256'],
-                       'scenes':[str(q.relative_to(project)) for q in scenes], 'candidates':[]}
-   continue
   gui_refs(r.get('gui_evidence'),p.parent,binding,name)
   for x in r['gui_evidence']:
    wrapper=read(checked_ref(x,p.parent));actions=wrapper.get('actions',[])

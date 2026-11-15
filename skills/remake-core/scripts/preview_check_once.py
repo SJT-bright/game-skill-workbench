@@ -14,9 +14,6 @@ def rule_files(kind,conditions=None):
     # input failure or invalidate an old pass without changing the game export.
     files=[Path(__file__).with_name('serve_preview.py'),Path(__file__),
            assets/'preview-touch-bridge.js']
-    if kind=='home':
-        files.extend([Path(__file__).with_name('preview_audio_startup.py'),
-                      assets/'preview-web-audio-probe.js'])
     if (conditions or {}).get('ad_simulator') is True:
         files.append(assets/'ad-simulator.js')
     if kind=='ad-response':

@@ -6,15 +6,15 @@
 
 ## 先看这里（测试线省 token 的读法）
 
-0. 先读已有 `preflight.md` 和逐项账本；缺项或真实受影响的预检只在原节点执行一次，修完继续，不因写包重开整套预检。
+0. 先跑 `scripts/preflight.py`（一键预检），读 `preflight.md`；它查出的问题修完再进入下面的逐项测试。
 1. 用 `check_known_issues.py init` 生成本游戏清单后，**先只读生成的清单**：每行有"常见症状"（以前真实出过的问题长什么样）和"自动检查"列。按症状去找问题，比读长规则更快更准。某一行看不懂时，再读本页或对应专题页的相关小节。
-2. **"自动检查"列读取相应节点的真实结果；首次未执行或实际失效时才回该节点执行**：脚本加 `--binding <review.json> --out <报告.json>`，把报告写进该行的 `auto_reports`（`[{"path": "...", "sha256": "..."}]`）。门禁会核对报告是本版本、本工具、全部通过、未被改动；缺报告或不通过就拒绝打包。目前有：
+2. **"自动检查"列有脚本的行，必须跑脚本**：脚本加 `--binding <review.json> --out <报告.json>`，把报告写进该行的 `auto_reports`（`[{"path": "...", "sha256": "..."}]`）。门禁会核对报告是本版本、本工具、全部通过、未被改动；缺报告或不通过就拒绝打包。目前有：
    - `ART-02`、`ART-03`：`scripts/audit_dark_area.py <每个页面和弹窗的截图>`（只查负向：大块深色、整屏纯色、边缘纯色/纯黑底、大白板；不设亮度下限）
    - `AUDIO-02`：`scripts/audit_audio_sources.py --project <工程>`（每个音频都有合格来源记录）
    - 动态画面问题在试玩时按[人工试玩画面清单](manual-visual-review.md)观察。
    - `ECON-01`：`scripts/audit_acquisition_progression.py --table <unlock_table.json>`；`NOSKIP-01`：`scripts/audit_no_ad_skip.py --project <工程>`
-   - `STORAGE-01`：`scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json> --out <本次报告.json>`；按[回执v3](storage-upgrade-trace-v3.md)核新玩家、旧值读不出来照样能玩（上线过且写过原始值的游戏另核旧值取回）、真实触控可玩及原始证据。原有效项按增量账本沿用，只补适用缺项；首次审计核准回放，三个写包/交付入口共用 `audit_final_storage.py` 消费当前核准回执，合同用 `native_storage_report: {path, sha256}` 引用，或复用既有STORAGE-01 auto_reports。缺覆盖、已知反例未复现、最终Native/运行器/原始证据失配时拒绝，设备和真实IAA另列。
-3. 修完问题、改代码或换图后，核实际证据绑定和受影响范围；只补失效检查及相关回归。现有工具仍有整树绑定时，先定位具体证据及依赖 ownership，沿用可核准的旧项；未知范围只回这一节点补依据或定点验证，不把旧报告换哈希当新证据，也不重开全部人工操作。
+   - `STORAGE-01`：`scripts/audit_native_storage_contract.py --trace <trace.json> --native <最终Native目录> --binding <review.json>`；旧版空字符串失败、现版 23 场景通过，真实主页/地图/关卡详情触控恢复，最终 Native 字节与报告一致；缺一项就拒绝测试 ZIP
+3. 修完问题、改代码或换图后，核实际证据绑定和受影响范围；只补失效检查及相关回归。现有工具使用全树绑定时按其要求真实重跑，不把旧报告换哈希当新证据；也不在同版有效时固定重开全部人工操作。
 4. **每条检查写自己看到的内容**：同一段话复制到多条检查，或一条检查的几个观察字段写成一样，门禁会直接拒绝。
 
 
@@ -88,16 +88,6 @@ inventory输入是实际入口数组，例如：
 
 ## 领取结果一致性检查
 
-### 主动领取的可见完成反馈
-
-制作第一个实际 CLAIM/领取入口时，就把提交成功、当前奖励反馈与原定去向一起接通。免费领取与广告加赠适用同一标准：实际奖励正确且只应用一次后，玩家能看到本次奖励/到账/已领取的明确反馈，或到达原定下一状态，也可两者都有。既定合同要求继续下一局时，即使有动画也仍须继续；签到、礼盒等允许留页时不强制跳关。同场景重开须核旧结算页退出和新局/目标身份，不能只比场景名。零奖励不要求余额增加或播放“+0”，核本次结算与正确去向；非金币按实际奖励/效果核对。
-
-只变余额、日志/声音、按钮按压色或禁用、通用“Video complete”提示、背景/计时运动，都不能单独证明领取完成。动画不得承担入账或成为唯一继续条件；保存失败不提前显示成功，动画中断/迟到也不重复发奖、不重播广告、不锁住免费出口。平台自动回访奖励、后台记账与静默恢复继续遵守原静默合同，不套用主动领取的动画要求。
-
-复用原 `reward_entries.<入口>.states.completed` 行及同一次真实操作的画面证据，不另建专项、视频、第二视口或固定等待。该行的 `postconditions` 记录 `completion_feedback`：`reward_feedback`（本次可见奖励/到账反馈）或 `destination`（原页退出并到达原定目标），并记录 `destination_contract_met=true`；已有 `observed/evidence` 写清本次目标、反馈和实际去向，须有 `gui_mouse/gui_touch/device` 层，`mixed` 列出实际层。原要求留页且留页正确也可确认合同满足。`navigation_reward` 仍由现有平台导航/静默规则检查，不添加这两个字段。字段只校验证据完整性，不自动识别图片或证明观察为真。
-
-CLAIM-01 汇总引用这些逐入口结果；广告、经济和存档检查复用同一操作的有效证据。`ad_outcome` 的数值变化、泛化画面差异，以及按钮巡查通过，都只作补充，不能替代本次领取反馈与去向。短动画未被现有证据捕获时记缺证，仅补该入口观察，不直接判产品失败，也不添加全量美术采集。旧记录若已包含同版、同目标且依赖未变的真实反馈/去向，可读原证据补这两个字段，保留原时间；只有余额的旧通过不能推定新结论。相关消费者、页面绑定、反馈或去向变化才失效相应入口；最终 ZIP、版本身份和交付回执照现行流程核对。
-
 ### 最小执行法：先打通，再扩展
 
 首个奖励机制可运行就做，别等整套UI和最终打包。每种实际机制先选一个代表入口，复用现有隔离SDK/存储夹具，完成：
@@ -126,7 +116,7 @@ CLAIM-01 汇总引用这些逐入口结果；广告、经济和存档检查复�
 
 | 状态 | 增补的必查后置条件 |
 | --- | --- |
-| `completed` | `reward_identity_verified`（本次类型/数量/物品及周期/局目标）、`current_reward_display_consistent`（本次结果与下一次预告区分）、`success_feedback_consistent`（提交结果与成功/待保存/失败反馈一致）；主动领取另按上文填写 `completion_feedback / destination_contract_met`，复用同次GUI证据 |
+| `completed` | `reward_identity_verified`（本次类型/数量/物品及周期/局目标）、`current_reward_display_consistent`（本次结果与下一次预告区分）、`success_feedback_consistent`（提交结果与成功/待保存/失败反馈一致） |
 | `reopen` / `reload` | `model_and_presentation_consistent`（当前合法资格下，模型与重绘后的文字、按钮及数量/拥有一致） |
 | `save_failure_retry` | `proof_target_preserved`（完成凭证与原日期/局/物品匹配，恢复历史事务不消耗另一目标的新凭证） |
 | `apply_or_consume` | `ownership_and_usage_distinguished`（拥有与选中/装备/实际生效明确）、`related_views_consistent`（已有相关页面含缓存再次显示时与同一模型一致） |
@@ -157,9 +147,9 @@ CLAIM-01 汇总引用这些逐入口结果；广告、经济和存档检查复�
 
 `review`使用schema 3，保存源/Native/Web指纹、build tag、catalog摘要、全部编号、入口矩阵及证据路径/哈希。证据行使用真实`layer`与`observed`；不适用需`reason`与当前绑定的依据；入口已声明的视频或持久奖励不能把相关AD/CLAIM/STATE总项免验。`completed`的`postconditions`填写奖励、模型及按钮结果；取消/失败填写零奖励与恢复；重开/刷新/迟到回调填写不额外奖励/请求。
 
-### 更换 AI 时沿用有效证据
+### 换其他 AI 测试时的 GPT 抽查（gpt_spot_check）
 
-执行者名称只记录来源，不要求 GPT 重跑全部自动检查或再走三条固定流程。按[统一写包路线](single-writer.md)核原 key、输入、条件和原始证据；发现不一致只定位对应检查 ID。旧 `gpt_spot_check` 可以保留历史观察，未完成的分歧必须解决，但不扩大成整类复测。
+检查表顶层 `test_executor` 写着其他 AI（不是 gpt/codex）时，门禁要求顶层 `gpt_spot_check`：`reviewer` 为 `gpt`；`locked_commit` 写锁定时的提交号、`code_changes_reviewed` 为 true（Codex 读过测试阶段的 AI 从锁定到现在改过的全部代码：`git diff <锁定提交>..HEAD`）；`rerun_auto_checks` 为 true（GPT 自己重跑了全部自动检查脚本）；`flows` 至少 3 条 GPT 亲自重做的流程，每条有 `check_id`、自己的 `observed` 和当前版本证据；有看广告入口时必须含一条 AD-*/CLAIM-*，有平台任务时必须含 GROW-01/ASYNC-01/LIFE-02 之一；`disagreements` 必须为空（发现对不上就把那一类全部重测后再清空）。这样便宜模型漏测或乱填"通过"时，GPT 在抽查里就能发现，包出不来。
 
 ### 改坏版本的失败记录（negative_control）
 
@@ -190,7 +180,7 @@ CLAIM-01 汇总引用这些逐入口结果；广告、经济和存档检查复�
 - **LEVEL-01 关卡板块**（两个板块，不能标不适用）：`audit_level_plan.py --binding` 的报告（**设计关**用 `design_check.py` 查，最终总检测不重查；`level_plan.json`：通关型重塑至少 60 关、英化默认不补关（`levels_at_least_70` 按板块判；重塑多于 60 也行，英化多出原版的关要有 `explicit_total`）、每 10 关一个限定关（第 10、20、30…关，华丽边框节点）、每 10 关一个按种子随机的奖励关（3 倍货币、看广告 6 倍、货币图标节点）、难度波浪分档（`wave-tiers.v2`，Saul 2026-10-29：1–2教学、第3关起变难（第3关高难）、每个限定关考核，之后低/中/高/超高 25/45/15/15 不规则波浪；v7.8 以前写着 `wave-tiers.v1`（1–3教学、4尖峰、5–9回落）的旧表照 v1 查、不返工）（无 policy 的旧表逐关递增）、限定皮肤格式 `limited_skin_mode` 是 `final`（只有最后一个限定关送）或 `every_10`（每个限定关各送一款）、地图显示总关数；无尽型没有地图）。`level_plan.json` 是通关型（mode levels）时 **LEVEL-02** 不能标不适用，观察项都要实玩填。
 - **FEAT-01 皮肤板块**：`docs/modules.json` 里 `skins.user_choice` 是 yes（默认）时不能标不适用，四个观察项都要浏览器实测（结算金币只加一次、试用也有加成、换完立刻生效、重开一致）；限定皮肤排最前变暗、卡片加成、越稀有越精致属于设计和美术，在设计关、美术关查（用户 2026-10-24）。
 - **ART-06 美术制作自检**（美术阶段）。用 art_check.py 检查裁切、布局、资源绑定等适用项，使用[人工试玩画面清单](manual-visual-review.md)交接肉眼可判断的问题。
-- **ART-04 清晰度**：使用同批运行时 dump 与静态源图报告；默认普通图/背景 1:1、advisory，只有显式 strict 才按所选倍率阻断，见[清晰度策略](../../remake-art/references/artwork-and-feedback.md#清晰度硬规则禁止低分辨率像素风和粗糙边缘)。旧观察 ID `runtime_frames_2x_background_1_5x` 仅作兼容，不再代表默认阈值。首件和冻结候选共用证据，后续只复验真实变化；最终交付不重跑已有效覆盖。原图窄范围处理仍要核真实来源，不能豁免新图的实际断切或不可读。
+- **ART-04 清晰度**（两个板块，用户 2026-10-23；**美术关**查，最终总检测不重查）：`art_check.py` 的报告（清晰度行＝dump 里运行时的图 `low_res`＋`audit_image_clarity.py`）；观察 `runtime_frames_2x_background_1_5x`（代码里动态设置的图集格、角色帧有效像素≥节点 2 倍，背景≥1.5 倍）、`same_check_every_art_round`（每轮美术自检就过了这一行；反例 RobotSpaDay 用户确认美术后最终验收才查出 22 张不到 2 倍，所以 2026-10-24 起只在美术关查）。英化未改的原图写 `docs/art/clarity-exempt.json`（每条 why）。
 - **LOGIC-01 逻辑检查**（两个板块，不能标不适用，用户 2026-10-23）：`logic_check.py --mode build --binding` 的通过报告（`cocos-game-check/test`）：重塑第一轮玩法做完、玩法确认节点 1 之前跑过（`logic_check_after_gameplay_round`），英化在优化和广告接入之后、美术之前；`docs/logic/inventory.md` 的按钮去向表里每页有出路——关卡内能回首页、设置能返回、失败页 Home＋Retry（复活广告单独在下面）、胜利页 Home＋Next、按钮位置固定（`every_page_has_exit_and_standard_buttons`）；暂停停住物理和计时、离开一局清干净（`pause_stops_physics_and_leaving_cleans_up`）；广告/加载回调带局次、超时安全恢复且不能叠奖励（`async_round_tokens_and_ad_timeout_recovery`）；刷新后进度和声音设置都在（`progress_and_sound_restored_after_refresh`）；F01–F20 用真实触摸走过、两种比例、每个 pass 有证据文件（`flows_walked_with_real_touch`）。review 模式的报告不能用来过门禁。
 - **LOAD-02/LOAD-03 加载（最终检查重点，用户 2026-10-23）**：LOAD-03 报告必须是最终构建上的新报告，不写死结束时间（按 `*_allowed_ms`/`*_waste_ms` 判白等，计划不能放宽"不卡住"的三个数），观察 `no_fake_loading_wait`（下完就进，不超过 max(2 秒, 首页时间 25%)）、`every_level_entry_timed`（PLAY、地图选关、Next、Retry 进关都计时）、`final_build_loading_retest`；LOAD-02 观察 `every_entry_route_enters`（每条进关路线都真实进到能玩）。
 - **PAGE-01 数字不叠印、没有假透明格子**（两个板块，用户 2026-10-23）：观察 `no_glyph_overlap_fixed_numbers_one_picture`（报告里没有 `glyph_overlap`/`double_number`/`negative_spacing`/`font_advance`；固定数字和金币图标/底板一起生成成一张图，会变的数字是一个位图字体 Label，三位数和最大值都放大看过；卡片里的奖励图不伸出卡片）、`no_checkerboard_fake_transparency`（没有 `checker_fill`，生成图是真透明）。反例：Daily Rewards 弹窗 100/150/200/300 像"10"叠在"100"上、第 7 天的车伸出卡片、卡片里是绿色棋盘格。见[数字不叠印](../../remake-art/references/page-richness.md#数字和字不能叠在一起固定数字和底图一起生成用户-2026-10-23两个板块)。
@@ -208,9 +198,17 @@ python3 /path/to/skill/scripts/make_tiktok_zip.py --native <Native构建> --app-
 
 它先跑 `pre_scan` 门禁，再查形式和体积（外层文件夹、Web 构建、源码、ZIP 套 ZIP、Mac/Windows 垃圾、非 ASCII 路径、测试跳关、App ID、主包≤4,000,000、总包≤30,000,000、独立分包各≤4,000,000），不合格**不写 ZIP**；写完回读核对、独立解压再比，才放到 `--out`。报告 `<ZIP名>.report.json`（tool `make_tiktok_zip`，带 review 的 binding）放进 BUILD-04 的 `auto_reports`（`--stage post_package` 检查）。观察：`made_by_make_tiktok_zip`、`big_resources_in_normal_subpackage`（resources 等大 bundle 在 `subpackages/`，启动时带进度加载、有 Retry）、`main_total_independent_within_limits`、`root_entry_no_outer_folder`、`no_web_source_nested_zip_or_junk`。形式和改法见[包的形式](../../cocos-game-check/package/references/package-forms.md)。
 
-### 统一写包工具拒绝契约（BUILD-03）
+### 打包脚本必须真的拒绝（BUILD-03）
 
-BUILD-03 属于 Skill 工具发版验证，由 `test_single_writer.py` 等定点控制证明两个旧命令进入同一后端、缺实质证据拒绝、Native 不被修改、缺项不启动浏览器。每款游戏只消费该工具和实际生产证据，不再为了填表额外五次运行真实 writer。实际游戏的 ZIP 字节与最终交付核对仍逐次保留，详见[唯一写包入口](single-writer.md)。
+本游戏的打包脚本在生成 ZIP 前自己运行 `check_known_issues.py check --stage pre_scan`，非零就停止、不留 ZIP。出包时用下面的命令实际跑一遍打包脚本，证明缺检查表、有失败项、指纹过期、缺 `STORAGE-01` Native 自动报告时都出不了包，正常时能出包：
+
+```sh
+python3 /path/to/skill/scripts/test_writer_refusal.py \
+  --review /path/to/project/known-issue-review.json --zip-dir /path/to/zip-output \
+  --out /path/to/evidence/writer-refusal.json -- <本游戏的打包命令>
+```
+
+报告放进 BUILD-03 的 `auto_reports`（`--stage post_package` 检查）。只证明共用门禁会拒绝不算数，必须是本游戏实际的打包脚本。用 `make_tiktok_zip.py` 出包时，它就是打包脚本：`-- python3 make_tiktok_zip.py ... --out <单独的检查用 ZIP>`（已有的 ZIP 不覆盖；跑完删掉检查用的 ZIP）。
 
 每条证据标`role`：`current_result`是本轮现场运行的JSON结果包装，要求`schema=known_issue_current_result.v1`、完整`binding`等于本轮、`status=pass`、整数`failed=0`；`execution`必须含命令数组`command`、整数`exit_code=0`、`tool`与`raw_report`的`path/sha256`；路径相对包装所在目录或为绝对路径。脚本核原报告的明确通过状态与无失败案例；无可识别结果保留待审，不拿手写包装代替执行。`current_artifact`用于本轮原截图、实际资源或绑定盘点，证据引用也带本轮`binding`，主线审阅原件。历史说明为`historical_reference`，预期失败的旧版报告为`negative_control`；后二者不能单独支撑当前pass。哈希能发现文件变化，不能证明从未被盘点的入口不存在、截图真实或人工声明准确。
 

@@ -81,13 +81,12 @@ _ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
 
 
 def enforce_tiktok_host(files):
-    """Inspect shipped JS for legacy host access and known platform-gated input gaps."""
+    """Report legacy host access in the main package, adapters and subpackages."""
     from cocos1_compat import engine_file
-    creator1_engine = engine_file(files)
+    genuine_creator1 = engine_file(files)
     candidates = [{'file': name, 'code': data.decode('utf-8-sig')}
                   for name, data in sorted(files.items())
-                  if name not in _ENGINE_MULTIPLATFORM_FILES and name != creator1_engine
-                  and name.lower().endswith(('.js', '.mjs', '.cjs'))]
+                  if name not in _ENGINE_MULTIPLATFORM_FILES and name != genuine_creator1 and name.lower().endswith(('.js', '.mjs', '.cjs'))]
     if not candidates:
         return
     node = shutil.which('node')
@@ -98,29 +97,10 @@ def enforce_tiktok_host(files):
                             text=True, capture_output=True, timeout=30)
     if result.returncode:
         raise ValueError('TikTok host-reference check did not run: ' + result.stderr[-500:])
-    data = json.loads(result.stdout)
-    findings = data['findings']
-    input_scan = data.get('platform_input_bindings')
-    if (not isinstance(input_scan, dict) or input_scan.get('schema') != 'platform_input_bindings.v1' or
-            not isinstance(input_scan.get('findings'), list) or not isinstance(input_scan.get('unresolved'), list)):
-        raise ValueError('TikTok platform-input binding check did not run: missing/invalid AST scan result')
+    findings = json.loads(result.stdout)['findings']
     if findings:
         raise ValueError('TikTok Native contains legacy WeChat host references: ' + '; '.join(
             f"{row['file']}:{row['line']} {row['reference']}" for row in findings[:12]))
-    if input_scan['findings']:
-        raise ValueError('TikTok Native platform input binding skipped: ' + '; '.join(
-            '%s:%s:%s %s missing when %s' % (row['file'], row['line'], row['column'], row['event'],
-                                            json.dumps(row['missing_when'], sort_keys=True))
-            for row in input_scan['findings'][:12]))
-    ad_scan = data.get('ad_sdk_capabilities')
-    if (not isinstance(ad_scan, dict) or ad_scan.get('schema') != 'ad_sdk_capabilities.v1' or
-            not isinstance(ad_scan.get('findings'), list) or not isinstance(ad_scan.get('unresolved'), list)):
-        raise ValueError('TikTok ad SDK capability check did not run: missing/invalid AST scan result')
-    if ad_scan['findings']:
-        raise ValueError('TikTok ad SDK capability rejects callable API: ' + '; '.join(
-            '%s:%s:%s [%s] %s' % (row['file'], row['line'], row['column'], row['rule'], row['reason'])
-            for row in ad_scan['findings'][:12]))
-    return dict(input_scan, ad_sdk_capabilities=ad_scan)
 
 
 def enforce_files(files):
@@ -150,16 +130,12 @@ def inspect_files(files, platform='tiktok'):
             raise ValueError('Missing/empty root entry: '+name+' (do not upload an outer folder)')
     game=json_object(files['game.json'])
     result=enforce({p:len(b) for p,b in files.items()},game,platform)
-    input_scan = enforce_tiktok_host(files) if platform == 'tiktok' else None
+    if platform == 'tiktok':
+        enforce_tiktok_host(files)
     key='subpackages' if platform=='tiktok' else 'subPackages'
     subs=game.get(key,[])
     roots=[s['root'].rstrip('/')+'/' for s in subs]
     warnings=[]
-    if input_scan:
-        result['platform_input_bindings'] = {key: input_scan[key] for key in ('schema', 'findings', 'unresolved')}
-        result['ad_sdk_capabilities'] = input_scan['ad_sdk_capabilities']
-        warnings.extend('Platform input branch needs runtime review: %s:%s (%s)' %
-                        (row['file'], row['line'], row['reason']) for row in input_scan['unresolved'])
     for sub,root in zip(subs,roots):
         if not files.get(root+'game.js'):
             raise ValueError('Missing/empty subpackage game.js entry: '+root)
@@ -204,7 +180,7 @@ def inspect_files(files, platform='tiktok'):
     return result
 
 
-def inspect_zip(archive, platform='tiktok', feedback=None, *, _verified_files=None):
+def inspect_zip(archive, platform='tiktok', feedback=None):
     """No cached verdict, receipt reuse or game execution. Every payload is CRC-read."""
     archive=Path(archive).resolve()
     before=hashlib.sha256(archive.read_bytes()).hexdigest()
@@ -214,7 +190,7 @@ def inspect_zip(archive, platform='tiktok', feedback=None, *, _verified_files=No
             'platform':platform,'source':SOURCES[platform],
             'tool_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'passed':False,'errors':[],
-            'boundary':'Fresh local partition/configuration/byte/CRC and known JS host/input prerequisite checks only; no platform upload or gameplay verdict.'}
+            'boundary':'Fresh local partition/configuration/byte/CRC check only; no platform upload or gameplay verdict.'}
     files={};seen=set()
     try:
         with zipfile.ZipFile(archive) as z:
@@ -257,21 +233,12 @@ def inspect_zip(archive, platform='tiktok', feedback=None, *, _verified_files=No
     if hashlib.sha256(archive.read_bytes()).hexdigest()!=before:
         result['passed']=False
         result['errors'].append('ZIP changed during checking; no valid delivery receipt')
-    if _verified_files is not None and result['passed']:
-        if type(_verified_files) is not dict or _verified_files:
-            raise ValueError('verified payload output must be an empty dict')
-        _verified_files.update(files)
     return result
 
 
-def inspect_final_zip(archive, platform='tiktok', feedback=None, *, _verified_files=None, _verified_receipt=None):
+def inspect_final_zip(archive, platform='tiktok', feedback=None):
     """Fresh final-package gate. TikTok adds official CLI checks to the size receipt."""
-    for output in (_verified_files, _verified_receipt):
-        if output is not None and (type(output) is not dict or output):
-            raise ValueError('fresh inspection output must be an empty dict')
-    verified_files, receipt_snapshot = {}, {}
-    result = inspect_zip(archive, platform, feedback, _verified_files=verified_files)
-    result.update(delivery_ready=False, next_step='prepare_delivery.py; file checks do not certify runtime')
+    result = inspect_zip(archive, platform, feedback)
     if platform == 'tiktok':
         result['size_passed'] = result['passed']
         if result['passed']:
@@ -279,23 +246,9 @@ def inspect_final_zip(archive, platform='tiktok', feedback=None, *, _verified_fi
             cli = result['tiktok_cli'] = verify(result['archive'], result['sha256'])
             result['passed'] = cli['passed']
             result['errors'].extend(cli['errors'])
-            if result['passed']:
-                from verify_native_zip import receipt_status
-                receipt = receipt_status(Path(archive), result['sha256'],
-                                         {name: hashlib.sha256(data).hexdigest() for name, data in verified_files.items()},
-                                         **({'_receipt_snapshot': receipt_snapshot} if _verified_receipt is not None else {}))
-                result['writer_receipt'] = receipt
-                if receipt.get('entry') != 'official':
-                    result['passed'] = False
-                    result['errors'].append('delivery.writer_receipt: no byte-matching official writer receipt; repair current startup/storage evidence and return to the original writer, not a project-local ZIP script')
         else:
             result['tiktok_cli'] = {'passed': False, 'status': 'blocked_by_size_or_zip_check'}
-        result['boundary'] = 'Final ZIP/CRC/size, host/input prerequisites, TikTok CLI and byte-matching official writer receipt; prepare_delivery must still verify current startup/storage and preview. No platform/device verdict.'
-    if result['passed']:
-        if _verified_files is not None:
-            _verified_files.update(verified_files)
-        if _verified_receipt is not None:
-            _verified_receipt.update(receipt_snapshot)
+        result['boundary'] = 'Fresh local ZIP/CRC/size and TikTok CLI checks; platform upload and device tests are separate.'
     return result
 
 

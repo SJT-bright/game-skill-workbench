@@ -182,27 +182,15 @@ class MarlowsR6(unittest.TestCase):
         self.assertTrue((p / 'assets/resources/art/manifest.json').read_text().count('"imageExt": ".webp"'))
         self.assertTrue(F.check_source_record(p))                 # K5 refuses the writer
 
-    def test_imageExt_png_passes_image_gate_while_original_popups_stay_blocked(self):
+    def test_imageExt_png_passes(self):
         p = self.copy('.png')
         rec = F.finalize_source(p, 'remake', app_id=APP)
+        self.assertEqual(rec['blocks'], [], rec['blocks'])
         self.assertEqual(rec['policy'], 'new')
-        self.assertFalse(any(b['id'] == 'IMG0_source_images' for b in rec['blocks']), rec['blocks'])
-        # First source now installs GameUIKit before scanning. The archived
-        # fixture's hand-built popups still need adoption; an image-only fix
-        # must not promote that unrelated UI issue into a ready source record.
-        self.assertEqual([b['id'] for b in rec['blocks']], ['K_ui_handmade_popup'])
-        self.assertTrue(F.check_source_record(p))
+        self.assertEqual(F.check_source_record(p), [])
 
 
 class RecordedOptions(WF.KitInSync):
-    def setUp(self):
-        super().setUp()
-        # This fixture isolates the existing source/writer options contract.
-        # Strict-six production refusal is covered by the dedicated ad gate tests.
-        scope = mock.patch('ad_standard_scope.requirement', return_value={'required': False})
-        scope.start()
-        self.addCleanup(scope.stop)
-
     def src(self, options):
         p = H.project24(self.d / 'p')
         (p / 'assets' / 'tiktok-platform' / 'PlatformConfig.js').write_text(WF.kit_config(), encoding='utf-8')
@@ -260,8 +248,6 @@ class RecordedOptions(WF.KitInSync):
         # The gate keeps its own comparison as a second line: a context whose options differ from the record.
         p, _ = self.src(EXC)
         b = self.native()
-        prepared = F.finalize_native(b, p, 'remake', APP, options=dict(EXC))
-        self.assertEqual(prepared['blocks'], [], prepared['blocks'])
         record, context, problems = M.finalize_for_writer(b, p, 'remake', APP, dict(EXC))   # same option
         self.assertIsNotNone(record, problems)
         context = dict(context, finalize_options={})

@@ -41,7 +41,5 @@ function probe(files){
  }
  return {schema:'cocos1_touch_coordinates.v1',engine:'1.9.3',passed:rows.every(r=>r.passed),rows};
 }
-if(require.main===module){
- if(process.argv.slice(2).some(a=>a==='--help'||a==='-h')){console.log("Usage: node probe_cocos1_touch_coordinates.cjs [native-directory] < input.json\nstdin: {\"files\":{\"game.js\":\"...\", \"cocos2d-js-min.js\":\"...\"}}");process.exit(0);}
- try{const raw=fs.readFileSync(0,'utf8');if(!raw.trim()){console.error("Usage: node probe_cocos1_touch_coordinates.cjs [native-directory] < input.json\nstdin: {\"files\":{\"game.js\":\"...\", \"cocos2d-js-min.js\":\"...\"}}");process.exit(2);}const r=probe(JSON.parse(raw).files);console.log(JSON.stringify(r));process.exitCode=r.passed?0:1;}catch(e){console.log(JSON.stringify({schema:'cocos1_touch_coordinates.v1',passed:false,error:String(e)}));process.exitCode=1;}}
+if(require.main===module){try{const r=probe(JSON.parse(fs.readFileSync(0,'utf8')).files);console.log(JSON.stringify(r));process.exitCode=r.passed?0:1;}catch(e){console.log(JSON.stringify({schema:'cocos1_touch_coordinates.v1',passed:false,error:String(e)}));process.exitCode=1;}}
 module.exports={probe};

@@ -53,8 +53,7 @@ KINDS = ('home', 'gameplay', 'popup', 'page', 'loading')
 ID = re.compile(r'^(?:ad-boost:)?[A-Za-z][A-Za-z0-9_.-]{0,60}$')
 PAGE_KEYS = {'id', 'name', 'kind', 'purpose', 'node', 'prefab', 'buttons', 'close', 'pause', 'ad_entries', 'why',
              'seen_at_runtime', 'note'}
-TOP_KEYS = {'schema', 'game', 'required_viewports', 'pages', 'no_ad_roles', 'adapter_js', 'note',
-            'not_reachable', 'text_not_shown'}
+TOP_KEYS = {'schema', 'game', 'required_viewports', 'pages', 'no_ad_roles', 'adapter_js', 'note'}
 ADAPTER_JS = {'request', 'state', 'ready', 'exit', 'exit_label', 'home', 'no_music', 'boot_timeout_s', 'home_scene',
               'after_home_js', 'enter_level'}
 DEFAULT_VIEWPORTS = [{'name': 'iphone14', 'width': 390, 'height': 844}, {'name': 'iphone-se', 'width': 375, 'height': 667}]
@@ -71,11 +70,6 @@ def validate(doc):
     errs = [] if doc.get('schema') == SCHEMA else ['schema must be %s' % SCHEMA]
     errs += ['unknown top-level key %s' % k for k in sorted(set(doc) - TOP_KEYS)]
     pages = doc.get('pages')
-    for key, field in (('not_reachable', 'prefab'), ('text_not_shown', 'text')):
-        if key in doc and (not isinstance(doc[key], list) or any(
-                not isinstance(row, dict) or not isinstance(row.get(field), str) or not row[field].strip()
-                or not isinstance(row.get('why'), str) or len(row['why'].strip()) < 4 for row in doc[key])):
-            errs.append('%s must be a list of {%s, why} records with a concrete reason' % (key, field))
     if not isinstance(pages, list) or not pages:
         return errs + ['pages must be a nonempty list']
     ids = set()
@@ -157,8 +151,7 @@ def screens_doc(doc, sha):
         rows.append(row)
     return {'generated_by': 'page_registry.py from docs/logic/pages.json', 'pages_sha256': sha,
             'runtime_verified': all(p.get('seen_at_runtime') is True for p in doc['pages']),
-            'required_viewports': doc.get('required_viewports', DEFAULT_VIEWPORTS), 'screens': rows,
-            **{key: doc[key] for key in ('not_reachable', 'text_not_shown') if key in doc}}
+            'required_viewports': doc.get('required_viewports', DEFAULT_VIEWPORTS), 'screens': rows}
 
 
 def page_flows(doc):
@@ -354,62 +347,12 @@ def check(project):
             'checked': len(stamp.get('outputs') or {}), 'problems': problems}
 
 
-def verified_page_observations(project, dumps, doc):
-    """Reuse sealed collector proof for original UI that does not call PageRegistry.
-
-    The stable screen ID and exact visible root must both match pages.json.
-    Source presence, page purpose or a hidden same-name node never count as a
-    runtime observation. This consumes existing captures and starts no browser.
-    """
-    observed, problems = {}, []
-    root = project/'.tiktok-kit/art-rounds'
-    if not (root/'current.json').is_file():
-        return observed, problems
-    try:
-        from art_capture_history import snapshot
-        from art_round_check import run
-        current=json.loads((root/'current.json').read_text(encoding='utf-8'))
-        snap=snapshot(project,current['version'])
-        verified=run('verify',project,Path(snap['build']),dumps)
-        if verified.get('ready') is not True or verified.get('error'):
-            raise ValueError(verified.get('error') or 'sealed capture round incomplete')
-        files=verified.get('resolved_dumps')
-        if files is None:
-            files=[str(Path(dumps)/('capture-ui-dump-'+c['id']+'.json')) for c in verified.get('cases', [])]
-        allowed={str(Path(path).resolve()) for path in files}
-        for path in allowed:
-            data=json.loads(Path(path).read_text(encoding='utf-8'))
-            for page in doc.get('pages', []):
-                if (not page.get('node') or data.get('screen') != page.get('id')
-                        or data.get('purpose','other') != (page.get('purpose') or page.get('kind'))):
-                    continue
-                matches=[n for n in data.get('nodes',[]) if n.get('path') == page['node']]
-                if len(matches) != 1:
-                    continue
-                node=matches[0];rect=node.get('screen') or node.get('rect') or []
-                if (node.get('active') is False or node.get('opacity',1) <= .05 or len(rect) != 4
-                        or rect[2] <= 0 or rect[3] <= 0 or rect[0] >= 1 or rect[1] >= 1
-                        or rect[0]+rect[2] <= 0 or rect[1]+rect[3] <= 0):
-                    continue
-                # A root shell without any actual drawn content is not a page.
-                if not any((n.get('path') == page['node'] or n.get('path','').startswith(page['node']+'/'))
-                           and n.get('opacity',1) > .05 and {'sprite','label','richtext','image_text','graphics'} & set(n.get('comps',{}))
-                           for n in data.get('nodes',[])):
-                    continue
-                observed.setdefault(page['id'],[]).append({'dump':path,'capture_id':data.get('art_capture_id')})
-    except (OSError,ValueError,KeyError,TypeError) as exc:
-        problems.append('sealed page observations not consumed: '+str(exc))
-    return observed,problems
-
-
 def merge_dumps(project, dumps):
-    """Merge recorded pages and verified original-UI observations into the same source list."""
+    """Set seen_at_runtime from ui_dump files whose "pages" list (PageRegistry.record) names a page."""
     project = Path(project)
     doc = json.loads((project / PAGES).read_text(encoding='utf-8-sig'))
     seen, extra = set(), set()
     known = {p.get('id') for p in doc.get('pages') or [] if isinstance(p, dict)}
-    verified, observation_problems = verified_page_observations(project,Path(dumps),doc)
-    seen.update(verified)
     for f in sorted(Path(dumps).rglob('*ui-dump-*.json')) if Path(dumps).is_dir() else []:
         try:
             data = json.loads(f.read_text(encoding='utf-8'))
@@ -431,14 +374,11 @@ def merge_dumps(project, dumps):
     other = sorted(x for x in extra if not str(x).startswith(ADBOOST_PREFIX))
     report = {'tool': 'page_registry merge-dumps', 'seen': sorted(seen),
               'never_opened': sorted(known - seen), 'not_in_pages_json': sorted(extra),
-              'verified_original_pages': verified,
               'status': 'failed' if other else 'passed', 'passed': not other,
               'problems': ['opened at runtime but not in pages.json: %s (add it, then make)' % x for x in other]}
     if board:
         report['warnings'] = ['ad-boost 板块页 %s 运行时打开过，但 pages.json 里没有：跑 ad-boost 的 record_ad_entries.py '
                               '把板块页加进 pages.json，再 make' % x for x in board]
-    if observation_problems:
-        report.setdefault('warnings',[]).extend(observation_problems)
     return report
 
 

@@ -405,16 +405,6 @@ if (sceneName === 'bold_api') {
     panel.kid(new Node('BtnHome', 0, -270, 360, 100)).add(new Button({ interactable: true })).add(new Sprite({ spriteFrame: { name: 'home' }, type: 0 }));
   }
 }
-if (sceneName === 'semantic_roles') {
-  const body=canvas.kid(new Node('Body',0,0,400,80)).add(new Label({string:'Changes are saved automatically.',fontSize:28,overflow:1}));
-  body.__gameUIProducer='GameUIKit';body.__gameUIRole='body_text';
-  const claim=canvas.kid(new Node('ClaimAction',0,-200,400,100)).add(new Button({interactable:true}));
-  claim.__gameUIProducer='GameUIKit';claim.__gameUIRole='result_claim_link';
-  const unknown=canvas.kid(new Node('UnverifiedRole',0,200,200,40));unknown.__gameUIRole='body_text';
-  const frame={name:'glyph_font-1_48',rect:{x:4,y:8,width:10,height:20},originalSize:{width:10,height:20},
-    __gameUISource:{kind:'bitmap_glyph',font_uuid:'font-1',code:48}};
-  canvas.kid(new Node('Glyph',0,-300,20,40)).add(new Sprite({spriteFrame:frame,type:0}));
-}
 if (BAR) {
   const top = canvas.kid(new Node('TopBar', 0, 760, 750, 90));
   [['Energy', -270, 'icon_lightning', '5/5'], ['Pearls', -100, BAR === 'coinbar' ? 'icon_coin' : 'icon_pearl', '1,250'], ['Level', 70, 'icon_flag', '12']]

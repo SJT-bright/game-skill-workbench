@@ -32,11 +32,6 @@ if english_path.is_file():
 @unittest.skipIf(E is None, 'English returned-delivery route is tested in the English distribution')
 class Returned(unittest.TestCase):
     def setUp(self):
-        # Isolate this prior-delivery visual authorization contract. Six-family
-        # production and verified maintenance scope have independent tests.
-        import ad_standard_scope
-        ad_scope = mock.patch.object(ad_standard_scope, 'requirement', return_value={'required': False})
-        ad_scope.start();self.addCleanup(ad_scope.stop)
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
         self.p=self.root/'project';(self.p/'assets').mkdir(parents=True)
         (self.p/'assets/button.png').write_bytes(b'fixture-current-art')
@@ -104,15 +99,10 @@ class Returned(unittest.TestCase):
         with mock.patch.object(F.T,'load_manifest',return_value={}), mock.patch.object(F,'read_source_record',return_value={'board':'localize'}), mock.patch.object(F,'check_source_record',return_value=[{'id':'K5_functional','message':'current reward code has a real error'}]), mock.patch.object(F,'finalize_native') as finalize:
             _,_,problems=W.finalize_for_writer(self.native,self.p,'localize','tt123')
             self.assertTrue(any('K5_functional' in x for x in problems));finalize.assert_not_called()
-        import test_writer_finalize as WF
-        fixture=WF.KitInSync('runTest');fixture.setUp();self.addCleanup(fixture.doCleanups)
-        project=fixture.project();native=fixture.native()
-        F.finalize_source(project,'localize')
-        prepared=F.finalize_native(native,project,'localize',WF.APP,options={'prepared_png_only':True})
-        self.assertEqual(prepared['blocks'],[],prepared['blocks'])
-        with mock.patch.object(F,'check_trial_source',side_effect=AssertionError('no repeated Sprite-art gate')):
-            record,_,problems=W.finalize_for_writer(native,project,'localize',WF.APP)
-        self.assertEqual(problems,[]);self.assertNotIn('art_receipt',record)
+        with mock.patch.object(F.T,'load_manifest',return_value={}), mock.patch.object(F,'read_source_record',return_value={'board':'localize'}), mock.patch.object(F,'check_source_record',return_value=[]), mock.patch.object(F,'finalize_native',return_value={'blocks':[],'table':[],'warnings':[]}):
+            with mock.patch.object(F,'check_trial_source',side_effect=AssertionError('no repeated Sprite-art gate')):
+                record,_,problems=W.finalize_for_writer(self.native,self.p,'localize','tt123')
+            self.assertEqual(problems,[]);self.assertNotIn('art_receipt',record)
     def test_delivery_summary_does_not_copy_historical_art_receipt(self):
         self.accept()
         import verify_native_zip as V

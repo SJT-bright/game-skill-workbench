@@ -19,7 +19,7 @@ Every non-gameplay dump:
   plain_backdrop  no full-screen picture and no game scene behind (a flat colour / tinted default sprite)
   bare_button     a button with text but no plate picture
   system_font     any visible text drawn in the system default font (use the game font)
-  empty_panel     a popup/page panel with no visible contents; low nonzero fill requires visual review
+  empty_panel     a popup/page panel whose inside is less than 30% filled
   dev_text        developer wording on screen ("LOCAL PREVIEW", "PROTOTYPE", "TEST AD" ...)
 Text on every dump, gameplay HUD included (user 2026-10-22: thin system-font words dropped on generated art, white
 RETRY on cream, navy PLAY on a navy button, "Coins 0 Springs 1" on a busy picture):
@@ -59,8 +59,7 @@ LEVELS/SKINS/Add to Home/Revisit tiles, typed numbers 0/9 and 0):
                   frame_size and display_size; user 2026-10-23: DETAILS 570x345 forced into 234x49 = 2.89x): crop each word
                   to its own SpriteFrame and scale it uniformly; squashed_picture: the same for other pictures (bars,
                   glows, backgrounds may stretch)
-  low_res         Configurable source/render ratio reference; default advisory, actual phone readability decides.
-                  Historical strict case (2026-10-23): the final review found 22 frames below 2x after the user
+  low_res         ART-04 at run time (user 2026-10-23: the final review found 22 frames below 2x their node size after the user
                   had approved the art): a simple sprite whose picture (frame_size) is smaller than 2x the size it is drawn at
                   (display_size; backgrounds and full-screen pictures 1.5x), so it looks soft on phone screens. Same check in
                   every art round as in the final review; regenerate / re-crop at >= 2x. Original untouched frames of a
@@ -117,8 +116,7 @@ By purpose (dump_ui "purpose"):
   skins/map, which have their own content rules)
     plain_popup             the panel holds only text and buttons: it needs a generated illustration (gift/chest,
                             mascot, phone with the game icon, reward items with the currency icon ...) covering
-                            (below the 10% composition reference requires visual review, not automatic redraw;
-                            user 2026-10-23 negative example: a flat pale "Home screen reward" panel
+                            >= 10% of the panel (user 2026-10-23 negative example: a flat pale "Home screen reward" panel
                             with font text and three flat buttons ADD NOW / CHECK REWARD / CLOSE)
   league                    >= 10 numbers (ranks and points), >= 35% of the screen used
   settings (General tab)    >= 3 rows/buttons, "How to Play", with no Credits/About entry (remake-art/references/common-game-components.md)
@@ -138,7 +136,6 @@ from contextvars import ContextVar
 from collections import Counter
 import fnmatch
 import json
-import math
 import os
 from pathlib import Path
 import re
@@ -186,7 +183,7 @@ MAINTENANCE_RULES = set()
 REQUIRED = ('home', 'result_win', 'result_fail', 'settings', 'settings_sound')
 FUNCTION_PAGES = {'home', 'result_win', 'result_fail', 'pause', 'settings', 'settings_sound', 'revive', 'trial'}
 MAX_BUTTON_SHARE, MIN_TITLE_WIDTH, MIN_COVER_ART = 0.40, 0.55, 0.15   # buttons <= 40% (user 2026-10-23)
-MIN_POPUP_ART = 0.10        # composition review reference; an absent illustration still blocks
+MIN_POPUP_ART = 0.10        # popup illustration share of the panel (user 2026-10-23)
 TITLE_DECOR = re.compile(r'ribbon|banner|title|header|corner|border|frame|divider|line', re.I)   # not an illustration
 OWN_POPUP_RULES = {'settings', 'settings_sound', 'league', 'checkin', 'shop', 'skins', 'map'}
 MAX_FLAT, MAX_PLAIN_BLOCK = 0.40, 0.35
@@ -241,8 +238,6 @@ def dev_info(n):
 BITMAP_FONT_NAME = re.compile(r'fnt|bitmap|bmfont|atlas|digit|num', re.I)
 MIN_BAKED_TEXT_BUTTON = 0.012   # a btn_<words> picture this big counts as a text button (icons are smaller)
 GENERATED_TEXT_SOURCES = {}
-SPRITE_ART_SOURCES = {}
-GLYPH_ART_SOURCES = {}
 RUNTIME_TEXT = []     # docs/text/runtime-text.json: labels that really change at run time (rival names ...), path globs
 CAPTION_FRAMES = []    # Explicit whole-button word artworks; style membership alone does not imply a caption.
 BUTTON_SET = None     # docs/art/button-set.json: frame-name globs of the one button set drawn for this game
@@ -253,8 +248,7 @@ NAME_TOKENS = re.compile(r'[A-Z]?[a-z]+|[A-Z]+(?![a-z])')   # BtnWord -> Btn, Wo
 MAX_STRETCH, MIN_STRETCH_AREA, MAX_STRETCH_AREA = 1.10, 0.002, 0.6   # user 2026-10-23: words 570x345 forced into 234x49
 STRETCH_OK = re.compile(r'bar|fill|progress|line|divider|strip|stripe|glow|shadow|mask|ray|light|particle|bg|backdrop|'
                         r'background|sky|ground|floor|water|wave|gradient|vignette|overlay|dim', re.I)   # stretchable pictures
-MIN_SHARP, MIN_SHARP_BG, MIN_SHARP_AREA = 1.0, 1.0, 0.003  # Default ratio reference only; actual readability is reviewed.
-CLARITY_POLICY = None
+MIN_SHARP, MIN_SHARP_BG, MIN_SHARP_AREA = 1.99, 1.495, 0.003   # ART-04: picture >= 2x its node size, backgrounds 1.5x
 BACKGROUND_NAME = re.compile(r'bg|backdrop|background|sky|scene|wallpaper', re.I)
 CLARITY_EXEMPT = []   # docs/art/clarity-exempt.json: frame globs (with a why) kept from the original game (localize)
 CANVAS_TEXT_FILES = []   # docs/text/runtime-text.json "canvas_text_files": scripts allowed to draw text with Canvas fonts
@@ -326,46 +320,16 @@ def contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
-def generated_source(n):
-    """Resolve dynamic glyphs by actual font UUID/code/rect, not a guessed frame name."""
-    sprite = n.get('comps', {}).get('sprite', {})
-    if 'source_font_uuid' in sprite:
-        source = GLYPH_ART_SOURCES.get((sprite.get('source_font_uuid'),sprite.get('source_glyph_code')))
-        if (not source or sprite.get('source_glyph_rect') != source['rect']
-                or sprite.get('frame_size') != source['rect'][2:]):
-            return None
-        return source
-    return GENERATED_TEXT_SOURCES.get(sprite.get('frame'))
-
-
-def load_glyph_sources(project):
-    """Index actual BMFont page rectangles for GameUIKit.fontFrames observations."""
-    from audit_bitmap_letter_fonts import glyphs, uuid_of
-    out = {}
-    assets = Path(project)/'assets'
-    for font in assets.rglob('*.fnt') if assets.is_dir() else []:
-        uuid = uuid_of(font)
-        if not uuid:
-            continue
-        pages = dict((int(i), name) for i,name in re.findall(r'page\s+id=["\']?(\d+)["\']?\s+file=["\']([^"\']+)',font.read_text(encoding='utf-8',errors='replace')))
-        for char,(page,x,y,w,h) in glyphs(font).items():
-            source = (font.parent/pages[page]).resolve() if page in pages else None
-            if source is not None and source.is_file() and source.is_relative_to(assets.resolve()) and w > 0 and h > 0:
-                key=(uuid,ord(char))
-                out[key] = None if key in out else {'path':source,'rect':[x,y,w,h]}
-    return out
-
-
 def generated_text_contrast(img, group, nodes, need, image_module):
     """Use the actual source alpha/fill masks, so the blue gaps between glyphs are not classified as text ink."""
     if group.get('comps',{}).get('image_text',{}).get('complete'):
         pieces=[n for n in nodes if node_under(n,group) and n is not group and 'sprite' in n['comps']]
-    elif generated_source(group):pieces=[group]
+    elif group.get('comps',{}).get('sprite',{}).get('frame') in GENERATED_TEXT_SOURCES:pieces=[group]
     else:return None
     if not pieces:return None
     ratios=[]
     for n in pieces:
-        source=generated_source(n)
+        source=GENERATED_TEXT_SOURCES.get(n['comps']['sprite'].get('frame'))
         if not source or abs(n.get('angle',0))>1:return None
         r=n.get('unclipped_screen') or n.get('screen') or n['rect'];W,H=img.size
         box=(round(r[0]*W),round(r[1]*H),round((r[0]+r[2])*W),round((r[1]+r[3])*H))
@@ -395,41 +359,6 @@ def generated_text_contrast(img, group, nodes, need, image_module):
         elif against>=need:ratios.append(against)
         else:ratios.append(max(pair if bg is None else 0,against))
     return min(ratios)
-
-
-def font_css_size(d,n,lab=None):
-    """Cocos design units are not phone CSS pixels (do not multiply DPR)."""
-    lab=lab or n.get('comps',{}).get('label') or {}
-    rect=n.get('unclipped_screen') or n.get('screen') or n.get('rect')
-    canvas=d.get('canvas_css') or []
-    height=lab.get('height')
-    size=lab.get('actualFontSize') or lab.get('fontSize')
-    if (not rect or len(rect)!=4 or len(canvas)!=4 or not isinstance(height,(int,float)) or height<=0
-            or not isinstance(size,(int,float)) or size<=0 or canvas[3]<=0):
-        return None
-    return round(size*rect[3]*canvas[3]/height,6)
-
-
-def produced_body_text(n, nodes, buttons):
-    """Short complete instructions stay text; fixed titles/actions never do.
-
-    Producer role is necessary but insufficient: require a real TTF label,
-    sentence content and no interactive/title ancestry. Readability and dark
-    fill checks below still apply unchanged.
-    """
-    lab = n.get('comps', {}).get('label')
-    value = text(n).strip()
-    if (n.get('ui_role_source') != 'GameUIKit' or n.get('ui_role') != 'body_text'
-            or not isinstance(lab, dict) or lab.get('font_kind') != 'ttf'
-            or lab.get('system_font') or not lab.get('font') or bitmap_font(lab)
-            or len(re.findall(r'[A-Za-z]+',value)) < 4 or not re.search(r'[.!?]$',value)
-            or re.search(r'(?:^|/)(?:Title|Heading|Caption)(?:/|$)',n.get('path',''),re.I)
-            or any(node_under(n,b) for b in buttons)):
-        return False
-    return not any(node_under(n,parent) and parent is not n and
-                   (parent.get('ui_role') in ('title','fixed_word','action') or
-                    re.search(r'(?:^|/)(?:Title|Heading|Caption)(?:/|$)',parent.get('path',''),re.I))
-                   for parent in nodes)
 
 
 def text_problems(d, nodes, buttons, image_module):
@@ -475,7 +404,7 @@ def text_problems(d, nodes, buttons, image_module):
         r = n.get('screen') or n['rect']
         h_design = lab.get('height') or 0
         size = (lab.get('actualFontSize') or lab.get('fontSize') or 0)
-        css = font_css_size(d,n,lab)
+        css = size * (r[3] * ch / h_design) if h_design else None          # font size in CSS px on the simulated phone
         word = text(n)[:30]
         if css is not None and round(css, 1) < 11:
             out.append('small_text: "%s" is %.0f px on the phone (needs >= 11 px)' % (word, css))
@@ -504,11 +433,10 @@ def text_problems(d, nodes, buttons, image_module):
         outline = lab.get('outline') if isinstance(lab.get('outline'), dict) else ({} if lab.get('outline') else None)
         styled = bool(outline) or lab.get('shadow') or lab.get('bold')
         in_button = any(node_under(n, b) for b in buttons)
-        body = produced_body_text(n,nodes,buttons)
-        if not styled and len(text(n)) <= DENSE_TEXT and not body:          # long paragraphs (rules, notices) may be a thinner font
+        if not styled and len(text(n)) <= DENSE_TEXT:          # long paragraphs (rules, notices) may be a thinner font
             out.append('plain_text: "%s" is thin font text (no outline, shadow or bold): make it picture text with the art, or the '
                        'game display font with an outline/shadow in the theme colours' % word)
-        if WORDS.search(text(n)) and len(text(n)) <= 40 and not n.get('_tutorial_body') and not body and not runtime_text(n['path']):
+        if WORDS.search(text(n)) and len(text(n)) <= 40 and not n.get('_tutorial_body') and not runtime_text(n['path']):
             out.append('font_text: "%s" (%s) is drawn with a font; fixed words (titles, buttons, labels, item and mission names, '
                        'COINS/Price ...) are picture text generated with GPT in the game\'s style, frame txt_<words> '
                        '(only text that really changes at run time goes in docs/text/runtime-text.json)' % (word, n['path']))
@@ -519,7 +447,7 @@ def text_problems(d, nodes, buttons, image_module):
         if isinstance(col, list) and len(col) == 3 and dark_green(col):
             out.append('dark_green_text: "%s" is dark green/teal %s: banned (user 2026-10-22); picture text, or a bright display '
                        'font with an outline' % (word, tuple(col)))
-        heavy = lab.get('bold') or outline is not None or lab.get('shadow') or (css >= 16 if css is not None else size >= 24)
+        heavy = lab.get('bold') or outline is not None or lab.get('shadow') or (css or 0) >= 16 or size >= 24
         if isinstance(col, list) and len(col) == 3 and lstar(col) < DARK_BOLD_LSTAR and heavy and not dark_green(col):
             out.append('dark_bold_text: "%s" is dark bold text %s (L* %.0f): permanently banned (user 2026-10-23, any hue, HUD '
                        'too); fill it white/cream/light yellow or a light theme colour with a darker outline, or picture text '
@@ -556,7 +484,7 @@ def text_problems(d, nodes, buttons, image_module):
         if oc and (outline.get('width') or 0) >= 2 and contrast(oc, bg_c) >= 3 and contrast(col, oc) >= 3:
             continue
         out.append('low_contrast: "%s" contrast %.1f:1 against what is behind it (needs %.1f): change the text colour, add an outline '
-                   'with clear theme-colour glyph edges or a calmer position; keep resource HUD transparent unless a necessary carrier is established' % (word, ratio, need))
+                   'or a plate behind it' % (word, ratio, need))
     return out
 
 
@@ -858,10 +786,6 @@ def text(n):
 def is_claim_link(b, nodes=()):
     if b.get('_claim_link') is True:
         return True
-    if (b.get('ui_role') == 'result_claim_link' and b.get('ui_role_source') == 'GameUIKit'
-            and b.get('comps', {}).get('button', {}).get('enabled', True)
-            and 'button' in b.get('comps', {})):
-        return True
     def named(n):
         frame = str(n.get('comps', {}).get('sprite', {}).get('frame', ''))
         return bool(CLAIM_LINK.search(n.get('name', '') + ' ' + frame))
@@ -1014,32 +938,6 @@ def bitmap_font(lab):
     return bool(BITMAP_FONT_NAME.search(str(lab.get('font') or '')))    # dumps from before font_kind: judge by the font name
 
 
-def verified_detached_icon_caption(plate, caption):
-    """Only real, resolvable transparent standalone art can own an outside caption.
-    Unknown rectangles keep the original one-piece fail-closed rule. A generated
-    word's source is required too; node names alone never establish this layout.
-    """
-    frame=plate.get('comps',{}).get('sprite',{}).get('frame')
-    caption_frame=caption.get('comps',{}).get('sprite',{}).get('frame')
-    source=SPRITE_ART_SOURCES.get(frame)
-    word=GENERATED_TEXT_SOURCES.get(caption_frame)
-    if not source or not word or not SPRITE_ART_SOURCES.get(caption_frame) or frame_like(plate):return False
-    try:
-        from PIL import Image
-        for item in (source,word):
-            raw=Image.open(item['path'] if isinstance(item,dict) else item)
-            if 'A' not in raw.getbands():return False
-            if isinstance(item,dict) and item.get('rect'):
-                x,y,w,h=item['rect'];raw=raw.crop((x,y,x+w,y+h))
-            alpha=raw.getchannel('A');w,h=alpha.size
-            if min(w,h)<2 or alpha.getextrema()[1]<200:return False
-            # True transparent corners distinguish the standalone cutout from
-            # a filled picture tile. Tiny alpha from PNG edge antialiasing is OK.
-            if any(alpha.getpixel(p)>5 for p in ((0,0),(w-1,0),(0,h-1),(w-1,h-1))):return False
-        return True
-    except (OSError,ValueError,KeyError):return False
-
-
 def one_piece_problems(nodes, buttons):
     """User 2026-10-23 (both boards): a button is ONE generated picture with its stylized word in it. A word (font label or
     txt_ picture text) laid over a button plate is a spliced button. Digits on a plate (level numbers, prices) may stay
@@ -1050,14 +948,8 @@ def one_piece_problems(nodes, buttons):
         said = [n for n in sub if not n.get('_tutorial_body') and ((WORDS.search(text(n)) and not runtime_text(n['path']) and
                 ('label' in n['comps'] or 'richtext' in n['comps'] or str(n['comps'].get('sprite', {}).get('frame', '')).lower().startswith('txt_')))
                 or (n is not b and wordlike(n) and not text(n) and not baked(n)))]          # words.png / BtnWord cut from a word sheet
-        plates = [n for n in sub if 'sprite' in n['comps'] and not text(n) and n not in said
-                  and area(n['rect']) >= 0.3 * area(b['rect'])]
-        # Descendant captions below an icon are not words laid over its plate.
-        # Use the same 15% text/picture intersection used by overlap checking.
-        said = [n for n in said if any(area(n['rect']) > 0 and
-                (inter(n['rect'], p['rect']) >= .15 * area(n['rect'])
-                 or not verified_detached_icon_caption(p,n)) for p in plates)]
-        if said and plates:
+        plate = any('sprite' in n['comps'] and not text(n) and n not in said and area(n['rect']) >= 0.3 * area(b['rect']) for n in sub)
+        if said and plate:
             out.append('spliced_button: %s lays the word "%s" (%s) over a button plate: generate the whole button with its '
                        'stylized word in one picture (frame btn_<words>, e.g. btn_play; icon captions baked into the icon '
                        'picture), no label or txt_ word on top of a plate (user 2026-10-23)'
@@ -1121,139 +1013,10 @@ def squash_problems(nodes, full):
     return out
 
 
-def sprite_assembly_findings(d, nodes):
-    """Locate reward-composition defects and ambiguous cases on existing evidence.
-
-    Insets describe a stretch center, not a universal content-safe area. A name
-    is an art-role hint, not proof of baked text. Keep those risks for direct
-    visual review; only an explicitly declared caption role is a hard mismatch.
-    """
-    result = {'problems': [], 'reviews': [], 'measurements': []}
-    nodes = [n for n in nodes if n.get('active') is not False and n.get('opacity', 1) > .05]
-    viewport = d.get('viewport') or d.get('page') or {}
-    width, height = viewport.get('width'), viewport.get('height')
-    valid_number = lambda v: type(v) in (int, float) and math.isfinite(v)
-    valid_rect = lambda r: (isinstance(r, (list, tuple)) and len(r) == 4 and
-                            all(valid_number(v) for v in r) and min(r[2:]) > 0)
-    reward_group = re.compile(r'^(?:rewards?|rewarditems|rewardicons|prizes?|items)$', re.I)
-    uncertain_group = re.compile(r'^contents?$', re.I)
-    def group_kind(n, owner=None):
-        path = n.get('path', '')
-        if owner is not None:
-            if not under(path, owner): return None
-            path = path[len(owner):].strip('/')
-        parts = path.split('/')[:-1]
-        return 'reward' if any(reward_group.fullmatch(p) for p in parts) else (
-            'unknown' if any(uncertain_group.fullmatch(p) for p in parts) else None)
-    def interactive(n):
-        return any('button' in b.get('comps', {}) and node_under(n, b) for b in nodes)
-    def ordinary_content(n):
-        return (bool(text(n) or n.get('comps', {}).get('sprite')) and
-                not re.search(r'(?:^|/)(?:decorations?|ornaments?|badges?|sparkles?)(?:/|$)',
-                              n.get('path', ''), re.I))
-    def slice_surface(n):
-        s = n.get('comps', {}).get('sprite', {})
-        return (s.get('sliced') and not s.get('tiled') and not
-            re.search(r'progress|slider|gauge|meter|(?:^|[_ /.-])(?:bar|fill|track|rail)(?:$|[_ /.-])',
-                      n.get('name', '')+' '+str(s.get('frame', '')), re.I))
-    surfaces = [n for n in nodes if slice_surface(n)]
-    designated = lambda n: str(n.get('name', '')).lower() in {'cardsurface', 'panelsurface'}
-    reviewed_owners = set()
-    for n in nodes:
-        sprite = n.get('comps', {}).get('sprite', {})
-        frame = str(sprite.get('frame', ''))
-        role = group_kind(n)
-        caption_confirmed = bool(CAPTION_FRAMES and glob_any(frame, CAPTION_FRAMES, lower=True))
-        if (role and ordinary_content(n) and not interactive(n) and
-                (frame.lower().startswith('btn_') or caption_confirmed)):
-            known_mismatch = role == 'reward' and caption_confirmed
-            message = ('reward_button_thumbnail: %s uses %s frame "%s" in a non-interactive %s slot. '
-                'Inspect the source and actual displayed words on this same screenshot; confirm whether it is '
-                'a whole caption button or a pure item/symbol icon. Naming and resolution alone are not proof; '
-                'do not regenerate automatically.' % (n['path'],
-                'an explicitly declared whole-caption' if caption_confirmed else 'a button-named', frame, role))
-            result['problems' if known_mismatch else 'reviews'].append(message)
-            result['measurements'].append(dict(code='reward_button_thumbnail', path=n['path'], frame=frame,
-                css_display_size=sprite.get('css_display_size'), source_size=sprite.get('frame_size'),
-                caption_confirmed=caption_confirmed, role=role, visual_review_required=not known_mismatch,
-                auto_regenerate=False))
-        if n not in surfaces:
-            continue
-        owner = parent_of(n)
-        siblings = [s for s in surfaces if parent_of(s) == owner]
-        preferred = [s for s in siblings if designated(s)]
-        if preferred and n not in preferred:
-            continue  # A second decorative surface does not own the card rewards.
-        items = [m for m in nodes if m is not n and group_kind(m, owner) and
-                 ordinary_content(m) and valid_rect(m.get('screen') or m.get('rect'))]
-        if not items: continue
-        candidates = preferred or siblings
-        if len(candidates) != 1:
-            if owner not in reviewed_owners:
-                result['reviews'].append('sliced_reward_owner_unresolved: %s has multiple possible surfaces; '
-                    'resolve the actual container on the existing screenshot before applying any inner-area rule.' % owner)
-                reviewed_owners.add(owner)
-            continue
-        inner = sprite.get('inner'); outer = n.get('screen') or n.get('rect')
-        row = dict(code='sliced_reward_content', path=n['path'], frame=frame,
-                   source_size=sprite.get('frame_size'), css_display_size=sprite.get('css_display_size'),
-                   insets=sprite.get('insets'), inner=inner, inner_meaning='stretch_center_not_content_safe',
-                   auto_regenerate=False)
-        result['measurements'].append(row)
-        if not (valid_rect(inner) and valid_rect(outer) and valid_number(width) and
-                valid_number(height) and min(width, height) > 0):
-            row['status'] = 'unmeasured'
-            result['reviews'].append('sliced_reward_inner_unmeasured: %s has populated content but no valid '
-                'measured stretch center/viewport; inspect the existing screenshot. A missing center does not '
-                'prove either a broken card or a safe composition.' % n['path'])
-            continue
-        row['inner_css_size'] = [inner[2]*width, inner[3]*height]
-        # Measurement rounding tolerance, never a style or resolution threshold.
-        tolerance = 2.0
-        def overflow(rect, boundary):
-            return max((boundary[0]-rect[0])*width, (boundary[1]-rect[1])*height,
-                (rect[0]+rect[2]-boundary[0]-boundary[2])*width,
-                (rect[1]+rect[3]-boundary[1]-boundary[3])*height, 0)
-        center_crossing = []; outer_crossing = []
-        for item in items:
-            rect = item.get('screen') or item['rect']; size = [rect[2]*width, rect[3]*height]
-            center = overflow(rect, inner); edge = overflow(rect, outer)
-            if center > tolerance:
-                center_crossing.append(dict(path=item['path'], css_size=size, overflow_css=center))
-            if edge > tolerance:
-                outer_crossing.append(dict(path=item['path'], overflow_css=edge))
-        row.update(center_crossing=center_crossing, outer_crossing=outer_crossing,
-                   status='review_required' if center_crossing or outer_crossing else 'within_measured_center')
-        if center_crossing:
-            result['reviews'].append('sliced_reward_content_exceeds_inner: %s has measured stretch center '
-                '%.2fx%.2f CSS px; %d content items cross it by position or size. Check the actual border, '
-                'center bands and source-safe design in the same screenshot. Stretch center is not a universal '
-                'content-safe area; intended overhang and decorations are not automatically defects.' %
-                (n['path'], *row['inner_css_size'], len(center_crossing)))
-        if outer_crossing:
-            result['reviews'].append('reward_content_outside_card: %s has %d content items outside its outer '
-                'rect; verify actual ownership, masks and intended overhang on the existing screenshot.' %
-                (n['path'], len(outer_crossing)))
-        if any(group_kind(m, owner) == 'unknown' for m in items):
-            result['reviews'].append('reward_content_role_unresolved: %s uses a generic content group; '
-                'confirm the actual item/decorative/action roles before requiring an artwork change.' % n['path'])
-    return result
-
-
-def assembly_visual_reviews(report):
-    """Preserve exact original evidence in the existing Codex look-list flow."""
-    return [dict(screen=page.get('screen'), file=page.get('file'), issue=issue)
-            for page in report.get('pages', [])
-            for issue in page.get('visual_reviews', page.get('stats', {}).get('visual_reviews', []) +
-                page.get('stats', {}).get('sprite_assembly', {}).get('reviews', []))]
-
-
-def runtime_clarity_findings(nodes, full, policy=None):
+def low_res_problems(nodes, full):
     """ART-04 at run time. Compare source pixels to the sprite's actual CSS-pixel size on the phone, not Cocos design
     units. Frames set from code are not in scene files, so the static audit_image_clarity.py misses them - the dump measures
     the live view."""
-    from clarity_policy import resolve_policy, measure
-    policy = policy or CLARITY_POLICY or resolve_policy()
     out = []
     for n in nodes:
         s = n['comps'].get('sprite')
@@ -1278,31 +1041,15 @@ def runtime_clarity_findings(nodes, full, policy=None):
         bg = n in full or a >= MAX_STRETCH_AREA or bool(BACKGROUND_NAME.search(n['name'] + ' ' + frame))
         if not bg and STRETCH_OK.search(n['name'] + ' ' + frame):
             continue
-        item = measure(fs, ds, policy, background=bg)
-        item.update(path=n.get('path'), frame=frame)
-        out.append(item)
-    return out
-
-
-def low_res_problems(nodes, full):
-    """Ratio messages only. Advisory messages are kept separate from defects by main()."""
-    out = []
-    for item in runtime_clarity_findings(nodes, full):
-        if not item['below_threshold']:
+        need = MIN_SHARP_BG if bg else MIN_SHARP
+        r = min(fs[0] / ds[0], fs[1] / ds[1])
+        if r >= need:
             continue
-        out.append('low_res: %s (frame "%s") source %gx%g / rendered %gx%g = %.2fx; reference %gx; %s. '
-                   'Judge clarity at the actual phone size; ratio alone never schedules regeneration.' %
-                   (item['path'], item['frame'], *item['source'], *item['render'],
-                    item['source_render_ratio'], item['threshold'], item['severity']))
+        want = 1.5 if bg else 2
+        out.append('low_res: %s (frame "%s") picture %dx%d is drawn at %gx%g = %.2fx - needs >= %gx (%dx%d px) or it looks soft on '
+                   'the phone: regenerate or re-crop it at >= %gx (ART-04, same check every art round as in the final review, '
+                   'user 2026-10-23)' % (n['path'], frame, fs[0], fs[1], ds[0], ds[1], r, want, round(ds[0] * want), round(ds[1] * want), want))
     return out
-
-
-def split_clarity_messages(problems, policy):
-    """Only a resolution-ratio advisory is non-blocking; other defects retain their status."""
-    if policy['severity'] != 'advisory':
-        return list(problems), []
-    return ([message for message in problems if not message.startswith('low_res:')],
-            [message for message in problems if message.startswith('low_res:')])
 
 
 BITMAP_DIGIT_FRAME = re.compile(r'(?:^|[_-])(?:digit|digits|num|nums|number|numbers|glyph|glyphs)[_-]?\d+(?:$|[_-])', re.I)
@@ -1723,8 +1470,8 @@ def solid_fill(n):
 
 def flat_value_plate_problems(nodes):
     """User 2026-10-28/29 (冲鸭小巴 "数据后面有纯色背景的在skill也要限制住", 坦克 "金币后面的蓝色背景去掉", 人鱼逃脱 blue strip
-    behind "LEVEL 1 • +10 PEARLS"): no flat solid-colour box of ANY colour behind a level/score/currency value. Resource HUD stays transparent by default; fix glyphs, spacing and position first.
-    Any necessary carrier must follow text-backplate-review.md, including generated PNG backgrounds."""
+    behind "LEVEL 1 • +10 PEARLS"): no flat solid-colour box of ANY colour behind a level/score/currency value. A plate
+    behind data is a picture generated with the art; text-backplate-review.md already bans the dark ones."""
     out = []
     for n in nodes:
         value = text(n)
@@ -1746,8 +1493,8 @@ def flat_value_plate_problems(nodes):
             if fill is None or fill[1] < 0.35:      # a faint tint is not a box; popup masks are full-screen anyway
                 continue
             out.append('flat_value_plate: "%s" (%s) sits on a flat colour box %s (colour %s, %.0f%% visible): no flat '
-                       'colour plate of any colour behind data; keep an already readable resource HUD transparent; '
-                       'fix glyphs/edges/spacing first; only a necessary carrier may use the game art style'
+                       'colour plate of any colour behind data (user 2026-10-29); use a plate picture generated with the '
+                       'art, or no plate and a clear outline on the digits'
                        % (value[:30], n['path'], p['path'], fill[0], fill[1] * 100))
             break
     return out
@@ -1878,11 +1625,7 @@ def related(a, b):
 
 
 def fully_occluded(node, masks):
-    """Only proven opaque surfaces can completely hide a lower visual node.
-
-    Input blocking is independent of visual coverage. In particular, a dimmer
-    must not turn still-visible underlay into an automatic visual exemption.
-    """
+    """A higher, full-screen input-blocking modal makes its lower scene inactive for visual audits."""
     r=node['rect'];x=max(0,r[0]);y=max(0,r[1]);visible=[x,y,max(0,min(1,r[0]+r[2])-x),max(0,min(1,r[1]+r[3])-y)]
     size = area(visible)
     if size <= 0:
@@ -1892,31 +1635,9 @@ def fully_occluded(node, masks):
 
 
 def modal_masks(nodes):
-    """Conservative full-screen occluders with a genuinely opaque source Sprite.
-
-    Unknown Graphics geometry, transparent texture holes, tint alpha and partial
-    visibility retain the underlay. Opacity is not an art-style threshold.
-    """
-    out = []
-    for n in nodes:
-        sprite = n.get('comps', {}).get('sprite', {})
-        source = SPRITE_ART_SOURCES.get(sprite.get('frame'))
-        if (area(n['rect']) < 0.85 or not n.get('comps', {}).get('block_input')
-                or n.get('opacity', 1) < 0.999 or sprite.get('alpha', 255) < 255
-                or abs(n.get('angle', 0)) > 0.01 or sprite.get('filled') is not False or not source):
-            continue
-        try:
-            from PIL import Image
-            with Image.open(source['path']) as image:
-                image = image.convert('RGBA')
-                # The full original must be opaque. A tight opaque trimmed frame
-                # inside an originally transparent canvas cannot hide the node's
-                # whole rectangle when trim is disabled.
-                if image.width > 0 and image.height > 0 and image.getchannel('A').getextrema() == (255,255):
-                    out.append(n)
-        except (OSError, ValueError, KeyError):
-            pass
-    return out
+    """Full-screen input blockers are the only nodes that can hide a lower screen from visual audits.
+    No dim-opacity limit (Saul 10-31): how dark a popup dim is follows the game's style and is judged by eye."""
+    return [n for n in nodes if area(n['rect']) >= 0.85 and n.get('comps', {}).get('block_input')]
 
 
 # --- clear_color_band (art patch v3, 2026-10-31: v2's band check merged into v7.8 after a 725-dump comparison) -----------
@@ -2120,7 +1841,7 @@ def caption_style_problems(d, nodes, buttons, image_module):
             kind = ' + '.join(sorted(sig)) + (' on plate "%s"' % plate_family if plate_family else '')
         ink = None
         if img is not None:
-            inks = {generated_face_ink_class(img,n,image_module) or (caption_ink_class(img, n.get('screen') or n['rect']) if baked(n) else ink_class(img, n.get('screen') or n['rect'])) for n in found if 'label' not in n['comps']}
+            inks = {caption_ink_class(img, n.get('screen') or n['rect']) if baked(n) else ink_class(img, n.get('screen') or n['rect']) for n in found if 'label' not in n['comps']}
             inks.discard(None)
             ink = ','.join(sorted(inks)) or None
         return kind, ink, found
@@ -2466,7 +2187,7 @@ def busy_text_problems(d, nodes, image_module):
         colours, edges = m
         if colours > MAX_TEXT_COLOURS:
             out.append('busy_text_background: "%s" (%s) has no plate and the background behind the words is busy (%d colours, '
-                       'max %d; edges around it %.0f%%): fix glyphs/edges/position or the local background first; keep resource HUD transparent unless a necessary carrier is established '
+                       'max %d; edges around it %.0f%%): add a plate behind it or move it to a calm part of the background '
                        '(Holly v2: PROFILE crossed by the fence)' % (text(t)[:24], t['path'], colours, MAX_TEXT_COLOURS, 100 * edges))
     return out
 
@@ -2722,12 +2443,6 @@ def overlap_problems(nodes, buttons, full):
         for t in texts:
             if countdown_hint(t, nodes):
                 continue
-            # A separate standard clickable Claim link owns its action text.
-            # A non-clickable caption with the same words must still be checked.
-            if any(c is not b and is_claim_link(c, nodes) and node_under(t, c)
-                   and c.get('comps', {}).get('button', {}).get('interactable') is True
-                   for c in real):
-                continue
             r = t['rect']
             if node_under(t, b) and r[1] < br[1] + br[3] * 0.9:
                 continue
@@ -2748,40 +2463,6 @@ def hue_class(rgb):
         return 'neutral'
     h, _l, _s = colorsys.rgb_to_hls(*(c / 255.0 for c in rgb))
     return 'hue%d' % (int(h * 360 + 15) % 360 // 30 * 30)
-
-
-def generated_face_ink_class(img, n, image_module):
-    """Measure rendered light glyph faces using the generated PNG's opaque face mask.
-    A white face on a pale panel cannot be segmented by contrast against that panel;
-    doing so selects only the coloured outline. No source colour is used as evidence
-    of the rendered colour. Unknown/rotated assets keep the existing fallback.
-    """
-    source = generated_source(n)
-    if not source or image_module is None or abs(n.get('angle', 0)) > 1:
-        return None
-    r = n.get('unclipped_screen') or n.get('screen') or n['rect']
-    W, H = img.size
-    box = (round(r[0]*W), round(r[1]*H), round((r[0]+r[2])*W), round((r[1]+r[3])*H))
-    width, height = box[2]-box[0], box[3]-box[1]
-    if min(width, height) < 2:
-        return None
-    raw = image_module.open(source['path'] if isinstance(source, dict) else source).convert('RGBA')
-    if isinstance(source, dict) and source.get('rect'):
-        x,y,w,h = source['rect']; raw = raw.crop((x,y,x+w,y+h))
-    raw = raw.resize((width, height))
-    shown = img.crop(box).convert('RGB')
-    if n.get('unclipped_screen') and n.get('screen'):
-        clip=n['screen']
-        cb=(max(0,round(clip[0]*W)-box[0]),max(0,round(clip[1]*H)-box[1]),
-            min(width,round((clip[0]+clip[2])*W)-box[0]),min(height,round((clip[1]+clip[3])*H)-box[1]))
-        raw=raw.crop(cb); shown=shown.crop(cb)
-    faces=[rgb for rgba,rgb in zip(raw.getdata(),shown.getdata()) if rgba[3]>=200 and lstar(rgba[:3])>=70]
-    if len(faces)<12:
-        return None
-    counts={}
-    for rgb in faces:
-        c=hue_class(rgb); counts[c]=counts.get(c,0)+1
-    return max(counts,key=counts.get)
 
 
 def caption_ink_class(img, r):
@@ -2830,49 +2511,29 @@ def ink_class(img, r):
     return max(count, key=count.get)
 
 
-def colour_samples(d, nodes, image_module):
-    """Return only glyph-colour measurements, never coloured button plates."""
-    shot = screenshot_of(d) if d.get('_file') else None
-    img = page_pixels(image_module,shot) if image_module is not None and shot is not None and shot.is_file() else None
-    groups,settings_text,unknown = {},[],[]
-    for n in nodes:
-        lab = n['comps'].get('label') or n['comps'].get('richtext')
-        value = text(n) or baked(n)
-        if not value or (lab and len(value) > DENSE_TEXT):
-            continue
-        cls = None
-        col = (n['comps'].get('label') or {}).get('color')
-        if n['comps'].get('label') and not bitmap_font(n['comps']['label']) and isinstance(col,list) and len(col)==3:
-            cls = hue_class(col)
-        elif img is not None:
-            if n['comps'].get('image_text',{}).get('complete'):
-                pieces=[child for child in nodes if child is not n and node_under(child,n) and 'sprite' in child['comps']]
-                classes=[generated_face_ink_class(img,child,image_module) for child in pieces]
-                if classes and all(c is not None for c in classes):
-                    cls=max(set(classes),key=classes.count)
-            elif baked(n):
-                # A baked plate has no reliable glyph mask in the legacy format.
-                # White highlights, cream rims and backgrounds are not text ink.
-                cls=None
-            else:
-                cls=generated_face_ink_class(img,n,image_module) or ink_class(img,n.get('screen') or n['rect'])
-        if cls is None:
-            unknown.append(n['path'])
-        else:
-            groups.setdefault(n['name'],(cls,value[:16]))
-            if BOARD=='localize' and d.get('purpose')=='settings_sound':
-                settings_text.append((n['name'],n.get('screen') or n['rect']))
-    return groups,settings_text,unknown
-
-
-def colour_problems(d, nodes, image_module, samples=None):
+def colour_problems(d, nodes, image_module):
     """User 2026-10-23 bad examples: the "Hazel's Shelf Scramble" home where the title, PLAY and the numbers 100 / 3 are all
     the same teal, and the "Your Progress" popup where every word is the same orange-yellow with a brown outline. Titles,
     buttons, numbers and labels share one style family but differ in colour (and size/shape). Text items are grouped by
     their node name (a list of rank rows is one item); with >= 3 items all in one colour family the page fails."""
-    groups,settings_text,unknown=samples if samples is not None else colour_samples(d,nodes,image_module)
-    if unknown:
-        return []  # Preserve an explicit visual review below, not a false 'all words are the same colour'.
+    shot = screenshot_of(d) if d.get('_file') else None
+    img = page_pixels(image_module, shot) if image_module is not None and shot is not None and shot.is_file() else None
+    groups = {}
+    settings_text = []
+    for n in nodes:
+        lab = n['comps'].get('label') or n['comps'].get('richtext')
+        if not text(n) or (lab and len(text(n)) > DENSE_TEXT):
+            continue
+        cls = None
+        col = (n['comps'].get('label') or {}).get('color')
+        if n['comps'].get('label') and not bitmap_font(n['comps']['label']) and isinstance(col, list) and len(col) == 3:
+            cls = hue_class(col)
+        elif img is not None:
+            cls = ink_class(img, n.get('screen') or n['rect'])
+        if cls is not None:
+            groups.setdefault(n['name'], (cls, text(n)[:16]))
+            if BOARD == 'localize' and d.get('purpose') == 'settings_sound':
+                settings_text.append((n['name'], n.get('screen') or n['rect']))
     classes = {c for c, _ in groups.values()}
     if len(groups) >= 3 and len(classes) == 1:
         titles = [rect for name, rect in settings_text if re.search(r'title|heading', name, re.I)]
@@ -2925,11 +2586,10 @@ def _verified_legacy_capture_ids(project, folder):
 
 
 def load(folders, project=None):
-    from art_capture_history import resolve_input_files
     dumps = []
     for folder in folders:
         legacy_ids = None
-        for f in resolve_input_files(folder, project=project):
+        for f in sorted(Path(folder).rglob('*ui-dump-*.json')):
             try:
                 d = json.loads(f.read_text(encoding='utf-8'))
             except (OSError, ValueError):
@@ -3064,7 +2724,7 @@ def canvas_text_code(proj):
     return out
 
 
-def result_claim_problems(buttons, sub_names, nodes=()):
+def result_claim_problems(buttons, sub_names):
     """Remake result page (user 2026-10-27): the x2 ad button is the biggest control; one plain line of generated
     clickable text (LinkClaim / link_claim*) sits under it and claims the base amount."""
     doubles = [b for b in buttons if DOUBLE_BUTTON.search(sub_names(b)) and not is_claim_link(b)]
@@ -3079,18 +2739,9 @@ def result_claim_problems(buttons, sub_names, nodes=()):
         out.append('result_claim_link: no one-line "Claim" text under the x2 button: add generated clickable picture text '
                    '(node LinkClaim, frame link_claim*) that claims the base amount (user 2026-10-27)')
         return out
-    def drawn_rect(button):
-        drawn=[n.get('screen') or n['rect'] for n in nodes if node_under(n,button) and
-               (text(n) or 'sprite' in n.get('comps',{}) or 'graphics' in n.get('comps',{}))]
-        if not drawn:
-            return button.get('screen') or button['rect']
-        x=min(r[0] for r in drawn);y=min(r[1] for r in drawn)
-        return [x,y,max(r[0]+r[2] for r in drawn)-x,max(r[1]+r[3] for r in drawn)-y]
-    dr = drawn_rect(double)
+    dr = double['rect']
     for link in links:
-        r = drawn_rect(link)
-        if any(node_under(n,link) and baked(n) and not text(n) for n in nodes):
-            out.append('result_claim_link: %s uses a whole button plate; the free Claim is generated one-line picture text' % link['path'])
+        r = link['rect']
         if r[1] + r[3] / 2 <= dr[1] + dr[3]:
             out.append('result_claim_link: %s must sit under the x2 button %s (user 2026-10-27)' % (link['path'], double['path']))
         if area(r) > 0.5 * area(dr):
@@ -3129,58 +2780,6 @@ def visible_sound_buttons(nodes):
     """A greyed endpoint remains a visible control; a disabled component or hidden node does not."""
     return [n for n in nodes if n.get('active', True) is not False and n.get('opacity', 1) > 0.05
             and 'button' in n.get('comps', {}) and n['comps']['button'].get('enabled', True) is not False]
-
-
-def sound_stepper_channels(nodes):
-    """Two volume steppers require a real visible minus and plus for each section.
-    Close and help controls are independent of the number of audio channels.
-    """
-    labels=[n for n in nodes if re.fullmatch(r'music|sound(?: effects)?|sfx|effects',text(n).strip(),re.I)]
-    found={}
-    for b in visible_sound_buttons(nodes):
-        words_=b.get('name','')+' '+' '.join(str(n.get('comps',{}).get('sprite',{}).get('frame',''))+' '+text(n)
-                                              for n in nodes if node_under(n,b))
-        sign='minus' if re.search(r'minus|decrease|subtract|(?:^|\s)[−-](?:$|\s)',words_,re.I) else 'plus' if re.search(r'plus|increase|add|(?:^|\s)\+(?:$|\s)',words_,re.I) else None
-        if not sign or not labels: continue
-        cy=b['rect'][1]+b['rect'][3]/2
-        label=min(labels,key=lambda n:abs(cy-n['rect'][1]-n['rect'][3]/2))
-        r=label['rect']
-        if abs(cy-r[1]-r[3]/2)>max(3*r[3],b['rect'][3]):continue
-        channel='music' if re.fullmatch('music',text(label).strip(),re.I) else 'sfx'
-        found.setdefault(channel,set()).add(sign)
-    return {channel for channel,signs in found.items() if signs=={'minus','plus'}}
-
-
-def resource_hud_word(n, nodes):
-    """A local resource label + real icon + decodable value row is HUD, not a title.
-    A generated frame suffix (such as _value) is not the visible label's identity.
-    Pair via actual row ancestry and geometry; unrelated Home counters cannot
-    turn another title into HUD just because they share a distant ancestor.
-    """
-    if not WORDS.search(text(n)):return False
-    parent=path_parent(n['path'])
-    if parent in ('','Canvas'):return False
-    r=n['rect']
-    siblings=[m for m in nodes if m is not n and under(m['path'],parent) and not node_under(m,n)
-              and abs(m['rect'][0]+m['rect'][2]/2-r[0]-r[2]/2)<=max(r[2],.1)
-              and abs(m['rect'][1]+m['rect'][3]/2-r[1]-r[3]/2)<=max(3*r[3],.06)]
-    for icon in siblings:
-        sp=icon.get('comps',{}).get('sprite',{})
-        match=re.search(r'(?:^|_)(coin|energy|gem|diamond|heart|life)(?:_|$)',str(sp.get('frame','')),re.I)
-        if not match:continue
-        # The resource identity comes from the actual icon; words such as
-        # "value"/"balance" in a generated frame name are implementation suffixes.
-        family=match.group(1).lower()
-        label_words=re.findall(r'[a-z]+',text(n).lower())
-        names={family,family+'s','lives' if family=='life' else family}
-        if not any(w in names for w in label_words) or any(w not in names|{'value','amount','count','balance'} for w in label_words):continue
-        row=path_parent(icon['path'])
-        if path_parent(row)!=parent:continue
-        value_nodes=[m for m in siblings if m is not icon and under(m['path'],row)]
-        values=numeric_picture_values(value_nodes)
-        if any(NUMERIC.fullmatch(text(m).strip()) for m in value_nodes if text(m)) or values:
-            return True
-    return False
 
 
 def requires_result_double(project):
@@ -3284,17 +2883,9 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     pix = {'flat_ratio': pixels['flat_ratio'], 'plain_block_ratio': pixels['plain_block_ratio']} if pixels else {}
     if colour_hints:
         pix['dark_button_hints'] = colour_hints
-    assembly = sprite_assembly_findings(d, nodes)
-    problems += assembly['problems']
-    pix['sprite_assembly'] = assembly
-    visual_reviews = pix['visual_reviews'] = []
-    measured_colours=colour_samples(d,nodes,image_module)
-    _,_,unknown_colours=measured_colours
-    if unknown_colours:
-        visual_reviews.append('text_colour_review: glyph pixels could not be isolated for %s; inspect the same capture; plate/rim colours were not counted as text' % ', '.join(unknown_colours[:8]))
     problems += text_problems(d, nodes, [n for n in nodes if 'button' in n['comps']], image_module)
     problems += one_piece_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)])
-    problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module,measured_colours) + low_res_problems(nodes, full)
+    problems += squash_problems(nodes, full) + colour_problems(d, nodes, image_module) + low_res_problems(nodes, full)
     problems += overlap_problems(nodes, [n for n in nodes if 'button' in n['comps'] and n['comps']['button'].get('interactable', True)], full)
     # v7.8 U11: buttons over any picture frame, text on a busy background without a plate, one text drawn twice
     blockers = [n for n in all_full if n.get('comps', {}).get('block_input')]
@@ -3373,38 +2964,28 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         problems.append('system_font: "%s" (%s) uses the system default font; use the game font' % (text(n)[:30], n['path']))
     panels = [n for n in nodes if n not in masks and area(n['rect']) < 0.85 and
               'button' not in n['comps'] and area(n['rect']) >= 0.12 and
-              (('sprite' in n['comps'] and (n['comps']['sprite'].get('sliced') or frame_like(n))) or
+              (('sprite' in n['comps'] and (n['comps']['sprite'].get('sliced') or kind == 'popup')) or
                (n['name'] == 'PanelSurface' and 'graphics' in n['comps']))]
     if panels and kind in ('popup', 'page', 'home'):
         p = max(panels, key=lambda n: area(n['rect']))
-        inner = [n['rect'] for n in content if n is not p and
-                 (text(n) or 'sprite' in n['comps'] or 'graphics' in n['comps']) and
-                 center_in(n['rect'], p['rect']) and 0 < area(n['rect']) < 0.9 * area(p['rect'])]
+        inner = [n['rect'] for n in content if n is not p and center_in(n['rect'], p['rect']) and area(n['rect']) < 0.9 * area(p['rect'])]
         filled = coverage(inner, p['rect'])
         # A check-in page has its own seven-card/day-7 layout checks; generic
         # panel fill counts the card grid incorrectly. Keep the generic guard
         # active for other pages, including league/rankings panels.
         if filled < 0.30 and purpose != 'checkin':
-            if not inner:
-                problems.append('empty_panel: %s has no visible contents inside its panel' % p['path'])
-            else:
-                visual_reviews.append('panel_fill_review: %s has visible content occupying %.0f%% of the panel '
-                    '(30%% composition reference). Use the original screenshot to judge spacing and completeness; '
-                    'the ratio does not prove an empty panel or require artwork changes.' % (p['path'], filled * 100))
+            problems.append('empty_panel: %s is only %.0f%% filled (needs >= 30%%): the screenshot "Weekly Rankings" mistake'
+                            % (p['path'], filled * 100))
         if (kind == 'popup' or masks) and purpose not in OWN_POPUP_RULES:
             art = [n['rect'] for n in pictures if n is not p and n not in panels and not text(n) and center_in(n['rect'], p['rect'])
                    and not TITLE_DECOR.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
-                   and area(n['rect']) > 0 and not any(node_under(n, b) for b in buttons)]
-            art_share = coverage([r for r in art if area(r) >= 0.005], p['rect'])
+                   and area(n['rect']) >= 0.005 and not any(node_under(n, b) for b in buttons)]
+            art_share = coverage(art, p['rect'])
             if art_share < MIN_POPUP_ART and 'original_popup_illustration' not in original_rules:
-                if not art:
-                    problems.append('plain_popup: %s has no visible illustration besides text and buttons: add a '
-                                    'generated illustration - gift/chest, mascot, phone with the game icon, or reward items '
-                                    'with the currency icon' % p['path'])
-                else:
-                    visual_reviews.append('popup_illustration_share_review: %s has a visible illustration covering %.0f%% '
-                        'of the panel (10%% composition reference). Check its presence, scale and clarity in the original '
-                        'screenshot; the ratio alone does not require redrawing or enlarging it.' % (p['path'], art_share * 100))
+                problems.append('plain_popup: %s holds only text and buttons (pictures %.0f%% of the panel, needs >= 10%%): add a '
+                                'generated illustration - gift/chest, mascot, phone with the game icon, the reward items with the '
+                                'currency icon - plus a picture-text title on a ribbon (user 2026-10-23: the flat "Home screen '
+                                'reward" popup)' % (p['path'], art_share * 100))
     if purpose in ('result_win', 'result_fail'):
         decor = [n for n in pictures if not any(node_under(n, b) for b in buttons) and n not in panels]
         need = []
@@ -3428,7 +3009,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
                 problems.append('result_double: no "watch an ad, x2 reward" button: every level end (endless: every run end) offers '
                                 'it (user 2026-10-23, both boards; AdRewards.resultReward(...).doubled), name it BtnDouble / btn_x2_*')
             elif not claimed_status:
-                problems += result_claim_problems(buttons, sub_names,nodes)
+                problems += result_claim_problems(buttons, sub_names)
     button_share = coverage([b['rect'] for b in buttons])
     problems += video_button_problems(purpose, content, nodes)
     if purpose in FUNCTION_PAGES and button_share > MAX_BUTTON_SHARE:
@@ -3448,7 +3029,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         for n in content:
             lab = n['comps'].get('label') or n['comps'].get('richtext')
             r = n['rect']
-            if in_button(n) or resource_hud_word(n, nodes) or not WORDS.search(text(n)) or r[1] + r[3] / 2 >= 0.45:
+            if in_button(n) or not WORDS.search(text(n)) or r[1] + r[3] / 2 >= 0.45:
                 continue
             h_design = (lab or {}).get('height') or 0
             css = ((lab or {}).get('fontSize') or 0) * (r[3] * ch_ / h_design) if h_design else 0
@@ -3513,22 +3094,13 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             continue
         if frame.lower().startswith('btn_') and baked(n):
             continue  # A generated whole-word action button is not an empty collection card.
-        inside = [m['rect'] for m in content if m is not n and
-                  (text(m) or 'sprite' in m['comps'] or 'graphics' in m['comps']) and
-                  center_in(m['rect'], n['rect']) and 0 < area(m['rect']) < 0.9 * area(n['rect'])]
-        card_fill = coverage(inside, n['rect'])
-        if not inside:
+        inside = [m['rect'] for m in content if m is not n and center_in(m['rect'], n['rect']) and area(m['rect']) < 0.9 * area(n['rect'])]
+        if coverage(inside, n['rect']) < 0.15:
             problems.append('blank_card: %s is an empty card/frame (put the level preview, item picture, number or icon in it)' % n['path'])
-        elif card_fill < 0.15:
-            visual_reviews.append('card_fill_review: %s has visible content occupying %.0f%% of the card '
-                '(15%% composition reference). Check the actual item, icon and number in the original screenshot; '
-                'low area alone is not an empty-card defect or an instruction to remake it.' % (n['path'], card_fill * 100))
     for n in content:
         lab = n['comps'].get('label') or {}
         col = lab.get('color')
-        css=font_css_size(d,n,lab)
-        heavy=lab.get('bold') or lab.get('outline') or lab.get('shadow') or (css>=16 if css is not None else (lab.get('fontSize') or 0)>=28)
-        if text(n) and isinstance(col, list) and len(col) == 3 and lstar(col) < DARK_LSTAR and heavy:
+        if text(n) and isinstance(col, list) and len(col) == 3 and lstar(col) < DARK_LSTAR and ((lab.get('fontSize') or 0) >= 28 or lab.get('bold')):
             problems.append('dark_text: "%s" is dark thick text (L* %.0f); use white/light or a saturated theme colour, medium weight'
                             % (text(n)[:30], lstar(col)))
     for b in buttons:
@@ -3646,8 +3218,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         need = []
         if not re.search(r'music', texts, re.I): need.append('a "Music" section')
         if not re.search(r'sound|sfx|effects', texts, re.I): need.append('a "Sound Effects" section')
-        if sound_stepper_channels(nodes) != {'music','sfx'} and len(visible_sound_buttons(nodes)) < 6:
-            need.append('independent Music/SFX minus-plus controls (including greyed volume limits), or >= 6 visible audio controls; found %d' % len(visible_sound_buttons(nodes)))
+        if len(visible_sound_buttons(nodes)) < 6: need.append('>= 6 visible controls (including greyed volume limits), found %d' % len(visible_sound_buttons(nodes)))
         if len(re.findall(r'\d+\s*%', texts+' '+' '.join(value for n,value in numeric_pictures))) < 2: need.append('two percentages (e.g. 70%)')
         if need:
             problems.append('settings_sound: ' + '; '.join(need))
@@ -3673,14 +3244,7 @@ def main():
     ap.add_argument('--board', choices=['localize', 'remake'],
                     help='overrides the board recorded in the project (small_value_font blocks remake games only)')
     ap.add_argument('--no-analysis-cache', action='store_true', help='recompute identical pixel inputs for comparison')
-    from clarity_policy import add_arguments as clarity_arguments, from_args as clarity_from_args
-    clarity_arguments(ap)
     a = ap.parse_args()
-    global CLARITY_POLICY
-    try:
-        CLARITY_POLICY = clarity_from_args(a)
-    except ValueError as exc:
-        ap.error(str(exc))
     global BOARD
     proj = a.project.resolve()
     from feature_policy import board_of
@@ -3691,7 +3255,7 @@ def main():
         dumps = selected_dump_files(dumps, a.dump_file)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         ap.error(str(exc))
-    global CAPTION_FRAMES, RUNTIME_TEXT, BUTTON_SET, CANVAS_TEXT_FILES, CLARITY_EXEMPT, MODE, OPTIONAL, GENERATED_TEXT_SOURCES, SPRITE_ART_SOURCES, GLYPH_ART_SOURCES
+    global CAPTION_FRAMES, RUNTIME_TEXT, BUTTON_SET, CANVAS_TEXT_FILES, CLARITY_EXEMPT, MODE, OPTIONAL, GENERATED_TEXT_SOURCES
     global HERO_GLOBS
     try:                                     # v7.8 H11: the hero named by the project (else found by name / size)
         hero_spec = json.loads((proj / 'docs/art/hero.json').read_text(encoding='utf-8-sig'))
@@ -3700,16 +3264,11 @@ def main():
     except (OSError, ValueError, AttributeError):
         HERO_GLOBS = []
     GENERATED_TEXT_SOURCES={}
-    SPRITE_ART_SOURCES={}
-    GLYPH_ART_SOURCES=load_glyph_sources(proj)
     for source in (proj/'assets').rglob('*.png'):
         if (Path(str(source)+'.meta')).is_file():
             try:
                 meta=json.loads(Path(str(source)+'.meta').read_text())
                 for name,sub in meta.get('subMetas',{}).items():
-                    rect=[sub.get('trimX',0),sub.get('trimY',0),sub.get('width',0),sub.get('height',0)]
-                    SPRITE_ART_SOURCES[name]=(None if name in SPRITE_ART_SOURCES else
-                                             {'path':source,'rect':rect if min(rect[2:])>0 else None})
                     if name.startswith(('phrase_','digit_','symbol_','txt_')) or source.parent.name=='type20261024':
                         rect=[sub.get('trimX',0),sub.get('trimY',0),sub.get('width',0),sub.get('height',0)]
                         GENERATED_TEXT_SOURCES[name]={'path':source,'rect':rect if min(rect[2:])>0 else None}
@@ -3789,7 +3348,7 @@ def main():
     # Keep first-piece and full checks compatible for the exact same original dump.
     cache_options.pop('dump_file', None)
     analysis_cache = PageCache(proj, dict(board=BOARD, binding=presentation_binding,
-        maintenance=maintenance_mapping, clarity_policy=CLARITY_POLICY, cli=cache_options), enabled=not a.no_analysis_cache)
+        maintenance=maintenance_mapping, cli=cache_options), enabled=not a.no_analysis_cache)
     pages, failed = [], []
     for d in dumps:
         from english_visual_scope import rules_for
@@ -3809,12 +3368,8 @@ def main():
             _PAGE_PIXELS.reset(token)
             for pixels in images.values():
                 pixels.close()
-        clarity = runtime_clarity_findings([n for n in d.get('nodes', []) if n.get('active') is not False], [], CLARITY_POLICY)
-        problems, advisories = split_clarity_messages(problems, CLARITY_POLICY)
         row = {'screen': d.get('screen'), 'kind': d.get('kind'), 'purpose': d.get('purpose', 'other'), 'file': d['_file'],
-               'problems': problems, 'advisories': advisories,
-               'visual_reviews': stats.get('visual_reviews', []) + stats.get('sprite_assembly', {}).get('reviews', []),
-               'clarity_findings': clarity, 'stats': stats}
+               'problems': problems, 'stats': stats}
         pages.append(row)
         if problems:
             failed.append(row)
@@ -3841,8 +3396,7 @@ def main():
         pass
     try:
         from audit_level_plan import plan_mode     # imported here: audit_level_plan imports this module
-        if (plan_mode(proj) == 'levels' and __import__('maintenance_scope').required_map(proj)
-                and __import__('feature_policy').applies('level_map', BOARD, proj) != 'not_applicable'):
+        if plan_mode(proj) == 'levels' and __import__('maintenance_scope').required_map(proj):
             need.append('map')
     except ImportError:
         pass
@@ -3856,12 +3410,7 @@ def main():
     report = {'tool': 'audit_page_richness', 'schema': 2, 'checked': len(pages),
               'failed': len(failed), 'passed': not failed and bool(pages), 'status': 'pass' if not failed and pages else 'fail',
               'pages': pages, 'missing': missing, 'setup': setup,
-              'clarity_policy': CLARITY_POLICY,
-              'clarity_findings': [dict(x, file=p['file'], screen=p['screen']) for p in pages for x in p.get('clarity_findings', [])],
-              'boundary': 'Technical findings only. Required visual reviews use the existing original screenshots; '
-                          'a technical pass never replaces Codex visual acceptance.'}
-    report['visual_review_count'] = len(assembly_visual_reviews(report))
-    report['visual_review_required'] = report['visual_review_count'] > 0
+              'boundary': 'Scene-tree structure from dump_ui; the final look is still judged by Codex on the contact sheets.'}
     if maintenance_mapping is not None:
         report['maintenance_mapping'] = maintenance_mapping
     if original_mapping is not None:
@@ -3878,7 +3427,6 @@ def main():
     a.out.with_suffix('.cache.json').write_text(json.dumps(analysis_cache.report(), ensure_ascii=False, indent=2))
     a.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'status': report['status'], 'checked': report['checked'], 'failed': len(failed),
-                      'visual_review_count': report['visual_review_count'],
                       'found': [{'screen': f['screen'], 'problems': f['problems'][:3]} for f in failed][:8], 'report': str(a.out)},
                      ensure_ascii=False))
     return 0 if report['passed'] else 1

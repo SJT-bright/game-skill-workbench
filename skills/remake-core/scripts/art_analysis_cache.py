@@ -30,24 +30,7 @@ def file_hash(path):
     return sha(path.read_bytes())
 
 
-def _owning_report(path):
-    """Only known checker outputs are not policy inputs; unknown files stay bound.
-
-    Explicit evidence references are still hashed recursively by key(). This
-    prevents a saved/copied first-piece output from invalidating its own inputs.
-    """
-    if path.suffix.lower() != '.json':
-        return False
-    try:
-        row = json.loads(path.read_text())
-        return isinstance(row, dict) and (row.get('tool') in {
-            'art_production_preflight', 'art_check', 'art_input_preflight'}
-            or row.get('schema') == 'art_iteration_plan.v1')
-    except (OSError, ValueError):
-        return False
-
-
-def snapshot(root, names, *, skip_owning_reports=False):
+def snapshot(root, names):
     result = {}
     for name in names:
         base = root / name
@@ -63,16 +46,8 @@ def snapshot(root, names, *, skip_owning_reports=False):
             if path.is_symlink():
                 raise ValueError('symlink dependency')
             if path.is_file():
-                if skip_owning_reports and path.is_relative_to(root/'docs/art') and _owning_report(path):
-                    continue
                 result[path.relative_to(root).as_posix()] = file_hash(path)
     return result
-
-
-def tool_snapshot(root):
-    return snapshot(root, [p.name for p in root.iterdir()
-                          if p.is_file() and p.suffix in {'.py', '.json', '.js', '.mjs'}
-                          and not p.name.startswith(('test_', 'fixture_'))])
 
 
 def option_state(arguments):
@@ -128,9 +103,9 @@ class PageCache:
                 'assets', 'settings', 'profiles', 'extensions', 'package.json', 'project.json',
                 'docs/art', 'docs/text', 'docs/art-style.txt', 'docs/features.json',
                 'docs/league', 'docs/levels', 'docs/english/pre-english-images.json',
-                'docs/board.txt', '.tiktok-kit/finalize-source.json', '.tiktok-kit/policy.json'],
-                skip_owning_reports=True)
-            tools = tool_snapshot(here)
+                'docs/board.txt', '.tiktok-kit/finalize-source.json', '.tiktok-kit/policy.json'])
+            tools = snapshot(here, [p.name for p in here.iterdir()
+                                   if p.is_file() and p.suffix in {'.py', '.json', '.js', '.mjs'}])
             self.base = sha(encoded(dict(project=str(self.project), files=project_files,
                 tools=tools, options=options, python=platform.python_version(),
                 pillow=PIL.__version__, numpy=numpy_version)))
@@ -148,29 +123,21 @@ class PageCache:
             # referenced file and JSON attachment recursively; unresolved paths are misses.
             pending = [origin, Path(shot)]
             seen = {}
-            def refs(obj, parent, location=()):
+            def refs(obj, parent):
                 if isinstance(obj, dict):
-                    for field, value in obj.items():
-                        yield from refs(value, parent, location + (field,))
+                    for value in obj.values():
+                        yield from refs(value, parent)
                 elif isinstance(obj, list):
-                    for index, value in enumerate(obj):
-                        yield from refs(value, parent, location + (index,))
+                    for value in obj:
+                        yield from refs(value, parent)
                 elif isinstance(obj, str) and Path(obj).suffix.lower() in {
                         '.png', '.jpg', '.jpeg', '.webp', '.json', '.fnt', '.ttf', '.otf', '.webm', '.mp4'}:
                     p = Path(obj)
-                    # Cocos SpriteFrame.name is an identifier, even when the atlas
-                    # retained a .png suffix. It is not an attachment path. The raw
-                    # identifier stays in the document hash; all assets stay in base.
-                    if (len(location) == 5 and location[0] == 'nodes'
-                            and isinstance(location[1], int)
-                            and location[2:] == ('comps', 'sprite', 'frame')
-                            and p.name == obj and '/' not in obj and '\\' not in obj):
-                        return
                     if not p.is_absolute():
                         candidates = [parent/p, self.project/p]
                         found = [c for c in candidates if c.is_file()]
                         if not found:
-                            raise ValueError('unresolved evidence reference: ' + obj)
+                            raise ValueError('unresolved evidence reference')
                         # Hash both when relative resolution is ambiguous.
                         yield from found
                     else:
@@ -192,8 +159,7 @@ class PageCache:
             key = sha(encoded(dict(base=self.base, document=document, dependencies=seen)))
             self.observed[str(origin)] = (document, shot, key)
             return key
-        except (OSError, ValueError, TypeError, KeyError) as exc:
-            self.reason = str(exc)
+        except (OSError, ValueError, TypeError, KeyError):
             return None
 
     def _secret(self):

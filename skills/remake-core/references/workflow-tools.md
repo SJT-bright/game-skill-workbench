@@ -84,7 +84,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 打包（TikTok 平台包）
 
-`python scripts/make_tiktok_zip.py --native <Native构建> --app-id <App ID> --out <新ZIP> --project <工程> --web <Web构建> --build-tag <版本> --review <review.json> --resource-manifest <当前业务资源清单.json> --startup-contract <当前启动报告.json> --loading-recovery-runtime <当前恢复runtime.json>`（[`cocos-game-check/package`](../../cocos-game-check/package/README.md)，BUILD-04，用户 2026-10-23）：所有叫法（打包、出包、上传测试包、检测包、压缩包）都只出这一种包。只读消费准备和已形成的检查记录，再查形式（外层文件夹、Web 构建、源码、ZIP 套 ZIP、垃圾文件、非 ASCII、测试跳关、App ID）和体积（未压缩主包≤4,000,000、总包≤30,000,000、独立分包各≤4,000,000），不合格不写 ZIP；写完回读、和 Native 逐字节比、独立解压再比，才放到 `--out`，旁边写 `<ZIP名>.report.json`。检查现成的包：`python scripts/verify_native_zip.py <包.zip>`（限额内置，只能更严）。
+`python scripts/make_tiktok_zip.py --native <Native构建> --app-id <App ID> --out <新ZIP> --project <工程> --web <Web构建> --build-tag <版本> --review <review.json> --resource-manifest <当前业务资源清单.json> --startup-contract <当前启动报告.json> --loading-recovery-runtime <当前恢复runtime.json>`（[`cocos-game-check/package`](../../cocos-game-check/package/README.md)，BUILD-04，用户 2026-10-23）：所有叫法（打包、出包、上传测试包、检测包、压缩包）都只出这一种包。先跑门禁，再查形式（外层文件夹、Web 构建、源码、ZIP 套 ZIP、垃圾文件、非 ASCII、测试跳关、App ID）和体积（未压缩主包≤4,000,000、总包≤30,000,000、独立分包各≤4,000,000），不合格不写 ZIP；写完回读、和 Native 逐字节比、独立解压再比，才放到 `--out`，旁边写 `<ZIP名>.report.json`。检查现成的包：`python scripts/verify_native_zip.py <包.zip>`（限额内置，只能更严）。
 
 ## 设计关自检
 
@@ -92,7 +92,7 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 
 ## 美术自检
 
-`python scripts/art_check.py --project <工程> --dumps <同批采集>`：首件有效预防后集中制作并冻结候选，每个需要的目标构建一次、全量采集一次，适用页面、图文、裁切、布局、清晰度和开发字等检查共用这批证据，一次列全问题。清晰度默认 1:1 advisory、strict 仅显式选择；不是旧 2x / 1.5x 自动阻断。真实问题同因合批修复后只补受影响项；纯工具修复在原证据重算对应报告，不重画、构建或重采。最终总检测核已有覆盖与包内资源。具体入口见[美工批次流程](../../remake-art/references/art-iteration-workflow.md)。
+`python scripts/art_check.py --project <工程> --dumps docs/test/art-round-N`：每轮美术做完立刻跑（ART-06），把画面相关的检查一次跑完：页面内容与背景（`audit_page_richness.py`，含空白卡片、占位方块、深色粗字、字超出按钮、大片空白、按钮≤40%、单调弹窗、首页上半屏大图和封面、选关≥6关）、截图颜色（`audit_dark_area.py`）、布局（`extract_ui_layout.py`＋`audit_ui_coverage.py`）、文字放得下（`audit_copy_quality.py --require-runtime`）、开发用字和占位图（`audit_dev_text.py --final`）、清晰度（ART-04：dump 里运行时的图≥节点 2 倍、背景≥1.5 倍的 `low_res`＋`audit_image_clarity.py`，两个板块第一轮起就拦；英化未改的原图写 `docs/art/clarity-exempt.json`），首页礼盒 10 帧动画（`docs/modules.json` 的 `gift_box.frames_dir`），再生成总览图和看图清单。美术只在这里查，最终总检测不再查美术（用户 2026-10-24，[检查分阶段](check-stages.md)）。结果在工程外 `<工程名>-artcheck/<时间>/art-check.md`。缺页面、缺截图都是"需处理"。见[美术自检](../../remake-art/references/page-richness.md#五美术自检每轮美术做完立刻做两个板块art-06page-01)。
 
 ## 定点短录排障
 
@@ -107,8 +107,6 @@ python "<SKILL>/scripts/audit_model_usage.py" --log-dir "<LOG_DAY>" --workspace 
 `python scripts/audit_startup_loading.py --plan docs/test/startup-plan.json --runs <chrome_touch 输出文件夹...> --binding <review.json> --out <报告.json>`：读计时运行的报告（Ego Lite 里跑，`timing`/`record`/`network`/`cache`），逐次核预算、加载动画是否卡住、首页前的大文件、覆盖次数和四种加载故障。规则见 `cocos-game-check/startup/references/startup-loading-timing.md`，计划模板 `assets/startup-plan-template.json`。
 
 ## 首页资源清单和体积账本（开工就分包，P04）
-
-首次完整英化先按[资源分包前置](resource-package-prepare.md)实际准备：资源归属与加载配置在制作节点实施，主包 4,000,000 字节、首屏 10 MiB、总包及独立分包分别核算。下方 `first_screen.py` 和账本是共用输入，不能把生成了清单等同于已拆包；本轮输入未变沿用现有记录，首份 Native 标准准备完成后校准实际字节。普通旧游戏局部维护按原范围继续，不为缺少新资源记录重做。
 
 开工第一步就跑，不等出包：`python3 -B scripts/first_screen.py --project <工程>`（英化在原版工程上跑，加 `--board localize`）。几秒跑完，写 `docs/startup/first-screen.json`（首页要的图、字体、脚本标 `home_needs`，其余标 `deferred`；模板字段照抄 `assets/startup-plan-template.json`，`home_assets_allowed` 自动填好）和 `docs/startup/budget.json`（开局下载的账本）。这几种当场报错：首页开局下载估计超过 10 MiB（主包＋首页前请求的分包＋引擎）、首页前请求了首页不用的分包、加载页或首页 onLoad/start 里加载声音、没有脚本加载也不在白名单里的场景留在主包。英化游戏后三种只提示，超 10 MiB 照样报错。
 

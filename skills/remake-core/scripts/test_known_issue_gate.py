@@ -9,14 +9,12 @@ import tempfile
 import subprocess
 import sys
 import check_known_issues as gate
-import audit_native_storage_contract as storage_contract  # pin this installation before helper imports adjust sys.path
 import logic_regressions as logic_reg
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--report', type=Path, required=True)
-    parser.add_argument('--claim-feedback-only', action='store_true', help='Run only CLAIM completion controls with the same gate fixtures')
     args = parser.parse_args()
     from unittest.mock import patch
     import audit_startup_contract
@@ -24,7 +22,7 @@ def main():
                 'passed':bool(audit_startup_contract.validate_runtime_report({'passed':True},{}))}]
     # Explicit unit boundary: this matrix has no real Cocos/browser renderer.
     renderer_boundary=patch.object(audit_startup_contract,'validate_runtime_report',
-        side_effect=lambda report,binding,**kwargs: [] if report.get('policy_version')==2 and report.get('runtime_required') is True and report.get('binding')==binding else ['synthetic runtime boundary metadata invalid'])
+        side_effect=lambda report,binding: [] if report.get('policy_version')==2 and report.get('runtime_required') is True and report.get('binding')==binding else ['synthetic runtime boundary metadata invalid'])
     renderer_boundary.start()
     import atexit
     atexit.register(renderer_boundary.stop)
@@ -86,68 +84,27 @@ def main():
                      {'mode': 'levels'} if tool == 'audit_level_plan' else
                      {'stage': 'runtime'} if tool in {'audit_page_readiness', 'audit_loading_recovery'} else {})
             if tool == 'audit_native_storage_contract':
-                from audit_native_storage_contract import CASES, digest, approve_runtime
-                from test_native_storage_upgrade_contract import observations
-                import maintenance_scope
-                # Explicit orchestration boundary: this synthetic catalog fixture
-                # has no scenes. Only its own route ref is mocked; the production
-                # storage validator, runner replay and approval receipt are real.
-                route_file = root / 'synthetic-storage-routes.json'
-                route_file.write_text(json.dumps({'unit_boundary': 'synthetic source/UI inventory only'}))
-                route_ref = {'path': str(route_file), 'sha256': digest(route_file)}
-                real_inventory = maintenance_scope.source_inventory
-                def synthetic_storage_routes(ref, *pargs, **kwargs):
-                    if ref == route_ref:
-                        return {'routes': {name: {'present': True} for name in ('home', 'map', 'stage_details')}}
-                    return real_inventory(ref, *pargs, **kwargs)
-                route_boundary = patch.object(maintenance_scope, 'source_inventory', side_effect=synthetic_storage_routes)
-                route_boundary.start(); atexit.register(route_boundary.stop)
-                current_result = {'cases': {k: 'pass' for k in CASES}, 'upgrade_observations': observations()}
-                old_result = {'cases': {k: ('fail' if k == 'missing_empty_string' else 'pass') for k in CASES}}
-                upgrade_result = deepcopy(current_result)
-                upgrade_result['cases']['legacy_numeric_nonbinary_typed'] = 'fail'
-                upgrade_result['upgrade_observations']['legacy_numeric_nonbinary_typed'].update(
-                    storage_after={'ProjectSpecific.Number': '0', 'unrelated': 'keep'},
-                    failure_kind='legacy_numeric_bridge', first_exception='synthetic type mismatch', loading_overlay_visible=True)
+                from audit_native_storage_contract import CASES, digest
                 runner = root / 'synthetic-storage-runner.py'
-                fixture_results = {'current': current_result, 'negative': old_result, 'upgrade': upgrade_result}
                 runner.write_text('import argparse,hashlib,json\n'
                     'p=argparse.ArgumentParser();p.add_argument("--bundle");p.add_argument("--adapter");a=p.parse_args()\n'
                     'h=lambda q:hashlib.sha256(open(q,"rb").read()).hexdigest()\n'
-                    'fixtures=json.loads(' + repr(json.dumps(fixture_results)) + ')\n'
-                    'text=open(a.bundle).read();kind="upgrade" if "numeric-bridge-negative" in text else "negative" if "empty-string-negative" in text else "current"\n'
-                    'r=fixtures[kind];r.update(runner_sha256=h(__file__),bundle_sha256=h(a.bundle),adapter_sha256=h(a.adapter));print(json.dumps(r))\n')
-                base_bundle = native / 'game.js'
-                base_line = '// Synthetic Native'
-                negative = root / 'negative-storage.js'
-                negative_line = '// Synthetic Native empty-string-negative'
-                negative.write_text(base_bundle.read_text().replace(base_line, negative_line, 1))
-                upgrade_negative = root / 'upgrade-negative-storage.js'
-                upgrade_line = '// Synthetic Native numeric-bridge-negative'
-                upgrade_negative.write_text(base_bundle.read_text().replace(base_line, upgrade_line, 1))
-                def execution(bundle, label, changed_line=None):
+                    'cases={k:"pass" for k in ' + repr(CASES) + '} if "Native" in a.bundle else {"missing_empty_string":"fail"}\n'
+                    'print(json.dumps({"runner_sha256":h(__file__),"bundle_sha256":h(a.bundle),"adapter_sha256":h(a.adapter),"cases":cases}))\n')
+                negative = root / 'negative-storage.js'; negative.write_text('// known bad synthetic control')
+                def execution(bundle, label):
                     raw = root / (label + '-storage.json')
                     run = subprocess.run([sys.executable, str(runner), '--bundle', str(bundle), '--adapter', str(bundle)], capture_output=True, text=True, check=True)
                     raw.write_text(run.stdout)
-                    record = {'bundle': str(bundle), 'bundle_sha256': digest(bundle), 'adapter': str(bundle),
-                              'adapter_sha256': digest(bundle), 'raw_report': str(raw), 'raw_sha256': digest(raw)}
-                    if changed_line:
-                        record.update(kind='controlled_legacy_fixture', provenance={'path': str(artifact), 'sha256': digest(artifact)},
-                                      base_bundle={'path': str(base_bundle), 'sha256': digest(base_bundle)},
-                                      mechanism='Synthetic orchestration defect selected by an exact one-line fixture mutation',
-                                      patch={'before': base_line, 'after': changed_line})
-                    return record
-                trace = {'schema': 'native_storage_trace.v3', 'binding': binding, 'project': str(project),
-                         'trace_base': str(root), 'route_inventory': route_ref,
-                         'execution': {'runner': str(runner), 'runner_sha256': digest(runner), 'dependencies': [],
+                    return {'bundle': str(bundle), 'bundle_sha256': digest(bundle), 'adapter': str(bundle),
+                            'adapter_sha256': digest(bundle), 'raw_report': str(raw), 'raw_sha256': digest(raw)}
+                trace = {'schema': 'native_storage_trace.v1', 'binding': binding,
+                         'execution': {'runner': str(runner), 'runner_sha256': digest(runner),
                                        'command': [sys.executable, str(runner), '--bundle', '{bundle}', '--adapter', '{adapter}']},
-                         'current': execution(base_bundle, 'current'),
-                         'negative_control': execution(negative, 'negative', negative_line),
-                         'upgrade_negative_control': execution(upgrade_negative, 'upgrade', upgrade_line)}
+                         'current': execution(native / 'game.js', 'current'), 'negative_control': execution(negative, 'negative')}
                 trace_file = root / 'synthetic-storage-trace.json'; trace_file.write_text(json.dumps(trace))
-                extra = approve_runtime(trace, native, binding)
-                extra.update(trace=str(trace_file), trace_sha256=digest(trace_file), native=str(native))
-                assert extra.get('passed') is True, extra
+                extra = {'policy_version': 1, 'required_cases': list(CASES), 'trace': str(trace_file),
+                         'trace_sha256': digest(trace_file), 'native': str(native)}
             if tool == 'test_writer_refusal':
                 extra = {'checks': [{'id': cid, 'passed': True} for cid in
                                    ('missing_review', 'failed_check', 'stale_binding', 'missing_storage', 'normal')]}
@@ -228,9 +185,6 @@ def main():
                         'each_channel_settles_once': True, 'non_eligible_results_no_reward': True,
                         'every_result_visible_end_state': True, 'test_double_supports_each_channel': True,
                         'channels_tested': ['callback', 'promise', 'both', 'void_or_incomplete', 'reject_or_throw', 'event']}
-                if state == 'completed' and entry['policy'] != 'navigation_reward':
-                    entry['states'][state]['layer'] = 'gui_touch'  # Synthetic schema boundary, never real GUI proof.
-                    post.update(completion_feedback='reward_feedback', destination_contract_met=True)
                 entry['states'][state]['postconditions'] = post
         # Calibration (Monkey Dash 2026-10-21): the same check must have failed on a known-bad version.
         cal_tool = root / 'return-contract-check.py'
@@ -255,10 +209,7 @@ def main():
         for item in catalog['items']:
             if item.get('requires_negative_control'):
                 baseline['checks'][item['id']]['evidence'] = [deepcopy(ref)] + cal_refs()
-        claim_feedback_names = {'animation cannot override a missing intended destination', 'active claim source-only feedback is insufficient', 'complete synthetic schema accepted (not a game pass)', 'old balance-only evidence needs scoped feedback observation', 'destination cannot leave the old claim page visible', 'write committed/readback failure not checked', 'save retry replays ad', 'free claim with visible receipt may stay on its original page', 'active claim rejects completion data_only', 'active claim rejects completion background_motion', 'active claim rejects completion video_complete_toast', 'silent platform navigation does not require CLAIM animation', 'active claim rejects completion None', 'zero-reward same-scene next round is valid', 'active claim rejects completion button_press', 'active claim rejects completion []', 'active claim rejects completion {}', 'mixed source without GUI is insufficient', 'mixed GUI evidence remains accepted'}
         def probe(name, change, expected='blocked'):
-            if args.claim_feedback_only and name not in claim_feedback_names:
-                return
             current = deepcopy(baseline)
             change(current)
             a.review.write_text(json.dumps(current))
@@ -272,13 +223,6 @@ def main():
             finally:
                 records()
         probe('complete synthetic schema accepted (not a game pass)', lambda d: None, 'passed')
-        probe('description-only prior catalog retains unrelated valid evidence', lambda d: d.update(catalog_sha256=gate.PRE_STORAGE_UPGRADE_CATALOG), 'passed')
-        probe('2026-11-12 description-only prior catalog retains valid evidence', lambda d: d.update(catalog_sha256=gate.PRE_UNREADABLE_START_CATALOG), 'passed')
-        probe('an unknown catalog is still refused', lambda d: d.update(catalog_sha256='0' * 64))
-        def old_storage_cannot_hide_behind_prior_catalog(d):
-            d['catalog_sha256']=gate.PRE_STORAGE_UPGRADE_CATALOG
-            d['checks']['STORAGE-01']['auto_reports']=[]
-        probe('prior catalog still requires current storage approval', old_storage_cannot_hide_behind_prior_catalog)
         # User 2026-10-24: design and art rows are checked at their own stage (design_check.py / art_check.py).
         gated = [x['id'] for x in catalog['items'] if x.get('gate') in ('design', 'art')]
         results.append({'name': 'design/art rows are the expected earlier-stage checks',
@@ -292,7 +236,7 @@ def main():
             d['checks']['ART-06'].update(status='pending')
         probe('left-over design/art rows are ignored by the final audit', stale_gated_rows, 'passed')
         results.append({'name': 'final audit reports the earlier-stage checks',
-                        'passed': set(gate.audit(SimpleNamespace(**{**vars(a), 'review': a.review})).get('earlier_stage_checks', {})) == {'design', 'art', 'tool_release'}})
+                        'passed': set(gate.audit(SimpleNamespace(**{**vars(a), 'review': a.review})).get('earlier_stage_checks', {})) == {'design', 'art'}})
         logic_path = auto_files['logic_check']
         logic_good = logic_path.read_text()
         for missing in ('regression_version', 'regressions'):
@@ -339,32 +283,6 @@ def main():
                       lambda d, state=state, field=field: states(d)[state]['postconditions'].pop(field))
                 probe(state + ' inconsistent ' + field,
                       lambda d, state=state, field=field: states(d)[state]['postconditions'].update({field: False}))
-        # Active CLAIM: use the existing completed row, not a second test/manifest.
-        for value in (None, 'data_only', 'button_press', 'background_motion', 'video_complete_toast', [], {}):
-            probe('active claim rejects completion ' + str(value), lambda d, value=value:
-                  states(d)['completed']['postconditions'].update(completion_feedback=value))
-        probe('old balance-only evidence needs scoped feedback observation', lambda d:
-              states(d)['completed']['postconditions'].pop('completion_feedback'))
-        probe('active claim source-only feedback is insufficient', lambda d:
-              states(d)['completed'].update(layer='source'))
-        probe('mixed source without GUI is insufficient', lambda d:
-              states(d)['completed'].update(layer='mixed', layers=['source', 'native']))
-        probe('mixed GUI evidence remains accepted', lambda d:
-              states(d)['completed'].update(layer='mixed', layers=['source', 'gui_touch']), 'passed')
-        probe('animation cannot override a missing intended destination', lambda d:
-              states(d)['completed']['postconditions'].update(destination_contract_met=False))
-        probe('destination cannot leave the old claim page visible', lambda d:
-              states(d)['completed']['postconditions'].update(completion_feedback='destination',
-                  presentation='navigated', claim_page_left=False))
-        probe('zero-reward same-scene next round is valid', lambda d:
-              states(d)['completed']['postconditions'].update(completion_feedback='destination',
-                  presentation='navigated', claim_page_left=True), 'passed')
-        probe('free claim with visible receipt may stay on its original page', lambda d:
-              d['reward_entries'][2]['states']['completed']['postconditions'].update(
-                  completion_feedback='reward_feedback', destination_contract_met=True), 'passed')
-        probe('silent platform navigation does not require CLAIM animation', lambda d:
-              d['reward_entries'][1]['states']['completed']['postconditions'].update(
-                  completion_feedback=None, destination_contract_met=None), 'passed')
         probe('same observed text copied into two checks', lambda d: d['checks']['LOAD-02'].update(
             observed=d['checks']['FLOW-01']['observed']))
         probe('LOAD-03 observation fields repeat one summary', lambda d: d['checks']['LOAD-03'].update(
@@ -495,7 +413,7 @@ def main():
         def no_api(d):
             d['reward_entries'][1].pop('api')
         probe('platform entry must name its api', no_api)
-        probe('COPY-01 valid observations are independent of reviewer model name', lambda d: d['checks']['COPY-01'].update(reviewer='executor-agent'), 'passed')
+        probe('COPY-01 marked pass by a test executor', lambda d: d['checks']['COPY-01'].update(reviewer='executor-agent'))
         probe('COPY-01 without the copy audit report', lambda d: d['checks']['COPY-01'].update(auto_reports=[]))
         probe('COPY-01 without the GPT phrasing review', lambda d: d['checks']['COPY-01']['observations'].pop('native_phrasing_review'))
         probe('COPY-01 cannot be waived', lambda d: d['checks']['COPY-01'].update(status='not_applicable', reason='Synthetic skip'))
@@ -526,12 +444,12 @@ def main():
         probe_records('LEVEL-02 may be not applicable in an endless game', endless_game, 'passed', mode='endless')
         probe('INPUT-05 every button tapped cannot be waived', lambda d: d['checks']['INPUT-05'].update(status='not_applicable', reason='Synthetic skip'))
         probe('INPUT-05 without the button coverage report', lambda d: d['checks']['INPUT-05'].update(auto_reports=[]))
-        # Executor identity never changes required evidence or creates a replay.
+        # User 2026-10-22: the test stage ends only when all non-Codex rows are done (--executor-exit).
         a.executor_exit = True
         def codex_rows_pending(d):
             d['checks']['COPY-01'] = {'status': 'pending'}
             d['test_executor'] = 'grok'
-        probe('pending technical evidence stays incomplete regardless of executor', codex_rows_pending, 'test_stage_incomplete')
+        probe('test stage complete with only Codex rows left', codex_rows_pending, 'test_stage_complete')
         def one_test_left(d):
             codex_rows_pending(d)
             d['checks']['AD-02'] = {'status': 'pending'}
@@ -541,8 +459,7 @@ def main():
             d['checks']['RANK-02'] = {'status': 'not_applicable', 'layer': 'source', 'reason': 'Synthetic: only 12 levels, decision skip',
                                       'observed': 'Synthetic league skip', 'evidence': [deepcopy(ref)]}
         probe_records('RANK-02 may be not applicable when the league decision is skip', league_skipped, 'passed', league='skip')
-        # Valid existing evidence is reusable across AI handoffs. Optional old
-        # spot records are checked if present; no quota/identity-based reruns.
+        # User 2026-10-21: tests run by a cheaper AI need a GPT spot check.
         def flows(n=3, ids=('AD-02', 'GROW-01', 'FLOW-03')):
             return [{'check_id': ids[i], 'observed': 'GPT redid flow %d itself and saw the same result' % i,
                      'evidence': [deepcopy(ref)]} for i in range(n)]
@@ -550,19 +467,19 @@ def main():
             d['test_executor'] = 'other-ai cheap model'
             d['gpt_spot_check'] = dict({'reviewer': 'gpt', 'locked_commit': 'abc1234', 'code_changes_reviewed': True,
                                         'rerun_auto_checks': True, 'flows': flows(), 'disagreements': []}, **change)
-        probe('tests by another AI reuse valid evidence without a new spot run', lambda d: d.update(test_executor='other-ai cheap model'), 'passed')
+        probe('tests by another AI without a GPT spot check', lambda d: d.update(test_executor='other-ai cheap model'))
         probe('tests by another AI with a GPT spot check accepted', spot, 'passed')
-        probe('optional spot record need not add a third flow', lambda d: spot(d, flows=flows(2)), 'passed')
-        probe('valid evidence does not depend on reviewer model name', lambda d: spot(d, reviewer='other-ai'), 'passed')
-        probe('valid automatic checks are not rerun at handoff', lambda d: spot(d, rerun_auto_checks=False), 'passed')
-        probe('already validated platform flow is not duplicated', lambda d: spot(d, flows=flows(3, ('AD-02', 'FLOW-03', 'FLOW-01'))), 'passed')
-        probe('existing input-bound results do not need a model-specific code review flag', lambda d: spot(d, code_changes_reviewed=False), 'passed')
-        probe('valid evidence has no new lock-commit requirement', lambda d: spot(d, locked_commit=''), 'passed')
+        probe('spot check with only two flows', lambda d: spot(d, flows=flows(2)))
+        probe('spot check signed by the executor', lambda d: spot(d, reviewer='other-ai'))
+        probe('spot check without re-running the scripts', lambda d: spot(d, rerun_auto_checks=False))
+        probe('spot check skips the platform task', lambda d: spot(d, flows=flows(3, ('AD-02', 'FLOW-03', 'FLOW-01'))))
+        probe('code fixed by the test AI but not reviewed by GPT', lambda d: spot(d, code_changes_reviewed=False))
+        probe('spot check without the lock commit', lambda d: spot(d, locked_commit=''))
         probe('spot check found mismatches', lambda d: spot(d, disagreements=['FLOW-01 record says pass, GPT saw no new round']))
         a.stage = 'post_package'
         probe('post-package review accepted with writer refusal evidence', lambda d: None, 'passed')
-        probe('BUILD-03 tool contract does not require game-level repeated packing', lambda d: d['checks']['BUILD-03'].update(auto_reports=[]), 'passed')
-        probe('old missing-review refusal fields are not new game requirements', lambda d: d['checks']['BUILD-03']['observations'].pop('stale_inputs_refused'), 'passed')
+        probe('BUILD-03 without the writer refusal report', lambda d: d['checks']['BUILD-03'].update(auto_reports=[]))
+        probe('BUILD-03 needs each refusal observation', lambda d: d['checks']['BUILD-03']['observations'].pop('stale_binding_refused'))
         a.stage = 'pre_scan'
 
         tool = root / 'execute-fixture.py'

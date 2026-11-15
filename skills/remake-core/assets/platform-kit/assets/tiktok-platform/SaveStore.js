@@ -223,19 +223,6 @@ SaveStore.prototype._fill = function (data) {
   return data;
 };
 
-// 2026-11-12: the load / recover / update logic below is the text of 2b86117a (in games up to 2026-11-10) again.
-// The 2026-11-11 text (34f53c10) answered an unreadable or corrupt save with status 'unavailable' and refused
-// every later update(): such a player could never save again, and a new player on a device without a key list
-// could not save at all. An unreadable save is backed up under <key>:corrupt-backup and replaced by defaults.
-// The line below only names this text for the old-version check (K6); no code reads it.
-SaveStore.prototype.unreadableSavePolicy = 'backup-then-defaults';
-// Kept for game code written against the 2026-11-11 text (a subclass whose _load calls this._unavailable(reason)):
-// same result as there, defaults in memory and status 'unavailable'. update() does not refuse this status, so the
-// game can still save afterwards.
-SaveStore.prototype._unavailable = function (error) {
-  this.data = clone(this.defaults); this.status = 'unavailable'; return this._result(false, error);
-};
-
 // Returns {ok, status: 'new'|'loaded'|'recovered'|'unavailable', data}.
 // v1.2 (MergeShot2048 v81-v85 on a real iPhone): TikTok storage can read back true/false/undefined, or throw,
 // for a key. Such a read is never treated as a save. getStorageInfoSync().keys decides whether the key exists:

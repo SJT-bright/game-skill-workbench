@@ -37,55 +37,6 @@ def platform_kit_covers_retry(native, project):
 
 
 def audit_final_startup(native, project, startup_contract, recovery_runtime, *, reuse_only=False):
-    if project and startup_contract and (Path(project)/'docs/checks/creator1-compatibility.json').is_file():
-        from cocos1_compat import engine_file
-        engines={n:(Path(native)/n).read_bytes() for n in ('cocos2d-js-min.js','cocos2d-js.js') if (Path(native)/n).is_file()}
-        if engine_file(engines):
-            from creator1_compatibility_contract import consume
-            saved=json.loads((Path(project)/'docs/checks/creator1-compatibility.json').read_bytes())
-            checked=consume(project,native,saved['web'])
-            if (Path(saved['startup']['path']).resolve()!=Path(startup_contract).resolve()
-                    or not recovery_runtime or Path(saved['recovery']['path']).resolve()!=Path(recovery_runtime).resolve()):
-                raise ValueError('Creator1 exact startup/recovery evidence required')
-            return dict(passed=True,native_tree_sha256=checked['binding']['native_tree_sha256'],
-                        startup_contract_sha256=hashlib.sha256(Path(startup_contract).read_bytes()).hexdigest(),
-                        loading_recovery_runtime_sha256=hashlib.sha256(Path(recovery_runtime).read_bytes()).hexdigest(),
-                        current_binding=checked['binding'],registered_renderer_replayed=False,
-                        checks=[dict(id='creator1.compatibility',action='reused',evidence=[saved['startup']['path'],saved['recovery']['path']],
-                                     original_at=checked['original_at'],reason='Exact original registered Native controls revalidated')],
-                        scope=checked['boundary'])
-    if project and startup_contract:
-        from startup_scoped_evidence import consume
-        scoped = consume(project, native, startup_contract)
-        if scoped is not None:
-            original = scoped['original_binding']
-            contract_bytes = Path(startup_contract).read_bytes()
-            if recovery_runtime:
-                recovery_path = Path(recovery_runtime).resolve()
-                recovery_bytes = recovery_path.read_bytes()
-                errors = validate_recovery(json.loads(recovery_bytes), original, recovery_path.parent)
-                if errors:
-                    raise StartupRefused('startup.native.retry', 'scoped original Retry evidence refused: ' + '; '.join(errors))
-                if recovery_path.read_bytes() != recovery_bytes:
-                    raise StartupRefused('startup.native.retry', 'Retry evidence changed during scoped validation')
-            else:
-                covered, why = platform_kit_covers_retry(Path(native), Path(project))
-                if not covered:
-                    raise StartupRefused('startup.native.retry', 'current unchanged kit does not cover Retry: ' + why)
-                recovery_bytes = None
-            # Repeat only the cheap identity boundary, never a renderer/helper.
-            after = consume(project, native, startup_contract)
-            if after['current_binding'] != scoped['current_binding'] or Path(startup_contract).read_bytes() != contract_bytes:
-                raise ValueError('startup scope inputs changed during final validation')
-            return {'passed': True, 'native_tree_sha256': scoped['current_binding']['native_tree_sha256'],
-                    'current_binding': scoped['current_binding'], 'original_binding': original,
-                    'startup_contract_sha256': hashlib.sha256(contract_bytes).hexdigest(),
-                    'loading_recovery_runtime_sha256': hashlib.sha256(recovery_bytes).hexdigest() if recovery_bytes else None,
-                    'registered_renderer_replayed': False,
-                    'checks': [{k: v for k, v in scoped.items() if k not in ('contract', 'proof')},
-                               {'id': 'startup.native.retry', 'action': 'rejudged',
-                                'reason': '原 Retry 观察按启动请求闭包沿用；当前依赖未变'}],
-                    'scope': 'Existing original startup observation; current dependency scope and actual artifact identity verified'}
     if not project or not startup_contract:
         raise ValueError('final Native startup evidence required: --project and --startup-contract; file/Web checks cannot prove HOME')
     native, project = Path(native).resolve(), Path(project).resolve()

@@ -73,7 +73,6 @@ Exit codes: 0 pass, 1 over a limit, 2 bad input.
 import argparse
 import hashlib
 import json
-import math
 import re
 import sys
 from pathlib import Path
@@ -161,39 +160,14 @@ def check_box(box, label, frame, problems, pad):
         target=[0,0,*box['screen_size']] if c.get('outside_panel') and box.get('screen_size') else frame if c.get('chrome') else safe
         if not inside(c['rect'], target, 0 if c.get('chrome') or c.get('outside_panel') else pad):
             problems.append('%s: %s crosses the inner border (needs %dpx padding inside the frame)' % (label, c['name'], pad))
-        if c.get('container_owner'):
-            owner=next((item for item in contents if item['name']==c['container_owner']),None)
-            if (owner is None or not any(c['name']==p or c['name'].startswith(p+'/') for p in owner.get('container_for',[]))):
-                raise ValueError(label+': invalid explicit card container relationship')
-            if not inside(c['rect'],owner['rect'],pad):
-                problems.append('%s: %s crosses its card container %s (needs %dpx padding)' % (label,c['name'],owner['name'],pad))
         for d in decorations:
             if overlap(c['rect'], d['rect']):
                 problems.append('%s: %s overlaps frame ornament %s' % (label, c['name'], d['name']))
         named.append(c)
     for i, a in enumerate(named):
         for b in named[i + 1:]:
-            if a.get('container_owner')==b['name'] or b.get('container_owner')==a['name']:
-                continue  # This precise surface/content nesting was checked above.
-            if overlap(a['rect'], b['rect']) and alpha_overlap(a,b) and not intentional_contact(a,b):
+            if overlap(a['rect'], b['rect']) and alpha_overlap(a,b):
                 problems.append('%s: %s overlaps %s' % (label, a['name'], b['name']))
-
-
-def intentional_contact(a,b):
-    """Exact, reviewed noninteractive Sprite edge contact; never a blanket exclusion."""
-    declared=any(x.get('intentional_contact_with')==y.get('name') and
-                 isinstance(x.get('contact_why'),str) and x['contact_why'].strip() for x,y in ((a,b),(b,a)))
-    if not declared or not all(x.get('contact_eligible_sprite') is True and not x.get('text_content') and x.get('alpha_sources') for x in (a,b)):
-        return False
-    dpr=a.get('contact_dpr')
-    if type(dpr) not in (int,float) or not math.isfinite(dpr) or dpr<=0 or b.get('contact_dpr')!=dpr:return False
-    ar,br=a['rect'],b['rect']
-    width=max(0,min(ar[0]+ar[2],br[0]+br[2])-max(ar[0],br[0]))
-    height=max(0,min(ar[1]+ar[3],br[1]+br[3])-max(ar[1],br[1]))
-    # Conservative rectangle bounds also constrain any actual alpha intersection.
-    # Existing alpha_overlap already verified the exact source bytes above.
-    return (0 < min(width,height) <= 3*dpr+1e-6 and
-            width*height <= .10*min(ar[2]*ar[3],br[2]*br[3])+1e-6)
 
 
 def alpha_overlap(a,b):

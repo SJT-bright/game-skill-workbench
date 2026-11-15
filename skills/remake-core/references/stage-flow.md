@@ -1,7 +1,5 @@
 # 四个阶段：先做完、你确认、锁定、再在浏览器里测试
 
-2026-11-11：重塑与英化均执行[五标准广告制作联动](ad-standard-six.md)，五类不可用扩展替代。逻辑阶段先定五类，制作广告UI前调用美工，正式试玩核接线和局部画面，最终写包核运行和Native；无关局部维护沿原范围。
-
 **持续执行与进度汇报（2026-10-25纠错）**：用户已授权的开发、完整验收或出包，不按固定分钟、一次修复、固定测试数量或一次预览更新切成等待“继续”的回合。修好一项且局部回归通过后，只在 commentary 汇报进度，并在当前任务继续下一项；“整体未完成”是继续工作的状态，不是 final 收尾理由。省Token的检查点/回合提醒只用于保存进度，不构成停止授权。仅到用户明确要求的交付终点、既有必需人工确认节点、用户停止、工具安全停止或确需外部输入且独立工作已尽时才结束；如有真实限制说明具体原因，不让用户用“继续”代替内部调度。新聊天仅按已授权的阶段接续规则创建，不自动扩大跨聊天操作。
 
 
@@ -20,7 +18,7 @@
 - **本 Skill 不做任何上传 TikTok 后的测试**：不出真机清单、不要求扫码/录屏、不分析手机录屏、不跑 `check_known_issues.py --stage device`。出的 ZIP 由用户自己决定怎么上传和测。
 - **全部测试都在浏览器手机模拟里做**，目标只有一个：用户在浏览器里不会遇到**进不了游戏、加载卡住、按钮点了没反应**，**尤其是所有和广告有关的流程**（看广告复活、领奖、试用、双倍、失败/取消/超时/没广告/很慢/重复点击/迟到回调）。广告用本地模拟（替身）把每种结果都实际触发一遍，见[加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md#三广告要做到)。
 - **用 Ego Lite 模拟 iPhone**（用户 2026-11-06）。`chrome_touch.py` 的 `device` 默认 `iphone_15`，短屏用 `iphone_se`。每个按钮都要点一遍，按钮清单从游戏里自动读出，见[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)。
-- **英化人工点检使用 Computer Use + Edge，自动脚本使用 Ego Lite；用户试玩仅在英化两次正式交接按[固定手机入口](user-phone-preview.md)打开 Google Chrome**（用户 2026-10-23：Ego 只给 AI 自己测试，禁止在 Ego 里开窗口让用户试玩；`serve_preview.py --keep` 起本地服务，链接写在 Codex 回复里；Ego 里"需要你处理"/等用户的空间 AI 自己关掉，见[Ego 只给 AI 测试](machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）：自动脚本先运行 `ego-browser skill` 按它的说明操作；我们的触摸计划/截图/按需录屏工具用 `chrome_touch.py` 跑在 Ego 里（通过 `ego-browser nodejs`，不需要任何地址）（见[手机触屏](../../mobile-touch-computer-use/SKILL.md)）。Ego 不可用时保留未测并继续离线工作。
+- **AI 自己测试严格用 Ego Lite；用户试玩按[固定手机入口](user-phone-preview.md)自动弹出独立 Google Chrome**（用户 2026-10-23：Ego 只给 AI 自己测试，禁止在 Ego 里开窗口让用户试玩；`serve_preview.py --keep` 起本地服务，链接写在 Codex 回复里；Ego 里"需要你处理"/等用户的空间 AI 自己关掉，见[Ego 只给 AI 测试](machine-load.md#ego-只给-ai-自己测试用户试玩自动打开-google-chrome用户-2026-10-27)）：先运行 `ego-browser skill` 按它的说明操作；我们的触摸计划/截图/录屏工具用 `chrome_touch.py` 跑在 Ego 里（通过 `ego-browser nodejs`，不需要任何地址）（见[手机触屏](../../mobile-touch-computer-use/SKILL.md)）。Ego 不可用时保留未测并继续离线工作。
 - **新建测试空间不问用户（用户 2026-10-23，已长期授权）**：每次测试自己新建 TaskSpace；空间不在/失活/被占直接新建接着测；每一轮、每个新对话开头先 `browser_slots.py tidy` 收拾上一轮的空间，不留闲置的。见[新开测试空间不用问](machine-load.md#一遇到被占用要排队立刻新开一个绝不等待用户-2026-10-23最高优先)。
 - **不依赖、不询问 TikTok 开发者工具**：电脑上没有是正常情况，不问、不让用户安装或登录，不标"受阻"。
 - 浏览器模拟证明不了真实 TikTok 里的广告填充、平台审核、真实手机性能，汇报时如实写"浏览器模拟已通过"，不说"TikTok 上已验证"。
@@ -63,7 +61,7 @@
 
 **玩法确认前短检**：真实启动、可信输入、基础胜败/奖励存档、免费重开及明显数据/资源错误先通过；当前已报告问题定点闭合。完整F01–F20与广告/存档/加载故障矩阵在玩法确认后的稳定候选一次执行，按[执行计划](../../cocos-game-check/test/references/review-execution-plan.md)覆盖实际机制，局部修复只补失效项。
 
-**检查分阶段：设计和美术先验收，最终核对证据和产物**（两个板块，用户 2026-10-24）：关卡数（重塑≥60；英化不补关）、关卡表、皮肤表、内置板块、禁止功能清理和已授权非社交扩展在**设计关**用 `design_check.py` 查（重塑：第一轮、节点 1 前；英化默认没有设计关，创新玩法新加的部分也在这里查）；全部美术项（清晰度 ART-04：默认普通图/背景 1:1 advisory，显式 strict 才按声明倍率阻断；页面内容、深色粗字、穿模、首页礼盒 10 帧动画等）在**美术关**用 `art_check.py` 查（英化范围按第 3 阶段，重塑第二轮、节点 2 前），通过才交用户；最终总检测核对已有证据与实际产物。见[检查分阶段](check-stages.md)。
+**检查分阶段：设计和美术先验收，最终核对证据和产物**（两个板块，用户 2026-10-24）：关卡数（重塑≥60；英化不补关）、关卡表、皮肤表、内置板块、禁止功能清理和已授权非社交扩展在**设计关**用 `design_check.py` 查（重塑：第一轮、节点 1 前；英化默认没有设计关，创新玩法新加的部分也在这里查）；全部美术项（清晰度 ART-04：运行时的图≥节点 2 倍、背景≥1.5 倍；页面内容、深色粗字、穿模、首页礼盒 10 帧动画等）在**美术关**用 `art_check.py` 查（英化范围按第 3 阶段，重塑第二轮、节点 2 前），通过才交用户；最终总检测核对已有证据与实际产物。见[检查分阶段](check-stages.md)。
 
 **重塑的玩法确认节点**：交给用户一个可玩入口和一份简短的玩法清单（[试玩清单](../assets/user-playtest-checklist-template.md)的第一到四、六节，美术部分跳过）；用户把玩法问题统一提，改好后说"**玩法通过**"。之后改玩法要说明会让已做的美术返工。
 
@@ -73,7 +71,7 @@
 
 ## 阶段 1：制作（最高优先级）
 
-- **英化**：以[英化入口五阶段](../../cocos-game-to-english/SKILL.md)为准；首次完整制作按[生产依赖顺序](production-plan.md#英化制作的依赖顺序)先盘点全部五类广告与固定入口，准备共用接口和数值，再由美工统一规划原页面/新增页面、验证首件并批量制作，随后按实际变化构建、采集和交接。核心玩法、原关卡、原画风与声音文件保持原范围；五类要求的皮肤/主题、体力、局内道具和临时权益缺失时按已定规则补真实依赖，不能因旧“默认不新增”在后期返工。五类之外的创新、关卡地图和引导不顺手扩展。已交付后的局部维护只处理真实受影响节点。
+- **英化**：按英化包英化入口（cocos-game-to-english）的五个阶段做：开工先核中文原版内部基线→ 盘点 → 只改固定几项（全部中文改英文，图片字按原画风重做，等级/关卡号/分数/货币做成图片字和位图数字；首次主页由美工 Skill 按[默认主页排版](../../remake-art/references/english-home-layout.md)重排，平台入口一并设计（2.4 挂 HomeGrowthEntries，不写入口坐标，它按首页按钮和带触摸的节点自动摆；3.x 用 `tiktok_finalize` 装好的插件 `TikTokKit.HomeEntrySlots.placeLater(cc, this, {root, entries})`，同一套规则运行时找空位，别手写入口坐标（R4G1）；只做生成时预估才跑 `tools/home_free_slot.js --dump`，ui_dump 已记下带触摸监听的节点，不用再传 `--obstacle`；首次主页留位不足先调整当前设计；已交付后的局部接入只修受影响区域）；音效、BGM 两个音量；删分享、更多游戏、联网排行榜（局内本地名次可以留），核心玩法里的分享奖励改看广告；修好原来点不到的操作；结算页 Watch Ad x2 和 Retry；看广告复活）→ 统一检查 → 用户试玩确认 → 出包。**核心玩法、关卡（数量和顺序）、原画风、原声音文件不动**；不写无关玩法优化清单，首次主页默认重排，其他未受影响页面不重排，默认不加皮肤/收集、顶部资源栏、关卡地图、首关教程（Saul 2026-10-28，取代 10-21～10-24 的“英化＋优化”）；Saul 要求创新玩法时，新加的部分按对应板块做、按对应检查查。
 - **原始输入只读保留（生成时预防 R4D）**：英化开工用 `unpack_source.py` 放中文源码，它先把原包复制进游戏文件夹的只读 `_原始输入/`（unpack_source 自动做）；清理旧版本只用 `remake-core/scripts/clean_old_versions.py`，`_原始输入/` 只有 Saul 自己能删。
 - **重塑**：先做玩法、关卡（关卡表 `level_plan.json`：限定关、奖励关）、顶部资源栏、广告和收集系统的代码（占位图）→ 节点 1 玩法通过 → 再做**全部美术**（每个页面和弹窗、背景、按钮、图标、字体、动画）和音乐音效，接进真实 Cocos 工程。美术先做样板、AI 自审后整套生成（不在中途停下等用户）。
 - **标准件开工就装、每次构建前同步（生成时预防 P02/P05，两个板块都做）**：建好工程、跑完 `tiktok_finalize.py init` 就跑一次 `tiktok_finalize.py source --project <工程> --board <remake|localize>`，以后**每次构建前**先跑 `tiktok_finalize.py sync --project <工程> --board <板块>`（约 1 秒：平台包文件按哈希换回、装 `GameUIKit.js`，不动图片）；英化工程构建出 TikTok 小游戏包后再加 `--native <构建目录>` 跑一次（启动件、触摸、存档层装进构建，连同宿主接口兜底 host-shim 和 3.x 启动看守，不手写 game.js 那几行；3.x 工程 sync 也装 `GameUIKit.ts`）。旧游戏只报告。新做的弹窗、按钮一律用平台包 `GameUIKit`（`UI.popup`、`UI.button`、`UI.toast`、`UI.digits`；原版按钮用 `UI.wrapExisting`），别手写遮罩、淡出和点击。见[平台包接入说明](../assets/platform-kit/README_接入说明.md)第十一节。顶栏不手算胶囊位置：新游戏 source 自动装 CapsuleAuto。页面背景一律用 `ScreenFit.cover(cc, bg, {watch:true})`，别按设计尺寸铺，source 会查首页、局内、结算的背景（新游戏拦，英化警告）。加载页一律用 Cocos 官方默认加载样式、不放游戏图（[加载界面规则](../../cocos-game-check/startup/references/cocos-loading-screen.md)，Saul 10-26），首页背景在 onLoad 里一次设好最终那张图再 cover，别先放一张再换图、再缩放（热气球闪换图）；source 的 `K_bg_loading_swap` 会查（新游戏拦，英化警告）。激励广告的超时和迟到兜底由平台包 `main.js` v1.7 自动装的 `rewarded-guard.js` 管，生成的代码只调 `RewardedService`，别自己写计时，也别改 guard。update 里移动一律乘 dt（或 RunSession.move），节点在 onLoad 建好或从 FxPool 取，别在 update 里 new；sync 每次构建前会扫（新游戏拦，英化只提示）。
@@ -168,7 +166,7 @@
 完整新制作或失去完整基线时执行下面完整适用范围；已通过候选的局部维护按 `review-execution-plan.md` 只复验改动、依赖和已报告问题。有效关卡抽样、故障和页面证据不在最后重复采集。
 
 1. **测试阶段**（用户指定的 AI：其他 AI 省 Codex 额度，或 Codex 自己）：**只查玩法和功能**（美术已在美术关、设计已在设计关查完，这里不再跑 `art_check.py` 和 `design_check.py`，[检查分阶段](check-stages.md)）：一键预检 → 当前项目适用的"自动检查"脚本 → 浏览器模拟 iPhone 触摸测试（[关卡抽测](../../cocos-game-check/test/references/prepackage-mobile-review.md#关卡抽测哪些关必须真实触摸)、[重开与触摸输入](../../cocos-game-check/test/references/replay-and-input-checks.md)、**[每个按钮都点一遍](../../cocos-game-check/test/references/replay-and-input-checks.md#七每个按钮都点一遍iphone-模拟input-05用户-2026-10-22)，`audit_button_coverage.py` 出《按钮清单》**）→ [动态画面检查](../../remake-art/references/dynamic-visual-review.md) → [加载与广告预防](../../cocos-game-check/startup/references/loading-and-ad-prevention.md)和[启动契约](../../cocos-game-check/startup/references/startup-contract.md)的故障 → 必要状态的 dump_ui 和点位截图、`extract_ui_layout.py`（重塑）和 `audit_copy_quality.py --sheet` → 核对英文文案 → **修代码类 bug 并重测**（最小修复，不改设计；需要新图的写生图需求单）→ 填门禁非画面行、写测试报告。按下面[测试阶段必须全部测完](#测试阶段必须全部测完分段测当段修不停下一次汇报用户-2026-10-22)分 9 段测、当段修、不停下，`--executor-exit` 返回 `test_stage_complete` 才结束。生图需求另记。完成本阶段后在已授权成品制作流程中继续封装证据、正式出包及交付，仅检测/评审/试玩时遵守用户边界。
-2. **最终验收与打包**（只能 Codex，新对话说"最终验收"）：查测试阶段改过的全部代码 → 核有效证据并抽查（自动门禁照常执行，其他脚本只补失效/改动/有疑点项；按实际输入、执行器、环境和原始结果核准已有记录；执行者名称不构成失效原因，只补真实受影响、缺证或有具体疑点的节点。慢网冷启动及各实际进关路线在功能轮形成有效证据，最终补失效项）→ 按下面[最终检查一项不漏](#最终检查一项不漏加载是重点用户-2026-10-23)的总表逐行核对→ 最终英文确认（COPY-01）→ 处理生图需求单 → 门禁 → 用户说"打包"时出包。只重测改到的部分。
+2. **最终验收与打包**（只能 Codex，新对话说"最终验收"）：查测试阶段改过的全部代码 → 核有效证据并抽查（自动门禁照常执行，其他脚本只补失效/改动/有疑点项；其他 AI 执行时按现门禁亲自重跑全部适用自动脚本并抽查至少3个流程；同一个 Codex 已亲测且无改动不固定另走3流程。慢网冷启动及各实际进关路线在功能轮形成有效证据，最终补失效项）→ 按下面[最终检查一项不漏](#最终检查一项不漏加载是重点用户-2026-10-23)的总表逐行核对→ 最终英文确认（COPY-01）→ 处理生图需求单 → 门禁 → 用户说"打包"时出包。只重测改到的部分。
 
 ## 测试阶段必须全部测完：分段测、当段修、不停下、一次汇报（用户 2026-10-22）
 
@@ -188,7 +186,7 @@
 | 8 | 英文文案自动检查 | COPY 的自动部分 |
 | 9 | **核最终构建绑定及覆盖**：第1段报告仍有效则引用，不固定重跑；加载/资源/分包/引擎变化或工具判绑定失效时重跑实际失效矩阵 → 门禁完成检查 | LOAD-03、全部 |
 
-**每一段**：测 → 发现 bug **当段修好** → 复测这一段（修改影响到前面的段，就把受影响的部分也复测）→ 在 `docs/test/测试进度.md` 里打勾 → **直接进下一段**。节点结束先在聊天汇报实际用时、完成与沿用范围，再直接进下一节点；不以过程报告结束执行或等待用户再次说继续。
+**每一段**：测 → 发现 bug **当段修好** → 复测这一段（修改影响到前面的段，就把受影响的部分也复测）→ 在 `docs/test/测试进度.md` 里打勾 → **直接进下一段**。中间不停下来等用户，也不先汇报。
 
 **唯一的结束条件**：运行
 
@@ -197,7 +195,7 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
   --review docs/test/review.json --stage pre_scan --executor-exit --report docs/test/test-stage-exit.json
 ```
 
-返回 `test_stage_complete` 才算测完：本轮适用义务均有有效通过或有依据的不适用记录。执行者身份不产生额外抽查、重新跑自动检查或再走三条流程的要求。返回 `test_stage_incomplete` 就照 `errors` 继续测、继续修。
+返回 `test_stage_complete` 才算测完：除了只能由 Codex 做的几项（GPT/Codex 抽查、英文语感审查），其他每一项都是"通过"或"有依据的不适用"。返回 `test_stage_incomplete` 就照 `errors` 继续测、继续修。
 
 **只有这两种情况可以中途停**：
 
@@ -251,7 +249,7 @@ python3 check_known_issues.py check --project <工程> --native <Native> --web <
 
 ## 和打包的关系
 
-阶段 4 通过后，用户说"打包"才出包：用 [`cocos-game-check/package`](../../cocos-game-check/package/README.md) 的 `make_tiktok_zip.py` 出唯一一种包（可直接上传的 TikTok 平台包，主包≤4,000,000、总包≤30,000,000，BUILD-04）；同版自动打开的 Google Chrome 试玩窗口及本地链接 + TikTok 上传 ZIP，ZIP 过 `verify_native_zip.py` 和门禁 `check_known_issues.py --stage post_package`。这就是本 Skill 的终点，不再有真机阶段。不自动打包的规则不变。按[统一写包路线](single-writer.md)，回归在各生产节点形成记录；writer 只合并有效记录，不重新跑激励广告或全部运行套件。`--ad-regression <工程>/qa/ad-regression.json` 仍用于核对真实所需覆盖与依赖；缺项或失败回对应节点修复，不换旧入口，不以名单或测试子集冒充完整通过。
+阶段 4 通过后，用户说"打包"才出包：用 [`cocos-game-check/package`](../../cocos-game-check/package/README.md) 的 `make_tiktok_zip.py` 出唯一一种包（可直接上传的 TikTok 平台包，主包≤4,000,000、总包≤30,000,000，BUILD-04）；同版自动打开的 Google Chrome 试玩窗口及本地链接 + TikTok 上传 ZIP，ZIP 过 `verify_native_zip.py` 和门禁 `check_known_issues.py --stage post_package`。这就是本 Skill 的终点，不再有真机阶段。不自动打包的规则不变。v7.8 起 `make_tiktok_zip.py` 写 ZIP 前也跑激励广告回归和全部运行时套件（布局状态、按钮普查、看广告入口、dead_shell、popin、frame_rate 等，和 `build_checked_zip.py` 一样），出包命令要带 `--ad-regression <工程>/qa/ad-regression.json`：新游戏（工程标记 new 的英化游戏也算）没这个文件、缺套件要的字段或有用例没过就不写 ZIP；名单上的老游戏只警告（[运行时回归](../../cocos-game-check/package-check/references/runtime-regression.md)）。每款多几分钟。
 
 ### 美术检查明细
 

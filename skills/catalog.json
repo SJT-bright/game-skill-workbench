@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-14T22:00:19.841Z",
-  "treeHash": "9b007d889eab8f3037fc84439f3af89f2f8098d8d0690ab62f86aacc15f7c514",
+  "createdAt": "2026-11-15T04:02:49.554Z",
+  "treeHash": "55c9006270e0c2a30ff7036891ce747e9ce0dc188c575b4d254c8cbbdbdf6241",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2179,9 +2179,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "23910911abce3cee6e9242db986034e150759ad49e6f000841c743713cccc646",
-      "fileCount": 68,
-      "bytes": 1062036,
+      "treeHash": "3fd3f32788e5e5568f67637933967de7624ca28a4a8a02be71ab44191633bb96",
+      "fileCount": 69,
+      "bytes": 1071248,
       "files": [
         {
           "path": "PROVENANCE.json",
@@ -2191,8 +2191,8 @@
         },
         {
           "path": "SKILL.md",
-          "hash": "d070e1b62546bea3abd38e1f93fced06886d1222c48a452ca1d99d7efb4ef5f9",
-          "size": 104579,
+          "hash": "428fd0136dd0388bd653907ea10ef4ce3163788b1b0aacfe64872214b4d4f76e",
+          "size": 105192,
           "executable": false
         },
         {
@@ -2263,8 +2263,8 @@
         },
         {
           "path": "references/first-trial-repair.md",
-          "hash": "ebdd1b8512429d158b9dcbc3ee121e1c307689a38599d61cc736888a29cc22d0",
-          "size": 4246,
+          "hash": "54311bb394ac475d6b866124d2b887493b2f230658c58be6e029e93cb1612ea9",
+          "size": 4741,
           "executable": false
         },
         {
@@ -2281,8 +2281,8 @@
         },
         {
           "path": "references/phase-timing.md",
-          "hash": "fba6584d2d0fe2c36025a4a721b46c5e999230b575c8fde143c2be4c6691c0b3",
-          "size": 6944,
+          "hash": "233865967e19f2887c058e009bd2393b42ba527c07b7f8fda3368edd9c953456",
+          "size": 7606,
           "executable": false
         },
         {
@@ -2295,6 +2295,12 @@
           "path": "references/preview-handoff.md",
           "hash": "c06867f92351d95fc5b6d12a0b4566929233b592d6b57c375d34bcd79baf970b",
           "size": 3693,
+          "executable": false
+        },
+        {
+          "path": "references/repeat-check-convergence.md",
+          "hash": "dfd5cf5d256735855dd5bbffb48e25b96317973ceb99908b473242a8549ede24",
+          "size": 7442,
           "executable": false
         },
         {

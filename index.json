@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "e4ea5058-6a75-488c-8c0a-36a75cf8cfea",
+      "skillId": "s-8a4323773719ef381f6d",
+      "directory": "grok-image-review",
+      "name": "grok-image-review",
+      "version": "v9",
+      "createdAt": "2026-11-15T19:50:57.040Z",
+      "summary": "文件变更：新增 0，修改 1，移除 0。",
+      "changes": {
+        "added": 0,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "779e2757d55c1808c32e4b3024610bfb865a06c3a0f979e5c8317fbf1fba3ad6",
+      "bytes": 24518,
+      "fileCount": 5
+    },
+    {
       "id": "33087206-7d2c-474a-87fc-34778a90d5a0",
       "skillId": "s-bedd22bb6c578608dd49",
       "directory": "grok-delegate",

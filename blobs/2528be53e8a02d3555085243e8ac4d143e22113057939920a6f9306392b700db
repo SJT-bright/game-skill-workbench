@@ -1,0 +1,973 @@
+{
+  "audit": "Only enumerated maintenance files are excluded when reviewed production readers and current cache/consumer implementation are exact. Unknown files remain inputs; manifest-selected maintenance files become production inputs.",
+  "classification_inputs": {
+    "remake-core/scripts/official_engine_sources.json": {
+      "executable": false,
+      "sha256": "37cea30a31a2c09f664065a951aec23ba04da13e36ff02c3d0b3aec5bd83a870"
+    }
+  },
+  "creator1_overlay_audit": "Exact reviewed 1.x-only run_part_step import is not executed by 2/3; classifier and registry remain guarded. Creator1 uses a new complete current domain and cannot project formal34.",
+  "formal34_identity": {
+    "preparation_cache.py": {
+      "executable": false,
+      "sha256": "a92c681cd4c37c5e57192cc323e04cd3d8be66f74334bf70aa1783ba49d41be3"
+    },
+    "tiktok_finalize.py": {
+      "executable": false,
+      "sha256": "d537d20a945dce95396c4d62bade4c6ef1b3e8c399de4792a26c35c0e7936afb"
+    }
+  },
+  "formal34_production_readers": {
+    "cocos-game-check/package-check/scripts/check_guard.py": {
+      "executable": false,
+      "sha256": "9a8cab307fb074120e1045d37d69080ce40dde3a32949e9782866f617c85a626"
+    },
+    "remake-core/scripts/audit_image_clarity.py": {
+      "executable": false,
+      "sha256": "65991487d27f5930fe5ff5215aa4a86b178dd2f1f13084ec7606d3946a572826"
+    },
+    "remake-core/scripts/bundle_module_inputs.py": {
+      "executable": false,
+      "sha256": "90a5047408fe73a56a0eea31e79faab354e7c397124cb73fd7f9facf2351650d"
+    },
+    "remake-core/scripts/button_state_check.py": {
+      "executable": false,
+      "sha256": "dfede487329aefa3a41b4d4127b56c10be9914c9fbae349791f35380a0d5738d"
+    },
+    "remake-core/scripts/check_ledger.py": {
+      "executable": false,
+      "sha256": "836c8d41ed000d43b4dacc1b1b3b795debd4ba4a8b8ce8b740a7ea25924434f4"
+    },
+    "remake-core/scripts/check_skin_preview.py": {
+      "executable": false,
+      "sha256": "72a399d9f807f000bfe5ee7666d50de5a26f57df6ba324cf94b1c6894742a462"
+    },
+    "remake-core/scripts/clarity_policy.py": {
+      "executable": false,
+      "sha256": "9882138665b07985d469fa2dcf260366e5321f779059c101a9d6de54c20e37d4"
+    },
+    "remake-core/scripts/input_owner_inventory.py": {
+      "executable": false,
+      "sha256": "dafea8fc55ae7c83dd8b2c08370ff907970438e04f520fcd9a735d88cf880c56"
+    },
+    "remake-core/scripts/logic_case_ledger.py": {
+      "executable": false,
+      "sha256": "7aa0fa0d6ca6d7c2b83618a3544d83b478dec8b4718aaaf3f28ca53281f399e4"
+    },
+    "remake-core/scripts/logic_check.py": {
+      "executable": false,
+      "sha256": "e15141438f639c1c9e3fe10f8964f420d03e2bd57062c2207c1dfd36a61e465b"
+    },
+    "remake-core/scripts/logic_regressions.py": {
+      "executable": false,
+      "sha256": "5d210a8ec5be53245209bd5107176a00dfaf25166adb41fab4d8b6dd9c2f2e49"
+    },
+    "remake-core/scripts/package_gates/__init__.py": {
+      "executable": false,
+      "sha256": "c5a368a873dd692229af61b407c708aa20e3b484851049f0c8cf466ee6448373"
+    },
+    "remake-core/scripts/package_gates/adapter_fix.py": {
+      "executable": false,
+      "sha256": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/__init__.py": {
+      "executable": false,
+      "sha256": "bf4dc4f368d554408ca68202dc6aa0de693143d8c5b172e98a2940b8b34b8dee"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/adapter.py": {
+      "executable": false,
+      "sha256": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/appid.py": {
+      "executable": false,
+      "sha256": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/art_static.py": {
+      "executable": false,
+      "sha256": "5e11c1c62091b225e5294dc32d4d133693c79f4a472e765cb0e2a31fd5174e5a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/bg_cover.py": {
+      "executable": false,
+      "sha256": "b4bbd70b143d2a86a7e6318640d0eb8e8ef7b9047a688438d2ab299cb62e644d"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/build_templates.py": {
+      "executable": false,
+      "sha256": "d690f00b2d05eb9001cf671583191396a5157abba7be7aea2b4fbf9f10dffc55"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/capsule_auto.py": {
+      "executable": false,
+      "sha256": "0ff1a2e18435b87a9f010d768ae0f8ef7bc17a039932731055c0e2ac76288aeb"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py": {
+      "executable": false,
+      "sha256": "6bd18137315c9b1293d799a807274028982ea90eb3b3101c181d781ab660dfc0"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/frame_scan.py": {
+      "executable": false,
+      "sha256": "1a7c1479a17dc29384bc89b675e235fe1fd401327a8a8b6338086cd644e9de84"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py": {
+      "executable": false,
+      "sha256": "7cf255052c11f80872ca5c10b8537f5e2b720c49ab5313738051d9f2cd211d34"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/home_entry_scan.py": {
+      "executable": false,
+      "sha256": "f32167dd264b90a89d6addd5dc1591776ec35e8411d293447e1a6b5aea59fe47"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/images.py": {
+      "executable": false,
+      "sha256": "f5b9e52a090f458104d3a861039310060b800ac2015153cfd1706a9ac023185e"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/kit_sources.py": {
+      "executable": false,
+      "sha256": "99e795cfecabe96c62c63c42ba159e59758acaddfd8a0ba19a74052d9606899a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/login.py": {
+      "executable": false,
+      "sha256": "350b6d31fc74b4c86fef7e1a4cee51c580ab6c816111d3fc25d855b77b90d4b2"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/orientation.py": {
+      "executable": false,
+      "sha256": "43692def64c653d32d818d5c8ebb672576f375db0e904342ad5d628b4509e409"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/physics_clock.py": {
+      "executable": false,
+      "sha256": "8e36d901cab216e3f879d0fde35b24eee97a5bb0fb81646264186f6a20cc1f7d"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py": {
+      "executable": false,
+      "sha256": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/png.py": {
+      "executable": false,
+      "sha256": "806c3c158f5bad9ce5209a90a3f7e78fc0f21b6cc4efd2ef85624ab3591f5165"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/policy.py": {
+      "executable": false,
+      "sha256": "f2275eb05739099ec5900bd6d2ee7c5217b44847d47431cebfdb510790949eba"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py": {
+      "executable": false,
+      "sha256": "6d765a7b9f404a38d17b17ac35b8e508e4d5546aabe4cf8179d907a4f42e3498"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/rewarded.py": {
+      "executable": false,
+      "sha256": "a978d0ae5c74589ea9f2f932ae8614844f7d7942f2395a3b15adfd5ccda14021"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/save_read_scan.py": {
+      "executable": false,
+      "sha256": "991fb2e8a72a58df39858431edda4720b42b30f990aedb81edac304815361a1f"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/settings.py": {
+      "executable": false,
+      "sha256": "aa48a660755474b126847852129f0acac8cdaeafcbbb90f424fcfe51af58f5ff"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/skin_preview_scan.py": {
+      "executable": false,
+      "sha256": "f9181de056a0ec4f45e44d8e76be03ff5357f7ccad486a97645d4a0d68bc8034"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/slot_overlap_scan.py": {
+      "executable": false,
+      "sha256": "9a1414b8d2b0690a718f429fd1184e9be5f04ff2abe692cfb1b276d040d0b941"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/startup.py": {
+      "executable": false,
+      "sha256": "8171f4ef3c84da954f0f1fe7aa42ef2376a02d4495eee44aa43f4a4436ec637a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/storage.py": {
+      "executable": false,
+      "sha256": "9249db688a94b58e29ccf228893d6679609e21a4e16855d2cf1df3169bb5dd1a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/structure.py": {
+      "executable": false,
+      "sha256": "a303704fbe79da829b0ee5da4ef76223c63a04b11b0a81117d125a28a076be8f"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/touch.py": {
+      "executable": false,
+      "sha256": "fab070f35c3dd59ec9919131322846953b04a779406e1fb12be318131ee26004"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": {
+      "executable": false,
+      "sha256": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/upload_compat.py": {
+      "executable": false,
+      "sha256": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29"
+    }
+  },
+  "formal34_step_readers": {
+    "@common": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "adapter": [
+      "remake-core/scripts/package_gates/__init__.py",
+      "remake-core/scripts/package_gates/adapter_fix.py",
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/adapter.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "appid": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/appid.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "art_static": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "bg_cover": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py",
+      "remake-core/scripts/tiktok_finalize_steps/bg_cover.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "build_templates": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/build_templates.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "capsule_auto": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py",
+      "remake-core/scripts/tiktok_finalize_steps/capsule_auto.py",
+      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "debug_leftover_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "frame_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/frame_scan.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "game_name_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "home_entry_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/home_entry_scan.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py"
+    ],
+    "images": [
+      "cocos-game-check/package-check/scripts/check_guard.py",
+      "remake-core/scripts/audit_image_clarity.py",
+      "remake-core/scripts/clarity_policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/images.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "kit_sources": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "login": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/login.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "orientation": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/orientation.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "physics_clock": [
+      "remake-core/scripts/bundle_module_inputs.py",
+      "remake-core/scripts/button_state_check.py",
+      "remake-core/scripts/check_ledger.py",
+      "remake-core/scripts/input_owner_inventory.py",
+      "remake-core/scripts/logic_case_ledger.py",
+      "remake-core/scripts/logic_check.py",
+      "remake-core/scripts/logic_regressions.py",
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/physics_clock.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "plugin3x_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "png": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/png.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "reward_order_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py"
+    ],
+    "rewarded": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/rewarded.py"
+    ],
+    "run_parts": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "save_read_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/save_read_scan.py"
+    ],
+    "settings": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/appid.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/settings.py"
+    ],
+    "skin_preview_scan": [
+      "remake-core/scripts/check_skin_preview.py",
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/skin_preview_scan.py"
+    ],
+    "slot_overlap_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/slot_overlap_scan.py"
+    ],
+    "startup": [
+      "remake-core/scripts/package_gates/__init__.py",
+      "remake-core/scripts/package_gates/adapter_fix.py",
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/build_templates.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/startup.py"
+    ],
+    "storage": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/storage.py"
+    ],
+    "structure": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/structure.py"
+    ],
+    "touch": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/touch.py"
+    ],
+    "ui_kit": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "ui_kit_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py"
+    ],
+    "upload_compat": [
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/upload_compat.py"
+    ]
+  },
+  "kit_readers": {
+    "tools/build_kit_fingerprints.py": {
+      "executable": false,
+      "sha256": "9946bee5b34d8c9881c741b9c99b649b449b11aaaea7898b1e0f702bb7981938"
+    },
+    "tools/check_kit_project.py": {
+      "executable": false,
+      "sha256": "9026eb6367c035ea43d0a518b96e4d1d20cf94995c688bf972306be87af5e00e"
+    },
+    "tools/home_free_slot.js": {
+      "executable": false,
+      "sha256": "83a4ef695e38b09e4173c70263136a2abeec9dc3106d48ea94d20bdc32e8137a"
+    },
+    "tools/make_gameuikit_3x.py": {
+      "executable": false,
+      "sha256": "2d2f3b9ac23737c61b7e4d20dc3c0e5a55e79cca512e1229779f70739a477e70"
+    },
+    "tools/make_plugin_scripts.py": {
+      "executable": false,
+      "sha256": "8eb80f06f865244835f50faa0d64d1f361d7378a43f0b56c275394d658804bb0"
+    }
+  },
+  "maintenance_original": {
+    "README_接入说明.md": {
+      "executable": false,
+      "sha256": "775e1a9f0a6292fa91001e0e4e847ee77bf7625720aa0d0953b6f4dd5075f224"
+    },
+    "tests/audio-service.test.js": {
+      "executable": false,
+      "sha256": "599b6beac1f812c4556628d25f5f1db2852ec75b97cdf04b33b7edd33462438f"
+    },
+    "tests/boot-3x.test.js": {
+      "executable": false,
+      "sha256": "e24961ff289103653dc48daac442c80b171ab6a8e706d43594a551aa9564b9bb"
+    },
+    "tests/boot-negative-controls.js": {
+      "executable": false,
+      "sha256": "0acb28634847db9551b192dab1a014176f736ebc0781420f8362292e64c9e51d"
+    },
+    "tests/boot.test.js": {
+      "executable": false,
+      "sha256": "073985a443ea06bf995607a384ccbd6b246efccffebd3fb1b9c259350e4e9dd2"
+    },
+    "tests/capsule-auto-3x.test.js": {
+      "executable": false,
+      "sha256": "53962076edec49424bfc2f84ea13294e3acc677d0a706c0575d5b8bdbe861f33"
+    },
+    "tests/capsule-auto.test.js": {
+      "executable": false,
+      "sha256": "8df1390bff664d12819028de7299777a4539c3b4221c22aba21cf233da35d68a"
+    },
+    "tests/capsule-layout.test.js": {
+      "executable": false,
+      "sha256": "2f53fe9dce07a623d2bfd725724883f6a108de4409d7c5f65e8a3512f37c6178"
+    },
+    "tests/check-kit-project.test.js": {
+      "executable": false,
+      "sha256": "a210526525778f1c15401d3a8878737aea8d4afec95fbd8b37bac8445f9b1b1b"
+    },
+    "tests/course-lane.test.js": {
+      "executable": false,
+      "sha256": "245ec5ae4177efac56401731592bfcc15a1c98a64e2e04ece673c0f616290e31"
+    },
+    "tests/engine-stub-ui.js": {
+      "executable": false,
+      "sha256": "dd97d79f8b431f31d4818f666abf58c40a46dd96d5a6863c2a1cfbaa3bd89390"
+    },
+    "tests/entity-retire.test.js": {
+      "executable": false,
+      "sha256": "bfeb974005c39269c2a736483e33c4cd693373600d521d477a14b8dd0f07b962"
+    },
+    "tests/entry-tracking.test.js": {
+      "executable": false,
+      "sha256": "7e2fe5484057e66d30e6aa443974cf36eef67f26237ec9df472eafe382acec53"
+    },
+    "tests/fx-pool.test.js": {
+      "executable": false,
+      "sha256": "5855719f21e5e3b59b175432e517b547b8525ce2f00e2c086bd8d9187a6322bc"
+    },
+    "tests/game-ui-ad-feedback.test.js": {
+      "executable": false,
+      "sha256": "fee1b14d7994a8d2dd8958070d4ede3bc78cc0de7a3bf8875e04c038b156a75e"
+    },
+    "tests/game-ui-adopt.test.js": {
+      "executable": false,
+      "sha256": "8e21c0f6782a31c717f4f9fc47576393540de27b85ae17abf995a050c39760e6"
+    },
+    "tests/game-ui-frame-release.test.js": {
+      "executable": false,
+      "sha256": "b8d496c65b13b624752bc1c5dfb0d94e75211590b6b003ef37e1aec38b2b1332"
+    },
+    "tests/game-ui-kit.test.js": {
+      "executable": false,
+      "sha256": "68f0c326e7272f4291455684b522c09d01038de7f6e09cccbc3182ac6ccbf085"
+    },
+    "tests/game-ui-pages.test.js": {
+      "executable": false,
+      "sha256": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8"
+    },
+    "tests/game-ui-production-contract.test.js": {
+      "executable": false,
+      "sha256": "d11223a647cb2601b898ac8ea75e2544a759664badd9c9d14ffdd81145749c95"
+    },
+    "tests/game-ui-row-state.test.js": {
+      "executable": false,
+      "sha256": "88bda7eb38c4dd4708c59ac899ef77657690c53bac2af4e06bd234ef74642664"
+    },
+    "tests/game-ui-text-guide.test.js": {
+      "executable": false,
+      "sha256": "e0449d481c0bd7f47aa43415e8e53ef3ef6cb449ebf053a26c02eabf893333ed"
+    },
+    "tests/home-entries-negative-controls.js": {
+      "executable": false,
+      "sha256": "69094af4f63ad952a332062a67b99bc6f64dcdf1f37321d5029b455a55a28484"
+    },
+    "tests/home-entries-no-coin.test.js": {
+      "executable": false,
+      "sha256": "8228cc4ed2899edf99ec32cf4183666070a34ceef59a7630298632b3e723d18f"
+    },
+    "tests/home-entries-notice-settle.test.js": {
+      "executable": false,
+      "sha256": "1c6dd5a6378e829a8743fa93cd0e0b2bb2159208ecf05e8b8e421eda52b29e1d"
+    },
+    "tests/home-entries-slot.test.js": {
+      "executable": false,
+      "sha256": "5fa06b7053a22e33c960d4e3f8abbc51d821e5c106e9c84e60367378cd76752b"
+    },
+    "tests/home-entries-touch.test.js": {
+      "executable": false,
+      "sha256": "c1f79d44180066a4ccc60795eb5bb1ad7a375262199a6120ccb5bc955822da75"
+    },
+    "tests/home-entries.test.js": {
+      "executable": false,
+      "sha256": "9b5b349e9cd7a3392715424ce180be882d29ea6a4c24c0aee46031bdf253c788"
+    },
+    "tests/home-free-slot.test.js": {
+      "executable": false,
+      "sha256": "4d0b99a1b329c970439a7aaaf1a448fb2cd110d6e268791051cf24e906d8fb83"
+    },
+    "tests/host-shim.test.js": {
+      "executable": false,
+      "sha256": "272a4075faf8d391d29c2534b25b57e6852e40b9694112a4010fac87b5470234"
+    },
+    "tests/kit-negative-controls.js": {
+      "executable": false,
+      "sha256": "af5c795e5759c771baa571f16f5654105e99b63af65de0ad0480fd3309278b90"
+    },
+    "tests/kit.test.js": {
+      "executable": false,
+      "sha256": "cabce5c645bb5d9ebabb1603678b6b4925133155a3a89a49946f0e9f58080706"
+    },
+    "tests/physics-clock.test.js": {
+      "executable": false,
+      "sha256": "45b2dd06c5ae4aa7afe23d05e9477deeae8eddc45f82ee664f25fbf12c7ce889"
+    },
+    "tests/plugins-3x.test.js": {
+      "executable": false,
+      "sha256": "e2d4808d6819d4eb0c96b428c96c1ef35567b73a8648e032c17630e481f42b34"
+    },
+    "tests/real-engine-ui/README.md": {
+      "executable": false,
+      "sha256": "bc9413e2287e256af12f50647f288f14eb87cde9ce454faf5b37d5ba633c8c9c"
+    },
+    "tests/real-engine-ui/fixture.js": {
+      "executable": false,
+      "sha256": "9ada57d335f2768e735afc7dcc7d76a0960aa4a6de70065e7fba614a1667709c"
+    },
+    "tests/real-engine-ui/index.html": {
+      "executable": false,
+      "sha256": "684459885e879596071d1f0db1725a5e3709305db218484e029493c72837251d"
+    },
+    "tests/real-engine-ui/prepare_ui_engine_fixture.py": {
+      "executable": false,
+      "sha256": "8f742e35fccb280188de8e7f8f5c52b6b1a8fcf282f0812c427e1eccc4fd6b05"
+    },
+    "tests/real-engine-ui/test_prepare_ui_engine_fixture.py": {
+      "executable": false,
+      "sha256": "bdec6fddd5f0ed065c392cf5ca87c047a33a579a30b9c4959debdba88c87f866"
+    },
+    "tests/refresh-suite-contracts.cjs": {
+      "executable": false,
+      "sha256": "f3d57121fb95660e3c9ec842bae02808d1f28bb8a86c761354cc8fdda10a6f03"
+    },
+    "tests/res-loader-fixtures/ResMgr_dessert_v11.js": {
+      "executable": false,
+      "sha256": "a36f3dcefc79d548292ce9cdf610bfbc4230c0a5fd26dd86dc0120e8c6d0a95c"
+    },
+    "tests/res-loader.test.js": {
+      "executable": false,
+      "sha256": "2fce0fb28ed073cbc8db3388439151027a0105aaf94b1ad1bea655e8c1dbf154"
+    },
+    "tests/rewarded-capability.test.js": {
+      "executable": false,
+      "sha256": "fdec742bafedf1f24a9b0ec54493090cb413e69d9727a40e7e876fa136151ef9"
+    },
+    "tests/rewarded-guard.test.js": {
+      "executable": false,
+      "sha256": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b"
+    },
+    "tests/rewarded-timing.test.js": {
+      "executable": false,
+      "sha256": "be02343b6f8f9d3913db6749acfdc8b90d0d46a471de6ab211b8d1249534517a"
+    },
+    "tests/run-all.js": {
+      "executable": false,
+      "sha256": "a89ad2891458f0584ee5e3358e3808d374dd797a4c93b88b629b03a6e16adb4c"
+    },
+    "tests/run-session.test.js": {
+      "executable": false,
+      "sha256": "11205510dcd9d2bb752e3f79aa10663a1950bd69fb130cb7da3c1095f2096232"
+    },
+    "tests/screen-fit-watch.test.js": {
+      "executable": false,
+      "sha256": "4de795b3bfa7f07cffa2b93b642a673634e934a77a9f595b8d3bee73acc64bfc"
+    },
+    "tests/screen-fit.test.js": {
+      "executable": false,
+      "sha256": "e482f1ccee3d92ef322ae7dc23b00994e1a7db1780bdbb68de1fc46edc420a27"
+    },
+    "tests/shop-tx.test.js": {
+      "executable": false,
+      "sha256": "43c0f55d92bca276fff389b9ba3eb0e960b10943fbd1b50f30187a774f568bfd"
+    },
+    "tests/snake-regression/PlatformConfig.snake.js": {
+      "executable": false,
+      "sha256": "d37cc3d6acceb474d70349553e18cf352ae9cc909d5a3ca64c64b6f6a7ec4e2a"
+    },
+    "tests/snake-regression/negative-controls.js": {
+      "executable": false,
+      "sha256": "5bfaa7d7904e8e65dcc133485f9ce16ff82c3d3a0631e905710fe0e2e866af07"
+    },
+    "tests/snake-regression/platform-components.test.js": {
+      "executable": false,
+      "sha256": "e5a27cf79db7b7a78ac83226453db655e79d403874ffcdb49641161250c02de5"
+    },
+    "tests/snake-regression/run.js": {
+      "executable": false,
+      "sha256": "d801b71c432f36a54338feff2faad3bf621b63a38c9820076fe1c91462d95b8d"
+    },
+    "tests/snake-regression/sdk-resolution.test.js": {
+      "executable": false,
+      "sha256": "968a81037ce4c5a984be5fb94ab1ef2392e68238aface5411d6e001d09608737"
+    },
+    "tests/storage-guard-negative-controls.js": {
+      "executable": false,
+      "sha256": "254be0299141ab5e958dcf9369e872b777f7d3f811b3ed117c7a674f96461b90"
+    },
+    "tests/storage-guard.test.js": {
+      "executable": false,
+      "sha256": "ef563dd8eeaf61016a1116a7977379539d0f0e8fbd1169beea060422b1219033"
+    },
+    "tests/storage-recovery.test.js": {
+      "executable": false,
+      "sha256": "dbd27a51994b48d2b52f1c2642474a2e82f206568a6f130f7876ca31ecafbaf2"
+    },
+    "tests/storage-typed-negative-controls.js": {
+      "executable": false,
+      "sha256": "e2ca719313424f38c99fec32bcf631616f93869b2baec39ed258b5eacee4ba1b"
+    },
+    "tests/storage-typed-recovery.test.js": {
+      "executable": false,
+      "sha256": "8bfbfe71ad2f659424549f850e2f97c124362fc7b8609c288f566bcc93c716de"
+    },
+    "tests/suite-contracts.json": {
+      "executable": false,
+      "sha256": "64014968ad1ad7a99833de3879b4ad5270def3c674ff5b5cb0e72612503248a4"
+    },
+    "tests/suite-runner.cjs": {
+      "executable": false,
+      "sha256": "823bceba0fdbf2947b68dbc00a82f5d19f146ae99bbb857c59cdb0cb9f607153"
+    },
+    "tests/test_suite_receipts.cjs": {
+      "executable": false,
+      "sha256": "7cb0b5528fab0b0ac41f4fab9959eb71dbf7cc677cef4c2ddfc0c4d491c8e487"
+    },
+    "tests/touch-3x.test.js": {
+      "executable": false,
+      "sha256": "b2e7368d68ca1c8ba245c2204f1f3cb40e26dc303c24acad5d5dbfb7461e8a63"
+    },
+    "tests/touch-lifecycle-24.test.js": {
+      "executable": false,
+      "sha256": "1daa505af595d0c6101d4a400b5c81941c29e644d9ad58c9349db5b1129d65e4"
+    },
+    "tests/touch-owner.test.js": {
+      "executable": false,
+      "sha256": "925e43897c40a8db0bb07643d5ad442be0fa06ae3acae133091de3d8b27f3bf4"
+    }
+  },
+  "production_readers": {
+    "cocos-game-check/package-check/scripts/check_guard.py": {
+      "executable": false,
+      "sha256": "9a8cab307fb074120e1045d37d69080ce40dde3a32949e9782866f617c85a626"
+    },
+    "remake-core/scripts/audit_image_clarity.py": {
+      "executable": false,
+      "sha256": "65991487d27f5930fe5ff5215aa4a86b178dd2f1f13084ec7606d3946a572826"
+    },
+    "remake-core/scripts/bundle_module_inputs.py": {
+      "executable": false,
+      "sha256": "90a5047408fe73a56a0eea31e79faab354e7c397124cb73fd7f9facf2351650d"
+    },
+    "remake-core/scripts/button_state_check.py": {
+      "executable": false,
+      "sha256": "dfede487329aefa3a41b4d4127b56c10be9914c9fbae349791f35380a0d5738d"
+    },
+    "remake-core/scripts/check_ledger.py": {
+      "executable": false,
+      "sha256": "836c8d41ed000d43b4dacc1b1b3b795debd4ba4a8b8ce8b740a7ea25924434f4"
+    },
+    "remake-core/scripts/check_skin_preview.py": {
+      "executable": false,
+      "sha256": "72a399d9f807f000bfe5ee7666d50de5a26f57df6ba324cf94b1c6894742a462"
+    },
+    "remake-core/scripts/clarity_policy.py": {
+      "executable": false,
+      "sha256": "9882138665b07985d469fa2dcf260366e5321f779059c101a9d6de54c20e37d4"
+    },
+    "remake-core/scripts/cocos1_compat.py": {
+      "executable": false,
+      "sha256": "4b6ecabb4b210efb9ea305dbadb9a7d5ca5ac0ad89fec957c8219d7a811712b4"
+    },
+    "remake-core/scripts/creator_asset_contract.py": {
+      "executable": false,
+      "sha256": "20b3f1c2d5517193bdf68d9e4b17e310e5e659660eaae4ba80ce005ed3a5a474"
+    },
+    "remake-core/scripts/input_owner_inventory.py": {
+      "executable": false,
+      "sha256": "dafea8fc55ae7c83dd8b2c08370ff907970438e04f520fcd9a735d88cf880c56"
+    },
+    "remake-core/scripts/logic_case_ledger.py": {
+      "executable": false,
+      "sha256": "7aa0fa0d6ca6d7c2b83618a3544d83b478dec8b4718aaaf3f28ca53281f399e4"
+    },
+    "remake-core/scripts/logic_check.py": {
+      "executable": false,
+      "sha256": "e15141438f639c1c9e3fe10f8964f420d03e2bd57062c2207c1dfd36a61e465b"
+    },
+    "remake-core/scripts/logic_regressions.py": {
+      "executable": false,
+      "sha256": "5d210a8ec5be53245209bd5107176a00dfaf25166adb41fab4d8b6dd9c2f2e49"
+    },
+    "remake-core/scripts/package_gates/__init__.py": {
+      "executable": false,
+      "sha256": "4dd2c672ef718c0419cae15a4e2d90dcb916ef7ed84787fae3c063fa551ff14e"
+    },
+    "remake-core/scripts/package_gates/adapter_fix.py": {
+      "executable": false,
+      "sha256": "292f6b0198cddfcae12dd498c14ffca92b08660bceeda332160eeadf06711f19"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/__init__.py": {
+      "executable": false,
+      "sha256": "1916b40378d0407d8df6658f28b6171f0b3e45d941c63981908593ac74748196"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/adapter.py": {
+      "executable": false,
+      "sha256": "32822382d43599ec8494ac5dfe0bd064ae526ead455216125b2dad0ae23847f7"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/appid.py": {
+      "executable": false,
+      "sha256": "37b1e40ff95437be2be476f304e6d842c40a7df139ebaea75b24f7b16d94be76"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/art_static.py": {
+      "executable": false,
+      "sha256": "5e11c1c62091b225e5294dc32d4d133693c79f4a472e765cb0e2a31fd5174e5a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/bg_cover.py": {
+      "executable": false,
+      "sha256": "b4bbd70b143d2a86a7e6318640d0eb8e8ef7b9047a688438d2ab299cb62e644d"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/build_templates.py": {
+      "executable": false,
+      "sha256": "d690f00b2d05eb9001cf671583191396a5157abba7be7aea2b4fbf9f10dffc55"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/capsule_auto.py": {
+      "executable": false,
+      "sha256": "0ff1a2e18435b87a9f010d768ae0f8ef7bc17a039932731055c0e2ac76288aeb"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py": {
+      "executable": false,
+      "sha256": "6bd18137315c9b1293d799a807274028982ea90eb3b3101c181d781ab660dfc0"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/frame_scan.py": {
+      "executable": false,
+      "sha256": "1a7c1479a17dc29384bc89b675e235fe1fd401327a8a8b6338086cd644e9de84"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py": {
+      "executable": false,
+      "sha256": "7cf255052c11f80872ca5c10b8537f5e2b720c49ab5313738051d9f2cd211d34"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/home_entry_scan.py": {
+      "executable": false,
+      "sha256": "f32167dd264b90a89d6addd5dc1591776ec35e8411d293447e1a6b5aea59fe47"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/images.py": {
+      "executable": false,
+      "sha256": "f5b9e52a090f458104d3a861039310060b800ac2015153cfd1706a9ac023185e"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/kit_sources.py": {
+      "executable": false,
+      "sha256": "aaf9bcc12400fcec38913ac5e0fdfdee0d8b7c03f26d98cd1351763626eb723d"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/login.py": {
+      "executable": false,
+      "sha256": "350b6d31fc74b4c86fef7e1a4cee51c580ab6c816111d3fc25d855b77b90d4b2"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/orientation.py": {
+      "executable": false,
+      "sha256": "43692def64c653d32d818d5c8ebb672576f375db0e904342ad5d628b4509e409"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/physics_clock.py": {
+      "executable": false,
+      "sha256": "8e36d901cab216e3f879d0fde35b24eee97a5bb0fb81646264186f6a20cc1f7d"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py": {
+      "executable": false,
+      "sha256": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/png.py": {
+      "executable": false,
+      "sha256": "806c3c158f5bad9ce5209a90a3f7e78fc0f21b6cc4efd2ef85624ab3591f5165"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/policy.py": {
+      "executable": false,
+      "sha256": "78b15e5b875134af0841296d542ccb3f18af53bc9d51b0f28363ccca24abb655"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py": {
+      "executable": false,
+      "sha256": "6d765a7b9f404a38d17b17ac35b8e508e4d5546aabe4cf8179d907a4f42e3498"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/rewarded.py": {
+      "executable": false,
+      "sha256": "a978d0ae5c74589ea9f2f932ae8614844f7d7942f2395a3b15adfd5ccda14021"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/save_read_scan.py": {
+      "executable": false,
+      "sha256": "991fb2e8a72a58df39858431edda4720b42b30f990aedb81edac304815361a1f"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/settings.py": {
+      "executable": false,
+      "sha256": "53235fe4219cae3834d1961f7f62956cf3863648690bf95863994afb331c6e79"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/skin_preview_scan.py": {
+      "executable": false,
+      "sha256": "f9181de056a0ec4f45e44d8e76be03ff5357f7ccad486a97645d4a0d68bc8034"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/slot_overlap_scan.py": {
+      "executable": false,
+      "sha256": "9a1414b8d2b0690a718f429fd1184e9be5f04ff2abe692cfb1b276d040d0b941"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/startup.py": {
+      "executable": false,
+      "sha256": "8171f4ef3c84da954f0f1fe7aa42ef2376a02d4495eee44aa43f4a4436ec637a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/storage.py": {
+      "executable": false,
+      "sha256": "9249db688a94b58e29ccf228893d6679609e21a4e16855d2cf1df3169bb5dd1a"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/structure.py": {
+      "executable": false,
+      "sha256": "a303704fbe79da829b0ee5da4ef76223c63a04b11b0a81117d125a28a076be8f"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/touch.py": {
+      "executable": false,
+      "sha256": "fab070f35c3dd59ec9919131322846953b04a779406e1fb12be318131ee26004"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py": {
+      "executable": false,
+      "sha256": "b2c1bb6fc35a2c41cb31c66fd6edcc35f7f0193d4216eebb4d9fdeeb8ae60581"
+    },
+    "remake-core/scripts/tiktok_finalize_steps/upload_compat.py": {
+      "executable": false,
+      "sha256": "bc29e4b8e83d93d2d4313c1cd2f0af1791c415996fee5408b999d55730b0de29"
+    }
+  },
+  "reviewed_release": "11.17.35+production-enforcement.1",
+  "schema": "preparation-production-scope.v1",
+  "step_readers": {
+    "@common": [
+      "remake-core/scripts/cocos1_compat.py",
+      "remake-core/scripts/tiktok_finalize_steps/__init__.py",
+      "remake-core/scripts/tiktok_finalize_steps/policy.py"
+    ],
+    "adapter": [
+      "remake-core/scripts/package_gates/__init__.py",
+      "remake-core/scripts/package_gates/adapter_fix.py",
+      "remake-core/scripts/tiktok_finalize_steps/adapter.py"
+    ],
+    "appid": [
+      "remake-core/scripts/tiktok_finalize_steps/appid.py"
+    ],
+    "art_static": [
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py"
+    ],
+    "bg_cover": [
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py",
+      "remake-core/scripts/tiktok_finalize_steps/bg_cover.py"
+    ],
+    "build_templates": [
+      "remake-core/scripts/tiktok_finalize_steps/build_templates.py"
+    ],
+    "capsule_auto": [
+      "remake-core/scripts/creator_asset_contract.py",
+      "remake-core/scripts/tiktok_finalize_steps/art_static.py",
+      "remake-core/scripts/tiktok_finalize_steps/capsule_auto.py",
+      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py"
+    ],
+    "debug_leftover_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/debug_leftover_scan.py"
+    ],
+    "frame_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/frame_scan.py"
+    ],
+    "game_name_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/game_name_scan.py"
+    ],
+    "home_entry_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/home_entry_scan.py",
+      "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py"
+    ],
+    "images": [
+      "cocos-game-check/package-check/scripts/check_guard.py",
+      "remake-core/scripts/audit_image_clarity.py",
+      "remake-core/scripts/clarity_policy.py",
+      "remake-core/scripts/tiktok_finalize_steps/images.py"
+    ],
+    "kit_sources": [
+      "remake-core/scripts/creator_asset_contract.py",
+      "remake-core/scripts/tiktok_finalize_steps/kit_sources.py"
+    ],
+    "login": [
+      "remake-core/scripts/tiktok_finalize_steps/login.py"
+    ],
+    "orientation": [
+      "remake-core/scripts/tiktok_finalize_steps/orientation.py"
+    ],
+    "physics_clock": [
+      "remake-core/scripts/bundle_module_inputs.py",
+      "remake-core/scripts/button_state_check.py",
+      "remake-core/scripts/check_ledger.py",
+      "remake-core/scripts/input_owner_inventory.py",
+      "remake-core/scripts/logic_case_ledger.py",
+      "remake-core/scripts/logic_check.py",
+      "remake-core/scripts/logic_regressions.py",
+      "remake-core/scripts/tiktok_finalize_steps/physics_clock.py"
+    ],
+    "plugin3x_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py"
+    ],
+    "png": [
+      "remake-core/scripts/tiktok_finalize_steps/png.py"
+    ],
+    "reward_order_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/reward_order_scan.py"
+    ],
+    "rewarded": [
+      "remake-core/scripts/tiktok_finalize_steps/rewarded.py"
+    ],
+    "run_parts": [],
+    "save_read_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/save_read_scan.py"
+    ],
+    "settings": [
+      "remake-core/scripts/tiktok_finalize_steps/appid.py",
+      "remake-core/scripts/tiktok_finalize_steps/settings.py"
+    ],
+    "skin_preview_scan": [
+      "remake-core/scripts/check_skin_preview.py",
+      "remake-core/scripts/tiktok_finalize_steps/skin_preview_scan.py"
+    ],
+    "slot_overlap_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/slot_overlap_scan.py"
+    ],
+    "startup": [
+      "remake-core/scripts/package_gates/__init__.py",
+      "remake-core/scripts/package_gates/adapter_fix.py",
+      "remake-core/scripts/tiktok_finalize_steps/build_templates.py",
+      "remake-core/scripts/tiktok_finalize_steps/startup.py"
+    ],
+    "storage": [
+      "remake-core/scripts/tiktok_finalize_steps/storage.py"
+    ],
+    "structure": [
+      "remake-core/scripts/tiktok_finalize_steps/structure.py"
+    ],
+    "touch": [
+      "remake-core/scripts/tiktok_finalize_steps/touch.py"
+    ],
+    "ui_kit": [],
+    "ui_kit_scan": [
+      "remake-core/scripts/tiktok_finalize_steps/ui_kit_scan.py"
+    ],
+    "upload_compat": [
+      "remake-core/scripts/tiktok_finalize_steps/upload_compat.py"
+    ]
+  }
+}

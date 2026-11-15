@@ -29,12 +29,11 @@ class FinalStartupGate(unittest.TestCase):
     def save(self):self.contract.write_text(json.dumps(self.data))
     def call(self):return gate.audit_final_startup(self.native,self.project,self.contract,self.recovery)
     def test_no_runtime_proof_no_zip(self):
-        from test_single_writer import SingleWriter
-        actual_startup=gate.audit_final_startup
-        f=SingleWriter('test_legacy_build_routes_all_parameters_once');f.setUp();self.addCleanup(f.doCleanups);f.mock_engine()
-        with patch.object(gate,'audit_final_startup',side_effect=actual_startup), self.assertRaisesRegex(ValueError,'final Native startup evidence required'):
-            build(**f.kw)
-        self.assertFalse(f.out.exists());self.assertFalse(list(f.home.glob('.tiktok-package-*')))
+        out=self.root/'test.zip'
+        with patch('upload_size_gate.enforce_tiktok_host'), \
+                self.assertRaisesRegex(ValueError,'scope_required'):
+            build(self.native,APP,out,resource_manifest=self.manifest,project=self.project)
+        self.assertFalse(out.exists());self.assertFalse(list(self.root.glob('.tiktok-package-*')))
     def test_failed_contract_rejected(self):
         self.data['passed']=False;self.save()
         with self.assertRaisesRegex(ValueError,'missing or failed'):self.call()
@@ -118,15 +117,5 @@ class FinalStartupGate(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, '原通过证据丢失'):
                 self.call()
             self.assertEqual((self.project/'calls').read_text(), '11')
-
-# This module checks the original gate's own obligations with tiny fixtures.
-# Keep the strict-six production boundary in its dedicated real-auditor tests.
-from pathlib import Path as _AdFixturePath
-import sys as _ad_fixture_sys
-_ad_fixture_core = next(p/'remake-core/scripts' for p in _AdFixturePath(__file__).resolve().parents
-                        if (p/'remake-core/scripts/fixture_ad_standard_scope.py').is_file())
-_ad_fixture_sys.path.insert(0,str(_ad_fixture_core))
-from fixture_ad_standard_scope import isolate as _isolate_ad_fixture
-_isolate_ad_fixture(globals())
 
 if __name__=='__main__':unittest.main()

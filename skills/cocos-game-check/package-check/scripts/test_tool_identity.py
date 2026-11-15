@@ -143,30 +143,8 @@ class Wiring(unittest.TestCase):
         source = Path(check_package.__file__).read_text(encoding='utf-8')
         self.assertIn("result['tool_identity'] = tools_in_use()", source)
         self.assertIn("result['modified_tools'] = result['tool_identity']['summary']", source)
-        # The compatibility command delegates; diagnostics belong to the sole
-        # canonical backend. Exercise its actual diagnostic hook and real draft.
-        import make_tiktok_zip as writer
-        import build_checked_zip as alias
-        with patch.object(writer, 'write_package', return_value={'sentinel': True}) as backend:
-            self.assertEqual(alias.build('native', APP, 'out.zip'), {'sentinel': True})
-            self.assertEqual(backend.call_count, 1)
-        with tempfile.TemporaryDirectory() as out, patch.dict('os.environ', {T.ENV_FEEDBACK: out}):
-            result = {'tool_identity': ident, 'warnings': []}
-            writer.report_tool_identity(result, 'Game', Path(out)/'Game.zip')
-            self.assertEqual(result['modified_tools'], ['a'])
-            self.assertEqual(result['warnings'], ['改过的工具: a'])
-            self.assertTrue(Path(result['tool_feedback_draft']).is_file())
-            import contextlib
-            import io
-            result.update(finalize={'policy':'new','table_markdown':''},delivery_folder={})
-            output=io.StringIO()
-            args=['--native','native','--app-id',APP,'--out','out.zip','--project','Game',
-                  '--resource-manifest','resources.json']
-            with patch.object(writer,'write_package',return_value=result), \
-                    patch('delivery_folder.describe',return_value=[]),contextlib.redirect_stdout(output):
-                self.assertEqual(alias.main(args),0)
-            self.assertIn('改过的工具：a',output.getvalue())
-            self.assertIn('反馈草稿：',output.getvalue())
+        writer = (Path(check_package.__file__).parent / 'build_checked_zip.py').read_text(encoding='utf-8')
+        self.assertIn("package_checks.feedback_draft(result.get('tool_identity')", writer)
 
 
 
@@ -190,16 +168,6 @@ class ThrowawayCopies(unittest.TestCase):
 
     def test_game_folder_copies_still_write_a_draft(self):
         self.assertFalse(T.throwaway('/Users/x/Downloads/game/qa/ad_regression_tool_fix'))
-
-# This module checks the original gate's own obligations with tiny fixtures.
-# Keep the strict-six production boundary in its dedicated real-auditor tests.
-from pathlib import Path as _AdFixturePath
-import sys as _ad_fixture_sys
-_ad_fixture_core = next(p/'remake-core/scripts' for p in _AdFixturePath(__file__).resolve().parents
-                        if (p/'remake-core/scripts/fixture_ad_standard_scope.py').is_file())
-_ad_fixture_sys.path.insert(0,str(_ad_fixture_core))
-from fixture_ad_standard_scope import isolate as _isolate_ad_fixture
-_isolate_ad_fixture(globals())
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)

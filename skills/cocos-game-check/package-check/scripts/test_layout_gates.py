@@ -177,6 +177,48 @@ class AdEntries(unittest.TestCase):
         self.assertTrue(got[2] and got[3])
 
 
+class AdEntryContracts(unittest.TestCase):
+    def verdict(self, expect, **observed):
+        return node('return R.adEntryVerdict(%s, %s);' % (json.dumps(expect), json.dumps(observed)))
+
+    def test_eligible_refusal_text_is_not_ad_success(self):
+        self.assertFalse(self.verdict('ad', reaction={'kind': 'text'})['passed'])
+        self.assertFalse(self.verdict('ad', reaction={'kind': 'prompt'}, adRequested=True)['passed'])
+        self.assertTrue(self.verdict('ad', showRequested=True)['passed'])
+        self.assertEqual(self.verdict('ad', showRequested=True)['proof'], 'sdk_show_requested')
+
+    def test_exhausted_active_silent_button_is_rejected(self):
+        self.assertFalse(self.verdict('disabled', disabled=False, feedbackMatched=False)['passed'])
+        self.assertFalse(self.verdict('disabled', disabled=True, feedbackMatched=False)['passed'])
+        self.assertFalse(self.verdict('disabled', disabled=False, feedbackMatched=True)['passed'])
+        self.assertTrue(self.verdict('disabled', disabled=True, feedbackMatched=True)['passed'])
+
+    def test_ineligible_entry_cannot_request_an_ad(self):
+        for expect in ('disabled', 'feedback'):
+            self.assertFalse(self.verdict(expect, adRequested=True, disabled=True, feedbackMatched=True)['passed'])
+
+    def test_feedback_requires_its_specific_visible_reason(self):
+        self.assertFalse(self.verdict('feedback', reaction={'kind': 'text'}, feedbackMatched='true')['passed'])
+        self.assertFalse(self.verdict('feedback', reaction={'kind': 'prompt'})['passed'])
+        self.assertTrue(self.verdict('feedback', feedbackMatched=True)['passed'])
+
+    def test_old_adapter_reports_only_reaction(self):
+        got = self.verdict(None, reaction={'kind': 'ad'})
+        self.assertTrue(got['passed'])
+        self.assertEqual(got['proof'], 'entry_reaction_only')
+        self.assertIn('warning', self.verdict('reaction', disabled=True))
+        self.assertFalse(self.verdict('unknown', reaction=True)['passed'])
+
+    def test_contract_schema_and_playback_routing(self):
+        def entry(state):
+            return [{'id': 'hint', 'button': 'Canvas/hint/ad', 'states': [dict(name='limit', **state)]}]
+        for state in ({'expect': 'disabled'}, {'expect': 'feedback', 'feedback_js': ''}, {'expect': 'bad'}):
+            self.assertTrue(node('return R.adEntriesProblems(%s);' % json.dumps(entry(state))))
+        good = entry({'expect': 'disabled', 'feedback_js': 'return visibleReason();', 'disabled_js': 'return isDisabled();'})
+        self.assertEqual(node('return R.adEntriesProblems(%s);' % json.dumps(good)), [])
+        self.assertEqual(node("return ['ad','feedback','disabled','reaction',null].map(expect => R.adOutcomeStateApplies({expect}));"), [True, False, False, True, True])
+
+
 class SuiteFiles(unittest.TestCase):
     """The suites keep the prototype's calibrated fixes in code (not only in this file)."""
 

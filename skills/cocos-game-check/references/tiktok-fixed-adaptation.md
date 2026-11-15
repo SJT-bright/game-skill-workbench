@@ -23,7 +23,7 @@
    **侧栏领奖专项（11.17.7）**。钱包就绪即挂回访监听，按本次 TikTok `scene` 分流。`center` 查个人侧栏，`desktop_shortcut` 查桌面，普通返回保持安静。资格为真才记一次奖励。已有游戏重新出包也由 G1 拦旧句、G3 查实际 Native 的冷启动、保活返回、到账、重复领取及遮盖页。真机优先从 TikTok 个人主页侧栏实际进入。
 5. **新游戏必须用平台包标准件**，不手写、不“照抄平台包”另存一份；**旧游戏**（在冻结的遗留名单上的）不自动替换，只给警告，由各自的游戏会话处理。哪些算旧游戏见下一节「新游戏和旧游戏」。
 6. **交付回复写“标准件待真机复测”**：v7.7 的标准件（平台包 `main.js` v1.6、`storage-guard.js`、`tiktok-touch-3x.js`、`HomeGrowthEntries.js`、3.x 插件版、WebP 探针）都只在 Node 和模拟宿主里测过，没有扫码确认。第一款 v7.7 新游戏扫码通过之前，每个交付回复都写这一句。v7.8 的三个可选件（`parts/CapsuleLayout.js`、`parts/CourseLane.js`、`parts/PhysicsClock.js`）也一样，用了它们的游戏照样写这一句。
-7. **美术检查按制作和改动节点执行**。完整美术回执已撤销；首轮正式英文试玩前要有一次完整 art_check 运行记录（不绑图片指纹，之后只复查受影响的行），试玩核候选身份和适用冒烟，写包核实际包文件、英化新图体积（≤800 KB）及适用的功能证据。启动生产节点的用例另查“屏幕离开加载画面”，writer 只读核对该有效记录：日志进了首页、屏幕变化不到 2% 判失败（11.17.16，`runtime_regression/screen.mjs`）。Native 准备最后一步 `upload_compat` 自动补分包 root 的 `/`、`game.js` 本地引用的 `./` 与扩展名、`project.config.json` 的 es6/minified/urlCheck 并删 postcss/newFeature（鸽鸽小羊上传成功的修法，见[定点修复](../package/references/upload-compat-and-entry-fix.md)）。
+7. **美术检查按制作和改动节点执行**。完整美术回执已撤销；首轮正式英文试玩前要有一次完整 art_check 运行记录（不绑图片指纹，之后只复查受影响的行），试玩核候选身份和适用冒烟，写包核实际包文件、英化新图体积（≤800 KB）及适用的功能证据。出包必跑的启动用例另查“屏幕离开加载画面”：日志进了首页、屏幕变化不到 2% 判失败（11.17.16，`runtime_regression/screen.mjs`）。写包最后一步 `upload_compat` 自动补分包 root 的 `/`、`game.js` 本地引用的 `./` 与扩展名、`project.config.json` 的 es6/minified/urlCheck 并删 postcss/newFeature（鸽鸽小羊上传成功的修法，见[定点修复](../package/references/upload-compat-and-entry-fix.md)）。
 8. **代码画的按钮和数字不算图片字**（Saul 10-30）：按钮和数字图片字都要用 GPT 生图，生图要留记录（H10，见「出包时怎么装」）；PIL、字体离线画的 PNG 不能登记成「允许代码画」。
 9. **布局状态、按钮普查出包必跑**（Saul 10-30 10:4x）：新游戏拦、名单上的老游戏只警告；3.x 先只拦开局下载（超过 10 MiB 或带声音），其余只警告。
 10. **关卡难度和样板**（Saul 10-29、10-30）：新关卡表默认 `wave-tiers.v2`（第 1、2 关教学，第 3 关就是难关），按旧 v1 排好的表不返工（第二部分第 8 节）。完整换皮照搬底子要写 `mode=reskin` 并有 Saul 点头记录；样板先行（首页样图、20 秒试玩、BGM 三选一、3～5 个样关）只管自制新游戏，只提示、不拦。
@@ -38,14 +38,14 @@
 1. **起项目 / 英化开工**：`python3 remake-core/scripts/tiktok_finalize.py init --project <工程> --board remake`（英化用 `--board localize`），写新游戏标记 `<工程>/.tiktok-kit/policy.json`。v7.8 起重塑加 `--base <底子工程文件夹或源码 ZIP>`（从零做的写 `--no-base-why "<原因>"`），同时记下底子的图和声音（H8，见下面「美术制作与分项记录」）；两个都没给时 init 照常写标记，只提示补记命令 `art_records.py base --project <工程> --from <底子>`。英化接着跑 `tiktok_finalize.py inventory --project <工程>`，把原版里的广告、加桌面/回访、触摸、启动、存档、分享/跳转/统计、登录代码列到 `docs/english/platform-inventory.json`；接着跑 `rewire-ads` 自动改线，见 [rewire-ads](../../remake-core/references/rewire-ads.md)。
 2. **源码段，正式试玩前的 Creator 构建之前**：`python3 remake-core/scripts/tiktok_finalize.py source --project <工程> --board remake|localize [--app-id <ID>]`。按顺序跑 `images`（WebP 换 PNG/JPG、缩图）、`kit_sources`（平台包模块逐字节对齐）、`physics_clock`（v7.8，P16：用了 2.4 物理、自己没开 enabledAccumulator 的新游戏装平台包 `parts/PhysicsClock.js`，老游戏只警告 `K_W_physics_clock_legacy`，从不拦包）、`build_templates`（只对重塑新游戏：`build-templates/` 只留平台包件；英化工程和旧游戏的构建模板不动，触摸、存档、启动件改在产物段装）、`settings`（写 App ID）、`orientation`（v7.8，B31：`K_portrait_design`）、`art_static`（v7.8，U7 补、H6：`K_art_aspect`、`K_art_hidden_body`，只读；遮罩不量透明度，Saul 10-31）。`source` 还做两件事：判出「只靠子资源 uuid 对上名单、但工程在启动包里或旁边、或带 `--board remake`」时自动写新游戏标记（B27，见「新游戏和旧游戏」）；把生成记录、底子记录跟到改了格式或名字的文件上（`art_records`，出错不会让源码段失败）。改动前的原图在 `<工程>/.tiktok-kit/originals/`，被换掉的文件在 `<工程>/.tiktok-kit/removed/`，记录写 `<工程>/.tiktok-kit/finalize-source.json`（含 `assets/`、`build-templates/`、`settings/` 的内容哈希，和本次用的 `--keep-webp-exception` 原因 `options`）。跑完再构建。试玩后用 `tiktok_finalize.py check-source --project <工程>` 核对已有记录。记录失效时回试玩前准备阶段处理（K5）。旧游戏源码段只写 App ID，也必须跑。
    - 游戏脚本和平台包模块同名（Cocos 2.4 的模块名全局唯一，MabelsMeadow r8 自带 `assets/scripts/platform/TikTokMissionService.js`、`MissionFlow.js`，Creator 因此报 Filename conflict）：新游戏由 `kit_sources` 把游戏那份连 `.meta` 移到 `<工程>/.tiktok-kit/removed/<原路径>`，警告 `K_W_kit_module_duplicate`，游戏里 `require` 这个名字时加载的就是平台包模块；旧游戏只警告。还同名就是 `K_kit_module_duplicate`（新游戏拦，旧游戏警告）。
-3. **产物段，在受影响检查之前完成准备**：先运行 `tiktok_finalize.py native --native <构建目录> --project <工程> --board localize|remake`，完成实际适用的 adapter、startup、upload_compat、touch、storage、rewarded、login、App ID、PNG 和结构准备并固定字节，再执行真正缺失或受影响的检查。移走文件仍放构建目录旁的 `.tiktok-kit-removed/`，不进 ZIP。正式命令固定为 `make_tiktok_zip.py`，旧 `build_checked_zip.py` 只转发到同一个后端。writer 必须有实际 `--project`，只消费 `prepared_native_result`；不在已验收后原地运行 finalize、不自动重装平台件或压图。准备记录缺失时回这一节点处理，只补验实际受影响项。`--review` 接收已有摘要，不要求为旧游戏补填完整历史表。收据继续绑定 finalize policy、实际 Native 和最终 ZIP 字节；没有有效准备记录、policy 不符或字节不匹配时拒绝并继续修具体原因。详细依赖顺序与路由见[唯一写包入口](../../remake-core/references/single-writer.md)。
+3. **产物段，英化在正式试玩前先准备**：`make_tiktok_zip.py` 和 `build_checked_zip.py` 先查源码段记录（K5，被拒时构建目录一个字节都不改），再在任何门禁之前调用 `finalize_native`（取代 v7.5 的 `adapter_fix.apply`），原地改 `--native` 构建目录，顺序 `adapter → startup → touch → storage → rewarded → login → appid → png → structure`。英化先运行 `tiktok_finalize.py native` 完成 PNG 处理，再复核实际 Native 与 Web 的图片和切片。英化写包时的 `png` 步骤只核对处理过的字节。移走的文件放 `<构建目录的上一级>/.tiktok-kit-removed/<构建目录名>/`，不进 ZIP。两个写包入口都必须给 `--project`：`build_checked_zip.py` 不给时命令行报错（退出码 2）；`make_tiktok_zip.py` 不给时被它原有的参数检查拒绝（退出码 2，要求同时给 `--review`、`--project`、`--web`、`--build-tag`），都在 finalize 之前。写包报告的 `finalize.table_markdown` 是一张中文小表（标准件、结果、改动文件数、警告数），收据的 `finalize.table` 是同一张表，交付回复直接贴这张表；结果写 `已装（插加载行）` 表示文件本来就是平台包的、本次只插了加载行。收据升到 schema 2：没有 `finalize`、`finalize` 有拦截、用过 `--policy`、`finalize` 改过的文件和 ZIP 对不上，都算“非官方入口”，`prepare_delivery.py` 拒收。**v7.6 写的收据在 v7.7 一律不再是官方入口，交付前要用 v7.7 写包入口重新出包。** 写包入口另核适用的运行时套件及已有功能证据。发布后整理交付文件夹，见「出包后」。
    - 游戏自己的打包步骤（例如 MabelsMeadow 的 `scripts/prepare-native-package.py` 把 `config/*.json` 放到包根）不是标准件，仍归这款游戏负责：在写包入口之前对构建目录做完，finalize 不替它做。
 4. **单独查看**：`tiktok_finalize.py decide --project <工程>`（或 `--native` / `--zip`）写出判成新游戏还是旧游戏、为什么；`tiktok_finalize.py native --native <构建目录> --project <工程> --board …` 单独跑产物段。`--policy new|legacy` 只给测试和校准用，写包入口不接受（只读的 `check_package.py` 有这个参数，也只给测试）；用它做出的源码段记录会被 K5 拒绝。
 5. 同一工程连跑两次，第二次 0 改动（pngquant 结果有缓存 `<工程>/.tiktok-kit/png-cache.json`，pngquant 版本或参数变了缓存作废）。缺 `pngquant` 就拒绝，不跳过。
 
 **美术制作与分项记录**
 
-- 美术结果按实际检查节点保留明细。正式试玩、统一写包入口和交付均已撤掉完整美术回执要求。
+- 美术结果按实际检查节点保留明细。正式试玩、两个写包入口和交付均已撤掉完整美术回执要求。
 - **底子原图原声不留（H8）**：底子的图、声音、模型内嵌贴图的哈希记在 `docs/art/base-assets.json`（`init --base` 或 `art_records.py base --project <工程> --from <底子>`；从零做的 `--none --why`）。工程 `assets/` 下会进包的文件和底子逐字节相同、又没写进 `docs/art/base-keep.json`（每条要写 why，`art_records.py keep`）的，美术检查这一行不通过，回执写 fail。「会进包」= 在 `resources` 或资源包文件夹里、被场景/预制体/图集/字体/脚本直接或间接引用（含 subMetas 的 uuid）、或者认不出（没有 .meta、代码写了它的 uuid 或路径）；工程里没用到的只列「不会进包（不拦，建议删掉）」。要按成品包核对就加 `--build <包或构建文件夹>`，按 uuid 认文件（不要拿成品包按字节比，构建会重新压缩图）。4×4 以内的图、平台包和官方加载页的图不算；没有底子记录的重塑游戏不通过。英化（board localize 或 art-style original）不查。回执只记图，所以写包入口另拿当前声音和底子记录比一次：`ART_base_audio`，新重塑游戏拒，老游戏警告，英化不查。
 - **新做的图都有生成记录（H10）**：每出一张图就记进 `docs/art/generated.json`（sha256、file、prompt、tool、date；`art_records.py generated`，生图原图另存的加 `--raw`；以后再改同一张跑 `art_records.py derive`；素材库 CC0 图用 `--source` 加 `--license`）。会进包、不是底子图、不在记录里的新图报「不是生成的图」；生成后又改过、没补记的单独报，并给出 derive 命令。确实要代码画的（纯色九宫格底板这类）写进 `docs/art/script-drawn-allow.json` 并写 why（`art_records.py allow`）；PIL、字体画的按钮和数字不能登记成 allow（已定口径第 8 条）。新重塑游戏不通过；英化只提示，而且要先 `art_records.py base --from <中文原版>` 记下原版才分得出新图，没记时写「不适用」。`tiktok_finalize.py source` 自己转格式、缩图时自动补记，不用手工再记。这项只认记录、分不出像素是谁画的，故意把 PIL 图登记成「生成的」拦不住，看图清单仍要看按钮是不是一整张生成图。
 - **v7.8 前已有的图（Saul 10-30 21:3x）**：新游戏标记日期在 2026-10-31 或以前的游戏，可以一次性跑 `art_records.py pre-v78 --project <工程> --why "装 v7.8 时工程里已有的图"`，把工程里已有、没有生成记录的图登记成「v7.8 前已有」（`generated.json` 里 `pre_v78: true`）。只能跑一次；美术检查每次都列出这些图的数量；和底子相同的图照样拦（H8 不受影响）。
@@ -72,12 +72,12 @@
 | `trial_link`（v7.8，F） | 本地试玩链接点一次看广告，模拟广告窗在最上层、点看完后游戏有变化，见第一部分第 3 节 | 有试玩链接时（`serve_preview.py --keep` 给链接前、`runtime_regression.py trial --url`） | 不过不给链接 | 同左 |
 
 - 3.x 上 `popin`、`frame_rate` 只警告「未覆盖」，`dead_shell` 不跑（只做了 2.x）；没跑的套件和原因写在摘要 `not_run` 里。
-- 这些套件和广告用例在生产/检测节点按实际计划运行并记入逐项 ledger；统一 writer 只取 `plan_only` 核清适用清单，再沿用全部有效原结果，不回退浏览器。缺失、失败或失效项回对应节点定点处理；旧 `build_checked_zip.py` 仅转发同一后端。
+- 两个写包入口都跑这些套件和 10 个广告用例，适配文件都来自 `--ad-regression` 或 `$TIKTOK_AD_REGRESSION_ADAPTER`：`build_checked_zip.py`（和 `prepare_delivery.py`）经 `check_package.check()`；`make_tiktok_zip.py`（重塑游戏的正式写包入口，v7.8 第四轮 W97 接上，以前一个运行时套件都不跑）调 `check_package.writer_regressions()`，跑在刚写好、重读过的 ZIP 的解压副本上（就是要发出去的字节），policy 用 finalize 记录的、board 用 `--board`。新游戏没有适配文件、没有 Ego、环境不完整、任一用例没过都不写 ZIP，一次列出全部原因；名单上的老游戏同样的原因只写进报告 `warnings`（带「[legacy game: warning]」），照样出包。结果在报告的 `rewarded_ad_regression`、`runtime_regression`。这一步排在所有便宜检查之后。
 - 开跑前先查环境（A6，见第一部分第 1 节），环境不完整报「环境不完整：……」，退出码 2，不算包不通过。
 - 多花的时间（这台机器实测）：`dead_shell` 15～30 秒，`layout_state` 30～104 秒，`button_sweep` 110～500 秒（首页预算 480 秒封顶，W93 加局内后另有 90 秒上限），`popin` 约 112 秒，`frame_rate` 30～60 秒，写了 n/a 的 0 秒；每款出包合计多约 5～15 分钟。
 
 **出包后（v7.8，总表 B32）**：
-- 统一写包后端（含旧名转发）发布 ZIP 和回执后，把同一文件夹里同款游戏的旧包（appid 相同、游戏自己的文件至少 30% 相同）连同回执、报告挪进「旧包/」，写「最新.txt」（上传 TikTok 用哪个包的完整路径、sha256、「源码包、试玩文件夹不能上传」）；源码 ZIP、别的游戏的包、`delivery_receipt_*.json`、说明文件不动；「旧包/」里重名加「 (2)」，不覆盖、不删。`--keep-old-packages` 或 `TIKTOK_KEEP_OLD_PACKAGES=1` 什么都不挪。交付回复照「最新.txt」写「上传 TikTok 用这个」。
+- 两个写包入口发布 ZIP 和回执后，把同一文件夹里同款游戏的旧包（appid 相同、游戏自己的文件至少 30% 相同）连同回执、报告挪进「旧包/」，写「最新.txt」（上传 TikTok 用哪个包的完整路径、sha256、「源码包、试玩文件夹不能上传」）；源码 ZIP、别的游戏的包、`delivery_receipt_*.json`、说明文件不动；「旧包/」里重名加「 (2)」，不覆盖、不删。`--keep-old-packages` 或 `TIKTOK_KEEP_OLD_PACKAGES=1` 什么都不挪。交付回复照「最新.txt」写「上传 TikTok 用这个」。
 - 按新设计作废旧问题：`package_issue_gate.py supersede --id <旧> --by <新> --quote '<Saul 原话>' --date YYYY-MM-DD`，没有原话、日期不对或是将来、新问题没登记都拒；作废后旧问题不再拦包，新问题复验通过前照样拦。v7～v7.7.5 写的复验证明照样认，已关掉的问题不用重测。
 - 用的检查工具和安装版、发布记录（PROVENANCE.json）都对不上时，`check_package` 的结果里写「改过的工具」（`tool_identity`，只警告、不拦），并写一份反馈草稿到 `！Skill更新/反馈草稿_改过的工具_<游戏>_<日期>.md`（同一天同样的改动只写一次）。
 - 拆包前的旧路径 `cocos-game-check/core/scripts/<脚本>.py`（19 个）是转发桩，转到 `remake-core/scripts/` 的同名脚本，并提示新路径；新写的文档和命令用新路径。
@@ -103,7 +103,7 @@ v7.8 另有三个可选件，登记在 `KIT_MANIFEST.json` 的 `files` 段（`re
 
 3.x 没有启动件（Q5，没有真机通过的底子）、没有 `HomeGrowthEntries`（3.x 首页入口直接用 `TikTokKit.MissionFlow`）、没有 WebP 探针，也没有 WebP 例外（DECISIONS 13:25：3.x 新游戏只能靠 PNG/JPG 和 `max_side` 缩到 30 MB 以内；带 `--keep-webp-exception` 时源码段、产物段在任何步骤之前拒绝，不改工程和构建文件，写包门禁也拦，`K_webp_exception_3x`；3.x 探针放到 v7.8）。另外两步每款都跑、不是文件：`adapter`（v7.5 的适配层三处，第 5 条）、`appid`（`project.config.json` 写 App ID，第 8 条）；`png`、`structure` 见第 6 条。
 
-**新门禁**（`remake-core/scripts/package_gates/kit_parts.py`，挂在 `package_gates` 里，统一写包后端（含旧名转发）和只读的 `check_package.py` 都跑；只读包里的字节和清单，不信记录）：
+**新门禁**（`remake-core/scripts/package_gates/kit_parts.py`，挂在 `package_gates` 里，两个写包入口和只读的 `check_package.py` 都跑；只读包里的字节和清单，不信记录）：
 
 | 门禁 | 查什么 | 新游戏 | 旧游戏 |
 |---|---|---|---|
@@ -165,7 +165,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 3. 激励广告计时与卡死（34 款）
 - **规则**：按上面“已定口径”第 1 条。锁必须在超时、取消、按 X 时一起清掉“正在播放”并解绑 onClose/onError；`onError` 不能是空回调；切到后台不能取消或结束正在播的广告（TikTok 播全屏广告时游戏会切后台）；广告期间暂停 BGM 和音效，各种结局后恢复。
-- **标准件**：平台包 `assets/tiktok-platform/RewardedService.js`（件名 `rewarded`，以当前 manifest 与同源生成件为准），单测 `tests/rewarded-timing.test.js`；3.x 用 `RewardedService.plugin.js`（`rewarded3x`，游戏里调 `globalThis.TikTokKit.RewardedService`），同一套计时用例。游戏只调它，不再自写广告服务。
+- **标准件**：平台包 `assets/tiktok-platform/RewardedService.js`（件名 `rewarded`，与 v7.4 逐字节相同），单测 `tests/rewarded-timing.test.js`；3.x 用 `RewardedService.plugin.js`（`rewarded3x`，游戏里调 `globalThis.TikTokKit.RewardedService`），同一套计时用例。游戏只调它，不再自写广告服务。
 - **出包时怎么装**：源码段 `kit_sources` 让工程里的平台包广告服务和清单逐字节相同（新游戏缺了补上、改过恢复；旧游戏只报差异）。游戏的发奖函数接到哪里，脚本不改，由模型接、由 10 个广告用例验。
 - **现在怎么拦**：v7.9 起模拟宿主有 `adhide=1`（激励视频一开播游戏就被切后台、播完回来，和手机一样），`resume_play`、`ad_outcome` 两个套件用它真点按钮看广告；v7.9 手机检查补全起这两个套件不靠 adapter 写全：关内广告、各个看广告入口没写就用 button_sweep 这次真点出广告的按钮，新游戏一个都找不到又没写明原因就拒。`check_package --ad-regression <qa/ad-regression.json>` 的 10 个广告用例必跑，有激励广告却没有适配文件或任一用例失败就出不了包（`build_checked_zip.py`、`prepare_delivery.py` 同样接收）。`A2_hide_kills_ad`：重塑拦、其他板块警告。`A1_rewarded_outside_kit`（平台包以外直接调 `createRewardedVideoAd`）：新游戏拦，旧游戏警告。BGM/音效暂停只进警告。v7.8：
   - 3.x 相机（总表 A13 补）：广告回归点 X、运行时回归找字和定位，3.x 改用节点所在 Canvas 的相机（`cameraComponent`），找不到才退回第一个相机；三处换算是同一段 `cam-point` 块（`test_tap_point.py` 会运行它）。企鹅雪道 v7 的 X 以前被算到 (818, -918) 误报 5 条，现在点到 (354, 78) 通过；2.x 不变。
@@ -174,13 +174,12 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
   - 试玩链接冒烟（总表 B21、B30 F，套件 `trial_link`）：`serve_preview.py --keep` 起服务后、打印链接之前，按 Saul 的用法（1180×960 电脑窗口、清存档）点一次看广告：2.5 秒内画面中心要被模拟广告窗盖住，等「看完」可点后点它，游戏必须有变化；不过就不给链接、退出码 1；跑不了（没有 Ego、找不到入口）时打印原因再给链接。手动跑 `runtime_regression.py trial --url <链接>`。入口不对时在适配文件写 `trial.taps`（`--adapter`）。试玩页往页面上加元素一律挂画布的父节点（挂在 `document.body` 上会被游戏适配器换掉的 body 吃掉）。英化包的 `cocos-game-to-english/scripts/serve_preview.py` 现在转到 `remake-core/scripts/serve_preview.py`（以前指向不存在的 `cocos-game-core`）。
 - **验收包**：10 例广告回归全过（late16 不发奖、bgload 回来看完发奖、long200 发奖、nocallback 30 秒有 X 且下一次马上能用）；任挑一款自写广告服务的旧包（如 SimonsScrew R14）必须被拦，换成平台包后通过。v7.8：全民飞车漂移 v1 的 `ad_entries` 被拦（`offline_x2` 收益 0 时哑按钮、`natural_fall` 没有复活页），v3.1 6/6 通过；飞车 v1 自带的旧试玩宿主 `trial_link` 被拦（广告已开始但页面上看不到广告窗），v3.1 放进手机外壳、ReefGuard v7 经 `serve_preview.py --ad-simulator` 通过。
 
-### 4. 存档读值、旧档与恢复
-
-- **规则与唯一细则**：按[跨平台语义与旧存档](../../remake-core/references/cross-platform-runtime-contract.md)（2026-11-12 重定）。历史与受控兼容模型中，缺键可能为false/空字符串，旧裸数字可能失真为Boolean；不是所有iOS必然如此。读不出来的值一律按没有这个值、用默认值继续，不抛错、不出恢复页、不锁存档。实际对象按本作schema处理，不重复JSON.parse、不把Boolean猜成任意数字。
-- **标准件**：新游戏（重塑和英化）使用平台 `storage24` / `storage3x` 存档保护层：写文本，读不懂的值返回 `null`（读到布尔值等异常形状时在控制台逐键打一行 `[TikTokKit] storage …`），不上锁。SaveStore键由它自己处理：没有就建新档，读不出来或损坏就备份后从默认值开始。只有上线过且原样写过数字/布尔值的游戏才在读存档前调用 `TikTokStorageGuard.recoverTyped` 取回旧值；取不回照常进游戏，不出提示页。
-- **安装范围**：2.4标准main在游戏脚本前装guard；非标准main经game.js的adaptEngine之后接入；3.x经web-adapter之后接入。新游戏按manifest同步，旧游戏仍按Q6不强制全量换件，但本次涉及存档/启动的适用契约不得因旧游戏身份免验或把实际证据失败降为警告。
-- **门禁**：K1/K2/K3继续核字节、接线和单层。`save_restart`仍核同版写后重开，不能代表冷升级。STORAGE-01使用[v3原始观察与首次核准回执](../../remake-core/references/storage-upgrade-trace-v3.md)核新玩家、旧值读不出来照样进玩法（上线过且写过原始值的另核旧值取回）及同runner反例。旧23项有效证据按增量账本复用，只补新增/失效项。consumer核准证据，不重复启动长矩阵。组件自测不替代本作Native/真机。
-- **反例**：历史或可审查的单点受控反例必须复现本项已知故障；缺键空字符串负例与旧类型恢复负例分开留证。值域、键名和编码来自本作schema，JSON、Boolean、文本无裸数字机制不得硬塞45制造失败。设备、真实IAA与平台接受分别登记。
+### 4. 存档读到的值（13 款）
+- **规则**：TikTok 存储和浏览器不一样：没存过的键读到 `false` 或 `''`，用数字写进去的值读回 `true`。写入只写文字（数字、布尔先转）；读到 `null`、`undefined`、`''`、`false`、`true`、`0` 时用 key 列表（`getStorageInfoSync().keys`）判断键在不在，不在就是新玩家；读出对象直接用，不再 `JSON.parse` 一次。所有游戏（含英化原版存档代码）都走同一层。
+- **标准件**：重塑用平台包 `assets/tiktok-platform/SaveStore.js`（v7.5 已按 key 列表判断）。所有新游戏（重塑和英化）再加一层平台包 `parts/storage-guard.js`（件名 `storage24` / `storage3x`；以射击高手 pkg85 的 `storage-guard.js` 为底，加 TobinsGem / Tansys 的 key 列表判断；SaveStore 的键原样读，和 SaveStore 一起跑有测试）。射击高手 pkg85（`40aee1a4…`）和 pkg83/84（`0e090a0f…`）的存档层被清单认作旧版本。
+- **出包时怎么装**：产物段 `storage` 步。2.4 平台包 `main.js` 在加载游戏脚本前装它；不是平台包 `main.js` 时，包根放 `storage-guard.js`，在 `game.js` 的 `__globalAdapter.adaptEngine()` 之后插一行；3.x 插在 `require('./web-adapter')` 之后。新游戏一律装，旧版本换成新版；旧游戏不装（Q6：旧英化游戏只在 `adopt` 以后装；“盘点出数字写入时也装”还没做成脚本，要装就先 `adopt`）。
+- **现在怎么拦**：`K1_kit_bytes`、`K2_kit_wiring`、`K3_single_layer`（`storage24` / `storage3x`）；旧游戏带旧版本存档层时报警告。`SaveStore.js`、`storage-guard.js` 单测（`tests/kit.test.js`、`tests/storage-guard.test.js`）；启动套件有“没存过的键”用例。写入类型记录：仍是文档规则。重开保存检查 v7.9 做成运行时套件 `save_restart`（两个宿主都按手机的读法：没存过的键读到 false、存的 0/1 读回 false/true），手机检查补全起每一步写 `kind`，新游戏首页有 PLAY、商店、领奖入口就各要有一步（见第二部分第 1 条）。新游戏存档层由出包入口自动装上，这一层装上后甜点消消乐 R48 那种「新玩家第一次打开读到 false、判存档坏了」不会发生；遗留名单上的旧游戏不装（R48、猴子快跑 v12 就是这样被 `save_restart` 查出来的，只警告）。
+- **验收包**：射击高手 v84 必须被拦，v85 通过；SorensRivet R21 在“没存过的键读到 false”时必须被拦，R22 通过；DoubleJumpDuo 的空字符串情况通过。
 
 ### 5. 适配层三处旧写法（12 款）
 - **规则**：Cocos 2.4 bytedance 适配层的 `SDKVersion[0]`（字段缺失就崩、两位数主版本读错）、“没有 `getOpenDataContext` 就判成开放数据子域”、doNothing 对包内文件做 `fs.access`（真机上这一步可能一直不回），由写包入口统一替换，每处正好命中一次；替换不到或命中多处就拒绝并提示人工确认。SDKVersion 用 `split('.')` 取主版本、缺字段按 2，不用 `String(...)[0]`。模型不手改 adapter。
@@ -262,7 +261,7 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 
 ### 4. 源码和上传包对不上（21 款）
 - **规则**：上传包只能从源码经官方写包入口（`make_tiktok_zip.py` / `build_checked_zip.py`）出；直接改包必须带补丁脚本，对源码和包打同一组改动、每处正好命中一次，并写进源码说明。
-- **现在怎么拦**：统一写包后端（含旧名转发）都写 `<zip>.receipt.json`，没有回执的 ZIP 标“非官方入口”，`prepare_delivery.py` 拒收；`prepare_delivery.py` 比对 `logic_check` 报告里的源码哈希和交付源码。v7.7 起写包入口还查 `K5_source_finalized`（源码段之后工程没改过）和 `K4_finalize_ran`（产物段写的文件和包里一致），收据升到 schema 2、带 `finalize` 记录；v7.6 写的收据不再是官方入口，要用 v7.7 写包入口重新出包。v7.7.4 起 `verify_native_zip.py` 和 `upload_preflight.py` 单独运行时也拒收没有匹配回执的 ZIP（退出码 3 / refuse；DriftRacer v2 就是只跑了这两个、带着旧版广告服务交的包），只看结构加 `--structure-only`。v7.7.5 起 ZIP 改了名也认：同名回执不在时，在同一文件夹里找为这份 ZIP 字节写的回执（官方写包入口写的、`zip_sha256` 相同），内容改过一个字节就找不到。v7.8（总表 B17）：`check_package.py` 命令行对没有匹配写包回执的 ZIP，结论写「只读预检，不可交付（非官方入口）」，状态 `unofficial_not_deliverable`，**退出码 3**（以前照样报通过，丛林荡藤 v6、剪刀达人 v30 都是这样）；给的是 Native 目录时写「只读预检，不可交付（Native 目录不是上传包）」；`--structure-only` 只看结构，结论仍写不可交付；官方入口写的包写「官方入口写出的包，本地检查通过」。写包入口和 prepare_delivery 调的 `check()` 不变。build-templates 和包根文件逐字节比对、补丁脚本要求：仍是文档规则，计划做成出包硬拦截。
+- **现在怎么拦**：两个写包入口都写 `<zip>.receipt.json`，没有回执的 ZIP 标“非官方入口”，`prepare_delivery.py` 拒收；`prepare_delivery.py` 比对 `logic_check` 报告里的源码哈希和交付源码。v7.7 起写包入口还查 `K5_source_finalized`（源码段之后工程没改过）和 `K4_finalize_ran`（产物段写的文件和包里一致），收据升到 schema 2、带 `finalize` 记录；v7.6 写的收据不再是官方入口，要用 v7.7 写包入口重新出包。v7.7.4 起 `verify_native_zip.py` 和 `upload_preflight.py` 单独运行时也拒收没有匹配回执的 ZIP（退出码 3 / refuse；DriftRacer v2 就是只跑了这两个、带着旧版广告服务交的包），只看结构加 `--structure-only`。v7.7.5 起 ZIP 改了名也认：同名回执不在时，在同一文件夹里找为这份 ZIP 字节写的回执（官方写包入口写的、`zip_sha256` 相同），内容改过一个字节就找不到。v7.8（总表 B17）：`check_package.py` 命令行对没有匹配写包回执的 ZIP，结论写「只读预检，不可交付（非官方入口）」，状态 `unofficial_not_deliverable`，**退出码 3**（以前照样报通过，丛林荡藤 v6、剪刀达人 v30 都是这样）；给的是 Native 目录时写「只读预检，不可交付（Native 目录不是上传包）」；`--structure-only` 只看结构，结论仍写不可交付；官方入口写的包写「官方入口写出的包，本地检查通过」。写包入口和 prepare_delivery 调的 `check()` 不变。build-templates 和包根文件逐字节比对、补丁脚本要求：仍是文档规则，计划做成出包硬拦截。
 - **验收包**：Basil fix1、fix2 配 0.4.0 源码被拦；Marlows R6 配 R6 源码通过；方块冲冲原包配现在的源码被拒、`方块冲冲tk.zip` 通过。
 
 ### 5. 英化固定清理：分享、更多游戏、排行、跳转、国内统计（10 款 + 统计 2 款）
@@ -309,7 +308,3 @@ A1 和 G1k 认平台包件时，文件名和 `KIT_MANIFEST.json` 里的指纹都
 2. 不要把第一部分做成“检查出来再让模型修”。目标是出包时自动装上，再确认装上了。
 3. 不要因为旧游戏自写的启动链、广告代码能用，就自动替换。只对新游戏强制，旧游戏给警告，交给各自的会话。
 4. 每做成一条硬拦截，都在完结游戏里抽 3 款（至少一款 3.x）跑一次，确认不误拦好包。检查工具自己也会误报漏报（33 款碰到过），探针报错不能说成包不合格。
-
-## 跨平台旧存档导航（用户2026-11-11）
-
-本页第4节与[共享契约](../../remake-core/references/cross-platform-runtime-contract.md)为当前接入口径；详细原始观察和核准回执只维护在[v3格式](../../remake-core/references/storage-upgrade-trace-v3.md)，不重复旧版23项摘要。

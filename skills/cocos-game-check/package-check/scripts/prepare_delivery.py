@@ -10,10 +10,7 @@ v7.7: the writer receipt must carry a passed finalize record (verify_native_zip 
 went through tiktok_finalize is unofficial and refused. The delivery record repeats the finalize policy and the
 Chinese parts table for the reply, plus the line KIT_PARTS_PHONE_RETEST (DECISIONS.md, risk R9)."""
 import argparse
-from contextlib import contextmanager, ExitStack
-import time
 import hashlib
-import copy
 import json
 from pathlib import Path
 import tempfile
@@ -22,7 +19,6 @@ from audit_final_package_startup import audit_final_startup, StartupRefused
 import package_obligations
 from verify_delivery_preview import verify_preview
 from delivery_continuation import failure, repair_context
-from audit_upload_startup import audit_invocation
 
 # Parent decision 2026-10-29 (DECISIONS.md, design risk R9): until the first v7.7 NEW game passes a phone scan, every
 # delivery reply says this line. Remove this constant (and its use below) after the first v7.7 game passes a phone
@@ -30,23 +26,15 @@ from audit_upload_startup import audit_invocation
 KIT_PARTS_PHONE_RETEST = '标准件待真机复测'
 
 
-def writer_board(archive, app_id, project=None, *, files=None, _archive_context=None):
+def writer_board(archive, app_id, project=None, *, files=None):
     """Retain the board of the byte-verified official writer, never a CLI waiver."""
-    if _archive_context is None:
-        from verify_native_zip import verify
-        verified = verify(archive, expected_app_id=app_id)
-    else:
-        from delivery_archive_context import consume_delivery_archive
-        verified = consume_delivery_archive(_archive_context, archive, app_id, files=files)
+    from verify_native_zip import verify
+    verified = verify(archive, expected_app_id=app_id)
     if verified.get('entry') != 'official':
         raise ValueError('delivery requires a byte-matching official writer receipt')
     if files is not None and verified['file_sha256'] != {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}:
         raise ValueError('final ZIP differs from actual Native input paths/bytes')
-    if _archive_context is None:
-        receipt = json.loads(Path(verified['receipt']).read_text(encoding='utf-8'))
-    else:
-        from delivery_archive_context import delivery_receipt
-        receipt = delivery_receipt(_archive_context, archive)
+    receipt = json.loads(Path(verified['receipt']).read_text(encoding='utf-8'))
     board = receipt.get('board')
     if board not in ('localize', 'remake'):
         return None  # Old / unknown receipts keep the strict unknown-board rules.
@@ -75,21 +63,6 @@ def writer_finalize(receipt_file):
     return {'policy': fin.get('policy'), 'policy_reason': fin.get('policy_reason'),
             'kit_version': fin.get('kit_version'), 'table': rows, 'table_markdown': table,
             'warnings': fin.get('warnings') or []}
-
-
-@contextmanager
-def _timed_node(timings, check_id, mode):
-    started = time.monotonic()
-    row = {'id': check_id, 'mode': mode, 'status': 'running'}
-    timings['nodes'].append(row)
-    try:
-        yield row
-        row['status'] = 'completed'
-    except BaseException:
-        row['status'] = 'failed'
-        raise
-    finally:
-        row['seconds'] = round(time.monotonic() - started, 6)
 
 
 def source_sha256(source):
@@ -205,67 +178,30 @@ def regression_checks(result):
     return rows
 
 
-@audit_invocation()
 def prepare(archive, native, app_id, record, project=None, startup_contract=None, loading_recovery_runtime=None, resource_manifest=None, ad_regression=None, logic_report=None, source=None, preview_url=None, platform_feedback=None):
     checks, state = [], {}
-    started = time.monotonic()
-    timings = {'schema': 'delivery-verification-timings.v1', 'nodes': [],
-               'boundary': 'Current verification wall times, separate from original game observations; nodes are nested in total.'}
-    result = None
     try:
-        with ExitStack() as resources:
-            result = _prepare(archive, native, app_id, record, project, startup_contract, loading_recovery_runtime,
-                              resource_manifest, ad_regression, logic_report, source, preview_url, platform_feedback, checks, state,
-                              _timings=timings, _resources=resources)
-        return result
+        return _prepare(archive, native, app_id, record, project, startup_contract, loading_recovery_runtime,
+                        resource_manifest, ad_regression, logic_report, source, preview_url, platform_feedback, checks, state)
     except (ValueError, OSError, RuntimeError) as error:
         if 'record' in state:
             path = Path(str(state['record']) + '.blocked.json')
-            blocked = {'status': 'delivery_blocked', 'delivery_ready': False, 'archive': state['archive'], 'sha256': state.get('sha256'),
+            blocked = {'status': 'delivery_blocked', 'archive': state['archive'], 'sha256': state.get('sha256'),
                        **repair_context('delivery'),
                        'checks': checks + [{'id': error.check_id if isinstance(error, StartupRefused) else state['stage'],
                                             'action': 'blocked',
                                             'reason': str(error), 'evidence': state.get('evidence', [])}]}
             try:
-                blocked_bytes = (json.dumps(blocked, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
-                with path.open('xb') as stream:
-                    stream.write(blocked_bytes)
-                state['written_record'] = {'path': str(path), 'kind': 'blocked',
-                                           'sha256': hashlib.sha256(blocked_bytes).hexdigest()}
+                with path.open('x', encoding='utf-8') as stream:
+                    json.dump(blocked, stream, ensure_ascii=False, indent=2)
+                    stream.write('\n')
             except OSError:
                 pass  # Keep the original refusal if the failure record cannot be written.
         raise
-    finally:
-        timings['total_seconds'] = round(time.monotonic() - started, 6)
-        timings['status'] = 'completed' if result is not None else 'failed'
-        timings['delivery_ready'] = bool(result and result.get('delivery_ready'))
-        if 'record' in state:
-            timing_path = Path(str(state['record']) + '.timing.json')
-            try:
-                written = state.get('written_record')
-                owned_path = Path(written['path']) if written else None
-                current_sha = (hashlib.sha256(owned_path.read_bytes()).hexdigest()
-                               if owned_path and owned_path.is_file() and not owned_path.is_symlink() else None)
-                timings.update(archive=state['archive'], archive_sha256=state.get('sha256'),
-                               fresh_run_id=state.get('fresh_run_id'),
-                               record=str(owned_path) if owned_path else None,
-                               record_kind=written['kind'] if written else 'not_written',
-                               record_sha256=written['sha256'] if written else None,
-                               record_current_sha256=current_sha,
-                               record_unchanged=bool(written and current_sha == written['sha256']))
-                with timing_path.open('x', encoding='utf-8') as stream:
-                    json.dump(timings, stream, ensure_ascii=False, indent=2)
-                    stream.write('\n')
-            except OSError:
-                # Telemetry cannot revoke a completed delivery or hide its failure.
-                if isinstance(result, dict):
-                    result['timing_unavailable'] = str(timing_path)
 
 
 def _prepare(archive, native, app_id, record, project, startup_contract, loading_recovery_runtime,
-             resource_manifest, ad_regression, logic_report, source, preview_url, platform_feedback, checks, state,
-             *, _timings, _resources):
-    verification_started = time.monotonic()
+             resource_manifest, ad_regression, logic_report, source, preview_url, platform_feedback, checks, state):
     archive, native, record = (Path(p).resolve() for p in (archive, native, record))
     temporary = Path(tempfile.gettempdir()).resolve()
     if archive.is_relative_to(temporary) or any(x.casefold() in ('temp', 'rwtemp') for x in archive.parts):
@@ -275,34 +211,27 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
     if record == archive or record.is_relative_to(native):
         raise ValueError('delivery record must be outside Native and distinct from ZIP')
     blocked_record = Path(str(record) + '.blocked.json')
-    timing_path = Path(str(record) + '.timing.json')
-    if (record.exists() or record.is_symlink() or blocked_record.exists() or blocked_record.is_symlink()
-            or timing_path.exists() or timing_path.is_symlink()):
+    if record.exists() or record.is_symlink() or blocked_record.exists() or blocked_record.is_symlink():
         raise ValueError('delivery record already exists; choose a new record path')
     # Every delivery (even identical bytes / renamed or imported ZIPs) gets a fresh,
     # independent size receipt BEFORE startup/gameplay checks can fail or reuse CI.
-    from delivery_archive_context import inspect_delivery_archive, check_delivery_archive_current
+    from upload_size_gate import inspect_final_zip
     size_record = Path(str(record) + '.size.json')
     if size_record.exists() or size_record.is_symlink():
         raise ValueError('size receipt already exists; choose a fresh delivery record path')
-    with _timed_node(_timings, 'package.fresh_size_crc_cli', 'fresh_actual_final_zip'):
-        size_check, archive_context = inspect_delivery_archive(archive, platform_feedback)
-    if archive_context is not None:
-        _resources.callback(archive_context.close)
+    size_check = inspect_final_zip(archive, 'tiktok', platform_feedback)
     size_record.parent.mkdir(parents=True, exist_ok=True)
     with size_record.open('x', encoding='utf-8') as stream:
         json.dump(size_check, stream, ensure_ascii=False, indent=2)
         stream.write('\n')
-    state.update(record=record, archive=str(archive), sha256=size_check['sha256'], fresh_run_id=size_check.get('run_id'),
-                 stage=('package.size_crc' if not size_check.get('size_passed') else
-                        'package.writer_receipt' if size_check.get('writer_receipt', {}).get('entry') == 'unofficial' else 'package.tiktok_cli'),
+    state.update(record=record, archive=str(archive), sha256=size_check['sha256'],
+                 stage='package.size_crc' if not size_check.get('size_passed') else 'package.tiktok_cli',
                  evidence=[str(size_record)])
     if size_check.get('size_passed') or size_check['passed']:
         checks.append({'id': 'package.size_crc', 'action': 'rerun', 'reason': '逐次核对最终 ZIP 体积、分包和 CRC',
                        'evidence': [str(size_record)], 'run_id': size_check['run_id']})
     if not size_check['passed']:
-        phase = ('writer receipt' if size_check.get('writer_receipt', {}).get('entry') == 'unofficial' else
-                 'TikTok CLI' if size_check.get('size_passed') else 'size')
+        phase = 'TikTok CLI' if size_check.get('size_passed') else 'size'
         raise ValueError(f'fresh delivery {phase} check failed: ' + '; '.join(size_check['errors']))
     checks.append({'id': 'package.tiktok_cli', 'action': 'rerun', 'reason': '本次对最终 ZIP 执行官方 check/build',
                    'evidence': [str(size_record)], 'run_id': size_check['run_id']})
@@ -311,42 +240,32 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
     if source is not None:
         state.update(stage='source.hygiene', evidence=[str(source)])
         from source_hygiene import audit as audit_source_hygiene
-        with _timed_node(_timings, 'source.hygiene', 'current_source_verification'):
-            hygiene = audit_source_hygiene(source)
+        hygiene = audit_source_hygiene(source)
         if not hygiene['passed']:
             raise ValueError('delivered source is not clean (source_hygiene.py): ' + '; '.join(hygiene['problems'][:8]) +
                              ' - make the source ZIP with remake-core/scripts/make_source_zip.py; no delivery record written')
         checks.append({'id': 'source.hygiene', 'action': 'rerun', 'reason': '核查本次交付源码', 'evidence': [str(source)]})
     state.update(stage='package.identity', evidence=[str(size_record)])
-    before = check_delivery_archive_current(archive_context, archive)
+    before = hashlib.sha256(archive.read_bytes()).hexdigest()
     if before != size_check['sha256']:
         raise ValueError('ZIP changed after the fresh size check; retry with a new delivery record')
     # Delivery can verify existing writer evidence only. Read it before even asking for the startup ledger;
     # missing, changed or incomplete evidence never launches a browser from this command.
     files = native_files(native)
-    with _timed_node(_timings, 'package.writer_board', 'canonical_semantics_on_fresh_payload'):
-        board = writer_board(archive, app_id, project, files=files, _archive_context=archive_context)
+    board = writer_board(archive, app_id, project, files=files)
     state.update(stage='package.obligations', evidence=[str(resource_manifest)] if resource_manifest else [])
-    with _timed_node(_timings, 'package.obligations', 'existing_evidence_verification'):
-        obligations = package_obligations.verify(files, native, project, resource_manifest)
+    obligations = package_obligations.verify(files, native, project, resource_manifest)
     checks.append({'id': 'package.obligations', 'action': 'rejudged', 'reason': '核对最终资源和已知问题证据', 'evidence': state['evidence']})
     state.update(stage='package.regressions', evidence=[str(archive) + '.receipt.json'])
-    with _timed_node(_timings, 'package.check', 'consume_same_delivery_archive_verification'):
-        result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True,
-                       project=project, _archive_context=archive_context)
+    result = check(archive, app_id, native, ad_regression, board=board, reuse_writer_regressions=True, project=project)
     checks.extend(regression_checks(result))
-    state.update(stage='storage.native.contract', evidence=[str(startup_contract)] if startup_contract else [])
-    from audit_final_storage import audit_final_storage
-    with _timed_node(_timings, 'storage.native.contract', 'original_evidence_verification'):
-        checks.append(audit_final_storage(native, project, startup_contract))
     state.update(stage='startup.native.current_evidence', evidence=[str(p) for p in (startup_contract, loading_recovery_runtime) if p])
-    with _timed_node(_timings, 'startup.native.current_evidence', 'original_evidence_verification'):
-        startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
+    startup_runtime = audit_final_startup(native, project, startup_contract, loading_recovery_runtime, reuse_only=True)
     checks.extend(startup_runtime.get('checks') or [])
     if native_files(native) != files:
         raise ValueError('Native changed during startup verification; no delivery record written')
     state.update(stage='package.identity', evidence=[str(size_record), str(result.get('receipt') or archive)])
-    after = check_delivery_archive_current(archive_context, archive)
+    after = hashlib.sha256(archive.read_bytes()).hexdigest()
     if before != after or result['sha256'] != after:
         raise ValueError('delivery ZIP changed while checking; retry against the final file')
     current_native = {name: hashlib.sha256(data).hexdigest()
@@ -366,7 +285,7 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         logic = logic_source_binding(logic_report, source, project)
         checks.append({'id': 'source.logic', 'action': 'rejudged', 'reason': '核对已有逐项玩法证据和本次源码身份',
                        'evidence': [str(logic_report)]})
-    receipt = {'status': 'delivery_file_verified', 'delivery_ready': False, 'archive': str(archive),
+    receipt = {'status': 'delivery_file_verified', 'archive': str(archive),
                'sha256': after, 'bytes': archive.stat().st_size,
                'native': str(native), 'app_id': app_id, 'expected_tree_exact': True,
                'markdown_link': '[' + archive.name + '](<' + str(archive) + '>)',
@@ -381,20 +300,11 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
                'package_obligations': obligations,
                'source_hygiene': ({'source': hygiene['source'], 'passed': True} if hygiene else None),
                'entry': result['entry'], 'receipt': result.get('receipt'),
-               'receipt_artifacts': [
-                   {'kind': 'writer_receipt', 'path': str(result.get('receipt')),
-                    'markdown_link': '[' + Path(result['receipt']).name + '](<' + str(result['receipt']) + '>)'},
-                   {'kind': 'delivery_record', 'path': str(record),
-                    'markdown_link': '[' + record.name + '](<' + str(record) + '>)'}],
-               'team_handoff': {'next': 'game_handoff.py export with this record and the actual source ZIP',
-                                'evidence_exported': False, 'receiver_current_approval': False},
                'finalize': writer_finalize(result.get('receipt')),
                'kit_parts_status': KIT_PARTS_PHONE_RETEST,
                'reply_lines': [KIT_PARTS_PHONE_RETEST],
                'logic_source_binding': logic,
                'check_schema': 'delivery-checks.v1', 'checks': checks,
-               'timing_report': str(timing_path),
-               'timing_boundary': 'Complete elapsed/status is in timing_report; embedded nodes are the verification snapshot before publication.',
                'boundary': 'Local file/link identity only; include markdown_link, reply_lines and the finalize '
                            'table_markdown and preview.markdown_link in the actual reply. No upload performed.'}
     state.update(stage='preview.same_build', evidence=[str(startup_contract)] if startup_contract else [])
@@ -403,41 +313,18 @@ def _prepare(archive, native, app_id, record, project, startup_contract, loading
         raise ValueError('缺同版试玩链接：只有 ZIP，交付未完成。')
     if hashlib.sha256(contract_bytes).hexdigest() != startup_runtime.get('startup_contract_sha256'):
         raise ValueError('同版启动合同缺失或在校验后变化，无法核对试玩版本。')
-    # A scoped witness keeps the original contract/observation immutable while
-    # binding the exact current Web served to the user.
-    web_sha = (startup_runtime.get('current_binding') or json.loads(contract_bytes)['binding'])['web_tree_sha256']
+    web_sha = json.loads(contract_bytes)['binding']['web_tree_sha256']
     record.parent.mkdir(parents=True, exist_ok=True)
     with package_obligations.publication_guard(files, native, project, resource_manifest, obligations):
-        with _timed_node(_timings, 'preview.same_build', 'actual_same_build_readback'):
-            receipt['preview'] = verify_preview(preview_url, web_sha)
+        receipt['preview'] = verify_preview(preview_url, web_sha)
         checks.append({'id': 'preview.same_build', 'action': 'rerun', 'reason': '实际访问试玩并核对本版 Web 快照',
                        'evidence': [preview_url, str(startup_contract)], 'web_tree_sha256': web_sha})
         state.update(stage='delivery.publication', evidence=[str(size_record)])
-        if check_delivery_archive_current(archive_context, archive) != after:
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != after:
             raise ValueError('ZIP changed while checking the preview; no delivery record written')
-        receipt['delivery_ready'] = True
-        _timings['verification_before_publication_seconds'] = round(time.monotonic() - verification_started, 6)
-        _timings['timing_report'] = str(timing_path)
-        receipt['check_timings'] = {'schema': _timings['schema'],
-                                    'status': 'verification_snapshot_before_publication',
-                                    'verification_seconds': _timings['verification_before_publication_seconds'],
-                                    'nodes': copy.deepcopy(_timings['nodes']),
-                                    'complete_report': str(timing_path),
-                                    'boundary': receipt['timing_boundary']}
-        record_bytes = (json.dumps(receipt, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
-        with record.open('xb') as stream:
-            stream.write(record_bytes)
-        state['written_record'] = {'path': str(record), 'kind': 'delivery',
-                                   'sha256': hashlib.sha256(record_bytes).hexdigest()}
-    # Learning reads already existing project evidence after publication. It
-    # neither mutates the signed record/ZIP nor participates in delivery gates.
-    try:
-        from production_hooks import collect_after_delivery
-        with _timed_node(_timings, 'delivery.experience_collect', 'post_publication_optional'):
-            collect_after_delivery(project, record_paths=[record, startup_contract, resource_manifest,
-                                   ad_regression, logic_report], final_zip_sha256=after)
-    except Exception:
-        pass  # Even an unavailable hook cannot invalidate a verified delivery.
+        with record.open('x', encoding='utf-8') as stream:
+            json.dump(receipt, stream, ensure_ascii=False, indent=2)
+            stream.write('\n')
     return receipt
 
 

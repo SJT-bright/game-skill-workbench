@@ -247,7 +247,6 @@
     main.addEventListener(type, function (e) {
       e.preventDefault(); touchCount[type]++;
       H_[type].emit({ touches: tlist(e.touches), changedTouches: tlist(e.changedTouches), timeStamp: e.timeStamp });
-      if (type === 'touchend' && typeof recoverPreviewAudio === 'function') recoverPreviewAudio();
     }, { passive: false });
   });
   // Mouse -> single TikTok touch. 生成时预防 #41 (普查 hit_area_misaligned 13/17, BrothersRush「本地预览鼠标划不动」):
@@ -265,7 +264,7 @@
     function fromTouch() { return fingersDown > 0 || now() - lastRealTouch < 800; }
     main.addEventListener('mousedown', function (e) { if ((e.button || 0) !== 0 || fromTouch()) return; down = true; H_.touchstart.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
     window.addEventListener('mousemove', function (e) { if (down) H_.touchmove.emit({ touches: mt(e), changedTouches: mt(e), timeStamp: e.timeStamp }); });
-    window.addEventListener('mouseup', function (e) { if (!down) return; down = false; H_.touchend.emit({ touches: [], changedTouches: mt(e), timeStamp: e.timeStamp }); if (typeof recoverPreviewAudio === 'function') recoverPreviewAudio(); });
+    window.addEventListener('mouseup', function (e) { if (!down) return; down = false; H_.touchend.emit({ touches: [], changedTouches: mt(e), timeStamp: e.timeStamp }); });
   }
   var hidden = false;
   var growthLaunchScene = Q.get('growth_launch');
@@ -281,32 +280,6 @@
 
   // ---------- audio ----------
   var audioLive = 0, innerAudios = [], audioCleared = 0, sfxPlays = 0;
-  // Preview only: Native has no browser autoplay policy. Preserve the package's
-  // own request and recover ONLY a NotAllowedError on the next ordinary input.
-  // No new track is started, no setting is changed, and no game failure is hidden.
-  var audioGestures = 0, musicAutoRequests = 0, previewAudioRecoveries = 0;
-  var audioInterrupted = false;
-  H_.audioBegin.on(function () { audioInterrupted = true; });
-  H_.audioEnd.on(function () { audioInterrupted = false; });
-  function recoverPreviewAudio() {
-    audioGestures++;
-    if (Q.get('preview_audio_recovery') === '0' || hidden || audioInterrupted) return;
-    innerAudios.forEach(function (x) {
-      if (x._autoplayBlocked && !x._destroyed && x._intent && !x._pausedByGame && x.loop && x.src && x.volume > 0) {
-        previewAudioRecoveries++;
-        x.play();
-      }
-    });
-  }
-  window.__audioStartupSnapshot = function () {
-    return {schema: 'preview-audio-startup.v1', environment: 'browser_native_host',
-      gestures: audioGestures, autoRequests: musicAutoRequests, previewRecoveries: previewAudioRecoveries,
-      tracks: innerAudios.filter(function (x) { return !x._destroyed && x.loop && x.src; }).map(function (x) {
-        return {src: x.src, intent: !!x._intent, paused: x.paused, volume: x.volume,
-          currentTime: x.currentTime, duration: x.duration, blocked: !!x._autoplayBlocked,
-          error: x._playError || null};
-      })};
-  };
   window.__musicState = function () {
     return innerAudios.filter(function (x) { return !x._destroyed && x.loop && x.src; })
       .map(function (x) { return { src: String(x.src).slice(-80), playing: !!x._intent, volume: x.volume }; });
@@ -334,7 +307,7 @@
       hs[n] = hub(); self['on' + n] = hs[n].on; self['off' + n] = hs[n].off;
     });
     a.addEventListener('canplay', function () { hs.Canplay.emit(); });
-    a.addEventListener('play', function () { self._autoplayBlocked = false; self._playError = null; hs.Play.emit(); });
+    a.addEventListener('play', function () { hs.Play.emit(); });
     a.addEventListener('pause', function () { if (!self._stopping) hs.Pause.emit(); });
     a.addEventListener('ended', function () { hs.Ended.emit(); });
     // The engine recycles players with src = null/'' (cocos2d-js-min: this._element.src=""). That is
@@ -357,25 +330,11 @@
     this.obeyMuteSwitch = true;
     // _intent records what the game asked for, so autoplay blocking cannot hide a missing resume.
     self._intent = false;
-    self._playEpoch = 0;
-    this.play = function () {
-      self._intent = true; self._pausedByGame = false;
-      var epoch = ++self._playEpoch;
-      self._autoplayBlocked = false;
-      if (!a.loop) sfxPlays++;
-      else if (audioGestures === 0) musicAutoRequests++;
-      function failed(e) {
-        if (self._destroyed || epoch !== self._playEpoch || !self._intent) return;
-        self._playError = String(e && e.name || e);
-        self._autoplayBlocked = self._playError === 'NotAllowedError';
-        beacon('audio-play-blocked', self._playError);
-      }
-      try { var p = a.play(); if (p && p.catch) p.catch(failed); } catch (e) { failed(e); }
-    };
-    this.pause = function () { self._playEpoch++; self._autoplayBlocked = false; self._intent = false; self._pausedByGame = true; a.pause(); };
-    this.stop = function () { self._playEpoch++; self._autoplayBlocked = false; self._intent = false; self._pausedByGame = false; self._stopping = true; a.pause(); try { a.currentTime = 0; } catch (_) {} self._stopping = false; hs.Stop.emit(); };
+    this.play = function () { self._intent = true; self._pausedByGame = false; if (!a.loop) sfxPlays++; var p = a.play(); if (p && p.catch) p.catch(function (e) { beacon('audio-play-blocked', String(e && e.name)); }); };
+    this.pause = function () { self._intent = false; self._pausedByGame = true; a.pause(); };
+    this.stop = function () { self._intent = false; self._pausedByGame = false; self._stopping = true; a.pause(); try { a.currentTime = 0; } catch (_) {} self._stopping = false; hs.Stop.emit(); };
     this.seek = function (t) { try { a.currentTime = t; } catch (_) {} };
-    this.destroy = function () { self._playEpoch++; self._autoplayBlocked = false; self._intent = false; self._pausedByGame = false; self._destroyed = true; a.pause(); a.removeAttribute('src'); audioLive--; };
+    this.destroy = function () { self._intent = false; self._pausedByGame = false; self._destroyed = true; a.pause(); a.removeAttribute('src'); audioLive--; };
     a.addEventListener('ended', function () { if (!a.loop) { self._intent = false; self._pausedByGame = false; } });
     window.__audios = window.__audios || []; window.__audios.push(a);
     innerAudios.push(self);
@@ -429,21 +388,8 @@
   if (Q.get('reset') === '1' || Q.get('fresh') === '1') sKeys().forEach(function (k) { NLS.removeItem(SP + k); });
   window.__storeRaw = function (k, raw) { if (raw === null || raw === undefined) NLS.removeItem(SP + k); else NLS.setItem(SP + k, String(raw)); };
   window.__storeDump = function () { var o = {}; sKeys().forEach(function (k) { o[k] = NLS.getItem(SP + k); }); return o; };
-  // Test-only cold-upgrade fixture, applied before the game loads. Supply a JSON object of typed key/value pairs.
-  // It belongs to this isolated host store, never the user's platform data. Remove storage_seed on restart.
-  if (Q.has('storage_seed')) {
-    var seed = JSON.parse(Q.get('storage_seed'));
-    if (!seed || typeof seed !== 'object' || Array.isArray(seed)) throw new Error('storage_seed must be a JSON object');
-    Object.keys(seed).forEach(function (k) { NLS.setItem(SP + k, JSON.stringify(seed[k])); });
-  }
-  function typedStorageValue(k) {
-    var v = NLS.getItem(SP + k); if (v === null) return missingValue(k);
-    try { return JSON.parse(v); } catch (_) { return v; }
-  }
   // missing=true|false|undefined|null|throw: what getStorageSync returns for a key never written
-  // (real TikTok can return true; MergeShot2048 v81). numbool=01|all (alias syncnumbool): sync numbers read as Boolean.
-  // async_storage=typed bypasses only that injected numeric distortion for getStorage; default remains unchanged.
-  // This is an explicit compatibility fault profile, not a real-device/iOS acceptance claim.
+  // (real TikTok can return true; MergeShot2048 v81). numbool=01|all: a stored number reads back as a Boolean.
   function missingValue(k) {
     var m = Q.get('missing');
     if (m === null) return '';
@@ -452,34 +398,7 @@
     return m === 'true' ? true : m === 'false' ? false : m === 'null' ? null : undefined;
   }
 
-  
-// Opt-in storage/recovery fault profiles. Defaults and old missing/numbool models stay unchanged.
-function storageProfileHit(kind, key) {
-  if (typeof hit === 'function') hit(kind, key); else log('fault-' + kind, key);
-}
-function applyStorageProfile(api) {
-  var mode = Q.get('storage_info');
-  if (mode === 'missing') { delete api.getStorageInfoSync; storageProfileHit('storage_info_missing', 'api'); }
-  if (mode === 'throw') api.getStorageInfoSync = function () { storageProfileHit('storage_info_throw', 'api'); throw Error('getStorageInfoSync:fail simulated'); };
-  if (Q.get('async_storage') === 'unavailable') { delete api.getStorage; storageProfileHit('storage_async_unavailable', 'api'); }
-}
-function storageAsyncFault(o) {
-  if (Q.get('storage_fault_key') && Q.get('storage_fault_key') !== String(o.key)) return false;
-  var mode = Q.get('async_storage');
-  if (mode !== 'error' && mode !== 'hang') return false;
-  storageProfileHit('storage_async_' + mode, o.key);
-  if (mode === 'error') setTimeout(function () { cb(o, false, { errMsg: 'getStorage:fail simulated recovery error' }); });
-  return true;
-}
-function modalFault(o) {
-  var mode = Q.get('modal_fault');
-  if (mode !== 'fail' && mode !== 'reject' && mode !== 'silent') return null;
-  storageProfileHit('modal_' + mode, o.title || '');
-  if (mode === 'fail') setTimeout(function () { cb(o, false, { errMsg: 'showModal:fail simulated' }); });
-  return { value: mode === 'reject' ? Promise.reject(Error('showModal:fail simulated rejection')) : undefined };
-}
-
-// ---------- rewarded ads (simulated) ----------
+  // ---------- rewarded ads (simulated) ----------
   var adStats = window.__adStats = { created: 0, shown: 0, closedEnded: 0, closedEarly: 0, errors: 0, live: 0, units: {} };
   var adRecords = [];
   window.__adPendingListeners = function () {
@@ -571,7 +490,6 @@ function modalFault(o) {
   // tapped with real pointer input (window.__modalRect(which) gives their CSS rect).
   window.__modalOpen = null;
   function showModal(o) {
-    var injected = modalFault(o || {}); if (injected) return injected.value;
     o = o || {};
     beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText }); gateLog('modal', o.title || o.content);
     var box = nCreate('div');
@@ -711,15 +629,16 @@ function modalFault(o) {
       return task;
     },
     getStorageSync: function (k) {
-      var r = typedStorageValue(k);
-      var nb = Q.get('syncnumbool') || Q.get('numbool'); if (nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { hit('numbool', k + '=' + r); return r !== 0; }
+      var v = NLS.getItem(SP + k); if (v === null) return missingValue(k);
+      var r; try { r = JSON.parse(v); } catch (_) { return v; }
+      var nb = Q.get('numbool'); if (nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { hit('numbool', k + '=' + r); return r !== 0; }
       return r;
     },
     setStorageSync: function (k, v) { storageWrites++; NLS.setItem(SP + k, JSON.stringify(v)); },
     removeStorageSync: function (k) { NLS.removeItem(SP + k); },
     clearStorageSync: function () { sKeys().forEach(function (k) { NLS.removeItem(SP + k); }); },
     getStorageInfoSync: function () { return { keys: sKeys(), currentSize: 0, limitSize: 10240 }; },
-    getStorage: function (o) { if (storageAsyncFault(o)) return; var v = Q.get('async_storage') === 'typed' ? typedStorageValue(o.key) : tt.getStorageSync(o.key); setTimeout(function () { cb(o, true, { data: v }); }); },
+    getStorage: function (o) { var v = tt.getStorageSync(o.key); setTimeout(function () { cb(o, true, { data: v }); }); },
     setStorage: function (o) { tt.setStorageSync(o.key, o.data); setTimeout(function () { cb(o, true, {}); }); },
     onTouchStart: H_.touchstart.on, offTouchStart: H_.touchstart.off,
     onTouchMove: H_.touchmove.on, offTouchMove: H_.touchmove.off,
@@ -780,7 +699,6 @@ function modalFault(o) {
     var legacy = function (kind) { return function (o) { beacon('legacy-ad-create', kind + ':' + (o && o.adUnitId)); var h = { style: Object.assign({ realWidth: 300, realHeight: 100 }, (o && o.style) || {}) }; ['onResize', 'offResize', 'onLoad', 'offLoad', 'onError', 'offError', 'onClose', 'offClose'].forEach(function (k) { h[k] = function () {}; }); h.show = function () { return Promise.reject({ errCode: 1004, errMsg: 'no fill (legacy stub)' }); }; h.load = function () { return Promise.reject({ errCode: 1004 }); }; h.hide = function () {}; h.destroy = function () {}; return h; }; };
     tt.createBannerAd = legacy('banner'); tt.createInterstitialAd = legacy('interstitial');
   }
-  applyStorageProfile(tt);
   window.tt = tt;
   window.TTMinis = { game: tt };
   window.GameGlobal = window;

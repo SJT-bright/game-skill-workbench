@@ -22,7 +22,7 @@ const centre = (page, p) => G.evalJs(page, `var n = findNode(${JSON.stringify(p)
   var c = cssBox(n); if (!c) return null;
   var w = c.x1 - c.x0, h = c.y1 - c.y0; if (w < 2 || h < 2) return null;
   var b = n.getComponent(cc.Button);
-  return { x: (c.x0 + c.x1) / 2, y: (c.y0 + c.y1) / 2, w: w, h: h, interactable: b ? b.interactable : null, hasButton: !!b, coveredBy: coverOf(n) };`);
+  return { x: (c.x0 + c.x1) / 2, y: (c.y0 + c.y1) / 2, w: w, h: h, interactable: b ? b.interactable : null, enabled: b ? b.enabled : null, hasButton: !!b, coveredBy: coverOf(n) };`);
 async function labels(page) {
   const v = await G.visibleNodes(page);
   return Object.fromEntries(v.nodes.filter((n) => n.kind === 'label').map((n) => [n.path, n.text]));
@@ -30,13 +30,13 @@ async function labels(page) {
 const safe = (s) => String(s).replace(/[^\w.-]+/g, '_').slice(0, 60);
 
 await L.suite(async ({ out, page }) => {
-  const rep = { suite: 'ad_entries', policy: POLICY, cases: [] };
+  const rep = { suite: 'ad_entries', policy: POLICY, boundary: 'Local SDK requests and declared state feedback only; not playback, reward, real ads or device acceptance', cases: [] };
   const bad = R.adEntriesProblems(A.ad_entries);
   if (bad.length) { out.add('adapter', false, bad); return; }
   for (const entry of A.ad_entries) for (const state of entry.states) {
     const id = entry.id + '/' + state.name;
     if (C.selection && !C.selection.includes(id)) continue;
-    const c = { id, button: entry.button, why: state.why };
+    const c = { id, button: entry.button, why: state.why, expect: state.expect || 'reaction' };
     rep.cases.push(c);
     let fail = null, warn = null;
     await G.openGame(page, 'iphone14', 'capsule=pt&' + (A.ad_entries_query || 'ad=complete'));
@@ -66,10 +66,25 @@ await L.suite(async ({ out, page }) => {
       c.before_png = await G.shot(page, path.join(C.evidenceDir, 'ad-' + safe(id) + '-before.png'));
       await G.click(page, pos.x, pos.y);
       let reaction = null;
+      let events = [];
+      let feedbackMatched = false;
+      const strict = c.expect !== 'reaction';
       const t0 = Date.now();
-      while (Date.now() - t0 < WINDOW_MS && !reaction) {
+      while (Date.now() - t0 < WINDOW_MS) {
         await G.sleep(250);
         const ev = await page.evaluate((mark) => (window.__gateLog || []).filter((r) => r.t >= mark && /^(ad-create|ad-show|toast|modal)$/.test(r.kind)), mark).catch(() => []);
+        events = ev;
+        if (state.feedback_js) {
+          try {
+            const matched = await G.evalJs(page, state.feedback_js) === true;
+            if (matched && !feedbackMatched) {
+              feedbackMatched = true;
+              c.feedback_ms = Date.now() - t0;
+              c.feedback_png = await G.shot(page, path.join(C.evidenceDir, 'ad-' + safe(id) + '-reason.png'));
+            }
+          }
+          catch (e) { c.predicateError = String(e); }
+        }
         const ad = ev.find((r) => r.kind === 'ad-create' || r.kind === 'ad-show'), prompt = ev.find((r) => r.kind === 'toast' || r.kind === 'modal');
         if (ad) reaction = { kind: 'ad', detail: ad, ms: Date.now() - t0 };
         else if (prompt) reaction = { kind: 'prompt', detail: prompt, ms: Date.now() - t0 };
@@ -78,17 +93,30 @@ await L.suite(async ({ out, page }) => {
           const fresh = Object.keys(now).filter((k) => !noisy.has(k) && now[k] && before[k] !== now[k]);
           if (fresh.length) reaction = { kind: 'text', detail: fresh.slice(0, 4).map((k) => k + ' = ' + now[k]), ms: Date.now() - t0 };
         }
+        // Strict negative states observe the full window: a late unexpected SDK call must not pass.
+        if ((!strict && reaction) || (c.expect === 'ad' && ev.some((r) => r.kind === 'ad-show'))) break;
       }
       c.after_png = await G.shot(page, path.join(C.evidenceDir, 'ad-' + safe(id) + '-after.png'));
       c.reaction = reaction;
-      if (!reaction && pos.interactable === false) warn = entry.button + ' is a disabled cc.Button (interactable=false) and stays silent; acceptable only if it is drawn greyed out (see ' + c.before_png + ')';
-      else if (!reaction) fail = 'dead_button: clicked ' + entry.button + ' -> no ad call, no toast / modal, no new text within ' + WINDOW_MS + ' ms';
+      const observed = c.observed = {
+        showRequested: events.some((r) => r.kind === 'ad-show'),
+        adRequested: events.some((r) => r.kind === 'ad-create' || r.kind === 'ad-show'),
+        disabled: pos.interactable === false || pos.enabled === false,
+        feedbackMatched, reaction
+      };
+      try {
+        if (state.disabled_js) observed.disabled = await G.evalJs(page, state.disabled_js) === true;
+        if (state.feedback_js) observed.feedbackMatched = (await G.evalJs(page, state.feedback_js) === true) || feedbackMatched;
+      } catch (e) { c.predicateError = String(e); }
+      const verdict = c.verdict = R.adEntryVerdict(c.expect, observed);
+      if (!verdict.passed) fail = verdict.reason + (c.predicateError ? ': ' + c.predicateError : '');
+      if (verdict.warning) warn = entry.button + ': ' + verdict.warning + ' (see ' + c.before_png + ')';
     }
     c.result = fail ? 'fail' : warn ? 'warn' : 'pass';
     if (warn) out.warn('ad_entries ' + id + ': ' + warn);
     const blocks = !!fail && (POLICY === 'new' || /^invalid run/.test(fail));
     if (fail && !blocks) out.warn('ad_entries ' + id + ': ' + fail + ' [legacy game: warning]');
-    out.add(id, !blocks, fail || (c.reaction ? c.reaction.kind + ' after ' + c.reaction.ms + ' ms' : warn));
+    out.add(id, !blocks, fail || warn || c.verdict?.proof || (c.reaction ? c.reaction.kind + ' after ' + c.reaction.ms + ' ms' : null));
   }
   out.evidence.report = L.evidence('ad_entries.json', rep);
 }, { w: 390, h: 844 });

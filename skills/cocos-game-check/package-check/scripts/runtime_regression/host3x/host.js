@@ -231,17 +231,9 @@ let fontN = 0;
 
 // ---------- storage ----------
 if (F.has('firstrun') || Q.get('fresh') === '1' || Q.get('reset') === '1') Object.keys(localStorage).filter(k => k.startsWith(STORE)).forEach(k => localStorage.removeItem(k));
-// Test-only cold-upgrade fixture, applied before the game loads. Remove storage_seed on restart.
-if (Q.has('storage_seed')) {
-  const seed = JSON.parse(Q.get('storage_seed'));
-  if (!seed || typeof seed !== 'object' || Array.isArray(seed)) throw new Error('storage_seed must be a JSON object');
-  Object.keys(seed).forEach(k => localStorage.setItem(STORE + k, JSON.stringify({ v: seed[k] })));
-}
 // v7.9 (手机检查补全 ③, same switches as the 2.x host): missing=true|false|undefined|null|throw = what getStorageSync
 // returns for a key never written (a real phone can return false / true); numbool=01|all = a stored number reads back
-// as a Boolean (0 / 1 only, or every number); syncnumbool is an alias. save_restart keeps its default 01 profile.
-// async_storage=typed bypasses only injected numeric distortion for getStorage, not missing/throw behavior.
-// This explicit compatibility fault profile is not a real-device/iOS acceptance claim.
+// as a Boolean (0 / 1 only, or every number). save_restart runs with missing=false&numbool=01.
 const missingValue = (k) => {
   const m = Q.get('missing');
   if (m === null) return '';
@@ -250,44 +242,17 @@ const missingValue = (k) => {
   return m === 'true' ? true : m === 'false' ? false : m === 'null' ? null : undefined;
 };
 const storage = {
-  get(k, typed = false) {
+  get(k) {
     const v = localStorage.getItem(STORE + k); if (v == null) return missingValue(k);
     let r; try { r = JSON.parse(v).v; } catch (e) { return ''; }
-    const nb = Q.get('syncnumbool') || Q.get('numbool');
-    if (!typed && nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { log('fault-numbool', k + '=' + r); return r !== 0; }
+    const nb = Q.get('numbool');
+    if (nb && typeof r === 'number' && (nb === 'all' || r === 0 || r === 1)) { log('fault-numbool', k + '=' + r); return r !== 0; }
     return r;
   },
   set(k, v) { if (F.has('storage_throw')) throw new Error('setStorageSync:fail exceeded'); localStorage.setItem(STORE + k, JSON.stringify({ v })); },
   keys() { return Object.keys(localStorage).filter(k => k.startsWith(STORE)).map(k => k.slice(STORE.length)); },
 };
 X.storage = storage;
-
-
-// Opt-in storage/recovery fault profiles. Defaults and old missing/numbool models stay unchanged.
-function storageProfileHit(kind, key) {
-  if (typeof hit === 'function') hit(kind, key); else log('fault-' + kind, key);
-}
-function applyStorageProfile(api) {
-  var mode = Q.get('storage_info');
-  if (mode === 'missing') { delete api.getStorageInfoSync; storageProfileHit('storage_info_missing', 'api'); }
-  if (mode === 'throw') api.getStorageInfoSync = function () { storageProfileHit('storage_info_throw', 'api'); throw Error('getStorageInfoSync:fail simulated'); };
-  if (Q.get('async_storage') === 'unavailable') { delete api.getStorage; storageProfileHit('storage_async_unavailable', 'api'); }
-}
-function storageAsyncFault(o) {
-  if (Q.get('storage_fault_key') && Q.get('storage_fault_key') !== String(o.key)) return false;
-  var mode = Q.get('async_storage');
-  if (mode !== 'error' && mode !== 'hang') return false;
-  storageProfileHit('storage_async_' + mode, o.key);
-  if (mode === 'error') setTimeout(function () { cb(o, false, { errMsg: 'getStorage:fail simulated recovery error' }); });
-  return true;
-}
-function modalFault(o) {
-  var mode = Q.get('modal_fault');
-  if (mode !== 'fail' && mode !== 'reject' && mode !== 'silent') return null;
-  storageProfileHit('modal_' + mode, o.title || '');
-  if (mode === 'fail') setTimeout(function () { cb(o, false, { errMsg: 'showModal:fail simulated' }); });
-  return { value: mode === 'reject' ? Promise.reject(Error('showModal:fail simulated rejection')) : undefined };
-}
 
 // ---------- touch ----------
 const touchCbs = { Start: [], Move: [], End: [], Cancel: [] };
@@ -352,7 +317,6 @@ function loadSubpackage(o) {
 
 // ---------- modal / ads / growth ----------
 function showModal(o) {
-  var injected = modalFault(o || {}); if (injected) return injected.value;
   o = o || {}; X.modals.push({ t: now(), title: o.title, content: o.content }); log('modal.show', o.title + ' | ' + o.content);
   gateLog('modal', o.title || o.content); beacon('modal', { title: o.title, content: o.content, confirmText: o.confirmText });
   const ov = document.getElementById('ov'); document.getElementById('ovt').textContent = o.title || ''; document.getElementById('ovc').textContent = o.content || '';
@@ -453,7 +417,7 @@ const tt = {
   getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, v),
   removeStorageSync: k => localStorage.removeItem(STORE + k), clearStorageSync: () => storage.keys().forEach(k => localStorage.removeItem(STORE + k)),
   getStorageInfoSync: () => ({ keys: storage.keys(), currentSize: 1, limitSize: 10240 }),
-  getStorage(o) { if (storageAsyncFault(o)) return; let d; try { d = storage.get(o.key, Q.get('async_storage') === 'typed'); } catch (e) { cb(o, false, { errMsg: String(e) }); return; } cb(o, true, { data: d }); }, setStorage(o) { try { storage.set(o.key, o.data); cb(o, true, {}); } catch (e) { cb(o, false, { errMsg: String(e) }); } },
+  getStorage(o) { let d; try { d = storage.get(o.key); } catch (e) { cb(o, false, { errMsg: String(e) }); return; } cb(o, true, { data: d }); }, setStorage(o) { try { storage.set(o.key, o.data); cb(o, true, {}); } catch (e) { cb(o, false, { errMsg: String(e) }); } },
   onTouchStart: f => touchCbs.Start.push(f), onTouchMove: f => touchCbs.Move.push(f), onTouchEnd: f => touchCbs.End.push(f), onTouchCancel: f => touchCbs.Cancel.push(f),
   offTouchStart() {}, offTouchMove() {}, offTouchEnd() {}, offTouchCancel() {},
   onAccelerometerChange() {}, offAccelerometerChange() {}, startAccelerometer(o) { o && cb(o, true, {}); }, stopAccelerometer(o) { o && cb(o, true, {}); },
@@ -475,7 +439,6 @@ tt.canIUse = name => { if (F.has('caniuse_false')) return false; return typeof t
 if (F.has('no_ads')) delete tt.createRewardedVideoAd;
 // Names starting with __ are kit / host markers (tiktok-touch-3x.js reads tt.__tiktokKitTouch3x to see whether it is
 // installed), never SDK APIs, so they are not logged as missing (W-D4 request 6).
-applyStorageProfile(tt);
 const ttProxy = new Proxy(tt, { get(t, k) { if (typeof k === 'string' && !k.startsWith('__') && !(k in t) && !X.missing[k]) { X.missing[k] = now(); log('tt.missing', k); } return t[k]; } });
 GT.tt = ttProxy;
 if (!F.has('no_ttminis')) GT.TTMinis = { game: ttProxy };

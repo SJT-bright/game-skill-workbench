@@ -282,7 +282,31 @@ export function adEntriesProblems(entries) {
       if (!s || typeof s.name !== 'string' || !s.name) out.push('ad_entries[' + i + '].states[' + j + '].name must be a string');
       if (s && s.setup_js != null && typeof s.setup_js !== 'string') out.push('ad_entries[' + i + '].states[' + j + '].setup_js must be a string');
       if (s && s.actions != null && !Array.isArray(s.actions)) out.push('ad_entries[' + i + '].states[' + j + '].actions must be a list');
+      if (s && s.expect != null && !['ad', 'feedback', 'disabled', 'reaction'].includes(s.expect)) out.push('ad_entries[' + i + '].states[' + j + '].expect must be ad, feedback, disabled or reaction');
+      for (const key of ['feedback_js', 'disabled_js']) if (s && s[key] != null && (typeof s[key] !== 'string' || !s[key].trim())) out.push('ad_entries[' + i + '].states[' + j + '].' + key + ' must be a nonempty read-only predicate');
+      if (s && ['feedback', 'disabled'].includes(s.expect) && (typeof s.feedback_js !== 'string' || !s.feedback_js.trim())) out.push('ad_entries[' + i + '].states[' + j + ']: feedback/disabled needs feedback_js proving the visible reason');
     });
   });
   return out;
+}
+
+// Local entry evidence only. An SDK show request is not playback, reward or real-device acceptance.
+export function adEntryVerdict(expect, observed) {
+  expect = expect || 'reaction';
+  if (expect === 'ad') return observed.showRequested === true
+    ? {passed: true, proof: 'sdk_show_requested'}
+    : {passed: false, reason: 'expected_ad: no SDK show request; creation, refusal text or unrelated UI change does not satisfy an eligible entry'};
+  if (expect === 'feedback' || expect === 'disabled') {
+    if (observed.adRequested === true) return {passed: false, reason: 'unexpected_ad: an ineligible state requested an ad'};
+    if (expect === 'disabled' && observed.disabled !== true) return {passed: false, reason: 'expected_disabled: the entry is still actionable or its disabled state is unproven'};
+    return observed.feedbackMatched === true ? {passed: true, proof: expect + '_with_reason'}
+      : {passed: false, reason: 'missing_reason: the declared visible feedback was not observed'};
+  }
+  if (expect !== 'reaction') return {passed: false, reason: 'invalid_expectation'};
+  if (observed.reaction) return {passed: true, proof: 'entry_reaction_only'};
+  if (observed.disabled === true) return {passed: true, proof: 'disabled_unreviewed', warning: 'disabled control: visible reason and disabled appearance still need review'};
+  return {passed: false, reason: 'dead_button: no ad call or visible reaction'};
+}
+export function adOutcomeStateApplies(state) {
+  return !['feedback', 'disabled'].includes(state && state.expect);
 }

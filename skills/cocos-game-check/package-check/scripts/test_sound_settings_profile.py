@@ -216,23 +216,13 @@ class WriterScope(unittest.TestCase):
         trace = self.root / 'sound.json'
         trace.write_text('{"schema":"sound_settings_trace.v1"}')
         out = self.root / 'no-output.zip'
-        with patch('audit_final_package_startup.audit_final_startup') as runtime:
+        with patch('build_checked_zip.audit_final_startup') as runtime:
             with self.assertRaisesRegex(ValueError, 'unregistered sound-only evidence scope'):
                 package_fixtures.build(self.native, APP, out,
-                    resource_manifest=manifest, project=self.project, interaction_audio_trace=trace,web=self.native)
+                    resource_manifest=manifest, project=self.project, interaction_audio_trace=trace)
             runtime.assert_not_called()
         self.assertFalse(out.exists())
 
-
-# This module checks the original gate's own obligations with tiny fixtures.
-# Keep the strict-six production boundary in its dedicated real-auditor tests.
-from pathlib import Path as _AdFixturePath
-import sys as _ad_fixture_sys
-_ad_fixture_core = next(p/'remake-core/scripts' for p in _AdFixturePath(__file__).resolve().parents
-                        if (p/'remake-core/scripts/fixture_ad_standard_scope.py').is_file())
-_ad_fixture_sys.path.insert(0,str(_ad_fixture_core))
-from fixture_ad_standard_scope import isolate as _isolate_ad_fixture
-_isolate_ad_fixture(globals())
 
 if __name__ == '__main__':
     unittest.main()

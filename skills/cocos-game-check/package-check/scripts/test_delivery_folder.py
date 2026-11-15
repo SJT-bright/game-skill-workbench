@@ -135,9 +135,9 @@ class Writer(unittest.TestCase):
         # Folder publication uses synthetic regression evidence; actual authorization
         # and coverage are tested at the public scope/evidence entrypoints.
         with runtime_patch(), \
-                patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True, 'patched': True}), \
+                patch('build_checked_zip.audit_final_startup', return_value={'passed': True, 'patched': True}), \
                 patch.object(check_package, 'rewarded_ad_gate', return_value={'status': 'patched_in_unit_test'}):
-            return build(self.case.native, APP, out, resource_manifest=manifest, project=self.case.project, web=self.case.native, **kw)
+            return build(self.case.native, APP, out, resource_manifest=manifest, project=self.case.project, **kw)
 
     def test_writer_moves_the_older_package(self):
         from check_package import native_files, write_archive
@@ -149,7 +149,7 @@ class Writer(unittest.TestCase):
         (folder / 'Game_源码_v1.zip').write_bytes(b'PK\x05\x06' + b'\0' * 18)
         result = self.run_build(folder / 'Game_v2.zip')
         self.assertEqual(sorted(p.name for p in folder.iterdir()),
-                         sorted(['Game_v2.zip', 'Game_v2.zip.receipt.json', 'Game_v2.report.json', 'Game_源码_v1.zip', D.OLD_DIR, D.LATEST]))
+                         sorted(['Game_v2.zip', 'Game_v2.zip.receipt.json', 'Game_源码_v1.zip', D.OLD_DIR, D.LATEST]))
         self.assertEqual(sorted(p.name for p in (folder / D.OLD_DIR).iterdir()), ['Game_v1.zip', 'Game_v1.zip.receipt.json'])
         self.assertEqual(result['delivery_folder']['latest'], str((folder / D.LATEST).resolve()))
         self.assertIn(result['sha256'], (folder / D.LATEST).read_text(encoding='utf-8'))
@@ -166,30 +166,10 @@ class Writer(unittest.TestCase):
         self.assertTrue(result['delivery_folder']['skipped'])
 
     def test_formal_writer_is_wired(self):
-        import make_tiktok_zip as writer
-        from test_single_writer import SingleWriter
-        f=SingleWriter('test_legacy_build_routes_all_parameters_once');f.setUp();self.addCleanup(f.doCleanups);f.mock_engine()
-        def observe(out, app_id, tool, identity, **kwargs):
-            self.assertTrue(out.is_file())
-            self.assertTrue(Path(str(out)+'.receipt.json').is_file())
-            self.assertTrue(out.with_name(out.stem+'.report.json').is_file())
-            self.assertEqual(tool, 'make_tiktok_zip')
-            self.assertTrue(kwargs['keep'])
-            return {'published': True}
-        with patch.object(D,'tidy',side_effect=observe) as tidy:
-            result=writer.write_package(**f.kw)
-        tidy.assert_called_once();self.assertTrue(result['delivery_folder']['published'])
+        text = (HERE.parents[2] / 'remake-core' / 'scripts' / 'make_tiktok_zip.py').read_text(encoding='utf-8')
+        self.assertIn("delivery_folder.tidy(out, a.app_id, 'make_tiktok_zip', report['zip_sha256'],", text)
+        self.assertIn("'--keep-old-packages'", text)
 
-
-# This module checks the original gate's own obligations with tiny fixtures.
-# Keep the strict-six production boundary in its dedicated real-auditor tests.
-from pathlib import Path as _AdFixturePath
-import sys as _ad_fixture_sys
-_ad_fixture_core = next(p/'remake-core/scripts' for p in _AdFixturePath(__file__).resolve().parents
-                        if (p/'remake-core/scripts/fixture_ad_standard_scope.py').is_file())
-_ad_fixture_sys.path.insert(0,str(_ad_fixture_core))
-from fixture_ad_standard_scope import isolate as _isolate_ad_fixture
-_isolate_ad_fixture(globals())
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)

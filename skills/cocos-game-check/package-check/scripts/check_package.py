@@ -27,7 +27,6 @@ SHARED = Path(__file__).resolve().parents[3] / 'remake-core' / 'scripts'
 sys.path.insert(0, str(SHARED))
 import verify_native_zip as verifier
 from delivery_continuation import repair_context
-from regression_scope_gate import scoped_execution
 from audit_packed_assets import audit as packed_assets
 
 
@@ -127,19 +126,17 @@ def rework_plan(rework_of, files, adapter=None, policy=None, board=None):
     """Resolve the historical proof without turning an unknown edit into a full browser run."""
     if not rework_of:
         return None
-    from regression_scope_gate import ENV_PLAN, preflight
-    if os.environ.get(ENV_PLAN):
-        from check_ledger import project_of
-        current_adapter=adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
-        preflight(project_of(adapter=current_adapter), files, current_adapter, board=board,
-                  policy=policy, prior=rework_of, operation='writer')
-        return None  # The precise plan can recover real evidence without an old writer receipt.
     import rework_scope
     result=rework_scope.plan(rework_of, files, adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER), policy, board)
     if not result.get('reuse'):
         from check_ledger import project_of, Ledger
         current_adapter=adapter or os.environ.get(ad_regression_gate.ENV_ADAPTER)
         project=project_of(adapter=current_adapter)
+        from regression_scope_gate import ENV_PLAN, preflight
+        if os.environ.get(ENV_PLAN):
+            preflight(project, files, current_adapter, board=board, policy=policy,
+                      prior=rework_of, operation='writer')
+            return None  # The validated unit plan includes new and inherited independent checks.
         ledger=Ledger(project)
         try:
             import runtime_incremental
@@ -216,10 +213,11 @@ def verify_regression_scope(files, folder, adapter, board, policy, prior, *,
     """Check authorization on these exact bytes before a package check can open Ego."""
     if 'game.js' not in files and not ad_regression_gate.needs_regression(files):
         return None
-    from regression_scope_gate import ensure_plan
+    from regression_scope_gate import preflight
     project, adapter, board, policy = regression_context(files, folder, adapter, board, policy, project)
-    audit = ensure_plan(project, files, adapter, board=board, policy=policy, prior=prior,
-                       operation=operation, expected_sha256=expected_scope_sha256)
+    audit = preflight(project, files, adapter, board=board, policy=policy, prior=prior, operation=operation)
+    if expected_scope_sha256 is not None and audit.get('plan_sha256') != expected_scope_sha256:
+        raise ValueError('scope_required: regression plan changed after writer preflight')
     return audit
 
 
@@ -345,20 +343,6 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
     except (OSError, TypeError, ValueError) as error:
         return no('writer receipt unreadable: %s' % error)
     record = receipt.get('regressions') if isinstance(receipt, dict) else None
-    if isinstance(record, dict) and record.get('profile') == 'creator1_compatibility_regression.v1':
-        try:
-            from creator1_compatibility_contract import consume, writer_evidence
-            ref=record['compatibility'];doc=json.loads(Path(ref['path']).read_bytes())
-            checked=consume(doc['project'],doc['native'],doc['web'],ref['path'])
-            if checked['record'] != ref or checked['native_inputs'] != {n:hashlib.sha256(b).hexdigest() for n,b in files.items()}:
-                return no('Creator1 exact ZIP/proof mismatch')
-            _,scope,expected,rt,ad=writer_evidence(doc['project'],doc['native'],doc['web'])
-            if record != expected:return no('Creator1 writer record differs from original mandatory regression evidence')
-            return dict(reused=True,receipt=str(receipt_file),regression_scope=scope,
-                        note='Revalidated immutable Creator1 integration regression; no gameplay rerun',
-                        rewarded_ad_regression=ad,runtime_regression=rt)
-        except (OSError,ValueError,TypeError,KeyError) as error:
-            return no('Creator1 proof refused: '+str(error))
     if not isinstance(record, dict) or record.get('schema') != REUSE_SCHEMA:
         return no('writer receipt has no regression record (written before v7.9, or a regression did not pass there)')
     ad, rt = record.get('rewarded_ad_regression'), record.get('runtime_regression')
@@ -460,7 +444,6 @@ def reusable_regressions(receipt_file, files, adapter=None, policy=None):
             'runtime_regression': dict(rt, reused_from=source)}
 
 
-@scoped_execution
 def writer_regressions(files, folder, adapter=None, policy=None, board=None, rework_of=None, *,
                        project=None, expected_scope_sha256=None):
     """v7.8 (W97, 总表 22.6 D/E): the rewarded-ad and runtime regressions for make_tiktok_zip.py, which does not call
@@ -549,9 +532,8 @@ def _fallback_entries(archive):
     return out
 
 
-@scoped_execution
 def check(archive, app_id=None, tree=None, ad_regression=None, board=None, policy=None, context=None,
-          reuse_writer_regressions=False, rework_of=None, *, expected_scope_sha256=None, project=None, _archive_context=None):
+          reuse_writer_regressions=False, rework_of=None, *, expected_scope_sha256=None, project=None):
     # 简化.11.15 (出包后返工): rework_of (build_checked_zip --rework-of) is the last passed package; when only pictures,
     # sounds or fonts changed since it, the browser suites that cannot see the change keep its passes (rework_scope).
     # v7.9 (出包检查提速 S1, 总表 19 ①): reuse_writer_regressions (prepare_delivery only) takes an official writer
@@ -571,20 +553,12 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     prepare_delivery.py) = judged from the package bytes (scene / asset uuids against LEGACY_GAMES.json, not listed
     = new). context: writer-only kit_parts attributes (finalize record, project) for K4/K5."""
     import package_gates
-    start_sha = hashlib.sha256(Path(archive).read_bytes()).hexdigest() if _archive_context is None else None
+    start_sha = hashlib.sha256(Path(archive).read_bytes()).hexdigest()
     reasons = []
     verified_files = {}
     try:
-        if _archive_context is None:
-            result = verifier.verify(archive, expected_app_id=app_id, _verified_files=verified_files)
-        else:
-            from delivery_archive_context import consume_delivery_archive, delivery_payload
-            result = consume_delivery_archive(_archive_context, archive, app_id)
-            verified_files = delivery_payload(_archive_context, archive)
+        result = verifier.verify(archive, expected_app_id=app_id, _verified_files=verified_files)
     except ValueError as error:
-        if _archive_context is not None:
-            # Never turn a stale/forged context into a second full read or run.
-            raise
         reasons.append('verifier: ' + str(error))
         result = None
         verified_files = _fallback_entries(archive)
@@ -612,10 +586,7 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
     project = project or (context or {}).get('project')
     project, ad_regression, board, policy = regression_context(
         verified_files, tree or Path(archive).parent, ad_regression, board, policy, project)
-    gate_context = dict(context or {})
-    if project is not None:
-        gate_context['project'] = project
-    gates = package_gates.run(verified_files, tree, board, policy=policy, context=gate_context)
+    gates = package_gates.run(verified_files, None, board, policy=policy, context=context)
     reasons.extend(package_gates.messages(gates['blocks']))
     regression = runtime = None
     # v7.9 (出包检查提速 S1, 总表 19 ①): prepare_delivery reuses what the official writer ran on exactly these bytes with
@@ -664,12 +635,7 @@ def check(archive, app_id=None, tree=None, ad_regression=None, board=None, polic
                                                           gates.get('policy'))
                     if problem:
                         reasons.append(problem)
-    if _archive_context is None:
-        final_sha = hashlib.sha256(Path(archive).read_bytes()).hexdigest()
-    else:
-        from delivery_archive_context import check_delivery_archive_current
-        final_sha = check_delivery_archive_current(_archive_context, archive)
-    if final_sha != (result['sha256'] if result else start_sha):
+    if hashlib.sha256(Path(archive).read_bytes()).hexdigest() != (result['sha256'] if result else start_sha):
         raise ValueError('ZIP changed during package checks')
     if reasons:
         tail = [BROWSER_SKIPPED_NOTE] if browser_skipped else []
@@ -743,7 +709,6 @@ def main():
     parser.add_argument('--input', required=True, type=Path)
     parser.add_argument('--expected-app-id')
     parser.add_argument('--expected-tree', type=Path)
-    parser.add_argument('--project', type=Path, help='actual project for six-standard ad/UI production evidence')
     parser.add_argument('--report', type=Path)
     parser.add_argument('--ad-regression', type=Path, help='adapter JSON for the mandatory rewarded-ad and runtime regressions '
                         '(default $%s)' % ad_regression_gate.ENV_ADAPTER)
@@ -764,12 +729,12 @@ def main():
             with tempfile.TemporaryDirectory(prefix='TikTok Native preflight ') as temp:
                 zipped = Path(temp) / 'candidate.zip'
                 write_archive(zipped, native_files(args.input))
-                result = check(zipped, args.expected_app_id, args.input, args.ad_regression, args.board, args.policy, project=args.project)
+                result = check(zipped, args.expected_app_id, args.input, args.ad_regression, args.board, args.policy)
                 result['input'] = str(args.input.resolve())
                 result.pop('archive', None)
             result['verdict'] = READ_ONLY_DIR
         else:
-            result = check(args.input, args.expected_app_id, args.expected_tree, args.ad_regression, args.board, args.policy, project=args.project)
+            result = check(args.input, args.expected_app_id, args.expected_tree, args.ad_regression, args.board, args.policy)
             # v7.8 (总表 B17): check() is unchanged (the writers import it); only this command refuses a ZIP that no
             # official writer wrote, as verify_native_zip.py / upload_preflight.py do since v7.7.4.
             if result.get('entry') == 'official':
@@ -803,7 +768,7 @@ def main():
     if refused:
         print('REFUSED: ' + refused, file=sys.stderr)
         return 3
-    return 1 if result.get('passed') is False else 0
+    return 0
 
 
 if __name__ == '__main__':

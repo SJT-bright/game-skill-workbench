@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 import test_final_startup_gate as startup_cases
-from test_package_checks import fixture, runtime_patch, APP, OTHER_APP, fixture_project, prepare_writer_fixture
+from test_package_checks import fixture, runtime_patch, APP, OTHER_APP, fixture_project
 _RUNTIME = runtime_patch()
 setUpModule, tearDownModule = _RUNTIME.start, _RUNTIME.stop
 from check_package import write_archive
@@ -38,34 +38,32 @@ class WriterOrder(unittest.TestCase):
         self.manifest.write_text(json.dumps({'resources': [
             {'bundle': 'main', 'path': 'fixture', 'type': 'cc.JsonAsset'}]}))
         self.out = self.root / 'new.zip'
-        prepare_writer_fixture(self.native, self.project)
-        self.files = {p.relative_to(self.native).as_posix(): p.read_bytes() for p in self.native.rglob('*') if p.is_file()}
 
     def tearDown(self):
         self.temp.cleanup()
 
     def test_wrong_app_id_never_starts_runtime(self):
-        with patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}) as run:
+        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
             # v7.7: tiktok_finalize's appid step compares the target with the project's PlatformConfig first
-            with self.assertRaisesRegex(ValueError, 'K_native_preparation_required'):
-                build(self.native, OTHER_APP, self.out, resource_manifest=self.manifest, project=self.project, web=self.native)
+            with self.assertRaisesRegex(ValueError, 'K_appid_mismatch: --app-id %s differs' % OTHER_APP):
+                build(self.native, OTHER_APP, self.out, resource_manifest=self.manifest, project=self.project)
             run.assert_not_called()
         self.assertFalse(self.out.exists())
 
     def test_wrong_output_suffix_refused_before_any_runtime(self):
         out = self.root / 'looks-like-source.txt'
-        with patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}) as run:
+        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
             with self.assertRaisesRegex(ValueError, r'\.zip'):
-                build(self.native, APP, out, resource_manifest=self.manifest, project=self.project, web=self.native)
+                build(self.native, APP, out, resource_manifest=self.manifest, project=self.project)
             run.assert_not_called()
         self.assertFalse(out.exists())
 
     def test_missing_packed_asset_refused_before_runtime(self):
-        with patch('audit_packed_assets.audit', return_value={
+        with patch('check_package.packed_assets', return_value={
                 'passed': False, 'errors': ['missing fixture texture']}) as assets, \
-                patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}) as run:
+                patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run:
             with self.assertRaisesRegex(ValueError, 'missing fixture texture'):
-                build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project, web=self.native)
+                build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
             run.assert_not_called()
             self.assertTrue(assets.called)
         self.assertFalse(self.out.exists())
@@ -74,22 +72,23 @@ class WriterOrder(unittest.TestCase):
         def change(*args, **kwargs):
             self.manifest.write_text('{"resources": []}')
             return {'passed': True}
-        with patch('audit_final_package_startup.audit_final_startup', side_effect=change):
-            with self.assertRaisesRegex(ValueError, 'manifest.*changed|resource manifest.*changed'):
-                build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project, web=self.native)
+        with patch('build_checked_zip.audit_final_startup', side_effect=change):
+            with self.assertRaisesRegex(ValueError, 'manifest changed'):
+                build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
         self.assertFalse(self.out.exists())
         self.assertFalse(list(self.root.glob('.tiktok-package-*')))
 
     def test_normal_writer_calls_runtime_once_and_reports_phase_timings(self):
         import audit_upload_startup
-        with patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}) as run, \
+        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}) as run, \
                 patch.object(audit_upload_startup, 'audit_files', wraps=audit_upload_startup.audit_files) as dependency:
-            result = build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project, web=self.native)
+            result = build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
         run.assert_called_once()
-        self.assertTrue(run.call_args.kwargs['reuse_only'])
         self.assertEqual(dependency.call_count, 2)  # Native preflight, then the actual ZIP.
         self.assertTrue(result['expected_tree_exact'])
-        self.assertEqual(set(result['check_timings']), {'static_preflight_seconds', 'total_seconds'})
+        self.assertEqual(set(result['check_timings']), {
+            'static_preflight_seconds', 'startup_runtime_seconds',
+            'archive_validation_seconds', 'total_seconds'})
         self.assertTrue(all(n >= 0 for n in result['check_timings'].values()))
 
     def test_existing_delivery_record_stops_before_full_check(self):
@@ -106,8 +105,8 @@ class WriterOrder(unittest.TestCase):
 
     def test_cli_runs_once_per_delivery_and_never_in_writer(self):
         with patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': []}) as cli, \
-                patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}):
-            result = build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project, web=self.native)
+                patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
+            result = build(self.native, APP, self.out, resource_manifest=self.manifest, project=self.project)
             cli.assert_not_called()
             records = [self.root / 'delivery.json', self.root / 'redelivery.json']
             for count, record in enumerate(records, start=1):
@@ -122,8 +121,8 @@ class WriterOrder(unittest.TestCase):
 
     def test_delivery_native_mutation_during_startup_refused(self):
         archive = self.root / 'input.zip'
-        with patch('audit_final_package_startup.audit_final_startup', return_value={'passed': True}):
-            build(self.native, APP, archive, resource_manifest=self.manifest, project=self.project, web=self.native)
+        with patch('build_checked_zip.audit_final_startup', return_value={'passed': True}):
+            build(self.native, APP, archive, resource_manifest=self.manifest, project=self.project)
         record = self.root / 'delivery.json'
         def mutate(*args, **kwargs):
             (self.native / 'child.js').write_text('changed = true;')
@@ -187,16 +186,6 @@ class StartupIdentity(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, 'identity paths'):
                         self.call()
 
-
-# This module checks the original gate's own obligations with tiny fixtures.
-# Keep the strict-six production boundary in its dedicated real-auditor tests.
-from pathlib import Path as _AdFixturePath
-import sys as _ad_fixture_sys
-_ad_fixture_core = next(p/'remake-core/scripts' for p in _AdFixturePath(__file__).resolve().parents
-                        if (p/'remake-core/scripts/fixture_ad_standard_scope.py').is_file())
-_ad_fixture_sys.path.insert(0,str(_ad_fixture_core))
-from fixture_ad_standard_scope import isolate as _isolate_ad_fixture
-_isolate_ad_fixture(globals())
 
 if __name__ == '__main__':
     unittest.main()

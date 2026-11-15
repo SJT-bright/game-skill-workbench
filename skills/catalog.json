@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-15T19:42:21.562Z",
-  "treeHash": "9ebd8692c88742f562a85214dd3f6ab816873b653a307de9f4a43931f20ff385",
+  "createdAt": "2026-11-15T19:48:13.523Z",
+  "treeHash": "0ecb54a12bd0f0c4cd5779afd384b39dab481280ebab5f87ce6e3db789b918b4",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3319,20 +3319,20 @@
     },
     {
       "name": "remake-art",
-      "treeHash": "50a86320edd122d842282eaa1bed16fcb7396d3e1be159113415599ac5c989a8",
-      "fileCount": 69,
-      "bytes": 1497320,
+      "treeHash": "5057efb3600091a1fa7523958890ae6f5a14eae229f98de4bbb233af70862655",
+      "fileCount": 67,
+      "bytes": 1469861,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "0055d7881b6edb4c5015319e133e4402c4ddd10b417d69620b6fe17f6775e2f5",
-          "size": 26771,
+          "hash": "be0af96f4d2c6b10b25da02478d15a366e5923c2a1c9c60e26eb27a2b10b235c",
+          "size": 18145,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "33da32b425f9ea0ffd17bc4dadf359c2d6e1fe9994855bf7076a4f8f5d441b9e",
-          "size": 27886,
+          "hash": "04d91130186614c1d78ddd5b3145ddec9e4d27af3a0704cb62f01a0b442099c2",
+          "size": 25546,
           "executable": false
         },
         {
@@ -3379,26 +3379,26 @@
         },
         {
           "path": "references/art-before-trial.md",
-          "hash": "10e0595d38e9fde532cb8dfbc35cd50df4e272dcfb46386e9a70a632fc7a8a3c",
-          "size": 5685,
+          "hash": "d24c499ee1ea4d560e7f3a92ebbc6189de1d09a2ad8efe585cf1a8218329411e",
+          "size": 5543,
           "executable": false
         },
         {
           "path": "references/art-iteration-workflow.md",
-          "hash": "b126ed616b180e45c374cafdbf58132210e78e1e0129f6cc31c54e5f7ae91794",
-          "size": 7804,
+          "hash": "1a70d06edd7dbcd361fcd52d86de7c08ee86e0bf15c989be6add803b0fe6643c",
+          "size": 12373,
           "executable": false
         },
         {
           "path": "references/artwork-and-feedback.md",
-          "hash": "6a53ebfbc15719f78275a809baf3e2d81e1223d77ac646cfbb111dd86156953b",
-          "size": 24316,
+          "hash": "b6a406695c663159cda7278b9b36f403a1a0a94a43d1bf250b8f4fd34ae3c5cc",
+          "size": 25122,
           "executable": false
         },
         {
           "path": "references/atlas-slice-integrity.md",
-          "hash": "e49e9e0e2fdbfcb3b26a96ed9d2d730a82603e498492fcced0a18c891e6864cc",
-          "size": 19006,
+          "hash": "3feb5d159c46a81b718a249c13b0ee57c1471d60f518e108faa27c5bbfb86734",
+          "size": 17950,
           "executable": false
         },
         {
@@ -3463,8 +3463,8 @@
         },
         {
           "path": "references/full-visual-review.md",
-          "hash": "11e2ec0421cd4af0155f87e15468fb88a77b3f92135a0f4d3ab2638b7aa04a3d",
-          "size": 11404,
+          "hash": "d7c79c7beb52384e815860c4d9c6bbf07956cf6bad8ea39592f7bd9144cf1e01",
+          "size": 11392,
           "executable": false
         },
         {
@@ -3475,14 +3475,14 @@
         },
         {
           "path": "references/large-background-static-review.md",
-          "hash": "4a7ac7eeef8a873a750d21d2c3dd1122fdb39a24db7c8e8bc956fb93aa9a1f57",
-          "size": 2254,
+          "hash": "0cfb1b28ec90832260dcdeb6b92de7ea8579fc3960f0bc749b5cb9bc3d725d1e",
+          "size": 2140,
           "executable": false
         },
         {
           "path": "references/local-ui-contract.md",
-          "hash": "71f78ae7d8c51ffd47ca214ac3f9c716b0f33417c38832ece3ca3399632100f2",
-          "size": 12972,
+          "hash": "1564e6f6d9b6716c0f68d58d9e64cd1eddefd96e04145df0a05c11d25c8bb1cc",
+          "size": 12503,
           "executable": false
         },
         {
@@ -3493,14 +3493,14 @@
         },
         {
           "path": "references/new-feature-ui.md",
-          "hash": "0f46fb97d7e6a86d68a7bf22f06b9f4f63781db9aad0fe1549c68ccdca0ebbc4",
-          "size": 5032,
+          "hash": "0a2b582dce595dd257c1fd8bae1915edc17cfe650abe087e3774b78973fb34bd",
+          "size": 3517,
           "executable": false
         },
         {
           "path": "references/page-richness.md",
-          "hash": "3cc048ec1a1a9bbd5ba9f00a9f112f949dce3aa9e1e3b627a1ea82a59d977c0a",
-          "size": 95595,
+          "hash": "213a5a8de68d5333f0ac524d94c0d976c0ad326b89a3d61a0194924ae79a0370",
+          "size": 95649,
           "executable": false
         },
         {
@@ -3517,20 +3517,20 @@
         },
         {
           "path": "references/production-check-link.md",
-          "hash": "3f5aa2ee299c83861a98330bfb77035ad84633dcfdb240788698062c301ab2e7",
-          "size": 12432,
+          "hash": "91611881c153f67ceee7df826cb6a2364ce6cd159654a166f5647857ac459d46",
+          "size": 13219,
           "executable": false
         },
         {
           "path": "references/production-prevention.md",
-          "hash": "c2a23dc11fd08577ec582e5724e5d65bb4b9fca6a645658545a0d61da8dfb915",
-          "size": 39135,
+          "hash": "dd34eb577d5195ab51a0953376135c1c4c9d0ba3b8e3eb9c0fdd390a4dc2afdc",
+          "size": 33248,
           "executable": false
         },
         {
           "path": "references/saul-art-rules.md",
-          "hash": "765666bf780e8b494aebb0341aee1a5e2f8c8f4d10fbfe3da5b70a6035e1d3fb",
-          "size": 50574,
+          "hash": "ecfc189627369c619f8e637d1b1de88d9919fa1c55a8e7e1e965230498f88be1",
+          "size": 50521,
           "executable": false
         },
         {
@@ -3571,14 +3571,14 @@
         },
         {
           "path": "references/ui-style-and-samples.md",
-          "hash": "93268ea2f02058cf5e0a2eeda168983a50531461e692a8eda2a53cf2320847fa",
-          "size": 16873,
+          "hash": "927941abd8ab3820337f3e8104464bec19c04cd2b41f2881a26d8b6ad3b2d907",
+          "size": 16677,
           "executable": false
         },
         {
           "path": "scripts/bind_art.py",
-          "hash": "2f920d11bf4b97d98cb04589d175eb3eaf4e31b9ac2c0f767c6dd513d99b4b30",
-          "size": 50692,
+          "hash": "7a8e70f1f30145b84cda29ce2b128d7489f4a7b9a95c83d949cf4687be3d9da6",
+          "size": 46980,
           "executable": false
         },
         {
@@ -3601,8 +3601,8 @@
         },
         {
           "path": "scripts/check_native_sprite_sources.py",
-          "hash": "dd60ee326bfe0b6a037e5cb18ef86e9403b858e4a6393b5d7d28e1dc78ea4a67",
-          "size": 20460,
+          "hash": "8e8f956591134007a051ab69a8a96f1cda463f5cfe5a3a106c8f7e8e08766476",
+          "size": 15693,
           "executable": false
         },
         {
@@ -3643,32 +3643,20 @@
         },
         {
           "path": "scripts/test_bind_art.py",
-          "hash": "a9c6c882ccbabb9d09860479944ec8e6b62a68d9be830bdbefaaf856fa0b2c3d",
-          "size": 8850,
+          "hash": "e08196611c2b41d221a2db6d289492fb99b20be8578cffced1904821268e2af2",
+          "size": 8821,
           "executable": false
         },
         {
           "path": "scripts/test_bind_art_3x.py",
-          "hash": "ff4259e02fcd41d136060a123543519188e6ff791195a8f032a6a28b6fb5a5bc",
-          "size": 28054,
+          "hash": "f91c384e93e619b1d58e5f1226bd8aa2ee69c2f6eaa8369e4f6fa9b455c21e17",
+          "size": 27976,
           "executable": false
         },
         {
           "path": "scripts/test_bind_art_slot.py",
           "hash": "2ae8efa58b6bf5b19bc8875b2e1a74539f29c1e3c82dab199ccf6ebf85323c37",
           "size": 8953,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_bind_input_contract.py",
-          "hash": "58590a77df0dd836230568bf1dae20a7bacfb01ac1e893d432a3845501317b4c",
-          "size": 1724,
-          "executable": false
-        },
-        {
-          "path": "scripts/test_bitmap_font_sprite_sources.py",
-          "hash": "6a3f9cc87759736b5bd9e5d3c5be93a2454f3d19ed229194eda598220be566e2",
-          "size": 2955,
           "executable": false
         },
         {

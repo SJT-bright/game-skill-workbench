@@ -120,17 +120,18 @@ class BindArt(unittest.TestCase):
         # old way with the same file: trim on in a 200x200 node stretches the 1:2 visible part to 1:1
         self.assertGreater(abs(tool.drawn_ratio([200, 200], True, rec_geo(rec)) / 0.5 - 1), 0.10)
 
-    def test_design_upscale_is_advisory_not_automatic_regeneration(self):
+    def test_upscale_over_2x_refused(self):
         self.png('tiny', (40, 40), (0, 0, 40, 40))
         self.prefab()
-        rec = self.bind('tiny')[0]
-        self.assertEqual(rec['upscale'], 5)
-        self.assertFalse(rec['clarity_advisory']['blocking'])
-        self.assertFalse(rec['clarity_advisory']['auto_regenerate'])
-        self.assertEqual(tool.run_check(self.root, []), [])
+        with self.assertRaisesRegex(tool.BindError, 'upscale'):
+            self.bind('tiny')
+        size, sp = self.btn()
+        self.assertEqual(size['width'], 200)  # nothing written
+        # the parent/own scale counts: 120 px picture in a 200 box at scale 1.5 = 2.5x
         self.png('mid', (120, 120), (0, 0, 120, 120))
         self.prefab(scale=1.5)
-        self.assertEqual(self.bind('mid')[0]['clarity_advisory']['source_to_design_scale'], 2.5)
+        with self.assertRaisesRegex(tool.BindError, 'upscale'):
+            self.bind('mid')
 
     def test_patched_over_old_words_refused(self):
         self.png('new_btn', (200, 200), (0, 0, 200, 200))

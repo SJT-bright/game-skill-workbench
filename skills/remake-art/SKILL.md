@@ -3,12 +3,7 @@ name: remake-art
 description: "美工（英化第一轮由英化入口调用，照原画风重新生成按钮和文字；新增功能界面在设计时自动调用，英化首次主页默认重排，其他既有页面的额外改造按任务范围做；触发词：用美工skill、重做美术、美术skill、这页太丑、重新设计界面）。重做或局部修改Cocos游戏美术、按钮、图标和界面布局。英化里的中文图片字和带字按钮照原画风重新生成，属于英化入口第1项和第2阶段「第一轮美工」（Saul 2026-10-31）。"
 ---
 
-**2026-11-13 执行更新**：英化按[一次通过、按改动复验](../remake-core/references/incremental-checks.md)执行：先按最大显示用途规划单张大原图，倍率只作可调参考，默认不据此阻断或自动重画；一批冻结后共用一次完整采集与分析，原始证据和质量判定分开保存，首件及未变化结果直接沿用，真实变化只定点确认。
-
-**五标准广告节点与美工制作已接入（用户2026-11-11）**。首次完整制作与明确的五类迁移，结束、主页、永久皮肤、局内道具、周期试用五类全部必需；体力自2026-11-14起改为可选：原游戏有体力的保留并接看广告+3，没有的不为广告新做体力系统；额外奖励循环不能替代任何一类。按[五标准广告制作联动](../remake-core/references/ad-standard-six.md)在制作时调用同包ad-boost与remake-art。旧“0～2个才推荐/无系统不新增/英化默认不加这些系统”不再限制这五类所需依赖。已交付游戏的无关局部维护保留原授权范围和有效记录，不自动改原件。
-
-
-**当前检查执行规则（用户 2026-11-08）**：先读[一次通过、按改动复验](../remake-core/references/incremental-checks.md)。图片、文字/字幕、音效、玩法、关卡、平台检查均按命名节点留存真实记录；已通过且依赖未变的项禁止重复执行，代码或配置变化也不触发全量。浏览器和写包读取同一计划；完整覆盖通过有效记录与真实缺项核对，不因阶段交接重复执行。最终 ZIP 的本次体积与分包核对按用户单独要求保留。
+**当前检查执行规则（用户 2026-11-08）**：先读[一次通过、按改动复验](../remake-core/references/incremental-checks.md)。图片、文字/字幕、音效、玩法、关卡、平台检查均按命名节点留存真实记录；已通过且依赖未变的项禁止重复执行，代码或配置变化也不触发全量。浏览器和写包读取同一计划；旧文中的“每次必跑/全量检查”改按完整覆盖核对解释。最终 ZIP 的本次体积与分包核对按用户单独要求保留。
 
 **已交付返工的视觉交付规则（用户 2026-11-08）**：已交付源码/测试包后，用户要求“改完这处美工给测试包”即授权本次指定视觉修改免 AI 美工复验；按[返工交付与人工快查](../remake-core/references/returned-art-delivery.md)记录独立授权并继续完成同版 ZIP＋试玩入口。旧文“每轮必须先过美工/回执过期必须复验”不适用于此授权范围；不伪造技术通过，不扩到功能。人工快查放原有 Native 试玩与反馈时，不新增出包等待。
 
@@ -51,7 +46,6 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 | 首页按玩法设计、会动的背景、可互动的首页物件 | [首页按玩法设计](references/home-by-gameplay.md)（用户 2026-10-28） |
 | 集合预览、首尾压框、装备对应 | [集合预览](references/collection-preview-review.md) |
 | 拼装后的实际画面和输入 | [美术自审](references/artwork-and-feedback.md)、[局部UI契约](references/local-ui-contract.md) |
-| 新增/修改实际拦截输入的弹窗、加载层行为，连续操作后无法关闭 | [实例归属](../remake-core/references/modal-input-ownership.md)：沿用现有管理器，机制代表件定点验证；不扩成美术全验 |
 | 用户确认后的检查范围 | [美术前移与锁定](references/art-before-trial.md)、[执行去重](../cocos-game-check/test/references/review-execution-plan.md) |
 | 新游戏开工、共享修改或反复返工 | [少返工的制作与采集](references/art-iteration-workflow.md)（用途盘点、首件、故障分流和下一步计划） |
 
@@ -65,15 +59,13 @@ description: "美工（英化第一轮由英化入口调用，照原画风重新
 
 **独立图标与符号先锁显示槽**：本次新增或替换的视频图标、勾、乘号、关闭符号和图文按钮，生图前确定用途与设计尺寸，PNG 像素不能决定节点显示大小；首件按真实 canvas 换算，在 [visual-slots 的 display_budget](references/local-ui-contract.md#高清图标接入时锁定独立显示预算) 登记各受影响视口的独立期望宽高。图标按等比适配后的实际 Art 底板定位，配合 inside 和图文间隔，不能只核较大的触摸 root。底板文字已烘焙时，生成规格必须预留图标净空；缺留白就调整制作规格或使用完整图文按钮，不能靠默认边距强行叠加。ad-boost 面板同时遵循随包的显示槽规则，并在批量制作前跑其调用集回归。
 
-**九宫格与奖励图标核实际拼装**：源图 slice/平铺豁免仅限对应源连通体检查。dump 的 `inner` 只是九宫格 stretch center，不等于内容安全区；奖励内容的尺寸或实际位置超中心、超外框以及归属不唯一等风险，须由 Codex 查看同批原图后记实际结论，不能直接断言九宫格坏。`btn_*` 名称只是需看线索；仅现有 `button-set.caption_frames` 明确核过含词的整钮用于非交互奖励图标槽时，才报整钮缩略问题。真正按钮（含禁用态及子 Art）、纯符号图和有实际设计依据的外溢保留。原页面检查将需看项保留为 `visual_reviews` / `visual_review_required`，完整检查转入原 `look_list`，首件亦保留；技术 passed 不等于视觉通过，不得重跑同输入抹掉需看项。详见[制作预防](references/production-prevention.md#九宫格内区与奖励图标核实际拼装)，不新增清单或采集。
-
 **所有本轮美工制作先做源头预防（Saul 2026-11-03）**：先读[美工制作预防](references/production-prevention.md)，把美术总表 T01–T14 中与本轮资产有关的要求落成具体提示词、尺寸/状态方案与接图要求；广告板块新增资产也执行。不能只在制作前泛读禁止项、等检查报错再返工。英化保持原画风，按下面的英文空间规则细化。
 
-**英化生图前与接图时先预防（Saul 2026-11-03）**：按[生成前先定尺寸与分区](../cocos-game-to-english/references/english-ui-rebuild.md#生成前先定尺寸与分区制作时消除问题saul-2026-11-03)执行：先按英文定稿规划可读内区和各元素空间，把目标比例、完整文字、留白写进提示词；接图保持比例、处理重复旧层，代表源图先按实际用途核画风、拼写和预算，再批量制作。全部素材、布局与接线冻结后，共用同轮采集完成唯一正式首件及首次适用检查；后续只复验真实受影响项，未变化结果沿用。英化第一轮换哪些图，照 `docs/english/art-replace-round1.json` 的 `replace`、`manual_review`、`regenerate` 三组做（[英化换图第 0 步](../cocos-game-to-english/references/english-ui-rebuild.md#英化只换带中文字的图画风跟原游戏一致)）。
+**英化生图前与接图时先预防（Saul 2026-11-03）**：按[生成前先定尺寸与分区](../cocos-game-to-english/references/english-ui-rebuild.md#生成前先定尺寸与分区制作时消除问题saul-2026-11-03)执行：先按英文定稿规划可读内区和各元素空间，把目标比例、完整文字、留白写进提示词；接图保持比例、处理重复旧层，代表样先在真实页面确认再批量做。每批发现共性问题即修生成模板或共享组件，完整美工检查继续在每轮试玩前完成。英化第一轮换哪些图，照 `docs/english/art-replace-round1.json` 的 `replace`、`manual_review`、`regenerate` 三组做（[英化换图第 0 步](../cocos-game-to-english/references/english-ui-rebuild.md#英化只换带中文字的图画风跟原游戏一致)）。
 
 **接图用 `bind_art.py`、一张图一个主体（R4C）**：接图一律用 `remake-art/scripts/bind_art.py`（3.x 嵌套预制体实例也支持），不手改节点宽高，接完跑 `--check`（英化游戏只改这一轮换过图的节点，原游戏的图照原样）；新美术一张图只放一个主体，条状图只用 `cut_sheet_frame.py` / `ad-boost/scripts/art/cut_strip.py` 切。见[出图和接图的两条固定做法](references/production-prevention.md#出图和接图的两条固定做法r4c普查-squashed_image-32-款sprite_crop_fragment-17-款)。
 
-**先量后做**：按[排版预算与页面全覆盖](references/text-fit-and-coverage.md)盘点本轮页面、弹窗及共享用途，先从现有原图、节点和已有效采集确定英文、尺寸与最长数字预算，生成前核代表源图。全部本批素材、布局和接线冻结后，共用一次必要的实际采集运行 `audit_text_fit.py` 等适用检查；一次列齐问题，修正后只核相关节点。新增页面用源布局记录补预算，不为每接好一页或每一条检查另构建、另采集。
+**先量后做（Saul 2026-11-04，蛋壳特工队六张图）**：按[排版预算与页面全覆盖](references/text-fit-and-coverage.md)做。开工就用 `audit_page_coverage.py` 从工程预制体拿到全部有字或按钮的页面和弹窗，当作本轮的工作和采集清单；带字的按钮、标题、底板、数量槽，先把 Label 换成定稿英文、两种尺寸 `dump_ui`，跑 `audit_text_fit.py --plan`，按「底板至少要」的宽度生图，数字按 `docs/art/longest-text.json` 的最长值留槽；每接好一页马上再跑一次 `audit_text_fit.py`，零发现再做下一页。
 
 **每出一张图就记一次（v7.8 H10，Saul 2026-10-30：代码画的按钮和数字不算图片字）**：生成的图裁好、压缩好、放进工程 `assets/` 之后，跑 `python3 <skills>/remake-core/scripts/art_records.py generated --project <工程> --prompt "<提示词>" --tool "<生图工具>" [--raw <原图>] <最终文件>...`，记进 `docs/art/generated.json`；同一张图再裁切、压缩跑 `art_records.py derive --project <工程> <图>`，`tiktok_finalize.py source` 自己的转换会自动补记。英化游戏开工时用 `art_records.py base --project <工程> --from <中文原版工程或源码 ZIP>` 记下原版，`art_check.py` 才分得出哪些是新做的英文图；没有生成记录的新图只提示、不拦，而且只算会进包的图（resources 和资源包文件夹里的、被场景或预制体等引用的、代码里写了路径的），工程里没用到的只提示「建议删掉」。英化不查「底子原图原声」（原图原声本来就保留）。
 

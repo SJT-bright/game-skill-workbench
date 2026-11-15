@@ -33,6 +33,8 @@ What a binding does (Cocos 2.4/3.x Sprite.trim, as in ad-boost AdBoostKit 1.2.0 
   * by rect -> trim on; by original -> trim off; sizeMode CUSTOM; the sprite frame is set to the picture;
   * SLICED / TILED / FILLED sprites keep their size (stretching is their job), only the frame is set.
 Errors (nothing is written for the whole run):
+  * upscale: the node would show the picture more than 2x its pixels (with the node and parent scales)
+    -> regenerate bigger (display size x 2, backgrounds x 1.5);
   * cover_old_text: under the bound node there is a flat colour block (built-in single-colour frame, a flat
     PNG or cc.Graphics) and a cc.Label -> old words covered by a patch and new words typed on top;
     regenerate the whole picture with the new word instead (rule T02);
@@ -54,9 +56,6 @@ button slot (a cc.Button on the node, or on its parent with the node as target /
   --slots [files]  read only: every button slot whose text has CJK characters, per file (page), shown bound
                    (in docs/art/bind_log.json or its CJK labels already off) or 未接. A Label with a RichText
                    ancestor is part of that RichText, never a slot title of its own. exit 1 when one is 未接.
-Design-space enlargement is advisory only; it never schedules regeneration. Explicit strict clarity policy
-uses the declared actual CSS usage budget. New projects read that same producer budget from generated.json
-(including derived files), or from binding usage/expected_cases, before writing.
 Every binding is recorded with the old box and the new size in <project>/docs/art/bind_log.json.
 --check lists every SIMPLE sprite whose drawn picture is more than 10 % off its own ratio (the old way: a new
 frame dropped into the old box); exit 1 when there is one.
@@ -85,43 +84,6 @@ TEXTURE_TYPES_3X = ('texture',)
 
 class BindError(Exception):
     pass
-
-
-def binding_usage(project, binding):
-    """Consume the producer's embedded budget, including byte-identical derivatives.
-
-    Explicit binding declarations are supported for source-only art workflows.
-    They may not silently contradict a generated record for the same source.
-    """
-    core = pathlib.Path(__file__).resolve().parents[2] / 'remake-core/scripts'
-    before = list(sys.path)
-    try:
-        sys.path.insert(0, str(core))
-        from art_usage_budget import asset_usage, validate_output
-        from art_records import valid_generated, sha
-        image = pathlib.Path(project) / binding['image']
-        known = valid_generated(project)[0]
-        h = sha(image.read_bytes())
-        row, seen = known.get(h), set()
-        while row and 'usage' not in row and row.get('from_sha256') and h not in seen:
-            seen.add(h); h = row['from_sha256']; row = known.get(h)
-        inherited = asset_usage(row) if row and ('usage' in row or 'expected_cases' in row) else None
-        explicit = 'usage' in binding or 'expected_cases' in binding
-        result = asset_usage(binding, project) if explicit else inherited
-        if result is None:
-            result = asset_usage(dict(name=binding['image']), project)
-        if inherited and explicit and (result['usage'] != inherited['usage'] or set(result['expected_cases']) != set(inherited['expected_cases'])):
-            raise ValueError('binding usage contradicts generated-source usage; reconcile the source declaration first')
-        if result:
-            result = asset_usage(dict(name=binding['image'], usage=result['usage'], expected_cases=result['expected_cases']), project)
-            from PIL import Image
-            with Image.open(image) as im:
-                result['source_measurements'] = validate_output(result['usage'], list(im.size), project=project)
-        return result
-    except (ValueError, OSError) as error:
-        raise BindError(str(error)) from error
-    finally:
-        sys.path[:] = before
 
 
 def read_json(p):
@@ -844,13 +806,9 @@ def bind_local(doc, i, b, frames, by_png, project, meta_fixes=None, scale_mul=(1
     src = geo['rect'] if trim else geo['raw']
     up = max(new[0] * sx / src[0], new[1] * sy / src[1])
     rec.update({'new_size': new, 'trim': trim, 'size_mode': 'CUSTOM', 'upscale': round(up, 2)})
-    usage = binding_usage(project, b)
-    if usage:
-        rec['usage_record'] = usage
     if stype == SIMPLE and up > MAX_UPSCALE:
-        rec['clarity_advisory'] = {'source_to_design_scale': round(up, 3), 'blocking': False,
-                                  'auto_regenerate': False,
-                                  'message': 'Design-space enlargement only, not actual CSS or a visual verdict. Inspect at declared final uses; no redraw is scheduled by this ratio.'}
+        raise BindError('%s: upscale: the node shows %s at %.1fx its pixels (> %.0fx); regenerate it at about %dx%d px'
+                        % (b['node'], rel, up, MAX_UPSCALE, math.ceil(new[0] * sx * 2), math.ceil(new[1] * sy * 2)))
     doc.set_size(i, new[0], new[1])
     if doc.v3:
         sp['_spriteFrame'] = {'__uuid__': uuid, '__expectedType__': 'cc.SpriteFrame'}
@@ -871,20 +829,10 @@ def bind_local(doc, i, b, frames, by_png, project, meta_fixes=None, scale_mul=(1
 
 
 def resolve_bindings(m, gen_log, project):
-    if not isinstance(m, dict) or not isinstance(m.get('bindings'), list):
-        raise BindError('map must be an object: {"bindings":[{"prefab":"assets/prefabs/Panel.prefab","node":"Panel/Button","image":"assets/ui/button.png"}]}')
     out = []
-    gen = read_json(gen_log) if gen_log else {}
-    if not isinstance(gen, dict) or not isinstance(gen.get('records', {}), dict):
-        raise BindError('generation log must be an object with a records object')
-    records = gen.get('records') or {}
-    for index, b in enumerate(m['bindings']):
-        if not isinstance(b, dict):
-            raise BindError('bindings[%d] must be an object with prefab, node and image' % index)
+    records = (read_json(gen_log).get('records') or {}) if gen_log else {}
+    for b in m.get('bindings') or []:
         b = dict(b)
-        for field in ('prefab', 'node', 'image', 'name'):
-            if field in b and not isinstance(b[field], str):
-                raise BindError('bindings[%d].%s must be a string' % (index, field))
         if not b.get('image') and b.get('name'):
             post = (records.get(b['name']) or {}).get('post') or {}
             p = post.get('copied_to') or post.get('final')
@@ -985,13 +933,7 @@ def check_doc(doc, prefix, top, project, frames, bad):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__.split('\n')[0],
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='Map example (paths are project-relative; node is the exact serialized node path):\n'
-               '{"bindings":[{"prefab":"assets/prefabs/Panel.prefab","node":"Panel/Button","image":"assets/ui/button.png"}]}\n'
-               'Use the same object for Creator 2.4 and 3.x; .fire/.scene are also supported.\n'
-               'New production projects inherit usage/expected_cases from the image generation record.\n'
-               'Use --dry-run to resolve inputs without writing; --check reads actual Sprite proportions.')
+    ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--project', required=True)
     ap.add_argument('--map')
     ap.add_argument('--gen-log', default='')
@@ -1026,7 +968,7 @@ def main():
         if a.dry_run:
             print('dry run: nothing written')
         return 0
-    except (BindError, OSError, json.JSONDecodeError) as e:
+    except BindError as e:
         print('[FAIL] %s' % e)
         print('nothing written')
         return 1

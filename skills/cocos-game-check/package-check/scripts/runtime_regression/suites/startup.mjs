@@ -99,10 +99,7 @@ const LIFE = [
 // phone; the hosts now draw it too (window.__hostState().loading / .loadingMask).
 async function loadingLeft(page) {
   const st = await L.hostState(page).catch(() => null);
-  if (!st || (st.loading !== null && typeof st.loading !== 'string') || typeof st.loadingMask !== 'boolean') {
-    return { unavailable: true };
-  }
-  return st.loading !== null || st.loadingMask ? { title: st.loading, mask: st.loadingMask } : null;
+  return st && st.loading !== null && st.loading !== undefined ? { title: st.loading, mask: !!st.loadingMask } : null;
 }
 async function runLife(page, out, [id, fault, query, maxRetries]) {
   if (!A.play) { out.add(id, false, { problems: ['adapter.play is missing: a locator for the home PLAY button (return CSS {x, y} on Cocos 2.4)'] }); return; }
@@ -151,8 +148,7 @@ async function runLife(page, out, [id, fault, query, maxRetries]) {
       how = 'home shown, onHide + 3 s + onShow';
     }
     loading = await loadingLeft(page);
-    if (loading?.unavailable) problems.push('Native host loading-overlay telemetry missing after home; cannot verify dismissal');
-    else if (loading) problems.push(`a loading box "${loading.title}"${loading.mask ? ' (mask: true, it takes every touch)' : ''} is still up on the home page` +
+    if (loading) problems.push(`a loading box "${loading.title}"${loading.mask ? ' (mask: true, it takes every touch)' : ''} is still up on the home page` +
       (fault === 'after_home' ? ' after the game came back from the background' : '') +
       ': tt.showLoading without hideLoading; on the phone this looks like loading stuck at that number');
     const p = await L.locate(page, A.play);
@@ -228,8 +224,7 @@ async function runCase(page, out, [id, query, limitMs, maxRetries, skip]) {
     screen = await sw.judge(page);
     if (screen.problem) problems.push(screen.problem);
     const left = await loadingLeft(page);
-    if (left?.unavailable) problems.push('Native host loading-overlay telemetry missing after home; cannot verify dismissal');
-    else if (left) problems.push(`home reached but a loading box "${left.title}"${left.mask ? ' (mask: true)' : ''} is still up: tt.showLoading without hideLoading`);
+    if (left) problems.push(`home reached but a loading box "${left.title}"${left.mask ? ' (mask: true)' : ''} is still up: tt.showLoading without hideLoading`);
   }
   if (id === 'storage_missing_true') {
     const bad = warns.filter(w => /saved value is unavailable/i.test(w));

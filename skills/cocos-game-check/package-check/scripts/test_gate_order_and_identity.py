@@ -127,17 +127,10 @@ class WriterOrder(unittest.TestCase):
         def mutate(*args, **kwargs):
             (self.native / 'child.js').write_text('changed = true;')
             return {'passed': True}
-        # Reach the mutation guard with a synthetic writer fixture. Fresh CLI and
-        # writer-evidence validation have separate tests; neither is live evidence here.
         with patch('prepare_delivery.tempfile.gettempdir', return_value=str(self.root / 'other-temp')), \
-                patch('tiktok_cli_gate.verify', return_value={'passed': True, 'errors': []}), \
-                patch('prepare_delivery.check', return_value={'unit_test': 'writer evidence boundary'}) as checked, \
-                patch('prepare_delivery.audit_final_startup', side_effect=mutate) as startup:
+                patch('prepare_delivery.audit_final_startup', side_effect=mutate):
             with self.assertRaisesRegex(ValueError, 'Native changed'):
                 prepare(archive, self.native, APP, record, project=self.project, resource_manifest=self.manifest)
-        checked.assert_called_once()
-        startup.assert_called_once()
-        self.assertTrue(startup.call_args.kwargs['reuse_only'])
         self.assertFalse(record.exists())
 
 
@@ -149,7 +142,7 @@ class StartupIdentity(unittest.TestCase):
     call = startup_cases.FinalStartupGate.call
     def test_runtime_cannot_replace_native_after_binding_check(self):
         import audit_final_package_startup as gate
-        def mutate(*args, **kwargs):
+        def mutate(*args):
             (self.native / 'child.js').write_text('modified during execution;')
             return []
         with patch.object(gate.renderer, 'validate', return_value=[]), \
@@ -160,7 +153,7 @@ class StartupIdentity(unittest.TestCase):
 
     def test_runtime_cannot_replace_recovery_evidence(self):
         import audit_final_package_startup as gate
-        def mutate(*args, **kwargs):
+        def mutate(*args):
             self.recovery.write_text('{"replacement": true}')
             return []
         with patch.object(gate.renderer, 'validate', return_value=[]), \

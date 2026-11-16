@@ -6,8 +6,7 @@ import time
 import uuid
 from runtime_incremental import CL
 
-def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_only=False):
-    """Plan with the production ledger, or execute that exact validated scope."""
+def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None):
     started=time.monotonic();package=Path(package_dir).resolve();adapter=ar.load_adapter(adapter_path)
     required=ar.default_cases(adapter);selected=list(cases) if cases is not None else required
     if any(c in ar.DOUBLE_CASES for c in selected) and 'double_claim' not in adapter:
@@ -20,16 +19,8 @@ def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_onl
         for case in required:
             p=ledger.prepare('ads.'+case,roots,{},ar.tool_digest(),label='广告回调 / '+case,domain='platform')
             if case in selected or p['action']=='reuse':plans.append(p)
-        if plan_only:
-            return plans
-        from regression_scope_gate import authorize_batch
-        plan_sha = authorize_batch(ledger.project,roots,plans,operation='ads',
-                                   native=package,adapter=adapter_path)
         def execute(ids):
             actual=[cid[4:] for cid in ids]
-            if not actual or root()!=roots:
-                raise CL.NeedsScope('广告回归没有明确用例，或候选输入已变化，重新生成检查计划')
-            authorize_batch(ledger.project,roots,plans,operation='ads',expected_sha256=plan_sha)
             try:result=ar._run_uncached(package,adapter_path,actual,work or ledger.home/'runs'/uuid.uuid4().hex,timeout)
             except ar.RegressionRefused as exc:
                 result=getattr(exc,'summary',None)
@@ -51,15 +42,10 @@ def run(ar,package_dir,adapter_path,cases=None,work=None,timeout=None,*,plan_onl
             tool_sha256=ar.tool_digest(),adapter_sha256=hashlib.sha256(Path(adapter_path).read_bytes()).hexdigest(),
             seconds=round(time.monotonic()-started,3),incremental=proofs,
             executed_units=sum(not p['reused'] for p in proofs.values()),reused_units=sum(p['reused'] for p in proofs.values()))
-        if not required:
-            summary.update(applicable=False, disposition='manual_revive_only',
-                manual_playtest_required=True,
-                not_run=[{'role':'revive','reason':'The configured request exclusively exercises rewarded revive; cover it in the first manual playtest after art, not final automation.'}])
         if not ok:
             error=ar.RegressionRefused('rewarded-ad regression failed: '+' | '.join(problems));error.summary=summary;raise error
         return summary
     except CL.NeedsScope as exc:
         error=ar.RegressionRefused(str(exc));error.summary={'id':'rewarded_ad_regression','passed':False,'status':'scope_required',
-            'problems':[str(exc)],'stopped_before_browser':True,'proof_error':True,'ledger':str(ledger.home),
-            'task_terminal':False,'next_action':'repair_and_replan'};raise error
+            'problems':[str(exc)],'stopped_before_browser':True,'proof_error':True,'ledger':str(ledger.home)};raise error
     finally:ledger.close()

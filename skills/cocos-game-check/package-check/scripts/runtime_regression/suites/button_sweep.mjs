@@ -214,7 +214,6 @@ await L.suite(async ({ out, page }) => {
   async function sweepStage(st) {
     let dirty = false;
     for (const b of st.buttons) {
-      if (R.isManualRevive(b.path, b.sig, A)) continue;
       if (Date.now() > st.deadline) { warn('time budget used up: ' + (st.buttons.length - st.rows.length) + ' ' + st.name + ' buttons not swept'); break; }
       if (dirty) { if (!(await st.reload())) { st.reloadFailed(); break; } dirty = false; }
       const r = await tapTwice(page, b.path, !!b.clipped, { touchOnly: !!b.touchOnly, game: st.game });
@@ -261,7 +260,7 @@ await L.suite(async ({ out, page }) => {
       st.popups.push(pr);
       for (const n of p.buttons) {
         if (tested >= st.maxPopup || Date.now() > st.deadline) { warn('popup sweep capped: ' + p.opener + ' -> ' + n.path + ' and later not swept'); return; }
-        if (R.isManualRevive(n.path, n.sig, A) || (SKIP && (SKIP.test(n.path) || SKIP.test(n.sig || '')))) continue;
+        if (SKIP && (SKIP.test(n.path) || SKIP.test(n.sig || ''))) continue;
         tested++;
         if (!(await st.reload())) { st.reloadFailed(); return; }
         const o = await G.nodeCentre(page, p.opener);

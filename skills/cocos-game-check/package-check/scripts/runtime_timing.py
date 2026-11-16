@@ -29,31 +29,12 @@ def suite_metadata(report, name, reused):
 def rule_fingerprint(cl, paths):
     here = Path(__file__).resolve()
     module = here.with_name('runtime_incremental.py')
-    ledger_module = Path(cl.__file__).resolve()
-    compatible_ledger_sha = None
     try:
         proof = json.loads(here.with_name('runtime-reporting-compat.json').read_text())
-        module_sha = hashlib.sha256(module.read_bytes()).hexdigest()
-        helper_sha = hashlib.sha256(here.read_bytes()).hexdigest()
         approved = (proof.get('schema') == 'runtime-reporting-compat.v1'
-            and module_sha == proof['new_runtime_sha256']
-            and helper_sha == proof['helper_sha256']
+            and hashlib.sha256(module.read_bytes()).hexdigest() == proof['new_runtime_sha256']
+            and hashlib.sha256(here.read_bytes()).hexdigest() == proof['helper_sha256']
             and proof.get('scope') == 'reporting-only-exact-byte-pair')
-        if not approved:
-            # The exact reviewed scope pair adds authorization and a read-only
-            # plan route. It leaves all observers and result predicates intact.
-            scope = json.loads(here.with_name('runtime-scope-compat.json').read_text())
-            approved = (scope.get('schema') == 'runtime-scope-compat.v2'
-                and scope.get('scope') == 'scheduler-and-evidence-recovery-exact-byte-triple'
-                and module_sha == scope['new_runtime_sha256']
-                and helper_sha == scope['new_helper_sha256']
-                and hashlib.sha256(ledger_module.read_bytes()).hexdigest() == scope['new_ledger_sha256']
-                and scope['prior_runtime_sha256'] == proof['new_runtime_sha256']
-                and scope['prior_helper_sha256'] == proof['helper_sha256']
-                and hashlib.sha256(here.with_name('runtime-reporting-compat.json').read_bytes()).hexdigest()
-                    == scope['prior_compat_sha256'])
-            if approved:
-                compatible_ledger_sha = scope['prior_ledger_sha256']
     except (OSError, ValueError, KeyError, TypeError):
         approved = False
     if not approved:
@@ -75,13 +56,7 @@ def rule_fingerprint(cl, paths):
             rows.append((p.name, 'missing'))
             continue
         raw = p.read_bytes()
-        if p == module:
-            fingerprint = proof['old_runtime_sha256']
-        elif p == ledger_module and compatible_ledger_sha:
-            fingerprint = compatible_ledger_sha
-        else:
-            fingerprint = cl.sha(raw)
-        rows.append((p.name, fingerprint))
+        rows.append((p.name, proof['old_runtime_sha256'] if p == module else cl.sha(raw)))
         if p.suffix == '.py':
             try:
                 for node in ast.walk(ast.parse(raw)):

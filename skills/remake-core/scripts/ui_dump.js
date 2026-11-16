@@ -434,11 +434,46 @@
   const intersect=(a,b)=>{const x=Math.max(a[0],b[0]),y=Math.max(a[1],b[1]);return[x,y,Math.max(0,Math.min(a[0]+a[2],b[0]+b[2])-x),Math.max(0,Math.min(a[1]+a[3],b[1]+b[3])-y)]};
   for(const n of nodes)for(const m of clips)if((n.ancestor_ids||[]).includes(m.id)){n.unclipped_rect=n.unclipped_rect||n.rect;n.rect=intersect(n.rect,m.rect);if(n.screen&&m.screen){n.unclipped_screen=n.unclipped_screen||n.screen;n.screen=intersect(n.screen,m.screen)}}
 
+  const meshSurfaces = (cc, scene) => {
+    // Creator 2.x non-UI renderers can have width/height zero. Their mesh bounds,
+    // world matrix and actual camera establish screen geometry independently.
+    if (!cc.MeshRenderer || !cc.Vec3 || !cc.Vec3.transformMat4 || !cc.mat4 ||
+        String(cc.ENGINE_VERSION || '').split('.')[0] !== '2') return [];
+    const result = [], size=cc.view.getVisibleSize(), origin=cc.view.getVisibleOrigin?cc.view.getVisibleOrigin():{x:0,y:0};
+    const walk=(node,path,opacity)=>{
+      if(!node || (node!==scene && node.active===false) || node.activeInHierarchy===false)return;
+      const here=path?path+'/'+node.name:node.name, op=opacity*(typeof node.opacity==='number'?node.opacity/255:1);
+      try {
+        const renderer=node.getComponent(cc.MeshRenderer), mesh=renderer&&renderer.mesh;
+        const min=mesh&&mesh._minPos,max=mesh&&mesh._maxPos;
+        const vertices=mesh?(mesh._subDatas||[]).reduce((sum,d)=>sum+(d.vData&&d.vfm&&d.vfm._bytes?d.vData.byteLength/d.vfm._bytes:0),0):0;
+        const cam=cc.Camera&&cc.Camera.findCamera?cc.Camera.findCamera(node):null;
+        if(op>.05 && renderer && renderer.enabled!==false && renderer.enabledInHierarchy!==false &&
+           min&&max&&vertices>=3&&cam&&cam.enabled!==false&&(!cam.containsNode||cam.containsNode(node))&&
+           ['x','y','z'].every(k=>Number.isFinite(min[k])&&Number.isFinite(max[k])&&max[k]>=min[k])) {
+          const matrix=cc.mat4();node.getWorldMatrix(matrix);const points=[],depths=[];
+          for(const x of [min.x,max.x])for(const y of [min.y,max.y])for(const z of [min.z,max.z]){
+            const world=cc.v3();cc.Vec3.transformMat4(world,cc.v3(x,y,z),matrix);
+            const pixel=cam.getWorldToScreenPoint(world,cc.v3());
+            points.push([(pixel.x-origin.x)/size.width,1-(pixel.y-origin.y)/size.height]);depths.push(pixel.z);
+          }
+          const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+          const screen=[Math.min(...xs),Math.min(...ys),Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys)];
+          if(depths.some(z=>Number.isFinite(z)&&z>=0&&z<=1)&&screen.every(Number.isFinite)&&screen[2]>0&&screen[3]>0&&screen[0]<1&&screen[1]<1&&screen[0]+screen[2]>0&&screen[1]+screen[3]>0)
+            result.push({path:here,source:'cc.MeshRenderer.mesh',geometry_method:'mesh_bounds_world_camera',vertices,opacity:op,
+              camera:cam.node&&cam.node.name||'',screen:screen.map(v=>Math.round(v*100000)/100000)});
+        }
+      }catch(_){ /* missing renderer geometry is not invented */ }
+      for(const child of node.children||[])walk(child,here,op);
+    };
+    walk(scene,'',1);return result;
+  };
+  
   return {
     tool: 'ui_dump', schema: 1, engine: cc.ENGINE_VERSION || '', api: is3 ? '3.x' : '2.x', scene: scene.name || '',
     page: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio || 1 },
     canvas_css: [cr.x, cr.y, cr.width, cr.height], canvases, cameras: cams.length, truncated: nodes.length >= maxNodes, errors, nodes,
-    settle,
+    settle, scene_renderers: meshSurfaces(cc, scene),
     // 总表 P19 ①: pages the dev build recorded (remake-core/assets/page-registry/PageRegistry.js); page_registry.py merge-dumps
     pages: (() => { try { const r = window.__pageRegistry; return r && typeof r.list === 'function' ? r.list() : undefined; } catch (_) { return undefined; } })(),
   };

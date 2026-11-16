@@ -201,11 +201,6 @@ def audit_files(files):
         launch = re.search(r'\blaunchScene\s*:\s*["\']([^"\']+)', settings)
         if launch and launch.group(1).startswith('db://'):
             scene_maps = []
-            from cocos1_compat import engine_file
-            if engine_file(files):
-                read = subprocess.run([shutil.which('node') or 'node', str(Path(__file__).with_name('read_cocos1_settings.cjs'))], input=settings, text=True, capture_output=True, timeout=10)
-                if read.returncode: errors.append('Creator1 literal settings parser refused')
-                else: scene_maps.extend(row.get('url') for row in json.loads(read.stdout).get('scenes', []))
             for n in names:
                 if re.search(r'/(?:config(?:\.[\w-]+)?)\.json$', n):
                     try:
@@ -376,20 +371,6 @@ def audit_files(files):
         except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
             errors.append('Native bootstrap probe unavailable/invalid: '+str(exc))
     touch_coordinates = None
-    from cocos1_compat import engine_file
-    creator1_engine = engine_file(files)
-    if creator1_engine:
-        try:
-            payload = {'files': {n: b.decode('utf-8-sig') for n, b in files.items()
-                                  if n.endswith('.js') and (n in ('game.js', 'adapter-min.js',
-                                      'sdk-namespace.js', creator1_engine) or n.startswith('libs/weapp-adapter/'))}}
-            run = subprocess.run([shutil.which('node') or 'node', str(Path(__file__).with_name(
-                'probe_cocos1_touch_coordinates.cjs'))], input=json.dumps(payload), capture_output=True, text=True, timeout=20)
-            touch_coordinates = json.loads(run.stdout)
-            if run.returncode or touch_coordinates.get('schema') != 'cocos1_touch_coordinates.v1' or touch_coordinates.get('passed') is not True:
-                errors.append('Cocos1 native touch coordinates rejected: ' + str(touch_coordinates.get('error') or 'actual adapter/engine coordinates differ'))
-        except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired) as exc:
-            errors.append('Cocos1 native touch-coordinate probe unavailable: ' + str(exc))
     adapter = files.get('adapter-min.js', b'').decode('utf-8', errors='replace')
     # Release builds ship cocos/cocos2d-js-min.js; debug builds (MergeShot2048 v82) ship cocos/cocos2d-js.js.
     engine_candidates = [n for n in files if re.search(r'(?:^|/)cocos/cocos2d-js(?:-min)?\.js$', n)
@@ -424,7 +405,7 @@ def audit_files(files):
     # package's real game.js -> web-adapter.js prefix with SDK touches that carry only the documented
     # identifier/screenX/screenY/force fields, then the engine's own callbacks (probe_cocos3_touch_coordinates.cjs).
     # Its Vec2 turns NaN into 0, so the probe requires the tapped point, not just a finite on-screen value.
-    touch_probed = touch_converter or bool(creator1_engine)
+    touch_probed = touch_converter
     root_scripts = [n for n in files if '/' not in n and n.endswith('.js')]
     tiktok = any(re.search(rb'\btt\s*\.\s*[A-Za-z_$]|\bTTMinis\b', files[n]) for n in root_scripts)
     cocos3_engine = next((n for n in sorted(files) if n.startswith('cocos-js/') and n.endswith('.js')

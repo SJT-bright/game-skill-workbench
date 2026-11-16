@@ -19,7 +19,6 @@ Every non-gameplay dump:
   plain_backdrop  no full-screen picture and no game scene behind (a flat colour / tinted default sprite)
   bare_button     a button with text but no plate picture
   system_font     any visible text drawn in the system default font (use the game font)
-  empty_panel     a popup/page panel whose inside is less than 30% filled
   dev_text        developer wording on screen ("LOCAL PREVIEW", "PROTOTYPE", "TEST AD" ...)
 Text on every dump, gameplay HUD included (user 2026-10-22: thin system-font words dropped on generated art, white
 RETRY on cream, navy PLAY on a navy button, "Coins 0 Springs 1" on a busy picture):
@@ -136,6 +135,7 @@ from contextvars import ContextVar
 from collections import Counter
 import fnmatch
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -190,7 +190,13 @@ MAX_FLAT, MAX_PLAIN_BLOCK = 0.40, 0.35
 MIN_SOLID_BLOCK, MAX_EMPTY_BAND, DARK_LSTAR = 0.02, 0.18, 35.0
 DARK_BOLD_LSTAR = 50.0      # user 2026-10-23: no dark bold text of any hue (label colour)
 INK_DARK, INK_LIGHT = 45.0, 58.0   # screenshot: glyph pixels darker than INK_DARK with (almost) none lighter than INK_LIGHT
-CARD_NAMES = re.compile(r'card|frame|slot|cell|box|plate|item_bg|level_bg|tile_bg', re.I)
+CARD_NAMES = re.compile(r'(?:^|[^a-z0-9])(?:card|frame|slot|cell|box|plate)(?:$|[^a-z0-9])|(?:item|level|tile)_bg', re.I)
+
+def card_name(value):
+    # A frame named Sandbox is an illustration, not a Box. Preserve explicit
+    # Card/RewardBox/level_bg identities, including camel-case node names.
+    words = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', str(value))
+    return bool(CARD_NAMES.search(words))
 ARROWS = re.compile(r'^\s*[<>‹›«»←→◀▶◁▷^vV＜＞]+\s*$')
 WORDS = re.compile(r'[A-Za-z]{2,}')
 NUMERIC = re.compile(r'^[\s\d+\-xX×/:.,%$#·]*\d[\s\d+\-xX×/:.,%$#·]*$')   # "0", "0/9", "+50", "1,250", "70%", "x2", "02:30"
@@ -742,16 +748,61 @@ def transient_banner_offscreen(node):
 
 
 def coverage(rects, frame=(0.0, 0.0, 1.0, 1.0)):
+    """Exact clipped axis-aligned rectangle union, in the caller's coordinates."""
     fx, fy, fw, fh = frame
-    if fw <= 0 or fh <= 0:
+    if not all(isinstance(v,(int,float)) and math.isfinite(v) for v in frame) or fw <= 0 or fh <= 0:
         return 0.0
-    hit = 0
-    for gy in range(GRID_H):
-        for gx in range(GRID_W):
-            x, y = fx + (gx + 0.5) * fw / GRID_W, fy + (gy + 0.5) * fh / GRID_H
-            if any(r[0] <= x <= r[0] + r[2] and r[1] <= y <= r[1] + r[3] for r in rects):
-                hit += 1
-    return hit / (GRID_W * GRID_H)
+    clipped = []
+    for x,y,w,h in rects:
+        if not all(isinstance(v,(int,float)) and math.isfinite(v) for v in (x,y,w,h)) or w <= 0 or h <= 0:
+            continue
+        left,right=max(fx,x),min(fx+fw,x+w)
+        top,bottom=max(fy,y),min(fy+fh,y+h)
+        if right>left and bottom>top:
+            clipped.append((left,top,right,bottom))
+    xs=sorted({x for r in clipped for x in (r[0],r[2])})
+    total=0.0
+    for left,right in zip(xs,xs[1:]):
+        spans=sorted((t,b) for l,t,r,b in clipped if l<right and r>left)
+        height=0.0; end=None
+        for top,bottom in spans:
+            if end is None or top>end:
+                height+=bottom-top
+            elif bottom>end:
+                height+=bottom-end
+            end=bottom if end is None else max(end,bottom)
+        total+=(right-left)*height
+    return max(0.0,min(1.0,total/(fw*fh)))
+
+
+def required_base_purposes(project, board, dumps, original_mapping):
+    """Original English state pairs follow verified inventory, not remake design.
+
+    Source-wide audit_page_coverage remains a mandatory independent full-pipeline
+    check: this role equivalence never excuses a real uncaptured source page.
+    """
+    need=list(REQUIRED)
+    import feature_policy
+    if feature_policy.board_of(project,board)[0]!='localize' or feature_policy.art_style(project)!='original' or not original_mapping:
+        return need
+    declared=feature_policy.read_record(project,'docs/art/screens.json')
+    if declared.get('runtime_verified') is not True:
+        return need
+    declared_purposes={r.get('purpose') for r in declared.get('screens',[]) if isinstance(r,dict)}
+    for expected,existing in (('result_win','result_fail'),('result_fail','result_win'),('settings','settings_sound')):
+        if expected in declared_purposes or existing not in declared_purposes:
+            continue
+        # A result branch needs its authenticated retained original mapping.
+        # settings_sound semantically includes generic settings, even for new
+        # UI: use its two actual declared captures, without original-art waiver.
+        mapped={c['path'] for row in original_mapping.get('pages',[]) for c in row.get('captures',[])}
+        ids={r.get('id') for r in declared.get('screens',[]) if isinstance(r,dict) and r.get('purpose')==existing}
+        seen={(d.get('page',{}).get('width'),d.get('page',{}).get('height')) for d in dumps
+              if d.get('purpose')==existing and d.get('screen') in ids and
+              (existing=='settings_sound' or str(Path(d.get('_file','')).resolve()) in mapped)}
+        if len(seen)>=2 and all(isinstance(w,(int,float)) and isinstance(h,(int,float)) and h>w>0 for w,h in seen):
+            need.remove(expected)
+    return need
 
 
 def visual_coverage_nodes(content, nodes):
@@ -981,7 +1032,7 @@ def squash_problems(nodes, full):
     out = []
     for n in nodes:
         s = n['comps'].get('sprite')
-        if not s:
+        if not s or (n.get('_original_pattern_panel') and not text(n)):
             continue
         frame = str(s.get('frame', ''))
         wordy = bool(text(n) or baked(n) or wordlike(n))
@@ -1106,7 +1157,7 @@ CHECKER_OK = re.compile(r'checker|chess|flag|board|tile|grid|plaid|tartan', re.I
 
 def card_like(n):
     s = n['comps'].get('sprite') or {}
-    return bool(s.get('sliced') or CARD_NAMES.search(n['name'] + ' ' + str(s.get('frame', ''))) or re.match(r'(?i)day\s*\d', n['name']))
+    return bool(s.get('sliced') or card_name(n['name'] + ' ' + str(s.get('frame', ''))) or re.match(r'(?i)day\s*\d', n['name']))
 
 
 def parent_of(n):
@@ -1516,7 +1567,7 @@ def panel_fill_block(box, nodes):
     contains = lambda outer, inner: (inner[0] >= outer[0] - 0.01 and inner[1] >= outer[1] - 0.01 and
                                      inner[0] + inner[2] <= outer[0] + outer[2] + 0.01 and
                                      inner[1] + inner[3] <= outer[1] + outer[3] + 0.01)
-    panels = [n for n in nodes if str(n['name']).lower() in ('panelsurface', 'panelart', 'panel', 'resultpanel') and
+    panels = [n for n in nodes if n.get('opacity',1) > 0.05 and str(n['name']).lower() in ('panelsurface', 'panelart', 'panel', 'resultpanel') and
               ('graphics' in n['comps'] or 'sprite' in n['comps']) and area(n['rect']) >= 0.12]
     if not any(contains(n.get('screen') or n['rect'], box) for n in panels):
         return False
@@ -1528,13 +1579,29 @@ def panel_fill_block(box, nodes):
     def matching_surface(n):
         r = n.get('screen') or n['rect']
         full_screen = r[0] <= 0.05 and r[1] <= 0.05 and r[0] + r[2] >= 0.95 and r[1] + r[3] >= 0.95
-        return (str(n['name']).lower() not in ('panelsurface', 'panelart', 'panel', 'resultpanel') and not full_screen and
+        return (n.get('opacity',1) > 0.05 and str(n['name']).lower() not in ('panelsurface', 'panelart', 'panel', 'resultpanel') and not full_screen and
                 ('graphics' in n['comps'] or 'sprite' in n['comps']) and
                 inter(box, r) / block_area >= 0.65)
     return not any(matching_surface(n) for n in nodes)
 
 
-def background_only_block(box, nodes):
+def scene_mesh_rects(d):
+    """Actual collector geometry for zero-size 2.x MeshRenderers, never a scope flag."""
+    if d.get('tool') != 'ui_dump' or d.get('schema') != 1 or d.get('producer') not in {'ego_page.dump_ui', 'chrome_touch.dump_ui'}:
+        return []
+    out = []
+    for r in d.get('scene_renderers') or []:
+        rect = r.get('screen')
+        if (r.get('source') == 'cc.MeshRenderer.mesh' and r.get('geometry_method') == 'mesh_bounds_world_camera'
+                and r.get('vertices', 0) >= 3 and r.get('opacity', 0) > .05 and r.get('camera')
+                and isinstance(rect, list) and len(rect) == 4 and all(isinstance(v, (int, float)) and math.isfinite(v) for v in rect)
+                and rect[2] > 0 and rect[3] > 0 and rect[0] < 1 and rect[1] < 1
+                and rect[0]+rect[2] > 0 and rect[1]+rect[3] > 0):
+            out.append(rect)
+    return out
+
+
+def background_only_block(box, nodes, scene_rects=()):
     """Do not call a flat sky/wallpaper patch a UI placeholder when it has no surface over it."""
     block_area = area(box)
     if block_area <= 0:
@@ -1551,7 +1618,7 @@ def background_only_block(box, nodes):
         rect = n.get('screen') or n.get('rect')
         if rect and inter(box, rect) / block_area >= 0.98 and area(rect) >= 0.85:
             backdrops.append(n)
-    if not backdrops:
+    if not backdrops and coverage(scene_rects, box) < .98:
         return False
     # A real flat placeholder remains reportable: its own Sprite/Graphics node covers the
     # sampled patch. Ignore only the unadorned pixels from the full-screen backdrop itself.
@@ -1595,6 +1662,9 @@ def flat_button_problems(buttons, nodes, img):
                    not str(n['comps']['sprite'].get('frame', '')).lower().startswith('txt_'))) and
                   area(n.get('screen') or n['rect']) >= 0.3 * area(br)]
         rendered = max(plates, key=lambda n: area(n.get('screen') or n['rect'])) if plates else b
+        frame = str((rendered['comps'].get('sprite') or {}).get('frame', ''))
+        if hasattr(ORIGINAL_ART, 'same_bytes') and ORIGINAL_ART.same_bytes(frame):
+            continue  # preserve exact original bytes; no broad frame-name glob
         r = rendered.get('screen') or rendered['rect']
         if area(r) < 0.004:
             continue
@@ -1969,7 +2039,7 @@ def control_picture_problems(nodes, buttons, full, kind=None, blockers=()):
                  and 0 < area(n['rect']) < 0.05]
     frames = [n for n in nodes if 'sprite' in n['comps'] and not text(n) and n not in full and 0.0015 <= area(n['rect']) < 0.3
               and not decor(n) and not POINTER.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
-              and frame_like(n) and not any(node_under(n, b) for b in buttons)]
+              and frame_like(n) and not n.get('_original_pattern_panel') and not any(node_under(n, b) for b in buttons)]
     for c in controls:
         cr, ca = c['rect'], area(c['rect'])
         for p in frames:
@@ -2354,7 +2424,7 @@ def overlap_problems(nodes, buttons, full):
                             the action word is on the generated button picture; captions only explain (e.g. "x2 coins")"""
     out = []
     pics = [n for n in nodes if 'sprite' in n['comps'] and not text(n) and not baked(n) and n not in full and area(n['rect']) < 0.3
-            and not decor(n)]
+            and not decor(n) and not n.get('_original_pattern_panel')]
     texts = [n for n in nodes if text(n)]
     for t in texts:
         at = area(t['rect'])
@@ -2516,10 +2586,19 @@ def colour_problems(d, nodes, image_module):
     the same teal, and the "Your Progress" popup where every word is the same orange-yellow with a brown outline. Titles,
     buttons, numbers and labels share one style family but differ in colour (and size/shape). Text items are grouped by
     their node name (a list of rank rows is one item); with >= 3 items all in one colour family the page fails."""
+    # Repeated values from one numeric HUD font are one visual vocabulary,
+    # not separate title/button/label captions. Do not sample their common
+    # contour or earth backdrop as if it were each glyph's fill colour.
+    items=[(n.get('comps',{}).get('label') or {},text(n)) for n in nodes if text(n)]
+    if (d.get('kind')=='gameplay' and d.get('purpose')=='gameplay' and items
+            and all(bitmap_font(lab) and lab.get('font') and
+                    re.fullmatch(r'[\d\s+\-xX×/:.,%$#·]+',value) for lab,value in items)
+            and len({lab['font'] for lab,value in items})==1
+            and any(re.search(r'\d',value) for lab,value in items)):
+        return []
     shot = screenshot_of(d) if d.get('_file') else None
     img = page_pixels(image_module, shot) if image_module is not None and shot is not None and shot.is_file() else None
     groups = {}
-    settings_text = []
     for n in nodes:
         lab = n['comps'].get('label') or n['comps'].get('richtext')
         if not text(n) or (lab and len(text(n)) > DENSE_TEXT):
@@ -2532,15 +2611,8 @@ def colour_problems(d, nodes, image_module):
             cls = ink_class(img, n.get('screen') or n['rect'])
         if cls is not None:
             groups.setdefault(n['name'], (cls, text(n)[:16]))
-            if BOARD == 'localize' and d.get('purpose') == 'settings_sound':
-                settings_text.append((n['name'], n.get('screen') or n['rect']))
     classes = {c for c, _ in groups.values()}
     if len(groups) >= 3 and len(classes) == 1:
-        titles = [rect for name, rect in settings_text if re.search(r'title|heading', name, re.I)]
-        labels = [rect for name, rect in settings_text if not re.search(r'title|heading', name, re.I)]
-        if (len(titles) == 1 and len(labels) >= 2
-                and all(titles[0][1] < rect[1] and titles[0][3] >= 1.25 * rect[3] for rect in labels)):
-            return []  # Clearly separated by visible size and order. Other readability checks still run.
         c = classes.pop()
         return ['uniform_text_colour: all %d text items are the same colour (%s: %s): give the title, buttons, numbers and labels '
                 'different fill colours (one style family, varied colours, sizes and letter shapes; user 2026-10-23: the all-teal '
@@ -2792,7 +2864,7 @@ def requires_home_gift(project):
     return applies('gift_box', BOARD, project) != 'not_applicable'
 
 
-def check(d, image_module=None, project=None, binding=None, original_rules=(), retained_pattern_frames=()):
+def check(d, image_module=None, project=None, binding=None, original_rules=(), retained_pattern_frames=(), retained_panel_nodes=()):
     from official_loading import audit as audit_official_loading
     if 'original_loading_spinner' in original_rules:
         # An original in-engine scene-switch spinner is not the official
@@ -2833,6 +2905,10 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             stack.pop()
         if n.get('id') and 'depth' in n:
             n['_audit_ancestors'] = n.get('ancestor_ids', [a['id'] for a in stack if a.get('id')])
+        n['_original_pattern_panel'] = (not text(n) and not baked(n) and
+            bool({'original_information_panel','original_transient_notice'} & set(original_rules)) and
+            any(n.get('path') == p['path'] and n.get('comps', {}).get('sprite', {}).get('frame') == p['frame']
+                for p in retained_panel_nodes))
         records.append(n)
         stack.append(n)
     def visible_in_camera(n):
@@ -2930,16 +3006,16 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         return problems, dict(pix, gameplay=True)
     # Check-in pages have a dedicated seven-card, day-7 and Claim structure check below;
     # their modal panel/background footprint must not be mistaken for an empty full page.
-    if len(content) < 5 or (cov < 0.25 and purpose != 'checkin' and 'result_original_density' not in original_rules):
+    original_notice = purpose == 'toast' and 'original_transient_notice' in original_rules and any(n.get('_original_pattern_panel') for n in nodes)
+    original_info = (purpose == 'info' or original_notice) and any(n.get('_original_pattern_panel') for n in nodes)
+    if not original_info and (len(content) < 5 or (cov < 0.25 and purpose != 'checkin' and 'result_original_density' not in original_rules)):
         problems.append('monotonous: only %d visible things covering %.0f%% of the screen (needs >= 5 and >= 25%%): '
                         'add title, reward, stars, mascot or decoration' % (len(content), cov * 100))
     behind = [n for n in all_pictures if not any(under(n['path'], m['path']) for m in masks)]
     composite_bg=[n for n in all_pictures if BACKGROUND_NAME.search(n['name']+' '+str(n['comps']['sprite'].get('frame','')))]
-    if not backdrops and coverage([n.get('screen')or n['rect']for n in composite_bg])<.85 and not (masks and len(behind) >= 8):
+    if not backdrops and coverage([n.get('screen')or n['rect']for n in composite_bg])<.85 and coverage(scene_mesh_rects(d))<.85 and not (masks and len(behind) >= 8):
         problems.append('plain_backdrop: no background picture and no game scene behind (flat colour)')
     for b in buttons:
-        if purpose in ('result_win', 'result_fail') and is_claim_link(b, nodes):
-            continue
         sub = [n for n in nodes if node_under(n, b)]
         has_plate = any('sprite' in n['comps'] and area(n['rect']) >= 0.3 * area(b['rect']) for n in sub)
         if not has_plate and any(text(n) for n in sub):
@@ -2962,26 +3038,19 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         if not lab or not text(n) or lab.get('system_font') is not True or lab.get('font'):
             continue
         problems.append('system_font: "%s" (%s) uses the system default font; use the game font' % (text(n)[:30], n['path']))
-    panels = [n for n in nodes if n not in masks and area(n['rect']) < 0.85 and
+    panels = [n for n in nodes if n not in masks and (not original_notice or n.get('_original_pattern_panel')) and area(n['rect']) < 0.85 and
               'button' not in n['comps'] and area(n['rect']) >= 0.12 and
               (('sprite' in n['comps'] and (n['comps']['sprite'].get('sliced') or kind == 'popup')) or
                (n['name'] == 'PanelSurface' and 'graphics' in n['comps']))]
     if panels and kind in ('popup', 'page', 'home'):
         p = max(panels, key=lambda n: area(n['rect']))
-        inner = [n['rect'] for n in content if n is not p and center_in(n['rect'], p['rect']) and area(n['rect']) < 0.9 * area(p['rect'])]
-        filled = coverage(inner, p['rect'])
-        # A check-in page has its own seven-card/day-7 layout checks; generic
-        # panel fill counts the card grid incorrectly. Keep the generic guard
-        # active for other pages, including league/rankings panels.
-        if filled < 0.30 and purpose != 'checkin':
-            problems.append('empty_panel: %s is only %.0f%% filled (needs >= 30%%): the screenshot "Weekly Rankings" mistake'
-                            % (p['path'], filled * 100))
+        # User 2026-11-16 removed the panel content-fill percentage requirement.
         if (kind == 'popup' or masks) and purpose not in OWN_POPUP_RULES:
             art = [n['rect'] for n in pictures if n is not p and n not in panels and not text(n) and center_in(n['rect'], p['rect'])
                    and not TITLE_DECOR.search(n['name'] + ' ' + str(n['comps']['sprite'].get('frame', '')))
                    and area(n['rect']) >= 0.005 and not any(node_under(n, b) for b in buttons)]
             art_share = coverage(art, p['rect'])
-            if art_share < MIN_POPUP_ART and 'original_popup_illustration' not in original_rules:
+            if art_share < MIN_POPUP_ART and 'original_popup_illustration' not in original_rules and not p.get('_original_pattern_panel'):
                 problems.append('plain_popup: %s holds only text and buttons (pictures %.0f%% of the panel, needs >= 10%%): add a '
                                 'generated illustration - gift/chest, mascot, phone with the game icon, the reward items with the '
                                 'currency icon - plus a picture-text title on a ribbon (user 2026-10-23: the flat "Home screen '
@@ -2992,7 +3061,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         result_controls=[n for n in content if 'button' in n['comps']]
         if len(result_controls)<2 or not buttons:need.append('>= 2 visible result controls and an enabled exit, found %d visible / %d enabled'%(len(result_controls),len(buttons)))
         if not numbers: need.append('a number (reward coins, score or level)')
-        if len(decor) < 3: need.append('>= 3 pictures besides buttons (stars, coin, ribbon, mascot), found %d' % len(decor))
+        if len(decor) < 3 and 'result_original_density' not in original_rules: need.append('>= 3 pictures besides buttons (stars, coin, ribbon, mascot), found %d' % len(decor))
         if cov < 0.25 and 'result_original_density' not in original_rules: need.append('>= 25%% of the screen used, found %.0f%%' % (cov * 100))
         if need:
             problems.append('result_page: ' + '; '.join(need))
@@ -3008,7 +3077,9 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             if not any(DOUBLE_BUTTON.search(sub_names(b)) for b in buttons) and not claimed_status:
                 problems.append('result_double: no "watch an ad, x2 reward" button: every level end (endless: every run end) offers '
                                 'it (user 2026-10-23, both boards; AdRewards.resultReward(...).doubled), name it BtnDouble / btn_x2_*')
-            elif not claimed_status:
+            elif not claimed_status and BOARD != 'localize':
+                # Claim-base link is the remake result flow; English keeps its
+                # existing atomic base award and still requires the x2 offer.
                 problems += result_claim_problems(buttons, sub_names)
     button_share = coverage([b['rect'] for b in buttons])
     problems += video_button_problems(purpose, content, nodes)
@@ -3068,13 +3139,13 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
     #     PLAY text, text sticking out of plates and a big empty middle)
     if image_module is not None and pixels is not None:
         for share, fill, box in solid_blocks(screenshot_of(d), image_module):   # the background is full width: skipped below
-            surfaces=[n for n in all_visual if 'sprite' in n.get('comps',{}) and not str(n['comps']['sprite'].get('frame','')).startswith(('txt_','digit_','symbol_')) and area(n.get('screen') or n['rect'])<.85 and inter(box,n.get('screen') or n['rect'])>=.65*area(box)]
+            surfaces=[n for n in all_visual if n.get('opacity',1) > 0.05 and 'sprite' in n.get('comps',{}) and not str(n['comps']['sprite'].get('frame','')).startswith(('txt_','digit_','symbol_')) and area(n.get('screen') or n['rect'])<.85 and inter(box,n.get('screen') or n['rect'])>=.65*area(box)]
             top=max(surfaces,key=lambda n:n.get('order',0)) if surfaces else None
             if top and str(top.get('comps',{}).get('sprite',{}).get('frame','')) in retained_pattern_frames:
                 continue
             # A dim full-screen input shade masks the underlay from interaction checks,
             # but the background pixels remain visible behind it in this screenshot.
-            if background_only_block(box, all_visual):
+            if background_only_block(box, all_visual, scene_mesh_rects(d)):
                 continue
             if panel_fill_block(box, nodes):
                 continue
@@ -3090,7 +3161,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
         frame = str(n['comps']['sprite'].get('frame', ''))
         if not (0.015 <= area(n['rect']) <= 0.12) or n in panels or 'button' in n['comps'] and text(n):
             continue
-        if not (CARD_NAMES.search(frame) or CARD_NAMES.search(n['name'])):
+        if not (card_name(frame) or card_name(n['name'])):
             continue
         if frame.lower().startswith('btn_') and baked(n):
             continue  # A generated whole-word action button is not an empty collection card.
@@ -3124,8 +3195,7 @@ def check(d, image_module=None, project=None, binding=None, original_rules=(), r
             problems.append('empty_area: a band of %.0f%% of the screen height has nothing in it (needs < 18%%): fill it with cover art, '
                             'more level nodes or move things closer' % (gap * 100))
     if purpose in ('home', 'result_win', 'result_fail'):
-        texted = [b for b in buttons if texted_action_button(b, nodes)
-                  and (purpose == 'home' or not is_claim_link(b, nodes))]
+        texted = [b for b in buttons if texted_action_button(b, nodes)]
         if len(texted) > 2 and 'result_original_button_layout' not in original_rules:
             problems.append('text_buttons: %d buttons have text on the plate (max 2, e.g. PLAY/NEXT; the rest are icons with a small '
                             'caption below): %s' % (len(texted), ', '.join(text(next(n for n in nodes if node_under(n, b) and text(n)))[:16]
@@ -3246,9 +3316,8 @@ def main():
     ap.add_argument('--no-analysis-cache', action='store_true', help='recompute identical pixel inputs for comparison')
     a = ap.parse_args()
     global BOARD
+    BOARD = a.board
     proj = a.project.resolve()
-    from feature_policy import board_of
-    BOARD = board_of(proj, a.board)[0]
     folders = a.dumps or [proj / 'docs/test']
     dumps = load([f for f in folders if Path(f).is_dir()], project=proj)
     try:
@@ -3273,13 +3342,8 @@ def main():
                         rect=[sub.get('trimX',0),sub.get('trimY',0),sub.get('width',0),sub.get('height',0)]
                         GENERATED_TEXT_SOURCES[name]={'path':source,'rect':rect if min(rect[2:])>0 else None}
             except (OSError,ValueError):pass
-    from feature_policy import enabled, read_record
+    from feature_policy import enabled
     OPTIONAL = enabled(proj)
-    declared = read_record(proj, 'docs/art/screens.json')
-    declared_purposes = {item.get('purpose') for item in (declared.get('screens') or []) if isinstance(item, dict)}
-    if BOARD == 'localize':
-        OPTIONAL['checkin'] = (read_record(proj, 'docs/features.json').get('daily_checkin') is True
-                               or 'checkin' in declared_purposes or any(d.get('purpose') == 'checkin' for d in dumps))
     setup = []
     global MAINTENANCE_RULES
     MAINTENANCE_RULES = set()
@@ -3348,19 +3412,21 @@ def main():
     # Keep first-piece and full checks compatible for the exact same original dump.
     cache_options.pop('dump_file', None)
     analysis_cache = PageCache(proj, dict(board=BOARD, binding=presentation_binding,
-        maintenance=maintenance_mapping, cli=cache_options), enabled=not a.no_analysis_cache)
+        maintenance=maintenance_mapping, original_visual_scope=original_mapping, cli=cache_options), enabled=not a.no_analysis_cache)
     pages, failed = [], []
     for d in dumps:
         from english_visual_scope import rules_for
         scoped=rules_for(original_mapping,d)
         frames={x['frame'] for row in (original_mapping or {}).get('pages',[]) if row['screen']==d.get('screen') for x in row.get('original_frames',[])} if scoped else set()
+        retained_panels = [p for row in (original_mapping or {}).get('pages', []) if row['screen'] == d.get('screen')
+                           for p in row.get('retained_panel_nodes', [])] if scoped else []
         images = {}
         token = _PAGE_PIXELS.set(images)
         try:
             cache_key = analysis_cache.key(d, screenshot_of(d))
             cached = analysis_cache.get(cache_key)
             if cached is None:
-                problems, stats = check(d, Image, proj, presentation_binding,scoped,frames)
+                problems, stats = check(d, Image, proj, presentation_binding,scoped,frames,retained_panels)
                 analysis_cache.put(cache_key, [problems, stats])
             else:
                 problems, stats = cached
@@ -3374,12 +3440,7 @@ def main():
         if problems:
             failed.append(row)
     analysis_cache.finish()
-    need = list(REQUIRED)
-    if BOARD == 'localize' and declared.get('runtime_verified') is True:
-        for expected, existing in (('result_win', 'result_fail'), ('result_fail', 'result_win'),
-                                   ('settings', 'settings_sound')):
-            if expected not in declared_purposes and existing in declared_purposes:
-                need.remove(expected)
+    need = required_base_purposes(proj, BOARD, dumps, original_mapping)
     if 'settings_original_switches' in MAINTENANCE_RULES:
         for mapped in ('settings', 'settings_sound'):
             if mapped in need:

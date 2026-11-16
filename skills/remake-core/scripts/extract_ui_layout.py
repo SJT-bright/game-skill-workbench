@@ -332,6 +332,24 @@ class Screen:
             self.notes.append('no button found on the home screen dump')
         return {'kind': 'page', 'role': 'home', 'buttons': out}
 
+    def unframed_overlay(self, sub):
+        actions = self.outermost([n for n in sub if 'button' in n['comps'] and not self.in_world(n)])
+        if not actions and self.d.get('purpose') in {'result_win', 'result_fail'}:
+            raise ValueError('%s: unframed result has no rendered action controls' % self.d['screen'])
+        self.notes.append('unframed overlay: retained scene has no enclosing dialog panel')
+        is_result = self.d.get('purpose') in {'result_win', 'result_fail'}
+        def primary(n):
+            if PRIMARY.search(n['name']):
+                return True
+            if not is_result:
+                return len(actions) <= 2  # preserve existing generic overlay behaviour
+            # Result x2/watch-ad reward and NEXT are main actions; Home is an
+            # icon exit. Match the actual action leaf, not a parent path.
+            name = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', n['name'])
+            return bool(re.search(r'(?:^|[^a-z0-9])(?:double(?:_?reward)?|x2|watch_?ad)(?:$|[^a-z0-9])', name, re.I))
+        return {'kind':'page','role':'overlay','buttons':[{'name':n['path'],'rect':list(n['px']),'label':'none',
+            **({'primary':True} if primary(n) else {})} for n in actions]}
+
     def popup(self):
         roots = self.o.get('popup_root') or {}
         root = roots.get(self.d['screen']) or roots.get('*')
@@ -354,16 +372,15 @@ class Screen:
             surfaces = [n for n in sub if not self.in_world(n) and 0.04 <= self.share(n['px']) <= 0.9 and 'button' not in n['comps'] and
                         ((('sprite' in n['comps']) and not DECOR.search(n['name'])) or
                          (n['name'] in ('PanelSurface', 'PanelArt') and 'graphics' in n['comps']))]
+            if not surfaces and self.d.get('purpose') in {'result_win', 'result_fail'}:
+                return self.unframed_overlay(sub)
             if not surfaces:
                 raise ValueError('%s: no rendered panel surface under %s' % (self.d['screen'], root))
             framed=[n for n in surfaces if n['comps'].get('sprite',{}).get('sliced') or re.search(r'panel|boxbg|box[-_]?background',n['name'],re.I)]
             if not framed:
                 # An unframed end-of-run overlay may deliberately retain its
                 # board. Do not pick a board shadow as an enclosing dialog.
-                actions=self.outermost([n for n in sub if 'button' in n['comps'] and not self.in_world(n)])
-                self.notes.append('unframed overlay: no semantic panel surface; retained game board is not a dialog frame')
-                return {'kind':'page','buttons':[{'name':n['path'],'rect':list(n['px']),'label':'none',
-                    **({'primary':True} if len(actions)<=2 or PRIMARY.search(n['name']) else {})} for n in actions], 'role':'overlay'}
+                return self.unframed_overlay(sub)
             panel = max(framed, key=lambda n: area(n['px']))
         self.notes.append('panel picked: ' + panel['path'])
         pr = panel['px']
@@ -425,6 +442,8 @@ class Screen:
         return res
 
     def page(self):
+        if self.d.get('purpose') in {'result_win', 'result_fail'}:
+            return self.unframed_overlay(self.nodes)
         return {'kind': 'page', 'entry_names': [n['path'] for n in self.nodes if 'button' in n['comps']]}
 
     def build(self):

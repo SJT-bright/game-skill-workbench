@@ -31,6 +31,7 @@ the original ones, and every finding says how to record the original.
 import colorsys
 import fnmatch
 import json
+import plistlib
 from pathlib import Path
 import re
 
@@ -552,6 +553,18 @@ def frame_index(proj):
         except (OSError, ValueError):
             continue
         tex = src if low.endswith(IMAGE_EXT) else src.with_suffix('.png')
+        if low.endswith('.plist'):
+            try:
+                atlas = plistlib.loads(src.read_bytes())
+                texture = (atlas.get('metadata') or {}).get('textureFileName')
+                if texture:
+                    tex = src.parent / texture
+                # Runtime SpriteFrame names use the plist frame keys. Creator
+                # meta subkeys may replace '/' with '-', so they are not aliases.
+                for name in atlas.get('frames', {}):
+                    by_name.setdefault(name, []).append(tex)
+            except (OSError, ValueError, plistlib.InvalidFileException):
+                pass
         for key, sub in (data.get('subMetas') or {}).items():
             if not isinstance(sub, dict):
                 continue
@@ -628,6 +641,15 @@ class OriginalArt:
         if any(fnmatch.fnmatch(frame, g) for g in self.globs):
             return True
         if not self.record:
+            return False
+        if self._index is None:
+            self._index = frame_index(self.proj)
+        files = self._index['name'].get(frame) or []
+        return bool(files) and all(self._digest(f) in self.record for f in files)
+
+    def same_bytes(self, frame):
+        """Exact original source identity only; no clarity glob exceptions."""
+        if not self.english or not self.record or not frame:
             return False
         if self._index is None:
             self._index = frame_index(self.proj)

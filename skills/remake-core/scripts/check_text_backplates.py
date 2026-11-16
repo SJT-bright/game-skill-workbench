@@ -99,9 +99,18 @@ def ui_dump_problems(d, image, nodes, get_text, project=None):
     source_findings=[]
     source_index={}
     original_digests=set()
+    original_source_index={}
     if project is not None:
         for p in (Path(project)/'assets').rglob('*.png'):
-            source_index.setdefault(p.stem, []).append(p)
+            keys = {p.stem, p.name, p.relative_to(Path(project)/'assets').as_posix()}
+            resources = Path(project)/'assets/resources'
+            if p.is_relative_to(resources):
+                keys.add(p.relative_to(resources).as_posix())
+                keys.add(p.relative_to(resources).with_suffix('').as_posix())
+            for key in keys:
+                source_index.setdefault(key, []).append(p)
+        from audit_button_colour import frame_index
+        original_source_index = frame_index(Path(project))['name']
         # Preserve explicitly recorded original English art. A broad original
         # panel seen through transparent word art is not the word's own fill.
         board=Path(project)/'docs/board.txt'
@@ -130,10 +139,39 @@ def ui_dump_problems(d, image, nodes, get_text, project=None):
                 source_checked=True
             except (OSError, ValueError):
                 source_checked=False  # unreadable evidence keeps the strict screenshot check
+        # Bitmap labels have no sprite frame on the node. Inspect the actual
+        # referenced glyph alpha, just as picture words above; a retained parent
+        # button seen through that alpha is not a fill baked into the glyph.
+        lab = n.get('comps', {}).get('label', {})
+        if project is not None and lab.get('font_kind') == 'bitmap' and lab.get('font'):
+            from audit_glyph_core import parse_fnt
+            fonts = list((Path(project)/'assets').rglob(str(lab['font'])+'.fnt'))
+            checked_fonts = 0
+            for font in fonts:
+                parsed = parse_fnt(font)
+                if not parsed:
+                    continue
+                glyphs = [parsed['chars'].get(ord(ch)) for ch in get_text(n) if not ch.isspace()]
+                if not glyphs or any(g is None for g in glyphs):
+                    continue
+                try:
+                    findings = []
+                    for glyph in glyphs:
+                        page = (font.parent/parsed['pages'][glyph['page']]).resolve()
+                        if not page.is_relative_to(Path(project).resolve()/'assets'):
+                            raise ValueError('bitmap page outside project assets')
+                        with Image.open(page) as raw:
+                            rgba = raw.convert('RGBA').crop((glyph['x'],glyph['y'],glyph['x']+glyph['width'],glyph['y']+glyph['height']))
+                            findings.extend(find_backplates(rgba,[{'path':n['path'],'rect':[0,0,*rgba.size]}]))
+                    source_findings.extend(findings)
+                    checked_fonts += 1
+                except (OSError, ValueError, KeyError):
+                    continue
+            source_checked = source_checked or bool(fonts and checked_fonts == len(fonts))
         for surface in surfaces:
             if surface is n and source_checked:continue
             sf=str((surface.get('comps',{}).get('sprite') or {}).get('frame',''))
-            originals=source_index.get(sf,[])
+            originals=source_index.get(sf,[]) or original_source_index.get(sf,[])
             if source_checked and originals and all(sha(p) in original_digests for p in originals):continue
             b=pixels(surface)
             ix=max(0,min(r[0]+r[2],b[0]+b[2])-max(r[0],b[0]));iy=max(0,min(r[1]+r[3],b[1]+b[3])-max(r[1],b[1]))

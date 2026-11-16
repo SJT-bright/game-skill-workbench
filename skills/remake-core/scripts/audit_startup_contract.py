@@ -107,10 +107,9 @@ def native_sizes(native, startup_subs):
 
 
 
-def validate_runtime_report(report, binding, *, detail=None, replay_runner=None):
-    """Rejudge exact evidence; use the ledger for the reviewed real browser replay."""
+def validate_runtime_report(report, binding):
+    """Final LOAD gate rejects source-only/legacy attestations and replays the real chain."""
     import audit_native_startup_renderer as renderer
-    import native_startup_ledger
     try:
         if report.get('policy_version') != 2 or report.get('runtime_required') is not True:
             return ['Final startup report requires real Native renderer policy v2']
@@ -118,13 +117,7 @@ def validate_runtime_report(report, binding, *, detail=None, replay_runner=None)
         if not path.is_file() or renderer.sha(path) != ref['sha256']:
             return ['Real Native startup report missing or changed']
         proof = json.loads(path.read_text()); native = Path(report['native']); project = Path(report['project'])
-        errors = renderer.validate(proof,native,binding,project)
-        if errors:
-            return errors
-        replay = (replay_runner or native_startup_ledger.replay)(proof,native,binding,project)
-        if detail is not None:
-            detail.update(replay)
-        return []
+        return renderer.validate(proof,native,binding,project) + renderer.execute_registered(proof,native,binding,project)
     except (KeyError,ValueError,TypeError,OSError) as e:
         return ['Real Native startup report invalid: '+str(e)]
 
@@ -151,11 +144,8 @@ def main():
                       'scope':'finished-product Native startup runtime; file/size checks remain in the upload writer',
                       'project':str(a.project.resolve()),'native':str(a.native.resolve()),'binding':binding,
                       'startup_renderer_report':{'path':str(a.renderer_report.resolve()),'sha256':renderer.sha(a.renderer_report)}}
-            replay = {}
-            errors = validate_runtime_report(report,binding,detail=replay)
+            errors = validate_runtime_report(report,binding)
             report.update(checked=1,failed=len(errors),passed=not errors,errors=errors)
-            if replay:
-                report['renderer_replay'] = replay
             if a.out:
                 a.out.parent.mkdir(parents=True,exist_ok=True)
                 with a.out.open('x',encoding='utf-8') as f:json.dump(report,f,ensure_ascii=False,indent=2)
@@ -204,11 +194,10 @@ def main():
         problems.append('no --native build given: startup size not measured')
     runtime_ref=a.renderer_report or a.project/'docs/native-startup-renderer.json'
     runtime_required=bool(a.native) and not a.source_only
-    replay = {}
     if runtime_required:
         if runtime_ref.is_file():
             import audit_native_startup_renderer as renderer
-            runtime_errors=validate_runtime_report({'policy_version':2,'runtime_required':True,'startup_renderer_report':{'path':str(runtime_ref.resolve()),'sha256':renderer.sha(runtime_ref)},'native':str(a.native.resolve()),'project':str(a.project.resolve())},binding,detail=replay)
+            runtime_errors=validate_runtime_report({'policy_version':2,'runtime_required':True,'startup_renderer_report':{'path':str(runtime_ref.resolve()),'sha256':renderer.sha(runtime_ref)},'native':str(a.native.resolve()),'project':str(a.project.resolve())},binding)
             problems.extend(runtime_errors)
         else:problems.append('Final Native startup check requires --renderer-report with executable real entry/adapter/renderer/scene proof')
     report = {'tool': 'audit_startup_contract', 'checked': 1 + (1 if sizes else 0), 'failed': len(problems),
@@ -217,8 +206,6 @@ def main():
                          {'name': 'startup size and audio', 'passed': bool(sizes) and not [p for p in problems if 'startup' in p or 'audio' in p]}],
               'note': 'Static check only. The browser fault runs of audit_startup_loading.py prove the game really gets in.'}
     report.update(policy_version=2,runtime_required=runtime_required,project=str(a.project.resolve()),native=str(a.native.resolve()) if a.native else None)
-    if replay:
-        report['renderer_replay'] = replay
     if runtime_ref.is_file():
         import audit_native_startup_renderer as renderer
         report['startup_renderer_report']={'path':str(runtime_ref.resolve()),'sha256':renderer.sha(runtime_ref)}

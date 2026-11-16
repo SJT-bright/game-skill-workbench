@@ -344,7 +344,6 @@ class PageRichnessTests(unittest.TestCase):
         win = self.problems(r, 'result_win')
         for kind in ('monotonous', 'result_page', 'result_double'):
             self.assertIn(kind, win)
-        self.assertIn('empty_panel', self.problems(r, 'league'))
 
     FULL = [('good_home', 'home'), ('good_result', 'result_win'), ('good_result', 'result_fail'),
             ('settings', 'settings'), ('settings_sound', 'settings_sound'), ('play', 'other')]

@@ -328,14 +328,14 @@ def check_buttons(s, size, problems, a):
             raise ValueError(s['name'] + ': button label must be none/small/text')
         (prim if b.get('primary') else sec).append(b)
     name = s['name']
-    scoped_home='home_original_composition' in getattr(a,'original_rules',{}).get(name,set())
+    scoped_home=s.get('role') == 'home' and 'home_original_composition' in getattr(a,'original_rules',{}).get(name,set())
     if len(prim) > 2:
         problems.append('%s: %d primary buttons; keep at most 2 big text buttons' % (name, len(prim)))
     for b in prim:
         r = clip(b['rect'], size)
-        if r[2] * r[3] / screen > a.max_primary:
+        if not scoped_home and r[2] * r[3] / screen > a.max_primary:
             problems.append('%s: primary %s covers %.1f%% of the screen (limit %.0f%%)' % (name, b['name'], r[2] * r[3] / screen * 100, a.max_primary * 100))
-        if r[2] > 0.7 * size[0]:
+        if not scoped_home and r[2] > 0.7 * size[0]:
             problems.append('%s: primary %s is wider than 70%% of the screen' % (name, b['name']))
     zones = {}
     for b in sec:

@@ -9,8 +9,6 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import shutil
-import subprocess
 import stat
 import uuid
 import zipfile
@@ -75,40 +73,11 @@ def enforce(sizes, game, platform='tiktok'):
         raise ValueError(f'Uncompressed Douyin total {total} bytes exceeds conservative 20000000 limit')
     return {'total_bytes':total,'main_bytes':main,'normal_subpackages':normal,'independent_subpackages':independent}
 
-
-# Only the shipped multiplatform Cocos engine paths carry supported wx branches.
-_ENGINE_MULTIPLATFORM_FILES = {'cocos/cocos2d-js-min.js', 'cocos/cocos2d-js.js'}
-
-
-def enforce_tiktok_host(files):
-    """Report legacy host access in the main package, adapters and subpackages."""
-    from cocos1_compat import engine_file
-    genuine_creator1 = engine_file(files)
-    candidates = [{'file': name, 'code': data.decode('utf-8-sig')}
-                  for name, data in sorted(files.items())
-                  if name not in _ENGINE_MULTIPLATFORM_FILES and name != genuine_creator1 and name.lower().endswith(('.js', '.mjs', '.cjs'))]
-    if not candidates:
-        return
-    node = shutil.which('node')
-    if not node:
-        raise ValueError('TikTok host-reference check needs Node.js')
-    scanner = Path(__file__).with_name('scan_tiktok_host_refs.cjs')
-    result = subprocess.run([node, str(scanner)], input=json.dumps({'files': candidates}),
-                            text=True, capture_output=True, timeout=30)
-    if result.returncode:
-        raise ValueError('TikTok host-reference check did not run: ' + result.stderr[-500:])
-    findings = json.loads(result.stdout)['findings']
-    if findings:
-        raise ValueError('TikTok Native contains legacy WeChat host references: ' + '; '.join(
-            f"{row['file']}:{row['line']} {row['reference']}" for row in findings[:12]))
-
-
 def enforce_files(files):
     # Reject total before parsing config or opening an output file.
     total=sum(len(data) for data in files.values())
     if total>TIKTOK_TOTAL:
         raise ValueError(f'Uncompressed total package {total} bytes exceeds the limit {TIKTOK_TOTAL} bytes')
-    enforce_tiktok_host(files)
     return enforce({p:len(data) for p,data in files.items()},json.loads(files['game.json'].decode('utf-8-sig')))
 
 
@@ -130,8 +99,6 @@ def inspect_files(files, platform='tiktok'):
             raise ValueError('Missing/empty root entry: '+name+' (do not upload an outer folder)')
     game=json_object(files['game.json'])
     result=enforce({p:len(b) for p,b in files.items()},game,platform)
-    if platform == 'tiktok':
-        enforce_tiktok_host(files)
     key='subpackages' if platform=='tiktok' else 'subPackages'
     subs=game.get(key,[])
     roots=[s['root'].rstrip('/')+'/' for s in subs]

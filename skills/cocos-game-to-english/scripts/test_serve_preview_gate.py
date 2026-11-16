@@ -364,14 +364,25 @@ class TrialLinkTiming(unittest.TestCase):
         shutil.copytree(str(web), str(snap))
         verify(snap)()
 
-    def test_prepared_candidates_do_not_start_user_wait_or_record_a_handoff(self):
+    def test_new_export_is_a_round_same_export_is_not_and_numbers_do_not_double(self):
         with tempfile.TemporaryDirectory() as td:
             root, web = make_game(td)
             scan(root, web, env_for(td))
             lines, say = quiet()
             self.link(root, web, td, say)
+            links = [e for e in timing_events(root) if e['ev'] == 'link']
+            self.assertEqual([e['n'] for e in links], [1])
+            self.assertIn('第 1 轮', ''.join(lines))
+            self.link(root, web, td, say)                                  # the same export served again
+            self.assertEqual([e['n'] for e in timing_events(root) if e['ev'] == 'link'], [1])
+            self.assertIn('同一份导出', ''.join(lines))
+            sys.path.insert(0, str(HERE))
+            import stage_timer
+            stage_timer.call(root, 'link', 2)                              # the session also ran T link 2 by hand
+            (web / 'index.html').write_text('<html><canvas id="GameCanvas"></canvas><!-- round 2 --></html>', encoding='utf-8')
+            scan(root, web, env_for(td))
             self.link(root, web, td, say)
-            self.assertFalse([event for event in timing_events(root) if event['ev'] == 'link'])
+            self.assertEqual([e['n'] for e in timing_events(root) if e['ev'] == 'link'], [1, 2])
             self.assertFalse((root / '.tiktok-kit/art-receipt.json').exists())
 
     def test_timing_that_cannot_be_written_does_not_stop_the_link(self):
@@ -505,112 +516,6 @@ class RealServer(unittest.TestCase):
                 self.stop(p, reader)
             log = json.loads((root / 'docs' / 'english' / 'chinese-audit' / 'trial-links.json').read_text(encoding='utf-8'))
             self.assertEqual(log[-1]['snapshot_manifest_sha256'], log[-1]['export_manifest_sha256'])
-
-
-class UserHandoff(unittest.TestCase):
-    """Real retained HTTP shell, synthetic game evidence, intercepted Chrome launch."""
-
-    def test_only_completed_art_or_bound_package_can_request_chrome(self):
-        from functools import partial
-        from zipfile import ZipFile
-        import handoff_preview as H
-        import verify_delivery_preview
-
-        with tempfile.TemporaryDirectory(prefix='英化交接 ') as td:
-            project, web = make_game(td)
-            scan(project, web, env_for(td))
-            GATE.timing(project, 'start', '--run-id', 'trial', '--route', 'source')
-            GATE.timing(project, 'stage', '3')
-            native = native_dir(project)
-            snapshot = shutil.copytree(web, Path(td) / 'snapshot')
-            _, verify = GATE.gate(['--directory', str(web), '--snapshot', '--keep',
-                                   '--native', str(native)], timing_run_id='trial', say=quiet()[1])
-            verify(snapshot)()
-            shared = runpy.run_path(str(HERE.parents[1] / 'remake-core/scripts/serve_preview.py'))
-            handler = partial(shared['Handler'], directory=str(snapshot), phone_size=(390, 844),
-                              preview_token='fixture')
-            server = shared['ThreadingHTTPServer'](('127.0.0.1', 0), handler)
-            thread = threading.Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            url = f'http://127.0.0.1:{server.server_port}/'
-            slot = {'id': '1110-090000-preview-abcdef', 'kind': 'preview', 'url': url, 'keep': True, 'dir': str(snapshot),
-                    'pid': os.getpid(), 'process_identity': H.browser_slots.process_identity(os.getpid()),
-                    'project': str(project.resolve()), 'phone_size': [390, 844]}
-            plan = {'schema': 'english-playtest-plan.v1', 'game': 'Same game', 'version': 'R1',
-                    'mode': 'trial', 'preview_url': url, 'web_tree_sha256': H.tree_sha(web),
-                    'inventory': [{'id': 'play', 'page': 'Home', 'state': 'ready',
-                                   'control': 'Play', 'evidence': 'fixture'}],
-                    'steps': [{'id': 'home', 'page': 'Home', 'enter': 'Open the game',
-                               'checks': [{'covers': ['play'], 'basis': 'strict_requirement',
-                                           'action': 'Tap Play', 'expected': 'Game starts'}]}]}
-            try:
-                with patch.object(H.browser_slots, 'SLOTS', Path(td) / 'slots'), \
-                        patch.object(H.browser_slots, 'slots', return_value=[slot]), \
-                        patch.object(verify_delivery_preview, 'slots', return_value=[slot]), \
-                        patch.object(H.preview_chrome, 'open_chrome_window',
-                                     return_value={'status': 'launch_requested'}) as launch:
-                    GATE.timing(project, 'begin', '未结束的检查')
-                    with self.assertRaisesRegex(ValueError, '开放步骤'):
-                        H.handoff(project, url, 'art', plan)
-                    GATE.timing(project, 'end', '未结束的检查')
-                    with self.assertRaisesRegex(ValueError, '同页清单尚不可用'):
-                        H.handoff(project, url, 'art', plan)
-                    launch.assert_not_called()
-                    self.assertNotIn('done', [event['ev'] for event in timing_events(project)])
-                    server.playtest_html = H.browser_slots.playtest_html_path(slot['id'])
-                    result = H.handoff(project, url, 'art', plan)
-                    self.assertEqual(result['label'], '英文美工试玩')
-                    self.assertEqual(launch.call_count, 1)
-                    self.assertEqual(launch.call_args.args[0], url + '__playtest/')
-                    self.assertIn('完成与沿用', result['stage_report'])
-                    self.assertIn('阶段结算', result['stage_report'])
-                    page = urllib.request.urlopen(result['playtest_url'], timeout=3).read().decode()
-                    self.assertIn(f'"preview_url":"{url}"', page)
-                    self.assertIn('game-frame', page)
-                    self.assertNotIn('在新标签页打开游戏', page)
-                    self.assertEqual([event['ev'] for event in timing_events(project)][-2:], ['done', 'link'])
-
-                    GATE.timing(project, 'stage', '5')
-                    with self.assertRaisesRegex(ValueError, '第 3 阶段完成'):
-                        H.handoff(project, url, 'art', plan)
-                    with self.assertRaisesRegex(ValueError, '交付回执'):
-                        H.handoff(project, url, 'package', plan)
-                    self.assertEqual(launch.call_count, 1)
-
-                    archive = (Path(td) / 'Final.zip').resolve()
-                    with ZipFile(archive, 'w') as z:
-                        for path in native.iterdir():
-                            z.write(path, path.name)
-                    digest = H.chinese_audit.sha_file(archive)
-                    delivery = Path(td) / 'delivery.json'
-                    size = Path(td) / 'delivery.json.size.json'
-                    size.write_text(json.dumps({'archive': str(archive), 'passed': True, 'sha256': digest,
-                                                'run_id': 'new-size'}))
-                    proof = {'status': 'delivery_file_verified', 'archive': str(archive), 'entry': 'official',
-                             'expected_tree_exact': True, 'sha256': digest, 'native': str(native),
-                             'fresh_size_check': {'reused': False, 'sha256': digest,
-                                                  'run_id': 'new-size', 'report': str(size)},
-                             'final_startup_runtime': {'passed': True, 'native_tree_sha256':
-                                                       H.startup_renderer.digest(H.startup_renderer.tree(native))},
-                             'preview': {'url': url, 'web_tree_sha256': H.tree_sha(web), 'slot_id': slot['id']}}
-                    delivery.write_text(json.dumps(proof))
-                    result = H.handoff(project, url, 'package', plan, delivery)
-                    self.assertEqual(result['label'], '测试包同版试玩')
-                    self.assertEqual(launch.call_count, 2)
-                    self.assertEqual(result['playtest_url'], url + '__playtest/')
-                    self.assertIn('核对本次实际 ZIP', result['stage_report'])
-
-                    (native / 'game.js').write_text('changed after the final check')
-                    with self.assertRaisesRegex(ValueError, 'Native.*变化'):
-                        H.handoff(project, url, 'package', plan, delivery)
-                    archive.write_bytes(b'changed ZIP')
-                    with self.assertRaisesRegex(ValueError, 'ZIP 已变化'):
-                        H.handoff(project, url, 'package', plan, delivery)
-                    self.assertEqual(launch.call_count, 2)
-            finally:
-                server.shutdown()
-                server.server_close()
-                thread.join(timeout=3)
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ from . import Result
 
 STEP = 'plugin3x_scan'
 FLAGS = {'isPlugin': True, 'loadPluginInWeb': True, 'loadPluginInNative': True, 'loadPluginInMiniGame': True}
-DEFAULT_NAMES = {'PlatformConfig', 'TikTokMissionService', 'RewardedService', 'SaveStore', 'MissionFlow',
+DEFAULT_NAMES = {'PlatformConfig', 'AdDisplayPolicy', 'TikTokMissionService', 'RewardedService', 'SaveStore', 'MissionFlow',
                  'HomeEntrySlots', 'CapsuleLayout', 'CapsuleAuto', 'RunSession', 'FxPool', 'ShopTx', 'SaveSchema'}
 MODULE_ONLY = {'GameUIKit'}          # a real 3.x module (parts-3x/GameUIKit.ts): only .js / .plugin imports count
 KIT_DIR = 'assets/tiktok-platform/'

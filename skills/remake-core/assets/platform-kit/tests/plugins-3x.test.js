@@ -14,7 +14,7 @@ var assert = require('assert'), fs = require('fs'), os = require('os'), path = r
 var child = require('child_process');
 var KIT = path.join(__dirname, '..');
 var PLUGINS = path.join(KIT, 'plugins-3x');
-var NAMES = ['PlatformConfig', 'TikTokMissionService', 'RewardedService', 'SaveStore', 'MissionFlow'];
+var NAMES = ['PlatformConfig', 'AdDisplayPolicy', 'TikTokMissionService', 'RewardedService', 'SaveStore', 'MissionFlow'];
 var parts = JSON.parse(fs.readFileSync(path.join(KIT, 'parts-3x', 'KIT_PARTS_3X.json'), 'utf8'));
 var results = [];
 function test(name, run) {
@@ -87,7 +87,7 @@ test('loading_a_plugin_twice_keeps_the_first', function () {
 test('missing_dependency_names_the_plugin_to_add', function () {
   var ctx = runIn(bareContext(), ['RewardedService']);
   assert.throws(function () { return ctx.TikTokKit.RewardedService; }, /PlatformConfig is not loaded .*RewardedService.*PlatformConfig\.plugin\.js/);
-  runIn(ctx, ['PlatformConfig']);
+  runIn(ctx, ['PlatformConfig', 'AdDisplayPolicy']);
   assert.strictEqual(typeof ctx.TikTokKit.RewardedService, 'function', 'works once the dependency is loaded');
 });
 test('plugins_loaded_through_a_commonjs_loader_still_publish_globals', function () {
@@ -145,7 +145,7 @@ function sameCases(label, base, plug) {
 var counts = {};
 test('rewarded_timing_cases_pass_on_RewardedService_plugin', function () {
   var file = path.join(work, 'RewardedService.js');
-  fs.writeFileSync(file, shim(['MissionFlow', 'RewardedService', 'PlatformConfig'], 'RewardedService'));
+  fs.writeFileSync(file, shim(['MissionFlow', 'RewardedService', 'PlatformConfig', 'AdDisplayPolicy'], 'RewardedService'));
   counts.rewarded_timing = sameCases('rewarded-timing', runSuite('rewarded-timing.test.js'), runSuite('rewarded-timing.test.js', [file]));
 });
 test('kit_cases_pass_on_plugin_modules', function () {
@@ -168,7 +168,7 @@ test('shared_cases_fail_on_broken_plugin_copies', function () {
   var keep = PLUGINS;
   PLUGINS = dir;
   try {
-    fs.writeFileSync(path.join(dir, 'RewardedService.js'), shim(['RewardedService', 'PlatformConfig'], 'RewardedService'));
+    fs.writeFileSync(path.join(dir, 'RewardedService.js'), shim(['RewardedService', 'PlatformConfig', 'AdDisplayPolicy'], 'RewardedService'));
     fs.writeFileSync(path.join(dir, '_kit3x.js'), shim(NAMES, null));
     ['PlatformConfig', 'SaveStore', 'MissionFlow', 'TikTokMissionService', 'RewardedService'].forEach(function (n) {
       fs.writeFileSync(path.join(dir, n + '.js'), "'use strict';\nmodule.exports = require('./_kit3x.js')." + n + ';\n');
@@ -240,7 +240,7 @@ var GAME_JS = "loadCC();\nfunction loadCC() {\n    require('./web-adapter');\n  
 test('parts_cover_touch_storage_startup_and_plugins_only', function () {
   // 生成时预防 R4B: + boot3x, hostshim3x (installed by tiktok_finalize, step boot / hostshim)
   assert.deepStrictEqual(Object.keys(parts.parts).sort(),
-    ['boot3x', 'capsuleauto3x', 'capsulelayout3x', 'homeslots3x', 'hostshim3x', 'missionflow3x', 'missions3x', 'platformconfig3x', 'rewarded3x', 'rewardguard3x', 'savestore3x', 'storage3x', 'touch3x']);   // R4G1: + homeslots3x; 生成时预防 R4G2: + capsule plugins (step capsule_auto), rewardguard3x (startup step)
+    ['adpolicy3x', 'boot3x', 'capsuleauto3x', 'capsulelayout3x', 'homeslots3x', 'hostshim3x', 'missionflow3x', 'missions3x', 'platformconfig3x', 'rewarded3x', 'rewardguard3x', 'savestore3x', 'storage3x', 'touch3x']);   // Includes the shared display policy; prior startup and guard parts are unchanged.
   Object.keys(parts.parts).forEach(function (k) {
     var p = parts.parts[k];
     assert.strictEqual(p.engine, 3, k);

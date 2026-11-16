@@ -43,8 +43,8 @@
     },
     {
       "path": "assets/known-issues.json",
-      "sha256": "ad3e0e120ca2d882c6203551dbb33d8c248b6615a83aa58262fb31f8c85a1934",
-      "bytes": 154174
+      "sha256": "4e6fa0dd3ceb6ddd2ee8e781e16a33e84b18ff0538ebe0bca911ddb3e2431177",
+      "bytes": 154978
     },
     {
       "path": "assets/loading-recovery-examples/asset-load-guard.js",
@@ -73,13 +73,13 @@
     },
     {
       "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-      "sha256": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
-      "bytes": 14816
+      "sha256": "060a4782c253978e71135df12b1d3abab8c8c9555cd8e5c2579506e6202d94ed",
+      "bytes": 15280
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
-      "bytes": 60120
+      "sha256": "e618db8f4bc1259a771d3a0f842d3e11ea966ffd343bdd3d17b753c6f702e29b",
+      "bytes": 65134
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -88,8 +88,8 @@
     },
     {
       "path": "assets/platform-kit/README_接入说明.md",
-      "sha256": "1c384532bb64be81a62a3bc00b8e4c7ade223d0ee8cea0356cf163e64c1377ae",
-      "bytes": 84616
+      "sha256": "dd36ade29a6ef3c0305f485b500d4f2353fe920fd7384f20f9a8cfc72107d01f",
+      "bytes": 84881
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/HomeGrowthEntries.js",
@@ -103,13 +103,13 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/PlatformConfig.js",
-      "sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
-      "bytes": 2370
+      "sha256": "83a965e274de744ce1c528530945e225b9c905a69a4f54342198b1f4dcb2a102",
+      "bytes": 2670
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/RewardedService.js",
-      "sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
-      "bytes": 9797
+      "sha256": "af349aaaa34859be1e554f94c355143aa0e91e427051b93cb576fd107f1ce65e",
+      "bytes": 11038
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/SaveStore.js",
@@ -163,8 +163,8 @@
     },
     {
       "path": "assets/platform-kit/parts/GameUIKit.js",
-      "sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
-      "bytes": 90698
+      "sha256": "e06ccce81e9a89897b5b3fc363c19e29c557218744c7f4bc697f70b7684023a3",
+      "bytes": 93269
     },
     {
       "path": "assets/platform-kit/parts/HomeEntrySlots.js",
@@ -223,13 +223,13 @@
     },
     {
       "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-      "bytes": 88164
+      "sha256": "3c91e854eb433e5c5c5c48ca660fe0b98779a2de1e5c9aea7458595c3852dce4",
+      "bytes": 90735
     },
     {
       "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
-      "bytes": 15103
+      "sha256": "125dfb33c377659b143cb7ca04473883e6c1dc42f68dfa5f7f09e52a484742c8",
+      "bytes": 15975
     },
     {
       "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
@@ -258,13 +258,13 @@
     },
     {
       "path": "assets/platform-kit/plugins-3x/PlatformConfig.plugin.js",
-      "sha256": "db307a9d05d55548dcb875d3a4b031d9eac9ad16115f5df9b6e6b80681224840",
-      "bytes": 4684
+      "sha256": "fa519f437263734cdf86c47c322b72134f930248cd1d2f6c52cadffface23baf",
+      "bytes": 4984
     },
     {
       "path": "assets/platform-kit/plugins-3x/RewardedService.plugin.js",
-      "sha256": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
-      "bytes": 12017
+      "sha256": "22122804454cd0ef2376c45de62b83eb7c0da1939776eacce2d9d770fd30c746",
+      "bytes": 13258
     },
     {
       "path": "assets/platform-kit/plugins-3x/SaveStore.plugin.js",
@@ -368,8 +368,8 @@
     },
     {
       "path": "assets/platform-kit/tests/game-ui-pages.test.js",
-      "sha256": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8",
-      "bytes": 17055
+      "sha256": "5255b6a60a64d76d13ea1d1be13658a731fce9c42b52253fee749c52779fe170",
+      "bytes": 22591
     },
     {
       "path": "assets/platform-kit/tests/game-ui-row-state.test.js",
@@ -438,8 +438,8 @@
     },
     {
       "path": "assets/platform-kit/tests/plugins-3x.test.js",
-      "sha256": "e2d4808d6819d4eb0c96b428c96c1ef35567b73a8648e032c17630e481f42b34",
-      "bytes": 30052
+      "sha256": "f297cfc2a9fb4c4ffa0e5c5aa9b6004c2df46dc47e4767c2b81d2b31befd52a8",
+      "bytes": 30112
     },
     {
       "path": "assets/platform-kit/tests/res-loader-fixtures/ResMgr_dessert_v11.js",
@@ -453,13 +453,13 @@
     },
     {
       "path": "assets/platform-kit/tests/rewarded-guard.test.js",
-      "sha256": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b",
-      "bytes": 31270
+      "sha256": "b94092d0b5ec8253f8de2a4e72ef5fa21fafbcfd7751cab5ee35e4150f3824d2",
+      "bytes": 31367
     },
     {
       "path": "assets/platform-kit/tests/rewarded-timing.test.js",
-      "sha256": "be02343b6f8f9d3913db6749acfdc8b90d0d46a471de6ab211b8d1249534517a",
-      "bytes": 14248
+      "sha256": "b496b184ac5864d0332239eedb8327cb08ae3c659daeed6ddd43f9dbb8923ef1",
+      "bytes": 18838
     },
     {
       "path": "assets/platform-kit/tests/run-all.js",
@@ -683,8 +683,8 @@
     },
     {
       "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-      "sha256": "1863f920924107c283bb481071440407deb2eb2df3755933a11cb7f6998c7d56",
-      "bytes": 23697
+      "sha256": "9d506ed79e62fb1b5f45c60e660694213e6591ad0a0f1e476baba58318271a6d",
+      "bytes": 23743
     },
     {
       "path": "assets/platform-kit/webp-probe/cocos2.4/loading/webp-probe.webp",
@@ -3303,8 +3303,8 @@
     },
     {
       "path": "scripts/tiktok_finalize_steps/plugin3x_scan.py",
-      "sha256": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac",
-      "bytes": 13235
+      "sha256": "bc2c6da2d66a4a0f740e2706924b87e9ceccfdf51f7491ca09dfe8d1c457c45c",
+      "bytes": 13254
     },
     {
       "path": "scripts/tiktok_finalize_steps/png.py",
@@ -3425,6 +3425,26 @@
       "path": "scripts/writer_check_reuse.py",
       "sha256": "94ef95fec3cd44c6cca62207c5f403664e01893e3216a0fc85b22ce5a7e3f6cf",
       "bytes": 12771
+    },
+    {
+      "path": "assets/platform-kit/assets/tiktok-platform/AdDisplayPolicy.js",
+      "sha256": "2923efaa8d3955b2b24e8622daae4744d40eb50b94d14a62eeb0ea177a257114"
+    },
+    {
+      "path": "assets/platform-kit/plugins-3x/AdDisplayPolicy.plugin.js",
+      "sha256": "cb9d0b356c3c1cef48028b265e0fe8225b17ccd2f4762e7ea18ad842cdbbb273"
+    },
+    {
+      "path": "assets/platform-kit/tests/ad-display-policy.test.js",
+      "sha256": "fa048cfcd00c77aa812b3e684e435debfdb6ff6bf1ec950e9fcb114ef6c61bea"
+    },
+    {
+      "path": "assets/platform-kit/tools/kit_versions/PlatformConfig/bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a.txt",
+      "sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a"
+    },
+    {
+      "path": "assets/platform-kit/tools/kit_versions/RewardedService/57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243.txt",
+      "sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243"
     }
   ],
   "source_bundle_sha256": "5b1d8a07c8be7cfbe01b9a79d56bf466cfeccd5f440659c7938f7669755c7f14",
@@ -4346,7 +4366,238 @@
           "method": "authorized_local_patch"
         }
       ]
+    },
+    {
+      "id": "2026-11-15.ad-display-policy.1",
+      "base": "11.17.25",
+      "scope": "Display switch only; existing local patches and unrelated files preserved",
+      "files": [
+        {
+          "path": "remake-core/assets/platform-kit/KIT_FINGERPRINTS.json",
+          "inner": "assets/platform-kit/KIT_FINGERPRINTS.json",
+          "base_sha256": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
+          "before_sha256": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
+          "candidate_sha256": "060a4782c253978e71135df12b1d3abab8c8c9555cd8e5c2579506e6202d94ed",
+          "after_sha256": "060a4782c253978e71135df12b1d3abab8c8c9555cd8e5c2579506e6202d94ed",
+          "after_bytes": 15280,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/KIT_MANIFEST.json",
+          "inner": "assets/platform-kit/KIT_MANIFEST.json",
+          "base_sha256": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
+          "before_sha256": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
+          "candidate_sha256": "e618db8f4bc1259a771d3a0f842d3e11ea966ffd343bdd3d17b753c6f702e29b",
+          "after_sha256": "e618db8f4bc1259a771d3a0f842d3e11ea966ffd343bdd3d17b753c6f702e29b",
+          "after_bytes": 65134,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/README_接入说明.md",
+          "inner": "assets/platform-kit/README_接入说明.md",
+          "base_sha256": "1c384532bb64be81a62a3bc00b8e4c7ade223d0ee8cea0356cf163e64c1377ae",
+          "before_sha256": "1c384532bb64be81a62a3bc00b8e4c7ade223d0ee8cea0356cf163e64c1377ae",
+          "candidate_sha256": "dd36ade29a6ef3c0305f485b500d4f2353fe920fd7384f20f9a8cfc72107d01f",
+          "after_sha256": "dd36ade29a6ef3c0305f485b500d4f2353fe920fd7384f20f9a8cfc72107d01f",
+          "after_bytes": 84881,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/assets/tiktok-platform/AdDisplayPolicy.js",
+          "inner": "assets/platform-kit/assets/tiktok-platform/AdDisplayPolicy.js",
+          "base_sha256": null,
+          "before_sha256": null,
+          "candidate_sha256": "2923efaa8d3955b2b24e8622daae4744d40eb50b94d14a62eeb0ea177a257114",
+          "after_sha256": "2923efaa8d3955b2b24e8622daae4744d40eb50b94d14a62eeb0ea177a257114",
+          "after_bytes": 11963,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/assets/tiktok-platform/PlatformConfig.js",
+          "inner": "assets/platform-kit/assets/tiktok-platform/PlatformConfig.js",
+          "base_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+          "before_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+          "candidate_sha256": "83a965e274de744ce1c528530945e225b9c905a69a4f54342198b1f4dcb2a102",
+          "after_sha256": "83a965e274de744ce1c528530945e225b9c905a69a4f54342198b1f4dcb2a102",
+          "after_bytes": 2670,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/assets/tiktok-platform/RewardedService.js",
+          "inner": "assets/platform-kit/assets/tiktok-platform/RewardedService.js",
+          "base_sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+          "before_sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+          "candidate_sha256": "af349aaaa34859be1e554f94c355143aa0e91e427051b93cb576fd107f1ce65e",
+          "after_sha256": "af349aaaa34859be1e554f94c355143aa0e91e427051b93cb576fd107f1ce65e",
+          "after_bytes": 11038,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/parts-3x/GameUIKit.ts",
+          "inner": "assets/platform-kit/parts-3x/GameUIKit.ts",
+          "base_sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+          "before_sha256": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
+          "candidate_sha256": "3c91e854eb433e5c5c5c48ca660fe0b98779a2de1e5c9aea7458595c3852dce4",
+          "after_sha256": "3c91e854eb433e5c5c5c48ca660fe0b98779a2de1e5c9aea7458595c3852dce4",
+          "after_bytes": 90735,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+          "inner": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+          "base_sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
+          "before_sha256": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
+          "candidate_sha256": "125dfb33c377659b143cb7ca04473883e6c1dc42f68dfa5f7f09e52a484742c8",
+          "after_sha256": "125dfb33c377659b143cb7ca04473883e6c1dc42f68dfa5f7f09e52a484742c8",
+          "after_bytes": 15975,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/parts/GameUIKit.js",
+          "inner": "assets/platform-kit/parts/GameUIKit.js",
+          "base_sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+          "before_sha256": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
+          "candidate_sha256": "e06ccce81e9a89897b5b3fc363c19e29c557218744c7f4bc697f70b7684023a3",
+          "after_sha256": "e06ccce81e9a89897b5b3fc363c19e29c557218744c7f4bc697f70b7684023a3",
+          "after_bytes": 93269,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/plugins-3x/AdDisplayPolicy.plugin.js",
+          "inner": "assets/platform-kit/plugins-3x/AdDisplayPolicy.plugin.js",
+          "base_sha256": null,
+          "before_sha256": null,
+          "candidate_sha256": "cb9d0b356c3c1cef48028b265e0fe8225b17ccd2f4762e7ea18ad842cdbbb273",
+          "after_sha256": "cb9d0b356c3c1cef48028b265e0fe8225b17ccd2f4762e7ea18ad842cdbbb273",
+          "after_bytes": 14183,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/plugins-3x/PlatformConfig.plugin.js",
+          "inner": "assets/platform-kit/plugins-3x/PlatformConfig.plugin.js",
+          "base_sha256": "db307a9d05d55548dcb875d3a4b031d9eac9ad16115f5df9b6e6b80681224840",
+          "before_sha256": "db307a9d05d55548dcb875d3a4b031d9eac9ad16115f5df9b6e6b80681224840",
+          "candidate_sha256": "fa519f437263734cdf86c47c322b72134f930248cd1d2f6c52cadffface23baf",
+          "after_sha256": "fa519f437263734cdf86c47c322b72134f930248cd1d2f6c52cadffface23baf",
+          "after_bytes": 4984,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/plugins-3x/RewardedService.plugin.js",
+          "inner": "assets/platform-kit/plugins-3x/RewardedService.plugin.js",
+          "base_sha256": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
+          "before_sha256": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
+          "candidate_sha256": "22122804454cd0ef2376c45de62b83eb7c0da1939776eacce2d9d770fd30c746",
+          "after_sha256": "22122804454cd0ef2376c45de62b83eb7c0da1939776eacce2d9d770fd30c746",
+          "after_bytes": 13258,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tests/ad-display-policy.test.js",
+          "inner": "assets/platform-kit/tests/ad-display-policy.test.js",
+          "base_sha256": null,
+          "before_sha256": null,
+          "candidate_sha256": "fa048cfcd00c77aa812b3e684e435debfdb6ff6bf1ec950e9fcb114ef6c61bea",
+          "after_sha256": "fa048cfcd00c77aa812b3e684e435debfdb6ff6bf1ec950e9fcb114ef6c61bea",
+          "after_bytes": 28841,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tests/game-ui-pages.test.js",
+          "inner": "assets/platform-kit/tests/game-ui-pages.test.js",
+          "base_sha256": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8",
+          "before_sha256": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8",
+          "candidate_sha256": "5255b6a60a64d76d13ea1d1be13658a731fce9c42b52253fee749c52779fe170",
+          "after_sha256": "5255b6a60a64d76d13ea1d1be13658a731fce9c42b52253fee749c52779fe170",
+          "after_bytes": 22591,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tests/plugins-3x.test.js",
+          "inner": "assets/platform-kit/tests/plugins-3x.test.js",
+          "base_sha256": "e2d4808d6819d4eb0c96b428c96c1ef35567b73a8648e032c17630e481f42b34",
+          "before_sha256": "e2d4808d6819d4eb0c96b428c96c1ef35567b73a8648e032c17630e481f42b34",
+          "candidate_sha256": "f297cfc2a9fb4c4ffa0e5c5aa9b6004c2df46dc47e4767c2b81d2b31befd52a8",
+          "after_sha256": "f297cfc2a9fb4c4ffa0e5c5aa9b6004c2df46dc47e4767c2b81d2b31befd52a8",
+          "after_bytes": 30112,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tests/rewarded-guard.test.js",
+          "inner": "assets/platform-kit/tests/rewarded-guard.test.js",
+          "base_sha256": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b",
+          "before_sha256": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b",
+          "candidate_sha256": "b94092d0b5ec8253f8de2a4e72ef5fa21fafbcfd7751cab5ee35e4150f3824d2",
+          "after_sha256": "b94092d0b5ec8253f8de2a4e72ef5fa21fafbcfd7751cab5ee35e4150f3824d2",
+          "after_bytes": 31367,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tests/rewarded-timing.test.js",
+          "inner": "assets/platform-kit/tests/rewarded-timing.test.js",
+          "base_sha256": "be02343b6f8f9d3913db6749acfdc8b90d0d46a471de6ab211b8d1249534517a",
+          "before_sha256": "be02343b6f8f9d3913db6749acfdc8b90d0d46a471de6ab211b8d1249534517a",
+          "candidate_sha256": "b496b184ac5864d0332239eedb8327cb08ae3c659daeed6ddd43f9dbb8923ef1",
+          "after_sha256": "b496b184ac5864d0332239eedb8327cb08ae3c659daeed6ddd43f9dbb8923ef1",
+          "after_bytes": 18838,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tools/kit_versions/PlatformConfig/bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a.txt",
+          "inner": "assets/platform-kit/tools/kit_versions/PlatformConfig/bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a.txt",
+          "base_sha256": null,
+          "before_sha256": null,
+          "candidate_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+          "after_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+          "after_bytes": 2370,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tools/kit_versions/RewardedService/57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243.txt",
+          "inner": "assets/platform-kit/tools/kit_versions/RewardedService/57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243.txt",
+          "base_sha256": null,
+          "before_sha256": null,
+          "candidate_sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+          "after_sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+          "after_bytes": 9797,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/assets/platform-kit/tools/make_plugin_scripts.py",
+          "inner": "assets/platform-kit/tools/make_plugin_scripts.py",
+          "base_sha256": "1863f920924107c283bb481071440407deb2eb2df3755933a11cb7f6998c7d56",
+          "before_sha256": "1863f920924107c283bb481071440407deb2eb2df3755933a11cb7f6998c7d56",
+          "candidate_sha256": "9d506ed79e62fb1b5f45c60e660694213e6591ad0a0f1e476baba58318271a6d",
+          "after_sha256": "9d506ed79e62fb1b5f45c60e660694213e6591ad0a0f1e476baba58318271a6d",
+          "after_bytes": 23743,
+          "method": "exact-base-replacement"
+        },
+        {
+          "path": "remake-core/scripts/tiktok_finalize_steps/plugin3x_scan.py",
+          "inner": "scripts/tiktok_finalize_steps/plugin3x_scan.py",
+          "base_sha256": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac",
+          "before_sha256": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac",
+          "candidate_sha256": "bc2c6da2d66a4a0f740e2706924b87e9ceccfdf51f7491ca09dfe8d1c457c45c",
+          "after_sha256": "bc2c6da2d66a4a0f740e2706924b87e9ceccfdf51f7491ca09dfe8d1c457c45c",
+          "after_bytes": 13254,
+          "method": "exact-base-replacement"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-15.AD-04-ad-return-input.1",
+      "scope": "Only existing AD-04 approved residual-input and explicit-retry checks; preserve all other installed rules and local patches. Codex only.",
+      "authority": "把这个 AD-04 补丁合入当前最新版 Skill，核对通过后安装，其他规则不要动。",
+      "files": [
+        {
+          "path": "assets/known-issues.json",
+          "before_sha256": "ad3e0e120ca2d882c6203551dbb33d8c248b6615a83aa58262fb31f8c85a1934",
+          "after_sha256": "4e6fa0dd3ceb6ddd2ee8e781e16a33e84b18ff0538ebe0bca911ddb3e2431177",
+          "after_bytes": 154978
+        }
+      ],
+      "source_patch": "/Users/sijunting/Downloads/！自制游戏/！游戏学习库/游戏文件/王新睿-9090-CC-星星消消乐-8/！Skill更新/补丁_沉淀_AD-04_广告往返与会话结束_基于11.17.25"
     }
   ],
-  "previous_local_provenance_sha256": "ca9bbed6d3d315bd6f343a90d6007048b29d83d1ae884f9dbac858cd576c3d30"
+  "previous_local_provenance_sha256": "bd0abe3410adda5c0bf7159fb5a8648d9ea2b2f09df2d434271f0990bc80b612"
 }

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-15T22:56:33.511Z",
-  "treeHash": "d908cf9798e0af3077fdf071f4370e4011c7e5dd4decc4eb4068633dd74ba42d",
+  "createdAt": "2026-11-16T08:26:38.629Z",
+  "treeHash": "0a64aa69b1a948fc65748d193e7c236a236792d76419b02bcb4643fbb7d03993",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3675,14 +3675,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "f0a4f8d295b4e06f579d2a193b43bc03f1da440a45ea6d861dcca537a9a52288",
-      "fileCount": 685,
-      "bytes": 13102404,
+      "treeHash": "4530d875b1ee664c4dd2c7aea3bcd19b401e544a870fdcb27c9e6afd13dc76a0",
+      "fileCount": 690,
+      "bytes": 13210557,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "1d7ee3964f8f8bd5d35e56425ba3dc7f5208d78791d9e71f1d7853a66a650464",
-          "size": 166011,
+          "hash": "94a79fc3c9049685536a7a7493063b6f70414110cfdefa95c66dde56b2c72a7e",
+          "size": 181019,
           "executable": false
         },
         {
@@ -3729,8 +3729,8 @@
         },
         {
           "path": "assets/known-issues.json",
-          "hash": "ad3e0e120ca2d882c6203551dbb33d8c248b6615a83aa58262fb31f8c85a1934",
-          "size": 154174,
+          "hash": "4e6fa0dd3ceb6ddd2ee8e781e16a33e84b18ff0538ebe0bca911ddb3e2431177",
+          "size": 154978,
           "executable": false
         },
         {
@@ -3765,14 +3765,14 @@
         },
         {
           "path": "assets/platform-kit/KIT_FINGERPRINTS.json",
-          "hash": "1338bc8b93db432abd85e3a0a296f52ae64801ad6b9317db2d0eaed1f4905f5b",
-          "size": 14816,
+          "hash": "060a4782c253978e71135df12b1d3abab8c8c9555cd8e5c2579506e6202d94ed",
+          "size": 15280,
           "executable": false
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "b37a48496d31eecea5b6282e4f874da8ffb6485ac84fede137dc190d24fb5154",
-          "size": 60120,
+          "hash": "e618db8f4bc1259a771d3a0f842d3e11ea966ffd343bdd3d17b753c6f702e29b",
+          "size": 65134,
           "executable": false
         },
         {
@@ -3783,8 +3783,14 @@
         },
         {
           "path": "assets/platform-kit/README_接入说明.md",
-          "hash": "1c384532bb64be81a62a3bc00b8e4c7ade223d0ee8cea0356cf163e64c1377ae",
-          "size": 84616,
+          "hash": "dd36ade29a6ef3c0305f485b500d4f2353fe920fd7384f20f9a8cfc72107d01f",
+          "size": 84881,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/AdDisplayPolicy.js",
+          "hash": "2923efaa8d3955b2b24e8622daae4744d40eb50b94d14a62eeb0ea177a257114",
+          "size": 11963,
           "executable": false
         },
         {
@@ -3801,14 +3807,14 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/PlatformConfig.js",
-          "hash": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
-          "size": 2370,
+          "hash": "83a965e274de744ce1c528530945e225b9c905a69a4f54342198b1f4dcb2a102",
+          "size": 2670,
           "executable": false
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/RewardedService.js",
-          "hash": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
-          "size": 9797,
+          "hash": "af349aaaa34859be1e554f94c355143aa0e91e427051b93cb576fd107f1ce65e",
+          "size": 11038,
           "executable": false
         },
         {
@@ -3873,8 +3879,8 @@
         },
         {
           "path": "assets/platform-kit/parts/GameUIKit.js",
-          "hash": "8c2b34a5a75aa704be2adedcc558f64eb7a565f6ce1fafd8d5fb724389e4eea5",
-          "size": 90698,
+          "hash": "e06ccce81e9a89897b5b3fc363c19e29c557218744c7f4bc697f70b7684023a3",
+          "size": 93269,
           "executable": false
         },
         {
@@ -3945,20 +3951,26 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-          "hash": "1f4e4d1efef4de506c5e8498870cfc4ebdef3460e196013c3c5ef7b3c178d6e9",
-          "size": 88164,
+          "hash": "3c91e854eb433e5c5c5c48ca660fe0b98779a2de1e5c9aea7458595c3852dce4",
+          "size": 90735,
           "executable": false
         },
         {
           "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-          "hash": "e780f04e53152a468d0c81ce7713187e5fdfc53ae7d4b0750bfd964472c1a9ec",
-          "size": 15103,
+          "hash": "125dfb33c377659b143cb7ca04473883e6c1dc42f68dfa5f7f09e52a484742c8",
+          "size": 15975,
           "executable": false
         },
         {
           "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
           "hash": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
           "size": 17006,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/plugins-3x/AdDisplayPolicy.plugin.js",
+          "hash": "cb9d0b356c3c1cef48028b265e0fe8225b17ccd2f4762e7ea18ad842cdbbb273",
+          "size": 14183,
           "executable": false
         },
         {
@@ -3987,14 +3999,14 @@
         },
         {
           "path": "assets/platform-kit/plugins-3x/PlatformConfig.plugin.js",
-          "hash": "db307a9d05d55548dcb875d3a4b031d9eac9ad16115f5df9b6e6b80681224840",
-          "size": 4684,
+          "hash": "fa519f437263734cdf86c47c322b72134f930248cd1d2f6c52cadffface23baf",
+          "size": 4984,
           "executable": false
         },
         {
           "path": "assets/platform-kit/plugins-3x/RewardedService.plugin.js",
-          "hash": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
-          "size": 12017,
+          "hash": "22122804454cd0ef2376c45de62b83eb7c0da1939776eacce2d9d770fd30c746",
+          "size": 13258,
           "executable": false
         },
         {
@@ -4013,6 +4025,12 @@
           "path": "assets/platform-kit/settings/bytedance.json",
           "hash": "ece6d0a62eb9d7c54bd282065c1d76fd6c4c141ea3df0becf7a34a4fb82ddd49",
           "size": 156,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tests/ad-display-policy.test.js",
+          "hash": "fa048cfcd00c77aa812b3e684e435debfdb6ff6bf1ec950e9fcb114ef6c61bea",
+          "size": 28841,
           "executable": false
         },
         {
@@ -4119,8 +4137,8 @@
         },
         {
           "path": "assets/platform-kit/tests/game-ui-pages.test.js",
-          "hash": "d0a530cfdf6f4fe320bde1fdf99556f0ff6565312092f0eb20e3fd38b8df3bc8",
-          "size": 17055,
+          "hash": "5255b6a60a64d76d13ea1d1be13658a731fce9c42b52253fee749c52779fe170",
+          "size": 22591,
           "executable": false
         },
         {
@@ -4203,8 +4221,8 @@
         },
         {
           "path": "assets/platform-kit/tests/plugins-3x.test.js",
-          "hash": "e2d4808d6819d4eb0c96b428c96c1ef35567b73a8648e032c17630e481f42b34",
-          "size": 30052,
+          "hash": "f297cfc2a9fb4c4ffa0e5c5aa9b6004c2df46dc47e4767c2b81d2b31befd52a8",
+          "size": 30112,
           "executable": false
         },
         {
@@ -4221,14 +4239,14 @@
         },
         {
           "path": "assets/platform-kit/tests/rewarded-guard.test.js",
-          "hash": "a099dcfa0e41a23449d1c59dd93e56898517afebe69f8fe5db12193d7132335b",
-          "size": 31270,
+          "hash": "b94092d0b5ec8253f8de2a4e72ef5fa21fafbcfd7751cab5ee35e4150f3824d2",
+          "size": 31367,
           "executable": false
         },
         {
           "path": "assets/platform-kit/tests/rewarded-timing.test.js",
-          "hash": "be02343b6f8f9d3913db6749acfdc8b90d0d46a471de6ab211b8d1249534517a",
-          "size": 14248,
+          "hash": "b496b184ac5864d0332239eedb8327cb08ae3c659daeed6ddd43f9dbb8923ef1",
+          "size": 18838,
           "executable": false
         },
         {
@@ -4424,9 +4442,21 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tools/kit_versions/PlatformConfig/bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a.txt",
+          "hash": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a",
+          "size": 2370,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tools/kit_versions/RewardedService/04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd.txt",
           "hash": "04121e95bef876cd22b2490f94216b652353a71c310eca09135c08453a8830bd",
           "size": 5805,
+          "executable": false
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/RewardedService/57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243.txt",
+          "hash": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243",
+          "size": 9797,
           "executable": false
         },
         {
@@ -4497,8 +4527,8 @@
         },
         {
           "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-          "hash": "1863f920924107c283bb481071440407deb2eb2df3755933a11cb7f6998c7d56",
-          "size": 23697,
+          "hash": "9d506ed79e62fb1b5f45c60e660694213e6591ad0a0f1e476baba58318271a6d",
+          "size": 23743,
           "executable": false
         },
         {
@@ -7641,8 +7671,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/plugin3x_scan.py",
-          "hash": "ac09bc0742c8c3706f89f8ed58f01be7c0c75c113c6727e3218f85e5c82d0dac",
-          "size": 13235,
+          "hash": "bc2c6da2d66a4a0f740e2706924b87e9ceccfdf51f7491ca09dfe8d1c457c45c",
+          "size": 13254,
           "executable": false
         },
         {

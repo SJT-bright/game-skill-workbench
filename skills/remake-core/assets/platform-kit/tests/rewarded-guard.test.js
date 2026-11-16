@@ -459,6 +459,7 @@ function baseline(file, env) {
     fs.mkdirSync(dir);
     fs.copyFileSync(file, path.join(dir, 'RewardedService.js'));
     fs.copyFileSync(path.join(KIT, 'PlatformConfig.js'), path.join(dir, 'PlatformConfig.js'));
+    fs.copyFileSync(path.join(KIT, 'AdDisplayPolicy.js'), path.join(dir, 'AdDisplayPolicy.js'));
     return require(path.join(dir, 'RewardedService.js'));
   }
   async function bgThenWatch(file) {

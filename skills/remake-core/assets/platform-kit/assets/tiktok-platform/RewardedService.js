@@ -1,5 +1,6 @@
 'use strict';
 var config = require('./PlatformConfig');
+var AdDisplayPolicy = require('./AdDisplayPolicy');
 // D2 2026-11-04 (ships with parts/rewarded-guard.js): this service's own createRewardedVideoAd call carries
 // root.__tiktokKitRewardedDirect, so the guard hands back the native ad and only this service times the 15 s.
 // Rewarded-ad timeout rule (Basil rule, remake-ads/references/ad-timeout-and-regression.md):
@@ -17,7 +18,8 @@ var messages = {
   completed: 'Reward ready.', cancelled: 'Video closed. No reward was claimed.',
   error: 'The video could not open. Please try again.', timeout: 'The video took too long to start. Please try again.',
   unsupported: 'Rewarded videos are available inside TikTok.', busy: 'A video is still active. Please finish or close it first.',
-  stale: 'This session has ended. No reward was claimed.', unconfigured: 'This reward is not available.'
+  stale: 'This session has ended. No reward was claimed.', unconfigured: 'This reward is not available.',
+  disabled: 'Ads are currently unavailable.'
 };
 function rootSDK(method) {
   var candidates = [
@@ -65,10 +67,15 @@ function makeResult(status, session, error, reason) {
 function RewardedService(options) {
   options = options || {};
   this.getSDK = options.getSDK || rootSDK;
+  this.policyError = null;
+  try { this.adDisplayPolicy = options.adDisplayPolicy || AdDisplayPolicy.get(config,
+    options.getSDK ? {getSDK: options.getSDK} : {}); }
+  catch (error) { this.policyError = error; this.adDisplayPolicy = null; }
   this.now = options.now || Date.now;
   this.requestTimeoutMs = options.requestTimeoutMs || 15000;
   this.exitAfterMs = options.exitAfterMs || 30000;
   this.pending = null;
+  this.refreshPolicy();
   var self = this;
   this.poll = options.autoPoll === false ? null : setInterval(function () { self.tick(); }, 100);
   if (this.poll && this.poll.unref) this.poll.unref();
@@ -92,6 +99,7 @@ RewardedService.prototype.onHide = function () {
   if (!s.expireRequest(now)) s.hiddenAt = now;
 };
 RewardedService.prototype.onShow = function () {
+  this.refreshPolicy();
   var s = this.pending;
   if (!s || s.hiddenAt === null) return;
   var away = Math.max(0, this.now() - s.hiddenAt);
@@ -112,6 +120,7 @@ RewardedService.prototype.request = function (options) {
   this.tick();
   if (nativeSession && nativeSession !== this.pending) nativeSession.expireRequest();
   if (nativeSession) return Promise.resolve(makeResult('busy', null));
+  if (this.policyError) return Promise.resolve(makeResult('unconfigured', null, null, 'ad_policy_not_ready'));
   var sdk;
   try { sdk = this.getSDK('createRewardedVideoAd'); } catch (_) {}
   if (!sdk || typeof sdk.createRewardedVideoAd !== 'function') return Promise.resolve(makeResult('unsupported', null));
@@ -164,6 +173,7 @@ RewardedService.prototype.request = function (options) {
     try {
       if (typeof sdk.onHide === 'function') sdk.onHide(onHide);
       if (typeof sdk.onShow === 'function') sdk.onShow(onShow);
+      if (!self.isEnabled()) { s.finish('disabled'); return; }
       s.ad = createDirect(sdk, adUnitId);
       if (!s.ad || typeof s.ad.onClose !== 'function' || typeof s.ad.onError !== 'function' || typeof s.ad.show !== 'function') {
         s.finish('unsupported'); return;
@@ -172,6 +182,7 @@ RewardedService.prototype.request = function (options) {
       if (s.terminal) return;
       s.ad.onError(onError);
       if (s.terminal || s.expireRequest()) return;
+      if (!self.isEnabled()) { s.finish('disabled'); return; }
       showInvoked = true; // A host may call onClose synchronously from inside show().
       var shown = s.ad.show();
       if (shown && typeof shown.then === 'function') shown.then(onStarted, onError);
@@ -181,6 +192,17 @@ RewardedService.prototype.request = function (options) {
 };
 RewardedService.prototype.cancelOwner = function (ownerId) {
   if (this.pending && this.pending.options.ownerId === ownerId) this.pending.finish('cancelled', null, 'owner');
+};
+// The policy is runtime-owned; disposing a page/service must not erase its accepted configuration.
+RewardedService.prototype.isEnabled = function () {
+  try { return this.adDisplayPolicy.isEnabled() === true; } catch (_) { return false; }
+};
+RewardedService.prototype.refreshPolicy = function () {
+  try { return Promise.resolve(this.adDisplayPolicy.refresh()).catch(function () { return null; }); }
+  catch (_) { return Promise.resolve(null); }
+};
+RewardedService.prototype.subscribePolicy = function (listener) {
+  try { return this.adDisplayPolicy.subscribe(listener); } catch (_) { return function () {}; }
 };
 RewardedService.prototype.isNativeBusy = function () { return nativeSession !== null; };
 RewardedService.prototype.dispose = function () {

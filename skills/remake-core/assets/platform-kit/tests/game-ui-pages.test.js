@@ -253,6 +253,85 @@ test('8 sounds through AudioService (setup({audio})), a set sfx wins; X of the p
   assert.ok(hidden && g.paused, 'OLD WAY BUG: popup gone, game still paused');
 });
 
+// Display-policy cases extend this existing page suite; the original cases above remain unchanged.
+function policyAds(enabled) {
+  var a = fakeAds(); a.enabled = enabled; a.listeners = []; a.refreshes = 0;
+  a.isEnabled = function () { return a.enabled; };
+  a.refreshPolicy = function () { a.refreshes++; return Promise.resolve(); };
+  a.subscribePolicy = function (fn) { a.listeners.push(fn); return function () { a.listeners = a.listeners.filter(function (x) { return x !== fn; }); }; };
+  a.setEnabled = function (v) { a.enabled = v; a.listeners.slice().forEach(function (fn) { fn(); }); };
+  return a;
+}
+
+test('9 policy default ON: original ad slot and reward remain unchanged', async function () {
+  var env = fresh(), ads = policyAds(true), values = [];
+  var p = env.Kit.resultPage(env.canvas, {ads: ads, amount: 12, onReward: function (n, doubled) { values.push([n, doubled]); }, onNext: function () {}, onHome: function () {}});
+  env.flush(); assert.strictEqual(p.button('double').node.active, true);
+  tap(env, p, 'double'); ads.answer(WATCHED); await settle();
+  assert.strictEqual(ads.calls.length, 1); eq(values, [[24, true]]);
+  assert.strictEqual(p.state.busy, false); p.dispose();
+});
+
+test('10 policy OFF: no ad pause or request, free Claim stays usable', function () {
+  var env = fresh(), ads = policyAds(false), s = session(env), values = [];
+  s.newRun(function () { return {}; });
+  var p = env.Kit.resultPage(env.canvas, {session: s, ads: ads, amount: 15, onReward: function (n, doubled) { values.push([n, doubled]); }, onNext: function () {}, onHome: function () {}});
+  env.flush(); assert.strictEqual(p.button('double').node.active, false);
+  p._runAd('double', function () { throw new Error('OFF rewarded'); });
+  assert.strictEqual(ads.calls.length, 0); assert.strictEqual(p.state.busy, false);
+  eq(s.reasons(), ['popup']); tap(env, p, 'claim'); eq(values, [[15, false]]);
+  assert.ok(ads.refreshes > 0, 'hidden entry still refreshes config'); p.dispose();
+});
+
+test('11 policy changes while an ad runs preserve pause and legal completion', async function () {
+  var env = fresh(), ads = policyAds(true), s = session(env), revived = 0;
+  s.newRun(function () { return {}; });
+  var p = env.Kit.revivePage(env.canvas, {session: s, ads: ads, onRevive: function () { revived++; }, onGiveUp: function () {}});
+  env.flush(); tap(env, p, 'watchAd'); ads.setEnabled(false);
+  assert.strictEqual(p.state.busy, true); assert.strictEqual(p.button('watchAd').node.active, true, 'no layout mutation during transaction');
+  eq(s.reasons().sort(), ['ad', 'popup']); ads.answer(WATCHED); await settle(); after(env);
+  assert.strictEqual(revived, 1); assert.strictEqual(s.isPaused(), false);
+  assert.strictEqual(ads.listeners.length, 0); p.dispose();
+});
+
+test('12 policy close/reopen/dispose owns one subscription and permits restoration', function () {
+  var env = fresh(), ads = policyAds(false);
+  var p = env.Kit.revivePage(env.canvas, {ads: ads, onRevive: function () {}, onGiveUp: function () {}});
+  env.flush(); assert.strictEqual(ads.listeners.length, 1);
+  ads.setEnabled(true); assert.strictEqual(p.button('watchAd').node.active, true);
+  ads.setEnabled(false); assert.strictEqual(p.button('watchAd').node.active, false);
+  p.close(); assert.strictEqual(ads.listeners.length, 0); after(env);
+  p.open(); env.flush(); assert.strictEqual(ads.listeners.length, 1);
+  ads.setEnabled(true); assert.strictEqual(p.button('watchAd').node.active, true);
+  for (var cycle = 0; cycle < 3; cycle++) {
+    p.popup.close(); after(env); assert.strictEqual(ads.listeners.length, 0, 'popup.close detaches each opening');
+    p.open(); env.flush(); assert.strictEqual(ads.listeners.length, 1, 'reopen owns exactly one subscription');
+  }
+  p.dispose(); assert.strictEqual(ads.listeners.length, 0);
+});
+
+test('13 earned double survives failed save then OFF; Claim retries original grant once', async function () {
+  var env = fresh(), ads = policyAds(true), writes = [], coins = 0, fail = true, grantIds = 0;
+  var store = {grant: function (spec) { writes.push(JSON.parse(JSON.stringify(spec))); if (fail) return {ok: false}; coins += spec.add.coins; return {ok: true}; }};
+  var p = env.Kit.resultPage(env.canvas, {ads: ads, store: store, amount: 30, grantId: function () { grantIds++; return 'result:earned:' + grantIds; }, onNext: function () {}, onHome: function () {}});
+  env.flush(); tap(env, p, 'double'); ads.answer(WATCHED); await settle();
+  assert.strictEqual(coins, 0); assert.strictEqual(p.state.claimed, false);
+  ads.setEnabled(false); assert.strictEqual(p.button('double').node.active, false);
+  fail = false; tap(env, p, 'claim');
+  assert.strictEqual(coins, 60); assert.strictEqual(ads.calls.length, 1);
+  eq(writes, [{id: 'result:earned:1', add: {coins: 60}}, {id: 'result:earned:1', add: {coins: 60}}]);
+  assert.strictEqual(grantIds, 1, 'failed earned retry retains its original grant identity');
+  tap(env, p, 'claim'); assert.strictEqual(coins, 60); assert.strictEqual(writes.length, 2);
+  ads.setEnabled(true); tap(env, p, 'double'); assert.strictEqual(ads.calls.length, 1); p.dispose();
+});
+
+test('14 policy restoration preserves an independently disabled ad control', function () {
+  var env = fresh(), ads = policyAds(true);
+  var p = env.Kit.revivePage(env.canvas, {ads: ads, onRevive: function () {}, onGiveUp: function () {}});
+  p.button('watchAd').setEnabled(false); ads.setEnabled(false); ads.setEnabled(true);
+  assert.strictEqual(p.button('watchAd').isEnabled(), false); p.dispose();
+});
+
 (async function main() {
   var failed = 0;
   for (var k = 0; k < KINDS.length; k++) {

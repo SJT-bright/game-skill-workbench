@@ -87,6 +87,8 @@ v1.1（2026-10-27）：卡住判定 20 秒 → 10 秒（skill 规定 10 秒无�
 - `normalLevelCoins` 填本游戏的 B（= `unlock_table.json` 的 `normal_level_coins`）。加桌面、主页回访各发一次 `config.growthReward()` = 5B（Saul 2026-10-29，等于一次首页礼盒基础奖励；没有首页礼盒的游戏也是 5B）。不填时 `growthReward()` 抛错，领奖写入被拒、不发奖也不记已领取，kit 测试里有这条用例。
 - 原游戏没有金币的英化游戏（R4O3，Saul 2026-11-04 ECON-SHORTCUT / ECON-REVISIT）：`normalLevelCoins` 留 0，生成首页时 `HomeGrowthEntries` 必须传替代奖励，别手写桥接：`init(save, {reward: function (kind, draft) { draft.energy = (Number(draft.energy) || 0) + 3; }, rewardText: '+3 Energy', onGranted: ...})`（发什么看 `docs/economy/economy_capabilities.json` 的 `no_wallet_substitutes`；没有体力的先加一种金币和皮肤，再按上面发 5B）。有金币时 `reward` 选项不生效，照发 5B。两样都没有时不发奖、不记已领取、不提示存档失败，原因写在 `controller.rewardIssue` 和 `[TikTokKit]` 日志里；写包入口的 `check_kit_project.py` 报 `K_home_entries_no_reward`（工程有 `economy_capabilities.json` wallet false 记录的拦，没有记录的只警告）。用例：`tests/home-entries-no-coin.test.js`。
 
+广告展示可通过 `adDisplay` 数据关闭，默认开启；远端关闭与包内配置的生效方式、共享策略及广告模块接线见[统一开关说明](../../../remake-ads/references/ad-display-switch.md)。存档和奖励金额继续用原规则。
+
 ### 第 3 步：存档（金币和"已领取"必须在同一个存档里）
 
 ```js

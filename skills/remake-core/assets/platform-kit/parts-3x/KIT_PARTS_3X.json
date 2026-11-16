@@ -19,10 +19,10 @@
       "file": {
         "src": "plugins-3x/PlatformConfig.plugin.js",
         "dest": "assets/tiktok-platform/PlatformConfig.plugin.js",
-        "sha256": "db307a9d05d55548dcb875d3a4b031d9eac9ad16115f5df9b6e6b80681224840",
+        "sha256": "fa519f437263734cdf86c47c322b72134f930248cd1d2f6c52cadffface23baf",
         "previous_sha256": [],
         "from": "assets/tiktok-platform/PlatformConfig.js",
-        "from_sha256": "bfa97517e3ca46830a679ca91791e8d24fb5a2276ade2d776ee17a81c73b070a"
+        "from_sha256": "83a965e274de744ce1c528530945e225b9c905a69a4f54342198b1f4dcb2a102"
       },
       "global": "globalThis.TikTokKit.PlatformConfig",
       "policy": {
@@ -30,6 +30,26 @@
         "legacy": "report"
       },
       "note": "per-game values (gameId / appId / placementMap / normalLevelCoins; growthReward() = 5B is fixed) are edited inside BEGIN..END; K1 checks presence only. Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
+    },
+    "adpolicy3x": {
+      "engine": 3,
+      "phase": "source",
+      "plugin": true,
+      "editable": false,
+      "file": {
+        "src": "plugins-3x/AdDisplayPolicy.plugin.js",
+        "dest": "assets/tiktok-platform/AdDisplayPolicy.plugin.js",
+        "sha256": "cb9d0b356c3c1cef48028b265e0fe8225b17ccd2f4762e7ea18ad842cdbbb273",
+        "previous_sha256": [],
+        "from": "assets/tiktok-platform/AdDisplayPolicy.js",
+        "from_sha256": "2923efaa8d3955b2b24e8622daae4744d40eb50b94d14a62eeb0ea177a257114"
+      },
+      "global": "globalThis.TikTokKit.AdDisplayPolicy",
+      "policy": {
+        "new": "replace",
+        "legacy": "report"
+      },
+      "note": "byte-identical to the kit; the 2.4 module between BEGIN..END (tools/make_plugin_scripts.py --check). Checked in the project (source record): a Cocos 3.x build may minify plugin scripts."
     },
     "missions3x": {
       "engine": 3,
@@ -62,12 +82,12 @@
       "file": {
         "src": "plugins-3x/RewardedService.plugin.js",
         "dest": "assets/tiktok-platform/RewardedService.plugin.js",
-        "sha256": "d9ec5837f1938e83215036af9a1c7db38587c5595d40321df5a77ac996e6fbdd",
+        "sha256": "22122804454cd0ef2376c45de62b83eb7c0da1939776eacce2d9d770fd30c746",
         "previous_sha256": [
           "16880d5ba2e674202dcc9c285c5a228a224b3581a1ff4a369a4fa7b774c5c01a"
         ],
         "from": "assets/tiktok-platform/RewardedService.js",
-        "from_sha256": "57eccb9c85bf085e930b1d0ec65993a6b7dfd87edcc042eac8f04fed0231a243"
+        "from_sha256": "af349aaaa34859be1e554f94c355143aa0e91e427051b93cb576fd107f1ce65e"
       },
       "global": "globalThis.TikTokKit.RewardedService",
       "policy": {

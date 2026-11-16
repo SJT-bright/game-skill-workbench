@@ -18,6 +18,15 @@ var config = {
   appId: '7683427172773644296',
   clientKey: 'mgq7o8c3rbhdx2kv',
   normalLevelCoins: 0,
+  // Data-only display switch. Empty remoteUrl means package configuration only.
+  // Keep existing ad placement IDs and reward values when changing this block.
+  adDisplay: {
+    enabled: true,
+    channel: 'production',
+    remoteUrl: '',
+    refreshAfterMs: 60000,
+    requestTimeoutMs: 1500
+  },
   rewardedPlacements: [
     {name: 'Rewarded 2', id: 'ad7683064432721709074'},
     {name: 'Rewarded', id: 'ad7683076047361067016'},

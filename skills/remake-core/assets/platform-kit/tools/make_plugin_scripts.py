@@ -31,6 +31,7 @@ PARTS_FILE = 'parts-3x/KIT_PARTS_3X.json'
 # (module, part name, editable). HomeGrowthEntries.js is a Cocos 2.4 cc.Class component: not a 3.x plugin.
 MODULES = [
     ('PlatformConfig', 'platformconfig3x', True),
+    ('AdDisplayPolicy', 'adpolicy3x', False),
     ('TikTokMissionService', 'missions3x', False),
     ('RewardedService', 'rewarded3x', False),
     ('SaveStore', 'savestore3x', False),

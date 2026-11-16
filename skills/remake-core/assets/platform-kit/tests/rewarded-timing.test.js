@@ -14,6 +14,10 @@ var target = path.resolve(process.argv[2] || path.join(KIT, 'RewardedService.js'
 var dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'kit-rewarded-')));
 fs.copyFileSync(target, path.join(dir, 'RewardedService.js'));
 fs.copyFileSync(path.join(KIT, 'PlatformConfig.js'), path.join(dir, 'PlatformConfig.js'));
+// Current services depend on the policy; historical fixture services intentionally do not.
+if (fs.existsSync(path.join(path.dirname(target), 'AdDisplayPolicy.js'))) {
+  fs.copyFileSync(path.join(path.dirname(target), 'AdDisplayPolicy.js'), path.join(dir, 'AdDisplayPolicy.js'));
+}
 // A fresh module per case: the one-live-session lock is module-global, so cases never leak into each other.
 function freshService() {
   Object.keys(require.cache).forEach(function (k) { if (k.indexOf(dir) === 0) delete require.cache[k]; });
@@ -26,7 +30,7 @@ function flush() { var p = Promise.resolve(); for (var i = 0; i < 6; i++) p = p.
 
 // A TikTok SDK stand-in on a fake clock. at(ms, fn) schedules an SDK/user event; run(ms) advances in 100 ms
 // steps (the service's own poll interval), firing due events and calling service.tick() each step.
-function world() {
+function world(policy) {
   var w = {time: 0, events: [], ads: [], hide: [], show: [], exitNotices: 0, offs: []};
   w.sdk = {
     canIUse: function () { return true; },
@@ -44,7 +48,7 @@ function world() {
     }
   };
   var RewardedService = freshService();
-  w.service = new RewardedService({getSDK: function () { return w.sdk; }, now: function () { return w.time; }, autoPoll: false,
+  w.service = new RewardedService({adDisplayPolicy: policy, getSDK: function () { return w.sdk; }, now: function () { return w.time; }, autoPoll: false,
     onExitAvailable: function () { w.exitNotices++; }});
   w.at = function (ms, fn) { w.events.push({at: ms, fn: fn}); };
   // App lifecycle as a game wired per README: SDK onHide/onShow listeners plus the service's onHide()/onShow().
@@ -254,6 +258,69 @@ function released(w, label) {
       assert(r.result); assert.strictEqual(r.result.rewarded, false, JSON.stringify(values[i]) + ' must not reward');
       assert.strictEqual(r.result.status, 'cancelled');
     }
+  });
+
+  // Display policy changes do not change the original thirteen timing contracts above.
+  function policy() {
+    return {enabled: true, refreshes: 0, isEnabled: function () { return this.enabled; },
+      refresh: function () { this.refreshes++; return Promise.resolve(); },
+      subscribe: function () { return function () {}; }};
+  }
+  await test('policy_default_ON_preserves_strict_completed_result', async function () {
+    var p = policy(), w = world(p), r = w.request();
+    w.ads[0].start(); await flush(); w.ads[0].close({isEnded: true}); await flush();
+    assert.strictEqual(r.result.status, 'completed'); assert.strictEqual(r.result.rewarded, true);
+    assert.strictEqual(w.service.pending, null); assert.strictEqual(w.service.isNativeBusy(), false);
+    assert.strictEqual(p.refreshes, 1, 'startup refresh is outside the ad request');
+  });
+  await test('policy_OFF_creates_no_native_ad_and_releases_session', async function () {
+    var p = policy(); p.enabled = false;
+    var w = world(p);
+    // An installed SDK guard may own runtime lifecycle listeners. Only this request's listeners must disappear.
+    w.service.getSDK('createRewardedVideoAd');
+    var hides = w.hide.length, shows = w.show.length;
+    var r = w.request(); await flush();
+    assert.strictEqual(r.result.status, 'disabled'); assert.strictEqual(r.result.rewarded, false);
+    assert.strictEqual(w.ads.length, 0); assert.strictEqual(w.service.pending, null);
+    assert.strictEqual(w.service.isNativeBusy(), false); assert.strictEqual(w.hide.length, hides); assert.strictEqual(w.show.length, shows);
+  });
+  await test('policy_rechecks_before_show_after_native_registration_reentry', async function () {
+    var p = policy(), w = world(p), original = w.sdk.createRewardedVideoAd, shows = 0;
+    w.sdk.createRewardedVideoAd = function () {
+      var ad = original();
+      ad.show = function () { shows++; return Promise.resolve(); };
+      p.enabled = false; return ad;
+    };
+    var r = w.request(); await flush();
+    assert.strictEqual(r.result.status, 'disabled'); assert.strictEqual(shows, 0);
+    assert.strictEqual(w.service.pending, null); assert.strictEqual(w.service.isNativeBusy(), false);
+    assert.strictEqual(w.ads[0].h.close, null); assert.strictEqual(w.ads[0].h.error, null);
+  });
+  await test('policy_OFF_after_show_pending_keeps_original_completion_and_busy_lock', async function () {
+    var p = policy(), w = world(p), r = w.request(); await flush();
+    assert.strictEqual(w.service.pending.phase, 'request'); p.enabled = false;
+    var busy = w.request(); await flush(); assert.strictEqual(busy.result.status, 'busy');
+    w.ads[0].close({isEnded: true}); await flush();
+    assert.strictEqual(r.result.status, 'completed'); assert.strictEqual(r.result.rewarded, true);
+    var off = w.request(); await flush(); assert.strictEqual(off.result.status, 'disabled');
+    assert.strictEqual(w.ads.length, 1); assert.strictEqual(w.service.isNativeBusy(), false);
+  });
+  await test('policy_reenable_uses_original_completed_cancelled_and_late_callback_rules', async function () {
+    var p = policy(); p.enabled = false;
+    var w = world(p), off = w.request(); await flush(); assert.strictEqual(off.result.status, 'disabled');
+    p.enabled = true; var next = w.request(); await flush();
+    w.ads[0].start(); await flush(); var late = w.ads[0].h.close;
+    w.service.cancelOwner('result'); await flush();
+    assert.strictEqual(next.result.status, 'cancelled'); late({isEnded: true}); await flush();
+    assert.strictEqual(next.result.rewarded, false); assert.strictEqual(w.service.isNativeBusy(), false);
+    var completed = w.request(); w.ads[1].start(); await flush(); w.ads[1].close({isEnded: true}); await flush();
+    assert.strictEqual(completed.result.rewarded, true); assert.strictEqual(w.service.isNativeBusy(), false);
+  });
+  await test('policy_refresh_failure_does_not_block_or_change_ad_transaction', async function () {
+    var p = policy(); p.refresh = function () { return Promise.reject(new Error('offline')); };
+    var w = world(p), r = w.request();
+    w.ads[0].start(); await flush(); w.ads[0].close({isEnded: true}); await flush();
+    assert.strictEqual(r.result.status, 'completed'); assert.strictEqual(w.service.isNativeBusy(), false);
   });
 
   var failed = results.filter(function (x) { return x.status !== 'passed'; });

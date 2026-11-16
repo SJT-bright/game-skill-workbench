@@ -1001,6 +1001,40 @@ function createGameUIKit(E) {
       grantMode: null, state: {claimed: false, busy: false}};
     var release = null;            // session.pause('popup') of the current opening
     var opening = 0;
+    var unsubscribePolicy = null;
+    function adEnabled() {
+      try { return !o.ads || typeof o.ads.isEnabled !== 'function' || o.ads.isEnabled() === true; }
+      catch (e) { return false; }
+    }
+    function refreshAdPolicy() {
+      if (!o.ads || typeof o.ads.refreshPolicy !== 'function') return;
+      try { var p = o.ads.refreshPolicy(); if (p && typeof p.catch === 'function') p.catch(function () {}); } catch (e) {}
+    }
+    function detachPolicy() { if (unsubscribePolicy) { var off = unsubscribePolicy; unsubscribePolicy = null; off(); } }
+    function paintAdPolicy() {
+      if (!E.isValid(popup.root) || !popup.isOpen()) { detachPolicy(); return; }
+      if (page.state.busy) return; // A policy change never cancels or releases a running ad transaction.
+      var allowed = adEnabled();
+      order.forEach(function (s) {
+        if (!s.ad || !s.handle || !E.isValid(s.handle.node)) return;
+        if (!allowed && !s.policyHidden) {
+          s.policyHidden = true;
+          s.policyWasActive = E.isActive(s.handle.node);
+          s.policyWasEnabled = s.handle.isEnabled();
+          s.handle.setEnabled(false); E.setActive(s.handle.node, false);
+        } else if (allowed && s.policyHidden) {
+          s.policyHidden = false;
+          E.setActive(s.handle.node, s.policyWasActive); s.handle.setEnabled(s.policyWasEnabled);
+        }
+      });
+    }
+    function attachPolicy() {
+      if (!unsubscribePolicy && o.ads && typeof o.ads.subscribePolicy === 'function') {
+        unsubscribePolicy = o.ads.subscribePolicy(paintAdPolicy) || null;
+        popup.onClose(detachPolicy);
+      }
+      paintAdPolicy(); refreshAdPolicy();
+    }
     function hold() {
       if (session && !release) release = session.pause('popup');
     }
@@ -1040,6 +1074,7 @@ function createGameUIKit(E) {
       s.ad = !!spec.ad;
       s.placementKey = spec.placementKey || null;
       s.handle = Kit.button(n, handler, {name: kind + '.' + slotName, art: art, width: s.w, height: s.h, close: false});
+      paintAdPolicy();
       return s.handle;
     }
     function record() {
@@ -1059,6 +1094,7 @@ function createGameUIKit(E) {
     page.isOpen = function () { return popup.isOpen(); };
     page.isHolding = function () { return !!release; };
     page.close = function () {
+      detachPolicy();
       letGo();
       return popup.close();
     };
@@ -1069,8 +1105,11 @@ function createGameUIKit(E) {
       hold();
       pageHook(record(), popup.root, popup.closeNode);
       refreshFrom(o, page);
+      attachPolicy();
       return true;
     };
+    // The scene owner calls page.dispose() from onDestroy when it removes a page without close().
+    page.dispose = function () { detachPolicy(); letGo(); };
     page.guard = function (cb) { return popup.guard(cb); };
     page.record = record;
     // the X of pause / revive does what the page's own "back" button does (never a silent close that keeps the pause)
@@ -1079,6 +1118,8 @@ function createGameUIKit(E) {
     // rewarded ad for one slot: pause('ad') until the result; a late result after the page closed pays nothing
     page._runAd = function (slotName, onRewarded) {
       if (page.state.busy) return null;
+      refreshAdPolicy();
+      if (!adEnabled()) { paintAdPolicy(); return null; }
       var st = page.state;
       st.busy = true;
       var s = slots[slotName];
@@ -1091,6 +1132,7 @@ function createGameUIKit(E) {
         st.busy = false;
         if (adRelease) { adRelease(); adRelease = null; }
         if (!popup.isOpen() || page.state !== st) return;          // closed or reopened meanwhile: no reward here
+        paintAdPolicy();
         if (r && r.rewarded === true) { onRewarded(r); return; }
         // runAd (AdBoostKit) shows its own reason; toast here only when it says it did not (feedbackShown === false, 1.1.5)
         if (o.toast !== false && (typeof o.runAd !== 'function' || (r && r.feedbackShown === false))) Kit.toast((r && r.message) || 'No reward was claimed.');
@@ -1115,10 +1157,16 @@ function createGameUIKit(E) {
     }
     page._pay = function (amount, doubled) {
       if (page.state.claimed) return true;
+      // A completed view remains owed after a failed write. Claim/Home/Next retry that same amount and id.
+      if (page.state.earned) { amount = page.state.earned.amount; doubled = page.state.earned.doubled; }
+      else if (doubled) page.state.earned = {amount: amount, doubled: true};
       var add = {}; add[key] = amount;
       var res;
       if (page.grantMode === 'grant') {
-        var id = typeof o.grantId === 'function' ? o.grantId(session) : (o.grantId || (session ? 'run:' + session.run + ':result' : null));
+        var owed = page.state.earned;
+        var id = owed && Object.prototype.hasOwnProperty.call(owed, 'grantId') ? owed.grantId :
+          (typeof o.grantId === 'function' ? o.grantId(session) : (o.grantId || (session ? 'run:' + session.run + ':result' : null)));
+        if (owed) owed.grantId = id;
         res = o.store.grant({id: id, add: add, apply: o.applyReward}, function () {});
       } else if (page.grantMode === 'update') {
         res = o.store.update(function (d) {
@@ -1135,12 +1183,13 @@ function createGameUIKit(E) {
         return false;
       }
       page.state.claimed = true;
+      page.state.earned = null;
       safeCall(o.onClaimed, {amount: amount, doubled: !!doubled, already: !!res.already, currency: key});
       return true;
     };
     page._fill = fill;
     page._slots = slots;
-    page._open = function () { opening = 1; hold(); pageHook(record(), popup.root, popup.closeNode); refreshFrom(o, page); };
+    page._open = function () { opening = 1; hold(); pageHook(record(), popup.root, popup.closeNode); refreshFrom(o, page); attachPolicy(); };
     return page;
   }
   function need(o, k, kind) {
@@ -1213,6 +1262,7 @@ function createGameUIKit(E) {
       var ds = specFor(o, 'double'); ds.ad = true; ds.placementKey = ds.placementKey || o.placementKey;
       page._fill('double', ds, function () {
         if (page.state.claimed) return;
+        if (page.state.earned) { page._pay(amount * 2, true); return; }
         page._runAd('double', function () { page._pay(amount * 2, true); });
       });
     }

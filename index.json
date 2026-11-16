@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "69aa4b21-6484-41a4-96b5-8c7c35251e0c",
+      "skillId": "s-c527d5389d209a5759a9",
+      "name": "remake-core",
+      "version": "v66",
+      "createdAt": "2026-11-16T08:27:31.025Z",
+      "summary": "文件变更：新增 5，修改 18，移除 0。",
+      "changes": {
+        "added": 5,
+        "modified": 18,
+        "deleted": 0
+      },
+      "treeHash": "4530d875b1ee664c4dd2c7aea3bcd19b401e544a870fdcb27c9e6afd13dc76a0",
+      "bytes": 13210557,
+      "fileCount": 690
+    },
+    {
       "id": "d2c0515d-428d-4788-b27a-d30df063852c",
       "skillId": "s-c527d5389d209a5759a9",
       "name": "remake-core",

@@ -205,13 +205,19 @@ class TTImage extends HTMLImageElement {
   get onerror() { return F.has('img_events_only') ? this._oe || null : super.onerror; }
 }
 customElements.define('tt-image', TTImage, { extends: 'img' });
+// Audible by default; ?mute=1 is an explicit QA-only choice.
+const previewAudioInstances = new Set();
+function resumePreviewAudio() {
+  for (const audio of previewAudioInstances) if (audio._pendingPlay) audio.play();
+}
+for (const event of ['pointerdown', 'touchend', 'keydown']) document.addEventListener(event, resumePreviewAudio, true);
 class TTAudio {
-  constructor() { this.a = new Audio(); this.a.muted = true; this.h = {}; this._src = ''; this._vol = 1;
+  constructor() { this.a = new Audio(); this.a.muted = Q.get('mute') === '1'; this.h = {}; this._src = ''; this._vol = 1; this._pendingPlay = false; this._playId = 0; previewAudioInstances.add(this);
     const fire = (k, e) => (this.h[k] || []).slice().forEach(f => { try { f(e || {}); } catch (err) { log('audio.cb_err', String(err)); } });
     this.a.addEventListener('canplay', () => fire('Canplay')); this.a.addEventListener('play', () => fire('Play')); this.a.addEventListener('pause', () => fire('Pause'));
     this.a.addEventListener('ended', () => fire('Ended')); this.a.addEventListener('timeupdate', () => fire('TimeUpdate')); this.a.addEventListener('waiting', () => fire('Waiting'));
     this.a.addEventListener('seeked', () => fire('Seeked')); this.a.addEventListener('seeking', () => fire('Seeking'));
-    this.a.addEventListener('error', () => { log('audio.error', this._src); fire('Error', { errMsg: 'audio error', errCode: 10001 }); });
+    this.a.addEventListener('error', () => { this._pendingPlay = false; log('audio.error', this._src); fire('Error', { errMsg: 'audio error', errCode: 10001 }); });
     for (const k of ['Canplay', 'Play', 'Pause', 'Stop', 'Ended', 'Error', 'TimeUpdate', 'Waiting', 'Seeking', 'Seeked']) {
       this['on' + k] = f => (this.h[k] = this.h[k] || []).push(f);
       this['off' + k] = f => { if (!f) this.h[k] = []; else this.h[k] = (this.h[k] || []).filter(x => x !== f); };
@@ -221,11 +227,14 @@ class TTAudio {
   get src() { return this._src; } set src(v) { this._src = String(v); this.a.src = /^(https?:|data:)/.test(v) ? v : '/' + clean(v); }
   get loop() { return this.a.loop; } set loop(v) { this.a.loop = !!v; }
   get autoplay() { return this.a.autoplay; } set autoplay(v) { this.a.autoplay = !!v; }
-  get volume() { return this._vol; } set volume(v) { this._vol = v; }
+  get volume() { return this._vol; } set volume(v) { const n = Number(v); if (Number.isFinite(n)) this.a.volume = this._vol = Math.max(0, Math.min(1, n)); }
   get currentTime() { return this.a.currentTime; } get duration() { return this.a.duration || 0; } get paused() { return this.a.paused; }
   get startTime() { return 0; } set startTime(v) {} get buffered() { return this.a.duration || 0; } get obeyMuteSwitch() { return true; } set obeyMuteSwitch(v) {}
-  play() { const p = this.a.play(); if (p && p.catch) p.catch(() => {}); } pause() { this.a.pause(); } stop() { this.a.pause(); try { this.a.currentTime = 0; } catch (e) {} this._fire('Stop'); }
-  seek(t) { try { this.a.currentTime = t; } catch (e) {} } destroy() { this.a.pause(); this.a.src = ''; }
+  play() { const id = ++this._playId; this._pendingPlay = true; const p = this.a.play(); if (p && p.then) p.then(() => { if (id === this._playId) this._pendingPlay = false; }).catch(e => { if (id !== this._playId) return; if (e.name !== 'NotAllowedError') { this._pendingPlay = false; log('audio.play_error', String(e)); } }); }
+  pause() { ++this._playId; this._pendingPlay = false; this.a.pause(); }
+  stop() { this.pause(); try { this.a.currentTime = 0; } catch (e) {} this._fire('Stop'); }
+  seek(t) { try { this.a.currentTime = t; } catch (e) {} }
+  destroy() { this.pause(); previewAudioInstances.delete(this); this.a.src = ''; }
 }
 let fontN = 0;
 

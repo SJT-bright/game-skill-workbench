@@ -11,6 +11,10 @@
   'use strict';
   var d = w.document;
   if (!d || w.__previewTouchBridge) return;
+  // Keep the actual DOM dispatcher before a mini-game adapter can replace canvas.dispatchEvent.
+  var nativeDispatch = w.EventTarget && w.EventTarget.prototype.dispatchEvent;
+  var NativeTouch = w.Touch, NativeTouchEvent = w.TouchEvent;
+  var nativeCreateEvent = d.createEvent.bind(d);
   // Engines enable touch input only when the page says it supports touches (cc.sys.capabilities.touches,
   // 3.x INPUT_TOUCH): declare it like a phone does.
   try { if (!('ontouchstart' in d.documentElement)) d.documentElement.ontouchstart = null; } catch (e) {}
@@ -24,7 +28,7 @@
     var init = {identifier: a.id, target: target, clientX: x, clientY: y, screenX: x, screenY: y,
       pageX: x + (w.pageXOffset || 0), pageY: y + (w.pageYOffset || 0), radiusX: 1, radiusY: 1, rotationAngle: 0,
       force: 1};
-    try { if (typeof w.Touch === 'function') return new w.Touch(init); } catch (err) {}
+    try { if (typeof NativeTouch === 'function') return new NativeTouch(init); } catch (err) {}
     return init;
   }
 
@@ -32,20 +36,20 @@
     var touches = stillDown ? [touch] : [];
     var event;
     try {
-      if (typeof w.TouchEvent === 'function' && typeof w.Touch === 'function' && touch instanceof w.Touch) {
-        event = new w.TouchEvent(type, {bubbles: true, cancelable: true, composed: true, touches: touches,
+      if (typeof NativeTouchEvent === 'function' && typeof NativeTouch === 'function' && touch instanceof NativeTouch) {
+        event = new NativeTouchEvent(type, {bubbles: true, cancelable: true, composed: true, touches: touches,
           targetTouches: touches, changedTouches: [touch]});
       }
     } catch (err) { event = null; }
     if (!event) {
-      event = d.createEvent('Event');
+      event = nativeCreateEvent('Event');
       event.initEvent(type, true, true);
       Object.defineProperty(event, 'touches', {value: touches});
       Object.defineProperty(event, 'targetTouches', {value: touches});
       Object.defineProperty(event, 'changedTouches', {value: [touch]});
     }
     Object.defineProperty(event, '__previewTouchBridge', {value: true});
-    target.dispatchEvent(event);
+    nativeDispatch.call(target, event);
   }
 
   function isCanvas(t) { return !!t && String(t.tagName || t.nodeName || '').toUpperCase() === 'CANVAS'; }
@@ -77,5 +81,5 @@
     active = null;
     fire('touchcancel', a.target, point(a, {clientX: a.x || 0, clientY: a.y || 0}), false);
   });
-  w.__previewTouchBridge = {version: 1};
+  w.__previewTouchBridge = {version: 2, dispatcher: 'native_event_target'};
 })(window);

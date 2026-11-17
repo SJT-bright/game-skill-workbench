@@ -14,6 +14,8 @@
 - 恢复旧链接也先检查外壳；可在原端口重启当前服务以保留 origin/存档。外壳在服务层生成，不改已验证的 Web/Native 导出或 ZIP，不清存档，不凭此重新打包。
 - 手机外壳必须以 `Permissions-Policy: fullscreen=()` 和 iframe `allow="fullscreen 'none'"` 禁止游戏自动全屏；真实触摸 PLAY 后再次核 iframe 内部尺寸及外框，防止首页合格、开局却铺满窗口。外壳策略不改 Web/Native 产物。
 - 发链接前只做相称检查：桌面宽窗口下读回 iframe 内390×844（或明确尺寸）、外框未放大且留白；小窗口整体缩放不溢出；确认真实游戏首页与 PLAY/开始可用。HTTP200、标题正确或设置手机 UA 单独都不够。
+- Native 预览使用当前共享 host3x 音频适配，默认输出原游戏声音，实际传递音量；自动播放受限时在用户点击后重试，暂停、停止或销毁后不得被后续点击重新播放。旧预览副本若强制静音或只保存音量数值，交接入口须拦截并更新宿主。首次接入或音频适配变化后，定点验证原 BGM 在真实点击后持续播放、未静音、有效音量及非零音频输出；仅有文件或播放参数不算有声音。
+
 - Agent 对显示容器和一次开始操作的检查在 Ego 内完成；用户 Chrome 窗口只作试玩交接，不在其中运行验收。验证完成后关闭自有 QA 页面；保留正在交给用户的 Chrome 窗口与试玩服务。用户结束或被新版替代后，通过受支持接口关闭准确 URL 对应的自有页面，再关闭服务并核实；不退出整个 Chrome、不清登录/存档，不关闭用户其他页面。
 
 ```sh
@@ -34,4 +36,6 @@ python3 scripts/serve_preview.py --directory <同版Web导出> --snapshot --keep
 
 **给链接前自动截首页图（生成时预防 P21 ⑤ 后半）**：给人用的链接（`--keep`、`--open`、`--idle-minutes 0`）读回核对以后，`serve_preview.py` 自己通过 Ego 官方 Page 接口截一张游戏页的图，并读页面探针。全黑、只有一种颜色、12 秒后还停在加载页、页面报错（未捕获异常、未处理的 Promise、console.error、资源加载失败）就**不给链接**，退出码 1。没有浏览器、截图超时、浏览器没写出图时打印「没截图」，照样给链接，不算通过。Cocos 3.x 导出还没校准，有问题只警告。截图路径打在输出里，交链接前自己看一眼。不要另外手写截图或 sleep 等待来代替它。
 
-**手机外壳里鼠标就是手指（P13 ④）**：外壳里的游戏页由服务自动加上 `assets/preview-touch-bridge.js`，只改服务给出的 HTTP 内容，不改导出。在画布上按下、拖动、松开鼠标，会变成 touchstart、touchmove、touchend；窗口失焦时变成 touchcancel。字段有 identifier、clientX/clientY、screenX/screenY（等于游戏页坐标，和 TikTok 一样）、pageX/pageY 和 force，平台包 touch24、tiktok-touch-3x 和 TouchOwner 都能直接读。转换过的那次鼠标事件不再往下传，引擎不会收到两次。点在画布以外（模拟广告面板、vConsole）的照旧按鼠标处理。`--raw` 内部 QA 页面不加这个脚本。只认触摸的游戏在预览里也能拖动，不要在游戏里另写鼠标兼容代码。
+**手机外壳输入归属（TEST-03）**：服务仍只在 HTTP 响应中注入 `assets/preview-touch-bridge.js`。Native 宿主已为 GameCanvas 启用鼠标通道时由宿主处理，桥不再吞鼠标或重复转发；无该通道的 Web 页面仍由桥把鼠标转为带 identifier、clientX/Y、screenX/Y 的触摸。桥保存启动时的浏览器事件构造和分发接口，适配器改写同名 API 后仍可工作。画布外点击、真实触摸与失焦取消保持原行为。交接以最终实际外壳里的 PLAY、按下、拖动、松开及业务结果为准，缩放后的 iframe 坐标需正确换算。仅日志、HTTP200 或截图不算输入通过。
+
+**真实鼠标试玩交接（2026-11-16）**：每次给用户游戏试玩链接前，必须用真实浏览器鼠标完成开局和一项实际玩法操作，并观察业务变化；触摸指令、HTTP 200、桥接存在或 clicked 不可代替。未执行、失败或缺操作计划时阻止交接，只做开局和代表操作，不扩大回归。使用 `preview_mouse_gate.py` 与项目 `docs/playtest/mouse-plan.json`；见 [真实鼠标检查](real-mouse-preview.md)。

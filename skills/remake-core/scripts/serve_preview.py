@@ -30,6 +30,7 @@ import argparse
 import os
 import re
 import secrets
+import subprocess
 import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -42,6 +43,35 @@ from urllib.parse import parse_qs, urlsplit, urlunsplit
 
 LAST = [time.time()]
 CHECK_SCRIPTS = Path(__file__).resolve().parents[2] / 'cocos-game-check' / 'package-check' / 'scripts'
+
+
+def check_preview_host_audio(directory):
+    """Reject stale strict Native hosts before handing a user an inaudible preview."""
+    host = Path(directory) / '__host' / 'host.js'
+    if not host.is_file():
+        return
+    source = host.read_text(encoding='utf-8')
+    if 'function InnerAudio()' in source:
+        # Known 2.x hosts must retain rejected music intent and native gesture recovery.
+        required = ('function retryBlockedMusic(', 'function clearIntent()', 'function failPlay(',
+                    "error.name === 'NotAllowedError'", 'nativeAudioDocument.addEventListener',
+                    'a.paused && a.loop && !a.muted && a.volume > 0', 'this.play = requestPlay',
+                    'this.pause = function () { clearIntent();',
+                    'this.stop = function () { clearIntent();', 'audioRecovery.delete(recovery)')
+        if not all(part in source for part in required):
+            raise SystemExit('试玩音频检查失败：旧 InnerAudio 宿主缺少拒播后的普通手势恢复或取消边界；请从当前 trial_host/host/host.js 重建预览。')
+        if re.search(r'\ba\.muted\s*=\s*true\b', source):
+            raise SystemExit('试玩音频检查失败：InnerAudio 宿主强制静音。')
+        volume = re.search(r'volume:\s*\{[^\n]+', source)
+        if not volume or not re.search(r'a\.volume\s*=', volume[0]):
+            raise SystemExit('试玩音频检查失败：InnerAudio 未传递音量。')
+        return
+    if 'class TTAudio' not in source:
+        return
+    forced_mute = re.search(r'\bthis\.a\.muted\s*=\s*true\b', source)
+    volume = re.search(r'set\s+volume\s*\(v\)\s*\{([^}]+)', source)
+    if forced_mute or not volume or not re.search(r'this\.a\.volume\s*=', volume[1]):
+        raise SystemExit('试玩音频检查失败：Native 宿主强制静音或未传递音量；请使用当前 host3x/host.js 重建预览宿主后再交接。')
 
 
 def uses_rewarded_ads(directory):
@@ -599,6 +629,7 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
     parser.add_argument('--raw', action='store_true', help='internal automated QA only: expose top-level original canvas; never hand this URL to a user')
     parser.add_argument('--ad-simulator', action='store_true', help='inject manual rewarded-ad simulation into local HTML responses only; no source or Native changes')
     parser.add_argument('--ad-simulator-setup', type=Path, help='optional game-specific preview-only entry labels and real-state reader')
+    parser.add_argument('--mouse-plan', type=Path, help='real mouse start/gameplay plan; defaults to project/docs/playtest/mouse-plan.json')
     parser.add_argument('--adapter', type=Path, help='--keep trial-link smoke: the runtime adapter JSON; its "trial" field '
                         '(taps, reward_js) names the way to a rewarded ad (default: an ad-like home button)')
     parser.add_argument('--home-shot-wait', type=float, default=12, help='headless home screenshot: seconds of page time '
@@ -625,6 +656,8 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
     directory = args.directory.resolve()
     if not (directory / 'index.html').is_file():
         raise SystemExit('找不到 index.html，请指定实际 Cocos Web 导出目录。')
+    if args.keep or args.open or args.idle_minutes == 0:
+        check_preview_host_audio(directory)
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     if verify_snapshot is None and not chinese_original and not args.raw and (args.keep or args.open or args.idle_minutes == 0):
         from feature_policy import board_of
@@ -758,6 +791,15 @@ def main(argv=None, *, verify_snapshot=None, chinese_original=False, returned_ar
         print('返工交付：已读回同版入口；按用户授权免重复美术截图，不重跑无关广告试玩。', flush=True)
     elif for_person and chinese_original:
         print('中文原版：已核准导出与链接身份，交 Google Chrome 供用户试玩；未启动自动浏览器验收。', flush=True)
+    if for_person and not locals().get('internal_window', False):
+        from preview_mouse_gate import handoff_check
+        try:
+            mouse_result = handoff_check(url, args.project,
+                                         args.mouse_plan, directory=current_export, phone_size=phone_size)
+        except (ValueError, OSError, subprocess.TimeoutExpired) as error:
+            abort_start()
+            raise SystemExit('不给试玩链接：真实鼠标检查未通过：' + str(error))
+        print('真实鼠标开局与玩法操作通过；鼠标输入和业务变化已保存。', flush=True)
     if record_ready_trial is not None:
         try:
             record_ready_trial()

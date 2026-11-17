@@ -4,6 +4,8 @@ var assert = require('assert');
 var fs = require('fs'), path = require('path'), vm = require('vm');
 var Policy = require('../assets/tiktok-platform/AdDisplayPolicy');
 var results = [];
+var reported = false;
+process.once('beforeExit', function () { if (!reported) { console.error('ad-display-policy suite incomplete: pending asynchronous case'); process.exitCode = 1; } });
 function config(overrides) {
   var c = {gameId: 'policy-test', appId: 'test-app', adDisplay: {enabled: true, channel: 'production',
     remoteUrl: 'https://config.example.test/game.json', refreshAfterMs: 60000, requestTimeoutMs: 1500}};
@@ -391,6 +393,7 @@ async function test(name, fn) {
     }
   });
   var failed = results.filter(function (r) { return r.status === 'failed'; });
+  reported = true;
   console.log(JSON.stringify({suite: 'ad-display-policy', passed: results.length - failed.length, failed: failed.length, results: results}, null, 2));
   if (failed.length) process.exitCode = 1;
 })();

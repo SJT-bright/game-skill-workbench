@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-17T09:25:48.513Z",
-  "treeHash": "621634a511563861eea4a91c7ff51c8388b55e61f222ab22363ea18f7bb14c7e",
+  "createdAt": "2026-11-17T09:27:20.190Z",
+  "treeHash": "9acb1a83463d64b0218bc3758829b4ee2529da5ca2333033600ed5c0c52365a9",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3555,20 +3555,20 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "46d39bc1d2756751f5f689875f2b68517a5aa6e0b5670c030c07d3de95d65dcf",
-      "fileCount": 670,
-      "bytes": 12963153,
+      "treeHash": "72f5065d71f9c4ef10be3ee6d251def84b85fffb040c3ef49ceb7e17e6b43ef4",
+      "fileCount": 680,
+      "bytes": 13055524,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "7e04b02b7274974c43944980b68294cb9639e26bc7d9c44ce068e522e1bb9a65",
-          "size": 178359,
+          "hash": "33d1d544753161abdd3c1c1f99117638b1eb89f63db82ddf533a21db87cc3bc3",
+          "size": 185206,
           "executable": false
         },
         {
           "path": "SKILL.md",
-          "hash": "c30337bdc897f7fbf663ce21550b9b028b49184f95773978ded3dc451a90e6a8",
-          "size": 13070,
+          "hash": "2b20404a701b877c8bab9885f09ca4230f1cdee9c09ad7450c89e9a61f634d47",
+          "size": 13987,
           "executable": false
         },
         {
@@ -3609,8 +3609,8 @@
         },
         {
           "path": "assets/known-issues.json",
-          "hash": "16b388786941812725d12e1774bd3a14d9dfc1f5bb64777a9915f99136b508b3",
-          "size": 148505,
+          "hash": "4a2868d4154fa76e5ef1424dfe6fac7534b51ac009dbadee65b798ed4a764310",
+          "size": 150222,
           "executable": false
         },
         {
@@ -3909,8 +3909,8 @@
         },
         {
           "path": "assets/platform-kit/tests/ad-display-policy.test.js",
-          "hash": "fa048cfcd00c77aa812b3e684e435debfdb6ff6bf1ec950e9fcb114ef6c61bea",
-          "size": 28841,
+          "hash": "0b4db203a85718fc9d6e9cc6a48d0fd0db75998b70607200f8dcbac76e910a54",
+          "size": 29048,
           "executable": false
         },
         {
@@ -4443,8 +4443,8 @@
         },
         {
           "path": "assets/preview-touch-bridge.js",
-          "hash": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
-          "size": 3977,
+          "hash": "89f13aa1c6f44e22d849f0b3c87ef5d3d18fc7623b8b8287d89039d81b35c73b",
+          "size": 4334,
           "executable": false
         },
         {
@@ -4748,6 +4748,12 @@
           "executable": false
         },
         {
+          "path": "references/real-mouse-preview.md",
+          "hash": "01fa10d7ee29b60f30be4f3e5bb87af10847b9ad72619cbee7278903d366f100",
+          "size": 3295,
+          "executable": false
+        },
+        {
           "path": "references/returned-art-delivery.md",
           "hash": "b9bc11a53024feb3c3f6b56aec70aeb8cece127f3faf523006f6d8dfa29c0b0a",
           "size": 12057,
@@ -4791,8 +4797,8 @@
         },
         {
           "path": "references/user-phone-preview.md",
-          "hash": "06d98b34cbff26dfef47fd032d6f9d34737e9dccf5deb156ea201592e3760fde",
-          "size": 7856,
+          "hash": "45bf9fd86f05b0d6f4fb90c180f43f279e909ba82c57b910f8583b941145adca",
+          "size": 8705,
           "executable": false
         },
         {
@@ -4805,6 +4811,12 @@
           "path": "references/workflow-tools.md",
           "hash": "316e20b8f0b6fde3234b58a286e691deabf06aecf10ec7fef01dd6e30247f244",
           "size": 22531,
+          "executable": false
+        },
+        {
+          "path": "scripts/ad_display_config.cjs",
+          "hash": "6a76cdd76fba451a783341c3b50a924e8b1150961ce299713facae2ae8951935",
+          "size": 15516,
           "executable": false
         },
         {
@@ -5480,6 +5492,12 @@
           "executable": false
         },
         {
+          "path": "scripts/fixtures/preview-touch-bridge-v1.js",
+          "hash": "69d3e751c9b9415526412398eba44b68a4f778e0084097f7e3d70fcaaec80e79",
+          "size": 3977,
+          "executable": false
+        },
+        {
           "path": "scripts/fixtures_rewire/dqiao/TTSdk.js",
           "hash": "727b5d93cb4afe794a9e14293627cb031094d115df82ce947101b7856c3cf6e4",
           "size": 10487,
@@ -5828,6 +5846,18 @@
           "executable": false
         },
         {
+          "path": "scripts/preview_mouse_gate.py",
+          "hash": "c24e80fe0f7e2cef127a2dc40562a03504f696c87b538b36b64d164b81a58cdd",
+          "size": 5665,
+          "executable": false
+        },
+        {
+          "path": "scripts/preview_mouse_runner.mjs",
+          "hash": "816ca8b27c43eb5cdcd8317ee32f94fbfe65383b3ce50f143252cc351eefc944",
+          "size": 4703,
+          "executable": false
+        },
+        {
           "path": "scripts/preview_touch_fakedom.cjs",
           "hash": "ac46a04b762db17bac1a4ff60efd1e678dfd713d66939188027e80d78a45c786",
           "size": 3778,
@@ -5979,8 +6009,8 @@
         },
         {
           "path": "scripts/serve_preview.py",
-          "hash": "0b3b0c827d787568f109b7c6c779da598bc6633a32d8a5fcd2cb1e3547718804",
-          "size": 49115,
+          "hash": "b75b4cd40908df8e9e207f2b117d4a3c0e743c0ad60b704979f305e57c93e6a7",
+          "size": 51904,
           "executable": false
         },
         {
@@ -6017,6 +6047,12 @@
           "path": "scripts/subset_fonts.py",
           "hash": "49cf9e1bc4482ac620f7df73d142869b977123b49ee11c26bd649f893d92a06a",
           "size": 9480,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_ad_display_config.cjs",
+          "hash": "8d75d68c3f3602201b71f6a130143192819eec7d5bf49d3b659389ec1fc3f946",
+          "size": 9709,
           "executable": false
         },
         {
@@ -6311,6 +6347,18 @@
           "path": "scripts/test_check_workflow.py",
           "hash": "dbd730f6b6276af88be5176c11a94d461a39b6656e99095c1f693b712e5c1125",
           "size": 3814,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_chendian_audio_01.py",
+          "hash": "2ddae8c0038576078f3512c596a85e33a3d9dae774f2dda42b6f9d4121f221ab",
+          "size": 8312,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_chendian_test_03.py",
+          "hash": "7e83d8bb8cd984a0b53e02c606f157b0300caaef6398eb98c4ff0a009f16433a",
+          "size": 5158,
           "executable": false
         },
         {
@@ -6872,9 +6920,21 @@
           "executable": false
         },
         {
+          "path": "scripts/test_preview_mouse_gate.py",
+          "hash": "6b30f33de7dfd90bb02f1b5c6ec3bf811135a84ccb2a246228656398952f6f4c",
+          "size": 2835,
+          "executable": false
+        },
+        {
           "path": "scripts/test_preview_phone.py",
           "hash": "52ee95722206a4321732006b062917968b91e2ed38333c3694359248e792e020",
           "size": 5248,
+          "executable": false
+        },
+        {
+          "path": "scripts/test_preview_touch_bridge.cjs",
+          "hash": "df1c9105de3bf3b1af189eb1d33c45577772f958813befe5507ac30ebf056ef2",
+          "size": 19518,
           "executable": false
         },
         {

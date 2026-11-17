@@ -2,7 +2,7 @@
   "schema": "gameskills.release-provenance.v1",
   "skill": "cocos-game-to-english",
   "scope": "Portable sources; local QA trust and game evidence excluded.",
-  "revision": "2026-11-10.english-simple.11.17.17+real-mouse-preview.1+ad-display-portable.2",
+  "revision": "2026-11-10.english-simple.11.17.17+real-mouse-preview.1+ad-display-portable.2+sdk-provider-selftest.1",
   "files": [
     {
       "path": "SKILL.md",
@@ -166,8 +166,8 @@
     },
     {
       "path": "scripts/test_entry_consistency.py",
-      "sha256": "38b05207dcd246124c018b7c806f6a90ddc77e4b2fd7e4da80a4baa2cbac9c1e",
-      "bytes": 78640
+      "sha256": "93134546bd6501808f50b54ac1e97399c093306e8e4219b537ea31df1eb6d222",
+      "bytes": 77819
     },
     {
       "path": "scripts/test_fit_english_labels.py",
@@ -631,8 +631,19 @@
           "bytes": 94283
         }
       ]
+    },
+    {
+      "id": "2026-11-17.sdk-provider-selftest.1",
+      "scope": "Maintenance test fixture only: expect the existing real-mouse gate to refuse a missing plan; preserve separate HTTP identity coverage. No preview policy or production function changed.",
+      "files": [
+        {
+          "path": "scripts/test_entry_consistency.py",
+          "sha256": "93134546bd6501808f50b54ac1e97399c093306e8e4219b537ea31df1eb6d222"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_沉淀_GROW-01_平台任务资格与奖励_基于11.17.17+real-mouse-preview.1+ad-display-portable.2/核对结果.json"
     }
   ],
-  "previous_local_provenance_sha256": "b394759f80a6d625a116b05db5b11296d808ac7b200d7ac8f934e173c0da74ed",
+  "previous_local_provenance_sha256": "36e07ce66ce8f0e9256a12c672ce1df68807ce6dbbd83f9c7cca7d66d89fe0bf",
   "patch_scope": "2026-11-17: portable TK ad-display configuration, sibling resolution and workflow integration; preserve other local features"
 }

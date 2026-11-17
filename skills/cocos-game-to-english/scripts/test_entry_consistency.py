@@ -9,8 +9,8 @@
 3. (10.1) The English pack says the same thing everywhere: English games use this pack by default and the remake
    boards only for new gameplay Saul asks for (Saul 2026-10-30); stage 1 gives Saul the Chinese original's trial link
    first and goes on without waiting (Saul 2026-10-31); local in-match places may stay (Saul 2026-10-31).
-4. The stage-1 command serves a Chinese-original web export without --keep / --project. HTTP bytes are checked;
-   the Chinese-original handoff does not run an Agent browser check.
+4. Original-export HTTP identity needs no project; a user handoff without a real mouse plan is refused before
+   invoking the browser. The transport component and the current handoff gate are tested separately.
 5. (10.2) The ad and economy boards are in the pack and the English work uses them without being asked (Saul
    2026-10-31: "英化skill需要自动做的时候就使用广告skill"): result x2, ad revive, the claim-window checkbox, ad timing
    and qa/ad-regression.json route to remake-ads, amounts to remake-economy; no doc still says those boards are
@@ -1109,71 +1109,43 @@ class PreventionAtFirstBuild(unittest.TestCase):
 
 
 class OriginalTrialServer(unittest.TestCase):
-    """Chinese-original handoff reads real HTTP bytes without a project or any Agent browser execution."""
+    """HTTP identity remains project-independent; user handoffs still require the real mouse plan."""
 
-    def test_original_export_is_served_without_project(self):
+    def test_original_handoff_without_mouse_plan_is_refused(self):
         with tempfile.TemporaryDirectory() as td:
-            web = Path(td) / '本地试玩_中文原版（不用上传）'
-            web.mkdir()
-            source = '<html><canvas id="GameCanvas"></canvas></html>'
-            (web / 'index.html').write_text(source, encoding='utf-8')
-            # --no-browser suppresses the user window, not automatic Ego checks. An accidental Agent run must
-            # fail this test, and must never reach the machine's real Ego installation.
-            fake_bin = Path(td) / 'fake-bin'
-            fake_bin.mkdir()
-            called = Path(td) / 'ego-called'
-            ego = fake_bin / 'ego-browser'
-            ego.write_text('#!' + sys.executable + '\nfrom pathlib import Path\nPath(' + repr(str(called)) +
-                           ').write_text("unexpected Agent browser execution")\nraise SystemExit(97)\n')
-            ego.chmod(0o755)
-            env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', GAME_SKILL_LOCK_DIR=str(Path(td) / 'locks'),
-                       PATH=str(fake_bin) + os.pathsep + os.environ.get('PATH', ''))
-            p = subprocess.Popen([sys.executable, '-B', 'serve_preview.py', '--directory', str(web), '--snapshot',
-                                  '--no-browser', '--idle-minutes', '0', '--chinese-original', '--name', 'test 中文原版'],
-                                 cwd=str(HERE), env=env,
-                                 stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            lines = []
-            reader = threading.Thread(target=lambda: [lines.append(l) for l in p.stdout], daemon=True)
-            reader.start()
+            web=Path(td)/'original';web.mkdir();(web/'index.html').write_text('<html><canvas id="GameCanvas"></canvas></html>')
+            fake_bin=Path(td)/'fake-bin';fake_bin.mkdir();called=Path(td)/'ego-called';ego=fake_bin/'ego-browser'
+            ego.write_text('#!'+sys.executable+'\nfrom pathlib import Path\nPath('+repr(str(called))+').write_text("unexpected browser")\nraise SystemExit(97)\n');ego.chmod(0o755)
+            env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',GAME_SKILL_LOCK_DIR=str(Path(td)/'locks'),PATH=str(fake_bin)+os.pathsep+os.environ.get('PATH',''))
+            done=subprocess.run([sys.executable,'-B','serve_preview.py','--directory',str(web),'--snapshot','--no-browser','--idle-minutes','0','--chinese-original','--name','test original missing mouse plan'],cwd=str(HERE),env=env,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=15)
+            text=done.stdout+done.stderr
+            self.assertNotEqual(done.returncode,0,text)
+            self.assertIn('缺少真实鼠标操作计划',text)
+            self.assertNotIn('手机尺寸本地试玩：',text)
+            self.assertIn('入口 1 个文件和现在的导出一字不差',text)
+            self.assertFalse(called.exists(),'missing plan must be refused before any browser call')
+            self.assertFalse((web/'docs').exists(),'the export must not receive a check ledger')
+
+    def test_original_http_identity_component_without_project(self):
+        # Test the real transport component, not a fabricated mouse-pass result or a relaxed handoff gate.
+        import functools
+        import importlib.util
+        shared=ENTRY.parent/'remake-core/scripts/serve_preview.py'
+        spec=importlib.util.spec_from_file_location('_original_http_component',shared);module=importlib.util.module_from_spec(spec)
+        sys.path.insert(0,str(shared.parent))
+        try:spec.loader.exec_module(module)
+        finally:sys.path.remove(str(shared.parent))
+        with tempfile.TemporaryDirectory() as td:
+            web=Path(td);source='<html><canvas id="GameCanvas"></canvas></html>';(web/'index.html').write_text(source)
+            server=module.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(module.Handler,directory=str(web),phone_size=(390,844),touch_bridge=True))
+            thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start();url='http://127.0.0.1:'+str(server.server_port)+'/'
             try:
-                url, deadline = None, time.time() + 60
-                while url is None and time.time() < deadline and p.poll() is None:
-                    found = re.search(r'http://127\.0\.0\.1:\d+/', ''.join(lines))
-                    url = found.group(0) if found else None
-                    time.sleep(0.1)
-                self.assertIsNotNone(url, 'no trial link printed: ' + ''.join(lines)[-800:])
-                body = None
-                for _ in range(100):
-                    try:
-                        body = urllib.request.urlopen(url, timeout=5).read()
-                        break
-                    except OSError:
-                        time.sleep(0.1)
-                self.assertIsNotNone(body, 'trial link did not answer')
-                self.assertIn(b'fixed-phone-v1', body)
-                with urllib.request.urlopen(url + 'index.html?__phone_game=1', timeout=5) as response:
-                    # The fixed-phone host adds its supported input bridge; all original HTML must match.
-                    self.assertEqual(response.read(), b'<script src="/__local_touch_bridge.js"></script>' + source.encode())
-                self.assertIn('入口 1 个文件和现在的导出一字不差', ''.join(lines))
-                self.assertFalse(called.exists(), 'Chinese-original handoff invoked Ego')
-                self.assertNotIn('PREVIEW_HOME_EGO', ''.join(lines))
-                self.assertFalse((web / 'docs').exists(), 'the export must not receive a check ledger')
-                self.assertNotIn('不起试玩服务', ''.join(lines))
+                with urllib.request.urlopen(url,timeout=5) as response:self.assertIn(b'fixed-phone-v1',response.read())
+                with urllib.request.urlopen(url+'index.html?__phone_game=1',timeout=5) as response:self.assertEqual(response.read(),b'<script src="/__local_touch_bridge.js"></script>'+source.encode())
+                self.assertFalse((web/'docs').exists())
             finally:
-                p.terminate()
-                try:
-                    p.wait(timeout=20)
-                except subprocess.TimeoutExpired:
-                    p.kill()
-                    p.wait()
-                reader.join(timeout=5)
-                p.stdout.close()
-                self.assertIsNotNone(p.poll(), 'preview process did not exit')
-                if url:
-                    port = int(re.search(r':(\d+)/', url).group(1))
-                    with self.assertRaises(OSError):
-                        socket.create_connection(('127.0.0.1', port), timeout=1)
-                self.assertFalse(called.exists(), 'Chinese-original cleanup invoked Ego')
+                server.shutdown();server.server_close();thread.join(timeout=5)
+            with self.assertRaises(OSError):socket.create_connection(('127.0.0.1',server.server_port),timeout=1)
 
 
 if __name__ == '__main__':

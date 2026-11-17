@@ -1,0 +1,139 @@
+{
+  "id": "b6afe627-7e28-4c28-99c6-6703bc9fb413",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v96",
+  "createdAt": "2026-11-17T18:56:44.547Z",
+  "summary": "文件变更：新增 4，修改 15，移除 37。",
+  "changes": {
+    "added": 4,
+    "modified": 15,
+    "deleted": 37
+  },
+  "treeHash": "727f2aaf35bb37169d2f98cf0f888290c7ec1f87555619ea6fc4b08ffbd6c79e",
+  "bytes": 15624,
+  "fileCount": 20,
+  "files": [
+    {
+      "path": "SKILL.md",
+      "hash": "ca3423c26634d8cbfdcd5319a703d3f0b94fc4e572e6bca8dfb71e133783e03b",
+      "size": 8152,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "scripts/browser_env.py",
+      "hash": "d273fb5de5fb83b19072f241be3157bdf6a6fc3f766188552cd0fddf60053460",
+      "size": 402,
+      "executable": true
+    },
+    {
+      "path": "scripts/build_playtest_h5.py",
+      "hash": "d55e17d52c05f89f42f680fe773ccd7b3793ac9067fa8d577d331bd7a62bbf4e",
+      "size": 408,
+      "executable": true
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "hash": "16813bbf9609cb5f8dc03729dce8a940cee74d1eadf057184b0bdd279a8edcc9",
+      "size": 410,
+      "executable": true
+    },
+    {
+      "path": "scripts/check_machine.py",
+      "hash": "12ebba7a4106c55fc7c51fa4130a37fc477c4c0c1a95e17dc7d3cf98b4a6d75c",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/chinese_audit.py",
+      "hash": "c1eac9943599b02910d2659b2367ced37a4f5d6b0c858b103d0cfe18af3a9655",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/doc_contract.py",
+      "hash": "ce464a746eb6b1d1d62e4047d87728b6cd4c5e38d267c93b1b8b1731accfe5cb",
+      "size": 403,
+      "executable": true
+    },
+    {
+      "path": "scripts/english_copy_guard.py",
+      "hash": "706f6b1be8bc1a1536056bcb5bfdd72049a4e75904e1a9b248b2a728663dcc94",
+      "size": 409,
+      "executable": true
+    },
+    {
+      "path": "scripts/find_creator.py",
+      "hash": "275bd292c59efa099f5969183c9db662e5fc7db807446f6ba52cea325e8bc2c7",
+      "size": 403,
+      "executable": true
+    },
+    {
+      "path": "scripts/fit_english_labels.py",
+      "hash": "42a413c91f0ec34252241b2287a6bfb0b5fc87d7be9455acac593308e80747fc",
+      "size": 409,
+      "executable": true
+    },
+    {
+      "path": "scripts/fix_web_entry_3x.py",
+      "hash": "1a5de69557811aaa7519dd225b72f4e1aaf4b2ff999975995d8be05b7c01eb21",
+      "size": 407,
+      "executable": true
+    },
+    {
+      "path": "scripts/run_skill.py",
+      "hash": "48139546d82897fd67fadf6778db3c4890034aa5778fd28eeaed80057f9c21a8",
+      "size": 400,
+      "executable": true
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "63e30a50693ca5197458fe0b8481c006a341ab0afa27cc1bd83d60a629dbf7f8",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/stage2_pipeline.py",
+      "hash": "0f3cd3892028dce088d86814e7c8f641868717ee38d32ab77093f4e59d171d52",
+      "size": 406,
+      "executable": true
+    },
+    {
+      "path": "scripts/stage_timer.py",
+      "hash": "4e21922a437c42a8e484ba6195e481abbbdd8d92a793abbfb8af107314d74096",
+      "size": 402,
+      "executable": true
+    },
+    {
+      "path": "scripts/start_project.py",
+      "hash": "e2fcb343ede5ba515ff8a60346fd120fc3a5f46b19c73c11b532e1701948f8bf",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "hash": "be39615a1be5477433183c556cb67913743e4927a42b62c8940b4b25263ba929",
+      "size": 413,
+      "executable": true
+    },
+    {
+      "path": "scripts/ts_full_check.py",
+      "hash": "e48788dc8cc02404e283a1c20f3b35da6ada6fd6b6f489a98990a7a6d8cd2b42",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/unpack_source.py",
+      "hash": "86e6ef2f575c53e02cab99570144407752d6173fd9bb78475760245d8fb3b20b",
+      "size": 404,
+      "executable": true
+    }
+  ]
+}

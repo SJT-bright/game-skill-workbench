@@ -2,6 +2,22 @@
   "schema": 1,
   "releases": [
     {
+      "id": "e623df36-5809-4e55-9652-c1e7726f7fbf",
+      "skillId": "s-c527d5389d209a5759a9",
+      "name": "remake-core",
+      "version": "v69",
+      "createdAt": "2026-11-17T12:55:12.744Z",
+      "summary": "文件变更：新增 3，修改 12，移除 0。",
+      "changes": {
+        "added": 3,
+        "modified": 12,
+        "deleted": 0
+      },
+      "treeHash": "207f8d0307e5f6d009f82684287986b8e37fdee07dad90488ec8807655b5ae61",
+      "bytes": 13095891,
+      "fileCount": 683
+    },
+    {
       "id": "1c7b92f8-dad1-496c-8253-b5e2c3f76a49",
       "skillId": "s-16601c48e7f1b99915ae",
       "directory": "mobile-touch-computer-use",

@@ -197,18 +197,20 @@
       "id": "GROW-01",
       "feature": "growth",
       "title": "平台任务资格与奖励",
-      "steps": "分别点首页桌面快捷方式和个人主页回访，第一次点击直接调用各自导航。Studio 或无能力、失败、取消、超时和无资格时界面无说明、过渡提示、领奖键或假奖，入口可重试。测两项对应入口冷启动和热返回、普通切前台、回调与 Promise 资格、等待过期、迟到结果和重复进入。真实触摸核对两键并记录当时界面及调用顺序。原每种结果提示的证据字段 each_negative_result_message 记录各分支无提示与可重试的观察。",
-      "expected": "两键始终显示，点击直接导航，已领取也可点。只有匹配入口返回、严格资格为 true 且持久保存成功才发一次，重开和重复事件不重发。Studio 不弹游戏内说明。奖励在原玩法中可用。",
+      "steps": "先绑定实际源码与ZIP，沿首页按钮→业务→SDK追踪，必要时对照已验证参考包；区分未调用导航、平台菜单/列表缺失、返回不查奖及Pack Error。适配器覆盖别名前保留真实SDK对象，按TTMinis.game→tt→经平台确认的wx及保留对象逐方法选择，不把能渲染当成有任务能力，不因canIUse返回undefined拒绝存在的方法。构造单SDK、分离SDK、别名覆写和命名全局不挂window的旧新对照，并记录调用时的对象来源、接口与顺序；再按原范围核两键首次直跳、已领取可点、冷启动与热返回的对应资格、普通前台静默、失败/超时恢复、严格资格及存档去重。已有未变证据沿用。",
+      "expected": "适配后原平台任务接口仍可达且由原对象调用；同样输入下丢失回退或覆盖原对象的坏例必须失败，正常单SDK不退化。两键始终显示并首次点击直接导航，缺能力不造菜单、提示或奖励；仅匹配来源、严格资格true及持久保存成功才按本游戏规则发一次，重开不重复。SDK与界面本地验证不能代替真实侧栏显示或审核结论；平台菜单缺失不直接断言账号地区。",
       "phase": "pre_scan",
       "always_applicable": false,
-      "symptom": "平台任务（加桌面、个人主页回访等）没完成也发奖，或完成了不发奖；去加桌面/个人主页回来后点\"查看奖励\"没反应（旧查询没取消、还占着锁，新查询被挡；失败/无资格时不给任何提示）。 去加桌面/回访回来点\"查看奖励\"一直 CHECKING：SDK 用 Promise 返回资格而代码只接 success 回调；超时依赖的定时回调没执行，等待永远不结束（Monkey Dash 2026-10-21）。",
+      "symptom": "平台任务（加桌面、个人主页回访等）没完成也发奖，或完成了不发奖；去加桌面/个人主页回来后点\"查看奖励\"没反应（旧查询没取消、还占着锁，新查询被挡；失败/无资格时不给任何提示）。 去加桌面/回访回来点\"查看奖励\"一直 CHECKING：SDK 用 Promise 返回资格而代码只接 success 回调；超时依赖的定时回调没执行，等待永远不结束（Monkey Dash 2026-10-21）。 猪仔逃亡63→64：受控分离SDK条件下，旧引擎别名覆盖且任务组件移除wx回退，PROFILE点击没有导航调用；保留原对象后恢复本地调用，真实侧栏显示仍待验。",
       "requires_gui": true,
       "required_observations": [
         "query_pending_then_leave_and_return",
         "each_negative_result_message",
         "repeat_tap_vs_return_requery",
         "late_old_result_ignored",
-        "claim_save_and_real_use"
+        "claim_save_and_real_use",
+        "sdk_provider_before_after_alias",
+        "split_sdk_same_input_negative_control"
       ],
       "requires_negative_control": true
     },

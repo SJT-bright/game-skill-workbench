@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-17T09:28:32.488Z",
-  "treeHash": "50a402f0eb3ee2de2676b012daf1d6404752701476ba699be1a708678423ecb9",
+  "createdAt": "2026-11-17T12:54:19.710Z",
+  "treeHash": "f6ed1769f3888c8624d42676176c468249d3e27ce45bcce9e50f40339ab509dc",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -3555,14 +3555,14 @@
     },
     {
       "name": "remake-core",
-      "treeHash": "72f5065d71f9c4ef10be3ee6d251def84b85fffb040c3ef49ceb7e17e6b43ef4",
-      "fileCount": 680,
-      "bytes": 13055524,
+      "treeHash": "207f8d0307e5f6d009f82684287986b8e37fdee07dad90488ec8807655b5ae61",
+      "fileCount": 683,
+      "bytes": 13095891,
       "files": [
         {
           "path": "PROVENANCE.json",
-          "hash": "33d1d544753161abdd3c1c1f99117638b1eb89f63db82ddf533a21db87cc3bc3",
-          "size": 185206,
+          "hash": "ac0f3703f74661f71a35ed683f9fffe5c87f061bee01d3c410bc26df000eb07e",
+          "size": 189108,
           "executable": false
         },
         {
@@ -3609,8 +3609,8 @@
         },
         {
           "path": "assets/known-issues.json",
-          "hash": "4a2868d4154fa76e5ef1424dfe6fac7534b51ac009dbadee65b798ed4a764310",
-          "size": 150222,
+          "hash": "a39a45319321b4ec4fc4e0b403d491c0d2e26f516dcaab8edd21b984a5d73994",
+          "size": 150944,
           "executable": false
         },
         {
@@ -3651,8 +3651,8 @@
         },
         {
           "path": "assets/platform-kit/KIT_MANIFEST.json",
-          "hash": "e618db8f4bc1259a771d3a0f842d3e11ea966ffd343bdd3d17b753c6f702e29b",
-          "size": 65134,
+          "hash": "cb86aa7954e0b347911e84beb293e7f4e70795f455893ba9e5971cfca79f964b",
+          "size": 65641,
           "executable": false
         },
         {
@@ -3681,8 +3681,8 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
-          "hash": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
-          "size": 13707,
+          "hash": "19b269e213e8ff98403e4904ed57cef6e980e67f6b282d1a11c38092831ea433",
+          "size": 13602,
           "executable": false
         },
         {
@@ -3705,8 +3705,8 @@
         },
         {
           "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
-          "hash": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
-          "size": 5832,
+          "hash": "a0bff5b99bd1f3c9cd2b9c432ebfbe73ee5eda015633118c0543b566fcb7b72b",
+          "size": 6594,
           "executable": false
         },
         {
@@ -3807,8 +3807,8 @@
         },
         {
           "path": "assets/platform-kit/parts/host-shim.js",
-          "hash": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
-          "size": 6707,
+          "hash": "66c1dd29d4aadc7029bc5b86db6595ce1c7596f484c17a8c2ef6dadbb7e700b9",
+          "size": 8153,
           "executable": false
         },
         {
@@ -3837,8 +3837,8 @@
         },
         {
           "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-          "hash": "125dfb33c377659b143cb7ca04473883e6c1dc42f68dfa5f7f09e52a484742c8",
-          "size": 15975,
+          "hash": "764bbe5decd1dca8c6b36ba9457d7f76e80510c78691cc34e095058c3f717dce",
+          "size": 16217,
           "executable": false
         },
         {
@@ -3873,8 +3873,8 @@
         },
         {
           "path": "assets/platform-kit/plugins-3x/MissionFlow.plugin.js",
-          "hash": "5d5cc5ac2171ef0b7267cbe4e795ae773764e0d2a5853c87c2da72730046f909",
-          "size": 15903,
+          "hash": "2525b838ac49290579dd14740521a8ebf3472e90d245254690b38706ab22664d",
+          "size": 15798,
           "executable": false
         },
         {
@@ -3897,8 +3897,8 @@
         },
         {
           "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
-          "hash": "adaac30615468bef658094242a97c5f4dd6caea2ebb13cba91fe5e77706d5038",
-          "size": 8082,
+          "hash": "ccf748568672ba69ebf1043b5cbd07bf2e45b62e7d7bb65aa64b82a65bbab6ea",
+          "size": 8844,
           "executable": false
         },
         {
@@ -4304,6 +4304,12 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tools/kit_versions/MissionFlow/abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706.txt",
+          "hash": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
+          "size": 13707,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tools/kit_versions/MissionFlow/d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11.txt",
           "hash": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
           "size": 10614,
@@ -4388,6 +4394,12 @@
           "executable": false
         },
         {
+          "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae.txt",
+          "hash": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
+          "size": 5832,
+          "executable": false
+        },
+        {
           "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608.txt",
           "hash": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
           "size": 5880,
@@ -4407,8 +4419,8 @@
         },
         {
           "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-          "hash": "9d506ed79e62fb1b5f45c60e660694213e6591ad0a0f1e476baba58318271a6d",
-          "size": 23743,
+          "hash": "e0a6871914e32242c2fb541a9b534d5210c3c3c22d4f45ac25b9f3f59bf67974",
+          "size": 24156,
           "executable": false
         },
         {
@@ -6356,6 +6368,12 @@
           "executable": false
         },
         {
+          "path": "scripts/test_chendian_grow_01.py",
+          "hash": "631c2ae663245cd23998e20b05943e27905578fccc4a8c855c6b6997afb1692d",
+          "size": 7446,
+          "executable": false
+        },
+        {
           "path": "scripts/test_chendian_test_03.py",
           "hash": "7e83d8bb8cd984a0b53e02c606f157b0300caaef6398eb98c4ff0a009f16433a",
           "size": 5158,
@@ -6417,8 +6435,8 @@
         },
         {
           "path": "scripts/test_finalize_hostshim_boot.py",
-          "hash": "94967689844e864ea8113e3efda1d5ff7e22fbe2a03d41aad4103cb19ac5536e",
-          "size": 13195,
+          "hash": "ced68174b1fe081d702d911baa740d4703f40a0d9ba47bdab0d3d40448b86234",
+          "size": 15675,
           "executable": false
         },
         {
@@ -7545,8 +7563,8 @@
         },
         {
           "path": "scripts/tiktok_finalize_steps/startup.py",
-          "hash": "8171f4ef3c84da954f0f1fe7aa42ef2376a02d4495eee44aa43f4a4436ec637a",
-          "size": 23579,
+          "hash": "addce43846d1262fc6cc8825e0bf88243e4f0aefe30790bcf2a0bafd4c70da0c",
+          "size": 25935,
           "executable": false
         },
         {

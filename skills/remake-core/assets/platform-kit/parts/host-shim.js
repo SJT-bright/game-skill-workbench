@@ -28,6 +28,35 @@ function rootObject() {
     : typeof window !== 'undefined' ? window : {};
 }
 
+// Capture object references before adapters replace tt/wx. This never copies or invents mission methods.
+var MISSION_PROVIDERS = '__tiktokKitMissionSDKProvidersV1';
+function captureSDKProviders(sdk, root, includeGlobals) {
+  var list = [], previous = [];
+  function add(api) {
+    if (api && (typeof api === 'object' || typeof api === 'function') && list.indexOf(api) < 0) list.push(api);
+  }
+  add(sdk);
+  if (includeGlobals !== false) {
+    // Named globals can exist without corresponding properties on window or GameGlobal.
+    if (root === rootObject()) {
+      try { add(typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game); } catch (_) {}
+      try { add(typeof tt !== 'undefined' && tt); } catch (_) {}
+      try { add(typeof wx !== 'undefined' && wx); } catch (_) {}
+    }
+    try { add(root.TTMinis && root.TTMinis.game); } catch (_) {}
+    try { add(root.tt); } catch (_) {}
+    try { add(root.wx); } catch (_) {}
+    try { previous = root[MISSION_PROVIDERS]; } catch (_) {}
+    if (Array.isArray(previous)) previous.forEach(add);
+  }
+  try {
+    Object.defineProperty(root, MISSION_PROVIDERS, {value: list.slice(), configurable: true, writable: true, enumerable: false});
+  } catch (_) {
+    try { root[MISSION_PROVIDERS] = list.slice(); } catch (_) {}
+  }
+  return list;
+}
+
 function parseVersion(value) {
   var out = [0, 0, 0];
   if (typeof value !== 'string' && typeof value !== 'number') return out;
@@ -112,7 +141,8 @@ function shimOne(api, root, report) {
 function install(sdk, opts) {
   opts = opts || {};
   var root = opts.root || rootObject();
-  var report = {version: VERSION, targets: 0, filled: [], skipped: []};
+  var providers = captureSDKProviders(sdk, root, opts.alsoGlobals !== false);
+  var report = {version: VERSION, targets: 0, filled: [], skipped: [], sdkProviders: providers.length};
   var list = [];
   if (sdk) list.push(sdk);
   if (opts.alsoGlobals !== false) {
@@ -130,4 +160,4 @@ function sdkVersion(sdk) {
   catch (e) { return [0, 0, 0]; }
 }
 
-module.exports = {install: install, parseVersion: parseVersion, sdkVersion: sdkVersion, version: VERSION};
+module.exports = {install: install, captureSDKProviders: captureSDKProviders, parseVersion: parseVersion, sdkVersion: sdkVersion, version: VERSION};

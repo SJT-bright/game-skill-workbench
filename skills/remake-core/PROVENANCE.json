@@ -1,6 +1,6 @@
 {
   "schema": "gameskills.release-provenance.v1",
-  "revision": "2026-11-16.english-simple.11.17.17+ad-display-policy.1+real-mouse-preview.1+ad-display-portable.2",
+  "revision": "2026-11-16.english-simple.11.17.17+ad-display-policy.1+real-mouse-preview.1+ad-display-portable.2 +sdk-provider-retention.1",
   "skill": "remake-core",
   "previous_provenance_sha256": "a1e01e5757f77e23663edde4809f44936aea03c683b5f1a3acad827e4a146b91",
   "split_from": "cocos-game-to-english@2026-10-27.economy-v4",
@@ -43,8 +43,8 @@
     },
     {
       "path": "assets/known-issues.json",
-      "sha256": "4a2868d4154fa76e5ef1424dfe6fac7534b51ac009dbadee65b798ed4a764310",
-      "bytes": 150222
+      "sha256": "a39a45319321b4ec4fc4e0b403d491c0d2e26f516dcaab8edd21b984a5d73994",
+      "bytes": 150944
     },
     {
       "path": "assets/loading-recovery-examples/asset-load-guard.js",
@@ -78,8 +78,8 @@
     },
     {
       "path": "assets/platform-kit/KIT_MANIFEST.json",
-      "sha256": "e618db8f4bc1259a771d3a0f842d3e11ea966ffd343bdd3d17b753c6f702e29b",
-      "bytes": 65134
+      "sha256": "cb86aa7954e0b347911e84beb293e7f4e70795f455893ba9e5971cfca79f964b",
+      "bytes": 65641
     },
     {
       "path": "assets/platform-kit/LEGACY_GAMES.json",
@@ -103,8 +103,8 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
-      "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
-      "bytes": 13707
+      "sha256": "19b269e213e8ff98403e4904ed57cef6e980e67f6b282d1a11c38092831ea433",
+      "bytes": 13602
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/PlatformConfig.js",
@@ -123,8 +123,13 @@
     },
     {
       "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
-      "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
-      "bytes": 5832
+      "sha256": "a0bff5b99bd1f3c9cd2b9c432ebfbe73ee5eda015633118c0543b566fcb7b72b",
+      "bytes": 6594
+    },
+    {
+      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
+      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
+      "bytes": 5603
     },
     {
       "path": "assets/platform-kit/build-templates/bytedance/main.js",
@@ -137,9 +142,24 @@
       "bytes": 2593
     },
     {
-      "path": "assets/platform-kit/build-templates/bytedance-mini-game/tiktok-touch-3x.js",
-      "sha256": "4abedb1d52d7304ed2bd038c41c14c2aa4a7b2fae4290cfa64f1b3df2e9f5472",
-      "bytes": 5603
+      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
+      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
+      "bytes": 14203
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
+      "sha256": "3c91e854eb433e5c5c5c48ca660fe0b98779a2de1e5c9aea7458595c3852dce4",
+      "bytes": 90735
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+      "sha256": "764bbe5decd1dca8c6b36ba9457d7f76e80510c78691cc34e095058c3f717dce",
+      "bytes": 16217
+    },
+    {
+      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
+      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
+      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/parts/AudioService.js",
@@ -208,8 +228,8 @@
     },
     {
       "path": "assets/platform-kit/parts/host-shim.js",
-      "sha256": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
-      "bytes": 6707
+      "sha256": "66c1dd29d4aadc7029bc5b86db6595ce1c7596f484c17a8c2ef6dadbb7e700b9",
+      "bytes": 8153
     },
     {
       "path": "assets/platform-kit/parts/rewarded-guard.js",
@@ -220,26 +240,6 @@
       "path": "assets/platform-kit/parts/storage-guard.js",
       "sha256": "1853efbe982a2c3146871c1aedf7a541842a666ce32dfeaaf4e22b25045e3e27",
       "bytes": 4483
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.adapter-3x.js",
-      "sha256": "660495e77a6d4a05a3153712b549cfe06486563624d78ff401a4b71fd9a1f2fd",
-      "bytes": 14203
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/GameUIKit.ts",
-      "sha256": "3c91e854eb433e5c5c5c48ca660fe0b98779a2de1e5c9aea7458595c3852dce4",
-      "bytes": 90735
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
-      "sha256": "125dfb33c377659b143cb7ca04473883e6c1dc42f68dfa5f7f09e52a484742c8",
-      "bytes": 15975
-    },
-    {
-      "path": "assets/platform-kit/parts-3x/boot-guard-3x.js",
-      "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
-      "bytes": 17006
     },
     {
       "path": "assets/platform-kit/plugins-3x/AdDisplayPolicy.plugin.js",
@@ -263,8 +263,8 @@
     },
     {
       "path": "assets/platform-kit/plugins-3x/MissionFlow.plugin.js",
-      "sha256": "5d5cc5ac2171ef0b7267cbe4e795ae773764e0d2a5853c87c2da72730046f909",
-      "bytes": 15903
+      "sha256": "2525b838ac49290579dd14740521a8ebf3472e90d245254690b38706ab22664d",
+      "bytes": 15798
     },
     {
       "path": "assets/platform-kit/plugins-3x/PlatformConfig.plugin.js",
@@ -283,8 +283,8 @@
     },
     {
       "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
-      "sha256": "adaac30615468bef658094242a97c5f4dd6caea2ebb13cba91fe5e77706d5038",
-      "bytes": 8082
+      "sha256": "ccf748568672ba69ebf1043b5cbd07bf2e45b62e7d7bb65aa64b82a65bbab6ea",
+      "bytes": 8844
     },
     {
       "path": "assets/platform-kit/settings/bytedance.json",
@@ -622,6 +622,11 @@
       "bytes": 8255
     },
     {
+      "path": "assets/platform-kit/tools/kit_versions/MissionFlow/abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706.txt",
+      "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
+      "bytes": 13707
+    },
+    {
       "path": "assets/platform-kit/tools/kit_versions/MissionFlow/d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11.txt",
       "sha256": "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
       "bytes": 10614
@@ -692,6 +697,11 @@
       "bytes": 5825
     },
     {
+      "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae.txt",
+      "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
+      "bytes": 5832
+    },
+    {
       "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608.txt",
       "sha256": "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
       "bytes": 5880
@@ -708,8 +718,8 @@
     },
     {
       "path": "assets/platform-kit/tools/make_plugin_scripts.py",
-      "sha256": "9d506ed79e62fb1b5f45c60e660694213e6591ad0a0f1e476baba58318271a6d",
-      "bytes": 23743
+      "sha256": "e0a6871914e32242c2fb541a9b534d5210c3c3c22d4f45ac25b9f3f59bf67974",
+      "bytes": 24156
     },
     {
       "path": "assets/platform-kit/webp-probe/cocos2.4/loading/webp-probe.webp",
@@ -2332,6 +2342,11 @@
       "bytes": 8312
     },
     {
+      "path": "scripts/test_chendian_grow_01.py",
+      "sha256": "631c2ae663245cd23998e20b05943e27905578fccc4a8c855c6b6997afb1692d",
+      "bytes": 7446
+    },
+    {
       "path": "scripts/test_chendian_test_03.py",
       "sha256": "7e83d8bb8cd984a0b53e02c606f157b0300caaef6398eb98c4ff0a009f16433a",
       "bytes": 5158
@@ -2383,8 +2398,8 @@
     },
     {
       "path": "scripts/test_finalize_hostshim_boot.py",
-      "sha256": "94967689844e864ea8113e3efda1d5ff7e22fbe2a03d41aad4103cb19ac5536e",
-      "bytes": 13195
+      "sha256": "ced68174b1fe081d702d911baa740d4703f40a0d9ba47bdab0d3d40448b86234",
+      "bytes": 15675
     },
     {
       "path": "scripts/test_finalize_images.py",
@@ -3323,8 +3338,8 @@
     },
     {
       "path": "scripts/tiktok_finalize_steps/startup.py",
-      "sha256": "8171f4ef3c84da954f0f1fe7aa42ef2376a02d4495eee44aa43f4a4436ec637a",
-      "bytes": 23579
+      "sha256": "addce43846d1262fc6cc8825e0bf88243e4f0aefe30790bcf2a0bafd4c70da0c",
+      "bytes": 25935
     },
     {
       "path": "scripts/tiktok_finalize_steps/storage.py",
@@ -4698,8 +4713,73 @@
           "bytes": 19518
         }
       ]
+    },
+    {
+      "id": "2026-11-17.sdk-provider-retention.1",
+      "authority": "确认，按卡制作并合入17版",
+      "scope": "GROW-01: preserve genuine mission SDK objects before alias modules; per-method resolution; reuse existing startup and checks",
+      "files": [
+        {
+          "path": "assets/known-issues.json",
+          "sha256": "a39a45319321b4ec4fc4e0b403d491c0d2e26f516dcaab8edd21b984a5d73994"
+        },
+        {
+          "path": "assets/platform-kit/KIT_MANIFEST.json",
+          "sha256": "cb86aa7954e0b347911e84beb293e7f4e70795f455893ba9e5971cfca79f964b"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/MissionFlow.js",
+          "sha256": "19b269e213e8ff98403e4904ed57cef6e980e67f6b282d1a11c38092831ea433"
+        },
+        {
+          "path": "assets/platform-kit/assets/tiktok-platform/TikTokMissionService.js",
+          "sha256": "a0bff5b99bd1f3c9cd2b9c432ebfbe73ee5eda015633118c0543b566fcb7b72b"
+        },
+        {
+          "path": "assets/platform-kit/parts-3x/KIT_PARTS_3X.json",
+          "sha256": "764bbe5decd1dca8c6b36ba9457d7f76e80510c78691cc34e095058c3f717dce"
+        },
+        {
+          "path": "assets/platform-kit/parts/host-shim.js",
+          "sha256": "66c1dd29d4aadc7029bc5b86db6595ce1c7596f484c17a8c2ef6dadbb7e700b9"
+        },
+        {
+          "path": "assets/platform-kit/plugins-3x/MissionFlow.plugin.js",
+          "sha256": "2525b838ac49290579dd14740521a8ebf3472e90d245254690b38706ab22664d"
+        },
+        {
+          "path": "assets/platform-kit/plugins-3x/TikTokMissionService.plugin.js",
+          "sha256": "ccf748568672ba69ebf1043b5cbd07bf2e45b62e7d7bb65aa64b82a65bbab6ea"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/MissionFlow/abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706.txt",
+          "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706"
+        },
+        {
+          "path": "assets/platform-kit/tools/kit_versions/TikTokMissionService/38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae.txt",
+          "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae"
+        },
+        {
+          "path": "assets/platform-kit/tools/make_plugin_scripts.py",
+          "sha256": "e0a6871914e32242c2fb541a9b534d5210c3c3c22d4f45ac25b9f3f59bf67974"
+        },
+        {
+          "path": "scripts/test_chendian_grow_01.py",
+          "sha256": "631c2ae663245cd23998e20b05943e27905578fccc4a8c855c6b6997afb1692d"
+        },
+        {
+          "path": "scripts/test_finalize_hostshim_boot.py",
+          "sha256": "ced68174b1fe081d702d911baa740d4703f40a0d9ba47bdab0d3d40448b86234"
+        },
+        {
+          "path": "scripts/tiktok_finalize_steps/startup.py",
+          "sha256": "addce43846d1262fc6cc8825e0bf88243e4f0aefe30790bcf2a0bafd4c70da0c"
+        }
+      ],
+      "receipt": "/Users/sijunting/Downloads/！自制游戏/启动包工坊/！Skill更新/补丁_沉淀_GROW-01_平台任务资格与奖励_基于11.17.17+real-mouse-preview.1+ad-display-portable.2/核对结果.json",
+      "physical_device": "pending; local source/plugin/startup tests only"
     }
   ],
-  "previous_local_provenance_sha256": "e6e6658759800bdea9300c19f98f720cafd7b1b2b1700e8e9836cf33153b2477",
+  "previous_local_provenance_sha256": "33d1d544753161abdd3c1c1f99117638b1eb89f63db82ddf533a21db87cc3bc3",
   "patch_scope": "2026-11-17: portable TK ad-display configuration, sibling resolution and workflow integration; preserve other local features"
 }

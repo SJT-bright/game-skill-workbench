@@ -26,6 +26,7 @@ Cocos 3.x: no device-proven startup part exists (R3, Q5): check only, own startu
     (build_templates step, part template); the game.js line is written by native / sync --native.
 """
 import re
+import copy
 
 from . import (KitError, MAIN_REQUIRE, Result, STOCK_ROOT_JS, anchors, install_part, is_engine_or_adapter,
                kit_main_current, kit_main_versions, kit_lines, live_matches, neutralize, part_action, part_facts,
@@ -242,10 +243,59 @@ def _anchor_of(wiring):
     return wiring.get('insert_before') or wiring.get('insert_after')
 
 
+def _hostshim_before_alias(files, part, engine):
+    """Prefer a proven earlier SDK-alias module over the normal adapter anchor; keep other wiring unchanged."""
+    if part.get('step') != 'hostshim':
+        return part
+    game = text_of(files.get('game.js'))
+    rules = wirings(part, engine, 'game.js')
+    if not rules:
+        return part
+    points = live_matches(game, re.compile(_anchor_of(rules[0])))
+    if len(points) != 1:
+        return part  # The existing exact-one-anchor check still owns ambiguity.
+    limit = points[0].start()
+    alias = re.compile(r"\b(?:globalThis|GameGlobal|window|global|root|g)\s*\.\s*(?:tt|wx)\s*=")
+    choices = []
+    for rel, raw in files.items():
+        if rel == 'game.js' or not rel.endswith('.js') or not live_matches(text_of(raw), alias):
+            continue
+        hits = live_matches(game, require_rx(rel))
+        if len(hits) == 1 and hits[0].start() < limit:
+            choices.append((hits[0].start(), rel))
+    if not choices:
+        return part
+    _, first = min(choices)
+    adjusted = copy.deepcopy(part)
+    for rule in adjusted.get('wiring', []):
+        if rule.get('in') == 'game.js' and rule.get('insert_before'):
+            rule['insert_before'] = require_rx(first).pattern
+    return adjusted
+
+
+def _move_known_hostshim_before_alias(ctx, r, name, part):
+    """Only relocate our single marked line; unknown code and ambiguous anchors remain protected."""
+    if part.get('step') != 'hostshim':
+        return
+    game = text_of(ctx.read('game.js'))
+    rules = wirings(part, ctx.engine, 'game.js')
+    marks = kit_lines(game, name)
+    if not rules or len(marks) != 1:
+        return
+    found, usable = anchors(game, _anchor_of(rules[0]))
+    if len(found) != 1 or len(usable) != 1 or marks[0][1] <= found[0].start():
+        return
+    start, end, _ = marks[0]
+    new = game[:start] + game[end:]
+    ctx.write('game.js', new.encode('utf-8'))
+    r.change('game.js', game.encode('utf-8'), new.encode('utf-8'), 'move the marked host shim before an SDK alias module')
+
+
 def install_early(ctx, r):
     """Native phase: install host-shim (+ boot3x on 3.x) in the build folder. Writes into r (r.state untouched)."""
     for name, part in early_parts(ctx.manifest, ctx.engine):
         files = ctx.files()
+        part = _hostshim_before_alias(files, part, ctx.engine)
         f = part_facts(files, ctx.manifest, name, part, ctx.engine)
         if is_boot(name, part):
             own = own_boot_page(files, ctx.manifest, part)
@@ -264,6 +314,7 @@ def install_early(ctx, r):
                    "game.js); hand it to this game's session" % (name, _anchor_of(game_w[0])), {'part': name})
             continue
         sub = Result(STEP)
+        _move_known_hostshim_before_alias(ctx, sub, name, part)
         install_part(ctx, sub, name, part, action)
         r.changed += sub.changed
         r.blocks += sub.blocks
@@ -303,6 +354,7 @@ def apply_source(ctx):
         text = text_of(tmpl[g])
         new = text
         for name, part in parts:
+            part = _hostshim_before_alias(dict(tmpl, **{'game.js': new.encode('utf-8')}), part, ctx.engine)
             if is_boot(name, part):
                 own = own_boot_page(dict(tmpl, **{'game.js': new.encode('utf-8')}), ctx.manifest, part)
                 if own:
@@ -451,6 +503,7 @@ def verify(files, manifest, policy, engine=None):
         # R4B: a host-shim / boot3x that is present must be the kit file, loaded once, before its anchor. Not required
         # (a package built before R4B has none); finalize's own self-check requires it for the games it installs.
         for name, part in early_parts(manifest, engine):
+            part = _hostshim_before_alias(files, part, engine)
             if is_boot(name, part) and own_boot_page(root, manifest, part):
                 continue
             out += part_findings(files, manifest, name, part, engine, policy, required=False)

@@ -86,6 +86,12 @@ PREVIOUS = {'missions3x': ['876096fa0ba41ca95871446875105329dfc715b20fb33e772a1a
                             '1076eae52c305e0c666a0e105639b780857954c909676f7f762358b684f601f9'],   # R4N6: before 'wheel:'
             'boot3x': ['bb1a107005af791144137d36894217a538b225eadda801051714f9cb91563dab'],   # R4Q5: before stats off at home
             'touch3x': ['7027f5388161bffe7dcf52231b5b8de27cbfc62e1fb8e519b3b8027788478b86']}
+
+# Retain the preceding generated parts as recognized upgrade inputs.
+PREVIOUS.setdefault('missions3x', []).append('adaac30615468bef658094242a97c5f4dd6caea2ebb13cba91fe5e77706d5038')
+PREVIOUS.setdefault('missionflow3x', []).append('5d5cc5ac2171ef0b7267cbe4e795ae773764e0d2a5853c87c2da72730046f909')
+PREVIOUS.setdefault('hostshim3x', []).append('7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872')
+
 TOUCH_SRC = 'build-templates/bytedance-mini-game/tiktok-touch-3x.js'
 STORAGE_SRC = 'parts/storage-guard.js'
 WEB_ADAPTER = r"""require\(\s*['"]\./web-adapter(?:\.js)?['"]\s*\)\s*;?"""

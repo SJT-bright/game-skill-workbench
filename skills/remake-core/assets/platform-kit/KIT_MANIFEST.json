@@ -82,11 +82,12 @@
       "origin": "SnakeVSBlock v32 assets/src (passed on device), changed in v7.4 2026-10-28 to the Basil ad-timeout rule: 15 s request timeout not counting background time, no playback timeout, exit X 30 s after playback starts without a callback, immediate release after timeout or X; verified by tests/snake-regression and package-check ad_regression (Marlows r5 10/10); foreground deadlines are enforced at SDK callbacks as well as timer ticks (2026-11-04, tests/rewarded-timing.test.js); D2 2026-11-04: its own createRewardedVideoAd call carries root.__tiktokKitRewardedDirect so parts/rewarded-guard.js passes it through and only this service times the 15 s (tests/rewarded-guard.test.js D2 cases); 待真机复测"
     },
     "assets/tiktok-platform/TikTokMissionService.js": {
-      "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
+      "sha256": "a0bff5b99bd1f3c9cd2b9c432ebfbe73ee5eda015633118c0543b566fcb7b72b",
       "previous_sha256": [
         "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e",
         "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
-        "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4"
+        "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
+        "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae"
       ],
       "origin": "SnakeVSBlock v32 assets/src (passed on device), changed in 简化.11.3 (Saul 2026-11-02, Mosslight v20/v21 and 77~86 found on the phone that canIUse('startEntranceMission') answers undefined): only canIUse answering false (or throwing) skips an object, no canIUse is allowed; failures keep the platform errMsg / errorCode; Node-tested, 待真机复测; Successful navigation carries no player guidance. SDK call selection, callbacks and eligibility are unchanged."
     },
@@ -102,14 +103,15 @@
       "origin": "new in kit v1, Node-tested; v7.5: unreadable read decided by getStorageInfoSync().keys (missing key = new save), one fire-and-forget login after load; v7.7 unchanged, runs the same with storage-guard.js (kit.test.js savestore_with_storage_guard_behaves_the_same); 简化.11.13 P10: grant(delta, onDone) (wallet + claim id in one update, onDone only after read-back) and best(key, value) (writes the first record and higher scores only), kit.test.js grant_*/best_* + 4 census writings caught; 待真机复测; R4E (问题普查补查 第四节 2, 蛋壳特工队 999999): optional read-time schema check (options.schema / global TikTokSaveSchema from make_save_schema.py), bad values fall back to defaults with a [SaveStore] schema log line, no schema = unchanged; kit.test.js schema_* + scripts/test_make_save_schema.py; 待真机复测; R4J1 (广告skill ad-boost v1.2.17): schema 2 (nullable, type object, in_defaults false keys removed when bad) and grant() removes daily claim ids that carry their day (online-ladder:, timer-chest:, coin-ad:, gift:home:, offline:quick:, quest-x2:daily:) 7 days after that day; kit.test.js grant_daily_ids_* / grant_pruning_* / schema2_*; R4N6 (广告skill): wheel: added to the pruned prefixes (not all of offline:, no shopfree:, checkin unchanged), kit.test.js grant_wheel_daily_ids_*"
     },
     "assets/tiktok-platform/MissionFlow.js": {
-      "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
+      "sha256": "19b269e213e8ff98403e4904ed57cef6e980e67f6b282d1a11c38092831ea433",
       "previous_sha256": [
         "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49",
         "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
         "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f",
         "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee",
         "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348",
-        "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a"
+        "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a",
+        "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706"
       ],
       "origin": "new in kit v1, Node-tested; v7.5: hasNativeSDK uses TTMinis.game / tt / wx like TikTokMissionService.js; v7.7: without a reward option it pays PlatformConfig.growthReward() (5B) to draft.coins; v7.7.4: preview text is 'Available in TikTok.' (the v7.7.3 'LOCAL PREVIEW: ...' failed audit_dev_text); 待真机复测; 简化.11.3 (Saul 2026-11-02): a runtime counts as TikTok when it has canIUse or one of the four mission methods; open(kind, {navigate: true}) goes to TikTok at once (home entries); start() also works after the reward was collected (paid once, platformClaims); Home buttons dispatch immediately without a panel or player-facing navigation copy; automatic eligibility and single payout use the existing flow."
     },
@@ -227,11 +229,14 @@
       "use": "Cocos 2.4 new games: `tiktok_finalize.py source` copies it and CapsuleLayout.js to assets/tiktok-platform/ (English and legacy games: K_W_capsule_auto lists the top-bar nodes, nothing written). It moves only top-bar nodes that overlap the capsule; TikTokCapsuleAuto.off = true or a node name with nocapsule switches it off. Not required by check_kit_project or K1/K2 (reference)"
     },
     "parts/host-shim.js": {
-      "sha256": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
+      "sha256": "66c1dd29d4aadc7029bc5b86db6595ce1c7596f484c17a8c2ef6dadbb7e700b9",
       "origin": "new in 生成时预防 B 批 (P03): fills only missing host APIs (getSystemInfoSync / SDKVersion / canIUse / getOpenDataContext), never replaces one; one file for 2.4 (part hostshim24, game.js before the adapter) and 3.x (part hostshim3x, game.js before web-adapter); Node-tested (tests/host-shim.test.js, 躲雨小鸭 v16 / 射击高手2048 fixtures); 待真机复测",
       "reference": true,
       "optional": true,
-      "use": "生成时预防 R4B: installed by tiktok_finalize (startup step; parts hostshim24 / hostshim3x). source puts it in build-templates/bytedance (2.4) or build-templates/bytedance-mini-game (3.x, also wires a template game.js); native and sync --native add one marked line right before the adapter line of the build game.js (2.4 adapter-min.js, 3.x web-adapter). Legacy games: report only. Do not hand-write the line."
+      "use": "生成时预防 R4B: installed by tiktok_finalize (startup step; parts hostshim24 / hostshim3x). source puts it in build-templates/bytedance (2.4) or build-templates/bytedance-mini-game (3.x, also wires a template game.js); native and sync --native add one marked line right before the adapter line of the build game.js (2.4 adapter-min.js, 3.x web-adapter). Legacy games: report only. Do not hand-write the line.",
+      "previous_sha256": [
+        "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872"
+      ]
     },
     "parts-3x/boot-guard-3x.js": {
       "sha256": "96c3d59e6355e35388d2db56216e580dc821fd6cace64bba7f7a92b474ee10c9",
@@ -650,8 +655,10 @@
         "src": "parts/host-shim.js",
         "template": "build-templates/bytedance/host-shim.js",
         "dest": "host-shim.js",
-        "sha256": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
-        "previous_sha256": []
+        "sha256": "66c1dd29d4aadc7029bc5b86db6595ce1c7596f484c17a8c2ef6dadbb7e700b9",
+        "previous_sha256": [
+          "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872"
+        ]
       },
       "what": "简化.11.15 R4B: the host API shim (parts/host-shim.js) for Cocos 2.4 builds; tiktok_finalize native and sync --native put one marked line right before the adapter line of the build game.js (2.4.15 writes require('adapter-min.js') without ./). Legacy games: report only",
       "wiring": [
@@ -746,25 +753,27 @@
       "file": {
         "src": "assets/tiktok-platform/MissionFlow.js",
         "dest": "assets/tiktok-platform/MissionFlow.js",
-        "sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706",
+        "sha256": "19b269e213e8ff98403e4904ed57cef6e980e67f6b282d1a11c38092831ea433",
         "previous_sha256": [
           "f5b7757343ef67d2db57e4bc1281ef4ef83e22e090c560efa1b0b64cf7292e49",
           "d5e256dbf803b26f6b785047f34f64df4bb8d2dbf938ae8ca8b8f823b4e3ce11",
           "273f1aff4c34424469a507990a8b2ed612aeb8c35293a9c4dec59cff6922241f",
           "306c04c3ca25a1032dc615c0373e4ef75c5f2a198518f058caaa19c8e36395ee",
           "79bdcdc4ebfdef497f81a3c4bb34f07c35386b7c059c99543cd447f50cf34348",
-          "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a"
+          "7ea4980b7e424a732f6f83ee518935d64d1a46a744499a4bdc7719d7f9f3a09a",
+          "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706"
         ]
       },
       "extra_files": [
         {
           "src": "assets/tiktok-platform/TikTokMissionService.js",
           "dest": "assets/tiktok-platform/TikTokMissionService.js",
-          "sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae",
+          "sha256": "a0bff5b99bd1f3c9cd2b9c432ebfbe73ee5eda015633118c0543b566fcb7b72b",
           "previous_sha256": [
             "10375c9650fcc64b2baabc2cfc95cd1a1921a2dbcd4e7cd9769bf8ec3527d45e",
             "3cc14d62e24e4768120f592919cc91b4134945a30c4613d82523d92104fa2608",
-            "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4"
+            "ab11a082b79e0de11f674b1de59a219cbcd08adaf6b79ab9d597eefdc0bfe1c4",
+            "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae"
           ]
         }
       ],

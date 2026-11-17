@@ -18,17 +18,30 @@ function usable(candidate, method) {
   if (typeof candidate.canIUse !== 'function') return true;
   try { return candidate.canIUse(method) !== false; } catch (_) { return false; }
 }
+function sdkCandidates() {
+  var list = [], remembered = [], root;
+  function add(api) {
+    if (api && (typeof api === 'object' || typeof api === 'function') && list.indexOf(api) < 0) list.push(api);
+  }
+  try { add(typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game); } catch (_) {}
+  try { add(typeof tt !== 'undefined' && tt); } catch (_) {}
+  try { add(typeof wx !== 'undefined' && wx); } catch (_) {}
+  try {
+    root = typeof globalThis !== 'undefined' ? globalThis : typeof GameGlobal !== 'undefined' ? GameGlobal
+      : typeof window !== 'undefined' ? window : null;
+    remembered = root && root.__tiktokKitMissionSDKProvidersV1;
+  } catch (_) {}
+  if (Array.isArray(remembered)) remembered.forEach(add);
+  return list;
+}
 function sdk(method) {
-  var candidates = [
-    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
-    typeof tt !== 'undefined' && tt,
-    typeof wx !== 'undefined' && wx
-  ];
+  var candidates = sdkCandidates();
   for (var i = 0; i < candidates.length; i++) {
     if (usable(candidates[i], method)) return candidates[i];
   }
   return null;
 }
+
 function isCurrent(options) { try { return !options.isCurrent || options.isCurrent() === true; } catch (_) { return false; } }
 // 简化.11.3: keep what the platform said (errMsg / errorCode / errCode) so a failure on the phone can be read.
 function result(status, action, request, e) {
@@ -116,4 +129,6 @@ TikTokMissionService.prototype.dispose = function () {
   if (this.poll !== null) clearInterval(this.poll);
   this.poll = null;
 };
+// The home flow must observe the same genuine objects used by navigation and reward requests.
+TikTokMissionService.sdkCandidates = sdkCandidates;
 module.exports = TikTokMissionService;

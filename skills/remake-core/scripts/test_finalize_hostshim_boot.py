@@ -38,7 +38,7 @@ APP = '7683427172773644296'
 HOSTSHIM24 = {
     'engine': 2, 'phase': 'native', 'step': 'hostshim',
     'file': {'src': 'parts/host-shim.js', 'template': 'build-templates/bytedance/host-shim.js', 'dest': 'host-shim.js',
-             'sha256': '7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872', 'previous_sha256': []},
+             'sha256': json.loads(T.MANIFEST.read_text(encoding='utf-8'))['files']['parts/host-shim.js']['sha256'], 'previous_sha256': []},
     'wiring': [{'in': 'game.js',
                 'insert_before': "require\\(\\s*['\"](?:\\./)?adapter(?:-min)?(?:\\.js)?['\"]\\s*\\)\\s*;?",
                 'line': "try { require('./host-shim.js').install(globalThis.TTMinis&&TTMinis.game||globalThis.tt); } "
@@ -249,6 +249,41 @@ class HostShimBoot(unittest.TestCase):
         legacy = project(self.d / 'l', 3)
         F.finalize_sync(legacy, 'remake', policy='legacy', manifest=self.m)
         self.assertFalse((legacy / 'assets' / 'tiktok-platform' / 'GameUIKit.ts').exists(), 'legacy: report only')
+
+
+class SDKAliasCaptureOrder(unittest.TestCase):
+    def test_hostshim_precedes_alias_module_for_both_engines(self):
+        for engine in (2, 3):
+            with self.subTest(engine=engine), tempfile.TemporaryDirectory() as folder:
+                out = build(Path(folder)/'native', engine)
+                before = (out/'game.js').read_text()
+                alias = "globalThis.tt = globalThis.TTMinis.game; globalThis.wx = globalThis.tt;\n"
+                (out/'sdk-namespace.js').write_text(alias)
+                (out/'game.js').write_text("require('./sdk-namespace.js');\n" + before)
+                ctx = T.Ctx('native', out, engine=engine, policy='new', manifest=manifest())
+                result = T.Result('startup'); startup.install_early(ctx, result)
+                self.assertFalse(result.blocks, result.blocks)
+                game = (out/'game.js').read_text()
+                self.assertLess(game.index("require('./host-shim.js')"), game.index("require('./sdk-namespace.js')"))
+                self.assertEqual((out/'sdk-namespace.js').read_text(), alias)
+                again = T.Result('startup'); startup.install_early(ctx, again)
+                self.assertFalse(again.blocks, again.blocks); self.assertFalse(again.changed)
+
+    def test_old_marked_line_after_alias_is_relocated(self):
+        with tempfile.TemporaryDirectory() as folder:
+            out = build(Path(folder)/'native', 2)
+            m = manifest(); part = m.parts['hostshim24']; line = part['wiring'][0]['line']
+            (out/'sdk-namespace.js').write_text('g.tt = platform; g.wx = platform;\n')
+            (out/'host-shim.js').write_bytes((T.KIT_DIR/'parts/host-shim.js').read_bytes())
+            game = "require('./sdk-namespace.js');\n" + line + '\n' + GAME24
+            (out/'game.js').write_text(game)
+            findings = startup.verify({p.relative_to(out).as_posix():p.read_bytes() for p in out.rglob('*') if p.is_file()}, m, 'new', 2)
+            self.assertTrue(any(f['id']=='K2_kit_wiring' for f in findings), findings)
+            ctx=T.Ctx('native',out,engine=2,policy='new',manifest=m);result=T.Result('startup');startup.install_early(ctx,result)
+            self.assertFalse(result.blocks,result.blocks)
+            fixed=(out/'game.js').read_text()
+            self.assertEqual(fixed.count('tiktok-kit:hostshim24:2.0'),1)
+            self.assertLess(fixed.index("require('./host-shim.js')"),fixed.index("require('./sdk-namespace.js')"))
 
 
 if __name__ == '__main__':

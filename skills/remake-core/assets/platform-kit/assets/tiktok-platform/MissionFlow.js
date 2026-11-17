@@ -38,11 +38,7 @@ var KINDS = {shortcut: true, profile: true};
 // only exposes tt (Mabel's Meadow r7/r8) used to show the LOCAL PREVIEW text inside TikTok.
 // 简化.11.3: a runtime counts when it has canIUse or one of the four mission methods (canIUse is not required).
 function sdkCandidates() {
-  return [
-    typeof TTMinis !== 'undefined' && TTMinis && TTMinis.game,
-    typeof tt !== 'undefined' && tt,
-    typeof wx !== 'undefined' && wx
-  ];
+  return TikTokMissionService.sdkCandidates();
 }
 
 function hasNativeSDK() {

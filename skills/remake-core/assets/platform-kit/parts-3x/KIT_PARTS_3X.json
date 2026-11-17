@@ -59,13 +59,14 @@
       "file": {
         "src": "plugins-3x/TikTokMissionService.plugin.js",
         "dest": "assets/tiktok-platform/TikTokMissionService.plugin.js",
-        "sha256": "adaac30615468bef658094242a97c5f4dd6caea2ebb13cba91fe5e77706d5038",
+        "sha256": "ccf748568672ba69ebf1043b5cbd07bf2e45b62e7d7bb65aa64b82a65bbab6ea",
         "previous_sha256": [
           "876096fa0ba41ca95871446875105329dfc715b20fb33e772a1ace962e14af5f",
-          "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d"
+          "7bec0136a45c766a1c536c5e8b4149b55e7dfcfa1dda80297cda3f1b5726108d",
+          "adaac30615468bef658094242a97c5f4dd6caea2ebb13cba91fe5e77706d5038"
         ],
         "from": "assets/tiktok-platform/TikTokMissionService.js",
-        "from_sha256": "38046d069bab5afe10fca20594211614866c44993b2674282fdda1a1a50f76ae"
+        "from_sha256": "a0bff5b99bd1f3c9cd2b9c432ebfbe73ee5eda015633118c0543b566fcb7b72b"
       },
       "global": "globalThis.TikTokKit.TikTokMissionService",
       "policy": {
@@ -129,14 +130,15 @@
       "file": {
         "src": "plugins-3x/MissionFlow.plugin.js",
         "dest": "assets/tiktok-platform/MissionFlow.plugin.js",
-        "sha256": "5d5cc5ac2171ef0b7267cbe4e795ae773764e0d2a5853c87c2da72730046f909",
+        "sha256": "2525b838ac49290579dd14740521a8ebf3472e90d245254690b38706ab22664d",
         "previous_sha256": [
           "4a686c2347613533fa4a6f9fd5631e473be0db94ee5b37ccb82b1a1298994aae",
           "fcbb11db54436643cf3435a750b3fb7a1275319b81a4f6b629713b6211086919",
-          "9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2"
+          "9a7f33e4684f1ff0ce558afeece333036541ff8798f4547748d4793a3d10e2c2",
+          "5d5cc5ac2171ef0b7267cbe4e795ae773764e0d2a5853c87c2da72730046f909"
         ],
         "from": "assets/tiktok-platform/MissionFlow.js",
-        "from_sha256": "abd95bf59b20edfe39271b219439e29eaadfa6936d3336a45c203a3635c78706"
+        "from_sha256": "19b269e213e8ff98403e4904ed57cef6e980e67f6b282d1a11c38092831ea433"
       },
       "global": "globalThis.TikTokKit.MissionFlow",
       "policy": {
@@ -301,8 +303,10 @@
         "src": "parts/host-shim.js",
         "dest": "host-shim.js",
         "template": "build-templates/bytedance-mini-game/host-shim.js",
-        "sha256": "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872",
-        "previous_sha256": []
+        "sha256": "66c1dd29d4aadc7029bc5b86db6595ce1c7596f484c17a8c2ef6dadbb7e700b9",
+        "previous_sha256": [
+          "7b325cd2f684dcbe86388f2cc12f0f3a98d7427b2eb632130a4111ae0c16d872"
+        ]
       },
       "wiring": [
         {

@@ -47,5 +47,5 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 - 平台：按 [TikTok 固定适配](../cocos-english-pack/cocos-game-check/references/tiktok-fixed-adaptation.md)读取当前阶段涉及的小节，标准件由脚本安装；检查报到哪项再读对应细节，不在开工重读全部手册。
 - 用户试玩交接：[真实鼠标检查](../cocos-english-pack/remake-core/references/real-mouse-preview.md)。中文原版、英文试玩、重开和最终交接都保留真实鼠标开局及代表操作门禁；由试玩入口执行本次观察，不另外手动重复跑一遍鼠标门禁。
 - 反馈与交付：[返工交付](../cocos-english-pack/remake-core/references/returned-art-delivery.md)、[人工画面清单](../cocos-english-pack/remake-core/references/manual-visual-review.md)、[同页 H5](../cocos-english-pack/cocos-game-to-english/references/playtest-h5.md)。
-- 计时与协作：[阶段与节点计时](../cocos-english-pack/cocos-game-to-english/references/phase-timing.md)、[并行分工](../cocos-english-pack/cocos-game-to-english/references/parallel-production.md)、[源工程排雷与单通道极速流水线](../cocos-english-pack/cocos-game-to-english/references/raw-game-conflict-shield.md)。美工生成使用同一整机锁，默认和上限为 5；主线程统一构建和交接，任务少时不用子 Agent。
+- 计时与协作：[阶段与节点计时](../cocos-english-pack/cocos-game-to-english/references/phase-timing.md)、[并行分工](../cocos-english-pack/cocos-game-to-english/references/parallel-production.md)、[源工程排雷与单通道极速流水线](../cocos-english-pack/cocos-game-to-english/references/raw-game-conflict-shield.md)。美工生成使用同一整机锁，默认和上限为 10；主线程统一构建和交接，任务少时不用子 Agent。
 - 用户明确要求重设计时才读[美工首轮与重设计](../cocos-english-pack/cocos-game-to-english/references/art-first-round.md)。未用板块、历史事故和维护测试不作为每个游戏的必读材料。

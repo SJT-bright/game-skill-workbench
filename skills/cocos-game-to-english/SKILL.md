@@ -12,7 +12,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 1. **任何输入第一步固定跑自动驾驶状态机**：拿到任何压缩包、源码目录、交接目录或导出目录，第一条命令必须运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py next "<目标路径>"`（别名 `status` / `autopilot`）。脚本自动判定唯一路由（`source_fresh` / `source_in_progress` / `handoff` / `preview_or_package_only`）、当前阶段（`1`～`5`）、引擎与本机 Creator 路径及钱包策略；**严格执行工具末尾输出的 `[EXACT_NEXT_COMMAND]`，禁止模型自行猜测跳步**。
 2. **严禁手写野生脚本或翻读内部源码**：严禁在工程 `docs/`、`qa/` 手写一次性 `.py`/`.mjs`/`.sh` 测试或改账本脚本，严禁手写拼凑 `known-issue-review.json` 指纹，严禁 `cat`/`rg` 翻读 Skill 内部源码猜门禁；审查包固定用 `run_skill.py build-review-bundle` 生成。
 3. **现成测试包一键预览**：用户仅需预览现成 TikTok 测试 `.zip` 或仅含 `game.js + game.json` 的导出目录时，直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py preview "<路径>" --quick-preview --open`（或 `run_skill.py quick-preview "<路径>" --open`）一键挂载宿主预览，不进建项流程。
-4. **先单端 Web 过审，再单次构建 ByteDance**：正式试玩前必须**先只构建 `web-mobile`**，跑通中文专项与首轮美工检查后，**最后只构建一次 `bytedance`（Native）**；严禁改图期间双端反复重编。
+4. **批量美工前先确认 Native 能开局。** 新中文工程在第 1 阶段运行 `native-preflight`。用诊断构建实测首页、首屏资源和真实触摸进入游戏，同版有效物证可以复用。第 3 阶段的正式候选先用 `web-mobile` 完成中文专项与美工检查，再从定稿源码导出一次同版 ByteDance。
 
 ## 开工与共用规则
 
@@ -41,7 +41,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 
 | 阶段 | 现在做什么 | 细节 |
 |---|---|---|
-| 1 盘点 | 跑 `run_skill.py next` 锁定路由，核来源、解包和引擎并运行开工计划；中文原版有可用导出则先交用户试玩，不等回复。列中文素材、实际页面、平台/存档/声音与奖励待办。 | [盘点与原版试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-1.md) |
+| 1 盘点 | 跑 `run_skill.py next` 锁定路由，核来源、解包和引擎。新项目批量美工前在内部 Native 核实首页、点击开始和实际进关。列中文素材、实际页面、平台/存档/声音与奖励待办。 | [盘点与原版试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-1.md) |
 | 2 修改 | 完成九项固定修改。先定英文内框、字符集、显示槽和共享用途，首件接真实页面确认后再批量生成；改完跑 `run_skill.py stage2` 单写者静态排雷与接图闭环。 | [制作与接入](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-2.md) |
 | 3 英文试玩 | 先只构建 `web-mobile` 通过中文专项与首轮美工检查，再单次构建同版 Native；核实启动、输入和候选身份后交正式同版试玩＋H5 清单。 | [候选与试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-3.md) |
 | 4 反馈 | 同批反馈一次改完，按单端 Web 复验后再补同版 Native；只补变化影响的页面与检查。新链接绑定新候选；同事交接或已交付局部返工按增量基线处理。 | [反馈与返工](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-4.md) |

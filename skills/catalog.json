@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-18T18:01:46.189Z",
-  "treeHash": "367339b7eefb09ea62d505c75b1c226060c099b492fab0496642cf726bae9b32",
+  "createdAt": "2026-11-18T21:02:18.017Z",
+  "treeHash": "a562ef211953a091a87220349710c2b2f2a032675c0c8db478a6983ed02d9890",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2071,14 +2071,14 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "628f57ef957152cb94a5860e888d2aafeb1c27f21eb7e20e8659e0ab84947d4d",
-      "fileCount": 24,
-      "bytes": 19455,
+      "treeHash": "52ff5119b212e3df0c90f9fa0a48dd6ec7c225f00c73b89665f0309b39aaa780",
+      "fileCount": 29,
+      "bytes": 21613,
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "ebd0f05ba02c673c936b989d7adc8a3a3bdf18c6cbe36e4349abf036ee68969c",
-          "size": 10354,
+          "hash": "f2d30d14622cf4dbac5a64778c670a9e32768d64f8e29c0a43b7604289e2b67a",
+          "size": 10453,
           "executable": false
         },
         {
@@ -2154,6 +2154,18 @@
           "executable": true
         },
         {
+          "path": "scripts/native_diagnostic_build.py",
+          "hash": "c633623d406c34e484119cdab5d032f6ce8cb622966ae95f7c942750f43832f4",
+          "size": 414,
+          "executable": true
+        },
+        {
+          "path": "scripts/native_preflight.py",
+          "hash": "d00ae87fd0d2ee8634e3e0b33c96333a137ed06022d1016f1b2a97a8da85a25b",
+          "size": 407,
+          "executable": true
+        },
+        {
           "path": "scripts/prepack_fast.py",
           "hash": "57a4a24ba19be27953e12a8c50a6705f828cad52a645c4a5309a22bf6739a996",
           "size": 403,
@@ -2196,9 +2208,27 @@
           "executable": true
         },
         {
+          "path": "scripts/test_art_workflow.py",
+          "hash": "a9eebed6790dee8a1ba3c4b72c4f1011616f03d238acb458075a864c01e755eb",
+          "size": 408,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_creator30_build_inputs.py",
+          "hash": "086ac662caa01e985250f6577930c4a88c62db219440a5cfe0c10a14cb22f2a7",
+          "size": 418,
+          "executable": true
+        },
+        {
           "path": "scripts/test_entry_consistency.py",
           "hash": "be39615a1be5477433183c556cb67913743e4927a42b62c8940b4b25263ba929",
           "size": 413,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_native_preflight.py",
+          "hash": "a40accaad831a60cb350cf29ddf58a9eeb33c27d87ca16c5ebdd0ae24d406041",
+          "size": 412,
           "executable": true
         },
         {

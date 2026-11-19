@@ -12,10 +12,11 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 1. **任何输入第一步固定跑自动驾驶状态机**：拿到任何压缩包、源码目录、交接目录或导出目录，第一条命令必须运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py next "<目标路径>"`（别名 `status` / `autopilot`）。脚本自动判定唯一路由（`source_fresh` / `source_in_progress` / `handoff` / `preview_or_package_only`）、当前阶段（`1`～`5`）、引擎与本机 Creator 路径及钱包策略；**严格执行工具末尾输出的 `[EXACT_NEXT_COMMAND]`，禁止模型自行猜测跳步**。
 2. **严禁手写野生脚本或翻读内部源码**：严禁在工程 `docs/`、`qa/` 手写一次性 `.py`/`.mjs`/`.sh` 测试或改账本脚本，严禁手写拼凑 `known-issue-review.json` 指纹，严禁 `cat`/`rg` 翻读 Skill 内部源码猜门禁；审查包固定用 `run_skill.py build-review-bundle` 生成。
 3. **现成测试包一键预览**：用户仅需预览现成 TikTok 测试 `.zip` 或仅含 `game.js + game.json` 的导出目录时，直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py preview "<路径>" --quick-preview --open`（或 `run_skill.py quick-preview "<路径>" --open`）一键挂载宿主预览，不进建项流程。
-4. **批量美工前先确认 Native 能开局。** 新中文工程在第 1 阶段运行 `native-preflight`。用诊断构建实测首页、首屏资源和真实触摸进入游戏，同版有效物证可以复用。第 3 阶段的正式候选先用 `web-mobile` 完成中文专项与美工检查，再从定稿源码导出一次同版 ByteDance。
+4. **批量美工前先确认 Native 能开局。** 新中文工程在第 1 阶段运行 `native-preflight`。先用同一份诊断 Native 核算主包、各分包和总包的未压缩字节与可用空间，再实测首页、首屏资源和真实触摸进入游戏。同版结果沿用。美工批量生产按开工预算安排首批，实际导入后核算图集。第 3 阶段的正式候选先用 `web-mobile` 完成中文专项与美工检查，再从定稿源码导出一次同版 ByteDance。
 
 ## 开工与共用规则
 
+- **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)处理，包含桌面快捷方式和个人主页回访的两项引导。
 - 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 一键完成安全解包与开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
 - 开工记录 `docs/checks/workflow.json` 的 `route`：中文源码从零制作用 `source`，已完成源码与同版测试 ZIP 用 `handoff`（运行 `run_skill.py start --input "<工程>" --route handoff` 自动核对身份并写出 `docs/handoff-baseline.json`）。后者先核身份和恢复有效记录，不重做中文原版或已完成制作。旧项目是否采用标准件先看 `tiktok_finalize.py decide`，不自动改成新项目。
 - [共享执行规则](../cocos-english-pack/remake-core/references/execution-policy.md)管理增量复验、视觉交接、最终 ZIP 和计时；[浏览器规则](../cocos-english-pack/remake-core/references/browser-testing-policy.md)管理 Ego Lite 测试与用户试玩的分工。所有读图由主 Agent 直接查看，OCR 只辅助定位。
@@ -28,7 +29,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 | 项 | 工作与结果 |
 |---|---|
 | 1 | 中文字符串、Label、图片字改自然英文；首轮照原画风重做按钮和图片字。句子用英文字体；LEVEL、SCORE、货币等固定词、动态数字与符号按同套画风整组制作。不留游戏名、版本号或 Credits。 |
-| 2 | 首页加个人主页回访和添加桌面，原按钮不挪。点击直接调用平台入口；对应冷启动核资格、存档成功后自动发奖，不重复发奖，普通切回前台不提示。奖励与无钱包替代按货币规则。 |
+| 2 | 首页加个人主页回访和添加桌面，原按钮不挪。对应按钮先展示引导，确认才调用平台入口；对应冷启动核资格、存档成功后自动发奖，不重复发奖，普通切回前台不提示。奖励与无钱包替代按货币规则。 |
 | 3 | SFX、BGM 分开调音量，立即生效，重启后保留。 |
 | 4 | 删除分享、更多游戏、联网排行榜；核心分享奖励改激励视频，局内本地名次按固定入口的例外保留。 |
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |

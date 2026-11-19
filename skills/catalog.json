@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-18T21:02:18.017Z",
-  "treeHash": "a562ef211953a091a87220349710c2b2f2a032675c0c8db478a6983ed02d9890",
+  "createdAt": "2026-11-19T08:50:30.344Z",
+  "treeHash": "8e45220062b4f48ff424b6cd070fa2ef1198fc2b6cfdad4723320fc78a4f610a",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2071,14 +2071,14 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "52ff5119b212e3df0c90f9fa0a48dd6ec7c225f00c73b89665f0309b39aaa780",
-      "fileCount": 29,
-      "bytes": 21613,
+      "treeHash": "86c379cd2a1c2f189ea0ae1f6057245341a8e4c3bfaea62dda5a995afc7b4e35",
+      "fileCount": 31,
+      "bytes": 22841,
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "f2d30d14622cf4dbac5a64778c670a9e32768d64f8e29c0a43b7604289e2b67a",
-          "size": 10453,
+          "hash": "078c9deb891f18a254aeddbdd3cc3b9d7eddee5f870d96379821ffbfb4fa1d38",
+          "size": 10866,
           "executable": false
         },
         {
@@ -2166,6 +2166,12 @@
           "executable": true
         },
         {
+          "path": "scripts/package_budget.py",
+          "hash": "55577b9e3268707a8aa318ba24c3c8323af1e63b48c2f4b6a05746d9e89af23f",
+          "size": 405,
+          "executable": true
+        },
+        {
           "path": "scripts/prepack_fast.py",
           "hash": "57a4a24ba19be27953e12a8c50a6705f828cad52a645c4a5309a22bf6739a996",
           "size": 403,
@@ -2229,6 +2235,12 @@
           "path": "scripts/test_native_preflight.py",
           "hash": "a40accaad831a60cb350cf29ddf58a9eeb33c27d87ca16c5ebdd0ae24d406041",
           "size": 412,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_package_budget.py",
+          "hash": "1256b1acadf3f9c43975ade1184c545fcd5f5de2f37f93dfff0d6096b6ea4209",
+          "size": 410,
           "executable": true
         },
         {

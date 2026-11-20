@@ -16,7 +16,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 
 ## 开工与共用规则
 
-- **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)处理，包含桌面快捷方式和个人主页回访的两项引导。
+- **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)处理，包含桌面快捷方式和个人主页回访两项入口，首页真实点击直接调用平台。
 - 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 一键完成安全解包与开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
 - 开工记录 `docs/checks/workflow.json` 的 `route`：中文源码从零制作用 `source`，已完成源码与同版测试 ZIP 用 `handoff`（运行 `run_skill.py start --input "<工程>" --route handoff` 自动核对身份并写出 `docs/handoff-baseline.json`）。后者先核身份和恢复有效记录，不重做中文原版或已完成制作。旧项目是否采用标准件先看 `tiktok_finalize.py decide`，不自动改成新项目。
 - [共享执行规则](../cocos-english-pack/remake-core/references/execution-policy.md)管理增量复验、视觉交接、最终 ZIP 和计时；[浏览器规则](../cocos-english-pack/remake-core/references/browser-testing-policy.md)管理 Ego Lite 测试与用户试玩的分工。所有读图由主 Agent 直接查看，OCR 只辅助定位。
@@ -29,7 +29,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 | 项 | 工作与结果 |
 |---|---|
 | 1 | 中文字符串、Label、图片字改自然英文；首轮照原画风重做按钮和图片字。句子用英文字体；LEVEL、SCORE、货币等固定词、动态数字与符号按同套画风整组制作。不留游戏名、版本号或 Credits。 |
-| 2 | 首页加个人主页回访和添加桌面，原按钮不挪。对应按钮先展示引导，确认才调用平台入口；对应冷启动核资格、存档成功后自动发奖，不重复发奖，普通切回前台不提示。奖励与无钱包替代按货币规则。 |
+| 2 | 首页加个人主页回访和添加桌面，原按钮不挪。对应按钮直接调用平台入口；对应冷启动核资格、存档成功后自动发奖，不重复发奖，普通切回前台不提示。奖励与无钱包替代按货币规则。 |
 | 3 | SFX、BGM 分开调音量，立即生效，重启后保留。 |
 | 4 | 删除分享、更多游戏、联网排行榜；核心分享奖励改激励视频，局内本地名次按固定入口的例外保留。 |
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |

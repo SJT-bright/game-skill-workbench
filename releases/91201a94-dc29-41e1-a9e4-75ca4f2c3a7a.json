@@ -1,0 +1,247 @@
+{
+  "id": "91201a94-dc29-41e1-a9e4-75ca4f2c3a7a",
+  "skillId": "s-8ba890829a14c4a656ac",
+  "directory": "cocos-game-to-english",
+  "name": "cocos-game-to-english",
+  "version": "v106",
+  "createdAt": "2026-11-20T10:26:44.580Z",
+  "summary": "文件变更：新增 0，修改 1，移除 0。",
+  "changes": {
+    "added": 0,
+    "modified": 1,
+    "deleted": 0
+  },
+  "treeHash": "1f513d9d7009e25726cd6c187cca44986cbe2bf7c28c1ff71c6338e1a2d5941b",
+  "bytes": 27896,
+  "fileCount": 38,
+  "files": [
+    {
+      "path": "SKILL.md",
+      "hash": "49559971a60afafd38a407952aaef406aa5ffcc237418ef38b2c07cf1871dbc4",
+      "size": 13005,
+      "executable": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
+      "size": 176,
+      "executable": false
+    },
+    {
+      "path": "scripts/art_preflight_guard.py",
+      "hash": "aa49ec7f44eaa828f2a789acf71a6f852ad8a5dfdafa1b2167d2e9250cb87643",
+      "size": 410,
+      "executable": true
+    },
+    {
+      "path": "scripts/browser_env.py",
+      "hash": "d273fb5de5fb83b19072f241be3157bdf6a6fc3f766188552cd0fddf60053460",
+      "size": 402,
+      "executable": true
+    },
+    {
+      "path": "scripts/build_playtest_h5.py",
+      "hash": "d55e17d52c05f89f42f680fe773ccd7b3793ac9067fa8d577d331bd7a62bbf4e",
+      "size": 408,
+      "executable": true
+    },
+    {
+      "path": "scripts/check_export_images.py",
+      "hash": "16813bbf9609cb5f8dc03729dce8a940cee74d1eadf057184b0bdd279a8edcc9",
+      "size": 410,
+      "executable": true
+    },
+    {
+      "path": "scripts/check_machine.py",
+      "hash": "12ebba7a4106c55fc7c51fa4130a37fc477c4c0c1a95e17dc7d3cf98b4a6d75c",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/chinese_audit.py",
+      "hash": "c1eac9943599b02910d2659b2367ced37a4f5d6b0c858b103d0cfe18af3a9655",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/doc_contract.py",
+      "hash": "ce464a746eb6b1d1d62e4047d87728b6cd4c5e38d267c93b1b8b1731accfe5cb",
+      "size": 403,
+      "executable": true
+    },
+    {
+      "path": "scripts/english_copy_guard.py",
+      "hash": "706f6b1be8bc1a1536056bcb5bfdd72049a4e75904e1a9b248b2a728663dcc94",
+      "size": 409,
+      "executable": true
+    },
+    {
+      "path": "scripts/find_creator.py",
+      "hash": "275bd292c59efa099f5969183c9db662e5fc7db807446f6ba52cea325e8bc2c7",
+      "size": 403,
+      "executable": true
+    },
+    {
+      "path": "scripts/fit_english_labels.py",
+      "hash": "42a413c91f0ec34252241b2287a6bfb0b5fc87d7be9455acac593308e80747fc",
+      "size": 409,
+      "executable": true
+    },
+    {
+      "path": "scripts/fix_web_entry_3x.py",
+      "hash": "1a5de69557811aaa7519dd225b72f4e1aaf4b2ff999975995d8be05b7c01eb21",
+      "size": 407,
+      "executable": true
+    },
+    {
+      "path": "scripts/native_diagnostic_build.py",
+      "hash": "c633623d406c34e484119cdab5d032f6ce8cb622966ae95f7c942750f43832f4",
+      "size": 414,
+      "executable": true
+    },
+    {
+      "path": "scripts/native_preflight.py",
+      "hash": "d00ae87fd0d2ee8634e3e0b33c96333a137ed06022d1016f1b2a97a8da85a25b",
+      "size": 407,
+      "executable": true
+    },
+    {
+      "path": "scripts/package_budget.py",
+      "hash": "55577b9e3268707a8aa318ba24c3c8323af1e63b48c2f4b6a05746d9e89af23f",
+      "size": 405,
+      "executable": true
+    },
+    {
+      "path": "scripts/prepack_fast.py",
+      "hash": "57a4a24ba19be27953e12a8c50a6705f828cad52a645c4a5309a22bf6739a996",
+      "size": 403,
+      "executable": true
+    },
+    {
+      "path": "scripts/project_autopilot.py",
+      "hash": "e1eac98cf6fa19192c3671941eb306e228cc17be2d8f8f4ae032ee7bf1602852",
+      "size": 408,
+      "executable": true
+    },
+    {
+      "path": "scripts/run_skill.py",
+      "hash": "48139546d82897fd67fadf6778db3c4890034aa5778fd28eeaed80057f9c21a8",
+      "size": 400,
+      "executable": true
+    },
+    {
+      "path": "scripts/serve_preview.py",
+      "hash": "63e30a50693ca5197458fe0b8481c006a341ab0afa27cc1bd83d60a629dbf7f8",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/stage2_pipeline.py",
+      "hash": "0f3cd3892028dce088d86814e7c8f641868717ee38d32ab77093f4e59d171d52",
+      "size": 406,
+      "executable": true
+    },
+    {
+      "path": "scripts/stage_timer.py",
+      "hash": "4e21922a437c42a8e484ba6195e481abbbdd8d92a793abbfb8af107314d74096",
+      "size": 402,
+      "executable": true
+    },
+    {
+      "path": "scripts/start_project.py",
+      "hash": "e2fcb343ede5ba515ff8a60346fd120fc3a5f46b19c73c11b532e1701948f8bf",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_art_prompt_context.py",
+      "hash": "30d2a8549b51c8fcd827c5918d7136b6c2300166328647b9b2641fc7adc9c2ef",
+      "size": 414,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_art_resource_advice.py",
+      "hash": "516bdb01a7c9ab3e4e93cd5e5c840cf6ce7ea271e8322317c8f5998fcdd2f5e0",
+      "size": 415,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_art_review_entrypoints.py",
+      "hash": "0e1c07819bc487dbdab05be40e9558bda9e94ae251ba04ae9831e6c9c70c808d",
+      "size": 418,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_art_workflow.py",
+      "hash": "a9eebed6790dee8a1ba3c4b72c4f1011616f03d238acb458075a864c01e755eb",
+      "size": 408,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_creator244_build_flags.py",
+      "hash": "7210e001ef2954f23762204d0d1992d3cc5e93eea4839b4e06b9ffd7565ea4ec",
+      "size": 418,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_creator30_build_inputs.py",
+      "hash": "086ac662caa01e985250f6577930c4a88c62db219440a5cfe0c10a14cb22f2a7",
+      "size": 418,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_entry_consistency.py",
+      "hash": "be39615a1be5477433183c556cb67913743e4927a42b62c8940b4b25263ba929",
+      "size": 413,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_final_phase_boundary.py",
+      "hash": "50843472e94ba8791f439a13d78c1e71b7447907b193e310322ffd72d77a6ee8",
+      "size": 416,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_native_build_output_mode.py",
+      "hash": "d01168c756ebc304059e6922ef7d5cde45c5da3a45aee0ed71ef36ff4af71db7",
+      "size": 420,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_native_preflight.py",
+      "hash": "a40accaad831a60cb350cf29ddf58a9eeb33c27d87ca16c5ebdd0ae24d406041",
+      "size": 412,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_package_budget.py",
+      "hash": "1256b1acadf3f9c43975ade1184c545fcd5f5de2f37f93dfff0d6096b6ea4209",
+      "size": 410,
+      "executable": true
+    },
+    {
+      "path": "scripts/test_stage2_art_boundary.py",
+      "hash": "8e40b35c003ca5eae753b48f6e4696a4da056d2569d6a8017bfdb2da71fd0dcd",
+      "size": 415,
+      "executable": true
+    },
+    {
+      "path": "scripts/ts_full_check.py",
+      "hash": "e48788dc8cc02404e283a1c20f3b35da6ada6fd6b6f489a98990a7a6d8cd2b42",
+      "size": 404,
+      "executable": true
+    },
+    {
+      "path": "scripts/ui_clipping_guard.py",
+      "hash": "d9fddc3a9884b8ccd3f02c161c318349949de74069055ac6196858de9a57c1c6",
+      "size": 408,
+      "executable": true
+    },
+    {
+      "path": "scripts/unpack_source.py",
+      "hash": "86e6ef2f575c53e02cab99570144407752d6173fd9bb78475760245d8fb3b20b",
+      "size": 404,
+      "executable": true
+    }
+  ]
+}

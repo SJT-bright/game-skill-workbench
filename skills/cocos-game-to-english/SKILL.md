@@ -35,7 +35,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 | 3 | SFX、BGM 分开调音量，立即生效，重启后保留。 |
 | 4 | 删除分享、更多游戏、联网排行榜；核心分享奖励改激励视频，局内本地名次按固定入口的例外保留。 |
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |
-| 6 | 结算有 Retry、最显眼的 Watch Ad x2，以及它下方一行可点的 Claim；奖励、取消和防重复按广告规则。 |
+| 6 | 结算有 Retry、最显眼的 Watch Ad x2，以及它下方一行可点的 Claim。有下一关时，点 Claim 保存本关奖励并自动进下一关，合并 Next 功能。见[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。 |
 | 7 | 接入看广告复活，覆盖实际失败状态；没有失败状态时按固定入口的对应方案，不自行变更玩法。 |
 | 8 | 用户说“用广告skill优化”或要求选择模块/细节时，先走[父子级选择](../cocos-english-pack/ad-boost/references/hierarchical-choices.md)，按choice_plan实施。普通自动英化无选型要求时按诊断接适用推荐；完成本轮美工与接入后发英文试玩。 |
 | 9 | 每个模式关内有暂停/设置入口，暂停窗含 Continue、Restart、Home；开窗时计时、物理和生成暂停。复用平台页面与原版暂停函数。 |

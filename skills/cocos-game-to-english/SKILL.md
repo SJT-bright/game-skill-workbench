@@ -1,6 +1,6 @@
 ---
 name: cocos-game-to-english
-description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。"
+description: "把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。"
 ---
 
 # Cocos 游戏英化
@@ -17,7 +17,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 ## 开工与共用规则
 
 - **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)处理，包含桌面快捷方式和个人主页回访两项入口，首页真实点击直接调用平台。
-- 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 一键完成安全解包与开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
+- 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 先安全解包，按输出交中文原版试玩后接着做开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
 - 开工记录 `docs/checks/workflow.json` 的 `route`：中文源码从零制作用 `source`，已完成源码与同版测试 ZIP 用 `handoff`（运行 `run_skill.py start --input "<工程>" --route handoff` 自动核对身份并写出 `docs/handoff-baseline.json`）。后者先核身份和恢复有效记录，不重做中文原版或已完成制作。旧项目是否采用标准件先看 `tiktok_finalize.py decide`，不自动改成新项目。
 - [共享执行规则](../cocos-english-pack/remake-core/references/execution-policy.md)管理增量复验、视觉交接、最终 ZIP 和计时；[浏览器规则](../cocos-english-pack/remake-core/references/browser-testing-policy.md)管理 Ego Lite 测试与用户试玩的分工。所有读图由主 Agent 直接查看，OCR 只辅助定位。
 - 默认保持原玩法、原关卡、原声音素材与原有数值，不补关、不主动加经济或皮肤系统。广告推荐载体是明确的默认例外，按 [ad-boost 英化模式](../cocos-english-pack/ad-boost/references/localize-mode.md)执行。用户明确要求新增玩法时另立范围，只验证实际新增部分。
@@ -44,7 +44,7 @@ description: "把可运行的中文 Cocos 游戏英化，保持原玩法、关�
 
 | 阶段 | 现在做什么 | 细节 |
 |---|---|---|
-| 1 盘点 | 跑 `run_skill.py next` 锁定路由，核来源、解包和引擎。新项目批量美工前在内部 Native 核实首页、点击开始和实际进关。列中文素材、实际页面、平台/存档/声音与奖励待办。 | [盘点与原版试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-1.md) |
+| 1 盘点 | 跑 `run_skill.py next` 锁定路由并安全接收原版。新中文工程先构建或沿用原始 Web，实际开局后发中文原版手机试玩链接，发完立即继续做开工准备和内部 Native 首页与进关验证。列中文素材、实际页面、平台、存档、声音与奖励待办。 | [盘点与原版试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-1.md) |
 | 2 修改 | 完成九项固定修改。先定英文内框、字符集、显示槽和共享用途，首件接真实页面确认后再批量生成；改完跑 `run_skill.py stage2` 单写者静态排雷与接图闭环。 | [制作与接入](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-2.md) |
 | 3 英文试玩 | 先构建 `web-mobile`，合并完成本轮美工并通过中文专项、完整美工总审与真实页面复核，再单次构建同版 Native；核实启动、输入和候选身份后交第一个正式同版试玩＋H5 清单。 | [候选与试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-3.md) |
 | 4 反馈 | 同批反馈一次改完，按单端 Web 复验后再补同版 Native；只补变化影响的页面与检查。新链接绑定新候选；同事交接或已交付局部返工按增量基线处理。 | [反馈与返工](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-4.md) |

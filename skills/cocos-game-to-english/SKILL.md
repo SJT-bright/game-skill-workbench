@@ -5,6 +5,8 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 
 # Cocos 游戏英化
 
+**广告选型优先**：明确选择或有效项目 `docs/adboost/choice_plan.json` 优先于默认广告载体和第6～8项的新增范围；只做选中模块并保留原有功能。进入[广告Skill](../cocos-english-pack/ad-boost/SKILL.md)完成父级多选与子级细分，选完直接继续，不重复确认。
+
 先确定唯一来源和工作副本，再按五阶段确定性命令流执行。原工程、原始 ZIP、玩家存档和已有有效证据保留。当前整包版本、补丁与指纹以包根目录 `distribution-manifest.json` 为准；安装后可从各 Skill 的 `PROVENANCE.json` 核对同版来源。历史原因只在[版本历史](../cocos-english-pack/cocos-game-to-english/版本历史.md)追溯。
 
 ## 零主观判断执行铁律
@@ -35,7 +37,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |
 | 6 | 结算有 Retry、最显眼的 Watch Ad x2，以及它下方一行可点的 Claim；奖励、取消和防重复按广告规则。 |
 | 7 | 接入看广告复活，覆盖实际失败状态；没有失败状态时按固定入口的对应方案，不自行变更玩法。 |
-| 8 | ad-boost 按诊断推荐默认加入适用载体，不出选择题；无空位或缺确定数值时换下一适用推荐。先完成本轮计划的美工与接入，再发英文试玩。 |
+| 8 | 用户说“用广告skill优化”或要求选择模块/细节时，先走[父子级选择](../cocos-english-pack/ad-boost/references/hierarchical-choices.md)，按choice_plan实施。普通自动英化无选型要求时按诊断接适用推荐；完成本轮美工与接入后发英文试玩。 |
 | 9 | 每个模式关内有暂停/设置入口，暂停窗含 Continue、Restart、Home；开窗时计时、物理和生成暂停。复用平台页面与原版暂停函数。 |
 
 ## 五阶段

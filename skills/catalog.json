@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-20T04:24:19.975Z",
-  "treeHash": "6122f43f457b38a32f6de4e468dc54481b24ba2c97d842d3cb94fc829674654a",
+  "createdAt": "2026-11-20T07:25:25.029Z",
+  "treeHash": "fd0c9eba8c3c384ed82c3142932a31b80ef574f5baf4db177d4c67790d95e8e0",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2071,14 +2071,14 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "5125a39a310e854998c9e12e18344b25acf6b70287e911c091c7f892516500a9",
-      "fileCount": 31,
-      "bytes": 22856,
+      "treeHash": "d24096cc9e6f5dd39e39fa9c7849de0ef476d8eaff95dbff66f0ec26eb2738e0",
+      "fileCount": 38,
+      "bytes": 27669,
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "064ef44188a3ca26c42d2d517a2ff3b77ce84d08305bf92446bde7a4155a5fd3",
-          "size": 10881,
+          "hash": "245c231ce330f5517de2b2f55fee0be9b5a953459cc3ab5a2ccfaac57ef32fd6",
+          "size": 12778,
           "executable": false
         },
         {
@@ -2214,9 +2214,33 @@
           "executable": true
         },
         {
+          "path": "scripts/test_art_prompt_context.py",
+          "hash": "30d2a8549b51c8fcd827c5918d7136b6c2300166328647b9b2641fc7adc9c2ef",
+          "size": 414,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_art_resource_advice.py",
+          "hash": "516bdb01a7c9ab3e4e93cd5e5c840cf6ce7ea271e8322317c8f5998fcdd2f5e0",
+          "size": 415,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_art_review_entrypoints.py",
+          "hash": "0e1c07819bc487dbdab05be40e9558bda9e94ae251ba04ae9831e6c9c70c808d",
+          "size": 418,
+          "executable": true
+        },
+        {
           "path": "scripts/test_art_workflow.py",
           "hash": "a9eebed6790dee8a1ba3c4b72c4f1011616f03d238acb458075a864c01e755eb",
           "size": 408,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_creator244_build_flags.py",
+          "hash": "7210e001ef2954f23762204d0d1992d3cc5e93eea4839b4e06b9ffd7565ea4ec",
+          "size": 418,
           "executable": true
         },
         {
@@ -2232,6 +2256,18 @@
           "executable": true
         },
         {
+          "path": "scripts/test_final_phase_boundary.py",
+          "hash": "50843472e94ba8791f439a13d78c1e71b7447907b193e310322ffd72d77a6ee8",
+          "size": 416,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_native_build_output_mode.py",
+          "hash": "d01168c756ebc304059e6922ef7d5cde45c5da3a45aee0ed71ef36ff4af71db7",
+          "size": 420,
+          "executable": true
+        },
+        {
           "path": "scripts/test_native_preflight.py",
           "hash": "a40accaad831a60cb350cf29ddf58a9eeb33c27d87ca16c5ebdd0ae24d406041",
           "size": 412,
@@ -2241,6 +2277,12 @@
           "path": "scripts/test_package_budget.py",
           "hash": "1256b1acadf3f9c43975ade1184c545fcd5f5de2f37f93dfff0d6096b6ea4209",
           "size": 410,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_stage2_art_boundary.py",
+          "hash": "8e40b35c003ca5eae753b48f6e4696a4da056d2569d6a8017bfdb2da71fd0dcd",
+          "size": 415,
           "executable": true
         },
         {

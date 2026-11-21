@@ -18,7 +18,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 
 ## 开工与共用规则
 
-- **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)处理，包含桌面快捷方式和个人主页回访两项入口，首页真实点击直接调用平台。
+- **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)执行。两份引导在美工前定稿，首页分别打开引导，确认才调用 TikTok。
 - 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 先安全解包，按输出交中文原版试玩后接着做开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
 - 开工记录 `docs/checks/workflow.json` 的 `route`：中文源码从零制作用 `source`，已完成源码与同版测试 ZIP 用 `handoff`（运行 `run_skill.py start --input "<工程>" --route handoff` 自动核对身份并写出 `docs/handoff-baseline.json`）。后者先核身份和恢复有效记录，不重做中文原版或已完成制作。旧项目是否采用标准件先看 `tiktok_finalize.py decide`，不自动改成新项目。
 - [共享执行规则](../cocos-english-pack/remake-core/references/execution-policy.md)管理增量复验、视觉交接、最终 ZIP 和计时；[浏览器规则](../cocos-english-pack/remake-core/references/browser-testing-policy.md)管理 Ego Lite 测试与用户试玩的分工。所有读图由主 Agent 直接查看，OCR 只辅助定位。
@@ -31,11 +31,11 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 | 项 | 工作与结果 |
 |---|---|
 | 1 | 中文字符串、Label、图片字改自然英文；首轮照原画风重做按钮和图片字。句子用英文字体；LEVEL、SCORE、货币等固定词、动态数字与符号按同套画风整组制作。不留游戏名、版本号或 Credits。 |
-| 2 | 首页加个人主页回访和添加桌面，原按钮不挪。对应按钮直接调用平台入口；对应冷启动核资格、存档成功后自动发奖，不重复发奖，普通切回前台不提示。奖励与无钱包替代按货币规则。 |
+| 2 | 首页加个人主页回访和添加桌面，原按钮不挪。各自先开引导，确认才调用平台入口；对应冷启动核资格、存档成功后自动发奖，不重复发奖，普通切回前台不提示。奖励与无钱包替代按货币规则。 |
 | 3 | SFX、BGM 分开调音量，立即生效，重启后保留。 |
 | 4 | 删除分享、更多游戏、联网排行榜；核心分享奖励改激励视频，局内本地名次按固定入口的例外保留。 |
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |
-| 6 | 结算有 Retry、最显眼的 Watch Ad x2，以及它下方一行可点的 Claim。有下一关时，点 Claim 保存本关奖励并自动进下一关，合并 Next 功能。见[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。 |
+| 6 | 结算有奖励时，适用的 Watch Ad x2 是主按钮，Claim 是免费结算入口。闯关胜利点 Claim 进下一关，无尽结算或关卡失败点 Claim 执行 Retry。没有可领奖励的失败页直接显示 Retry。见[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。 |
 | 7 | 接入看广告复活，覆盖实际失败状态；没有失败状态时按固定入口的对应方案，不自行变更玩法。 |
 | 8 | 用户说“用广告skill优化”或要求选择模块/细节时，先走[父子级选择](../cocos-english-pack/ad-boost/references/hierarchical-choices.md)，按choice_plan实施。普通自动英化无选型要求时按诊断接适用推荐；完成本轮美工与接入后发英文试玩。 |
 | 9 | 每个模式关内有暂停/设置入口，暂停窗含 Continue、Restart、Home；开窗时计时、物理和生成暂停。复用平台页面与原版暂停函数。 |

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-24T10:04:56.006Z",
-  "treeHash": "7680205c6785b47eac29422651e5df13a2ac5f7541e9fbcb6b391c9557ac1075",
+  "createdAt": "2026-11-24T19:07:54.188Z",
+  "treeHash": "d54d4282187f3ac2ffbd454c232d92bf3c637e12fdca2ac0e905f29adeb88e38",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2071,9 +2071,9 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "a23a939faf33f8728c96c2c705c4e36dd85694dc42341b8515e2575988fd3e67",
-      "fileCount": 58,
-      "bytes": 38167,
+      "treeHash": "40abd44689505ced65f2f9318d2f3ab3db45584dd983df69a188d9eff38ac726",
+      "fileCount": 59,
+      "bytes": 38586,
       "files": [
         {
           "path": "SKILL.md",
@@ -2307,6 +2307,12 @@
           "path": "scripts/test_machine_editor_route.py",
           "hash": "c1e849c3a6b38d18f08bc8242500129be0f6265329f9ab02b817ef9a2565ecab",
           "size": 416,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_native_art_only_changes.py",
+          "hash": "01a814d2254abcc8d30c6665e2f5512a26c6b5ecf06a86242f4c041f1f971ca6",
+          "size": 419,
           "executable": true
         },
         {

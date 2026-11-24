@@ -2,6 +2,23 @@
   "schema": 1,
   "releases": [
     {
+      "id": "b1bca689-6ef4-4f7f-87a7-1157e5981aa3",
+      "skillId": "s-8ba890829a14c4a656ac",
+      "directory": "cocos-game-to-english",
+      "name": "cocos-game-to-english",
+      "version": "v113",
+      "createdAt": "2026-11-24T10:05:55.390Z",
+      "summary": "文件变更：新增 19，修改 1，移除 0。",
+      "changes": {
+        "added": 19,
+        "modified": 1,
+        "deleted": 0
+      },
+      "treeHash": "a23a939faf33f8728c96c2c705c4e36dd85694dc42341b8515e2575988fd3e67",
+      "bytes": 38167,
+      "fileCount": 58
+    },
+    {
       "id": "e5bfb5a6-5b58-422d-b3e1-2bbb75fcfc0a",
       "skillId": "s-8ba890829a14c4a656ac",
       "directory": "cocos-game-to-english",

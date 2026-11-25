@@ -9,6 +9,8 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 
 先确定唯一来源和工作副本，再按五阶段确定性命令流执行。原工程、原始 ZIP、玩家存档和已有有效证据保留。当前整包版本、补丁与指纹以包根目录 `distribution-manifest.json` 为准；安装后可从各 Skill 的 `PROVENANCE.json` 核对同版来源。历史原因只在[版本历史](../cocos-english-pack/cocos-game-to-english/版本历史.md)追溯。
 
+遇到当前授权范围内的故障，执行 Agent 按[自动返修](../cocos-english-pack/remake-core/references/execution-policy.md#当前任务中的自动返修)当轮修复、复验，继续原任务。失败输出中的重试命令在原因修正后执行。
+
 ## 零主观判断执行铁律
 
 1. **任何输入第一步固定跑自动驾驶状态机**：拿到任何压缩包、源码目录、交接目录或导出目录，第一条命令必须运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py next "<目标路径>"`（别名 `status` / `autopilot`）。脚本自动判定唯一路由（`source_fresh` / `source_in_progress` / `handoff` / `preview_or_package_only`）、当前阶段（`1`～`5`）、引擎与本机 Creator 路径及钱包策略；**严格执行工具末尾输出的 `[EXACT_NEXT_COMMAND]`，禁止模型自行猜测跳步**。

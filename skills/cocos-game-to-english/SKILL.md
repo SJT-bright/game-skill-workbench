@@ -5,7 +5,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 
 # Cocos 游戏英化
 
-**广告选型优先**：明确选择或有效项目 `docs/adboost/choice_plan.json` 优先于默认广告载体和第6～8项的新增范围；只做选中模块并保留原有功能。进入[广告Skill](../cocos-english-pack/ad-boost/SKILL.md)完成父级多选与子级细分，选完直接继续，不重复确认。
+**广告与经济开工时由用户定**：结算 x2、复活、ad-boost 板块、经济与皮肤在开工时问用户并跑 `run_skill.py kickoff record`，Skill 不默认新增；口径只在[英化广告与经济](../cocos-english-pack/cocos-game-to-english/references/english-ad-integration.md)。
 
 先确定唯一来源和工作副本，再按五阶段确定性命令流执行。原工程、原始 ZIP、玩家存档和已有有效证据保留。当前整包版本、补丁与指纹以包根目录 `distribution-manifest.json` 为准；安装后可从各 Skill 的 `PROVENANCE.json` 核对同版来源。历史原因只在[版本历史](../cocos-english-pack/cocos-game-to-english/版本历史.md)追溯。
 
@@ -22,7 +22,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 - 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 先安全解包，按输出交中文原版试玩后接着做开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
 - 开工记录 `docs/checks/workflow.json` 的 `route`：中文源码从零制作用 `source`，已完成源码与同版测试 ZIP 用 `handoff`（运行 `run_skill.py start --input "<工程>" --route handoff` 自动核对身份并写出 `docs/handoff-baseline.json`）。后者先核身份和恢复有效记录，不重做中文原版或已完成制作。旧项目是否采用标准件先看 `tiktok_finalize.py decide`，不自动改成新项目。
 - [共享执行规则](../cocos-english-pack/remake-core/references/execution-policy.md)管理增量复验、视觉交接、最终 ZIP 和计时；[浏览器规则](../cocos-english-pack/remake-core/references/browser-testing-policy.md)管理 Ego Lite 测试与用户试玩的分工。所有读图由主 Agent 直接查看，OCR 只辅助定位。
-- 默认保持原玩法、原关卡、原声音素材与原有数值，不补关、不主动加经济或皮肤系统。广告推荐载体是明确的默认例外，按 [ad-boost 英化模式](../cocos-english-pack/ad-boost/references/localize-mode.md)执行。用户明确要求新增玩法时另立范围，只验证实际新增部分。
+- 默认保持原玩法、原关卡、原声音和数值，不补关；用户明确要求新增玩法时另立范围，只验证实际新增部分。
 
 ## 九项固定修改
 
@@ -35,9 +35,9 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 | 3 | SFX、BGM 独立开关、十格与实时百分比，立即生效并持久保存；按固定入口的 AUDIO-01 核实际输出。 |
 | 4 | 删除分享、更多游戏、联网排行榜；核心分享奖励改激励视频，局内本地名次按固定入口的例外保留。 |
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |
-| 6 | 结算有奖励时，适用的 Watch Ad x2 是主按钮，主按钮下方一行可点的 Claim 是免费结算入口。闯关胜利点 Claim 进下一关，无尽结算或关卡失败点 Claim 执行 Retry。没有可领奖励的失败页直接显示 Retry。见[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。 |
-| 7 | 接入看广告复活，覆盖实际失败状态；没有失败状态时按固定入口的对应方案，不自行变更玩法。 |
-| 8 | 用户说“用广告skill优化”或要求选择模块/细节时，先走[父子级选择](../cocos-english-pack/ad-boost/references/hierarchical-choices.md)，按choice_plan实施。普通自动英化无选型要求时按诊断接适用推荐；完成本轮美工与接入后发英文试玩。 |
+| 6 | 按开工决定：加了 Watch Ad x2 时它是结算主按钮，下方一行可点的 Claim 免费结算（胜利进下一关，无尽或失败执行 Retry），没有可领奖励的失败页直接显示 Retry；不加则结算页保留原样。见[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。 |
+| 7 | 按开工决定接入看广告复活，覆盖实际失败状态；原有复活保留并改接平台包。 |
+| 8 | 按开工决定：`none` 不加板块；点名的板块走[父子级选择](../cocos-english-pack/ad-boost/references/hierarchical-choices.md)按 choice_plan 实施。 |
 | 9 | 每个模式关内有暂停/设置入口，暂停窗含 Continue、Restart、Home；开窗时计时、物理和生成暂停。复用平台页面与原版暂停函数。 |
 
 ## 五阶段
@@ -46,7 +46,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 
 | 阶段 | 现在做什么 | 细节 |
 |---|---|---|
-| 1 盘点 | 跑 `run_skill.py next` 锁定路由并安全接收原版。新中文工程先构建或沿用原始 Web，实际开局后发中文原版手机试玩链接，发完立即继续做开工准备和内部 Native 首页与进关验证。列中文素材、实际页面、平台、存档、声音与奖励待办。 | [盘点与原版试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-1.md) |
+| 1 盘点 | 跑 `run_skill.py next` 锁定路由并安全接收原版。新中文工程先构建或沿用原始 Web，实际开局后发中文原版手机试玩链接（同条附上开工决定几题），发完立即继续做开工准备和内部 Native 首页与进关验证。列中文素材、实际页面、平台、存档、声音与奖励待办。 | [盘点与原版试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-1.md) |
 | 2 修改 | 完成九项固定修改。先定英文内框、字符集、显示槽和共享用途，首件接真实页面确认后再批量生成；改完跑 `run_skill.py stage2` 单写者静态排雷与接图闭环。 | [制作与接入](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-2.md) |
 | 3 英文试玩 | 先构建 `web-mobile`，合并完成本轮美工并通过中文专项、完整美工总审与真实页面复核，再单次构建同版 Native；核实启动、输入和候选身份后交第一个正式同版试玩＋H5 清单。 | [候选与试玩](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-3.md) |
 | 4 反馈 | 同批反馈一次改完，按单端 Web 复验后再补同版 Native；只补变化影响的页面与检查。新链接绑定新候选；同事交接或已交付局部返工按增量基线处理。 | [反馈与返工](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-4.md) |

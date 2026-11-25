@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-24T19:07:54.188Z",
-  "treeHash": "d54d4282187f3ac2ffbd454c232d92bf3c637e12fdca2ac0e905f29adeb88e38",
+  "createdAt": "2026-11-25T05:32:09.407Z",
+  "treeHash": "e766d9ed9c7786d41960a1b1896bf21bd2622d8bc3c98819f9747110cdd4c3bb",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2071,14 +2071,14 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "40abd44689505ced65f2f9318d2f3ab3db45584dd983df69a188d9eff38ac726",
-      "fileCount": 59,
-      "bytes": 38586,
+      "treeHash": "f7999d383cbc521fbe99a3e3931cde438bbb4bb97aca6a9a60c976f312341b17",
+      "fileCount": 62,
+      "bytes": 39485,
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "7bb96ca89a258584bd80289206336996fd3231b51072d49e571f521e0d1560c8",
-          "size": 15010,
+          "hash": "765f8a82bc964ec461f2d977f29d777b2815649336ad33328a0ee0b49e436336",
+          "size": 14670,
           "executable": false
         },
         {
@@ -2163,6 +2163,12 @@
           "path": "scripts/garbled_names.py",
           "hash": "1d274d0d4fad4757f773844b1ea681d7619fdb0b193e5d330f5838325130d01f",
           "size": 404,
+          "executable": true
+        },
+        {
+          "path": "scripts/kickoff_decisions.py",
+          "hash": "e825ca16d1c6130a3551ef5021af38aea26faa47fb66a76ac633f32c780569a9",
+          "size": 408,
           "executable": true
         },
         {
@@ -2298,6 +2304,12 @@
           "executable": true
         },
         {
+          "path": "scripts/test_kickoff_decisions.py",
+          "hash": "f9b1b3ee8e7bf85db9a13e2b4b80598c7fe6805dc39de8af7b29e4c70a0c2ee9",
+          "size": 413,
+          "executable": true
+        },
+        {
           "path": "scripts/test_label_value_paths.py",
           "hash": "c949581b238fec7b4b2e55a2ea54f4184ab5e3d4978b4d9e3b725c20fd4b7e85",
           "size": 413,
@@ -2373,6 +2385,12 @@
           "path": "scripts/test_stage2_art_boundary.py",
           "hash": "8e40b35c003ca5eae753b48f6e4696a4da056d2569d6a8017bfdb2da71fd0dcd",
           "size": 415,
+          "executable": true
+        },
+        {
+          "path": "scripts/test_stage2_environment_gap.py",
+          "hash": "e4f7b8533c71fccd0f25a3b1966e21e25d3109e57b5b952169d539e51c3b4653",
+          "size": 418,
           "executable": true
         },
         {

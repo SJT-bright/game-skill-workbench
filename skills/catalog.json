@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "createdAt": "2026-11-25T18:46:32.573Z",
-  "treeHash": "e638db2084ec2c3f8f999c50253b7457731e2198bbdba8a61526e5fe31e567f7",
+  "createdAt": "2026-11-26T14:57:39.900Z",
+  "treeHash": "dc9e9aaa9c6f75d9976eec421ab885643efece3c6eb47d52d2188b31c575a927",
   "skills": [
     {
       "name": "chrome-mobile-testing",
@@ -2071,20 +2071,20 @@
     },
     {
       "name": "cocos-game-to-english",
-      "treeHash": "6ec0adbe750de48892f777a8c1cbc631ffa6e5cee7d5fa2b94696364ca9e3efe",
+      "treeHash": "1ae3ecb8a6758750dc68a3a480b08e1ff29251a9231127c02eb61792c68296c1",
       "fileCount": 62,
-      "bytes": 39752,
+      "bytes": 40541,
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "8acaff4b676a5fa9e5defa45027458a7dac7467ced9973b6ea8c5392b113f63d",
-          "size": 14937,
+          "hash": "a5d6cefb48ac90a472cf783e42a6f4139ba7598cd154871913da2dc45a7ad123",
+          "size": 15699,
           "executable": false
         },
         {
           "path": "agents/openai.yaml",
-          "hash": "267c80101eb8a99960a2a809b63f40f82ce461d619b932e18b3947cb1187704a",
-          "size": 176,
+          "hash": "b64461b302816e55aff709be2fb1c217a1ac0a25cf25b384500eb9879bdbdbdd",
+          "size": 203,
           "executable": false
         },
         {

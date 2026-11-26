@@ -1,7 +1,10 @@
 ---
 name: cocos-game-to-english
-description: "把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。"
+description: "把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。外包游戏完工时，响应口令“出完工交接包”，汇总同版测试 ZIP、源码、回执和两类检查记录。"
 ---
+
+用户说“出完工交接包”或交付外包完工游戏时，按[完工交接包](../cocos-english-pack/remake-core/references/completion-handoff.md)执行。正式交付 CLI 在成功回执后自动汇总。需要单独补交时，直接使用原回执和本次源码，交接前核对外层清单。
+
 
 # Cocos 游戏英化
 
@@ -19,6 +22,8 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 4. **批量美工前先确认 Native 能开局。** 新中文工程在第 1 阶段运行 `native-preflight`。先用同一份诊断 Native 核算主包、各分包和总包的未压缩字节与可用空间，再实测首页、首屏资源和真实触摸进入游戏。同版结果沿用。美工批量生产按开工预算安排首批，实际导入后核算图集。第 3 阶段的正式候选先用 `web-mobile` 完成中文专项与美工检查，再从定稿源码导出一次同版 ByteDance。
 
 ## 开工与共用规则
+
+首页制作先按[双入口接线](../cocos-english-pack/remake-core/references/tiktok-home-growth.md#首页设计时接好两个平台入口)接通 PROFILE 和 SHORTCUT。首个集成 Native 包实点验证任务 SDK 晚到后的两条路径。发现零请求、错调或重复，直接修工作副本、重建、复测。
 
 - **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)执行。两份引导在美工前定稿，首页分别打开引导，确认才调用 TikTok。只从匹配来源核验资格，资格通过不加奖，真实点领取并确认存档提交后才到账。侧栏返工以用户实际测包和同版可编辑源码为基线；无法绑定后台版本或 SHA-256 时明确记录，不把本地模拟称为平台验收。
 - 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 先安全解包，按输出交中文原版试玩后接着做开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。

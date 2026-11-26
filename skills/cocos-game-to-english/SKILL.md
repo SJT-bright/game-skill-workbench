@@ -1,7 +1,9 @@
 ---
 name: cocos-game-to-english
-description: "把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。外包游戏完工时，响应口令“出完工交接包”，汇总同版测试 ZIP、源码、回执和两类检查记录。"
+description: "响应“结合最新的skill优化这个游戏的侧栏”、优化侧栏、侧边栏、个人主页回访和桌面快捷方式专项。新旧游戏两入口一律先开本作三步图文引导，确认才跳转。把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。外包游戏完工时，响应口令“出完工交接包”，汇总同版测试 ZIP、源码、回执和两类检查记录。"
 ---
+
+用户说“结合最新的skill优化这个游戏的侧栏”“优化侧栏”“整改侧边栏”，直接执行[侧栏优化专项](../cocos-english-pack/remake-core/references/tiktok-home-growth.md#侧栏优化专项)。这句话已包含个人主页回访和桌面快捷方式两套引导的美术制作、接线、返修和实点验收。已有游戏的旧约定和旧回执仅供定位问题。专项先走下述制作与实测入口，完成后按本次需求交付。
 
 用户说“出完工交接包”或交付外包完工游戏时，按[完工交接包](../cocos-english-pack/remake-core/references/completion-handoff.md)执行。正式交付 CLI 在成功回执后自动汇总。需要单独补交时，直接使用原回执和本次源码，交接前核对外层清单。
 
@@ -16,7 +18,7 @@ description: "把可运行的中文 Cocos 游戏英化。新中文工程开工�
 
 ## 零主观判断执行铁律
 
-1. **任何输入第一步固定跑自动驾驶状态机**：拿到任何压缩包、源码目录、交接目录或导出目录，第一条命令必须运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py next "<目标路径>"`（别名 `status` / `autopilot`）。脚本自动判定唯一路由（`source_fresh` / `source_in_progress` / `handoff` / `preview_or_package_only`）、当前阶段（`1`～`5`）、引擎与本机 Creator 路径及钱包策略；**严格执行工具末尾输出的 `[EXACT_NEXT_COMMAND]`，禁止模型自行猜测跳步**。
+1. **整款英化或交接的第一步运行自动驾驶状态机**：仅优化侧栏时执行上面的专项。整款英化或交接收到压缩包、源码目录、交接目录或导出目录时，第一条命令必须运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py next "<目标路径>"`（别名 `status` / `autopilot`）。脚本自动判定唯一路由（`source_fresh` / `source_in_progress` / `handoff` / `preview_or_package_only`）、当前阶段（`1`～`5`）、引擎与本机 Creator 路径及钱包策略；**严格执行工具末尾输出的 `[EXACT_NEXT_COMMAND]`，禁止模型自行猜测跳步**。
 2. **禁止伪造证据与绕过检查；允许必要的兼容诊断**：不在工程 `docs/`、`qa/` 手写一次性测试或改账本脚本，不手工拼凑 `known-issue-review.json` 指纹；审查包用 `run_skill.py build-review-bundle` 生成。遇到已复现的命令失败、版本识别或构建路径兼容问题，先核日志、实际命令和配置，允许只读查阅相关内部实现；在用户已经授权的范围内对独立候选做最小兼容修补并复验，不因“内部脚本”字样重复索取授权。不得修改验收门槛、伪造完成状态或借诊断绕过检查。用户要求仅交 ZIP 时只改独立副本，不覆盖安装。
 3. **现成测试包一键预览**：用户仅需预览现成 TikTok 测试 `.zip` 或仅含 `game.js + game.json` 的导出目录时，直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py preview "<路径>" --quick-preview --open`（或 `run_skill.py quick-preview "<路径>" --open`）一键挂载宿主预览，不进建项流程。
 4. **批量美工前先确认 Native 能开局。** 新中文工程在第 1 阶段运行 `native-preflight`。先用同一份诊断 Native 核算主包、各分包和总包的未压缩字节与可用空间，再实测首页、首屏资源和真实触摸进入游戏。同版结果沿用。美工批量生产按开工预算安排首批，实际导入后核算图集。第 3 阶段的正式候选先用 `web-mobile` 完成中文专项与美工检查，再从定稿源码导出一次同版 ByteDance。

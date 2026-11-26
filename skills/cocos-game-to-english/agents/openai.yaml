@@ -1,4 +1,4 @@
 interface:
   display_name: "英化"
-  short_description: "中文完整游戏只改英文美工和文字，补固定入口，完工后生成交接包"
+  short_description: "英化与侧栏优化：两项图文引导、确认跳转、实点返修、完工交接"
   default_prompt: "用英化skill英化这个游戏"

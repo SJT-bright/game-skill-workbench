@@ -1,0 +1,4 @@
+interface:
+  display_name: "英化"
+  short_description: "英化与侧栏优化：两项图文引导、确认跳转、实点返修、完工交接"
+  default_prompt: "用英化skill英化这个游戏"

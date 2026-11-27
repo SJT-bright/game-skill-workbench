@@ -1,11 +1,9 @@
 ---
 name: cocos-game-to-english
-description: "响应“结合最新的skill优化这个游戏的侧栏”、优化侧栏、侧边栏、个人主页回访和桌面快捷方式专项。新旧游戏两入口一律先开本作三步图文引导，确认才跳转。把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。外包游戏完工时，响应口令“出完工交接包”，汇总同版测试 ZIP、源码、回执和两类检查记录。用户说“别测了”“不要测了”“别跑全量”“直接出包”时，先问来源 A/B/C，按豁免只跑必查清单后出包。"
+description: "响应“结合最新的skill优化这个游戏的侧栏”、优化侧栏、侧边栏、个人主页回访和桌面快捷方式专项。新旧游戏两入口一律先开本作三步图文引导，确认才跳转。把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。外包游戏完工时，响应口令“出完工交接包”，汇总同版测试 ZIP、源码、回执和两类检查记录。"
 ---
 
 用户说“结合最新的skill优化这个游戏的侧栏”“优化侧栏”“整改侧边栏”，直接执行[侧栏优化专项](../cocos-english-pack/remake-core/references/tiktok-home-growth.md#侧栏优化专项)。这句话已包含个人主页回访和桌面快捷方式两套引导的美术制作、接线、返修和实点验收。已有游戏的旧约定和旧回执仅供定位问题。专项先走下述制作与实测入口，完成后按本次需求交付。
-
-用户说“别测了”“不要测了”“别跑全量”“直接出包”，按[别测了豁免](../cocos-english-pack/remake-core/references/skip-tests-waiver.md)先问来源 A/B/C，再只跑必查清单出包。
 
 用户说“出完工交接包”或交付外包完工游戏时，按[完工交接包](../cocos-english-pack/remake-core/references/completion-handoff.md)执行。正式交付 CLI 在成功回执后自动汇总。需要单独补交时，直接使用原回执和本次源码，交接前核对外层清单。
 
@@ -29,8 +27,7 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 
 首页制作先按[双入口接线](../cocos-english-pack/remake-core/references/tiktok-home-growth.md#首页设计时接好两个平台入口)接通 PROFILE 和 SHORTCUT。首个集成 Native 包实点验证任务 SDK 晚到后的两条路径。发现零请求、错调或重复，直接修工作副本、重建、复测。
 
-- **优化侧栏。** 「优化侧栏」和「整改侧栏」都按[侧栏优化触发范围](../cocos-english-pack/remake-core/references/tiktok-home-growth.md)执行。两份引导在美工前定稿，首页分别打开引导，确认才调用 TikTok。只从匹配来源核验资格，资格通过不加奖，真实点领取并确认存档提交后才到账。侧栏返工以用户实际测包和同版可编辑源码为基线；无法绑定后台版本或 SHA-256 时明确记录，不把本地模拟称为平台验收。
-- 新中文源码可直接运行 `python <skills>/cocos-game-to-english/scripts/run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 先安全解包，按输出交中文原版试玩后接着做开工准备；已有工作副本也可运行 `run_skill.py start --project "<工作副本>"` 先看只读计划，核对后加 `--apply` 执行适用开工节点。工具已完成且输入未变的节点直接沿用；具体见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
+- 新中文源码运行 `run_skill.py start --input "<源码.zip或目录>" --work "<工作副本>" --route source` 安全解包，交中文原版试玩后接着开工；已有工作副本先看只读计划，核对后加 `--apply`，见[开工调度](../cocos-english-pack/cocos-game-to-english/references/start-project.md)。找不到 Python 或引擎时先按[环境准备](../cocos-english-pack/cocos-game-to-english/references/portable-environment.md)处理。
 - 开工记录 `docs/checks/workflow.json` 的 `route`：中文源码从零制作用 `source`，已完成源码与同版测试 ZIP 用 `handoff`（运行 `run_skill.py start --input "<工程>" --route handoff` 自动核对身份并写出 `docs/handoff-baseline.json`）。后者先核身份和恢复有效记录，不重做中文原版或已完成制作。旧项目是否采用标准件先看 `tiktok_finalize.py decide`，不自动改成新项目。
 - [共享执行规则](../cocos-english-pack/remake-core/references/execution-policy.md)管理增量复验、视觉交接、最终 ZIP 和计时；[浏览器规则](../cocos-english-pack/remake-core/references/browser-testing-policy.md)管理 Ego Lite 测试与用户试玩的分工。所有读图由主 Agent 直接查看，OCR 只辅助定位。
 - 默认保持原玩法、原关卡、原声音和数值，不补关；用户明确要求新增玩法时另立范围，只验证实际新增部分。
@@ -63,9 +60,9 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 | 4 反馈 | 同批反馈一次改完，按单端 Web 复验后再补同版 Native；只补变化影响的页面与检查。新链接绑定新候选；同事交接或已交付局部返工按增量基线处理。 | [反馈与返工](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-4.md) |
 | 5 核包交付 | 用户确认后只读核功能、平台、中文与包体覆盖，跑 `prepack` 与 `build-review-bundle`，只补这些范围的缺项并复用有效记录；不执行美工或静态视觉布局检查。最终写包与重新读回 ZIP 查体积和分包，同条回复交 ZIP、可用试玩与本版 H5。 | [补缺与交付](../cocos-english-pack/cocos-game-to-english/references/workflow-stage-5.md) |
 
-**“最后全量测试”只指第 5 阶段的完整功能、平台与包体验证，不回跑前置美工。** 第一个正式试玩前完成本轮计划内美工与合并检查；已交正式试玩或有效交接后，旧美工记录缺失或后来误跑的美工失败不能把最终任务倒送回第 3 阶段。保留这些历史记录，不改写为通过。用户明确提出的新视觉修改，按受影响页面在更新试玩前完成；真实按钮点不动、奖励不生效、资源缺失等仍按功能故障修复，不借此扩大为原界面审美返工。
+**“最后全量测试”只指第 5 阶段的功能、平台与包体验证，不回跑前置美工**；已交正式试玩后美工阶段不倒退，细则在第 5 阶段页。
 
-试玩、广告接入、反馈 `stage2` 和预检共用[同一阶段规则](../cocos-english-pack/remake-core/references/check-stages.md)。原画风适用标签不代表用户新增了视觉返工范围；过期的历史说明不再生成当前执行步骤。
+试玩、广告接入、反馈 `stage2` 和预检共用[同一阶段规则](../cocos-english-pack/remake-core/references/check-stages.md)。原画风适用标签不代表用户新增了视觉返工范围。
 
 ## 每轮制作回收问题
 
@@ -73,7 +70,7 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 
 ## 按需读取
 
-- 第一轮美工：[美工入口](../cocos-english-pack/remake-art/SKILL.md)、[Codex 多进程并发美工流水线](../cocos-english-pack/remake-art/references/codex-concurrent-art-pipeline.md)（统一用 `codex exec` 多子进程并发 + 母版合成 + `raw_image_gate.py` 秒检）、[英文界面重建](../cocos-english-pack/cocos-game-to-english/references/english-ui-rebuild.md)、[分数与奖励行](../cocos-english-pack/cocos-game-to-english/references/score-reward-production.md)。采集先按[少返工的制作与采集](../cocos-english-pack/remake-art/references/art-iteration-workflow.md)合并路线并判定旧图能否沿用；首件不代替其他真实状态。
+- 第一轮美工：[美工入口](../cocos-english-pack/remake-art/SKILL.md)、[Codex 多进程并发美工流水线](../cocos-english-pack/remake-art/references/codex-concurrent-art-pipeline.md)、[英文界面重建](../cocos-english-pack/cocos-game-to-english/references/english-ui-rebuild.md)、[分数与奖励行](../cocos-english-pack/cocos-game-to-english/references/score-reward-production.md)。采集先按[少返工的制作与采集](../cocos-english-pack/remake-art/references/art-iteration-workflow.md)合并路线并判定旧图能否沿用；首件不代替其他真实状态。
 - 广告：[固定广告接入](../cocos-english-pack/cocos-game-to-english/references/english-ad-integration.md)、[ad-boost 英化模式](../cocos-english-pack/ad-boost/references/localize-mode.md)，以及实际选中板块 README。新 TK 包按[广告展示开关](../cocos-english-pack/remake-ads/references/ad-display-switch.md)接线，默认开启，关闭/恢复保留已赚取权益与免费路径；使用同包配置工具核实真实远端源和全部现存广告路径，没有真实配置源不报告后台控制已完成。
 - SDK 回退：[固定顺序](../cocos-english-pack/cocos-game-check/references/tiktok-fixed-adaptation.md#tiktok-sdk-fallback)在开工、适配及实际 Native 交付时必检，适用于全部新旧游戏。
 - 手机布局兼容：涉及胶囊、安全区、窄屏或触摸的新增界面与局部修复，按[五视口布局与触摸复验](../cocos-english-pack/remake-core/references/tiktok-mobile-layout-compatibility.md)记录同版基础、失败对照及浏览器/真机证据；不扩大已授权范围。
@@ -81,4 +78,4 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 - 用户试玩交接：[真实鼠标检查](../cocos-english-pack/remake-core/references/real-mouse-preview.md)。中文原版、英文试玩、重开和最终交接都保留真实鼠标开局及代表操作门禁；由试玩入口执行本次观察，不另外手动重复跑一遍鼠标门禁。
 - 反馈与交付：[返工交付](../cocos-english-pack/remake-core/references/returned-art-delivery.md)、[人工画面清单](../cocos-english-pack/remake-core/references/manual-visual-review.md)、[同页 H5](../cocos-english-pack/cocos-game-to-english/references/playtest-h5.md)。
 - 计时与协作：[阶段与节点计时](../cocos-english-pack/cocos-game-to-english/references/phase-timing.md)、[并行分工](../cocos-english-pack/cocos-game-to-english/references/parallel-production.md)、[源工程排雷与单通道极速流水线](../cocos-english-pack/cocos-game-to-english/references/raw-game-conflict-shield.md)。美工工厂与广告生图共用同一整机锁，默认和上限为 15；主线程统一构建和交接，任务少时不用子 Agent。
-- 用户明确要求重设计时才读[美工首轮与重设计](../cocos-english-pack/cocos-game-to-english/references/art-first-round.md)。未用板块、历史事故和维护测试不作为每个游戏的必读材料。
+- 第一轮美工必读[美工首轮：先出一张沿用原画风的优化主页图](../cocos-english-pack/cocos-game-to-english/references/art-first-round.md)；用户要求重设计时也读它。未用板块、历史事故和维护测试不作为每个游戏的必读材料。

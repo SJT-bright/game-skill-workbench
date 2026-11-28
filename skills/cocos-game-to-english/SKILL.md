@@ -1,11 +1,11 @@
 ---
 name: cocos-game-to-english
-description: "响应“结合最新的skill优化这个游戏的侧栏”、优化侧栏、侧边栏、个人主页回访和桌面快捷方式专项。新旧游戏两入口一律先开本作三步图文引导，确认才跳转。把可运行的中文 Cocos 游戏英化。新中文工程开工先交中文原版手机试玩链接，不等回复继续。保持原玩法、关卡和画风，完成九项固定修改、美工与中文专项后交同版英文试玩及 H5 清单；用户确认后只补缺项并核包交付。也接收已完成源码和测试包，复用输入未变的有效记录。外包游戏完工时，响应口令“出完工交接包”，汇总同版测试 ZIP、源码、回执和两类检查记录。"
+description: "把可运行的中文 Cocos 游戏英化，保留玩法、关卡和画风。支持“结合最新的skill优化这个游戏的侧栏”，个人主页回访和桌面快捷方式先开三步图文引导，确认才跳转。先交中文原版试玩，完成适用制作与检查后交同版英文试玩及 H5 清单。接手源码和测试包时复用有效记录。口令“出完工交接包”汇总测试 ZIP、源码、回执与检查记录。"
 ---
 
 中文来源游戏在可编辑工作副本清除原游戏的隐私政策、用户协议、服务条款、使用条款及其中英文译文。随正文一起移除开屏弹窗、同意与拒绝按钮、设置链接、勾选框、专用图文资源和等待同意的启动分支。删除协议时不得写入虚假的同意状态，平台自身的授权接口按实际功能保留。
 
-首轮正式英文试玩按[首轮英文试玩美工验收](../cocos-english-pack/remake-art/references/first-trial-art.md)执行。双入口与引导、字效、广告和普通领取在同版画面实点通过，已报问题修完并复测后再交英文链接。中文原版按阶段 1 的可玩性检查先交。
+首轮英文试玩按[美工验收](../cocos-english-pack/remake-art/references/first-trial-art.md)实点本作入口、引导、广告与普通领取，核字效，修完已报问题再交链接。中文原版按阶段 1 先交。
 
 用户说“结合最新的skill优化这个游戏的侧栏”“优化侧栏”“整改侧边栏”，直接执行[侧栏优化专项](../cocos-english-pack/remake-core/references/tiktok-home-growth.md#侧栏优化专项)。这句话已包含个人主页回访和桌面快捷方式两套引导的美术制作、接线、返修和实点验收。已有游戏的旧约定和旧回执仅供定位问题。专项先走下述制作与实测入口，完成后按本次需求交付。
 
@@ -14,7 +14,7 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 
 # Cocos 游戏英化
 
-**广告与经济开工时由用户定**：结算 x2、复活、ad-boost 板块、经济与皮肤在开工时问用户并跑 `run_skill.py kickoff record`，Skill 不默认新增；口径只在[英化广告与经济](../cocos-english-pack/cocos-game-to-english/references/english-ad-integration.md)。
+开工用 `run_skill.py kickoff record` 记录选择。失败续玩和结算双倍各自可选，缺省不新增。见[英化广告与经济](../cocos-english-pack/cocos-game-to-english/references/english-ad-integration.md)。
 
 先确定唯一来源和工作副本，再按五阶段确定性命令流执行。原工程、原始 ZIP、玩家存档和已有有效证据保留。当前整包版本、补丁与指纹以包根目录 `distribution-manifest.json` 为准；安装后可从各 Skill 的 `PROVENANCE.json` 核对同版来源。历史原因只在[版本历史](../cocos-english-pack/cocos-game-to-english/版本历史.md)追溯。
 
@@ -38,7 +38,7 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 
 ## 九项固定修改
 
-逐项判断适用性，不适用须有具体原因。实施细节见[固定修改与范围](../cocos-english-pack/cocos-game-to-english/references/scope-and-fixed-work.md)、[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。
+适用范围与实施见[制作范围](../cocos-english-pack/cocos-game-to-english/references/scope-and-fixed-work.md)、[入口细则](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。
 
 | 项 | 工作与结果 |
 |---|---|
@@ -47,8 +47,8 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 | 3 | SFX、BGM 独立开关、十格与实时百分比，立即生效并持久保存；按固定入口的 AUDIO-01 核实际输出。 |
 | 4 | 删除分享、更多游戏、联网排行榜；核心分享奖励改激励视频，局内本地名次按固定入口的例外保留。 |
 | 5 | 修复真实的点击、触摸和操作缺陷，保持玩法。 |
-| 6 | 按开工决定：加了 Watch Ad x2 时它是结算主按钮，下方一行可点的 Claim 免费结算（胜利进下一关，无尽或失败执行 Retry），没有可领奖励的失败页直接显示 Retry；不加则结算页保留原样。见[固定入口](../cocos-english-pack/cocos-game-to-english/references/fixed-entries.md)。 |
-| 7 | 按开工决定接入看广告复活，覆盖实际失败状态；原有复活保留并改接平台包。 |
+| 6 | 结算双倍可选。已接入时核 Watch Ad x2 与下方一行可点的免费 Claim；未选时保留原结算流程。 |
+| 7 | 失败续玩可选。已接入时检查完整观看后恢复本局。 |
 | 8 | 按开工决定：`none` 不加板块；点名的板块走[父子级选择](../cocos-english-pack/ad-boost/references/hierarchical-choices.md)按 choice_plan 实施。 |
 | 9 | 每个模式关内有暂停/设置入口，暂停窗含 Continue、Restart、Home；开窗时计时、物理和生成暂停。复用平台页面与原版暂停函数。 |
 
@@ -75,7 +75,7 @@ description: "响应“结合最新的skill优化这个游戏的侧栏”、优�
 ## 按需读取
 
 - 第一轮美工：[美工入口](../cocos-english-pack/remake-art/SKILL.md)、[Codex 多进程并发美工流水线](../cocos-english-pack/remake-art/references/codex-concurrent-art-pipeline.md)、[英文界面重建](../cocos-english-pack/cocos-game-to-english/references/english-ui-rebuild.md)、[分数与奖励行](../cocos-english-pack/cocos-game-to-english/references/score-reward-production.md)。采集先按[少返工的制作与采集](../cocos-english-pack/remake-art/references/art-iteration-workflow.md)合并路线并判定旧图能否沿用；首件不代替其他真实状态。
-- 广告：[固定广告接入](../cocos-english-pack/cocos-game-to-english/references/english-ad-integration.md)、[ad-boost 英化模式](../cocos-english-pack/ad-boost/references/localize-mode.md)，以及实际选中板块 README。新 TK 包按[广告展示开关](../cocos-english-pack/remake-ads/references/ad-display-switch.md)接线，默认开启，关闭/恢复保留已赚取权益与免费路径；使用同包配置工具核实真实远端源和全部现存广告路径，没有真实配置源不报告后台控制已完成。
+- 广告按[英化模式](../cocos-english-pack/ad-boost/references/localize-mode.md)和所选板块实施。新 TK 包按[展示开关](../cocos-english-pack/remake-ads/references/ad-display-switch.md)默认开启，核远端源、现有入口、已赚取权益与免费路径。
 - SDK 回退：[固定顺序](../cocos-english-pack/cocos-game-check/references/tiktok-fixed-adaptation.md#tiktok-sdk-fallback)在开工、适配及实际 Native 交付时必检，适用于全部新旧游戏。
 - 手机布局兼容：涉及胶囊、安全区、窄屏或触摸的新增界面与局部修复，按[五视口布局与触摸复验](../cocos-english-pack/remake-core/references/tiktok-mobile-layout-compatibility.md)记录同版基础、失败对照及浏览器/真机证据；不扩大已授权范围。
 - 平台：按 [TikTok 固定适配](../cocos-english-pack/cocos-game-check/references/tiktok-fixed-adaptation.md)读取当前阶段涉及的小节，标准件由脚本安装；检查报到哪项再读对应细节，不在开工重读全部手册。
